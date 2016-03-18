@@ -24,6 +24,7 @@ namespace Catkeys
 	/// Code speed measurement, and other time functions.
 	/// Easier to use than System.Stopwatch class.
 	/// </summary>
+	[DebuggerStepThrough]
 	public static class Time
 	{
 		static long[] _a = new long[11];
