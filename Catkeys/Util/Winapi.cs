@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 //Change default DllImport CharSet from Ansi to Unicode.
@@ -1026,6 +1027,7 @@ namespace Catkeys.Winapi
 	}
 
 
+	[DebuggerStepThrough]
 	public static class Api
 	{
 		public struct WNDCLASSEX

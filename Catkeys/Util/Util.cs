@@ -22,6 +22,7 @@ using Auto = Catkeys.Automation;
 
 namespace Catkeys.Util
 {
+	[DebuggerStepThrough]
 	public static class NoClass
 	{
 		public static readonly IntPtr NULL = default(IntPtr); //info: IntPtr cannot be const
@@ -33,6 +34,7 @@ namespace Catkeys.Util
 		}
 	}
 
+	[DebuggerStepThrough]
 	public static class Paths
 	{
 		public static string App
@@ -44,6 +46,7 @@ namespace Catkeys.Util
 		public static string CombineApp(string file) { return Path.Combine(App, file); }
 	}
 
+	[DebuggerStepThrough]
 	public static class Window
 	{
 		/// <summary>
@@ -67,6 +70,7 @@ namespace Catkeys.Util
 		}
 	}
 
+	[DebuggerStepThrough]
 	public class SharedMemoryFast
 	{
 		protected IntPtr _hmap, _mem;
@@ -104,6 +108,7 @@ namespace Catkeys.Util
 		}
 	}
 
+	[DebuggerStepThrough]
 	public static class Misc
 	{
 		public static void MinimizeMemory()

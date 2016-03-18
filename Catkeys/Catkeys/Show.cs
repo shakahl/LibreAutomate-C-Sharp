@@ -20,6 +20,7 @@ using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
+	//[DebuggerStepThrough]
 	public static class Show
 	{
 		public static void MessageDialog(string s)

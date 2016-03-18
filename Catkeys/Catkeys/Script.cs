@@ -17,6 +17,7 @@ namespace Catkeys
 	/// <summary>
 	/// Stores script speed and other options common to multiple automation library methods and script statements.
 	/// </summary>
+	[DebuggerStepThrough]
 	public class ScriptOptions
 	{
 #pragma warning disable 649
@@ -73,6 +74,7 @@ namespace Catkeys
 	/// <summary>
 	/// Base class of user main script class. Manages script options, calling script methods on launch/trigger, etc.
 	/// </summary>
+	[DebuggerStepThrough]
 	public class Script
 	{
 		[ThreadStatic] static ScriptOptions _opt;
