@@ -18,7 +18,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// The WM_NULL message performs no operation. An application sends the WM_NULL message if it wants to post a message that the recipient window will ignore.
 		/// </summary>
-		NULL = 0x0000,
+		Zero = 0x0000,
 		/// <summary>
 		/// The WM_CREATE message is sent when an application requests that a window be created by calling the CreateWindowEx or CreateWindow function. (The message is sent before the function returns.) The window procedure of the new window receives this message after the window is created, but before the window becomes visible.
 		/// </summary>
@@ -237,7 +237,7 @@ namespace Catkeys.Winapi
 		/// </summary>
 		COPYDATA = 0x004A,
 		/// <summary>
-		/// The WM_CANCELJOURNAL message is posted to an application when a user cancels the application's journaling activities. The message is posted with a NULL window handle.
+		/// The WM_CANCELJOURNAL message is posted to an application when a user cancels the application's journaling activities. The message is posted with a Zero window handle.
 		/// </summary>
 		CANCELJOURNAL = 0x004B,
 		/// <summary>
@@ -1026,10 +1026,29 @@ namespace Catkeys.Winapi
 		EX_NOACTIVATE = 0x08000000
 	}
 
+	//[Flags]
+	public enum SW_
+	{
+		HIDE = 0,
+		SHOWNORMAL = 1,
+		SHOWMINIMIZED = 2,
+		SHOWMAXIMIZED = 3,
+		SHOWNOACTIVATE = 4,
+		SHOW = 5,
+		MINIMIZE = 6,
+		SHOWMINNOACTIVE = 7,
+		SHOWNA = 8,
+		RESTORE = 9,
+		SHOWDEFAULT = 10,
+		FORCEMINIMIZE = 11,
+	}
+
 
 	[DebuggerStepThrough]
 	public static class Api
 	{
+		//USER32
+
 		public struct WNDCLASSEX
 		{
 			public int cbSize;
@@ -1041,9 +1060,7 @@ namespace Catkeys.Winapi
 			public IntPtr hIcon;
 			public IntPtr hCursor;
 			public IntPtr hbrBackground;
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string lpszMenuName;
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string lpszClassName;
 			public IntPtr hIconSm;
 
@@ -1052,77 +1069,135 @@ namespace Catkeys.Winapi
 				cbSize = Marshal.SizeOf(typeof(WNDCLASSEX));
 				lpszClassName=name;
 				lpfnWndProc=wndProc;
-            }
+				//hInstance=Api.GetModuleHandle(null); //tested: RegisterClassEx uses this if hInstance is Zero, even for app-local classes
+
+				//tested:
+				//For app-global classes, CreateWindowEx and GetClassInfo ignore their hInst argument (always succeed).
+				//For app-local classes, CreateWindowEx and GetClassInfo fail if their hInst argument does not match. However CreateWindowEx always succeeds if its hInst argument is Zero.
+			}
 		}
 
 		public struct COPYDATASTRUCT
 		{
-			public IntPtr dwData;
+			public LPARAM dwData;
 			public int cbData;
 			public IntPtr lpData;
 
-			public COPYDATASTRUCT(IntPtr dwData, int cbData, IntPtr lpData)
+			public COPYDATASTRUCT(LPARAM dwData, int cbData, IntPtr lpData)
 			{
 				this.dwData=dwData; this.cbData=cbData; this.lpData=lpData;
 			}
 		}
 
+		[DllImport("user32.dll")]
+		public static extern Wnd FindWindow(string lpClassName, string lpWindowName);
+
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+		public static extern LPARAM SendMessage(Wnd hWnd, WM_ Msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
+		public static extern LPARAM SendMessageS(Wnd hWnd, WM_ Msg, LPARAM wParam, string lParam);
 
 		[DllImport("user32.dll")]
-		public static extern IntPtr SendMessage(IntPtr hWnd, WM_ Msg, IntPtr wParam, IntPtr lParam);
-
-		[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-		public static extern IntPtr SendMessageS(IntPtr hWnd, WM_ Msg, IntPtr wParam, string lParam);
+		public static extern bool IsWindow(Wnd hWnd);
 
 		[DllImport("user32.dll")]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		public static extern bool IsWindow(IntPtr hWnd);
-
-		public delegate IntPtr WndProc(IntPtr hWnd, WM_ msg, IntPtr wParam, IntPtr lParam);
+		public static extern bool IsWindowVisible(Wnd hWnd);
 
 		[DllImport("user32.dll")]
-		[return: MarshalAs(UnmanagedType.U2)]
+		public static extern bool ShowWindow(Wnd hWnd, SW_ nCmdShow);
+
+		public delegate LPARAM WndProc(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", SetLastError = true)]
 		public static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpwcx);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern IntPtr CreateWindowExW(
+		public static extern Wnd CreateWindowExW(
 			WS_ dwExStyle,
 			string lpClassName,
 			string lpWindowName,
 			WS_ dwStyle,
-			Int32 x,
-			Int32 y,
-			Int32 nWidth,
-			Int32 nHeight,
-			IntPtr hWndParent,
+			int x,
+			int y,
+			int nWidth,
+			int nHeight,
+			Wnd hWndParent,
 			IntPtr hMenu,
 			IntPtr hInstance,
 			IntPtr lpParam
 		);
 
 		[DllImport("user32.dll")]
-		public static extern System.IntPtr DefWindowProcW(IntPtr hWnd, WM_ msg, IntPtr wParam, IntPtr lParam);
+		public static extern LPARAM DefWindowProcW(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll")]
-		public static extern bool DestroyWindow(IntPtr hWnd);
+		public static extern bool DestroyWindow(Wnd hWnd);
 
 		[DllImport("user32.dll")]
 		public static extern void PostQuitMessage(int nExitCode);
 
-		[DllImport("user32.dll")]
-		public static extern int MessageBox(IntPtr hWnd, String text, String caption, int options);
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern int MessageBox(Wnd hWnd, string text, string caption, int options);
 
 		public struct POINT { public int X; public int Y; }
-		public struct MSG { public IntPtr hwnd; public UInt32 message; public IntPtr wParam; public IntPtr lParam; public UInt32 time; public POINT pt; }
+		public struct MSG { public Wnd hwnd; public uint message; public LPARAM wParam; public LPARAM lParam; public uint time; public POINT pt; }
 
 		[DllImport("user32.dll")]
-		public static extern int GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+		public static extern int GetMessage(out MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
 		[DllImport("user32.dll")]
-		public static extern IntPtr DispatchMessage([In] ref MSG lpmsg);
+		public static extern LPARAM DispatchMessage([In] ref MSG lpmsg);
 
+		public enum WH_
+		{
+			MSGFILTER = -1,
+			JOURNALRECORD = 0,
+			JOURNALPLAYBACK = 1,
+			KEYBOARD = 2,
+			GETMESSAGE = 3,
+			CALLWNDPROC = 4,
+			CBT = 5,
+			SYSMSGFILTER = 6,
+			MOUSE = 7,
+			DEBUG = 9,
+			SHELL = 10,
+			FOREGROUNDIDLE = 11,
+			CALLWNDPROCRET = 12,
+			KEYBOARD_LL = 13,
+			MOUSE_LL = 14,
+		}
+
+		public delegate IntPtr HookProc(int code, LPARAM wParam, IntPtr lParam);
+
+		[DllImport("user32.dll")]
+		public static extern IntPtr SetWindowsHookEx(WH_ hookType, HookProc lpfn, IntPtr hMod, uint dwThreadId);
+
+		[DllImport("user32.dll")]
+		public static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+		[DllImport("user32.dll")]
+		public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, LPARAM wParam,  IntPtr lParam);
+
+		public enum HCBT_
+		{
+			MOVESIZE = 0,
+			MINMAX = 1,
+			QS = 2,
+			CREATEWND = 3,
+			DESTROYWND = 4,
+			ACTIVATE = 5,
+			CLICKSKIPPED = 6,
+			KEYSKIPPED = 7,
+			SYSCOMMAND = 8,
+			SETFOCUS = 9,
+		}
+
+		[DllImport("user32.dll")]
+		public static extern IntPtr GetAncestor(Wnd hwnd, uint gaFlags);
+
+
+		//KERNEL32
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern bool SetDllDirectory(string lpPathName);
@@ -1130,7 +1205,7 @@ namespace Catkeys.Winapi
 		[DllImport("kernel32.dll")]
 		public static extern long GetTickCount64();
 
-		[DllImport("kernel32.dll")]
+		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern IntPtr CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
 
 		[DllImport("kernel32.dll")]
@@ -1139,8 +1214,7 @@ namespace Catkeys.Winapi
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		[return: MarshalAs(UnmanagedType.Bool)]
+		[DllImport("kernel32.dll")]
 		public static extern bool CloseHandle(IntPtr hObject);
 
 		[DllImport("kernel32.dll")]
@@ -1153,16 +1227,48 @@ namespace Catkeys.Winapi
 		public static extern IntPtr OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		public static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, UIntPtr dwNumberOfBytesToMap);
+		public static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, LPARAM dwNumberOfBytesToMap);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
 
 		[DllImport("kernel32.dll")]
-		public static extern bool SetProcessWorkingSetSize(IntPtr hProcess, UIntPtr dwMinimumWorkingSetSize, UIntPtr dwMaximumWorkingSetSize);
+		public static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
 
 		[DllImport("kernel32.dll")]
 		public static extern IntPtr GetCurrentProcess();
 
+		[DllImport("kernel32.dll")]
+		public static extern IntPtr GetModuleHandle(string name);
+
+		public static IntPtr GetModuleHandleOfType(Type t)
+		{
+			return Marshal.GetHINSTANCE(t.Module);
+
+			//Tested these to get caller's module without Type parameter:
+			//This is dirty/dangerous and 50 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(new StackFrame(1).GetMethod().DeclaringType.Module);
+			//This is dirty/dangerous, does not support multi-module assemblies and 12 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(Assembly.GetCallingAssembly().GetLoadedModules()[0]);
+			//This is dirty/dangerous/untested and 12 times slower: [MethodImpl(MethodImplOptions.AggressiveInlining)] ... return Marshal.GetHINSTANCE(MethodBase.GetCurrentMethod().DeclaringType.Module);
+		}
+
+
+
+
+
+		//COMCTL32
+
+		public delegate LPARAM SubclassProc(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
+
+		[DllImport("comctl32.dll")]
+		public static extern bool SetWindowSubclass(Wnd hWnd, SubclassProc pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
+
+		[DllImport("comctl32.dll")]
+		public static extern bool GetWindowSubclass(Wnd hWnd, SubclassProc pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
+
+		[DllImport("comctl32.dll")]
+		public static extern bool RemoveWindowSubclass(Wnd hWnd, SubclassProc pfnSubclass, LPARAM uIdSubclass);
+
+		[DllImport("comctl32.dll")]
+		public static extern LPARAM DefSubclassProc(Wnd hWnd, WM_ uMsg, LPARAM wParam, LPARAM lParam);
 	}
 }

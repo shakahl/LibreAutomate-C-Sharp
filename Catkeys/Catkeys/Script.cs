@@ -61,7 +61,7 @@ namespace Catkeys
 		/// </code>
 		/// </example>
 		/// </summary>
-		public static ScriptOptions Default = new ScriptOptions(null);
+		public static ScriptOptions Default { get; set; } = new ScriptOptions(null);
 
 		//Equals() - don't need.
 		//ToString() - probably don't need too.
@@ -69,6 +69,14 @@ namespace Catkeys
 		//{
 		//	return $"(speed={speed}, slowMouse={slowMouse}, slowKeys={slowKeys}, waitMsg={waitMsg}, ...)";
 		//}
+
+		/// <summary>
+		/// Default title text for standard dialogs (function Show.MessageDialog() etc). Also can be displayed in other places.
+		/// Default value - current appdomain name. In exe it is exe file name like "example.exe", else it is script name.
+		/// </summary>
+		public static string DisplayName { get { return _DisplayName ?? AppDomain.CurrentDomain.FriendlyName; } set { _DisplayName=value; } }
+		static string _DisplayName;
+		//consider: use [assembly: AssemblyTitle("...")]. var a=Assembly.GetEntryAssembly(); But exception if appdomain runs with DoCallBack().
 	}
 
 	/// <summary>

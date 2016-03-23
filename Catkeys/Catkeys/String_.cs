@@ -310,8 +310,91 @@ namespace Catkeys
 		{
 			return t.TrimStart(trimChars.ToCharArray());
 		}
+
+		static int _CharHexToDec(char c)
+		{
+			if(c>='0' && c<='9') return c-'0';
+			if(c>='A' && c<='F') return c-('A'-10);
+			if(c>='a' && c<='f') return c-('a'-10);
+			return -1;
+		}
+
+		/// <summary>
+		/// Converts string to int.
+		/// Returns the int value, or 0 if fails to convert.
+		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
+		/// Unlike int.Parse and Convert.ToInt32:
+		///		Gets length of the number part.
+		///		No exceptions. If fails to convert, sets the length argument to 0.
+		///		The number in string can be followed by more text, like "123text".
+		///		Supports hexadecimal format, like "0x1E" or "0x1e".
+		///		Ignores any culture info.
+		///		7-9 times faster.
+		/// </summary>
+		/// <remarks>
+		/// The string can beging with ASCII spaces, tabs or newlines, like " 5".
+		/// The number can be with "-", like "-5", but not with "+" or "- ".
+		/// If the string begins with a decimal number, fails if the value is less than int.MinValue or greater than int.MaxValue.
+		/// If the string begins with a hexadecimal number, fails if the value is more than uint.MaxValue (0xffffffff).
+		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets length=1.
+		/// </remarks>
+		/// <param name="length">Receives length of the number part, including spaces and "-" at the beginning.</param>
+		public static int ToInt_(this string t, out int length)
+		{
+			length=0;
+			if(t==null) return 0;
+			int i, k, n = 0; bool minus = false;
+
+			for(i=0; i<t.Length; i++) if(t[i]!=' ' && t[i]!='\t' && t[i]!='\r' && t[i]!='\n') break; //skip spaces
+
+			if(i<t.Length && t[i]=='-') { i++; minus=true; } //minus
+
+			long R = 0; //result
+
+			if(i<=t.Length-3 && t[i]=='0' && t[i+1]=='x') { //hex
+				for(i+=2; i<t.Length; i++) {
+					k=_CharHexToDec(t[i]); if(k<0) break;
+					R=R*16+k;
+					if(++n>8) return 0; //too long for hex int?
+				}
+				if(n==0) i--; //0xNotHex (decimal 0)
+				else if(minus) R=-R;
+			} else { //decimal or not a number
+				for(; i<t.Length; i++) {
+					k=t[i]-'0'; if(k<0 || k>9) break;
+					R=R*10+k;
+					if(++n>10) return 0; //too long for decimal int?
+				}
+				if(n==0) return 0; //not a number
+
+				if(minus) { R=-R; if(R<int.MinValue) return 0; } else if(R>int.MaxValue) return 0; //too big for int?
+			}
+
+			length=i;
+			return (int)R;
+		}
+
+		/// <summary>
+		/// Converts string to int and gets string part followed by the number.
+		/// For example, for string "123text", sets the tail argument to "text" and returns 123.
+		/// For only-number string like "123", sets tail to "".
+		/// If fails to convert, sets tail to null.
+		/// Skips 1 ASCII space or tab character after the number part. For example, for string "123 text" sets tail = "text", not " text".
+		/// Everything else is the same as for the other overload that gets number part length.
+		/// </summary>
+		/// <param name="tail">A string variable. Can be this variable.</param>
+		public static int ToInt_(this string t, out string tail)
+		{
+			int len, R = t.ToInt_(out len);
+
+			if(len==0)
+				tail=null;
+			else {
+				if(len<t.Length) { char c = t[len]; if(c==' ' || c=='\t') len++; }
+				if(len<t.Length) tail=t.Substring(len); else tail="";
+			}
+
+			return R;
+		}
 	}
-
-
-
 }

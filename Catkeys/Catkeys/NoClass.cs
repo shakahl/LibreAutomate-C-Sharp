@@ -8,7 +8,7 @@ using System.Diagnostics;
 //using System.Threading.Tasks;
 //using System.Reflection;
 //using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.IO;
 //using System.Windows.Forms;
 
@@ -24,7 +24,15 @@ namespace Catkeys
 	public static class NoClass
 	{
 		/// <summary>
+		/// Default (0) value for IntPtr, Wnd and similar types, eg to pass to a function, to avoid using IntPtr.Zero or default(IntPtr).
+		/// These types are struct types, therefore you cannot assign 0 or null.
+		/// However this is error: <c>void Func(IntPtr x=Zero){}</c>; use <c>void Func(IntPtr x=default(IntPtr)){}</c>.
+		/// </summary>
+		public static readonly IntPtr Zero = default(IntPtr); //info: IntPtr cannot be const
+
+		/// <summary>
 		/// Windows newline string "\r\n".
+		/// Allows to replace "one\r\ntwo\r\nthree" with "one"+_+"two"+_+"three" or $"one{_}two{_}three" when you don't want @"multiline string".
 		/// </summary>
 		public const string _ = "\r\n";
 		//Compiler optimizes "one"+_+"two"+_+"three", but not $"one{_}two{_}three"
@@ -51,7 +59,19 @@ namespace Catkeys
 		public static void Out(IntPtr value) { Output.Write(value); }
 		//public static void Out<T>(T value) { Output.Write(value); } //this could replace all the above overloads, but it disables Out<T>(IEnumerable<T> values). Also, for intellisense it's better to have all overloads here.
 		public static void Out<T>(IEnumerable<T> values) { Output.Write(values); }
+		public static void Out<K, V>(IDictionary<K, V> values) { Output.Write(values); }
 		public static void Out(string separator, params object[] values) { Output.Write(separator, values); }
+
+		public static void OutHex(int value) { Output.Write($"0x{value:X}"); }
+		public static void OutHex(uint value) { Output.Write($"0x{value:X}"); }
+		public static void OutHex(long value) { Output.Write($"0x{value:X}"); }
+		public static void OutHex(ulong value) { Output.Write($"0x{value:X}"); }
+
+		/// <summary>
+		/// Writes current function name.
+		/// </summary>
+		public static void OutFunc([System.Runtime.CompilerServices.CallerMemberName] string name = "") { Output.Write(name); }
+
 
 	}
 }

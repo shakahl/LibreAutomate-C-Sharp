@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 //using System.Threading.Tasks;
-using System.Linq;
+//using System.Linq;
 
 using System.Diagnostics;
 using System.Threading;
@@ -47,14 +47,14 @@ class Test
 	//0 event
 	//8 _hwndCompiler
 
-	static IntPtr _hwndCompiler;
+	static Wnd _hwndCompiler;
 	static api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
 
 
 	public static void _Main()
 	{
 	Time.First();
-		IntPtr ev=api.CreateEvent(NULL, false, false, null);
+		IntPtr ev=api.CreateEvent(Zero, false, false, null);
 
 		_mmf=MemoryMappedFile.CreateNew("Catkeys_SM_Tasks", 1024*1024);
 		_m=_mmf.CreateViewAccessor();
@@ -71,12 +71,12 @@ class Test
 		_m.Read(8, out _hwndCompiler);
 	Time.Next();
 		
-		api.SendMessage(_hwndCompiler, WM.USER, NULL, Marshal.StringToBSTR("test"));
+		api.SendMessage(_hwndCompiler, WM.USER, Zero, Marshal.StringToBSTR("test"));
 	Time.NextOut();
 
 		Msg("exit");
 		
-		api.SendMessage(_hwndCompiler, WM.CLOSE, NULL, NULL);
+		api.SendMessage(_hwndCompiler, WM.CLOSE, Zero, Zero);
 		//Environment.Exit(0);
 	}
 
@@ -96,9 +96,9 @@ class Test
 
 		Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
 
-		IntPtr w=api.CreateWindowExW(0, "Catkeys_Compiler",
-			null, WS.POPUP, 0, 0, 0, 0, (IntPtr)(-3),
-			NULL, Window.hInst, NULL);
+		Wnd w=api.CreateWindowExW(0, "Catkeys_Compiler",
+			null, WS.POPUP, 0, 0, 0, 0, Wnd.Spec.Message,
+			Zero, Window.hInst, Zero);
 
 		_mmf=MemoryMappedFile.OpenExisting("Catkeys_SM_Tasks"); //1.5 ms
 		_m=_mmf.CreateViewAccessor(); //3.5 ms. Why it is so slow? CreateOrOpen is even slower.
@@ -110,7 +110,7 @@ class Test
 		Application.Run(); //message loop
 	}
 
-	unsafe static IntPtr _WndProcCompiler(IntPtr hWnd, WM msg, IntPtr wParam, IntPtr lParam)
+	unsafe static LPARAM _WndProcCompiler(Wnd hWnd, WM msg, LPARAM wParam, LPARAM lParam)
 	{
 		switch(msg) {
 		//case WM.NCCREATE:
@@ -128,10 +128,10 @@ class Test
 		case WM.USER:
 			Out(Marshal.PtrToStringBSTR(lParam));
 			Marshal.FreeBSTR(lParam);
-			return NULL;
+			return Zero;
 		}
 
-		IntPtr R = api.DefWindowProcW(hWnd, msg, wParam, lParam);
+		LPARAM R = api.DefWindowProcW(hWnd, msg, wParam, lParam);
 
 		switch(msg) {
 		case WM.NCDESTROY:
@@ -155,47 +155,12 @@ class Test
 
 #region
 
-public struct Ptr
-{
-	public static implicit operator IntPtr(Ptr x) { return x._p; }
-	public static implicit operator Ptr(IntPtr x) { unsafe { return *(Ptr*)(&x); } }
-	//public static implicit operator int(Ptr x) { return (int)x._p; } //not useful
-	public static implicit operator Ptr(int x) { unsafe { return (IntPtr)x; } } //for Ptr=0 or Ptr=HWND_MESSAGE etc
-
-	#pragma warning disable 649 //_p never used
-	IntPtr _p;
-	#pragma warning restore 649
-}
-
 partial class Test
 {
-//[StructLayout(LayoutKind.Sequential)]
-//public struct HWND
-//{
-//    public IntPtr Value;
-//	public static readonly HWND Zero=default(HWND);
-//}
-
-//[DllImport("user32.dll",
-//    SetLastError = true,
-//    CallingConvention = CallingConvention.StdCall)]
-//public extern static HWND FindWindowExW(
-//    HWND hWndParent,
-//    HWND hWndChildAfter,
-//    [MarshalAs(UnmanagedType.LPWStr)] string lpszClass,
-//    [MarshalAs(UnmanagedType.LPWStr)] string lpszWindow);
-
-//[DllImport("user32.dll",
-//    SetLastError = true,
-//    CallingConvention = CallingConvention.StdCall)]
-//public extern static int SetForegroundWindow(
-//    HWND hWnd);
-
-
 
 	struct _SHMEM {
 	public IntPtr eventCompilerStartup;
-	public IntPtr hwndCompiler;
+	public Wnd hwndCompiler;
 	public Time.PerformanceCounter perf;
 	}
 
@@ -208,7 +173,7 @@ partial class Test
 
 	static OurSharedMemory _sm;
 
-	static IntPtr _hwndCompiler;
+	static Wnd _hwndCompiler;
 	static Api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
 
 
@@ -243,7 +208,7 @@ partial class Test
 	//Out("here"); return;
 	////Out(x.IsAllocated);
 	//Out(GCHandle.ToIntPtr(x));
-	//if(GCHandle.ToIntPtr(x)==IntPtr.Zero) Out("null");
+	//if(GCHandle.ToIntPtr(x)==Zero) Out("null");
 	//else {
 	//string s=(x.Target as string);
 	//Out(s);
@@ -312,10 +277,263 @@ partial class Test
 	[Trigger.Hotkey("Ctrl+K")]
 	public static void Script(HotkeyTriggers.Message m) { Out("script"); }
 
-	public static unsafe void _Main()
-	{
 
-  //      Output.Clear();
+
+	//public class MooWriter :TextWriter
+	//{
+	//	public override void WriteLine(string value)
+	//	{
+	//		//Out(value); //stack overflow
+	//		Output.WriteDirectly($"direct: {value}");
+	//           Mes(value);
+	//	}
+	//	public override void Write(string value) { WriteLine(value); }
+	//	public override Encoding Encoding { get { return Encoding.Unicode; } }
+	//}
+
+	//[DllImport("uxtheme")]
+	//static extern uint GetThemeAppProperties();
+
+	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+	static void TestX()
+	{
+		try {
+			//ScriptOptions.DisplayName="Script display name";
+			//Out(Assembly.GetEntryAssembly().FullName); //exception
+
+			//Out(GetThemeAppProperties());
+			//MessageBox.Show("sss");
+			//Out(Show.MessageDialog(Zero, "test", MDButtons.OKCancel, MDIcon.Error, MDFlag.DefaultButton2));
+			//Out(Show.MessageDialog("One\ntwooooooooooooo."));
+			//Out(Show.MessageDialog("One\ntwooooooooooooo.", "YNCi"));
+
+			//Out(Show.TaskDialog(Zero, "[Head1\nHead2] Text[1]\nText[2].", "Title", (TDButton)111, TDIcon.Info));
+			//Out(Show.TaskDialog(Zero, "[Head1\nHead2] Text[1]\nText[2].", "Title", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info));
+			//Out(Show.TaskDialog(Zero, "[Head1\nHead2] Text[1]\nText[2].", "Title", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0));
+			//Out(Show.TaskDialog("title", "head", "content", "OCYNLRi"));
+
+			//Out(Show.TaskListDialog("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
+			//Out(Show.TaskListDialog(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More"));
+			//		Out(Show.TaskListDialog(@"
+			//|1 one
+			//|2 two
+			//comments
+			//|3 three
+			//" , "Main", "More\r\nmore"));
+
+			//		Out(Show.TaskListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
+			//return;
+
+			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
+			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
+			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
+			//var d = new Show.AdvancedTaskDialog("Head Text.", null, 0, TDIcon.Shield);
+			//var d = new Show.AdvancedTaskDialog("", "More text.", 0, TDIcon.Shield);
+			//var d = new Show.AdvancedTaskDialog();
+			var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel);
+
+			d.SetCheckbox("Checkbox", false);
+
+			d.FlagAllowCancel=true;
+			d.FlagCanBeMinimized=true;
+			d.FlagEnableHyperlinks=true;
+			//d.FlagRtlLayout=true;
+			//d.FlagPositionRelativeToWindow=true;
+
+			//d.ExpandedInfoText="Expanded info\nand more info."; d.EXPAND_FOOTER_AREA=true;
+			d.SetExpandedText("Expanded info\nand more info.", true);
+
+			//d.EXPANDED_BY_DEFAULT=true; d.CollapsedControlText="Show more info"; d.ExpandedControlText="Hide more info";
+			d.SetExpandControl(true, "Show more info", "Hide more info");
+
+			//d.FooterText="Footer.";
+			//d.FooterIcon=TDIcon.Warning;
+			d.SetFooterText("Footer\ntext.", TDIcon.Warning);
+
+			//d.Width=700;
+
+			//d.Buttons=new TDButtonStruct[] { new TDButtonStruct(101, "one"), new TDButtonStruct(102, "two")};
+			//d.Buttons=new string[] { "101 one", "102 two" };
+			//d.Buttons="101 one|102 two";
+			//d.SetButtons(new string[] { "101 one", "102 two" });
+			d.SetButtons("1 one|2 two\nzzz", true);
+			//d.SetButtons(new string[] { "5", "102 two" }, true);
+			//d.SetButtons("101|102 two\nzzz", true);
+			//d.SetDefaultButton(TDResult.Cancel);
+			d.SetDefaultButton(2);
+			//d.SetDefaultButton(TDResult.Cancel);
+			//d.SetDefaultButton(TDResult.Retry);
+
+			//d.SetRadioButtons(new string[] { "1001 r1", "1002 r2" }, 1002);
+			d.SetRadioButtons("1001 r1|1002 r2");
+			//d.SetRadioButtons("1001 r1|1002 r2", 0, true);
+
+			var icon=new System.Drawing.Icon(@"Q:\app\qm.ico", 32, 32);
+			if(icon!=null) d.MainIconHandle=icon.Handle;
+
+			d.TimeoutS=30;
+
+			//Time.First();
+			TDResult b = d.Show();
+			//Time.NextWrite();
+
+			Out($"{b}  radio={d.ResultRadioButton}  checked={d.ResultIsChecked}");
+
+		} catch(ArgumentException e) { Out($"ArgumentException: {e.ParamName}, '{e.Message}'"); }
+		catch(Exception e) { Out($"Exception: '{e.Message}'"); }
+	}
+
+	static void TestInScriptDomain()
+	{
+		var domain = AppDomain.CreateDomain("Test");
+		domain.DoCallBack(TestX);
+		AppDomain.Unload(domain);
+	}
+
+
+	static unsafe void TestAny()
+	{
+		//OutHex(MakeLparam(10, 5));
+		//Out(MulDiv(10, 5, 2));
+		//Out(Percent(10, 20));
+		//Out(Percent(10.0, 1.25));
+
+		//TestX();
+		TestInScriptDomain();
+
+		//Out(sizeof(WPARAM));
+
+		////void* b = (void*)1000000;
+		////IntPtr b = (IntPtr)(-1);
+		////UIntPtr b = (UIntPtr)(0xffffffff);
+		//int b = -1;
+		////uint b = 0xffffffff;
+		////byte b = 5;
+		////sbyte b = -5;
+		////ushort b = 5;
+		////short b = -5;
+		////char b = 'A';
+		////WPARAM b = -1;
+
+		////IntPtr b=(IntPtr)(-1);
+		////UIntPtr b=(UIntPtr)(0xffffffff);
+		////uint b = 5;
+		////char b = 'A';
+
+		//LPARAM x;
+		//x=b;
+		////x=1000;
+		//b=x;
+
+		////uint u =0xffffffff;
+		////int x = (int)u;
+		////WPARAM y = u;
+
+		//Out("OK");
+		//Out($"{x} {b}");
+		////Out($"{x} {((int)b).ToString()}");
+		////Out(x==-1);
+		////Out(x+4);
+
+
+		////string s = " 10 more";
+		//string s = "-10 more";
+		////string s = "0x10 more";
+		////string s = "-0x10";
+		//s=" 15 text";
+
+		////Out(Convert.ToInt32(s));
+		////Out(int.Parse(s));
+		////Out(SplitNumberString(ref s));
+		////Out($"'{s}'");
+
+		//int len, r = s.ToInt_(out len);
+		//Out($"{r} 0x{r:X} {len}");
+
+		//string tail;
+		//r=s.ToInt_(out tail);
+		//Out($"{r} 0x{r:X} '{tail}' {tail==null}");
+
+		//Time.WakeCPU();
+		//int i, j, n1=0, n2=0;
+		//for(j=0; j<4; j++) {
+		//	Time.First();
+		//	for(i=0; i<1000; i++) n1+=int.Parse(s);
+		//	Time.Next();
+		//	for(i=0; i<1000; i++) n2+=ToInt_(s, out len);
+		//	Time.NextWrite();
+		//}
+		//Out($"{n1} {n2} {len}");
+
+
+		//Show.MessageDialog("test");
+
+		//Out((int)MessageBox.Show("sss", "ccc", MessageBoxButtons.OKCancel));
+
+		//string[] a = { "one", "two" };
+		//Out(a);
+
+		//var d = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 } };
+		//Out(d);
+
+		//var k = new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } };
+		////Out(k);
+		//Output.Write(k);
+
+		//Redirect();
+		//Thread.Sleep(100);
+
+		//Output.Writer=new MooWriter();
+
+		//Time.WakeCPU();
+		//int i, n=10;
+		//for(int j=0; j<3; j++) {
+
+		//	Time.First();
+		//	for(i=0; i<n; i++) Out("out");
+		//	Time.Next();
+		//	for(i=0; i<n; i++) Console.WriteLine("con");
+		//	//Time.Next();
+		//	//for(i=0; i<n; i++) Trace.WriteLine("tra");
+		//	Time.NextWrite();
+		//}
+		//speed: Out unbuffered 35, Console.WriteLine 30, Trace.WriteLine (debug mode) 900
+
+		////Time.First(true);
+		////Output.AlwaysOutput=true;
+		//Output.RedirectConsoleOutput();
+		//Output.RedirectDebugOutput();
+		////Time.NextWrite();
+
+		////Console.Write("{0} {1}", 1, true);
+		////return;
+		//Out("out");
+		//Console.WriteLine("con");
+		//Trace.WriteLine("tra");
+		////Thread.Sleep(1000); try { Console.Clear(); } catch { Out("exc"); }
+		//Debug.WriteLine("deb");
+
+		////Output.Clear();
+
+
+		//var e = new Exception("failed");
+		//var e = new ArgumentException(null, "paramName");
+		//var e = new FormatException();
+		//var e = new InvalidOperationException();
+		//var e = new NotImplementedException();
+		//var e = new NotSupportedException();
+		//var e = new OperationCanceledException();
+		//var e = new TimeoutException();
+		//var e = new WaitTimeoutException();
+		//var e = new WaitTimeoutException(null, new Exception("inner"));
+		//var e = new WaitTimeoutException();
+		//Out(e.Message);
+
+		//Auto.Wnd w = Auto.Wnd.Zero;
+		//MessageBox.Show(null, "text", "title"); //ok
+		//MessageBox.Show(w, "text", "title"); //ok
+
+		//      Output.Clear();
 
 		//double d = 3.5;
 		//float f = 1.2F;
@@ -447,6 +665,11 @@ partial class Test
 
 		//StringBuilder sb="hhh"; //error
 		//var sbb=new StringBuilder("nnn");
+	}
+
+	public static unsafe void _Main()
+	{
+		TestAny();
 		return;
 
 	//TestUnmanaged();
@@ -462,7 +685,7 @@ partial class Test
 
 	//Dee f=Mee;
 	////f(GCHandle.Alloc("test"));
-	////f(GCHandle.FromIntPtr(IntPtr.Zero));
+	////f(GCHandle.FromIntPtr(Zero));
 	//f("test");
 	//f(5);
 
@@ -516,7 +739,7 @@ partial class Test
 		_sm.x->perf.AddTicksFirst(t1);
 		_sm.x->perf.Next();
 
-		IntPtr ev=Api.CreateEvent(NULL, false, false, null);
+		IntPtr ev=Api.CreateEvent(Zero, false, false, null);
 
 		_sm.x->eventCompilerStartup=ev;
 
@@ -536,12 +759,12 @@ partial class Test
 		_hwndCompiler=_sm.x->hwndCompiler;
 		
 		for(int i=0; i<1; i++) {
-		Api.SendMessage(_hwndCompiler, WM_.USER, NULL, Marshal.StringToBSTR("test"));
+		Api.SendMessage(_hwndCompiler, WM_.USER, Zero, Marshal.StringToBSTR("test"));
 		}
 
 		//Mes("in");
 		
-		Api.SendMessage(_hwndCompiler, WM_.CLOSE, NULL, NULL);
+		Api.SendMessage(_hwndCompiler, WM_.CLOSE, Zero, Zero);
 		//Environment.Exit(0);
 
 		//Mes("after");
@@ -619,9 +842,7 @@ partial class Test
 
 		_sm.x->perf.Next();
 
-		IntPtr w=Api.CreateWindowExW(0, "Catkeys_Compiler",
-			null, WS_.POPUP, 0, 0, 0, 0, (IntPtr)(-3),
-			NULL, Window.hInstModule, NULL);
+		Wnd w =Api.CreateWindowExW(0, "Catkeys_Compiler", null, WS_.POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
 
 		_sm.x->perf.Next();
 
@@ -632,10 +853,10 @@ partial class Test
 		//message loop
 		//Application.Run(); //By default would add several ms to the startup time. Same speed if Main() has the LoaderOptimization attribute. Also may be not completely compatible with native wndproc. Also in some cases adds several MB to the working set.
 		Api.MSG m;
-		while(Api.GetMessage(out m, NULL, 0, 0)>0) { Api.DispatchMessage(ref m); }
+		while(Api.GetMessage(out m, Zero, 0, 0)>0) { Api.DispatchMessage(ref m); }
 	}
 
-	unsafe static IntPtr _WndProcCompiler(IntPtr hWnd, WM_ msg, IntPtr wParam, IntPtr lParam)
+	unsafe static LPARAM _WndProcCompiler(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam)
 	{
 		switch(msg) {
 		//case WM.NCCREATE:
@@ -654,10 +875,10 @@ partial class Test
 			//Out(Marshal.PtrToStringBSTR(lParam));
 			Marshal.FreeBSTR(lParam);
 			TestRoslyn();
-			return NULL;
+			return Zero;
 		}
 
-		IntPtr R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
+		LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
 
 		switch(msg) {
 		case WM_.NCDESTROY:
@@ -706,7 +927,7 @@ partial class Test
 		GC.Collect(); //releases a lot
 
 		OutLoadedAssemblies();
-		Mes("exit");
+		Show.MessageDialog("exit");
 	}
 
 	static void OutLoadedAssemblies()

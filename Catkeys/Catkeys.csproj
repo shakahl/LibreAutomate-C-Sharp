@@ -66,10 +66,12 @@
   <ItemGroup>
     <Compile Include="Automation\Input.cs" />
     <Compile Include="Automation\NoClass.cs" />
+    <Compile Include="Catkeys\Calc.cs" />
+    <Compile Include="Catkeys\Exceptions.cs" />
     <Compile Include="Catkeys\NoClass.cs" />
     <Compile Include="Catkeys\Output.cs" />
     <Compile Include="Catkeys\Show.cs" />
-    <Compile Include="Automation\Wnd.cs" />
+    <Compile Include="Catkeys\Wnd.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Catkeys\Script.cs" />
     <Compile Include="Catkeys\String_.cs" />

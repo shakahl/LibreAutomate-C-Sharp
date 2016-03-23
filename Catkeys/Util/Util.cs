@@ -25,12 +25,40 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class NoClass
 	{
-		public static readonly IntPtr NULL = default(IntPtr); //info: IntPtr cannot be const
+	}
 
-		public static void Mes(string s)
+	/// <summary>
+	/// Enum extension methods.
+	/// </summary>
+	[DebuggerStepThrough]
+	public static class Enum_
+	{
+		/// <summary>
+		/// Returns true if this has one or more flags specified in flagOrFlags.
+		/// It is different from HasFlag, which returns true if this has ALL specified flags.
+		/// Speed: 0.1 mcs. It is several times slower than HasFlag, and 100 times slower than operators & !=0.
+		/// </summary>
+		public static bool HasAny(this Enum t, Enum flagOrFlags)
 		{
-			//MessageBox.Show(s); //does not have topmost option
-			Api.MessageBox(NULL, s, "Test", 0x50000); //MB_TOPMOST|MB_SETFOREGROUND
+			return (Convert.ToUInt64(t) & Convert.ToUInt64(flagOrFlags)) !=0;
+			//info: cannot apply operator & to Enum, or cast to uint, or use unsafe pointer.
+		}
+		////same speed:
+		//public static bool Has<T>(this T t, T flagOrFlags) where T: struct
+		//{
+		//	//return ((uint)t & (uint)flagOrFlags) !=0; //error
+		//	return (Convert.ToUInt64(t) & Convert.ToUInt64(flagOrFlags)) !=0;
+		//}
+
+		public static void SetFlag(ref Enum t, Enum flag, bool set)
+		{
+			ulong _t = Convert.ToUInt64(t), _f = Convert.ToUInt64(flag);
+			if(set) _t|=_f; else _t&=~_f;
+			t=(Enum)(object)_t; //can do it better?
+			//info: Cannot make this a true extension method.
+			//	If we use 'this Enum t', t is a copy of the actual variable, because Enum is a value type.
+			//	That is why we need ref.
+			//Speed not tested.
 		}
 	}
 
@@ -49,14 +77,15 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class Window
 	{
-		/// <summary>
-		/// Native handle of current process exe file.
-		/// </summary>
-		public static readonly IntPtr hInstApp = Process.GetCurrentProcess().Handle;
+		///// <summary>
+		///// Native handle of current process exe file.
+		///// </summary>
+		//public static readonly IntPtr hInstApp = Api.GetModuleHandle(null);
+
 		/// <summary>
 		/// Native handle of current module (dll or exe file).
 		/// </summary>
-		public static readonly IntPtr hInstModule = Marshal.GetHINSTANCE(typeof(Window).Module);
+		public static readonly IntPtr CatkeysModuleHandle = Marshal.GetHINSTANCE(typeof(Window).Module);
 
 		/// <summary>
 		/// Registers native window class that can be used for simple hidden windows.
@@ -70,6 +99,7 @@ namespace Catkeys.Util
 		}
 	}
 
+	//TODO: test SafeMemoryMappedFileHandle, SafeMemoryMappedViewHandle.
 	[DebuggerStepThrough]
 	public class SharedMemoryFast
 	{
@@ -85,26 +115,26 @@ namespace Catkeys.Util
 		public bool Create(string name, uint size)
 		{
 			Close();
-			_hmap = Api.CreateFileMapping((IntPtr)(~0), NULL, 4, 0, size, name);
-			if(_hmap==NULL) return false;
-			_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, UIntPtr.Zero);
+			_hmap = Api.CreateFileMapping((IntPtr)(~0), Zero, 4, 0, size, name);
+			if(_hmap==Zero) return false;
+			_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, 0);
 			//if(_mem && nbZero) Zero(_mem, nbZero); //don't zero all, because it maps memory for all possibly unused pages. Tested: although MSDN says that the memory is zero, it is not true.
-			return _mem!=NULL;
+			return _mem!=Zero;
 		}
 
 		public bool Open(string name)
 		{
 			Close();
 			_hmap = Api.OpenFileMapping(0x000F001F, false, name);
-			if(_hmap==NULL) return false;
-			_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, UIntPtr.Zero);
-			return _mem!=NULL;
+			if(_hmap==Zero) return false;
+			_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, 0);
+			return _mem!=Zero;
 		}
 
 		public void Close()
 		{
-			if(_mem!=NULL) { Api.UnmapViewOfFile(_mem); _mem=NULL; }
-			if(_hmap!=NULL) { Api.CloseHandle(_hmap); _hmap=NULL; }
+			if(_mem!=Zero) { Api.UnmapViewOfFile(_mem); _mem=Zero; }
+			if(_hmap!=Zero) { Api.CloseHandle(_hmap); _hmap=Zero; }
 		}
 	}
 
