@@ -66,16 +66,16 @@ namespace Catkeys.Tasks
 #endif
 		}
 
-		unsafe static LPARAM WndProcAppsManager(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam)
+		unsafe static LPARAM WndProcAppsManager(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
 		{
 			switch(msg) {
-			case WM_.NCCREATE:
+			case Api.WM_NCCREATE:
 				_hwndAM=hWnd;
 				break;
 			//case WM.CREATE:
 			//	Time.Next();
 			//	break;
-			case WM_.COPYDATA: //TODO: ChangeWindowMessageFilter
+			case Api.WM_COPYDATA: //TODO: ChangeWindowMessageFilter
 				_OnCopyData((IntPtr)wParam, (Api.COPYDATASTRUCT*)lParam);
 				break;
 				//case WM.DESTROY:
@@ -86,7 +86,7 @@ namespace Catkeys.Tasks
 			LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
 
 			switch(msg) {
-			case WM_.NCDESTROY:
+			case Api.WM_NCDESTROY:
 				//Out("ncdestroy");
 				Application.Exit();
 				break;

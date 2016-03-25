@@ -48,7 +48,7 @@ class TestProg
 	//	_hwndCompiler=Api.FindWindow("Catkeys_Compiler", null);
 	//	Console.WriteLine($"_hwndCompiler={_hwndCompiler}");
 
-	//	Api.SendMessage(_hwndCompiler, WM_.USER, Zero, Marshal.StringToBSTR("test"));
+	//	_hwndCompiler.Send(Api.WM_USER, Zero, Marshal.StringToBSTR("test"));
 
 	//	Console.WriteLine("key...");
 	//	Console.ReadKey();
@@ -74,7 +74,7 @@ class TestProg
 	//	Application.Run(); //message loop
 	//}
 
-	//unsafe static LPARAM _WndProcCompiler(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam)
+	//unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
 	//{
 	//	switch(msg) {
 	//	//case WM.NCCREATE:
@@ -89,7 +89,7 @@ class TestProg
 	//	//case WM.DESTROY:
 	//	//	Out("destroy");
 	//	//	break;
-	//	case WM_.USER:
+	//	case Api.WM_USER:
 	//		Console.WriteLine(Marshal.PtrToStringBSTR(lParam));
 	//		Marshal.FreeBSTR(lParam);
 	//		return Zero;

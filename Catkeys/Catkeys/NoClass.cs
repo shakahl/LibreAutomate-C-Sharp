@@ -72,6 +72,10 @@ namespace Catkeys
 		/// </summary>
 		public static void OutFunc([System.Runtime.CompilerServices.CallerMemberName] string name = "") { Output.Write(name); }
 
-
+		/// <summary>
+		/// Returns true if the string is null or "".
+		/// The same as string.IsNullOrEmpty.
+		/// </summary>
+		public static bool Empty(string s) { return string.IsNullOrEmpty(s); }
 	}
 }

@@ -54,7 +54,7 @@ namespace Catkeys
 		public static void Clear()
 		{
 			if(_isConsole && !AlwaysOutput) Console.Clear();
-			else if(_InitHwndEditor()) Api.SendMessageS(_hwndEditor, WM_.SETTEXT, -1, null);
+			else if(_InitHwndEditor()) _hwndEditor.Send(Api.WM_SETTEXT, -1, null);
 		}
 
 		/// <summary>
@@ -138,7 +138,7 @@ namespace Catkeys
 		public static void WriteDirectly(string value)
 		{
 			if(_isConsole && !AlwaysOutput) Console.WriteLine(value);
-			else if(_InitHwndEditor()) Api.SendMessageS(_hwndEditor, WM_.SETTEXT, -1, value==null ? "" : value);
+			else if(_InitHwndEditor()) _hwndEditor.SendS(Api.WM_SETTEXT, -1, value==null ? "" : value);
 		}
 
 		static bool _consoleRedirected, _debugRedirected;

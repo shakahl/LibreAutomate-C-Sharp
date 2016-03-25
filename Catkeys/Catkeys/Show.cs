@@ -7,11 +7,12 @@ using System.ComponentModel;
 //using System.Linq;
 //using System.Threading;
 //using System.Threading.Tasks;
-//using System.Reflection;
+using System.Reflection;
 using System.Runtime.InteropServices;
 //using System.Runtime.CompilerServices;
 //using System.IO;
 using System.Windows.Forms;
+using System.Drawing;
 
 using static Catkeys.NoClass;
 using Catkeys.Util;
@@ -25,6 +26,18 @@ using Auto = Catkeys.Automation;
 namespace Catkeys
 {
 	/// <summary>
+	/// Standard dialogs, tooltips and other windows to show information to the user or get instructions/input from the user.
+	/// </summary>
+	//[DebuggerStepThrough]
+	public static partial class Show
+	{
+
+		//Other parts of this class are below in this file, wrapped in regions together with associated enums etc.
+	}
+
+	#region MessageDialog
+
+	/// <summary>
 	/// MessageDialog return value (user-clicked button).
 	/// </summary>
 	public enum MDResult
@@ -32,36 +45,41 @@ namespace Catkeys
 		OK = 1, Cancel = 2, Abort = 3, Retry = 4, Ignore = 5, Yes = 6, No = 7, Timeout = 9, TryAgain = 10, Continue = 11,
 	}
 
+	/// <summary>
+	/// MessageDialog buttons.
+	/// </summary>
 	public enum MDButtons
 	{
 		OK = 0, OKCancel = 1, AbortRetryIgnore = 2, YesNoCancel = 3, YesNo = 4, RetryCancel = 5, CancelTryagainContinue = 6,
 		//TODO: consider: Abort = -1 (QM2 mes-). In TaskDialog too.
 	}
 
+	/// <summary>
+	/// MessageDialog icon.
+	/// </summary>
 	public enum MDIcon
 	{
-		None = 0, Error = 0x10, Question = 0x20, Warning = 0x30, Info = 0x40, Shield = 0x50,
+		None = 0, Error = 0x10, Question = 0x20, Warning = 0x30, Info = 0x40, Shield = 0x50, App = 0x60,
 	}
 
+	/// <summary>
+	/// MessageDialog flags.
+	/// </summary>
 	[Flags]
 	public enum MDFlag :uint
 	{
 		DefaultButton2 = 0x100, DefaultButton3 = 0x200, DefaultButton4 = 0x300,
 		DisableThreadWindows = 0x2000, HelpButton = 0x4000, //TODO: test receiving WM_HELP on HelpButton
-		Activate = 0x10000, DefaultDesktopOnly = 0x20000, Topmost = 0x40000, RightAlign = 0x80000, Rtl = 0x100000, Service = 0x200000,
-		NoSound = 0x80000000, NoTopmost = 0x40000000,
+		Activate = 0x10000, DefaultDesktopOnly = 0x20000, Topmost = 0x40000, RightAlign = 0x80000, RtlLayout = 0x100000, Service = 0x200000,
+		//not API flags
+		NoSound = 0x80000000,
 	}
 
-	//[DebuggerStepThrough]
 	public static partial class Show
 	{
-		static string _Title(string title) { return string.IsNullOrEmpty(title) ? ScriptOptions.DisplayName : title; }
-		//info: IsNullOrEmpty because if "", API TaskDialog uses "ProcessName.exe".
-
-		//MessageDialog
-
 		/// <summary>
-		/// Shows standard message box dialog.
+		/// Shows classic message box dialog.
+		/// Like System.Windows.Forms.MessageBox.Show but has more options and is always-on-top by default.
 		/// </summary>
 		/// <param name="owner">Owner window or Zero.</param>
 		/// <param name="text">Text.</param>
@@ -73,7 +91,7 @@ namespace Catkeys
 		{
 			//const uint MB_SYSTEMMODAL = 0x1000; //same as MB_TOPMOST + adds system icon in title bar (why need it?)
 			const uint MB_USERICON = 0x80;
-			//const uint IDI_APPLICATION = 32512; //standard icon, not useful
+			const uint IDI_APPLICATION = 32512;
 			const uint IDI_ERROR = 32513;
 			const uint IDI_QUESTION = 32514;
 			const uint IDI_WARNING = 32515;
@@ -83,24 +101,33 @@ namespace Catkeys
 			var p = new MSGBOXPARAMS(title);
 			p.lpszText=text;
 
-			bool alien = flags.HasAny(MDFlag.DefaultDesktopOnly|MDFlag.Service);
+			bool alien = (flags&(MDFlag.DefaultDesktopOnly|MDFlag.Service))!=0;
 			if(alien) owner=Zero; //API would fail. The dialog is displayed in csrss process.
 
 			if(icon==MDIcon.None) { } //no sound
-			else if(icon==MDIcon.Shield || flags.HasFlag(MDFlag.NoSound)) {
+			else if(icon==MDIcon.Shield || icon==MDIcon.App || flags.HasFlag(MDFlag.NoSound)) {
 				switch(icon) {
 				case MDIcon.Error: p.lpszIcon=(IntPtr)IDI_ERROR; break;
 				case MDIcon.Question: p.lpszIcon=(IntPtr)IDI_QUESTION; break;
 				case MDIcon.Warning: p.lpszIcon=(IntPtr)IDI_WARNING; break;
 				case MDIcon.Info: p.lpszIcon=(IntPtr)IDI_INFORMATION; break;
 				case MDIcon.Shield: p.lpszIcon=(IntPtr)IDI_SHIELD; break;
+				case MDIcon.App:
+					p.lpszIcon=(IntPtr)IDI_APPLICATION;
+					if(Resources.AppIconHandle32!=Zero) p.hInstance=Misc.GetModuleHandleOfAppdomainEntryAssembly();
+					//info: C# compiler adds icon to the native resources as IDI_APPLICATION.
+					//	If assembly without icon, we set hInstance=0 and then the API shows common app icon.
+					//	In any case, it will be the icon displayed in File Explorer etc.
+					break;
 				}
 				p.dwStyle|=MB_USERICON; //disables sound
 				icon=0;
 			}
 			//note: Too difficult to add app icon because it must be in unmanaged resources. If need, use TaskDialog, it accepts icon handle.
 
-			if(owner.IsZero && !flags.HasFlag(MDFlag.NoTopmost)) flags|=MDFlag.Topmost;
+			if(Script.Option.dialogRtlLayout) flags|=MDFlag.RtlLayout;
+			if(owner.IsZero && Script.Option.dialogTopmostIfNoOwner) flags|=MDFlag.Topmost;
+			//why: (in some periods of time) MDFlag.Topmost is ignored when the process runs from Visual Studio. Then the same when in QM, when QM is running as User. MB_SYSTEMMODAL works, but adds system icon.
 			//tested: if owner is child, the API disables its top-level parent.
 			//consider: if owner 0, create hidden parent window to:
 			//	Avoid adding taskbar icon.
@@ -111,10 +138,8 @@ namespace Catkeys
 
 			p.hwndOwner=owner;
 
-			flags&=~(MDFlag.NoSound|MDFlag.NoTopmost);
+			flags&=~(MDFlag.NoSound); //not API flags
 			p.dwStyle|=(uint)buttons | (uint)icon | (uint)flags;
-
-			//TODO: if(flags.HasFlag(MDIcon.Activate)) Wnd.AllowActivateWindows();
 
 			int R = MessageBoxIndirect(ref p);
 			if(R==0) throw new CatkeysException();
@@ -128,13 +153,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Shows standard message box dialog.
+		/// Shows classic message box dialog.
 		/// Returns clicked button's character (as in style), eg 'O' for OK.
 		/// You can specify buttons etc in style string, which can contain:
 		/// <para>
 		/// Buttons: OC OKCancel, YN YesNo, YNC YesNoCancel, ARI AbortRetryIgnore, RC RetryCancel, CTE CancelTryagainContinue.
-		/// Icon: x error, ! warning, i info, ? question, v shield.
-		/// Flags: s no sound, a activate, t topmost, n no topmost, d disable windows, h Help button.
+		/// Icon: x error, ! warning, i info, ? question, v shield, a app.
+		/// Flags: s no sound, t topmost, d disable windows, h Help button.
 		/// Default button: 2, 3 or 4.
 		/// </para>
 		/// </summary>
@@ -161,9 +186,9 @@ namespace Catkeys
 				else if(style.Contains("!")) icon=MDIcon.Warning;
 				else if(style.Contains("i")) icon=MDIcon.Info;
 				else if(style.Contains("v")) icon=MDIcon.Shield;
+				else if(style.Contains("a")) icon=MDIcon.App;
 
-				if(style.Contains("t")) flags|=MDFlag.Topmost; else if(style.Contains("n")) flags|=MDFlag.NoTopmost;
-				if(style.Contains("a")) flags|=MDFlag.Activate;
+				if(style.Contains("t")) flags|=MDFlag.Topmost;
 				if(style.Contains("s")) flags|=MDFlag.NoSound;
 				if(style.Contains("d")) flags|=MDFlag.DisableThreadWindows;
 				if(style.Contains("h")) flags|=MDFlag.HelpButton;
@@ -202,10 +227,13 @@ namespace Catkeys
 		static extern int MessageBoxIndirect([In] ref MSGBOXPARAMS lpMsgBoxParams);
 
 	}
-	//_________________________________________________________________
+	#endregion MessageDialog
 
-	//TaskDialog
+	#region TaskDialog
 
+	/// <summary>
+	/// TaskDialog buttons.
+	/// </summary>
 	[Flags]
 	public enum TDButton
 	{
@@ -213,12 +241,19 @@ namespace Catkeys
 		OKCancel = OK|Cancel, YesNo = Yes|No, RetryCancel = Retry|Cancel
 	}
 
+	/// <summary>
+	/// TaskDialog icon.
+	/// </summary>
 	[Flags]
 	public enum TDIcon
 	{
-		Warning = 0xffff, Error = 0xfffe, Info = 0xfffd, Shield = 0xfffc
+		Warning = 0xffff, Error = 0xfffe, Info = 0xfffd, Shield = 0xfffc,
+		App = 32512 //IDI_APPLICATION
 	}
 
+	/// <summary>
+	/// TaskDialog common return value.
+	/// </summary>
 	public enum TDResult
 	{
 		Cancel = 0, OK = -1, Retry = -4, Yes = -6, No = -7, Close = -8,
@@ -227,10 +262,9 @@ namespace Catkeys
 
 	public static partial class Show
 	{
-		const int E_INVALIDARG = unchecked((int)0x80070057);
-
-		[DllImport("comctl32.dll", EntryPoint = "TaskDialog")]
-		static extern int _TaskDialog(Wnd hWndParent, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, TDButton dwCommonButtons, IntPtr pszIcon, out int pnButton);
+		//This API does not support some features we need.
+		//[DllImport("comctl32.dll", EntryPoint = "TaskDialog")]
+		//static extern int TaskDialogAPI(Wnd hWndParent, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, TDButton dwCommonButtons, IntPtr pszIcon, out int pnButton);
 
 		/// <summary>
 		/// Shows simple task dialog.
@@ -239,18 +273,18 @@ namespace Catkeys
 		/// <param name="owner">Owner window or Zero.</param>
 		/// <param name="mainText">Main instruction. Bigger font.</param>
 		/// <param name="moreText">Text below main instruction.</param>
-		/// <param name="buttons">Buttons, eg TDButton.YesNo or TDButton.OK|TDButton.Close. If omitted or 0, adds OK button.</param>
+		/// <param name="buttons">Examples: TDButton.YesNo, TDButton.OK|TDButton.Close. If omitted or 0, adds OK button.</param>
 		/// <param name="icon">One of four standard icons, eg TDIcon.Info.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
-		public static TDResult TaskDialog(Wnd owner, string mainText, string moreText = null, TDButton buttons = 0, TDIcon icon = 0, string title = null)
+		public static TDResult TaskDialog(Wnd owner, string mainText, string moreText = null, TDButton buttons = 0, TDIcon icon = 0,
+			string customButtons = null, bool asCommandLinks = false,
+			string expandedText = null, string footerText = null, int timeoutS = 0, string title = null)
 		{
-			int R, hr = _TaskDialog(owner, Zero, _Title(title), mainText, moreText, buttons, (IntPtr)icon, out R);
-
-			if(hr!=0) throw new Win32Exception(hr);
-
-			if(R==2) R=0; else R=-R; //TDResult.Cancel is 0, other TDResult values negative
-			return (TDResult)R;
+			var d = new AdvancedTaskDialog(mainText, moreText, buttons, icon,
+				customButtons, asCommandLinks, expandedText, footerText, timeoutS, title);
+			return d.Show(owner);
 		}
+		//TODO: consider: return string, eg "OK", "Custom button text first line", "hyperlink href".
 
 		/// <summary>
 		/// Shows simple task dialog.
@@ -258,7 +292,7 @@ namespace Catkeys
 		/// You can specify buttons etc in style string, which can contain:
 		/// <para>
 		/// Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.
-		/// Icon: x error, ! warning, i info, v shield.
+		/// Icon: x error, ! warning, i info, v shield, a app.
 		/// </para>
 		/// </summary>
 		/// <param name="mainText">Main instruction. Bigger font.</param>
@@ -266,10 +300,21 @@ namespace Catkeys
 		/// <param name="style">Example: "YN!".</param>
 		/// <param name="owner">Owner window or Zero.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
-		public static char TaskDialog(string mainText, string moreText = null, string style = null, Wnd owner = default(Wnd), string title = null)
+		public static char TaskDialog(string mainText, string moreText = null, string style = null, Wnd owner = default(Wnd),
+			string customButtons = null, bool asCommandLinks = false,
+			string expandedText = null, string footerText = null, int timeoutS = 0, string title = null,
+			EventHandler<AdvancedTaskDialog.TDEventArgs> helpF1Callback = null)
+		{
+			var d = new AdvancedTaskDialog(mainText, moreText, style,
+				customButtons, asCommandLinks, expandedText, footerText, timeoutS, title);
+			int r = -(int)d.Show(owner);
+			return (r>=0 && r<9) ? "COCCRCYNL"[r] : 'C';
+		}
+
+		static TDButton _ParseStyleString(string style, out TDIcon icon)
 		{
 			TDButton buttons = 0;
-			TDIcon icon = 0;
+			icon = 0;
 			if(style!=null) {
 				foreach(char c in style) {
 					switch(c) {
@@ -283,203 +328,404 @@ namespace Catkeys
 					case '!': icon|=TDIcon.Warning; break;
 					case 'i': icon|=TDIcon.Info; break;
 					case 'v': icon|=TDIcon.Shield; break;
+					case 'a': icon|=TDIcon.App; break;
 					}
 				}
 			}
-
-			int r = -(int)TaskDialog(owner, mainText, moreText, buttons, icon, title);
-
-			return (r>=0 && r<9) ? "COCCRCYNL"[r] : 'C';
+			return buttons;
 		}
 
-		public static int TaskListDialog(string[] list, string mainText = null, string moreText = null, Wnd owner = default(Wnd), string title = null)
+		public static int TaskListDialog(string[] list, string mainText = null, string moreText = null, Wnd owner = default(Wnd), string style = null, string title = null)
 		{
-			var d = new AdvancedTaskDialog(mainText, moreText, 0, 0, title);
-			d.SetButtons(list, true);
+			var d = new AdvancedTaskDialog(mainText, moreText, style, null, title: title);
+			d.SetTitleBarText(title);
+			d.SetText(mainText, moreText);
+			d.SetStyle(style);
+			d.SetCustomButtons(list, true);
 			d.FlagAllowCancel=true; //instead of TDButton.Cancel; users can add Cancel as custom button
 			return (int)d.Show(owner);
 		}
 
-		public static int TaskListDialog(string list, string mainText = null, string moreText = null, Wnd owner = default(Wnd), string title = null)
+		public static int TaskListDialog(string list, string mainText = null, string moreText = null, Wnd owner = default(Wnd), string style = null, string title = null)
 		{
-			return TaskListDialog(_ButtonsStringToArray(list), mainText, moreText, owner, title);
+			return TaskListDialog(_ButtonsStringToArray(list), mainText, moreText, owner, style, title);
 		}
 
-		[Flags]
-		enum TDF_
-		{
-			ENABLE_HYPERLINKS = 0x0001,
-			USE_HICON_MAIN = 0x0002,
-			USE_HICON_FOOTER = 0x0004,
-			ALLOW_DIALOG_CANCELLATION = 0x0008,
-			USE_COMMAND_LINKS = 0x0010,
-			USE_COMMAND_LINKS_NO_ICON = 0x0020,
-			EXPAND_FOOTER_AREA = 0x0040,
-			EXPANDED_BY_DEFAULT = 0x0080,
-			VERIFICATION_FLAG_CHECKED = 0x0100,
-			SHOW_PROGRESS_BAR = 0x0200,
-			SHOW_MARQUEE_PROGRESS_BAR = 0x0400,
-			CALLBACK_TIMER = 0x0800,
-			POSITION_RELATIVE_TO_WINDOW = 0x1000,
-			RTL_LAYOUT = 0x2000,
-			NO_DEFAULT_RADIO_BUTTON = 0x4000,
-			CAN_BE_MINIMIZED = 0x8000,
-			TDF_SIZE_TO_CONTENT = 0x1000000, //possibly added later than in Vista, don't know when
-		}
-
-		enum TDM_
-		{
-			WM_USER = 0x400,
-			NAVIGATE_PAGE = WM_USER+101,
-			CLICK_BUTTON = WM_USER+102, // wParam = Button ID
-			SET_MARQUEE_PROGRESS_BAR = WM_USER+103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
-			SET_PROGRESS_BAR_STATE = WM_USER+104, // wParam = new progress state
-			SET_PROGRESS_BAR_RANGE = WM_USER+105, // lParam = MAKELPARAM(nMinRange, nMaxRange)
-			SET_PROGRESS_BAR_POS = WM_USER+106, // wParam = new position
-			SET_PROGRESS_BAR_MARQUEE = WM_USER+107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lparam = speed (milliseconds between repaints)
-			SET_ELEMENT_TEXT = WM_USER+108, // wParam = element (TASKDIALOG_ELEMENTS), lParam = new element text (LPCWSTR)
-			CLICK_RADIO_BUTTON = WM_USER+110, // wParam = Radio Button ID
-			ENABLE_BUTTON = WM_USER+111, // lParam = 0 (disable), lParam != 0 (enable), wParam = Button ID
-			ENABLE_RADIO_BUTTON = WM_USER+112, // lParam = 0 (disable), lParam != 0 (enable), wParam = Radio Button ID
-			CLICK_VERIFICATION = WM_USER+113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
-			UPDATE_ELEMENT_TEXT = WM_USER+114, // wParam = element (TASKDIALOG_ELEMENTS), lParam = new element text (LPCWSTR)
-			SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER+115, // wParam = Button ID, lParam = 0 (elevation not required), lParam != 0 (elevation required)
-			UPDATE_ICON = WM_USER+116  // wParam = icon element (TASKDIALOG_ICON_ELEMENTS), lParam = new icon (hIcon if TDF_USE_HICON_* was set, PCWSTR otherwise)
-		}
-
-		enum TDN_ :uint
-		{
-			TDN_CREATED = 0,
-			TDN_NAVIGATED = 1,
-			TDN_BUTTON_CLICKED = 2,            // wParam = Button ID
-			TDN_HYPERLINK_CLICKED = 3,            // lParam = (LPCWSTR)pszHREF
-			TDN_TIMER = 4,            // wParam = Milliseconds since dialog created or timer reset
-			TDN_DESTROYED = 5,
-			TDN_RADIO_BUTTON_CLICKED = 6,            // wParam = Radio Button ID
-			TDN_DIALOG_CONSTRUCTED = 7,
-			TDN_VERIFICATION_CLICKED = 8,             // wParam = 1 if checkbox checked, 0 if not, lParam is unused and always 0
-			TDN_HELP = 9,
-			TDN_EXPANDO_BUTTON_CLICKED = 10            // wParam = 0 (dialog is now collapsed), wParam != 0 (dialog is now expanded)
-		}
-
-		enum TDE_
-		{
-			TDE_CONTENT,
-			TDE_EXPANDED_INFORMATION,
-			TDE_FOOTER,
-			TDE_MAIN_INSTRUCTION
-		}
-
-		enum TDIE_
-		{
-			TDIE_ICON_MAIN,
-			TDIE_ICON_FOOTER
-		}
-
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		public struct TASKDIALOG_BUTTON
-		{
-			public int id;
-			public string text;
-		}
-
-		delegate int TaskDialogCallbackProc(Wnd hwnd, TDN_ notification, LPARAM wParam, LPARAM lParam, IntPtr data);
-
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		struct TASKDIALOGCONFIG
-		{
-			public int cbSize;
-			public Wnd hwndParent;
-			public IntPtr hInstance;
-			public TDF_ dwFlags;
-			public TDButton dwCommonButtons;
-			public string pszWindowTitle;
-			public IntPtr hMainIcon;
-			public string pszMainInstruction;
-			public string pszContent;
-			public int cButtons;
-			public IntPtr pButtons;
-			public int nDefaultButton;
-			public int cRadioButtons;
-			public IntPtr pRadioButtons;
-			public int nDefaultRadioButton;
-			public string pszVerificationText;
-			public string pszExpandedInformation;
-			public string pszExpandedControlText;
-			public string pszCollapsedControlText;
-			public IntPtr hFooterIcon;
-			public string pszFooter;
-			public TaskDialogCallbackProc pfCallback;
-			public IntPtr lpCallbackData;
-			public int cxWidth;
-
-			public TASKDIALOGCONFIG(string title) : this()
-			{
-				cbSize=Marshal.SizeOf(typeof(TASKDIALOGCONFIG));
-				pszWindowTitle=_Title(title);
-			}
-		}
-
-		[DllImport("comctl32.dll")]
-		static extern int TaskDialogIndirect([In] ref TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
-
+		/// <summary>
+		/// Shows advanced task dialog.
+		/// Wraps Windows API function TaskDialogIndirect. You can find more info MSDN.
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// var d = new Show.AdvancedTaskDialog();
+		/// d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClick event.");
+		/// d.SetStyle("OC!");
+		/// d.SetExpandedText("Expanded info\nand more info.", true);
+		/// d.FlagCanBeMinimized=true;
+		/// d.SetCustomButtons("1 one|2 two\nzzz", true);
+		/// d.SetRadioButtons("1001 r1|1002 r2");
+		/// d.SetTimeout(10, "OK");
+		/// d.HyperlinkClicked+=(o, a) => { Out($"{a.Message} {a.LinkHref}"); };
+		/// d.ButtonClicked+=(o, a) => { Out($"{a.Message} {a.WParam}"); if(a.WParam==7) a.Return=1; }; //prevent closing if clicked No
+		/// d.FlagShowProgressBar=true; d.Timer+=(o, a) => { a.Dialog.Send((uint)Show.AdvancedTaskDialog.TDM_.SET_PROGRESS_BAR_POS, a.WParam/100); };
+		/// TDResult b = d.Show();
+		/// switch(b) { case TDResult.OK: ... case (TDResult)1: ... }
+		/// switch(d.ResultRadioButton) { ... }
+		/// if(d.ResultIsChecked) { ... }
+		/// </code>
+		/// </example>
 		public class AdvancedTaskDialog
 		{
+			[DllImport("comctl32.dll")]
+			static extern int TaskDialogIndirect([In] ref TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
+
+			const int WM_USER = 0x400;
+
+			/// <summary>
+			/// Messages that your event handler can send to the dialog.
+			/// Reference: MSDN -> "Task Dialog Messages".
+			/// </summary>
+			public enum TDM_ :uint
+			{
+				NAVIGATE_PAGE = WM_USER+101,
+				CLICK_BUTTON = WM_USER+102, // wParam = Button ID
+				SET_MARQUEE_PROGRESS_BAR = WM_USER+103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
+				SET_PROGRESS_BAR_STATE = WM_USER+104, // wParam = new progress state
+				SET_PROGRESS_BAR_RANGE = WM_USER+105, // lParam = MAKELPARAM(nMinRange, nMaxRange)
+				SET_PROGRESS_BAR_POS = WM_USER+106, // wParam = new position
+				SET_PROGRESS_BAR_MARQUEE = WM_USER+107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lparam = speed (milliseconds between repaints)
+				SET_ELEMENT_TEXT = WM_USER+108, // wParam = element (TASKDIALOG_ELEMENTS), lParam = new element text (LPCWSTR)
+				CLICK_RADIO_BUTTON = WM_USER+110, // wParam = Radio Button ID
+				ENABLE_BUTTON = WM_USER+111, // lParam = 0 (disable), lParam != 0 (enable), wParam = Button ID
+				ENABLE_RADIO_BUTTON = WM_USER+112, // lParam = 0 (disable), lParam != 0 (enable), wParam = Radio Button ID
+				CLICK_VERIFICATION = WM_USER+113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
+				UPDATE_ELEMENT_TEXT = WM_USER+114, // wParam = element (TASKDIALOG_ELEMENTS), lParam = new element text (LPCWSTR)
+				SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER+115, // wParam = Button ID, lParam = 0 (elevation not required), lParam != 0 (elevation required)
+				UPDATE_ICON = WM_USER+116  // wParam = icon element (TASKDIALOG_ICON_ELEMENTS), lParam = new icon (hIcon if TDF_USE_HICON_* was set, PCWSTR otherwise)
+			}
+
+			/// <summary>
+			/// Notification messages that your event handler receives.
+			/// Reference: MSDN -> "Task Dialog Notifications".
+			/// </summary>
+			public enum TDN_ :uint
+			{
+				CREATED = 0,
+				NAVIGATED = 1,
+				BUTTON_CLICKED = 2,
+				HYPERLINK_CLICKED = 3,
+				TIMER = 4,
+				DESTROYED = 5,
+				RADIO_BUTTON_CLICKED = 6,
+				DIALOG_CONSTRUCTED = 7,
+				VERIFICATION_CLICKED = 8,
+				HELP = 9,
+				EXPANDO_BUTTON_CLICKED = 10
+			}
+
+			/// <summary>
+			/// Constants for TDM_.SET_ELEMENT_TEXT and TDM_.UPDATE_ELEMENT_TEXT messages.
+			/// </summary>
+			public enum TDE_
+			{
+				CONTENT,
+				EXPANDED_INFORMATION,
+				FOOTER,
+				MAIN_INSTRUCTION
+			}
+
+			/// <summary>
+			/// Constants for TDM_.UPDATE_ICON message.
+			/// </summary>
+			public enum TDIE_
+			{
+				ICON_MAIN,
+				ICON_FOOTER
+			}
+
+			//TASKDIALOGCONFIG flags.
+			[Flags]
+			enum TDF_
+			{
+				ENABLE_HYPERLINKS = 0x0001,
+				USE_HICON_MAIN = 0x0002,
+				USE_HICON_FOOTER = 0x0004,
+				ALLOW_DIALOG_CANCELLATION = 0x0008,
+				USE_COMMAND_LINKS = 0x0010,
+				USE_COMMAND_LINKS_NO_ICON = 0x0020,
+				EXPAND_FOOTER_AREA = 0x0040,
+				EXPANDED_BY_DEFAULT = 0x0080,
+				VERIFICATION_FLAG_CHECKED = 0x0100,
+				SHOW_PROGRESS_BAR = 0x0200,
+				SHOW_MARQUEE_PROGRESS_BAR = 0x0400,
+				CALLBACK_TIMER = 0x0800,
+				POSITION_RELATIVE_TO_WINDOW = 0x1000,
+				RTL_LAYOUT = 0x2000,
+				NO_DEFAULT_RADIO_BUTTON = 0x4000,
+				CAN_BE_MINIMIZED = 0x8000,
+				TDF_SIZE_TO_CONTENT = 0x1000000, //possibly added later than in Vista, don't know when
+			}
+
+			[StructLayout(LayoutKind.Sequential, Pack = 1)]
+			struct TASKDIALOG_BUTTON
+			{
+				public int id;
+				public string text;
+			}
+
+			delegate int TaskDialogCallbackProc(Wnd hwnd, TDN_ notification, LPARAM wParam, LPARAM lParam, IntPtr data);
+
+			[StructLayout(LayoutKind.Sequential, Pack = 1)]
+			struct TASKDIALOGCONFIG
+			{
+				public int cbSize;
+				public Wnd hwndParent;
+				public IntPtr hInstance;
+				public TDF_ dwFlags;
+				public TDButton dwCommonButtons;
+				public string pszWindowTitle;
+				public IntPtr hMainIcon;
+				public string pszMainInstruction;
+				public string pszContent;
+				public int cButtons;
+				public IntPtr pButtons;
+				public int nDefaultButton;
+				public int cRadioButtons;
+				public IntPtr pRadioButtons;
+				public int nDefaultRadioButton;
+				public string pszVerificationText;
+				public string pszExpandedInformation;
+				public string pszExpandedControlText;
+				public string pszCollapsedControlText;
+				public IntPtr hFooterIcon;
+				public string pszFooter;
+				public TaskDialogCallbackProc pfCallback;
+				public IntPtr lpCallbackData;
+				public int cxWidth;
+
+				public TASKDIALOGCONFIG(string title) : this()
+				{
+					cbSize=Marshal.SizeOf(typeof(TASKDIALOGCONFIG));
+					pszWindowTitle=_Title(title);
+				}
+			}
+
 			TASKDIALOGCONFIG c;
 			string[] _buttons, _radioButtons; //before showing dialog these will be marshaled to IntPtr
 
 			/// <summary>
-			/// Sets text and other most commonly used properties.
+			/// Creates new object.
 			/// </summary>
-			public AdvancedTaskDialog(string mainText, string moreText = null, TDButton buttons = 0, TDIcon icon = 0, string title = null)
+			public AdvancedTaskDialog()
 			{
 				c.cbSize=Marshal.SizeOf(typeof(TASKDIALOGCONFIG));
-				c.pszMainInstruction=mainText;
-				c.pszContent=moreText;
-				c.dwCommonButtons=buttons;
-				c.hMainIcon=(IntPtr)(int)icon;
-				c.pszWindowTitle=_Title(title);
+				c.pszWindowTitle=_Title(null); //if SetTitleBarText will not be called
+				FlagRtlLayout=Script.Option.dialogRtlLayout;
 			}
 
-			public IntPtr MainIconHandle { set { c.hMainIcon=value; USE_HICON_MAIN=value!=Zero; } } //TODO: use overloaded method: handle, file (when getfileicon, expandpath etc available), resource. Tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32. Also add TDIcon.App (script's icon or exe icon). Maybe also all the same for the footer icon.
+			/// <summary>
+			/// Creates new object and sets commonly used parameters.
+			/// </summary>
+			public AdvancedTaskDialog(string mainText, string moreText = null, TDButton buttons = 0, TDIcon icon = 0,
+			string customButtons = null, bool asCommandLinks = false,
+			string expandedText = null, string footerText = null, int timeoutS = 0, string title = null)
+			{
+				c.cbSize=Marshal.SizeOf(typeof(TASKDIALOGCONFIG));
+				SetText(mainText, moreText);
+				SetButtons(buttons);
+				SetIcon(icon);
+				SetCustomButtons(customButtons, asCommandLinks);
+				SetExpandedText(expandedText);
+				SetFooterText(footerText);
+				SetTimeout(timeoutS);
+				SetTitleBarText(title);
+			}
 
-			public void SetButtons(string[] buttons, bool asCommandLinks = false, bool noCommandLinkIcon = false)
+			/// <summary>
+			/// Creates new object and sets commonly used parameters.
+			/// </summary>
+			public AdvancedTaskDialog(string mainText, string moreText, string style,
+			string customButtons = null, bool asCommandLinks = false,
+			string expandedText = null, string footerText = null, int timeoutS = 0, string title = null)
+			{
+				c.cbSize=Marshal.SizeOf(typeof(TASKDIALOGCONFIG));
+				SetText(mainText, moreText);
+				SetStyle(style);
+				SetCustomButtons(customButtons, asCommandLinks);
+				SetExpandedText(expandedText);
+				SetFooterText(footerText);
+				SetTimeout(timeoutS);
+				SetTitleBarText(title);
+			}
+
+			/// <summary>
+			/// Changes title bar text.
+			/// If you don't call this method or text is null or "", the dialog uses ScriptOptions.DisplayName (default is appdomain name).
+			/// </summary>
+			public void SetTitleBarText(string text)
+			{
+				c.pszWindowTitle=_Title(text);
+			}
+
+			/// <summary>
+			/// Sets text.
+			/// </summary>
+			/// <param name="mainText">Main instruction. Bigger font.</param>
+			/// <param name="moreText">Text below main instruction.</param>
+			public void SetText(string mainText, string moreText = null)
+			{
+				c.pszMainInstruction=mainText;
+				c.pszContent=moreText;
+			}
+
+			/// <summary>
+			/// Sets common icon.
+			/// </summary>
+			/// <param name="icon">One of four standard icons, eg TDIcon.Info.</param>
+			public void SetIcon(TDIcon icon)
+			{
+				c.hMainIcon=(IntPtr)(int)icon;
+				USE_HICON_MAIN=false;
+			}
+			/// <summary>
+			/// Sets custom icon.
+			/// </summary>
+			/// <param name="iconHandle">Native icon handle.</param>
+			public void SetIcon(IntPtr iconHandle)
+			{
+				c.hMainIcon=iconHandle;
+				USE_HICON_MAIN=iconHandle!=Zero;
+				//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
+				//note: for App icon Show() will execute more code. The same for footer icon.
+			}
+
+			//TODO: add more SetIcon overloads (maybe also for footer icon): file, resource, Icon.
+
+			/// <summary>
+			/// Sets common buttons.
+			/// </summary>
+			/// <param name="buttons">Examples: TDButton.YesNo, TDButton.OK|TDButton.Close.</param>
+			public void SetButtons(TDButton buttons)
+			{
+				c.dwCommonButtons=buttons;
+			}
+
+			/// <summary>
+			/// Sets common buttons and/or icon.
+			/// You can call this function instead of SetButtons() and SetIcon() if you prefer to specify buttons and icon in string:
+			/// <para>
+			/// Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.
+			/// Icon: x error, ! warning, i info, v shield, a app.
+			/// </para>
+			/// </summary>
+			/// <param name="buttonsIcon">Example: "YN!".</param>
+			public void SetStyle(string buttonsIcon)
+			{
+				TDIcon icon;
+				c.dwCommonButtons=_ParseStyleString(buttonsIcon, out icon);
+				SetIcon(icon);
+			}
+
+			/// <summary>
+			/// Adds custom buttons specified as array and sets button style.
+			/// </summary>
+			/// <param name="buttons">Array of strings "id text". Example: <c>new string[]{"1 One", "2 Two", "3 Three"}</param>
+			/// <param name="asCommandLinks">false - row of classic buttons; true - column of command-link buttons that can have multiline text.</param>
+			/// <param name="noCommandLinkIcon">No arrow icon in command-link buttons.</param>
+			public void SetCustomButtons(string[] buttons, bool asCommandLinks = false, bool noCommandLinkIcon = false)
 			{
 				_buttons=buttons;
 				USE_COMMAND_LINKS=asCommandLinks && !noCommandLinkIcon;
 				USE_COMMAND_LINKS_NO_ICON=asCommandLinks && noCommandLinkIcon;
 			}
-			public void SetButtons(string buttons, bool asCommandLinks = false, bool noCommandLinkIcon = false)
+			/// <summary>
+			/// Adds custom buttons specified as string and sets button style.
+			/// </summary>
+			/// <param name="buttons">List of strings "id text" separated by |. Example: <c>"1 One|2 Two|3 Three"</c></param>
+			/// <param name="asCommandLinks">false - row of classic buttons; true - column of command-link buttons that can have multiline text.</param>
+			/// <param name="noCommandLinkIcon">No arrow icon in command-link buttons.</param>
+			public void SetCustomButtons(string buttons, bool asCommandLinks = false, bool noCommandLinkIcon = false)
 			{
-				SetButtons(_ButtonsStringToArray(buttons), asCommandLinks, noCommandLinkIcon);
+				SetCustomButtons(_ButtonsStringToArray(buttons), asCommandLinks, noCommandLinkIcon);
 			}
 
-			public void SetDefaultButton(TDResult button) { c.nDefaultButton=button==0 ? 2 : -(int)button; } //standard button. TDResult.Cancel is 0, other TDResult values negative.
-			public void SetDefaultButton(int buttonId) { c.nDefaultButton=-buttonId; } //custom button. Button ids are -idSpecified. See _MarshalButtons().
+			/// <summary>
+			/// Sets default button to one of common buttons.
+			/// </summary>
+			public void SetDefaultButton(TDButton button) //common button
+			{
+				//map button flag to internal common button id
+				switch(button) {
+				case TDButton.OK: c.nDefaultButton=1; break;
+				case TDButton.Cancel: c.nDefaultButton=2; break;
+				case TDButton.Retry: c.nDefaultButton=4; break;
+				case TDButton.Yes: c.nDefaultButton=6; break;
+				case TDButton.No: c.nDefaultButton=7; break;
+				case TDButton.Close: c.nDefaultButton=8; break;
+				default: throw new ArgumentException(); //eg YesNo
+				}
+			}
+			/// <summary>
+			/// Sets default button to one of custom buttons.
+			/// </summary>
+			/// <param name="customButton">Custom button id as specified when calling SetCustomButtons().</param>
+			public void SetDefaultButton(int customButton)
+			{
+				c.nDefaultButton=-customButton; //internally custom button ids are -idSpecified. See _MarshalButtons().
+			}
 
+			/// <summary>
+			/// Adds radio (option) buttons specified as array.
+			/// When Show() returns, use ResultRadioButton to get selected radio button id.
+			/// </summary>
+			/// <param name="buttons">Array of strings "id text". Example: <c>new string[]{"1 One", "2 Two", "3 Three"}</param>
+			/// <param name="defaultId">Check this button. If omitted or 0, checks the first.</param>
+			/// <param name="noDefaultButton">Don't check any.</param>
 			public void SetRadioButtons(string[] buttons, int defaultId = 0, bool noDefaultButton = false)
 			{
 				_radioButtons=buttons;
 				c.nDefaultRadioButton=defaultId;
 				NO_DEFAULT_RADIO_BUTTON=noDefaultButton;
 			}
+			/// <summary>
+			/// Adds radio (option) buttons specified as string.
+			/// When Show() returns, use ResultRadioButton to get selected radio button id.
+			/// </summary>
+			/// <param name="buttons">List of strings "id text" separated by |. Example: <c>"1 One|2 Two|3 Three"</c></param>
+			/// <param name="defaultId">Check this button. If omitted or 0, checks the first.</param>
+			/// <param name="noDefaultButton">Don't check any.</param>
 			public void SetRadioButtons(string buttons, int defaultId = 0, bool noDefaultButton = false)
 			{
 				SetRadioButtons(_ButtonsStringToArray(buttons), defaultId, noDefaultButton);
 			}
 
+			/// <summary>
+			/// Adds check box.
+			/// When Show() returns, use ResultIsChecked to get its state.
+			/// </summary>
 			public void SetCheckbox(string text, bool check)
 			{
 				c.pszVerificationText=text;
 				VERIFICATION_FLAG_CHECKED=check;
 			}
 
+			/// <summary>
+			/// Adds text that the user can show and hide.
+			/// </summary>
+			/// <param name="text">Text.</param>
+			/// <param name="showInFooter">Show the text at the bottom of the dialog.</param>
 			public void SetExpandedText(string text, bool showInFooter = false)
 			{
 				EXPAND_FOOTER_AREA=showInFooter;
 				c.pszExpandedInformation=text;
 			}
 
+			/// <summary>
+			/// Set properties of the control that shows and hides text added by SetExpandedText().
+			/// </summary>
+			/// <param name="defaultExpanded"></param>
+			/// <param name="collapsedText"></param>
+			/// <param name="expandedText"></param>
 			public void SetExpandControl(bool defaultExpanded, string collapsedText = null, string expandedText = null)
 			{
 				EXPANDED_BY_DEFAULT=defaultExpanded;
@@ -487,40 +733,71 @@ namespace Catkeys
 				c.pszExpandedControlText=expandedText;
 			}
 
+			/// <summary>
+			/// Adds text and icon at the bottom of the dialog.
+			/// </summary>
+			/// <param name="text">Text.</param>
+			/// <param name="icon">One of standard icons, eg TDIcon.Warning.</param>
 			public void SetFooterText(string text, TDIcon icon = 0)
 			{
 				c.pszFooter=text;
 				c.hFooterIcon=(IntPtr)(int)icon; USE_HICON_FOOTER=false;
 			}
+			/// <summary>
+			/// Adds text and icon at the bottom of the dialog.
+			/// </summary>
+			/// <param name="text">Text.</param>
+			/// <param name="icon">Native icon handle.</param>
 			public void SetFooterText(string text, IntPtr iconHandle)
 			{
 				c.pszFooter=text;
 				c.hFooterIcon=iconHandle; USE_HICON_FOOTER=iconHandle!=Zero;
 			}
 
+			/// <summary>
+			/// Sets preferred width of the dialog, in dialog units.
+			/// If 0 (default), calculates optimal width.
+			/// </summary>
 			public int Width { set { c.cxWidth=value; } }
+
+			/// <summary>
+			/// Sets dialog position.
+			/// </summary>
+			/// <param name="x"></param>
+			/// <param name="y"></param>
+			/// <param name="relativeToOwner"></param>
+			/// <param name="raw"></param>
+			public void SetXY(int x, int y, bool relativeToOwner = false, bool raw = false)
+			{
+				_x=x; _y=y; POSITION_RELATIVE_TO_WINDOW=relativeToOwner; _xyIsRaw =raw;
+			}
 
 			int _x, _y; bool _xyIsRaw;
 
-			public void SetXY(int x, int y, bool relativeToOwner, bool raw)
+			/// <summary>
+			/// Let the dialog close itself after closeAfterS seconds.
+			/// On timeout Show() returns TDResult.Timeout.
+			/// <para>Example: <c>d.SetTimeout(30, "OK");</c></para>
+			/// </summary>
+			public void SetTimeout(int closeAfterS, string timeoutActionText = null)
 			{
-				_x=x; _y=y; POSITION_RELATIVE_TO_WINDOW=relativeToOwner; _xyIsRaw =raw;
-            }
+				_timeoutS=closeAfterS;
+				_timeoutActionText=timeoutActionText;
+			}
+			int _timeoutS; bool _timeoutActive; string _timeoutActionText, _timeoutFooterText;
 
-			public int TimeoutS { set; private get; }
-			int _timeElapsed;
-
-			public bool FlagEnableHyperlinks { set; private get; } //TODO: event OnHyperlinkClick
 			public bool FlagAllowCancel { set; private get; }
 			public bool FlagRtlLayout { set; private get; }
 			public bool FlagCanBeMinimized { set; private get; }
+			public bool FlagShowProgressBar { set; private get; }
+			public bool FlagShowMarqueeProgressBar { set; private get; }
+
+			public bool FlagTopmost { set { _flagTopmost=value; _flagTopmostChanged=true; } }
+			bool _flagTopmost, _flagTopmostChanged;
 
 			bool USE_HICON_MAIN;
 			bool USE_HICON_FOOTER;
 			bool VERIFICATION_FLAG_CHECKED;
-			//bool CALLBACK_TIMER;
-			//bool SHOW_PROGRESS_BAR;
-			//bool SHOW_MARQUEE_PROGRESS_BAR;
 			bool EXPAND_FOOTER_AREA;
 			bool EXPANDED_BY_DEFAULT;
 			bool USE_COMMAND_LINKS;
@@ -533,23 +810,24 @@ namespace Catkeys
 			public int ResultRadioButton { get; private set; }
 			public bool ResultIsChecked { get; private set; }
 
-			Wnd _hdlg; //need in hook proc
+			Wnd _dlg; //need in hook proc
 
 			public TDResult Show(Wnd owner = default(Wnd))
 			{
 				ResultRadioButton=0; ResultIsChecked=false;
-				_timeElapsed=0;
-				_hdlg=Zero;
+				_timeoutActive=false;
+				_dlg=Zero;
 
 				int hr = 0, R = 0;
 
 				c.hwndParent=owner;
 
 				TDF_ f = 0;
-				if(FlagEnableHyperlinks) f|=TDF_.ENABLE_HYPERLINKS;
 				if(FlagAllowCancel) f|=TDF_.ALLOW_DIALOG_CANCELLATION;
 				if(FlagRtlLayout) f|=TDF_.RTL_LAYOUT;
 				if(FlagCanBeMinimized) f|=TDF_.CAN_BE_MINIMIZED;
+				if(FlagShowProgressBar) f|=TDF_.SHOW_PROGRESS_BAR;
+				if(FlagShowMarqueeProgressBar) f|=TDF_.SHOW_MARQUEE_PROGRESS_BAR;
 				if(USE_COMMAND_LINKS) f|=TDF_.USE_COMMAND_LINKS;
 				if(USE_COMMAND_LINKS_NO_ICON) f|=TDF_.USE_COMMAND_LINKS_NO_ICON;
 				if(EXPAND_FOOTER_AREA) f|=TDF_.EXPAND_FOOTER_AREA;
@@ -559,23 +837,37 @@ namespace Catkeys
 				if(USE_HICON_FOOTER) f|=TDF_.USE_HICON_FOOTER;
 				if(VERIFICATION_FLAG_CHECKED) f|=TDF_.VERIFICATION_FLAG_CHECKED;
 				if(POSITION_RELATIVE_TO_WINDOW) f|=TDF_.POSITION_RELATIVE_TO_WINDOW;
-				//if(SHOW_PROGRESS_BAR) f|=TDF_.SHOW_PROGRESS_BAR;
-				//if(SHOW_MARQUEE_PROGRESS_BAR) f|=TDF_.SHOW_MARQUEE_PROGRESS_BAR;
-				//if(CALLBACK_TIMER) f|=TDF_.CALLBACK_TIMER;
-				if(TimeoutS>0) { f|=TDF_.CALLBACK_TIMER; f|=TDF_.SHOW_PROGRESS_BAR; }
+				if(HyperlinkClicked!=null) f|=TDF_.ENABLE_HYPERLINKS;
+				if(_timeoutS>0 || Timer!=null) f|=TDF_.CALLBACK_TIMER;
+				if(_timeoutS>0) {
+					_timeoutActive=true;
+					_timeoutFooterText=c.pszFooter;
+					c.pszFooter=_TimeoutFooterText(_timeoutS);
+					if(c.hFooterIcon==Zero) c.hFooterIcon=(IntPtr)TDIcon.Info;
+				}
 				c.dwFlags=f;
+
+				if(!_flagTopmostChanged && owner==Zero) _flagTopmost=Script.Option.dialogTopmostIfNoOwner;
+
+				if((c.hMainIcon==(IntPtr)TDIcon.App || c.hFooterIcon==(IntPtr)TDIcon.App) && Resources.AppIconHandle32!=Zero)
+					c.hInstance=Misc.GetModuleHandleOfAppdomainEntryAssembly();
+				//info: TDIcon.App is IDI_APPLICATION (32512).
+				//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
+				//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.
+				//For App icon we could instead use icon handle, but then the small icon for the title bar and taskbar button can be distorted because shrinked from the big icon. Now extracts small icon from resources.
+				//More info in Show.MessageDialog().
 
 				c.pfCallback=_CallbackProc;
 
-				IntPtr hhook=Zero; Api.HookProc hpHolder = null;
+				IntPtr hhook = Zero; Api.HookProc hpHolder = null;
 
 				try {
 					c.pButtons=_MarshalButtons(_buttons, out c.cButtons, true);
 					c.pRadioButtons=_MarshalButtons(_radioButtons, out c.cRadioButtons);
 
-					if(TimeoutS>0) {
+					if(_timeoutActive) {
 						//need to receive mouse and keyboard messages to stop countdown on click or key
-						hhook=Api.SetWindowsHookEx(Api.WH_.CBT, hpHolder=_HookProcCBT, Zero, Api.GetCurrentThreadId());
+						hhook=Api.SetWindowsHookEx(Api.WH_CBT, hpHolder=_HookProcCBT, Zero, Api.GetCurrentThreadId());
 					}
 
 					int rRadioButton, rIsChecked;
@@ -599,53 +891,112 @@ namespace Catkeys
 				return (TDResult)R;
 			}
 
-			int _CallbackProc(Wnd w, TDN_ code, LPARAM wParam, LPARAM lParam, IntPtr data)
+			int _CallbackProc(Wnd w, TDN_ message, LPARAM wParam, LPARAM lParam, IntPtr data)
 			{
-				//Out(code);
-				switch(code) {
-				case TDN_.TDN_CREATED:
-					if(TimeoutS>0) {
-						_hdlg=w;
-                        w.Send((uint)TDM_.SET_PROGRESS_BAR_POS, 100, 0); //right-to-left; tested: cannot prevent the initial inertion.
-                    }
+				EventHandler<TDEventArgs> e = null;
+				int R = 0;
+
+				//Out(message);
+				switch(message) {
+				case TDN_.DIALOG_CONSTRUCTED: _dlg=w; break;
+				case TDN_.CREATED:
+					if(_x!=0 || _y!=0 || _xyIsRaw) {
+						//TODO: implement. Also use monitor.
+
+					}
+					if(_flagTopmost) {
+						//TODO: implement
+
+					}
+					e=Created;
 					break;
-				case TDN_.TDN_TIMER:
-					if(TimeoutS>0 && _timeElapsed>=0) {
-						int timeoutTicks = TimeoutS*5; _timeElapsed++; //200 ms timer ticks
-						if(_timeElapsed<timeoutTicks) {
-							w.Send((uint)TDM_.SET_PROGRESS_BAR_POS, 100-Calc.Percent(timeoutTicks, _timeElapsed), 0);
+				case TDN_.TIMER:
+					if(_timeoutActive) {
+						int timeElapsed = wParam/1000;
+						if(timeElapsed<_timeoutS) {
+							w.SendS((uint)TDM_.UPDATE_ELEMENT_TEXT, (int)TDE_.FOOTER, _TimeoutFooterText(_timeoutS-timeElapsed-1));
 						} else {
-							//Out("timeout");
-							_timeElapsed=-1;
-                            w.Send((uint)TDM_.CLICK_BUTTON, -(int)TDResult.Timeout, 0);
-                        }
-                    }
+							_timeoutActive=false;
+							w.Send((uint)TDM_.CLICK_BUTTON, -(int)TDResult.Timeout, 0);
+						}
+					}
+					e=Timer;
 					break;
+				case TDN_.DESTROYED: e=Destroyed; break;
+				case TDN_.BUTTON_CLICKED: e=ButtonClicked; break;
+				case TDN_.HYPERLINK_CLICKED: e=HyperlinkClicked; break;
+				case TDN_.HELP: e=HelpF1; break;
+				default: e=OtherMessages; break;
 				}
-				//Out(code);
-				return 0;
+
+				if(e!=null) {
+					var a = new TDEventArgs(_dlg, message, wParam, lParam);
+					e(this, a);
+					R=a.Return;
+				}
+
+				return R;
+			}
+
+			public class TDEventArgs :EventArgs
+			{
+				public TDEventArgs(Wnd dlg, TDN_ message, LPARAM wParam, LPARAM lParam)
+				{
+					Dialog=dlg; Message=message; WParam=wParam;
+					if(message==TDN_.HYPERLINK_CLICKED) LinkHref=Marshal.PtrToStringUni(lParam); else LinkHref=null;
+				}
+				public Wnd Dialog { get; private set; }
+				public TDN_ Message { get; private set; }
+				public LPARAM WParam { get; private set; }
+				public string LinkHref { get; private set; }
+				public int Return { get; set; }
+			}
+
+			public event EventHandler<TDEventArgs> Created, Destroyed, Timer, ButtonClicked, HyperlinkClicked, HelpF1, OtherMessages;
+
+			string _TimeoutFooterText(int timeLeft)
+			{
+				string s1 = Empty(_timeoutActionText) ? null : $"  Timeout action: {_timeoutActionText}.";
+				string s2 = Empty(_timeoutFooterText) ? null : $"\n{_timeoutFooterText}";
+				return $"This dialog disappears after {timeLeft} s if not clicked.{s1}{s2}";
 			}
 
 			IntPtr _HookProcCBT(int code, LPARAM wParam, IntPtr lParam)
 			{
-				switch((Api.HCBT_)code) {
-				case Api.HCBT_.CLICKSKIPPED:
-					switch((WM_)(int)wParam) { case WM_.LBUTTONDOWN: case WM_.NCLBUTTONDOWN: goto case Api.HCBT_.KEYSKIPPED; }
-					//TODO: only if _hdlg
+				switch(code) {
+				case Api.HCBT_CLICKSKIPPED:
+					switch((uint)wParam) { case Api.WM_LBUTTONUP: case Api.WM_NCLBUTTONUP: goto g1; }
 					break;
-				case Api.HCBT_.KEYSKIPPED:
-					_timeElapsed=-1;
+				case Api.HCBT_KEYSKIPPED:
+					g1:
+					if(_dlg.IsActiveWindow) {
+						_timeoutActive=false;
+						if(Empty(_timeoutFooterText)) {
+							_dlg.Send((uint)TDM_.UPDATE_ICON, (int)TDIE_.ICON_FOOTER, 0);
+							_dlg.SendS((uint)TDM_.SET_ELEMENT_TEXT, (int)TDE_.FOOTER, ""); //null does not change text; however still remains some space for footer
+
+							//c.pszFooter=null; Update(); //don't use this because interferes with the expand/collapse control
+						} else _dlg.SendS((uint)TDM_.SET_ELEMENT_TEXT, (int)TDE_.FOOTER, _timeoutFooterText);
+					}
 					break;
-                }
+				}
 				return Api.CallNextHookEx(Zero, code, wParam, lParam);
-            }
+			}
 
-			//LPARAM SubclassProc(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData)
-			//{
+			[DllImport("user32.dll", EntryPoint = "SendMessageW")]
+			static extern LPARAM SendMessageTASKDIALOGCONFIG(Wnd hWnd, uint msg, LPARAM wParam, [In] ref TASKDIALOGCONFIG c);
 
-			//}
+			/// <summary>
+			/// Applies new properties to the dialog while it is already open.
+			/// Can be used for example to create wizard-like dialog with custom buttons "Next" and "Back".
+			/// In an event handler, set new properties and then call this method.
+			/// </summary>
+			public void Update()
+			{
+				SendMessageTASKDIALOGCONFIG(_dlg, (uint)TDM_.NAVIGATE_PAGE, 0, ref c);
+			}
 
-			#region forget
+			#region util
 #if DEBUG //TODO: consider: use this func always.
 			//The API throws 'access violation' exception if some value is invalid (eg unknown flags in dwCommonButtons) or it does not like something.
 			//.NET does not allow to handle such exceptions, unless we use [HandleProcessCorruptedStateExceptions] or <legacyCorruptedStateExceptionsPolicy enabled="true"/> in config file.
@@ -702,15 +1053,59 @@ namespace Catkeys
 			return buttons.Replace("\r\n", "\n").Replace("\n|", "|").Trim_("\r\n|").Split('|');
 			//info: the API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
 		}
+	}
+	#endregion TaskDialog
 
-		//_________________________________________________________________
+	#region InputDialog
 
-		//InputDialog
+	public static partial class Show
+	{
 
 
 		public static bool InputDialog(string s)
 		{
 			return false;
 		}
+
 	}
+	#endregion InputDialog
+
+	#region util
+	public static partial class Show
+	{
+		static string _Title(string title) { return string.IsNullOrEmpty(title) ? ScriptOptions.DisplayName : title; }
+		//info: IsNullOrEmpty because if "", API TaskDialog uses "ProcessName.exe".
+
+		public static class Resources
+		{
+			/// <summary>
+			/// Gets native icon handle of the entry assembly of current appdomain.
+			/// Returns Zero if the assembly is without icon.
+			/// The icon is extracted first time and then cached in a static variable. Don't destroy the icon.
+			/// </summary>
+			public static IntPtr AppIconHandle32 { get { return _GetAppIconHandle(ref _AppIcon32, false); } }
+			public static IntPtr AppIconHandle16 { get { return _GetAppIconHandle(ref _AppIcon16, true); } }
+			static IntPtr _AppIcon32, _AppIcon16;
+
+			static IntPtr _GetAppIconHandle(ref IntPtr hicon, bool small = false)
+			{
+				if(hicon==Zero) {
+					var asm = Misc.AppdomainAssembly; if(asm==null) return Zero;
+					IntPtr hinst = Misc.GetModuleHandleOf(asm);
+					int size = small ? 16 : 32;
+					hicon = Api.LoadImageRes(hinst, 32512, Api.IMAGE_ICON, size, size, 0);
+					//note:
+					//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
+					//I could not find a .NET method to get icon directly from native resources of assembly.
+					//Could use Icon.ExtractAssociatedIcon(asm.Location), but it always gets 32 icon and is several times slower.
+					//Also could use PrivateExtractIcons. But it uses file path, not module handle.
+					//Also could use the resource emumeration API...
+					//Never mind. Anyway, we use hInstance/resId with MessageBoxIndirect (which does not support handles) etc.
+					//info: don't use Api.LR_SHARED because MSDN says that then returns cached icon regardless of size, although it is not true (tested only on Win10).
+				}
+				return hicon;
+			}
+		}
+	}
+	#endregion util
 }

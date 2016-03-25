@@ -59,7 +59,7 @@ namespace Compiler
 
 			_sm.x->perf.Next();
 
-			Wnd w = Api.CreateWindowExW(0, "Catkeys_Compiler", null, WS_.POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
+			Wnd w = Api.CreateWindowExW(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
 
 			_sm.x->perf.Next();
 
@@ -73,7 +73,7 @@ namespace Compiler
 			while(Api.GetMessage(out m, Zero, 0, 0)>0) { Api.DispatchMessage(ref m); }
 		}
 
-		unsafe static LPARAM _WndProcCompiler(Wnd hWnd, WM_ msg, LPARAM wParam, LPARAM lParam)
+		unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
 		{
 			switch(msg) {
 			//case WM.NCCREATE:
@@ -88,7 +88,7 @@ namespace Compiler
 			//case WM.DESTROY:
 			//	Out("destroy");
 			//	break;
-			case WM_.USER:
+			case Api.WM_USER:
 				//Out(Marshal.PtrToStringBSTR(lParam));
 				Marshal.FreeBSTR(lParam);
 				TestRoslyn();
@@ -98,7 +98,7 @@ namespace Compiler
 			LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
 
 			switch(msg) {
-			case WM_.NCDESTROY:
+			case Api.WM_NCDESTROY:
 				Api.PostQuitMessage(0); //Application.Exit[Thread](); does not work
 				break;
 			}

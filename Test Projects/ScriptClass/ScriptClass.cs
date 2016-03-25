@@ -5,13 +5,16 @@ using System.Text;
 //using System.Threading;
 using System.Reflection;
 using System.Diagnostics;
+using System.Windows.Forms;
 
+using Catkeys;
+using static Catkeys.NoClass;
 using Catkeys.Automation;
 using static Catkeys.Automation.NoClass;
-using static Catkeys.Automation.Input;
-using Catkeys.Triggers;
-using Catkeys.Util; using Util = Catkeys.Util;
-using Catkeys.Winapi;
+//using static Catkeys.Automation.Input;
+//using Catkeys.Triggers;
+//using Catkeys.Util; using Util = Catkeys.Util;
+//using Catkeys.Winapi;
 
 //public class Macro
 //{
@@ -64,13 +67,19 @@ using Catkeys.Winapi;
 //}
 
 
-class ScriptClass //:ScriptBase
+class ScriptClass :Script
 {
 	static void Main()
 	{
-		char[] a4 = { 'A', 'B', 'C' };
+		var asm = Assembly.GetEntryAssembly();
+		//var rm = new System.Resources.ResourceManager("", asm);
+		//Console.WriteLine(rm);
 
-		Console.WriteLine(a4);
+		Out(asm!=null);
+
+		//Console.WriteLine(a4);
+		//MessageBox.Show("script");
+		//Console.ReadKey();
 	}
 
 	public void Script()

@@ -27,6 +27,7 @@ namespace Catkeys.Util
 	{
 	}
 
+#if dont_use
 	/// <summary>
 	/// Enum extension methods.
 	/// </summary>
@@ -61,6 +62,7 @@ namespace Catkeys.Util
 			//Speed not tested.
 		}
 	}
+#endif
 
 	[DebuggerStepThrough]
 	public static class Paths
@@ -141,6 +143,44 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class Misc
 	{
+		/// <summary>
+		/// Gets the entry assembly of current appdomain.
+		/// Normally instead can be used Assembly.GetEntryAssembly(), but it fails if appdomain launched through DoCallBack.
+		/// </summary>
+		public static Assembly AppdomainAssembly
+		{
+			get
+			{
+				if(_appdomainAssembly==null) {
+					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
+					if(asm==null) asm=AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
+					_appdomainAssembly=asm;
+				}
+				return _appdomainAssembly;
+			}
+		}
+		static Assembly _appdomainAssembly;
+
+		public static IntPtr GetModuleHandleOf(Type t)
+		{
+			return t==null ? Zero : Marshal.GetHINSTANCE(t.Module);
+
+			//Tested these to get caller's module without Type parameter:
+			//This is dirty/dangerous and 50 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(new StackFrame(1).GetMethod().DeclaringType.Module);
+			//This is dirty/dangerous, does not support multi-module assemblies and 12 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(Assembly.GetCallingAssembly().GetLoadedModules()[0]);
+			//This is dirty/dangerous/untested and 12 times slower: [MethodImpl(MethodImplOptions.AggressiveInlining)] ... return Marshal.GetHINSTANCE(MethodBase.GetCurrentMethod().DeclaringType.Module);
+		}
+
+		public static IntPtr GetModuleHandleOf(Assembly asm)
+		{
+			return asm==null ? Zero : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
+		}
+
+		public static IntPtr GetModuleHandleOfAppdomainEntryAssembly()
+		{
+			return GetModuleHandleOf(AppdomainAssembly);
+		}
+
 		public static void MinimizeMemory()
 		{
 			//return;

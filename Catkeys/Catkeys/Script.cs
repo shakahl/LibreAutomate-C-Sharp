@@ -23,6 +23,7 @@ namespace Catkeys
 #pragma warning disable 649
 		public int speed;
 		public bool slowMouse, slowKeys, waitMsg;
+		public bool dialogTopmostIfNoOwner, dialogRtlLayout; public int dialogMonitor;
 #pragma warning restore 649
 
 		/// <summary>

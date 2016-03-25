@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{373AE121-FC34-421C-B4B5-E083C0C1037F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ScriptClass</RootNamespace>
     <AssemblyName>ScriptClass</AssemblyName>
@@ -31,9 +31,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Xml" />
@@ -49,6 +53,10 @@
     <ProjectReference Include="..\..\Catkeys\Catkeys.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Catkeys</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Triggers\Catkeys.Triggers.csproj">
+      <Project>{c8ced7d2-876d-48be-9a2a-142864271c25}</Project>
+      <Name>Catkeys.Triggers</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
