@@ -73,6 +73,14 @@ namespace Catkeys
 		public static void OutFunc([System.Runtime.CompilerServices.CallerMemberName] string name = "") { Output.Write(name); }
 
 		/// <summary>
+		/// Writes window handle, class and name.
+		/// </summary>
+		public static void OutWnd(Wnd w)
+		{
+			Output.Write(w.ToString());
+		}
+
+		/// <summary>
 		/// Returns true if the string is null or "".
 		/// The same as string.IsNullOrEmpty.
 		/// </summary>

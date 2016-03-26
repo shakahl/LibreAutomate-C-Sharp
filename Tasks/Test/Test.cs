@@ -296,17 +296,50 @@ partial class Test
 	//[DllImport("uxtheme")]
 	//static extern uint GetThemeAppProperties();
 
+
+	public class TDResult
+	{
+		public TDResult(int button, int radioButton = 0, bool isChecked = false)
+		{
+			Button=button; RadioButton=radioButton; IsChecked=isChecked;
+		}
+
+		public const int Cancel = 0, OK = -1, Retry = -4, Yes = -6, No = -7, Close = -8, Timeout = -32000;
+
+		public int Button { get; set; }
+		public int RadioButton { get; set; }
+		public bool IsChecked { get; set; }
+
+		//Implicit conversion to int allows to use code switch(TaskDialog(...)) instead of switch(TaskDialog(...).Button)
+		public static implicit operator int(TDResult r) { return r.Button; }
+	}
+
+	static TDResult TestResult()
+	{
+		return new TDResult(TDResult.OK, 77, true);
+	}
+
+
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
+		//switch(TestResult().Button) {
+		switch(TestResult()) {
+		case TDResult.OK: Out("OK"); break; //common button
+		case 1: Out(1); break; //custom button
+		}
+
+
+#if NEWRESULT
 		try {
+			//Thread.Sleep(5000);
 
 			//Api.MessageBox(Zero, "dd", "ggg", 0x40000);
 			//return;
 
 			//Script.Option.dialogRtlLayout=true;
 			//Script.Option.dialogTopmostIfNoOwner=true;
-
+			
 			//var asm = Assembly.GetEntryAssembly(); //fails if DoCallBack, OK if ExecuteAssembly
 			////var asm = Assembly.GetExecutingAssembly(); //OK
 			////Out(asm!=null);
@@ -322,13 +355,14 @@ partial class Test
 			//MessageBox.Show("sss");
 			//Out(Show.MessageDialog(Zero, "test", MDButtons.OKCancel, MDIcon.App, MDFlag.DefaultButton2));
 			//Out(Show.MessageDialog("One\ntwooooooooooooo."));
-			Out(Show.MessageDialog("One\ntwooooooooooooo.", "YNCa"));
+			//Out(Show.MessageDialog("One\ntwooooooooooooo.", "YNC!t"));
 
-			////Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, "1 one|2 two", false, "expanded", "", 20, "TTT"));
-			//Out(Show.TaskDialog("Head1\nHead2.", "Text1\nText2.", "OCa", Zero, "1 one|2 two", false, "expanded", "", 20, "TTT"));
-			////Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info));
-			////Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0));
-			////Out(Show.TaskDialog("title", "head", "content", "OCYNLRi"));
+			//Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, "1 one|2 two", "expanded", "", 20, "TTT"));
+			//Out(Show.TaskDialog("Head1\nHead2.", "Text1\nText2.", "OC!ct", Zero, "1 one|2 two", "expanded", "foo", 60, "TTT"));
+			//Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info));
+			//Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0));
+			//Out(Show.TaskDialog("head", "content", "OCYNLRi"));
+			//Out(Show.TaskDialog("", "<a href=\"example\">link</a>.", onLinkClick: (o, a) => { Out(a.LinkHref); }));
 
 			////Out(Show.TaskListDialog("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
 			////Out(Show.TaskListDialog(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More"));
@@ -340,7 +374,7 @@ partial class Test
 			////" , "Main", "More\r\nmore"));
 
 			////		Out(Show.TaskListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
-			return;
+			//return;
 
 			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
 			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
@@ -383,7 +417,7 @@ partial class Test
 
 			//d.FooterText="Footer.";
 			//d.FooterIcon=TDIcon.Warning;
-			d.SetFooterText("Footer text.", TDIcon.Warning);
+			//d.SetFooterText("Footer text.", TDIcon.Warning);
 			//d.SetFooterText("Footer.");
 
 			//d.Width=700;
@@ -401,7 +435,8 @@ partial class Test
 			d.SetRadioButtons("1001 r1|1002 r2");
 			//d.SetRadioButtons("1001 r1|1002 r2", 0, true);
 
-			d.SetTimeout(10, "OK");
+			d.SetTimeout(10, "Cancel");
+			//d.SetTimeout(10, null, true);
 
 			//d.Created+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
 			//d.Destroyed+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
@@ -421,6 +456,7 @@ partial class Test
 			Out($"{b}  radio={d.ResultRadioButton}  checked={d.ResultIsChecked}");
 
 		} catch(ArgumentException e) { Out($"ArgumentException: {e.ParamName}, '{e.Message}'"); } catch(Exception e) { Out($"Exception: '{e.Message}'"); }
+#endif
 	}
 
 	static void TestInScriptDomain()
