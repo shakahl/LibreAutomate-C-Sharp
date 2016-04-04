@@ -37,6 +37,7 @@ using Catkeys.Triggers;
 //using Cat = Catkeys.Automation.Input;
 //using Meow = Catkeys.Show;
 
+//using static Catkeys.Show;
 
 #pragma warning disable 162 //unreachable code
 
@@ -303,16 +304,16 @@ public partial class Test
 		return await Task.Run(()=> Show.TaskDialog(text1, "", "OC"));
 	}
 
-	public static Show.TaskDialogObject TaskDialogNoWait(string text1, TDAsyncResult onClose =null)
+	public static TaskDialogObject TaskDialogNoWait(string text1, TDAsyncCloseDelegate onClose =null)
 	{
-		var d = new Show.TaskDialogObject(text1);
+		var d = new TaskDialogObject(text1);
 		d.ShowAsync(onClose);
 		return d;
 	}
 
-	public static Show.TaskDialogObject TaskProgressDialog(string text1)
+	public static TaskDialogObject TaskProgressDialog(string text1)
 	{
-		var d = new Show.TaskDialogObject(text1);
+		var d = new TaskDialogObject(text1);
 		d.FlagShowProgressBar = true;
 		d.ShowAsync();
 		return d;
@@ -584,7 +585,7 @@ public partial class Test
 		//}
 		//pd.Send.Close();
 
-		//var td = new Show.TaskDialogObject("dddd");
+		//var td = new TaskDialogObject("dddd");
 		//Task.Run(() => td.Show());
 		////Time.First();
 		////td.ThreadWaitOpen();
@@ -651,13 +652,13 @@ public partial class Test
 		////		Out(Show.TaskListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
 		return;
 
-		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
-		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
-		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
-		//var d = new Show.TaskDialogObject("Head Text.", null, 0, TDIcon.Shield);
-		//var d = new Show.TaskDialogObject("", "More text.", 0, TDIcon.Shield);
-		//var d = new Show.TaskDialogObject();
-		var d = new Show.TaskDialogObject();
+		//var d = new TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
+		//var d = new TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
+		//var d = new TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
+		//var d = new TaskDialogObject("Head Text.", null, 0, TDIcon.Shield);
+		//var d = new TaskDialogObject("", "More text.", 0, TDIcon.Shield);
+		//var d = new TaskDialogObject();
+		var d = new TaskDialogObject();
 
 		d.SetTitleBarText("MOO");
 

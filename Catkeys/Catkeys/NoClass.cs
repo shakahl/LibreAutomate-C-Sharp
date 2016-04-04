@@ -83,6 +83,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets function name.
+		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
 		/// </summary>
 		public static string FunctionName([CallerMemberName] string name = null) { return name; }
 

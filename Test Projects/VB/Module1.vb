@@ -9,9 +9,16 @@ Imports Catkeys.Automation
 Imports Catkeys.Automation.NoClass
 Imports Catkeys.Automation.Input
 
+Imports Catkeys.Show
+
+
 Module Module1
 
 	Sub Main()
+
+		'Show.MessageDialog("ggg")
+		'Show.TaskDialog("ddd")
+		'TaskDialog("ddd") 'error, ambiguous if Imports Catkeys.Show, although OK in C#
 
 		'Console.WriteLine("test")
 		''Util.Tesst.Koo()
@@ -21,15 +28,15 @@ Module Module1
 		'Console.WriteLine(s.Trim) 'VS replaces trim with Trim
 		''Console.WriteLine(s.trim2)
 
-		Dim w As Wnd = Wnd.Get.DirectParent(Wnd0)
+		'Dim w As Wnd = Wnd.Get.DirectParent(Wnd0)
 
 		'Out(Keys.Control)
 		'Out(Shift)
-		Out(K.Control)
-		Input.Keys("")
-		Keys("")
-		Key("")
-		Input.Key("")
+		'Out(K.Control)
+		'Input.Keys("")
+		'Keys("")
+		'Key("")
+		'Input.Key("")
 	End Sub
 
 End Module
