@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 //using System.Linq;
-//using System.Threading;
+using System.Threading;
 //using System.Threading.Tasks;
 //using System.Reflection;
 //using System.Runtime.InteropServices;
@@ -27,6 +27,8 @@ namespace Catkeys
 	[DebuggerStepThrough]
 	public static class Time
 	{
+		#region FirstNextWrite
+
 		static long[] _a = new long[11];
 		static uint _counter = 0;
 		static double _freq = 1000000.0/Stopwatch.Frequency;
@@ -36,13 +38,13 @@ namespace Catkeys
 		/// </summary>
 		public static void First() { _counter=0; _a[0]=Stopwatch.GetTimestamp(); }
 		/// <summary>
-		/// Calls WakeCPU(100) and First().
+		/// Calls SpinCPU(100) and First().
 		/// </summary>
-		public static void First(bool wakeCpu) { WakeCPU(); First(); }
+		public static void First(bool wakeCpu) { SpinCPU(); First(); }
 		/// <summary>
-		/// Calls WakeCPU(wakeCpuMS) and First().
+		/// Calls SpinCPU(wakeCpuMS) and First().
 		/// </summary>
-		public static void First(int wakeCpuMS) { WakeCPU(wakeCpuMS); First(); }
+		public static void First(int wakeCpuMS) { SpinCPU(wakeCpuMS); First(); }
 
 		/// <summary>
 		/// Stores current time in the next element of an internal static array to use with next Next() and Write().
@@ -65,7 +67,7 @@ namespace Catkeys
 				s.Append((int)(_freq * (_a[i+1]-_a[i]) - 0.5));
 			}
 
-			Out(s.ToString());
+			Output.Write(s.ToString());
 		}
 
 		/// <summary>
@@ -90,7 +92,7 @@ namespace Catkeys
 		/// Spins CPU timeMS milliseconds, default 100.
 		/// Call before measuring code speed, because after some idle time CPU needs to work some time to gain full speed.
 		/// </summary>
-		public static void WakeCPU(int timeMS = 100)
+		public static void SpinCPU(int timeMS = 100)
 		{
 			int n = 0;
 			for(long t0 = Microseconds; Microseconds-t0 < timeMS*1000; n++) {
@@ -130,7 +132,7 @@ namespace Catkeys
 					}
 				}
 
-				Out(s.ToString());
+				Output.Write(s.ToString());
 			}
 
 			public void NextWrite() { Next(); Write(); }
@@ -139,6 +141,26 @@ namespace Catkeys
 
 			public void AddTicksNext(long ticks) { if(_counter<10) unsafe { fixed (long* p = _a) { p[++_counter]=ticks; } } }
 		}
-//#endif
+		//#endif
+		#endregion
+
+		public static void Wait(double timeS)
+		{
+			int ms;
+			if(timeS<0) ms=Timeout.Infinite;
+			else {
+				timeS*=1000.0;
+				if(timeS<=int.MaxValue) ms=(int)timeS;
+				else throw new ArgumentOutOfRangeException();
+			}
+			WaitMS(ms);
+		}
+
+		public static void WaitMS(int timeMS)
+		{
+			if(timeMS<0) timeMS=Timeout.Infinite;
+			Thread.Sleep(timeMS);
+			//TODO
+		}
 	}
 }

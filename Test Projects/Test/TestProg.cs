@@ -7,6 +7,8 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Diagnostics;
 
+using Catkeys;
+using static Catkeys.NoClass;
 using Catkeys.Automation;
 using static Catkeys.Automation.NoClass;
 using Catkeys.Util; using Util = Catkeys.Util;

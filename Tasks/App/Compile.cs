@@ -8,7 +8,8 @@ using System.IO;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Catkeys.Util; using Util = Catkeys.Util;
+using Catkeys.Util;
+using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
@@ -19,52 +20,52 @@ using Mono.CSharp;
 
 namespace Catkeys.Tasks
 {
-class Compile
-{
-	public static void Init()
+	class Compile
 	{
-		var thr=new Thread(_AppDomainThread);
-		thr.Start();
-	}
+		public static void Init()
+		{
+			var thr = new Thread(_AppDomainThread);
+			thr.Start();
+		}
 
-	static void _AppDomainThread()
-	{
-		//Out(AppDomain.CurrentDomain.FriendlyName);
-		Time.First();
+		static void _AppDomainThread()
+		{
+			//Out(AppDomain.CurrentDomain.FriendlyName);
+			Time.First();
 
-		//AppDomainSetup domainSetup = new AppDomainSetup()
-		//{
-		//	ApplicationBase = AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
-		//	ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile,
-		//	ApplicationName = AppDomain.CurrentDomain.SetupInformation.ApplicationName,
-		//	LoaderOptimization = LoaderOptimization.MultiDomainHost
-		//};
+			//AppDomainSetup domainSetup = new AppDomainSetup()
+			//{
+			//	ApplicationBase = AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
+			//	ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile,
+			//	ApplicationName = AppDomain.CurrentDomain.SetupInformation.ApplicationName,
+			//	LoaderOptimization = LoaderOptimization.MultiDomainHost
+			//};
 
-		//var domain=AppDomain.CreateDomain("Compiler", null, domainSetup); //same speed, but need to test later
-		var domain=AppDomain.CreateDomain("Compiler");
-		Time.Next();
-		//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe")); //25 ms (5 ms after updating Win 10 to 10576 and performing WinDefender quick scan)
-		domain.DoCallBack(_DomainCallback); //22 ms (1 ms after updating||scanning), but need more testing later
-		//domain.CreateInstance(typeof(Compile).Assembly.FullName, "Catkeys.Compiler"); //too
-		//Time.Next();
-		//domain.DoCallBack(_DomainCallback);
-		//Time.Next();
-		//domain.DoCallBack(_DomainCallback);
-		Time.Next();
-		AppDomain.Unload(domain);
-		//Time.NextOut();
-	}
+			//var domain=AppDomain.CreateDomain("Compiler", null, domainSetup); //same speed, but need to test later
+			var domain = AppDomain.CreateDomain("Compiler");
+			Time.Next();
+			//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe")); //25 ms (5 ms after updating Win 10 to 10576 and performing WinDefender quick scan)
+			domain.DoCallBack(_DomainCallback); //22 ms (1 ms after updating||scanning), but need more testing later
+												//domain.CreateInstance(typeof(Compile).Assembly.FullName, "Catkeys.Compiler"); //too
+												//Time.Next();
+												//domain.DoCallBack(_DomainCallback);
+												//Time.Next();
+												//domain.DoCallBack(_DomainCallback);
+			Time.Next();
+			AppDomain.Unload(domain);
+			//Time.NextOut();
+		}
 
-	static void _DomainCallback()
-	{
-		//Out(AppDomain.CurrentDomain.FriendlyName);
-		//while(true) {
-		//	break;
-		//}
+		static void _DomainCallback()
+		{
+			//Out(AppDomain.CurrentDomain.FriendlyName);
+			//while(true) {
+			//	break;
+			//}
 #if ROSLYN
 		TestRoslyn();
 #endif
-	}
+		}
 
 		//class Compiler :MarshalByRefObject
 		//{ //note CreateInstance(... "Catkeys.Compiler") fails if this is a child class of Compile, even if both classes are public

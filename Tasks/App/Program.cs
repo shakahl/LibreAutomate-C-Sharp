@@ -19,7 +19,7 @@ namespace Catkeys.Tasks
 	static class Program
 	{
 		static Wnd _hwndAM;
-		static Api.WndProc _wndProcKeepAlive = WndProcAppsManager; //use static member to prevent GC from collecting the delegate
+		static Api.WNDPROC _wndProcKeepAlive = WndProcAppsManager; //use static member to prevent GC from collecting the delegate
 
 		//static Program()
 		//{
@@ -76,7 +76,7 @@ namespace Catkeys.Tasks
 			//	Time.Next();
 			//	break;
 			case Api.WM_COPYDATA: //TODO: ChangeWindowMessageFilter
-				_OnCopyData((IntPtr)wParam, (Api.COPYDATASTRUCT*)lParam);
+				_OnCopyData((Wnd)(IntPtr)wParam, (Api.COPYDATASTRUCT*)lParam);
 				break;
 				//case WM.DESTROY:
 				//	Out("destroy");

@@ -108,7 +108,7 @@ partial class Test
 
 		//string s1=null, s2 = null, s3 = null;
 		//int i;
-		//Time.WakeCPU();
+		//Time.SpinCPU();
 		//Time.First();
 		//for(i = 0; i<1000; i++) s1="one\r\ntwo\r\nthree";
 		//Time.Next();
@@ -117,7 +117,7 @@ partial class Test
 		//for(i = 0; i<1000; i++) s3=$"one{_}two{_}three";
 		////for(i = 0; i<1000; i++) s3=$"one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}";
 		//Time.Next();
-		//Time.Out();
+		//Time.Write();
 		//Out(s1+s2+s3);
 	}
 }
@@ -197,7 +197,7 @@ partial class Test
 			//	str g = "bsf";
 			//	int i, n1 = 0, n2=0;
 
-			//	Time.WakeCPU();
+			//	Time.SpinCPU();
 			//	for(int j = 0; j<5; j++) {
 
 			//		Time.First();
@@ -208,7 +208,7 @@ partial class Test
 			//		//for(i=0; i<100000; i++) n2+=Foo2(s);
 			//		//Time.Next();
 			//		if(j<3) continue;
-			//		Time.Out();
+			//		Time.Write();
 
 			//	}
 			//		Out($"{n1} {n2}");

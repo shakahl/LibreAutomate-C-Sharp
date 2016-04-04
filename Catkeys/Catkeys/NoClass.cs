@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 //using System.Linq;
-//using System.Threading;
+using System.Threading;
 //using System.Threading.Tasks;
 //using System.Reflection;
 //using System.Runtime.InteropServices;
@@ -24,11 +24,18 @@ namespace Catkeys
 	public static class NoClass
 	{
 		/// <summary>
-		/// Default (0) value for IntPtr, Wnd and similar types, eg to pass to a function, to avoid using IntPtr.Zero or default(IntPtr).
+		/// Default (0) value for IntPtr, LPARAM and some other types. The same as IntPtr.Zero or default(IntPtr).
 		/// These types are struct types, therefore you cannot assign 0 or null.
 		/// However this is error: <c>void Func(IntPtr x=Zero){}</c>; use <c>void Func(IntPtr x=default(IntPtr)){}</c>.
 		/// </summary>
-		public static readonly IntPtr Zero = default(IntPtr); //info: IntPtr cannot be const
+		public static readonly IntPtr Zero;
+
+		/// <summary>
+		/// Default (0) value for Wnd.
+		/// These types are struct types, therefore you cannot assign 0 or null.
+		/// However this is error: <c>void Func(Wnd x=Wnd0){}</c>; use <c>void Func(Wnd x=default(Wnd)){}</c>.
+		/// </summary>
+		public static readonly Wnd Wnd0;
 
 		/// <summary>
 		/// Windows newline string "\r\n".
@@ -44,46 +51,48 @@ namespace Catkeys
 		/// <summary>
 		/// Alias of Output.Write.
 		/// </summary>
-		public static void Out(string value) { Output.Write(value); }
-		public static void Out(int value) { Output.Write(value); }
-		public static void Out(uint value) { Output.Write(value); }
-		public static void Out(long value) { Output.Write(value); }
-		public static void Out(ulong value) { Output.Write(value); }
-		public static void Out(bool value) { Output.Write(value); }
-		public static void Out(char value) { Output.Write(value); }
-		public static void Out(char[] value) { Output.Write(value); }
-		public static void Out(double value) { Output.Write(value); }
-		public static void Out(float value) { Output.Write(value); }
-		public static void Out(decimal value) { Output.Write(value); }
+		//public static void Out(string value) { Output.Write(value); }
 		public static void Out(object value) { Output.Write(value); }
-		public static void Out(IntPtr value) { Output.Write(value); }
-		//public static void Out<T>(T value) { Output.Write(value); } //this could replace all the above overloads, but it disables Out<T>(IEnumerable<T> values). Also, for intellisense it's better to have all overloads here.
-		public static void Out<T>(IEnumerable<T> values) { Output.Write(values); }
-		public static void Out<K, V>(IDictionary<K, V> values) { Output.Write(values); }
-		public static void Out(string separator, params object[] values) { Output.Write(separator, values); }
-
-		public static void OutHex(int value) { Output.Write($"0x{value:X}"); }
-		public static void OutHex(uint value) { Output.Write($"0x{value:X}"); }
-		public static void OutHex(long value) { Output.Write($"0x{value:X}"); }
-		public static void OutHex(ulong value) { Output.Write($"0x{value:X}"); }
+		//public static void Out<K, V>(IDictionary<K, V> value) { Output.Write(value); }
+		//public static void Out<T>(IEnumerable<T> value) { Output.Write(value); }
+		public static void OutList(params object[] values) { Output.WriteList(values); }
+		//public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
+		//public static void OutHex<T>(T value) { Output.WriteHex(value); }
 
 		/// <summary>
-		/// Writes current function name.
+		/// Alias of Output.Write.
 		/// </summary>
-		public static void OutFunc([System.Runtime.CompilerServices.CallerMemberName] string name = "") { Output.Write(name); }
+		//public static void Print(string value) { Output.Write(value); }
+		public static void Print(object value) { Output.Write(value); }
+		//public static void Print<K, V>(IDictionary<K, V> value) { Output.Write(value); }
+		//public static void Print<T>(IEnumerable<T> value) { Output.Write(value); }
+		public static void PrintList(params object[] values) { Output.WriteList(values); }
+		//public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
+		//public static void PrintHex<T>(T value) { Output.WriteHex(value); }
+
+		///// <summary>
+		///// Alias of Output.Write.
+		///// </summary>
+		//public static void Write(string value) { Output.Write(value); }
+		//public static void Write(object value) { Output.Write(value); }
+		//public static void Write<K, V>(IDictionary<K, V> value) { Output.Write(value); }
+		//public static void Write<T>(IEnumerable<T> value) { Output.Write(value); }
+		//public static void WriteList(params object[] values) { Output.WriteList(values); }
+		////public static void WriteListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
+		////public static void WriteHex<T>(T value) { Output.WriteHex(value); }
 
 		/// <summary>
-		/// Writes window handle, class and name.
+		/// Gets function name.
 		/// </summary>
-		public static void OutWnd(Wnd w)
-		{
-			Output.Write(w.ToString());
-		}
+		public static string FunctionName([CallerMemberName] string name = null) { return name; }
 
 		/// <summary>
 		/// Returns true if the string is null or "".
 		/// The same as string.IsNullOrEmpty.
 		/// </summary>
 		public static bool Empty(string s) { return string.IsNullOrEmpty(s); }
-	}
+
+		public static void Wait(double timeS) { Time.Wait(timeS); }
+		public static void WaitMS(int timeMS) { Time.WaitMS(timeMS); }
+    }
 }

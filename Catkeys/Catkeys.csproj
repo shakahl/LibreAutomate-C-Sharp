@@ -69,10 +69,14 @@
     <Compile Include="Automation\Input.cs" />
     <Compile Include="Automation\NoClass.cs" />
     <Compile Include="Catkeys\Calc.cs" />
+    <Compile Include="Catkeys\Classes.cs" />
     <Compile Include="Catkeys\Exceptions.cs" />
+    <Compile Include="Catkeys\Mouse.cs" />
+    <Compile Include="Catkeys\NetExt.cs" />
     <Compile Include="Catkeys\NoClass.cs" />
     <Compile Include="Catkeys\Output.cs" />
     <Compile Include="Catkeys\Show.cs" />
+    <Compile Include="Catkeys\WaitFor.cs" />
     <Compile Include="Catkeys\Wnd.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Catkeys\Script.cs" />

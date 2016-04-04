@@ -320,32 +320,35 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts string to int.
+		/// Converts part of string to int.
 		/// Returns the int value, or 0 if fails to convert.
 		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
 		/// Unlike int.Parse and Convert.ToInt32:
-		///		Gets length of the number part.
-		///		No exceptions. If fails to convert, sets the length argument to 0.
 		///		The number in string can be followed by more text, like "123text".
+		///		Gets the end of the number part.
+		///		This overload has startIndex parameter.
+		///		No exceptions. If fails to convert, sets numberEndIndex = 0 and returns 0.
 		///		Supports hexadecimal format, like "0x1E" or "0x1e".
 		///		Ignores any culture info.
 		///		7-9 times faster.
 		/// </summary>
+		/// <param name="startIndex">Offset in string where to start parsing.</param>
+		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <remarks>
-		/// The string can beging with ASCII spaces, tabs or newlines, like " 5".
+		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
 		/// The number can be with "-", like "-5", but not with "+" or "- ".
-		/// If the string begins with a decimal number, fails if the value is less than int.MinValue or greater than int.MaxValue.
-		/// If the string begins with a hexadecimal number, fails if the value is more than uint.MaxValue (0xffffffff).
+		/// For decimal numbers, fails if the value is less than int.MinValue or greater than int.MaxValue.
+		/// For hexadecimal numbers, fails if the value is more than uint.MaxValue (0xffffffff).
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets length=1.
+		/// This is the main overload. Other overloads just call it.
 		/// </remarks>
-		/// <param name="length">Receives length of the number part, including spaces and "-" at the beginning.</param>
-		public static int ToInt_(this string t, out int length)
+		public static int ToInt_(this string t, int startIndex, out int numberEndIndex)
 		{
-			length=0;
+			numberEndIndex=0;
 			if(t==null) return 0;
 			int i, k, n = 0; bool minus = false;
 
-			for(i=0; i<t.Length; i++) if(t[i]!=' ' && t[i]!='\t' && t[i]!='\r' && t[i]!='\n') break; //skip spaces
+			for(i=startIndex; i<t.Length; i++) if(t[i]!=' ' && t[i]!='\t' && t[i]!='\r' && t[i]!='\n') break; //skip spaces
 
 			if(i<t.Length && t[i]=='-') { i++; minus=true; } //minus
 
@@ -370,8 +373,34 @@ namespace Catkeys
 				if(minus) { R=-R; if(R<int.MinValue) return 0; } else if(R>int.MaxValue) return 0; //too big for int?
 			}
 
-			length=i;
+			numberEndIndex=i;
 			return (int)R;
+		}
+
+		/// <summary>
+		/// The same as the main overload, but without startIndex parameter.
+		/// </summary>
+		public static int ToInt_(this string t, out int numberEndIndex)
+		{
+			return ToInt_(t, 0, out numberEndIndex);
+		}
+
+		/// <summary>
+		/// The same as the main overload, but without numberEndIndex parameter.
+		/// </summary>
+		public static int ToInt_(this string t, int startIndex)
+		{
+			int eon;
+            return ToInt_(t, startIndex, out eon);
+		}
+
+		/// <summary>
+		/// The same as the main overload, but without startIndex and numberEndIndex parameters.
+		/// </summary>
+		public static int ToInt_(this string t)
+		{
+			int eon;
+            return ToInt_(t, 0, out eon);
 		}
 
 		/// <summary>
@@ -380,21 +409,33 @@ namespace Catkeys
 		/// For only-number string like "123", sets tail to "".
 		/// If fails to convert, sets tail to null.
 		/// Skips 1 ASCII space or tab character after the number part. For example, for string "123 text" sets tail = "text", not " text".
-		/// Everything else is the same as for the other overload that gets number part length.
+		/// Everything else is the same as for the main overload.
 		/// </summary>
 		/// <param name="tail">A string variable. Can be this variable.</param>
 		public static int ToInt_(this string t, out string tail)
 		{
-			int len, R = t.ToInt_(out len);
+			int eon, R = t.ToInt_(out eon);
 
-			if(len==0)
+			if(eon==0)
 				tail=null;
 			else {
-				if(len<t.Length) { char c = t[len]; if(c==' ' || c=='\t') len++; }
-				if(len<t.Length) tail=t.Substring(len); else tail="";
+				if(eon<t.Length) { char c = t[eon]; if(c==' ' || c=='\t') eon++; }
+				if(eon<t.Length) tail=t.Substring(eon); else tail="";
 			}
 
 			return R;
 		}
+
+		/// <summary>
+		/// If this string is longer than length, returns its substring 0 to length - 3 with appended "...".
+		/// Else returns this string.
+		/// </summary>
+		public static string Limit_(this string t, int length)
+		{
+			int k = t.Length;
+			if(k <= length || length < 4) return t;
+			return t.Remove(length-3) + "...";
+		}
+
 	}
 }

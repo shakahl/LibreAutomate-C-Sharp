@@ -38,7 +38,7 @@ namespace Compiler
 		static OurSharedMemory _sm;
 
 		//static Wnd _hwndCompiler;
-		static Api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
+		static Api.WNDPROC _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
 
 
 		public static unsafe void Main()
@@ -70,7 +70,7 @@ namespace Compiler
 			//message loop
 			//Application.Run(); //By default would add several ms to the startup time. Same speed if Main() has the LoaderOptimization attribute. Also may be not completely compatible with native wndproc. Also in some cases adds several MB to the working set.
 			Api.MSG m;
-			while(Api.GetMessage(out m, Zero, 0, 0)>0) { Api.DispatchMessage(ref m); }
+			while(Api.GetMessage(out m, Wnd0, 0, 0)>0) { Api.DispatchMessage(ref m); }
 		}
 
 		unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)

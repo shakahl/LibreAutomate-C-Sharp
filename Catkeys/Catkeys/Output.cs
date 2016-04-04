@@ -8,7 +8,7 @@ using System.Diagnostics;
 //using System.Threading.Tasks;
 //using System.Reflection;
 //using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using System.IO;
 //using System.Windows.Forms;
 
@@ -44,8 +44,8 @@ namespace Catkeys
 
 		static bool _InitHwndEditor()
 		{
-			if(_hwndEditor==Zero || !Api.IsWindow(_hwndEditor)) _hwndEditor=Api.FindWindow("QM_Editor", null);
-			return _hwndEditor != Zero;
+			if(!_hwndEditor.IsWindow) _hwndEditor=Api.FindWindow("QM_Editor", null); //TODO: Wnd.Find
+			return !_hwndEditor.Is0;
 		}
 
 		/// <summary>
@@ -61,42 +61,69 @@ namespace Catkeys
 		/// Writes value to the output pane or console.
 		/// </summary>
 		public static void Write(string value) { Writer.WriteLine(value); }
-		public static void Write(int value) { Write(value.ToString()); }
-		public static void Write(uint value) { Write(value.ToString()); }
-		public static void Write(long value) { Write(value.ToString()); }
-		public static void Write(ulong value) { Write(value.ToString()); }
-		public static void Write(bool value) { Write(value.ToString()); }
-		public static void Write(char value) { Write(value.ToString()); }
-		public static void Write(char[] value) { Write(new string(value)); }
-		public static void Write(double value) { Write(value.ToString()); }
-		public static void Write(float value) { Write(value.ToString()); } //don't delete this, because converting float to double is not 100% precise, eg Out(1.2F) shows 1.20000004768372 if using the double overload
-		public static void Write(decimal value) { Write(value.ToString()); }
-		public static void Write(object value) { Write(value.ToString()); }
-		public static void Write(IntPtr value) { Write(value.ToString()); }
 
 		/// <summary>
-		/// Writes array or other collection as a list of element values.
-		/// Separator depends on element type: string "\r\n", other ", ".
+		/// Writes value.ToString() to the output pane or console.
 		/// </summary>
-		public static void Write<T>(IEnumerable<T> values) { Write(string.Join((values is IEnumerable<string>) ? "\r\n" : ", ", values)); }
-		//public static void Write<T>(IEnumerable<T> values) { Write(string.Join(((values is IEnumerable<string>) || (values is IEnumerable<KeyValuePair>) ? "\r\n" : ", ", values)); }
+		public static void Write(object value)
+		{
+			Write((value==null) ? "" : value.ToString());
+		}
 
 		/// <summary>
-		/// Writes dictionary as a list of element pair values.
+		/// Writes array, List˂T˃ or other collection as a list of element values.
+		/// Separator depends on element type: string "\r\n", char "", other ", ".
+		/// </summary>
+		public static void Write<T>(IEnumerable<T> value)
+		{
+			string sep = null;
+			if(value is IEnumerable<string>) sep="\r\n"; else if(!(value is IEnumerable<char>)) sep=" ";
+
+			Write(string.Join(sep, value));
+		}
+
+		/// <summary>
+		/// Writes dictionary as a multiline list of [key, value].
 		/// Separator "\r\n".
 		/// </summary>
-		public static void Write<K, V>(IDictionary<K, V> values) { Write(string.Join("\r\n", values)); }
+		public static void Write<K, V>(IDictionary<K, V> value)
+		{
+			Write(string.Join("\r\n", value));
+		}
 
 		/// <summary>
-		/// Writes multiple values using the specified separator, default " ".
-		/// <example>
-		/// <code>
-		/// Output.Write(", ", a, b, c);
-		/// Output.Write($"{a}, {b}, {c}");
-		/// </code>
-		/// </example>
+		/// Writes multiple argument values using separator ", ".
 		/// </summary>
-		public static void Write(string separator, params object[] values) { Write(string.Join(separator, values)); }
+		public static void WriteList(params object[] values) { Write(string.Join(", ", values)); }
+
+		/// <summary>
+		/// Writes multiple argument values using the specified separator.
+		/// </summary>
+		public static void WriteListSep(string separator, params object[] values) { Write(string.Join(separator, values)); }
+
+		/// <summary>
+		/// Writes an integer in hexadecimal format, like "0x5A".
+		/// </summary>
+		public static void WriteHex<T>(T value) { Write($"0x{value:X}"); }
+
+		/// <summary>
+		/// Writes a string prefixed with "Warning: " and optionally followed by the stack trace.
+		/// </summary>
+		/// <param name="s">Warning text.</param>
+		/// <param name="showStackFromThisFrame">If ˃= 0, appends stack trace, skipping this number of frames.</param>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static void Warning(string s, int showStackFromThisFrame = -1)
+		{
+			var sb = new StringBuilder("Warning: ");
+			sb.Append(s);
+			if(showStackFromThisFrame >= 0) {
+				var x = new StackTrace(showStackFromThisFrame+1, false);
+				sb.AppendLine();
+				sb.Append(x.ToString());
+			}
+			Out(sb.ToString());
+			sb.Clear();
+		}
 
 		//Note:
 		//In library don't redirect console and don't use Console.WriteLine.
@@ -116,14 +143,14 @@ namespace Catkeys
 		static TextWriter _writer;
 
 		/// <summary>
-		/// Gets or sets object that actually writes text when your script or the automation library calls Output.Write or Out.
+		/// Gets or sets object that actually writes text when your script or the automation library calls Output.Write or Write.
 		/// If you want to redirect or modify output text (for example write to a file or add time), use code like this:
 		/// <c>Output.Writer=myWriter;</c>, where myWriter is a variable of your class that is derived from TextWriter and overrides its functions WriteLine, Write and Encoding.
 		/// It is like redirecting console output with code <c>Console.SetOut(myWriter);</c> (google for more info).
 		/// Usually the best place to redirect is in static ScriptClass() {  }.
 		/// Redirection is applied to whole script appdomain, and does not affect other scripts.
 		/// Redirection affects Write, RedirectConsoleOutput, RedirectDebugOutput, AlwaysOutput and all OutX. It does not affect WriteDirectly and Clear.
-		/// Don't call Output.Write and Out in your writer class; it would create stack overflow; if need, use Output.WriteDirectly.
+		/// Don't call Output.Write and Write in your writer class; it would create stack overflow; if need, use Output.WriteDirectly.
 		/// </summary>
 		public static TextWriter Writer
 		{

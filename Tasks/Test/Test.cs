@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-//using System.Threading.Tasks;
+using System.Threading.Tasks;
 //using System.Linq;
 
 using System.Diagnostics;
@@ -56,7 +56,7 @@ class Test
 	public static void _Main()
 	{
 	Time.First();
-		IntPtr ev=api.CreateEvent(Zero, false, false, null);
+		IntPtr ev=api.CreateEvent(Wnd0, false, false, null);
 
 		_mmf=MemoryMappedFile.CreateNew("Catkeys_SM_Tasks", 1024*1024);
 		_m=_mmf.CreateViewAccessor();
@@ -78,7 +78,7 @@ class Test
 
 		Msg("exit");
 		
-		_hwndCompiler.Send(WM.CLOSE, Zero, Zero);
+		_hwndCompiler.Send(WM.CLOSE);
 		//Environment.Exit(0);
 	}
 
@@ -100,7 +100,7 @@ class Test
 
 		Wnd w=api.CreateWindowExW(0, "Catkeys_Compiler",
 			null, WS.POPUP, 0, 0, 0, 0, Wnd.Spec.Message,
-			Zero, Window.hInst, Zero);
+			Zero, Zero, Zero);
 
 		_mmf=MemoryMappedFile.OpenExisting("Catkeys_SM_Tasks"); //1.5 ms
 		_m=_mmf.CreateViewAccessor(); //3.5 ms. Why it is so slow? CreateOrOpen is even slower.
@@ -154,11 +154,10 @@ class Test
 
 
 
-
-#region
-
-partial class Test
+public partial class Test
 {
+
+	#region
 
 	struct _SHMEM
 	{
@@ -177,7 +176,7 @@ partial class Test
 	static OurSharedMemory _sm;
 
 	static Wnd _hwndCompiler;
-	static Api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
+	static Api.WNDPROC _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
 
 
 	//class DialogVariables { public string lb3, c4; public string[] au; }
@@ -218,11 +217,6 @@ partial class Test
 	//}
 	delegate void Dee(object x);
 
-	static void Mee(object x)
-	{
-		Out(x);
-	}
-
 	[DllImport("UnmanagedDll", CallingConvention = CallingConvention.Cdecl)]
 	static extern void TestUnmanaged();
 
@@ -244,7 +238,7 @@ partial class Test
 		//}
 		public string this[string s]
 		{
-			get { return s+" ?"; }
+			get { return s + " ?"; }
 			set { Out($"{s} {value}"); }
 		}
 
@@ -279,204 +273,529 @@ partial class Test
 	[Trigger.Hotkey("Ctrl+K")]
 	public static void Function1(HotkeyTriggers.Message m) { Out("script"); }
 
+	[DllImport("kernel32.dll")]
+	public static extern int lstrlenW([In] string lpString);
 
-
-	//public class MooWriter :TextWriter
+	//static void AnotherThread()
 	//{
-	//	public override void WriteLine(string value)
-	//	{
-	//		//Out(value); //stack overflow
-	//		Output.WriteDirectly($"direct: {value}");
-	//           Mes(value);
-	//	}
-	//	public override void Write(string value) { WriteLine(value); }
-	//	public override Encoding Encoding { get { return Encoding.Unicode; } }
+	//	//Show.TaskDialog("another thread", "", "", x:1);
+	//	MessageBox.Show("another thread");
+	//	Out("after msgbox in another thread");
 	//}
 
-	//[DllImport("uxtheme")]
-	//static extern uint GetThemeAppProperties();
+	//[DllImport("comctl32.dll", EntryPoint = "TaskDialog")]
+	//static extern int _TaskDialog(Wnd hWndParent, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, TDButton dwCommonButtons, LPARAM pszIcon, out int pnButton);
 
+	//static int TD(string s, bool asy)
+	//{
+	//	int r = 0;
+	//	for(int i = 0; i < 100; i++) {
+	//		int hr = _TaskDialog(Wnd0, Zero, "Test", s, null, TDButton.Cancel, 0, out r);
+	//		OutList(hr, r, asy);
+	//		if(hr == 0 || hr == Api.E_INVALIDARG) break;
+	//		Time.WaitMS(20);
+	//	}
+	//	return r;
+	//}
 
-	public class TDResult
+	public static async Task<TDResult> TaskDialogAsync(string text1)
 	{
-		public TDResult(int button, int radioButton = 0, bool isChecked = false)
-		{
-			Button=button; RadioButton=radioButton; IsChecked=isChecked;
-		}
-
-		public const int Cancel = 0, OK = -1, Retry = -4, Yes = -6, No = -7, Close = -8, Timeout = -32000;
-
-		public int Button { get; set; }
-		public int RadioButton { get; set; }
-		public bool IsChecked { get; set; }
-
-		//Implicit conversion to int allows to use code switch(TaskDialog(...)) instead of switch(TaskDialog(...).Button)
-		public static implicit operator int(TDResult r) { return r.Button; }
+		return await Task.Run(()=> Show.TaskDialog(text1, "", "OC"));
 	}
 
-	static TDResult TestResult()
+	public static Show.TaskDialogObject TaskDialogNoWait(string text1, TDAsyncResult onClose =null)
 	{
-		return new TDResult(TDResult.OK, 77, true);
+		var d = new Show.TaskDialogObject(text1);
+		d.ShowAsync(onClose);
+		return d;
 	}
 
+	public static Show.TaskDialogObject TaskProgressDialog(string text1)
+	{
+		var d = new Show.TaskDialogObject(text1);
+		d.FlagShowProgressBar = true;
+		d.ShowAsync();
+		return d;
+    }
 
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
-		//switch(TestResult().Button) {
-		switch(TestResult()) {
-		case TDResult.OK: Out("OK"); break; //common button
-		case 1: Out(1); break; //custom button
-		}
+		#region commented
+		//Out(AppDomain.CurrentDomain.FriendlyName);
+
+		//new Thread(AnotherThread).Start();
+
+		//Show.TaskDialog("appdomain primary thread", "", "e");
+
+		////Thread.CurrentThread.Abort();
+		////AppDomain.Unload(AppDomain.CurrentDomain);
+		//Out("after TaskDialog");
+
+		//return;
+
+		//Show.TaskDialog("", "<a href=\"test\">test</a>", onLinkClick: ed =>
+		//{
+		//	Wnd z = ed.DialogWindow;
+		//	string s = null;
+		//	Time.First(true);
+		//	for(int j = 0; j<8; j++) {
+		//		for(int i=0; i<1000; i++) s= z.ClassName;
+		//		//for(int i=0; i<1000; i++) s= z.Name;
+		//		//for(int i = 0; i<1000; i++) s= z.ControlText;
+		//		//for(int i = 0; i<1000; i++) s= z.ControlTextLength;
+		//		Time.Next();
+		//	}
+		//	Time.Write();
+		//	Out(s);
+		//}
+		//);
+
+		//return;
+
+		////Time.Wait(1);
+		//Wnd z = Wnd.Find("Untitled - Notepad");
+		////z=(Wnd)(IntPtr)2098486; //Inno
+		////z=(Wnd)(IntPtr)395896; //Static
+		////z=(Wnd)(IntPtr)1510052; //Edit
+
+		////z.Name = "MMMMMMMMGGGG"; return;
+
+		////string m = z.Name;
+		////string m = z.GetControlText();
+		////OutList(m==null, m=="", m);
+		////return;
+
+		//Out(z);
+
+		//string cn = null;
+		////cn= z.ControlText; OutList(cn.Length, cn); return;
+		//int nt = 0;
+
+		//Time.First(true);
+		//for(int j = 0; j<8; j++) {
+		//	//for(int i=0; i<1000; i++) cn= z.ClassName;
+		//	//for(int i=0; i<1000; i++) cn= z.Name;
+		//	for(int i = 0; i<1000; i++) cn= z.GetControlText();
+		//	Time.Next();
+		//}
+		//Time.Write();
+		//Out(cn);
+		//Out(nt);
+
+		//Wnd ww = Wnd.Find("Untitled - Notepad");
+		//ww.MoveInScreen(100, 100);
+		//return;
+
+		//OutFunc();
+		//Out(FunctionName());
+		//Output.WriteHex((sbyte)(-10));
+		//OutList(1, "mmm", true, null, 5.6);
+		//Out("ff");
+		//Print(5);
+		//PrintList(1, 2, 3);
+		//return;
+
+		//Output.Clear();
+		//Screen s = null;
+		////Output.Write(s);
+		////Console.WriteLine(s);
+		//Info("stri");
+		//Info(5);
+		//Info(true);
+		//Info(new char[] { 'a', 'b' });
+		//Info(new string[] { "aaa", "bbb" });
+		//Info(new int[] { 'a', 'b' });
+		//Info(new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } });
+		//Out("----------");
+		//Print("stri");
+		//Print(5);
+		//Print(true);
+		//Print(new char[] { 'a', 'b' });
+		//Print(new string[] { "aaa", "bbb" });
+		//Print(new int[] { 'a', 'b' });
+		//Print(new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } });
+
+		////Time.First(true);
+		////for(int j=0; j<5; j++) {
+		////	for(int i = 0; i<1000; i++) Info2("ff");
+		////	Time.Next();
+		////}
+		////Time.Write();
+
+		//return;
 
 
-#if NEWRESULT
-		try {
-			//Thread.Sleep(5000);
 
-			//Api.MessageBox(Zero, "dd", "ggg", 0x40000);
-			//return;
 
-			//Script.Option.dialogRtlLayout=true;
-			//Script.Option.dialogTopmostIfNoOwner=true;
-			
-			//var asm = Assembly.GetEntryAssembly(); //fails if DoCallBack, OK if ExecuteAssembly
-			////var asm = Assembly.GetExecutingAssembly(); //OK
-			////Out(asm!=null);
-			//Out(asm.Location);
-			////var rm = new System.Resources.ResourceManager("", asm);
-			////Out(rm);
-			//return;
+		//Wait(2);
+		//Info("bla");
+		//Out("bla");
+		//Say("bla");
+		//Print("bla");
+		//OW("bla");
 
-			//ScriptOptions.DisplayName="Script display name";
-			//Out(Assembly.GetEntryAssembly().FullName); //exception
+		//Info("bla"); Warning("bla"); Error("bla");
 
-			//Out(GetThemeAppProperties());
-			//MessageBox.Show("sss");
-			//Out(Show.MessageDialog(Zero, "test", MDButtons.OKCancel, MDIcon.App, MDFlag.DefaultButton2));
-			//Out(Show.MessageDialog("One\ntwooooooooooooo."));
-			//Out(Show.MessageDialog("One\ntwooooooooooooo.", "YNC!t"));
 
-			//Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, "1 one|2 two", "expanded", "", 20, "TTT"));
-			//Out(Show.TaskDialog("Head1\nHead2.", "Text1\nText2.", "OC!ct", Zero, "1 one|2 two", "expanded", "foo", 60, "TTT"));
-			//Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info));
-			//Out(Show.TaskDialog(Zero, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0));
-			//Out(Show.TaskDialog("head", "content", "OCYNLRi"));
-			//Out(Show.TaskDialog("", "<a href=\"example\">link</a>.", onLinkClick: (o, a) => { Out(a.LinkHref); }));
 
-			////Out(Show.TaskListDialog("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
-			////Out(Show.TaskListDialog(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More"));
-			////		Out(Show.TaskListDialog(@"
-			////|1 one
-			////|2 two
-			////comments
-			////|3 three
-			////" , "Main", "More\r\nmore"));
+		//Wnd w = Wnd.Find("Untitled - Notepad");
+		////Wnd w2 = Wnd.Find("Registry Editor");
 
-			////		Out(Show.TaskListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
-			//return;
+		////w.MoveInScreen(0, 0, null, limitSize:true, rawXY:false);
+		////w.EnsureInScreen(null, limitSize:true, workArea:true);
 
-			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
-			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
-			//var d = new Show.AdvancedTaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
-			//var d = new Show.AdvancedTaskDialog("Head Text.", null, 0, TDIcon.Shield);
-			//var d = new Show.AdvancedTaskDialog("", "More text.", 0, TDIcon.Shield);
-			//var d = new Show.AdvancedTaskDialog();
-			var d = new Show.AdvancedTaskDialog();
+		//RECT k=new RECT(0, 1700, 5000, 400, true);
+		////RECT k=new RECT(-1, -1, 500, 400, true);
 
-			d.SetTitleBarText("MOO");
+		////Wnd.RectMoveInScreen(ref k, limitSize:true);
+		//Wnd.RectEnsureInScreen(ref k, limitSize:true);
+		//Out(k);
 
-			d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClick event.");
+		////w=Wnd.Spec.NoTopmost;
+		//Out(Screen_.FromObject(w));
 
-			d.SetButtons(TDButton.OKCancel|TDButton.Retry);
+		////Screen s1 = Screen_.FromObject(w);
+		////Screen s2 = Screen_.FromObject(w);
+		//Screen s1 = Screen.PrimaryScreen;
+		//Screen s2 = Screen.PrimaryScreen;
+		//Out(s1==s2);
+		//Out(s1.Equals(s2));
 
-			//d.SetIcon(TDIcon.Warning);
-			//var icon = new System.Drawing.Icon(@"Q:\app\qm.ico", 32, 32); if(icon!=null) d.SetIcon(icon.Handle);
-			//var icon = new System.Drawing.Icon(typeof(Test), "catkeys.ico"); if(icon!=null) d.SetIcon(icon.Handle);
-			//var icon=Catkeys.Tasks.Properties.Settings.Default.PropertyValues.
-			//Catkeys.Tasks.Properties.Resources
-			//d.SetIcon(Show.Resources.AppIconHandle32);
-			//d.SetIcon(TDIcon.App);
 
-			d.SetStyle("YNCa");
+		//IntPtr hm = DisplayMonitor.GetHandle(w);
+		////hm=DisplayMonitor.GetHandle(2);
+		////hm=DisplayMonitor.GetHandle(DisplayMonitor.OfMouse);
+		////hm=DisplayMonitor.GetHandle(new POINT(2000, 2000));
+		////hm=DisplayMonitor.GetHandle(new RECT(2000, 2000, 100, 100, true));
+		//Out(hm);
 
-			d.SetXY(100, 100);
+		//for(int z=0; z<2; z++) {
+		//	Screen[] ad = Screen.AllScreens;
+		//	foreach(Screen k in ad) {
+		//		RECT rr = k.Bounds;
+		//		Out(rr);
+		//	}
+		//	Show.MessageDialog("aaa");
+		//}
 
-			d.SetCheckbox("Checkbox", false);
+		//Time.First(true);
+		//for(int rep1=0; rep1<5; rep1++) {
+		//	//for(int rep2=0; rep2<100; rep2++) { RECT u1 = DisplayMonitor.GetRectangle(2); }
+		//	for(int rep2=0; rep2<100; rep2++) { RECT u2 = ScreenFromIndex(2).Bounds; }
+		//	Time.Next();
+		//}
+		//Time.Write();
 
-			d.FlagAllowCancel=true;
-			d.FlagCanBeMinimized=true;
-			//d.FlagRtlLayout=true;
-			//d.FlagPositionRelativeToWindow=true;
+		//Screen k = ScreenFromIndex(1);
+		//Out(k.Bounds);
 
-			//d.ExpandedInfoText="Expanded info\nand more info."; d.EXPAND_FOOTER_AREA=true;
-			d.SetExpandedText("Expanded info\nand more info.", true);
 
-			//d.EXPANDED_BY_DEFAULT=true; d.CollapsedControlText="Show more info"; d.ExpandedControlText="Hide more info";
-			d.SetExpandControl(true, "Show more info", "Hide more info");
+		//return;
 
-			//d.FooterText="Footer.";
-			//d.FooterIcon=TDIcon.Warning;
-			//d.SetFooterText("Footer text.", TDIcon.Warning);
-			//d.SetFooterText("Footer.");
+		//RECT r1; System.Drawing.Rectangle r2;
 
-			//d.Width=700;
+		//Api.GetWindowRect(w, out r1);
+		//GetWindowRect(w, out r2);
 
-			//d.SetCustomButtons(new string[] { "101 one", "102 two" });
-			d.SetCustomButtons("1 one|2 two\nzzz", true);
-			//d.SetCustomButtons(new string[] { "5", "102 two" }, true);
-			//d.SetCustomButtons("101|102 two\nzzz", true);
-			d.SetDefaultButton(TDButton.Retry);
-			//d.SetDefaultButton(2);
-			//d.SetDefaultButton(TDResult.Cancel);
-			//d.SetDefaultButton(TDResult.Retry);
+		//OutList(r1, r2);
 
-			//d.SetRadioButtons(new string[] { "1001 r1", "1002 r2" }, 1002);
-			d.SetRadioButtons("1001 r1|1002 r2");
-			//d.SetRadioButtons("1001 r1|1002 r2", 0, true);
+		//return;
 
-			d.SetTimeout(10, "Cancel");
-			//d.SetTimeout(10, null, true);
 
-			//d.Created+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
-			//d.Destroyed+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
-			//d.ButtonClicked+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); if(a.WParam==6) a.Return=1; };
-			d.HyperlinkClicked+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
-			//d.OtherMessages+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
-			//d.Timer+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
-			//d.HelpF1+=(o, a) => { Out($"{a.Message} {a.WParam} {a.LinkHref}"); };
+		//var r1 = new RECT();
+		//var r2 = r1;
+		//var r3 = RECT.LTRB(1, 8, 10, 50);
+		//var r4 = RECT.LTWH(1, 8, 10, 50);
+		//var r5 = new RECT() { left=2, top=20, Width=2, Height=10 };
 
-			//d.FlagShowProgressBar=true;
-			//d.Timer+=(o, a) => { a.Dialog.Send((uint)Show.AdvancedTaskDialog.TDM_.SET_PROGRESS_BAR_POS, a.WParam/100); };
+		//Out(r2==r1);
 
-			//Time.First();
-			TDResult b = d.Show();
-			//Time.NextWrite();
+		//Out(r3);
+		//Out(r4);
+		//Out(r5);
 
-			Out($"{b}  radio={d.ResultRadioButton}  checked={d.ResultIsChecked}");
+		//return;
 
-		} catch(ArgumentException e) { Out($"ArgumentException: {e.ParamName}, '{e.Message}'"); } catch(Exception e) { Out($"Exception: '{e.Message}'"); }
-#endif
+		//Wnd w = Wnd.Spec.Bottom;
+		//Out(w.Equals(Wnd.Spec.Bottom));
+		//Wnd w2 = w;
+		//Out(w.Equals(w2));
+		////Wnd w = Wnd0;
+		////Out(w.Equals(Wnd0));
+
+		//Wnd wg = Wnd.Get.FirstToplevel();
+
+		//return;
+
+		//int eon, x = "ab 99 hjk".ToInt_(2, out eon);
+		//OutList(x, eon);
+		//int x = "ab 99 hjk".ToInt_(2);
+		//int x = " 99 hjk".ToInt_();
+		//OutList(x);
+		//int eon, x = " 99 hjk".ToInt_(out eon);
+		//OutList(x, eon);
+
+		//return;
+
+		//#if NEWRESULT
+		//try {
+		//Thread.Sleep(5000);
+
+		//Api.MessageBox(Wnd0, "dd", "ggg", 0x40000);
+		//return;
+
+		//Script.Option.dialogRtlLayout=true;
+		//Script.Option.dialogTopmostIfNoOwner=true;
+
+		//var asm = Assembly.GetEntryAssembly(); //fails if DoCallBack or CreateInstance, OK if ExecuteAssembly
+		//var asm = Assembly.GetExecutingAssembly(); //OK
+		//Out(asm!=null);
+		//Out(asm.Location);
+		////var rm = new System.Resources.ResourceManager("", asm);
+		////Out(rm);
+		//return;
+
+		//ScriptOptions.DisplayName="Script display name";
+		//Out(Assembly.GetEntryAssembly().FullName); //exception
+
+		#endregion
+
+
+		//TaskDialogAsync("async"); //warning "consider applying await"
+		//TDResult rr=await TaskDialogAsync("async"); //error, the caller must be marked with async. But then fails to run altogether.
+
+		//Task<TDResult> t=TaskDialogAsync("async");
+		//Show.TaskDialog("continue");
+		//t.Wait();
+		//Out(t.Result);
+
+		////var pd = TaskDialogNoWait("async", y=>Out(y));
+		//var pd = TaskDialogNoWait("async");
+		//Wait(2);
+		//if(pd.IsOpen) pd.Send.Close();
+		//Out(pd.Result);
+
+		//var pd = TaskProgressDialog("progress");
+		//for(int i = 1; i <= 100; i++) {
+		//	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
+		//	pd.Send.Progress(i);
+		//	WaitMS(50); //do next part of your work in the loop
+		//}
+		//pd.Send.Close();
+
+		//var td = new Show.TaskDialogObject("dddd");
+		//Task.Run(() => td.Show());
+		////Time.First();
+		////td.ThreadWaitOpen();
+		////Time.NextWrite();
+		//td.ThreadWaitClosed();
+		////Task.Run(() => td.Show());
+		////td.ThreadWaitOpen();
+		////td.ThreadWaitClosed();
+		//Out(td.Result);
+
+		Show.TaskDialog("continue", y:300);
+
+		Out("finished");
+
+		//Task t = Task.Run(() =>
+		//{
+		//	//Thread.Sleep(100);
+
+		//	//Out("run");
+		//	Out(Show.TaskDialog("async", style: "OC", x: 1));
+		//	//MessageBox.Show("another thread");
+		//	//Show.MessageDialog("async",style:"OC");
+		//	//TD("async", true);
+		//}
+		//);
+
+		////Thread.Sleep(7);
+
+		//Out(Show.TaskDialog("continue", style: "OC"));
+		////TD("continue", false);
+		////Show.MessageDialog("continue",style:"OC");
+		////Thread.Sleep(1000);
+		//t.Wait();
+		//Out("after all");
+
+		//for(int i=0; i<5; i++) TD("continue", false);
+
+		//Out(GetThemeAppProperties());
+		//MessageBox.Show("sss");
+		//Out(Show.MessageDialog("test", MDButtons.OKCancel, MDIcon.App, MDFlag.DefaultButton2));
+		//Out(Show.MessageDialog("One\ntwooooooooooooo."));
+		//Out(Show.MessageDialog("One\ntwooooooooooooo.", "YNC!t2"));
+		//Show.MessageDialog("One\ntwooooooooooooo.");
+		//Out(Wnd.ActiveWindow);
+
+		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, TDResult.Cancel, "1 one|2 two", new string[] { "101 r1|||", "102 r2" }, "Chick|check", "expanded", "", 20, "TTT").ToString());
+		//Out(Show.TaskDialog("Head1\nHead2.", "Text1\nText2.", "OCd2!t", Wnd0, "1 one|2 two", null, null, "expanded", "foo", 60, "TTT").ToString());
+		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info).ToString());
+		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0).ToString());
+		//Out(Show.TaskDialog("head", "content", "OCYNLRio", owner: Wnd.Find("Untitled - Notepad")).ToString());
+		//Out(Show.TaskDialog("head", "content", "OCYNLRi", x:100, y:-11, timeoutS:15).ToString());
+		//Out(Show.TaskDialog("", "<a href=\"example\">link</a>.", onLinkClick: ed => { Out(ed.LinkHref); }).ToString());
+
+		//Out(Show.TaskListDialog("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
+		//Out(Show.TaskListDialog(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
+		//Out(Show.TaskListDialog(new List<string> { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
+		////		Out(Show.TaskListDialog(@"
+		////|1 one
+		////|2 two
+		////comments
+		////|3 three
+		////" , "Main", "More\r\nmore"));
+
+		////		Out(Show.TaskListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
+		return;
+
+		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
+		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
+		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
+		//var d = new Show.TaskDialogObject("Head Text.", null, 0, TDIcon.Shield);
+		//var d = new Show.TaskDialogObject("", "More text.", 0, TDIcon.Shield);
+		//var d = new Show.TaskDialogObject();
+		var d = new Show.TaskDialogObject();
+
+		d.SetTitleBarText("MOO");
+
+		d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClick event.");
+
+		d.SetButtons(TDButton.OKCancel | TDButton.Retry);
+
+		//d.SetIcon(TDIcon.Warning);
+		//var icon = new System.Drawing.Icon(@"Q:\app\qm.ico", 32, 32); if(icon!=null) d.SetIcon(icon.Handle);
+		//var icon = new System.Drawing.Icon(typeof(Test), "catkeys.ico"); if(icon!=null) d.SetIcon(icon.Handle);
+		//var icon=Catkeys.Tasks.Properties.Settings.Default.PropertyValues.
+		//Catkeys.Tasks.Properties.Resources
+		//d.SetIcon(Show.Resources.AppIconHandle32);
+		//d.SetIcon(TDIcon.App);
+
+		d.SetStyle("YNCa");
+
+		Wnd w = Wnd.Find("Untitled - Notepad");
+		d.SetOwnerWindow(w);
+
+		//Script.Option.dialogScreenIfNoOwner=2;
+
+		d.SetXY(100, 100);
+
+		d.SetCheckbox("Checkbox", false);
+
+		//Script.Option.dialogTopmostIfNoOwner=true;
+		//d.FlagTopmost=false;
+		d.FlagAllowCancel = true;
+		d.FlagCanBeMinimized = true;
+		//d.FlagRtlLayout=true;
+		//d.FlagPositionRelativeToWindow=true;
+
+		//Script.Option.dialogScreenIfNoOwner=2;
+		//d.Screen=2;
+
+		d.SetExpandedText("Expanded info\nand more info.", true);
+
+		d.SetExpandControl(true, "Show more info", "Hide more info");
+
+		//d.SetFooterText("Footer text.", TDIcon.Warning);
+		//d.SetFooterText("Footer.");
+
+		//d.Width=700;
+
+		//d.SetCustomButtons(new string[] { "101 one", "102 two" });
+		d.SetCustomButtons("1 one|2 two\nzzz", true);
+		//d.SetCustomButtons(new string[] { "5", "102 two" }, true);
+		//d.SetCustomButtons("101|102 two\nzzz", true);
+		d.DefaultButton = TDResult.No;
+		//d.SetDefaultButton(2);
+		//d.SetDefaultButton(TDResult.Cancel);
+		//d.SetDefaultButton(TDResult.Retry);
+
+		//d.SetRadioButtons(new string[] { "1001 r1", "1002 r2" }, 1002);
+		//d.SetRadioButtons("1001 r1|1002 r2");
+		//d.SetRadioButtons("1001 r1|1002 r2", 0, true);
+
+		d.SetTimeout(10, "Cancel");
+		//d.SetTimeout(10, null, true);
+
+		//d.Created += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
+		d.Created += ed => { ed.Obj.Send.EnableButton(TDResult.Yes, false); };
+		//d.Created += ed => { ed.OwnerWindow.Enabled=true; };
+		//d.Created += ed => { ed.DialogWindow.Owner.Enabled=true; };
+		//d.Created += ed => { Wnd.Get.Owner(ed.DialogWindow).Enabled=true; };
+		//d.Created += ed => { w.Enabled=true; };
+		//d.Destroyed += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
+		d.ButtonClicked += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); if(ed.WParam == TDResult.No) ed.Return = 1; };
+		d.HyperlinkClicked += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
+		//d.OtherEvents += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
+		//d.Timer += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
+		//d.HelpF1 += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
+
+		//d.FlagShowProgressBar=true; d.Timer += ed => { ed.Obj.Send.Progress(ed.WParam/100); };
+
+		//Time.First();
+		TDResult r = d.Show();
+		//Time.NextWrite();
+
+		Out(r.ToString());
+
+		//} catch(ArgumentException e) { Out($"ArgumentException: {e.ParamName}, '{e.Message}'"); } catch(Exception e) { Out($"Exception: '{e.Message}'"); }
+		//#endif
+	}
+
+	//static void ScriptDomainThread()
+	//{
+
+	//}
+
+	public Test()
+	{
+		TestX();
 	}
 
 	static void TestInScriptDomain()
 	{
 		var domain = AppDomain.CreateDomain("Test");
-		//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
-		domain.DoCallBack(TestX); //Assembly.GetEntryAssembly() fails. OK if ExecuteAssembly.
-		AppDomain.Unload(domain);
+
+		try {
+
+			//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
+
+			//domain.DoCallBack(TestX);
+			//Out("after domain.DoCallBack");
+
+			domain.CreateInstance("CatkeysTasks", "Test");
+			//domain.CreateInstanceFrom("CatkeysTasks.exe", "Test");
+			//Out("after domain.CreateInstance");
+
+		} finally {
+			AppDomain.Unload(domain);
+			//Out("after AppDomain.Unload(domain)");
+		}
 	}
+	//static void TestInScriptDomain()
+	//{
+	//	var domain = AppDomain.CreateDomain("Test");
+	//	//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
+	//	domain.DoCallBack(TestX); //Assembly.GetEntryAssembly() fails. OK if ExecuteAssembly.
+	//	Out("after domain.DoCallBack");
+	//	AppDomain.Unload(domain);
+	//	Out("after AppDomain.Unload(domain)");
+	//}
 
 
 	static unsafe void TestAny()
 	{
-		//OutHex(MakeLparam(10, 5));
-		//Out(MulDiv(10, 5, 2));
-		//Out(Percent(10, 20));
-		//Out(Percent(10.0, 1.25));
+		Output.Clear();
 
 		//TestX();
-		TestInScriptDomain();
+		//TestInScriptDomain();
+		var t = new Thread(TestInScriptDomain);
+		t.Start();
+		t.Join();
+		//Show.TaskDialog("after all");
+		//Out("after all");
 
 		//Out(sizeof(WPARAM));
 
@@ -531,7 +850,7 @@ partial class Test
 		//r=s.ToInt_(out tail);
 		//Out($"{r} 0x{r:X} '{tail}' {tail==null}");
 
-		//Time.WakeCPU();
+		//Time.SpinCPU();
 		//int i, j, n1=0, n2=0;
 		//for(j=0; j<4; j++) {
 		//	Time.First();
@@ -541,11 +860,6 @@ partial class Test
 		//	Time.NextWrite();
 		//}
 		//Out($"{n1} {n2} {len}");
-
-
-		//Show.MessageDialog("test");
-
-		//Out((int)MessageBox.Show("sss", "ccc", MessageBoxButtons.OKCancel));
 
 		//string[] a = { "one", "two" };
 		//Out(a);
@@ -562,7 +876,7 @@ partial class Test
 
 		//Output.Writer=new MooWriter();
 
-		//Time.WakeCPU();
+		//Time.SpinCPU();
 		//int i, n=10;
 		//for(int j=0; j<3; j++) {
 
@@ -574,7 +888,7 @@ partial class Test
 		//	//for(i=0; i<n; i++) Trace.WriteLine("tra");
 		//	Time.NextWrite();
 		//}
-		//speed: Out unbuffered 35, Console.WriteLine 30, Trace.WriteLine (debug mode) 900
+		//speed: Write unbuffered 35, Console.WriteLine 30, Trace.WriteLine (debug mode) 900
 
 		////Time.First(true);
 		////Output.AlwaysOutput=true;
@@ -606,35 +920,6 @@ partial class Test
 		//var e = new WaitTimeoutException();
 		//Out(e.Message);
 
-		//Auto.Wnd w = Auto.Wnd.Zero;
-		//MessageBox.Show(null, "text", "title"); //ok
-		//MessageBox.Show(w, "text", "title"); //ok
-
-		//      Output.Clear();
-
-		//double d = 3.5;
-		//float f = 1.2F;
-		//Out(d);
-		//Out(f);
-		//IntPtr p = (IntPtr)7;
-		//Out(p);
-
-		//Out(",  ", d, f, p, "end");
-
-		//string[] a1 = { "aaa", "bbb", "ccc" };
-		//List<string> a2 = new List<string> { "aaa", "bbb", "ccc" };
-		//int[] a3 = { 4, 5, 6 };
-		//char[] a4 = { 'A', 'B', 'C' };
-
-		//Output.Write(a1);
-		//Output.Write(a2);
-		//Output.Write(a3);
-		//Output.Write(a4);
-		//Out("----");
-		//Out(a1);
-		//Out(a2);
-		//Out(a3);
-		//Out(a4);
 
 		//Out(1);
 		//Input.Key("Ctrl+K");
@@ -744,6 +1029,8 @@ partial class Test
 		//var sbb=new StringBuilder("nnn");
 	}
 
+	#region old
+
 	public static unsafe void _Main()
 	{
 		TestAny();
@@ -804,12 +1091,12 @@ partial class Test
 
 
 
-		//Time.WakeCPU(); //does nothing
+		//Time.SpinCPU(); //does nothing
 		long t1 = Stopwatch.GetTimestamp();
 
 		//TODO: instead could simply allocate unmanaged memory with Marshal methods and pass to domains with childDomain.SetData
-		_sm=new OurSharedMemory();
-		_sm.Create("Catkeys_SM_Tasks", 1024*1024);
+		_sm = new OurSharedMemory();
+		_sm.Create("Catkeys_SM_Tasks", 1024 * 1024);
 
 		if(true) //compiler
 		{
@@ -818,7 +1105,7 @@ partial class Test
 
 			IntPtr ev = Api.CreateEvent(Zero, false, false, null);
 
-			_sm.x->eventCompilerStartup=ev;
+			_sm.x->eventCompilerStartup = ev;
 
 			//Mes("before");
 
@@ -833,15 +1120,15 @@ partial class Test
 
 			_sm.x->perf.NextWrite();
 
-			_hwndCompiler=_sm.x->hwndCompiler;
+			_hwndCompiler = _sm.x->hwndCompiler;
 
-			for(int i = 0; i<1; i++) {
+			for(int i = 0; i < 1; i++) {
 				_hwndCompiler.Send(Api.WM_USER, Zero, Marshal.StringToBSTR("test"));
 			}
 
 			//Mes("in");
 
-			_hwndCompiler.Send(Api.WM_CLOSE, Zero, Zero);
+			_hwndCompiler.Send(Api.WM_CLOSE);
 			//Environment.Exit(0);
 
 			//Mes("after");
@@ -889,7 +1176,7 @@ partial class Test
 		//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe"));
 		//domain.DoCallBack(Compiler.Compiler.Main); //faster than ExecuteAssembly by 3-4 ms
 		AppDomain.Unload(domain);
-		domain=null;
+		domain = null;
 		//Out("_AppDomainThread() ended");
 		GC.Collect(); //releases a lot
 					  //Mes("MinimizeMemory");
@@ -907,7 +1194,7 @@ partial class Test
 		//if(AppDomain.CurrentDomain.FriendlyName!="Compiler") return;
 		long t1 = Stopwatch.GetTimestamp();
 
-		_sm=new OurSharedMemory();
+		_sm = new OurSharedMemory();
 		_sm.Open("Catkeys_SM_Tasks");
 
 		_sm.x->perf.AddTicksNext(t1);
@@ -924,13 +1211,13 @@ partial class Test
 		_sm.x->perf.Next();
 
 		_SHMEM* x = _sm.x;
-		x->hwndCompiler=w;
+		x->hwndCompiler = w;
 		Api.SetEvent(x->eventCompilerStartup);
 
 		//message loop
 		//Application.Run(); //By default would add several ms to the startup time. Same speed if Main() has the LoaderOptimization attribute. Also may be not completely compatible with native wndproc. Also in some cases adds several MB to the working set.
 		Api.MSG m;
-		while(Api.GetMessage(out m, Zero, 0, 0)>0) { Api.DispatchMessage(ref m); }
+		while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 	}
 
 	unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
@@ -989,10 +1276,10 @@ partial class Test
 
 		//g[0]="/?";
 		Time.Next(); //16 ms
-		for(int i = 1; i<=4; i++) {
+		for(int i = 1; i <= 4; i++) {
 			g[0] = $@"/out:C:\Test\test{i}.exe";
 			int r = (int)m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
-			if(r!=0) Out(r);
+			if(r != 0) Out(r);
 			Time.Next();
 			//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
 			//Time.Next();
@@ -1019,6 +1306,8 @@ partial class Test
 	}
 }
 
+
+#endregion
 
 
 #endif
@@ -1180,4 +1469,3 @@ partial class Test
 //		formatter.Serialize(stream, a); //error, assembly not marked as serializable
 //	}
 //}
-

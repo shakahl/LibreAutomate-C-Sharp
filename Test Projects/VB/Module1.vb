@@ -3,6 +3,8 @@
 Imports K = System.Windows.Forms.Keys
 'Imports System.Windows.Forms.Keys
 
+Imports Catkeys
+Imports Catkeys.NoClass
 Imports Catkeys.Automation
 Imports Catkeys.Automation.NoClass
 Imports Catkeys.Automation.Input
@@ -18,6 +20,8 @@ Module Module1
 		'Console.WriteLine(s.Trim)
 		'Console.WriteLine(s.Trim) 'VS replaces trim with Trim
 		''Console.WriteLine(s.trim2)
+
+		Dim w As Wnd = Wnd.Get.DirectParent(Wnd0)
 
 		'Out(Keys.Control)
 		'Out(Shift)

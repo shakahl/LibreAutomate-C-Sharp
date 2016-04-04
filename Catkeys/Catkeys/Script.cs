@@ -22,8 +22,14 @@ namespace Catkeys
 	{
 #pragma warning disable 649
 		public int speed;
+		//TODO: speed must be must be function-specific. Or use two - one function-specific an one thread-specific.
+		//To implement, can use thread-specific Dictionary. When a function sets speed, write to the dictionary: function id, its position in stack, its speed.
+		//Then called functions can access caller's speed by walking the stack.
+		//Alternative implementation: set function's speed in its attributes.
+
 		public bool slowMouse, slowKeys, waitMsg;
-		public bool dialogTopmostIfNoOwner, dialogRtlLayout; public int dialogMonitor;
+		public bool dialogTopmostIfNoOwner, dialogRtlLayout;
+		public object dialogScreenIfNoOwner;
 #pragma warning restore 649
 
 		/// <summary>
@@ -39,6 +45,10 @@ namespace Catkeys
 			if(o==null) { speed=100; return; }
 			speed=o.speed;
 			slowMouse=o.slowMouse; slowKeys=o.slowKeys; waitMsg=o.waitMsg;
+			dialogTopmostIfNoOwner = o.dialogTopmostIfNoOwner; dialogRtlLayout = o.dialogRtlLayout;
+			dialogScreenIfNoOwner = o.dialogScreenIfNoOwner;
+			//TODO: now dialogScreenIfNoOwner actually is common to all threads because we do shallow copy, ie we copy only the reference to the object.
+			//	If not possible to copy object, make this member static. Maybe in Show class.
 		}
 
 		/// <summary>

@@ -25,44 +25,7 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class NoClass
 	{
-	}
-
-#if dont_use
-	/// <summary>
-	/// Enum extension methods.
-	/// </summary>
-	[DebuggerStepThrough]
-	public static class Enum_
-	{
-		/// <summary>
-		/// Returns true if this has one or more flags specified in flagOrFlags.
-		/// It is different from HasFlag, which returns true if this has ALL specified flags.
-		/// Speed: 0.1 mcs. It is several times slower than HasFlag, and 100 times slower than operators & !=0.
-		/// </summary>
-		public static bool HasAny(this Enum t, Enum flagOrFlags)
-		{
-			return (Convert.ToUInt64(t) & Convert.ToUInt64(flagOrFlags)) !=0;
-			//info: cannot apply operator & to Enum, or cast to uint, or use unsafe pointer.
-		}
-		////same speed:
-		//public static bool Has<T>(this T t, T flagOrFlags) where T: struct
-		//{
-		//	//return ((uint)t & (uint)flagOrFlags) !=0; //error
-		//	return (Convert.ToUInt64(t) & Convert.ToUInt64(flagOrFlags)) !=0;
-		//}
-
-		public static void SetFlag(ref Enum t, Enum flag, bool set)
-		{
-			ulong _t = Convert.ToUInt64(t), _f = Convert.ToUInt64(flag);
-			if(set) _t|=_f; else _t&=~_f;
-			t=(Enum)(object)_t; //can do it better?
-			//info: Cannot make this a true extension method.
-			//	If we use 'this Enum t', t is a copy of the actual variable, because Enum is a value type.
-			//	That is why we need ref.
-			//Speed not tested.
-		}
-	}
-#endif
+    }
 
 	[DebuggerStepThrough]
 	public static class Paths
@@ -94,7 +57,7 @@ namespace Catkeys.Util
 		/// Returns class atom.
 		/// Sets class name, procedure address and current module handle. All other properties 0.
 		/// </summary>
-		public static ushort RegWinClassHidden(string name, Api.WndProc wndProc)
+		public static ushort RegWinClassHidden(string name, Api.WNDPROC wndProc)
 		{
 			var w = new Api.WNDCLASSEX(name, wndProc);
 			return Api.RegisterClassEx(ref w);
@@ -186,8 +149,20 @@ namespace Catkeys.Util
 			//return;
 			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), (UIntPtr)(~0U), (UIntPtr)(~0U));
 		}
-	}
 
+		public static unsafe int CharPtrLength(char* p)
+		{
+			if(p==null) return 0;
+			for(int i = 0; ; i++) if(*p=='\0') return i;
+		}
+
+		public static unsafe int CharPtrLength(char* p, int nMax)
+		{
+			if(p==null) return 0;
+			for(int i = 0; i<nMax; i++) if(*p=='\0') return i;
+			return nMax;
+		}
+	}
 
 
 
