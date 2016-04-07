@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Diagnostics;
 
 using static Catkeys.NoClass;
-using Catkeys.Util; using Util = Catkeys.Util;
+using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;

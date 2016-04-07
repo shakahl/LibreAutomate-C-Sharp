@@ -9,7 +9,6 @@ using System.Diagnostics;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Catkeys.Util;
 using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
@@ -30,7 +29,7 @@ namespace Compiler
 
 		//We don't use MemoryMappedFile because it is very slow. Creating/writing is 1500, opening/reading is 5000.
 		//With this class - 1300 and 600 (because of JIT). With ngen - 60 and 20 (same as in C++).
-		unsafe class OurSharedMemory :SharedMemoryFast
+		unsafe class OurSharedMemory :Util.SharedMemoryFast
 		{
 			public _SHMEM* x { get { return (_SHMEM*)_mem; } }
 		}
@@ -55,11 +54,11 @@ namespace Compiler
 
 			//=AppDomain.CurrentDomain.GetData("hPipe")
 
-			Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
+			Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
 
 			_sm.x->perf.Next();
 
-			Wnd w = Api.CreateWindowExW(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
+			Wnd w = Api.CreateWindowEx(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
 
 			_sm.x->perf.Next();
 
@@ -95,7 +94,7 @@ namespace Compiler
 				return Zero;
 			}
 
-			LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
+			LPARAM R = Api.DefWindowProc(hWnd, msg, wParam, lParam);
 
 			switch(msg) {
 			case Api.WM_NCDESTROY:
@@ -119,7 +118,7 @@ namespace Compiler
 
 			//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
 			//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
-			Assembly a = Assembly.LoadFile(Paths.CombineApp("csc.exe")); //ok
+			Assembly a = Assembly.LoadFile(Util.Paths.CombineApp("csc.exe")); //ok
 																		 //Assembly a = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
 			MethodInfo m = a.EntryPoint;
 			string[] g = new string[] { null, "/nologo", "/noconfig", @"C:\Test\test.cs" };
@@ -136,7 +135,7 @@ namespace Compiler
 			}
 			Time.Write();
 
-			Show.MessageDialog("now will GC.Collect");
+			Show.TaskDialog("now will GC.Collect");
 			GC.Collect(); //releases a lot
 		}
 	}

@@ -42,20 +42,10 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class Window
 	{
-		///// <summary>
-		///// Native handle of current process exe file.
-		///// </summary>
-		//public static readonly IntPtr hInstApp = Api.GetModuleHandle(null);
-
-		/// <summary>
-		/// Native handle of current module (dll or exe file).
-		/// </summary>
-		public static readonly IntPtr CatkeysModuleHandle = Marshal.GetHINSTANCE(typeof(Window).Module);
-
 		/// <summary>
 		/// Registers native window class that can be used for simple hidden windows.
 		/// Returns class atom.
-		/// Sets class name, procedure address and current module handle. All other properties 0.
+		/// Sets class name and procedure address. All other properties 0 (including hInstance).
 		/// </summary>
 		public static ushort RegWinClassHidden(string name, Api.WNDPROC wndProc)
 		{
@@ -142,6 +132,51 @@ namespace Catkeys.Util
 		public static IntPtr GetModuleHandleOfAppdomainEntryAssembly()
 		{
 			return GetModuleHandleOf(AppdomainAssembly);
+		}
+
+		public static IntPtr GetModuleHandleOfCatkeysDll()
+		{
+			return Marshal.GetHINSTANCE(typeof(Misc).Module);
+		}
+
+		public static IntPtr GetModuleHandleOfExe()
+		{
+			return Api.GetModuleHandle(null);
+		}
+
+
+		/// <summary>
+		/// Gets native icon handle of the entry assembly of current appdomain.
+		/// It is the assembly icon, not an icon from managed resources.
+		/// Returns Zero if the assembly is without icon.
+		/// The icon is extracted first time and then cached; don't destroy it.
+		/// </summary>
+		/// <param name="size">Icon size, 16 or 32.</param>
+		public static IntPtr GetAppIconHandle(int size)
+		{
+			if(size < 24) return _GetAppIconHandle(ref _AppIcon16, true);
+			return _GetAppIconHandle(ref _AppIcon32, false);
+		}
+
+		static IntPtr _AppIcon32, _AppIcon16;
+
+		static IntPtr _GetAppIconHandle(ref IntPtr hicon, bool small = false)
+		{
+			if(hicon == Zero) {
+				var asm = Misc.AppdomainAssembly; if(asm == null) return Zero;
+				IntPtr hinst = Misc.GetModuleHandleOf(asm);
+				int size = small ? 16 : 32;
+				hicon = Api.LoadImageRes(hinst, 32512, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
+				//note:
+				//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
+				//I could not find a .NET method to get icon directly from native resources of assembly.
+				//Could use Icon.ExtractAssociatedIcon(asm.Location), but it always gets 32 icon and is several times slower.
+				//Also could use PrivateExtractIcons. But it uses file path, not module handle.
+				//Also could use the resource emumeration API...
+				//Never mind. Anyway, we use hInstance/resId with MessageBoxIndirect (which does not support handles) etc.
+				//info: MSDN says that LR_SHARED gets cached icon regardless of size, but it is not true. Caches each size separately. Tested on Win 10, 7, XP.
+			}
+			return hicon;
 		}
 
 		public static void MinimizeMemory()

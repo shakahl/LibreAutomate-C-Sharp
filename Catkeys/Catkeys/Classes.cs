@@ -17,13 +17,14 @@ using System.ComponentModel;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Catkeys.Util;
+using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
+#pragma warning disable 660, 661 //no Equals()
 
 	/// <summary>
 	/// Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg wParam/lParam of SendMessage.
@@ -35,7 +36,7 @@ namespace Catkeys
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
 	///	There is no cast operators for long, ulong and enum. When need, cast through int or uint. For Wnd cast through IntPtr.
 	/// </remarks>
-	[Serializable]
+	//[Serializable] //Code Analysis warning: void* is not serializable
 	public unsafe struct LPARAM
 	{
 		void* _v; //Not IntPtr, because it throws exception on overflow when casting from uint etc.
@@ -69,17 +70,12 @@ namespace Catkeys
 		public static implicit operator char (LPARAM x) { return (char)(ushort)x._v; }
 		public static implicit operator bool (LPARAM x) { return x._v != null; }
 
+		public static bool operator==(LPARAM a, LPARAM b) { return a._v == b._v; }
+		public static bool operator!=(LPARAM a, LPARAM b) { return a._v != b._v; }
+
 		public override string ToString() { return ((int)_v).ToString(); }
 	}
 
-	/// <summary>
-	/// .NET has a generic delegate type void EventHandler˂TEventArgs˃(object sender, TEventArgs e).
-	/// This is an alternative delegate type, without the object sender parameter. When you need sender, you can define it in your TEventArgs class.
-	/// </summary>
-	[Serializable]
-	public delegate void EventHandler_<TEventArgs>(TEventArgs e);
-
-#pragma warning disable 660, 661 //no Equals()
 	/// <summary>
 	/// Contains point coordinates.
 	/// The same as System.Drawing.Point.
@@ -341,7 +337,7 @@ namespace Catkeys
 	/// <summary>
 	/// Stores a string[] and has implicit casts from string[], List˂string˃ and |- delimited string like "one|two|three".
 	/// Can be used for function parameters that accept a list of strings of any of these types.
-	/// The called function then can get the string[] through implicit cast to string[].
+	/// The called function then can get the string[] through the Arr property or implicit cast to string[].
 	/// </summary>
 	[DebuggerStepThrough]
 	public class StringList
@@ -375,7 +371,20 @@ namespace Catkeys
 		/// Gets string[] stored in StringList.
 		/// </summary>
 		public static implicit operator string[] (StringList x) { return x == null ? null : x._a; }
+
+		/// <summary>
+		/// Gets string[] stored in StringList.
+		/// </summary>
+		public string[] Arr { get { return this == null ? null : _a; } }
 	}
 
+	/// <summary>
+	/// Ctores an x or y coordinate in various formats (pixels, fraction etc).
+	/// Can be used for function parameters.
+	/// </summary>
+	public class Coord
+	{
+		//public static Coord FromRight 
+	}
 
 }

@@ -8,7 +8,6 @@ using System.IO;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Catkeys.Util;
 using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;

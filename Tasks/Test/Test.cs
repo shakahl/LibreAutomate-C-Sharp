@@ -23,12 +23,12 @@ using System.Runtime.CompilerServices;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Catkeys.Util;
 using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
 using Catkeys.Triggers;
+
 
 //using Boo.Lang.Compiler;
 //using Boo.Lang.Compiler.IO;
@@ -169,7 +169,7 @@ public partial class Test
 
 	//We don't use MemoryMappedFile because it is very slow. Creating/writing is 1500, opening/reading is 5000.
 	//With this class - 1300 and 600 (because of JIT). With ngen - 60 and 20 (same as in C++).
-	unsafe class OurSharedMemory :SharedMemoryFast
+	unsafe class OurSharedMemory :Util.SharedMemoryFast
 	{
 		public _SHMEM* x { get { return (_SHMEM*)_mem; } }
 	}
@@ -269,13 +269,10 @@ public partial class Test
 	//}
 
 
-	#endregion
-
 	[Trigger.Hotkey("Ctrl+K")]
 	public static void Function1(HotkeyTriggers.Message m) { Out("script"); }
 
-	[DllImport("kernel32.dll")]
-	public static extern int lstrlenW([In] string lpString);
+	#endregion
 
 	//static void AnotherThread()
 	//{
@@ -292,7 +289,7 @@ public partial class Test
 	//	int r = 0;
 	//	for(int i = 0; i < 100; i++) {
 	//		int hr = _TaskDialog(Wnd0, Zero, "Test", s, null, TDButton.Cancel, 0, out r);
-	//		OutList(hr, r, asy);
+	//		//OutList(hr, r, asy);
 	//		if(hr == 0 || hr == Api.E_INVALIDARG) break;
 	//		Time.WaitMS(20);
 	//	}
@@ -301,10 +298,10 @@ public partial class Test
 
 	public static async Task<TDResult> TaskDialogAsync(string text1)
 	{
-		return await Task.Run(()=> Show.TaskDialog(text1, "", "OC"));
+		return await Task.Run(() => Show.TaskDialog(text1, "", "OC"));
 	}
 
-	public static TaskDialogObject TaskDialogNoWait(string text1, TDAsyncCloseDelegate onClose =null)
+	public static TaskDialogObject TaskDialogNoWait(string text1, Action<TDResult> onClose = null)
 	{
 		var d = new TaskDialogObject(text1);
 		d.ShowAsync(onClose);
@@ -317,7 +314,22 @@ public partial class Test
 		d.FlagShowProgressBar = true;
 		d.ShowAsync();
 		return d;
-    }
+	}
+
+	//	static System.Drawing.Font _dialogFont;
+	//	public static System.Drawing.Font DefaultDialogFont
+	//	{
+	//		get
+	//		{
+	//			if(_dialogFont == null) {
+	//				Form.DefaultFont
+	//				System.Drawing.Font.
+	//_dialogFont =new System.Drawing.Font()
+	//            }
+	//			return _dialogFont;
+	//		}
+	//	}
+
 
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
@@ -337,7 +349,7 @@ public partial class Test
 
 		//Show.TaskDialog("", "<a href=\"test\">test</a>", onLinkClick: ed =>
 		//{
-		//	Wnd z = ed.DialogWindow;
+		//	Wnd z = ed.Hwnd;
 		//	string s = null;
 		//	Time.First(true);
 		//	for(int j = 0; j<8; j++) {
@@ -560,7 +572,58 @@ public partial class Test
 		//ScriptOptions.DisplayName="Script display name";
 		//Out(Assembly.GetEntryAssembly().FullName); //exception
 
+		//Wnd ko = Wnd0;
+		////ko = Wnd.Spec.Topmost;
+		//Out(ko == null);
+		//Out(null==ko);
+		//Wnd? mo = null, mo2=null;
+		//Out(ko == mo);
+		//Out(mo == mo2);
+		//POINT po = new POINT();
+		//Out(po == null);
+		////int io = 0;
+		////Out(io == null);
+		//IntPtr pi = Zero;
+		//Out(pi == null);
+		//return;
+
 		#endregion
+
+
+		//Show.TaskListDialog("1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30");
+		Show.TaskListDialog("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBBBBBB");
+		return;
+
+		//var f = new Form();
+		//f.Show();
+
+		string s; int i;
+		//if(!Show.InputDialog(out s)) return;
+		//if(!Show.InputDialog(out s, "Text.", owner: Wnd.Find("Untitled - Notepad"))) return;
+		if(!Show.InputDialog(out s, "Text\ntext\ntext.")) return;
+		//if(!Show.InputDialog(out s, "Text.", "Default")) return;
+		//if(!Show.InputDialogEx(out s, "Text.", "0", editType: TDEdit.Number, expandedText:"exp")) return;
+		//if(!Show.InputDialog(out i, "Text.", 5)) return; Out(i); return;
+		//if(!Show.InputDialogEx(out s, "Text.", "pas", editType: TDEdit.Password)) return;
+		//if(!Show.InputDialog(out s, "Text.", "one\r\ntwo\r\nthree", editType: TDEdit.Multiline)) return;
+		//if(!Show.InputDialog(out s, "Text.", "def\none\r\ntwo\nthree", editType: TDEdit.Combo)) return;
+		//if(!Show.InputDialogEx(out s, "Text.", "def\none\r\ntwo\nthree", editType: TDEdit.Combo, expandedText:"exp")) return;
+		//if(!Show.InputDialogEx(out s, "Text.")) return;
+		bool ch;
+		//if(!Show.InputDialogWithCheckboxEx(out s, out ch, "Check", "Text.", "one\r\ntwo\r\nthree", editType:TDEdit.Multiline, expandedText:"More\ntext.", timeoutS: 60)) return;
+		//if(!Show.InputDialogWithCheckbox(out s, out ch, "Check", "Text.", "txt", editType:TDEdit.Multiline)) return;
+		Out(s);
+		//Out(ch);
+
+		//if(false) {
+		//	d.SetCustomButtons("1 Browse...", true, true);
+		//	d.ButtonClicked += e => { if(e.WParam == 1) { Out("Browse"); e.Return = 1; } };
+		//}
+
+		//MessageBox.Show("ddddddddddddddddddd");
+		//Show.MessageDialog("fffffffffff");
+
+		return;
 
 
 		//TaskDialogAsync("async"); //warning "consider applying await"
@@ -571,7 +634,7 @@ public partial class Test
 		//t.Wait();
 		//Out(t.Result);
 
-		////var pd = TaskDialogNoWait("async", y=>Out(y));
+		//var pd = TaskDialogNoWait("async", y=>Out(y));
 		//var pd = TaskDialogNoWait("async");
 		//Wait(2);
 		//if(pd.IsOpen) pd.Send.Close();
@@ -596,9 +659,10 @@ public partial class Test
 		////td.ThreadWaitClosed();
 		//Out(td.Result);
 
-		Show.TaskDialog("continue", y:300);
+		//Show.TaskDialog("continue", y:300);
 
-		Out("finished");
+
+		//Out("finished");
 
 		//Task t = Task.Run(() =>
 		//{
@@ -631,13 +695,14 @@ public partial class Test
 		//Show.MessageDialog("One\ntwooooooooooooo.");
 		//Out(Wnd.ActiveWindow);
 
-		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, TDResult.Cancel, "1 one|2 two", new string[] { "101 r1|||", "102 r2" }, "Chick|check", "expanded", "", 20, "TTT").ToString());
+		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, TDResult.Cancel, "1 one|2 two", new string[] { "101 r1|||", "102 r2" }, "Chick|check", "expanded", "", "TTT", 0, 0, 20).ToString());
 		//Out(Show.TaskDialog("Head1\nHead2.", "Text1\nText2.", "OCd2!t", Wnd0, "1 one|2 two", null, null, "expanded", "foo", 60, "TTT").ToString());
 		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info).ToString());
 		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0).ToString());
 		//Out(Show.TaskDialog("head", "content", "OCYNLRio", owner: Wnd.Find("Untitled - Notepad")).ToString());
 		//Out(Show.TaskDialog("head", "content", "OCYNLRi", x:100, y:-11, timeoutS:15).ToString());
 		//Out(Show.TaskDialog("", "<a href=\"example\">link</a>.", onLinkClick: ed => { Out(ed.LinkHref); }).ToString());
+		Out(Show.TaskDialog("head", "content", "i", customButtons: "-1 Mo OK|-2 My Cancel").ToString());
 
 		//Out(Show.TaskListDialog("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
 		//Out(Show.TaskListDialog(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
@@ -667,17 +732,20 @@ public partial class Test
 		d.SetButtons(TDButton.OKCancel | TDButton.Retry);
 
 		//d.SetIcon(TDIcon.Warning);
-		//var icon = new System.Drawing.Icon(@"Q:\app\qm.ico", 32, 32); if(icon!=null) d.SetIcon(icon.Handle);
-		//var icon = new System.Drawing.Icon(typeof(Test), "catkeys.ico"); if(icon!=null) d.SetIcon(icon.Handle);
-		//var icon=Catkeys.Tasks.Properties.Settings.Default.PropertyValues.
-		//Catkeys.Tasks.Properties.Resources
-		//d.SetIcon(Show.Resources.AppIconHandle32);
+		//d.SetIcon(new System.Drawing.Icon(@"Q:\app\copy.ico", 32, 32)); //OK
+		//d.SetIcon(Catkeys.Tasks.Properties.Resources.output); //OK
+		//d.SetIcon(new System.Drawing.Icon(Catkeys.Tasks.Properties.Resources.output, 16, 16)); //OK
+		//d.SetIcon(new System.Drawing.Icon("Resources/output.ico")); //OK
+		//d.SetIcon(new System.Drawing.Icon("Resources/output.ico", 16, 16)); //OK
+		//d.SetIcon(new System.Drawing.Icon(typeof(Test), "output.ico")); //exception
+		//Out(Catkeys.Tasks.Properties.Resources.output.Width);
+		//d.SetIcon(new System.Drawing.Icon(Show.Resources.AppIconHandle32));
 		//d.SetIcon(TDIcon.App);
 
 		d.SetStyle("YNCa");
 
 		Wnd w = Wnd.Find("Untitled - Notepad");
-		d.SetOwnerWindow(w);
+		//d.SetOwnerWindow(w);
 
 		//Script.Option.dialogScreenIfNoOwner=2;
 
@@ -691,6 +759,8 @@ public partial class Test
 		d.FlagCanBeMinimized = true;
 		//d.FlagRtlLayout=true;
 		//d.FlagPositionRelativeToWindow=true;
+		d.FlagNoTaskbarButton = true;
+		d.FlagNeverActivate = true;
 
 		//Script.Option.dialogScreenIfNoOwner=2;
 		//d.Screen=2;
@@ -699,8 +769,10 @@ public partial class Test
 
 		d.SetExpandControl(true, "Show more info", "Hide more info");
 
-		//d.SetFooterText("Footer text.", TDIcon.Warning);
+		d.SetFooterText("Footer text.", TDIcon.Warning);
 		//d.SetFooterText("Footer.");
+		//d.SetFooterText("Footer.", Catkeys.Tasks.Properties.Resources.output); //icon 32x32, srinked
+		//d.SetFooterText("Footer.", new System.Drawing.Icon(Catkeys.Tasks.Properties.Resources.output, 16, 16)); //icon OK
 
 		//d.Width=700;
 
@@ -714,17 +786,16 @@ public partial class Test
 		//d.SetDefaultButton(TDResult.Retry);
 
 		//d.SetRadioButtons(new string[] { "1001 r1", "1002 r2" }, 1002);
-		//d.SetRadioButtons("1001 r1|1002 r2");
-		//d.SetRadioButtons("1001 r1|1002 r2", 0, true);
+		d.SetRadioButtons("1001 r1|1002 r2");
 
-		d.SetTimeout(10, "Cancel");
+		//d.SetTimeout(10, "Cancel");
 		//d.SetTimeout(10, null, true);
 
 		//d.Created += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
 		d.Created += ed => { ed.Obj.Send.EnableButton(TDResult.Yes, false); };
 		//d.Created += ed => { ed.OwnerWindow.Enabled=true; };
-		//d.Created += ed => { ed.DialogWindow.Owner.Enabled=true; };
-		//d.Created += ed => { Wnd.Get.Owner(ed.DialogWindow).Enabled=true; };
+		//d.Created += ed => { ed.Hwnd.Owner.Enabled=true; };
+		//d.Created += ed => { Wnd.Get.Owner(ed.Hwnd).Enabled=true; };
 		//d.Created += ed => { w.Enabled=true; };
 		//d.Destroyed += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
 		d.ButtonClicked += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); if(ed.WParam == TDResult.No) ed.Return = 1; };
@@ -733,7 +804,7 @@ public partial class Test
 		//d.Timer += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
 		//d.HelpF1 += ed => { Out($"{ed.Message} {ed.WParam} {ed.LinkHref}"); };
 
-		//d.FlagShowProgressBar=true; d.Timer += ed => { ed.Obj.Send.Progress(ed.WParam/100); };
+		d.FlagShowProgressBar = true; d.Timer += ed => ed.Obj.Send.Progress(ed.WParam / 100);
 
 		//Time.First();
 		TDResult r = d.Show();
@@ -793,6 +864,7 @@ public partial class Test
 		//TestX();
 		//TestInScriptDomain();
 		var t = new Thread(TestInScriptDomain);
+		t.SetApartmentState(ApartmentState.STA); //must be STA, or something will not work, eg some COM components, MSAA in TaskDialog.
 		t.Start();
 		t.Join();
 		//Show.TaskDialog("after all");
@@ -1203,11 +1275,11 @@ public partial class Test
 
 		//=AppDomain.CurrentDomain.GetData("hPipe")
 
-		Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
+		Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
 
 		_sm.x->perf.Next();
 
-		Wnd w = Api.CreateWindowExW(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
+		Wnd w = Api.CreateWindowEx(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
 
 		_sm.x->perf.Next();
 
@@ -1243,7 +1315,7 @@ public partial class Test
 			return Zero;
 		}
 
-		LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
+		LPARAM R = Api.DefWindowProc(hWnd, msg, wParam, lParam);
 
 		switch(msg) {
 		case Api.WM_NCDESTROY:
@@ -1267,8 +1339,8 @@ public partial class Test
 
 		//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
 		//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
-		Assembly a = Assembly.LoadFile(Paths.CombineApp("csc.exe")); //ok
-																	 //Assembly a = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
+		Assembly a = Assembly.LoadFile(Util.Paths.CombineApp("csc.exe")); //ok
+																		  //Assembly a = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
 		MethodInfo m = a.EntryPoint;
 		string[] g = new string[] {null, "/nologo", "/noconfig", "/target:winexe",
 		"/r:System.dll", "/r:System.Core.dll", "/r:System.Windows.Forms.dll",
@@ -1291,7 +1363,7 @@ public partial class Test
 		GC.Collect(); //releases a lot
 
 		OutLoadedAssemblies();
-		Show.MessageDialog("exit");
+		Show.TaskDialog("exit");
 	}
 
 	static void OutLoadedAssemblies()

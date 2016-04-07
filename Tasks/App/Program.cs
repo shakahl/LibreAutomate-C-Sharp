@@ -8,7 +8,6 @@ using System.Text;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Catkeys.Util;
 using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
@@ -83,7 +82,7 @@ namespace Catkeys.Tasks
 				//	break;
 			}
 
-			LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
+			LPARAM R = Api.DefWindowProc(hWnd, msg, wParam, lParam);
 
 			switch(msg) {
 			case Api.WM_NCDESTROY:

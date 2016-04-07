@@ -8,7 +8,7 @@ using System.Diagnostics;
 //using System.Threading.Tasks;
 //using System.Reflection;
 //using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 //using System.IO;
 //using System.Windows.Forms;
 
@@ -17,7 +17,7 @@ using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
 
 using static Catkeys.NoClass;
-using Catkeys.Util; using Util = Catkeys.Util;
+using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
@@ -32,6 +32,23 @@ namespace Catkeys
 	[DebuggerStepThrough]
 	public static class String_
 	{
+		/// <summary>
+		/// Returns Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// The same as the .NET String.Equals, but provided for consistency and to make immediately clear that it uses ordinal, not current culture like part of .NET String methods.
+		/// </summary>
+		public static bool Equals_(this string t, string value, bool ignoreCase = false)
+		{
+			return t.Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+		}
+
+		/// <summary>
+		/// Returns Equals(value, StringComparison.OrdinalIgnoreCase).
+		/// </summary>
+		public static bool EqualsI_(this string t, string value)
+		{
+			return t.Equals(value, StringComparison.OrdinalIgnoreCase);
+		}
+
 		/// <summary>
 		/// Returns EndsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
 		/// </summary>
@@ -53,7 +70,7 @@ namespace Catkeys
 		/// </summary>
 		public static bool StartsWith_(this string t, string value, bool ignoreCase = false)
 		{
-			return t.StartsWith(value, StringComparison.Ordinal);
+			return t.StartsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		/// <summary>
@@ -66,6 +83,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if this string matches wildcard pattern.
+		/// This string can be null, then returns false.
 		/// </summary>
 		/// <param name="pattern">String with wildcard characters:
 		///  * (zero or more characters),
@@ -75,14 +93,16 @@ namespace Catkeys
 		///  [!charlist] (a character not in charlist).
 		/// </param>
 		/// <remarks>
-		/// Works like the VB operator 'Like': https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
+		/// Calls the VB 'Like' operator function: https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.NoInlining)] //prevent compiling Operators.LikeString (slow first time) when actually not used
 		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
 		{
-			return Operators.LikeString(t, pattern, ignoreCase ? CompareMethod.Text : CompareMethod.Binary);
+			return t != null && Operators.LikeString(t, pattern, ignoreCase ? CompareMethod.Text : CompareMethod.Binary);
 		}
 		/// <summary>
 		/// Returns true if this string matches wildcard pattern. Case-insensitive.
+		/// This string can be null, then returns false.
 		/// </summary>
 		/// <param name="pattern">String with wildcard characters:
 		///  * (zero or more characters),
@@ -92,15 +112,27 @@ namespace Catkeys
 		///  [!charlist] (a character not in charlist).
 		/// </param>
 		/// <remarks>
-		/// Works like the VB operator 'Like': https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
+		/// Calls the VB 'Like' operator function: https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.NoInlining)] //prevent compiling Operators.LikeString (slow first time) when actually not used
 		public static bool LikeI_(this string t, string pattern)
 		{
-			return Operators.LikeString(t, pattern, CompareMethod.Text);
+			return t != null && Operators.LikeString(t, pattern, CompareMethod.Text);
 		}
 		//Speed for 1000 times (@"C:\Users\G\Documents\dictionary.xls", "*.xls"):
 		//this 85, regex 830, compiled regex 440, regex with WildcardToRegex 1200, QM2 FindRX 400, QM2 MatchW ~30 (matchw 70 + rep 35).
 		//Not tested System.Management.Automation.WildcardPattern, because assembly System.Management.Automation is not installed. It seems need to install it through NuGet.
+
+		/// <summary>
+		/// Returns true if this string contains wildcard characters '*', '?', '#', '['.
+		/// These wildcard characters can be used with String.Like_().
+		/// This string can be null, then returns false.
+		/// </summary>
+		public static bool IsLikeWildcard_(this string t)
+		{
+			return t != null && t.IndexOfAny(_wildcardChars) >= 0;
+		}
+		static readonly char[] _wildcardChars = new char[] { '*', '?', '#', '[' };
 
 		/// <summary>
 		/// Returns IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
@@ -313,9 +345,9 @@ namespace Catkeys
 
 		static int _CharHexToDec(char c)
 		{
-			if(c>='0' && c<='9') return c-'0';
-			if(c>='A' && c<='F') return c-('A'-10);
-			if(c>='a' && c<='f') return c-('a'-10);
+			if(c >= '0' && c <= '9') return c - '0';
+			if(c >= 'A' && c <= 'F') return c - ('A' - 10);
+			if(c >= 'a' && c <= 'f') return c - ('a' - 10);
 			return -1;
 		}
 
@@ -344,36 +376,36 @@ namespace Catkeys
 		/// </remarks>
 		public static int ToInt_(this string t, int startIndex, out int numberEndIndex)
 		{
-			numberEndIndex=0;
-			if(t==null) return 0;
+			numberEndIndex = 0;
+			if(t == null) return 0;
 			int i, k, n = 0; bool minus = false;
 
-			for(i=startIndex; i<t.Length; i++) if(t[i]!=' ' && t[i]!='\t' && t[i]!='\r' && t[i]!='\n') break; //skip spaces
+			for(i = startIndex; i < t.Length; i++) if(t[i] != ' ' && t[i] != '\t' && t[i] != '\r' && t[i] != '\n') break; //skip spaces
 
-			if(i<t.Length && t[i]=='-') { i++; minus=true; } //minus
+			if(i < t.Length && t[i] == '-') { i++; minus = true; } //minus
 
 			long R = 0; //result
 
-			if(i<=t.Length-3 && t[i]=='0' && t[i+1]=='x') { //hex
-				for(i+=2; i<t.Length; i++) {
-					k=_CharHexToDec(t[i]); if(k<0) break;
-					R=R*16+k;
-					if(++n>8) return 0; //too long for hex int?
+			if(i <= t.Length - 3 && t[i] == '0' && t[i + 1] == 'x') { //hex
+				for(i += 2; i < t.Length; i++) {
+					k = _CharHexToDec(t[i]); if(k < 0) break;
+					R = R * 16 + k;
+					if(++n > 8) return 0; //too long for hex int?
 				}
-				if(n==0) i--; //0xNotHex (decimal 0)
-				else if(minus) R=-R;
+				if(n == 0) i--; //0xNotHex (decimal 0)
+				else if(minus) R = -R;
 			} else { //decimal or not a number
-				for(; i<t.Length; i++) {
-					k=t[i]-'0'; if(k<0 || k>9) break;
-					R=R*10+k;
-					if(++n>10) return 0; //too long for decimal int?
+				for(; i < t.Length; i++) {
+					k = t[i] - '0'; if(k < 0 || k > 9) break;
+					R = R * 10 + k;
+					if(++n > 10) return 0; //too long for decimal int?
 				}
-				if(n==0) return 0; //not a number
+				if(n == 0) return 0; //not a number
 
-				if(minus) { R=-R; if(R<int.MinValue) return 0; } else if(R>int.MaxValue) return 0; //too big for int?
+				if(minus) { R = -R; if(R < int.MinValue) return 0; } else if(R > int.MaxValue) return 0; //too big for int?
 			}
 
-			numberEndIndex=i;
+			numberEndIndex = i;
 			return (int)R;
 		}
 
@@ -391,7 +423,7 @@ namespace Catkeys
 		public static int ToInt_(this string t, int startIndex)
 		{
 			int eon;
-            return ToInt_(t, startIndex, out eon);
+			return ToInt_(t, startIndex, out eon);
 		}
 
 		/// <summary>
@@ -400,7 +432,7 @@ namespace Catkeys
 		public static int ToInt_(this string t)
 		{
 			int eon;
-            return ToInt_(t, 0, out eon);
+			return ToInt_(t, 0, out eon);
 		}
 
 		/// <summary>
@@ -414,13 +446,13 @@ namespace Catkeys
 		/// <param name="tail">A string variable. Can be this variable.</param>
 		public static int ToInt_(this string t, out string tail)
 		{
-			int eon, R = t.ToInt_(out eon);
+			int eon, R = ToInt_(t, out eon);
 
-			if(eon==0)
-				tail=null;
+			if(eon == 0)
+				tail = null;
 			else {
-				if(eon<t.Length) { char c = t[eon]; if(c==' ' || c=='\t') eon++; }
-				if(eon<t.Length) tail=t.Substring(eon); else tail="";
+				if(eon < t.Length) { char c = t[eon]; if(c == ' ' || c == '\t') eon++; }
+				if(eon < t.Length) tail = t.Substring(eon); else tail = "";
 			}
 
 			return R;
@@ -434,7 +466,7 @@ namespace Catkeys
 		{
 			int k = t.Length;
 			if(k <= length || length < 4) return t;
-			return t.Remove(length-3) + "...";
+			return t.Remove(length - 3) + "...";
 		}
 
 	}

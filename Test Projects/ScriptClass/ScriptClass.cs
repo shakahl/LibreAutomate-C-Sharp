@@ -13,7 +13,7 @@ using Catkeys.Automation;
 using static Catkeys.Automation.NoClass;
 //using static Catkeys.Automation.Input;
 //using Catkeys.Triggers;
-//using Catkeys.Util; using Util = Catkeys.Util;
+//using Util = Catkeys.Util;
 //using Catkeys.Winapi;
 
 //public class Macro
