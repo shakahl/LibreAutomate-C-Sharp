@@ -17,6 +17,7 @@ using Catkeys.Winapi;
 
 class TestProg
 {
+	[STAThread]
 	static void Main(string[] args)
 	{
 		//Debug.Assert(false);
@@ -33,12 +34,13 @@ class TestProg
 
 		Console.WriteLine("etc");
 
-		//Console.ReadKey();
+		Console.ReadKey();
 	}
 
 	//static Wnd _hwndCompiler;
 	//static Api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
 
+	//[STAThread]
 	//static void Main(string[] args)
 	//{
 	//	Catkeys.Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
@@ -83,7 +85,7 @@ class TestProg
 	//	//	_hwndAM=hWnd;
 	//	//	break;
 	//	//case WM.CREATE:
-	//	//	Time.Next();
+	//	//	Speed.Next();
 	//	//	break;
 	//	//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
 	//	//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);

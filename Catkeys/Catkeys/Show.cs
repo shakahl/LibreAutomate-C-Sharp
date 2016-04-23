@@ -37,7 +37,7 @@ namespace Catkeys
 #if use_MessageDialog
 	//Almost complete. Need just to implement screen and EndThread option.
 	//Instead use TaskDialogEx and co. If need classic message box, use MessageBox.Show(). Don't need 3 functions for the same.
-#region MessageDialog
+	#region MessageDialog
 
 	/// <summary>
 	/// MessageDialog return value (user-clicked button).
@@ -231,10 +231,10 @@ namespace Catkeys
 		static extern int MessageBoxIndirect([In] ref MSGBOXPARAMS lpMsgBoxParams);
 
 	}
-#endregion MessageDialog
+	#endregion MessageDialog
 #endif
 
-#region TaskDialog
+	#region TaskDialog
 
 	/// <summary>
 	/// TaskDialog() buttons.
@@ -250,6 +250,7 @@ namespace Catkeys
 		Close = 0x20, //L
 		OKCancel = OK | Cancel,
 		YesNo = Yes | No,
+		YesNoCancel = Yes | No | Cancel,
 		RetryCancel = Retry | Cancel
 	}
 
@@ -277,7 +278,99 @@ namespace Catkeys
 		EndThread = 4, //e
 		NeverActivate = 8, //n
 		OwnerCenter = 16, //o
-		Topmost = 32, //t
+		RawXY = 32, //r
+		Topmost = 64, //t
+	}
+
+	/// <summary>
+	/// Dialog buttons, icon, flags and default button. Used as 'style' parameter with TaskDialog() and similar functions.
+	/// <para>
+	/// Supports implicit cast from string, which can contain these characters:
+	/// </para>
+	/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
+	/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
+	/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
+	/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
+	/// <para>Also supports implicit cast from TDButton, TDIcon, TDFlags, int (default button), IntPtr (icon handle) and System.Drawing.Icon.</para>
+	/// </summary>
+	/// <example>
+	/// <code>TaskDialog(..., new TDStyle(TDButton.YesNo, TDIcon.Warning, TDFlag.OwnerCenter), ...);</code>
+	/// <code>TaskDialog(..., "YN!o", ...); //does the same as the above</code>
+	/// <code>TaskDialog(..., TDButton.YesNo|TDButton.Retry, ...);</code>
+	/// <code>TaskDialog(..., TDIcon.Warning, ...);</code>
+	/// <code>TaskDialog(..., TDFlag.CommandLinks|TDFlag.OwnerCenter, ...);</code>
+	/// <code>TaskDialog(..., new System.Drawing.Icon(@"c:\icons\icon.ico", ...);</code>
+	/// </example>
+	public class TDStyle
+	{
+		public TDButton buttons;
+		public TDIcon icon;
+		public TDFlag flags;
+		public int defaultButton;
+		public object customIcon;
+
+		public TDStyle(TDButton buttons = 0, TDIcon icon = 0, TDFlag flags = 0, int defaultButton = 0, object customIcon = null)
+		{
+			this.buttons = buttons; this.icon = icon; this.flags = flags; this.defaultButton = defaultButton; this.customIcon = customIcon;
+        }
+
+		public TDStyle(string style)
+		{
+			if(style == null) return;
+			for(int i = 0, n = style.Length; i < n; i++) {
+				char c = style[i];
+				switch(c) {
+				//buttons
+				case 'O': buttons |= TDButton.OK; break;
+				case 'C': buttons |= TDButton.Cancel; break;
+				case 'R': buttons |= TDButton.Retry; break;
+				case 'Y': buttons |= TDButton.Yes; break;
+				case 'N': buttons |= TDButton.No; break;
+				case 'L': buttons |= TDButton.Close; break;
+				//icon
+				case 'x': icon |= TDIcon.Error; break;
+				case '!': icon |= TDIcon.Warning; break;
+				case 'i': icon |= TDIcon.Info; break;
+				case 'v': icon |= TDIcon.Shield; break;
+				case 'a': icon |= TDIcon.App; break;
+				//flags
+				case 'c': flags |= TDFlag.CommandLinks; break;
+				case 'b': flags |= TDFlag.NoTaskbarButton; break;
+				case 'e': flags |= TDFlag.EndThread; break;
+				case 'n': flags |= TDFlag.NeverActivate; break;
+				case 'o': flags |= TDFlag.OwnerCenter; break;
+				case 'r': flags |= TDFlag.RawXY; break;
+				case 't': flags |= TDFlag.Topmost; break;
+				//default button
+				case 'd':
+					if(i == n - 1) break; //incorrectly used
+					switch(style[i + 1]) {
+					case 'O': defaultButton = TDResult.OK; break;
+					case 'C': defaultButton = TDResult.Cancel; break;
+					case 'R': defaultButton = TDResult.Retry; break;
+					case 'Y': defaultButton = TDResult.Yes; break;
+					case 'N': defaultButton = TDResult.No; break;
+					case 'L': defaultButton = TDResult.Close; break;
+					default:
+						int eon;
+						defaultButton = style.ToInt_(i + 1, out eon);
+						if(eon != 0) i = eon - 1; //else incorrectly used
+						break;
+					}
+					break;
+					//default: //unknown character
+				}
+				//note: don't throw if unknown or incorrectly used character. It is not so important. Maybe show warning, when we will have a Warning() function.
+			}
+		}
+
+		public static implicit operator TDStyle(string style) { return new TDStyle(style); }
+		public static implicit operator TDStyle(TDButton buttons) { return new TDStyle(buttons); }
+		public static implicit operator TDStyle(TDIcon icon) { return new TDStyle(icon: icon); }
+		public static implicit operator TDStyle(TDFlag flags) { return new TDStyle(flags: flags); }
+		public static implicit operator TDStyle(int defaultButton) { return new TDStyle(defaultButton: defaultButton); }
+		public static implicit operator TDStyle(IntPtr customIcon) { return new TDStyle(customIcon: customIcon); }
+		public static implicit operator TDStyle(System.Drawing.Icon customIcon) { return new TDStyle(customIcon: customIcon); }
 	}
 
 	/// <summary>
@@ -443,31 +536,33 @@ namespace Catkeys
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">Examples: TDButton.YesNo, TDButton.OK|TDButton.Close. If omitted or 0, adds OK button.</param>
 		/// <param name="icon">One of four standard icons, eg TDIcon.Info.</param>
-		/// <param name="flags">Example: TDFlag.CommandLinks|TDFlag.NeverActivate.</param>
+		/// <param name="flags">Example: TDFlag.CommandLinks|TDFlag.OwnerCenter.</param>
 		/// <param name="defaultButton">Specifies which button id to return on Enter key. Can be one of common buttons (eg TDResult.Cancel) or a custom button id (eg 1).</param>
 		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. Use TDFlag.CommandLinks in flags to change button style. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel) makes the button work like the common Cancel button (adds title bar x button, enables Esc key).</param>
 		/// <param name="radioButtons">Adds radio (option) buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃.</param>
 		/// <param name="checkBox">Check box text. To check, use "Text|true" or "Text|check" or "Text|checked".</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
 		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
 		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, eg lambda. Example: <c>Show.TaskDialogEx("", "Text ˂a href="example"˃link˂/a˃.", onLinkClick: ed => { Out(ed.LinkHref); });</c></param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, eg lambda. Example: <c>Show.TaskDialogEx("", "Text ˂a href="example"˃link˂/a˃.", onLinkClick: ed => { Out(ed.linkHref); });</c></param>
 		/// <remarks>
 		/// Uses TaskDialogObject class, which uses Windows API function TaskDialogIndirect (you can find more info in MSDN).
-		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
 		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialogEx(...))</c> instead of <c>switch(TaskDialogEx(...).Button)</c>.
 		/// Tip: For optional parameters use named arguments. Example: <c>Show.TaskDialogEx("Text.", icon: TDIcon.Info, title: "Title")</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
+		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
+		/// If owner, x, y, flag 'owner center', flag 'raw x y' and screen are not specified, the dialog will be in the center of the primary screen or of the screen that contains another window of current process.
 		/// </remarks>
 		public static TDResult TaskDialogEx(
 			Wnd owner, string text1, string text2 = null,
 			TDButton buttons = 0, TDIcon icon = 0, TDFlag flags = 0, int defaultButton = 0,
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
-			string expandedText = null, string footerText = null, string title = null, int x = 0, int y = 0, int timeoutS = 0,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
 			Action<TDEventArgs> onLinkClick = null
 			)
 		{
@@ -485,16 +580,16 @@ namespace Catkeys
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">Examples: TDButton.YesNo, TDButton.OK|TDButton.Close. If omitted or 0, adds OK button.</param>
 		/// <param name="icon">One of four standard icons, eg TDIcon.Info.</param>
-		/// <param name="flags">Example: TDFlag.CommandLinks|TDFlag.NeverActivate.</param>
+		/// <param name="flags">Example: TDFlag.CommandLinks|TDFlag.OwnerCenter.</param>
 		/// <param name="defaultButton">Specifies which button id to return on Enter key. Can be one of common buttons (eg TDResult.Cancel) or a custom button id (eg 1).</param>
 		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. Use TDFlag.CommandLinks in flags to change button style. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel) makes the button work like the common Cancel button (adds title bar x button, enables Esc key).</param>
 		/// <remarks>
 		/// Calls TaskDialogEx(), which uses TaskDialogObject class, which uses Windows API function TaskDialogIndirect (you can find more info in MSDN).
-		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
 		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog(...))</c> instead of <c>switch(TaskDialog(...).Button)</c>.
 		/// Tip: For optional parameters use named arguments. Example: <c>Show.TaskDialog("Text.", icon: TDIcon.Info)</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
+		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// </remarks>
 		public static TDResult TaskDialog(
 			Wnd owner, string text1, string text2 = null, TDButton buttons = 0, TDIcon icon = 0, TDFlag flags = 0,
@@ -508,40 +603,42 @@ namespace Catkeys
 		/// Shows task dialog.
 		/// Returns clicked button id and other results packed in a TDResult object (more info in Remarks).
 		/// <para>
-		/// You can specify buttons etc in style string, which can contain these characters:
+		/// You can specify dialog style (buttons, icon etc) as string which can contain these characters:
 		/// </para>
 		/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 		/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-		/// <para>Flags: c command links, b no taskbar button, e end task, n never activate, o owner center, t topmost.</para>
+		/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
 		/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="style">Example: "YN!c".</param>
+		/// <param name="style">Style string (like "YN!e"), or TDButton (like TDButton.YesNo|TDButton.Retry), or TDIcon (like TDIcon.Info), or TDFlags (like TDFlag.NeverActivate|TDFlag.EndThread), or TDStyle object (like new TDStyle(TDButton.YesNo, TDIcon.Warning, TDFlag.OwnerCenter)).</param>
 		/// <param name="owner">Owner window or Wnd0.</param>
 		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. Use "c" in style to change button style. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel) makes the button work like the common Cancel button (adds title bar x button, enables Esc key).</param>
 		/// <param name="radioButtons">Adds radio (option) buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃.</param>
 		/// <param name="checkBox">Check box text. To check, use "Text|true" or "Text|check" or "Text|checked".</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
 		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
 		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, eg lambda. Example: <c>Show.TaskDialogEx("", "Text ˂a href="example"˃link˂/a˃.", onLinkClick: ed => { Out(ed.LinkHref); });</c></param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, eg lambda. Example: <c>Show.TaskDialogEx("", "Text ˂a href="example"˃link˂/a˃.", onLinkClick: ed => { Out(ed.linkHref); });</c></param>
 		/// <remarks>
-		/// The difference from the other overload: here buttons, icon, flags and default button are specified in the style parameter (string) instead of using 4 parameters. This is more compact but less readable.
+		/// The difference from the other overload: instead of 4 parameters for buttons, icon, flags and default button here is used 1 parameter 'style'.
 		/// Uses TaskDialogObject class, which uses Windows API function TaskDialogIndirect (you can find more info in MSDN).
-		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
 		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialogEx(...))</c> instead of <c>switch(TaskDialogEx(...).Button)</c>.
 		/// Tip: For optional parameters use named arguments. Example: <c>Show.TaskDialogEx("Text.", style: "YN!", title: "Title")</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
+		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
+		/// If owner, x, y, flag 'owner center', flag 'raw x y' and screen are not specified, the dialog will be in the center of the primary screen or of the screen that contains another window of current process.
 		/// </remarks>
 		public static TDResult TaskDialogEx(
-			string text1, string text2 = null, string style = null, Wnd owner = default(Wnd),
+			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
-			string expandedText = null, string footerText = null, string title = null, int x = 0, int y = 0, int timeoutS = 0,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
 			Action<TDEventArgs> onLinkClick = null
 			)
 		{
@@ -554,41 +651,30 @@ namespace Catkeys
 		/// Shows task dialog.
 		/// Returns clicked button id and other results packed in a TDResult object (more info in Remarks).
 		/// <para>
-		/// You can specify buttons etc in style string, which can contain these characters:
+		/// You can specify dialog style (buttons, icon etc) as string which can contain these characters:
 		/// </para>
 		/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 		/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-		/// <para>Flags: c command links, b no taskbar button, e end task, n never activate, o owner center, t topmost.</para>
+		/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
 		/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="style">Example: "YN!c".</param>
+		/// <param name="style">Style string (like "YN!e"), or TDButton (like TDButton.YesNo|TDButton.Retry), or TDIcon (like TDIcon.Info), or TDFlags (like TDFlag.NeverActivate|TDFlag.EndThread), or TDStyle object (like new TDStyle(TDButton.YesNo, TDIcon.Warning, TDFlag.OwnerCenter)).</param>
 		/// <param name="owner">Owner window or Wnd0.</param>
 		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. Use "c" in style to change button style. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel) makes the button work like the common Cancel button (adds title bar x button, enables Esc key).</param>
 		/// <remarks>
-		/// The difference from the other overload: here buttons, icon, flags and default button are specified in the style parameter (string) instead of using 4 parameters. This is more compact but less readable.
+		/// The difference from the other overload: instead of 4 parameters for buttons, icon, flags and default button here is used 1 parameter 'style'.
 		/// Calls TaskDialogEx(), which uses TaskDialogObject class, which uses Windows API function TaskDialogIndirect (you can find more info in MSDN).
-		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
 		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog(...))</c> instead of <c>switch(TaskDialog(...).Button)</c>.
 		/// Tip: For optional parameters use named arguments. Example: <c>Show.TaskDialog("Text.", style: "YN!")</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
+		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// </remarks>
-		public static TDResult TaskDialog(string text1, string text2 = null, string style = null, Wnd owner = default(Wnd), StringList customButtons = null)
+		public static TDResult TaskDialog(string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd), StringList customButtons = null)
 		{
 			return TaskDialogEx(text1, text2, style, owner, customButtons);
-		}
-
-
-		public static int TaskListDialog(
-			StringList list, string text1 = null, string text2 = null, Wnd owner = default(Wnd), string style = null, string title = null)
-		{
-			var d = new TaskDialogObject(text1, text2, style, title: title);
-			d.SetCustomButtons(list, true);
-			d.FlagAllowCancel = true;
-			d.SetOwnerWindow(owner);
-			return d.Show();
 		}
 	}
 
@@ -606,9 +692,9 @@ namespace Catkeys
 	/// d.SetCustomButtons("1 one|2 two\nzzz", true);
 	/// d.SetRadioButtons("1001 r1|1002 r2");
 	/// d.SetTimeout(30, "OK");
-	/// d.HyperlinkClicked += ed => { Out($"{ed.Message} {ed.LinkHref}"); };
-	/// d.ButtonClicked += ed => { Out($"{ed.Message} {ed.WParam}"); if(ed.WParam==TDResult.No) ed.Return=1; }; //ed.Return=1 prevents closing
-	/// d.FlagShowProgressBar=true; d.Timer += ed => { ed.Obj.Send.Progress(ed.WParam/100); };
+	/// d.HyperlinkClicked += ed => { Out($"{ed.message} {ed.linkHref}"); };
+	/// d.ButtonClicked += ed => { Out($"{ed.message} {ed.wParam}"); if(ed.wParam==TDResult.No) ed.returnValue=1; }; //ed.returnValue=1 prevents closing
+	/// d.FlagShowProgressBar=true; d.Timer += ed => { ed.obj.Send.Progress(ed.wParam/100); };
 	/// TDResult r = d.Show();
 	/// switch(r.Button) { case TDResult.OK: ... case 1: ... }
 	/// switch(r.RadioButton) { ... }
@@ -621,7 +707,7 @@ namespace Catkeys
 	/// </remarks>
 	public partial class TaskDialogObject
 	{
-#region API
+		#region API
 
 		[DllImport("comctl32.dll")]
 		static extern int TaskDialogIndirect([In] ref TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
@@ -687,7 +773,7 @@ namespace Catkeys
 			public int cxWidth;
 		}
 
-#endregion
+		#endregion
 
 		TASKDIALOGCONFIG _c;
 		string[] _buttons, _radioButtons; //before showing dialog these will be marshaled to IntPtr
@@ -708,7 +794,8 @@ namespace Catkeys
 		public TaskDialogObject(
 			Wnd owner, string text1, string text2 = null, TDButton buttons = 0, TDIcon icon = 0, TDFlag flags = 0,
 			int defaultButton = 0, StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
-			string expandedText = null, string footerText = null, string title = null, int x = 0, int y = 0, int timeoutS = 0,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
 			Action<TDEventArgs> onLinkClick = null
 			) : this()
 		{
@@ -729,7 +816,7 @@ namespace Catkeys
 			SetExpandedText(expandedText);
 			SetFooterText(footerText);
 			SetTitleBarText(title);
-			SetXY(x, y);
+			SetXY(x, y, flags.HasFlag(TDFlag.RawXY));
 			SetTimeout(timeoutS);
 			if(onLinkClick != null) HyperlinkClicked += onLinkClick;
 		}
@@ -739,13 +826,14 @@ namespace Catkeys
 		/// All parameters are the same as of Show.TaskDialogEx().
 		/// </summary>
 		public TaskDialogObject(
-			string text1, string text2 = null, string style = null, Wnd owner = default(Wnd),
+			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
-			string expandedText = null, string footerText = null, string title = null, int x = 0, int y = 0, int timeoutS = 0,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
 			Action<TDEventArgs> onLinkClick = null
 			) : this()
 		{
-			SetStyle(style);
+			if(style != null) SetStyle(style);
 			SetOwnerWindow(owner);
 			SetText(text1, text2);
 			SetCustomButtons(customButtons);
@@ -791,25 +879,24 @@ namespace Catkeys
 		/// <summary>
 		/// Sets custom icon.
 		/// </summary>
-		/// <param name="icon">Icon object.</param>
-		public void SetIcon(Icon icon)
+		/// <param name="icon">Icon handle (IntPtr) or object (System.Drawing.Icon).</param>
+		public void SetIcon(object icon)
 		{
-			_c.hMainIcon = icon == null ? Zero : icon.Handle;
+			_c.hMainIcon = _IconHandleFromObject(icon);
 			_USE_HICON_MAIN = _c.hMainIcon != Zero;
 			//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
 			//note: for App icon Show() will execute more code. The same for footer icon.
 		}
-		///// <summary>
-		///// Sets custom icon.
-		///// </summary>
-		///// <param name="iconHandle">Native icon handle.</param>
-		//public void SetIcon(IntPtr iconHandle)
-		//{
-		//	_c.hMainIcon = iconHandle;
-		//	_USE_HICON_MAIN = iconHandle != Zero;
-		//	//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
-		//	//note: for App icon Show() will execute more code. The same for footer icon.
-		//}
+
+		static IntPtr _IconHandleFromObject(object icon)
+		{
+			IntPtr hi = Zero;
+			if(icon != null) {
+				if(icon is IntPtr) hi = (IntPtr)icon;
+				else if(icon is System.Drawing.Icon) hi = ((System.Drawing.Icon)icon).Handle;
+			}
+			return hi;
+		}
 
 		/// <summary>
 		/// Sets common buttons.
@@ -825,79 +912,24 @@ namespace Catkeys
 		/// You can call this function instead of SetButtons(), SetIcon() etc if you prefer to specify all in string:
 		/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 		/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-		/// <para>Flags: c command links, b no taskbar button, e end task, n never activate, o owner center, t topmost.</para>
+		/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
 		/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 		/// </summary>
-		/// <param name="style">Example: "YN!".</param>
-		public void SetStyle(string style)
+		/// <param name="style">Style string (like "YN!e"), or TDButton (like TDButton.YesNo|TDButton.Retry), or TDIcon (like TDIcon.Info), or TDFlags (like TDFlag.NeverActivate|TDFlag.EndThread), or TDStyle object (like new TDStyle(TDButton.YesNo, TDIcon.Warning, TDFlag.OwnerCenter)).</param>
+		public void SetStyle(TDStyle style)
 		{
-			var t = new _TDStyle(style);
-			SetButtons(t.buttons);
-			DefaultButton = t.defaultButton;
-			SetIcon(t.icon);
-			_USE_COMMAND_LINKS = t.commandLinks; //SetCustomButtons has a bool? parameter for this
-			FlagNoTaskbarButton = t.noTaskbarButton;
-			FlagEndThread = t.endThread;
-			FlagNeverActivate = t.noActivate;
-			_POSITION_RELATIVE_TO_WINDOW = t.ownerCenter; //SetOwnerWindow has a bool? parameter for this
-			if(t.topmost) FlagTopmost = t.topmost; //else use Option.dialogTopmostIfNoOwner if no owner
-		}
-
-		struct _TDStyle
-		{
-			public TDButton buttons;
-			public int defaultButton;
-			public TDIcon icon;
-			public bool commandLinks, noTaskbarButton, endThread, noActivate, ownerCenter, topmost;
-
-			public _TDStyle(string style) : this()
-			{
-				if(style == null) return;
-				for(int i = 0, n = style.Length; i < n; i++) {
-					char c = style[i];
-					switch(c) {
-					//buttons
-					case 'O': buttons |= TDButton.OK; break;
-					case 'C': buttons |= TDButton.Cancel; break;
-					case 'R': buttons |= TDButton.Retry; break;
-					case 'Y': buttons |= TDButton.Yes; break;
-					case 'N': buttons |= TDButton.No; break;
-					case 'L': buttons |= TDButton.Close; break;
-					//icon
-					case 'x': icon |= TDIcon.Error; break;
-					case '!': icon |= TDIcon.Warning; break;
-					case 'i': icon |= TDIcon.Info; break;
-					case 'v': icon |= TDIcon.Shield; break;
-					case 'a': icon |= TDIcon.App; break;
-					//flags
-					case 'c': commandLinks = true; break;
-					case 'b': noTaskbarButton = true; break;
-					case 'e': endThread = true; break;
-					case 'n': noActivate = true; break;
-					case 'o': ownerCenter = true; break;
-					case 't': topmost = true; break;
-					//default button
-					case 'd':
-						if(i == n - 1) break; //incorrectly used
-						switch(style[i + 1]) {
-						case 'O': defaultButton = TDResult.OK; break;
-						case 'C': defaultButton = TDResult.Cancel; break;
-						case 'R': defaultButton = TDResult.Retry; break;
-						case 'Y': defaultButton = TDResult.Yes; break;
-						case 'N': defaultButton = TDResult.No; break;
-						case 'L': defaultButton = TDResult.Close; break;
-						default:
-							int eon;
-							defaultButton = style.ToInt_(i + 1, out eon);
-							if(eon != 0) i = eon - 1; //else incorrectly used
-							break;
-						}
-						break;
-						//default: //unknown character
-					}
-					//note: don't throw if unknown or incorrectly used character. It is not so important. Maybe show warning, when we will have a Warning() function.
-				}
-			}
+			if(style == null) style = new TDStyle();
+			SetButtons(style.buttons);
+			DefaultButton = style.defaultButton;
+			if(style.customIcon != null) SetIcon(style.customIcon); else SetIcon(style.icon);
+			var f = style.flags;
+			_USE_COMMAND_LINKS = f.HasFlag(TDFlag.CommandLinks); //SetCustomButtons has a bool? parameter for this
+			FlagNoTaskbarButton = f.HasFlag(TDFlag.NoTaskbarButton);
+			FlagEndThread = f.HasFlag(TDFlag.EndThread);
+			FlagNeverActivate = f.HasFlag(TDFlag.NeverActivate);
+			_POSITION_RELATIVE_TO_WINDOW = f.HasFlag(TDFlag.OwnerCenter); //SetOwnerWindow has a bool? parameter for this
+			_rawXY = f.HasFlag(TDFlag.RawXY); //SetXY has a bool? parameter for this
+			if(f.HasFlag(TDFlag.Topmost)) FlagTopmost = true; //else use Option.dialogTopmostIfNoOwner if no owner
 		}
 
 		/// <summary>
@@ -986,9 +1018,29 @@ namespace Catkeys
 		/// <summary>
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
+		/// <param name="text">Text, optionally preceded by an icon character and |, like "i|Text". Icons: x error, ! warning, i info, v shield, a app.</param>
+		public void SetFooterText(string text)
+		{
+			TDIcon icon = 0;
+			if(text != null && text.Length >= 2 && text[1] == '|') {
+				switch(text[0]) {
+				case 'x': icon = TDIcon.Error; break;
+				case '!': icon = TDIcon.Warning; break;
+				case 'i': icon = TDIcon.Info; break;
+				case 'v': icon = TDIcon.Shield; break;
+				case 'a': icon = TDIcon.App; break;
+				}
+				text = text.Substring(2);
+			}
+			_c.pszFooter = text;
+			_c.hFooterIcon = (IntPtr)(int)icon; _USE_HICON_FOOTER = false;
+		}
+		/// <summary>
+		/// Adds text and common icon at the bottom of the dialog.
+		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon">One of standard icons, eg TDIcon.Warning.</param>
-		public void SetFooterText(string text, TDIcon icon = 0)
+		public void SetFooterText(string text, TDIcon icon)
 		{
 			_c.pszFooter = text;
 			_c.hFooterIcon = (IntPtr)(int)icon; _USE_HICON_FOOTER = false;
@@ -997,23 +1049,13 @@ namespace Catkeys
 		/// Adds text and custom icon at the bottom of the dialog.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">Icon object.</param>
-		public void SetFooterText(string text, Icon icon)
+		/// <param name="icon">Icon handle (IntPtr) or object (System.Drawing.Icon).</param>
+        public void SetFooterText(string text, object icon)
 		{
 			_c.pszFooter = text;
-			_c.hFooterIcon = icon == null ? Zero : icon.Handle;
+			_c.hFooterIcon = _IconHandleFromObject(icon);
 			_USE_HICON_FOOTER = _c.hFooterIcon != Zero;
 		}
-		///// <summary>
-		///// Adds text and custom icon at the bottom of the dialog.
-		///// </summary>
-		///// <param name="text">Text.</param>
-		///// <param name="icon">Native icon handle.</param>
-		//public void SetFooterText(string text, IntPtr iconHandle)
-		//{
-		//	_c.pszFooter = text;
-		//	_c.hFooterIcon = iconHandle; _USE_HICON_FOOTER = iconHandle != Zero;
-		//}
 
 		/// <summary>
 		/// Adds Edit or Combo control (if editType is not TDEdit.None (0)).
@@ -1063,13 +1105,14 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
 		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
-		/// <param name="rawXY">Don't interpret 0 and negative x y in a special way.</param>
-		public void SetXY(int x, int y, bool rawXY = false)
+		/// <param name="rawXY">Don't interpret 0 and negative x y in a special way. If omitted or null, does not change the current value, which may be previously set with SetStyle(), and default is false.</param>
+		public void SetXY(int x, int y, bool? rawXY = null)
 		{
-			_x = x; _y = y; _xyIsRaw = rawXY;
+			_x = x; _y = y;
+			if(rawXY != null) _rawXY = rawXY.Value;
 		}
 
-		int _x, _y; bool _xyIsRaw;
+		int _x, _y; bool _rawXY;
 
 		/// <summary>
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
@@ -1299,8 +1342,8 @@ namespace Catkeys
 
 				if(!_POSITION_RELATIVE_TO_WINDOW) {
 					object scr = Screen; if(scr == null && _c.hwndParent.Is0) scr = Script.Option.dialogScreenIfNoOwner;
-					if((_x != 0 || _y != 0 || _xyIsRaw || scr != null)) {
-						w.MoveInScreen(_x, _y, scr, rawXY: _xyIsRaw);
+					if((_x != 0 || _y != 0 || _rawXY || scr != null)) {
+						w.MoveInScreen(_x, _y, scr, rawXY: _rawXY);
 					}
 				}
 
@@ -1341,7 +1384,7 @@ namespace Catkeys
 			if(e != null) {
 				var ed = new TDEventArgs(this, _dlg, message, wParam, lParam);
 				e(ed);
-				R = ed.Return;
+				R = ed.returnValue;
 			}
 
 			if(message == TDApi.TDN.DESTROYED) _SetClosed();
@@ -1360,38 +1403,38 @@ namespace Catkeys
 	/// <summary>
 	/// Arguments for event handlers of TaskDialogObject, TaskDialogEx() (onLinkClick) and some other functions.
 	/// More info: MSDN -> TaskDialogCallbackProc function.
-	/// To return a non-zero value from the callback function, assign the value to the Return property.
+	/// To return a non-zero value from the callback function, assign the value to the returnValue field.
 	/// </summary>
 	public class TDEventArgs :EventArgs
 	{
-		internal TDEventArgs(TaskDialogObject obj, Wnd dlg, TDApi.TDN message, LPARAM wParam, LPARAM lParam)
+		internal TDEventArgs(TaskDialogObject obj_, Wnd hwnd_, TDApi.TDN message_, LPARAM wParam_, LPARAM lParam_)
 		{
-			Obj = obj; Hwnd = dlg; Message = message; WParam = wParam;
-			if(message == TDApi.TDN.HYPERLINK_CLICKED) LinkHref = Marshal.PtrToStringUni(lParam); else LinkHref = null;
+			obj = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
+			linkHref = (message_ == TDApi.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
 		}
-		public TaskDialogObject Obj;
-		public Wnd Hwnd; //not a property because then handler could not do ed.Hwnd.Property=value. Also cannot be readonly.
-		public TDApi.TDN Message;
-		public LPARAM WParam;
-		public string LinkHref;
-		public int Return;
+		public TaskDialogObject obj;
+		public Wnd hwnd; //not a property because then handler could not do ed.Hwnd.Property=value. Also cannot be readonly.
+		public TDApi.TDN message;
+		public LPARAM wParam;
+		public string linkHref;
+		public int returnValue;
 	}
 
 	public partial class TaskDialogObject
 	{
-#region async_etc
+		#region async_etc
 
 		/// <summary>
 		/// Shows the dialog in another thread and waits a while until the dialog is open.
 		/// Calls <c>Task.Run(() =˃ { Show(); }); ThreadWaitOpen();</c>
 		/// </summary>
-		/// <param name="onClose">A callback function (lambda etc) to call when the dialog is closed. It will be called in another thread too.</param>
-		public void ShowAsync(Action<TDResult> onClose = null)
+		/// <param name="whenClosed">An event handler function (lambda etc) to call when the dialog is closed. It will be called in other thread too.</param>
+		public void ShowAsync(Action<TDResult> whenClosed = null)
 		{
 			Task.Run(() =>
 			{
 				Show();
-				if(onClose != null) onClose(Result);
+				if(whenClosed != null) whenClosed(Result);
 				//note: currently onClose not called if main thread is already returned at that time.
 				//	Because then called AppDomain.Unload, which aborts thread, which aborts executing managed code.
 				//	In the future before calling AppDomain.Unload should close all thread windows, or wait for windows marked 'fait for it on script exit'.
@@ -1474,7 +1517,7 @@ namespace Catkeys
 		}
 		bool _isClosed;
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Gets dialog window handle as Wnd.
@@ -1504,7 +1547,7 @@ namespace Catkeys
 			/// <summary>
 			/// Sends a message to the dialog.
 			/// Call this method while the dialog is open, eg in an event handler.
-			/// Example (in an event handler): <c>ed.Obj.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
+			/// Example (in an event handler): <c>ed.obj.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
 			/// Also there are several other functions to send some messages.
 			/// Message reference: MSDN.
 			/// </summary>
@@ -1520,7 +1563,7 @@ namespace Catkeys
 			/// <summary>
 			/// Sends message TDApi.TDM.SET_ELEMENT_TEXT or TDApi.TDM.UPDATE_ELEMENT_TEXT to the dialog.
 			/// Call this method while the dialog is open, eg in an event handler.
-			/// Example (in an event handler): <c>ed.Obj.Send.Text(true, TDApi.TDE.CONTENT, "New text.");</c>
+			/// Example (in an event handler): <c>ed.obj.Send.Text(true, TDApi.TDE.CONTENT, "New text.");</c>
 			/// </summary>
 			public void SetText(bool updateText, TDApi.TDE partId, string text)
 			{
@@ -1528,7 +1571,8 @@ namespace Catkeys
 				_dlg.SendS((uint)(updateText ? TDApi.TDM.UPDATE_ELEMENT_TEXT : TDApi.TDM.SET_ELEMENT_TEXT), (int)partId, text ?? "");
 				//info: null does not change text.
 
-				if(!updateText && _tdo != null) _tdo._EditControlUpdateAsync();
+				if(_tdo != null) _tdo._EditControlUpdateAsync(updateText);
+				//info: sometimes even UPDATE_ELEMENT_TEXT sends our control to the bottom of the Z order.
 			}
 
 			/// <summary>
@@ -1562,7 +1606,7 @@ namespace Catkeys
 			/// <summary>
 			/// Enables or disables a button. Normally it closes the dialog.
 			/// Call this method while the dialog is open, eg in an event handler.
-			/// Example: <c>d.Created += ed => { ed.Obj.Send.EnableButton(TDResult.Yes, false); };</c>
+			/// Example: <c>d.Created += ed => { ed.obj.Send.EnableButton(TDResult.Yes, false); };</c>
 			/// Sends message TDApi.TDM.ENABLE_BUTTON.
 			/// </summary>
 			public void EnableButton(int buttonId, bool enable)
@@ -1583,7 +1627,7 @@ namespace Catkeys
 			}
 		} //class Sender
 
-#region marshalButtons_hookProc_timeoutText
+		#region marshalButtons_hookProc_timeoutText
 #if DEBUG //CONSIDER: use this func always, or add the attribute etc to allow native exception handling.
 		//The API throws 'access violation' exception if some value is invalid (eg unknown flags in dwCommonButtons) or it does not like something.
 		//.NET does not allow to handle such exceptions, unless we use [HandleProcessCorruptedStateExceptions] or <legacyCorruptedStateExceptionsPolicy enabled="true"/> in config file.
@@ -1604,13 +1648,13 @@ namespace Catkeys
 			cButtons = a.Length;
 
 			int structSize = Marshal.SizeOf(typeof(TASKDIALOG_BUTTON));
-			IntPtr R = Marshal.AllocHGlobal(structSize * a.Length);
+			IntPtr R = Marshal.AllocHGlobal(structSize * a.Length); //TODO: don't use Marshal Alloc/Free, because in other place it was slow etc
 
 			for(int i = 0; i < a.Length; i++) {
 				TASKDIALOG_BUTTON b; b.id = a[i].ToInt_(out b.text); //"id text" -> TASKDIALOG_BUTTON
 
 				if(string.IsNullOrEmpty(b.text)) { b.text = a[i]; if(string.IsNullOrEmpty(b.text)) b.text = " "; } //exception if null or ""
-				else b.text = b.text.Replace("\r\n", "\n"); //the API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
+				else b.text = b.text.Replace("\r\n", "\n").TrimStart('\n'); //the API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts. Also does not like if begins with \n;
 
 				//info: internally button ids are negative (internalId = -specifiedId), to avoid user button id conflict with common button ids.
 				if(escapeId) {
@@ -1655,7 +1699,7 @@ namespace Catkeys
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_KEYDOWN:
 			case Api.WM_SYSKEYDOWN:
-				if(_timeoutActive && m.hwnd.ToplevelParentOrSelf == _dlg) {
+				if(_timeoutActive && m.hwnd.ToplevelParentOrThis == _dlg) {
 					_timeoutActive = false;
 					//_TimeoutFooterTextHide();
 					Send.SetText(true, TDApi.TDE.FOOTER, _timeoutFooterText);
@@ -1683,12 +1727,12 @@ namespace Catkeys
 		//		_dlg.Send((uint)TDApi.TDM.UPDATE_ICON, (int)TDApi.TDIE.ICON_FOOTER, 0);
 		//		Send.Text(false, TDApi.TDE.FOOTER, ""); //however still remains some space for footer
 
-		//		//c.pszFooter=null; SendNavigatePage(); //don't use this because interferes with the expand/collapse control
+		//		//_c.pszFooter=null; SendNavigatePage(); //don't use this because interferes with the expand/collapse control
 		//	} else Send.Text(false, TDApi.TDE.FOOTER, _timeoutFooterText);
 		//}
-#endregion
+		#endregion
 
-#region Edit_control
+		#region Edit_control
 
 		void _EditControlInitBeforeShowDialog()
 		{
@@ -1698,19 +1742,21 @@ namespace Catkeys
 			if(_editType == TDEdit.Multiline) _radioButtons = new string[] { ".1", ".2", ".3", ".4" }; //reserve space for multiline Edit control
 		}
 
-		void _EditControlUpdate()
+		void _EditControlUpdate(bool onlyZorder = false)
 		{
 			if(_editWnd.Is0) return;
-			RECT r;
-			_EditControlGetPlace(out r);
-			_editParent.MoveResize(r.left, r.top, r.Width, r.Height);
-			_editWnd.MoveResize(0, 0, r.Width, r.Height);
+			if(!onlyZorder) {
+				RECT r;
+				_EditControlGetPlace(out r);
+				_editParent.MoveResize(r.left, r.top, r.Width, r.Height);
+				_editWnd.MoveResize(0, 0, r.Width, r.Height);
+			}
 			_editParent.ZorderTop();
 		}
 
-		void _EditControlUpdateAsync()
+		void _EditControlUpdateAsync(bool onlyZorder = false)
 		{
-			_editParent.Post(Api.WM_APP + 111);
+			_editParent.Post(Api.WM_APP + 111, onlyZorder);
 		}
 
 		Wnd _EditControlGetPlace(out RECT r)
@@ -1718,7 +1764,7 @@ namespace Catkeys
 			Wnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
 
 			//We'll hide the progress bar control and create our Edit control in its place.
-			Wnd prog = Wnd.FindControlOfClass(parent, "msctls_progress32");
+			Wnd prog = parent.ChildByClassName("msctls_progress32");
 			prog.Visible = false;
 
 			r = prog.GetRectInClientOf(parent);
@@ -1728,19 +1774,18 @@ namespace Catkeys
 			if(_editType == TDEdit.Multiline) {
 				//as bottom, use the last radio button
 				Wnd rLast = Wnd0;
-				Wnd.All.Controls(c =>
+				Wnd.All.Controls(e =>
 				{
-					var s = c.Name;
-					if(s.Like_(".#")) {
-						c.Visible = false;
-						//c.Enabled = false; //hiding and disabling does not exclude the radio button from Tab
+					var s = e.w.Name;
+					if(s.Length==2 && s[0]=='.' && s[1]>='1' && s[1]<='4') {
+						e.w.Visible = false;
+						//e.w.Enabled = false; //hiding and disabling does not exclude the radio button from Tab
 						if(s[1] == '4') {
-							rLast = c;
-							return true;
+							rLast = e.w;
+							e.Stop();
 						}
 					}
-					return false;
-				}, parent, false, "Button");
+				}, parent, "Button");
 
 				RECT u = rLast.GetRectInClientOf(parent);
 				r.bottom = u.bottom;
@@ -1760,7 +1805,7 @@ namespace Catkeys
 			uint pExStyle = Api.WS_EX_NOPARENTNOTIFY; //not Api.WS_EX_CONTROLPARENT
 			_editParent = Api.CreateWindowEx(pExStyle, "#32770", null, pStyle, r.left, r.top, r.Width, r.Height, parent, 0, Zero, 0);
 			_EditControlParentProcHolder = _EditControlParentProc;
-			_editParent.SetLong(Api.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_EditControlParentProcHolder));
+			_editParent.SetWindowLong(Api.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_EditControlParentProcHolder));
 
 			//Create Edit or ComboBox control.
 			string className = "Edit";
@@ -1775,7 +1820,7 @@ namespace Catkeys
 			_editWnd = Api.CreateWindowEx(Api.WS_EX_CLIENTEDGE, className, null, style, 0, 0, r.Width, r.Height, _editParent, 0, Zero, 0);
 
 			//Init the control.
-			_editWnd.Font=Form.DefaultFont.ToHfont();
+			_editWnd.Font = Form.DefaultFont.ToHfont();
 			if(_editType == TDEdit.Combo) {
 				if(_editComboItems != null) {
 					foreach(string s in _editComboItems.Arr) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
@@ -1799,7 +1844,7 @@ namespace Catkeys
 			ButtonClicked += ed => _editText = _editWnd.GetControlText();
 			OtherEvents += ed =>
 			{
-				switch(ed.Message) {
+				switch(ed.message) {
 				case TDApi.TDN.EXPANDO_BUTTON_CLICKED:
 				case TDApi.TDN.NAVIGATED:
 					_EditControlUpdateAsync();
@@ -1818,16 +1863,16 @@ namespace Catkeys
 			//OutList(msg, wParam, lParam);
 			switch(msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				Wnd.FindControlOfClass(_dlg, "DirectUIHWND", true).Focus();
+				_dlg.ChildByClassName("DirectUIHWND", true).Focus();
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				Wnd.FindControlOfClass(_dlg, "DirectUIHWND", true).Focus();
+				_dlg.ChildByClassName("DirectUIHWND", true).Focus();
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);
 				return 1;
 			case Api.WM_APP + 111: //async update edit control pos
-				_EditControlUpdate();
+				_EditControlUpdate(wParam != 0);
 				return 1;
 			}
 			return 0;
@@ -1835,11 +1880,11 @@ namespace Catkeys
 		}
 		Api.DLGPROC _EditControlParentProcHolder;
 
-#endregion
+		#endregion
 	} //TaskDialogObject
-#endregion TaskDialog
+	#endregion TaskDialog
 
-#region InputDialog
+	#region InputDialog
 
 	public static partial class Show
 	{
@@ -1855,20 +1900,30 @@ namespace Catkeys
 		/// <param name="initText">Initial Edit control text. If editType == TDEdit.Combo, the first line sets Edit control text, other lines add drop-down list items.</param>
 		/// <param name="owner">Owner window.</param>
 		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
-		/// <param name="flags">Options.</param>
+		/// <param name="style">The same as with Show.TaskDialogEx(). Can be specified flags and icon, but not buttons (the dialog always has OK and Cancel).</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
 		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
 		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. Use TDFlag.CommandLinks in flags to change button style.</param>
-		/// <param name="onButtonClick">A lambda or other kind of delegate callback function to call on button click. For example on a custom button clicks it can set edit control text, or on OK click verify edit control text and don't allow to close the dialog if the text is invalid.</param>
+		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. In the 'style' parameter you can change button style.</param>
+		/// <param name="onButtonClick">
+		/// A button-clicked event handler function, eg lambda.
+		/// For example, it can set edit control text when a custom button clicked. Example (lambda):
+		/// <c>ed => { if(ed.wParam == 1) { string _s; if(Show.InputDialog(out _s, owner:ed.hwnd)) ed.obj.EditControl.SetControlText(_s); ed.returnValue = 1; } }</c>
+		/// Or on OK click it can verify edit control text and don't allow to close the dialog if the text is invalid. Example (lambda):
+		/// <c>ed => { if(ed.wParam == TDResult.OK) { string _s=ed.obj.EditControl.Name; if(Empty(_s)) { Show.TaskDialog("Text cannot be empty.", owner: ed.hwnd); ed.returnValue = 1; } } }</c>
+		/// </param>
 		/// <param name="onLinkClick">Enables hyperlinks in text. A link-clicked event handler function, eg lambda. Example: see Show.TaskDialogEx().</param>
-		public static bool InputDialogWithCheckboxEx(
+		/// <remarks>
+		/// Uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static bool InputDialogEx(
 			out string s, out bool isChecked, string checkBoxText, string staticText = null,
-			string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Text, TDFlag flags = 0,
-			string expandedText = null, string footerText = null, string title = null, int x = 0, int y = 0, int timeoutS = 0,
+			string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Text, TDStyle style = null,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
 			StringList customButtons = null, Action<TDEventArgs> onButtonClick = null,
 			Action<TDEventArgs> onLinkClick = null
 			)
@@ -1876,8 +1931,10 @@ namespace Catkeys
 			s = null;
 			isChecked = false;
 
-			var d = new TaskDialogObject(owner, null, staticText, TDButton.OKCancel, 0, flags, 0, customButtons, null,
+			var d = new TaskDialogObject(null, staticText, style, owner, customButtons, null,
 				checkBoxText, expandedText, footerText, title, x, y, timeoutS, onLinkClick);
+
+			d.SetButtons(TDButton.OKCancel);
 
 			if(editType == TDEdit.None) editType = TDEdit.Text;
 			d.SetEditControl(editType, initText);
@@ -1904,11 +1961,14 @@ namespace Catkeys
 		/// <param name="initText">Initial Edit control text.</param>
 		/// <param name="owner">Owner window.</param>
 		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
-		public static bool InputDialogWithCheckbox(
+		/// <remarks>
+		/// Calls InputDialogEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static bool InputDialog(
 			out string s, out bool isChecked, string checkBoxText, string staticText = null,
 			string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Text)
 		{
-			return InputDialogWithCheckboxEx(out s, out isChecked, checkBoxText, staticText, initText, owner, editType);
+			return InputDialogEx(out s, out isChecked, checkBoxText, staticText, initText, owner, editType);
 		}
 
 		/// <summary>
@@ -1923,13 +1983,16 @@ namespace Catkeys
 		/// <param name="initText">Initial Edit control text.</param>
 		/// <param name="owner">Owner window.</param>
 		/// <param name="editType">Edit field type. It can be number (TDEdit.Number, default), simple text or combo box.</param>
-		public static bool InputDialogWithCheckbox(
+		/// <remarks>
+		/// Calls InputDialogEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static bool InputDialog(
 			out int i, out bool isChecked, string checkBoxText, string staticText = null,
 			string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Number)
 		{
 			i = 0;
 			string s;
-			if(!InputDialogWithCheckboxEx(out s, out isChecked, checkBoxText, staticText, initText, owner, editType)) return false;
+			if(!InputDialogEx(out s, out isChecked, checkBoxText, staticText, initText, owner, editType)) return false;
 			i = s.ToInt_();
 			return true;
 		}
@@ -1943,26 +2006,36 @@ namespace Catkeys
 		/// <param name="initText">Initial Edit control text. If editType == TDEdit.Combo, the first line sets Edit control text, other lines add drop-down list items.</param>
 		/// <param name="owner">Owner window.</param>
 		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
-		/// <param name="flags">Options.</param>
+		/// <param name="style">The same as with Show.TaskDialogEx(). Can be specified flags and icon, but not buttons (the dialog always has OK and Cancel).</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
 		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
 		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. Use TDFlag.CommandLinks in flags to change button style.</param>
-		/// <param name="onButtonClick">A lambda or other kind of delegate callback function to call on button click. For example on a custom button clicks it can set edit control text, or on OK click verify edit control text and don't allow to close the dialog if the text is invalid.</param>
+		/// <param name="customButtons">Adds buttons that have custom text and id. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List˂string˃. In the 'style' parameter you can change button style.</param>
+		/// <param name="onButtonClick">
+		/// A button-clicked event handler function, eg lambda.
+		/// For example, it can set edit control text when a custom button clicked. Example (lambda):
+		/// <c>ed => { if(ed.wParam == 1) { string _s; if(Show.InputDialog(out _s, owner:ed.hwnd)) ed.obj.EditControl.SetControlText(_s); ed.returnValue = 1; } }</c>
+		/// Or on OK click it can verify edit control text and don't allow to close the dialog if the text is invalid. Example (lambda):
+		/// <c>ed => { if(ed.wParam == TDResult.OK) { string _s=ed.obj.EditControl.Name; if(Empty(_s)) { Show.TaskDialog("Text cannot be empty.", owner: ed.hwnd); ed.returnValue = 1; } } }</c>
+		/// </param>
 		/// <param name="onLinkClick">Enables hyperlinks in text. A link-clicked event handler function, eg lambda. Example: see Show.TaskDialogEx().</param>
+		/// <remarks>
+		/// Uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
 		public static bool InputDialogEx(
 			out string s, string staticText = null,
-			string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Text, TDFlag flags = 0,
-			string expandedText = null, string footerText = null, string title = null, int x = 0, int y = 0, int timeoutS = 0,
+			string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Text, TDStyle style = null,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
 			StringList customButtons = null, Action<TDEventArgs> onButtonClick = null,
 			Action<TDEventArgs> onLinkClick = null
 			)
 		{
 			bool isChecked;
-			return InputDialogWithCheckboxEx(out s, out isChecked, null, staticText, initText, owner, editType, flags,
+			return InputDialogEx(out s, out isChecked, null, staticText, initText, owner, editType, style,
 				expandedText, footerText, title, x, y, timeoutS, customButtons, onButtonClick, onLinkClick);
 		}
 
@@ -1975,6 +2048,9 @@ namespace Catkeys
 		/// <param name="initText">Initial Edit control text.</param>
 		/// <param name="owner">Owner window.</param>
 		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <remarks>
+		/// Calls InputDialogEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
 		public static bool InputDialog(out string s, string staticText = null, string initText = null, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Text)
 		{
 			return InputDialogEx(out s, staticText, initText, owner, editType);
@@ -1989,6 +2065,9 @@ namespace Catkeys
 		/// <param name="initText">Initial Edit control text.</param>
 		/// <param name="owner">Owner window.</param>
 		/// <param name="editType">Edit field type. It can be number (TDEdit.Number, default), simple text or combo box.</param>
+		/// <remarks>
+		/// Calls InputDialogEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
 		public static bool InputDialog(out int i, string staticText = null, int initValue = 0, Wnd owner = default(Wnd), TDEdit editType = TDEdit.Number)
 		{
 			i = 0;
@@ -2024,21 +2103,226 @@ namespace Catkeys
 		}
 #endif
 	}
-#endregion InputDialog
+	#endregion InputDialog
 
-
-#region OutputWindow
-	/// <summary>
-	/// Shows a scrolling read-only text window where you then can write text (append lines) like in a console window.
-	/// Just creates the window and returns. The window runs in another thread.
-	/// </summary>
-	public class OutputWindow
+	#region ListDialog
+	public static partial class Show
 	{
+		/// <summary>
+		/// Shows task dialog with a list (column) of command-link buttons.
+		/// Returns clicked button id and other results packed in a TDResult object (if assigned to an int variable or switch, it is button id). On Cancel/X click the returned id is 0 (not TDResult.Cancel, which is -2).
+		/// </summary>
+		/// <param name="list">List items (buttons). A list of strings "id text" separated by |, like "1 One|2 Two|3 Three|Cancel". Also can be string[] or List˂string˃. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel).</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Text below main instruction.</param>
+		/// <param name="style">The same as with Show.TaskDialogEx(). Example: "Co" (adds Cancel button and owner-center flag). Example: TDButton.Cancel.</param>
+		/// <param name="owner">Owner window or Wnd0.</param>
+		/// <param name="checkBox">Check box text. To check, use "Text|true" or "Text|check" or "Text|checked".</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DisplayName (default is appdomain name).</param>
+		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
+		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
+		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, eg lambda. Example: <c>Show.TaskDialogEx("", "Text ˂a href="example"˃link˂/a˃.", onLinkClick: ed => { Out(ed.linkHref); });</c></param>
+		/// <remarks>
+		/// Uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static TDResult ListDialogEx(
+			StringList list, string text1 = null, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
+			string checkBox = null, string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
+			Action<TDEventArgs> onLinkClick = null
+			)
+		{
+			var d = new TaskDialogObject(text1, text2, style, owner, null, null, checkBox, null, footerText, title, x, y, timeoutS, onLinkClick);
+			d.SetCustomButtons(list, true);
+			d.FlagAllowCancel = true;
+			d.SetExpandedText(expandedText, true);
+			TDResult R = d.Show();
+			if(R.Button == TDResult.Cancel) R.Button = 0;
+			return R;
+		}
 
+		/// <summary>
+		/// Shows task dialog with a list (column) of command-link buttons.
+		/// Returns clicked button id. On Cancel/X click returns 0 (not TDResult.Cancel, which is -2).
+		/// </summary>
+		/// <param name="list">List items (buttons). A list of strings "id text" separated by |, like "1 One|2 Two|3 Three|Cancel". Also can be string[] or List˂string˃. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel).</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Text below main instruction.</param>
+		/// <param name="style">The same as with Show.TaskDialogEx(). Example: "Co" (adds Cancel button and owner-center flag). Example: TDButton.Cancel.</param>
+		/// <param name="owner">Owner window or Wnd0.</param>
+		/// <remarks>
+		/// Calls ListDialogEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static int ListDialog(StringList list, string text1 = null, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd))
+		{
+			return ListDialogEx(list, text1, text2, style, owner);
+		}
 	}
-#endregion OutputWindow
+	#endregion
 
-#region Show util
+	#region ProgressDialog
+
+	public static partial class Show
+	{
+		/// <summary>
+		/// Shows dialog with progress bar.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns TaskDialogObject object that can be used to control the dialog: set progress bar position, update text, close etc.
+		/// All parameters are the same as with Show.TaskDialogEx(). If no buttons specified, adds Cancel.
+		/// </summary>
+		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
+		/// <example>
+		/// <code>
+		/// var pd = Show.ProgressDialogEx(false, "Working", customButtons: "1 Stop", y: -1);
+		/// for(int i = 1; i != 100; i++) {
+		/// 	if(!pd.IsOpen) { Out(pd.Result); break; } //if the user closed the dialog
+		/// 	pd.Send.Progress(i); //don't need this if marquee
+		/// 	WaitMS(50); //do something in the loop
+		/// }
+		/// pd.Send.Close();
+		/// </code>
+		/// </example>
+		/// <remarks>
+		/// Uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static TaskDialogObject ProgressDialogEx(bool marquee,
+			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
+			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
+			Action<TDEventArgs> onLinkClick = null
+		)
+		{
+			//If no buttons specified, add Cancel instead of OK.
+			if((style == null || style.buttons == 0) && customButtons == null) {
+				if(style == null) style = new TDStyle(TDButton.Cancel);
+				else style.buttons = TDButton.Cancel;
+			}
+
+			var d = new TaskDialogObject(text1, text2, style, owner,
+				customButtons, radioButtons, checkBox, expandedText, footerText, title, x, y, timeoutS, onLinkClick);
+
+			if(marquee) d.FlagShowMarqueeProgressBar = true;
+			else d.FlagShowProgressBar = true;
+
+			d.ShowAsync();
+
+			if(marquee) d.Send.Message(TDApi.TDM.SET_PROGRESS_BAR_MARQUEE, true);
+
+			return d;
+		}
+
+		/// <summary>
+		/// Shows dialog with progress bar.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns TaskDialogObject object that can be used to control the dialog: set progress bar position, close etc.
+		/// All parameters except marquee are the same as with Show.TaskDialogEx().
+		/// </summary>
+		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
+		/// <example>
+		/// <code>
+		/// var pd = Show.ProgressDialog(false, "Working", customButtons: "1 Stop", y: -1);
+		/// for(int i = 1; i != 100; i++) {
+		/// 	if(!pd.IsOpen) { Out(pd.Result); break; } //if the user closed the dialog
+		/// 	pd.Send.Progress(i); //don't need this if marquee
+		/// 	WaitMS(50); //do something in the loop
+		/// }
+		/// pd.Send.Close();
+		/// </code>
+		/// </example>
+		/// <remarks>
+		/// Calls ProgressDialogEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static TaskDialogObject ProgressDialog(bool marquee,
+			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
+			StringList customButtons = null, int x = 0, int y = 0)
+		{
+			return ProgressDialogEx(marquee, text1, text2, style, owner, customButtons, x: x, y: y);
+		}
+	}
+
+	#endregion
+
+	#region TaskDialogNoWait
+
+	public static partial class Show
+	{
+		/// <summary>
+		/// Shows task dialog like Show.TaskDialogEx() but does not wait.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns TaskDialogObject object that can be used to control the dialog, eg close.
+		/// All parameters except whenClosed are the same as with Show.TaskDialogEx().
+		/// </summary>
+		/// <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog is closed. It will be called in other thread too.</param>
+		/// <example><code>
+		/// //Show.TaskDialogNoWaitEx(null, "Text."); //simplest example
+		/// var td = Show.TaskDialogNoWaitEx(ed => { Out(ed); }, "Text.", style: "OCi");
+		/// Wait(3); //do something while the dialog is open in other thread
+		/// td.ThreadWaitClosed(); //wait until dialog closed (optional, but if the main thread will exit before closing the dialog, dialog's thread then will be aborted)
+		/// </code></example>
+		/// <remarks>
+		/// Uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static TaskDialogObject TaskDialogNoWaitEx(Action<TDResult> whenClosed,
+			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
+			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
+			string expandedText = null, string footerText = null, string title = null,
+			int x = 0, int y = 0, int timeoutS = 0,
+			Action<TDEventArgs> onLinkClick = null
+			)
+		{
+			var d = new TaskDialogObject(text1, text2, style, owner,
+				customButtons, radioButtons, checkBox, expandedText, footerText, title, x, y, timeoutS, onLinkClick);
+			d.ShowAsync(whenClosed);
+			return d;
+		}
+
+		/// <summary>
+		/// Shows task dialog like Show.TaskDialog() but does not wait.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns TaskDialogObject object that can be used to control the dialog, eg close.
+		/// All parameters except whenClosed are the same as with Show.TaskDialog().
+		/// </summary>
+		/// <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog is closed. It will be called in other thread too.</param>
+		/// <example><code>
+		/// //Show.TaskDialogNoWait(null, "Text."); //simplest example
+		/// var td = Show.TaskDialogNoWait(ed => { Out(ed); }, "Text.", style: "OCi");
+		/// Wait(3); //do something while the dialog is open in other thread
+		/// td.ThreadWaitClosed(); //wait until dialog closed (optional, but if the main thread will exit before closing the dialog, dialog's thread then will be aborted)
+		/// </code></example>
+		/// <remarks>
+		/// Calls TaskDialogNoWaitEx, which uses TaskDialogObject class, like Show.TaskDialogEx(). More info there.
+		/// </remarks>
+		public static TaskDialogObject TaskDialogNoWait(Action<TDResult> whenClosed,
+			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd), StringList customButtons = null
+			)
+		{
+			return TaskDialogNoWaitEx(whenClosed, text1, text2, style, owner, customButtons);
+		}
+	}
+
+	#endregion
+
+	#region OutputWindow
+
+	//public static partial class Show
+	//{
+	//	/// <summary>
+	//	/// Shows a scrolling read-only text window where you then can write text (append lines) like in a console window.
+	//	/// Just creates the window and returns. The window runs in another thread.
+	//	/// </summary>
+	//	public class OutputWindow
+	//	{
+
+	//	}
+	//}
+
+	#endregion OutputWindow
+
+	#region Show util
 
 	internal static class _Util
 	{
@@ -2072,5 +2356,5 @@ namespace Catkeys
 
 	}
 
-#endregion util
+	#endregion util
 }

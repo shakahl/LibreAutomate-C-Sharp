@@ -24,7 +24,7 @@ namespace Compiler
 			public IntPtr eventCompilerStartup;
 #pragma warning restore 649
 			public Wnd hwndCompiler;
-			public Time.PerformanceCounter perf;
+			public Speed.PerformanceCounter perf;
 		}
 
 		//We don't use MemoryMappedFile because it is very slow. Creating/writing is 1500, opening/reading is 5000.
@@ -40,6 +40,7 @@ namespace Compiler
 		static Api.WNDPROC _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
 
 
+		[STAThread]
 		public static unsafe void Main()
 		{
 			//Msg("Compiler");
@@ -79,7 +80,7 @@ namespace Compiler
 			//	_hwndAM=hWnd;
 			//	break;
 			//case WM.CREATE:
-			//	Time.Next();
+			//	Speed.Next();
 			//	break;
 			//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
 			//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);
@@ -111,29 +112,29 @@ namespace Compiler
 			//Out("test");
 			//TODO: auto-ngen compiler. Need admin.
 
-			Time.First();
+			Speed.First();
 			//System.Runtime.ProfileOptimization.SetProfileRoot(@"C:\Test");
 			//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
-			//Time.Next();
+			//Speed.Next();
 
 			//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
 			//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
-			Assembly a = Assembly.LoadFile(Util.Paths.CombineApp("csc.exe")); //ok
+			Assembly a = Assembly.LoadFile(Folders.App + "csc.exe"); //ok
 																		 //Assembly a = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
 			MethodInfo m = a.EntryPoint;
 			string[] g = new string[] { null, "/nologo", "/noconfig", @"C:\Test\test.cs" };
 			object[] p = new object[1] { g };
 
 			//g[0]="/?";
-			Time.Next(); //16 ms
+			Speed.Next(); //16 ms
 			for(int i = 1; i<=4; i++) {
 				g[0] = $@"/out:C:\Test\test{i}.exe";
 				m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
-				Time.Next();
+				Speed.Next();
 				//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
-				//Time.Next();
+				//Speed.Next();
 			}
-			Time.Write();
+			Speed.Write();
 
 			Show.TaskDialog("now will GC.Collect");
 			GC.Collect(); //releases a lot

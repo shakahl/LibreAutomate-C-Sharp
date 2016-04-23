@@ -69,6 +69,7 @@ using static Catkeys.Automation.NoClass;
 
 class ScriptClass :Script
 {
+	[STAThread]
 	static void Main()
 	{
 		var asm = Assembly.GetEntryAssembly();

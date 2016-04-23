@@ -4,7 +4,7 @@ namespace Catkeys.Winapi
 {
 	public static partial class Api
 	{
-		//WM_
+		#region WM_
 
 		public const uint WM_NULL = 0;
 		public const uint WM_CREATE = 0x0001;
@@ -236,7 +236,9 @@ namespace Catkeys.Winapi
 		public const uint WM_HSHELL_WINDOWACTIVATED = 4;
 		public const uint WM_HSHELL_WINDOWREPLACED = 13;
 
-		//WS_
+		#endregion
+
+		#region WS_
 
 		public const uint WS_POPUP = 0x80000000;
 		public const uint WS_CHILD = 0x40000000;
@@ -289,6 +291,10 @@ namespace Catkeys.Winapi
 		public const uint WS_EX_NOACTIVATE = 0x08000000;
 		public const uint WS_EX_NOREDIRECTIONBITMAP = 0x00200000;
 
+		#endregion
+
+		#region control styles, messages etc
+
 		//ES_, EM_, EN_
 		public const uint ES_WANTRETURN = 4096;
 		//public const uint ES_UPPERCASE = 8;
@@ -316,7 +322,10 @@ namespace Catkeys.Winapi
 		public const int CB_INSERTSTRING = 330;
 		public const int CB_RESETCONTENT = 331;
 
-		//VK_
+		#endregion
+
+		#region VK_
+
 		public const int VK_ZOOM = 251;
 		public const int VK_XBUTTON2 = 6;
 		public const int VK_XBUTTON1 = 5;
@@ -478,9 +487,13 @@ namespace Catkeys.Winapi
 		public const int VK_ADD = 107;
 		public const int VK_ACCEPT = 30;
 
-		//Errors
+		#endregion
+
+		#region Errors
 
 		public const int E_INVALIDARG = unchecked((int)0x80070057);
+		public const int ERROR_INSUFFICIENT_BUFFER = 122;
 
+		#endregion
 	}
 }

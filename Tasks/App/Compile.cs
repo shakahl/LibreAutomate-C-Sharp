@@ -30,7 +30,7 @@ namespace Catkeys.Tasks
 		static void _AppDomainThread()
 		{
 			//Out(AppDomain.CurrentDomain.FriendlyName);
-			Time.First();
+			Speed.First();
 
 			//AppDomainSetup domainSetup = new AppDomainSetup()
 			//{
@@ -42,17 +42,16 @@ namespace Catkeys.Tasks
 
 			//var domain=AppDomain.CreateDomain("Compiler", null, domainSetup); //same speed, but need to test later
 			var domain = AppDomain.CreateDomain("Compiler");
-			Time.Next();
+			Speed.Next();
 			//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe")); //25 ms (5 ms after updating Win 10 to 10576 and performing WinDefender quick scan)
 			domain.DoCallBack(_DomainCallback); //22 ms (1 ms after updating||scanning), but need more testing later
 												//domain.CreateInstance(typeof(Compile).Assembly.FullName, "Catkeys.Compiler"); //too
-												//Time.Next();
+												//Speed.Next();
 												//domain.DoCallBack(_DomainCallback);
-												//Time.Next();
+												//Speed.Next();
 												//domain.DoCallBack(_DomainCallback);
-			Time.Next();
+			Speed.Next();
 			AppDomain.Unload(domain);
-			//Time.NextOut();
 		}
 
 		static void _DomainCallback()
@@ -94,7 +93,7 @@ namespace Catkeys.Tasks
 				
 		MethodInfo mi=o.GetType().GetMethod("Compile");
 
-		//Time.Next();
+		//Speed.Next();
 		if((bool)mi.Invoke(o, null) && c.Report.Errors==0) //40 ms; with -noconfig 20 ms
 		{
 			if (c.Report.Warnings > 0)
@@ -127,19 +126,18 @@ namespace Catkeys.Tasks
 
 	static void TestMono()
 	{
-		Time.First();
+		Speed.First();
 		Assembly a = Assembly.Load(@"mcs, Version=4.0.3.0, Culture=neutral, PublicKeyToken=null"); //60 ms
 		//Assembly a = Assembly.LoadFile(Path.Combine(Application.StartupPath, "mcs.exe")); //a little slower
 		//Assembly a = Assembly.Load(@"Mono.CSharp, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"); //60 ms
-		Time.Next();
+		Speed.Next();
 
 		for(int i=1; i<=5; i++)
 		{
 			MonoCompile(a, @"Q:\Test\test.cs", $@"Q:\Test\test{i}.exe");
-			Time.Next();
+			Speed.Next();
 		}
 
-		Time.Out();
 	}
 #endif //#if MONO
 
@@ -149,10 +147,10 @@ namespace Catkeys.Tasks
 		//Out("test");
 		//TODO: auto-ngen compiler. Need admin.
 
-		Time.First();
+		Speed.First();
 		//System.Runtime.ProfileOptimization.SetProfileRoot(@"C:\Test");
 		//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
-		//Time.Next();
+		//Speed.Next();
 
 		//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
 		//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
@@ -163,16 +161,15 @@ namespace Catkeys.Tasks
 		object[] p = new object[1] { g };
 
 		//g[0]="/?";
-		Time.Next(); //16 ms
+		Speed.Next(); //16 ms
 		for(int i=1; i<=4; i++)
 		{
 			g[0] = $@"/out:C:\Test\test{i}.exe";
 			m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
-			Time.Next();
+			Speed.Next();
 			//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
-			//Time.Next();
+			//Speed.Next();
 		}
-		Time.Out();
 
 		//MessageBox.Show("now will GC.Collect");
 		GC.Collect();

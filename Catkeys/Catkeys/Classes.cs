@@ -13,7 +13,11 @@ using System.ComponentModel;
 //using System.Runtime.InteropServices;
 //using System.Runtime.CompilerServices;
 //using System.IO;
-//using System.Windows.Forms;
+using System.Windows.Forms;
+
+using System.Xml.Serialization;
+using System.Xml;
+using System.Xml.Schema;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -36,8 +40,7 @@ namespace Catkeys
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
 	///	There is no cast operators for long, ulong and enum. When need, cast through int or uint. For Wnd cast through IntPtr.
 	/// </remarks>
-	//[Serializable] //Code Analysis warning: void* is not serializable
-	public unsafe struct LPARAM
+	public unsafe struct LPARAM :IXmlSerializable
 	{
 		void* _v; //Not IntPtr, because it throws exception on overflow when casting from uint etc.
 
@@ -70,17 +73,22 @@ namespace Catkeys
 		public static implicit operator char (LPARAM x) { return (char)(ushort)x._v; }
 		public static implicit operator bool (LPARAM x) { return x._v != null; }
 
-		public static bool operator==(LPARAM a, LPARAM b) { return a._v == b._v; }
-		public static bool operator!=(LPARAM a, LPARAM b) { return a._v != b._v; }
+		public static bool operator ==(LPARAM a, LPARAM b) { return a._v == b._v; }
+		public static bool operator !=(LPARAM a, LPARAM b) { return a._v != b._v; }
 
 		public override string ToString() { return ((int)_v).ToString(); }
+
+		//IXmlSerializable implementation.
+		//Need it because default serialization: 1. Gets only public members. 2. Exception if void*. 3. If would work, would format like <...><_v>value</_v></...>, but we need <...>value</...>.
+		public XmlSchema GetSchema() { return null; }
+		public void ReadXml(XmlReader reader) { _v = (void*)reader.ReadElementContentAsLong(); }
+		public void WriteXml(XmlWriter writer) { writer.WriteValue((long)_v); }
 	}
 
 	/// <summary>
 	/// Contains point coordinates.
 	/// The same as System.Drawing.Point.
 	/// </summary>
-	[Serializable]
 	public struct POINT
 	{
 		public int x, y;
@@ -105,7 +113,6 @@ namespace Catkeys
 	/// Contains width and height.
 	/// The same as System.Drawing.Size.
 	/// </summary>
-	[Serializable]
 	public struct SIZE
 	{
 		public int cx, cy;
@@ -130,7 +137,6 @@ namespace Catkeys
 	/// Contains rectangle coordinates.
 	/// Unlike System.Drawing.Rectangle, which contains fields for width and height and therefore cannot be used with Windows API functions, RECT contains fields for right and bottom and can be used with Windows API.
 	/// </summary>
-	[Serializable]
 	public struct RECT
 	{
 		public int left, top, right, bottom;
@@ -201,14 +207,9 @@ namespace Catkeys
 		/// <summary>
 		/// Makes the rectangle bigger or smaller:
 		/// left-=dx; right+=dx; top-=dy; bottom+=dy;
-		/// Note: negative coordinates can make the rectangle invalid (right˂left or bottom˂top); you can use Normalize() to fix it.
+		/// Note: negative coordinates can make the rectangle invalid (right˂left or bottom˂top).
 		/// </summary>
 		public void Inflate(int dx, int dy) { left -= dx; right += dx; top -= dy; bottom += dy; }
-
-		/// <summary>
-		/// Fixes invalid rectangle: if(right˂left) right=left; if(bottom˂top) bottom=top;
-		/// </summary>
-		public void Normalize() { if(right < left) right = left; if(bottom < top) bottom = top; }
 
 		/// <summary>
 		/// Returns the intersection rectangle of two rectangles.
@@ -379,12 +380,89 @@ namespace Catkeys
 	}
 
 	/// <summary>
-	/// Ctores an x or y coordinate in various formats (pixels, fraction etc).
-	/// Can be used for function parameters.
+	/// Stores an x or y coordinate as pixels or as a fraction of some rectangle.
+	/// Can be used for function parameters. Accepts values of type int or double.
 	/// </summary>
 	public class Coord
 	{
-		//public static Coord FromRight 
+		public bool isFraction;
+		public int coord;
+		public double fraction;
+
+		public Coord(int coord) { this.coord = coord; }
+		public Coord(double fraction) { this.fraction = fraction; isFraction = true; }
+		public Coord(Coord z) { coord = z.coord; fraction = z.fraction; isFraction = z.isFraction; }
+
+		public static implicit operator Coord(int coord) { return new Coord(coord); }
+		public static implicit operator Coord(double fraction) { return new Coord(fraction); }
+
+		/// <summary>
+		/// If isFraction==false, just adds min to coord.
+		/// If isFraction==true, sets isFraction=false and calculates non-fraction coordinate: coord = (int)((max - min) * fraction) + min.
+		/// Examples: if fraction is 0.0, sets coord = min; if fraction is 1.0, sets coord = max; if fraction is 0.5, sets coord = center between min and max.
+		/// Example: <c>Coord x, y... RECT r... x.Normalize(r.left, r.right); y.Normalize(r.top, r.bottom);</c>
+		/// </summary>
+		public void Normalize(int min, int max)
+		{
+			if(isFraction) {
+				isFraction = false;
+				coord = (int)((max - min) * fraction);
+			}
+			coord += min;
+		}
+
+		static void _NormalizeIn(bool inWindow, Wnd w, Coord x, Coord y, bool xFromRight, bool yFromBottom)
+		{
+			bool fx = x != null && (x.isFraction || xFromRight), fy = y != null && (y.isFraction || yFromBottom);
+			if(fx || fy) {
+				RECT r = inWindow ? w.RectClient : (RECT)Screen.PrimaryScreen.Bounds;
+				if(fx) {
+					x.Normalize(0, r.right);
+					if(xFromRight) x.coord = r.right-x.coord;
+				}
+				if(fy) {
+					y.Normalize(0, r.bottom);
+					if(yFromBottom) y.coord = r.bottom-y.coord;
+				}
+			}
+		}
+
+		/// <summary>
+		/// If x or/and y is not null and is a fractional coordinate, gets w client rectangle and calls Normalize for the fractional coordinates.
+		/// </summary>
+		/// <param name="xFromRight">Finally make x relative to the right of the client area: x.coord = r.right-x.coord.</param>
+		/// <param name="yFromBottom">Finally make y relative to the bottom of the client area: y.coord = r.bottom-y.coord.</param>
+		public static void NormalizeInWindowClientArea(Coord x, Coord y, Wnd w, bool xFromRight = false, bool yFromBottom = false)
+		{
+			_NormalizeIn(true, w, x, y, xFromRight, yFromBottom);
+		}
+
+		/// <summary>
+		/// If x or/and y is not null and is a fractional coordinate, gets primary screen rectangle and calls Normalize for the fractional coordinates.
+		/// </summary>
+		/// <param name="xFromRight">Finally make x relative to the right of the screen: x.coord = r.right-x.coord.</param>
+		/// <param name="yFromBottom">Finally make y relative to the bottom of the screen: y.coord = r.bottom-y.coord.</param>
+		public static void NormalizeInScreen(Coord x, Coord y, bool xFromRight = false, bool yFromBottom = false)
+		{
+			_NormalizeIn(false, Wnd0, x, y, xFromRight, yFromBottom);
+		}
+
+		/// <summary>
+		/// Returns false if rectangle r does not contain coordinates specified in non-null x y.
+		/// x y must be normalized (not fractional).
+		/// x or/and y can be null; for example returns true if both are null.
+		/// </summary>
+		public static bool IsInRect(Coord x, Coord y, RECT r)
+		{
+			if(x != null) { if(x.coord < r.left || x.coord >= r.right) return false; }
+			if(y != null) { if(y.coord < r.top || y.coord >= r.bottom) return false; }
+			return true;
+		}
+
+		public override string ToString()
+		{
+			return isFraction ? fraction.ToString() : coord.ToString();
+		}
 	}
 
 }

@@ -18,6 +18,7 @@ class ScriptClass :Script
 {
 	//static ScriptClass() { ScriptOptions.Default.speed=50; }
 
+	//[STAThread]
 	//static void Main()
 	public static void TestMain()
 	{

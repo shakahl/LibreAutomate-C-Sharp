@@ -26,7 +26,8 @@ using Office = Microsoft.Office.Core;
 //note: need to download and install Office 2003 PIA (interop assemblies). VS fails to auto-generate PIAs from Office COM typelibs (maybe need to run VS as admin?). Maybe tlbimp.exe could generate?
 
 public static class ThisScript {
-static void Main(string[] args) {
+	[STAThread]
+	static void Main(string[] args) {
 #endregion
 
 // change these if need. Here $documents$ is the Documents folder.

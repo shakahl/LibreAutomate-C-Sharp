@@ -36,11 +36,11 @@ namespace Catkeys.Tasks
 			Test._Main();
 #if NOTEST
 
-		//Out($"{Time.TimeNowMCS()-Convert.ToInt64(args[0])}"); //startup time: 17 ms. In QM2 use: CreateProcessSimple(F"Q:\app\Catkeys\Tasks\Catkeys Tasks.exe {perf}")
+		//Out($"{Time.Microseconds-Convert.ToInt64(args[0])}"); //startup time: 17 ms. In QM2 use: CreateProcessSimple(F"Q:\app\Catkeys\Tasks\Catkeys Tasks.exe {perf}")
 
 		//Application.EnableVisualStyles(); //don't need for this domain; do it for script domains; 600 mcs
 		//Application.SetCompatibleTextRenderingDefault(false); //90 mcs
-		//Time.First();
+		//Speed.First();
 		ushort atom = Window.RegWinClassHidden("CatkeysTasks", _wndProcKeepAlive);
 
 		api.CreateWindowExW(0, "CatkeysTasks",
@@ -50,7 +50,6 @@ namespace Catkeys.Tasks
 		//Out($"{_hwndAM}");
 
 		//GC.Collect(); //does nothing here
-		//Time.NextOut();
 		Application.Run();
 
 		//api.DestroyWindow(_hwndAM);
@@ -72,10 +71,10 @@ namespace Catkeys.Tasks
 				_hwndAM=hWnd;
 				break;
 			//case WM.CREATE:
-			//	Time.Next();
+			//	Speed.Next();
 			//	break;
 			case Api.WM_COPYDATA: //TODO: ChangeWindowMessageFilter
-				_OnCopyData((Wnd)(IntPtr)wParam, (Api.COPYDATASTRUCT*)lParam);
+				_OnCopyData((Wnd)wParam, (Api.COPYDATASTRUCT*)lParam);
 				break;
 				//case WM.DESTROY:
 				//	Out("destroy");

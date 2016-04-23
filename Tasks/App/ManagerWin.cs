@@ -18,9 +18,9 @@ namespace Catkeys.Tasks
 	{
 		public ManagerWin()
 		{
-			Time.Next(); //3 ms
+			Speed.Next(); //3 ms
 			//InitializeComponent(); //5 ms
-			Time.NextWrite();
+			Speed.NextWrite();
 		}
 	}
 }

@@ -18,7 +18,8 @@ using Catkeys.Browsers;
 //.ref Browsers;
 
 public static class ThisScript2 {
-static void Main(string[] args) {
+	[STAThread]
+	static void Main(string[] args) {
 #endregion
 
 string s=Firefox.GetAddress();
@@ -26,7 +27,7 @@ string s=Firefox.GetAddress();
 s=Regex.Replace(s, "^.+\bv=(.+?)(?=&|$)", "$1");
 //Out(s);
 Run("http://share.xmarks.com/folder/bookmarks/JQk2OrPIPd");
-Hwnd w=0;
+Wnd w=0;
 try { w=WaitFor.WindowActive(20, "Video - Muzika (Xmarks shared folder) - Mozilla Firefox", "MozillaWindowClass");
 } catch { MsgBoxEnd("Failed. If does not open xmarks in new tab, restart firefox."); }
 w.Activate();

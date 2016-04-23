@@ -15,7 +15,8 @@ using static Catkeys.Automation.NoClass;
 using Catkeys.Winapi;
 
 public static class ThisScript3 {
-static void Main(string[] args) {
+	[STAThread]
+	static void Main(string[] args) {
 #endregion
 
 OnScreenDisplay("Right click the bookmark", 30, 0, 0, 0, 0, 0, 8);

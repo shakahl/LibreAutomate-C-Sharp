@@ -12,7 +12,7 @@ using System.Runtime.CompilerServices;
 //using System.IO;
 //using System.Windows.Forms;
 
-//for Like_
+//for LikeEx_
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
 
@@ -27,10 +27,10 @@ namespace Catkeys
 	/// <summary>
 	/// Adds extension methods to System.String.
 	/// Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
-	/// Extension method names have suffix _. Some have case-insensitive versions with suffix I_.
+	/// Extension method names have suffix _.
 	/// </summary>
 	[DebuggerStepThrough]
-	public static class String_
+	public static partial class String_
 	{
 		/// <summary>
 		/// Returns Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
@@ -42,11 +42,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns Equals(value, StringComparison.OrdinalIgnoreCase).
+		/// Calls Equals_() for each string specified in the argument list until one matches this string.
+		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		public static bool EqualsI_(this string t, string value)
+		public static int Equals_(this string t, bool ignoreCase = false, params string[] strings)
 		{
-			return t.Equals(value, StringComparison.OrdinalIgnoreCase);
+			for(int i = 0; i < strings.Length; i++) if(t.Equals_(strings[i], ignoreCase)) return i + 1;
+			return 0;
 		}
 
 		/// <summary>
@@ -58,11 +60,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns EndsWith(value, StringComparison.OrdinalIgnoreCase).
+		/// Calls EndsWith_() for each string specified in the argument list until one matches this string.
+		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		public static bool EndsWithI_(this string t, string value)
+		public static int EndsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
-			return t.EndsWith(value, StringComparison.OrdinalIgnoreCase);
+			for(int i = 0; i < strings.Length; i++) if(t.EndsWith_(strings[i], ignoreCase)) return i + 1;
+			return 0;
 		}
 
 		/// <summary>
@@ -74,65 +78,14 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns StartsWith(value, StringComparison.OrdinalIgnoreCase).
+		/// Calls StartsWith_() for each string specified in the argument list until one matches this string.
+		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		public static bool StartsWithI_(this string t, string value)
+		public static int StartsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
-			return t.StartsWith(value, StringComparison.OrdinalIgnoreCase);
+			for(int i = 0; i < strings.Length; i++) if(t.StartsWith_(strings[i], ignoreCase)) return i + 1;
+			return 0;
 		}
-
-		/// <summary>
-		/// Returns true if this string matches wildcard pattern.
-		/// This string can be null, then returns false.
-		/// </summary>
-		/// <param name="pattern">String with wildcard characters:
-		///  * (zero or more characters),
-		///  ? (single character),
-		///  # (digit 0-9),
-		///  [charlist] (a character in charlist),
-		///  [!charlist] (a character not in charlist).
-		/// </param>
-		/// <remarks>
-		/// Calls the VB 'Like' operator function: https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
-		/// </remarks>
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevent compiling Operators.LikeString (slow first time) when actually not used
-		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
-		{
-			return t != null && Operators.LikeString(t, pattern, ignoreCase ? CompareMethod.Text : CompareMethod.Binary);
-		}
-		/// <summary>
-		/// Returns true if this string matches wildcard pattern. Case-insensitive.
-		/// This string can be null, then returns false.
-		/// </summary>
-		/// <param name="pattern">String with wildcard characters:
-		///  * (zero or more characters),
-		///  ? (single character),
-		///  # (digit 0-9),
-		///  [charlist] (a character in charlist),
-		///  [!charlist] (a character not in charlist).
-		/// </param>
-		/// <remarks>
-		/// Calls the VB 'Like' operator function: https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
-		/// </remarks>
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevent compiling Operators.LikeString (slow first time) when actually not used
-		public static bool LikeI_(this string t, string pattern)
-		{
-			return t != null && Operators.LikeString(t, pattern, CompareMethod.Text);
-		}
-		//Speed for 1000 times (@"C:\Users\G\Documents\dictionary.xls", "*.xls"):
-		//this 85, regex 830, compiled regex 440, regex with WildcardToRegex 1200, QM2 FindRX 400, QM2 MatchW ~30 (matchw 70 + rep 35).
-		//Not tested System.Management.Automation.WildcardPattern, because assembly System.Management.Automation is not installed. It seems need to install it through NuGet.
-
-		/// <summary>
-		/// Returns true if this string contains wildcard characters '*', '?', '#', '['.
-		/// These wildcard characters can be used with String.Like_().
-		/// This string can be null, then returns false.
-		/// </summary>
-		public static bool IsLikeWildcard_(this string t)
-		{
-			return t != null && t.IndexOfAny(_wildcardChars) >= 0;
-		}
-		static readonly char[] _wildcardChars = new char[] { '*', '?', '#', '[' };
 
 		/// <summary>
 		/// Returns IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
@@ -142,13 +95,6 @@ namespace Catkeys
 			return t.IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns IndexOf(value, StringComparison.OrdinalIgnoreCase).
-		/// </summary>
-		public static int IndexOfI_(this string t, string value)
-		{
-			return t.IndexOf(value, StringComparison.OrdinalIgnoreCase);
-		}
-		/// <summary>
 		/// Returns IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
 		/// </summary>
 		public static int IndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
@@ -156,25 +102,11 @@ namespace Catkeys
 			return t.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns IndexOf(value, startIndex, StringComparison.OrdinalIgnoreCase).
-		/// </summary>
-		public static int IndexOfI_(this string t, string value, int startIndex)
-		{
-			return t.IndexOf(value, startIndex, StringComparison.OrdinalIgnoreCase);
-		}
-		/// <summary>
 		/// Returns IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
 		/// </summary>
 		public static int IndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-		}
-		/// <summary>
-		/// Returns IndexOf(value, startIndex, count, StringComparison.OrdinalIgnoreCase).
-		/// </summary>
-		public static int IndexOfI_(this string t, string value, int startIndex, int count)
-		{
-			return t.IndexOf(value, startIndex, count, StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <summary>
@@ -207,13 +139,6 @@ namespace Catkeys
 			return t.LastIndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns LastIndexOf(value, StringComparison.OrdinalIgnoreCase).
-		/// </summary>
-		public static int LastIndexOfI_(this string t, string value)
-		{
-			return t.LastIndexOf(value, StringComparison.OrdinalIgnoreCase);
-		}
-		/// <summary>
 		/// Returns LastIndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
 		/// </summary>
 		public static int LastIndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
@@ -221,25 +146,11 @@ namespace Catkeys
 			return t.LastIndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns LastIndexOf(value, startIndex, StringComparison.OrdinalIgnoreCase).
-		/// </summary>
-		public static int LastIndexOfI_(this string t, string value, int startIndex)
-		{
-			return t.LastIndexOf(value, startIndex, StringComparison.OrdinalIgnoreCase);
-		}
-		/// <summary>
 		/// Returns LastIndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
 		/// </summary>
 		public static int LastIndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.LastIndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-		}
-		/// <summary>
-		/// Returns LastIndexOf(value, startIndex, count, StringComparison.OrdinalIgnoreCase).
-		/// </summary>
-		public static int LastIndexOfI_(this string t, string value, int startIndex, int count)
-		{
-			return t.LastIndexOf(value, startIndex, count, StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <summary>
@@ -469,5 +380,120 @@ namespace Catkeys
 			return t.Remove(length - 3) + "...";
 		}
 
+		/// <summary>
+		/// Returns true if this string matches wildcard pattern, which can contain these special characters:
+		///   * - 0 or more characters;
+		///   ? - 1 character;
+		///   ?* - 1 or more characters;
+		///   ** - literal *;
+		///   *? - literal ?.
+		/// </summary>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="useCurrentCulture">Use current culture. If false, uses ordinal matching which does not depend on a culture.</param>
+		/// <remarks>
+		/// Both "" and null match pattern "". This variable can be null because this is an extension method.
+		/// Uses class WildString, but does not support "[options]". You can use the class when comparing multiple strings with the same pattern, it will be faster.
+		/// </remarks>
+		public static bool Like_(this string t, string pattern, bool ignoreCase = false, bool useCurrentCulture = false)
+		{
+			var x = new WildString(pattern, WildStringType.Wildcard, ignoreCase, useCurrentCulture);
+			return x.Match(t, true);
+		}
+
+		/// <summary>
+		/// Calls Like_() (other overload) for each wildcard pattern specified in the argument list until one matches this string.
+		/// Returns 1-based index of matching pattern, or 0 if none.
+		/// </summary>
+		public static int Like_(this string t, bool ignoreCase = false, params string[] patterns)
+		{
+			for(int i = 0; i < patterns.Length; i++) if(t.Like_(patterns[i], ignoreCase)) return i + 1;
+			return 0;
+		}
+
+		/// <summary>
+		/// Calls Microsoft.VisualBasic.CompilerServices.Operators.LikeString().
+		/// More info: https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
+		/// Wildcards: * (0 or more characters), ? (any 1 character), # (any digit), [chars], [!chars]. Escape sequences: [*], [?], [#], [[].
+		/// Usually slower than Like_() (especially when ignoreCase is true).
+		/// Throws exception if pattern is invalid (eg "text[text").
+		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)] //prevent compiling Operators.LikeString (slow first time) when actually not used
+		public static bool LikeEx_(this string t, string pattern, bool ignoreCase = false)
+		{
+			return Operators.LikeString(t, pattern, ignoreCase ? CompareMethod.Text : CompareMethod.Binary);
+		}
+		//Speed for 1000 times (@"C:\Users\G\Documents\dictionary.xls", "*.xls"):
+		//	This 85, regex 830, compiled regex 440, regex with WildcardToRegex 1200, QM2 FindRX 400, QM2 MatchW ~30 (matchw 70 + rep 35).
+		//Not tested System.Management.Automation.WildcardPattern, because assembly System.Management.Automation is not installed. It seems need to install it through NuGet.
+		//Exception if pattern contains unclosed [, for example "abc[5" (must be "abc[5]" or "abc[[]5"). Also if pattern is "?*" and string is empty (why?).
+		//Like_() (which is used eg to compare window class names etc) does not support # (number) and [charset] that are supported by LikeEx_().
+		//	Usually they are too limited to be useful. It's better to keep Like_ as simple as possible, and use Regex when need something more.
+		//	For example, if we support #[, users that are unaware/forget of this would use window class name like "#32770", or with [ characters, and wonder why it does not work.
+
+		/// <summary>
+		/// Calls LikeEx_() for each wildcard pattern specified in the argument list until one matches this string.
+		/// Returns 1-based index of matching pattern, or 0 if none.
+		/// </summary>
+		public static int LikeEx_(this string t, bool ignoreCase = false, params string[] patterns)
+		{
+			for(int i = 0; i < patterns.Length; i++) if(t.LikeEx_(patterns[i], ignoreCase)) return i + 1;
+			return 0;
+		}
+
+		/// <summary>
+		/// Returns true if this string matches regular expression pattern.
+		/// Calls Regex.IsMatch(this, pattern, options|RegexOptions.CultureInvariant).
+		/// </summary>
+		public static bool RegexIs_(this string t, string pattern, RegexOptions options = 0)
+		{
+			return Regex.IsMatch(t, pattern, options | RegexOptions.CultureInvariant);
+		}
+
+		/// <summary>
+		/// Calls RegexIs_() for each regular expression pattern specified in the argument list until one matches this string.
+		/// Returns 1-based index of matching pattern, or 0 if none.
+		/// </summary>
+		public static int RegexIs_(this string t, RegexOptions options, params string[] patterns)
+		{
+			for(int i = 0; i < patterns.Length; i++) if(t.RegexIs_(patterns[i], options)) return i + 1;
+			return 0;
+		}
+
+		/// <summary>
+		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+		/// Returns its return value.
+		/// </summary>
+		public static Match RegexMatch_(this string t, string pattern, RegexOptions options = 0)
+		{
+			return Regex.Match(t, pattern, options | RegexOptions.CultureInvariant);
+		}
+
+		/// <summary>
+		/// Calls Regex.Matches(this, pattern, options|RegexOptions.CultureInvariant).
+		/// Returns its return value.
+		/// </summary>
+		public static MatchCollection RegexMatches_(this string t, string pattern, RegexOptions options = 0)
+		{
+			return Regex.Matches(t, pattern, options | RegexOptions.CultureInvariant);
+		}
+
+		/// <summary>
+		/// Calls Regex.Replace(t, pattern, replacement, options|RegexOptions.CultureInvariant).
+		/// Returns its return value.
+		/// </summary>
+		public static string RegexReplace_(this string t, string pattern, string replacement, RegexOptions options = 0)
+		{
+			return Regex.Replace(t, pattern, replacement, options | RegexOptions.CultureInvariant);
+		}
+
+		/// <summary>
+		/// Calls Regex.Replace(t, pattern, evaluator, options|RegexOptions.CultureInvariant).
+		/// Returns its return value.
+		/// </summary>
+		public static string RegexReplace_(this string t, string pattern, MatchEvaluator evaluator, RegexOptions options = 0)
+		{
+			return Regex.Replace(t, pattern, evaluator, options | RegexOptions.CultureInvariant);
+		}
 	}
+
 }

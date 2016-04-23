@@ -37,49 +37,43 @@ namespace Catkeys
 		/// </summary>
 		public static readonly Wnd Wnd0;
 
-		/// <summary>
-		/// Windows newline string "\r\n".
-		/// Allows to replace "one\r\ntwo\r\nthree" with "one"+_+"two"+_+"three" or $"one{_}two{_}three" when you don't want @"multiline string".
-		/// </summary>
-		public const string _ = "\r\n";
-		//Compiler optimizes "one"+_+"two"+_+"three", but not $"one{_}two{_}three"
-		//public static readonly string _ = Environment.NewLine; //compiler does not optimize "one"+_+"two"+_+"three"
+		///// <summary>
+		///// Windows newline string "\r\n".
+		///// Allows to replace "one\r\ntwo\r\nthree" with "one"+_+"two"+_+"three" or $"one{_}two{_}three" when you don't want @"multiline string".
+		///// </summary>
+		//public const string _ = "\r\n";
+		////Compiler optimizes "one"+_+"two"+_+"three", but not $"one{_}two{_}three"
+		////public static readonly string _ = Environment.NewLine; //compiler does not optimize "one"+_+"two"+_+"three"
+		////Not so useful, and interferes with intellisense.
 
 		//public const StringComparison CaseSens = StringComparison.Ordinal;
 		//public const StringComparison CaseInsens = StringComparison.OrdinalIgnoreCase;
 
 		/// <summary>
-		/// Alias of Output.Write.
+		/// Alias of Output.Write and Print.
+		/// Info: The Output class has more similar functions.
 		/// </summary>
-		//public static void Out(string value) { Output.Write(value); }
+		public static void Out(string value) { Output.Write(value); }
 		public static void Out(object value) { Output.Write(value); }
-		//public static void Out<K, V>(IDictionary<K, V> value) { Output.Write(value); }
-		//public static void Out<T>(IEnumerable<T> value) { Output.Write(value); }
+		public static void Out<T>(IEnumerable<T> value, string separator = "\r\n") { Output.Write(value, separator); }
+		public static void Out(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
+        public static void Out<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void OutList(params object[] values) { Output.WriteList(values); }
 		//public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
 		//public static void OutHex<T>(T value) { Output.WriteHex(value); }
 
 		/// <summary>
-		/// Alias of Output.Write.
+		/// Alias of Output.Write and Out.
+		/// Info: The Output class has more similar functions.
 		/// </summary>
-		//public static void Print(string value) { Output.Write(value); }
+		public static void Print(string value) { Output.Write(value); }
 		public static void Print(object value) { Output.Write(value); }
-		//public static void Print<K, V>(IDictionary<K, V> value) { Output.Write(value); }
-		//public static void Print<T>(IEnumerable<T> value) { Output.Write(value); }
+		public static void Print<T>(IEnumerable<T> value, string separator = "\r\n") { Output.Write(value, separator); }
+		public static void Print(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
+		public static void Print<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void PrintList(params object[] values) { Output.WriteList(values); }
 		//public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
 		//public static void PrintHex<T>(T value) { Output.WriteHex(value); }
-
-		///// <summary>
-		///// Alias of Output.Write.
-		///// </summary>
-		//public static void Write(string value) { Output.Write(value); }
-		//public static void Write(object value) { Output.Write(value); }
-		//public static void Write<K, V>(IDictionary<K, V> value) { Output.Write(value); }
-		//public static void Write<T>(IEnumerable<T> value) { Output.Write(value); }
-		//public static void WriteList(params object[] values) { Output.WriteList(values); }
-		////public static void WriteListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
-		////public static void WriteHex<T>(T value) { Output.WriteHex(value); }
 
 		/// <summary>
 		/// Gets function name.
@@ -92,6 +86,28 @@ namespace Catkeys
 		/// The same as string.IsNullOrEmpty.
 		/// </summary>
 		public static bool Empty(string s) { return string.IsNullOrEmpty(s); }
+
+		static readonly uint _winver = _GetWinVersion();
+		static uint _GetWinVersion()
+		{
+			var v = Environment.OSVersion.Version;
+			return (uint)(((v.Major & 0xff) << 8) | (v.Minor & 0xff));
+		}
+
+		/// <summary>
+		/// Gets classic Windows major+minor version value:
+		/// Win7 (0x601), Win8_0 (0x602), Win8_1 (0x603), Win10 (0xA00).
+		/// </summary>
+		public static uint WinVer
+		{
+			get { return _winver; }
+		}
+
+		/// <summary>
+		/// Classic Windows version major+minor values.
+		/// Example: <c>if(WinVer>=Win8_0) ...</c>
+		/// </summary>
+		public const uint Win7 = 0x601, Win8_0 = 0x602, Win8_1 = 0x603, Win10 = 0xA00;
 
 		public static void Wait(double timeS) { Time.Wait(timeS); }
 		public static void WaitMS(int timeMS) { Time.WaitMS(timeMS); }

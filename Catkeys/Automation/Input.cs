@@ -96,7 +96,7 @@ namespace Catkeys.Automation
 		//	public KeysToSend Ctrl { get { _a.Add(1); return this; } }
 		//	public KeysToSend A { get { _a.Add('A'); return this; } }
 		//	//public KeysToSend Tab(int nTimes) { return 0; } //error
-		//	public KeysToSend Repeat(int nTimes) { _a.Add(-nTimes); return this; }
+		//	public KeysToSend Execute(int nTimes) { _a.Add(-nTimes); return this; }
 
 		//}
 
@@ -105,7 +105,7 @@ namespace Catkeys.Automation
 
 		static void Test()
 		{
-			//Key("text", K.Ctrl.A.Tab.Repeat(9).Enter);
+			//Key("text", K.Ctrl.A.Tab.Execute(9).Enter);
 		}
     }
 }

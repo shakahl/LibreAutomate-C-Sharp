@@ -22,7 +22,6 @@ using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
-	[Serializable]
 	public class CatkeysException :Exception
 	{
 		const string _m ="Failed.";
@@ -36,7 +35,6 @@ namespace Catkeys
 		protected CatkeysException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 	}
 
-	[Serializable]
 	public class WaitTimeoutException :CatkeysException
 	{
 		const string _m ="Wait timeout.";

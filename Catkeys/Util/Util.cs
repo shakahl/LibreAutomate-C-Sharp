@@ -25,19 +25,8 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class NoClass
 	{
+		public static void ResetLastError() { Api.SetLastError(0); }
     }
-
-	[DebuggerStepThrough]
-	public static class Paths
-	{
-		public static string App
-		{
-			get { return AppDomain.CurrentDomain.BaseDirectory; }
-			//private set;
-		}
-
-		public static string CombineApp(string file) { return Path.Combine(App, file); }
-	}
 
 	[DebuggerStepThrough]
 	public static class Window
@@ -196,6 +185,30 @@ namespace Catkeys.Util
 			if(p==null) return 0;
 			for(int i = 0; i<nMax; i++) if(*p=='\0') return i;
 			return nMax;
+		}
+
+		/// <summary>
+		/// Removes '&' characters from string.
+		/// Replaces "&&" to "&".
+		/// Returns true if s had '&' characters.
+		/// </summary>
+		/// <remarks>
+		/// Character '&' is used to underline next character in displayed text of controls. Two '&' are used to display single '&'.
+		/// Normally the underline is displayed only when using the keyboard to select dialog controls.
+		/// </remarks>
+		public static bool StringRemoveMnemonicUnderlineAmpersand(ref string s)
+		{
+			if(!Empty(s)) {
+				int i = s.IndexOf('&');
+				if(i >= 0) {
+					i = s.IndexOf_("&&");
+					if(i >= 0) s = s.Replace("&&", "\0");
+					s = s.Replace("&", "");
+					if(i >= 0) s = s.Replace("\0", "&");
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 

@@ -47,8 +47,6 @@ namespace Catkeys
 			slowMouse=o.slowMouse; slowKeys=o.slowKeys; waitMsg=o.waitMsg;
 			dialogTopmostIfNoOwner = o.dialogTopmostIfNoOwner; dialogRtlLayout = o.dialogRtlLayout;
 			dialogScreenIfNoOwner = o.dialogScreenIfNoOwner;
-			//TODO: now dialogScreenIfNoOwner actually is common to all threads because we do shallow copy, ie we copy only the reference to the object.
-			//	If not possible to copy object, make this member static. Maybe in Show class.
 		}
 
 		/// <summary>

@@ -44,7 +44,7 @@ namespace Catkeys
 
 		static bool _InitHwndEditor()
 		{
-			if(!_hwndEditor.IsWindow) _hwndEditor=Api.FindWindow("QM_Editor", null); //TODO: Wnd.Find
+			if(!_hwndEditor.IsWindow) _hwndEditor = Api.FindWindow("QM_Editor", null); //TODO: Wnd.Find
 			return !_hwndEditor.Is0;
 		}
 
@@ -67,28 +67,37 @@ namespace Catkeys
 		/// </summary>
 		public static void Write(object value)
 		{
-			Write((value==null) ? "" : value.ToString());
+			Write((value == null) ? "" : value.ToString());
 		}
 
 		/// <summary>
-		/// Writes array, List˂T˃ or other collection as a list of element values.
-		/// Separator depends on element type: string "\r\n", char "", other ", ".
+		/// Writes array, List˂T˃ or other generic collection as a list of element values.
 		/// </summary>
-		public static void Write<T>(IEnumerable<T> value)
+		public static void Write<T>(IEnumerable<T> value, string separator = "\r\n")
 		{
-			string sep = null;
-			if(value is IEnumerable<string>) sep="\r\n"; else if(!(value is IEnumerable<char>)) sep=" ";
-
-			Write(string.Join(sep, value));
+			Write((value==null) ? "" : string.Join(separator, value));
 		}
 
 		/// <summary>
-		/// Writes dictionary as a multiline list of [key, value].
-		/// Separator "\r\n".
+		/// Writes non-generic collection as a list of element values.
 		/// </summary>
-		public static void Write<K, V>(IDictionary<K, V> value)
+		public static void Write(System.Collections.IEnumerable value, string separator = "\r\n")
 		{
-			Write(string.Join("\r\n", value));
+			if(value==null) { Write(""); return; }
+			var b = new StringBuilder();
+			foreach(object o in value) {
+				if(b.Length != 0) b.Append(separator);
+				b.Append(o.ToString());
+			}
+			Write(b.ToString());
+		}
+
+		/// <summary>
+		/// Writes dictionary as a list of [key, value].
+		/// </summary>
+		public static void Write<K, V>(IDictionary<K, V> value, string separator = "\r\n")
+		{
+			Write((value == null) ? "" : string.Join(separator, value));
 		}
 
 		/// <summary>
@@ -117,7 +126,7 @@ namespace Catkeys
 			var sb = new StringBuilder("Warning: ");
 			sb.Append(s);
 			if(showStackFromThisFrame >= 0) {
-				var x = new StackTrace(showStackFromThisFrame+1, false);
+				var x = new StackTrace(showStackFromThisFrame + 1, false);
 				sb.AppendLine();
 				sb.Append(x.ToString());
 			}
@@ -154,8 +163,8 @@ namespace Catkeys
 		/// </summary>
 		public static TextWriter Writer
 		{
-			get { return _writer ?? (_writer=new _OutputWriter()); }
-			set { _writer=value; }
+			get { return _writer ?? (_writer = new _OutputWriter()); }
+			set { _writer = value; }
 		}
 
 		/// <summary>
@@ -165,7 +174,7 @@ namespace Catkeys
 		public static void WriteDirectly(string value)
 		{
 			if(_isConsole && !AlwaysOutput) Console.WriteLine(value);
-			else if(_InitHwndEditor()) _hwndEditor.SendS(Api.WM_SETTEXT, -1, value==null ? "" : value);
+			else if(_InitHwndEditor()) _hwndEditor.SendS(Api.WM_SETTEXT, -1, value == null ? "" : value);
 		}
 
 		static bool _consoleRedirected, _debugRedirected;
@@ -178,8 +187,8 @@ namespace Catkeys
 		public static void RedirectConsoleOutput()
 		{
 			if(_consoleRedirected || _isConsole) return;
-			_consoleRedirected=true;
-            Console.SetOut(Writer);
+			_consoleRedirected = true;
+			Console.SetOut(Writer);
 			//speed: 870
 		}
 
@@ -190,7 +199,7 @@ namespace Catkeys
 		public static void RedirectDebugOutput()
 		{
 			if(_debugRedirected) return;
-			_debugRedirected=true;
+			_debugRedirected = true;
 			Trace.Listeners.Add((_isConsole && !AlwaysOutput) ? (new ConsoleTraceListener()) : (new TextWriterTraceListener(Writer)));
 			//speed: 6100
 		}
