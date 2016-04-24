@@ -1229,8 +1229,9 @@ bbb"", b3
 		w = Wnd.Find(null, "", prop: new Wnd.WinProp() { child=new Wnd.ChildDefinition("*ame") });
 		w = Wnd.Find("Free YouTube Downloader", "*.Window.*");
 		//w = Wnd.Find("Keyboard Layout*", "*.Window.*");
+		w = Wnd.Find("?*", prop: new Wnd.WinProp() { x=1, xFromRight=true, y=10 });
 		//w = Wnd.FromXY(100, 100, null, true, true);
-		w = Wnd.FromXY(0.1, 0.1, null, true, true);
+		//w = Wnd.FromXY(0.1, 0.1, null, true, true);
 
 		//for(int i=0; i<30; i++) {
 		//	Wait(1);
@@ -1240,7 +1241,7 @@ bbb"", b3
 		//Speed.ExecuteMulti(5, 100, () => { Wnd.FindByClassName("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
 
 		w = Wnd.FindByClassName("QM_Editor");
-		w = Wnd.Find("Catkeys -*");
+		//w = Wnd.Find("Catkeys -*");
 		Out(w);
 		//return;
 
@@ -1267,12 +1268,13 @@ bbb"", b3
 		//c = w.Child(null, "", prop: new Wnd.ChildProp() { child = new Wnd.ChildDefinition(Wnd.ChildFlag.DirectChild, "Reg*") });
 		//c = w.Child("Regex*", "Button");
 		//c = w.Child(null, "", prop: new Wnd.ChildProp() { wfName = "textBoxUrl" });
-		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1});
-		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1276});
-		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1, xFromRight=true });
-		//c = w.Child(null, "QM_*", prop:new Wnd.ChildProp() { y=10, yFromBottom=true });
-		c = w.Child("Find &Previous");
-		c = w.Child("Find Previous");
+		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1});
+		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1276});
+		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1, xFromRight=true });
+		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=w.RectClient.Width-1 });
+		//c = w.Child(null, "QM_*", prop:new Wnd.ChildProp() { y=0.02, yFromBottom=true });
+		//c = w.Child("Find &Previous");
+		//c = w.Child("Find Previous");
 
 		Out(c);
 		return;

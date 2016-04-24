@@ -77,11 +77,35 @@ namespace Catkeys
 			/// </summary>
 			public int childId;
 			//info: C# does not allow this: new Wnd.WinProp() { child.Name="..", ... }
+
+			/// <summary>
+			/// The control must contain this x coordinate in parent window's client area.
+			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
+			/// </summary>
+			public Coord x;
+			/// <summary>
+			/// The control must contain this y coordinate in parent window's client area.
+			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
+			/// </summary>
+			public Coord y;
+			/// <summary>
+			/// x is relative to the right of the client area, rigt-to-left.
+			/// For example, if x is 1, the control must be at the very right.
+			/// </summary>
+			public bool xFromRight;
+			/// <summary>
+			/// y is relative to the bottom of the client area, bottom-to-top.
+			/// For example, if y is 1, the control must be at the very bottom.
+			/// </summary>
+			public bool yFromBottom;
+
+			Coord _x, _y; //x y copies
+			ushort _propAtom;
+
 			//TODO: public ImageDefinition image;
 			//TODO: public UIElemDefinition elem; or/and elemRole, elemName.
 			//TODO: consider: maybe instead of WinProp/ChildProp add FindEx/ChildEx.
 
-			ushort _propAtom;
 
 			protected bool _Init(Wnd wParent)
 			{
@@ -96,10 +120,14 @@ namespace Catkeys
 					childName = null; childClass = null; childId = 0; //next time use the ChildDefinition object
 				}
 
+				if(x != null) _x = new Coord(x); if(y != null) _y = new Coord(y); //copy, because we don't want to modify (normalize) x y
+				if(wParent.Is0) Coord.NormalizeInScreen(_x, _y, xFromRight, yFromBottom);
+				else Coord.NormalizeInWindowClientArea(_x, _y, wParent, xFromRight, yFromBottom);
+
 				return true;
 			}
 
-			internal bool MatchPropStyles(Wnd w)
+			internal bool MatchPropStylesXY(Wnd w, Wnd wParent=default(Wnd))
 			{
 				if(_propAtom != 0) {
 					LPARAM prop = w.GetProp(_propAtom);
@@ -117,6 +145,10 @@ namespace Catkeys
 					uint u = w.ExStyle;
 					if(exStyleHas != 0 && (u & exStyleHas) != exStyleHas) return false;
 					if(exStyleNot != 0 && (u & exStyleNot) != 0) return false;
+				}
+
+				if(_x != null || _y != null) {
+					if(!Coord.IsInRect(_x, _y, wParent.Is0 ? w.Rect : w.GetRectInClientOf(wParent))) return false;
 				}
 
 				return true;
@@ -320,7 +352,7 @@ namespace Catkeys
 						}
 					}
 
-					if(!p.MatchPropStyles(w)) continue;
+					if(!p.MatchPropStylesXY(w)) continue;
 
 					if(_flags.HasFlag(WinFlag.SkipCloaked)) {
 						if(w.Cloaked) continue;
@@ -434,16 +466,6 @@ namespace Catkeys
 		public class ChildProp :_WndProp
 		{
 			/// <summary>
-			/// The control must contain this x coordinate in parent window's client area.
-			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
-			/// </summary>
-			public Coord x;
-			/// <summary>
-			/// The control must contain this y coordinate in parent window's client area.
-			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
-			/// </summary>
-			public Coord y;
-			/// <summary>
 			/// The programming name of the Windows Forms control.
 			/// Not used for other types of controls.
 			/// </summary>
@@ -453,18 +475,7 @@ namespace Catkeys
 			/// Wildcard, case-insensitive (read more in WildString class help).
 			/// </summary>
 			public WildString uiName;
-			/// <summary>
-			/// x is relative to the right of the client area, rigt-to-left.
-			/// For example, if x is 1, the control must be at the very right.
-			/// </summary>
-			public bool xFromRight;
-			/// <summary>
-			/// y is relative to the bottom of the client area, bottom-to-top.
-			/// For example, if y is 1, the control must be at the very bottom.
-			/// </summary>
-			public bool yFromBottom;
 
-			Coord _x, _y; //x y copies
 			WindowsFormsControlNames _wfControls;
 
 			//public static implicit operator ChildProp(string s)
@@ -481,22 +492,13 @@ namespace Catkeys
 			{
 				if(!_Init(wParent)) return false;
 
-				if(x != null) _x = new Coord(x); if(y != null) _y = new Coord(y); //copy, because we don't want to modify (normalize) x y
-				Coord.NormalizeInWindowClientArea(_x, _y, wParent, xFromRight, yFromBottom);
-
 				if(!Empty(wfName)) _wfControls = new WindowsFormsControlNames(wParent); //throws
 
 				return true;
 			}
 
-			internal bool MatchControlProp(Wnd wParent, Wnd c)
+			internal bool MatchControlProp(Wnd c)
 			{
-				if(_x != null || _y!=null) {
-					if(!Coord.IsInRect(_x, _y, c.GetRectInClientOf(wParent))) return false;
-				}
-
-				if(!MatchPropStyles(c)) return false;
-
 				if(_wfControls != null) {
 					if(!wfName.Equals_(_wfControls.GetControlName(c))) return false;
 				}
@@ -657,7 +659,9 @@ namespace Catkeys
 					//	if(!_name.Match(c.GetControlText())) continue;
 					//}
 
-					if(!p.MatchControlProp(wParent, c)) continue;
+					if(!p.MatchPropStylesXY(c, wParent)) continue;
+
+					if(!p.MatchControlProp(c)) continue;
 
 					if(p.child != null) {
 						if(!p.child.Find(c)) continue;
