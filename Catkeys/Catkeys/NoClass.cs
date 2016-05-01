@@ -59,8 +59,13 @@ namespace Catkeys
 		public static void Out(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
         public static void Out<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void OutList(params object[] values) { Output.WriteList(values); }
-		//public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
-		//public static void OutHex<T>(T value) { Output.WriteHex(value); }
+		public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
+		public static void OutHex<T>(T value) { Output.WriteHex(value); }
+		/// <summary>
+		/// Out() that is removed in Release config, ie if DEBUG is not defined.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void OutDebug(string value) { Output.Write(value); }
 
 		/// <summary>
 		/// Alias of Output.Write and Out.
@@ -72,14 +77,21 @@ namespace Catkeys
 		public static void Print(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void Print<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void PrintList(params object[] values) { Output.WriteList(values); }
-		//public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
-		//public static void PrintHex<T>(T value) { Output.WriteHex(value); }
+		public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
+		public static void PrintHex<T>(T value) { Output.WriteHex(value); }
+		/// <summary>
+		/// Print() that is removed in Release config, ie if DEBUG is not defined.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void PrintDebug(string value) { Output.Write(value); }
 
 		/// <summary>
 		/// Gets function name.
 		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
 		/// </summary>
 		public static string FunctionName([CallerMemberName] string name = null) { return name; }
+		public static void OutFunc([CallerMemberName] string name = null) { Output.Write(name); }
+		public static void PrintFunc([CallerMemberName] string name = null) { Output.Write(name); }
 
 		/// <summary>
 		/// Returns true if the string is null or "".
@@ -109,7 +121,7 @@ namespace Catkeys
 		/// </summary>
 		public const uint Win7 = 0x601, Win8_0 = 0x602, Win8_1 = 0x603, Win10 = 0xA00;
 
-		public static void Wait(double timeS) { Time.Wait(timeS); }
+		//public static void Wait(double timeS) { Time.Wait(timeS); } //in Automation; here it could be easily confused with WaitMS
 		public static void WaitMS(int timeMS) { Time.WaitMS(timeMS); }
     }
 }

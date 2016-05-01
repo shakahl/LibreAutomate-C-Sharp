@@ -54,6 +54,17 @@ namespace Catkeys
 			/// </summary>
 			public LPARAM propValue;
 			/// <summary>
+			/// The control must contain this x coordinate in parent window's client area. If top-level window - relative to the primary screen.
+			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
+			/// </summary>
+			public Coord x;
+			/// <summary>
+			/// The control must contain this y coordinate in parent window's client area. If top-level window - relative to the primary screen.
+			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
+			/// Example of getting control that is at the very right of the parent window w: <c>Wnd c=w.Child(... prop:new Wnd.ChildProp() { x=w.ClientWidth-1 });</c>
+			/// </summary>
+			public Coord y;
+			/// <summary>
 			/// The window must have this child window.
 			/// The ChildDefinition object specifies Wnd.Child() arguments; more info there.
 			/// Alternatively use childName, childClass and/or childId.
@@ -76,38 +87,20 @@ namespace Catkeys
 			/// This value will be passed to Wnd.Child(), together with childName and childClass.
 			/// </summary>
 			public int childId;
-			//info: C# does not allow this: new Wnd.WinProp() { child.Name="..", ... }
 
-			/// <summary>
-			/// The control must contain this x coordinate in parent window's client area.
-			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
-			/// </summary>
-			public Coord x;
-			/// <summary>
-			/// The control must contain this y coordinate in parent window's client area.
-			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
-			/// </summary>
-			public Coord y;
-			/// <summary>
-			/// x is relative to the right of the client area, rigt-to-left.
-			/// For example, if x is 1, the control must be at the very right.
-			/// </summary>
-			public bool xFromRight;
-			/// <summary>
-			/// y is relative to the bottom of the client area, bottom-to-top.
-			/// For example, if y is 1, the control must be at the very bottom.
-			/// </summary>
-			public bool yFromBottom;
-
-			Coord _x, _y; //x y copies
+			internal protected int _x, _y;
 			ushort _propAtom;
+			internal ChildDefinition _child;
 
-			//TODO: public ImageDefinition image;
-			//TODO: public UIElemDefinition elem; or/and elemRole, elemName.
-			//TODO: consider: maybe instead of WinProp/ChildProp add FindEx/ChildEx.
+			//info: C# does not allow this: new Wnd.WinProp() { child.Name="..", ... }
+			//TODO, when code or experience will be available:
+			//1. public ImageDefinition image;
+			//2. public UIElemDefinition elem; or/and elemRole, elemName.
+			//3. consider: add FindEx/ChildEx that would have parameters for some often used WinProp/ChildProp members.
+			//4. consider: support string WinProp/ChildProp, eg "<prop x='5' y='5'/>" or just "x='5' y='5'"; also <prop><child name='aaa'/></prop> or just <child name='aaa'/>.
 
 
-			protected bool _Init(Wnd wParent)
+			protected bool _Init()
 			{
 				_propAtom = 0;
 				if(!Empty(propName)) {
@@ -116,18 +109,13 @@ namespace Catkeys
 				} else propName = null;
 
 				if(childName != null || childClass != null || childId != 0) {
-					child = new ChildDefinition(childName, childClass, childId);
-					childName = null; childClass = null; childId = 0; //next time use the ChildDefinition object
-				}
-
-				if(x != null) _x = new Coord(x); if(y != null) _y = new Coord(y); //copy, because we don't want to modify (normalize) x y
-				if(wParent.Is0) Coord.NormalizeInScreen(_x, _y, xFromRight, yFromBottom);
-				else Coord.NormalizeInWindowClientArea(_x, _y, wParent, xFromRight, yFromBottom);
+					_child = new ChildDefinition(childName, childClass, childId);
+				} else _child = child;
 
 				return true;
 			}
 
-			internal bool MatchPropStylesXY(Wnd w, Wnd wParent=default(Wnd))
+			internal bool MatchPropStylesXY(Wnd w, Wnd wParent = default(Wnd))
 			{
 				if(_propAtom != 0) {
 					LPARAM prop = w.GetProp(_propAtom);
@@ -147,8 +135,9 @@ namespace Catkeys
 					if(exStyleNot != 0 && (u & exStyleNot) != 0) return false;
 				}
 
-				if(_x != null || _y != null) {
-					if(!Coord.IsInRect(_x, _y, wParent.Is0 ? w.Rect : w.GetRectInClientOf(wParent))) return false;
+				if(x != null || y != null) {
+					RECT r = wParent.Is0 ? w.Rect : w.RectInClientOf(wParent);
+					if(!r.Contains(x == null ? r.left : _x, y == null ? r.top : _y)) return false;
 				}
 
 				return true;
@@ -186,7 +175,11 @@ namespace Catkeys
 			/// </summary>
 			internal bool Init()
 			{
-				if(!_Init(Wnd0)) return false;
+				if(!_Init()) return false;
+
+				if(x != null) _x = x.GetNormalizedInScreen(false);
+				if(y != null) _y = y.GetNormalizedInScreen(true);
+
 				return true;
 			}
 		}
@@ -247,8 +240,10 @@ namespace Catkeys
 			/// </summary>
 			public bool Find()
 			{
-				return FindInList(All.Windows(null, !_flags.HasFlag(WinFlag.HiddenToo), true)) >= 0;
+				return FindInList(AllWindows(null, !_flags.HasFlag(WinFlag.HiddenToo), true)) >= 0;
 			}
+
+			static WinProp _propEmpty;
 
 			/// <summary>
 			/// Finds matching window in list of windows (handles).
@@ -256,14 +251,14 @@ namespace Catkeys
 			/// The Result property will be the window.
 			/// Does not skip hidden windows, even if flag HiddenToo is not set.
 			/// </summary>
-			/// <param name="a">List of windows (handles), for example returned by Wnd.All.Windows.</param>
+			/// <param name="a">List of windows (handles), for example returned by Wnd.AllWindows.</param>
 			public int FindInList(List<Wnd> a)
 			{
 				Result = Wnd0;
-				if(a == null) return -1;
+				if(a == null || a.Count == 0) return -1;
 
 				var p = _prop;
-				if(p == null) p = new WinProp(); //will not need if(p != null && ...)
+				if(p == null) p = _propEmpty ?? (_propEmpty = new WinProp()); //will not need if(p != null && ...)
 				else if(!p.Init()) return -1;
 
 				List<uint> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
@@ -339,7 +334,7 @@ namespace Catkeys
 								if(_flags.HasFlag(WinFlag.ProgramPath)) continue;
 								//switch to plan B
 								pids = Process_.GetProcessesByName(_program);
-								if(pids == null) break;
+								if(pids.Count == 0) break;
 								programNamePlanB = true;
 								goto g1;
 							}
@@ -355,11 +350,11 @@ namespace Catkeys
 					if(!p.MatchPropStylesXY(w)) continue;
 
 					if(_flags.HasFlag(WinFlag.SkipCloaked)) {
-						if(w.Cloaked) continue;
+						if(w.IsCloaked) continue;
 					}
 
-					if(p.child != null) {
-						if(!p.child.Find(w)) continue;
+					if(p._child != null) {
+						if(!p._child.Find(w)) continue;
 					}
 
 					if(_f != null) {
@@ -398,6 +393,7 @@ namespace Catkeys
 		/// <param name="matchIndex">1-based index of matching window. For example, if matchIndex is 2, the function skips the first matching window and returns the second.</param>
 		/// <remarks>
 		/// Uses all arguments that are not omitted/0/null/"".
+		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// </remarks>
 		public static Wnd Find(
 			WildString name, WildStringI className = null, WildStringI program = null, bool hiddenToo = false,
@@ -412,7 +408,7 @@ namespace Catkeys
 		/// <summary>
 		/// Finds window.
 		/// You can use this overload to specify more options (flags).
-		/// Other parameters and everything else are the same as with other overload.
+		/// Other parameters and everything are the same as with other overload.
 		/// </summary>
 		/// <param name="flags">
 		/// HiddenToo - can find hidden windows (note: other overload has a bool parameter for this).
@@ -430,20 +426,40 @@ namespace Catkeys
 			return d.Result;
 		}
 
-		public static Wnd FindAny(params WindowDefinition[] a)
+		/// <summary>
+		/// Finds all matching windows.
+		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Everything except the return type is the same as with Find().
+		/// The list is sorted to match the Z order, however hidden windows (when using WinFlag.HiddenToo) are always placed after visible windows.
+		/// </summary>
+		public static List<Wnd> FindAll(
+			WinFlag flags,
+			WildString name, WildStringI className = null, WildStringI program = null,
+			WinProp prop = null, Action<CallbackArgs> f = null
+			)
 		{
-			return Wnd0;
+			var a = new List<Wnd>();
+			Find(flags, name, className, program, prop, e =>
+			{
+				if(f != null) {
+					f(e);
+					if(!e.stop) return;
+					e.stop = false;
+				}
+				a.Add(e.w);
+			});
+			return a;
 		}
 
-		public static Wnd[] FindAll(params WindowDefinition[] a)
-		{
-			return null;
-		}
+		//public static List<Wnd> FindAll(params WindowDefinition[] a)
+		//{
+		//	return null;
+		//}
 
-		public static Wnd[] FindAll(string name, string className = null) //...
-		{
-			return null;
-		}
+		//public static Wnd FindAny(params WindowDefinition[] a)
+		//{
+		//	return Wnd0;
+		//}
 
 		/// <summary>
 		/// Finds window by class name.
@@ -488,11 +504,21 @@ namespace Catkeys
 			/// Returns false if the window cannot be found, eg prop atom not found.
 			/// Can throw; should not handle.
 			/// </summary>
+			/// <exception cref="CatkeysException">
+			/// When wfName used and cannot get form control names from this window, usually because of UAC.
+			/// </exception>
 			public bool Init(Wnd wParent)
 			{
-				if(!_Init(wParent)) return false;
+				if(!_Init()) return false;
 
-				if(!Empty(wfName)) _wfControls = new WindowsFormsControlNames(wParent); //throws
+				if(x != null) _x = x.GetNormalizedInWindowClientArea(wParent, false);
+				if(y != null) _y = y.GetNormalizedInWindowClientArea(wParent, true);
+
+				if(Empty(wfName)) _wfControls = null;
+				else
+					try {
+						_wfControls = new WindowsFormsControlNames(wParent);
+					} catch(CatkeysException e) { throw new CatkeysException("Cannot get wfName of controls. Try to run as admin.", e); }
 
 				return true;
 			}
@@ -508,6 +534,11 @@ namespace Catkeys
 				}
 
 				return true;
+			}
+
+			internal void Clear()
+			{
+				if(_wfControls != null) { _wfControls.Dispose(); _wfControls = null; }
 			}
 		}
 
@@ -567,7 +598,7 @@ namespace Catkeys
 			/// </summary>
 			public bool Find(Wnd w)
 			{
-				var a = All.Controls(w, null, _flags.HasFlag(ChildFlag.DirectChild), !_flags.HasFlag(ChildFlag.HiddenToo), true);
+				var a = w.AllChildren(null, _flags.HasFlag(ChildFlag.DirectChild), !_flags.HasFlag(ChildFlag.HiddenToo), true);
 				return _FindInList(w, a, false) >= 0;
 			}
 
@@ -578,7 +609,7 @@ namespace Catkeys
 			/// Does not skip hidden controls, even if flag HiddenToo is not set.
 			/// </summary>
 			/// <param name="w">Parent window.</param>
-			/// <param name="a">List of controls (handles), for example returned by Wnd.All.Controls.</param>
+			/// <param name="a">List of controls (handles), for example returned by Wnd.AllChildren.</param>
 			public int FindInList(Wnd w, List<Wnd> a)
 			{
 				return _FindInList(w, a, true);
@@ -587,97 +618,102 @@ namespace Catkeys
 			int _FindInList(Wnd wParent, List<Wnd> a, bool publicCall)
 			{
 				Result = Wnd0;
-				if(a == null) return -1;
+				if(a == null || a.Count == 0) return -1;
 
-				var p = _prop;
-				if(p == null) p = new ChildProp(); //will not need if(p != null && ...)
-				else if(!p.Init(wParent)) return -1;
+				if(_prop != null && !_prop.Init(wParent)) return -1;
+				try { //will need to call _prop.Clear
 
-				CallbackArgs cbArgs = null;
-				int matchInd = _matchIndex;
+					CallbackArgs cbArgs = null;
+					int matchInd = _matchIndex;
 
-				bool mustBeDirectChild = publicCall && _flags.HasFlag(ChildFlag.DirectChild);
+					bool mustBeDirectChild = publicCall && _flags.HasFlag(ChildFlag.DirectChild);
 
-				//List<ushort> badAtoms = null;
+					//List<ushort> badAtoms = null;
 
-				//bool useName = false, useText = false;
-				//if(_name != null) {
-				//	if(_flags.HasFlag(ChildFlag.ControlText)) useText = true; else useName = true;
-				//}
-
-				int index = -1;
-				foreach(Wnd c in a) {
-					index++;
-
-					if(mustBeDirectChild) {
-						if(c.DirectParentOrOwner != wParent) continue;
-					}
-
-					if(_id != 0) {
-						if(c.ControlId != _id) continue;
-					}
-
-					//if(useName) {
-					//	//if(!_name.Match(c.Name)) continue; //note: if using only Name, call it after ClassName
-					//	if(!_name.Match(c.GetControlName())) continue;
-					//	//speed:
-					//	//	Tested with QM2 window, finding control Find -> Folder (class "*Edit"), using only name (no class etc). Maybe 10-15-th control.
-					//	//	With GetControlName 4-5 times faster than with Name.
-					//	//	With GetControlText 12 times slower than with GetControlName.
-					//	//	When also using class, with GetControlText 2 times slower than with GetControlName.
+					//bool useName = false, useText = false;
+					//if(_name != null) {
+					//	if(_flags.HasFlag(ChildFlag.ControlText)) useText = true; else useName = true;
 					//}
 
-					if(_className != null) {
-						if(!_className.Match(c.ClassName)) continue;
-					}
+					int index = -1;
+					foreach(Wnd c in a) {
+						index++;
 
-					//This does not make faster. Even if only class used (no name). Why? Getting atom does not slow down much. If using id, 2 times faster.
-					//if(_className != null) {
-					//	ushort atom = c.GetClassLong(Api.GCW_ATOM); if(atom == 0) continue;
-					//	if(badAtoms != null && badAtoms.Contains(atom)) continue;
-					//	string s = c.ClassName; if(s == null) continue;
-					//	if(!_className.Match(s)) {
-					//		if(badAtoms == null) badAtoms = new List<ushort>();
-					//		badAtoms.Add(atom);
-					//		continue;
-					//	}
-					//}
-
-					if(_name != null) {
-						string s;
-						if(_flags.HasFlag(ChildFlag.ControlText)) s = c.GetControlText(); //only text
-						else if(_className == null && _id == 0) s = c.GetControlName(); //only internal name; getting editable text would be slow and unreliable
-						else s = c.Name; //internal name, then text if name empty; it is quite fast and reliable when class or id specified
-
-						if(!_name.Match(s)) {
-							if(!Util.Misc.StringRemoveMnemonicUnderlineAmpersand(ref s)) continue;
-                            if(!_name.Match(s)) continue;
+						if(mustBeDirectChild) {
+							if(c.DirectParentOrOwner != wParent) continue;
 						}
+
+						if(_id != 0) {
+							if(c.ControlId != _id) continue;
+						}
+
+						//if(useName) {
+						//	//if(!_name.Match(c.Name)) continue; //note: if using only Name, call it after ClassName
+						//	if(!_name.Match(c.GetControlName())) continue;
+						//	//speed:
+						//	//	Tested with QM2 window, finding control Find -> Folder (class "*Edit"), using only name (no class etc). Maybe 10-15-th control.
+						//	//	With GetControlName 4-5 times faster than with Name.
+						//	//	With GetControlText 12 times slower than with GetControlName.
+						//	//	When also using class, with GetControlText 2 times slower than with GetControlName.
+						//}
+
+						if(_className != null) {
+							if(!_className.Match(c.ClassName)) continue;
+						}
+
+						//This does not make faster. Even if only class used (no name). Why? Getting atom does not slow down much. If using id, 2 times faster.
+						//if(_className != null) {
+						//	ushort atom = c.GetClassLong(Api.GCW_ATOM); if(atom == 0) continue;
+						//	if(badAtoms != null && badAtoms.Contains(atom)) continue;
+						//	string s = c.ClassName; if(s == null) continue;
+						//	if(!_className.Match(s)) {
+						//		if(badAtoms == null) badAtoms = new List<ushort>();
+						//		badAtoms.Add(atom);
+						//		continue;
+						//	}
+						//}
+
+						if(_name != null) {
+							string s;
+							if(_flags.HasFlag(ChildFlag.ControlText)) s = c.GetControlText(); //only text
+							else if(_className == null && _id == 0) s = c.GetControlName(); //only internal name; getting editable text would be slow and unreliable
+							else s = c.Name; //internal name, then text if name empty; it is quite fast and reliable when class or id specified
+
+							if(!_name.Match(s)) {
+								if(!Util.Misc.StringRemoveMnemonicUnderlineAmpersand(ref s)) continue;
+								if(!_name.Match(s)) continue;
+							}
+						}
+
+						//if(useText) {
+						//	if(!_name.Match(c.GetControlText())) continue;
+						//}
+
+						if(_prop != null) {
+							if(!_prop.MatchPropStylesXY(c, wParent)) continue;
+
+							if(!_prop.MatchControlProp(c)) continue;
+
+							if(_prop._child != null) {
+								if(!_prop._child.Find(c)) continue;
+							}
+						}
+
+						if(_f != null) {
+							if(cbArgs == null) cbArgs = new CallbackArgs();
+							cbArgs.w = c;
+							_f(cbArgs);
+							if(!cbArgs.stop) continue;
+						}
+
+						if(--matchInd > 0) continue;
+
+						Result = cbArgs != null ? cbArgs.w : c;
+						return index;
 					}
 
-					//if(useText) {
-					//	if(!_name.Match(c.GetControlText())) continue;
-					//}
-
-					if(!p.MatchPropStylesXY(c, wParent)) continue;
-
-					if(!p.MatchControlProp(c)) continue;
-
-					if(p.child != null) {
-						if(!p.child.Find(c)) continue;
-					}
-
-					if(_f != null) {
-						if(cbArgs == null) cbArgs = new CallbackArgs();
-						cbArgs.w = c;
-						_f(cbArgs);
-						if(!cbArgs.stop) continue;
-					}
-
-					if(--matchInd > 0) continue;
-
-					Result = cbArgs != null ? cbArgs.w : c;
-					return index;
+				} finally {
+					if(_prop != null) { _prop.Clear(); }
 				}
 
 				return -1;
@@ -685,13 +721,14 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Finds a child window (control) of this window.
+		/// Finds child control.
+		/// Returns its handle as Wnd. Returns Wnd0 if not found.
 		/// </summary>
 		/// <param name="name">
 		/// Control name or text.
 		/// Supports wildcard etc, case-sensitive (more info in WildString help).
 		/// This function in most cases ignores editable or slow-to-get text unless one of these is used: className, id, ChildFlag.ControlText (with other overload).
-		/// Control text often contains an invisible '&' character to underline the next character when using the keyboard to select dialog controls. You can use control name with or without '&', this function supports both. 
+		/// Control text often contains an invisible '&amp;' character to underline the next character when using the keyboard to select dialog controls. You can use control name with or without '&amp;', this function supports both. 
 		/// </param>
 		/// <param name="className">Control class name. Supports wildcard etc, case-insensitive (more info in WildStringI and WildString help).</param>
 		/// <param name="id">Control id.</param>
@@ -700,12 +737,12 @@ namespace Catkeys
 		/// <param name="f">Lambda etc callback function to call for each matching control. It can evaluate more properties of the control and call Stop() when they match. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
 		/// <param name="matchIndex">1-based index of matching control. For example, if matchIndex is 2, the function skips the first matching control and returns the second.</param>
 		/// <exception cref="CatkeysException">
-		/// 1. When this window is invalid.
+		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When prop.wfName used and cannot get form control names from this window, usually because of UAC.
 		/// </exception>
 		/// <remarks>
 		/// Uses all arguments that are not omitted/0/null/"".
-		/// By default also searches indirect children (children of children and so on).
+		/// By default also searches indirect children (children of children and so on). Other overload has a flag to get only direct children.
 		/// </remarks>
 		public Wnd Child(
 			WildString name, WildStringI className = null, int id = 0, bool hiddenToo = false,
@@ -719,9 +756,9 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Finds a child window (control) of this window.
+		/// Finds child control.
 		/// You can use this overload to specify more options (flags).
-		/// Other parameters and everything else are the same as with other overload.
+		/// Other parameters and everything are the same as with other overload.
 		/// </summary>
 		/// <param name="flags">
 		/// HiddenToo - can find hidden controls (note: other overload has a bool parameter for this).
@@ -741,13 +778,39 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Finds a child window (control) of this window by its id.
+		/// Finds all matching child controls.
+		/// Returns list containing 0 or more elements (control handles as Wnd).
+		/// Everything except the return type is the same as with Child().
+		/// </summary>
+		public List<Wnd> ChildAll(
+			ChildFlag flags,
+			WildString name, WildStringI className = null, int id = 0,
+			ChildProp prop = null, Action<CallbackArgs> f = null
+			)
+		{
+			Validate();
+			var a = new List<Wnd>();
+			Child(flags, name, className, id, prop, e =>
+			{
+				if(f != null) {
+					f(e);
+					if(!e.stop) return;
+					e.stop = false;
+				}
+				a.Add(e.w);
+			});
+			return a;
+		}
+
+		/// <summary>
+		/// Finds child control by its id.
 		/// Finds hidden controls too.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="directChild">Must be direct child, not a child of a child and so on.</param>
+		/// <exception cref="CatkeysException">When this window is invalid (not found, closed, etc).</exception>
 		/// <remarks>
-		/// You can also use other overload to find controls by id, but this one is faster and better when the control can be identified only by id. It works differently.
+		/// This overload is faster and better when the control can be identified only by id.
 		/// At first calls Api.GetDlgItem. It is fast and searches only direct children. If it does not find, and !directChild, calls Api.EnumChildWindows like other oveload.
 		/// </remarks>
 		public Wnd Child(int id, bool directChild = false)
@@ -756,19 +819,18 @@ namespace Catkeys
 			if(R.Is0) {
 				Validate();
 				if(directChild == false) {
-					//return Child(null, null, id, true);
-					All.Controls(e =>
+					AllChildren(e =>
 					{
 						if(e.w.ControlId != id) return;
 						R = e.w; e.Stop();
-					}, this);
+					});
 				}
 			}
 			return R;
 		}
 
 		/// <summary>
-		/// Finds a child window (control) of this window by its class name.
+		/// Finds child control by its class name.
 		/// Finds hidden controls too.
 		/// </summary>
 		/// <param name="className">Class name. String by default is interpreted as wildcard, case-insensitive..</param>
@@ -776,23 +838,49 @@ namespace Catkeys
 		/// <param name="matchIndex">1-based match index. For example, if 2, will get the second matching control.</param>
 		public Wnd ChildByClassName(WildStringI className, bool directChild = false, int matchIndex = 1)
 		{
-			Debug.Assert(className != null);
+			Validate();
 			if(className == null) return Wnd0;
 			Wnd R = Wnd0;
-			All.Controls(e =>
+			AllChildren(e =>
 			{
 				if(--matchIndex > 0) return;
 				R = e.w; e.Stop();
-			}, this, className, directChild);
+			}, className, directChild);
 			return R;
 		}
 
 		#endregion
 
 		#region from XY
+		//TODO: test when this process is not DPI-aware:
+		//	Coordinate-related API on Win7 high DPI.
+		//	Acc location on Win10 with different DPI of monitors.
 
 		/// <summary>
-		/// Gets top-level window or control from point.
+		/// Gets visible non-transparent top-level window or visible enabled control from point.
+		/// This function just calls Api.WindowFromPoint() and returns its return value.
+		/// Use FromXY instead if you need "more real" controls (include disabled controls, prefer non-transparent controls) or if you want only top-level or only child windows.
+		/// </summary>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
+		public static Wnd RawFromXY(int x, int y)
+		{
+			return Api.WindowFromPoint(new POINT(x, y));
+		}
+		/// <summary>
+		/// Gets visible non-transparent top-level window or visible enabled control from point.
+		/// From other overload differs only by the parameter type.
+		/// </summary>
+		/// <param name="p">X and Y coordinates.</param>
+		public static Wnd RawFromXY(POINT p)
+		{
+			return Api.WindowFromPoint(p);
+		}
+
+		/// <summary>
+		/// Gets visible non-transparent top-level window or control from point.
+		/// Unlike RawFromXY(), this function gets non-transparent controls that are behind (in the Z order) transparent controls (eg a group button or a tab control).
+		/// Also this function supports fractional coordinates and does not skip disabled controls.
 		/// </summary>
 		/// <param name="x">X coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
 		/// <param name="y">Y coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
@@ -801,23 +889,62 @@ namespace Catkeys
 		/// If false, gets top-level window; if at that point is a control, gets its top-level parent.
 		/// If omitted or null, gets exactly what is at that point (control or top-level window).
 		/// </param>
-		/// <param name="xFromRight">x is relative to the right edge of the primary screen, right-to-left.</param>
-		/// <param name="yFromBottom">y is relative to the bottom edge of the primary screen, bottom-to-top.</param>
-		public static Wnd FromXY(Coord x, Coord y, bool? control=null, bool xFromRight = false, bool yFromBottom = false)
+		public static Wnd FromXY(Coord x, Coord y, bool? control = null)
 		{
-			Coord.NormalizeInScreen(x, y, xFromRight, yFromBottom);
-
-			Wnd w = Api.WindowFromPoint(new POINT(x.coord, y.coord));
-			if(control != null) {
-				if(control.Value) {
-					if(!w.IsControl) w = Wnd0;
-				} else w = w.ToplevelParentOrThis;
-			}
-			return w;
+			return FromXY(Coord.GetNormalizedInScreen(x, y), control);
 		}
 
 		/// <summary>
-		/// Gets top-level window or control from mouse cursor position.
+		/// Gets visible non-transparent top-level window or control from point.
+		/// From other overload differs only by the parameter type.
+		/// </summary>
+		public static Wnd FromXY(POINT p, bool? control = null)
+		{
+			if(control != null && !control.Value) return _ToplevelWindowFromPoint(p);
+
+			Wnd w = Api.WindowFromPoint(p);
+			if(w.Is0) return w;
+
+			Wnd t = w.DirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
+			if(!t.Is0) w = t;
+
+			t = w._ChildFromXY(p, false, true);
+			if(t.Is0) t = w;
+			if(control != null && t == w) return Wnd0;
+			return t;
+		}
+
+		//These are slower with some controls, faster with others.
+		//public static Wnd FromXY2(POINT p, bool? control = null)
+		//{
+		//	Wnd w = _ToplevelWindowFromPoint(p);
+		//	Debug.Assert(!w.Is0);
+		//	if(w.Is0) return w;
+
+		//	if(control != null && !control.Value) return w;
+
+		//	Wnd t = w._ChildFromXY(p, false, true);
+		//	if(t.Is0) t = w;
+		//	if(control != null && t == w) return Wnd0;
+		//	return t;
+		//}
+
+		//public static Wnd FromXY3(POINT p, bool? control = null)
+		//{
+		//	Wnd w = _ToplevelWindowFromPoint(p);
+		//	if(w.Is0) return w;
+
+		//	if(control != null && !control.Value) return w;
+
+		//	Wnd t = w._ChildFromXY(p, false, true);
+		//	if(t.Is0) t = w;
+		//	if(control != null && t == w) return Wnd0;
+		//	return t;
+		//}
+
+		/// <summary>
+		/// Gets visible non-transparent top-level window or control from mouse cursor position.
+		/// Calls FromXY(Mouse.XY, control).
 		/// </summary>
 		/// <param name="control">
 		/// If true, gets control; returns Wnd0 if there is no control at that point.
@@ -826,8 +953,114 @@ namespace Catkeys
 		/// </param>
 		public static Wnd FromMouse(bool? control = null)
 		{
-			POINT p; Api.GetCursorPos(out p);
-			return FromXY(p.x, p.y, control);
+			return FromXY(Mouse.XY, control);
+		}
+
+		/// <summary>
+		/// Gets child control from point.
+		/// Returns Wnd0 if the point is not within a child or is outside this window.
+		/// By default, x y must be relative to the client area of this window.
+		/// </summary>
+		/// <param name="x">X coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
+		/// <param name="y">Y coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
+		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
+		/// <param name="screenXY">x y are relative to the pimary screen.</param>
+		/// <seealso cref="Wnd.FromXY"/>
+		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
+		{
+			Validate();
+			POINT p = screenXY ? Coord.GetNormalizedInScreen(x, y) : Coord.GetNormalizedInWindowClientArea(x, y, this);
+			return _ChildFromXY(p, directChild, screenXY);
+		}
+
+		//Returns child or Wnd0.
+		Wnd _ChildFromXY(POINT p, bool directChild, bool screenXY)
+		{
+			Wnd R = _TopChildWindowFromPointSimple(this, p, directChild, screenXY);
+			if(R.Is0) return R;
+
+			//Test whether it is a transparent control, like tab, covering other controls.
+			//RealChildWindowFromPoint does it only for group button.
+
+			if(R.HasExStyle(Api.WS_EX_MDICHILD)) return R;
+
+			if(!screenXY) Api.ClientToScreen(this, ref p);
+			g1:
+			RECT r = R.Rect;
+			for(Wnd t = R; ;) {
+				t = Api.GetWindow(t, Api.GW_HWNDNEXT); if(t.Is0) break;
+				RECT rr = t.Rect;
+				if(!rr.Contains(p.x, p.y)) continue;
+				if(!t.Visible) continue;
+				if(rr.Width * rr.Height > r.Width * r.Height || rr == r) continue; //bigger than R, or equal
+
+				//is R transparent?
+				//OutList("WM_NCHITTEST", R);
+				LPARAM ht;
+				//if(!R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeLparam(p.x, p.y)) || (int)ht != Api.HTTRANSPARENT) break;
+				if(R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeLparam(p.x, p.y))) {
+					if((int)ht != Api.HTTRANSPARENT) break;
+				} else {
+					//break;
+					if(Marshal.GetLastWin32Error() != Api.ERROR_ACCESS_DENIED) break; //higher UAC level?
+					if(rr.left <= r.left || rr.top <= r.top || rr.right >= r.right || rr.bottom >= r.bottom) break; //R must fully cover t, like a tab or group control
+				}
+
+				//now we know that R is transparent and there is another control behind
+				if(!directChild) //that control can contain a child in that point, so we must find it
+				{
+					R = _TopChildWindowFromPointSimple(t, p, false, true);
+					//Out(R);
+					if(!R.Is0) goto g1;
+				}
+				R = t;
+			}
+
+			return R;
+		}
+
+		//Returns child or Wnd0.
+		static Wnd _TopChildWindowFromPointSimple(Wnd w, POINT p, bool directChild, bool screenXY)
+		{
+			if(screenXY && !Api.ScreenToClient(w, ref p)) return Wnd0;
+
+			for(Wnd R = Wnd0; ;) {
+				Wnd t = _RealChildWindowFromPoint_RtlAware(w, p);
+				if(directChild) return t;
+				if(t.Is0) return R;
+				Api.MapWindowPoints(w, t, ref p, 1);
+				R = w = t;
+			}
+		}
+
+		//Returns direct child or Wnd0.
+		static Wnd _RealChildWindowFromPoint_RtlAware(Wnd w, POINT p)
+		{
+			RECT rc; if(w.HasExStyle(Api.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out rc)) { p.x = rc.right - p.x; }
+			Wnd R = Api.RealChildWindowFromPoint(w, p);
+			return R == w ? Wnd0 : R;
+		}
+
+		static Wnd _ToplevelWindowFromPoint(POINT p)
+		{
+			Wnd w = Api.RealChildWindowFromPoint(Api.GetDesktopWindow(), p);
+			if(!w.HasExStyle(Api.WS_EX_TRANSPARENT | Api.WS_EX_LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
+			return Api.WindowFromPoint(p).ToplevelParentOrThis; //ChildWindowFromPointEx would be faster, but less reliable
+
+			//info:
+			//WindowFromPoint is the most reliable. It skips really transparent top-level windows (TL). Unfortunately it skips disabled controls (but not TL).
+			//ChildWindowFromPointEx with CWP_SKIPINVISIBLE|CWP_SKIPTRANSPARENT skips all with WS_EX_TRANSPARENT, although without WS_EX_LAYERED they aren't actually transparent.
+			//RealChildWindowFromPoint does not skip transparent TL. It works like ChildWindowFromPointEx(CWP_SKIPINVISIBLE).
+			//None of the above API prefers a really visible control that is under a transparent part of a sibling control. RealChildWindowFromPoint does it only for group buttons, but not for tab controls etc.
+			//All API skip windows that have a hole etc in window region at that point.
+			//None of the API uses WM_NCHITTEST+HTTRANSPARENT. Tested only with TL of other processes.
+			//AccessibleObjectFromPoint.get_Parent in most cases gets the most correct window/control, but it is dirty, unreliable and often very slow, because sends WM_GETOBJECT etc.
+			//speed:
+			//RealChildWindowFromPoint is the fastest. About 5 mcs.
+			//ChildWindowFromPointEx is 50% slower.
+			//WindowFromPoint is 4 times slower; ToplevelParentOrThis does not make significantly slower.
+			//AccessibleObjectFromPoint.get_Parent often is of RealChildWindowFromPoint speed, but often much slower than all others.
+			//IUIAutomationElement.ElementFromPoint super slow, 6-10 ms. Getting window handle from it is not easy, > 0.5 ms.
 		}
 
 		#endregion
@@ -881,7 +1114,7 @@ namespace Catkeys
 		public string GetControlName(Wnd c)
 		{
 			if(_pm == null) return null;
-			if(!IsDotNetWindow(c)) return null;
+			if(!IsWindowsForms(c)) return null;
 			LPARAM R;
 			if(!c.SendTimeout(10000, out R, WM_GETCONTROLNAME, 4096, _pm.Mem) || R < 1) return null;
 			return _pm.ReadUnicodeString(R);
@@ -889,20 +1122,52 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if window class name starts with "WindowsForms".
-		/// Usually it means that we can get Windows Forms control name of the specified window and its child controls.
+		/// Usually it means that we can get Windows Forms control name of w and its child controls.
 		/// </summary>
 		/// <param name="w">The window. Can be top-level or control.</param>
-		public static bool IsDotNetWindow(Wnd w)
+		public static bool IsWindowsForms(Wnd w)
 		{
 			return w.ClassNameIs(_cn);
 		}
 		static WildStringI _cn = new WildStringI("WindowsForms*");
 
-		//TODO: implement
-		public static string GetDotNetName(Wnd w, Wnd c, string cls)
+		/// <summary>
+		/// Gets programming name of a Windows Forms control.
+		/// Returns null if it is not a Windows Forms control or if fails.
+		/// </summary>
+		/// <param name="c">The control. Can be top-level window too.</param>
+		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WindowsFormsControlNames instance (once) and call GetControlName on it (for each control), it will be faster.</remarks>
+		public static string CachedGetControlName(Wnd c)
 		{
+			if(!IsWindowsForms(c)) return null;
+			try {
+				using(var x = new WindowsFormsControlNames(c)) { return x.GetControlName(c); }
+			} catch { }
 			return null;
 		}
 
+		//Don't use this cached version, it does not make significantly faster. Also, keeping process handle in such a way is not good, would need to use other thread to close it after some time.
+		///// <summary>
+		///// Gets programming name of a Windows Forms control.
+		///// Returns null if it is not a Windows Forms control or if fails.
+		///// </summary>
+		///// <param name="c">The control. Can be top-level window too.</param>
+		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WindowsFormsControlNames instance each time and calling GetControlName on it, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
+		//public static string CachedGetControlName(Wnd c)
+		//{
+		//	if(!IsWindowsForms(c)) return null;
+		//	uint pid = c.ProcessId; if(pid == 0) return null;
+		//	lock (_prevLock) {
+		//		if(pid != _prevPID || Time.Milliseconds - _prevTime > 1000) {
+		//			if(_prev != null) { _prev.Dispose(); _prev = null; }
+		//			try { _prev = new WindowsFormsControlNames(c); } catch { }
+		//			//Out("new");
+		//		} //else Out("cached");
+		//		_prevPID = pid; _prevTime = Time.Milliseconds;
+		//		if(_prev == null) return null;
+		//		return _prev.GetControlName(c);
+		//	}
+		//}
+		//static WindowsFormsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache
 	}
 }

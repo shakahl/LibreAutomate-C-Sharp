@@ -27,6 +27,7 @@ using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
+using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 
 
@@ -658,6 +659,11 @@ bbb"", b3
 
 	static void TestWndAll()
 	{
+		foreach(Wnd w in Wnd.AllWindows("QM_*")) {
+			Out(w);
+		}
+		Out("ok");
+
 		//Wnd wq = Wnd.Find(null, "QM_Editor");
 		//Out(wq.GetClassLong(Api.GCW_ATOM));
 
@@ -674,18 +680,17 @@ bbb"", b3
 
 		//List<Wnd> a = null;
 
-		////var a1 = new Action(() => { a = Wnd.All.Windows(); });
-		////var a1 = new Action(() => { a = Wnd.All.Windows(null, true); });
-		////var a1 = new Action(() => { a = Wnd.All.Controls(wy); });
-		////var a2 = new Action(() => { a = Wnd.All.Controls2(wy); });
-		////var a2 = new Action(() => { Wnd.All.Controls((c, e) => { }, wy); });
-		//var a1 = new Action(() => { a = Wnd.All.Windows(); });
-		//var a2 = new Action(() => { Wnd.All.Windows((w3, e) => { }); });
+		////var a1 = new Action(() => { a = Wnd.AllWindows(); });
+		////var a1 = new Action(() => { a = Wnd.AllWindows(null, true); });
+		////var a1 = new Action(() => { a = wy.AllChildren(); });
+		////var a2 = new Action(() => { wy.AllChildren((c, e) => { }); });
+		//var a1 = new Action(() => { a = Wnd.AllWindows(); });
+		//var a2 = new Action(() => { Wnd.AllWindows((w3, e) => { }); });
 
-		////Wnd.All.Controls((c, e)=> { Out(c); }, wy, null, true); return;
-		////Wnd.All.Windows((c, e)=> { Out(c); }, "QM_*"); return;
-		////Wnd.All.Windows((c, e)=> { Out(c); }, null, true); return;
-		////foreach(Wnd w3 in Wnd.All.Windows(onlyVisible:true)) { Out(w3); }; return;
+		////wy.AllChildren((c, e)=> { Out(c); }, null, true); return;
+		////Wnd.AllWindows((c, e)=> { Out(c); }, "QM_*"); return;
+		////Wnd.AllWindows((c, e)=> { Out(c); }, null, true); return;
+		////foreach(Wnd w3 in Wnd.AllWindows(onlyVisible:true)) { Out(w3); }; return;
 		////a1();
 
 		////var a2 = new Action(() =>
@@ -712,7 +717,7 @@ bbb"", b3
 		//	var b = new Button();
 		//	b.Location = new POINT(0, i * 20);
 		//	b.Size = new SIZE(50, 18);
-		//	f.Controls.Add(b);
+		//	f.AllChildren.Add(b);
 		//}
 
 		//f.Click += (o, e) =>
@@ -721,8 +726,8 @@ bbb"", b3
 
 		//	List<Wnd> a = null;
 
-		//	var a1 = new Action(() => { a=Wnd.All.Controls(hform); });
-		//	//var a1 = new Action(() => { a=Wnd.All.Controls(wq); });
+		//	var a1 = new Action(() => { a=hform.AllChildren(); });
+		//	//var a1 = new Action(() => { a=wq.AllChildren(); });
 		//	//a1();
 
 		//	for(int k=0; k<5; k++) {
@@ -771,19 +776,20 @@ bbb"", b3
 
 		////return;
 
-		////List<Wnd> e1 = Wnd.All.Controls((Wnd)1245464);
+		////Wnd w=(Wnd)1245464;
+		////List<Wnd> e1 = w.AllChildren();
 		////Out(e1.Count);
-		//////IEnumerable<Wnd> e= Wnd.All.DirectChildControlsEnum((Wnd)1245464);
-		////List<Wnd> e2 = Wnd.All.DirectChildControlsFastUnsafe((Wnd)1245464);
+		//////IEnumerable<Wnd> e= w.DirectChildControlsEnum();
+		////List<Wnd> e2 = w.DirectChildControlsFastUnsafe();
 		////Out(e2.Count);
 
 		////Speed.First(true);
 		////for(int uu=0; uu<5; uu++) {
 		////	Speed.First();
-		////	Speed.Execute(1000, () => { e2 = Wnd.All.DirectChildControlsFastUnsafe((Wnd)1245464); });
-		////	Speed.Execute(1000, () => { e1 = Wnd.All.Controls((Wnd)1245464); });
-		////	Speed.Execute(1000, () => { e1 = Wnd.All.Controls((Wnd)1245464, "Button", true); });
-		////	Speed.Execute(1000, () => { Wnd.All.Controls(c=> { /*Out(c);*/ return false; }, (Wnd)1245464); });
+		////	Speed.Execute(1000, () => { e2 =w.DirectChildControlsFastUnsafe(); });
+		////	Speed.Execute(1000, () => { e1 =w.AllChildren(); });
+		////	Speed.Execute(1000, () => { e1 = w.AllChildren("Button", true); });
+		////	Speed.Execute(1000, () => { w.AllChildren(c=> { /*Out(c);*/ return false; }; });
 		////	Speed.Write();
 		////}
 
@@ -1155,13 +1161,35 @@ bbb"", b3
 		////Out(x.GetControlName(c));
 		//Out(x.GetControlName(w));
 
-		var a = Wnd.All.Controls(w);
+		var a = w.AllChildren();
 		foreach(Wnd k in a) {
 			Out("---");
 			Out(k);
-			Out(WindowsFormsControlNames.IsDotNetWindow(k));
+			Out(WindowsFormsControlNames.IsWindowsForms(k));
 			Out(x.GetControlName(k));
 		}
+	}
+
+	static void TestDotNetControls2()
+	{
+		//Wnd w = Wnd.Find("Keyboard*").Child("Caps");
+		//Wnd w = Wnd.Find("Keyboard*");
+		//Wnd w = Wnd.Find("Quick*");
+		Wnd w = Wnd.Find("Free YouTube*").Child("My*");
+		Out(w);
+		//Out(WindowsFormsControlNames.CachedGetControlName(w));
+
+		string s1 = null, s2 = null;
+		var a1 = new Action(() =>
+		{
+			try {
+				using(var x = new WindowsFormsControlNames(w)) { s1 = x.GetControlName(w); }
+			} catch { s1 = null; }
+		});
+		var a2 = new Action(() => { s2 = WindowsFormsControlNames.CachedGetControlName(w); });
+
+		Speed.ExecuteMulti(5, 10, a1, a2);
+		OutList(s1, s2);
 	}
 
 	static void TestWildNot()
@@ -1180,7 +1208,7 @@ bbb"", b3
 
 	static void TestWndFind()
 	{
-		Wnd w = Wnd0, c=Wnd0;
+		Wnd w = Wnd0, c = Wnd0;
 		//w = Wnd.Find("", "", "dwm", true);
 		w = Wnd.Find(null, "QM_Editor");
 		//w = Wnd.Find("Quick Macros*");
@@ -1223,25 +1251,21 @@ bbb"", b3
 		//w = Wnd.Find(null, "QM_*", f:e=> { Out(e.w); e.w = Wnd0; e.Stop(); });
 		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass="QM_Code" });
 		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childName="Te&xt" });
-		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childId=2202 });
-		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "Button", childName= "Te&xt" });
-		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "*Edit", childName= "sea" });
-		w = Wnd.Find(null, "", prop: new Wnd.WinProp() { child=new Wnd.ChildDefinition("*ame") });
+		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childId = 2202 });
+		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "Button", childName = "Te&xt" });
+		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "*Edit", childName = "sea" });
+		w = Wnd.Find(null, "", prop: new Wnd.WinProp() { child = new Wnd.ChildDefinition("*ame") });
 		w = Wnd.Find("Free YouTube Downloader", "*.Window.*");
 		//w = Wnd.Find("Keyboard Layout*", "*.Window.*");
-		w = Wnd.Find("?*", prop: new Wnd.WinProp() { x=1, xFromRight=true, y=10 });
-		//w = Wnd.FromXY(100, 100, null, true, true);
+		//w = Wnd.Find("Catkeys -*");
+		//w = Wnd.Find("", prop: new Wnd.WinProp() { x=Screen_.Width-1, y=Screen_.Height-10 });
+		//w = Wnd.Find("", prop: new Wnd.WinProp() { x=0.5, y=1.1 });
+		//w = Wnd.FromXY(1532, 1224, null);
 		//w = Wnd.FromXY(0.1, 0.1, null, true, true);
-
-		//for(int i=0; i<30; i++) {
-		//	Wait(1);
-		//	Out(Wnd.FromMouse(false));
-		//}
 
 		//Speed.ExecuteMulti(5, 100, () => { Wnd.FindByClassName("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
 
-		w = Wnd.FindByClassName("QM_Editor");
-		//w = Wnd.Find("Catkeys -*");
+		//w = Wnd.FindByClassName("QM_Editor");
 		Out(w);
 		//return;
 
@@ -1268,11 +1292,17 @@ bbb"", b3
 		//c = w.Child(null, "", prop: new Wnd.ChildProp() { child = new Wnd.ChildDefinition(Wnd.ChildFlag.DirectChild, "Reg*") });
 		//c = w.Child("Regex*", "Button");
 		//c = w.Child(null, "", prop: new Wnd.ChildProp() { wfName = "textBoxUrl" });
-		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1});
-		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1276});
-		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1, xFromRight=true });
-		c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=w.RectClient.Width-1 });
-		//c = w.Child(null, "QM_*", prop:new Wnd.ChildProp() { y=0.02, yFromBottom=true });
+		//try {
+		//	Wnd w = Wnd.Find("Keyboard*");
+		//	Wnd c = w.Child("", prop: new Wnd.ChildProp() { wfName = "ckControl" });
+		//	Out(c);
+		//} catch(CatkeysException e) {
+		//	Out(e);
+		//}
+		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1 });
+		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1276});
+		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=w.ClientWidth-1 });
+		//c = w.Child(null, "QM_*", prop:new Wnd.ChildProp() { y=0.99 });
 		//c = w.Child("Find &Previous");
 		//c = w.Child("Find Previous");
 
@@ -1286,7 +1316,7 @@ bbb"", b3
 		var a4 = new Action(() => { c4 = w.Child(Wnd.ChildFlag.ControlText, "sea", "*Edit"); });
 		var a5 = new Action(() => { c5 = w.Child("Regex*"); });
 		var a6 = new Action(() => { c6 = w.Child("Regex*", "Button"); });
-		var a7 = new Action(() => { c7 = w.Child("Regex*", id:1028); });
+		var a7 = new Action(() => { c7 = w.Child("Regex*", id: 1028); });
 		Speed.ExecuteMulti(5, 100, a1, a2, a3, a4, a5, a6, a7);
 		Output.WriteListSep("\n", c1, c2, c3, c4, c5, c6, c7);
 
@@ -1307,7 +1337,7 @@ bbb"", b3
 		//TestProp(new Wnd.WinProp() { owner = Wnd0, exStyle = 8 });
 		//TestProp(new Wnd.WinProp(owner: Wnd0, style: 8));
 
-		//var a1 = new Action(() => { Wnd.All.Windows(e => { }); });
+		//var a1 = new Action(() => { Wnd.AllWindows(e => { }); });
 		//var a2 = new Action(() => { var a = Wnd.All.ThreadWindows(7192); /*Out(a == null); Out(a.Count);*/ });
 		////a2();
 
@@ -1323,21 +1353,288 @@ bbb"", b3
 		//var a5 = new Action(() => { string cn = w.ClassName; });
 		//var a6 = new Action(() => { uint tid = w.ThreadId; });
 		//var a7 = new Action(() => { Wnd own = w.Owner; });
-		//var a8 = new Action(() => { bool clo=w.Cloaked; });
+		//var a8 = new Action(() => { bool clo=w.IsCloaked; });
 
 		//Speed.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7, a8);
+	}
+
+	static void TestWndFromXY()
+	{
+		Wnd w1 = Wnd0, w2 = Wnd0, w3 = Wnd0, w4 = Wnd0, w5 = Wnd0, w6 = Wnd0;
+
+		var a1 = new Action(() => { w1 = Wnd.RawFromXY(Mouse.XY); });
+		var a2 = new Action(() => { w2 = Wnd.FromMouse(); });
+		//var a3 = new Action(() => { w3 = Wnd.FromXY2(Mouse.XY); });
+		//var a4 = new Action(() => { w4 = Wnd.FromXY3(Mouse.XY); });
+
+		for(;;) {
+			Wait(1);
+			if(Mouse.X == 0 && Mouse.Y == 0) break;
+			//a4(); Out(w4); continue;
+			Out("---------------------------");
+			a1(); a2(); //a3(); a4();
+			Speed.ExecuteMulti(3, 1, a1, a2);
+			Out(w1);
+			Out(w2);
+			//Out(w3);
+			//Out(w4);
+		}
+
+	}
+
+	static void TestChildFromXY()
+	{
+		Wnd w1 = Wnd.Find("Options");
+		Out(w1);
+		Out(w1.ChildFromXY(43, 132));
+		Out(w1.ChildFromXY(43, 132, true));
+		Out(w1.ChildFromXY(1265, 1243, false, true));
+		Out(w1.ChildFromXY(1, 1)); //coord not in a child
+		Out(w1.ChildFromXY(43, 932)); //coord outside
+	}
+
+	[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
+	public static extern int InternalGetWindowTextSB(Wnd hWnd, [Out] StringBuilder pString, int cchMaxCount);
+
+	static void TestMemory2(Wnd w)
+	{
+		var sb = new StringBuilder(1000);
+		InternalGetWindowTextSB(w, sb, 1000);
+		sb.Clear();
+		//sb.Length = 0;
+		//sb.Capacity = 0;
+
+	}
+
+	static void TestMemory3(Wnd w)
+	{
+		var sb = new StringBuilder();
+		for(int i = 16; i < 1000000; i *= 2) {
+			sb.Capacity = i;
+			InternalGetWindowTextSB(w, sb, i);
+
+		}
+		string R = sb.ToString();
+		Speed.First();
+		sb.Clear();
+		sb.Length = 0;
+		sb.Capacity = 0;
+		Speed.NextWrite();
+		Out(R);
+	}
+
+	static void TestMemory()
+	{
+		Wnd w = Wnd.Find("", "QM_Editor");
+		Out(w);
+		//Out(w.Name);
+		//Out(w.GetControlText());
+		//return;
+
+		while(Show.TaskDialog("test", style: "OC") == TDResult.OK) {
+			for(int i = 0; i < 1; i++) {
+				TestMemory3(w);
+			}
+			Show.TaskDialog("allocated 2 MB");
+		}
+	}
+
+	static void TestStringPlusConcatInterpolation()
+	{
+		string s;
+		if(Time.Milliseconds > 1000) s = "sjhdkjshdjkshjkdhsjkhdjkshdjkhsjkdhjskhdjksh"; else s = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+		string s1 = null, s2 = null, s3 = null, s4 = null, s5 = null, s6 = null;
+
+		var a1 = new Action(() => { s1 = "<IDLIST:" + s + ">"; });                          //40
+		var a2 = new Action(() => { s2 = string.Concat("<IDLIST:", s, ">"); });             //40
+		var a3 = new Action(() => { s3 = "<IDLIST:" + s + ">" + s + " tail"; });            //125
+		var a4 = new Action(() => { s4 = string.Concat("<IDLIST:", s, ">", s, " tail"); }); //125
+		var a5 = new Action(() => { s5 = $"<IDLIST:{s}>"; });                               //160
+		var a6 = new Action(() => { s6 = $"<IDLIST:{s}>{s} tail"; });                       //220
+
+		Speed.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6);
+		Out(s1);
+		Out(s2);
+		Out(s3);
+		Out(s4);
+		Out(s5);
+		Out(s6);
+
+		//Out(Folders.Virtual.ControlPanelFolder);
+	}
+
+	static void TestArrayAndList(IList<string> a)
+	{
+		Out(a.Count);
+		//for(int)
+	}
+
+	static void TestWndFindAll()
+	{
+		//Out(Wnd.FindAll(0, "*I*"));
+		Wnd w = Wnd.Find("Quick*");
+		Out(w.ChildAll(0, "", "QM*"));
+	}
+
+	static bool Activate(Wnd w)
+	{
+		if(!Wnd.AllowActivate()) return false;
+		Api.SetForegroundWindow(Wnd.ActiveWindow);
+		Api.SetForegroundWindow(Wnd.ActiveWindow);
+		Api.SetForegroundWindow(Wnd.ActiveWindow);
+		Speed.First();
+		if(!Api.SetForegroundWindow(w)) return false;
+		Speed.Next();
+		for(int i = 0; i < 10; i++) { Out(Wnd.ActiveWindow); WaitMS(1); }
+		//WaitMS(100);
+		Speed.Write();
+		if(w.IsActive) return true;
+
+		uint tid = w.ThreadId;
+		if(tid != 0 && tid == Wnd.ActiveWindow.ThreadId && Api.SetForegroundWindow(Wnd.Get.DesktopWindow)) {
+			Api.SetForegroundWindow(w);
+			Wnd t = Wnd.ActiveWindow;
+			Out(t);
+			if(t.ThreadId == tid) return true;
+		}
+
+		return false;
+	}
+
+	static void TestWndActivateFocus()
+	{
+		//Wait(2);
+		//var a = new Api.INPUTKEY[] { new Api.INPUTKEY(65, 0), new Api.INPUTKEY(65, 0, Api.IKFlag.Up), new Api.INPUTKEY(66, 0), new Api.INPUTKEY(66, 0, Api.IKFlag.Up)};
+		//Api.SendInputKey(a);
+		//Out("ok");
+		//return;
+
+		//Thread.CurrentThread.Priority = ThreadPriority.Highest;
+		Wait(2);
+
+		//Out(Wnd.LockActiveWindow(true));
+		//return;
+
+		//Wnd w=Wnd.Find("Quick*");
+		//Wnd w=Wnd.Find("*Notepad");
+		//Wnd w=Wnd.Find("[p]Paint");
+		Wnd w = Wnd.Find("Options");
+		//Wnd w=Wnd.Find(Wnd.Find("Microsoft Excel*").Name.EndsWith_("dictionary.xls") ? "Book1.xls" : "dictionary.xls");
+		Out(w);
+		//Out(w.ActivateRaw());
+		w.Activate();
+		//Out(Api.SetForegroundWindow(Wnd.Get.DesktopWindow));
+		//WaitMS(100);
+		//Out(Api.SetForegroundWindow(w));
+		//Out(Activate(w));
+		//WaitMS(100);
+		Out(Wnd.ActiveWindow);
+
+		Wnd c = w.Child("Show*");
+		c.FocusControl();
+		Out(Wnd.FocusedControl);
+		Out(Wnd.FocusedControlOfThisThread);
+
+		//Show.TaskDialog("a");
+		return;
+		Wait(2);
+		w = Wnd.Find("[p]Notepad");
+		Out(w.ActivateRaw());
+		Out(Wnd.ActiveWindow);
+	}
+
+	static void TestWndMinMaxRes()
+	{
+		//Wnd w = Wnd.Find("Quick*", "QM_Editor", null, true);
+		//Wnd w = Wnd.Find("", "XLMAIN");
+		//Wnd w = Wnd.Find("Book1.xls");
+		Wnd w = Wnd.Find("[p]Dreamweaver");
+		//Wnd w = Wnd.Find("app -*", "wndclass_desked_gsk");
+		Out(w);
+
+		//w.RestoreToNormal();
+		//Wait(1);
+		//w.Maximize();
+		//return;
+
+		w.Activate(); Wait(1); //return;
+
+		w.Minimize();
+		//Out(w.StateMinimized);
+		Out(Wnd.ActiveWindow);
+		Wait(1);
+		w.RestoreMinimized();
+		//Out(w.StateMinimized);
+		Out(Wnd.ActiveWindow);
+
+		//w.Maximize();
+		//w.RestoreToNormal();
+
+		Out("ok");
+	}
+
+	static bool IsVisible(Wnd w)
+	{
+		ThreadError.None();
+		return Api.IsWindowVisible(w) || ThreadError.SetIfWinError();
 	}
 
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
-		TestWndFind();
+		//Script.Option.speed = 10;
+		var w = Wnd.FindByClassName("QM_Editor");
+		//Speed.ExecuteMulti(5, 1, ()=> { Time.AutoDelay(w); });
+		Out(w);
+
+		w = Wnd.Spec.Bottom;
+
+		var a1 = new Action(() => { Api.GetCurrentThreadId(); });
+		bool yes = false;
+		var a2 = new Action(() => { yes = Api.IsWindow(w); });
+		var a3 = new Action(() => { yes = Api.IsWindowVisible(w); });
+		var a4 = new Action(() => { yes = w.Visible; });
+		var a5 = new Action(() => { yes = IsVisible(w); });
+
+		Speed.ExecuteMulti(5, 1, a1, a2, a3, a4, a5);
+
+
+		//ThreadError.Set("Failed to activate window.");
+		ThreadError.Set(5, "Failed to activate window.");
+		//ThreadError.Set(5, "");
+		//ThreadError.Set(5555, "Failed to activate window.");
+
+		Exception e = ThreadError.GetException();
+		//System.ComponentModel.Win32Exception e = ThreadError.Get() as System.ComponentModel.Win32Exception;
+		if(e == null) Out("null");
+		else {
+			Out(e);
+			Out(e.Message);
+			Out(ThreadError.WinErrorCode);
+
+			//try { throw e; } catch(Exception ee) { Out(ee); }
+			//try { ThreadError.ThrowIfError(); } catch(Exception ee) { Out(ee); }
+			//try { IsVisible(w) || ThreadError.ThrowIfError(); } catch(Exception ee) { Out(ee); } //cannot do it
+			try { if(!IsVisible(w)) ThreadError.ThrowIfError(); } catch(Exception ee) { Out(ee); }
+
+		}
+
+		//TestWndMinMaxRes();
+		//TestWndActivateFocus();
+		//TestArrayAndList(new string[] { "one", "two" });
+		//TestArrayAndList(new List<string> { "three", "four", "five" });
+		//TestWndFindAll();
+		//TestWndAll();
+		//TestStringPlusConcatInterpolation();
+		//TestMemory();
+		//TestChildFromXY();
+		//TestWndFromXY();
+		//TestWndFind();
 		//TestWildNot();
 		//TestDotNetControls();
 		//TestProcessMemory();
 		//TestRegexSpeed();
 		//TestStringEmpty("df");
-		//TestWndAll();
 		//TestWildString();
 		//TestProcessUacInfo();
 		//TestProcesses();

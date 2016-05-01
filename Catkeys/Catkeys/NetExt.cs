@@ -57,7 +57,7 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this has one or more flags specified in flagOrFlags.
 		/// It is different from HasFlag, which returns true if this has ALL specified flags.
-		/// Speed: 0.1 mcs. It is several times slower than HasFlag, and 100 times slower than operators & !=0.
+		/// Speed: 0.1 mcs. It is several times slower than HasFlag, and 100 times slower than operators.
 		/// </summary>
 		public static bool HasAny(this Enum t, Enum flagOrFlags)
 		{
@@ -157,5 +157,15 @@ namespace Catkeys
 
 			throw new ArgumentException("screen object type mismatch");
 		}
+
+		/// <summary>
+		/// Gets primary screen width.
+		/// </summary>
+		public static int Width { get { return Api.GetSystemMetrics(Api.SM_CXSCREEN); } }
+		/// <summary>
+		/// Gets primary screen height.
+		/// </summary>
+		public static int Height { get { return Api.GetSystemMetrics(Api.SM_CYSCREEN); } }
+		//public static int Width { get { return Screen.PrimaryScreen.Bounds.Width; } } //faster (gets cached value), but very slow first time, eg 15 ms
 	}
 }

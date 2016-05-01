@@ -188,12 +188,12 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Removes '&' characters from string.
-		/// Replaces "&&" to "&".
-		/// Returns true if s had '&' characters.
+		/// Removes '&amp;' characters from string.
+		/// Replaces "&amp;&amp;" to "&amp;".
+		/// Returns true if s had '&amp;' characters.
 		/// </summary>
 		/// <remarks>
-		/// Character '&' is used to underline next character in displayed text of controls. Two '&' are used to display single '&'.
+		/// Character '&amp;' is used to underline next character in displayed text of controls. Two '&amp;' are used to display single '&amp;'.
 		/// Normally the underline is displayed only when using the keyboard to select dialog controls.
 		/// </remarks>
 		public static bool StringRemoveMnemonicUnderlineAmpersand(ref string s)

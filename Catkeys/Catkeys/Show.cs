@@ -1328,7 +1328,7 @@ namespace Catkeys
 				_dlg = w;
 				break;
 			case TDApi.TDN.DESTROYED:
-				//Out(w.IsWindow); //valid
+				//Out(w.IsValid); //valid
 				e = Destroyed;
 				break;
 			case TDApi.TDN.CREATED:
@@ -1767,14 +1767,14 @@ namespace Catkeys
 			Wnd prog = parent.ChildByClassName("msctls_progress32");
 			prog.Visible = false;
 
-			r = prog.GetRectInClientOf(parent);
+			r = prog.RectInClientOf(parent);
 			r.Inflate(0, (Form.DefaultFont.Height + 9 - r.Height) / 2);
 			if(_editComboHeight != 0) r.Height = _editComboHeight; //combo height, remembered when creating, used when updating
 
 			if(_editType == TDEdit.Multiline) {
 				//as bottom, use the last radio button
 				Wnd rLast = Wnd0;
-				Wnd.All.Controls(e =>
+				parent.AllChildren(e =>
 				{
 					var s = e.w.Name;
 					if(s.Length==2 && s[0]=='.' && s[1]>='1' && s[1]<='4') {
@@ -1785,9 +1785,9 @@ namespace Catkeys
 							e.Stop();
 						}
 					}
-				}, parent, "Button");
+				}, "Button");
 
-				RECT u = rLast.GetRectInClientOf(parent);
+				RECT u = rLast.RectInClientOf(parent);
 				r.bottom = u.bottom;
 			}
 
@@ -1838,7 +1838,7 @@ namespace Catkeys
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
 			_editParent.ZorderTop();
-			_editWnd.Focus();
+			_editWnd.FocusControlOfThisThread();
 
 			//Set events.
 			ButtonClicked += ed => _editText = _editWnd.GetControlText();
@@ -1863,10 +1863,10 @@ namespace Catkeys
 			//OutList(msg, wParam, lParam);
 			switch(msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				_dlg.ChildByClassName("DirectUIHWND", true).Focus();
+				_dlg.ChildByClassName("DirectUIHWND", true).FocusControlOfThisThread();
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				_dlg.ChildByClassName("DirectUIHWND", true).Focus();
+				_dlg.ChildByClassName("DirectUIHWND", true).FocusControlOfThisThread();
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);

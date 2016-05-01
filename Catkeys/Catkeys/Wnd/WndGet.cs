@@ -1,4 +1,4 @@
-﻿//Classes Wnd.Get, Wnd.All and several related functions of Wnd.
+﻿//Class Wnd.Get, several related Wnd functions, Wnd functions to enum/get list of windows.
 
 using System;
 using System.Collections.Generic;
@@ -181,6 +181,14 @@ namespace Catkeys
 
 			/// <summary>
 			/// Gets direct parent of the specified control. It can be its top-level parent window or parent control.
+			/// If w is a top-level window, gets its owner, or returns Wnd0 (0) if it is unowned.
+			/// Calls Api.GetParent().
+			/// Supports Marshal.GetLastWin32Error().
+			/// </summary>
+			public static Wnd DirectParentOrOwner(Wnd w) { ResetLastError(); return Api.GetParent(w); }
+
+			/// <summary>
+			/// Gets direct parent of the specified control. It can be its top-level parent window or parent control.
 			/// Returns Wnd0 (0) if w is a top-level window.
 			/// Supports Marshal.GetLastWin32Error().
 			/// </summary>
@@ -198,18 +206,10 @@ namespace Catkeys
 			static Wnd _wDesktop = Api.GetDesktopWindow();
 
 			/// <summary>
-			/// Gets direct parent of the specified control. It can be its top-level parent window or parent control.
-			/// If w is a top-level window, gets its owner, or returns Wnd0 (0) if it is unowned.
-			/// Calls Api.GetParent().
-			/// Supports Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd DirectParentOrOwner(Wnd w) { ResetLastError(); return Api.GetParent(w); }
-
-			/// <summary>
 			/// Gets the special window that is used like the parent window of all top-level windows.
 			/// Calls Api.GetDesktopWindow().
 			/// </summary>
-			public static Wnd DesktopWindow { get { return Api.GetDesktopWindow(); } }
+			public static Wnd DesktopWindow { get { return _wDesktop; } }
 
 			/// <summary>
 			/// Gets a window of the shell process (usually explorer.exe).
@@ -263,7 +263,7 @@ namespace Catkeys
 					if(skipMinimized && w.StateMinimized) continue;
 
 					if(WinVer >= Win10) {
-						if(w.Cloaked) {
+						if(w.IsCloaked) {
 							if(!allDesktops) continue;
 							if((exStyle & Api.WS_EX_NOREDIRECTIONBITMAP) != 0) { //probably a store app
 								switch(w.ClassNameIsAny("Windows.UI.Core.CoreWindow|ApplicationFrameWindow")) {
@@ -271,7 +271,7 @@ namespace Catkeys
 								case 2: if(_WindowsStoreAppFrameChild(w).Is0) continue; break;
 								}
 							}
-                        }
+						}
 					} else if(WinVer >= Win8_0) {
 						if((exStyle & Api.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Api.WS_CAPTION)) {
 							if(!likeAltTab && (exStyle & Api.WS_EX_TOPMOST) != 0) continue; //skip store apps
@@ -319,7 +319,7 @@ namespace Catkeys
 				for(;;) {
 					c = Api.FindWindowEx(Wnd0, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
 					if(c.Is0) break;
-					if(c.Cloaked) return c; //else probably it is an unrelated window
+					if(c.IsCloaked) return c; //else probably it is an unrelated window
 				}
 
 				retry = true;
@@ -336,222 +336,223 @@ namespace Catkeys
 
 		}
 
+		#region enum/get top-level windows
+
 		/// <summary>
-		/// Static functions to get all windows or controls that match specified properties.
+		/// Gets list of top-level windows.
+		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Uses Api.EnumWindows().
+		/// By default the list elements are sorted to match the Z order.
 		/// </summary>
-		//[DebuggerStepThrough]
-		public static class All
+		/// <param name="className">If not null/"", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
+		/// <param name="onlyVisible">Need only visible windows.</param>
+		/// <param name="sortFirstVisible">Place all list elements of hidden windows at the end of the returned list, even if the hidden windows are before some visible windows in the Z order.</param>
+		public static List<Wnd> AllWindows(WildStringI className = null, bool onlyVisible = false, bool sortFirstVisible = false)
 		{
-			#region top-level windows
+			List<Wnd> a = new List<Wnd>(), aHidden = null;
+			if(onlyVisible) sortFirstVisible = false;
 
-			/// <summary>
-			/// Gets list of top-level windows.
-			/// Uses Api.EnumWindows().
-			/// By default the list elements are sorted to match the Z order, but it may be not true if sortFirstVisible is true.
-			/// </summary>
-			/// <param name="className">If not null/"", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
-			/// <param name="onlyVisible">Need only visible windows.</param>
-			/// <param name="sortFirstVisible">Place all list elements of hidden windows at the end of the returned list, even if the hidden windows are before some visible windows in the Z order.</param>
-			public static List<Wnd> Windows(WildStringI className = null, bool onlyVisible = false, bool sortFirstVisible = false)
+			AllWindows(e =>
 			{
-				List<Wnd> a = null, aHidden = null;
-				if(onlyVisible) sortFirstVisible = false;
-
-				Windows(e =>
-				{
-					if(sortFirstVisible && !e.w.Visible) {
-						if(aHidden == null) aHidden = new List<Wnd>(32);
-						aHidden.Add(e.w);
-					} else {
-						if(a == null) a = new List<Wnd>(32);
-						a.Add(e.w);
-					}
-				}, className, onlyVisible);
-
-				if(aHidden != null) a.AddRange(aHidden);
-				return a;
-
-				//info: tried to add a flag to skip tooltips, IME, MSCTFIME UI. But for it need to get class. It is slow. Other ways are unreliable and also make slower. Only the onlyVisible flag is really effective.
-			}
-
-			/// <summary>
-			/// Calls callback function for each top-level window.
-			/// Uses Api.EnumWindows().
-			/// </summary>
-			/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
-			/// <param name="className">If not null/""/"*", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
-			/// <param name="onlyVisible">Need only visible windows.</param>
-			public static void Windows(Action<CallbackArgs> f, WildStringI className = null, bool onlyVisible = false)
-			{
-				var e = new CallbackArgs();
-
-				Api.EnumWindows((w, param) =>
-				{
-					if(onlyVisible && !w.Visible) return 1;
-					if(className != null && !w.ClassNameIs(className)) return 1;
-					e.w = w; f(e);
-					return e.stop ? 0 : 1;
-				}, Zero);
-			}
-
-			/// <summary>
-			/// Gets list of top-level windows of current thread or another thread.
-			/// Uses Api.EnumThreadWindows().
-			/// </summary>
-			/// <param name="threadId">Unmanaged thread id. If 0, gets windows of current thread.</param>
-			/// <param name="className">If not null/""/"*", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
-			/// <param name="onlyVisible">Need only visible windows.</param>
-			public static List<Wnd> ThreadWindows(uint threadId = 0, WildStringI className = null, bool onlyVisible = false)
-			{
-				if(threadId == 0) threadId = Api.GetCurrentThreadId();
-				List<Wnd> a = null;
-
-				Api.EnumThreadWindows(threadId, (w, param) =>
-				{
-					if(onlyVisible && !w.Visible) return 1;
-					if(className != null && !w.ClassNameIs(className)) return 1;
-					if(a == null) a = new List<Wnd>();
-					a.Add(w);
-					return 1;
-				}, 0);
-
-				return a;
-
-				//speed: ~40% of EnumWindows time, tested with a foreign thread with 30 windows.
-			}
-
-			#endregion
-
-			#region controls
-
-			/// <summary>
-			/// Gets list of child controls of a window.
-			/// Uses Api.EnumChildWindows().
-			/// </summary>
-			/// <param name="w">The top-level window or control whose child controls you need.</param>
-			/// <param name="className">If not null/"", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
-			/// <param name="directChild">Need only direct children, not grandchildren.</param>
-			/// <param name="onlyVisible">Need only visible controls.</param>
-			/// <param name="sortFirstVisible">Place all list elements of hidden controls at the end of the returned list.</param>
-			public static List<Wnd> Controls(Wnd w, WildStringI className = null, bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
-			{
-				List<Wnd> a = null, aHidden=null;
-				if(onlyVisible) sortFirstVisible = false;
-
-				Controls(e =>
-				{
-					if(sortFirstVisible && !e.w.Visible) {
-						if(aHidden == null) aHidden = new List<Wnd>();
-						aHidden.Add(e.w);
-					} else {
-						if(a == null) a = new List<Wnd>();
-						a.Add(e.w);
-					}
-				}, w, className, directChild, onlyVisible);
-
-				if(aHidden != null) a.AddRange(aHidden);
-				return a;
-
-				//tested: using a non-anonymous callback function does not make faster.
-			}
-
-			/// <summary>
-			/// Calls callback function for each child control of a window.
-			/// Uses Api.EnumChildWindows().
-			/// </summary>
-			/// <param name="f">Lambda etc callback function to call for each matching control. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
-			/// <param name="w">The top-level window or control whose child controls you need.</param>
-			/// <param name="className">If not null/""/"*", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
-			/// <param name="directChild">Need only direct children, not grandchildren.</param>
-			/// <param name="onlyVisible">Need only visible controls.</param>
-			public static void Controls(Action<CallbackArgs> f, Wnd w, WildStringI className = null, bool directChild = false, bool onlyVisible = false)
-			{
-				var e = new CallbackArgs();
-
-				Api.EnumChildWindows(w, (c, param) =>
-				{
-					if(onlyVisible && !c.Visible) return 1;
-					if(directChild && c.DirectParentOrOwner != w) return 1;
-					if(className != null && !c.ClassNameIs(className)) return 1;
-					e.w = c; f(e);
-					return e.stop ? 0 : 1;
-				}, Zero);
-			}
-
-			//Better don't need this.
-			///// <summary>
-			///// Gets list of direct child controls of a window.
-			///// Uses Get.FirstChild and Get.NextSibling. It is faster than Api.EnumChildWindows.
-			///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
-			///// </summary>
-			///// <param name="w">The top-level window or control whose child controls you need.</param>
-			///// <param name="className">If not null/"", gets only controls of this class. Case-insensitive, wildcard (uses String.Like_()).</param>
-			//public static List<Wnd> DirectChildControlsFastUnsafe(Wnd hwnd, string className = null)
-			//{
-			//	var wild = _GetWildcard(className);
-			//	List<Wnd> a = null;
-			//	for(Wnd c = Get.FirstChild(hwnd); !c.Is0; c = Get.NextSibling(c)) {
-			//		if(wild != null && !c._ClassNameIs(wild)) continue;
-			//		if(a == null) a = new List<Wnd>();
-			//		a.Add(c);
-			//	}
-			//	return a;
-			//}
-
-			//Cannot use this because need a callback function. Unless we at first get all and store in an array (similar speed).
-			//public static IEnumerable<Wnd> Controls(Wnd hwnd)
-			//{
-			//	Api.EnumChildWindows(hwnd, (t, param)=>
-			//	{
-			//		yield return t; //error, yield cannot be in an anonymous method etc
-			//		return 1;
-			//	}, Zero);
-			//}
-
-			#endregion
-
-			#region main windows
-
-			/// <summary>
-			/// Get windows that have taskbar button and/or are included in the Alt+Tab sequence.
-			/// Uses Get.NextMainWindow().
-			/// </summary>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
-			/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
-			public static List<Wnd> MainWindows(bool allDesktops = false)
-			{
-				List<Wnd> a = null;
-
-				MainWindows(e =>
-				{
-					if(a == null) a = new List<Wnd>(32);
+				if(sortFirstVisible && !e.w.Visible) {
+					if(aHidden == null) aHidden = new List<Wnd>(className == null ? 256 : 8);
+					aHidden.Add(e.w);
+				} else {
 					a.Add(e.w);
-				}, allDesktops: allDesktops);
-
-				return a;
-			}
-
-			/// <summary>
-			/// Calls callback function for each window that has taskbar button and/or is included in the Alt+Tab sequence.
-			/// Uses Get.NextMainWindow().
-			/// </summary>
-			/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
-			/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
-			public static void MainWindows(Action<CallbackArgs> f, bool allDesktops = false)
-			{
-				var e = new CallbackArgs();
-
-				for(Wnd w = Wnd0; ;) {
-					w = Get.NextMainWindow(w, allDesktops: allDesktops);
-					if(w.Is0) break;
-					e.w = w; f(e);
-					if(e.stop) break;
 				}
-			}
+			}, className, onlyVisible);
 
-			#endregion
+			if(aHidden != null) a.AddRange(aHidden);
+			return a;
+
+			//info: tried to add a flag to skip tooltips, IME, MSCTFIME UI. But for it need to get class. It is slow. Other ways are unreliable and also make slower. Only the onlyVisible flag is really effective.
 		}
+
+		/// <summary>
+		/// Calls callback function for each window.
+		/// Uses Api.EnumWindows().
+		/// </summary>
+		/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
+		/// <param name="className">If not null/""/"*", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
+		/// <param name="onlyVisible">Need only visible windows.</param>
+		public static void AllWindows(Action<CallbackArgs> f, WildStringI className = null, bool onlyVisible = false)
+		{
+			var e = new CallbackArgs();
+
+			Api.EnumWindows((w, param) =>
+			{
+				if(onlyVisible && !w.Visible) return 1;
+				if(className != null && !w.ClassNameIs(className)) return 1;
+				e.w = w; f(e);
+				return e.stop ? 0 : 1;
+			}, Zero);
+		}
+
+		//Better don't use this.
+		//Why tried to use this? Because once one IME window was visible. IME windows are zero-size, disabled. Tested only on Win10.
+		//bool _HiddenOrZeroSize
+		//{
+		//	get
+		//	{
+		//		if(!Visible) return true;
+		//		RECT r; if(!Api.GetWindowRect(this, out r)) return true;
+		//		return r.left == 0 && r.top == 0 && r.right == 0 && r.bottom == 0;
+		//	}
+		//}
+
+		/// <summary>
+		/// Gets list of top-level windows of current thread or another thread.
+		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Uses Api.EnumThreadWindows().
+		/// </summary>
+		/// <param name="threadId">Unmanaged thread id. If 0, gets windows of current thread.</param>
+		/// <param name="className">If not null/""/"*", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
+		/// <param name="onlyVisible">Need only visible windows.</param>
+		public static List<Wnd> ThreadWindows(uint threadId = 0, WildStringI className = null, bool onlyVisible = false)
+		{
+			if(threadId == 0) threadId = Api.GetCurrentThreadId();
+			var a = new List<Wnd>();
+
+			Api.EnumThreadWindows(threadId, (w, param) =>
+			{
+				if(onlyVisible && !w.Visible) return 1;
+				if(className != null && !w.ClassNameIs(className)) return 1;
+				a.Add(w);
+				return 1;
+			}, 0);
+
+			return a;
+
+			//speed: ~40% of EnumWindows time, tested with a foreign thread with 30 windows.
+		}
+
+		#endregion
+
+		#region enum/get controls
+
+		/// <summary>
+		/// Gets list of child controls.
+		/// Returns list containing 0 or more elements (control handles as Wnd).
+		/// Uses Api.EnumChildWindows().
+		/// </summary>
+		/// <param name="className">If not null/"", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
+		/// <param name="directChild">Need only direct children, not grandchildren.</param>
+		/// <param name="onlyVisible">Need only visible controls.</param>
+		/// <param name="sortFirstVisible">Place all list elements of hidden controls at the end of the returned list.</param>
+		public List<Wnd> AllChildren(WildStringI className = null, bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
+		{
+			List<Wnd> a = new List<Wnd>(), aHidden = null;
+			if(onlyVisible) sortFirstVisible = false;
+
+			AllChildren(e =>
+			{
+				if(sortFirstVisible && !e.w.Visible) {
+					if(aHidden == null) aHidden = new List<Wnd>();
+					aHidden.Add(e.w);
+				} else {
+					a.Add(e.w);
+				}
+			}, className, directChild, onlyVisible);
+
+			if(aHidden != null) a.AddRange(aHidden);
+			return a;
+
+			//tested: using a non-anonymous callback function does not make faster.
+		}
+
+		/// <summary>
+		/// Calls callback function for each child control.
+		/// Uses Api.EnumChildWindows().
+		/// </summary>
+		/// <param name="f">Lambda etc callback function to call for each matching control. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
+		/// <param name="className">If not null/""/"*", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
+		/// <param name="directChild">Need only direct children, not grandchildren.</param>
+		/// <param name="onlyVisible">Need only visible controls.</param>
+		public void AllChildren(Action<CallbackArgs> f, WildStringI className = null, bool directChild = false, bool onlyVisible = false)
+		{
+			var e = new CallbackArgs();
+			Wnd w = this;
+
+			Api.EnumChildWindows(this, (c, param) =>
+			{
+				if(onlyVisible && !c.Visible) return 1;
+				if(directChild && c.DirectParentOrOwner != w) return 1;
+				if(className != null && !c.ClassNameIs(className)) return 1;
+				e.w = c; f(e);
+				return e.stop ? 0 : 1;
+			}, Zero);
+		}
+
+		//Better don't use this.
+		///// <summary>
+		///// Gets list of direct child controls of a window.
+		///// Uses Get.FirstChild and Get.NextSibling. It is faster than Api.EnumChildWindows.
+		///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
+		///// </summary>
+		//public static List<Wnd> DirectChildControlsFastUnsafe(string className = null)
+		//{
+		//	var wild = _GetWildcard(className);
+		//	var a = new List<Wnd>();
+		//	for(Wnd c = Get.FirstChild(this); !c.Is0; c = Get.NextSibling(c)) {
+		//		if(wild != null && !c._ClassNameIs(wild)) continue;
+		//		a.Add(c);
+		//	}
+		//	return a;
+		//}
+
+		//Cannot use this because need a callback function. Unless we at first get all and store in an array (similar speed).
+		//public static IEnumerable<Wnd> AllChildren(Wnd hwnd)
+		//{
+		//	Api.EnumChildWindows(hwnd, (t, param)=>
+		//	{
+		//		yield return t; //error, yield cannot be in an anonymous method etc
+		//		return 1;
+		//	}, Zero);
+		//}
+
+		#endregion
+
+		#region enum/get main windows
+
+		/// <summary>
+		/// Get windows that have taskbar button and/or are included in the Alt+Tab sequence.
+		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Uses Get.NextMainWindow().
+		/// </summary>
+		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
+		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
+		public static List<Wnd> MainWindows(bool allDesktops = false)
+		{
+			List<Wnd> a = new List<Wnd>();
+
+			MainWindows(e =>
+			{
+				a.Add(e.w);
+			}, allDesktops: allDesktops);
+
+			return a;
+		}
+
+		/// <summary>
+		/// Calls callback function for each window that has taskbar button and/or is included in the Alt+Tab sequence.
+		/// Uses Get.NextMainWindow().
+		/// </summary>
+		/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
+		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
+		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
+		public static void MainWindows(Action<CallbackArgs> f, bool allDesktops = false)
+		{
+			var e = new CallbackArgs();
+
+			for(Wnd w = Wnd0; ;) {
+				w = Get.NextMainWindow(w, allDesktops: allDesktops);
+				if(w.Is0) break;
+				e.w = w; f(e);
+				if(e.stop) break;
+			}
+		}
+
+		#endregion
 
 		#region util
 

@@ -83,7 +83,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns true if w!=null && w.Value == this.
+		/// Returns true if w!=null and w.Value == this.
 		/// </summary>
 		public bool Equals(Wnd? w)
 		{
@@ -257,16 +257,17 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if the window exists.
 		/// Returns false if the window is destroyed or the handle is 0 or some other invalid or special value.
+		/// Calls Is0 and Api.IsWindow().
 		/// </summary>
-		public bool IsWindow { get { return !Is0 && Api.IsWindow(this); } }
+		public bool IsValid { get { return !Is0 && Api.IsWindow(this); } }
 
 		/// <summary>
-		/// Throws exception if this.Is0==true or this.IsWindow==false.
+		/// Throws exception if this.Is0==true or this.IsValid==false.
 		/// </summary>
 		public void Validate()
 		{
-			if(Is0) throw new CatkeysException("Window handle is 0. Usually it means that previous 'find' function did not find the specified window.");
-			if(!IsWindow) throw new CatkeysException("Invalid window handle. Usually it means that the window is destroyed.");
+			if(Is0) throw new CatkeysException("Window handle is 0. Possibly previous 'find window' function did not find a window with the specified name etc.");
+			if(!IsValid) throw new CatkeysException("Invalid window handle. Possibly the window is closed/destroyed.");
 		}
 
 		/// <summary>
@@ -280,6 +281,15 @@ namespace Catkeys
 			get { ResetLastError(); return Api.IsWindowVisible(this); }
 			//set { if(value != Visible) Api.ShowWindow(this, value ? Api.SW_SHOWNA : Api.SW_HIDE); } //would not hide if the parent window is currently hidden
 			set { ResetLastError(); Api.ShowWindow(this, value ? Api.SW_SHOWNA : Api.SW_HIDE); }
+		}
+
+		/// <summary>
+		/// Private Visible without last error management.
+		/// </summary>
+		bool _Visible
+		{
+			get { return Api.IsWindowVisible(this); }
+			set { Api.ShowWindow(this, value ? Api.SW_SHOWNA : Api.SW_HIDE); }
 		}
 
 		/// <summary>
@@ -317,7 +327,7 @@ namespace Catkeys
 		/// On Windows 7 returns false because there is no "cloaked windows" feature.
 		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
-		public bool Cloaked
+		public bool IsCloaked
 		{
 			get { return CloakedState != 0; }
 		}
@@ -351,14 +361,14 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets or sets normal (not minimized or minimized) state.
+		/// Gets or sets normal (not minimized or maximized) state.
 		/// The 'get' function calls Api.IsIconic and Api.IsZoomed.
 		/// The 'set' function is like RestoreToNormal(), but visually fast, without animation. Calls Api.SetWindowPlacement.
 		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		public bool StateNormal
 		{
-			get { return !(StateMaximized || StateMinimized); }
+			get { return !(StateMaximized || StateMinimized) && Marshal.GetLastWin32Error() == 0; }
 			set { _SetStateFast(value ? Api.SW_SHOWNORMAL : Api.SW_SHOWMAXIMIZED); }
 		}
 
@@ -367,7 +377,7 @@ namespace Catkeys
 		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		/// <param name="state">Must be Api.SW_MINIMIZE, Api.SW_RESTORE (restores to normal/max if minimized), Api.SW_SHOWNORMAL or Api.SW_SHOWMAXIMIZED.</param>
-		public bool _SetState(int state)
+		bool _SetState(int state)
 		{
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 
@@ -378,7 +388,7 @@ namespace Catkeys
 				if(wasMinimized) goto gr;
 				break;
 			case Api.SW_RESTORE:
-				if(!wasMinimized) goto gr;
+				if(!wasMinimized) goto gr; //TODO: && !IsThreadError
 				break;
 			case Api.SW_SHOWNORMAL:
 				if(StateNormal) goto gr;
@@ -453,45 +463,123 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Api.SetWindowPlacement.
+		/// Sets wp.length and calls Api.SetWindowPlacement.
 		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		public bool SetWindowPlacement(ref Api.WINDOWPLACEMENT wp)
 		{
+			wp.length = Api.SizeOf(wp);
 			ResetLastError();
 			return Api.SetWindowPlacement(this, ref wp);
 		}
 
 		void _SetStateActivateWait(int state, bool wasMinimized)
 		{
-			if(!IsOfThisThread) {
-				if(wasMinimized) Activate(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
+			if(IsOfThisThread) return;
+			if(wasMinimized) ActivateRaw(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
+			else if(state == Api.SW_MINIMIZE) WaitForAnActiveWindow();
+		}
 
-				//wait until activates this window (if restoring from minimized) or another window (if minimizing)
-				//TODO: wait. Maybe use Script.Option.speed.
+		/// <summary>
+		/// If not minimized, minimizes.
+		/// Also unhides.
+		/// </summary>
+		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		/// <seealso cref="StateMinimized"/>
+		public void Minimize(bool? useSysCmd = null)
+		{
+			if(!Visible) Visible = true;
+			if(StateMinimized) return;
+			_MinMaxRes(Api.SW_MINIMIZE, useSysCmd);
+		}
 
+		/// <summary>
+		/// If not maximized, maximizes.
+		/// Also unhides.
+		/// </summary>
+		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		/// <seealso cref="StateMaximized"/>
+		public void Maximize(bool? useSysCmd = null)
+		{
+			if(!Visible) Visible = true;
+			if(StateMaximized) return;
+			_MinMaxRes(Api.SW_SHOWMAXIMIZED, useSysCmd);
+		}
+
+		/// <summary>
+		/// If maximized or minimized, makes normal (not min/max).
+		/// Also unhides.
+		/// </summary>
+		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		/// <seealso cref="StateNormal"/>
+		public void RestoreToNormal(bool? useSysCmd = null)
+		{
+			if(!Visible) Visible = true;
+			if(StateNormal) return;
+			_MinMaxRes(Api.SW_SHOWNORMAL, useSysCmd);
+		}
+
+		/// <summary>
+		/// If minimized, restores previous non-minimized state (maximized or normal).
+		/// Also unhides.
+		/// </summary>
+		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		/// <seealso cref="StateMinimized"/>
+		public void RestoreMinimized(bool? useSysCmd = null)
+		{
+			if(!Visible) Visible = true;
+			if(!StateMinimized) return;
+			_MinMaxRes(Api.SW_RESTORE, useSysCmd);
+		}
+
+		void _MinMaxRes(int state, bool? useSysCmd)
+		{
+			Validate();
+
+			//Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
+			uint cmd = 0;
+			if(useSysCmd == null) {
+				uint style = Style;
+				switch(state) {
+				case Api.SW_MINIMIZE: if((style & Api.WS_MINIMIZEBOX) != 0) cmd = Api.SC_MINIMIZE; break;
+				case Api.SW_SHOWMAXIMIZED: if((style & Api.WS_MAXIMIZEBOX) != 0) cmd = Api.SC_MAXIMIZE; break;
+				default: if((style & (Api.WS_MAXIMIZEBOX | Api.WS_MAXIMIZEBOX)) != 0) cmd = Api.SC_RESTORE; break;
+				}
+			} else if(useSysCmd.Value) {
+				switch(state) {
+				case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
+				case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
+				default: cmd = Api.SC_RESTORE; break;
+				}
 			}
+			//Out(cmd);
 
-		}
+			bool ok;
+			if(cmd != 0) {
+				ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
+				//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
+				if(ok && state == Api.SW_SHOWNORMAL && StateMaximized) ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
+				//it seems that don't need _SetStateActivateWait here like for ShowWindow.
+			} else ok = _SetState(state);
 
-		public void Minimize()
-		{
-
-		}
-
-		public void Maximize()
-		{
-
-		}
-
-		public void RestoreToNormal()
-		{
-
-		}
-
-		public void RestoreMinimized()
-		{
-
+			if(!ok) throw new CatkeysException("Failed to minimize, maximize or restore window.");
+			//TODO: auto-delay
 		}
 
 		/// <summary>
@@ -517,37 +605,308 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this window is the foreground window.
 		/// </summary>
-		public bool Active { get { return this == Api.GetForegroundWindow(); } }
+		public bool IsActive { get { return !Is0 && this == Api.GetForegroundWindow(); } }
 
+		/// <summary>
+		/// Activates this window (brings to the foreground).
+		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
+		/// </summary>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails to activate (unlikely).
+		/// </exception>
+		/// <remarks>
+		/// Applies auto-delay.
+		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
+		/// Fails (throws exception) if cannot activate this window, except:
+		///		1. If this is a control, calls FocusControl(), which activates its top-level parent and sets focus to this control.
+		///		2. If this is Wnd.Get.DesktopWindow, just deactivates the currently active window.
+		///		3. When the target application instead activates another window of the same thread.
+		/// </remarks>
+		/// <seealso cref="ActivateRaw"/>
+		/// <seealso cref="IsActive"/>
+		/// <seealso cref="Wnd.ActiveWindow"/>
 		public void Activate()
 		{
-			if(Active) return;
-			Api.SetForegroundWindow(this);
-			//TODO: wait until actually activated etc
+			if(IsControl) { FocusControl(); return; }
+			_Activate(_ActivateFlag.ValidateThrow);
+		}
+
+		[Flags]
+		internal enum _ActivateFlag
+		{
+			ValidateThrow = 1, //call Validate(). Throw if fails to activate.
+			IgnoreIfNoActivateStyleEtc = 2, //don't activate if WS_EX_NOACTIVATE or toolwindow without caption, unless cloaked. Then return true.
+		}
+
+		internal bool _Activate(_ActivateFlag flags)
+		{
+			bool validateThrow = flags.HasFlag(_ActivateFlag.ValidateThrow);
+			if(validateThrow) Validate(); else if(!IsValid) return false;
+
+			bool ofThisThread = IsOfThisThread;
+
+			if(StateMinimized) {
+				RestoreMinimized();
+				if(!ofThisThread) WaitMS(200); //need minimum 20 for Excel
+			}
+			if(!Visible) Visible = true;
+
+			bool R = IsActive, noAct = false;
+
+			if(!R) {
+				if(flags.HasFlag(_ActivateFlag.IgnoreIfNoActivateStyleEtc)) {
+					uint est = ExStyle;
+					if((est & Api.WS_EX_NOACTIVATE) != 0) noAct = true;
+					else if((est & (Api.WS_EX_TOOLWINDOW | Api.WS_EX_APPWINDOW)) == Api.WS_EX_TOOLWINDOW) noAct = !HasStyle(Api.WS_CAPTION);
+					if(noAct && !IsCloaked) return true; //if cloaked, need to activate to uncloak
+				}
+
+				for(int i = 0; i < 3; i++) {
+					bool ok = ActivateRaw();
+
+					if(!ofThisThread) {
+						int speed = get_speed();
+						for(int j = 0; j < 5; j++) {
+							//Out(ActiveWindow);
+							WaitMS(speed / 5 + 2);
+							//Speed.First();
+							SendTimeout(200, 0);
+							//Speed.NextWrite();
+						}
+					}
+
+					if(ok) {
+						Wnd f = ActiveWindow;
+						if(f == this) R = true;
+						else if(this == Get.DesktopWindow) R = f.Is0;
+						else {
+							uint tid = ThreadId; if(tid == 0) break;
+							if(f.ThreadId == tid) {
+								R = Api.SetForegroundWindow(Get.DesktopWindow) && ActivateRaw() && ActiveWindow.ThreadId == tid;
+								//Excel creates a minimized/offscreen window for each workbook opened in that excel process.
+								//These windows just add taskbar buttons. Also it allows to find and activate workbooks.
+								//When you activate such window, Excel instead activates its main window, where it displays all workbooks.
+								//For this reason we would fail (not always, because this may be temporarily active).
+								//Same with PowerPoint. Other Office apps no.
+							}
+						}
+						if(R) break;
+					}
+				}
+			}
+
+			if(R && !ofThisThread && IsCloaked) {
+				R = false;
+				for(int i = 0; i < 40; i++) { WaitMS(50); if(R = !IsCloaked) break; } //when switching Win10 desktops, uncloaks after ~20 ms
+				if(R) WaitMS(800); //need minimum 600 for pixel() and wait C, because of animation while switching Win10 virtual desktops.
+			}
+
+			if(R || noAct) return true;
+			if(validateThrow) throw new CatkeysException("Failed to activate window.");
+			return false;
 		}
 
 		/// <summary>
-		/// Gets the focused (receiving keyboard input) control.
+		/// Low-level version of Activate().
+		/// Just calls AllowActivate(), Api.SetForegroundWindow() and makes sure that it actually worked, but does not check whether it activated exactly this window.
+		/// No exceptions, no auto-delay, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
+		/// Returns false if fails (unlikely).
 		/// </summary>
-		public static Wnd FocusedControl { get { return Api.GetFocus(); } }
-		//TODO: use GetUIThreadInfo etc
+		public bool ActivateRaw()
+		{
+			if(IsActive) return true;
+
+			bool canAct = AllowActivate();
+
+			if(!Api.SetForegroundWindow(this)) {
+				if(!canAct || !IsValid) return false;
+				//It happens when foreground process called LockSetForegroundWindow.
+				//Although AllowSetForegroundWindow returns true, SetForegroundWindow fails.
+				//It happens only before this process sends keys. Eg after first _Act.SendKey this never happens again.
+				//If it has higher IL (and this process is User), also need _Act.MinRes.
+				_Act.SendKey();
+				if(!Api.SetForegroundWindow(this)) {
+					_Act.MinRes();
+					if(!Api.SetForegroundWindow(this)) return false;
+				}
+			}
+
+			//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
+			if(this == Get.DesktopWindow) return ActiveWindow.Is0;
+			return WaitForAnActiveWindow();
+        }
 
 		/// <summary>
-		/// Returns true if this control is the focused (receives keyboard input) control.
+		/// Waits while there is no active window.
+		/// It sometimes happens after switching the active window (and it is not of this thread), very briefly until Windows makes the new window active after making the old window inactive.
+		/// Don't need to call this after Activate(), ActivateRaw() and most other functions of this library that activate windows.
+		/// Waits max about 200 ms, then returns false if there is no active window.
 		/// </summary>
-		public bool Focused { get { return this == Api.GetFocus(); } }
-		//TODO: use GetUIThreadInfo etc
+		public static bool WaitForAnActiveWindow()
+		{
+			for(int i = 2; i < 20; i++) {
+				if(!ActiveWindow.Is0) return true;
+				WaitMS(i);
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Temporarily enables this process to activate windows with Api.SetForegroundWindow().
+		/// Returns false if fails (unlikely).
+		/// In some cases you may need this function because Windows often disables SetForegroundWindow() to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow() just makes the window's taskbar button flash which indicates that the windows wants attention. More info in SetForegroundWindow() help in MSDN.
+		/// Usually you will not call Api.SetForegroundWindow() directly. It is called by some other functions, for example some API dialog functions.
+		/// Don't need to call this function to enable Activate(), ActivateRaw() and most other functions of this library that activate windows.
+		/// </summary>
+		public static bool AllowActivate()
+		{
+			if(_Act.AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
+
+			_Act.SendKey();
+			if(_Act.AllowSetFore()) return true;
+			//First time fails if the foreground window is of higher IL. Then sending keys does not work.
+
+			_Act.MinRes();
+			return _Act.AllowSetFore();
+
+			//Other possible methods:
+			//1. Instead of key can use attachthreadinput. But it is less reliable, eg works first time only, and does not allow our process to activate later easily. Does not work if foreground window is higher IL.
+			//2. Call allowsetforegroundwindow from a hook from the foreground process. Too dirty. Need 2 native dlls (32/64-bit). Cannot inject if higher IL.
+		}
+		//TODO: test Show.TaskDialog etc, maybe need Wnd.AllowActivate(). Make sure that foreground lock enabled, because VS disables it.
+
+		//Util functions for AllowActivate etc.
+		static class _Act
+		{
+			/// <summary>
+			/// Sends a key (VK_0 up). It allows to activate now.
+			/// Later this process can always activate easily (without key etc). It works even with higher IL windows.
+			/// Don't know why is this behavior. Tested on all OS from XP to 10.
+			/// Does not work if the foreground process has higher UAC IL.
+			/// </summary>
+			internal static void SendKey()
+			{
+				OutDebug("_Act.Allow: need key");
+
+				var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
+				Api.SendInputKey(ref x);
+				//info: works without waiting.
+			}
+
+			/// <summary>
+			/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
+			/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
+			/// </summary>
+			internal static void MinRes()
+			{
+				OutDebug("_Act.Allow: need min/res");
+
+				Wnd t = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW, "#32770", null, Api.WS_POPUP | Api.WS_MINIMIZE | Api.WS_VISIBLE, 0, 0, 0, 0, Wnd0, 0, Zero, 0);
+				//info: When restoring, the window must be visible, or may not work.
+				try {
+					var wp = new Api.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
+					t.SetWindowPlacement(ref wp); //activates t; fast (no animation)
+					SendKey(); //makes so that later our process can always activate
+					AllowSetFore();
+					Api.SetForegroundWindow(Get.DesktopWindow); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
+
+				} finally { Api.DestroyWindow(t); }
+			}
+
+			/// <summary>
+			/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
+			/// </summary>
+			internal static bool AllowSetFore() { return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()); }
+		}
+
+		/// <summary>
+		/// Calls Api.LockSetForegroundWindow(), which temporarily prevents other applications from activating windows easily with SetForegroundWindow().
+		/// If Api.LockSetForegroundWindow() fails, calls AllowActivate() and retries.
+		/// </summary>
+		/// <param name="on">Lock or unlock.</param>
+		public static bool LockActiveWindow(bool on)
+		{
+			uint f = on ? Api.LSFW_LOCK : Api.LSFW_UNLOCK;
+			if(Api.LockSetForegroundWindow(f)) return true;
+			return AllowActivate() && Api.LockSetForegroundWindow(f);
+		}
+
+		static int get_speed() { return 100; } //TODO
 
 		/// <summary>
 		/// Makes this control the focused (receiving keyboard input) control.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Also activetes its top-level parent window.
+		/// This control can belong to any process/thread. To focus controls of this thread usually it's better to use FocusControlOfThisThread(); it is lightweight, no exceptions.
 		/// </summary>
-		public void Focus()
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails to activate parent window.
+		/// 3. When fails to set focus, for example because of UAC.
+		/// </exception>
+		/// <seealso cref="Wnd.FocusedControl"/>
+		public void FocusControl()
 		{
-			ResetLastError();
+			Debug.Assert(!IsOfThisThread);
+			Validate();
+			Wnd wTL = ToplevelParentOrThis;
+			if(wTL != Api.GetForegroundWindow()) wTL._Activate(_ActivateFlag.ValidateThrow);
+
+			uint th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
+			if(th1 == th2) {
+				Api.SetFocus(this);
+				return;
+			}
+
+			bool ok = false;
+			if(Api.AttachThreadInput(th1, th2, true))
+				try {
+					int i, speed = get_speed();
+					for(i = 0; i < 50; i++) {
+						Api.SetFocus(this);
+						if(this == FocusedControl) { ok = true; break; }
+						WaitMS(speed / 20 + 5);
+					}
+				} finally { Api.AttachThreadInput(th1, th2, false); }
+
+			if(!ok) throw new CatkeysException("Failed to set focus.");
+
+			//TODO: auto-delay.
+
+			//note: don't use accSelect because on Win7 it simply calls SetForegroundWindow, which like deactivates parent.
+		}
+
+		/// <summary>
+		/// Makes this control the focused (receiving keyboard input) control.
+		/// This control must belong to this thread, else nothing happens.
+		/// Its top-level parent window should be the active window, else nothing happens.
+		/// Calls Api.SetFocus.
+		/// </summary>
+		public void FocusControlOfThisThread()
+		{
 			Api.SetFocus(this);
 		}
-		//TODO: use GetUIThreadInfo etc
+
+		/// <summary>
+		/// Gets the focused (receiving keyboard input) control of this thread.
+		/// Returns Wnd0 if the top-level parent window is not the active window.
+		/// Calls Api.GetFocus().
+		/// </summary>
+		public static Wnd FocusedControlOfThisThread { get { return Api.GetFocus(); } }
+
+		/// <summary>
+		/// Gets the focused (receiving keyboard input) control of the currently active process/thread.
+		/// Uses Api.GetGUIThreadInfo().
+		/// </summary>
+		public static Wnd FocusedControl
+		{
+			get
+			{
+				var g = new Api.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
+				Api.GetGUIThreadInfo(0, ref g);
+				return g.hwndFocus;
+			}
+		}
 
 		#endregion
 
@@ -1028,25 +1387,46 @@ namespace Catkeys
 		#region rect
 
 		/// <summary>
-		/// Gets window rectangle.
+		/// Gets window rectangle relative to the primary screen.
 		/// If fails (eg window closed), returns empty rectangle.
 		/// Supports Marshal.GetLastWin32Error().
+		/// See also: X, Y, Width, Height, ClientRect, ClientWidth, ClientHeight.
 		/// </summary>
 		public RECT Rect { get { var r = new RECT(); ResetLastError(); Api.GetWindowRect(this, out r); return r; } }
+		/// <summary>
+		/// Returns Rect.left.
+		/// </summary>
+		public int X { get { return Rect.left; } }
+		/// <summary>
+		/// Returns Rect.top.
+		/// </summary>
+		public int Y { get { return Rect.top; } }
+		/// <summary>
+		/// Returns Rect.Width.
+		/// </summary>
+		public int Width { get { return Rect.Width; } }
+		/// <summary>
+		/// Returns Rect.Height.
+		/// </summary>
+		public int Height { get { return Rect.Height; } }
 
 		/// <summary>
 		/// Gets client area rectangle.
 		/// If fails (eg window closed), returns empty rectangle.
+		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
 		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
-		public RECT RectClient { get { var r = new RECT(); ResetLastError(); Api.GetClientRect(this, out r); return r; } }
+		public RECT ClientRect { get { var r = new RECT(); ResetLastError(); Api.GetClientRect(this, out r); return r; } }
+		public int ClientWidth { get { return ClientRect.Width; } }
+		public int ClientHeight { get { return ClientRect.Height; } }
 
 		/// <summary>
-		/// Gets window rectangle relative to the client area of window w.
+		/// Gets rectangle of this window (usually control) relative to the client area of another window (usually the parent window).
 		/// If fails (eg window closed), returns empty rectangle.
 		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
-		public RECT GetRectInClientOf(Wnd w)
+		/// <param name="w">The returned rectangle will be relative to the client area of window w.</param>
+		public RECT RectInClientOf(Wnd w)
 		{
 			var r = Rect;
 			if(r.IsEmpty && Marshal.GetLastWin32Error() != 0) return r;
@@ -1138,7 +1518,7 @@ namespace Catkeys
 		/// If current process has lower UAC integrity level, returns true.
 		/// Else returns false.
 		/// </summary>
-		public bool IsAccessDenied
+		public bool IsUacAccessDenied
 		{
 			get
 			{
@@ -1244,6 +1624,7 @@ namespace Catkeys
 		public string GetControlName()
 		{
 			return _GetName(false);
+			//TODO: consider: bool param to remove &.
 		}
 
 		unsafe string _GetName(bool getControlTextIfEmpty)
@@ -1261,22 +1642,20 @@ namespace Catkeys
 			if(nt < stackSize - 1) return new string(b, 0, nt);
 
 			var sb = new StringBuilder();
-			for(int na = nt; na <= int.MaxValue / 4;) {
+			for(int na = stackSize; na <= int.MaxValue / 4;) {
 				na *= 2;
 				sb.Capacity = na;
-				string R = null;
 				ResetLastError();
 				nt = _Api.InternalGetWindowTextSB(this, sb, na);
-				if(nt <= 0) { if(Marshal.GetLastWin32Error() == 0) R = ""; } else R = sb.ToString(0, Min(nt, sb.Length));
-				sb.Clear();
-				return R;
+				if(nt < na - 1) {
+					if(nt > 0) return sb.ToString();
+					return (Marshal.GetLastWin32Error() == 0) ? "" : null;
+				}
 			}
 
 			return null;
 
 			//speed: 320. Faster than QM2 str.getwintext (with conversion to UTF8 and free()).
-			//TODO: consider: don't call GetControlText.
-			//TODO: consider: remove &.
 		}
 
 		/// <summary>
@@ -1293,7 +1672,6 @@ namespace Catkeys
 		/// </remarks>
 		public unsafe string GetControlText(int timeoutMS = 5000) //TODO: consider: Option.sendMessageTimeoutMS=1000 (min 500, 0 = no timeout). Then let these be properties: ControlText (get, set), ControlName.
 		{
-			string R = null;
 			const int stackSize = 1024;
 			LPARAM na, nt;
 			bool ofThisThread = IsOfThisThread;
@@ -1322,12 +1700,8 @@ namespace Catkeys
 
 			if(ofThisThread) nt = SendSB(Api.WM_GETTEXT, na, sb);
 			else if(!SendTimeoutSB(timeoutMS, out nt, Api.WM_GETTEXT, na, sb)) return null;
-			if(nt < 1) return "";
 
-			R = sb.ToString(0, Min(nt, sb.Length)); //info: sb.Length is Min(na, text.IndexOf('\0'))
-			sb.Clear();
-
-			return R;
+			return sb.ToString(0, Min(nt, sb.Length)); //info: sb.Length is Min(na, text.IndexOf('\0'))
 
 			//speed:
 			//	If of same thread: same speed as getwindowtext. With sendtimeout 6 times slower.
@@ -1371,7 +1745,7 @@ namespace Catkeys
 		/// By default the class names in the list are interpreted as wildcard, case-insensitive (uses String.Like_()).
 		/// Supports Marshal.GetLastWin32Error).
 		/// </summary>
-		public int ClassNameIsAny(StringList classNames) //TODO: test
+		public int ClassNameIsAny(StringList classNames)
 		{
 			string cn = ClassName; if(cn == null) return 0;
 			return cn.Like_(true, classNames.Arr);
@@ -1403,7 +1777,33 @@ namespace Catkeys
 
 		#endregion
 
+		#region close, destroy
 
+		/// <summary>
+		/// Closes the window.
+		/// See also: Destroy().
+		/// </summary>
+		public bool Close()
+		{
+			if(!IsValid) return true;
+			//TODO: implement.
+			return true;
+		}
+
+		/// <summary>
+		/// Destroys the window.
+		/// Calls Api.DestroyWindow() and returns its return value.
+		/// Exception if the window is not of this thread.
+		/// See also: Close().
+		/// </summary>
+		public bool Destroy()
+		{
+			if(!IsValid) return false;
+			if(!IsOfThisThread) throw new CatkeysException("Cannot destroy windows of other threads. Try Close.");
+			return Api.DestroyWindow(this);
+		}
+
+		#endregion
 
 		#region misc
 
@@ -1438,6 +1838,22 @@ namespace Catkeys
 		{
 			Api.SetLastError(1400); //Invalid window handle
 		}
+
+		//This can be used, but not much simpler than calling ATI directly and using try/finally.
+		//internal struct _AttachThreadInput :IDisposable
+		//{
+		//	uint _tid;
+
+		//	public bool Attach(uint tid)
+		//	{
+		//		if(!Api.AttachThreadInput(Api.GetCurrentThreadId(), _tid, true)) return false;
+		//		_tid = tid; return true;
+		//	}
+
+		//	public bool Attach(Wnd w) { return Attach(w.ThreadId); }
+
+		//	public void Dispose() { if(_tid != 0) Api.AttachThreadInput(Api.GetCurrentThreadId(), _tid, false); }
+		//}
 
 		#endregion
 	}

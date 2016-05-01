@@ -292,12 +292,13 @@ namespace Catkeys
 			Marshal.Copy(pidl, ba, 0, (int)n);
 			Marshal.FreeCoTaskMem(pidl);
 
-			var x = new StringBuilder("<idlist:");
-			x.Append(Convert.ToBase64String(ba).TrimEnd('='));
-			x.Append('>');
+			//var x = new StringBuilder("<idlist:");
+			//x.Append(Convert.ToBase64String(ba).TrimEnd('='));
+			//x.Append('>');
+			//return x.ToString();
 
-			return x.ToString();
-		}
+			return "<idlist:" + Convert.ToBase64String(ba).TrimEnd('=') + ">";
+        }
 
 		#endregion
 

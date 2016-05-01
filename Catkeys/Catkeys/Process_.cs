@@ -41,7 +41,7 @@ namespace Catkeys
 					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
 
 					bool getNormal = fullPath || unDOS; //getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\SysWOW64\notepad.exe" and there is no API to convert to normal
-					var sb = new StringBuilder(300); uint size = 300;
+					uint size = 300; var sb = new StringBuilder((int)size);
 					if(QueryFullProcessImageNameW(ph, !getNormal, sb, ref size)) {
 						R = sb.ToString();
 
@@ -161,13 +161,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns list of process id of all processes whose names match processName.
-		/// Returns null if there are no matching processes.
+		/// Returns empty list if there are no matching processes.
 		/// </summary>
 		/// <param name="processName">Process name. String by default is interpreted as wildcard, case-insensitive.</param>
 		/// <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
 		public static List<uint> GetProcessesByName(WildStringI processName, bool fullPath = false)
 		{
-			List<uint> a = null;
+			List<uint> a = new List<uint>();
 			EnumProcesses(p =>
 			{
 				string s;
@@ -177,7 +177,6 @@ namespace Catkeys
 				} else s = GetFileNameWithoutExe(p.ProcessName);
 
 				if(processName.Match(s)) {
-					if(a == null) a = new List<uint>();
 					a.Add(p.ProcessID);
 				}
 				return false;
@@ -705,11 +704,11 @@ namespace Catkeys
 		{
 			const uint fl = PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE;
 			_hproc = w.Is0 ? new ProcessHandle_(pid, fl) : new ProcessHandle_(w, fl);
-			if(_hproc.Is0) { _Dispose(); throw new CatkeysException("Failed to open process handle"); }
+			if(_hproc.Is0) { _Dispose(); throw new CatkeysException("Failed to open process handle."); }
 
 			if(nBytes != 0) {
 				Mem = VirtualAllocEx(_hproc, Zero, nBytes, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-				if(Mem == Zero) { _Dispose(); throw new CatkeysException("Failed to allocate process memory"); }
+				if(Mem == Zero) { _Dispose(); throw new CatkeysException("Failed to allocate process memory."); }
 			}
 		}
 
@@ -747,7 +746,7 @@ namespace Catkeys
 		public bool WriteUnicodeString(string s, int offsetBytes = 0)
 		{
 			if(Mem == Zero) return false;
-			return WriteProcessMemoryW(_hproc, Mem + offsetBytes, s, (s.Length+1) * 2, Zero);
+			return WriteProcessMemoryW(_hproc, Mem + offsetBytes, s, (s.Length + 1) * 2, Zero);
 		}
 
 		/// <summary>
@@ -760,20 +759,17 @@ namespace Catkeys
 		public bool WriteAnsiString(string s, int offsetBytes = 0)
 		{
 			if(Mem == Zero) return false;
-			return WriteProcessMemoryA(_hproc, Mem + offsetBytes, s, s.Length+1, Zero);
+			return WriteProcessMemoryA(_hproc, Mem + offsetBytes, s, s.Length + 1, Zero);
 		}
 
 		string _ReadString(bool ansiString, int nChars, int offsetBytes)
 		{
 			if(Mem == Zero) return null;
 			var sb = new StringBuilder(nChars);
-			string R = null;
 			bool ok = ansiString
 				? ReadProcessMemoryA(_hproc, Mem + offsetBytes, sb, nChars, Zero)
 				: ReadProcessMemoryW(_hproc, Mem + offsetBytes, sb, nChars * 2, Zero);
-			if(ok) R = sb.ToString();
-			sb.Clear();
-			return R;
+			return ok ? sb.ToString() : null;
 		}
 
 		/// <summary>

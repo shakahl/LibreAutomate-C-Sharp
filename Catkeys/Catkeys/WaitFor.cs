@@ -53,10 +53,29 @@ namespace Catkeys
 
 		public static void WaitMS(int timeMS)
 		{
-			if(timeMS < 0) timeMS = Timeout.Infinite;
+			//if(timeMS < 0) timeMS = Timeout.Infinite;
 			Thread.Sleep(timeMS);
 			//TODO
 		}
+
+		public static void AutoDelay(Wnd w, int minMS, int maxMS = 0)
+		{
+			int ms = Script.Option.speed;
+			if(ms < minMS) ms = minMS;
+			if(maxMS > 0 && ms > maxMS) ms = maxMS;
+			for(int i = 0, t = 0; t < ms;) {
+				i += 2; t += i; if(t > ms) i -= t - ms;
+				//Out(i);
+				WaitMS(i);
+				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = Wnd0;
+			}
+		}
+
+		public static void AutoDelay(Wnd w) { AutoDelay(w, 0, 0); }
+
+		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(Wnd0, minMS, maxMS); }
+
+		public static void AutoDelay() { AutoDelay(Wnd0, 0, 0); }
 	}
 
 	//[DebuggerStepThrough]

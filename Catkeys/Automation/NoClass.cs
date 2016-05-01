@@ -25,5 +25,6 @@ namespace Catkeys.Automation
 	{
 		public static void Keys(params string[] keys_text_keys_text_andSoOn) { Input.Keys(keys_text_keys_text_andSoOn); }
 
+		public static void Wait(double timeS) { Time.Wait(timeS); }
 	}
 }

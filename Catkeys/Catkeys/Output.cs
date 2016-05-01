@@ -44,7 +44,7 @@ namespace Catkeys
 
 		static bool _InitHwndEditor()
 		{
-			if(!_hwndEditor.IsWindow) _hwndEditor = Api.FindWindow("QM_Editor", null); //TODO: Wnd.Find
+			if(!_hwndEditor.IsValid) _hwndEditor = Api.FindWindow("QM_Editor", null);
 			return !_hwndEditor.Is0;
 		}
 

@@ -183,8 +183,7 @@ namespace Catkeys
 		public int Height { get { return bottom - top; } set { bottom = top + value; } }
 
 		/// <summary>
-		/// Returns true if this rectangle contains the specified point:
-		/// return x˃=left && x˂right && y˃=top && y˂bottom;
+		/// Returns true if this rectangle contains the specified point.
 		/// </summary>
 		public bool Contains(int x, int y) { return x >= left && x < right && y >= top && y < bottom; }
 
@@ -336,50 +335,6 @@ namespace Catkeys
 	//}
 
 	/// <summary>
-	/// Stores a string[] and has implicit casts from string[], List˂string˃ and |- delimited string like "one|two|three".
-	/// Can be used for function parameters that accept a list of strings of any of these types.
-	/// The called function then can get the string[] through the Arr property or implicit cast to string[].
-	/// </summary>
-	[DebuggerStepThrough]
-	public class StringList
-	{
-		//For speed and memory usage, better would be struct. Then don't need to alloc new object.
-		//But then cannot assign null, which makes it more difficult/unclear to use.
-		//In this case, easy/clear usage is more important than some spped/memory advantage.
-		//Could inherit from string[] or List<string>, but C# does not allow it. Other tries to make this better failed too.
-		//It's difficult to measure speed because of compiler optimizations etc, but passing a string[] to a function through a parameter of this class is only less than 30% slower than passing directly through a string[] parameter or struct.
-
-		private string[] _a;
-
-		StringList(string[] a) { _a = a; }
-
-		/// <summary>
-		/// Stores the string[] in this variable. Does not copy.
-		/// </summary>
-		public static implicit operator StringList(string[] a) { return a == null ? null : new StringList(a); }
-		/// <summary>
-		/// Converts List˂string˃ to string[].
-		/// </summary>
-		public static implicit operator StringList(List<string> a) { return a == null ? null : new StringList(a.ToArray()); }
-		/// <summary>
-		/// Converts from string like "one|two|three" to string[] {"one", "two", "three"}.
-		/// </summary>
-		public static implicit operator StringList(string s) { return string.IsNullOrEmpty(s) ? null : new StringList(s.Split(_sep)); }
-
-		static char[] _sep = { '|' };
-
-		/// <summary>
-		/// Gets string[] stored in StringList.
-		/// </summary>
-		public static implicit operator string[] (StringList x) { return x == null ? null : x._a; }
-
-		/// <summary>
-		/// Gets string[] stored in StringList.
-		/// </summary>
-		public string[] Arr { get { return this == null ? null : _a; } }
-	}
-
-	/// <summary>
 	/// Stores an x or y coordinate as pixels or as a fraction of some rectangle.
 	/// Can be used for function parameters. Accepts values of type int or double.
 	/// </summary>
@@ -397,67 +352,95 @@ namespace Catkeys
 		public static implicit operator Coord(double fraction) { return new Coord(fraction); }
 
 		/// <summary>
-		/// If isFraction==false, just adds min to coord.
-		/// If isFraction==true, sets isFraction=false and calculates non-fraction coordinate: coord = (int)((max - min) * fraction) + min.
-		/// Examples: if fraction is 0.0, sets coord = min; if fraction is 1.0, sets coord = max; if fraction is 0.5, sets coord = center between min and max.
-		/// Example: <c>Coord x, y... RECT r... x.Normalize(r.left, r.right); y.Normalize(r.top, r.bottom);</c>
+		/// Sets coord = GetNormalized(min, max); sets isFraction = false.
 		/// </summary>
 		public void Normalize(int min, int max)
 		{
-			if(isFraction) {
-				isFraction = false;
-				coord = (int)((max - min) * fraction);
-			}
-			coord += min;
-		}
-
-		static void _NormalizeIn(bool inWindow, Wnd w, Coord x, Coord y, bool xFromRight, bool yFromBottom)
-		{
-			bool fx = x != null && (x.isFraction || xFromRight), fy = y != null && (y.isFraction || yFromBottom);
-			if(fx || fy) {
-				RECT r = inWindow ? w.RectClient : (RECT)Screen.PrimaryScreen.Bounds;
-				if(fx) {
-					x.Normalize(0, r.right);
-					if(xFromRight) x.coord = r.right-x.coord;
-				}
-				if(fy) {
-					y.Normalize(0, r.bottom);
-					if(yFromBottom) y.coord = r.bottom-y.coord;
-				}
-			}
+			coord = GetNormalized(min, max);
+			isFraction = false;
 		}
 
 		/// <summary>
-		/// If x or/and y is not null and is a fractional coordinate, gets w client rectangle and calls Normalize for the fractional coordinates.
+		/// If isFraction == false, returns coord + min.
+		/// Else calculates and returns non-fraction coordinate: (int)((max - min) * fraction) + min.
 		/// </summary>
-		/// <param name="xFromRight">Finally make x relative to the right of the client area: x.coord = r.right-x.coord.</param>
-		/// <param name="yFromBottom">Finally make y relative to the bottom of the client area: y.coord = r.bottom-y.coord.</param>
-		public static void NormalizeInWindowClientArea(Coord x, Coord y, Wnd w, bool xFromRight = false, bool yFromBottom = false)
+		public int GetNormalized(int min, int max)
 		{
-			_NormalizeIn(true, w, x, y, xFromRight, yFromBottom);
+			return (isFraction ? (int)((max - min) * fraction) : coord) + min;
 		}
 
 		/// <summary>
-		/// If x or/and y is not null and is a fractional coordinate, gets primary screen rectangle and calls Normalize for the fractional coordinates.
+		/// If isFraction == false, returns coord.
+		/// Else returns GetNormalized(0, yCoord ? Screen_.Height : Screen_.Width).
 		/// </summary>
-		/// <param name="xFromRight">Finally make x relative to the right of the screen: x.coord = r.right-x.coord.</param>
-		/// <param name="yFromBottom">Finally make y relative to the bottom of the screen: y.coord = r.bottom-y.coord.</param>
-		public static void NormalizeInScreen(Coord x, Coord y, bool xFromRight = false, bool yFromBottom = false)
+		public int GetNormalizedInScreen(bool yCoord)
 		{
-			_NormalizeIn(false, Wnd0, x, y, xFromRight, yFromBottom);
+			return isFraction ? GetNormalized(0, yCoord ? Screen_.Height : Screen_.Width) : coord;
 		}
 
 		/// <summary>
-		/// Returns false if rectangle r does not contain coordinates specified in non-null x y.
-		/// x y must be normalized (not fractional).
-		/// x or/and y can be null; for example returns true if both are null.
+		/// Returns new POINT(x.GetNormalizedInScreen(false), y.GetNormalizedInScreen(true)).
+		/// x and y must not be null.
 		/// </summary>
-		public static bool IsInRect(Coord x, Coord y, RECT r)
+		public static POINT GetNormalizedInScreen(Coord x, Coord y)
 		{
-			if(x != null) { if(x.coord < r.left || x.coord >= r.right) return false; }
-			if(y != null) { if(y.coord < r.top || y.coord >= r.bottom) return false; }
-			return true;
+			return new POINT(x.GetNormalizedInScreen(false), y.GetNormalizedInScreen(true));
 		}
+
+		/// <summary>
+		/// If isFraction == false, returns coord.
+		/// Else returns GetNormalized(0, yCoord ? w.ClientHeight : w.ClientWidth).
+		/// </summary>
+		public int GetNormalizedInWindowClientArea(Wnd w, bool yCoord)
+		{
+			return isFraction ? GetNormalized(0, yCoord ? w.ClientHeight : w.ClientWidth) : coord;
+		}
+
+		/// <summary>
+		/// Returns new POINT(x.GetNormalizedInWindowClientArea(w, false), y.GetNormalizedInWindowClientArea(w, true)).
+		/// x and y must not be null.
+		/// </summary>
+		public static POINT GetNormalizedInWindowClientArea(Coord x, Coord y, Wnd w)
+		{
+			return new POINT(x.GetNormalizedInWindowClientArea(w, false), y.GetNormalizedInWindowClientArea(w, true));
+		}
+
+		///// <summary>
+		///// If x or/and y is not null and is a fractional coordinate, for the fractional coordinates calls Normalize with max = primary screen width or height.
+		///// </summary>
+		//public static void NormalizeInScreen(Coord x, Coord y)
+		//{
+		//	bool fx = x != null && x.isFraction, fy = y != null && y.isFraction;
+		//	if(fx || fy) {
+		//		if(fx) x.Normalize(0, Screen_.Width);
+		//		if(fy) y.Normalize(0, Screen_.Height);
+		//	}
+		//}
+
+		///// <summary>
+		///// If x or/and y is not null and is a fractional coordinate, for the fractional coordinates calls Normalize with max = client area width or height.
+		///// </summary>
+		//public static void NormalizeInWindowClientArea(Coord x, Coord y, Wnd w)
+		//{
+		//	bool fx = x != null && x.isFraction, fy = y != null && y.isFraction;
+		//	if(fx || fy) {
+		//		RECT r = w.ClientRect;
+		//		if(fx) x.Normalize(0, r.right);
+		//		if(fy) y.Normalize(0, r.bottom);
+		//	}
+		//}
+
+		///// <summary>
+		///// Returns false if rectangle r does not contain coordinates specified in non-null x y.
+		///// x y must be normalized (not fractional).
+		///// x or/and y can be null; for example returns true if both are null.
+		///// </summary>
+		//public static bool IsInRect(Coord x, Coord y, RECT r)
+		//{
+		//	if(x != null) { if(x.coord < r.left || x.coord >= r.right) return false; }
+		//	if(y != null) { if(y.coord < r.top || y.coord >= r.bottom) return false; }
+		//	return true;
+		//}
 
 		public override string ToString()
 		{
