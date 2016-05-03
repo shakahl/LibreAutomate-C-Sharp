@@ -721,7 +721,7 @@ namespace Catkeys
 		/// <remarks>This is the preferred constructor when the process has windows. It works with windows of UAC High integrity level when this process is Medium+uiAccess.</remarks>
 		public ProcessMemory(Wnd w, int nBytes)
 		{
-			w.Validate();
+			w.ValidateThrow();
 			_Alloc(0, w, nBytes);
 		}
 

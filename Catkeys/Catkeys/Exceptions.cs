@@ -90,7 +90,7 @@ namespace Catkeys
 				return null;
 			}
 
-			internal string GetErrorString()
+			internal string GetErrorText()
 			{
 				return CreateErrorString(_winError, _catkeysError);
 			}
@@ -118,36 +118,31 @@ namespace Catkeys
 		/// Sets internal variables to 0/null and calls Api.SetLastError(0).
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void None()
+		public static void Clear()
 		{
 			_threadError.None();
 		}
 
 		/// <summary>
-		/// Calls Marshal.GetLastWin32Error(). If it returns not 0, sets thread error (else does not reset it).
-		/// Always returns false, so you can use code like this: <c>ThreadError.None(); return Api.Function(...) || ThreadError.SetIfWinError();</c>.
+		/// Calls Set(Marshal.GetLastWin32Error()).
+		/// Always returns false, so you can use code like this: <c>return Api.Function(...) || ThreadError.SetWinError();</c>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static bool SetIfWinError()
+		public static bool SetWinError()
 		{
-			int winErr = Marshal.GetLastWin32Error();
-			if(winErr != 0) _threadError.Set(winErr, null);
+			_threadError.Set(Marshal.GetLastWin32Error(), null);
 			return false;
 		}
 
 		/// <summary>
-		/// Calls Marshal.GetLastWin32Error(). If it returns not 0, sets thread error (calls Set()) or throws exception, depending on the 'set' argument.
-		/// Always returns false.
+		/// Calls Marshal.GetLastWin32Error() and returns its return value. Sets thread error if it returns not 0.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static bool SetOrThrowIfWinError(bool set)
+		public static int SetIfWinError()
 		{
-			int winErr = Marshal.GetLastWin32Error();
-			if(winErr != 0) {
-				if(set) _threadError.Set(winErr, null);
-				else throw _ThreadError.CreateException(winErr, null);
-			}
-			return false;
+			int e = Marshal.GetLastWin32Error();
+			if(e != 0) _threadError.Set(e, null);
+			return e;
 		}
 
 		/// <summary>
@@ -165,27 +160,6 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Sets thread error (calls Set()) or throws exception, depending on the 'set' argument.
-		/// Always returns false.
-		/// </summary>
-		/// <param name="winErrorCode">A Windows error code, such as those retrieved by Marshal.GetLastWin32Error() or returned by some Windows API functions. If 0, gets last Windows error (Marshal.GetLastWin32Error()); if it returns 0, uses Api.E_FAIL.</param>
-		/// <param name="errorText">Error text.</param>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static bool SetOrThrow(bool set, int winErrorCode, string errorText = null)
-		{
-			if(winErrorCode == 0) winErrorCode = _GetDefaultWinError();
-			if(set) _threadError.Set(winErrorCode, errorText);
-			else throw _ThreadError.CreateException(winErrorCode, errorText);
-			return false;
-		}
-
-		static int _GetDefaultWinError()
-		{
-			int winErr = Marshal.GetLastWin32Error();
-			return winErr != 0 ? winErr : Api.E_FAIL;
-		}
-
-		/// <summary>
 		/// Sets thread error.
 		/// Always returns false.
 		/// </summary>
@@ -197,17 +171,50 @@ namespace Catkeys
 			return false;
 		}
 
+		static int _GetDefaultWinError()
+		{
+			int winErr = Marshal.GetLastWin32Error();
+			return winErr != 0 ? winErr : Api.E_FAIL;
+		}
+
 		/// <summary>
-		/// Sets thread error (calls Set()) or throws exception, depending on the 'set' argument.
+		/// Sets thread error (calls Set()) or throws exception, depending on the 'throwException' argument.
 		/// Always returns false.
 		/// </summary>
+		/// <param name="winErrorCode">A Windows error code, such as those retrieved by Marshal.GetLastWin32Error() or returned by some Windows API functions. If 0, gets last Windows error (Marshal.GetLastWin32Error()); if it returns 0, uses Api.E_FAIL.</param>
 		/// <param name="errorText">Error text.</param>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static bool SetOrThrow(bool set, string errorText)
+		public static bool ThrowOrSet(bool throwException, int winErrorCode = 0, string errorText = null)
+		{
+			if(winErrorCode == 0) winErrorCode = _GetDefaultWinError();
+			if(throwException) throw _ThreadError.CreateException(winErrorCode, errorText);
+			_threadError.Set(winErrorCode, errorText);
+			return false;
+		}
+
+		/// <summary>
+		/// Sets thread error (calls Set()) or throws exception, depending on the 'throwException' argument.
+		/// Always returns false.
+		/// </summary>
+		/// <param name="errorText">Error text. If null, uses "Failed."</param>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static bool ThrowOrSet(bool throwException, string errorText)
 		{
 			if(errorText == null) errorText = "Failed.";
-			if(set) _threadError.Set(0, errorText);
-			else throw _ThreadError.CreateException(0, errorText);
+			if(throwException) throw _ThreadError.CreateException(0, errorText);
+			_threadError.Set(0, errorText);
+			return false;
+		}
+
+		/// <summary>
+		/// Throws exception (see Get()) if there was error.
+		/// Else returns false.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static bool ThrowIfError()
+		{
+			Exception e = _threadError.GetException();
+			if(e != null) throw e;
 			return false;
 		}
 
@@ -224,23 +231,7 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if there was error.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static bool IsError()
-		{
-			return _threadError.IsError();
-		}
-
-		/// <summary>
-		/// Throws exception (see Get()) if there was error.
-		/// Else returns false.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static bool ThrowIfError()
-		{
-			Exception e = _threadError.GetException();
-			if(e != null) throw e;
-			return false;
-		}
+		public static bool IsError { get { return _threadError.IsError(); } }
 
 		/// <summary>
 		/// Gets Windows error code (see Set()).
@@ -253,6 +244,6 @@ namespace Catkeys
 		/// It can be error text as set by Set(), or Windows error description, or both.
 		/// Returns null if there was no error (neither error text nor Windows error code weren't set).
 		/// </summary>
-		public static string ErrorString { get { return _threadError.GetErrorString(); } }
+		public static string ErrorText { get { return _threadError.GetErrorText(); } }
 	}
 }

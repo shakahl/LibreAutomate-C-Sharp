@@ -30,7 +30,7 @@ namespace Catkeys.Tasks
 		static void _AppDomainThread()
 		{
 			//Out(AppDomain.CurrentDomain.FriendlyName);
-			Speed.First();
+			Perf.First();
 
 			//AppDomainSetup domainSetup = new AppDomainSetup()
 			//{
@@ -42,15 +42,15 @@ namespace Catkeys.Tasks
 
 			//var domain=AppDomain.CreateDomain("Compiler", null, domainSetup); //same speed, but need to test later
 			var domain = AppDomain.CreateDomain("Compiler");
-			Speed.Next();
+			Perf.Next();
 			//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe")); //25 ms (5 ms after updating Win 10 to 10576 and performing WinDefender quick scan)
 			domain.DoCallBack(_DomainCallback); //22 ms (1 ms after updating||scanning), but need more testing later
 												//domain.CreateInstance(typeof(Compile).Assembly.FullName, "Catkeys.Compiler"); //too
-												//Speed.Next();
+												//Perf.Next();
 												//domain.DoCallBack(_DomainCallback);
-												//Speed.Next();
+												//Perf.Next();
 												//domain.DoCallBack(_DomainCallback);
-			Speed.Next();
+			Perf.Next();
 			AppDomain.Unload(domain);
 		}
 

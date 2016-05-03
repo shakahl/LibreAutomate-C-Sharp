@@ -167,5 +167,18 @@ namespace Catkeys
 		/// </summary>
 		public static int Height { get { return Api.GetSystemMetrics(Api.SM_CYSCREEN); } }
 		//public static int Width { get { return Screen.PrimaryScreen.Bounds.Width; } } //faster (gets cached value), but very slow first time, eg 15 ms
+
+		/// <summary>
+		/// Gets primary screen work area.
+		/// </summary>
+		public static unsafe RECT WorkArea
+		{
+			get
+			{
+				RECT r;
+				Api.SystemParametersInfo(Api.SPI_GETWORKAREA, 0, (void*)&r, 0);
+				return r;
+			}
+		}
 	}
 }

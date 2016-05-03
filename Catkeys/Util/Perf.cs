@@ -25,7 +25,7 @@ namespace Catkeys
 	/// Easier to use than System.Stopwatch class.
 	/// </summary>
 	[DebuggerStepThrough]
-	public static class Speed
+	public static class Perf
 	{
 		static long[] _a = new long[11];
 		static uint _counter = 0;
@@ -53,7 +53,7 @@ namespace Catkeys
 		/// <summary>
 		/// Formats a string from time values collected by calling First() and Next(), and shows it in the output or console.
 		/// The string contains the number of microseconds of each code execution between calling First() and each Next().
-		/// Example: <c>Speed.First(true); CODE1; Speed.Next(); CODE2; Speed.Next(); Speed.Write(); //speed: timeOfCODE1 timeOfCODE2</c>
+		/// Example: <c>Perf.First(true); CODE1; Perf.Next(); CODE2; Perf.Next(); Perf.Write(); //speed: timeOfCODE1 timeOfCODE2</c>
 		/// </summary>
 		public static void Write()
 		{
@@ -70,7 +70,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Calls Next() and Write().
-		/// You can use <c>Speed.NextWrite();</c> instead of <c>Speed.Next(); Speed.Write();</c>
+		/// You can use <c>Perf.NextWrite();</c> instead of <c>Perf.Next(); Perf.Write();</c>
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void NextWrite() { Next(); Write(); }
@@ -115,9 +115,9 @@ namespace Catkeys
 		//#if UNUSED
 		/// <summary>
 		/// Code speed measurement.
-		/// Similar to Speed.First() etc, but the array is in the instance object, so you can use multiple independent measurements.
+		/// Similar to Perf.First() etc, but the array is in the instance object, so you can use multiple independent measurements.
 		/// </summary>
-		public unsafe struct PerformanceCounter
+		public unsafe struct PerfInstance
 		{
 			fixed long _a[11];
 			uint _counter;

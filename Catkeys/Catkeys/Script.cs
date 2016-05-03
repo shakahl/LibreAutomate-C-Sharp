@@ -20,17 +20,42 @@ namespace Catkeys
 	[DebuggerStepThrough]
 	public class ScriptOptions
 	{
-#pragma warning disable 649
-		public int speed;
-		//TODO: speed must be must be function-specific. Or use two - one function-specific an one thread-specific.
-		//To implement, can use thread-specific Dictionary. When a function sets speed, write to the dictionary: function id, its position in stack, its speed.
+		/// <summary>
+		/// Auto-delay in milliseconds.
+		/// Used by some automation functions.
+		/// </summary>
+		public int speed
+		{
+			get { return _speed; }
+			set { if(value < 0 || value > 60000) throw new ArgumentOutOfRangeException(); _speed = value; }
+		}
+		int _speed;
+		//CONSIDER: use two speeds - function-specific and thread-specific.
+		//To implement function-specific speed, can use thread-specific Dictionary. When a function sets speed, write to the dictionary: function id, its position in stack, its speed.
 		//Then called functions can access caller's speed by walking the stack.
 		//Alternative implementation: set function's speed in its attributes.
 
-		public bool slowMouse, slowKeys, waitMsg;
-		public bool dialogTopmostIfNoOwner, dialogRtlLayout;
-		public object dialogScreenIfNoOwner;
-#pragma warning restore 649
+		/// <summary>
+		/// If dialog owner window not specified, let the dialog be always on top of most other windows.
+		/// Used by Show.TaskDialog and similar functions.
+		/// </summary>
+		public bool dialogTopmostIfNoOwner { get; set; }
+
+		/// <summary>
+		/// Dialog right-to-left layout.
+		/// Used by Show.TaskDialog and similar functions.
+		/// </summary>
+		public bool dialogRtlLayout { get; set; }
+
+		/// <summary>
+		/// Dialog screen.
+		/// Used by Show.TaskDialog and similar functions.
+		/// </summary>
+		public object dialogScreenIfNoOwner { get; set; }
+
+		public bool slowMouse { get; set; }
+		public bool slowKeys { get; set; }
+		public bool waitMsg { get; set; }
 
 		/// <summary>
 		/// Copies all options from ScriptOptions.Default.
@@ -39,18 +64,18 @@ namespace Catkeys
 		/// <summary>
 		/// Copies all options from another ScriptOptions object.
 		/// </summary>
-		/// <param name="o">If null, sets speed = 100 and other members = false or 0.</param>
+		/// <param name="o">If null, sets speed = 100 and other members = false/0/null.</param>
 		public ScriptOptions(ScriptOptions o)
 		{
-			if(o==null) { speed=100; return; }
-			speed=o.speed;
-			slowMouse=o.slowMouse; slowKeys=o.slowKeys; waitMsg=o.waitMsg;
+			if(o == null) { speed = 100; return; }
+			speed = o.speed;
+			slowMouse = o.slowMouse; slowKeys = o.slowKeys; waitMsg = o.waitMsg;
 			dialogTopmostIfNoOwner = o.dialogTopmostIfNoOwner; dialogRtlLayout = o.dialogRtlLayout;
 			dialogScreenIfNoOwner = o.dialogScreenIfNoOwner;
 		}
 
 		/// <summary>
-		/// Creates new object with all the same otion values.
+		/// Creates new object with all the same option values.
 		/// Code <c>var o2=o1.Copy();</c> does the same as <c>var o2=new ScriptOptions(o1);</c>.
 		/// </summary>
 		public ScriptOptions Copy() { return new ScriptOptions(this); }
@@ -59,21 +84,22 @@ namespace Catkeys
 		/// Default options used by:
 		/// 	All threads of current script's appdomain;
 		///		New ScriptOptions objects created like var o=new ScriptOptions();.
-		/// Initially default speed is 100, other options false or 0.
+		/// Initially default speed is 100, other options false/0/null.
 		/// You can modify them in scripts and script templates. Do it in ScriptClass static constructor.
 		/// <example>
 		///	<code>
 		/// 	static ScriptClass() { ScriptOptions.Default.speed=50; } //constructor
 		///		...
-		///		Out(Option.speed); //50, not 100, although Option.speed=50 never called.
-		///		Option.speed=10; //changes only for current thread
+		///		Out(Option.speed); //speed of this thread
+		///		Option.speed=10; //changes only for this thread
 		/// </code>
 		/// </example>
 		/// </summary>
 		public static ScriptOptions Default { get; set; } = new ScriptOptions(null);
 
 		//Equals() - don't need.
-		//ToString() - probably don't need too.
+
+		//CONSIDER:
 		//public override string ToString()
 		//{
 		//	return $"(speed={speed}, slowMouse={slowMouse}, slowKeys={slowKeys}, waitMsg={waitMsg}, ...)";
@@ -83,7 +109,11 @@ namespace Catkeys
 		/// Default title text for standard dialogs (function Show.MessageDialog() etc). Also can be displayed in other places.
 		/// Default value - current appdomain name. In exe it is exe file name like "example.exe", else it is script name.
 		/// </summary>
-		public static string DisplayName { get { return _DisplayName ?? AppDomain.CurrentDomain.FriendlyName; } set { _DisplayName=value; } }
+		public static string DisplayName
+		{
+			get { return _DisplayName ?? AppDomain.CurrentDomain.FriendlyName; }
+			set { _DisplayName = value; }
+		}
 		static string _DisplayName;
 		//consider: use [assembly: AssemblyTitle("...")]. var a=Assembly.GetEntryAssembly(); But exception if appdomain runs with DoCallBack().
 	}
@@ -94,8 +124,22 @@ namespace Catkeys
 	[DebuggerStepThrough]
 	public class Script
 	{
-		[ThreadStatic] static ScriptOptions _opt;
-		public static ScriptOptions Option { get { return _opt ?? (_opt=new ScriptOptions()); } }
+		[ThreadStatic]
+		static ScriptOptions _opt;
+
+		/// <summary>
+		/// Gets ScriptOptions object of this thread.
+		/// </summary>
+		public static ScriptOptions Option { get { return _opt ?? (_opt = new ScriptOptions()); } }
+
+		/// <summary>
+		/// Gets or sets Option.speed (auto-delay and speed for some automation functions, for this thread).
+		/// </summary>
+		public static int Speed
+		{
+			get { var t = _opt; return t != null ? t.speed : ScriptOptions.Default.speed; }
+			set { Option.speed = value; }
+		}
 
 		public void CallFirstMethod()
 		{
@@ -104,8 +148,8 @@ namespace Catkeys
 			//	Out(m.Name);
 			//}
 
-			var a = GetType().GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly);
-			if(a.Length==0) { Out("Info: Script code should be in a non-static method. Example:\nvoid Script() { Out(\"test\"); }"); return; }
+			var a = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+			if(a.Length == 0) { Out("Info: Script code should be in a non-static method. Example:\nvoid Script() { Out(\"test\"); }"); return; }
 
 			_CallMethod(a[0], null);
 
@@ -119,9 +163,9 @@ namespace Catkeys
 		/// <param name="name">Method name. The method must have 0 or 1 parameter.</param>
 		public void CallTriggerMethod(string name, object eventData)
 		{
-			var m = GetType().GetMethod(name, BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly);
+			var m = GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 			//Out(m);
-			if(m==null) { Out($"Error: Method {name} not found."); return; }
+			if(m == null) { Out($"Error: Method {name} not found."); return; }
 			_CallMethod(m, eventData);
 			//object[] a=null; if(parameter!=null) a=new object[1] { parameter };
 			//m.Invoke(this, a);
@@ -130,9 +174,9 @@ namespace Catkeys
 		void _CallMethod(MethodInfo m, object arg)
 		{
 			int n = m.GetParameters().Length;
-			if(n!=0 && n!=1) { Out($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
+			if(n != 0 && n != 1) { Out($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
 			try {
-				m.Invoke(this, n==0 ? null : new object[1] { arg });
+				m.Invoke(this, n == 0 ? null : new object[1] { arg });
 			} catch(Exception e) {
 				Out($"Error: Failed to call method {m.Name}. {e.Message}");
 			}

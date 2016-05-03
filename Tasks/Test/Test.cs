@@ -157,9 +157,9 @@ public partial class Test
 		var a1 = new Action(() => { v = new Ooo(s); });
 
 		for(int i = 0; i < 5; i++) {
-			Speed.First();
-			Speed.Execute(1000, a1);
-			Speed.Write();
+			Perf.First();
+			Perf.Execute(1000, a1);
+			Perf.Write();
 		}
 
 		OutList(v.style, v.x, v.control, v.propValue);
@@ -215,9 +215,9 @@ bbb"", b3
 		a1();
 
 		for(int i = 0; i < 5; i++) {
-			Speed.First();
-			Speed.Execute(1000, a1);
-			Speed.Write();
+			Perf.First();
+			Perf.Execute(1000, a1);
+			Perf.Write();
 		}
 		//OutList(v2.style, v2.x, v2.control, v2.propValue);
 		OutList(v2.style, v2.x, v2.control);
@@ -339,9 +339,9 @@ bbb"", b3
 
 		//var td = new TaskDialogObject("dddd");
 		//Task.Run(() => td.Show());
-		////Speed.First();
+		////Perf.First();
 		////td.ThreadWaitOpen();
-		////Speed.NextWrite();
+		////Perf.NextWrite();
 		//td.ThreadWaitClosed();
 		////Task.Run(() => td.Show());
 		////td.ThreadWaitOpen();
@@ -496,9 +496,9 @@ bbb"", b3
 
 		//d.FlagShowProgressBar = true; d.Timer += ed => ed.obj.Send.Progress(ed.wParam / 100);
 
-		//Speed.First();
+		//Perf.First();
 		TDResult r = d.Show();
-		//Speed.NextWrite();
+		//Perf.NextWrite();
 
 		Out(r.ToString());
 
@@ -638,15 +638,15 @@ bbb"", b3
 		////Out(s2);
 
 		//for(int i=0; i<5; i++) {
-		//	Speed.First();
-		//	Speed.Execute(1000, a1);
-		//	Speed.Execute(1000, a2);
-		//	Speed.Execute(1000, a3);
-		//	Speed.Execute(1000, a4);
-		//	Speed.Execute(1000, a5);
-		//	Speed.Execute(1000, a6);
-		//	Speed.Execute(1000, a7);
-		//	Speed.Write();
+		//	Perf.First();
+		//	Perf.Execute(1000, a1);
+		//	Perf.Execute(1000, a2);
+		//	Perf.Execute(1000, a3);
+		//	Perf.Execute(1000, a4);
+		//	Perf.Execute(1000, a5);
+		//	Perf.Execute(1000, a6);
+		//	Perf.Execute(1000, a7);
+		//	Perf.Write();
 		//}
 
 		//Task.Run(()=> Directory.SetCurrentDirectory("c:\\windows\\system32"));
@@ -682,12 +682,12 @@ bbb"", b3
 
 		////var a1 = new Action(() => { a = Wnd.AllWindows(); });
 		////var a1 = new Action(() => { a = Wnd.AllWindows(null, true); });
-		////var a1 = new Action(() => { a = wy.AllChildren(); });
-		////var a2 = new Action(() => { wy.AllChildren((c, e) => { }); });
+		////var a1 = new Action(() => { a = wy.ChildAllRaw(); });
+		////var a2 = new Action(() => { wy.ChildAllRaw((c, e) => { }); });
 		//var a1 = new Action(() => { a = Wnd.AllWindows(); });
 		//var a2 = new Action(() => { Wnd.AllWindows((w3, e) => { }); });
 
-		////wy.AllChildren((c, e)=> { Out(c); }, null, true); return;
+		////wy.ChildAllRaw((c, e)=> { Out(c); }, null, true); return;
 		////Wnd.AllWindows((c, e)=> { Out(c); }, "QM_*"); return;
 		////Wnd.AllWindows((c, e)=> { Out(c); }, null, true); return;
 		////foreach(Wnd w3 in Wnd.AllWindows(onlyVisible:true)) { Out(w3); }; return;
@@ -703,10 +703,10 @@ bbb"", b3
 		//int n = 10;
 
 		//for(int k = 0; k < 5; k++) {
-		//	Speed.First();
-		//	Speed.Execute(n, a1);
-		//	Speed.Execute(n, a2);
-		//	Speed.Write();
+		//	Perf.First();
+		//	Perf.Execute(n, a1);
+		//	Perf.Execute(n, a2);
+		//	Perf.Write();
 		//}
 		//Out(a.Count);
 
@@ -717,7 +717,7 @@ bbb"", b3
 		//	var b = new Button();
 		//	b.Location = new POINT(0, i * 20);
 		//	b.Size = new SIZE(50, 18);
-		//	f.AllChildren.Add(b);
+		//	f.ChildAllRaw.Add(b);
 		//}
 
 		//f.Click += (o, e) =>
@@ -726,14 +726,14 @@ bbb"", b3
 
 		//	List<Wnd> a = null;
 
-		//	var a1 = new Action(() => { a=hform.AllChildren(); });
-		//	//var a1 = new Action(() => { a=wq.AllChildren(); });
+		//	var a1 = new Action(() => { a=hform.ChildAllRaw(); });
+		//	//var a1 = new Action(() => { a=wq.ChildAllRaw(); });
 		//	//a1();
 
 		//	for(int k=0; k<5; k++) {
-		//		Speed.First();
-		//		Speed.Execute(1000, a1);
-		//		Speed.Write();
+		//		Perf.First();
+		//		Perf.Execute(1000, a1);
+		//		Perf.Write();
 		//	}
 		//	Out(a);
 		//      };
@@ -777,20 +777,20 @@ bbb"", b3
 		////return;
 
 		////Wnd w=(Wnd)1245464;
-		////List<Wnd> e1 = w.AllChildren();
+		////List<Wnd> e1 = w.ChildAllRaw();
 		////Out(e1.Count);
 		//////IEnumerable<Wnd> e= w.DirectChildControlsEnum();
 		////List<Wnd> e2 = w.DirectChildControlsFastUnsafe();
 		////Out(e2.Count);
 
-		////Speed.First(true);
+		////Perf.First(true);
 		////for(int uu=0; uu<5; uu++) {
-		////	Speed.First();
-		////	Speed.Execute(1000, () => { e2 =w.DirectChildControlsFastUnsafe(); });
-		////	Speed.Execute(1000, () => { e1 =w.AllChildren(); });
-		////	Speed.Execute(1000, () => { e1 = w.AllChildren("Button", true); });
-		////	Speed.Execute(1000, () => { w.AllChildren(c=> { /*Out(c);*/ return false; }; });
-		////	Speed.Write();
+		////	Perf.First();
+		////	Perf.Execute(1000, () => { e2 =w.DirectChildControlsFastUnsafe(); });
+		////	Perf.Execute(1000, () => { e1 =w.ChildAllRaw(); });
+		////	Perf.Execute(1000, () => { e1 = w.ChildAllRaw("Button", true); });
+		////	Perf.Execute(1000, () => { w.ChildAllRaw(c=> { /*Out(c);*/ return false; }; });
+		////	Perf.Write();
 		////}
 
 	}
@@ -821,7 +821,7 @@ bbb"", b3
 		//string pn1=null, pn2 = null;
 		//var a11 = new Action(() => { pn1=Process_.GetProcessName(1988); }); //qmserv
 		//var a12 = new Action(() => { pn2=Process_.GetProcessName(7140); }); //firefox
-		//Speed.ExecuteMulti(5, 1000, a11, a12);
+		//Perf.ExecuteMulti(5, 1000, a11, a12);
 		//Out(pn1); Out(pn2);
 		//return;
 
@@ -847,7 +847,7 @@ bbb"", b3
 		a7(); Out(w);
 		a8(); Out(w);
 
-		Speed.ExecuteMulti(5, 1, a1, a2, a3, a4, a5, a6, a7, a8);
+		Perf.ExecuteMulti(5, 1, a1, a2, a3, a4, a5, a6, a7, a8);
 
 		//Wnd w = (Wnd)12582978; //Notepad
 
@@ -861,44 +861,44 @@ bbb"", b3
 		//var a1 = new Action(() => { s = w.ProcessName; });
 		//var a2 = new Action(() => { s = w.ProcessPath; });
 
-		//Speed.ExecuteMulti(5, 1, a1, a2);
+		//Perf.ExecuteMulti(5, 1, a1, a2);
 
 		//Process[] a=null;
 
-		//Speed.First(true);
+		//Perf.First(true);
 		//a = Process.GetProcesses();
-		//Speed.Next();
+		//Perf.Next();
 		//a = Process.GetProcesses();
-		//Speed.Next();
+		//Perf.Next();
 		//a = Process.GetProcesses();
-		//Speed.Next();
+		//Perf.Next();
 		//a = Process.GetProcessesByName("NoTepad");
-		//Speed.Next();
+		//Perf.Next();
 		//a = Process.GetProcessesByName("NoTepad");
-		//Speed.Next();
+		//Perf.Next();
 		//a = Process.GetProcessesByName("NoTepad");
-		//Speed.Next();
-		//Speed.Write();
+		//Perf.Next();
+		//Perf.Write();
 
 		//int pid = a[0].Id;
 
 		//Process u = null;
 		//string name = null;
 
-		//Speed.First();
+		//Perf.First();
 		//u=Process.GetProcessById(pid);
-		//Speed.Next();
+		//Perf.Next();
 		//name = u.ProcessName;
-		//Speed.Next();
+		//Perf.Next();
 		//u=Process.GetProcessById(pid);
-		//Speed.Next();
+		//Perf.Next();
 		//name = u.ProcessName;
-		//Speed.Next();
+		//Perf.Next();
 		//u=Process.GetProcessById(pid);
-		//Speed.Next();
+		//Perf.Next();
 		//name = u.ProcessName;
-		//Speed.Next();
-		//Speed.Write();
+		//Perf.Next();
+		//Perf.Write();
 
 		//Out(name);
 
@@ -920,8 +920,8 @@ bbb"", b3
 		////Out(Api.GetModuleHandle("shell32"));
 		////Out(Api.GetModuleHandle("advapi32"));
 		//bool is1 = false, is2 = false, is3=false;
-		//Speed.SpinCPU(200);
-		//Speed.ExecuteMulti(5, 1, () => { is1 = UacInfo.IsThisProcessAdmin; }, () => { is2 = Api.IsUserAnAdmin(); }, () => { is3 = IsUserAdmin; });
+		//Perf.SpinCPU(200);
+		//Perf.ExecuteMulti(5, 1, () => { is1 = UacInfo.IsThisProcessAdmin; }, () => { is2 = Api.IsUserAnAdmin(); }, () => { is3 = IsUserAdmin; });
 		//OutList(is1, is2, is3);
 		////Out(Api.GetModuleHandle("shell32"));
 		////Out(Api.GetModuleHandle("advapi32"));
@@ -937,7 +937,7 @@ bbb"", b3
 			Process x = null;
 			UacInfo p = null;
 
-			Speed.First();
+			Perf.First();
 			if(i < 0) p = UacInfo.ThisProcess;
 			else {
 				x = a[i];
@@ -945,20 +945,20 @@ bbb"", b3
 				p = UacInfo.GetOfProcess((uint)x.Id);
 			}
 			if(p == null) { Out("failed"); continue; }
-			Speed.Next();
+			Perf.Next();
 			var elev = p.Elevation; if(p.Failed) Out("<><c 0xff>Elevation failed</c>");
-			Speed.Next();
+			Perf.Next();
 			var IL = p.IntegrityLevel; if(p.Failed) Out("<><c 0xff>IntegrityLevel failed</c>");
-			Speed.Next();
+			Perf.Next();
 			var IL2 = p.IntegrityLevelAndUIAccess;
-			Speed.Next();
+			Perf.Next();
 			bool uiaccess = p.IsUIAccess; if(p.Failed) Out("<><c 0xff>IsUIAccess failed</c>");
-			Speed.Next();
+			Perf.Next();
 			bool appcontainer = p.IsAppContainer; if(p.Failed) Out("<><c 0xff>IsAppContainer failed</c>");
-			Speed.Next();
+			Perf.Next();
 			Out($"elev={elev}, uiAccess={uiaccess}, AppContainer={appcontainer}, IL={IL}, IL+uiaccess={IL2}");
 			//Out($"uiAccess={uiaccess}, IL={IL}");
-			//Speed.Write();
+			//Perf.Write();
 		}
 	}
 
@@ -1069,18 +1069,18 @@ bbb"", b3
 
 		////Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
 
-		//if(excep) Speed.First(100, a2, a2);
-		//else Speed.First(100, a1, a2, a2);
+		//if(excep) Perf.First(100, a2, a2);
+		//else Perf.First(100, a1, a2, a2);
 		//for(int i = 0; i < 4; i++) {
-		//	Speed.First();
-		//	if(!excep) Speed.Execute(1000, a1);
-		//	Speed.Execute(1000, a2);
-		//	Speed.Execute(1000, a3);
+		//	Perf.First();
+		//	if(!excep) Perf.Execute(1000, a1);
+		//	Perf.Execute(1000, a2);
+		//	Perf.Execute(1000, a3);
 		//	//for(int j = 0; j < 1000; j++) s.LikeEx_(p);
-		//	//Speed.Next();
+		//	//Perf.Next();
 		//	//for(int j = 0; j < 1000; j++) x.Match(s);
-		//	//Speed.Next();
-		//	Speed.Write();
+		//	//Perf.Next();
+		//	Perf.Write();
 		//}
 
 	}
@@ -1106,7 +1106,7 @@ bbb"", b3
 		a1o(); a2o(); Out(yes);
 		a1oi(); a2oi(); Out(yes);
 
-		Speed.ExecuteMulti(5, 1000, a1, a2, a1i, a2i, a1o, a2o, a1oi, a2oi);
+		Perf.ExecuteMulti(5, 1000, a1, a2, a1i, a2i, a1o, a2o, a1oi, a2oi);
 
 		//compiling: Regex 4500, PCRE 450.
 		//match (invariant, match case): Regex 1200, PCRE 300.
@@ -1161,7 +1161,7 @@ bbb"", b3
 		////Out(x.GetControlName(c));
 		//Out(x.GetControlName(w));
 
-		var a = w.AllChildren();
+		var a = w.ChildAllRaw();
 		foreach(Wnd k in a) {
 			Out("---");
 			Out(k);
@@ -1188,7 +1188,7 @@ bbb"", b3
 		});
 		var a2 = new Action(() => { s2 = WindowsFormsControlNames.CachedGetControlName(w); });
 
-		Speed.ExecuteMulti(5, 10, a1, a2);
+		Perf.ExecuteMulti(5, 10, a1, a2);
 		OutList(s1, s2);
 	}
 
@@ -1263,7 +1263,7 @@ bbb"", b3
 		//w = Wnd.FromXY(1532, 1224, null);
 		//w = Wnd.FromXY(0.1, 0.1, null, true, true);
 
-		//Speed.ExecuteMulti(5, 100, () => { Wnd.FindByClassName("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
+		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindByClassName("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
 
 		//w = Wnd.FindByClassName("QM_Editor");
 		Out(w);
@@ -1317,7 +1317,7 @@ bbb"", b3
 		var a5 = new Action(() => { c5 = w.Child("Regex*"); });
 		var a6 = new Action(() => { c6 = w.Child("Regex*", "Button"); });
 		var a7 = new Action(() => { c7 = w.Child("Regex*", id: 1028); });
-		Speed.ExecuteMulti(5, 100, a1, a2, a3, a4, a5, a6, a7);
+		Perf.ExecuteMulti(5, 100, a1, a2, a3, a4, a5, a6, a7);
 		Output.WriteListSep("\n", c1, c2, c3, c4, c5, c6, c7);
 
 		//Out(Process.GetProcessesByName("qm")[0].MainWindowTitle); //TB INTERNET
@@ -1342,7 +1342,7 @@ bbb"", b3
 		////a2();
 
 		//Out("---");
-		//Speed.ExecuteMulti(5, 1000, a1, a2);
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
 
 		//Wnd w = (Wnd)1705264;
 
@@ -1355,14 +1355,14 @@ bbb"", b3
 		//var a7 = new Action(() => { Wnd own = w.Owner; });
 		//var a8 = new Action(() => { bool clo=w.IsCloaked; });
 
-		//Speed.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7, a8);
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7, a8);
 	}
 
 	static void TestWndFromXY()
 	{
 		Wnd w1 = Wnd0, w2 = Wnd0, w3 = Wnd0, w4 = Wnd0, w5 = Wnd0, w6 = Wnd0;
 
-		var a1 = new Action(() => { w1 = Wnd.RawFromXY(Mouse.XY); });
+		var a1 = new Action(() => { w1 = Wnd.FromXYRaw(Mouse.XY); });
 		var a2 = new Action(() => { w2 = Wnd.FromMouse(); });
 		//var a3 = new Action(() => { w3 = Wnd.FromXY2(Mouse.XY); });
 		//var a4 = new Action(() => { w4 = Wnd.FromXY3(Mouse.XY); });
@@ -1373,7 +1373,7 @@ bbb"", b3
 			//a4(); Out(w4); continue;
 			Out("---------------------------");
 			a1(); a2(); //a3(); a4();
-			Speed.ExecuteMulti(3, 1, a1, a2);
+			Perf.ExecuteMulti(3, 1, a1, a2);
 			Out(w1);
 			Out(w2);
 			//Out(w3);
@@ -1415,11 +1415,11 @@ bbb"", b3
 
 		}
 		string R = sb.ToString();
-		Speed.First();
+		Perf.First();
 		sb.Clear();
 		sb.Length = 0;
 		sb.Capacity = 0;
-		Speed.NextWrite();
+		Perf.NextWrite();
 		Out(R);
 	}
 
@@ -1452,7 +1452,7 @@ bbb"", b3
 		var a5 = new Action(() => { s5 = $"<IDLIST:{s}>"; });                               //160
 		var a6 = new Action(() => { s6 = $"<IDLIST:{s}>{s} tail"; });                       //220
 
-		Speed.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6);
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6);
 		Out(s1);
 		Out(s2);
 		Out(s3);
@@ -1482,12 +1482,12 @@ bbb"", b3
 		Api.SetForegroundWindow(Wnd.ActiveWindow);
 		Api.SetForegroundWindow(Wnd.ActiveWindow);
 		Api.SetForegroundWindow(Wnd.ActiveWindow);
-		Speed.First();
+		Perf.First();
 		if(!Api.SetForegroundWindow(w)) return false;
-		Speed.Next();
+		Perf.Next();
 		for(int i = 0; i < 10; i++) { Out(Wnd.ActiveWindow); WaitMS(1); }
 		//WaitMS(100);
-		Speed.Write();
+		Perf.Write();
 		if(w.IsActive) return true;
 
 		uint tid = w.ThreadId;
@@ -1575,16 +1575,15 @@ bbb"", b3
 
 	static bool IsVisible(Wnd w)
 	{
-		ThreadError.None();
-		return Api.IsWindowVisible(w) || ThreadError.SetIfWinError();
+		ThreadError.Clear();
+		return Api.IsWindowVisible(w) || ThreadError.SetWinError();
 	}
 
-	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
-	static void TestX()
+	static void TestThreadError()
 	{
 		//Script.Option.speed = 10;
 		var w = Wnd.FindByClassName("QM_Editor");
-		//Speed.ExecuteMulti(5, 1, ()=> { Time.AutoDelay(w); });
+		//Perf.ExecuteMulti(5, 1, ()=> { Time.AutoDelay(w); });
 		Out(w);
 
 		w = Wnd.Spec.Bottom;
@@ -1596,7 +1595,7 @@ bbb"", b3
 		var a4 = new Action(() => { yes = w.Visible; });
 		var a5 = new Action(() => { yes = IsVisible(w); });
 
-		Speed.ExecuteMulti(5, 1, a1, a2, a3, a4, a5);
+		Perf.ExecuteMulti(5, 1, a1, a2, a3, a4, a5);
 
 
 		//ThreadError.Set("Failed to activate window.");
@@ -1618,7 +1617,102 @@ bbb"", b3
 			try { if(!IsVisible(w)) ThreadError.ThrowIfError(); } catch(Exception ee) { Out(ee); }
 
 		}
+	}
 
+	static void TestWindowDimensions()
+	{
+		//Wnd w=Wnd.Find("Quick*", "QM_*");
+		Wnd w=Wnd.Find("* Notepad");
+		//Wnd w=Wnd.Find("Registry*");
+		//Wnd w=Wnd.Find(null, "Dwm", hiddenToo:true);
+		Out(w);
+
+
+		//Out(w.Child("", "*Tree*", prop: new Wnd.ChildProp() { y=0.5 }));
+		//Out(Wnd.Find("", "QM_*", prop: new Wnd.WinProp() { x=0.5 }));
+
+		w.Activate();
+		//w.MoveResizeRaw(300, 100, 600, 200);
+		//w.Width = 500;
+		//w.MoveResizeRaw(100, 30, 500, 300);
+		//w.MoveResizeRaw(100, 30, null, null);
+		//w.MoveResizeRaw(null, null, 500, 300);
+		//w.MoveResizeRaw(null, null, 500, null);
+		//w.MoveResizeRaw(null, null, null, 500);
+		//w.MoveResizeRaw(100, null, null, null);
+		//w.MoveResizeRaw(null, 100, null, null);
+		//w.MoveResizeRaw(null, 100, null, 300);
+		//w.MoveRaw(300, 100);
+		//w.MoveRaw(null, 100);
+		//w.ResizeRaw(300, 100);
+		//w.ResizeRaw(null, 100);
+		//w.ResizeRaw(300, null);
+
+		//TODO: test these. Also with fraction, work area.
+		//w.MoveResize(300, 100, 600, 200);
+		//w.MoveResize(100, 30, 500, 300);
+		//w.MoveResize(100, 30, null, null);
+		//w.MoveResize(null, null, 500, 300);
+		//w.MoveResize(null, null, 500, null);
+		//w.MoveResize(null, null, null, 500);
+		//w.MoveResize(100, null, null, null);
+		//w.MoveResize(null, 100, null, null);
+		//w.MoveResize(null, 100, null, 300);
+		//w.Move(500, 100);
+		//w.Move(null, 100);
+		//w.Resize(300, 100);
+		//w.Resize(null, 100);
+		//w.Resize(300, null);
+
+		//w = Wnd0;
+		//Out(w.Height);
+		//Out(w.StateNormal);
+		//Out(ThreadError.ErrorText);
+
+
+		OutList(w.X, w.Y, w.Width, w.Height);
+		OutList(w.ClientWidth, w.ClientHeight);
+
+		//w.X = 500;
+		//w.Y = 500;
+		//w.Width = 500;
+		//w.Height = 500;
+
+		//RECT r = w.Rect;
+		//r.Inflate(20, 20);
+		//w.Rect = r;
+
+		//RECT r = w.ClientRect;
+		//Out(r);
+		//r.Inflate(20, 20);
+		//w.ClientRect = r;
+
+		//w.ClientWidth = 300;
+		//Out(w.ClientWidth);
+		//w.ClientHeight = 300;
+		//Out(w.ClientHeight);
+
+		//RECT rw, rc;
+		//if(w.GetWindowAndClientRectInScreen(out rw, out rc)) OutList(rw, rc);
+	}
+
+	static void TestWndThreadError()
+	{
+		//Wnd w=Wnd.Find("Quick*", "QM_*");
+		Wnd w = Wnd.Find("* Notepad");
+		//Wnd w=Wnd.Find("Registry*");
+		//Wnd w=Wnd.Find(null, "Dwm", hiddenToo:true);
+		Out(w);
+
+	}
+
+	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+	static void TestX()
+	{
+
+		TestWndThreadError();
+		//TestWindowDimensions();
+		//TestThreadError();
 		//TestWndMinMaxRes();
 		//TestWndActivateFocus();
 		//TestArrayAndList(new string[] { "one", "two" });
@@ -1710,7 +1804,7 @@ bbb"", b3
 
 
 
-		//Speed.SpinCPU(); //does nothing
+		//Perf.SpinCPU(); //does nothing
 		long t1 = Stopwatch.GetTimestamp();
 
 		//TODO: instead could simply allocate unmanaged memory with Marshal methods and pass to domains with childDomain.SetData
@@ -1762,7 +1856,7 @@ bbb"", b3
 		//	thr2.Start();
 		//	Thread.Sleep(100);
 		//	if(i%10!=9) continue;
-		//	//Speed.First();
+		//	//Perf.First();
 		//	thr2=null;
 		//	GC.Collect(); //releases a lot. Without it, GC runs when Task Manager shows 100 MB.
 		//				  //GC.Collect(2, GCCollectionMode.Optimized); //collects at 26 MB; without - at 36 MB
@@ -1772,13 +1866,13 @@ bbb"", b3
 
 	static void _AppDomainThread2()
 	{
-		Speed.First();
+		Perf.First();
 		var domain = AppDomain.CreateDomain("Compiler");
-		Speed.Next();
+		Perf.Next();
 		domain.ExecuteAssembly(@"C:\Test\test1.exe");
-		Speed.Next();
+		Perf.Next();
 		AppDomain.Unload(domain);
-		Speed.NextWrite();
+		Perf.NextWrite();
 	}
 
 	static void _AppDomainThread()
@@ -1846,7 +1940,7 @@ bbb"", b3
 		//	_hwndAM=hWnd;
 		//	break;
 		//case WM.CREATE:
-		//	Speed.Next();
+		//	Perf.Next();
 		//	break;
 		//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
 		//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);
@@ -1878,10 +1972,10 @@ bbb"", b3
 		//Out("test");
 		//TODO: auto-ngen compiler. Need admin.
 
-		Speed.First();
+		Perf.First();
 		//System.Runtime.ProfileOptimization.SetProfileRoot(@"C:\Test");
 		//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
-		//Speed.Next();
+		//Perf.Next();
 
 		//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
 		//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
@@ -1894,16 +1988,16 @@ bbb"", b3
 		object[] p = new object[1] { g };
 
 		//g[0]="/?";
-		Speed.Next(); //16 ms
+		Perf.Next(); //16 ms
 		for(int i = 1; i <= 4; i++) {
 			g[0] = $@"/out:C:\Test\test{i}.exe";
 			int r = (int)m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
 			if(r != 0) Out(r);
-			Speed.Next();
+			Perf.Next();
 			//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
-			//Speed.Next();
+			//Perf.Next();
 		}
-		Speed.Write();
+		Perf.Write();
 
 		//Mes("now will GC.Collect");
 		GC.Collect(); //releases a lot
@@ -1930,7 +2024,7 @@ bbb"", b3
 	{
 		public IntPtr eventCompilerStartup;
 		public Wnd hwndCompiler;
-		public Speed.PerformanceCounter perf;
+		public Perf.PerfInstance perf;
 	}
 
 	//We don't use MemoryMappedFile because it is very slow. Creating/writing is 1500, opening/reading is 5000.
@@ -2018,7 +2112,7 @@ bbb"", b3
 	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//static void TestCallersVariables()
 	//{
-	//	Speed.First();
+	//	Perf.First();
 	//	StackFrame frame = new StackFrame(1);
 	//	var method = frame.GetMethod();
 	//	MethodBody mb=method.GetMethodBody();
@@ -2298,15 +2392,15 @@ bbb"", b3
 //{
 //	Wnd z = ed.hwnd;
 //	string s = null;
-//	Speed.First(true);
+//	Perf.First(true);
 //	for(int j = 0; j<8; j++) {
 //		for(int i=0; i<1000; i++) s= z.ClassName;
 //		//for(int i=0; i<1000; i++) s= z.Name;
 //		//for(int i = 0; i<1000; i++) s= z.ControlText;
 //		//for(int i = 0; i<1000; i++) s= z.ControlTextLength;
-//		Speed.Next();
+//		Perf.Next();
 //	}
-//	Speed.Write();
+//	Perf.Write();
 //	Out(s);
 //}
 //);
@@ -2332,14 +2426,14 @@ bbb"", b3
 ////cn= z.ControlText; OutList(cn.Length, cn); return;
 //int nt = 0;
 
-//Speed.First(true);
+//Perf.First(true);
 //for(int j = 0; j<8; j++) {
 //	//for(int i=0; i<1000; i++) cn= z.ClassName;
 //	//for(int i=0; i<1000; i++) cn= z.Name;
 //	for(int i = 0; i<1000; i++) cn= z.GetControlText();
-//	Speed.Next();
+//	Perf.Next();
 //}
-//Speed.Write();
+//Perf.Write();
 //Out(cn);
 //Out(nt);
 
@@ -2376,12 +2470,12 @@ bbb"", b3
 //Print(new int[] { 'a', 'b' });
 //Print(new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } });
 
-////Speed.First(true);
+////Perf.First(true);
 ////for(int j=0; j<5; j++) {
 ////	for(int i = 0; i<1000; i++) Info2("ff");
-////	Speed.Next();
+////	Perf.Next();
 ////}
-////Speed.Write();
+////Perf.Write();
 
 //return;
 
@@ -2439,13 +2533,13 @@ bbb"", b3
 //	Show.MessageDialog("aaa");
 //}
 
-//Speed.First(true);
+//Perf.First(true);
 //for(int rep1=0; rep1<5; rep1++) {
 //	//for(int rep2=0; rep2<100; rep2++) { RECT u1 = DisplayMonitor.GetRectangle(2); }
 //	for(int rep2=0; rep2<100; rep2++) { RECT u2 = ScreenFromIndex(2).Bounds; }
-//	Speed.Next();
+//	Perf.Next();
 //}
-//Speed.Write();
+//Perf.Write();
 
 //Screen k = ScreenFromIndex(1);
 //Out(k.Bounds);
@@ -2587,14 +2681,14 @@ bbb"", b3
 //r=s.ToInt_(out tail);
 //Out($"{r} 0x{r:X} '{tail}' {tail==null}");
 
-//Speed.SpinCPU();
+//Perf.SpinCPU();
 //int i, j, n1=0, n2=0;
 //for(j=0; j<4; j++) {
-//	Speed.First();
+//	Perf.First();
 //	for(i=0; i<1000; i++) n1+=int.Parse(s);
-//	Speed.Next();
+//	Perf.Next();
 //	for(i=0; i<1000; i++) n2+=ToInt_(s, out len);
-//	Speed.NextWrite();
+//	Perf.NextWrite();
 //}
 //Out($"{n1} {n2} {len}");
 
@@ -2613,25 +2707,25 @@ bbb"", b3
 
 //Output.Writer=new MooWriter();
 
-//Speed.SpinCPU();
+//Perf.SpinCPU();
 //int i, n=10;
 //for(int j=0; j<3; j++) {
 
-//	Speed.First();
+//	Perf.First();
 //	for(i=0; i<n; i++) Out("out");
-//	Speed.Next();
+//	Perf.Next();
 //	for(i=0; i<n; i++) Console.WriteLine("con");
-//	//Speed.Next();
+//	//Perf.Next();
 //	//for(i=0; i<n; i++) Trace.WriteLine("tra");
-//	Speed.NextWrite();
+//	Perf.NextWrite();
 //}
 //speed: Write unbuffered 35, Console.WriteLine 30, Trace.WriteLine (debug mode) 900
 
-////Speed.First(true);
+////Perf.First(true);
 ////Output.AlwaysOutput=true;
 //Output.RedirectConsoleOutput();
 //Output.RedirectDebugOutput();
-////Speed.NextWrite();
+////Perf.NextWrite();
 
 ////Console.Write("{0} {1}", 1, true);
 ////return;
@@ -2766,9 +2860,9 @@ bbb"", b3
 //			//	TestLocal();
 //			//	//Out("returned");
 //			//	//GC.Collect(0, GCCollectionMode.Forced, true);
-//			//	Speed.First();
+//			//	Perf.First();
 //			//	GC.Collect();
-//			//	Speed.Next();
+//			//	Perf.Next();
 //			//	//Out("collected");
 //			//	GC.WaitForFullGCComplete();
 //			//	//Out("waited");
@@ -2776,7 +2870,7 @@ bbb"", b3
 
 //			//long g1, g2;
 //			//g1=Stopwatch.GetTimestamp();
-//			//Speed.First();
+//			//Perf.First();
 //			////Thread.Sleep(1000);
 //			//g2=Stopwatch.GetTimestamp();
 

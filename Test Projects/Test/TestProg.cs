@@ -85,7 +85,7 @@ class TestProg
 	//	//	_hwndAM=hWnd;
 	//	//	break;
 	//	//case WM.CREATE:
-	//	//	Speed.Next();
+	//	//	Perf.Next();
 	//	//	break;
 	//	//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
 	//	//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);

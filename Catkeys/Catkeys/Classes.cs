@@ -370,77 +370,46 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// If isFraction == false, returns coord.
-		/// Else returns GetNormalized(0, yCoord ? Screen_.Height : Screen_.Width).
+		/// Returns new POINT(x, y), relative to the primary screen, where fractional x and/or y are converted to pixels.
+		/// x or y can be null, then the returned x or y value will be 0.
 		/// </summary>
-		public int GetNormalizedInScreen(bool yCoord)
+		/// <param name="workArea">If false, coordinates are in primary screen, else in its work area.</param>
+		/// <param name="widthHeight">Don't add work area offset. Use when x and y are width and height.</param>
+		public static POINT GetNormalizedInScreen(Coord x, Coord y, bool workArea = false, bool widthHeight = false)
 		{
-			return isFraction ? GetNormalized(0, yCoord ? Screen_.Height : Screen_.Width) : coord;
+			var p = new POINT();
+			if(x != null || y != null) {
+				if(workArea) {
+					RECT r = Screen_.WorkArea; if(widthHeight) r.Offset(-r.left, -r.top);
+					if(x != null) p.x = x.GetNormalized(r.left, r.right);
+					if(y != null) p.y = y.GetNormalized(r.top, r.bottom);
+				} else {
+					if(x != null) p.x = x.isFraction ? x.GetNormalized(0, Screen_.Width) : x.coord;
+					if(y != null) p.y = y.isFraction ? y.GetNormalized(0, Screen_.Height) : y.coord;
+				}
+			}
+			return p;
 		}
 
 		/// <summary>
-		/// Returns new POINT(x.GetNormalizedInScreen(false), y.GetNormalizedInScreen(true)).
-		/// x and y must not be null.
-		/// </summary>
-		public static POINT GetNormalizedInScreen(Coord x, Coord y)
-		{
-			return new POINT(x.GetNormalizedInScreen(false), y.GetNormalizedInScreen(true));
-		}
-
-		/// <summary>
-		/// If isFraction == false, returns coord.
-		/// Else returns GetNormalized(0, yCoord ? w.ClientHeight : w.ClientWidth).
-		/// </summary>
-		public int GetNormalizedInWindowClientArea(Wnd w, bool yCoord)
-		{
-			return isFraction ? GetNormalized(0, yCoord ? w.ClientHeight : w.ClientWidth) : coord;
-		}
-
-		/// <summary>
-		/// Returns new POINT(x.GetNormalizedInWindowClientArea(w, false), y.GetNormalizedInWindowClientArea(w, true)).
-		/// x and y must not be null.
+		/// Returns new POINT(x, y), relative to the window w client area, where fractional x and/or y are converted to pixels.
+		/// x or y can be null, then the returned x or y value will be 0.
 		/// </summary>
 		public static POINT GetNormalizedInWindowClientArea(Coord x, Coord y, Wnd w)
 		{
-			return new POINT(x.GetNormalizedInWindowClientArea(w, false), y.GetNormalizedInWindowClientArea(w, true));
+			var p = new POINT();
+			if(x != null || y != null) {
+				if((x != null && x.isFraction) || (y != null && y.isFraction)) {
+					RECT r = w.ClientRect;
+					if(x != null) p.x = x.GetNormalized(0, r.right);
+					if(y != null) p.y = y.GetNormalized(0, r.bottom);
+				} else {
+					if(x != null) p.x = x.coord;
+					if(y != null) p.y = y.coord;
+				}
+			}
+			return p;
 		}
-
-		///// <summary>
-		///// If x or/and y is not null and is a fractional coordinate, for the fractional coordinates calls Normalize with max = primary screen width or height.
-		///// </summary>
-		//public static void NormalizeInScreen(Coord x, Coord y)
-		//{
-		//	bool fx = x != null && x.isFraction, fy = y != null && y.isFraction;
-		//	if(fx || fy) {
-		//		if(fx) x.Normalize(0, Screen_.Width);
-		//		if(fy) y.Normalize(0, Screen_.Height);
-		//	}
-		//}
-
-		///// <summary>
-		///// If x or/and y is not null and is a fractional coordinate, for the fractional coordinates calls Normalize with max = client area width or height.
-		///// </summary>
-		//public static void NormalizeInWindowClientArea(Coord x, Coord y, Wnd w)
-		//{
-		//	bool fx = x != null && x.isFraction, fy = y != null && y.isFraction;
-		//	if(fx || fy) {
-		//		RECT r = w.ClientRect;
-		//		if(fx) x.Normalize(0, r.right);
-		//		if(fy) y.Normalize(0, r.bottom);
-		//	}
-		//}
-
-		///// <summary>
-		///// Returns false if rectangle r does not contain coordinates specified in non-null x y.
-		///// x y must be normalized (not fractional).
-		///// x or/and y can be null; for example returns true if both are null.
-		///// </summary>
-		//public static bool IsInRect(Coord x, Coord y, RECT r)
-		//{
-		//	if(x != null) { if(x.coord < r.left || x.coord >= r.right) return false; }
-		//	if(y != null) { if(y.coord < r.top || y.coord >= r.bottom) return false; }
-		//	return true;
-		//}
 
 		public override string ToString()
 		{

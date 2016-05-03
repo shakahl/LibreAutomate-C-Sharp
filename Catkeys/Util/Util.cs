@@ -25,7 +25,6 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class NoClass
 	{
-		public static void ResetLastError() { Api.SetLastError(0); }
     }
 
 	[DebuggerStepThrough]

@@ -68,12 +68,12 @@ partial class Test
 
 		for(i=0; i<10000; i++) n+=Split1(s);
 		for(i=0; i<10000; i++) n+=Split2(s);
-		Speed.First(true);
+		Perf.First(true);
 		for(i=0; i<10000; i++) n+=Split2(s);
-		Speed.Next();
+		Perf.Next();
 		for(i=0; i<10000; i++) n+=Split1(s);
-		Speed.Next();
-		Speed.Write();
+		Perf.Next();
+		Perf.Write();
 
 
 		//str s = "abcd";
@@ -108,16 +108,16 @@ partial class Test
 
 		//string s1=null, s2 = null, s3 = null;
 		//int i;
-		//Speed.SpinCPU();
-		//Speed.First();
+		//Perf.SpinCPU();
+		//Perf.First();
 		//for(i = 0; i<1000; i++) s1="one\r\ntwo\r\nthree";
-		//Speed.Next();
+		//Perf.Next();
 		//for(i = 0; i<1000; i++) s2="one"+_+"two"+_+"three";
-		//Speed.Next();
+		//Perf.Next();
 		//for(i = 0; i<1000; i++) s3=$"one{_}two{_}three";
 		////for(i = 0; i<1000; i++) s3=$"one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}";
-		//Speed.Next();
-		//Speed.Write();
+		//Perf.Next();
+		//Perf.Write();
 		//Out(s1+s2+s3);
 	}
 }
@@ -197,18 +197,18 @@ partial class Test
 			//	str g = "bsf";
 			//	int i, n1 = 0, n2=0;
 
-			//	Speed.SpinCPU();
+			//	Perf.SpinCPU();
 			//	for(int j = 0; j<5; j++) {
 
-			//		Speed.First();
+			//		Perf.First();
 			//		//for(i=0; i<100000; i++) n1+=Foo2(s);
 			//		//for(i=0; i<100000; i++) if(s.StartsWith("a", StringComparison.Ordinal)) n1++;
 			//		for(i=0; i<100000; i++) if(g.StartsWith("b")) n1++;
-			//		Speed.Next();
+			//		Perf.Next();
 			//		//for(i=0; i<100000; i++) n2+=Foo2(s);
-			//		//Speed.Next();
+			//		//Perf.Next();
 			//		if(j<3) continue;
-			//		Speed.Write();
+			//		Perf.Write();
 
 			//	}
 			//		Out($"{n1} {n2}");

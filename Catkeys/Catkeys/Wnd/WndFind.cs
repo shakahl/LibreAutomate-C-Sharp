@@ -88,7 +88,7 @@ namespace Catkeys
 			/// </summary>
 			public int childId;
 
-			internal protected int _x, _y;
+			internal protected POINT _xy;
 			ushort _propAtom;
 			internal ChildDefinition _child;
 
@@ -136,8 +136,8 @@ namespace Catkeys
 				}
 
 				if(x != null || y != null) {
-					RECT r = wParent.Is0 ? w.Rect : w.RectInClientOf(wParent);
-					if(!r.Contains(x == null ? r.left : _x, y == null ? r.top : _y)) return false;
+					RECT r; if(!w.GetRectInClientOf(wParent, out r)) return false;
+					if(!r.Contains(x == null ? r.left : _xy.x, y == null ? r.top : _xy.y)) return false;
 				}
 
 				return true;
@@ -177,8 +177,7 @@ namespace Catkeys
 			{
 				if(!_Init()) return false;
 
-				if(x != null) _x = x.GetNormalizedInScreen(false);
-				if(y != null) _y = y.GetNormalizedInScreen(true);
+				_xy = Coord.GetNormalizedInScreen(x, y);
 
 				return true;
 			}
@@ -511,8 +510,7 @@ namespace Catkeys
 			{
 				if(!_Init()) return false;
 
-				if(x != null) _x = x.GetNormalizedInWindowClientArea(wParent, false);
-				if(y != null) _y = y.GetNormalizedInWindowClientArea(wParent, true);
+				_xy=Coord.GetNormalizedInWindowClientArea(x, y, wParent);
 
 				if(Empty(wfName)) _wfControls = null;
 				else
@@ -598,7 +596,7 @@ namespace Catkeys
 			/// </summary>
 			public bool Find(Wnd w)
 			{
-				var a = w.AllChildren(null, _flags.HasFlag(ChildFlag.DirectChild), !_flags.HasFlag(ChildFlag.HiddenToo), true);
+				var a = w.ChildAllRaw(null, _flags.HasFlag(ChildFlag.DirectChild), !_flags.HasFlag(ChildFlag.HiddenToo), true);
 				return _FindInList(w, a, false) >= 0;
 			}
 
@@ -609,7 +607,7 @@ namespace Catkeys
 			/// Does not skip hidden controls, even if flag HiddenToo is not set.
 			/// </summary>
 			/// <param name="w">Parent window.</param>
-			/// <param name="a">List of controls (handles), for example returned by Wnd.AllChildren.</param>
+			/// <param name="a">List of controls (handles), for example returned by Wnd.ChildAllRaw.</param>
 			public int FindInList(Wnd w, List<Wnd> a)
 			{
 				return _FindInList(w, a, true);
@@ -749,7 +747,7 @@ namespace Catkeys
 			ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
-			Validate();
+			ValidateThrow();
 			var d = new ChildDefinition(name, className, id, hiddenToo, prop, f, matchIndex);
 			d.Find(this);
 			return d.Result;
@@ -771,7 +769,7 @@ namespace Catkeys
 			ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
-			Validate();
+			ValidateThrow();
 			var d = new ChildDefinition(flags, name, className, id, prop, f, matchIndex);
 			d.Find(this);
 			return d.Result;
@@ -788,7 +786,7 @@ namespace Catkeys
 			ChildProp prop = null, Action<CallbackArgs> f = null
 			)
 		{
-			Validate();
+			ValidateThrow();
 			var a = new List<Wnd>();
 			Child(flags, name, className, id, prop, e =>
 			{
@@ -817,9 +815,9 @@ namespace Catkeys
 		{
 			Wnd R = Api.GetDlgItem(this, id);
 			if(R.Is0) {
-				Validate();
+				ValidateThrow();
 				if(directChild == false) {
-					AllChildren(e =>
+					ChildAllRaw(e =>
 					{
 						if(e.w.ControlId != id) return;
 						R = e.w; e.Stop();
@@ -836,12 +834,13 @@ namespace Catkeys
 		/// <param name="className">Class name. String by default is interpreted as wildcard, case-insensitive..</param>
 		/// <param name="directChild">Must be direct child, not a grandchild.</param>
 		/// <param name="matchIndex">1-based match index. For example, if 2, will get the second matching control.</param>
+		/// <exception cref="CatkeysException">When this window is invalid (not found, closed, etc).</exception>
 		public Wnd ChildByClassName(WildStringI className, bool directChild = false, int matchIndex = 1)
 		{
-			Validate();
+			ValidateThrow();
 			if(className == null) return Wnd0;
 			Wnd R = Wnd0;
-			AllChildren(e =>
+			ChildAllRaw(e =>
 			{
 				if(--matchIndex > 0) return;
 				R = e.w; e.Stop();
@@ -863,7 +862,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="x">X coordinate.</param>
 		/// <param name="y">Y coordinate.</param>
-		public static Wnd RawFromXY(int x, int y)
+		public static Wnd FromXYRaw(int x, int y)
 		{
 			return Api.WindowFromPoint(new POINT(x, y));
 		}
@@ -872,14 +871,14 @@ namespace Catkeys
 		/// From other overload differs only by the parameter type.
 		/// </summary>
 		/// <param name="p">X and Y coordinates.</param>
-		public static Wnd RawFromXY(POINT p)
+		public static Wnd FromXYRaw(POINT p)
 		{
 			return Api.WindowFromPoint(p);
 		}
 
 		/// <summary>
 		/// Gets visible non-transparent top-level window or control from point.
-		/// Unlike RawFromXY(), this function gets non-transparent controls that are behind (in the Z order) transparent controls (eg a group button or a tab control).
+		/// Unlike FromXYRaw(), this function gets non-transparent controls that are behind (in the Z order) transparent controls (eg a group button or a tab control).
 		/// Also this function supports fractional coordinates and does not skip disabled controls.
 		/// </summary>
 		/// <param name="x">X coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
@@ -965,10 +964,11 @@ namespace Catkeys
 		/// <param name="y">Y coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <param name="screenXY">x y are relative to the pimary screen.</param>
+		/// <exception cref="CatkeysException">When this window is invalid (not found, closed, etc).</exception>
 		/// <seealso cref="Wnd.FromXY"/>
 		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
 		{
-			Validate();
+			ValidateThrow();
 			POINT p = screenXY ? Coord.GetNormalizedInScreen(x, y) : Coord.GetNormalizedInWindowClientArea(x, y, this);
 			return _ChildFromXY(p, directChild, screenXY);
 		}
@@ -1027,8 +1027,7 @@ namespace Catkeys
 			for(Wnd R = Wnd0; ;) {
 				Wnd t = _RealChildWindowFromPoint_RtlAware(w, p);
 				if(directChild) return t;
-				if(t.Is0) return R;
-				Api.MapWindowPoints(w, t, ref p, 1);
+				if(t.Is0 || !MapWindowPoints(w, t, ref p)) return R;
 				R = w = t;
 			}
 		}

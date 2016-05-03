@@ -1748,8 +1748,8 @@ namespace Catkeys
 			if(!onlyZorder) {
 				RECT r;
 				_EditControlGetPlace(out r);
-				_editParent.MoveResize(r.left, r.top, r.Width, r.Height);
-				_editWnd.MoveResize(0, 0, r.Width, r.Height);
+				_editParent._MoveResize(r.left, r.top, r.Width, r.Height);
+				_editWnd._MoveResize(0, 0, r.Width, r.Height);
 			}
 			_editParent.ZorderTop();
 		}
@@ -1767,14 +1767,14 @@ namespace Catkeys
 			Wnd prog = parent.ChildByClassName("msctls_progress32");
 			prog.Visible = false;
 
-			r = prog.RectInClientOf(parent);
+			prog.GetRectInClientOf(parent, out r);
 			r.Inflate(0, (Form.DefaultFont.Height + 9 - r.Height) / 2);
 			if(_editComboHeight != 0) r.Height = _editComboHeight; //combo height, remembered when creating, used when updating
 
 			if(_editType == TDEdit.Multiline) {
 				//as bottom, use the last radio button
 				Wnd rLast = Wnd0;
-				parent.AllChildren(e =>
+				parent.ChildAllRaw(e =>
 				{
 					var s = e.w.Name;
 					if(s.Length==2 && s[0]=='.' && s[1]>='1' && s[1]<='4') {
@@ -1787,7 +1787,7 @@ namespace Catkeys
 					}
 				}, "Button");
 
-				RECT u = rLast.RectInClientOf(parent);
+				RECT u; rLast.GetRectInClientOf(parent, out u);
 				r.bottom = u.bottom;
 			}
 
@@ -1832,7 +1832,7 @@ namespace Catkeys
 					}
 				}
 				RECT cbr = _editWnd.Rect;
-				_editParent.Resize(cbr.Width, _editComboHeight = cbr.Height); //because ComboBox resizes itself, usually makes bigger
+				_editParent._Resize(cbr.Width, _editComboHeight = cbr.Height); //because ComboBox resizes itself, usually makes bigger
 			} else {
 				_editWnd.SetControlText(_editText);
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);

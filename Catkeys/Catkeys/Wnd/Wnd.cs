@@ -40,7 +40,13 @@ namespace Catkeys
 	///			2. In some cases C# compiler does not allow to call a property-set function:
 	///				When a property-get function (or a method) returns a Wnd, the C# compiler does not allow to set properties in the same statement, like w.Owner.Enabled=false. Workaround: Wnd t=w.Owner; t.Enabled=false. Another workaround: if the property would get a field of a very simple struct, make that field public instaed of using a property.
 	///				When the variable is a foreach variable. Workaround: foreach(Wnd c in ...) { Wnd _c=c; _c.Enabled=flse; }
-	/// Wnd functions don't throw error when failed, unless explicitly specified that the function throws error. Instead they call SetLastError(0) before calling API functions that set a non-zero error code if failed. When a function returns something that does not indicate success (eg 0 or false or void), you can call Marshal.GetLastWin32Error(), it will return the error code if the function failed, or 0 if not failed.
+	/// What happens when a Wnd function fails:
+	///		Some Wnd functions throw exceptions when failed, and the exceptions are listed in function help.
+	///		Many other Wnd functions instead use ThreadError class, and it is documented in function help.
+	///		When a Wnd function that supports ThreadError returns something that does not indicate success (eg 0 or false), you can call ThreadError.IsError or other ThreadError functions to get error info.
+	/// Almost all Wnd functions can be used with windows of any process/thread.
+	///		Some of them work slightly differently with windows of current thread.
+	///		There are several functions that work only with windows of current thread, and it is documented in function help.
 	/// </remarks>
 	public partial struct Wnd :IWin32Window
 	{
@@ -154,95 +160,96 @@ namespace Catkeys
 
 		/// <summary>
 		/// Calls API SendMessage.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		public LPARAM Send(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
 		{
-			ResetLastError();
 			return _Api.SendMessage(this, message, wParam, lParam);
 		}
 
 		/// <summary>
 		/// Calls API SendMessage where lParam is string.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		public LPARAM SendS(uint message, LPARAM wParam, string lParam)
 		{
-			ResetLastError();
 			return _Api.SendMessageS(this, message, wParam, lParam);
 			//info: don't use overload, then eg ambiguous if null.
 		}
 
 		/// <summary>
 		/// Calls API SendMessage where lParam is StringBuilder.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		public LPARAM SendSB(uint message, LPARAM wParam, StringBuilder lParam)
 		{
-			ResetLastError();
 			return _Api.SendMessageSB(this, message, wParam, lParam);
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout.
 		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), bool block = false)
 		{
-			result = Zero;
+			result = 0;
 			uint fl = _Api.SMTO_ABORTIFHUNG; if(block) fl |= _Api.SMTO_BLOCK;
-			ResetLastError();
-			return 0 != _Api.SendMessageTimeout(this, message, wParam, lParam, fl, (uint)timeoutMS, out result);
+			return 0 != _Api.SendMessageTimeout(this, message, wParam, lParam, fl, (uint)timeoutMS, out result) || ThreadError.SetWinError();
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout.
 		/// Use this overload when you don't need the return value.
 		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), bool block = false)
 		{
 			LPARAM result;
-			ResetLastError();
 			return SendTimeout(timeoutMS, out result, message, wParam, lParam, block);
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout where lParam is string.
 		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, bool block = false)
 		{
-			result = Zero;
+			result = 0;
 			uint fl = _Api.SMTO_ABORTIFHUNG; if(block) fl |= _Api.SMTO_BLOCK;
-			ResetLastError();
-			return 0 != _Api.SendMessageTimeoutS(this, message, wParam, lParam, fl, (uint)timeoutMS, out result);
+			return 0 != _Api.SendMessageTimeoutS(this, message, wParam, lParam, fl, (uint)timeoutMS, out result) || ThreadError.SetWinError();
+		}
+
+		/// <summary>
+		/// Calls API SendMessageTimeout where lParam is string.
+		/// Use this overload when you don't need the return value.
+		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
+		/// Supports ThreadError.
+		/// </summary>
+		public bool SendTimeoutS(int timeoutMS, uint message, LPARAM wParam, string lParam, bool block = false)
+		{
+			LPARAM result;
+			return SendTimeoutS(timeoutMS, out result, message, wParam, lParam, block);
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout where lParam is StringBuilder.
 		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool SendTimeoutSB(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, StringBuilder lParam, bool block = false)
 		{
-			result = Zero;
+			result = 0;
 			uint fl = _Api.SMTO_ABORTIFHUNG; if(block) fl |= _Api.SMTO_BLOCK;
-			ResetLastError();
-			return 0 != _Api.SendMessageTimeoutSB(this, message, wParam, lParam, fl, (uint)timeoutMS, out result);
+			return 0 != _Api.SendMessageTimeoutSB(this, message, wParam, lParam, fl, (uint)timeoutMS, out result) || ThreadError.SetWinError();
 		}
 
 		/// <summary>
 		/// Calls API PostMessage.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool Post(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
 		{
-			ResetLastError();
-			return _Api.PostMessage(this, message, wParam, lParam);
+			return _Api.PostMessage(this, message, wParam, lParam) || ThreadError.SetWinError();
 		}
 		#endregion
 
@@ -256,80 +263,118 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if the window exists.
-		/// Returns false if the window is destroyed or the handle is 0 or some other invalid or special value.
+		/// Returns false if the window is closed or the handle is 0 or some other invalid or special value.
 		/// Calls Is0 and Api.IsWindow().
 		/// </summary>
 		public bool IsValid { get { return !Is0 && Api.IsWindow(this); } }
 
+		const string _errStr_Handle0 = "Window handle is 0. Possibly previous 'find window' function did not find a window.";
+		const string _errStr_HandleInvalid = "Invalid window handle. Possibly the window is closed/destroyed.";
+
 		/// <summary>
 		/// Throws exception if this.Is0==true or this.IsValid==false.
 		/// </summary>
-		public void Validate()
+		public void ValidateThrow()
 		{
-			if(Is0) throw new CatkeysException("Window handle is 0. Possibly previous 'find window' function did not find a window with the specified name etc.");
-			if(!IsValid) throw new CatkeysException("Invalid window handle. Possibly the window is closed/destroyed.");
+			if(Is0) throw new CatkeysException(_errStr_Handle0);
+			if(!IsValid) throw new CatkeysException(_errStr_HandleInvalid);
+		}
+
+		/// <summary>
+		/// If this.Is0==true or this.IsValid==false, sets thread error or throws exception, depending on the 'throwException' argument.
+		/// </summary>
+		public bool Validate(bool throwException)
+		{
+			if(Is0) {
+				if(throwException) throw new CatkeysException(_errStr_Handle0);
+				return ThreadError.Set(_errStr_Handle0);
+			}
+			if(!IsValid) {
+				if(throwException) throw new CatkeysException(_errStr_HandleInvalid);
+				return ThreadError.Set(_errStr_HandleInvalid);
+			}
+			return true;
 		}
 
 		/// <summary>
 		/// Gets or sets the visible state.
-		/// The 'get' function returns true if the window is visible; returns false if invisible, destroyed or the handle is 0. Calls Api.IsWindowVisible.
-		/// The 'set' function shows or hides the window, without [de]activating it or changing the Z order. Calls Api.ShowWindow(SW_SHOWNA/SW_HIDE).
-		/// Supports Marshal.GetLastWin32Error().
+		/// <para>
+		/// The 'get' function calls Api.IsWindowVisible().
+		/// Returns true if the window is visible. Returns false if is invisible or is a child of invisible parent or when fails (eg window closed).
+		/// </para>
+		/// <para>
+		/// The 'set' function calls Show() or Hide().
+		/// </para>
 		/// </summary>
 		public bool Visible
 		{
-			get { ResetLastError(); return Api.IsWindowVisible(this); }
-			//set { if(value != Visible) Api.ShowWindow(this, value ? Api.SW_SHOWNA : Api.SW_HIDE); } //would not hide if the parent window is currently hidden
-			set { ResetLastError(); Api.ShowWindow(this, value ? Api.SW_SHOWNA : Api.SW_HIDE); }
+			get { return Api.IsWindowVisible(this); } //note: ThreadError here would not be very useful, better let it be as fast as possible.
+			set { if(value) Show(); else Hide(); }
 		}
 
 		/// <summary>
-		/// Private Visible without last error management.
+		/// Shows this window if not visible.
+		/// Does not activate/deactivate/zorder.
+		/// Calls Api.ShowWindow(this, Api.SW_SHOWNA).
+		/// Supports ThreadError.
 		/// </summary>
-		bool _Visible
+		public bool Show()
 		{
-			get { return Api.IsWindowVisible(this); }
-			set { Api.ShowWindow(this, value ? Api.SW_SHOWNA : Api.SW_HIDE); }
+			return Visible || Api.ShowWindow(this, Api.SW_SHOWNA) || ThreadError.SetWinError();
+		}
+
+		/// <summary>
+		/// Hides this window.
+		/// Does not activate/deactivate/zorder.
+		/// Calls Api.ShowWindow(this, Api.SW_HIDE).
+		/// Supports ThreadError.
+		/// </summary>
+		public bool Hide()
+		{
+			return Api.ShowWindow(this, Api.SW_HIDE) || ThreadError.SetWinError();
+			//note: don't use if(!Visible) because then would not hide if the parent window is currently hidden.
 		}
 
 		/// <summary>
 		/// Gets or sets the enabled state.
-		/// The 'get' function returns true if the window is enabled; returns false if disabled, destroyed or the handle is 0. Calls Api.IsWindowEnabled.
-		/// The 'set' function enables or disables the window, without [de]activating it or changing the Z order. Calls Api.EnableWindow.
-		/// Supports Marshal.GetLastWin32Error().
+		/// <para>
+		/// The 'get' function calls Api.IsWindowEnabled().
+		/// Returns true if the window is enabled. Returns false if is disabled or is a child of disabled parent or when fails (eg window closed).
+		/// </para>
+		/// <para>
+		/// The 'set' function enables or disables the window.
+		/// Calls Api.EnableWindow().
+		/// </para>
 		/// </summary>
 		public bool Enabled
 		{
-			get { ResetLastError(); return Api.IsWindowEnabled(this); }
-			set { ResetLastError(); Api.EnableWindow(this, value); }
+			get { return Api.IsWindowEnabled(this); }
+			set { Api.EnableWindow(this, value); }
 		}
 
 		/// <summary>
 		/// Gets the cloaked state.
-		/// Returns 0 if not cloaked or if failed (eg the window is destroyed or Wnd0).
+		/// Returns 0 if not cloaked or if failed.
 		/// Else returns flags: 1 cloaked by its application, 2 cloaked by Windows, 4 cloaked because its owner window is cloaked.
-		/// On Windows 7 returns 0 because there is no "cloaked windows" feature.
-		/// Supports Marshal.GetLastWin32Error().
+		/// On Windows 7 returns 0 because there is no "cloaked window" feature.
 		/// </summary>
-		public int CloakedState
+		public int IsCloakedGetState
 		{
 			get
 			{
 				if(WinVer < Win8_0) return 0;
 				int cloaked = 0, hr = Api.DwmGetWindowAttribute(this, 14, out cloaked, 4); //DWMWA_CLOAKED
-				Api.SetLastError((uint)hr);
 				return cloaked;
 			}
 		}
 		/// <summary>
 		/// Returns true if the window is cloaked.
-		/// Returns false if not cloaked or if failed to get the cloaked state (eg the window is destroyed or Wnd0).
-		/// On Windows 7 returns false because there is no "cloaked windows" feature.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Returns false if not cloaked or if failed to get the cloaked state.
+		/// On Windows 7 returns false because there is no "cloaked window" feature.
 		/// </summary>
 		public bool IsCloaked
 		{
-			get { return CloakedState != 0; }
+			get { return IsCloakedGetState != 0; }
 		}
 
 		#endregion
@@ -338,139 +383,117 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets or sets minimized state.
-		/// The 'get' function calls Api.IsIconic.
-		/// The 'set' function is like Minimize() if true, and like RestoreMinimized() if false. Unlike these methods, it is visually fast, without animation. Calls Api.SetWindowPlacement.
-		/// Supports Marshal.GetLastWin32Error().
+		/// <para>
+		/// The 'get' function calls Api.IsIconic().
+		/// </para>
+		/// <para>
+		/// The 'set' function is like Minimize() if true, and like RestoreMinimized() if false. Unlike these methods, it is visually fast, without animation.
+		/// Calls Api.SetWindowPlacement().
+		/// </para>
+		/// Supports ThreadError.
 		/// </summary>
 		public bool StateMinimized
 		{
-			get { ResetLastError(); return Api.IsIconic(this); }
-			set { _SetStateFast(value ? Api.SW_MINIMIZE : Api.SW_RESTORE); }
+			get { return Api.IsIconic(this) || ThreadError.SetWinError(); }
+			set { _SetState(value ? Api.SW_MINIMIZE : Api.SW_RESTORE, true); }
 		}
 
 		/// <summary>
 		/// Gets or sets maximized state.
-		/// The 'get' function calls Api.IsZoomed.
-		/// The 'set' function is like Maximize(), but visually fast, without animation. Calls Api.SetWindowPlacement.
-		/// Supports Marshal.GetLastWin32Error().
+		/// <para>
+		/// The 'get' function calls Api.IsZoomed().
+		/// </para>
+		/// <para>
+		/// The 'set' function is like Maximize(), but visually fast, without animation.
+		/// Calls Api.SetWindowPlacement.
+		/// </para>
+		/// Supports ThreadError.
 		/// </summary>
 		public bool StateMaximized
 		{
-			get { ResetLastError(); return Api.IsZoomed(this); }
-			set { _SetStateFast(value ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL); }
+			get { return Api.IsZoomed(this) || ThreadError.SetWinError(); }
+			set { _SetState(value ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL, true); }
 		}
 
 		/// <summary>
 		/// Gets or sets normal (not minimized or maximized) state.
-		/// The 'get' function calls Api.IsIconic and Api.IsZoomed.
-		/// The 'set' function is like RestoreToNormal(), but visually fast, without animation. Calls Api.SetWindowPlacement.
-		/// Supports Marshal.GetLastWin32Error().
+		/// <para>
+		/// The 'get' function calls Api.IsIconic() and Api.IsZoomed().
+		/// </para>
+		/// <para>
+		/// The 'set' function is like RestoreToNormal(), but visually fast, without animation.
+		/// Calls Api.SetWindowPlacement().
+		/// </para>
+		/// Supports ThreadError.
 		/// </summary>
 		public bool StateNormal
 		{
-			get { return !(StateMaximized || StateMinimized) && Marshal.GetLastWin32Error() == 0; }
-			set { _SetStateFast(value ? Api.SW_SHOWNORMAL : Api.SW_SHOWMAXIMIZED); }
+			get { return !(StateMaximized || StateMinimized || ThreadError.IsError); }
+			set { _SetState(value ? Api.SW_SHOWNORMAL : Api.SW_SHOWMAXIMIZED, true); }
 		}
 
 		/// <summary>
-		/// Sets window min/max/normal/restore state with Api.ShowWindow.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Sets window min/max/normal/restore state with Api.ShowWindow() (animated) or Api.SetWindowPlacement() (no animation).
+		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="state">Must be Api.SW_MINIMIZE, Api.SW_RESTORE (restores to normal/max if minimized), Api.SW_SHOWNORMAL or Api.SW_SHOWMAXIMIZED.</param>
-		bool _SetState(int state)
+		/// <param name="fast">Use Api.SetWindowPlacement(), which sets state without animation. If false, uses (Api.ShowWindow)</param>
+		bool _SetState(int state, bool fast)
 		{
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 
-			bool wasMinimized = StateMinimized;
+			bool wasMinimized;
+			if(fast) {
+				Api.WINDOWPLACEMENT p;
+				if(!GetWindowPlacement(out p)) return false;
+				wasMinimized = (p.showCmd == Api.SW_SHOWMINIMIZED);
 
-			switch(state) {
-			case Api.SW_MINIMIZE:
-				if(wasMinimized) goto gr;
-				break;
-			case Api.SW_RESTORE:
-				if(!wasMinimized) goto gr; //TODO: && !IsThreadError
-				break;
-			case Api.SW_SHOWNORMAL:
-				if(StateNormal) goto gr;
-				break;
-			case Api.SW_SHOWMAXIMIZED:
-				if(StateMaximized) goto gr;
-				break;
+				switch(state) {
+				case Api.SW_MINIMIZE:
+					if(wasMinimized) goto gr;
+					if(p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
+					break;
+				case Api.SW_RESTORE:
+					if(!wasMinimized) goto gr;
+					if((p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state = Api.SW_SHOWMAXIMIZED; //without this would make normal
+					break;
+				case Api.SW_SHOWNORMAL:
+					if(p.showCmd == Api.SW_SHOWNORMAL) goto gr;
+					break;
+				case Api.SW_SHOWMAXIMIZED:
+					if(p.showCmd == Api.SW_SHOWMAXIMIZED) goto gr;
+					break;
+				}
+
+				//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. 
+				p.showCmd = state;
+
+				if(!SetWindowPlacement(ref p)) return false;
+			} else {
+				wasMinimized = StateMinimized;
+
+				switch(state) {
+				case Api.SW_MINIMIZE:
+					if(wasMinimized) goto gr;
+					break;
+				case Api.SW_RESTORE:
+					if(!wasMinimized) goto gr;
+					break;
+				case Api.SW_SHOWNORMAL:
+					if(StateNormal) goto gr;
+					break;
+				case Api.SW_SHOWMAXIMIZED:
+					if(StateMaximized) goto gr;
+					break;
+				}
+
+				if(!Api.ShowWindow(this, state)) return ThreadError.SetWinError();
 			}
 
-			ResetLastError();
-			if(!Api.ShowWindow(this, state)) return false;
-
 			_SetStateActivateWait(state, wasMinimized);
-
 			return true;
 			gr:
-			Visible = true;
-			return true;
-		}
-
-		/// <summary>
-		/// Sets window min/max/normal/restore state with Api.SetWindowPlacement, without animation.
-		/// Supports Marshal.GetLastWin32Error().
-		/// </summary>
-		/// <param name="state">Must be Api.SW_MINIMIZE, Api.SW_RESTORE (restores to normal/max if minimized), Api.SW_SHOWNORMAL or Api.SW_SHOWMAXIMIZED.</param>
-		bool _SetStateFast(int state)
-		{
-			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
-
-			Api.WINDOWPLACEMENT p;
-			if(!GetWindowPlacement(out p)) return false;
-			bool wasMinimized = (p.showCmd == Api.SW_SHOWMINIMIZED);
-
-			switch(state) {
-			case Api.SW_MINIMIZE:
-				if(wasMinimized) goto gr;
-				if(p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
-				break;
-			case Api.SW_RESTORE:
-				if(!wasMinimized) goto gr;
-				if((p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state = Api.SW_SHOWMAXIMIZED; //without this would make normal
-				break;
-			case Api.SW_SHOWNORMAL:
-				if(p.showCmd == Api.SW_SHOWNORMAL) goto gr;
-				break;
-			case Api.SW_SHOWMAXIMIZED:
-				if(p.showCmd == Api.SW_SHOWMAXIMIZED) goto gr;
-				break;
-			}
-			//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. 
-			p.showCmd = state;
-			if(!SetWindowPlacement(ref p)) return false;
-
-			_SetStateActivateWait(state, wasMinimized);
-
-			ResetLastError();
-			return true;
-			gr:
-			Visible = true;
-			return true;
-		}
-
-		/// <summary>
-		/// Initializes wp and calls Api.GetWindowPlacement.
-		/// Supports Marshal.GetLastWin32Error().
-		/// </summary>
-		public bool GetWindowPlacement(out Api.WINDOWPLACEMENT wp)
-		{
-			wp = new Api.WINDOWPLACEMENT(); wp.length = Api.SizeOf(wp);
-			ResetLastError();
-			return Api.GetWindowPlacement(this, ref wp);
-		}
-
-		/// <summary>
-		/// Sets wp.length and calls Api.SetWindowPlacement.
-		/// Supports Marshal.GetLastWin32Error().
-		/// </summary>
-		public bool SetWindowPlacement(ref Api.WINDOWPLACEMENT wp)
-		{
-			wp.length = Api.SizeOf(wp);
-			ResetLastError();
-			return Api.SetWindowPlacement(this, ref wp);
+			return Show();
 		}
 
 		void _SetStateActivateWait(int state, bool wasMinimized)
@@ -481,8 +504,29 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Initializes wp and calls Api.GetWindowPlacement.
+		/// Supports ThreadError.
+		/// </summary>
+		public bool GetWindowPlacement(out Api.WINDOWPLACEMENT wp)
+		{
+			wp = new Api.WINDOWPLACEMENT(); wp.length = Api.SizeOf(wp);
+			return Api.GetWindowPlacement(this, ref wp) || ThreadError.SetWinError();
+		}
+
+		/// <summary>
+		/// Sets wp.length and calls Api.SetWindowPlacement.
+		/// Supports ThreadError.
+		/// </summary>
+		public bool SetWindowPlacement(ref Api.WINDOWPLACEMENT wp)
+		{
+			wp.length = Api.SizeOf(wp);
+			return Api.SetWindowPlacement(this, ref wp) || ThreadError.SetWinError();
+		}
+
+		/// <summary>
 		/// If not minimized, minimizes.
 		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </summary>
 		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
 		/// <exception cref="CatkeysException">
@@ -500,6 +544,7 @@ namespace Catkeys
 		/// <summary>
 		/// If not maximized, maximizes.
 		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </summary>
 		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
 		/// <exception cref="CatkeysException">
@@ -517,6 +562,7 @@ namespace Catkeys
 		/// <summary>
 		/// If maximized or minimized, makes normal (not min/max).
 		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </summary>
 		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
 		/// <exception cref="CatkeysException">
@@ -534,6 +580,7 @@ namespace Catkeys
 		/// <summary>
 		/// If minimized, restores previous non-minimized state (maximized or normal).
 		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </summary>
 		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
 		/// <exception cref="CatkeysException">
@@ -550,7 +597,7 @@ namespace Catkeys
 
 		void _MinMaxRes(int state, bool? useSysCmd)
 		{
-			Validate();
+			ValidateThrow();
 
 			//Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
 			uint cmd = 0;
@@ -576,25 +623,25 @@ namespace Catkeys
 				//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
 				if(ok && state == Api.SW_SHOWNORMAL && StateMaximized) ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
 				//it seems that don't need _SetStateActivateWait here like for ShowWindow.
-			} else ok = _SetState(state);
+			} else ok = _SetState(state, false);
 
-			if(!ok) throw new CatkeysException("Failed to minimize, maximize or restore window.");
-			//TODO: auto-delay
+			if(!ok) throw new CatkeysException();
+
+			Time.AutoDelay(this);
 		}
 
 		/// <summary>
-		/// Quickly minimizes (without animation), hides and activates another window.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Quickly minimizes (without animation) and hides. Activates another window.
+		/// Supports ThreadError.
 		/// </summary>
-		public void MinimizeAndHide()
+		public bool MinimizeAndHide()
 		{
-			StateMinimized = true;
-			Visible = false;
+			return _SetState(Api.SW_MINIMIZE, true) && Hide();
 		}
 
 		#endregion
 
-		#region activation, focus
+		#region activate, focus
 
 		/// <summary>
 		/// Gets the foreground window.
@@ -610,52 +657,74 @@ namespace Catkeys
 		/// <summary>
 		/// Activates this window (brings to the foreground).
 		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </summary>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails to activate (unlikely).
 		/// </exception>
 		/// <remarks>
-		/// Applies auto-delay.
 		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
 		/// Fails (throws exception) if cannot activate this window, except:
-		///		1. If this is a control, calls FocusControl(), which activates its top-level parent and sets focus to this control.
+		///		1. If this is a control, activates its top-level parent window.
 		///		2. If this is Wnd.Get.DesktopWindow, just deactivates the currently active window.
 		///		3. When the target application instead activates another window of the same thread.
+		/// This overload just calls Activate(ActivateFlag.CanThrow).
 		/// </remarks>
 		/// <seealso cref="ActivateRaw"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="Wnd.ActiveWindow"/>
+		/// <seealso cref="Activate(ActivateFlag)"/>
 		public void Activate()
 		{
-			if(IsControl) { FocusControl(); return; }
-			_Activate(_ActivateFlag.ValidateThrow);
+			Activate(ActivateFlag.CanThrow);
 		}
 
 		[Flags]
-		internal enum _ActivateFlag
+		public enum ActivateFlag
 		{
-			ValidateThrow = 1, //call Validate(). Throw if fails to activate.
-			IgnoreIfNoActivateStyleEtc = 2, //don't activate if WS_EX_NOACTIVATE or toolwindow without caption, unless cloaked. Then return true.
+			/// <summary>
+			/// Throw exception if invalid window or if fails to activate. Without this flag then sets thread error and returns false.
+			/// </summary>
+			CanThrow = 1,
+			/// <summary>
+			/// Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked. Then returns true.
+			/// </summary>
+			IgnoreIfNoActivateStyleEtc = 2,
+			/// <summary>
+			/// Don't check is this a control (child window). Without this flag activates control's top-level parent window.
+			/// </summary>
+			DontCheckIsControl = 4,
+			/// <summary>
+			/// Don't apply auto-delay.
+			/// Anyway, always waits at least 20 ms. You can instead use ActivateRaw(), it is as fast as possible.
+			/// </summary>
+			Faster = 8,
 		}
 
-		internal bool _Activate(_ActivateFlag flags)
+		/// <summary>
+		/// Activates this window (brings to the foreground).
+		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
+		/// Everything is the same as with other overload, except that this overload has a 'flags' parameter and by default returns false if failed (does not throw exception).
+		/// </summary>
+		public bool Activate(ActivateFlag flags)
 		{
-			bool validateThrow = flags.HasFlag(_ActivateFlag.ValidateThrow);
-			if(validateThrow) Validate(); else if(!IsValid) return false;
+			bool canThrow = flags.HasFlag(ActivateFlag.CanThrow);
+			if(!Validate(canThrow)) return false;
+			if(!flags.HasFlag(ActivateFlag.DontCheckIsControl) && IsControl) return ToplevelParentOrThis.Activate(flags | ActivateFlag.DontCheckIsControl);
 
 			bool ofThisThread = IsOfThisThread;
 
 			if(StateMinimized) {
 				RestoreMinimized();
-				if(!ofThisThread) WaitMS(200); //need minimum 20 for Excel
+				if(!ofThisThread) WaitMS(100); //need minimum 20 for Excel
 			}
 			if(!Visible) Visible = true;
 
 			bool R = IsActive, noAct = false;
 
 			if(!R) {
-				if(flags.HasFlag(_ActivateFlag.IgnoreIfNoActivateStyleEtc)) {
+				if(flags.HasFlag(ActivateFlag.IgnoreIfNoActivateStyleEtc)) {
 					uint est = ExStyle;
 					if((est & Api.WS_EX_NOACTIVATE) != 0) noAct = true;
 					else if((est & (Api.WS_EX_TOOLWINDOW | Api.WS_EX_APPWINDOW)) == Api.WS_EX_TOOLWINDOW) noAct = !HasStyle(Api.WS_CAPTION);
@@ -666,13 +735,13 @@ namespace Catkeys
 					bool ok = ActivateRaw();
 
 					if(!ofThisThread) {
-						int speed = get_speed();
+						int speed = flags.HasFlag(ActivateFlag.Faster) ? 0 : Script.Speed;
 						for(int j = 0; j < 5; j++) {
 							//Out(ActiveWindow);
 							WaitMS(speed / 5 + 2);
-							//Speed.First();
+							//Perf.First();
 							SendTimeout(200, 0);
-							//Speed.NextWrite();
+							//Perf.NextWrite();
 						}
 					}
 
@@ -684,6 +753,7 @@ namespace Catkeys
 							uint tid = ThreadId; if(tid == 0) break;
 							if(f.ThreadId == tid) {
 								R = Api.SetForegroundWindow(Get.DesktopWindow) && ActivateRaw() && ActiveWindow.ThreadId == tid;
+								if(R) WaitMS(20);
 								//Excel creates a minimized/offscreen window for each workbook opened in that excel process.
 								//These windows just add taskbar buttons. Also it allows to find and activate workbooks.
 								//When you activate such window, Excel instead activates its main window, where it displays all workbooks.
@@ -693,6 +763,8 @@ namespace Catkeys
 						}
 						if(R) break;
 					}
+
+					if(noAct) break;
 				}
 			}
 
@@ -702,9 +774,8 @@ namespace Catkeys
 				if(R) WaitMS(800); //need minimum 600 for pixel() and wait C, because of animation while switching Win10 virtual desktops.
 			}
 
-			if(R || noAct) return true;
-			if(validateThrow) throw new CatkeysException("Failed to activate window.");
-			return false;
+			if(R) return R;
+			return ThreadError.ThrowOrSet(canThrow, "Failed to activate window.");
 		}
 
 		/// <summary>
@@ -735,7 +806,7 @@ namespace Catkeys
 			//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
 			if(this == Get.DesktopWindow) return ActiveWindow.Is0;
 			return WaitForAnActiveWindow();
-        }
+		}
 
 		/// <summary>
 		/// Waits while there is no active window.
@@ -832,12 +903,11 @@ namespace Catkeys
 			return AllowActivate() && Api.LockSetForegroundWindow(f);
 		}
 
-		static int get_speed() { return 100; } //TODO
-
 		/// <summary>
 		/// Makes this control the focused (receiving keyboard input) control.
 		/// Also activetes its top-level parent window.
 		/// This control can belong to any process/thread. To focus controls of this thread usually it's better to use FocusControlOfThisThread(); it is lightweight, no exceptions.
+		/// Applies auto-delay, except when this control is of this thread.
 		/// </summary>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -847,10 +917,9 @@ namespace Catkeys
 		/// <seealso cref="Wnd.FocusedControl"/>
 		public void FocusControl()
 		{
-			Debug.Assert(!IsOfThisThread);
-			Validate();
+			ValidateThrow();
 			Wnd wTL = ToplevelParentOrThis;
-			if(wTL != Api.GetForegroundWindow()) wTL._Activate(_ActivateFlag.ValidateThrow);
+			if(wTL != Api.GetForegroundWindow()) wTL.Activate(ActivateFlag.CanThrow | ActivateFlag.DontCheckIsControl);
 
 			uint th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
@@ -861,7 +930,7 @@ namespace Catkeys
 			bool ok = false;
 			if(Api.AttachThreadInput(th1, th2, true))
 				try {
-					int i, speed = get_speed();
+					int i, speed = Script.Speed;
 					for(i = 0; i < 50; i++) {
 						Api.SetFocus(this);
 						if(this == FocusedControl) { ok = true; break; }
@@ -871,9 +940,9 @@ namespace Catkeys
 
 			if(!ok) throw new CatkeysException("Failed to set focus.");
 
-			//TODO: auto-delay.
+			Time.AutoDelay(this);
 
-			//note: don't use accSelect because on Win7 it simply calls SetForegroundWindow, which like deactivates parent.
+			//note: don't use accSelect because on Win7 it simply calls SetForegroundWindow, which deactivates parent.
 		}
 
 		/// <summary>
@@ -910,49 +979,456 @@ namespace Catkeys
 
 		#endregion
 
-		#region Move_Resize_SetPos
+		#region rect
+
+		/// <summary>
+		/// Gets window rectangle (position and dimensions).
+		/// Calls Api.GetWindowRect() and returns its return value.
+		/// Supports ThreadError.
+		/// When you don't need the bool return value, you can instead use the Rect property, which calls this function.
+		/// </summary>
+		/// <param name="r">A variable that receives the rectangle in screen coordinates. Will be empty if failed.</param>
+		/// <seealso cref="GetClientRect"/>
+		/// <seealso cref="RectInClientOf"/>
+		bool GetWindowRect(out RECT r)
+		{
+			if(Api.GetWindowRect(this, out r)) return true;
+			ThreadError.SetWinError();
+			r.SetEmpty();
+			return false;
+		}
+
+		/// <summary>
+		/// Gets or sets window rectangle.
+		/// <para>
+		/// The 'get' function calls GetWindowRect(). Uses primary screen coordinates. Returns empty rectangle if fails (eg window closed).
+		/// </para>
+		/// <para>
+		/// The 'set' function for controls uses coordinates in direct parent's client area. For top-level windows - in primary screen.
+		/// </para>
+		/// Supports ThreadError. Sets thread error if failed, clears if succeeded (most other functions don't clear it when succeeded).
+		/// Use GetWindowRect() instead when you need a bool return value.
+		/// </summary>
+		public RECT Rect
+		{
+			get
+			{
+				ThreadError.Clear();
+				RECT r; GetWindowRect(out r);
+				return r;
+			}
+			set { _MoveResize(value.left, value.top, value.Width, value.Height); }
+		}
+
+		/// <summary>
+		/// Gets or sets horizontal position.
+		/// The 'set' function for controls uses coordinates in direct parent's client area; in other cases - in primary screen.
+		/// Supports ThreadError.
+		/// </summary>
+		public int X
+		{
+			get { return Rect.left; }
+			set { MoveRaw(value, null); }
+		}
+		/// <summary>
+		/// Gets or sets vertical position.
+		/// The 'set' function for controls uses coordinates in direct parent's client area; in other cases - in primary screen.
+		/// Supports ThreadError.
+		/// </summary>
+		public int Y
+		{
+			get { return Rect.top; }
+			set { MoveRaw(null, value); }
+		}
+		/// <summary>
+		/// Gets or sets width.
+		/// Supports ThreadError.
+		/// </summary>
+		public int Width
+		{
+			get { return Rect.Width; }
+			set { ResizeRaw(value, null); }
+		}
+		/// <summary>
+		/// Gets or sets height.
+		/// Supports ThreadError.
+		/// </summary>
+		public int Height
+		{
+			get { return Rect.Height; }
+			set { ResizeRaw(null, value); }
+		}
+
+		/// <summary>
+		/// Gets client area rectangle.
+		/// Calls Api.GetClientRect() and returns its return value.
+		/// Supports ThreadError.
+		/// When you don't need the bool return value, you can instead use the ClientRect property, which calls this function.
+		/// This method is the same as GetClientSize, just the parameter type is different.
+		/// </summary>
+		/// <param name="r">A variable that receives the rectangle. Will be empty if failed.</param>
+		bool GetClientRect(out RECT r)
+		{
+			if(Api.GetClientRect(this, out r)) return true;
+			ThreadError.SetWinError();
+			r.SetEmpty();
+			return false;
+		}
+
+		/// <summary>
+		/// Gets client area width and height.
+		/// Calls Api.GetClientRect() and returns its return value.
+		/// Supports ThreadError.
+		/// When you don't need the bool return value, you can instead use the ClientSize property, which calls this function.
+		/// This method is the same as GetClientRect, just the parameter type is different.
+		/// </summary>
+		/// <param name="z">A variable that receives width and height. Will be empty if failed.</param>
+		bool GetClientSize(out SIZE z)
+		{
+			RECT r;
+			if(Api.GetClientRect(this, out r)) { z = new SIZE(r.right, r.bottom); return true; }
+			ThreadError.SetWinError();
+			z = new SIZE();
+			return false;
+		}
+
+		/// <summary>
+		/// Gets or sets client area rectangle (width and height).
+		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
+		/// The 'set' function calculates and sets window rectangle from the specified client area rectangle.
+		/// The 'get' function returns empty rectangle if fails (eg window closed).
+		/// Supports ThreadError. Sets thread error if failed, clears if succeeded (most other functions don't clear it when succeeded).
+		/// Use GetClientRect() instead when you need a bool return value.
+		/// This property is the same as ClientSize, just its type is different.
+		/// </summary>
+		public RECT ClientRect
+		{
+			get
+			{
+				ThreadError.Clear();
+				RECT r; GetClientRect(out r);
+				return r;
+			}
+			set { _SetClientSize(value.Width, value.Height); }
+		}
+		/// <summary>
+		/// Gets or sets client area width and height.
+		/// The 'set' function calculates and sets window rectangle from the specified client area width and height.
+		/// The 'get' function returns empty SIZE value if fails (eg window closed).
+		/// Supports ThreadError. Sets thread error if failed, clears if succeeded (most other functions don't clear it when succeeded).
+		/// Use GetClientSize() instead when you need a bool return value.
+		/// This property is the same as ClientRect, just its type is different.
+		/// </summary>
+		public SIZE ClientSize
+		{
+			get
+			{
+				ThreadError.Clear();
+				SIZE z; GetClientSize(out z);
+				return z;
+			}
+			set { _SetClientSize(value.cx, value.cy); }
+		}
+		/// <summary>
+		/// Gets or sets client area width.
+		/// The 'set' function calculates and sets window width from the specified client area width.
+		/// Supports ThreadError.
+		/// </summary>
+		public int ClientWidth
+		{
+			get { return ClientSize.cx; }
+			set { _SetClientSize(value, null); }
+		}
+		/// <summary>
+		/// Gets or sets client area height.
+		/// The 'set' function calculates and sets window height from the specified client area height.
+		/// Supports ThreadError.
+		/// </summary>
+		public int ClientHeight
+		{
+			get { return ClientSize.cy; }
+			set { _SetClientSize(null, value); }
+		}
+
+		bool _SetClientSize(int? width, int? height)
+		{
+			Api.WINDOWINFO u; if(!GetWindowInfo(out u)) return false;
+
+			int W = width != null ? width.Value : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
+			int H = height != null ? height.Value : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
+
+			return _Resize(W, H);
+		}
+
+		/// <summary>
+		/// Calls Api.GetWindowInfo().
+		/// All info in MSDN, WINDOWINFO topic.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="wi">A Api.WINDOWINFO variable that receives window/client rectangles, styles etc. This function clears it and sets cbSize before calling Api.GetWindowInfo().</param>
+		public bool GetWindowInfo(out Api.WINDOWINFO wi)
+		{
+			wi = new Api.WINDOWINFO(); wi.cbSize = Api.SizeOf(wi);
+			return Api.GetWindowInfo(this, ref wi) || ThreadError.SetWinError();
+		}
+
+		/// <summary>
+		/// Gets window rectangle and client area rectangle, both in screen coordinates.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="rWindow">Receives window rectangle.</param>
+		/// <param name="rClient">Receives client area rectangle.</param>
+		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
+		{
+			Api.WINDOWINFO u;
+			if(GetWindowInfo(out u)) { rWindow = u.rcWindow; rClient = u.rcClient; return true; }
+			rWindow = new RECT(); rClient = new RECT();
+			return false;
+		}
+
+		/// <summary>
+		/// Calls Api.MapWindowPoints(), which converts (maps) a point from a coordinate space relative to one window to a coordinate space relative to another window.
+		/// A Wnd0 argument means primary screen, ie the function can map window-to-window, screen-to-window or window-to-screen.
+		/// More info in MSDN, MapWindowPoints topic.
+		/// Supports ThreadError.
+		/// </summary>
+		public static unsafe bool MapWindowPoints(Wnd wFrom, Wnd wTo, ref POINT p)
+		{
+			fixed (void* t = &p) { return _MapWindowPoints(wFrom, wTo, t, 1); }
+		}
+
+		/// <summary>
+		/// Calls Api.MapWindowPoints(), which converts (maps) a rectangle from a coordinate space relative to one window to a coordinate space relative to another window.
+		/// A Wnd0 argument means primary screen, ie the function can map window-to-window, screen-to-window or window-to-screen.
+		/// More info in MSDN, MapWindowPoints topic.
+		/// Supports ThreadError.
+		/// </summary>
+		public static unsafe bool MapWindowPoints(Wnd wFrom, Wnd wTo, ref RECT r)
+		{
+			fixed (void* t = &r) { return _MapWindowPoints(wFrom, wTo, t, 2); }
+		}
+
+		static unsafe bool _MapWindowPoints(Wnd wFrom, Wnd wTo, void* t, uint cPoints)
+		{
+			Api.SetLastError(0);
+			if(Api.MapWindowPoints(wFrom, wTo, t, cPoints) != 0) return true;
+			return ThreadError.SetIfWinError() == 0;
+		}
+
+		/// <summary>
+		/// Gets rectangle of this window (usually control) relative to the client area of another window (usually the parent window).
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is Wnd0, gets rectangle in screen.</param>
+		public bool GetRectInClientOf(Wnd w, out RECT r)
+		{
+			if(w.Is0) return GetWindowRect(out r);
+			return GetWindowRect(out r) && MapWindowPoints(Wnd0, w, ref r);
+		}
+
+		/// <summary>
+		/// Gets rectangle of normal (restored) window even if it is minimized or maximized.
+		/// Returns false if fails, eg if the window is closed.
+		/// Supports ThreadError.
+		/// </summary>
+		public bool GetNormalStateRect(out RECT r)
+		{
+			Api.WINDOWPLACEMENT p;
+			bool ok = GetWindowPlacement(out p);
+			r = p.rcNormalPosition;
+			return ok;
+		}
+
+		#endregion
+
+		#region move, resize, SetWindowPos
+
 		/// <summary>
 		/// Calls Api.SetWindowPos.
 		/// All info in MSDN, SetWindowPos topic.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
-		public bool SetPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default(Wnd))
+		public bool SetWindowPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default(Wnd))
 		{
-			ResetLastError();
-			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags);
+			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags) || ThreadError.SetWinError();
 		}
 
 		/// <summary>
 		/// Moves and resizes.
 		/// Calls Api.SetWindowPos with flags Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|swpFlagsToAdd.
-		/// More info in MSDN, SetWindowPos topic.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
-		public bool MoveResize(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
+		internal bool _MoveResize(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
 		{
-			return SetPos(Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE | swpFlagsToAdd, x, y, width, height);
+			ThreadError.Clear(); //because this func is used by some property-set functions
+			return SetWindowPos(Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE | swpFlagsToAdd, x, y, width, height);
 		}
 
 		/// <summary>
-		/// Moves and resizes.
+		/// Moves.
 		/// Calls Api.SetWindowPos with flags Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|swpFlagsToAdd.
-		/// More info in MSDN, SetWindowPos topic.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
-		public bool Move(int x, int y, uint swpFlagsToAdd = 0)
+		internal bool _Move(int x, int y, uint swpFlagsToAdd = 0)
 		{
-			return MoveResize(x, y, 0, 0, Api.SWP_NOSIZE | swpFlagsToAdd);
+			return _MoveResize(x, y, 0, 0, Api.SWP_NOSIZE | swpFlagsToAdd);
 		}
 
 		/// <summary>
-		/// Moves and resizes.
+		/// Resizes.
 		/// Calls Api.SetWindowPos with flags Api.SWP_NOMOVE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|swpFlagsToAdd.
-		/// More info in MSDN, SetWindowPos topic.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
-		public bool Resize(int width, int height, uint swpFlagsToAdd = 0)
+		internal bool _Resize(int width, int height, uint swpFlagsToAdd = 0)
 		{
-			return MoveResize(0, 0, width, height, Api.SWP_NOMOVE | swpFlagsToAdd);
+			return _MoveResize(0, 0, width, height, Api.SWP_NOMOVE | swpFlagsToAdd);
+		}
+
+		/// <summary>
+		/// Moves and/or resizes.
+		/// This is a lower-level function than MoveResize() (which can throw exceptions, applies auto-delay, supports fractional/workarea coordinates, does not support Api.SWP_x flags).
+		/// Calls Api.SetWindowPos().
+		/// More info in MSDN, SetWindowPos topic.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="x">Left. Can be null to not move in X axis.</param>
+		/// <param name="y">Top. Can be null to not move in Y axis.</param>
+		/// <param name="width">Width. Can be null to not change width.</param>
+		/// <param name="height">Height. Can be null to not change height.</param>
+		/// <param name="swpFlagsToAdd">One or more Api.SWP_x flags, except Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE.</param>
+		public bool MoveResizeRaw(int? x, int? y, int? width, int? height, uint swpFlagsToAdd = 0)
+		{
+			int L = 0, T = 0, W = 0, H = 0;
+
+			uint f = swpFlagsToAdd, getRect = 0;
+			if(x == null && y == null) f |= Api.SWP_NOMOVE;
+			else {
+				if(x != null) L = x.Value; else getRect |= 1;
+				if(y != null) T = y.Value; else getRect |= 2;
+			}
+
+			if(width == null && height == null) f |= Api.SWP_NOSIZE;
+			else {
+				if(width != null) W = width.Value; else getRect |= 4;
+				if(height != null) H = height.Value; else getRect |= 8;
+			}
+
+			if(getRect != 0) {
+				RECT r; if(!GetRectInClientOf(DirectParent, out r)) return false;
+				if((getRect & 1) != 0) L = r.left;
+				if((getRect & 2) != 0) T = r.top;
+				if((getRect & 4) != 0) W = r.Width;
+				if((getRect & 8) != 0) H = r.Height;
+			}
+
+			return _MoveResize(L, T, W, H, f);
+		}
+
+		/// <summary>
+		/// Moves.
+		/// This is a lower-level function than Move() (which can throw exceptions, applies auto-delay, supports fractional/workarea coordinates).
+		/// Calls MoveResizeRaw(x, y, null, null, 0).
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="x">Left. Can be null to not move in X axis.</param>
+		/// <param name="y">Top. Can be null to not move in Y axis.</param>
+		public bool MoveRaw(int? x, int? y)
+		{
+			return MoveResizeRaw(x, y, null, null);
+		}
+
+		/// <summary>
+		/// Resizes.
+		/// This is a lower-level function than Resize() (which can throw exceptions, applies auto-delay, supports fractional coordinates).
+		/// Calls MoveResizeRaw(null, null, width, height, 0).
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="width">Width. Can be null to not change width.</param>
+		/// <param name="height">Height. Can be null to not change height.</param>
+		public bool ResizeRaw(int? width, int? height)
+		{
+			return MoveResizeRaw(null, null, width, height);
+		}
+
+		/// <summary>
+		/// Moves and/or resizes.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// </summary>
+		/// <param name="x">Left. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
+		/// <param name="y">Top. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
+		/// <param name="width">Width. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change width.</param>
+		/// <param name="height">Height. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change height.</param>
+		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		public void MoveResize(Coord x, Coord y, Coord width, Coord height, bool workArea = false)
+		{
+			ValidateThrow();
+
+			Wnd w = DirectParent;
+			POINT xy, wh;
+			if(!w.Is0) {
+				xy = Coord.GetNormalizedInWindowClientArea(x, y, w);
+				wh = Coord.GetNormalizedInWindowClientArea(width, height, w);
+			} else {
+				xy = Coord.GetNormalizedInScreen(x, y, workArea);
+				wh = Coord.GetNormalizedInScreen(width, height, workArea, true);
+			}
+
+			uint f = 0, getRect = 0;
+			if(x == null && y == null) f |= Api.SWP_NOMOVE; else if(x == null) getRect |= 1; else if(y == null) getRect |= 2;
+			if(width == null && height == null) f |= Api.SWP_NOSIZE; else if(width == null) getRect |= 4; else if(height == null) getRect |= 8;
+
+			if(getRect != 0) {
+				RECT r; if(!GetRectInClientOf(w, out r)) ThreadError.ThrowIfError();
+				if((getRect & 1) != 0) xy.x = r.left;
+				if((getRect & 2) != 0) xy.y = r.top;
+				if((getRect & 4) != 0) wh.x = r.Width;
+				if((getRect & 8) != 0) wh.y = r.Height;
+			}
+
+			//TODO: consider: restore min/max
+
+			if(!_MoveResize(xy.x, xy.y, wh.x, wh.y, f)) ThreadError.ThrowIfError();
+
+			Time.AutoDelay(this);
+		}
+
+
+		/// <summary>
+		/// Moves.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// Calls MoveResize(x, y, null, null, workArea).
+		/// </summary>
+		/// <param name="x">Left. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
+		/// <param name="y">Top. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
+		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		public void Move(Coord x, Coord y, bool workArea = false)
+		{
+			MoveResize(x, y, null, null, workArea);
+		}
+
+		/// <summary>
+		/// Resizes.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// Calls MoveResize(null, null, width, height, workArea).
+		/// </summary>
+		/// <param name="width">Width. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change width.</param>
+		/// <param name="height">Height. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change height.</param>
+		/// <param name="workArea">If false, fractional width/height are part of the primary screen, else of its work area. Not used when this is a child window.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails (unlikely).
+		/// </exception>
+		public void Resize(Coord width, Coord height, bool workArea = false)
+		{
+			MoveResize(null, null, width, height, workArea);
 		}
 
 		//TODO: MoveToVirtualDesktop().
@@ -979,7 +1455,7 @@ namespace Catkeys
 			if(!bJustMoveIntoScreen) { x = r.left + rs.left; y = r.top + rs.top; }
 
 			if(useWindow) {
-				if(!w.GetRectNormal(out r)) return false;
+				if(!w.GetNormalStateRect(out r)) return false;
 			}
 
 			if(!bRawXY) {
@@ -1005,19 +1481,19 @@ namespace Catkeys
 			}
 
 			if(useWindow) { //move window
-							//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
-							//There are several workarounds. The best of them - temporarily set owner window 0.
 				Wnd hto = Wnd0; bool visible = w.Visible;
 				try {
+					//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
+					//There are several workarounds. The best of them - temporarily set owner window 0.
 					if(!visible) {
-						hto = (Wnd)w.GetWindowLong(Api.GWL_HWNDPARENT);
-						if(!hto.Is0) w.SetWindowLong(Api.GWL_HWNDPARENT, Zero);
+						hto = w.Owner;
+						if(!hto.Is0) w.Owner = Wnd0;
 					}
 
 					Api.WINDOWPLACEMENT wp;
 					if(!w.GetWindowPlacement(out wp)) return false;
 					bool isMax = wp.showCmd == Api.SW_SHOWMAXIMIZED;
-					//if(r == wp.rcNormalPosition && !isMax) return true;
+					//if(r == wp.rcNormalPosition && !isMax) return true; //TODO: maybe use this or similar. Then also don't set parent 0.
 					wp.rcNormalPosition = r;
 					wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
 					if(!w.SetWindowPlacement(ref wp)) return false;
@@ -1028,11 +1504,13 @@ namespace Catkeys
 						//Must call SetWindowPos twice, or it may refuse to move at all.
 						//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
 						rs = scr.WorkingArea;
-						return w.Move(rs.left, rs.top) && w.Resize(rs.Width, rs.Height);
+						if(!(w._Move(rs.left, rs.top) && w._Resize(rs.Width, rs.Height))) return false;
 					}
 				} finally {
-					if(!hto.Is0) w.SetWindowLong(Api.GWL_HWNDPARENT, (LPARAM)hto);
+					if(!hto.Is0) w.Owner = hto;
 				}
+
+				Time.AutoDelay(w);
 			}
 
 			return true;
@@ -1051,7 +1529,8 @@ namespace Catkeys
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// See also: Wnd.RectMoveInScreen.
-		/// Returns false if fails. Supports Marshal.GetLastWin32Error().
+		/// Returns false if fails. Supports ThreadError.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </remarks>
 		public bool MoveInScreen(int x, int y, object screen = null, bool workArea = true, bool limitSize = false, bool rawXY = false)
 		{
@@ -1068,7 +1547,8 @@ namespace Catkeys
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// See also: Wnd.RectEnsureInScreen.
-		/// Returns false if fails. Supports Marshal.GetLastWin32Error().
+		/// Returns false if fails. Supports ThreadError.
+		/// Applies auto-delay, except when this window is of this thread.
 		/// </remarks>
 		public bool EnsureInScreen(object screen = null, bool workArea = true, bool limitSize = false)
 		{
@@ -1109,57 +1589,59 @@ namespace Catkeys
 		#region Zorder
 		const uint _SWP_ZORDER = Api.SWP_NOMOVE | Api.SWP_NOSIZE | Api.SWP_NOACTIVATE | Api.SWP_NOOWNERZORDER;
 
+		//TODO: maybe need AllowActivate() etc. And now not tested.
+
 		/// <summary>
 		/// Places this window after another window in the Z order. If it is a control - after another control.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderAfter(Wnd anoterWindow)
 		{
-			return SetPos(_SWP_ZORDER, 0, 0, 0, 0, anoterWindow);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, anoterWindow);
 		}
 		/// <summary>
 		/// Places this window before another window in the Z order. If it is a control - before another control.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderBefore(Wnd anoterWindow)
 		{
-			return SetPos(_SWP_ZORDER, 0, 0, 0, 0, Get.PreviousSibling(anoterWindow));
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Get.PreviousSibling(anoterWindow));
 		}
 		/// <summary>
 		/// Places this window or control at the top of its Z order.
 		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows (after topmost windows).
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderTop()
 		{
-			return SetPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.Top);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.Top);
 		}
 		/// <summary>
 		/// Places this window or control at the bottom of its Z order.
 		/// If the window was topmost, makes it non-topmost. //TODO: maybe better don't do it; add parameter makeNonTopmost=false.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderBottom()
 		{
 			if(HasExStyle(Api.WS_EX_TOPMOST)) ZorderNotopmost();
-			return SetPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.Bottom);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.Bottom);
 		}
 		/// <summary>
 		/// Makes this window topmost (always on top of non-topmost windows in the Z order).
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderTopmost()
 		{
-			return SetPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.Topmost);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.Topmost);
 		}
 		/// <summary>
 		/// Makes this window non-topmost.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderNotopmost()
 		{
 			for(int i = 0; i < 4; i++) {
-				if(!SetPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.NoTopmost)) return false;
+				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Spec.NoTopmost)) return false;
 				if(i == 0 && !HasExStyle(Api.WS_EX_TOPMOST)) break;
 			}
 			return true;
@@ -1185,27 +1667,27 @@ namespace Catkeys
 		/// Gets window style.
 		/// It is a combination of Api.WS_x flags, documented in MSDN, "Window Styles" topic.
 		/// See also: HasStyle().
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public uint Style
 		{
-			get { return Api.GetWindowLong(this, Api.GWL_STYLE); }
+			get { return GetWindowLong(Api.GWL_STYLE); }
 		}
 
 		/// <summary>
 		/// Gets window extended style.
 		/// It is a combination of Api.WS_EX_x flags, documented in MSDN, "Extended Window Styles" topic.
 		/// See also: HasExStyle().
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public uint ExStyle
 		{
-			get { return Api.GetWindowLong(this, Api.GWL_EXSTYLE); }
+			get { return GetWindowLong(Api.GWL_EXSTYLE); }
 		}
 
 		/// <summary>
 		/// Returns true if the window has all specified style flags (Api.WS_x, documented in MSDN, "Window Styles" topic).
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool HasStyle(uint style)
 		{
@@ -1214,7 +1696,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if the window has all specified extended style flags (Api.WS_EX_x, documented in MSDN, "Extended Window Styles" topic).
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		public bool HasExStyle(uint exStyle)
 		{
@@ -1224,7 +1706,7 @@ namespace Catkeys
 		/// <summary>
 		/// Changes window style.
 		/// SetStyle sets style as specified. Adding/removing some style bits is easier with SetStyleAdd/SetStyleRemove.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="style">One or more WS_x flags. Documented in MSDN, "Window Styles" topic.</param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
@@ -1236,7 +1718,7 @@ namespace Catkeys
 		/// <summary>
 		/// Changes window extended style.
 		/// SetExStyle sets extended style as specified. Adding/removing some extended style bits is easier with SetExStyleAdd/SetExStyleRemove.
-		/// Supports Marshal.GetLastWin32Error().
+		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="style">One or more WS_x flags. Documented in MSDN, "Extended Window Styles" topic.</param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
@@ -1249,202 +1731,177 @@ namespace Catkeys
 		{
 			int gwl = exStyle ? Api.GWL_EXSTYLE : Api.GWL_STYLE;
 			if(how != 0) {
-				uint pstyle = Api.GetWindowLong(this, gwl);
+				uint pstyle = GetWindowLong(gwl);
 				if(how == 1) style |= pstyle;
 				else if(how == 2) style = pstyle & ~style;
 				else style = pstyle ^ style;
 			}
 
-			if(Api.SetWindowLong(this, gwl, (int)style) == 0 && Marshal.GetLastWin32Error() != 0) return false;
+			if(SetWindowLong(gwl, (int)style) == 0 && ThreadError.IsError) return false;
 
-			if(updateNC) SetPos(Api.SWP_FRAMECHANGED | Api.SWP_NOMOVE | Api.SWP_NOSIZE | Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE);
+			if(updateNC) SetWindowPos(Api.SWP_FRAMECHANGED | Api.SWP_NOMOVE | Api.SWP_NOSIZE | Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE);
 			if(updateClient) Api.InvalidateRect(this, Zero, true);
 
 			return true;
 		}
 		#endregion
 
-		#region window/class long, prop, control id
+		#region window/class long, control id, prop
 
-		/// <summary>
-		/// Gets or sets id of this control.
-		/// The 'get' function calls Api.GetDlgCtrlID.
-		/// The 'set' function calls Api.SetWindowLong(Api.GWL_ID).
-		/// Supports Marshal.GetLastWin32Error().
-		/// </summary>
-		public int ControlId
+		static partial class _Api
 		{
-			get { ResetLastError(); return Api.GetDlgCtrlID(this); }
-			set { SetWindowLong(Api.GWL_ID, value); }
+			[DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+			internal static extern int GetWindowLong32(Wnd hWnd, int nIndex);
+
+			[DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+			internal static extern LPARAM GetWindowLong64(Wnd hWnd, int nIndex);
+
+			[DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+			internal static extern int SetWindowLong32(Wnd hWnd, int nIndex, int dwNewLong);
+
+			[DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+			internal static extern LPARAM SetWindowLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+
+			[DllImport("user32.dll", EntryPoint = "GetClassLongW", SetLastError = true)]
+			internal static extern int GetClassLong32(Wnd hWnd, int nIndex);
+
+			[DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
+			internal static extern LPARAM GetClassLong64(Wnd hWnd, int nIndex);
 		}
 
 		/// <summary>
-		/// Calls Api.GetWindowLong(), which calls GetWindowLong if current process is 32-bit, GetWindowLongPtr if 64-bit.
+		/// Calls API GetWindowLong if this process is 32-bit, GetWindowLongPtr if 64-bit.
+		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="index">One of Api.GWL_x or Api.DWL_x.</param>
 		/// <remarks>
 		/// All GWL_ values are the same in 32-bit and 64-bit process. Some DWL_ values are different, therefore they are defined as properties, not as constants.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </remarks>
 		public LPARAM GetWindowLong(int index)
 		{
-			return Api.GetWindowLong(this, index);
+			Api.SetLastError(0);
+			LPARAM R;
+			if(IntPtr.Size == 8) R = _Api.GetWindowLong64(this, index); else R = _Api.GetWindowLong32(this, index);
+			if(R == 0) ThreadError.SetWinError();
+			return R;
 		}
 
 		/// <summary>
-		/// Calls Api.SetWindowLong(), which calls SetWindowLong if current process is 32-bit, SetWindowLongPtr if 64-bit.
+		/// Calls API SetWindowLong if this process is 32-bit, SetWindowLongPtr if 64-bit.
+		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="index">One of Api.GWL_x or Api.DWL_x.</param>
 		/// <remarks>
 		/// All GWL_ values are the same in 32-bit and 64-bit process. Some DWL_ values are different, therefore they are defined as properties, not as constants.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </remarks>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
 		{
-			return Api.SetWindowLong(this, index, newValue);
+			Api.SetLastError(0);
+			LPARAM R;
+			if(IntPtr.Size == 8) R = _Api.SetWindowLong64(this, index, newValue); else R = _Api.SetWindowLong32(this, index, newValue);
+			if(R == 0) ThreadError.SetWinError();
+			return R;
 		}
 
 		/// <summary>
-		/// Calls Api.GetClassLong(), which calls GetClassLong if current process is 32-bit, GetClassLongPtr if 64-bit.
+		/// Calls API GetClassLong if current process is 32-bit, GetClassLongPtr if 64-bit.
+		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="index">One of Api.GCL_x or Api.GCW_ATOM.</param>
 		/// <remarks>
 		/// All GCL_/GCW_ values are the same in 32-bit and 64-bit process.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </remarks>
 		public LPARAM GetClassLong(int index)
 		{
-			return Api.GetClassLong(this, index);
+			Api.SetLastError(0);
+			LPARAM R;
+			if(IntPtr.Size == 8) R = _Api.GetClassLong64(this, index); else R = _Api.GetClassLong32(this, index);
+			if(R == 0) ThreadError.SetWinError();
+			return R;
 		}
 
 		/// <summary>
 		/// Gets atom of a window class.
 		/// To get class atom when you have a window w, use w.GetClassLong(Api.GCW_ATOM).
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		/// <param name="className">Class name.</param>
 		/// <param name="hInstance">Native module handle of the exe or dll that registered the class. Don't use if it is a global class.</param>
 		internal static ushort GetClassAtom(string className, IntPtr hInstance = default(IntPtr))
 		{
 			var x = new Api.WNDCLASSEX_for_GetClassInfoEx();
-			ResetLastError();
 			return Api.GetClassInfoEx(hInstance, className, out x);
+		}
+
+		/// <summary>
+		/// Gets or sets id of this control.
+		/// <para>The 'get' function calls Api.GetDlgCtrlID.</para>
+		/// <para>The 'set' function calls SetWindowLong(Api.GWL_ID).</para>
+		/// Supports ThreadError.
+		/// </summary>
+		public int ControlId
+		{
+			get { int R = Api.GetDlgCtrlID(this); if(R == 0) ThreadError.SetWinError(); return R; }
+			set { SetWindowLong(Api.GWL_ID, value); }
 		}
 
 		/// <summary>
 		/// Calls Api.GetProp() and returns its return value.
 		/// More info in MSDN, GetProp topic.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
 		public LPARAM GetProp(string name)
 		{
-			ResetLastError();
 			return Api.GetProp(this, name);
 		}
+		/// <summary>
+		/// Calls Api.GetProp() and returns its return value.
+		/// More info in MSDN, GetProp topic.
+		/// </summary>
+		/// <param name="atom">Property name atom in the global atom table.</param>
 		public LPARAM GetProp(ushort atom)
 		{
-			ResetLastError();
 			return Api.GetProp(this, atom);
+			//note: cannot use ThreadError because GetLastError returns 0 when using atom that exists somewhere else.
 		}
 
 		/// <summary>
 		/// Calls Api.SetProp() and returns its return value.
 		/// More info in MSDN, SetProp topic.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
+		/// <param name="value">Property value. Can be a handle or an integer value.</param>
 		public bool SetProp(string name, LPARAM value)
 		{
-			ResetLastError();
 			return Api.SetProp(this, name, value);
 		}
+		/// <summary>
+		/// Calls Api.SetProp() and returns its return value.
+		/// More info in MSDN, SetProp topic.
+		/// </summary>
+		/// <param name="atom">Property name atom in the global atom table.</param>
+		/// <param name="value">Property value. Can be a handle or an integer value.</param>
 		public bool SetProp(ushort atom, LPARAM value)
 		{
-			ResetLastError();
 			return Api.SetProp(this, atom, value);
 		}
 
 		/// <summary>
 		/// Calls Api.RemoveProp() and returns its return value.
 		/// More info in MSDN, RemoveProp topic.
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
 		public LPARAM RemoveProp(string name)
 		{
-			ResetLastError();
 			return Api.RemoveProp(this, name);
 		}
+		/// <summary>
+		/// Calls Api.RemoveProp() and returns its return value.
+		/// More info in MSDN, RemoveProp topic.
+		/// </summary>
+		/// <param name="atom">Property name atom in the global atom table.</param>
 		public LPARAM RemoveProp(ushort atom)
 		{
-			ResetLastError();
 			return Api.RemoveProp(this, atom);
-		}
-
-		#endregion
-
-		#region rect
-
-		/// <summary>
-		/// Gets window rectangle relative to the primary screen.
-		/// If fails (eg window closed), returns empty rectangle.
-		/// Supports Marshal.GetLastWin32Error().
-		/// See also: X, Y, Width, Height, ClientRect, ClientWidth, ClientHeight.
-		/// </summary>
-		public RECT Rect { get { var r = new RECT(); ResetLastError(); Api.GetWindowRect(this, out r); return r; } }
-		/// <summary>
-		/// Returns Rect.left.
-		/// </summary>
-		public int X { get { return Rect.left; } }
-		/// <summary>
-		/// Returns Rect.top.
-		/// </summary>
-		public int Y { get { return Rect.top; } }
-		/// <summary>
-		/// Returns Rect.Width.
-		/// </summary>
-		public int Width { get { return Rect.Width; } }
-		/// <summary>
-		/// Returns Rect.Height.
-		/// </summary>
-		public int Height { get { return Rect.Height; } }
-
-		/// <summary>
-		/// Gets client area rectangle.
-		/// If fails (eg window closed), returns empty rectangle.
-		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
-		/// Supports Marshal.GetLastWin32Error().
-		/// </summary>
-		public RECT ClientRect { get { var r = new RECT(); ResetLastError(); Api.GetClientRect(this, out r); return r; } }
-		public int ClientWidth { get { return ClientRect.Width; } }
-		public int ClientHeight { get { return ClientRect.Height; } }
-
-		/// <summary>
-		/// Gets rectangle of this window (usually control) relative to the client area of another window (usually the parent window).
-		/// If fails (eg window closed), returns empty rectangle.
-		/// Supports Marshal.GetLastWin32Error().
-		/// </summary>
-		/// <param name="w">The returned rectangle will be relative to the client area of window w.</param>
-		public RECT RectInClientOf(Wnd w)
-		{
-			var r = Rect;
-			if(r.IsEmpty && Marshal.GetLastWin32Error() != 0) return r;
-			Api.MapWindowPoints(Wnd0, w, ref r, 2);
-			return r;
-		}
-
-		/// <summary>
-		/// Gets rectangle of normal (restored) window even if it is minimized or maximized.
-		/// Returns false if fails, eg if the window is closed.
-		/// Supports Marshal.GetLastWin32Error).
-		/// </summary>
-		public bool GetRectNormal(out RECT r)
-		{
-			Api.WINDOWPLACEMENT p;
-			bool ok = GetWindowPlacement(out p);
-			r = p.rcNormalPosition;
-			return ok;
 		}
 
 		#endregion
@@ -1453,41 +1910,47 @@ namespace Catkeys
 
 		/// <summary>
 		/// Calls Api.GetWindowThreadProcessId().
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
-		public uint GetThreadAndProcessId(out uint processId) { ResetLastError(); processId = 0; return Api.GetWindowThreadProcessId(this, out processId); }
+		public uint GetThreadAndProcessId(out uint processId)
+		{
+			processId = 0;
+			uint R = Api.GetWindowThreadProcessId(this, out processId);
+			if(R == 0) ThreadError.SetWinError();
+			return R;
+		}
 		/// <summary>
 		/// Calls Api.GetWindowThreadProcessId() and returns thread id.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
 		public uint ThreadId { get { uint pid; return GetThreadAndProcessId(out pid); } }
 		/// <summary>
 		/// Calls Api.GetWindowThreadProcessId() and returns process id.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
 		public uint ProcessId { get { uint pid = 0; GetThreadAndProcessId(out pid); return pid; } }
 		/// <summary>
 		/// Returns true if this window belongs to the current thread.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
 		public bool IsOfThisThread { get { return Api.GetCurrentThreadId() == ThreadId; } }
 		/// <summary>
 		/// Returns true if this window belongs to the current process.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
 		public bool IsOfThisProcess { get { return Api.GetCurrentProcessId() == ProcessId; } }
 
 		/// <summary>
 		/// Returns true if the window is a Unicode window.
 		/// Returns false if the window is an ANSI window or if fails (eg the handle is invalid).
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
-		public bool IsUnicode { get { ResetLastError(); return Api.IsWindowUnicode(this); } }
+		public bool IsUnicode { get { return Api.IsWindowUnicode(this) || ThreadError.SetWinError(); } }
 
 		/// <summary>
 		/// Returns true if the window is of a 64-bit process.
 		/// Returns false if the window is of a 32-bit process or if fails (eg the handle is invalid).
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// If you know that the window belongs to current process, instead use Environment.Is64BitProcess or IntPtr.Size==8.
 		/// See also: Environment.Is64BitOperatingSystem.
 		/// </summary>
@@ -1495,16 +1958,20 @@ namespace Catkeys
 		{
 			get
 			{
-				if(!Environment.Is64BitOperatingSystem) { ResetLastError(); return false; }
-				uint pid = ProcessId; if(pid == 0) return false;
-				IntPtr ph = Zero;
-				try {
-					ph = Api.OpenProcess(Api.PROCESS_QUERY_LIMITED_INFORMATION, false, pid); if(ph == Zero) return false;
-					int is32bit;
-					return Api.IsWow64Process(ph, out is32bit) && is32bit == 0;
-				} finally {
-					if(ph != Zero) Api.CloseHandle(ph);
+				if(Environment.Is64BitOperatingSystem) {
+					uint pid = ProcessId; if(pid == 0) return false;
+					IntPtr ph = Zero; int is32bit;
+					try {
+						ph = Api.OpenProcess(Api.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+						if(ph == Zero || !Api.IsWow64Process(ph, out is32bit)) return ThreadError.SetWinError();
+						if(is32bit == 0) return true;
+					} finally {
+						if(ph != Zero) Api.CloseHandle(ph);
+					}
 				}
+				ThreadError.Clear();
+				return false;
+
 				//info: don't use Process.GetProcessById, it does not have an desiredAccess parameter and fails with higher IL processes.
 			}
 		}
@@ -1574,8 +2041,8 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets class name.
-		/// Returns null if fails, eg if the window is destroyed.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Returns null if fails, eg if the window is closed.
+		/// Supports ThreadError.
 		/// </summary>
 		public unsafe string ClassName
 		{
@@ -1583,9 +2050,9 @@ namespace Catkeys
 			{
 				const int stackSize = 260;
 				var b = stackalloc char[stackSize];
-				ResetLastError();
 				int n = _Api.GetClassName(this, b, stackSize);
 				if(n > 0) return new string(b, 0, n);
+				ThreadError.SetWinError();
 				return null;
 				//speed: 320. It is 50% slower than QM2 str.getwinclass (with conversion to UTF8 and free()); slightly faster than with char[260] or fixed char[260]; with StringBuilder 70% slower; with Marshal.AllocHGlobal 30% slower.
 				//Calling through delegate (Marshal.GetDelegateForFunctionPointer) does not make faster.
@@ -1594,7 +2061,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets or sets window name or control text.
-		/// The 'get' function returns "" if the text is empty. Returns null if fails, eg if the window is destroyed.
+		/// The 'get' function returns "" if the text is empty. Returns null if fails, eg if the window is closed.
 		/// </summary>
 		/// <remarks>
 		/// Each top-level window and control has a text property, although the text can be empty. This function gets or sets that text.
@@ -1603,7 +2070,7 @@ namespace Catkeys
 		/// The 'get' function calls Api.InternalGetWindowText(). If it returns empty text and this is a control, calls GetControlText() with default parameter values. The later function is slow; to avoid it use GetControlName() instead of Name.
 		/// The 'set' function calls SetControlText(), which sends WM_SETTEXT message with 5000 ms timeout; on timeout does nothing.
 		/// Note: it is not the .NET Control.Name.
-		/// Supports Marshal.GetLastWin32Error.
+		/// Supports ThreadError.
 		/// </remarks>
 		public string Name
 		{
@@ -1615,16 +2082,18 @@ namespace Catkeys
 		/// Gets control name.
 		/// Returns "" if it is empty. Returns null if fails, eg if the window is destroyed or hung.
 		/// </summary>
+		/// <param name="removeMnemonic">Remove '&' characters that are used to underline next character when using the keyboard to select controls.</param>
 		/// <remarks>
 		/// Similar to the Name property, and in most cases will get the same value.
 		/// Unlike Name, does not call the slow function GetControlText() when Api.InternalGetWindowText() returns empty text.
 		/// Can be used with top-level windows too.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </remarks>
-		public string GetControlName()
+		public string GetControlName(bool removeMnemonic = false)
 		{
-			return _GetName(false);
-			//TODO: consider: bool param to remove &.
+			string R=_GetName(false);
+			if(removeMnemonic && !Empty(R)) Util.Misc.StringRemoveMnemonicUnderlineAmpersand(ref R);
+			return R;
 		}
 
 		unsafe string _GetName(bool getControlTextIfEmpty)
@@ -1632,10 +2101,10 @@ namespace Catkeys
 			const int stackSize = 1024;
 
 			var b = stackalloc char[stackSize];
-			ResetLastError();
+			Api.SetLastError(0);
 			int nt = _Api.InternalGetWindowText(this, b, stackSize);
 			if(nt < 1) {
-				if(Marshal.GetLastWin32Error() != 0) return null;
+				if(ThreadError.SetIfWinError() != 0) return null;
 				if(getControlTextIfEmpty && (Style & Api.WS_CHILD) != 0) return GetControlText();
 				return "";
 			}
@@ -1645,11 +2114,11 @@ namespace Catkeys
 			for(int na = stackSize; na <= int.MaxValue / 4;) {
 				na *= 2;
 				sb.Capacity = na;
-				ResetLastError();
+				Api.SetLastError(0);
 				nt = _Api.InternalGetWindowTextSB(this, sb, na);
 				if(nt < na - 1) {
 					if(nt > 0) return sb.ToString();
-					return (Marshal.GetLastWin32Error() == 0) ? "" : null;
+					return (ThreadError.SetIfWinError() == 0) ? "" : null;
 				}
 			}
 
@@ -1668,7 +2137,7 @@ namespace Catkeys
 		/// Unlike Name, does not try to use the fast API function InternalGetWindowText(), which in some cases can get unexpected value.
 		/// Sends message WM_GETTEXT. It is much slower than InternalGetWindowText(), especially when the window is of another thread.
 		/// Can be used with top-level windows too.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </remarks>
 		public unsafe string GetControlText(int timeoutMS = 5000) //TODO: consider: Option.sendMessageTimeoutMS=1000 (min 500, 0 = no timeout). Then let these be properties: ControlText (get, set), ControlName.
 		{
@@ -1681,7 +2150,7 @@ namespace Catkeys
 
 			var b = stackalloc char[stackSize];
 
-			if(ofThisThread) nt = Send(Api.WM_GETTEXT, stackSize, b);
+			if(ofThisThread) nt = Send(Api.WM_GETTEXT, stackSize, b); //info: here cannot fail, because IsOfThisThread returns false if cannot get thread id.
 			else if(!SendTimeout(timeoutMS, out nt, Api.WM_GETTEXT, stackSize, b)) return null;
 
 			if(nt < stackSize - 1) {
@@ -1721,18 +2190,17 @@ namespace Catkeys
 		/// More info: see GetControlText().
 		/// Can be used with top-level windows too.
 		/// You can instead use the Name property, which calls this function with default timeout.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </remarks>
 		public bool SetControlText(string text, int timeoutMS = 5000)
 		{
-			LPARAM res;
-			return SendTimeoutS(timeoutMS, out res, Api.WM_SETTEXT, 0, text ?? "");
+			return SendTimeoutS(timeoutMS, Api.WM_SETTEXT, 0, text ?? "");
 		}
 
 		/// <summary>
 		/// Returns true if the class name of this window matches className.
 		/// String by default is interpreted as wildcard, case-insensitive.
-		/// Supports Marshal.GetLastWin32Error).
+		/// Supports ThreadError.
 		/// </summary>
 		public bool ClassNameIs(WildStringI className)
 		{
@@ -1741,14 +2209,15 @@ namespace Catkeys
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
-		/// classNames can be a string array or List, or it can be |-delimited string list like "Class1|Class2|Class3".
-		/// By default the class names in the list are interpreted as wildcard, case-insensitive (uses String.Like_()).
-		/// Supports Marshal.GetLastWin32Error).
+		/// Strings by default are interpreted as wildcard, case-insensitive.
+		/// Supports ThreadError.
 		/// </summary>
-		public int ClassNameIsAny(StringList classNames)
+		public int ClassNameIs(params WildStringI[] classNames)
 		{
 			string cn = ClassName; if(cn == null) return 0;
-			return cn.Like_(true, classNames.Arr);
+			for(int i = 0; i < classNames.Length; i++) if(classNames[i].Match(cn)) return i + 1;
+			ThreadError.Clear();
+            return 0;
 		}
 
 		/// <summary>
@@ -1810,7 +2279,6 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets native font handle.
 		/// Sends message Api.WM_GETFONT or Api.WM_SETFONT (redraws).
-		/// Supports Marshal.GetLastWin32Error().
 		/// </summary>
 		public IntPtr Font
 		{
@@ -1833,11 +2301,6 @@ namespace Catkeys
 		#endregion
 
 		#region util
-
-		static void _SetLastErrorInvalidHandle()
-		{
-			Api.SetLastError(1400); //Invalid window handle
-		}
 
 		//This can be used, but not much simpler than calling ATI directly and using try/finally.
 		//internal struct _AttachThreadInput :IDisposable

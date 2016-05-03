@@ -71,7 +71,7 @@ namespace Catkeys.Tasks
 				_hwndAM=hWnd;
 				break;
 			//case WM.CREATE:
-			//	Speed.Next();
+			//	Perf.Next();
 			//	break;
 			case Api.WM_COPYDATA: //TODO: ChangeWindowMessageFilter
 				_OnCopyData((Wnd)wParam, (Api.COPYDATASTRUCT*)lParam);

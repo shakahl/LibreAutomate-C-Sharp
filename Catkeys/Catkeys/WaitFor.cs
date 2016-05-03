@@ -58,11 +58,21 @@ namespace Catkeys
 			//TODO
 		}
 
+		/// <summary>
+		/// Waits Script.Speed milliseconds, or longer if window w is busy.
+		/// Does not wait if window w is of this thread.
+		/// </summary>
+		/// <param name="w">A window.</param>
+		/// <param name="minMS">Minimal time to wait, ms.</param>
+		/// <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
 		public static void AutoDelay(Wnd w, int minMS, int maxMS = 0)
 		{
-			int ms = Script.Option.speed;
+			if(w.IsOfThisThread) return;
+
+			int ms = Script.Speed;
 			if(ms < minMS) ms = minMS;
 			if(maxMS > 0 && ms > maxMS) ms = maxMS;
+
 			for(int i = 0, t = 0; t < ms;) {
 				i += 2; t += i; if(t > ms) i -= t - ms;
 				//Out(i);
@@ -71,10 +81,23 @@ namespace Catkeys
 			}
 		}
 
+		/// <summary>
+		/// Waits Script.Speed milliseconds, or longer if window w is busy.
+		/// Does not wait if window w is of this thread.
+		/// </summary>
+		/// <param name="w">A window.</param>
 		public static void AutoDelay(Wnd w) { AutoDelay(w, 0, 0); }
 
+		/// <summary>
+		/// Waits Script.Speed milliseconds.
+		/// </summary>
+		/// <param name="minMS">Minimal time to wait, ms.</param>
+		/// <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
 		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(Wnd0, minMS, maxMS); }
 
+		/// <summary>
+		/// Waits Script.Speed milliseconds.
+		/// </summary>
 		public static void AutoDelay() { AutoDelay(Wnd0, 0, 0); }
 	}
 

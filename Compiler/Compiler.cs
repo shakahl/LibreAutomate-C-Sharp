@@ -24,7 +24,7 @@ namespace Compiler
 			public IntPtr eventCompilerStartup;
 #pragma warning restore 649
 			public Wnd hwndCompiler;
-			public Speed.PerformanceCounter perf;
+			public Perf.PerfInstance perf;
 		}
 
 		//We don't use MemoryMappedFile because it is very slow. Creating/writing is 1500, opening/reading is 5000.
@@ -80,7 +80,7 @@ namespace Compiler
 			//	_hwndAM=hWnd;
 			//	break;
 			//case WM.CREATE:
-			//	Speed.Next();
+			//	Perf.Next();
 			//	break;
 			//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
 			//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);
@@ -112,10 +112,10 @@ namespace Compiler
 			//Out("test");
 			//TODO: auto-ngen compiler. Need admin.
 
-			Speed.First();
+			Perf.First();
 			//System.Runtime.ProfileOptimization.SetProfileRoot(@"C:\Test");
 			//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
-			//Speed.Next();
+			//Perf.Next();
 
 			//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
 			//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
@@ -126,15 +126,15 @@ namespace Compiler
 			object[] p = new object[1] { g };
 
 			//g[0]="/?";
-			Speed.Next(); //16 ms
+			Perf.Next(); //16 ms
 			for(int i = 1; i<=4; i++) {
 				g[0] = $@"/out:C:\Test\test{i}.exe";
 				m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
-				Speed.Next();
+				Perf.Next();
 				//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
-				//Speed.Next();
+				//Perf.Next();
 			}
-			Speed.Write();
+			Perf.Write();
 
 			Show.TaskDialog("now will GC.Collect");
 			GC.Collect(); //releases a lot
