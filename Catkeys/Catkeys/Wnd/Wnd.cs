@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 //using System.IO;
 using System.Windows.Forms;
 using static System.Math;
+using System.Drawing;
 
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
@@ -107,6 +108,16 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Formats string $"{handle} {ClassName} \"{Name}\"".
+		/// </summary>
+		public override string ToString()
+		{
+			if(Is0) return "0";
+			string s = Name.Limit_(250);
+			return $"{_h} {ClassName} \"{s}\"";
+		}
+
+		/// <summary>
 		/// Implements IWin32Window.Handle.
 		/// </summary>
 		public IntPtr Handle { get { return _h; } }
@@ -128,7 +139,7 @@ namespace Catkeys
 
 		#endregion
 
-		#region Send message
+		#region send/post message
 
 		static partial class _Api
 		{
@@ -140,10 +151,6 @@ namespace Catkeys
 
 			[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
 			public static extern LPARAM SendMessageSB(Wnd hWnd, uint msg, LPARAM wParam, [Out] StringBuilder lParam);
-
-			public const int SMTO_BLOCK = 1;
-			public const int SMTO_ABORTIFHUNG = 2;
-			public const int SMTO_NOTIMEOUTIFNOTHUNG = 8;
 
 			[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
 			public static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
@@ -185,71 +192,62 @@ namespace Catkeys
 
 		/// <summary>
 		/// Calls API SendMessageTimeout.
-		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), bool block = false)
+		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), uint smtoFlags = Api.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			uint fl = _Api.SMTO_ABORTIFHUNG; if(block) fl |= _Api.SMTO_BLOCK;
-			return 0 != _Api.SendMessageTimeout(this, message, wParam, lParam, fl, (uint)timeoutMS, out result) || ThreadError.SetWinError();
+			return 0 != _Api.SendMessageTimeout(this, message, wParam, lParam, smtoFlags, (uint)timeoutMS, out result) || ThreadError.SetWinError();
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout.
 		/// Use this overload when you don't need the return value.
-		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), bool block = false)
+		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), uint smtoFlags = Api.SMTO_ABORTIFHUNG)
 		{
 			LPARAM result;
-			return SendTimeout(timeoutMS, out result, message, wParam, lParam, block);
+			return SendTimeout(timeoutMS, out result, message, wParam, lParam, smtoFlags);
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout where lParam is string.
-		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, bool block = false)
+		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, uint smtoFlags = Api.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			uint fl = _Api.SMTO_ABORTIFHUNG; if(block) fl |= _Api.SMTO_BLOCK;
-			return 0 != _Api.SendMessageTimeoutS(this, message, wParam, lParam, fl, (uint)timeoutMS, out result) || ThreadError.SetWinError();
+			return 0 != _Api.SendMessageTimeoutS(this, message, wParam, lParam, smtoFlags, (uint)timeoutMS, out result) || ThreadError.SetWinError();
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout where lParam is string.
 		/// Use this overload when you don't need the return value.
-		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, uint message, LPARAM wParam, string lParam, bool block = false)
+		public bool SendTimeoutS(int timeoutMS, uint message, LPARAM wParam, string lParam, uint smtoFlags = Api.SMTO_ABORTIFHUNG)
 		{
 			LPARAM result;
-			return SendTimeoutS(timeoutMS, out result, message, wParam, lParam, block);
+			return SendTimeoutS(timeoutMS, out result, message, wParam, lParam, smtoFlags);
 		}
 
 		/// <summary>
 		/// Calls API SendMessageTimeout where lParam is StringBuilder.
-		/// Uses flag SMTO_ABORTIFHUNG. If block==true, adds SMTO_BLOCK.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool SendTimeoutSB(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, StringBuilder lParam, bool block = false)
+		public bool SendTimeoutSB(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, StringBuilder lParam, uint smtoFlags = Api.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			uint fl = _Api.SMTO_ABORTIFHUNG; if(block) fl |= _Api.SMTO_BLOCK;
-			return 0 != _Api.SendMessageTimeoutSB(this, message, wParam, lParam, fl, (uint)timeoutMS, out result) || ThreadError.SetWinError();
+			return 0 != _Api.SendMessageTimeoutSB(this, message, wParam, lParam, smtoFlags, (uint)timeoutMS, out result) || ThreadError.SetWinError();
 		}
 
 		/// <summary>
 		/// Calls API PostMessage.
-		/// Supports ThreadError.
 		/// </summary>
 		public bool Post(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
 		{
-			return _Api.PostMessage(this, message, wParam, lParam) || ThreadError.SetWinError();
+			return _Api.PostMessage(this, message, wParam, lParam);
 		}
 		#endregion
 
@@ -303,36 +301,36 @@ namespace Catkeys
 		/// Returns true if the window is visible. Returns false if is invisible or is a child of invisible parent or when fails (eg window closed).
 		/// </para>
 		/// <para>
-		/// The 'set' function calls Show() or Hide().
+		/// The 'set' function calls Api.ShowWindow(). Does not activate/deactivate/zorder. Supports ThreadError.
+		/// <seealso cref="Activate"/>
+		/// <seealso cref="MinimizeAndHide"/>
 		/// </para>
 		/// </summary>
 		public bool Visible
 		{
 			get { return Api.IsWindowVisible(this); } //note: ThreadError here would not be very useful, better let it be as fast as possible.
-			set { if(value) Show(); else Hide(); }
+			set { _Show(value); }
 		}
 
 		/// <summary>
 		/// Shows this window if not visible.
 		/// Does not activate/deactivate/zorder.
-		/// Calls Api.ShowWindow(this, Api.SW_SHOWNA).
+		/// Calls Api.ShowWindow(this, Api.SW_SHOWNA/SW_HIDE).
 		/// Supports ThreadError.
 		/// </summary>
-		public bool Show()
+		internal bool _Show(bool show)
 		{
-			return Visible || Api.ShowWindow(this, Api.SW_SHOWNA) || ThreadError.SetWinError();
-		}
+			if(show && Visible) return true; //note: don't use this when !show, because then would not hide if the parent window is currently hidden.
+			return Api.ShowWindow(this, show ? Api.SW_SHOWNA : Api.SW_HIDE) || ThreadError.SetWinError();
 
-		/// <summary>
-		/// Hides this window.
-		/// Does not activate/deactivate/zorder.
-		/// Calls Api.ShowWindow(this, Api.SW_HIDE).
-		/// Supports ThreadError.
-		/// </summary>
-		public bool Hide()
-		{
-			return Api.ShowWindow(this, Api.SW_HIDE) || ThreadError.SetWinError();
-			//note: don't use if(!Visible) because then would not hide if the parent window is currently hidden.
+			//speed when the window already is in the requested state:
+			//	ShowWindow and SetWindowPos don't test it.
+			//	ShowWindow(SW_SHOW/SW_HIDE) are quite fast (maybe 5 times slower than IsWindowVisible).
+			//	Unfortunately SW_SHOW activates the window if it is top-level (depends on the foreground lock).
+			//	SW_SHOWNA is MUCH slower.
+			//	SetWindowPos is slightly faster than SW_SHOWNA. With SWP_NOSENDCHANGING faster, especially with windows of other threads, but not much.
+			//speed when the window is not in the requested state:
+			//	All similar.
 		}
 
 		/// <summary>
@@ -362,7 +360,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(WinVer < Win8_0) return 0;
+				if(WinVer < Win8) return 0;
 				int cloaked = 0, hr = Api.DwmGetWindowAttribute(this, 14, out cloaked, 4); //DWMWA_CLOAKED
 				return cloaked;
 			}
@@ -382,118 +380,279 @@ namespace Catkeys
 		#region state (minimized, maximized, normal)
 
 		/// <summary>
-		/// Gets or sets minimized state.
-		/// <para>
-		/// The 'get' function calls Api.IsIconic().
-		/// </para>
-		/// <para>
-		/// The 'set' function is like Minimize() if true, and like RestoreMinimized() if false. Unlike these methods, it is visually fast, without animation.
-		/// Calls Api.SetWindowPlacement().
-		/// </para>
+		/// Returns true if minimized.
+		/// Calls Api.IsIconic().
 		/// Supports ThreadError.
 		/// </summary>
-		public bool StateMinimized
+		public bool IsMinimized
 		{
 			get { return Api.IsIconic(this) || ThreadError.SetWinError(); }
-			set { _SetState(value ? Api.SW_MINIMIZE : Api.SW_RESTORE, true); }
 		}
 
 		/// <summary>
-		/// Gets or sets maximized state.
-		/// <para>
-		/// The 'get' function calls Api.IsZoomed().
-		/// </para>
-		/// <para>
-		/// The 'set' function is like Maximize(), but visually fast, without animation.
-		/// Calls Api.SetWindowPlacement.
-		/// </para>
+		/// Returns true if maximized.
+		/// Calls Api.IsZoomed().
 		/// Supports ThreadError.
 		/// </summary>
-		public bool StateMaximized
+		public bool IsMaximized
 		{
 			get { return Api.IsZoomed(this) || ThreadError.SetWinError(); }
-			set { _SetState(value ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL, true); }
+		}
+
+		///// <summary>
+		///// Returns true if not minimized/maximized.
+		///// Calls Api.IsIconic() and Api.IsZoomed().
+		///// Supports ThreadError.
+		///// </summary>
+		//public bool IsNotMinMax
+		//{
+		//	get { return !(IsMaximized || IsMinimized || ThreadError.IsError); }
+		//}
+
+		public enum MinMaxMethod
+		{
+			/// <summary>
+			/// Use LikeUser or LikeProgrammer, depending on window style. In most cases LikeUser.
+			/// </summary>
+			Auto = 0,
+			/// <summary>
+			/// Send Api.WM_SYSCOMMAND, like when the user clicks the Minimize, Maximize or Restore button in the title bar.
+			/// </summary>
+			LikeUser = 1,
+			/// <summary>
+			/// Call Api.ShowWindow().
+			/// </summary>
+			LikeProgrammer = 2,
+			/// <summary>
+			/// Visually fast, without animation. Uses Api.SetWindowPlacement().
+			/// </summary>
+			NoAnimation = 3,
 		}
 
 		/// <summary>
-		/// Gets or sets normal (not minimized or maximized) state.
-		/// <para>
-		/// The 'get' function calls Api.IsIconic() and Api.IsZoomed().
-		/// </para>
-		/// <para>
-		/// The 'set' function is like RestoreToNormal(), but visually fast, without animation.
-		/// Calls Api.SetWindowPlacement().
-		/// </para>
+		/// If not minimized, minimizes.
+		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// Calls ShowMinimized(MinMaxMethod.Auto, true, true).
+		/// </summary>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public void ShowMinimized()
+		{
+			ShowMinimized(MinMaxMethod.Auto, true, true);
+		}
+
+		/// <summary>
+		/// If not minimized, minimizes.
+		/// Also unhides.
+		/// Returns true if successful or if the window was already in that state.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool StateNormal
+		/// <param name="method">How.</param>
+		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
+		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public bool ShowMinimized(MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
 		{
-			get { return !(StateMaximized || StateMinimized || ThreadError.IsError); }
-			set { _SetState(value ? Api.SW_SHOWNORMAL : Api.SW_SHOWMAXIMIZED, true); }
+			return _MinMaxRes(Api.SW_MINIMIZE, method, validateThrow, applyAutodelay);
 		}
 
 		/// <summary>
-		/// Sets window min/max/normal/restore state with Api.ShowWindow() (animated) or Api.SetWindowPlacement() (no animation).
+		/// If not maximized, maximizes.
+		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// Calls ShowMaximized(MinMaxMethod.Auto, true, true).
+		/// </summary>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public void ShowMaximized()
+		{
+			ShowMaximized(MinMaxMethod.Auto, true, true);
+		}
+
+		/// <summary>
+		/// If not minimized, minimizes.
+		/// Also unhides.
+		/// Returns true if successful or if the window was already in that state.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="method">How.</param>
+		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
+		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public bool ShowMaximized(MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		{
+			return _MinMaxRes(Api.SW_SHOWMAXIMIZED, method, validateThrow, applyAutodelay);
+		}
+
+		/// <summary>
+		/// If maximized or minimized, makes normal (not min/max).
+		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// Calls ShowNotMinMax(MinMaxMethod.Auto, true, true).
+		/// </summary>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public void ShowNotMinMax()
+		{
+			ShowNotMinMax(MinMaxMethod.Auto, true, true);
+		}
+
+		/// <summary>
+		/// If maximized or minimized, makes normal (not min/max).
+		/// Also unhides.
+		/// Returns true if successful or if the window was already in that state.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="method">How.</param>
+		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
+		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public bool ShowNotMinMax(MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		{
+			return _MinMaxRes(Api.SW_SHOWNORMAL, method, validateThrow, applyAutodelay);
+		}
+
+		/// <summary>
+		/// If minimized, restores previous non-minimized state (maximized or normal).
+		/// Also unhides.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// Calls ShowNotMinimized(MinMaxMethod.Auto, true, true).
+		/// </summary>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public void ShowNotMinimized()
+		{
+			ShowNotMinimized(MinMaxMethod.Auto, true, true);
+		}
+
+		/// <summary>
+		/// If minimized, restores previous non-minimized state (maximized or normal).
+		/// Also unhides.
+		/// Returns true if successful or if the window was already in that state.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="method">How.</param>
+		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
+		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
+		/// <exception cref="CatkeysException">
+		/// 1. When this window is invalid (not found, closed, etc).
+		/// 2. When fails.
+		/// </exception>
+		public bool ShowNotMinimized(MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		{
+			return _MinMaxRes(Api.SW_RESTORE, method, validateThrow, applyAutodelay);
+		}
+
+		/// <summary>
+		/// Sets window min/max/normal/restore state.
+		/// Also unhides.
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="state">Must be Api.SW_MINIMIZE, Api.SW_RESTORE (restores to normal/max if minimized), Api.SW_SHOWNORMAL or Api.SW_SHOWMAXIMIZED.</param>
-		/// <param name="fast">Use Api.SetWindowPlacement(), which sets state without animation. If false, uses (Api.ShowWindow)</param>
-		bool _SetState(int state, bool fast)
+		/// <param name="m">Use WM_SYSCOMMAND, Api.ShowWindow() (animated) or Api.SetWindowPlacement() (no animation).</param>
+		bool _MinMaxRes(int state, MinMaxMethod m, bool validateThrow, bool applyAutodelay)
 		{
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 
-			bool wasMinimized;
-			if(fast) {
-				Api.WINDOWPLACEMENT p;
-				if(!GetWindowPlacement(out p)) return false;
-				wasMinimized = (p.showCmd == Api.SW_SHOWMINIMIZED);
+			if(validateThrow) ValidateThrow();
 
-				switch(state) {
-				case Api.SW_MINIMIZE:
-					if(wasMinimized) goto gr;
-					if(p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
-					break;
-				case Api.SW_RESTORE:
-					if(!wasMinimized) goto gr;
-					if((p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state = Api.SW_SHOWMAXIMIZED; //without this would make normal
-					break;
-				case Api.SW_SHOWNORMAL:
-					if(p.showCmd == Api.SW_SHOWNORMAL) goto gr;
-					break;
-				case Api.SW_SHOWMAXIMIZED:
-					if(p.showCmd == Api.SW_SHOWMAXIMIZED) goto gr;
-					break;
-				}
+			bool ok = false, fast = false, wasMinimized = IsMinimized;
+			uint cmd = 0;
 
-				//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. 
-				p.showCmd = state;
-
-				if(!SetWindowPlacement(ref p)) return false;
-			} else {
-				wasMinimized = StateMinimized;
-
-				switch(state) {
-				case Api.SW_MINIMIZE:
-					if(wasMinimized) goto gr;
-					break;
-				case Api.SW_RESTORE:
-					if(!wasMinimized) goto gr;
-					break;
-				case Api.SW_SHOWNORMAL:
-					if(StateNormal) goto gr;
-					break;
-				case Api.SW_SHOWMAXIMIZED:
-					if(StateMaximized) goto gr;
-					break;
-				}
-
-				if(!Api.ShowWindow(this, state)) return ThreadError.SetWinError();
+			switch(state) {
+			case Api.SW_MINIMIZE:
+				ok = wasMinimized;
+				break;
+			case Api.SW_RESTORE:
+				ok = !wasMinimized;
+				break;
+			case Api.SW_SHOWNORMAL:
+				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, _Show() will return false, don't need to check here.
+				break;
+			case Api.SW_SHOWMAXIMIZED:
+				ok = IsMaximized;
+				break;
 			}
 
-			_SetStateActivateWait(state, wasMinimized);
-			return true;
-			gr:
-			return Show();
+			if(ok) {
+				if(Visible) return true;
+				ok = _Show(true) || ThreadError.SetWinError();
+			} else {
+				g1:
+				switch(m) {
+				case MinMaxMethod.NoAnimation:
+					fast = true;
+					break;
+				case MinMaxMethod.Auto: //Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
+					uint style = Style;
+					switch(state) {
+					case Api.SW_MINIMIZE: if((style & Api.WS_MINIMIZEBOX) != 0) cmd = Api.SC_MINIMIZE; break;
+					case Api.SW_SHOWMAXIMIZED: if((style & Api.WS_MAXIMIZEBOX) != 0) cmd = Api.SC_MAXIMIZE; break;
+					default: if((style & (Api.WS_MAXIMIZEBOX | Api.WS_MAXIMIZEBOX)) != 0) cmd = Api.SC_RESTORE; break;
+					}
+					break;
+				case MinMaxMethod.LikeUser:
+					switch(state) {
+					case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
+					case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
+					default: cmd = Api.SC_RESTORE; break;
+					}
+					break;
+				}
+
+				if(cmd != 0) {
+					ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
+					//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
+					if(ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
+				} else {
+					if(fast) {
+						Api.WINDOWPLACEMENT p;
+						if(!GetWindowPlacement(out p)) return false;
+
+						switch(state) {
+						case Api.SW_MINIMIZE:
+							if(p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
+							break;
+						case Api.SW_RESTORE:
+							if((p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state = Api.SW_SHOWMAXIMIZED; //without this would make normal
+							break;
+						}
+
+						//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. 
+						p.showCmd = state;
+
+						ok = SetWindowPlacement(ref p);
+					} else {
+						ok = Api.ShowWindow(this, state) || ThreadError.SetWinError();
+					}
+
+					if(!ok && ThreadError.WinErrorCode == Api.ERROR_ACCESS_DENIED) { m = MinMaxMethod.LikeUser; goto g1; } //UAC blocks the API but not the message
+				}
+
+				if(ok) _SetStateActivateWait(state, wasMinimized);
+			}
+
+			if(ok) { if(applyAutodelay) Time.AutoDelay(this); } else if(validateThrow) throw new CatkeysException();
+
+			return ok;
 		}
 
 		void _SetStateActivateWait(int state, bool wasMinimized)
@@ -523,121 +682,16 @@ namespace Catkeys
 			return Api.SetWindowPlacement(this, ref wp) || ThreadError.SetWinError();
 		}
 
-		/// <summary>
-		/// If not minimized, minimizes.
-		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// </summary>
-		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
-		/// <exception cref="CatkeysException">
-		/// 1. When this window is invalid (not found, closed, etc).
-		/// 2. When fails (unlikely).
-		/// </exception>
-		/// <seealso cref="StateMinimized"/>
-		public void Minimize(bool? useSysCmd = null)
-		{
-			if(!Visible) Visible = true;
-			if(StateMinimized) return;
-			_MinMaxRes(Api.SW_MINIMIZE, useSysCmd);
-		}
-
-		/// <summary>
-		/// If not maximized, maximizes.
-		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// </summary>
-		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
-		/// <exception cref="CatkeysException">
-		/// 1. When this window is invalid (not found, closed, etc).
-		/// 2. When fails (unlikely).
-		/// </exception>
-		/// <seealso cref="StateMaximized"/>
-		public void Maximize(bool? useSysCmd = null)
-		{
-			if(!Visible) Visible = true;
-			if(StateMaximized) return;
-			_MinMaxRes(Api.SW_SHOWMAXIMIZED, useSysCmd);
-		}
-
-		/// <summary>
-		/// If maximized or minimized, makes normal (not min/max).
-		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// </summary>
-		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
-		/// <exception cref="CatkeysException">
-		/// 1. When this window is invalid (not found, closed, etc).
-		/// 2. When fails (unlikely).
-		/// </exception>
-		/// <seealso cref="StateNormal"/>
-		public void RestoreToNormal(bool? useSysCmd = null)
-		{
-			if(!Visible) Visible = true;
-			if(StateNormal) return;
-			_MinMaxRes(Api.SW_SHOWNORMAL, useSysCmd);
-		}
-
-		/// <summary>
-		/// If minimized, restores previous non-minimized state (maximized or normal).
-		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// </summary>
-		/// <param name="useSysCmd">If true, uses Api.WM_SYSCOMMAND. If false, uses Api.ShowWindow(). If omitted/null, uses Api.WM_SYSCOMMAND or Api.ShowWindow(), depending on window style.</param>
-		/// <exception cref="CatkeysException">
-		/// 1. When this window is invalid (not found, closed, etc).
-		/// 2. When fails (unlikely).
-		/// </exception>
-		/// <seealso cref="StateMinimized"/>
-		public void RestoreMinimized(bool? useSysCmd = null)
-		{
-			if(!Visible) Visible = true;
-			if(!StateMinimized) return;
-			_MinMaxRes(Api.SW_RESTORE, useSysCmd);
-		}
-
-		void _MinMaxRes(int state, bool? useSysCmd)
-		{
-			ValidateThrow();
-
-			//Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
-			uint cmd = 0;
-			if(useSysCmd == null) {
-				uint style = Style;
-				switch(state) {
-				case Api.SW_MINIMIZE: if((style & Api.WS_MINIMIZEBOX) != 0) cmd = Api.SC_MINIMIZE; break;
-				case Api.SW_SHOWMAXIMIZED: if((style & Api.WS_MAXIMIZEBOX) != 0) cmd = Api.SC_MAXIMIZE; break;
-				default: if((style & (Api.WS_MAXIMIZEBOX | Api.WS_MAXIMIZEBOX)) != 0) cmd = Api.SC_RESTORE; break;
-				}
-			} else if(useSysCmd.Value) {
-				switch(state) {
-				case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
-				case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
-				default: cmd = Api.SC_RESTORE; break;
-				}
-			}
-			//Out(cmd);
-
-			bool ok;
-			if(cmd != 0) {
-				ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
-				//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
-				if(ok && state == Api.SW_SHOWNORMAL && StateMaximized) ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
-				//it seems that don't need _SetStateActivateWait here like for ShowWindow.
-			} else ok = _SetState(state, false);
-
-			if(!ok) throw new CatkeysException();
-
-			Time.AutoDelay(this);
-		}
-
-		/// <summary>
-		/// Quickly minimizes (without animation) and hides. Activates another window.
-		/// Supports ThreadError.
-		/// </summary>
-		public bool MinimizeAndHide()
-		{
-			return _SetState(Api.SW_MINIMIZE, true) && Hide();
-		}
+		//Rarely used.
+		///// <summary>
+		///// Quickly minimizes (without animation) and hides. Activates another window.
+		///// Supports ThreadError.
+		///// </summary>
+		//public bool MinimizeAndHide()
+		//{
+		//	if(IsMinimized && !Visible) return true; //because ShowMinimized() unhides
+		//	return ShowMinimized(MinMaxMethod.NoAnimation) && _Show(false);
+		//}
 
 		#endregion
 
@@ -674,6 +728,7 @@ namespace Catkeys
 		/// <seealso cref="ActivateRaw"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="Wnd.ActiveWindow"/>
+		/// <seealso cref="Wnd.ActivateNextMainWindow"/>
 		/// <seealso cref="Activate(ActivateFlag)"/>
 		public void Activate()
 		{
@@ -715,8 +770,8 @@ namespace Catkeys
 
 			bool ofThisThread = IsOfThisThread;
 
-			if(StateMinimized) {
-				RestoreMinimized();
+			if(IsMinimized) {
+				ShowNotMinimized();
 				if(!ofThisThread) WaitMS(100); //need minimum 20 for Excel
 			}
 			if(!Visible) Visible = true;
@@ -794,11 +849,11 @@ namespace Catkeys
 				if(!canAct || !IsValid) return false;
 				//It happens when foreground process called LockSetForegroundWindow.
 				//Although AllowSetForegroundWindow returns true, SetForegroundWindow fails.
-				//It happens only before this process sends keys. Eg after first _Act.SendKey this never happens again.
-				//If it has higher IL (and this process is User), also need _Act.MinRes.
-				_Act.SendKey();
+				//It happens only before this process sends keys. Eg after first _AllowActivate_SendKey this never happens again.
+				//If it has higher IL (and this process is User), also need _AllowActivate_MinRes.
+				_AllowActivate_SendKey();
 				if(!Api.SetForegroundWindow(this)) {
-					_Act.MinRes();
+					_AllowActivate_MinRes();
 					if(!Api.SetForegroundWindow(this)) return false;
 				}
 			}
@@ -806,6 +861,20 @@ namespace Catkeys
 			//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
 			if(this == Get.DesktopWindow) return ActiveWindow.Is0;
 			return WaitForAnActiveWindow();
+		}
+
+		/// <summary>
+		/// Activates another main window, like with Alt+Tab.
+		/// Returns the window. Returns Wnd0 if there is no such window or if fails to activate (unlikely).
+		/// Uses Wnd.Get.NextMainWindow() and Activate().
+		/// </summary>
+		/// <param name="skipMinimized">Don't activate minimized windows.</param>
+		public static Wnd ActivateNextMainWindow(bool skipMinimized = false)
+		{
+			Wnd wa = ActiveWindow;
+			Wnd w = Get.NextMainWindow(wa, retryFromTop: true, skipMinimized: skipMinimized, likeAltTab: true);
+			if(w.Is0 || w == wa || !w.Activate(ActivateFlag.DontCheckIsControl)) return Wnd0; //does not throw
+			return w;
 		}
 
 		/// <summary>
@@ -832,14 +901,14 @@ namespace Catkeys
 		/// </summary>
 		public static bool AllowActivate()
 		{
-			if(_Act.AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
+			if(_AllowActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
 
-			_Act.SendKey();
-			if(_Act.AllowSetFore()) return true;
+			_AllowActivate_SendKey();
+			if(_AllowActivate_AllowSetFore()) return true;
 			//First time fails if the foreground window is of higher IL. Then sending keys does not work.
 
-			_Act.MinRes();
-			return _Act.AllowSetFore();
+			_AllowActivate_MinRes();
+			return _AllowActivate_AllowSetFore();
 
 			//Other possible methods:
 			//1. Instead of key can use attachthreadinput. But it is less reliable, eg works first time only, and does not allow our process to activate later easily. Does not work if foreground window is higher IL.
@@ -847,49 +916,45 @@ namespace Catkeys
 		}
 		//TODO: test Show.TaskDialog etc, maybe need Wnd.AllowActivate(). Make sure that foreground lock enabled, because VS disables it.
 
-		//Util functions for AllowActivate etc.
-		static class _Act
+		/// <summary>
+		/// Sends a key (VK_0 up). It allows to activate now.
+		/// Later this process can always activate easily (without key etc). It works even with higher IL windows.
+		/// Don't know why is this behavior. Tested on all OS from XP to 10.
+		/// Does not work if the foreground process has higher UAC IL.
+		/// </summary>
+		static void _AllowActivate_SendKey()
 		{
-			/// <summary>
-			/// Sends a key (VK_0 up). It allows to activate now.
-			/// Later this process can always activate easily (without key etc). It works even with higher IL windows.
-			/// Don't know why is this behavior. Tested on all OS from XP to 10.
-			/// Does not work if the foreground process has higher UAC IL.
-			/// </summary>
-			internal static void SendKey()
-			{
-				OutDebug("_Act.Allow: need key");
+			OutDebug("AllowActivate: need key");
 
-				var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
-				Api.SendInputKey(ref x);
-				//info: works without waiting.
-			}
-
-			/// <summary>
-			/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
-			/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
-			/// </summary>
-			internal static void MinRes()
-			{
-				OutDebug("_Act.Allow: need min/res");
-
-				Wnd t = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW, "#32770", null, Api.WS_POPUP | Api.WS_MINIMIZE | Api.WS_VISIBLE, 0, 0, 0, 0, Wnd0, 0, Zero, 0);
-				//info: When restoring, the window must be visible, or may not work.
-				try {
-					var wp = new Api.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
-					t.SetWindowPlacement(ref wp); //activates t; fast (no animation)
-					SendKey(); //makes so that later our process can always activate
-					AllowSetFore();
-					Api.SetForegroundWindow(Get.DesktopWindow); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
-
-				} finally { Api.DestroyWindow(t); }
-			}
-
-			/// <summary>
-			/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
-			/// </summary>
-			internal static bool AllowSetFore() { return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()); }
+			var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
+			Api.SendInputKey(ref x);
+			//info: works without waiting.
 		}
+
+		/// <summary>
+		/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
+		/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
+		/// </summary>
+		static void _AllowActivate_MinRes()
+		{
+			OutDebug("AllowActivate: need min/res");
+
+			Wnd t = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW, "#32770", null, Api.WS_POPUP | Api.WS_MINIMIZE | Api.WS_VISIBLE, 0, 0, 0, 0, Wnd0, 0, Zero, 0);
+			//info: When restoring, the window must be visible, or may not work.
+			try {
+				var wp = new Api.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
+				t.SetWindowPlacement(ref wp); //activates t; fast (no animation)
+				_AllowActivate_SendKey(); //makes so that later our process can always activate
+				_AllowActivate_AllowSetFore();
+				Api.SetForegroundWindow(Get.DesktopWindow); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
+
+			} finally { Api.DestroyWindow(t); }
+		}
+
+		/// <summary>
+		/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
+		/// </summary>
+		static bool _AllowActivate_AllowSetFore() { return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()); }
 
 		/// <summary>
 		/// Calls Api.LockSetForegroundWindow(), which temporarily prevents other applications from activating windows easily with SetForegroundWindow().
@@ -1017,7 +1082,7 @@ namespace Catkeys
 				RECT r; GetWindowRect(out r);
 				return r;
 			}
-			set { _MoveResize(value.left, value.top, value.Width, value.Height); }
+			set { _Move(value.left, value.top, value.Width, value.Height); }
 		}
 
 		/// <summary>
@@ -1258,7 +1323,7 @@ namespace Catkeys
 		/// Calls Api.SetWindowPos with flags Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|swpFlagsToAdd.
 		/// Supports ThreadError.
 		/// </summary>
-		internal bool _MoveResize(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
+		internal bool _Move(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
 		{
 			ThreadError.Clear(); //because this func is used by some property-set functions
 			return SetWindowPos(Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE | swpFlagsToAdd, x, y, width, height);
@@ -1271,7 +1336,7 @@ namespace Catkeys
 		/// </summary>
 		internal bool _Move(int x, int y, uint swpFlagsToAdd = 0)
 		{
-			return _MoveResize(x, y, 0, 0, Api.SWP_NOSIZE | swpFlagsToAdd);
+			return _Move(x, y, 0, 0, Api.SWP_NOSIZE | swpFlagsToAdd);
 		}
 
 		/// <summary>
@@ -1281,12 +1346,12 @@ namespace Catkeys
 		/// </summary>
 		internal bool _Resize(int width, int height, uint swpFlagsToAdd = 0)
 		{
-			return _MoveResize(0, 0, width, height, Api.SWP_NOMOVE | swpFlagsToAdd);
+			return _Move(0, 0, width, height, Api.SWP_NOMOVE | swpFlagsToAdd);
 		}
 
 		/// <summary>
 		/// Moves and/or resizes.
-		/// This is a lower-level function than MoveResize() (which can throw exceptions, applies auto-delay, supports fractional/workarea coordinates, does not support Api.SWP_x flags).
+		/// This is a lower-level function than Move() (which can throw exceptions, applies auto-delay, supports fractional/workarea coordinates, does not support Api.SWP_x flags).
 		/// Calls Api.SetWindowPos().
 		/// More info in MSDN, SetWindowPos topic.
 		/// Supports ThreadError.
@@ -1296,7 +1361,7 @@ namespace Catkeys
 		/// <param name="width">Width. Can be null to not change width.</param>
 		/// <param name="height">Height. Can be null to not change height.</param>
 		/// <param name="swpFlagsToAdd">One or more Api.SWP_x flags, except Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE.</param>
-		public bool MoveResizeRaw(int? x, int? y, int? width, int? height, uint swpFlagsToAdd = 0)
+		public bool MoveRaw(int? x, int? y, int? width, int? height, uint swpFlagsToAdd = 0)
 		{
 			int L = 0, T = 0, W = 0, H = 0;
 
@@ -1321,33 +1386,33 @@ namespace Catkeys
 				if((getRect & 8) != 0) H = r.Height;
 			}
 
-			return _MoveResize(L, T, W, H, f);
+			return _Move(L, T, W, H, f);
 		}
 
 		/// <summary>
 		/// Moves.
 		/// This is a lower-level function than Move() (which can throw exceptions, applies auto-delay, supports fractional/workarea coordinates).
-		/// Calls MoveResizeRaw(x, y, null, null, 0).
+		/// Calls MoveRaw(x, y, null, null, 0).
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="x">Left. Can be null to not move in X axis.</param>
 		/// <param name="y">Top. Can be null to not move in Y axis.</param>
 		public bool MoveRaw(int? x, int? y)
 		{
-			return MoveResizeRaw(x, y, null, null);
+			return MoveRaw(x, y, null, null);
 		}
 
 		/// <summary>
 		/// Resizes.
 		/// This is a lower-level function than Resize() (which can throw exceptions, applies auto-delay, supports fractional coordinates).
-		/// Calls MoveResizeRaw(null, null, width, height, 0).
+		/// Calls MoveRaw(null, null, width, height, 0).
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="width">Width. Can be null to not change width.</param>
 		/// <param name="height">Height. Can be null to not change height.</param>
 		public bool ResizeRaw(int? width, int? height)
 		{
-			return MoveResizeRaw(null, null, width, height);
+			return MoveRaw(null, null, width, height);
 		}
 
 		/// <summary>
@@ -1363,7 +1428,7 @@ namespace Catkeys
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails (unlikely).
 		/// </exception>
-		public void MoveResize(Coord x, Coord y, Coord width, Coord height, bool workArea = false)
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false)
 		{
 			ValidateThrow();
 
@@ -1391,7 +1456,7 @@ namespace Catkeys
 
 			//TODO: consider: restore min/max
 
-			if(!_MoveResize(xy.x, xy.y, wh.x, wh.y, f)) ThreadError.ThrowIfError();
+			if(!_Move(xy.x, xy.y, wh.x, wh.y, f)) ThreadError.ThrowIfError();
 
 			Time.AutoDelay(this);
 		}
@@ -1400,7 +1465,7 @@ namespace Catkeys
 		/// <summary>
 		/// Moves.
 		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls MoveResize(x, y, null, null, workArea).
+		/// Calls Move(x, y, null, null, workArea).
 		/// </summary>
 		/// <param name="x">Left. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
 		/// <param name="y">Top. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
@@ -1411,13 +1476,13 @@ namespace Catkeys
 		/// </exception>
 		public void Move(Coord x, Coord y, bool workArea = false)
 		{
-			MoveResize(x, y, null, null, workArea);
+			Move(x, y, null, null, workArea);
 		}
 
 		/// <summary>
 		/// Resizes.
 		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls MoveResize(null, null, width, height, workArea).
+		/// Calls Move(null, null, width, height, workArea).
 		/// </summary>
 		/// <param name="width">Width. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change width.</param>
 		/// <param name="height">Height. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change height.</param>
@@ -1428,10 +1493,8 @@ namespace Catkeys
 		/// </exception>
 		public void Resize(Coord width, Coord height, bool workArea = false)
 		{
-			MoveResize(null, null, width, height, workArea);
+			Move(null, null, width, height, workArea);
 		}
-
-		//TODO: MoveToVirtualDesktop().
 
 		#endregion
 
@@ -1528,10 +1591,10 @@ namespace Catkeys
 		/// <param name="rawXY">Don't interpret 0 and negative x y in a special way. They are relative to the top-left corner of the screen.</param>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
-		/// See also: Wnd.RectMoveInScreen.
 		/// Returns false if fails. Supports ThreadError.
 		/// Applies auto-delay, except when this window is of this thread.
 		/// </remarks>
+		/// <seealso cref="Wnd.RectMoveInScreen"/>
 		public bool MoveInScreen(int x, int y, object screen = null, bool workArea = true, bool limitSize = false, bool rawXY = false)
 		{
 			var r = new RECT(x, y, x, y, false);
@@ -1546,14 +1609,30 @@ namespace Catkeys
 		/// <param name="limitSize">If window is bigger than screen, resize it.</param>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
-		/// See also: Wnd.RectEnsureInScreen.
 		/// Returns false if fails. Supports ThreadError.
 		/// Applies auto-delay, except when this window is of this thread.
 		/// </remarks>
+		/// <seealso cref="Wnd.RectEnsureInScreen"/>
 		public bool EnsureInScreen(object screen = null, bool workArea = true, bool limitSize = false)
 		{
 			var r = new RECT();
 			return _MoveInScreen(true, this, ref r, screen, workArea, true, limitSize, false);
+		}
+
+		/// <summary>
+		/// Moves this window to the center of the screen.
+		/// Calls MoveInScreen(0, 0, screen, workArea). Also makes not minimized/maximized/hidden.
+		/// </summary>
+		/// <param name="screen">Move to this screen. If null, use screen of this window. The same as with Screen_.FromObject().</param>
+		/// <param name="workArea">Use the work area, not whole screen.</param>
+		/// <remarks>
+		/// Returns false if fails. Supports ThreadError.
+		/// Applies auto-delay, except when this window is of this thread.
+		/// </remarks>
+		/// <seealso cref="Wnd.RectMoveInScreen"/>
+		public bool MoveToScreenCenter(object screen = null, bool workArea = true)
+		{
+			return ShowNotMinMax(MinMaxMethod.NoAnimation) && MoveInScreen(0, 0, screen, workArea);
 		}
 
 		/// <summary>
@@ -1906,7 +1985,7 @@ namespace Catkeys
 
 		#endregion
 
-		#region thread, process, isUnicode, is64-bit, UAC
+		#region thread, process, isUnicode, is 64-bit, is hung, UAC
 
 		/// <summary>
 		/// Calls Api.GetWindowThreadProcessId().
@@ -1943,9 +2022,14 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if the window is a Unicode window.
 		/// Returns false if the window is an ANSI window or if fails (eg the handle is invalid).
-		/// Supports ThreadError.
 		/// </summary>
-		public bool IsUnicode { get { return Api.IsWindowUnicode(this) || ThreadError.SetWinError(); } }
+		public bool IsUnicode { get { return Api.IsWindowUnicode(this); } }
+
+		/// <summary>
+		/// Returns true if thread of this window is considered hung.
+		/// Calls Api.IsHungAppWindow().
+		/// </summary>
+		public bool IsHung { get { return Api.IsHungAppWindow(this); } }
 
 		/// <summary>
 		/// Returns true if the window is of a 64-bit process.
@@ -1993,7 +2077,7 @@ namespace Catkeys
 				var t = UacInfo.ThisProcess;
 				if(t.IsUIAccess) return false;
 				var u = UacInfo.GetOfProcess(ProcessId); if(u == null) return true;
-				if(WinVer >= Win8_0 && WinVer <= Win8_1 && u.IsAppContainer) return true;
+				if(WinVer >= Win8 && WinVer <= Win8_1 && u.IsAppContainer) return true;
 				if(t.IntegrityLevel < u.IntegrityLevel) return true;
 				return false;
 				//TODO: test
@@ -2025,7 +2109,7 @@ namespace Catkeys
 
 		#endregion
 
-		#region text, class, isofclass, process name, tostring
+		#region text, class, isofclass, process name
 
 		static partial class _Api
 		{
@@ -2082,7 +2166,7 @@ namespace Catkeys
 		/// Gets control name.
 		/// Returns "" if it is empty. Returns null if fails, eg if the window is destroyed or hung.
 		/// </summary>
-		/// <param name="removeMnemonic">Remove '&' characters that are used to underline next character when using the keyboard to select controls.</param>
+		/// <param name="removeMnemonic">Remove '&amp;' characters that are used to underline next character when using the keyboard to select controls.</param>
 		/// <remarks>
 		/// Similar to the Name property, and in most cases will get the same value.
 		/// Unlike Name, does not call the slow function GetControlText() when Api.InternalGetWindowText() returns empty text.
@@ -2091,7 +2175,7 @@ namespace Catkeys
 		/// </remarks>
 		public string GetControlName(bool removeMnemonic = false)
 		{
-			string R=_GetName(false);
+			string R = _GetName(false);
 			if(removeMnemonic && !Empty(R)) Util.Misc.StringRemoveMnemonicUnderlineAmpersand(ref R);
 			return R;
 		}
@@ -2217,7 +2301,7 @@ namespace Catkeys
 			string cn = ClassName; if(cn == null) return 0;
 			for(int i = 0; i < classNames.Length; i++) if(classNames[i].Match(cn)) return i + 1;
 			ThreadError.Clear();
-            return 0;
+			return 0;
 		}
 
 		/// <summary>
@@ -2234,42 +2318,98 @@ namespace Catkeys
 		/// </summary>
 		public string ProcessPath { get { return Process_.GetProcessName(ProcessId, true); } }
 
-		/// <summary>
-		/// Formats string $"{handle} {ClassName} \"{Name}\"".
-		/// </summary>
-		public override string ToString()
-		{
-			if(Is0) return "0";
-			string s = Name.Limit_(250);
-			return $"{_h} {ClassName} \"{s}\"";
-		}
-
 		#endregion
 
 		#region close, destroy
 
 		/// <summary>
-		/// Closes the window.
-		/// See also: Destroy().
+		/// Tries to close the window.
+		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or simply need more time until it is finally destroyed.
+		/// This function waits a while until the window is destroyed or hidden or disabled, but does not wait indefinitely. Also applies auto-delay.
+		/// If finally the window is destroyed (or was already destroyed when calling this function), sets this=Wnd0 and returns true.
+		/// Else returns false (although in many cases the window is already hidden and will be destroyed soon, and another window is activated).
+		/// If the window is of this thread, just sends (not posts) Api.WM_CLOSE or Api.WM_SYSCOMMAND and does not wait.
 		/// </summary>
-		public bool Close()
+		/// <param name="closeLikeUser">
+		/// If true, uses Api.WM_SYSCOMMAND, like when the user clicks the Close button in the title bar.
+		/// If false, uses Api.WM_CLOSE, which is more often used in programming code.
+		/// If null, uses Api.WM_SYSCOMMAND or Api.WM_CLOSE depending on window style.
+		/// Most windows can be closed with any of these messages, but some respond properly only to one of them.
+		/// </param>
+		/// <seealso cref="Destroy"/>
+		public bool Close(bool? closeLikeUser = null)
 		{
-			if(!IsValid) return true;
-			//TODO: implement.
+			if(IsValid) {
+				bool useSysCmd;
+				if(closeLikeUser != null) useSysCmd = closeLikeUser.Value;
+				else {
+					uint style = Style;
+					useSysCmd = (style & (Api.WS_SYSMENU | Api.WS_VISIBLE | Api.WS_CHILD | Api.WS_POPUP)) == (Api.WS_SYSMENU | Api.WS_VISIBLE);
+				}
+
+				if(IsOfThisThread) {
+					if(useSysCmd) Send(Api.WM_SYSCOMMAND, Api.SC_CLOSE); else Send(Api.WM_CLOSE);
+				} else {
+					//note: Don't use SendX messages because of possible anomalies. Some windows then are
+					//hidden but not closed, and even next app instance does not start (eg Firefox). Possible
+					//problems with windows that have toolbars. Possible crashes and other anomalies.
+
+					//Some windows cannot be properly closed using only WM_CLOSE. For example, VS 7 window closed, but the app not closed.
+					//Some windows (eg IE7), sometimes ignore SC_CLOSE if it is posted soon after starting the program.
+					//When the user closes a window, Windows sends SC_CLOSE. DefWindowProc on SC_CLOSE sends WM_CLOSE, except if disabled.
+					//We post SC_CLOSE to most nonpopup windows. However it may not work with some windows.
+					//Not true: Therefore we also post WM_CLOSE. However then it is possible that the window will receive WM_CLOSE two times. For example, if on first WM_CLOSE (sent by Windows in response to SC_CLOSE) the app displays a "Save?" message box, then on second WM_CLOSE it may display another message box, or crash, etc. Therefore we wait a while, and dont use WM_CLOSE if the window is disabled or closed or hidden during that time.
+
+					bool ok = useSysCmd ? Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE) : Post(Api.WM_CLOSE);
+					if(!ok) {
+						//Out(Marshal.GetLastWin32Error()); //0 when UAC access denied
+						if(useSysCmd || !Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE)) goto g1; //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
+					}
+
+					for(int i = 2, n = useSysCmd ? 100 : 10; i < n; i++) {
+						WaitMS(Min(i, 10));
+						if(!Visible || !Enabled) goto g1; //destroyed, hidden or disabled (most likely because displays a modal dialog box, eg "Save?")
+						if(i > n / 2) {
+							if(!SendTimeout(200, 0)) {
+								if(!IsValid || IsHung) goto g1;
+							}
+						}
+					}
+					//if(useSysCmd) Post(Api.WM_CLOSE); //too dirty, better fail
+					g1:
+					Time.AutoDelay();
+					WaitForAnActiveWindow();
+				}
+				if(IsValid) return false;
+			}
+			_h = Zero;
 			return true;
 		}
 
 		/// <summary>
-		/// Destroys the window.
-		/// Calls Api.DestroyWindow() and returns its return value.
-		/// Exception if the window is not of this thread.
-		/// See also: Close().
+		/// Closes all matching windows.
+		/// Calls Wnd.FindAll(). All parameters etc are the same. Then calls Close() for each found window.
 		/// </summary>
+		public static void CloseAll(
+			WildString name, WildStringI className = null, WildStringI program = null,
+			WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null
+			)
+		{
+			foreach(Wnd w in FindAll(name, className, program, flags, prop, f)) w.Close();
+		}
+
+		/// <summary>
+		/// Destroys the window, which must be of this thread and should not be a modal dialog.
+		/// Calls Api.DestroyWindow(). If it succeeds, sets this=Wnd0 and returns true. Else returns false.
+		/// </summary>
+		/// <exception cref="CatkeysException">If the window is not of this thread.</exception>
+		/// <seealso cref="Close"/>
 		public bool Destroy()
 		{
-			if(!IsValid) return false;
-			if(!IsOfThisThread) throw new CatkeysException("Cannot destroy windows of other threads. Try Close.");
-			return Api.DestroyWindow(this);
+			if(Api.DestroyWindow(this)) { _h = Zero; return true; }
+			uint tid = ThreadId;
+			if(tid != 0 && tid != Api.GetCurrentThreadId()) throw new CatkeysException("Window of other thread. Use Close.");
+			return false;
 		}
 
 		#endregion
@@ -2277,46 +2417,341 @@ namespace Catkeys
 		#region misc
 
 		/// <summary>
+		/// Sets transparency.
+		/// On Windows 7 works only with top-level windows, on newer OS also with controls.
+		/// </summary>
+		/// <param name="allowTransparency">Set or remove Api.WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
+		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). If null, sets default value (opaque).</param>
+		/// <param name="color">Make pixels painted with this color completely transparent. If null, sets default value (no transparent color).</param>
+		public bool Transparency(bool allowTransparency, uint? opacity = null, uint? colorABGR = null)
+		{
+			uint est = ExStyle;
+			bool layered = (est & Api.WS_EX_LAYERED) != 0;
+
+			if(allowTransparency) {
+				if(!layered && !SetExStyle(est | Api.WS_EX_LAYERED)) return false;
+
+				uint col = 0, op = 0, f = 0;
+				if(colorABGR != null) { f |= 1; col = colorABGR.Value; }
+				if(opacity != null) { f |= 2; op = opacity.Value; if(op > 255) op = 255; }
+
+				if(!Api.SetLayeredWindowAttributes(this, col, (byte)op, f)) return ThreadError.SetWinError();
+			} else if(layered) {
+				//if(!Api.SetLayeredWindowAttributes(this, 0, 0, 0)) return ThreadError.SetWinError();
+				if(!SetExStyle(est & ~Api.WS_EX_LAYERED)) return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Gets icon that is displayed in window title bar and in its taskbar button.
+		/// Returns icon handle if successful, else Zero. Later call Api.DestroyIcon().
+		/// </summary>
+		/// <param name="big">Get 32x32 icon.</param>
+		public IntPtr GetIconHandle(bool big = false)
+		{
+			//support Windows store apps
+			if(WinVer >= Win8) {
+				Wnd t = Wnd0;
+				switch(ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+				case 1:
+					t = this;
+					break;
+				case 2:
+					t = _WindowsStoreAppFrameChild(this);
+					break;
+				}
+				string s = null;
+				if(!t.Is0 && 0 != _WindowsStoreAppId(t, out s, true)) {
+					IntPtr R = Files.GetIconHandle(s, big ? 32 : 16);
+					if(R != Zero) return R;
+				}
+			}
+
+			LPARAM _R;
+			SendTimeout(1000, out _R, Api.WM_GETICON, big);
+			if(_R == 0) SendTimeout(1000, out _R, Api.WM_GETICON, !big);
+			if(_R == 0) _R = GetClassLong(big ? Api.GCL_HICON : Api.GCL_HICONSM);
+			if(_R == 0) _R = GetClassLong(big ? Api.GCL_HICONSM : Api.GCL_HICON);
+
+			if(_R != 0) return Api.CopyIcon(_R);
+
+			return Zero;
+		}
+
+		/// <summary>
 		/// Gets or sets native font handle.
 		/// Sends message Api.WM_GETFONT or Api.WM_SETFONT (redraws).
 		/// </summary>
-		public IntPtr Font
+		public IntPtr FontHandle
 		{
 			get { return Send(Api.WM_GETFONT); }
 			set { Send(Api.WM_SETFONT, value, true); }
 		}
 
-		//TODO: Flash()
-
 		/// <summary>
-		/// Stops flashing taskbar button.
+		/// Taskbar button flash, progress, add/delete.
 		/// </summary>
-		public void FlashStop()
+		public static class TaskbarButton
 		{
-			var fi = new Api.FLASHWINFO(); fi.cbSize = Api.SizeOf(fi); fi.hwnd = this;
-			Api.FlashWindowEx(ref fi);
-			//tested. FlashWindow is easier but does not work for taskbar button, only for caption when no taskbar button.
+			/// <summary>
+			/// Starts or stops flashing the taskbar button.
+			/// </summary>
+			/// <param name="w">Window.</param>
+			/// <param name="count">The number of times to flash. If 0, stops flashing.</param>
+			public static void Flash(Wnd w, int count)
+			{
+				//const uint FLASHW_STOP = 0;
+				//const uint FLASHW_CAPTION = 0x00000001;
+				const uint FLASHW_TRAY = 0x00000002;
+				//const uint FLASHW_ALL = FLASHW_CAPTION | FLASHW_TRAY;
+				//const uint FLASHW_TIMER = 0x00000004;
+				//const uint FLASHW_TIMERNOFG = 0x0000000C;
+
+				var fi = new Api.FLASHWINFO(); fi.cbSize = Api.SizeOf(fi); fi.hwnd = w;
+				if(count > 0) {
+					fi.uCount = (uint)count;
+					//fi.dwTimeout = (uint)periodMS; //not useful
+					fi.dwFlags = FLASHW_TRAY;
+				}
+				Api.FlashWindowEx(ref fi);
+
+				//tested. FlashWindow is easier but does not work for taskbar button, only for caption when no taskbar button.
+			}
+
+			public enum ProgressState
+			{
+				NoProgress = 0,
+				Indeterminate = 0x1,
+				Normal = 0x2,
+				Error = 0x4,
+				Paused = 0x8
+			}
+
+			/// <summary>
+			/// Sets the state of the progress indicator displayed on the taskbar button.
+			/// More info in MSDN, ITaskbarList3.SetProgressState.
+			/// </summary>
+			/// <param name="state">Progress indicator state and color.</param>
+			public static void SetProgressState(Wnd w, ProgressState state)
+			{
+				_TaskbarButton.taskbarInstance.SetProgressState(w, state);
+			}
+
+			/// <summary>
+			/// Sets the value of the progress indicator displayed on the taskbar button.
+			/// More info in MSDN, ITaskbarList3.SetProgressValue.
+			/// </summary>
+			/// <param name="state">If not null, sets progress indicator state and color. Calls ITaskbarList3.SetProgressState.</param>
+			/// <param name="progressValue">Progress indicator value, 0 to progressTotal.</param>
+			/// <param name="progressTotal">Max progress indicator value.</param>
+			public static void SetProgressValue(Wnd w, int progressValue, int progressTotal = 100)
+			{
+				_TaskbarButton.taskbarInstance.SetProgressValue(w, progressValue, progressTotal);
+			}
+
+			/// <summary>
+			/// Adds taskbar button.
+			/// Uses ITaskbarList.AddTab().
+			/// </summary>
+			/// <param name="w">Window.</param>
+			public static void Add(Wnd w)
+			{
+				_TaskbarButton.taskbarInstance.AddTab(w);
+				//info: succeeds without HrInit(), tested on Win10 and 7.
+				//info: always returns 0, even if w is 0. Did not test ITaskbarList3 methods.
+			}
+
+			/// <summary>
+			/// Deletes taskbar button.
+			/// Uses ITaskbarList.DeleteTab().
+			/// </summary>
+			/// <param name="w">Window.</param>
+			public static void Delete(Wnd w)
+			{
+				_TaskbarButton.taskbarInstance.DeleteTab(w);
+			}
+
+			internal static class _TaskbarButton
+			{
+				[ComImport, Guid("ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+				internal interface ITaskbarList3
+				{
+					// ITaskbarList
+					[PreserveSig]
+					int HrInit();
+					[PreserveSig]
+					int AddTab(Wnd hwnd);
+					[PreserveSig]
+					int DeleteTab(Wnd hwnd);
+					[PreserveSig]
+					int ActivateTab(Wnd hwnd);
+					[PreserveSig]
+					int SetActiveAlt(Wnd hwnd);
+
+					// ITaskbarList2
+					[PreserveSig]
+					int MarkFullscreenWindow(Wnd hwnd, bool fFullscreen);
+
+					// ITaskbarList3
+					[PreserveSig]
+					int SetProgressValue(Wnd hwnd, long ullCompleted, long ullTotal);
+					[PreserveSig]
+					int SetProgressState(Wnd hwnd, ProgressState state);
+					[PreserveSig]
+					int RegisterTab(Wnd hwndTab, Wnd hwndMDI);
+					[PreserveSig]
+					int UnregisterTab(Wnd hwndTab);
+					[PreserveSig]
+					int SetTabOrder(Wnd hwndTab, Wnd hwndInsertBefore);
+					[PreserveSig]
+					int SetTabActive(Wnd hwndTab, Wnd hwndMDI, uint dwReserved);
+					[PreserveSig]
+					int ThumbBarAddButtons(Wnd hwnd, uint cButtons, IntPtr pButton); //LPTHUMBBUTTON
+					[PreserveSig]
+					int ThumbBarUpdateButtons(Wnd hwnd, uint cButtons, IntPtr pButton); //LPTHUMBBUTTON
+					[PreserveSig]
+					int ThumbBarSetImageList(Wnd hwnd, IntPtr himl);
+					[PreserveSig]
+					int SetOverlayIcon(Wnd hwnd, IntPtr hIcon, string pszDescription);
+					[PreserveSig]
+					int SetThumbnailTooltip(Wnd hwnd, string pszTip);
+					[PreserveSig]
+					int SetThumbnailClip(Wnd hwnd, ref RECT prcClip);
+				}
+
+				[ComImport]
+				[Guid("56FDF344-FD6D-11d0-958A-006097C9A090")]
+				[ClassInterface(ClassInterfaceType.None)]
+				internal class TaskbarInstance
+				{
+				}
+
+				internal static ITaskbarList3 taskbarInstance = (ITaskbarList3)new TaskbarInstance();
+			}
 		}
 
-		#endregion
+		/// <summary>
+		/// Arranges window, shows/hides desktop.
+		/// </summary>
+		public static class Arrange
+		{
+			/// <summary>
+			/// Shows or hides desktop.
+			/// </summary>
+			public static void ToggleDesktop()
+			{
+				_Do(0);
+			}
+			/// <summary>
+			/// Minimizes or restores all windows.
+			/// </summary>
+			public static void MinimizeWindows(bool on)
+			{
+				_Do(on ? 1 : 2);
+			}
+			/// <summary>
+			/// Cascades windows.
+			/// </summary>
+			public static void CascadeWindows()
+			{
+				_Do(3);
+			}
+			/// <summary>
+			/// Minimizes or restores all windows.
+			/// </summary>
+			public static void TileWindows(bool vertically)
+			{
+				_Do(vertically ? 5 : 4);
+			}
 
-		#region util
+			static void _Do(int what)
+			{
+				try {
+					dynamic shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application")); //speed: faster than calling a method
+					switch(what) {
+					case 0: shell.ToggleDesktop(); break;
+					case 1: shell.MinimizeAll(); break;
+					case 2: shell.UndoMinimizeALL(); break;
+					case 3: shell.CascadeWindows(); break;
+					case 4: shell.TileHorizontally(); break;
+					case 5: shell.TileVertically(); break;
+					}
+					Marshal.ReleaseComObject(shell);
+				} catch { }
+			}
+		}
 
-		//This can be used, but not much simpler than calling ATI directly and using try/finally.
-		//internal struct _AttachThreadInput :IDisposable
-		//{
-		//	uint _tid;
+		//FUTURE: use IVirtualDesktopManager to manage virtual desktops.
+		//Currently almost not useful, because its MoveWindowToDesktop does not work with windows of other processes.
+		//But in the future, if we'll have a dll to inject into another process, eg to find accessible objects faster, then also can add this to it.
+		//The inteface also has IsWindowOnCurrentVirtualDesktop and GetWindowDesktopId.
+		//Also there are internal/undocumented interfaces to add/remove/switch desktops etc. There is a GitHub library. And another library that injects.
 
-		//	public bool Attach(uint tid)
-		//	{
-		//		if(!Api.AttachThreadInput(Api.GetCurrentThreadId(), _tid, true)) return false;
-		//		_tid = tid; return true;
-		//	}
+		/// <summary>
+		/// Saves window position, dimensions and state in registry.
+		/// </summary>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="Registry_.ParseKeyString"/>.</param>
+		/// <param name="canBeMinimized">If now this window is minimized, let RegistryRestore make it minimized. If false, RegistryRestore will restore it to the most recent non-minimized state.</param>
+		public unsafe bool RegistrySave(string valueName, string key = null, bool canBeMinimized = false)
+		{
+			Api.WINDOWPLACEMENT p;
+			if(GetWindowPlacement(out p)) {
+				//OutList(p.showCmd, p.flags);
+				if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
+				return Registry_.SetBinary(&p, (int)Api.SizeOf(p), valueName, key);
+			}
+			return false;
+		}
 
-		//	public bool Attach(Wnd w) { return Attach(w.ThreadId); }
+		/// <summary>
+		/// Restores window position, dimensions and state saved in registry with RegistrySave().
+		/// Returns true if the registry value exists and successfully restored size/dimensions.
+		/// In any case uses ensureInScreen and onlySetPositionAndSize parameters.
+		/// </summary>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="Registry_.ParseKeyString"/>.</param>
+		/// <param name="ensureInScreen">Call <see cref="EnsureInScreen"/>.</param>
+		/// <param name="showActivate">Unhide and activate.</param>
+		public unsafe bool RegistryRestore(string valueName, string key = null, bool ensureInScreen = false, bool showActivate = false)
+		{
+			bool R = false;
+			Api.WINDOWPLACEMENT p; int siz = Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT));
+			if(siz == Registry_.GetBinary(&p, siz, valueName, key)) {
+				//OutList(p.showCmd, p.flags);
+				if(!showActivate && !Visible) {
+					uint style = Style;
+					switch(p.showCmd) {
+					case Api.SW_SHOWMAXIMIZED:
+						if((style & Api.WS_MAXIMIZE) == 0) {
+							SetStyle(style | Api.WS_MAXIMIZE);
+							RECT r = Screen.FromHandle(_h).WorkingArea;
+							r.Inflate(1, 1); //normally p.ptMaxPosition.x/y are -1 even if on non-primary monitor
+							Rect = r;
+						}
+						break;
+					case Api.SW_SHOWMINIMIZED:
+						if((style & Api.WS_MINIMIZE) == 0) SetStyle(style | Api.WS_MINIMIZE);
+						break;
+					case Api.SW_SHOWNORMAL:
+						if((style & (Api.WS_MAXIMIZE | Api.WS_MINIMIZE)) != 0) SetStyle(style & ~(Api.WS_MAXIMIZE | Api.WS_MINIMIZE));
+						//never mind: if currently minimized, will not be restored. Usually currently is normal, because this func called after creating window, especially if invisible. But will restore if currently maximized.
+						break;
+					}
+					p.showCmd = 0;
+				}
+				R = SetWindowPlacement(ref p);
+			}
 
-		//	public void Dispose() { if(_tid != 0) Api.AttachThreadInput(Api.GetCurrentThreadId(), _tid, false); }
-		//}
+			if(ensureInScreen) EnsureInScreen();
+			if(showActivate) {
+				_Show(true);
+				ActivateRaw();
+			}
+			return R;
+		}
 
 		#endregion
 	}

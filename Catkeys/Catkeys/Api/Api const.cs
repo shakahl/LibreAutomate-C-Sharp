@@ -491,8 +491,13 @@ namespace Catkeys.Winapi
 
 		#region Errors
 
+		public const int ERROR_FILE_NOT_FOUND = 2;
 		public const int ERROR_ACCESS_DENIED = 5;
+		public const int ERROR_INVALID_HANDLE = 6;
+		public const int ERROR_FILE_EXISTS = 80;
+		public const int ERROR_INVALID_PARAMETER = 87;
 		public const int ERROR_INSUFFICIENT_BUFFER = 122;
+		public const int ERROR_INVALID_WINDOW_HANDLE = 1400;
 		public const int E_INVALIDARG = unchecked((int)0x80070057);
 		public const int E_FAIL = unchecked((int)0x80004005);
 
@@ -550,6 +555,18 @@ namespace Catkeys.Winapi
 		public const uint SC_MONITORPOWER = 0xF170;
 		public const uint SC_CONTEXTHELP = 0xF180;
 		public const uint SC_SEPARATOR = 0xF00F;
+		#endregion
+
+		#region SMTO_
+		public const uint SMTO_BLOCK = 0x0001;
+		public const uint SMTO_ABORTIFHUNG = 0x0002;
+		public const uint SMTO_NOTIMEOUTIFNOTHUNG = 0x0008;
+		public const uint SMTO_ERRORONEXIT = 0x0020;
+		#endregion
+
+		#region 
+
+
 		#endregion
 	}
 }

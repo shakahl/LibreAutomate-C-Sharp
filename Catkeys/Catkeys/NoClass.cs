@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Threading;
 //using System.Threading.Tasks;
 //using System.Reflection;
-//using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
 //using System.Windows.Forms;
@@ -57,7 +57,7 @@ namespace Catkeys
 		public static void Out(object value) { Output.Write(value); }
 		public static void Out<T>(IEnumerable<T> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void Out(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
-        public static void Out<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
+		public static void Out<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void OutList(params object[] values) { Output.WriteList(values); }
 		public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
 		public static void OutHex<T>(T value) { Output.WriteHex(value); }
@@ -102,13 +102,34 @@ namespace Catkeys
 		static readonly uint _winver = _GetWinVersion();
 		static uint _GetWinVersion()
 		{
+			var x = new RTL_OSVERSIONINFOW(); x.dwOSVersionInfoSize = Api.SizeOf(x);
+			try {
+				if(0 == RtlGetVersion(ref x)) return Calc.MakeWord(x.dwMinorVersion, x.dwMajorVersion);
+				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
+			} catch { }
+			Debug.Fail("RtlGetVersion");
+
 			var v = Environment.OSVersion.Version;
-			return (uint)(((v.Major & 0xff) << 8) | (v.Minor & 0xff));
+			return Calc.MakeWord(v.Minor, v.Major);
 		}
+
+		public struct RTL_OSVERSIONINFOW
+		{
+			public uint dwOSVersionInfoSize;
+			public uint dwMajorVersion;
+			public uint dwMinorVersion;
+			public uint dwBuildNumber;
+			public uint dwPlatformId;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+			public string szCSDVersion;
+		}
+
+		[DllImport("ntdll.dll", ExactSpelling = true)]
+		static extern int RtlGetVersion(ref RTL_OSVERSIONINFOW lpVersionInformation);
 
 		/// <summary>
 		/// Gets classic Windows major+minor version value:
-		/// Win7 (0x601), Win8_0 (0x602), Win8_1 (0x603), Win10 (0xA00).
+		/// Win7 (0x601), Win8 (0x602), Win8_1 (0x603), Win10 (0xA00).
 		/// </summary>
 		public static uint WinVer
 		{
@@ -117,11 +138,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Classic Windows version major+minor values.
-		/// Example: <c>if(WinVer>=Win8_0) ...</c>
+		/// Example: <c>if(WinVer>=Win8) ...</c>
 		/// </summary>
-		public const uint Win7 = 0x601, Win8_0 = 0x602, Win8_1 = 0x603, Win10 = 0xA00;
+		public const uint Win7 = 0x601, Win8 = 0x602, Win8_1 = 0x603, Win10 = 0xA00;
 
 		//public static void Wait(double timeS) { Time.Wait(timeS); } //in Automation; here it could be easily confused with WaitMS
 		public static void WaitMS(int timeMS) { Time.WaitMS(timeMS); }
-    }
+	}
 }

@@ -344,7 +344,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(WinVer < Win8_0) return false;
+				if(WinVer < Win8) return false;
 				unsafe
 				{
 					uint siz; uint isac;
@@ -565,7 +565,7 @@ namespace Catkeys
 		static bool _isUacDisabled, _haveIsUacDisabled;
 		static bool _IsUacDisabled()
 		{
-			if(WinVer >= Win8_0) return false; //UAC cannot be disabled
+			if(WinVer >= Win8) return false; //UAC cannot be disabled
 			UacInfo x = ThisProcess;
 			switch(x.Elevation) {
 			case ElevationType.Full:

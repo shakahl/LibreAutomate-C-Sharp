@@ -1369,7 +1369,7 @@ namespace Catkeys
 				if(_lockForegroundWindow) {
 					_lockForegroundWindow = false;
 					Api.LockSetForegroundWindow(Api.LSFW_UNLOCK);
-					w.FlashStop();
+					Wnd.TaskbarButton.Flash(w, 0);
 					//info: cannot use Api.HCBT_ACTIVATE, does not work. Disables activating this window, but another window is deactivated anyway.
 				}
 
@@ -1748,8 +1748,8 @@ namespace Catkeys
 			if(!onlyZorder) {
 				RECT r;
 				_EditControlGetPlace(out r);
-				_editParent._MoveResize(r.left, r.top, r.Width, r.Height);
-				_editWnd._MoveResize(0, 0, r.Width, r.Height);
+				_editParent._Move(r.left, r.top, r.Width, r.Height);
+				_editWnd._Move(0, 0, r.Width, r.Height);
 			}
 			_editParent.ZorderTop();
 		}
@@ -1764,7 +1764,7 @@ namespace Catkeys
 			Wnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
 
 			//We'll hide the progress bar control and create our Edit control in its place.
-			Wnd prog = parent.ChildByClassName("msctls_progress32");
+			Wnd prog = parent.ChildCN("msctls_progress32");
 			prog.Visible = false;
 
 			prog.GetRectInClientOf(parent, out r);
@@ -1820,7 +1820,7 @@ namespace Catkeys
 			_editWnd = Api.CreateWindowEx(Api.WS_EX_CLIENTEDGE, className, null, style, 0, 0, r.Width, r.Height, _editParent, 0, Zero, 0);
 
 			//Init the control.
-			_editWnd.Font = Form.DefaultFont.ToHfont();
+			_editWnd.FontHandle = Form.DefaultFont.ToHfont();
 			if(_editType == TDEdit.Combo) {
 				if(_editComboItems != null) {
 					foreach(string s in _editComboItems.Arr) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
@@ -1863,10 +1863,10 @@ namespace Catkeys
 			//OutList(msg, wParam, lParam);
 			switch(msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				_dlg.ChildByClassName("DirectUIHWND", true).FocusControlOfThisThread();
+				_dlg.ChildCN("DirectUIHWND", true).FocusControlOfThisThread();
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				_dlg.ChildByClassName("DirectUIHWND", true).FocusControlOfThisThread();
+				_dlg.ChildCN("DirectUIHWND", true).FocusControlOfThisThread();
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);

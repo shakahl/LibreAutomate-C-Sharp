@@ -206,25 +206,17 @@ namespace Catkeys
 			readonly WinFlag _flags;
 
 			public WindowDefinition(
-				WinFlag flags,
 				WildString name, WildStringI className = null, WildStringI program = null,
-				WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+				WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 				)
 			{
 				_name = name;
 				_className = className;
 				_program = program;
+				_flags = flags;
 				_prop = prop;
 				_f = f;
 				_matchIndex = matchIndex;
-				_flags = flags;
-			}
-
-			public WindowDefinition(
-				WildString name, WildStringI className = null, WildStringI program = null, bool hiddenToo = false,
-				WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
-				) : this(hiddenToo ? WinFlag.HiddenToo : 0, name, className, program, prop, f, matchIndex)
-			{
 			}
 
 			/// <summary>
@@ -304,7 +296,7 @@ namespace Catkeys
 					if(_program != null) {
 						//Getting program name is one of slowest parts.
 						//Usually it does not slow down much because need to do it only 1 or several times, only when window name, class etc match.
-						//The worst case is when only program is specified, and the very worst case is when hiddenToo is also true.
+						//The worst case is when only program is specified, and the very worst case is when also using flag HiddenToo.
 						//We are prepared for the worst case.
 						//Normally we call Process_.GetProcessName. In most cases it is quite fast.
 						//Anyway, we use this optimization:
@@ -381,13 +373,17 @@ namespace Catkeys
 		/// <param name="name">Window name. Usually it is the title bar text. Supports wildcard etc, case-sensitive (more info in WildString help).</param>
 		/// <param name="className">Window class name. Supports wildcard etc, case-insensitive (more info in WildStringI and WildString help).</param>
 		/// <param name="program">
-		/// Program name without ".exe". Other overload has a flag to use full path of program file.
+		/// Program name without ".exe", or full path if using flag ProgramPath.
 		/// Supports wildcard etc, case-insensitive (more info in WildStringI and WildString help).
 		/// Can fail to get program name and especially path when the process has higher UAC integrity level; then assumes that the program name/path does not match.
 		/// Getting program name or path is much slower than getting window name or class name, therefore this parameter should not be used alone.
 		/// </param>
-		/// <param name="hiddenToo">Can find hidden windows. Other overload also has a flag to skip cloaked windows; this overload does not skip.</param>
-		/// <param name="prop">More properties of the window. Example: <c>new Wnd.WinProp(){ childClass="Static", childText="Text*" }</c></param>
+		/// <param name="flags">
+		/// HiddenToo - can find hidden windows.
+		/// SkipCloaked - skip cloaked windows. Cloaked windows are windows hidden not in the classic way (Wnd.Visible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows store apps on Windows 8.
+		/// ProgramPath - the 'program' argument is full path. Need this flag because the function cannot auto-detect it when using wildcard or regex.
+		/// </param>
+		/// <param name="prop">More properties, child control, etc. Example: <c>new Wnd.WinProp(){ childClass="Static", childText="Text*" }</c></param>
 		/// <param name="f">Lambda etc callback function to call for each matching window. It can evaluate more properties of the window and call Stop() when they match. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
 		/// <param name="matchIndex">1-based index of matching window. For example, if matchIndex is 2, the function skips the first matching window and returns the second.</param>
 		/// <remarks>
@@ -395,34 +391,25 @@ namespace Catkeys
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// </remarks>
 		public static Wnd Find(
-			WildString name, WildStringI className = null, WildStringI program = null, bool hiddenToo = false,
-			WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+			WildString name, WildStringI className = null, WildStringI program = null,
+			WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
-			var d = new WindowDefinition(name, className, program, hiddenToo, prop, f, matchIndex);
+			var d = new WindowDefinition(name, className, program, flags, prop, f, matchIndex);
 			d.Find();
 			return d.Result;
 		}
 
 		/// <summary>
-		/// Finds window.
-		/// You can use this overload to specify more options (flags).
-		/// Other parameters and everything are the same as with other overload.
+		/// Calls Find() with flag WinFlag.HiddenToo.
 		/// </summary>
-		/// <param name="flags">
-		/// HiddenToo - can find hidden windows (note: other overload has a bool parameter for this).
-		/// SkipCloaked - skip cloaked windows. Cloaked windows are windows hidden not in the classic way (Wnd.Visible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows store apps on Windows 8.
-		/// ProgramPath - the 'program' argument is full path. Need this flag because the function cannot auto-detect it when using wildcard or regex.
-		/// </param>
-		public static Wnd Find(
-			WinFlag flags,
+		/// <seealso cref="Find"/>
+		public static Wnd FindH(
 			WildString name, WildStringI className = null, WildStringI program = null,
 			WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
-			var d = new WindowDefinition(flags, name, className, program, prop, f, matchIndex);
-			d.Find();
-			return d.Result;
+			return Find(name, className, program, WinFlag.HiddenToo, prop, f, matchIndex);
 		}
 
 		/// <summary>
@@ -432,13 +419,12 @@ namespace Catkeys
 		/// The list is sorted to match the Z order, however hidden windows (when using WinFlag.HiddenToo) are always placed after visible windows.
 		/// </summary>
 		public static List<Wnd> FindAll(
-			WinFlag flags,
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinProp prop = null, Action<CallbackArgs> f = null
+			WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null
 			)
 		{
 			var a = new List<Wnd>();
-			Find(flags, name, className, program, prop, e =>
+			Find(name, className, program, flags, prop, e =>
 			{
 				if(f != null) {
 					f(e);
@@ -463,10 +449,10 @@ namespace Catkeys
 		/// <summary>
 		/// Finds window by class name.
 		/// Uses Api.FindWindow(). Much faster than Find(), which uses Api.EnumWindows().
-		/// Does not skip hidden and cloaked windows.
+		/// Does not skip hidden and cloaked windows, and does not prefer visible windows like Find().
 		/// </summary>
 		/// <param name="className">Class name. Full, case-insensitive. Wildcard etc not supported.</param>
-		public static Wnd FindByClassName(string className)
+		public static Wnd FindCN(string className)
 		{
 			return Api.FindWindow(className, null);
 		}
@@ -563,25 +549,17 @@ namespace Catkeys
 			readonly ChildFlag _flags;
 
 			public ChildDefinition(
-				ChildFlag flags,
 				WildString name, WildStringI className = null, int id = 0,
-				ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+				ChildFlag flags = 0, ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 				)
 			{
 				_name = name;
 				_className = className;
+				_id = id;
+				_flags = flags;
 				_prop = prop;
 				_f = f;
 				_matchIndex = matchIndex;
-				_id = id;
-				_flags = flags;
-			}
-
-			public ChildDefinition(
-				WildString name, WildStringI className = null, int id = 0, bool hiddenToo = false,
-				ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
-				) : this(hiddenToo ? ChildFlag.HiddenToo : 0, name, className, id, prop, f, matchIndex)
-			{
 			}
 
 			/// <summary>
@@ -725,13 +703,17 @@ namespace Catkeys
 		/// <param name="name">
 		/// Control name or text.
 		/// Supports wildcard etc, case-sensitive (more info in WildString help).
-		/// This function in most cases ignores editable or slow-to-get text unless one of these is used: className, id, ChildFlag.ControlText (with other overload).
+		/// This function in most cases ignores editable or slow-to-get text unless one of these is used: className, id, ChildFlag.ControlText.
 		/// Control text often contains an invisible '&amp;' character to underline the next character when using the keyboard to select dialog controls. You can use control name with or without '&amp;', this function supports both. 
 		/// </param>
 		/// <param name="className">Control class name. Supports wildcard etc, case-insensitive (more info in WildStringI and WildString help).</param>
 		/// <param name="id">Control id.</param>
-		/// <param name="hiddenToo">Can find hidden controls.</param>
-		/// <param name="prop">More properties of the control. Example: <c>new Wnd.ChildProp(){ x=344, y=448}</c></param>
+		/// <param name="flags">
+		/// HiddenToo - can find hidden controls.
+		/// DirectChild - skip indirect child controls (children of children and so on).
+		/// ControlText - to get name always use only ControlText(), which is much slower.
+		/// </param>
+		/// <param name="prop">More properties, child control, etc. Example: <c>new Wnd.ChildProp(){ x=344, y=448}</c></param>
 		/// <param name="f">Lambda etc callback function to call for each matching control. It can evaluate more properties of the control and call Stop() when they match. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
 		/// <param name="matchIndex">1-based index of matching control. For example, if matchIndex is 2, the function skips the first matching control and returns the second.</param>
 		/// <exception cref="CatkeysException">
@@ -740,39 +722,28 @@ namespace Catkeys
 		/// </exception>
 		/// <remarks>
 		/// Uses all arguments that are not omitted/0/null/"".
-		/// By default also searches indirect children (children of children and so on). Other overload has a flag to get only direct children.
 		/// </remarks>
 		public Wnd Child(
-			WildString name, WildStringI className = null, int id = 0, bool hiddenToo = false,
-			ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+			WildString name, WildStringI className = null, int id = 0,
+			ChildFlag flags = 0, ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			ValidateThrow();
-			var d = new ChildDefinition(name, className, id, hiddenToo, prop, f, matchIndex);
+			var d = new ChildDefinition(name, className, id, flags, prop, f, matchIndex);
 			d.Find(this);
 			return d.Result;
 		}
 
 		/// <summary>
-		/// Finds child control.
-		/// You can use this overload to specify more options (flags).
-		/// Other parameters and everything are the same as with other overload.
+		/// Calls Child() with flag ChildFlag.HiddenToo.
 		/// </summary>
-		/// <param name="flags">
-		/// HiddenToo - can find hidden controls (note: other overload has a bool parameter for this).
-		/// DirectChild - skip indirect child controls (children of children and so on).
-		/// ControlText - always use only an alternative (and much slower) way to get text.
-		/// </param>
-		public Wnd Child(
-			ChildFlag flags,
+		/// <seealso cref="Child(WildString, WildStringI, int, ChildFlag, ChildProp, Action{CallbackArgs}, int)"/>
+		public Wnd ChildH(
 			WildString name, WildStringI className = null, int id = 0,
 			ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
-			ValidateThrow();
-			var d = new ChildDefinition(flags, name, className, id, prop, f, matchIndex);
-			d.Find(this);
-			return d.Result;
+			return Child(name, className, id, ChildFlag.HiddenToo, prop, f, matchIndex);
 		}
 
 		/// <summary>
@@ -781,14 +752,13 @@ namespace Catkeys
 		/// Everything except the return type is the same as with Child().
 		/// </summary>
 		public List<Wnd> ChildAll(
-			ChildFlag flags,
 			WildString name, WildStringI className = null, int id = 0,
-			ChildProp prop = null, Action<CallbackArgs> f = null
+			ChildFlag flags = 0, ChildProp prop = null, Action<CallbackArgs> f = null
 			)
 		{
 			ValidateThrow();
 			var a = new List<Wnd>();
-			Child(flags, name, className, id, prop, e =>
+			Child(name, className, id, flags, prop, e =>
 			{
 				if(f != null) {
 					f(e);
@@ -802,7 +772,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds child control by its id.
-		/// Finds hidden controls too.
+		/// Finds hidden controls too, and does not prefer visible controls like other overload.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="directChild">Must be direct child, not a child of a child and so on.</param>
@@ -829,13 +799,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds child control by its class name.
-		/// Finds hidden controls too.
+		/// Finds hidden controls too, and does not prefer visible controls like Child().
 		/// </summary>
 		/// <param name="className">Class name. String by default is interpreted as wildcard, case-insensitive..</param>
 		/// <param name="directChild">Must be direct child, not a grandchild.</param>
 		/// <param name="matchIndex">1-based match index. For example, if 2, will get the second matching control.</param>
 		/// <exception cref="CatkeysException">When this window is invalid (not found, closed, etc).</exception>
-		public Wnd ChildByClassName(WildStringI className, bool directChild = false, int matchIndex = 1)
+		public Wnd ChildCN(WildStringI className, bool directChild = false, int matchIndex = 1)
 		{
 			ValidateThrow();
 			if(className == null) return Wnd0;

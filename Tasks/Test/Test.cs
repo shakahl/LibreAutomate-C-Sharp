@@ -717,7 +717,7 @@ bbb"", b3
 		//	var b = new Button();
 		//	b.Location = new POINT(0, i * 20);
 		//	b.Size = new SIZE(50, 18);
-		//	f.ChildAllRaw.Add(b);
+		//	f.Controls.Add(b);
 		//}
 
 		//f.Click += (o, e) =>
@@ -798,7 +798,7 @@ bbb"", b3
 	static void TestProcesses()
 	{
 		Wnd w = Wnd0;
-		bool hiddenToo = true;
+		Wnd.WinFlag hiddenToo = Wnd.WinFlag.HiddenToo;
 
 		//Process_.EnumProcesses(p =>
 		//{
@@ -825,16 +825,16 @@ bbb"", b3
 		//Out(pn1); Out(pn2);
 		//return;
 
-		var a1 = new Action(() => { w = Wnd.Find("*Notepad", hiddenToo: hiddenToo); });
-		var a2 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", hiddenToo: hiddenToo); });
-		var a3 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", "Notepad", hiddenToo: hiddenToo); });
-		var a4 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", "NotepaD.exE", hiddenToo: hiddenToo); });
-		var a5 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", @"c:\windows\syswow64\Notepad.exe", hiddenToo: hiddenToo); });
-		//var a6 = new Action(() => { w = Wnd.Find("", "", "NotepaD.exE", hiddenToo: hiddenToo); });
-		//var a7 = new Action(() => { w = Wnd.Find("", "", @"c:\windows\syswow64\Notepad.exe", hiddenToo: hiddenToo); });
-		var a6 = new Action(() => { w = Wnd.Find("", "", "no NotepaD.exE", hiddenToo: hiddenToo); });
-		var a7 = new Action(() => { w = Wnd.Find("", "", @"c:\no windows\syswow64\Notepad.exe", hiddenToo: hiddenToo); });
-		var a8 = new Action(() => { w = Wnd.Find("", "", "youtubedownloader", hiddenToo: hiddenToo); });
+		var a1 = new Action(() => { w = Wnd.Find("*Notepad", flags: hiddenToo); });
+		var a2 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", flags: hiddenToo); });
+		var a3 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", "Notepad", flags: hiddenToo); });
+		var a4 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", "NotepaD.exE", flags: hiddenToo); });
+		var a5 = new Action(() => { w = Wnd.Find("*Notepad", "Notepad", @"c:\windows\syswow64\Notepad.exe", flags: hiddenToo); });
+		//var a6 = new Action(() => { w = Wnd.Find("", "", "NotepaD.exE", flags: hiddenToo); });
+		//var a7 = new Action(() => { w = Wnd.Find("", "", @"c:\windows\syswow64\Notepad.exe", flags: hiddenToo); });
+		var a6 = new Action(() => { w = Wnd.Find("", "", "no NotepaD.exE", flags: hiddenToo); });
+		var a7 = new Action(() => { w = Wnd.Find("", "", @"c:\no windows\syswow64\Notepad.exe", flags: hiddenToo); });
+		var a8 = new Action(() => { w = Wnd.Find("", "", "youtubedownloader", flags: hiddenToo); });
 
 		//a6(); Out(w); return;
 
@@ -1115,8 +1115,8 @@ bbb"", b3
 
 	static void TestProcessMemory()
 	{
-		//var w = Wnd.FindByClassName("QM_Editor");
-		var w = Wnd.FindByClassName("Notepad");
+		//var w = Wnd.FindCN("QM_Editor");
+		var w = Wnd.FindCN("Notepad");
 		Out(w);
 		ProcessMemory x = null;
 		try {
@@ -1263,9 +1263,9 @@ bbb"", b3
 		//w = Wnd.FromXY(1532, 1224, null);
 		//w = Wnd.FromXY(0.1, 0.1, null, true, true);
 
-		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindByClassName("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
+		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindCN("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
 
-		//w = Wnd.FindByClassName("QM_Editor");
+		//w = Wnd.FindCN("QM_Editor");
 		Out(w);
 		//return;
 
@@ -1311,9 +1311,9 @@ bbb"", b3
 
 		Wnd c1 = Wnd0, c2 = Wnd0, c3 = Wnd0, c4 = Wnd0, c5 = Wnd0, c6 = Wnd0, c7 = Wnd0;
 		var a1 = new Action(() => { c1 = w.Child("sea"); });
-		var a2 = new Action(() => { c2 = w.Child(Wnd.ChildFlag.ControlText, "sea"); });
+		var a2 = new Action(() => { c2 = w.Child("sea", flags: Wnd.ChildFlag.ControlText); });
 		var a3 = new Action(() => { c3 = w.Child("sea", "*Edit"); });
-		var a4 = new Action(() => { c4 = w.Child(Wnd.ChildFlag.ControlText, "sea", "*Edit"); });
+		var a4 = new Action(() => { c4 = w.Child("sea", "*Edit", 0, Wnd.ChildFlag.ControlText); });
 		var a5 = new Action(() => { c5 = w.Child("Regex*"); });
 		var a6 = new Action(() => { c6 = w.Child("Regex*", "Button"); });
 		var a7 = new Action(() => { c7 = w.Child("Regex*", id: 1028); });
@@ -1473,7 +1473,7 @@ bbb"", b3
 	{
 		//Out(Wnd.FindAll(0, "*I*"));
 		Wnd w = Wnd.Find("Quick*");
-		Out(w.ChildAll(0, "", "QM*"));
+		Out(w.ChildAll("", "QM*"));
 	}
 
 	static bool Activate(Wnd w)
@@ -1503,6 +1503,11 @@ bbb"", b3
 
 	static void TestWndActivateFocus()
 	{
+		//Wnd.ActiveWindow.ShowMinimized();
+		//Out(Wnd.ActiveWindow);
+		//Out(Wnd.ActivateNextMainWindow(true));
+		//return;
+
 		//Wait(2);
 		//var a = new Api.INPUTKEY[] { new Api.INPUTKEY(65, 0), new Api.INPUTKEY(65, 0, Api.IKFlag.Up), new Api.INPUTKEY(66, 0), new Api.INPUTKEY(66, 0, Api.IKFlag.Up)};
 		//Api.SendInputKey(a);
@@ -1545,30 +1550,57 @@ bbb"", b3
 
 	static void TestWndMinMaxRes()
 	{
-		//Wnd w = Wnd.Find("Quick*", "QM_Editor", null, true);
 		//Wnd w = Wnd.Find("", "XLMAIN");
 		//Wnd w = Wnd.Find("Book1.xls");
-		Wnd w = Wnd.Find("[p]Dreamweaver");
+		//Wnd w = Wnd.Find("[p]Dreamweaver");
 		//Wnd w = Wnd.Find("app -*", "wndclass_desked_gsk");
-		Out(w);
+		//Wnd w = Wnd.Find("* Notepad");
+		//Out(w);
 
-		//w.RestoreToNormal();
-		//Wait(1);
-		//w.Maximize();
+		//w.Activate(); Wait(1); //return;
+
+		Wnd w = Wnd.Find("Registry*");
+		//if(!w.ShowMinimized(Wnd.MinMaxMethod.Auto)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd.MinMaxMethod.LikeProgrammer)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd.MinMaxMethod.NoAnimation)) Out(ThreadError.ErrorText);
 		//return;
 
-		w.Activate(); Wait(1); //return;
+		if(false) {
+			w.ShowNotMinMax();
+			Wait(1);
+			w.ShowMaximized();
+			return;
 
-		w.Minimize();
-		//Out(w.StateMinimized);
-		Out(Wnd.ActiveWindow);
-		Wait(1);
-		w.RestoreMinimized();
-		//Out(w.StateMinimized);
-		Out(Wnd.ActiveWindow);
+			w.ShowMinimized();
+			//Out(w.IsMinimized);
+			Out(Wnd.ActiveWindow);
+			Wait(1);
+			w.ShowNotMinimized();
+			//Out(w.IsMinimized);
+			Out(Wnd.ActiveWindow);
 
-		//w.Maximize();
-		//w.RestoreToNormal();
+			//w.ShowMaximized();
+			//w.ShowNotMinMax();
+		} else {
+			//var m =Wnd.MinMaxMethod.NoAnimation;
+			var m =Wnd.MinMaxMethod.LikeProgrammer;
+
+			//Out(w.ShowNotMinMax(m));
+			//Wait(1);
+			//Out(w.ShowMaximized(m));
+			//return;
+
+			Out(w.ShowMinimized(m));
+			//Out(w.IsMinimized);
+			Out(Wnd.ActiveWindow);
+			Wait(1);
+			Out(w.ShowNotMinimized(m));
+			//Out(w.IsMinimized);
+			Out(Wnd.ActiveWindow);
+
+			//Out(w.ShowMaximized(m));
+			//Out(w.ShowNotMinMax(m));
+		}
 
 		Out("ok");
 	}
@@ -1582,7 +1614,7 @@ bbb"", b3
 	static void TestThreadError()
 	{
 		//Script.Option.speed = 10;
-		var w = Wnd.FindByClassName("QM_Editor");
+		var w = Wnd.FindCN("QM_Editor");
 		//Perf.ExecuteMulti(5, 1, ()=> { Time.AutoDelay(w); });
 		Out(w);
 
@@ -1603,7 +1635,7 @@ bbb"", b3
 		//ThreadError.Set(5, "");
 		//ThreadError.Set(5555, "Failed to activate window.");
 
-		Exception e = ThreadError.GetException();
+		Exception e = ThreadError.Exception;
 		//System.ComponentModel.Win32Exception e = ThreadError.Get() as System.ComponentModel.Win32Exception;
 		if(e == null) Out("null");
 		else {
@@ -1624,24 +1656,26 @@ bbb"", b3
 		//Wnd w=Wnd.Find("Quick*", "QM_*");
 		Wnd w=Wnd.Find("* Notepad");
 		//Wnd w=Wnd.Find("Registry*");
-		//Wnd w=Wnd.Find(null, "Dwm", hiddenToo:true);
+		//Wnd w=Wnd.Find(null, "Dwm", flags:Wnd.WinFlag.HiddenToo);
 		Out(w);
 
+		//Out(w.MoveInScreen(0, 0));
+		//Out(w.MoveToScreenCenter(2));
 
 		//Out(w.Child("", "*Tree*", prop: new Wnd.ChildProp() { y=0.5 }));
 		//Out(Wnd.Find("", "QM_*", prop: new Wnd.WinProp() { x=0.5 }));
 
 		w.Activate();
-		//w.MoveResizeRaw(300, 100, 600, 200);
+		//w.MoveRaw(300, 100, 600, 200);
 		//w.Width = 500;
-		//w.MoveResizeRaw(100, 30, 500, 300);
-		//w.MoveResizeRaw(100, 30, null, null);
-		//w.MoveResizeRaw(null, null, 500, 300);
-		//w.MoveResizeRaw(null, null, 500, null);
-		//w.MoveResizeRaw(null, null, null, 500);
-		//w.MoveResizeRaw(100, null, null, null);
-		//w.MoveResizeRaw(null, 100, null, null);
-		//w.MoveResizeRaw(null, 100, null, 300);
+		//w.MoveRaw(100, 30, 500, 300);
+		//w.MoveRaw(100, 30, null, null);
+		//w.MoveRaw(null, null, 500, 300);
+		//w.MoveRaw(null, null, 500, null);
+		//w.MoveRaw(null, null, null, 500);
+		//w.MoveRaw(100, null, null, null);
+		//w.MoveRaw(null, 100, null, null);
+		//w.MoveRaw(null, 100, null, 300);
 		//w.MoveRaw(300, 100);
 		//w.MoveRaw(null, 100);
 		//w.ResizeRaw(300, 100);
@@ -1649,15 +1683,15 @@ bbb"", b3
 		//w.ResizeRaw(300, null);
 
 		//TODO: test these. Also with fraction, work area.
-		//w.MoveResize(300, 100, 600, 200);
-		//w.MoveResize(100, 30, 500, 300);
-		//w.MoveResize(100, 30, null, null);
-		//w.MoveResize(null, null, 500, 300);
-		//w.MoveResize(null, null, 500, null);
-		//w.MoveResize(null, null, null, 500);
-		//w.MoveResize(100, null, null, null);
-		//w.MoveResize(null, 100, null, null);
-		//w.MoveResize(null, 100, null, 300);
+		//w.Move(300, 100, 600, 200);
+		//w.Move(100, 30, 500, 300);
+		//w.Move(100, 30, null, null);
+		//w.Move(null, null, 500, 300);
+		//w.Move(null, null, 500, null);
+		//w.Move(null, null, null, 500);
+		//w.Move(100, null, null, null);
+		//w.Move(null, 100, null, null);
+		//w.Move(null, 100, null, 300);
 		//w.Move(500, 100);
 		//w.Move(null, 100);
 		//w.Resize(300, 100);
@@ -1666,7 +1700,7 @@ bbb"", b3
 
 		//w = Wnd0;
 		//Out(w.Height);
-		//Out(w.StateNormal);
+		//Out(w.IsNotMinMax);
 		//Out(ThreadError.ErrorText);
 
 
@@ -1696,21 +1730,249 @@ bbb"", b3
 		//if(w.GetWindowAndClientRectInScreen(out rw, out rc)) OutList(rw, rc);
 	}
 
-	static void TestWndThreadError()
+	static void TestWndtaskbarButton()
 	{
 		//Wnd w=Wnd.Find("Quick*", "QM_*");
 		Wnd w = Wnd.Find("* Notepad");
 		//Wnd w=Wnd.Find("Registry*");
-		//Wnd w=Wnd.Find(null, "Dwm", hiddenToo:true);
+		//Wnd w=Wnd.Find(null, "Dwm", flags:Wnd.WinFlag.HiddenToo);
 		Out(w);
 
+		//Wnd.TaskbarButton.Flash(w, 0);
+		//Wait(3);
+		//Wnd.TaskbarButton.Flash(w, 1);
+
+		//Wnd.TaskbarButton.SetProgressState(w, Wnd.TaskbarButton.ProgressState.Error);
+		//for(int i = 0; i < 100; i++) {
+		//	Wnd.TaskbarButton.SetProgressValue(w, i + 1);
+		//	WaitMS(100);
+		//}
+		//Wnd.TaskbarButton.SetProgressState(w, Wnd.TaskbarButton.ProgressState.NoProgress);
+
+		Wnd.TaskbarButton.Delete(w);
+		Wait(2);
+		Wnd.TaskbarButton.Add(w);
+    }
+
+	static void TestWndClose()
+	{
+		//Wnd w = Wnd.Find("*Notepad*");
+		//Wnd w = Wnd.Find("* Internet Explorer*");
+		//Wnd w = Wnd.Find("*Dreamweaver*");
+		Wnd w = Wnd.Find("Registry*");
+		Out(w);
+		//Script.Speed = 200;
+		Out(w.Close());
+		//Wnd.CloseAll("*Notepad*");
 	}
+
+	static void TestWndArrange()
+	{
+		Wnd w = Wnd.Find("*Notepad");
+		//Out(w);
+		Wnd.Arrange.ToggleDesktop();
+		Out("ok");
+		Wait(1);
+		Wnd.Arrange.ToggleDesktop();
+		//Wait(1);
+		//Wnd.Arrange.MinimizeWindows(true);
+		//Wait(1);
+		//Wnd.Arrange.MinimizeWindows(false);
+		//Wnd.Arrange.CascadeWindows();
+		//Wait(1);
+		//Wnd.Arrange.TileWindows(true);
+		//Wait(1);
+		//Wnd.Arrange.TileWindows(false);
+	}
+
+	static void TestWndShowHide()
+	{
+		bool vis = false;
+		Wnd w = Wnd.FindH("*Notepad");
+
+		var a1 = new Action(() => { vis=w.Visible; });
+		var a2 = new Action(() => { Api.ShowWindow(w, vis?0:Api.SW_SHOWNA); });
+		//var a2 = new Action(() => { Api.ShowWindow(w, vis?0:Api.SW_SHOW); });
+		var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW: Api.SWP_SHOWWINDOW)|Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE); });
+		//var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW: Api.SWP_SHOWWINDOW)|Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|Api.SWP_NOSENDCHANGING); });
+
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
+
+		Wnd[] a = new Wnd[10];
+		var f = new Form();
+		for(int i = 0; i < 10; i++) {
+			var b = new Button();
+			b.Location = new POINT(0, i * 20);
+			b.Size = new SIZE(50, 18);
+			f.Controls.Add(b);
+			a[i] = (Wnd)b.Handle;Out(a[i]);
+		}
+
+		var a10 = new Action(() => { for(int j = 0; j < 10; j++) { w = a[j]; a3(); } });
+
+		f.Click += (o, e) =>
+		{
+			Perf.ExecuteMulti(5, 10, a1, a10);
+			//Perf.ExecuteMulti(5, 1000, a10);
+		};
+
+		f.ShowDialog();
+
+	}
+
+	static unsafe void TestRegistry()
+	{
+		bool ok;
+
+		Out("---- int ----");
+
+		ok = Registry_.SetInt(5, "ii", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+
+		int i;
+		ok = Registry_.GetInt(out i, "ii", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+		Out(i);
+
+		Out("---- long ----");
+
+		ok = Registry_.SetLong(5, "LLL", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+
+		long L;
+		ok = Registry_.GetLong(out L, "LLL", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+		Out(L);
+
+		Out("---- string ----");
+
+		ok = Registry_.SetString("stttttttttttrrrrrr", "SSS", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+
+		string s;
+		ok = Registry_.GetString(out s, "SSS", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+		Out(s);
+
+		Out("---- multi string ----");
+
+		ok = Registry_.SetStringArray(new string[] { "one", "two", "three" }, "AAA", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+
+		string[] a;
+		ok = Registry_.GetStringArray(out a, "AAA", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+		Out(a);
+
+		Out("---- binary ----");
+
+		var r = new RECT(1, 2, 3, 4, false);
+		int n = Marshal.SizeOf(r);
+		ok = Registry_.SetBinary(&r, n, "BB", "Test");
+		Out(ok);
+		if(!ok) { Out(ThreadError.ErrorText); return; }
+		//ok=Registry_.SetBinary(&r, n, "rect2", @"HKEY_CURRENT_USER\Test");
+		//Out(ok);
+		//if(!ok) { Out(ThreadError.ErrorText); return; }
+		//ok = Registry_.SetBinary(&r, n, "rect2", @"HKEY_LOCAL_MACHINE\Software\Test");
+		//Out(ok);
+		//if(!ok) { Out(ThreadError.ErrorText); return; }
+
+		RECT r2;
+		n=Registry_.GetBinary(&r2, n, "BB", "Test");
+		Out(n);
+		if(n<=0) { Out(ThreadError.ErrorText); return; }
+		Out(r2);
+	}
+
+	static void TestWndRegistrySaveRestore()
+	{
+		Wnd w = Wnd.FindH("*Notepad", "Notepad");
+		Out(w);
+		Out(w.RegistrySave("WndSR", "Test", true));
+		Show.TaskDialog("move etc Notepad");
+		w.Visible = false;
+		Wnd.FindCN("QM_Editor").Activate();
+		Wait(0.2);
+		Out(w.RegistryRestore("WndSR", "Test", true, true));
+		Wait(1);
+		w.Visible = true;
+	}
+
+	static void TestWndTransparency()
+	{
+		Wnd w = Wnd.FindH("*Notepad", "Notepad");
+		//w = w.Child(15);
+		Out(w);
+		//Out(w.Transparency(true, null, 0));
+		//Out(w.Transparency(true, 80));
+		//Out(w.Transparency(true, 80, 0));
+		//Out(w.Transparency(true));
+		Out(w.Transparency(false));
+	}
+
+	static void TestWndGetIcon()
+	{
+		//Wnd w = Wnd.Find("*Notepad");
+		Wnd w = Wnd.Find("Calculator");
+		Out(w);
+		IntPtr hi = w.GetIconHandle(true);
+		Out(hi);
+		if(hi == Zero) return;
+		Show.TaskDialogEx("text", style: hi);
+		Api.DestroyIcon(hi);
+    }
+
+	static void TestFileIcon()
+	{
+		//IntPtr hi = Files._IconCreateEmpty(16, 16);
+
+		string s;
+
+		//s = @"q:\app\qm.exe,-133";
+		//int i = Files._IconGetIndex(ref s);
+		//OutList(i, s);
+		//return;
+
+		s = @"q:\app\paste.ico";
+		s = @"q:\app\qm.exe";
+		s = @"q:\app\qm.exe,1";
+		s = @"q:\app\qm.exe,-133";
+		s = @"q:\app\app.cpp";
+		s = @".dll";
+		s = "CatkeysTasks.exe";
+		s = @"Properties\app.config";
+		s = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
+
+		IntPtr hi = Files.GetIconHandle(s, 32);
+		Out(hi);
+		if(hi == Zero) return;
+		Show.TaskDialogEx("text", style: hi);
+		Api.DestroyIcon(hi);
+	}
+
 
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
 
-		TestWndThreadError();
+		TestFileIcon();
+		//TestWndGetIcon();
+		//TestWndTransparency();
+		//TestWndRegistrySaveRestore();
+		//TestRegistry();
+		//TestWndShowHide();
+		//TestWndArrange();
+		//TestWndClose();
+		//TestWndtaskbarButton();
 		//TestWindowDimensions();
 		//TestThreadError();
 		//TestWndMinMaxRes();

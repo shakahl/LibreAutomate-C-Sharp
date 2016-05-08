@@ -104,5 +104,9 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public static class WaitFor
 	{
+		//public static bool WindowIdle(int timeoutMS)
+		//{
+
+		//}
 	}
 }

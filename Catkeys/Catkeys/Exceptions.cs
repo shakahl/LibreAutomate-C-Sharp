@@ -58,12 +58,14 @@ namespace Catkeys
 		{
 			int _winError;
 			string _catkeysError;
+			Exception _exc;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			internal void None()
+			internal void Clear()
 			{
 				_winError = 0;
 				_catkeysError = null;
+				_exc = null;
 				Api.SetLastError(0);
 			}
 
@@ -72,11 +74,20 @@ namespace Catkeys
 			{
 				_winError = winErrorCode;
 				_catkeysError = errorText;
+				_exc = null;
+			}
+
+			internal void SetException(Exception e)
+			{
+				_winError = 0;
+				_catkeysError = null;
+				_exc = e;
 			}
 
 			internal Exception GetException()
 			{
-				return CreateException(_winError, _catkeysError);
+				if(_exc == null) _exc = CreateException(_winError, _catkeysError);
+				return _exc;
 			}
 
 			internal static Exception CreateException(int winErrorCode, string catkeysError)
@@ -92,6 +103,7 @@ namespace Catkeys
 
 			internal string GetErrorText()
 			{
+				if(_exc != null) return _exc.Message;
 				return CreateErrorString(_winError, _catkeysError);
 			}
 
@@ -107,7 +119,7 @@ namespace Catkeys
 
 			internal int GetWinErrorCode() { return _winError; }
 
-			internal bool IsError() { return _winError != 0 || _catkeysError != null; }
+			internal bool IsError() { return _winError != 0 || _catkeysError != null || _exc!=null; }
 		}
 
 		[ThreadStatic]
@@ -120,7 +132,7 @@ namespace Catkeys
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void Clear()
 		{
-			_threadError.None();
+			_threadError.Clear();
 		}
 
 		/// <summary>
@@ -168,6 +180,18 @@ namespace Catkeys
 		public static bool Set(string errorText)
 		{
 			_threadError.Set(0, errorText);
+			return false;
+		}
+
+		/// <summary>
+		/// Sets thread error as Exception object.
+		/// Always returns false.
+		/// </summary>
+		/// <param name="e">Exception.</param>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static bool SetException(Exception e)
+		{
+			_threadError.SetException(e);
 			return false;
 		}
 
@@ -219,31 +243,27 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// If there was error, creates and returns an exception object (CatkeysException or System.ComponentModel.Win32Exception).
-		/// Else returns null.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static Exception GetException()
-		{
-			return _threadError.GetException();
-		}
-
-		/// <summary>
 		/// Returns true if there was error.
 		/// </summary>
 		public static bool IsError { get { return _threadError.IsError(); } }
 
 		/// <summary>
 		/// Gets Windows error code (see Set()).
-		/// Returns 0 if Windows error code wasn't set (although a string error may be set).
+		/// Returns 0 if Windows error code wasn't set (although a string or Exception error may be set).
 		/// </summary>
 		public static int WinErrorCode { get { return _threadError.GetWinErrorCode(); } }
 
 		/// <summary>
 		/// Gets error text.
-		/// It can be error text as set by Set(), or Windows error description, or both.
-		/// Returns null if there was no error (neither error text nor Windows error code weren't set).
+		/// It can be error text as set by Set(), or Windows error description, or both, or Message of Exception object.
+		/// Returns null if there was no error.
 		/// </summary>
 		public static string ErrorText { get { return _threadError.GetErrorText(); } }
+
+		/// <summary>
+		/// If there was error, creates and returns an exception object (CatkeysException or System.ComponentModel.Win32Exception).
+		/// Else returns null.
+		/// </summary>
+		public static Exception Exception { get { return _threadError.GetException(); } }
 	}
 }

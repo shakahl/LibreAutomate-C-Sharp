@@ -237,7 +237,7 @@ namespace Catkeys
 
 					#region IsVisibleReally
 
-					if(skipMinimized && w.StateMinimized) continue;
+					if(skipMinimized && w.IsMinimized) continue;
 
 					if(WinVer >= Win10) {
 						if(w.IsCloaked) {
@@ -249,7 +249,7 @@ namespace Catkeys
 								}
 							}
 						}
-					} else if(WinVer >= Win8_0) {
+					} else if(WinVer >= Win8) {
 						if((exStyle & Api.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Api.WS_CAPTION)) {
 							if(!likeAltTab && (exStyle & Api.WS_EX_TOPMOST) != 0) continue; //skip store apps
 							uint pid, pidShell;
@@ -266,7 +266,7 @@ namespace Catkeys
 					if(likeAltTab) {
 						w2 = LastSeenActiveOwnedOrThis(RootOwnerOrThis(w)); //call with the root owner, because GLAP returns w if w has an owner (documented)
 						if(w2 != w) {
-							if(!w2.Visible || (skipMinimized && w2.StateMinimized)) w2 = w; //don't check cloaked etc for owned window if its owner passed
+							if(!w2.Visible || (skipMinimized && w2.IsMinimized)) w2 = w; //don't check cloaked etc for owned window if its owner passed
 							if(w2 == wFrom) { lastFound = w2; continue; }
 							w = w2;
 						}
@@ -274,33 +274,6 @@ namespace Catkeys
 
 					return w;
 				}
-			}
-
-			/// <summary>
-			/// On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
-			/// If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window with the same name as of w. It is unreliable, but MS does not provide API for this.
-			/// Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
-			/// </summary>
-			static Wnd _WindowsStoreAppFrameChild(Wnd w)
-			{
-				bool retry = false;
-				string name = null;
-				g1:
-				if(WinVer < Win10 || !w.ClassNameIs("ApplicationFrameWindow")) return Wnd0;
-				Wnd c = Api.FindWindowEx(w, Wnd0, "Windows.UI.Core.CoreWindow", null);
-				if(!c.Is0) return c;
-				if(retry) return Wnd0;
-
-				name = w.Name; if(Empty(name)) return Wnd0;
-
-				for(;;) {
-					c = Api.FindWindowEx(Wnd0, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
-					if(c.Is0) break;
-					if(c.IsCloaked) return c; //else probably it is an unrelated window
-				}
-
-				retry = true;
-				goto g1;
 			}
 
 			//TODO: impl these
@@ -531,8 +504,6 @@ namespace Catkeys
 
 		#endregion
 
-		#region util
-
 		public class CallbackArgs
 		{
 			public Wnd w;
@@ -540,7 +511,5 @@ namespace Catkeys
 
 			public void Stop() { stop = true; }
 		}
-
-		#endregion
 	}
 }

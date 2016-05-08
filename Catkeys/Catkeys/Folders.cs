@@ -164,7 +164,7 @@ namespace Catkeys
 		}
 
 		[DebuggerStepThrough]
-		public static class VirtualITEMIDLIST
+		public static partial class VirtualITEMIDLIST
 		{
 			public static IntPtr AddNewPrograms { get { return _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); } }
 			public static IntPtr AppsFolder_Win8 { get { return _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); } }
@@ -534,6 +534,15 @@ namespace Catkeys
 			return path;
 		}
 
+		//public static partial class VirtualITEMIDLIST
+		//{
+		//	public static IntPtr FromString(ref string s)
+		//	{
+
+		//		return Zero;
+		//	}
+		//}
+
 		/// <summary>
 		/// Gets the value of an environment variable.
 		/// </summary>
@@ -627,6 +636,17 @@ namespace Catkeys
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Makes fully-qualified path.
+		/// If path is not full path, returns App+path.
+		/// Expands environment variables, processes @"..\" etc (calls Combine()).
+		/// </summary>
+		/// <param name="path">Full path or filename or relative path.</param>
+		public static string FullPath(string path)
+		{
+			return Combine(null, path);
 		}
 
 		/// <summary>

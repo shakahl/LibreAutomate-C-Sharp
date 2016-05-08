@@ -18,6 +18,7 @@ using System.Windows.Forms;
 //using System.Runtime.InteropServices;
 //using System.Runtime.CompilerServices;
 //using System.IO;
+using Microsoft.Win32;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -100,16 +101,16 @@ namespace Catkeys
 		/// </remarks>
 		public static Screen FromIndex(int index)
 		{
-			if(index>0) {
+			if(index > 0) {
 				var a = Screen.AllScreens;
-				if(--index<a.Length) return a[index];
+				if(--index < a.Length) return a[index];
 				//SHOULDDO: ignore invisible pseudo-monitors associated with mirroring drivers.
 				//	iScreen.AllScreens and EnumDisplayMonitors should include them,
 				//	but in my recent tests with NetMeeting (noticed this long ago on an old OS version) and UltraVnc (wiki etc say) they didn't.
 				//	Therefore I cannot test and add filtering. No problems if they are the last in the list. Never mind.
 				//	Wiki about mirror drivers: https://en.wikipedia.org/wiki/Mirror_driver
-			} else if(index==OfMouse) return Screen.FromPoint(Mouse.XY);
-			else if(index==OfActiveWindow) return FromWindow(Wnd.ActiveWindow);
+			} else if(index == OfMouse) return Screen.FromPoint(Mouse.XY);
+			else if(index == OfActiveWindow) return FromWindow(Wnd.ActiveWindow);
 
 			return Screen.PrimaryScreen;
 
@@ -144,9 +145,9 @@ namespace Catkeys
 		/// If something fails, gets primary screen.
 		/// As screen index is used index in the array returned by Screen.AllScreens + 1. It is not the screen index that you can see in Control Panel.
 		/// </remarks>
-		public static Screen FromObject(object screen, Wnd w=default(Wnd))
+		public static Screen FromObject(object screen, Wnd w = default(Wnd))
 		{
-			if(screen==null) return FromWindow(w); //screen of w, or primary if w is Wnd0 or invalid
+			if(screen == null) return FromWindow(w); //screen of w, or primary if w is Wnd0 or invalid
 			if(screen is int) return FromIndex((int)screen);
 			if(screen is Wnd) return FromWindow((Wnd)screen);
 			if(screen is POINT) return Screen.FromPoint((POINT)screen);
@@ -179,6 +180,303 @@ namespace Catkeys
 				Api.SystemParametersInfo(Api.SPI_GETWORKAREA, 0, (void*)&r, 0);
 				return r;
 			}
+		}
+	}
+
+	/// <summary>
+	/// Registry functions.
+	/// Unlike Microsoft.Win32.Registry, does not throw exception when fails. Instead uses ThreadError.
+	/// Also has methods not supported by Microsoft.Win32.Registry, for example set/get struct variables easily.
+	/// </summary>
+	public static class Registry_
+	{
+		public const string CatkeysKey = @"Software\Catkeys\User";
+
+		/// <summary>
+		/// Parses registry key string and returns hive as RegistryKey.
+		/// If key starts with "HKEY_", removes hive name from it and returns that hive. For example, if key is @"HKEY_LOCAL_MACHINE\Software\Test", sets key=@"Software\Test" and returns Registry.LocalMachine.
+		/// Else if key is null or @"\", sets key=Registry_.CatkeysKey (@"Software\Catkeys\User") and returns Registry.CurrentUser.
+		/// Else if key starts with @"\", prepends Registry_.CatkeysKey (@"Software\Catkeys\User") and returns Registry.CurrentUser.
+		/// Else just returns Registry.CurrentUser.
+		/// Valid hive names: "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_CLASSES_ROOT", "HKEY_USERS", "HKEY_PERFORMANCE_DATA" or "HKEY_CURRENT_CONFIG".
+		/// </summary>
+		/// <param name="key">Registry key. Can start with a hive name.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static RegistryKey ParseKeyString(ref string key)
+		{
+			if(key == null) key = @"\";
+			if(key.StartsWith_(@"\")) {
+				key = (key.Length == 1) ? CatkeysKey : CatkeysKey + key;
+				return Registry.CurrentUser;
+			}
+			if(!key.StartsWith_("HKEY_")) return Registry.CurrentUser;
+
+			RegistryKey R = null;
+			int i = key.IndexOf('\\');
+			string s = i < 0 ? key : key.Remove(i);
+			switch(s) {
+			case "HKEY_CURRENT_USER": R = Registry.CurrentUser; break;
+			case "HKEY_LOCAL_MACHINE": R = Registry.LocalMachine; break;
+			case "HKEY_CLASSES_ROOT": R = Registry.ClassesRoot; break;
+			case "HKEY_USERS": R = Registry.Users; break;
+			case "HKEY_CURRENT_CONFIG": R = Registry.CurrentConfig; break;
+			case "HKEY_PERFORMANCE_DATA": R = Registry.PerformanceData; break;
+			//case "HKEY_DYN_DATA": R = Registry.DynData; break; //9x
+			default: throw new ArgumentException("Invalid \"HKEY_x\".");
+			}
+			key = i < 0 ? "" : key.Substring(i + 1);
+			return R;
+		}
+
+		static RegistryKey _Open(string key, bool create)
+		{
+			RegistryKey hive = ParseKeyString(ref key);
+			RegistryKey k = create ? hive.CreateSubKey(key) : hive.OpenSubKey(key);
+			if(k == null) {
+				string sc = create ? " or create" : "";
+				throw new CatkeysException($"Failed to open{sc} registry key \"{hive.Name}\\{key}\".");
+			}
+			return k;
+		}
+
+		/// <summary>
+		/// Sets value of REG_DWORD type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool SetInt(int data, string valueName, string key = null)
+		{
+			try {
+				using(var k = _Open(key, true)) {
+					k.SetValue(valueName, data, RegistryValueKind.DWord);
+					return true;
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Gets value of REG_DWORD type.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// If valueName does not exist, clears thread error and returns false.
+		/// </summary>
+		/// <param name="data">Receives data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool GetInt(out int data, string valueName, string key = null)
+		{
+			data = 0;
+			try {
+				using(var k = _Open(key, false)) {
+					object t = k.GetValue(valueName);
+					if(t != null) { data = (int)t; return true; }
+					ThreadError.Clear();
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Sets value of REG_QWORD type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool SetLong(long data, string valueName, string key = null)
+		{
+			try {
+				using(var k = _Open(key, true)) {
+					k.SetValue(valueName, data, RegistryValueKind.QWord);
+					return true;
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Gets value of REG_QWORD type.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// If valueName does not exist, clears thread error and returns false.
+		/// </summary>
+		/// <param name="data">Receives data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool GetLong(out long data, string valueName, string key = null)
+		{
+			data = 0;
+			try {
+				using(var k = _Open(key, false)) {
+					object t = k.GetValue(valueName);
+					if(t != null) { data = (long)t; return true; }
+					ThreadError.Clear();
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Sets string value of REG_SZ or REG_EXPAND_SZ type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool SetString(string data, string valueName, string key = null, bool REG_EXPAND_SZ = false)
+		{
+			try {
+				using(var k = _Open(key, true)) {
+					k.SetValue(valueName, data, REG_EXPAND_SZ ? RegistryValueKind.ExpandString : RegistryValueKind.String);
+					return true;
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+
+			//info: cannot set multistring with this.
+		}
+
+		/// <summary>
+		/// Gets string value of REG_SZ or REG_EXPAND_SZ type.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// If valueName does not exist, clears thread error and returns false.
+		/// </summary>
+		/// <param name="data">Receives data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool GetString(out string data, string valueName, string key = null)
+		{
+			data = null;
+			try {
+				using(var k = _Open(key, false)) {
+					object t = k.GetValue(valueName);
+					if(t != null) { data = (string)t; return true; }
+					ThreadError.Clear();
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Sets string value of REG_MULTI_SZ type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool SetStringArray(string[] data, string valueName, string key = null)
+		{
+			try {
+				using(var k = _Open(key, true)) {
+					k.SetValue(valueName, data, RegistryValueKind.MultiString);
+					return true;
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+
+			//info: cannot set multistring with this.
+		}
+
+		/// <summary>
+		/// Gets string value of REG_MULTI_SZ type.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// If valueName does not exist, clears thread error and returns false.
+		/// </summary>
+		/// <param name="data">Receives data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool GetStringArray(out string[] data, string valueName, string key = null)
+		{
+			data = null;
+			try {
+				using(var k = _Open(key, false)) {
+					object t = k.GetValue(valueName);
+					if(t != null) { data = (string[])t; return true; }
+					ThreadError.Clear();
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Sets binary value of REG_BINARY type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError.
+		/// If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data. For example a struct variable (unsafe address).</param>
+		/// <param name="size">Data size. For example, Marshal.SizeOf(variable) or Marshal.SizeOf(typeof(DATA)).</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe bool SetBinary(void* data, int size, string valueName, string key = null)
+		{
+			try {
+				using(var k = _Open(key, true)) {
+					return SetBinary(data, size, valueName, k);
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return false;
+		}
+
+		/// <summary>
+		/// Use this overload when you have an open registry key.
+		/// Everything is the same as with other overload.
+		/// </summary>
+		public static unsafe bool SetBinary(void* data, int size, string valueName, RegistryKey key)
+		{
+			IntPtr h = key.Handle.DangerousGetHandle();
+			int e = Api.RegSetValueEx(h, valueName, 0, RegistryValueKind.Binary, data, size);
+			return e == 0 || ThreadError.Set(e);
+		}
+
+		/// <summary>
+		/// Gets binary data.
+		/// Returns registry data size that the function copied into the 'data' memory. It can be equal or less than the 'size' argument. If registry data is bigger than 'size', gets only 'size' part of it.
+		/// If valueName does not exist, returns 0.
+		/// If fails, returns -1.
+		/// Supports ThreadError.
+		/// Registry data can be of any type.
+		/// </summary>
+		/// <param name="data">Receives data. For example a struct variable (unsafe address).</param>
+		/// <param name="size">Max data size to get. For example, Marshal.SizeOf(variable) or Marshal.SizeOf(typeof(DATA)).</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		public static unsafe int GetBinary(void* data, int size, string valueName, string key = null)
+		{
+			try {
+				using(var k = _Open(key, false)) {
+					return GetBinary(data, size, valueName, k);
+				}
+			} catch(Exception e) { ThreadError.SetException(e); }
+			return -1;
+		}
+
+		/// <summary>
+		/// Use this overload when you have an open registry key.
+		/// Everything is the same as with other overload.
+		/// </summary>
+		public static unsafe int GetBinary(void* data, int size, string valueName, RegistryKey key)
+		{
+			IntPtr h = key.Handle.DangerousGetHandle();
+			RegistryValueKind kind; int z = size;
+			int e = Api.RegQueryValueEx(h, valueName, Zero, out kind, data, ref z);
+			if(e == 0) { ThreadError.Clear(); return z; }
+			ThreadError.Set(e);
+			if(e == Api.ERROR_FILE_NOT_FOUND) return 0;
+			return -1;
 		}
 	}
 }
