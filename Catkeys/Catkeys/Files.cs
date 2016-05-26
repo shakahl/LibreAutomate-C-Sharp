@@ -167,7 +167,7 @@ namespace Catkeys
 			IntPtr R = Zero;
 
 
-			return R;
+			return 0;
 		}
 
 		/// <summary>

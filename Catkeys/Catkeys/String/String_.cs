@@ -285,6 +285,9 @@ namespace Catkeys
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets length=1.
 		/// This is the main overload. Other overloads just call it.
 		/// </remarks>
+		/// <seealso cref="Api.strtoi"/>
+		/// <seealso cref="Api.strtoui"/>
+		/// <seealso cref="Api.strtoi64"/>
 		public static int ToInt_(this string t, int startIndex, out int numberEndIndex)
 		{
 			numberEndIndex = 0;

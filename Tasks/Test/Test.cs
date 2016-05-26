@@ -51,6 +51,7 @@ using System.Globalization;
 
 #if !NETSM
 
+
 public class Ooo
 {
 	[XmlAttribute]
@@ -1583,7 +1584,7 @@ bbb"", b3
 			//w.ShowNotMinMax();
 		} else {
 			//var m =Wnd.MinMaxMethod.NoAnimation;
-			var m =Wnd.MinMaxMethod.LikeProgrammer;
+			var m = Wnd.MinMaxMethod.LikeProgrammer;
 
 			//Out(w.ShowNotMinMax(m));
 			//Wait(1);
@@ -1654,7 +1655,7 @@ bbb"", b3
 	static void TestWindowDimensions()
 	{
 		//Wnd w=Wnd.Find("Quick*", "QM_*");
-		Wnd w=Wnd.Find("* Notepad");
+		Wnd w = Wnd.Find("* Notepad");
 		//Wnd w=Wnd.Find("Registry*");
 		//Wnd w=Wnd.Find(null, "Dwm", flags:Wnd.WinFlag.HiddenToo);
 		Out(w);
@@ -1752,7 +1753,7 @@ bbb"", b3
 		Wnd.TaskbarButton.Delete(w);
 		Wait(2);
 		Wnd.TaskbarButton.Add(w);
-    }
+	}
 
 	static void TestWndClose()
 	{
@@ -1790,10 +1791,10 @@ bbb"", b3
 		bool vis = false;
 		Wnd w = Wnd.FindH("*Notepad");
 
-		var a1 = new Action(() => { vis=w.Visible; });
-		var a2 = new Action(() => { Api.ShowWindow(w, vis?0:Api.SW_SHOWNA); });
+		var a1 = new Action(() => { vis = w.Visible; });
+		var a2 = new Action(() => { Api.ShowWindow(w, vis ? 0 : Api.SW_SHOWNA); });
 		//var a2 = new Action(() => { Api.ShowWindow(w, vis?0:Api.SW_SHOW); });
-		var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW: Api.SWP_SHOWWINDOW)|Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE); });
+		var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW : Api.SWP_SHOWWINDOW) | Api.SWP_NOMOVE | Api.SWP_NOSIZE | Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE); });
 		//var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW: Api.SWP_SHOWWINDOW)|Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|Api.SWP_NOSENDCHANGING); });
 
 		//Perf.ExecuteMulti(5, 1000, a1, a2);
@@ -1805,7 +1806,7 @@ bbb"", b3
 			b.Location = new POINT(0, i * 20);
 			b.Size = new SIZE(50, 18);
 			f.Controls.Add(b);
-			a[i] = (Wnd)b.Handle;Out(a[i]);
+			a[i] = (Wnd)b.Handle; Out(a[i]);
 		}
 
 		var a10 = new Action(() => { for(int j = 0; j < 10; j++) { w = a[j]; a3(); } });
@@ -1887,9 +1888,9 @@ bbb"", b3
 		//if(!ok) { Out(ThreadError.ErrorText); return; }
 
 		RECT r2;
-		n=Registry_.GetBinary(&r2, n, "BB", "Test");
+		n = Registry_.GetBinary(&r2, n, "BB", "Test");
 		Out(n);
-		if(n<=0) { Out(ThreadError.ErrorText); return; }
+		if(n <= 0) { Out(ThreadError.ErrorText); return; }
 		Out(r2);
 	}
 
@@ -1929,7 +1930,7 @@ bbb"", b3
 		if(hi == Zero) return;
 		Show.TaskDialogEx("text", style: hi);
 		Api.DestroyIcon(hi);
-    }
+	}
 
 	static void TestFileIcon()
 	{
@@ -1960,11 +1961,146 @@ bbb"", b3
 	}
 
 
+	[ComImport, Guid("ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	internal interface ITaskbarList3
+	{
+		// ITaskbarList
+		[PreserveSig]
+		int HrInit();
+	}
+
+	static char[] TextFileToCharArray(string file)
+	{
+		try {
+			using(var reader = new StreamReader(file)) {
+				long n = reader.BaseStream.Length;
+				if(n <= int.MaxValue / 4) {
+					var s = new char[n];
+					reader.Read(s, 0, (int)n);
+					return s;
+				}
+			}
+		} catch { }
+		return null;
+	}
+
+	class Parser
+	{
+		char[] s, d; //source, destination
+		int i, j, n; //index in source, in destination, length
+
+		/// <summary>
+		/// i must be at the starting ". Moves i to the ending ".
+		/// </summary>
+		void SkipString()
+		{
+			Debug.Assert(s[i] == '\"');
+			for(++i; i < n; i++) {
+				if(s[i] == '\"') {
+					int k = i; while(s[k - 1] == '\\') k--;
+					if((k & 1) == 0) break;
+				} else d[j++] = s[i];
+			}
+		}
+	}
+
+	//static _StringFold(char s, int i, int )
+
+	static void TestStringFold()
+	{
+		var s = TextFileToCharArray(@"c:\test\a.txt");
+		if(s == null) return;
+
+		int i=0, j=0, n = s.Length;
+		var d = new char[n];
+
+		for(; i< n; i++) {
+			char c = s[i];
+			switch(c) {
+			case '\"':
+				d[j++] = c;
+                for(++i; i< n; i++) {
+					if(s[i] == '\"') {
+						int k = i; while(s[k-1] == '\\') k--;
+						if((k & 1) == 0) break;
+					} else d[j++] = s[i];
+				}
+				break;
+			}
+		}
+
+		Out(d, "");
+	}
+
+	static void TestStrToI()
+	{
+		var s = "1234567";
+		//var s = "0xffffffff";
+		var c = s.ToCharArray();
+
+		unsafe
+		{
+			fixed(char* p = c)
+			{
+				Out(s.ToInt_());
+				char* t=p, e;
+				Out(Api.strtoi(t, out e));
+				Out(Api.strtoui(t, out e));
+				Out(Api.strtoi64(t, out e));
+				int n;
+				Out(Api.strtoi(s, 0, out n)); Out(n);
+				Out(Api.strtoui(s, 0, out n)); Out(n);
+				Out(Api.strtoi64(s, 0, out n)); Out(n);
+
+				var a1 = new Action(() => { s.ToInt_(); });
+				var a2 = new Action(() => { Api.strtoi(t, out e); });
+				var a3 = new Action(() => { Api.strtoui(t, out e); });
+				var a4 = new Action(() => { Api.strtoi64(t, out e); });
+				var a5 = new Action(() => { Api.strtoi64(s, 0, out n); });
+
+				Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5);
+			}
+		}
+	}
+
+	static void TestStrToI2()
+	{
+		//var s = "12 ";
+		//int len;
+		//Out(Api.strtoi(s, 0, out len));
+		//Out(len);
+		//Out(Api.strtoi(s));
+
+		//Out(Api.strtoi("0x7ffffffe"));
+		//Out(Api.strtoi("0x8ffffffe"));
+		//Out(Api.strtoi("-0x8ffffffe"));
+		//OutHex(Api.strtoui("0xfffffffe"));
+		//OutHex(Api.strtoui("0xffffffff1"));
+		//OutHex(Api.strtoui("-2"));
+		//OutHex(Api.strtoui("-0x7fffffff"));
+		//OutHex(Api.strtoui("-0x80000000"));
+
+		Out(Api.strtoi64("0x7ffffffffffffffe"));
+		Out(Api.strtoi64("0x8000000000000000"));
+	}
+
+	[StructLayout(LayoutKind.Sequential, Pack = 16)]
+	struct __int128 { float a, b, c, d; }
+
+	struct OTHER
+	{
+		int i;
+		__int128 u;
+	}
+
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
+		Out(Marshal.SizeOf(typeof(OTHER)));
 
-		TestFileIcon();
+		//TestStrToI2();
+		//TestStringFold();
+		//TestFileIcon();
 		//TestWndGetIcon();
 		//TestWndTransparency();
 		//TestWndRegistrySaveRestore();
