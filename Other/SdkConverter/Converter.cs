@@ -156,34 +156,31 @@ public static class API
 			//The commented keywords/types are currently not supported and not expected to be in C/C++ headers that we'll parse.
 
 			_Keyword k;
-			//_Enum e;
-			//_Struct s;
-			//_Typedef td;
-			//_TypedefFunc tf;
 
-			//_AddKeyword("__alignof", k = new _Keyword(cannotStartStatement:true));
-			//_AddKeywords(k = new _Keyword(cannotStartStatement:true), "__based", "_based");
-			_AddKeywords(k = new _Keyword(), "__declspec", "_declspec");
-			//_AddKeyword("__event", k = new _Keyword());
-			//_AddKeyword("__identifier", k = new _Keyword());
-			//_AddKeywords(k = new _Keyword(), "__if_exists", "_if_exists", "__if_not_exists", "_if_not_exists");
-			//_AddKeywords(k = new _Keyword(), "__multiple_inheritance", "_multiple_inheritance", "__single_inheritance", "_single_inheritance", "__virtual_inheritance", "_virtual_inheritance"); k.cannotStartStatement = true;
-			_AddKeyword("__uuidof", k = new _Keyword(cannotStartStatement: true));
+			//_AddKeywords(new _Keyword(cannotStartStatement:true), "__based", "_based"); //0 in SDK
+			//_AddKeyword("__event", new _Keyword()); //0 in SDK
+			//_AddKeyword("__identifier", new _Keyword()); //0 in SDK
+			//_AddKeywords(new _Keyword(), "__if_exists", "_if_exists", "__if_not_exists", "_if_not_exists"); //0 in SDK. Usually used only in function body.
+			//_AddKeywords(new _Keyword(cannotStartStatement: true), "__multiple_inheritance", "_multiple_inheritance", "__single_inheritance", "_single_inheritance", "__virtual_inheritance", "_virtual_inheritance"); //0 in SDK
+			//_AddKeyword("__uuidof", new _Keyword(cannotStartStatement: true)); //should be only in function body
+			//_AddKeyword("alignas", k = new _Keyword(cannotStartStatement: true)); //removed in script
+			//_AddKeywords(new _Keyword(cannotStartStatement: true), "alignof", "__alignof"); //should be only in function body
+			//_AddKeywords(new _Keyword(cannotStartStatement: true)"false", "true"); //should be only in ignored code
+			//_AddKeyword("property", k = new _Keyword()); //0 in SDK
+			//_AddKeyword("signed", k = new _Keyword()); //replaced in script
+			//_AddKeywords(new _Keyword(cannotStartStatement: true), "throw", "noexcept"); //eg void f() throw(int); //will be skipped together with functions
+			//_AddKeyword("unsigned", k = new _Keyword()); //replaced in script
+			//_AddKeyword("nullptr", k); //0 in SDK
+
+			k = new _Keyword(cannotStartStatement: true);
+			_AddKeyword("sizeof", k); //can be like 'member[sizeof(X)]' or '#define X sizeof(Y)'
+
 			_AddKeyword("const", k = new _Keyword());
 			_AddKeyword("extern", k = new _Keyword());
-			_AddKeyword("false", k = new _Keyword(cannotStartStatement: true));
-			_AddKeyword("namespace", k = new _Keyword());
-			_AddKeyword("nullptr", k = new _Keyword(cannotStartStatement: true));
+			_AddKeyword("namespace", k = new _Keyword()); //0 in SDK (1 in CRT, which is removed)
 			_AddKeyword("operator", k = new _Keyword());
-			_AddKeyword("property", k = new _Keyword());
-			//_AddKeyword("signed", k = new _Keyword()); //our script replaced it
-			_AddKeyword("sizeof", k = new _Keyword(cannotStartStatement: true));
-			_AddKeyword("static", k = new _Keyword());
 			_AddKeyword("static_assert", k = new _Keyword());
 			_AddKeyword("template", k = new _Keyword());
-			_AddKeyword("throw", k = new _Keyword(cannotStartStatement: true)); //eg void f() throw(int);
-			_AddKeyword("true", k = new _Keyword(cannotStartStatement: true));
-			//_AddKeyword("unsigned", k = new _Keyword()); //our script replaced it
 			_AddKeyword("using", k = new _Keyword());
 			_AddKeyword("virtual", k = new _Keyword());
 
@@ -195,59 +192,35 @@ public static class API
 			_AddKeyword("typedef", k);
 			_AddKeyword("union", k);
 
-			k = new _Keyword(_KeywordT.CallConv, cannotStartStatement: true);
-			_AddKeyword("__cdecl", k); _AddKeyword("_cdecl", k);
-			_AddKeyword("__fastcall", k); _AddKeyword("_fastcall", k);
-			_AddKeyword("__stdcall", k); _AddKeyword("_stdcall", k);
-			_AddKeyword("__thiscall", k);
+			_AddKeywords(new _Keyword(_KeywordT.CallConv, cannotStartStatement: true), "__cdecl", "_cdecl", "__fastcall", "_fastcall", "__stdcall", "_stdcall", "__thiscall");
 
-			k = new _Keyword(_KeywordT.Inline);
-			_AddKeyword("__forceinline", k);
-			_AddKeyword("__inline", k);
-			_AddKeyword("_inline", k);
-			_AddKeyword("inline", k);
+			_AddKeywords(new _Keyword(_KeywordT.Inline), "__forceinline", "__inline", "_inline", "inline");
 
-			k = new _Keyword(_KeywordT.PubPrivProt);
-			_AddKeyword("private", k);
-			_AddKeyword("protected", k);
-			_AddKeyword("public", k);
+			_AddKeywords(new _Keyword(_KeywordT.PubPrivProt), "private", "protected", "public");
 
-			k = new _Keyword(_KeywordT.Ignore);
-			_AddKeyword("__unaligned", k);
-			_AddKeyword("__w64", k); _AddKeyword("_w64", k);
-			_AddKeyword("volatile", k);
-			_AddKeyword("explicit", k);
-			_AddKeyword("friend", k);
-			_AddKeyword("mutable", k);
+			//_AddKeywords(new _Keyword(_KeywordT.Ignore), "__unaligned", "__w64", "_w64", "volatile", "explicit", "friend", "mutable", "static", and so on); //removed in script
+			//_AddKeywords(k = new _Keyword(_KeywordT.Declspec), "__declspec", "_declspec"); //removed in script
 
-			_CppType t;
-			_AddKeyword("__int8", t = new _CppType("sbyte"));
-			_AddKeyword("__int16", t = new _CppType("short"));
-			_AddKeyword("__int32", t = new _CppType("int"));
-			_AddKeyword("__int64", t = new _CppType("long"));
-			_AddKeyword("__wchar_t", t = new _CppType("char"));
-			_AddKeyword("bool", t = new _CppType("bool"));
-			_AddKeyword("char", t = new _CppType("sbyte"));
-			_AddKeyword("double", t = new _CppType("double"));
-			_AddKeyword("float", t = new _CppType("float"));
-			_AddKeyword("int", t = new _CppType("int"));
-			_AddKeyword("long", t = new _CppType("int"));
-			_AddKeyword("short", t = new _CppType("short"));
+			_AddKeyword("uuid", k = new _Keyword(cannotStartStatement: true)); //was '__declspec(uuid', replaced in script
+
+			_AddKeywords(new _CppType("sbyte"), "__int8", "char");
+			_AddKeywords(new _CppType("short"), "__int16", "short");
+			_AddKeywords(new _CppType("int"), "__int32", "int", "long");
+			_AddKeyword("__int64", new _CppType("long"));
+			_AddKeywords(new _CppType("char"), "__wchar_t", "wchar_t", "char16_t");
+			_AddKeyword("bool", new _CppType("bool"));
+			_AddKeyword("double", new _CppType("double"));
+			_AddKeyword("float", new _CppType("float"));
 			//our preprocessor script replaced 'unsigned type' to 'u$type'
 			//also the script replaced 'signed type' to 'type, 'long long' to '__int64', 'long double' to 'double'
-			_AddKeyword("u$__int8", t = new _CppType("byte"));
-			_AddKeyword("u$__int16", t = new _CppType("ushort"));
-			_AddKeyword("u$__int32", t = new _CppType("uint"));
-			_AddKeyword("u$__int64", t = new _CppType("ulong"));
-			_AddKeyword("u$char", t = new _CppType("byte"));
-			_AddKeyword("u$int", t = new _CppType("uint"));
-			_AddKeyword("u$long", t = new _CppType("uint"));
-			_AddKeyword("u$short", t = new _CppType("ushort"));
-			//_AddKeyword("", t = new _CppType(""));
-			//_AddKeywords(k = new _Keyword(), "__m128", "__m128d", "__m128i"); //our script defined these as struct, because C# does not have a matching type
-			//_AddKeywords(k = new _Keyword(), "__m64"); //not used in SDK
-			_AddKeyword("void", t = new _CppType("void"));
-			_AddKeyword("auto", t = new _CppType("var")); //can be global variable
+			_AddKeywords(new _CppType("byte"), "u$__int8", "u$char");
+			_AddKeywords(new _CppType("ushort"), "u$__int16", "u$short");
+			_AddKeywords(new _CppType("uint"), "u$__int32", "u$int", "u$long", "char32_t");
+			_AddKeyword("u$__int64", new _CppType("ulong"));
+			//_AddKeywords(new _Keyword(), "__m128", "__m128d", "__m128i"); //our script defined these as struct, because C# does not have a matching type
+			//_AddKeywords(new _Keyword(), "__m64"); //not used in SDK
+			_AddKeyword("void", new _CppType("void"));
+			_AddKeyword("auto", new _CppType("var")); //has two meanings depending on compiler options. The old auto is a local variable, and we will not encounter it because we skip function bodies. The new auto is like C# var; it can also be applied to global variables too, unlike in C#; we'll ignore all variable declarations.
 		}
 
 		void _Convert(char* s)
@@ -285,12 +258,12 @@ public static class API
 						bool isPrefix = false;
 						switch(s[len]) {
 						case '\"':
-							if(len == 1) isPrefix = (*s == 'L' || *s == 'u' || *s == 'U');
-							else if(len == 2) isPrefix = (s[0] == 'u' && s[1] == '8');
+							if(len == 1) isPrefix = (c == 'L' || c == 'u' || c == 'U');
+							else if(len == 2) isPrefix = (c == 'u' && s[1] == '8');
 							//info: raw strings replaced to escaped strings when preprocessing
 							break;
 						case '\'':
-							if(len == 1) isPrefix = (*s == 'L' || *s == 'u' || *s == 'U');
+							if(len == 1) isPrefix = (c == 'L' || c == 'u' || c == 'U');
 							break;
 						}
 						if(isPrefix) { s += len - 1; continue; } //remove prefix
@@ -310,15 +283,15 @@ public static class API
 
 			for(_i = 1; _i < nTok; _i++) {
 				//Out(_tok[_i].ToString());
-				s = T(_i);
-				if(*s == '@') { //was #define, #undef or #pragma pack
+				s = T(_i); c = *s;
+				if(c == '@') { //was #define, #undef or #pragma pack
 					if(s[1] == '(') _PragmaPack();
 					else _DefineUndef();
-				} else if(_IsCharIdentStart(*s)) {
+				} else if(_IsCharIdentStart(c)) {
 					_Statement();
-				} else if(*s != ';') {
+				} else if(c != ';') {
 #if TEST_SMALL
-					if(*s == '/' && s[1] == '/') break;
+					if(c == '/' && s[1] == '/') break;
 #endif
 					//Out(_i);
 					_Err(_i, $"unexpected: {_tok[_i].ToString()}");
@@ -370,6 +343,8 @@ public static class API
 			for(; ; iNext++) {
 				char k = *T(iNext);
 				if(k == '@' || k == '\x0') break;
+
+				//TODO: convert sizeof(DWORD) to sizeof(int) etc
 			}
 
 			string name = new string(s, 0, lenName);
@@ -434,21 +409,16 @@ public static class API
 		{
 			g0:
 			_Symbol x = _FindSymbol(_i);
-			if(x.symType == _SymT.Keyword) {
-				var k = x as _Keyword;
+			var k = x as _Keyword;
+			if(k != null) {
 				if(k.cannotStartStatement) _Err(_i, "unexpected");
-
-				if(k.kwType == _KeywordT.Ignore) {
-					if(!_TokIsIdent(++_i)) _Err(_i, "unexpected");
-					goto g0;
-				}
 
 				if(k.kwType == _KeywordT.TypeDecl) {
 					bool isTypedef = *T(_i) == 't', isConst = false;
 					if(isTypedef) {
 						gk1:
 						x = _FindSymbol(++_i);
-						if(x.symType != _SymT.Keyword) {
+						if(!(x is _Keyword)) {
 							_i++;
 							_DeclareTypedefTypeOrFunc(x, isConst);
 							goto gSem;
@@ -473,8 +443,17 @@ public static class API
 					gSem:
 					if(!_TokIsChar(_i, ';')) _Err(_i, "unexpected");
 				} else {
-					_Err(_i, "unexpected"); //TODO
+					//can be:
+					//namespace, inline namespace
+					//extern "..." [{]
+					//extern T X
+					//const T X
+					//inline and its synonyms
+					//static_assert
 
+
+
+					_Err(_i, "unexpected"); //TODO
 				}
 
 			} else { //a type
@@ -502,7 +481,7 @@ public static class API
 					 //				callConv = *cc;
 					 //				goto g1;
 					 //			}
-					 //			//can be: __declspec, operator, 
+					 //			//can be: operator, 
 					 //			_Err("unexpected");
 					 //		} else { //now should be function name or variable name
 					 //			_Err($"type {s}"); //TODO
@@ -585,7 +564,7 @@ public static class API
 				name = _tok[_i].ToString();
 			} else {
 				if(_TokIsIdent(_i)) inl.paramName = _tok[_i].ToString();
-				else { _i--; inl.paramName = "noname" + inl.paramIndex; }
+				else { _i--; inl.paramName = "param" + inl.paramIndex; }
 
 				inl.typeName = name = (inl.parentName + "_" + inl.paramName);
 			}
@@ -651,7 +630,7 @@ public static class API
 		{
 			int ptr = 0; //0 - start or after comma, >0 pointer level, <0 after identifier
 			int ptrBase = 0;
-			int iStart = _i;
+			int iBaseTypeName = _i - 1;
 
 			//don't declare typedef to typedef
 			if(iTagName == 0 && aliasOf is _Typedef) {
@@ -668,7 +647,7 @@ public static class API
 						if(iTagName == 0 && _TokIsChar(_i + 1, '[')) { //typedef X Y[n];
 							_AddSymbol(_i, new _Struct(false));
 							string name = _tok[_i++].ToString();
-							string type = _ConvertTypeName(iStart - 1, aliasOf, ref ptr, false, false);
+							string type = _ConvertTypeName(iBaseTypeName, aliasOf, ref ptr, false, false);
 							string attr;
 							_i = _CArrayToMarshalAsAttribute(_i, out attr) - 1;
 							_sbStruct.AppendFormat("public struct {0} {{\r\n\t{2} {1}[] a;\r\n}}\r\n", name, type, attr);
@@ -761,8 +740,8 @@ public static class API
 			string sBaseType = null;
 			if(_TokIsChar(_i, ':')) {
 				_Symbol baseType = _FindType(++_i);
-				int ptr;
-				if(_Unalias(_i, ref baseType, out ptr) != _SymT.CppType || ptr != 0) _Err(_i, "unexpected");
+				int ptr = _Unalias(_i, ref baseType);
+				if(!(baseType is _CppType) || ptr != 0) _Err(_i, "unexpected");
 				sBaseType = (baseType as _CppType).csType;
 				_i++;
 			}
@@ -821,16 +800,12 @@ public static class API
 		/// <param name="isTypedef">Is 'typedef struct ...{...}X...;'.</param>
 		void _DeclareStruct(bool isTypedef)
 		{
-			//__declspec etc
+			//uuid (was '__declspec(uuid', replaced in script)
 			string uuid = null;
-			while(_TokIs(_i, "__declspec")) {
-				if(!_TokIsChar(++_i, '(')) _Err(_i, "unexpected");
-				if(_TokIs(_i + 1, "uuid") && _TokIsChar(_i + 2, '(') && _TokIsChar(_i + 3, '\"') && _TokIsChar(_i + 4, ')') && _TokIsChar(_i + 5, ')')) {
-					uuid = _tok[_i + 3].ToString();
-					_i += 6;
-				} else {
-					_i = _SkipEnclosed(_i) + 1;
-				}
+			if(_TokIs(_i, "uuid")) {
+				if(!_TokIsChar(++_i, '(') || !_TokIsChar(++_i, '\"') || !_TokIsChar(_i + 1, ')')) _Err(_i, "unexpected");
+				uuid = _tok[_i].ToString();
+				_i += 2;
 			}
 
 			//name
@@ -839,8 +814,13 @@ public static class API
 				iName = _i++;
 
 				//is forward declaration?
-				if(_TokIsChar(_i, ';')) {
-					_AddSymbol(iName, new _Struct(true));
+				int isForwardDecl = 0;
+				if(_TokIsChar(_i, ';')) isForwardDecl = 1; //typedef X;
+				else if(isTypedef && !_TokIsChar(_i, '{', ':')) isForwardDecl = 2; //typedef struct X Y;
+				if(isForwardDecl != 0) {
+					_Symbol y = new _Struct(true);
+					_AddSymbol(iName, y);
+					if(isForwardDecl == 2) _DeclareTypedef(y, iName);
 					return;
 				}
 			}
@@ -854,8 +834,8 @@ public static class API
 
 				for(; ; _i++) { //support multiple inheritance
 					_Symbol baseType = _FindType(_i);
-					int ptr;
-					if(_Unalias(_i, ref baseType, out ptr) != _SymT.Struct || ptr != 0 || baseType.forwardDecl) _Err(_i, "unexpected");
+					int ptr = _Unalias(_i, ref baseType);
+					if(!(baseType is _Struct) || ptr != 0 || baseType.forwardDecl) _Err(_i, "unexpected");
 					var b = baseType as _Struct;
 					char[] baseMembers = new char[b.membersLength];
 					_sbStruct.CopyTo(b.membersOffset, baseMembers, 0, b.membersLength);
@@ -896,7 +876,7 @@ public static class API
 					while(_TokIsChar(_i, '*', '&')) _i++;
 					//int ptr = 0;
 					//while(_TokIsChar(_i, '*', '&')) { _i++; ptr++; }
-					//Out(ptr); //TODO
+					//Out(ptr);
 
 					if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
 					t.name = _tok[_i++].ToString();

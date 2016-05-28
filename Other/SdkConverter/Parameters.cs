@@ -145,7 +145,6 @@ namespace SdkConverter
 				if(k == null) goto gFoundTypename;
 
 				switch(k.kwType) {
-				case _KeywordT.Ignore: continue;
 				case _KeywordT.TypeDecl: //inline forward declaration (keyword 'struct' etc)
 					if(*T(i++) == 'e') {
 						if(!(_TryFindSymbol(i, out x) && x is _Enum)) _AddSymbol(i, x = new _Enum(true));
@@ -155,11 +154,6 @@ namespace SdkConverter
 					goto gFoundTypename;
 				case _KeywordT.Normal:
 					if(_TokIs(i, "const")) { isConst = true; continue; }
-
-					if(_TokIs(i, "__declspec")) {
-						i = _SkipEnclosed(++i);
-						continue;
-					}
 					break;
 				}
 
@@ -193,7 +187,7 @@ namespace SdkConverter
 				if(ptr != 0) t.isUnsafe = true;
 
 				if(_TokIsIdent(i)) t.name = _tok[i++].ToString();
-				else if(!isMember && _TokIsChar(i, ',', ')')) t.name = "noname" + (iParam + 1);
+				else if(!isMember && _TokIsChar(i, ',', ')')) t.name = "param" + (iParam + 1);
 				else _Err(i, "no name");
 			}
 
@@ -218,12 +212,9 @@ namespace SdkConverter
 			string name = null;
 
 			if(t != null) {
-				int ptrAlias;
-				_SymT k = _Unalias(iTokName, ref t, out ptrAlias);
-				ptr += ptrAlias;
-
-				if(k == _SymT.CppType) {
-					var c = t as _CppType;
+				ptr += _Unalias(iTokName, ref t);
+				var c = t as _CppType;
+				if(c != null) {
 					name = c.csType;
 
 					if(ptr != 0) {
@@ -264,6 +255,7 @@ namespace SdkConverter
 			while(_TokIsChar(i, '[')) { //support [a][b]
 				char* t = T(i + 1);
 				i = _SkipEnclosed(i);
+				//TODO: convert sizeof(DWORD) to sizeof(int) etc
 				string ec = new string(t, 0, (int)(T(i++) - t));
 				if(elemCount == null) elemCount = ec; else elemCount = $"({elemCount})*({ec})";
 			}

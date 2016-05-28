@@ -1,4 +1,242 @@
 
+
+struct S1 {
+	int i;
+	typedef S1* PS1;
+	struct FORW;
+	FORW* p;
+
+	//namespace UU {} //error
+	//extern "C++" { } //error
+	//extern int ei; //error
+	const int coi;
+};
+
+typedef int DWORD;
+typedef short WORD, SHORT;
+typedef char BYTE;
+
+typedef struct _LIST_ENTRY {
+	struct _LIST_ENTRY *Flink;
+	struct _LIST_ENTRY *Blink;
+} LIST_ENTRY, *PLIST_ENTRY, *PRLIST_ENTRY;
+//
+
+typedef struct _SCOPE_TABLE_AMD64 {
+	int Count;
+	struct {
+		int BeginAddress;
+		int EndAddress;
+		int HandlerAddress;
+		int JumpTarget;
+	} ScopeRecord[1];
+} SCOPE_TABLE_AMD64, *PSCOPE_TABLE_AMD64;
+
+typedef struct _JOBOBJECT_CPU_RATE_CONTROL_INFORMATION {
+	DWORD ControlFlags;
+	union {
+		DWORD CpuRate;
+		DWORD Weight;
+		struct {
+			WORD MinRate;
+			WORD MaxRate;
+		};
+	};
+} JOBOBJECT_CPU_RATE_CONTROL_INFORMATION, *PJOBOBJECT_CPU_RATE_CONTROL_INFORMATION;
+
+typedef struct _NT_TIB {
+	struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+	void* StackBase;
+	void* StackLimit;
+	void* SubSystemTib;
+	union {
+		void* FiberData;
+		int Version;
+	};
+	void* ArbitraryUserPointer;
+	struct _NT_TIB *Self;
+} NT_TIB;
+
+typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+	union {
+		int FloatingContext[16];
+		struct {
+			int Xmm0;
+			int Xmm1;
+		};
+	};
+	union {
+		int IntegerContext[16];
+		struct {
+			int Rax;
+			int Rcx;
+		};
+	};
+} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+struct BITS {
+	int BaseMid : 8;
+	int Type : 5;
+	int Dpl : 2;
+	int Pres : 1;
+	int LimitHi : 4;
+	int Sys : 1;
+	int Reserved_0 : 1;
+	int Default_Big : 1;
+	int Granularity : 1;
+	int BaseHi : 8;
+};
+
+typedef struct _LDT_ENTRY {
+	short LimitLow;
+	short BaseLow;
+	union {
+		struct {
+			char BaseMid;
+			char Flags1;
+			char Flags2;
+			char BaseHi;
+		} Bytes;
+		struct {
+			int BaseMid : 8;
+			int Type : 5;
+			int Dpl : 2;
+			int Pres : 1;
+			int LimitHi : 4;
+			int Sys : 1;
+			int Reserved_0 : 1;
+			int Default_Big : 1;
+			int Granularity : 1;
+			int BaseHi : 8;
+		} Bits;
+	} HighWord;
+} LDT_ENTRY, *PLDT_ENTRY;
+
+typedef struct _PROCESS_MITIGATION_ASLR_POLICY {
+	union {
+		DWORD Flags;
+		struct {
+			DWORD EnableBottomUpRandomization : 1;
+			DWORD EnableForceRelocateImages : 1;
+			DWORD EnableHighEntropy : 1;
+			DWORD DisallowStrippedImages : 1;
+			DWORD ReservedFlags : 28;
+		};
+	};
+} PROCESS_MITIGATION_ASLR_POLICY, *PPROCESS_MITIGATION_ASLR_POLICY;
+
+struct _SYSTEM_CPU_SET_INFORMATION {
+	DWORD Size;
+	union {
+		struct {
+			DWORD Id;
+			WORD Group;
+			union {
+				BYTE AllFlags;
+				struct {
+					BYTE Parked : 1;
+					BYTE Allocated : 1;
+					BYTE AllocatedToTargetProcess : 1;
+					BYTE RealTime : 1;
+					BYTE ReservedFlags : 4;
+				};
+			};
+			DWORD Reserved;
+			int AllocationTag;
+		} CpuSet;
+	};
+};
+
+typedef struct _REPARSE_GUID_DATA_BUFFER {
+	DWORD ReparseTag;
+	WORD ReparseDataLength;
+	struct {
+		BYTE DataBuffer[1];
+	} GenericReparseBuffer;
+} REPARSE_GUID_DATA_BUFFER, *PREPARSE_GUID_DATA_BUFFER;
+
+typedef struct {
+	WORD Revision;
+	union {
+		WORD AsWORD;
+		struct {
+			WORD AllowScaling : 1;
+			WORD Disabled : 1;
+			WORD Reserved : 14;
+		};
+	} Flags;
+	DWORD PolicyCount;
+	int Policy[0x3];
+} PROCESSOR_IDLESTATE_POLICY, *PPROCESSOR_IDLESTATE_POLICY;
+
+typedef union _IMAGE_AUX_SYMBOL {
+	struct {
+		DWORD TagIndex;
+		union {
+			struct {
+				WORD Linenumber;
+				WORD Size;
+			} LnSz;
+			DWORD TotalSize;
+		} Misc;
+		union {
+			struct {
+				DWORD PointerToLinenumber;
+				DWORD PointerToNextFunction;
+			} Function;
+			struct {
+				WORD Dimension[4];
+			} Array;
+		} FcnAry;
+		WORD TvIndex;
+	} Sym;
+	struct {
+		BYTE Name[18];
+	} File;
+	struct {
+		DWORD Length;
+		WORD NumberOfRelocations;
+		WORD NumberOfLinenumbers;
+		DWORD CheckSum;
+		SHORT Number;
+		BYTE Selection;
+		BYTE bReserved;
+		SHORT HighNumber;
+	} Section;
+	int TokenDef;
+	struct {
+		DWORD crc;
+		BYTE rgbReserved[14];
+	} CRC;
+} IMAGE_AUX_SYMBOL;
+
+
+
+
+
+
+
+
+
+
+
+//
+
 struct ARRAYMEMBER {
 	int a[10];
 	int b[5], c[2], d;
@@ -6,7 +244,6 @@ struct ARRAYMEMBER {
 	int* p;
 	__wchar_t* s;
 };
-//
 
 struct ACCESS {
 private:
@@ -25,6 +262,7 @@ struct SIMPLE {
 	__wchar_t* s;
 	const __wchar_t* cs;
 	char* cp;
+	void(__fastcall*fun)(int k);
 };
 
 struct SIMPLEEX :SIMPLE {
@@ -46,7 +284,6 @@ struct SIMPLEEX2 :SIMPLE, VAVA {
 struct SIMPLEEX2P :public SIMPLE, VAVA {
 	int added;
 };
-//
 
 typedef short KEYARRAY[128];
 typedef long KEYARRAY2[3][4];
@@ -54,7 +291,6 @@ typedef short ARR5[5], ARR6[6];
 typedef int(*FUUARR)(int p[8]);
 typedef int(*FUUARRSTR)(__wchar_t p[8]);
 
-//
 enum ENUM_FORWARD;
 struct FORWARD;
 
@@ -81,21 +317,24 @@ typedef int(*FUU8S)(int, void __stdcall k(int, int));
 
 typedef int(*FUU11)(int, __interface INo* p);
 
-typedef int(*FUU12)(int, __declspec(deprecated) int(*cmp)(int a, int b));
 typedef int(*FUU13)(int, struct SIMPLE(*cmp)(int a, int b));
+
 typedef struct Node Node;
+typedef struct Node *PNode;
+typedef struct Node Node2, *PNode2;
+
 struct Node {
 	int data;
 	Node *nextptr;
 };
 
-//
-UNK* p;
-
 struct FORWARD; //ok
 struct SIMPLE; //ok
 typedef int(*FUU2)(int* p); //not error if same definition
 typedef const __wchar_t* LPCWSTR; //ok
+
+//
+UNK* p;
 //typedef __wchar_t* LPCWSTR; //error
 
 //typedef int(*FUU13)(int, inline int(*cmp)(int a, int b)); //error

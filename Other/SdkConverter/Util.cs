@@ -29,20 +29,19 @@ namespace SdkConverter
 		/// <summary>
 		/// If x is _Typedef, replaces it with its deepest used type.
 		/// Error if x is not a type (is _Keyword).
-		/// Returns symbol type of the final x type.
+		/// Returns pointer level.
 		/// </summary>
 		/// <param name="iTok">Used only for error place.</param>
-		/// <param name="ptr">Receives pointer level if it is a pointer typedef, else 0.</param>
 		[DebuggerStepThrough]
-		_SymT _Unalias(int iTok, ref _Symbol x, out int ptr)
+		int _Unalias(int iTok, ref _Symbol x)
 		{
-			ptr = 0;
+			int ptr = 0;
 			var t = x as _Typedef;
 			if(t != null) {
 				x = t.aliasOf;
 				ptr = t.ptr;
 			} else if(x is _Keyword) _Err(iTok, "unexpected");
-			return x.symType;
+			return ptr;
 		}
 
 		/// <summary>
@@ -78,9 +77,9 @@ namespace SdkConverter
 				_sym.Add(name, x);
 			} catch(ArgumentException) {
 				_Symbol p = _sym[name];
-				if(x.symType != p.symType) _Err(iTokError, "name already exists");
+				if(x.GetType() != p.GetType()) _Err(iTokError, "name already exists");
 				if(!x.forwardDecl) {
-					if(x.symType != _SymT.Typedef && x.symType != _SymT.TypedefFunc) _Err(iTokError, "already defined");
+					if(!(x is _Typedef) && !(x is _TypedefFunc)) _Err(iTokError, "already defined");
 					//info: C++ allows multiple identical typedef. We don't check identity, it is quite difficult, assume the header file is without such errors.
 					//info: before adding struct or enum, the caller checks whether it is forward-declaraed. If so, overwrites the forward-declared object and does not call this function, because cannot change object associated with that name because forward-declared object pointer can be used in a typedef.
 				}
@@ -134,8 +133,9 @@ namespace SdkConverter
 		_Keyword _FindKeyword(int iTok)
 		{
 			_Symbol x = _FindSymbol(iTok);
-			if(x.symType != _SymT.Keyword) _Err(iTok, "unexpected");
-			return x as _Keyword;
+			var k = x as _Keyword;
+			if(k == null) _Err(iTok, "unexpected");
+			return k;
 		}
 
 		/// <summary>
@@ -146,7 +146,7 @@ namespace SdkConverter
 		_Symbol _FindType(int iTok)
 		{
 			_Symbol x = _FindSymbol(iTok);
-			if(x.symType == _SymT.Keyword) _Err(iTok, "unexpected");
+			if(x is _Keyword) _Err(iTok, "unexpected");
 			return x;
 		}
 
@@ -217,6 +217,16 @@ namespace SdkConverter
 		{
 			char c = *T(iTok);
 			return c == c1 || c == c2;
+		}
+
+		/// <summary>
+		/// Returns true if token iTok is character c1, c2 or c3.
+		/// </summary>
+		[DebuggerStepThrough]
+		bool _TokIsChar(int iTok, char c1, char c2, char c3)
+		{
+			char c = *T(iTok);
+			return c == c1 || c == c2 || c == c3;
 		}
 
 		/// <summary>

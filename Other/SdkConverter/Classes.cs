@@ -24,18 +24,6 @@ namespace SdkConverter
 {
 	unsafe partial class Converter
 	{
-
-		enum _SymT :byte
-		{
-			Keyword, //C++ keyword except types
-			CppType, //C++ intrinsic type
-			Enum,
-			Struct,
-			Typedef,
-			TypedefFunc,
-			//AnyType //any except Keyword (not used in _Symbol class)
-		}
-
 		enum _KeywordT :byte
 		{
 			Normal,
@@ -43,17 +31,16 @@ namespace SdkConverter
 			CallConv, //__stdcall etc
 			Inline, //__forceinline etc
 			PubPrivProt, //public, private, protected
-			Ignore, //volatile etc
+			//Declspec, //__declspec(...) //removed in script
+			//Ignore, //volatile etc //removed in script
 		}
 
 		class _Symbol
 		{
-			internal _SymT symType;
 			internal bool forwardDecl;
 
-			internal _Symbol(_SymT symType, bool forwardDecl = false)
+			internal _Symbol(bool forwardDecl = false)
 			{
-				this.symType = symType;
 				this.forwardDecl = forwardDecl;
 			}
 		}
@@ -63,7 +50,7 @@ namespace SdkConverter
 			internal _KeywordT kwType;
 			internal bool cannotStartStatement;
 
-			internal _Keyword(_KeywordT kwType = _KeywordT.Normal, bool cannotStartStatement = false) : base(_SymT.Keyword)
+			internal _Keyword(_KeywordT kwType = _KeywordT.Normal, bool cannotStartStatement = false)
 			{
 				this.kwType = kwType;
 				this.cannotStartStatement = cannotStartStatement;
@@ -74,20 +61,20 @@ namespace SdkConverter
 		{
 			public string csType;
 
-			internal _CppType(string csType) : base(_SymT.CppType) { this.csType = csType; }
+			internal _CppType(string csType) { this.csType = csType; }
 		}
 
 		class _Enum :_Symbol
 		{
 
-			internal _Enum(bool forwardDecl) : base(_SymT.Enum, forwardDecl) { }
+			internal _Enum(bool forwardDecl) : base(forwardDecl) { }
 		}
 
 		class _Struct :_Symbol
 		{
 			public int membersOffset, membersLength;
 
-			internal _Struct(bool forwardDecl) : base(_SymT.Struct, forwardDecl) { }
+			internal _Struct(bool forwardDecl) : base(forwardDecl) { }
 		}
 
 		class _Typedef :_Symbol
@@ -109,7 +96,7 @@ namespace SdkConverter
 			/// </summary>
 			internal _Symbol aliasOf;
 
-			internal _Typedef(_Symbol aliasOf, int ptr, bool ofTag) : base(_SymT.Typedef)
+			internal _Typedef(_Symbol aliasOf, int ptr, bool ofTag)
 			{
 				this.aliasOf = aliasOf;
 				this.ptr = (byte)ptr;
@@ -120,7 +107,7 @@ namespace SdkConverter
 		class _TypedefFunc :_Symbol
 		{
 
-			internal _TypedefFunc() : base(_SymT.TypedefFunc) { }
+			internal _TypedefFunc() { }
 		}
 
 		//class _Func
