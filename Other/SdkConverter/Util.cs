@@ -45,39 +45,50 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Adds x to _sym.
+		/// Adds x to _ns[_nsCurrent].sym.
+		/// Error if already exists, unless it is a forward decl of same type or a typedef of same type.
 		/// </summary>
 		/// <param name="iTokName">Token index of symbol name.</param>
-		/// <param name="x"></param>
+		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
 		[DebuggerStepThrough]
-		void _AddSymbol(int iTokName, _Symbol x)
+		void _AddSymbol(int iTokName, _Symbol x, bool addToGlobal = false)
 		{
-			__AddSymbol(_tok[iTokName], x, iTokName);
+			__AddSymbol(_tok[iTokName], x, iTokName, addToGlobal);
 		}
 
 		/// <summary>
-		/// Adds x to _sym.
+		/// Adds x to _ns[_nsCurrent].sym.
+		/// Error if already exists, unless it is a forward decl of same type or a typedef of same type.
 		/// </summary>
 		/// <param name="iTokError">Where to show error if need.</param>
+		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
 		[DebuggerStepThrough]
-		void _AddSymbol(string name, _Symbol x, int iTokError)
+		void _AddSymbol(string name, _Symbol x, int iTokError, bool addToGlobal = false)
 		{
-			fixed (char* n = name) { __AddSymbol(new _Token(n, name.Length), x, iTokError); }
+			fixed (char* n = name) { __AddSymbol(new _Token(n, name.Length), x, iTokError, addToGlobal); }
 		}
 
 		/// <summary>
-		/// Adds x to _sym.
+		/// Adds x to _ns[_nsCurrent].sym.
+		/// Error if already exists, unless it is a forward decl of same type or a typedef of same type.
 		/// </summary>
 		/// <param name="iTokError">Where to show error if need.</param>
+		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
 		[DebuggerStepThrough]
-		void __AddSymbol(_Token name, _Symbol x, int iTokError)
+		void __AddSymbol(_Token name, _Symbol x, int iTokError, bool addToGlobal)
 		{
+			if(_keywords.ContainsKey(name)) _Err(iTokError, "name already exists (keyword)");
+			int ns = addToGlobal ? 0 : _nsCurrent;
 			//Out(name);
 			try {
-				_sym.Add(name, x);
+				_ns[ns].sym.Add(name, x);
 			} catch(ArgumentException) {
-				_Symbol p = _sym[name];
-				if(x.GetType() != p.GetType()) _Err(iTokError, "name already exists");
+				_Symbol p = _ns[ns].sym[name];
+				g1:
+				if(x.GetType() != p.GetType()) {
+					if(((p is _Typedef) && 0 == _Unalias(iTokError, ref p)) || ((x is _Typedef) && 0 == _Unalias(iTokError, ref x))) goto g1;
+					_Err(iTokError, "name already exists");
+				}
 				if(!x.forwardDecl) {
 					if(!(x is _Typedef) && !(x is _TypedefFunc)) _Err(iTokError, "already defined");
 					//info: C++ allows multiple identical typedef. We don't check identity, it is quite difficult, assume the header file is without such errors.
@@ -87,79 +98,84 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Finds symbol of token iTok in _sym.
+		/// Finds symbol of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if not found or the token is not an identifier.
 		/// </summary>
 		[DebuggerStepThrough]
-		_Symbol _FindSymbol(int iTok)
+		_Symbol _FindSymbol(int iTok, bool includingAncestorNamespaces)
 		{
 			_Symbol x;
-			if(_sym.TryGetValue(_tok[iTok], out x)) return x;
-			_Err(iTok, _TokIsIdent(iTok) ? "unknown identifier" : "unexpected");
-			return null;
+			if(!_TryFindSymbol(iTok, out x, includingAncestorNamespaces)) _Err(iTok, "unknown identifier");
+			return x;
 		}
 
 		/// <summary>
-		/// Finds symbol of token iTok in _sym.
+		/// Finds symbol of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if the token is not an identifier.
 		/// </summary>
 		[DebuggerStepThrough]
-		bool _TryFindSymbol(int iTok, out _Symbol x)
+		bool _TryFindSymbol(int iTok, out _Symbol x, bool includingAncestorNamespaces)
 		{
-			if(_sym.TryGetValue(_tok[iTok], out x)) return true;
+			_Token token = _tok[iTok];
+			if(_keywords.TryGetValue(token, out x)) return true;
+			for(int i = _nsCurrent; i >= 0; i--) {
+				if(_ns[i].sym.TryGetValue(token, out x)) return true;
+				if(!includingAncestorNamespaces) break;
+			}
 			if(!_TokIsIdent(iTok)) _Err(iTok, "unexpected");
 			return false;
 		}
 
 		/// <summary>
-		/// Finds symbol of T type of token iTok in _sym.
+		/// Finds symbol of T type of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if the token is not an identifier.
 		/// </summary>
 		[DebuggerStepThrough]
-		bool _TryFindSymbolOfType<T>(int iTok, out T x) where T : _Symbol
+		bool _TryFindSymbolAs<T>(int iTok, out T x, bool includingAncestorNamespaces) where T : _Symbol
 		{
 			x = null;
 			_Symbol t;
-			if(!_TryFindSymbol(iTok, out t)) return false;
+			if(!_TryFindSymbol(iTok, out t, includingAncestorNamespaces)) return false;
 			x = t as T;
 			return x != null;
 		}
 
 		/// <summary>
-		/// Finds symbol of token iTok in _sym.
+		/// Finds symbol of token iTok everywhere.
 		/// Error if not found or not a keyword or the token is not an identifier.
 		/// </summary>
+		/// <param name="kwType">If not _KeywordT.Any, error if the keyword is not of this type.</param>
 		[DebuggerStepThrough]
-		_Keyword _FindKeyword(int iTok)
+		_Keyword _FindKeyword(int iTok, _KeywordT kwType = _KeywordT.Any)
 		{
-			_Symbol x = _FindSymbol(iTok);
+			_Symbol x = _FindSymbol(iTok, true);
 			var k = x as _Keyword;
 			if(k == null) _Err(iTok, "unexpected");
+			if(kwType != _KeywordT.Any && k.kwType != kwType) _Err(iTok, "unexpected");
 			return k;
 		}
 
 		/// <summary>
-		/// Finds symbol of token iTok in _sym.
+		/// Finds symbol of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if not found or not a type (struct, enum etc) or the token is not an identifier.
 		/// </summary>
 		[DebuggerStepThrough]
-		_Symbol _FindType(int iTok)
+		_Symbol _FindType(int iTok, bool includingAncestorNamespaces)
 		{
-			_Symbol x = _FindSymbol(iTok);
+			_Symbol x = _FindSymbol(iTok, includingAncestorNamespaces);
 			if(x is _Keyword) _Err(iTok, "unexpected");
 			return x;
 		}
 
 		/// <summary>
-		/// Returns true if symbol of token iTok exists in _sym.
+		/// Returns true if symbol of token iTok exists in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if the token is not an identifier.
 		/// </summary>
 		[DebuggerStepThrough]
-		bool _SymbolExists(int iTok)
+		bool _SymbolExists(int iTok, bool includingAncestorNamespaces)
 		{
-			if(_sym.ContainsKey(_tok[iTok])) return true;
-			if(!_TokIsIdent(iTok)) _Err(iTok, "unexpected");
-			return false;
+			_Symbol t;
+			return _TryFindSymbol(iTok, out t, includingAncestorNamespaces);
 		}
 
 		#endregion
@@ -230,24 +246,36 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Returns true, if at token iTokAfterTypeNameAndPtr is '([callConv]*[funcTypeOrVariable])(' or [callConv] 'funcType('.
+		/// Returns true if token iTok is character c1, c2, c3 or c4.
+		/// </summary>
+		[DebuggerStepThrough]
+		bool _TokIsChar(int iTok, char c1, char c2, char c3, char c4)
+		{
+			char c = *T(iTok);
+			return c == c1 || c == c2 || c == c3 || c == c4;
+		}
+
+		/// <summary>
+		/// Converts token iTok from char* to string.
+		/// </summary>
+		[DebuggerStepThrough]
+		string _TokToString(int iTok)
+		{
+			return _tok[iTok].ToString();
+		}
+
+		/// <summary>
+		/// Returns true, if at token iTokAfterTypeNameAndPtr is '([callConv]*[funcTypeOrVariable])('.
 		/// </summary>
 		bool _DetectIsFuncType(int iTokAfterTypeNameAndPtr)
 		{
 			int i = iTokAfterTypeNameAndPtr;
-			if(_TokIsChar(i, '(')) {
-				if(_TokIsIdent(++i)) i++; //eg __stdcall
-				if(!_TokIsChar(i, '*')) return false;
-				if(_TokIsIdent(++i)) i++; //func type name or parameter/member name (optional)
-				if(!_TokIsChar(i, ')')) return false;
-				return _TokIsChar(i + 1, '(');
-			} else {
-				if(!_TokIsIdent(i)) return false; //can be funcType or callConv
-				if(_TokIsChar(i + 1, '(')) return true;
-				if(!_TokIsChar(i + 2, '(') || !_TokIsIdent(i + 1)) return false;
-				_Keyword k;
-				return _TryFindSymbolOfType(i, out k) && k.kwType == _KeywordT.CallConv;
-			}
+			if(!_TokIsChar(i, '(')) return false;
+			if(_TokIsIdent(++i)) i++; //eg __stdcall
+			if(!_TokIsChar(i, '*')) return false;
+			if(_TokIsIdent(++i)) i++; //func type name or optional parameter/member name
+			if(!_TokIsChar(i, ')')) return false;
+			return _TokIsChar(i + 1, '(');
 		}
 
 		/// <summary>

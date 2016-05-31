@@ -1302,7 +1302,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload has different parameter types.
 		/// </summary>
-		[DllImport("msvcrt.dll", EntryPoint = "wcstol")]
+		[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
 		public static extern unsafe int strtoi(char* s, out char* endPtr, int numberBase = 0);
 
 		/// <summary>
@@ -1314,15 +1314,15 @@ namespace Catkeys.Winapi
 			return k < -int.MaxValue ? 0u : (k > uint.MaxValue ? uint.MaxValue : (uint)k);
 		}
 		//note: don't use the u API because they return 1 if the value is too big and the string contains '-'.
-		//[DllImport("msvcrt.dll", EntryPoint = "wcstoul")]
+		//[DllImport("msvcrt.dll", EntryPoint = "wcstoul", CallingConvention = CallingConvention.Cdecl)]
 		//public static extern unsafe uint strtoui(char* s, out char* endPtr, int _base = 0);
-		//[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64")]
+		//[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
 		//public static extern unsafe ulong strtoui64(char* s, out char* endPtr, int _base = 0);
 
 		/// <summary>
 		/// This overload has different parameter types.
 		/// </summary>
-		[DllImport("msvcrt.dll", EntryPoint = "_wcstoi64")]
+		[DllImport("msvcrt.dll", EntryPoint = "_wcstoi64", CallingConvention = CallingConvention.Cdecl)]
 		public static extern unsafe long strtoi64(char* s, out char* endPtr, int numberBase = 0);
 		//info: ntdll also has wcstol, wcstoul, _wcstoui64, but not _wcstoi64.
 

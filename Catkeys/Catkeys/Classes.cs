@@ -38,7 +38,7 @@ namespace Catkeys
 	/// </summary>
 	/// <remarks>
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
-	///	There is no cast operators for long, ulong and enum. When need, cast through int or uint. For Wnd cast through IntPtr.
+	///	There is no cast operators for enum. When need, cast through int or uint. For Wnd cast through IntPtr.
 	/// </remarks>
 	public unsafe struct LPARAM :IXmlSerializable
 	{
@@ -57,6 +57,8 @@ namespace Catkeys
 		public static implicit operator LPARAM(short x) { return new LPARAM((void*)x); }
 		public static implicit operator LPARAM(ushort x) { return new LPARAM((void*)x); }
 		public static implicit operator LPARAM(char x) { return new LPARAM((void*)(ushort)x); }
+		public static implicit operator LPARAM(long x) { return new LPARAM((void*)x); }
+		public static implicit operator LPARAM(ulong x) { return new LPARAM((void*)x); }
 		public static implicit operator LPARAM(bool x) { return new LPARAM((void*)(x ? 1 : 0)); }
 		//public static implicit operator LPARAM(Enum x) { return new LPARAM((void*)(int)x); } //error
 		//public static implicit operator LPARAM(WPARAM x) { return new LPARAM(x); }
@@ -71,6 +73,8 @@ namespace Catkeys
 		public static implicit operator short (LPARAM x) { return (short)x._v; }
 		public static implicit operator ushort (LPARAM x) { return (ushort)x._v; }
 		public static implicit operator char (LPARAM x) { return (char)(ushort)x._v; }
+		public static implicit operator long (LPARAM x) { return (long)x._v; }
+		public static implicit operator ulong (LPARAM x) { return (ulong)x._v; }
 		public static implicit operator bool (LPARAM x) { return x._v != null; }
 
 		public static bool operator ==(LPARAM a, LPARAM b) { return a._v == b._v; }

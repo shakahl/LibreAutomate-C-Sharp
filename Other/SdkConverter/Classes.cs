@@ -26,88 +26,128 @@ namespace SdkConverter
 	{
 		enum _KeywordT :byte
 		{
+			Any,
 			Normal,
 			TypeDecl, //enum, struct, union, class, __interface, typedef
 			CallConv, //__stdcall etc
-			Inline, //__forceinline etc
 			PubPrivProt, //public, private, protected
 			//Declspec, //__declspec(...) //removed in script
 			//Ignore, //volatile etc //removed in script
+			IgnoreFuncEtc, //inline, template, operator, static_assert
 		}
 
+		[DebuggerStepThrough]
+		class _Namespace
+		{
+			/// <summary>
+			/// Symbols of current namespace. Types, typedef etc. Not C++ keywords/types.
+			/// </summary>
+			public Dictionary<_Token, _Symbol> sym = new Dictionary<_Token, _Symbol>();
+
+			/// <summary>
+			/// Formats members and nested types of current namespace. Cleared/reused for each type.
+			/// </summary>
+			public StringBuilder sb = new StringBuilder();
+
+			/// <summary>
+			/// Clears sym and sb.
+			/// </summary>
+			public void Clear()
+			{
+				sym.Clear();
+				sb.Clear();
+			}
+		}
+
+		[DebuggerStepThrough]
 		class _Symbol
 		{
-			internal bool forwardDecl;
+			/// C# code.
+			/// <summary>
+			/// If _Keyword or _Typedef - null.
+			/// If _CppType - C# typename.
+			/// If _Enum - "public enum...{...}".
+			/// If _Struct - "public struct...{...}".
+			/// If _Typedef - null.
+			/// If _TypedefFunc - "public delegate...(...)".
+			/// </summary>
+			public string cs;
+			public bool forwardDecl;
 
-			internal _Symbol(bool forwardDecl = false)
+			public _Symbol(bool forwardDecl = false)
 			{
 				this.forwardDecl = forwardDecl;
 			}
 		}
 
+		[DebuggerStepThrough]
 		class _Keyword :_Symbol
 		{
-			internal _KeywordT kwType;
-			internal bool cannotStartStatement;
+			public _KeywordT kwType;
+			public bool cannotStartStatement;
 
-			internal _Keyword(_KeywordT kwType = _KeywordT.Normal, bool cannotStartStatement = false)
+			public _Keyword(_KeywordT kwType = _KeywordT.Normal, bool cannotStartStatement = false)
 			{
 				this.kwType = kwType;
 				this.cannotStartStatement = cannotStartStatement;
 			}
 		}
 
+		[DebuggerStepThrough]
 		class _CppType :_Symbol
 		{
-			public string csType;
-
-			internal _CppType(string csType) { this.csType = csType; }
+			public byte sizeBytesCpp;
+			public bool isUnsigned;
+			public _CppType(string csType, int sizeBytesCpp, bool isUnsigned)
+			{
+				this.cs = csType;
+				this.sizeBytesCpp = (byte)sizeBytesCpp;
+				this.isUnsigned = isUnsigned;
+            }
 		}
 
+		[DebuggerStepThrough]
 		class _Enum :_Symbol
 		{
 
-			internal _Enum(bool forwardDecl) : base(forwardDecl) { }
+			public _Enum(bool forwardDecl) : base(forwardDecl) { }
 		}
 
+		[DebuggerStepThrough]
 		class _Struct :_Symbol
 		{
-			public int membersOffset, membersLength;
-
-			internal _Struct(bool forwardDecl) : base(forwardDecl) { }
+			public _Struct(bool forwardDecl) : base(forwardDecl) { }
 		}
 
+		[DebuggerStepThrough]
 		class _Typedef :_Symbol
 		{
 			/// <summary>
 			/// pointer (1 if *, 2 if ** and so on)
 			/// </summary>
-			internal byte ptr;
+			public byte ptr;
 			/// <summary>
 			/// TODO
 			/// </summary>
-			internal bool isConst;
-			/// <summary>
-			/// when eg 'typedef struct tagX{...} X;
-			/// </summary>
-			internal bool ofTag;
+			public bool isConst;
 			/// <summary>
 			/// struct etc for which this typedef is alias.
 			/// </summary>
-			internal _Symbol aliasOf;
+			public _Symbol aliasOf;
 
-			internal _Typedef(_Symbol aliasOf, int ptr, bool ofTag)
+			public _Typedef(_Symbol aliasOf, int ptr, bool isConst)
 			{
 				this.aliasOf = aliasOf;
 				this.ptr = (byte)ptr;
-				this.ofTag = ofTag;
+				this.isConst = isConst;
 			}
 		}
 
+		[DebuggerStepThrough]
 		class _TypedefFunc :_Symbol
 		{
 
-			internal _TypedefFunc() { }
+			public _TypedefFunc() { }
 		}
 
 		//class _Func
@@ -115,12 +155,13 @@ namespace SdkConverter
 
 		//}
 
+		[DebuggerStepThrough]
 		struct _Token :IEquatable<_Token>
 		{
 			public char* s { get; private set; }
 			public int len { get; private set; }
 
-			internal _Token(char* S, int length)
+			public _Token(char* S, int length)
 			{
 				s = S;
 				len = length;

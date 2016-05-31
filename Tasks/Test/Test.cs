@@ -2084,19 +2084,12 @@ bbb"", b3
 		Out(Api.strtoi64("0x8000000000000000"));
 	}
 
-	[StructLayout(LayoutKind.Sequential, Pack = 16)]
-	struct __int128 { float a, b, c, d; }
 
-	struct OTHER
-	{
-		int i;
-		__int128 u;
-	}
 
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
-		Out(Marshal.SizeOf(typeof(OTHER)));
+		OutHex(0x123456789123U);
 
 		//TestStrToI2();
 		//TestStringFold();
