@@ -1,3 +1,58 @@
+#include <ObjIdl.h>
+
+enum MENUM {
+	A, B
+};
+
+enum MENUM2:char {
+	A2, B2
+};
+enum MENUM3 {
+	A=0x10, B
+};
+
+
+struct BASE {
+	int a;
+	int b;
+};
+
+struct INHER :BASE {
+	int c, d;
+};
+
+__interface IUnknown
+{
+	void AddRef();
+};
+
+__interface IBase : IUnknown
+{
+	void BaseFunc();
+};
+
+__interface IInher : IBase
+{
+	void OwnFunc();
+};
+
+typedef int ARR[5];
+
+//
+
+
+
+__interface IInterface
+{
+public:
+	int Func();
+	virtual int* PureVirtual()=0;
+};
+
+
+
+
+
 typedef int DWORD, UINT, BOOL, LONG;
 typedef short WORD, SHORT;
 typedef char BYTE;
@@ -22,7 +77,7 @@ struct IMAGE_ARCHITECTURE_HEADER {
 	int : 7;
 	u$int AmaskShift : 8;
 	int : 16;
-	DWORD FirstEntryRVA;
+	DWORD * FirstEntryRVA;
 };
 
 struct BITF {

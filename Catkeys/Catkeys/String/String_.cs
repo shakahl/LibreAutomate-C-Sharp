@@ -497,6 +497,17 @@ namespace Catkeys
 		{
 			return Regex.Replace(t, pattern, evaluator, options | RegexOptions.CultureInvariant);
 		}
+
+		/// <summary>
+		/// Calls result = Regex.Replace(t, pattern, replacement, options|RegexOptions.CultureInvariant).
+		/// Returns the number of replacements made.
+		/// </summary>
+		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, RegexOptions options = 0)
+		{
+			int n = 0;
+			result=Regex.Replace(t, pattern, (m)=> { n++; return m.Result(replacement); }, options | RegexOptions.CultureInvariant);
+			return n;
+		}
 	}
 
 }

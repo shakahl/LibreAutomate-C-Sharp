@@ -1124,7 +1124,8 @@ bbb"", b3
 			x = new ProcessMemory(w, 1000);
 			//x = new ProcessMemory(w, 0);
 
-		} catch(CatkeysException e) { Out(e); return; }
+		}
+		catch(CatkeysException e) { Out(e); return; }
 
 		//Out(1);
 		//Out(x.WriteUnicodeString("Unicode"));
@@ -1185,7 +1186,8 @@ bbb"", b3
 		{
 			try {
 				using(var x = new WindowsFormsControlNames(w)) { s1 = x.GetControlName(w); }
-			} catch { s1 = null; }
+			}
+			catch { s1 = null; }
 		});
 		var a2 = new Action(() => { s2 = WindowsFormsControlNames.CachedGetControlName(w); });
 
@@ -1980,7 +1982,8 @@ bbb"", b3
 					return s;
 				}
 			}
-		} catch { }
+		}
+		catch { }
 		return null;
 	}
 
@@ -2011,17 +2014,17 @@ bbb"", b3
 		var s = TextFileToCharArray(@"c:\test\a.txt");
 		if(s == null) return;
 
-		int i=0, j=0, n = s.Length;
+		int i = 0, j = 0, n = s.Length;
 		var d = new char[n];
 
-		for(; i< n; i++) {
+		for(; i < n; i++) {
 			char c = s[i];
 			switch(c) {
 			case '\"':
 				d[j++] = c;
-                for(++i; i< n; i++) {
+				for(++i; i < n; i++) {
 					if(s[i] == '\"') {
-						int k = i; while(s[k-1] == '\\') k--;
+						int k = i; while(s[k - 1] == '\\') k--;
 						if((k & 1) == 0) break;
 					} else d[j++] = s[i];
 				}
@@ -2040,10 +2043,10 @@ bbb"", b3
 
 		unsafe
 		{
-			fixed(char* p = c)
+			fixed (char* p = c)
 			{
 				Out(s.ToInt_());
-				char* t=p, e;
+				char* t = p, e;
 				Out(Api.strtoi(t, out e));
 				Out(Api.strtoui(t, out e));
 				Out(Api.strtoi64(t, out e));
@@ -2086,10 +2089,78 @@ bbb"", b3
 
 
 
+	public unsafe class UNS
+	{
+		public struct HASARRAY
+		{
+			//[MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
+			public fixed int a[5];
+			public fixed char s[5];
+			//fixed public char s[5]; //error
+
+			//public fixed POINT p[6]; //error
+		}
+
+		public struct USEHASARRAY
+		{
+			public HASARRAY* p;
+		}
+
+
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern Wnd SetFocus2(Wnd hWnd);
+
+		public struct TDARRAY
+		{
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 5)]
+			public int[] a;
+
+			public int this[int i] { get { return a[i]; } set { _Init(); a[i] = value; } }
+			void _Init() { if(a == null) a = new int[5]; }
+		}
+	}
+
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static void TestX()
 	{
-		OutHex(0x123456789123U);
+		string p = @"(\d)\d+", r = "$1R";
+		string s = "aaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mm";
+
+		//Out(s.RegexReplace_(out s, p, r));
+		//Out(s);
+
+		string s2 = null; int n = 0;
+		var a1 = new Action(() => { s2 = s.RegexReplace_(p, r); });
+		var a2 = new Action(() => { n = s.RegexReplace_(out s2, p, r); });
+
+		Perf.ExecuteMulti(5, 1000, a1, a2);
+
+		OutList(n, s2);
+
+		//var k = new UNS.TDARRAY();
+		////k.a = new int[5];
+		//k[0] = 5;
+		//Out(k[0]);
+
+
+		//unsafe
+		//{
+		//	OutList(sizeof(UNS.HASARRAY), Marshal.SizeOf(typeof(UNS.HASARRAY)));
+
+		//	var k = new UNS.HASARRAY();
+
+		//	Out(k.a[0]);
+		//	k.a[0]=5;
+		//	Out(k.a[0]);
+
+		//	//Out(k.a); //error
+		//	//Out(k.s); //error
+
+		//	//char[] s = k.s; //error
+		//	k.s[0] = 'A';
+		//	string s = new string(k.s, 0, 5);
+		//	Out(s);
+		//}
 
 		//TestStrToI2();
 		//TestStringFold();
@@ -2156,7 +2227,8 @@ bbb"", b3
 			//domain.CreateInstanceFrom("CatkeysTasks.exe", "Test");
 			//Out("after domain.CreateInstance");
 
-		} finally {
+		}
+		finally {
 			AppDomain.Unload(domain);
 			//Out("after AppDomain.Unload(domain)");
 		}

@@ -31,8 +31,8 @@ namespace SdkConverter
 			TypeDecl, //enum, struct, union, class, __interface, typedef
 			CallConv, //__stdcall etc
 			PubPrivProt, //public, private, protected
-			//Declspec, //__declspec(...) //removed in script
-			//Ignore, //volatile etc //removed in script
+						 //Declspec, //__declspec(...) //removed in script
+						 //Ignore, //volatile etc //removed in script
 			IgnoreFuncEtc, //inline, template, operator, static_assert
 		}
 
@@ -62,22 +62,8 @@ namespace SdkConverter
 		[DebuggerStepThrough]
 		class _Symbol
 		{
-			/// C# code.
-			/// <summary>
-			/// If _Keyword or _Typedef - null.
-			/// If _CppType - C# typename.
-			/// If _Enum - "public enum...{...}".
-			/// If _Struct - "public struct...{...}".
-			/// If _Typedef - null.
-			/// If _TypedefFunc - "public delegate...(...)".
-			/// </summary>
-			public string cs;
+			public string csTypename;
 			public bool forwardDecl;
-
-			public _Symbol(bool forwardDecl = false)
-			{
-				this.forwardDecl = forwardDecl;
-			}
 		}
 
 		[DebuggerStepThrough]
@@ -98,25 +84,65 @@ namespace SdkConverter
 		{
 			public byte sizeBytesCpp;
 			public bool isUnsigned;
-			public _CppType(string csType, int sizeBytesCpp, bool isUnsigned)
+
+			public _CppType(string csTypename, int sizeBytesCpp, bool isUnsigned)
 			{
-				this.cs = csType;
+				this.csTypename = csTypename;
 				this.sizeBytesCpp = (byte)sizeBytesCpp;
 				this.isUnsigned = isUnsigned;
-            }
+			}
 		}
 
 		[DebuggerStepThrough]
 		class _Enum :_Symbol
 		{
+			public char[] defAfterName;
+			public bool isFlags;
 
-			public _Enum(bool forwardDecl) : base(forwardDecl) { }
+			public _Enum(string csTypename, bool forwardDecl)
+			{
+				this.csTypename = csTypename;
+				this.forwardDecl = forwardDecl;
+			}
+
+			public static _Enum Copy(_Enum x, string name)
+			{
+				var r = new _Enum(name, x.forwardDecl);
+				r.defAfterName = x.defAfterName;
+				r.isFlags = x.isFlags;
+				return r;
+			}
 		}
 
 		[DebuggerStepThrough]
 		class _Struct :_Symbol
 		{
-			public _Struct(bool forwardDecl) : base(forwardDecl) { }
+			public bool isInterface, isClass;
+			public char[] attributes, members;
+
+			public _Struct(string csTypename, bool forwardDecl)
+			{
+				this.csTypename = csTypename;
+				this.forwardDecl = forwardDecl;
+			}
+
+			public static _Struct Copy(_Struct x, string name)
+			{
+				var r = new _Struct(name, x.forwardDecl);
+				r.isInterface = x.isInterface;
+				r.attributes = x.attributes;
+				r.members = x.members;
+				return r;
+			}
+		}
+
+		[DebuggerStepThrough]
+		class _Callback :_Symbol
+		{
+			public _Callback(string csTypename)
+			{
+				this.csTypename = csTypename;
+			}
 		}
 
 		[DebuggerStepThrough]
@@ -131,23 +157,21 @@ namespace SdkConverter
 			/// </summary>
 			public bool isConst;
 			/// <summary>
+			/// Used when swapping tagX with X in 'typedef tagX{...}X'. Then true if tagX was forward-declared. Later used mostly to make conversion faster.
+			/// </summary>
+			public bool wasForwardDecl;
+			/// <summary>
 			/// struct etc for which this typedef is alias.
 			/// </summary>
 			public _Symbol aliasOf;
 
-			public _Typedef(_Symbol aliasOf, int ptr, bool isConst)
+			public _Typedef(_Symbol aliasOf, int ptr, bool isConst, bool wasForwardDecl=false)
 			{
 				this.aliasOf = aliasOf;
 				this.ptr = (byte)ptr;
 				this.isConst = isConst;
+				this.wasForwardDecl = wasForwardDecl;
 			}
-		}
-
-		[DebuggerStepThrough]
-		class _TypedefFunc :_Symbol
-		{
-
-			public _TypedefFunc() { }
 		}
 
 		//class _Func
@@ -178,6 +202,14 @@ namespace SdkConverter
 			{
 				if(s.Length != len) return false;
 				for(int i = 0; i < len; i++) if(s[i] != this.s[i]) return false;
+				return true;
+			}
+
+			public bool StartsWith(string s)
+			{
+				int n =s.Length;
+				if(n > len) return false;
+				for(int i = 0; i < n; i++) if(s[i] != this.s[i]) return false;
 				return true;
 			}
 

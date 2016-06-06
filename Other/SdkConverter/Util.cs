@@ -50,7 +50,7 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="iTokName">Token index of symbol name.</param>
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
-		[DebuggerStepThrough]
+		//[DebuggerStepThrough]
 		void _AddSymbol(int iTokName, _Symbol x, bool addToGlobal = false)
 		{
 			__AddSymbol(_tok[iTokName], x, iTokName, addToGlobal);
@@ -62,10 +62,12 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="iTokError">Where to show error if need.</param>
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
-		[DebuggerStepThrough]
+		//[DebuggerStepThrough]
 		void _AddSymbol(string name, _Symbol x, int iTokError, bool addToGlobal = false)
 		{
-			fixed (char* n = name) { __AddSymbol(new _Token(n, name.Length), x, iTokError, addToGlobal); }
+			//Out(name);
+			char* s = (char*)Marshal.StringToHGlobalUni(name); //never mind: finally release
+			__AddSymbol(new _Token(s, name.Length), x, iTokError, addToGlobal);
 		}
 
 		/// <summary>
@@ -74,15 +76,17 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="iTokError">Where to show error if need.</param>
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
-		[DebuggerStepThrough]
+		//[DebuggerStepThrough]
 		void __AddSymbol(_Token name, _Symbol x, int iTokError, bool addToGlobal)
 		{
+			Debug.Assert(_IsCharIdentStart(*name.s));
 			if(_keywords.ContainsKey(name)) _Err(iTokError, "name already exists (keyword)");
 			int ns = addToGlobal ? 0 : _nsCurrent;
 			//Out(name);
 			try {
 				_ns[ns].sym.Add(name, x);
-			} catch(ArgumentException) {
+			}
+			catch(ArgumentException) {
 				_Symbol p = _ns[ns].sym[name];
 				g1:
 				if(x.GetType() != p.GetType()) {
@@ -90,7 +94,7 @@ namespace SdkConverter
 					_Err(iTokError, "name already exists");
 				}
 				if(!x.forwardDecl) {
-					if(!(x is _Typedef) && !(x is _TypedefFunc)) _Err(iTokError, "already defined");
+					if(!(x is _Typedef) && !(x is _Callback)) _Err(iTokError, "already defined");
 					//info: C++ allows multiple identical typedef. We don't check identity, it is quite difficult, assume the header file is without such errors.
 					//info: before adding struct or enum, the caller checks whether it is forward-declaraed. If so, overwrites the forward-declared object and does not call this function, because cannot change object associated with that name because forward-declared object pointer can be used in a typedef.
 				}
@@ -125,6 +129,26 @@ namespace SdkConverter
 			if(!_TokIsIdent(iTok)) _Err(iTok, "unexpected");
 			return false;
 		}
+
+#if DEBUG
+		/// <summary>
+		/// Finds symbol by string name.
+		/// </summary>
+		[DebuggerStepThrough]
+		bool _TryFindSymbol(string name, out _Symbol x, bool includingAncestorNamespaces)
+		{
+			fixed (char* n = name)
+			{
+				_Token token = new _Token(n, name.Length);
+				if(_keywords.TryGetValue(token, out x)) return true;
+				for(int i = _nsCurrent; i >= 0; i--) {
+					if(_ns[i].sym.TryGetValue(token, out x)) return true;
+					if(!includingAncestorNamespaces) break;
+				}
+			}
+			return false;
+		}
+#endif
 
 		/// <summary>
 		/// Finds symbol of T type of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
@@ -208,12 +232,39 @@ namespace SdkConverter
 		}
 
 		/// <summary>
+		/// Returns true if token iTok string starts with s.
+		/// </summary>
+		[DebuggerStepThrough]
+		bool _TokStarts(int iTok, string s)
+		{
+			return _tok[iTok].StartsWith(s);
+		}
+
+		/// <summary>
 		/// Returns true if token iTok is an identifier.
 		/// </summary>
 		[DebuggerStepThrough]
 		bool _TokIsIdent(int iTok)
 		{
 			return _IsCharIdentStart(*T(iTok));
+		}
+
+		/// <summary>
+		/// Returns true if token iTok is a number.
+		/// </summary>
+		[DebuggerStepThrough]
+		bool _TokIsNumber(int iTok)
+		{
+			return _IsCharDigit(*T(iTok));
+		}
+
+		/// <summary>
+		/// Returns true if token iTok is an identifier or number.
+		/// </summary>
+		[DebuggerStepThrough]
+		bool _TokIsIdentOrNumber(int iTok)
+		{
+			return _IsCharIdent(*T(iTok));
 		}
 
 		/// <summary>
@@ -236,23 +287,14 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Returns true if token iTok is character c1, c2 or c3.
+		/// Returns true if token iTok is a character in chars.
 		/// </summary>
 		[DebuggerStepThrough]
-		bool _TokIsChar(int iTok, char c1, char c2, char c3)
+		bool _TokIsChar(int iTok, string chars)
 		{
 			char c = *T(iTok);
-			return c == c1 || c == c2 || c == c3;
-		}
-
-		/// <summary>
-		/// Returns true if token iTok is character c1, c2, c3 or c4.
-		/// </summary>
-		[DebuggerStepThrough]
-		bool _TokIsChar(int iTok, char c1, char c2, char c3, char c4)
-		{
-			char c = *T(iTok);
-			return c == c1 || c == c2 || c == c3 || c == c4;
+			for(int i = 0; i < chars.Length; i++) if(c == chars[i]) return true;
+			return false;
 		}
 
 		/// <summary>
@@ -279,24 +321,24 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Skips code block enclosed in {}, (), [] or ˂˃, starting from token iTok, which must be at the starting { etc.
-		/// Returns token index of the ending } etc.
+		/// Skips code block enclosed in {}, (), [] or ˂˃.
+		/// i must be token index at the starting { etc. Returns token index at } etc.
 		/// Inside the block:
 		///		Skips nested enclosed blocks of the same type.
 		///		Ignores nested enclosed blocks of other types, eg (), [] etc blocks when this block is {}.
-		/// Error if iTok character is not {([˂.
+		/// Error if i character is not {([˂.
 		/// Error if the ending })]˃ is missing.
 		/// </summary>
 		[DebuggerStepThrough]
-		int _SkipEnclosed(int iTok)
+		int _SkipEnclosed(int i)
 		{
-			char cStart = *T(iTok);
-			if(!(cStart == '{' || cStart == '(' || cStart == '[' || cStart == '<')) _Err(iTok, "unexpected");
+			char cStart = *T(i);
+			if(!(cStart == '{' || cStart == '(' || cStart == '[' || cStart == '<')) _Err(i, "unexpected");
 
 			char cEnd = cStart; cEnd++; if(cEnd != ')') cEnd++; //')' is '(' + 1, others + 2
 			int level = 1;
 
-			for(int i = iTok + 1; ; i++) {
+			for(++i; ; i++) {
 				char c = *T(i);
 				if(c == cStart) {
 					level++;
@@ -304,9 +346,24 @@ namespace SdkConverter
 					level--;
 					if(level == 0) return i;
 				} else if(c == 0) {
-					_Err(iTok, $"missing {cEnd}");
+					_Err(i, $"missing {cEnd}");
 				}
 			}
+		}
+
+		/// <summary>
+		/// Skips code block enclosed in {}, (), [] or ˂˃.
+		/// _i must be at the starting { etc. Finally it will be at } etc.
+		/// Inside the block:
+		///		Skips nested enclosed blocks of the same type.
+		///		Ignores nested enclosed blocks of other types, eg (), [] etc blocks when this block is {}.
+		/// Error if _i character is not {([˂.
+		/// Error if the ending })]˃ is missing.
+		/// </summary>
+		[DebuggerStepThrough]
+		void _SkipEnclosed()
+		{
+			_i = _SkipEnclosed(_i);
 		}
 
 		#endregion
@@ -478,6 +535,7 @@ namespace SdkConverter
 		/// <summary>
 		/// Scans integer or floating-point constant suffix and returns its length.
 		/// Error if invalid suffix.
+		/// Converts C++ suffix to C#.
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="type">Receives flags: 1 unsigned, 2 __int64, 4 float.</param>
@@ -486,26 +544,56 @@ namespace SdkConverter
 		{
 			type = 0;
 			char* s0 = s;
+			int lenTrim = 0;
 
 			if(floatingPoint) {
-				if(*s == 'f' || *s == 'F') { s++; type |= 4; } else if(*s == 'l' || *s == 'L') s++;
+				if(*s == 'f' || *s == 'F') {
+					s++; type |= 4;
+				} else if(*s == 'l' || *s == 'L') *s++ = ' ';
 			} else {
 				if(*s == 'u' || *s == 'U') { s++; type |= 1; }
 
 				if(*s == 'l' || *s == 'L') {
-					s++;
-					if(*s == 'l' || *s == 'L') { s++; type |= 2; }
+					s++; lenTrim = 1;
+					if(*s == 'l' || *s == 'L') {
+						*s++ = ' ';
+						type |= 2;
+					} else s[-1] = ' ';
 				} else if(*s == 'i' || *s == 'I') {
-					if(s[1] == '6' && s[2] == '4') type |= 2;
-					else if(s[1] == '8') s--;
-					else if(!((s[1] == '3' && s[2] == '2') || (s[1] == '1' && s[2] == '6'))) _Err(s, "unexpected");
+					if(s[1] == '8') {
+						s[0] = s[1] = ' ';
+						s += 2; lenTrim = 2;
+					} else {
+						if(s[1] == '6' && s[2] == '4') {
+							type |= 2;
+							s[0] = 'L'; lenTrim = 2;
+						} else if((s[1] == '3' && s[2] == '2') || (s[1] == '1' && s[2] == '6')) {
+							s[0] = ' '; lenTrim = 3;
+						} else _Err(s, "unexpected");
 
-					s += 3;
+						s[1] = s[2] = ' ';
+						s += 3;
+					}
 				}
 			}
 
 			if(_IsCharIdent(*s)) _Err(s, "unexpected");
-			return (int)(s - s0);
+			return (int)(s - lenTrim - s0);
+		}
+
+		/// <summary>
+		/// Finds ident as whole word.
+		/// Returns index or -1.
+		/// </summary>
+		int _FindIdentifierInString(string s, string ident)
+		{
+			int len = ident.Length;
+			for(int i=0; (i = s.IndexOf_(ident, i)) >= 0; i += len) {
+				if(i > 0 && _IsCharIdent(s[i - 1])) continue;
+				if(i < s.Length - len && _IsCharIdent(s[i + len])) continue;
+				return i;
+			}
+			return -1;
 		}
 
 		#endregion
@@ -570,36 +658,6 @@ namespace SdkConverter
 		static bool _IsCharHexDigit(char c)
 		{
 			return (_ctt[c] & (2 | 64)) != 0;
-		}
-
-		/// <summary>
-		/// Returns true if c is a C++ operator character.
-		/// </summary>
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool _IsCharOperator(char c)
-		{
-			return (_ctt[c] & 16) != 0;
-		}
-
-		/// <summary>
-		/// Returns true if c is a C++ punctuator character: .
-		/// </summary>
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool _IsCharPunctuator(char c)
-		{
-			return (_ctt[c] & 32) != 0;
-		}
-
-		/// <summary>
-		/// Returns true if c is a C++ enclosing character: '{'.
-		/// </summary>
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool _IsCharEnclosing(char c)
-		{
-			return (_ctt[c] & 64) != 0;
 		}
 
 		/// <summary>

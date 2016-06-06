@@ -27,7 +27,7 @@ namespace Catkeys
 	public static class Process_
 	{
 		[DllImport("kernel32.dll")]
-		static extern bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, [Out] StringBuilder lpExeName, ref uint lpdwSize);
+		static extern bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, [Out] StringBuilder lpExeName, ref int lpdwSize);
 
 		static string _GetProcessName(uint processId, bool fullPath, bool dontEnumerate = false, bool unDOS = false)
 		{
@@ -41,18 +41,21 @@ namespace Catkeys
 					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
 
 					bool getNormal = fullPath || unDOS; //getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\SysWOW64\notepad.exe" and there is no API to convert to normal
-					uint size = 300; var sb = new StringBuilder((int)size);
+					int size = 300; var sb = new StringBuilder(size);
 					if(QueryFullProcessImageNameW(ph, !getNormal, sb, ref size)) {
+						bool retry = false;
+						g1:
 						R = sb.ToString();
+						if(!fullPath) R = GetFileNameWithoutExe(R);
 
-						if(R.IndexOf('~') >= 0) { //DOS path?
-							if(getNormal || QueryFullProcessImageNameW(ph, false, sb, ref size)) {
-								string s = getNormal ? R : sb.ToString();
-								if(Api.GetLongPathName(s, sb, 300) != 0) R = sb.ToString();
+						if(!retry && R.IndexOf('~') >= 0) { //DOS path?
+							size = sb.EnsureCapacity(300);
+							if(QueryFullProcessImageNameW(ph, false, sb, ref size)) {
+								string s = sb.ToString();
+								if(0 != Api.GetLongPathName(s, sb, (uint)sb.EnsureCapacity(300))) { retry = true; goto g1; }
 							}
 						}
 
-						if(!fullPath) R = GetFileNameWithoutExe(R);
 						return R;
 					}
 				} else if(!dontEnumerate && !fullPath) {

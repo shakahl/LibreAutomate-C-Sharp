@@ -49,10 +49,11 @@ namespace SdkConverter
 		StringBuilder _sbInterface = new StringBuilder();
 		StringBuilder _sbCoclass = new StringBuilder();
 		StringBuilder _sbComment = new StringBuilder();
+		StringBuilder _sbInlineDelegate = new StringBuilder(); //from callback function types defined in parameter list or member list
 
 		List<_Token> _tok = new List<_Token>();
 		int _nTok; //token count, except the last '\0' tokens
-		int _nTokUntilDefUndef; //token count until first @d or @u (was #define/#undef), except the separating '\0' token
+		int _nTokUntilDefUndef; //token count until first `d or `u (was #define/#undef), except the separating '\0' token
 		int _i; //current token
 
 		_Namespace[] _ns = new _Namespace[10]; //stack of namespaces
@@ -63,7 +64,6 @@ namespace SdkConverter
 		//Dictionary<string, string> _func = new Dictionary<string, string>(); //function declaration
 		//List<string> _cppConst = new List<string>(); //const CONSTANT
 		//List<string> _comment = new List<string>(); //added when cannot convert, eg #define MACRO(...)
-		//TODO: maybe can be Dictionary<_Token, string>
 		Dictionary<string, string> _defineConst = new Dictionary<string, string>(); //#define CONSTANT
 		Dictionary<string, string> _defineOther = new Dictionary<string, string>(); //#define MACRO(...)
 
@@ -73,7 +73,7 @@ namespace SdkConverter
 
 		//Regex _rxIndent = new Regex("(?m)^(?=.)", RegexOptions.CultureInvariant);
 
-		public void Convert(string hFile, string csFile)
+		public void Convert(string hFile, /*( MMMMM* )*/ string csFile)
 		{
 			try {
 				if(_src != null) throw new Exception("cannot call Convert multiple times. Create new Converter instance.");
@@ -86,10 +86,13 @@ namespace SdkConverter
 				_InitTables();
 				_InitSymbols();
 
+				string stf = null;
+
 				fixed (char* p = _src)
 				{
 					_s0 = p;
 					_Tokenize(p);
+
 					//Test(); return;
 
 					_i = 1;
@@ -107,20 +110,21 @@ namespace SdkConverter
 					//27605, 983
 
 					foreach(var v in _defineConst) {
-						_sbConst.AppendFormat("public const {0} = {1};\r\n", v.Key, v.Value);
+						_sbConst.AppendLine(v.Value);
+						//TODO: add empty line if previous prefix is different
 					}
 					foreach(var v in _defineOther) {
-						_sbComment.AppendFormat("/// #define {0}{1}\r\nconst {0} = \"C macro\";\r\n\r\n", v.Key, v.Value);
+						_sbComment.AppendFormat("/// #define {0}{1}\r\nconst string {0} = \"C macro\";\r\n\r\n", v.Key, v.Value);
 					}
 					//TODO: finally remove '#define FuncX FuncY', '#define X UnknownIdentifier' etc.
 
-					Out(_sbType);
-					if(_sbFunc.Length > 0) Out(_sbFunc);
-
-					//TODO: typedef can be added as C# 'using X = Y;' or 'public unsafe struct X { Y* p; }'
+					stf = _PostProcessTypesFunctionsInterfaces();
+					//Out(stf);
 				}
 
-				string s = @"
+				string sh = @"// Windows API for C#.
+// Converted commonly used Windows 10 SDK header files.
+
 using System;
 using System.Text;
 using System.Diagnostics;
@@ -129,21 +133,21 @@ using System.Runtime.InteropServices;
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
 
-public static class API
+public static unsafe class API
 {
 ";
 
 				using(var writer = new StreamWriter(csFile)) {
-					writer.Write(s);
-					writer.Write("\r\n// TYPE\r\n\r\n");
-					writer.Write(_sbType.ToString());
-					writer.Write("\r\n// FUNCTION\r\n\r\n");
-					writer.Write(_sbFunc.ToString());
-					writer.Write("\r\n// INTERFACE\r\n\r\n");
-					writer.Write(_sbInterface.ToString());
-					writer.Write("\r\n// COCLASS\r\n\r\n");
+					writer.Write(sh);
+					writer.Write(stf);
+					//if(_sbType.Length > 0 || _sbInterface.Length > 0) {
+					//	writer.Write("\r\n// USED TAG-TYPES\r\n");
+					//	if(_sbType.Length > 0) writer.Write(_sbType.ToString());
+					//	if(_sbInterface.Length > 0) writer.Write(_sbInterface.ToString());
+					//}
+					writer.Write("\r\n// COCLASSES\r\n");
 					writer.Write(_sbCoclass.ToString());
-					writer.Write("\r\n// CONST\r\n\r\n");
+					writer.Write("\r\n// CONSTANTS\r\n\r\n");
 					writer.Write(_sbConst.ToString());
 					writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
 					writer.Write(_sbComment.ToString());
@@ -152,8 +156,10 @@ public static class API
 			}
 			//#if !TEST_SMALL
 			catch(ConverterException e) {
+				Out(e);
 				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{hFile}||{e.Offset}");
-			} catch(Exception e) {
+			}
+			catch(Exception e) {
 				Out(e);
 				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{hFile}||{_Pos(_i)}");
 			}
@@ -161,6 +167,8 @@ public static class API
 			finally {
 				Marshal.FreeHGlobal((IntPtr)_keywordMemory);
 			}
+
+			Out("DONE");
 		}
 
 		char* _keywordMemory;
@@ -236,6 +244,7 @@ public static class API
 			//_AddKeywords(k = new _Keyword(_KeywordT.Declspec), "__declspec", "_declspec"); //removed in script
 
 			_AddKeyword("uuid", k = new _Keyword(cannotStartStatement: true)); //was '__declspec(uuid', replaced in script
+			_AddKeyword("guid", k = new _Keyword()); //was 'extern "C" const GUID  GUID_MAX_POWER_SAVINGS = { 0x...};', replaced in script
 
 			_AddKeywords(new _CppType("sbyte", 1, false), "__int8", "char");
 			_AddKeywords(new _CppType("short", 2, false), "__int16", "short");
@@ -252,9 +261,10 @@ public static class API
 			_AddKeyword("u$__int64", new _CppType("ulong", 8, true));
 			_AddKeyword("bool", new _CppType("bool", 1, true));
 			_AddKeyword("void", new _CppType("void", 0, false));
-			_AddKeyword("auto", new _CppType("var", 1, false)); //has two meanings depending on compiler options. The old auto is a local variable, and we will not encounter it because we skip function bodies. The new auto is like C# var; it can also be applied to global variables too, unlike in C#; we'll ignore all variable declarations.
 			//_AddKeywords(new _Keyword(), "__m128", "__m128d", "__m128i"); //our script defined these as struct, because C# does not have a matching type
 			//_AddKeywords(new _Keyword(), "__m64"); //not used in SDK
+			_AddKeyword("auto", new _CppType("var", 1, false)); //has two meanings depending on compiler options. The old auto is a local variable, and we will not encounter it because we skip function bodies. The new auto is like C# var; it can also be applied to global variables too, unlike in C#; we'll ignore all variable declarations.
+			_AddKeyword("IntPtr", new _CppType("IntPtr", 8, false));
 		}
 
 		void _Tokenize(char* s)
@@ -277,7 +287,7 @@ public static class API
 				case '\v':
 				case '\f':
 					break;
-				case '@': //was #define, #undef or #pragma pack
+				case '`': //was #define, #undef or #pragma pack
 					if(isNewLine) { //else it is preprocessor operator
 						if(_nTokUntilDefUndef == 0 && s[1] != '(') {
 							_nTokUntilDefUndef = _tok.Count;
@@ -304,7 +314,11 @@ public static class API
 							if(len == 1) isPrefix = (c == 'L' || c == 'u' || c == 'U');
 							break;
 						}
-						if(isPrefix) { s += len - 1; continue; } //remove prefix
+						if(isPrefix) { //remove prefix
+							for(; len > 0; len--) *s++ = ' ';
+							s--;
+							continue;
+						}
 
 					} else if(_IsCharDigit(c)) len = _LenNumber(s);
 					else if(c == '\"') len = _SkipString(s);
@@ -330,7 +344,7 @@ public static class API
 				char* s = T(_i); char c = *s;
 				if(_IsCharIdentStart(c)) {
 					_Statement();
-				} else if(c == '@') { //was #pragma pack
+				} else if(c == '`') { //was #pragma pack
 					_PragmaPack();
 				} else if(c != ';' && c != '}') {
 #if TEST_SMALL
@@ -341,12 +355,11 @@ public static class API
 				}
 			}
 
-			//info: script converted all #define/#undef to @d/@u and placed at the end
-			_i++; //skip '\0' token inserted before first @d/@u token
-			OutList(_nTok, _nTokUntilDefUndef, _i);
+			//info: script converted all #define/#undef to `d/`u and placed at the end
+			_i++; //skip '\0' token inserted before first `d/`u token
 			for(; _i < _nTok; _i++) {
 				char* s = T(_i);
-				if(*s == '@') { //was #define, #undef
+				if(*s == '`') { //was #define, #undef
 					_DefineUndef();
 				} else {
 #if TEST_SMALL
@@ -358,17 +371,25 @@ public static class API
 			}
 		}
 
+		//bool _debugFARPROC;
+
 		void _Statement()
 		{
-			//g0:
+			g0:
 			_Symbol x = _FindSymbol(_i, true);
 			var k = x as _Keyword;
 			if(k != null) {
 				if(k.cannotStartStatement) _Err(_i, "unexpected");
 
 				if(k.kwType == _KeywordT.TypeDecl) {
+					//is forward decl like 'struct X* Func(...);'?
+					if(!_TokIsChar(_i, 't') && _TokIsChar(_i + 2, '*', '&')) {
+						_InlineForwardDeclaration();
+						goto g0;
+					}
+
 					var ftd = new _FINDTYPEDATA(); //just for ref parameter
-					_DeclareType(false, ref ftd);
+					_DeclareType(ref ftd, true);
 				} else if(k.kwType == _KeywordT.IgnoreFuncEtc) {
 					_SkipStatement();
 					return;
@@ -377,15 +398,19 @@ public static class API
 						if(_TokIsChar(_i + 1, '{')) _i++;
 						return;
 					} else { //extern T X
-
-						_Err(_i, "stop");
+						_SkipStatement(true);
+						//_Err(_i, "stop");
 					}
-					//} else if(_TokIs(_i, "")) {
-					//_i = _SkipEnclosed(++_i) + 1;
+				} else if(_TokIs(_i, "guid")) { //script converted DEFINE_GUID(X) to C# declaration with 'guid ' prefix
+					char* s0 = T(++_i);
+					while(!_TokIsChar(_i, ';')) _i++;
+					_sbConst.AppendLine(new string(s0, 0, (int)(T(_i) + 1 - s0)));
+				} else if(_TokIs(_i, "const")) {
+					_SkipStatement(true);
+					//if(!_Const()) _Err(_i, "unexpected");
 				} else {
 					//can be:
-					//namespace, inline namespace
-					//const T X
+					//namespace
 
 
 
@@ -436,65 +461,30 @@ public static class API
 			}
 		}
 
-		void _SkipStatement()
+		/// <summary>
+		/// Skips current statement.
+		/// _i can be at any place in the statement except in parts enclosed in (), [] or {}.
+		/// Finally _i will be at the ending ';' or '}' (if '}' is not followed by ';').
+		/// </summary>
+		/// <param name="debugShow"></param>
+		void _SkipStatement(bool debugShow = false)
 		{
-#if DEBUG
-			int i0 = _i;
-#endif
+			//#if DEBUG
+			//			int i0 = _i;
+			//#endif
 			gk1:
-			while(!_TokIsChar(_i, '(', '{', ';', '[')) _i++;
+			while(!_TokIsChar(_i, "({;[")) _i++;
 			if(!_TokIsChar(_i, ';')) {
-				_i = _SkipEnclosed(_i);
-				if(_TokIsChar(_i, ')')) goto gk1; //skip any number of (enclosed) parts, else skip single {enclosed} part
+				_SkipEnclosed();
+				if(!_TokIsChar(_i, '}')) goto gk1; //skip any number of (enclosed) or [enclosed] parts, else skip single {enclosed} part
+				if(_TokIsChar(_i + 1, ';')) _i++;
 			}
-#if DEBUG
-			string s = new string(T(i0), 0, (int)(T(_i + 1) - T(i0)));
-			Out($"<><c 0xff>skipped:</c>\r\n{s}");
-#endif
-		}
-
-		void _DefineUndef()
-		{
-			char* s = T(++_i);
-			char c = *s; //was like @d$$$_REALNAME, now s is without @
-			s += 5; int lenName = _tok[_i].len - 5; //skip prefix 'd$$$_' that was added to avoid unexpanding names
-
-			//is function-style?
-			char* sNext = T(_i + 1);
-			bool isFunc = c == 'd' && *sNext == '(' && sNext == s + lenName;
-
-			//find value
-			int iValue = _i + 1;
-			if(isFunc) iValue = _SkipEnclosed(iValue) + 1; //name(parameters)[ value]
-
-			//find next line
-			int iNext = iValue;
-			for(; ; iNext++) {
-				char k = *T(iNext);
-				if(k == '@' || k == '\x0') break;
-
-				//TODO: convert sizeof(DWORD) to sizeof(int) etc
-			}
-
-			string name = new string(s, 0, lenName);
-			if(c == 'u') { //#undef
-				if(!_defineConst.Remove(name)) _defineOther.Remove(name);
-				//Out($"#undef {name}");
-			} else if(iValue < iNext) { //preprocessor removes some #define values, it's ok
-				s = T(_i + 1); //info: for func-style get parameters as part of value
-				int i = iNext - 1;
-				string value = new string(s, 0, (int)(T(i) - s) + _tok[i].len);
-
-				if(isFunc) {
-					_defineOther[name] = value;
-					//Out($"#define {name}{value}");
-				} else {
-					_defineConst[name] = value;
-					//Out($"#define {name} {value}");
-				}
-			}
-
-			_i = iNext - 1;
+			//#if DEBUG
+			//			if(debugShow) {
+			//				string s = new string(T(i0), 0, (int)(T(_i + 1) - T(i0)));
+			//				Out($"<><c 0xff>skipped:</c>\r\n{s}");
+			//			}
+			//#endif
 		}
 
 		void _PragmaPack()
@@ -532,6 +522,15 @@ public static class API
 			if(pushPop > 0) _packStack.Push(_pack); else if(pushPop < 0 && _packStack.Count > 0) _pack = _packStack.Pop();
 			if(pack != 0) _pack = pack;
 			//Out($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
+		}
+
+		bool _Const()
+		{
+			return false;
+			_i++;
+			if(!(_TokIsChar(_i + 3, '}') && _TokIsChar(_i + 2, '=') && _TokIsIdent(_i) && _TokIsIdent(_i + 1))) return false;
+
+			return true;
 		}
 	}
 }

@@ -45,6 +45,8 @@ namespace SdkConverter
 		[DebuggerStepThrough]
 		int _GetParameters(List<_PARAMETER> p)
 		{
+			//TODO: don't use this func. Now used in pragma.
+
 			p.Clear();
 
 			char* s = T(_i);
@@ -79,7 +81,7 @@ namespace SdkConverter
 				case '[':
 				//case '<': //can be operator
 				case '{':
-					_i = _SkipEnclosed(_i);
+					_SkipEnclosed();
 					break;
 				}
 			}
@@ -87,36 +89,35 @@ namespace SdkConverter
 
 		/// <summary>
 		/// Converts function parameters to C# and appends to sb like "(...);\r\n".
+		/// _i must be at '('. Finally will be after ')'.
 		/// </summary>
-		/// <param name="isUnsafe">If parameters have pointers or unsafe types, sets=true, else does not change.</param>
-		void _ConvertParameters(List<_PARAMETER> p, ref StringBuilder sb, ref bool isUnsafe, string parentName)
+		void _ConvertParameters(StringBuilder sb, string parentName)
 		{
+			if(!_TokIsChar(_i, '(')) _Err(_i, "unexpected");
+			_i++;
 			sb.Append('(');
-			_INLINEFUNCTYPEDATA f = null;
 
-			for(int iParam = 0; iParam < p.Count; iParam++) {
-				int i = p[iParam].iTok, iTo = i + p[iParam].nTok;
+			if(!_TokIsChar(_i, ')')) {
+				for(int iParam = 0; ; iParam++, _i++) {
+					_PARAMDATA t;
+					_ParseParamOrMember(false, out t, parentName, iParam + 1);
 
-				_PARAMDATA t;
-				i = _ParseParamOrMember(false, i, out t, ref f, parentName, iParam + 1);
-				Debug.Assert(i <= iTo);
-				//string optParamValue = null;
-				if(i != iTo) {
-					if(!_TokIsChar(i, '=')) _Err(i, "unexpected");
-					//default value for optional parameter
-					//optParamValue = new string(T(i), 0, (int)(T(iTo - 1) + _tok[iTo - 1].len - T(i))); //this works, bt gets raw value, converting can be dificult, SDK does not have such things
-					i = iTo;
+					//skip default value of optional parameter
+					if(_TokIsChar(_i, '=')) {
+						while(!_TokIsChar(++_i, ',', ')')) { }
+					}
+
+					//is ',' or ')'?
+					bool isLast = _TokIsChar(_i, ')');
+					if(!isLast && !_TokIsChar(_i, ',')) _Err(_i, "unexpected");
+
+					sb.AppendFormat("{0}{1} {2}{3}", t.attributes, t.typeName, t.name, isLast ? "" : ", ");
+
+					if(isLast) break;
 				}
-
-				if(t.isUnsafe) isUnsafe = true;
-				//TODO: also set isUnsafe if some parameters are unsafe types.
-
-				sb.AppendFormat("{0}{1} {2}{3}", t.attributes, t.typeName, t.name, (iParam < p.Count - 1) ? ", " : "");
-				//sb.AppendFormat("{0}{1} {2}{3}{4}", t.attributes, t.typeName, t.name, optParamValue,(iParam < p.Count - 1) ? ", " : "");
 			}
-
+			_i++; //skip ')'
 			sb.Append(");\r\n");
-			if(f != null) sb.Append(f.sb.ToString());
 		}
 
 		struct _PARAMDATA
@@ -124,67 +125,57 @@ namespace SdkConverter
 			public string typeName; //C# typename
 			public string name; //parameter name
 			public string attributes; //C# attributes
-			public bool isUnsafe; //has pointers etc (need to declare parent as unsafe)
 			public bool isNestedTypeDefinitionWithoutVariables;
 			public bool isAnonymousTypeDefinitionWithoutVariables;
 		}
 
 		/// <summary>
 		/// Converts C++ function parameter or struct member definition (type, name, const etc) to C# typename/name/etc.
-		/// Returns token index after the parsed part. Does not check whether it is ',' etc.
+		/// _i must be at its start. Finally it will be after the parsed part. Does not check whether it is followed by ',' etc.
 		/// </summary>
 		/// <param name="isMember">false if parameter, true if member.</param>
-		/// <param name="i">Starting token index.</param>
 		/// <param name="t">Receives C# typename, name etc.</param>
-		/// <param name="f">An _INLINEFUNCTYPEDATA variable common to all parameters/members of the function/struct. Caller should just declare it and set = null in the declaration. Finally, if not null, its .sb may contain delegate definitions; append it to _sbDelegate.</param>
 		/// <param name="parentName">The function/struct name. Used to auto-create names for nameless parameters.</param>
 		/// <param name="iParam">1-based index of parameter/member. Used to auto-create names for nameless parameters.</param>
-		int _ParseParamOrMember(bool isMember, int i, out _PARAMDATA t, ref _INLINEFUNCTYPEDATA f, string parentName, int iParam)
+		void _ParseParamOrMember(bool isMember, out _PARAMDATA t, string parentName, int iParam)
 		{
 			t = new _PARAMDATA();
 
 			var d = new _FINDTYPEDATA();
-			i = _FindTypename(isMember, i, ref d);
+			_FindTypename(isMember, ref d);
 			if(d.outIsNestedTypeDefinition) {
-				if(_TokIsChar(i, ';')) {
+				if(_TokIsChar(_i, ';')) {
 					t.isNestedTypeDefinitionWithoutVariables = true;
 					t.isAnonymousTypeDefinitionWithoutVariables = d.outIsAnonymousTypeDefinition;
-					t.typeName = d.outTypename;
-					return i;
+					t.typeName = d.outSym.csTypename;
+					return;
 				}
-			} else i++;
+			} else _i++;
 
 			//pointer
 			int ptr = 0;
-			while(_TokIsChar(i, '*', '&')) { i++; ptr++; }
+			while(_TokIsChar(_i, '*', '&')) { _i++; ptr++; }
 
 			//suport inline function type definition
-			bool isFunc = _DetectIsFuncType(i);
+			bool isFunc = !d.outIsNestedTypeDefinition && _DetectIsFuncType(_i);
 			if(isFunc) {
-				if(f == null) f = new _INLINEFUNCTYPEDATA(parentName);
-				f.paramIndex = iParam;
-				int save_i = _i; _i = i;
-				_DeclareTypedefFunc(d.outSym, ptr, d.outIsConst, d.outTypenameToken, d.outTypename, f);
-				i = _i; _i = save_i;
+				var f = new _INLINEFUNCTYPEDATA(parentName, iParam);
+				_DeclareTypedefFunc(d.outSym, ptr, d.outIsConst, d.outTypenameToken, f);
 				t.typeName = f.typeName;
 				t.name = f.paramName;
-				if(f.isUnsafe) t.isUnsafe = true;
 			} else {
 				//typename, param/member name
-				t.typeName = _ConvertTypeName(d.outSym, ref ptr, !isMember, d.outIsConst, d.outTypenameToken, d.outTypename);
-				if(ptr != 0) t.isUnsafe = true;
+				t.typeName = _ConvertTypeName(d.outSym, ref ptr, !isMember, d.outIsConst, d.outTypenameToken);
 
-				if(_TokIsIdent(i)) t.name = _TokToString(i++);
-				else if(!isMember && _TokIsChar(i, ',', ')', '[', '=')) t.name = "param" + iParam;
-				else _Err(i, "no name");
+				if(_TokIsIdent(_i)) t.name = _TokToString(_i++);
+				else if(!isMember && _TokIsChar(_i, ",)[=")) t.name = "param" + iParam;
+				else _Err(_i, "no name");
 			}
 
-			if(_TokIsChar(i, '[')) {
-				i = _CArrayToMarshalAsAttribute(i, out t.attributes);
+			if(_TokIsChar(_i, '[')) {
+				t.attributes = _CArrayToMarshalAsAttribute(!isMember);
 				t.typeName += "[]";
 			}
-
-			return i;
 		}
 
 		struct _FINDTYPEDATA
@@ -194,93 +185,84 @@ namespace SdkConverter
 			public bool outIsAnonymousTypeDefinition;
 			public bool outIsNestedTypeDefinition;
 			public int outTypenameToken;
-			public string outTypename;
+			public int inTypedefNameToken;
 		}
 
 		/// <summary>
-		/// Finds and returns typename token index. Gets its _Symbol etc.
-		/// Starts searching from i.
+		/// Finds typename. Gets its _Symbol etc.
+		/// Starts searching from _i. Finally _i will be typename token index.
 		/// Error if not found.
 		/// Initially sets all outX=0/false/null.
 		/// If there is 'const', sets outIsConst=true.
-		/// If there is 'struct' etc as nested definition, converts the definition, sets outIsNestedStruct=true and sets outName to its type name; then returns token index after }, which can be semicolon, variable name or * variable name.
-		/// Else sets outTypenameToken.
+		/// If there is 'struct' etc as nested definition, converts the definition, sets outIsNestedStruct=true; then _i finally will be after }, which can be semicolon, variable name or * variable name.
 		/// If there is 'struct' etc as forward declaration, adds forward declaration.
 		/// </summary>
-		int _FindTypename(bool isMember, int i, ref _FINDTYPEDATA d)
+		void _FindTypename(bool isMember, ref _FINDTYPEDATA d)
 		{
 			d.outSym = null;
 			d.outIsConst = false;
 			d.outIsNestedTypeDefinition = false;
 			d.outTypenameToken = 0;
-			d.outTypename = null;
 
 			//process keywords until typename
-			for(; _TokIsIdent(i); i++) {
-				d.outSym = _FindSymbol(i, true);
+			for(; _TokIsIdent(_i); _i++) {
+				d.outSym = _FindSymbol(_i, true);
 				var k = d.outSym as _Keyword;
 				if(k == null) {
-					d.outTypenameToken = i;
-					return i;
+					d.outTypenameToken = _i;
+					return;
 				}
 
 				switch(k.kwType) {
-				case _KeywordT.TypeDecl: //keyword 'struct' etc
+				case _KeywordT.TypeDecl:
 					//is nested struct/enum/typedef definition?
 					if(isMember) {
 						bool isDef = false;
-						if(_TokIsChar(i, 't')) isDef = true;
+						if(_TokIsChar(_i, 't')) isDef = true;
 						else {
-							int j = i + 1; if(_TokIsIdent(j)) j++;
-							if(_TokIsChar(j, '{', ':', ';')) isDef = true;
+							int j = _i + 1; if(_TokIsIdent(j)) j++;
+							if(_TokIsChar(j, "{:;")) isDef = true;
 						}
 						if(isDef) {
-							int save_i = _i; _i = i;
-							_DeclareType(true, ref d);
-							i = _i; _i = save_i;
+							_DeclareType(ref d);
 							d.outIsNestedTypeDefinition = true;
-							return i;
+							return;
 						}
 					}
 
 					//inline forward declaration
-					if(*T(i++) == 'e') {
-						if(!(_TryFindSymbol(i, out d.outSym, true) && d.outSym is _Enum)) _AddSymbol(i, d.outSym = new _Enum(true), true);
-					} else {
-						if(!(_TryFindSymbol(i, out d.outSym, true) && d.outSym is _Struct)) _AddSymbol(i, d.outSym = new _Struct(true), true);
-					}
-					d.outTypenameToken = i;
-					return i;
+					d.outSym = _InlineForwardDeclaration();
+					d.outTypenameToken = _i;
+					return;
 				case _KeywordT.Normal:
-					if(_TokIs(i, "const")) { d.outIsConst = true; continue; }
+					if(_TokIs(_i, "const")) { d.outIsConst = true; continue; }
 					break;
 				}
 
-				_Err(i, "unexpected");
+				_Err(_i, "unexpected");
 			}
-			_Err(i, "no type");
-			return 0;
+			_Err(_i, "no type");
 		}
 
 		/// <summary>
-		/// Converts type name/pointer to C# type name/ref/out/pointer.
+		/// Converts type name/pointer to C# type name/ref/pointer.
 		/// </summary>
-		/// <param name="t">Can be null, eg if using forward-declared type.</param>
+		/// <param name="t">The type.</param>
 		/// <param name="ptr">Pointer level. The function may adjust it depending on typedef pointer level etc.</param>
 		/// <param name="useRefOut">Convert * to ref/out.</param>
 		/// <param name="isConst">Is const.</param>
-		/// <param name="iTokTypename">Type name token index. Not used if nestedStructName not null.</param>
-		/// <param name="nestedStructName">Use when the type is now defined nested struct/enum.</param>
-		string _ConvertTypeName(_Symbol t, ref int ptr, bool useRefOut, bool isConst, int iTokTypename, string nestedStructName = null)
+		/// <param name="iTokTypename">Type name token index. Can be 0 if don't need to unalias etc; then just adds pointer/ref if need.</param>
+		string _ConvertTypeName(_Symbol t, ref int ptr, bool useRefOut, bool isConst, int iTokTypename)
 		{
-			string name = nestedStructName;
+			string name;
+			bool isLangType = false;
 
-			if(t != null && nestedStructName == null) {
+			if(iTokTypename != 0) {
 				ptr += _Unalias(iTokTypename, ref t);
+				name = t.csTypename;
 				var c = t as _CppType;
 				if(c != null) {
-					name = c.cs;
-
+					isLangType = true;
 					if(ptr != 0) {
 						if(name == "char") {
 							ptr--;
@@ -290,16 +272,43 @@ namespace SdkConverter
 						}
 					}
 				}
-			}
+			} else name = t.csTypename;
 
-			if(name == null) name = _TokToString(iTokTypename);
+			if(isLangType) {
+				if(ptr > 0 && name == "void") {
+					name = "IntPtr";
+					ptr--;
+				}
+			} else {
+				var ts = t as _Struct;
+				if(ts != null) {
+					if(ts.isInterface) {
+						//OutList(ptr, ts.csTypename);
+						if(ptr == 0) _Err(iTokTypename, "interface and not pointer");
+						ptr--;
+					} else if(!ts.isClass) {
+						switch(name) {
+						case "GUID": name = "Guid"; break;
+						case "VARIANT": name = "object"; break;
+						//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
+							//Out(ptr);
+							//break;
+						}
+					}
+				}
+
+				//if(t.forwardDecl) {
+				//	OutList(name, iTokTypename);
+				//}
+			}
 
 			if(ptr == 0) return name;
 
 			__ctn.Clear();
 			if(useRefOut) {
 				ptr--;
-				__ctn.Append(isConst ? "ref " : "out ");
+				//__ctn.Append(isConst ? "ref " : "out ");
+				__ctn.Append("ref ");
 			}
 			__ctn.Append(name);
 			__ctn.Append('*', ptr);
@@ -311,20 +320,24 @@ namespace SdkConverter
 		/// <summary>
 		/// Converts "[x]" to "[MarshalAs(UnmanagedType.ByValArray, SizeConst = {x})]".
 		/// Supports "[y][x]" etc.
-		/// i must be token index at '['. Returns token index after ']'.
+		/// _i must be at '['. Finally it will be after ']'.
+		/// If empty array (like TYPE x[]), returns "//...".
+		/// If justSkipEnclosed, just skips [..] or [...][...] and returns null; it can be used for parameters, because C++ arguments for parameters 'TYPE param[n]' are passed like 'TYPE* param', and n is ignored, can be empty.
 		/// </summary>
-		int _CArrayToMarshalAsAttribute(int i, out string s)
+		string _CArrayToMarshalAsAttribute(bool justSkipEnclosed = false)
 		{
-			string elemCount = null;
-			while(_TokIsChar(i, '[')) { //support [a][b]
-				char* t = T(i + 1);
-				i = _SkipEnclosed(i);
-				//TODO: convert sizeof(DWORD) to sizeof(int) etc
-				string ec = new string(t, 0, (int)(T(i++) - t));
+			string elemCount = null, comment = null;
+			for(; _TokIsChar(_i, '['); _i++) { //support [a][b]
+				int i0 = _i + 1;
+				_SkipEnclosed();
+				if(justSkipEnclosed) continue;
+				bool notConst; string type, ec = _ConstValue(i0, _i, out notConst, out type);
+				if(ec.Length == 0) ec = "0"; //TYPE x[]
+				if(ec == "0") comment = "//";
 				if(elemCount == null) elemCount = ec; else elemCount = $"({elemCount})*({ec})";
 			}
-			s = $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {elemCount})]";
-			return i;
+			if(justSkipEnclosed) return null;
+			return $"{comment}[MarshalAs(UnmanagedType.ByValArray, SizeConst = {elemCount})]";
 		}
 
 		/// <summary>
