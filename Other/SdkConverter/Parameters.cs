@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-//using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -91,7 +90,7 @@ namespace SdkConverter
 		/// Converts function parameters to C# and appends to sb like "(...);\r\n".
 		/// _i must be at '('. Finally will be after ')'.
 		/// </summary>
-		void _ConvertParameters(StringBuilder sb, string parentName)
+		void _ConvertParameters(StringBuilder sb, string parentName, bool isDelegate)
 		{
 			if(!_TokIsChar(_i, '(')) _Err(_i, "unexpected");
 			_i++;
@@ -99,8 +98,15 @@ namespace SdkConverter
 
 			if(!_TokIsChar(_i, ')')) {
 				for(int iParam = 0; ; iParam++, _i++) {
+
+					//ignore ...
+					if(_TokIsChar(_i, '.') && _TokIsChar(_i + 1, '.') && _TokIsChar(_i + 2, '.') && _TokIsChar(_i + 3, ')')) {
+						_i += 3;
+						break;
+					}
+
 					_PARAMDATA t;
-					_ParseParamOrMember(false, out t, parentName, iParam + 1);
+					_ParseParamOrMember(isDelegate ? _TypeContext.DelegateParameter : _TypeContext.Parameter, out t, parentName, iParam + 1);
 
 					//skip default value of optional parameter
 					if(_TokIsChar(_i, '=')) {
@@ -133,13 +139,22 @@ namespace SdkConverter
 		/// Converts C++ function parameter or struct member definition (type, name, const etc) to C# typename/name/etc.
 		/// _i must be at its start. Finally it will be after the parsed part. Does not check whether it is followed by ',' etc.
 		/// </summary>
-		/// <param name="isMember">false if parameter, true if member.</param>
+		/// <param name="context">Member, Parameter or DelegateParameter.</param>
 		/// <param name="t">Receives C# typename, name etc.</param>
 		/// <param name="parentName">The function/struct name. Used to auto-create names for nameless parameters.</param>
 		/// <param name="iParam">1-based index of parameter/member. Used to auto-create names for nameless parameters.</param>
-		void _ParseParamOrMember(bool isMember, out _PARAMDATA t, string parentName, int iParam)
+		void _ParseParamOrMember(_TypeContext context, out _PARAMDATA t, string parentName, int iParam)
 		{
+			bool isMember = context == _TypeContext.Member;
+
 			t = new _PARAMDATA();
+
+			int iSAL = 0;
+			if(!isMember && _TokIsChar(_i, '^') && _TokIsChar(_i + 1, '\"')) {
+				iSAL = ++_i;
+				_tok[iSAL] = new _Token(_tok[iSAL].s + 1, _tok[iSAL].len - 2);
+				_i++;
+			}
 
 			var d = new _FINDTYPEDATA();
 			_FindTypename(isMember, ref d);
@@ -165,7 +180,7 @@ namespace SdkConverter
 				t.name = f.paramName;
 			} else {
 				//typename, param/member name
-				t.typeName = _ConvertTypeName(d.outSym, ref ptr, !isMember, d.outIsConst, d.outTypenameToken);
+				t.typeName = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, context, iSAL);
 
 				if(_TokIsIdent(_i)) t.name = _TokToString(_i++);
 				else if(!isMember && _TokIsChar(_i, ",)[=")) t.name = "param" + iParam;
@@ -174,6 +189,9 @@ namespace SdkConverter
 
 			if(_TokIsChar(_i, '[')) {
 				t.attributes = _CArrayToMarshalAsAttribute(!isMember);
+				//if(isMember && t.name.Contains("Reserved")) {
+				//	OutList(parentName, t.name, t.attributes);
+				//}
 				t.typeName += "[]";
 			}
 		}
@@ -244,38 +262,57 @@ namespace SdkConverter
 			_Err(_i, "no type");
 		}
 
+		enum _TypeContext
+		{
+			Parameter, DelegateParameter, Return, Member
+		}
+
 		/// <summary>
 		/// Converts type name/pointer to C# type name/ref/pointer.
 		/// </summary>
 		/// <param name="t">The type.</param>
 		/// <param name="ptr">Pointer level. The function may adjust it depending on typedef pointer level etc.</param>
-		/// <param name="useRefOut">Convert * to ref/out.</param>
 		/// <param name="isConst">Is const.</param>
 		/// <param name="iTokTypename">Type name token index. Can be 0 if don't need to unalias etc; then just adds pointer/ref if need.</param>
-		string _ConvertTypeName(_Symbol t, ref int ptr, bool useRefOut, bool isConst, int iTokTypename)
+		/// <param name="context">Depending on it char* will be converted to "string", "StringBuilder" etc.</param>
+		string _ConvertTypeName(_Symbol t, ref int ptr, bool isConst, int iTokTypename, _TypeContext context, int iSAL = 0)
 		{
 			string name;
 			bool isLangType = false;
 
 			if(iTokTypename != 0) {
-				ptr += _Unalias(iTokTypename, ref t);
+				ptr += _Unalias(iTokTypename, ref t, ref isConst);
 				name = t.csTypename;
+
+				bool _In_ = false, _Out_ = false, _Inout_ = false;
+				if(iSAL > 0) {
+					//Out(_tok[iSAL]);
+					if(_TokStarts(iSAL, "_In_")) _In_ = true;
+					else if(_TokStarts(iSAL, "_Out_")) _Out_ = true;
+					else if(_TokStarts(iSAL, "_Inout_")) _Inout_ = true;
+					else _Err(iSAL, "unknown SAL");
+				}
+
 				var c = t as _CppType;
 				if(c != null) {
 					isLangType = true;
-					if(ptr != 0) {
-						if(name == "char") {
-							ptr--;
-							name = (ptr == 0 && isConst) ? "string" : "StringBuilder";
-							isConst = false;
-							//TODO: typedef also can be const or not, eg LPWCSTR or LPWSTR
+					if(ptr == 1 && name == "char") { //not 'if(ptr != 0)', because cannot be 'ref string' or 'ref StringBuilder'
+						ptr = 0;
+						switch(context) {
+						case _TypeContext.Member: name = "string"; break; //must be string, not StringBuilder
+						case _TypeContext.Return: name = "IntPtr"; break; //if string/StringBuilder, .NET tries to free the return value (usually exception). See http://www.mono-project.com/docs/advanced/pinvoke/#strings-as-return-values.
+						case _TypeContext.DelegateParameter: name = _In_ ? "string" : "IntPtr"; break; //note: some are "LPSTR or WORD". Rarely used.
+						case _TypeContext.Parameter: name = isConst || _In_ ? "string" : (_Out_ ? "[Out] StringBuilder" : "StringBuilder"); break;
 						}
+						return name;
+					} else if(_TokIs(iTokTypename, "BOOL")) {
+						if(ptr == 0 || (ptr == 1 && context == _TypeContext.Parameter)) name = "bool";
 					}
 				}
 			} else name = t.csTypename;
 
 			if(isLangType) {
-				if(ptr > 0 && name == "void") {
+				if(ptr > 0 && (name == "void" || name == "sbyte")) {
 					name = "IntPtr";
 					ptr--;
 				}
@@ -290,7 +327,7 @@ namespace SdkConverter
 						switch(name) {
 						case "GUID": name = "Guid"; break;
 						case "VARIANT": name = "object"; break;
-						//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
+							//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
 							//Out(ptr);
 							//break;
 						}
@@ -305,7 +342,7 @@ namespace SdkConverter
 			if(ptr == 0) return name;
 
 			__ctn.Clear();
-			if(useRefOut) {
+			if(context == _TypeContext.Parameter) {
 				ptr--;
 				//__ctn.Append(isConst ? "ref " : "out ");
 				__ctn.Append("ref ");
@@ -322,22 +359,28 @@ namespace SdkConverter
 		/// Supports "[y][x]" etc.
 		/// _i must be at '['. Finally it will be after ']'.
 		/// If empty array (like TYPE x[]), returns "//...".
-		/// If justSkipEnclosed, just skips [..] or [...][...] and returns null; it can be used for parameters, because C++ arguments for parameters 'TYPE param[n]' are passed like 'TYPE* param', and n is ignored, can be empty.
+		/// If justSkipEnclosed, just skips [..] or [...][...] and returns null; used for parameters, because the attribute can be used only with struct fields; C++ arguments for parameters 'TYPE param[n]' are passed like 'TYPE* param', and n is ignored, can be empty.
 		/// </summary>
 		string _CArrayToMarshalAsAttribute(bool justSkipEnclosed = false)
 		{
-			string elemCount = null, comment = null;
+			uint elemCount = 1;
 			for(; _TokIsChar(_i, '['); _i++) { //support [a][b]
 				int i0 = _i + 1;
 				_SkipEnclosed();
 				if(justSkipEnclosed) continue;
-				bool notConst; string type, ec = _ConstValue(i0, _i, out notConst, out type);
-				if(ec.Length == 0) ec = "0"; //TYPE x[]
-				if(ec == "0") comment = "//";
-				if(elemCount == null) elemCount = ec; else elemCount = $"({elemCount})*({ec})";
+				uint ec = 0;
+				if(_i > i0) { //else TYPE x[]
+					_ExpressionResult r = _Expression(i0, _i, "[]");
+					switch(r.typeS) { case "int": case "uint": break; default: _Err(i0, "cannot calculate"); break; }
+					ec = r.valueI;
+				}
+				elemCount *= ec;
 			}
 			if(justSkipEnclosed) return null;
-			return $"{comment}[MarshalAs(UnmanagedType.ByValArray, SizeConst = {elemCount})]";
+			string comment = null; if(elemCount == 0) comment = "//";
+			string R = $"{comment}[MarshalAs(UnmanagedType.ByValArray, SizeConst = {elemCount})]";
+			//Out(R);
+			return R;
 		}
 
 		/// <summary>

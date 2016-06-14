@@ -15,6 +15,9 @@ using System.Runtime.InteropServices;
 
 #if USETESTAPI
 
+class TestExpr
+{
+	public const int MAXUHALF_PTR = ((uint)~0);
 
 }
 #endif

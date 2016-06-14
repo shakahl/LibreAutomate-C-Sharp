@@ -47,6 +47,9 @@
   <ItemGroup>
     <Compile Include="Classes.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="Expr.cs" />
+    <Compile Include="Functions.cs" />
+    <Compile Include="Tokenize.cs" />
     <Compile Include="Types.cs" />
     <Compile Include="_Test.cs" />
     <Compile Include="Util.cs" />

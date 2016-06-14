@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-//using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,9 +30,10 @@ namespace SdkConverter
 			TypeDecl, //enum, struct, union, class, __interface, typedef
 			CallConv, //__stdcall etc
 			PubPrivProt, //public, private, protected
-						 //Declspec, //__declspec(...) //removed in script
-						 //Ignore, //volatile etc //removed in script
 			IgnoreFuncEtc, //inline, template, operator, static_assert
+
+			//Declspec, //__declspec(...) //removed in script
+			//Ignore, //volatile etc //removed in script
 		}
 
 		[DebuggerStepThrough]
@@ -165,7 +165,7 @@ namespace SdkConverter
 			/// </summary>
 			public _Symbol aliasOf;
 
-			public _Typedef(_Symbol aliasOf, int ptr, bool isConst, bool wasForwardDecl=false)
+			public _Typedef(_Symbol aliasOf, int ptr, bool isConst, bool wasForwardDecl = false)
 			{
 				this.aliasOf = aliasOf;
 				this.ptr = (byte)ptr;
@@ -207,7 +207,7 @@ namespace SdkConverter
 
 			public bool StartsWith(string s)
 			{
-				int n =s.Length;
+				int n = s.Length;
 				if(n > len) return false;
 				for(int i = 0; i < n; i++) if(s[i] != this.s[i]) return false;
 				return true;

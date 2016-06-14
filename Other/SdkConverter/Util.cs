@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-//using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +44,22 @@ namespace SdkConverter
 		}
 
 		/// <summary>
+		/// This overload has isConst parameter. If x is const _Typedef sets the isConst variable = true, else isConst unchanged.
+		/// </summary>
+		[DebuggerStepThrough]
+		int _Unalias(int iTok, ref _Symbol x, ref bool isConst)
+		{
+			int ptr = 0;
+			var t = x as _Typedef;
+			if(t != null) {
+				x = t.aliasOf;
+				ptr = t.ptr;
+				if(t.isConst) isConst=true;
+			} else if(x is _Keyword) _Err(iTok, "unexpected");
+			return ptr;
+		}
+
+		/// <summary>
 		/// Adds x to _ns[_nsCurrent].sym.
 		/// Error if already exists, unless it is a forward decl of same type or a typedef of same type.
 		/// </summary>
@@ -66,8 +81,7 @@ namespace SdkConverter
 		void _AddSymbol(string name, _Symbol x, int iTokError, bool addToGlobal = false)
 		{
 			//Out(name);
-			char* s = (char*)Marshal.StringToHGlobalUni(name); //never mind: finally release
-			__AddSymbol(new _Token(s, name.Length), x, iTokError, addToGlobal);
+			__AddSymbol(_TokenFromString(name), x, iTokError, addToGlobal);
 		}
 
 		/// <summary>
@@ -307,6 +321,17 @@ namespace SdkConverter
 		}
 
 		/// <summary>
+		/// Converts raw tokens iTokFrom to (not including) iTokTo from char* to string.
+		/// </summary>
+		[DebuggerStepThrough]
+		string _TokToString(int iTokFrom, int iTokTo)
+		{
+			iTokTo--;
+			char* s = T(iTokFrom), se = T(iTokTo) + _tok[iTokTo].len;
+			return new string(s, 0, (int)(se - s));
+		}
+
+		/// <summary>
 		/// Returns true, if at token iTokAfterTypeNameAndPtr is '([callConv]*[funcTypeOrVariable])('.
 		/// </summary>
 		bool _DetectIsFuncType(int iTokAfterTypeNameAndPtr)
@@ -366,71 +391,17 @@ namespace SdkConverter
 			_i = _SkipEnclosed(_i);
 		}
 
+		_Token _TokenFromString(string s)
+		{
+			char* p = (char*)Marshal.StringToHGlobalUni(s); //never mind: finally release
+			return new _Token(p, s.Length);
+		}
+
 		#endregion
 
 		#region STRING
 
-		/// <summary>
-		/// Parses and folds string constant, starting from s, which must be at the starting ".
-		/// Returns folded string length, including both ".
-		/// For example, if s is '"a" "b"', makes it '"ab"   ' and returns 4.
-		/// Error if the ending " is missing.
-		/// </summary>
-		[DebuggerStepThrough]
-		int _SkipString(char* s)
-		{
-			Debug.Assert(*s == '\"');
-			char* s0 = s++, d = s; //d used for folding
-			g0:
-			for(; ; s++) {
-				*d++ = *s; //folding
-				if(*s == '\"') {
-					if(s[-1] == '\\') {
-						//is \" or \\"?
-						int k = -1; while(s[k - 1] == '\\') k--;
-						if((k & 1) != 0) continue;
-					}
-					break;
-				}
-				if(*s <= '\r') {
-					if(*s == 0 || *s == '\r' || *s == '\n') _Err(s0, "missing \"");
-				}
-			}
-
-			//fold strings
-			char* f = ++s; //skip "
-			while(_IsCharSpaceOrRN(*f)) f++;
-			if(*f == '\"') { s = f + 1; d--; goto g0; } //if string again
-			for(f = d; f < s; f++) *f = ' '; //erase what is moved to the left
-
-			return (int)(d - s0);
-
-			//info: could also give parsed length, but this is simpler. Caller will have to skip spaces in any case.
-		}
-
-		/// <summary>
-		/// Parses character constant, starting from s, which must be at the starting '.
-		/// Returns its length, including both '.
-		/// Error if the ending ' is missing.
-		/// </summary>
-		[DebuggerStepThrough]
-		int _SkipApos(char* s)
-		{
-			Debug.Assert(*s == '\'');
-			for(char* s0 = s++; ; s++) {
-				if(*s == '\'') {
-					if(s[-1] == '\\') {
-						//is \' or \\'?
-						int k = -1; while(s[k - 1] == '\\') k--;
-						if((k & 1) != 0) continue;
-					}
-					return (int)(s + 1 - s0);
-				}
-				if(*s <= '\r') {
-					if(*s == 0 || *s == '\r' || *s == '\n') _Err(s0, "missing '");
-				}
-			}
-		}
+		//Some of these currently are not used.
 
 		/// <summary>
 		/// Gets line length.
@@ -479,116 +450,13 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Parses a number literal and returns its length, including suffix.
-		/// Error if invalid.
-		/// </summary>
-		[DebuggerStepThrough]
-		int _LenNumber(char* s)
-		{
-			if(!_IsCharDigit(*s)) return 0;
-			char* s0 = s++;
-
-			//hex, bin, oct
-			int hexEtc = 0;
-			if(*s0 == '0') {
-				if(*s == 'x' || *s == 'X') {
-					hexEtc = 2;
-					for(++s; _IsCharHexDigit(*s); s++) { }
-				} else if(*s == 'b' || *s == 'B') {
-					hexEtc = 3;
-					for(++s; *s == '0' || *s == '1'; s++) { }
-				} else if(_IsCharDigit(*s)) hexEtc = 1; //or can be double like 01.2
-
-				if(hexEtc >= 2 && (s - s0) == 2) _Err(s, "unexpected");
-			}
-
-			bool dbl = false;
-			if(hexEtc < 2) {
-				while(_IsCharDigit(*s)) s++;
-				//double fraction
-				if(*s == '.') {
-					dbl = true;
-					for(++s; _IsCharDigit(*s); s++) { }
-				}
-			}
-
-			//double exponent
-			if(*s == 'E' || *s == 'e') {
-				dbl = true;
-				s++;
-				if(*s == '-' || *s == '+') s++;
-				if(!_IsCharDigit(*s)) _Err(s, "unexpected");
-				while(_IsCharDigit(*s)) s++;
-			}
-
-			if(hexEtc == 1 && !dbl) { //validate oct digits now
-				for(char* t = s0 + 2; t < s; t++) if(*t > '7') _Err(t, "unexpected");
-			}
-
-			//suffix
-			uint suffixType;
-			s += _NumberSuffix(s, dbl, out suffixType);
-
-			return (int)(s - s0);
-		}
-
-		/// <summary>
-		/// Scans integer or floating-point constant suffix and returns its length.
-		/// Error if invalid suffix.
-		/// Converts C++ suffix to C#.
-		/// </summary>
-		/// <param name="s"></param>
-		/// <param name="type">Receives flags: 1 unsigned, 2 __int64, 4 float.</param>
-		[DebuggerStepThrough]
-		int _NumberSuffix(char* s, bool floatingPoint, out uint type)
-		{
-			type = 0;
-			char* s0 = s;
-			int lenTrim = 0;
-
-			if(floatingPoint) {
-				if(*s == 'f' || *s == 'F') {
-					s++; type |= 4;
-				} else if(*s == 'l' || *s == 'L') *s++ = ' ';
-			} else {
-				if(*s == 'u' || *s == 'U') { s++; type |= 1; }
-
-				if(*s == 'l' || *s == 'L') {
-					s++; lenTrim = 1;
-					if(*s == 'l' || *s == 'L') {
-						*s++ = ' ';
-						type |= 2;
-					} else s[-1] = ' ';
-				} else if(*s == 'i' || *s == 'I') {
-					if(s[1] == '8') {
-						s[0] = s[1] = ' ';
-						s += 2; lenTrim = 2;
-					} else {
-						if(s[1] == '6' && s[2] == '4') {
-							type |= 2;
-							s[0] = 'L'; lenTrim = 2;
-						} else if((s[1] == '3' && s[2] == '2') || (s[1] == '1' && s[2] == '6')) {
-							s[0] = ' '; lenTrim = 3;
-						} else _Err(s, "unexpected");
-
-						s[1] = s[2] = ' ';
-						s += 3;
-					}
-				}
-			}
-
-			if(_IsCharIdent(*s)) _Err(s, "unexpected");
-			return (int)(s - lenTrim - s0);
-		}
-
-		/// <summary>
 		/// Finds ident as whole word.
 		/// Returns index or -1.
 		/// </summary>
 		int _FindIdentifierInString(string s, string ident)
 		{
 			int len = ident.Length;
-			for(int i=0; (i = s.IndexOf_(ident, i)) >= 0; i += len) {
+			for(int i = 0; (i = s.IndexOf_(ident, i)) >= 0; i += len) {
 				if(i > 0 && _IsCharIdent(s[i - 1])) continue;
 				if(i < s.Length - len && _IsCharIdent(s[i + len])) continue;
 				return i;
@@ -612,7 +480,9 @@ namespace SdkConverter
 			for(int i = '0'; i <= '9'; i++) _ctt[i] = 2;
 			_ctt[' '] = _ctt['\t'] = _ctt['\v'] = _ctt['\f'] = 4;
 			_ctt['\r'] = _ctt['\n'] = 8;
-			//_ctt['!'] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = 16;
+			_ctt['!'] = _ctt['%'] = _ctt['&'] /*= _ctt['('] = _ctt[')']*/ = _ctt['*'] = _ctt['+'] /*= _ctt[',']*/ = _ctt['-'] = _ctt['.'] = _ctt['/']
+				= _ctt[':'] = _ctt['<'] = _ctt['='] = _ctt['>'] = _ctt['?'] /*= _ctt['['] = _ctt[']']*/ = _ctt['^'] = _ctt['|'] = _ctt['~']
+				/*= _ctt['{'] = _ctt['}']*/ = 16;
 			//_ctt['('] = _ctt[')'] = _ctt['{'] = _ctt['}'] = _ctt['['] = _ctt[']'] = _ctt[';'] = _ctt['\''] = _ctt[':'] = _ctt['\"'] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = _ctt[''] = 32;
 			for(int i = 'a'; i <= 'f'; i++) _ctt[i] |= 64;
 			for(int i = 'A'; i <= 'F'; i++) _ctt[i] |= 64;
@@ -700,10 +570,23 @@ namespace SdkConverter
 			return (_ctt[c] & (8 | 128)) != 0;
 		}
 
+		/// <summary>
+		/// Returns true if c is a C++ operator character, not including ,[](){}.
+		/// </summary>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static bool _IsCharOperator(char c)
+		{
+			return (_ctt[c] & 16) != 0;
+		}
+
 		#endregion
+	}
 
-		#region ERROR
+	#region ERROR
 
+	unsafe partial class Converter
+	{
 		/// <summary>
 		/// Gets offset of token iTok in _src.
 		/// </summary>
@@ -734,9 +617,6 @@ namespace SdkConverter
 				$"{errorText}\r\n\tin {callerName}, {Path.GetFileName(callerFile)}:({callerLine})"
 				, pos);
 		}
-
-		#endregion
-
 	}
 
 	class ConverterException :Exception
@@ -751,4 +631,6 @@ namespace SdkConverter
 #endif
 		}
 	}
+
+	#endregion
 }

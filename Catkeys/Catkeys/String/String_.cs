@@ -505,8 +505,18 @@ namespace Catkeys
 		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, RegexOptions options = 0)
 		{
 			int n = 0;
-			result=Regex.Replace(t, pattern, (m)=> { n++; return m.Result(replacement); }, options | RegexOptions.CultureInvariant);
+			result = Regex.Replace(t, pattern, (m) => { n++; return m.Result(replacement); }, options | RegexOptions.CultureInvariant);
 			return n;
+		}
+
+		/// <summary>
+		/// Returns string.Join(separator, values).
+		/// If values[0] is null, sets it "". It is a workaround for the documented string.Join bug: it would return "" if values[0] is null.
+		/// </summary>
+		public static string Join(string separator, params object[] values)
+		{
+			if(values.Length>0 && values[0] == null) values[0] = "";
+			return string.Join(separator, values);
 		}
 	}
 

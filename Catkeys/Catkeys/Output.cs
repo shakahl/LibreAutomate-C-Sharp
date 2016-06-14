@@ -103,12 +103,12 @@ namespace Catkeys
 		/// <summary>
 		/// Writes multiple argument values using separator ", ".
 		/// </summary>
-		public static void WriteList(params object[] values) { Write(string.Join(", ", values)); }
+		public static void WriteList(params object[] values) { Write(String_.Join(", ", values)); }
 
 		/// <summary>
 		/// Writes multiple argument values using the specified separator.
 		/// </summary>
-		public static void WriteListSep(string separator, params object[] values) { Write(string.Join(separator, values)); }
+		public static void WriteListSep(string separator, params object[] values) { Write(String_.Join(separator, values)); }
 
 		/// <summary>
 		/// Writes an integer in hexadecimal format, like "0x5A".

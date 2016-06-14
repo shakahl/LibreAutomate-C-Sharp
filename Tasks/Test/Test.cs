@@ -44,7 +44,6 @@ using System.Xml.Schema;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 
-
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 #pragma warning disable 162 //unreachable code
@@ -2120,22 +2119,46 @@ bbb"", b3
 		}
 	}
 
+
+	[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]
+	//public static extern string GetCommandLine(); //exception
+	//public static extern StringBuilder GetCommandLine(); //exception
+	//public static extern IntPtr GetCommandLine(); //OK
+	public static unsafe extern char* GetCommandLine(); //OK
+
+	[DllImport("user32.dll", EntryPoint = "CharUpperW")]
+	public static extern IntPtr CharUpper(StringBuilder lpsz);
+
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
-	static void TestX()
+	static unsafe void TestX()
 	{
-		string p = @"(\d)\d+", r = "$1R";
-		string s = "aaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mm";
 
-		//Out(s.RegexReplace_(out s, p, r));
+
+		//Out(1);
+		//string s;
+		//s = new string(GetCommandLine());
 		//Out(s);
+		//s = new string(GetCommandLine());
+		//Out(s);
+		//s = new string(GetCommandLine());
+		//Out(s);
+		//Out(2);
 
-		string s2 = null; int n = 0;
-		var a1 = new Action(() => { s2 = s.RegexReplace_(p, r); });
-		var a2 = new Action(() => { n = s.RegexReplace_(out s2, p, r); });
 
-		Perf.ExecuteMulti(5, 1000, a1, a2);
 
-		OutList(n, s2);
+		//string p = @"(\d)\d+", r = "$1R";
+		//string s = "aaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mm";
+
+		////Out(s.RegexReplace_(out s, p, r));
+		////Out(s);
+
+		//string s2 = null; int n = 0;
+		//var a1 = new Action(() => { s2 = s.RegexReplace_(p, r); });
+		//var a2 = new Action(() => { n = s.RegexReplace_(out s2, p, r); });
+
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
+
+		//OutList(n, s2);
 
 		//var k = new UNS.TDARRAY();
 		////k.a = new int[5];

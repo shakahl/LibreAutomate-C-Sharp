@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
@@ -75,10 +76,21 @@ namespace SdkConverter
 				if(_TokIsIdent(_i)) {
 					if(ptr < 0) goto ge;
 					if(_TokIsChar(_i + 1, '[')) { //typedef X Y[n];
-						__DeclareTypedef_Array(_ConvertTypeName(aliasOf, ref ptr, false, false, 0));
+						__DeclareTypedef_Array(_ConvertTypeName(aliasOf, ref ptr, false, 0, _TypeContext.Member));
 					} else {
 						bool defined = false;
 						if(aliasOf is _CppType) {
+
+							//convert LONG_PTR etc to IntLong, not to long/ulong
+							if(aliasOf.csTypename == "long" || aliasOf.csTypename == "ulong") {
+								string name = _TokToString(_i);
+								if(name.EndsWith_("_PTR") || name == "POINTER_64_INT") {
+									//OutList(_tok[_i], aliasOf.csTypename, ptr);
+									aliasOf = _sym_IntLong;
+								} //else OutList(_tok[_i], aliasOf.csTypename, ptr);
+
+							}
+
 						} else if(_TokIs(_i, aliasOf.csTypename)) {
 							defined = true;
 						} else if(_nsCurrent == 0 && aliasOf.forwardDecl && ptrBase + ptr == 0) {
@@ -130,6 +142,8 @@ namespace SdkConverter
 			//info:
 			//SDK has 6 such typedefs, 2 of them are [1] ie used as variable-length array.
 			//We convert to struct, because would be difficult to have this as typedef.
+			//info:
+			//Here we don't replace char[] to string because SDK has just 1 such typedef and it is used for a parameter of type TYPEDEF* (array).
 		}
 
 		_Symbol _CopyStruct(_Symbol xFrom, string name)
@@ -166,7 +180,7 @@ namespace SdkConverter
 		void _DeclareTypedefFunc(_Symbol t, int ptr, bool isConst, int iTokTypename, _INLINEFUNCTYPEDATA inl = null)
 		{
 			//return type
-			string returnType = _ConvertTypeName(t, ref ptr, false, isConst, iTokTypename);
+			string returnType = _ConvertTypeName(t, ref ptr, isConst, iTokTypename, _TypeContext.Return);
 
 			Debug.Assert(_TokIsChar(_i, '('));
 			_i++;
@@ -200,7 +214,7 @@ namespace SdkConverter
 			sb.AppendFormat("public delegate {0} {1}", returnType, name);
 
 			//parameters
-			_ConvertParameters(sb, name);
+			_ConvertParameters(sb, name, true);
 
 			var x = new _Callback(name);
 			if(inl == null) _AddSymbol(iName, x);
@@ -232,8 +246,9 @@ namespace SdkConverter
 		/// </summary>
 		void __DeclareEnum(ref _FINDTYPEDATA d)
 		{
-			//scoped?
-			if(_TokIs(++_i, "class") || _TokIs(_i, "struct")) _i++;
+			//is in global namespace?
+			bool isScoped = _nsCurrent > 0;
+			if(_TokIs(++_i, "class") || _TokIs(_i, "struct")) { isScoped = true; _i++; }
 
 			_Enum x = null;
 
@@ -289,46 +304,51 @@ namespace SdkConverter
 
 			//body
 			sb.AppendLine(" {");
-			int iMember = 0, iPrevMember = 0;
-			for(; ; _i++) {
-				char* s = T(_i);
-				if(*s == '}') break;
-				if(*s == '\0') _Err(iBodyStart, "no }");
+			uint value = 0, nextValue = 0;
+			for(; !_TokIsChar(_i, '}'); _i++, nextValue++) {
+				if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
+				int iMember = _i++;
+				string memberName = _TokToString(iMember);
+				sb.Append('\t'); sb.Append(memberName);
+				char c = *T(_i);
+				if(c == '=') {
+					int i0 = ++_i;
+					while(!_TokIsChar(_i, ',', '}')) _i++;
+					if(_i == i0) _Err(_i, "unexpected");
 
-				if(iMember == 0) {
-					if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
-					iMember = _i;
-					sb.Append('\t'); sb.Append(_TokToString(iMember));
-					if(_TokIsChar(_i + 1, '=')) {
-						_i++;
+					_ExpressionResult r = _Expression(i0, _i, memberName);
+					switch(r.typeS) {
+					case "int":
+						value = r.valueI;
+						break;
+					case "uint":
+						value = r.valueI;
+						if(!isFlags) { isFlags = true; sBaseType = "uint"; }
+						break;
+					default:
+						_Err(i0, "cannot convert");
+						break;
+					}
 
-						if(_TokIsChar(_i + 1, '(')) {
-							if(_TokIsChar(_i + 3, '+') && _tok[_i + 2].Equals(_tok[iPrevMember]) && _TokIs(_i + 4, "1") && _TokIsChar(_i + 5, ')') && _TokIsChar(_i + 6, ',', '}')) {
-								//remove value if Member = (PrevMember+1)
-								_i += 5;
-								continue;
-							} else {
-								//remove cast from '(int)0x...'
-								if(_TokIsChar(_i + 3, ')') && _TokIs(_i + 2, "int") && _TokStarts(_i + 4, "0x")) {
-									_i += 3;
-								}
-								//Out(_tok[iMember]);
-							}
-						}
+					if(value != nextValue) {
+						sb.Append(" = ");
+						sb.Append(r.valueS);
+					}
 
-						sb.Append(" =");
-					} else if(!_TokIsChar(_i + 1, ',', '}')) _Err(_i, "unexpected");
-				} else if(*s == ',') {
-					iPrevMember = iMember;
-					iMember = 0;
-					if(!_TokIsChar(_i + 1, '}')) sb.AppendLine(",");
-				} else {
-					if(sBaseType == null && *s == '0' && (s[1] == 'x' || s[1] == 'X')) { isFlags = true; sBaseType = "uint"; }
+					nextValue = value;
+				} else if(c == ',' || c == '}') {
+					value = nextValue;
+				} else _Err(_i, "unexpected");
 
-					//sb.Append(' '); //splits '<<' etc
-					if(_i == iMember + 2) sb.Append(' ');
-					sb.Append(_TokToString(_i));
+				//add to a dictionary, to resolve other enum and #define
+				if(!isScoped) {
+					ulong v = value; if(isFlags) v |= 0x8000000000000000UL;
+					//OutList("add", _tok[iMember]);
+					_enumValues[_tok[iMember]] = v;
 				}
+
+				if(_TokIsChar(_i, '}')) break;
+				sb.AppendLine(",");
 			}
 			sb.AppendLine("\r\n}");
 			int iBodyEnd = ++_i;
@@ -346,6 +366,16 @@ namespace SdkConverter
 			d.outSym = x;
 
 			_FormatEnum(x);
+		}
+
+		Dictionary<_Token, ulong> _enumValues = new Dictionary<_Token, ulong>();
+		bool _EnumFindValue(int iTokName, out ulong value, out _OP type)
+		{
+			type = _OP.OperandInt;
+			//OutList("find", _tok[iTokName]);
+			if(!_enumValues.TryGetValue(_tok[iTokName], out value)) return false;
+			if((value & 0x8000000000000000UL) != 0) { value = (uint)value; type = _OP.OperandUint; }
+			return true;
 		}
 
 		void _FormatEnum(_Enum x)
@@ -441,7 +471,7 @@ namespace SdkConverter
 			//skip IUnknown
 			if(!__haveIUnknown && (isInterface || uuid != null) && name == "IUnknown") {
 				__haveIUnknown = true;
-				_SkipStatement(true);
+				_SkipStatement();
 				x.forwardDecl = false;
 				_DeclareGuid("IID_", name, uuid);
 				return;
@@ -491,7 +521,7 @@ namespace SdkConverter
 			if(_nsCurrent == 0) _anonymousStructSuffixCounter = 0;
 			if(!isInterface) _sbType = _ns[++_nsCurrent].sb;
 
-			for(int iMember = 1, iBitfields = 1, iInterfaceFunc=1; !_TokIsChar(_i, '}'); _i++, iMember++) {
+			for(int iMember = 1, iBitfields = 1, iInterfaceFunc = 1; !_TokIsChar(_i, '}'); _i++, iMember++) {
 
 				//public/private/protected?
 				if(_TokIsChar(_i + 1, ':') && 0 != _TokIs(_i, "public", "private", "protected")) {
@@ -521,7 +551,7 @@ namespace SdkConverter
 
 				//type
 				_PARAMDATA t;
-				_ParseParamOrMember(true, out t, "TYPEOF", iMember);
+				_ParseParamOrMember(_TypeContext.Member, out t, "TYPEOF", iMember);
 
 				if(t.isNestedTypeDefinitionWithoutVariables) {
 					//if anonymous type definition without a variable, its members are part of parent in C++, therefore in C# need to add a variable of that type
@@ -539,8 +569,15 @@ namespace SdkConverter
 					default: _Err(_i, "unexpected"); break;
 					}
 
-					if(t.attributes != null) { sb.Append(t.attributes); sb.Append(' '); }
-					sb.AppendFormat("{3}{2} {0} {1};\r\n", t.typeName, t.name, access, memberAttr);
+					string typeName = t.typeName;
+					if(t.attributes != null) {
+						if(t.typeName == "char[]") {
+							typeName = "string";
+							t.attributes = t.attributes.Replace(".ByValArray,", ".ByValTStr,");
+						}
+						sb.Append(t.attributes); sb.Append(' ');
+					}
+					sb.AppendFormat("{3}{2} {0} {1};\r\n", typeName, t.name, access, memberAttr);
 					if(!_TokIsChar(_i, ',')) break;
 					_i++;
 
@@ -632,7 +669,7 @@ namespace SdkConverter
 			if(_tok[_i].Equals(_tok[aliasToken])) return false; //typedef struct X{...}X
 
 			__RemoveForwardDeclIfExists(aliasToken, false);
-			wasForwardDecl=__RemoveForwardDeclIfExists(_i, true);
+			wasForwardDecl = __RemoveForwardDeclIfExists(_i, true);
 
 			return true;
 		}
@@ -735,7 +772,7 @@ namespace SdkConverter
 					csTypename = ct.csTypename;
 					isUnsigned = ct.isUnsigned;
 					return ct.sizeBytesCpp * 8;
-				} else if(_TokIs(_i, "IntLong")) {
+				} else if(t == _sym_IntLong) {
 					csTypename = "long";
 					return 64;
 					//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using IntLong is difficult because of its variable size.
@@ -752,7 +789,10 @@ namespace SdkConverter
 		void _DeclareGuid(string prefix, string name, string uuid)
 		{
 			if(uuid == null) return;
-			_sbInterface.AppendFormat("\r\npublic static Guid {0}{1} = new Guid({2});\r\n", prefix, name, uuid);
+			name = prefix + name;
+			if(_guids.ContainsKey(name)) return;
+			//Out(name); //about 10 in SDK
+			_sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", prefix, name, uuid);
 			//note: not 'readonly' because then could not be passed as ref.
 		}
 
@@ -772,9 +812,9 @@ namespace SdkConverter
 
 			string name = _TokToString(_i++);
 
-			//some interfaces have IUnknown memners
+			//some interfaces have IUnknown members
 			bool skip = false;
-			if(index<=3) {
+			if(index <= 3) {
 				if(index == 1 && name == "QueryInterface") skip = true;
 				if(index == 2 && name == "AddRef") skip = true;
 				if(index == 3 && name == "Release") skip = true;
@@ -783,14 +823,20 @@ namespace SdkConverter
 				_SkipEnclosed();
 				_i++;
 			} else {
-				string returnType = _ConvertTypeName(d.outSym, ref ptr, false, d.outIsConst, d.outTypenameToken);
+				string returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.Return);
+
+				//correct preprocessor-replaced method names that matched #define Func FuncW. Also there are several such struct members, never mind.
+				if(name.EndsWith_("W") && name.Length > 2 && char.IsLower(name[name.Length - 2])) {
+					//Out(name);
+					name = name.Remove(name.Length - 1);
+				}
 
 				//start formatting
 				sb.Append("[PreserveSig] ");
 				sb.Append(returnType); sb.Append(' '); sb.Append(name);
 
 				//parameters
-				_ConvertParameters(sb, name);
+				_ConvertParameters(sb, name, false);
 			}
 
 			//skip '= 0'
@@ -816,7 +862,7 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Joins _sbType, _sbInlineDelegate, _sbFunc, and _sbInterface into single string.
+		/// Joins _sbType, _sbInlineDelegate, _func, and _sbInterface into single string.
 		/// Replaces some identifiers in it etc.
 		/// Clears the stringbuilders.
 		/// </summary>
@@ -824,12 +870,12 @@ namespace SdkConverter
 		{
 			//join types etc into single string, for replacements
 			var sb = new StringBuilder();
-			sb.Append("\r\n// TYPES\r\n");
+			sb.Append("\r\n// TYPE\r\n");
 			sb.Append(_sbType.ToString()); _sbType.Clear();
 			sb.Append(_sbInlineDelegate.ToString()); _sbInlineDelegate.Clear();
-			sb.Append("\r\n// FUNCTIONS\r\n");
-			sb.Append(_sbFunc.ToString()); _sbFunc.Clear();
-			sb.Append("\r\n// INTERFACES\r\n");
+			sb.Append("\r\n// FUNCTION\r\n");
+			foreach(var v in _func) { sb.Append(v.Value); }
+			sb.Append("\r\n// INTERFACE\r\n");
 			sb.Append(_sbInterface.ToString()); _sbInterface.Clear();
 			string R = sb.ToString(); sb.Clear();
 
@@ -846,7 +892,7 @@ namespace SdkConverter
 
 					//Replace all found TYPE* and ref TYPE to IntPtr.
 					//Call RegexReplace_ 2 times because regex (a|b) is very slow.
-					string repl = "/*( $0 )*/ IntPtr";
+					string repl = "IntPtr";
 					int n;
 					if(ts != null && ts.isInterface) n = R.RegexReplace_(out R, $@"\b{s}\b", repl); //decremented pointer level. 0 in SDK
 					else n = R.RegexReplace_(out R, $@"\b{s}\*", repl) + R.RegexReplace_(out R, $@"\bref {s}\b", repl);
@@ -880,7 +926,67 @@ namespace SdkConverter
 			}
 			//Perf.NextWrite();
 
+			//remove W from struct/interface/delegate names
+			Perf.First();
+			foreach(var v in _defineW) {
+				__RemoveAW(ref R, v.Key, v.Value);
+			}
+			Perf.Next();
+			foreach(var v in _ns[0].sym) { //some A/W are not #define but typedef, eg 'typedef MIXERCAPSW MIXERCAPS;'
+				var td = v.Value as _Typedef; if(td == null) continue;
+				if(td.forwardDecl || td.ptr != 0) continue;
+				string name, nameW = td.aliasOf.csTypename;
+				int suffixLen = 0;
+				if(v.Key.len == nameW.Length - 1 && nameW.EndsWith_("W")) suffixLen = 1;
+				else if(v.Key.len == nameW.Length - 2 && nameW.EndsWith_("_W")) suffixLen = 2;
+				else continue;
+				name = v.Key.ToString(); if(!nameW.StartsWith_(name)) continue;
+				int what; //struct/interface/delegate
+				var t = td.aliasOf as _Struct;
+				if(t != null) what = t.isInterface ? 1 : 0; else if(td.aliasOf is _Callback) what = 2; else continue;
+				if(suffixLen == 2) what |= 0x10000;
+				__RemoveAW(ref R, name, what);
+			}
+			Perf.NextWrite(); //800 1000 ms
+
 			return R;
+		}
+
+		//what: 0 struct, 1 interface, 2 delegate, flag 0x10000 _W
+		void __RemoveAW(ref string R, string name, int what)
+		{
+			string sW = "W", sA = "A";
+			if((what & 0x10000) != 0) { sW = "_W"; sA = "_A"; }
+			what &= 0xff;
+
+			if(0 != R.RegexReplace_(out R, $@"\b{name}{sW}\b", name)) {
+				//Out($"<><c 0xff0000>{name}</c>");
+
+				//remove STRUCTA
+
+				string rx = null;
+				switch(what) {
+				case 0: rx = $@"(?ms)^public struct {name}{sA} .+?^\}}\r\n\r\n"; break;
+				case 1: rx = $@"(?ms)^public interface {name}{sA} .+?^\}}\r\n\r\n"; break;
+				case 2: rx = $@"(?m)^public delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
+				}
+				Match m = R.RegexMatch_(rx);
+				if(m.Success) {
+					//find attributes (regex with attributes would be very slow)
+					int i = m.Index - 3;
+					while(0 == string.Compare(R, i, "]\r\n", 0, 3)) {
+						//Out("attr");
+						i = R.LastIndexOf('\n', i) - 2;
+					}
+					i += 3;
+
+					R = R.Remove(i, m.Index - i + m.Length);
+					//OutList(what, name, R.RegexIs_($"\b{name}\b")); //all False
+				}
+			} else {
+				//Out($"<><c 0xff>{name}</c>"); //0
+				//Out(R.IndexOf_($"public struct {name}A "));
+			}
 		}
 	}
 }

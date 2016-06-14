@@ -1316,8 +1316,8 @@ namespace Catkeys.Winapi
 		//note: don't use the u API because they return 1 if the value is too big and the string contains '-'.
 		//[DllImport("msvcrt.dll", EntryPoint = "wcstoul", CallingConvention = CallingConvention.Cdecl)]
 		//public static extern unsafe uint strtoui(char* s, out char* endPtr, int _base = 0);
-		//[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
-		//public static extern unsafe ulong strtoui64(char* s, out char* endPtr, int _base = 0);
+		[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
+		public static extern unsafe ulong strtoui64(char* s, out char* endPtr, int _base = 0);
 
 		/// <summary>
 		/// This overload has different parameter types.

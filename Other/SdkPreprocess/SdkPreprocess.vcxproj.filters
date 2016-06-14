@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SdkHeaders.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CppTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Cpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="inactive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

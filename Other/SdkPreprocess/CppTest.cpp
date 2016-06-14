@@ -1,3 +1,24 @@
+#define WINVER 0x0A00
+#define _WIN32_WINNT 0x0A00
+#define _VARIANT_BOOL /##/
+
+//#include <initguid.h>
+#include <windows.h>
+//#include <shlobj.h>
+
+#pragma comment(lib, "Synchronization.lib")
+
+void main()
+{
+	//AddDllDirectory(L"");
+	//IsDebuggerPresent();
+	//WaitForDebugEventEx(0, 0);
+	//if(sizeof(CLSID_NetworkDomain)>1)
+	MessageBoxW(0, L"text", L"caption", 0);
+	//WaitOnAddress(0, 0, 0, 0);
+}
+
+#if 0
 
 #define OOO(k) (k>0)
 
@@ -115,3 +136,5 @@ void main()
 	printf(RAW2);
 	printf("\n");
 }
+
+#endif

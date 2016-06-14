@@ -44,11 +44,9 @@ namespace SdkConverter
 		char[] _src; //C/C++ source code
 		char* _s0; //_src start
 
-		StringBuilder _sbConst = new StringBuilder();
-		StringBuilder _sbFunc = new StringBuilder();
 		StringBuilder _sbInterface = new StringBuilder();
-		StringBuilder _sbCoclass = new StringBuilder();
-		StringBuilder _sbComment = new StringBuilder();
+		//StringBuilder _sbCoclass = new StringBuilder();
+		StringBuilder _sbGuid = new StringBuilder();
 		StringBuilder _sbInlineDelegate = new StringBuilder(); //from callback function types defined in parameter list or member list
 
 		List<_Token> _tok = new List<_Token>();
@@ -61,10 +59,13 @@ namespace SdkConverter
 		StringBuilder _sbType; //_ns[_nsCurrent].sb
 		Dictionary<_Token, _Symbol> _keywords = new Dictionary<_Token, _Symbol>();
 
-		//Dictionary<string, string> _func = new Dictionary<string, string>(); //function declaration
+		Dictionary<string, string> _func = new Dictionary<string, string>(); //function declaration
+		StringBuilder _sbFuncTemp = new StringBuilder(); //used to format _func values
+
 		//List<string> _cppConst = new List<string>(); //const CONSTANT
-		//List<string> _comment = new List<string>(); //added when cannot convert, eg #define MACRO(...)
+
 		Dictionary<string, string> _defineConst = new Dictionary<string, string>(); //#define CONSTANT
+		Dictionary<string, int> _defineW = new Dictionary<string, int>(); //#define STRUCT STRUCTW
 		Dictionary<string, string> _defineOther = new Dictionary<string, string>(); //#define MACRO(...)
 
 		Stack<int> _packStack = new Stack<int>(); int _pack = 8; //#pragma pack
@@ -73,7 +74,7 @@ namespace SdkConverter
 
 		//Regex _rxIndent = new Regex("(?m)^(?=.)", RegexOptions.CultureInvariant);
 
-		public void Convert(string hFile, /*( MMMMM* )*/ string csFile)
+		public void Convert(string hFile, string csFile)
 		{
 			try {
 				if(_src != null) throw new Exception("cannot call Convert multiple times. Create new Converter instance.");
@@ -85,6 +86,7 @@ namespace SdkConverter
 
 				_InitTables();
 				_InitSymbols();
+				_InitMaps();
 
 				string stf = null;
 
@@ -109,14 +111,7 @@ namespace SdkConverter
 					//27659, 998
 					//27605, 983
 
-					foreach(var v in _defineConst) {
-						_sbConst.AppendLine(v.Value);
-						//TODO: add empty line if previous prefix is different
-					}
-					foreach(var v in _defineOther) {
-						_sbComment.AppendFormat("/// #define {0}{1}\r\nconst string {0} = \"C macro\";\r\n\r\n", v.Key, v.Value);
-					}
-					//TODO: finally remove '#define FuncX FuncY', '#define X UnknownIdentifier' etc.
+					_FunctionsFinally();
 
 					stf = _PostProcessTypesFunctionsInterfaces();
 					//Out(stf);
@@ -145,12 +140,19 @@ public static unsafe class API
 					//	if(_sbType.Length > 0) writer.Write(_sbType.ToString());
 					//	if(_sbInterface.Length > 0) writer.Write(_sbInterface.ToString());
 					//}
-					writer.Write("\r\n// COCLASSES\r\n");
-					writer.Write(_sbCoclass.ToString());
-					writer.Write("\r\n// CONSTANTS\r\n\r\n");
-					writer.Write(_sbConst.ToString());
+					//writer.WriteLine("\r\n// COCLASS");
+					//writer.Write(_sbCoclass.ToString());
+					writer.WriteLine("\r\n// GUID");
+					writer.Write(_sbGuid.ToString());
+					writer.WriteLine("\r\n// CONSTANT\r\n");
+					foreach(var v in _defineConst) {
+						writer.WriteLine(v.Value);
+						//TODO: add empty line if previous prefix is different
+					}
 					writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
-					writer.Write(_sbComment.ToString());
+					foreach(var v in _defineOther) {
+						writer.Write("public const string {0} = \"#define {0}{1}\";\r\n\r\n", v.Key, v.Value);
+					}
 					writer.Write("\r\n}\r\n");
 				}
 			}
@@ -209,12 +211,11 @@ public static unsafe class API
 			//_AddKeyword("__uuidof", new _Keyword(cannotStartStatement: true)); //should be only in function body
 			//_AddKeyword("alignas", k = new _Keyword(cannotStartStatement: true)); //removed in script
 			//_AddKeywords(new _Keyword(cannotStartStatement: true), "alignof", "__alignof"); //should be only in function body
-			//_AddKeywords(new _Keyword(cannotStartStatement: true)"false", "true"); //should be only in ignored code
+			//_AddKeywords(new _Keyword(cannotStartStatement: true), "false", "true", "nullptr"); //we add enum values for it
 			//_AddKeyword("property", k = new _Keyword()); //0 in SDK
 			//_AddKeyword("signed", k = new _Keyword()); //replaced in script
 			//_AddKeywords(new _Keyword(cannotStartStatement: true), "throw", "noexcept"); //eg void f() throw(int); //will be skipped together with functions
 			//_AddKeyword("unsigned", k = new _Keyword()); //replaced in script
-			//_AddKeyword("nullptr", k); //0 in SDK
 
 			k = new _Keyword(cannotStartStatement: true);
 			_AddKeyword("sizeof", k); //can be like 'member[sizeof(X)]' or '#define X sizeof(Y)'
@@ -244,7 +245,6 @@ public static unsafe class API
 			//_AddKeywords(k = new _Keyword(_KeywordT.Declspec), "__declspec", "_declspec"); //removed in script
 
 			_AddKeyword("uuid", k = new _Keyword(cannotStartStatement: true)); //was '__declspec(uuid', replaced in script
-			_AddKeyword("guid", k = new _Keyword()); //was 'extern "C" const GUID  GUID_MAX_POWER_SAVINGS = { 0x...};', replaced in script
 
 			_AddKeywords(new _CppType("sbyte", 1, false), "__int8", "char");
 			_AddKeywords(new _CppType("short", 2, false), "__int16", "short");
@@ -259,83 +259,18 @@ public static unsafe class API
 			_AddKeywords(new _CppType("ushort", 2, true), "u$__int16", "u$short");
 			_AddKeywords(new _CppType("uint", 4, true), "u$__int32", "u$int", "u$long", "char32_t");
 			_AddKeyword("u$__int64", new _CppType("ulong", 8, true));
-			_AddKeyword("bool", new _CppType("bool", 1, true));
+			_AddKeyword("bool", new _CppType("bool", 1, false));
 			_AddKeyword("void", new _CppType("void", 0, false));
 			//_AddKeywords(new _Keyword(), "__m128", "__m128d", "__m128i"); //our script defined these as struct, because C# does not have a matching type
 			//_AddKeywords(new _Keyword(), "__m64"); //not used in SDK
 			_AddKeyword("auto", new _CppType("var", 1, false)); //has two meanings depending on compiler options. The old auto is a local variable, and we will not encounter it because we skip function bodies. The new auto is like C# var; it can also be applied to global variables too, unlike in C#; we'll ignore all variable declarations.
 			_AddKeyword("IntPtr", new _CppType("IntPtr", 8, false));
+
+			_AddSymbol("IntLong", _sym_IntLong = new _Struct("IntLong", false), 0);
+			_AddSymbol("HWND", _sym_Wnd = new _Struct("Wnd", false), 0);
 		}
 
-		void _Tokenize(char* s)
-		{
-			_tok.Capacity = _src.Length / 8;
-			_tok.Add(new _Token());
-
-			bool isNewLine = true;
-			int len;
-			char c;
-
-			for(; (c = *s) != 0; s++) {
-				switch(c) {
-				case '\r':
-				case '\n':
-					isNewLine = true;
-					break;
-				case ' ':
-				case '\t':
-				case '\v':
-				case '\f':
-					break;
-				case '`': //was #define, #undef or #pragma pack
-					if(isNewLine) { //else it is preprocessor operator
-						if(_nTokUntilDefUndef == 0 && s[1] != '(') {
-							_nTokUntilDefUndef = _tok.Count;
-							s[-1] = '\0'; //was '\n
-							_tok.Add(new _Token(s - 1, 1));
-						}
-					}
-					_tok.Add(new _Token(s, 1));
-					break;
-				default:
-					//TODO: replace '$' to '_'. Although SDK does not have such identifiers when removed CRT headers.
-					if(_IsCharIdentStart(c)) {
-						len = _LenIdent(s);
-
-						//is prefix"string" or prefix'char'?
-						bool isPrefix = false;
-						switch(s[len]) {
-						case '\"':
-							if(len == 1) isPrefix = (c == 'L' || c == 'u' || c == 'U');
-							else if(len == 2) isPrefix = (c == 'u' && s[1] == '8');
-							//info: raw strings replaced to escaped strings when preprocessing
-							break;
-						case '\'':
-							if(len == 1) isPrefix = (c == 'L' || c == 'u' || c == 'U');
-							break;
-						}
-						if(isPrefix) { //remove prefix
-							for(; len > 0; len--) *s++ = ' ';
-							s--;
-							continue;
-						}
-
-					} else if(_IsCharDigit(c)) len = _LenNumber(s);
-					else if(c == '\"') len = _SkipString(s);
-					else if(c == '\'') len = _SkipApos(s);
-					else len = 1;
-					_tok.Add(new _Token(s, len));
-					s += len - 1;
-					break;
-				}
-			}
-
-			_nTok = _tok.Count;
-			if(_nTokUntilDefUndef == 0) _nTokUntilDefUndef = _nTok;
-
-			for(int i = 0; i < 10; i++) _tok.Add(new _Token(s, 1)); //to safely query next token
-			_tok[0] = new _Token(s, 1); //to safely query previous token. Also used as an empty token. The empty list item added before tokenizing.
-		}
+		_Struct _sym_IntLong, _sym_Wnd;
 
 		void _ConvertAll(int nestLevel)
 		{
@@ -371,8 +306,6 @@ public static unsafe class API
 			}
 		}
 
-		//bool _debugFARPROC;
-
 		void _Statement()
 		{
 			g0:
@@ -394,20 +327,16 @@ public static unsafe class API
 					_SkipStatement();
 					return;
 				} else if(_TokIs(_i, "extern")) {
-					if(_TokIsChar(++_i, '\"')) { //extern "C"
+					if(_TokIsChar(_i + 1, '\"')) { //extern "C"
+						_i++;
 						if(_TokIsChar(_i + 1, '{')) _i++;
 						return;
 					} else { //extern T X
-						_SkipStatement(true);
-						//_Err(_i, "stop");
+						if(_TokIs(_i + 1, "const")) _i++;
+						if(!_ExternConst()) _SkipStatement();
 					}
-				} else if(_TokIs(_i, "guid")) { //script converted DEFINE_GUID(X) to C# declaration with 'guid ' prefix
-					char* s0 = T(++_i);
-					while(!_TokIsChar(_i, ';')) _i++;
-					_sbConst.AppendLine(new string(s0, 0, (int)(T(_i) + 1 - s0)));
 				} else if(_TokIs(_i, "const")) {
-					_SkipStatement(true);
-					//if(!_Const()) _Err(_i, "unexpected");
+					if(!_ExternConst()) _SkipStatement();
 				} else {
 					//can be:
 					//namespace
@@ -419,45 +348,7 @@ public static unsafe class API
 				if(!_TokIsChar(_i, ';')) _Err(_i, "unexpected");
 
 			} else { //a type
-				_SkipStatement();
-				//_Err(_i, "not impl");
-				//		 //now we expect one of:
-				//		 //	function declaration, like TYPE __stdcall Func(TYPE a, TYPE b);
-				//		 //	global variable, which can be:
-				//		 //		previously-defined type, like TYPE var;
-				//		 //		now-defined function type, like TYPE (__stdcall*var)(TYPE a, TYPE b);
-				//		 //
-				//	int ptr = 0; char callConv = '\0';
-				//	g1:
-				//	_s += s.Length;
-				//	g2:
-				//	_SkipSpaceAndRN();
-				//	if(_IsCharIdentStart(*_s)) {
-				//		s = _GetIdent(_s);
-				//		_Symbol x2;
-				//		if(_sym.TryGetValue(s, out x2) && x2.symType == _SymT.Keyword) {
-				//			var k2 = x2 as _Keyword;
-				//			if(k2.symType == _SymT.CppType) _Err("unexpected");
-				//			if(k2.type == _KeywordT.Ignore) goto g1;
-				//			if(k2.type == _KeywordT.CallConv) {
-				//				char* cc = _s + 1; if(*cc == '_') cc++;
-				//				callConv = *cc;
-				//				goto g1;
-				//			}
-				//			//can be: operator, 
-				//			_Err("unexpected");
-				//		} else { //now should be function name or variable name
-				//			_Err($"type {s}"); //TODO
-				//		}
-				//	} else if(*_s == '*' || *_s == '&') { //todo: use _TokIsPtr
-				//		ptr++;
-				//		_s++; goto g2;
-				//	} else if(*_s == '(') { //function type variable
-				//		_Err("not impl"); //TODO
-
-				//	} else {
-				//		_Err("unexpected");
-				//	}
+				_DeclareFunction();
 			}
 		}
 
@@ -469,9 +360,9 @@ public static unsafe class API
 		/// <param name="debugShow"></param>
 		void _SkipStatement(bool debugShow = false)
 		{
-			//#if DEBUG
-			//			int i0 = _i;
-			//#endif
+#if DEBUG
+			int i0 = _i;
+#endif
 			gk1:
 			while(!_TokIsChar(_i, "({;[")) _i++;
 			if(!_TokIsChar(_i, ';')) {
@@ -479,12 +370,12 @@ public static unsafe class API
 				if(!_TokIsChar(_i, '}')) goto gk1; //skip any number of (enclosed) or [enclosed] parts, else skip single {enclosed} part
 				if(_TokIsChar(_i + 1, ';')) _i++;
 			}
-			//#if DEBUG
-			//			if(debugShow) {
-			//				string s = new string(T(i0), 0, (int)(T(_i + 1) - T(i0)));
-			//				Out($"<><c 0xff>skipped:</c>\r\n{s}");
-			//			}
-			//#endif
+#if DEBUG
+			if(debugShow) {
+				string s = new string(T(i0), 0, (int)(T(_i + 1) - T(i0)));
+				Out($"<><c 0xff>skipped:</c>\r\n{s}");
+			}
+#endif
 		}
 
 		void _PragmaPack()
@@ -524,13 +415,71 @@ public static unsafe class API
 			//Out($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
 		}
 
-		bool _Const()
+		bool _ExternConst()
 		{
-			return false;
+			//skip everything that does not look like extern or const declaration. There are 5 such declarations in SDK, never mind.
+			if(!(_TokIsIdent(_i + 1) && _TokIsIdent(_i + 2) && _TokIsChar(_i + 3, ';'))) return false;
+			//skip everything that is not _Struct, because we need only GUID
+			_Symbol x;
+			if(!_TryFindSymbol(++_i, out x, false)) return false;
+			if(0 != _Unalias(_i, ref x)) return false;
+			//var t = x as _Struct; if(t== null) return false;
+			if(x.csTypename != "GUID") return false;
 			_i++;
-			if(!(_TokIsChar(_i + 3, '}') && _TokIsChar(_i + 2, '=') && _TokIsIdent(_i) && _TokIsIdent(_i + 1))) return false;
 
+			string name = _TokToString(_i), data;
+			if(!_guids.TryGetValue(name, out data)) {
+				//Out(name);
+				return false;
+			}
+
+			if(name.EndsWith_("A") && char.IsLower(name[name.Length - 2])) {
+				//Out(name);
+				return false;
+			} else if(name.EndsWith_("W") && char.IsLower(name[name.Length - 2])) {
+				//Out(name);
+				name = name.Remove(name.Length - 1);
+			}
+
+			_sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", name, data);
+
+			_i++;
 			return true;
+		}
+
+		Dictionary<string, string> _guids;
+
+		void _InitMaps()
+		{
+			//get dll function names extracted from SDK lib files and system dlls
+			_funcDllMap = new Dictionary<string, string>();
+			string[] a = File.ReadAllLines(@"Q:\app\Catkeys\Api\DllMap.txt");
+			foreach(var s in a) {
+				int i = s.IndexOf(' ');
+				_funcDllMap.Add(s.Substring(0, i), s.Substring(i + 1));
+			}
+
+			//get GUIDs extracted from SDK lib files
+			_guids = new Dictionary<string, string>();
+			foreach(var s in File.ReadAllLines(@"Q:\app\Catkeys\Api\GuidMap.txt")) {
+				//Out(s);
+				int i = s.IndexOf(' ');
+				string sn = s.Substring(0, i), sd = s.Substring(i + 1), sOld;
+				if(_guids.TryGetValue(sn, out sOld)) {
+					if(sd == sOld) continue;
+					//OutList(name, sOld, sd);
+					//continue;
+					//several in SDK, the second ones are correct
+					_guids.Remove(sn);
+				}
+				_guids.Add(sn, sd);
+			}
+
+			//add enum values for some keyword literals etc
+			_enumValues.Add(_TokenFromString("false"), 0);
+			_enumValues.Add(_TokenFromString("true"), 1);
+			_enumValues.Add(_TokenFromString("nullptr"), 0);
+			_enumValues.Add(_TokenFromString("NULL"), 0); //clang ignores #define NULL
 		}
 	}
 }
