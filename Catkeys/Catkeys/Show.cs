@@ -556,6 +556,7 @@ namespace Catkeys
 		/// If common and custom buttons are not specified, the dialog will have OK button.
 		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// If owner, x, y, flag 'owner center', flag 'raw x y' and screen are not specified, the dialog will be in the center of the primary screen or of the screen that contains another window of current process.
+		/// Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
 		/// </remarks>
 		public static TDResult TaskDialogEx(
 			Wnd owner, string text1, string text2 = null,
@@ -590,6 +591,7 @@ namespace Catkeys
 		/// Tip: For optional parameters use named arguments. Example: <c>Show.TaskDialog("Text.", icon: TDIcon.Info)</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
 		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
+		/// Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
 		/// </remarks>
 		public static TDResult TaskDialog(
 			Wnd owner, string text1, string text2 = null, TDButton buttons = 0, TDIcon icon = 0, TDFlag flags = 0,
@@ -633,6 +635,7 @@ namespace Catkeys
 		/// If common and custom buttons are not specified, the dialog will have OK button.
 		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
 		/// If owner, x, y, flag 'owner center', flag 'raw x y' and screen are not specified, the dialog will be in the center of the primary screen or of the screen that contains another window of current process.
+		/// Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
 		/// </remarks>
 		public static TDResult TaskDialogEx(
 			string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd),
@@ -671,6 +674,7 @@ namespace Catkeys
 		/// Tip: For optional parameters use named arguments. Example: <c>Show.TaskDialog("Text.", style: "YN!")</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
 		/// These script options are applied: Script.Option.dialogRtlLayout, Script.Option.dialogTopmostIfNoOwner, Script.Option.dialogScreenIfNoOwner (more info in Wnd.MoveInScreen()), ScriptOptions.DisplayName (title).
+		/// Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
 		/// </remarks>
 		public static TDResult TaskDialog(string text1, string text2 = null, TDStyle style = null, Wnd owner = default(Wnd), StringList customButtons = null)
 		{

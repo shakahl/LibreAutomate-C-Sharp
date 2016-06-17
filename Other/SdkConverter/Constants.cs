@@ -53,6 +53,9 @@ namespace SdkConverter
 			} else if(iValue < iNext) { //preprocessor removes some #define values, it's ok
 				if(isFunc) { //info: for func-style get parameters as part of value
 					_defineOther[name] = _TokToString(iParamOrValue, iNext);
+				} else if(*s2 == '\x2') { //ANSI string constant, when tokenizing replaced the first '\"' to '\x2'
+					*s2 = '\"';
+					_defineOther[name] = " " + _TokToString(iParamOrValue, iNext) + " //ANSI string";
 				} else {
 					_ExpressionResult r = _Expression(iParamOrValue, iNext, name);
 					if(r.typeS == null) {
@@ -82,7 +85,7 @@ namespace SdkConverter
 			}
 
 			string def;
-			if(suffixLen==1 && _func.TryGetValue(value, out def)) {
+			if(suffixLen == 1 && _func.TryGetValue(value, out def)) {
 				//if(!_func.Remove(name + "A")) Out($"<><c 0xff>{name}    {value}</c>"); //about 20 in SDK don't not have A versions
 				_func.Remove(name + "A");
 
@@ -104,7 +107,7 @@ namespace SdkConverter
 					if(t != null || x is _Callback) {
 						//if(x is _Struct) Out($"<><c 0xff0000>{name}    {value}</c>");
 						//else Out($"<><c 0x8000>{name}    {value}</c>");
-						int v =(t == null) ? 2 : (t.isInterface ? 1 : 0);
+						int v = (t == null) ? 2 : (t.isInterface ? 1 : 0);
 						if(suffixLen == 2) v |= 0x10000;
 						_defineW[name] = v; //later will replace all STRUCTW to STRUCT in the final string of struct/func/delegate/interface
 						return true;
@@ -122,6 +125,39 @@ namespace SdkConverter
 			}
 
 			return false;
+		}
+
+		void _ConstantsFinally(StreamWriter writer)
+		{
+			foreach(var v in _defineConst) {
+				//if string constant name ends with "W", remove this if non-W version exists, and remove A version
+				string s = v.Value;
+				if(s.EndsWith_("\";") && v.Key.EndsWith_("W")) {
+					//Out($"{v.Key} = {s}");
+					string k = v.Key.Remove(v.Key.Length - 1); //name without "W"
+					//remove A version from _defineOther
+					if(_defineOther.Remove(k + "A")) {
+						//Out($"removed A version: {v.Key} = {s}");
+					}
+					//remove this W version if non-W version exists
+					string s2;
+					if(_defineConst.TryGetValue(k, out s2) && s2.Length == s.Length - 1) {
+						int i = s.IndexOf("W = ");
+						if(s2 == s.Remove(i, 1)) {
+							//Out($"removed W version because non-W exists: {v.Key} = {s}");
+							continue;
+						}
+					}
+				}
+				writer.WriteLine(s);
+			}
+			writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
+			foreach(var v in _defineOther) {
+				//if(v.Value.StartsWith_(" \"")) Out($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
+
+				writer.Write("public const string {0} = \"#define {0}{1}\";\r\n\r\n", v.Key, v.Value);
+			}
+
 		}
 	}
 }

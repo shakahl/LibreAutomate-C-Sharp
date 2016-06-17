@@ -20,6 +20,7 @@ namespace SdkConverter
 {
 	class Program
 	{
+		[STAThread]
 		static void Main(string[] args)
 		{
 			Output.Clear();
@@ -41,6 +42,8 @@ namespace SdkConverter
 
 	unsafe partial class Converter
 	{
+		string _cppFile;
+
 		char[] _src; //C/C++ source code
 		char* _s0; //_src start
 
@@ -74,12 +77,14 @@ namespace SdkConverter
 
 		//Regex _rxIndent = new Regex("(?m)^(?=.)", RegexOptions.CultureInvariant);
 
-		public void Convert(string hFile, string csFile)
+		public void Convert(string cppFile, string csFile)
 		{
+			_cppFile = cppFile;
+
 			try {
 				if(_src != null) throw new Exception("cannot call Convert multiple times. Create new Converter instance.");
 
-				using(var reader = new StreamReader(hFile)) {
+				using(var reader = new StreamReader(_cppFile)) {
 					long n = reader.BaseStream.Length + 4; if(n > int.MaxValue / 4) throw new Exception("file too big");
 					reader.Read(_src = new char[n], 0, (int)n);
 				}
@@ -87,6 +92,7 @@ namespace SdkConverter
 				_InitTables();
 				_InitSymbols();
 				_InitMaps();
+				_InitCsKeywords();
 
 				string stf = null;
 
@@ -94,6 +100,7 @@ namespace SdkConverter
 				{
 					_s0 = p;
 					_Tokenize(p);
+					_InitInterfaces();
 
 					//Test(); return;
 
@@ -125,6 +132,9 @@ using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+using Wnd = System.IntPtr;
+using LPARAM = System.IntPtr;
+
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -145,25 +155,18 @@ public static unsafe class API
 					writer.WriteLine("\r\n// GUID");
 					writer.Write(_sbGuid.ToString());
 					writer.WriteLine("\r\n// CONSTANT\r\n");
-					foreach(var v in _defineConst) {
-						writer.WriteLine(v.Value);
-						//TODO: add empty line if previous prefix is different
-					}
-					writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
-					foreach(var v in _defineOther) {
-						writer.Write("public const string {0} = \"#define {0}{1}\";\r\n\r\n", v.Key, v.Value);
-					}
+					_ConstantsFinally(writer);
 					writer.Write("\r\n}\r\n");
 				}
 			}
 			//#if !TEST_SMALL
 			catch(ConverterException e) {
 				Out(e);
-				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{hFile}||{e.Offset}");
+				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 			}
 			catch(Exception e) {
 				Out(e);
-				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{hFile}||{_Pos(_i)}");
+				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 			}
 			//#endif
 			finally {
@@ -266,7 +269,7 @@ public static unsafe class API
 			_AddKeyword("auto", new _CppType("var", 1, false)); //has two meanings depending on compiler options. The old auto is a local variable, and we will not encounter it because we skip function bodies. The new auto is like C# var; it can also be applied to global variables too, unlike in C#; we'll ignore all variable declarations.
 			_AddKeyword("IntPtr", new _CppType("IntPtr", 8, false));
 
-			_AddSymbol("IntLong", _sym_IntLong = new _Struct("IntLong", false), 0);
+			_AddSymbol("LPARAM", _sym_IntLong = new _Struct("LPARAM", false), 0);
 			_AddSymbol("HWND", _sym_Wnd = new _Struct("Wnd", false), 0);
 		}
 
@@ -308,6 +311,7 @@ public static unsafe class API
 
 		void _Statement()
 		{
+			//try {
 			g0:
 			_Symbol x = _FindSymbol(_i, true);
 			var k = x as _Keyword;
@@ -350,6 +354,13 @@ public static unsafe class API
 			} else { //a type
 				_DeclareFunction();
 			}
+			//}
+			//catch(ConverterException e) {
+			//	//Out(e);
+			//	Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+			//	if(Show.TaskDialog("Error. Skip statement and continue?", e.Message, "YN").ButtonName != "Yes") throw e as Exception;
+			//	_SkipStatement();
+			//         }
 		}
 
 		/// <summary>
@@ -480,6 +491,31 @@ public static unsafe class API
 			_enumValues.Add(_TokenFromString("true"), 1);
 			_enumValues.Add(_TokenFromString("nullptr"), 0);
 			_enumValues.Add(_TokenFromString("NULL"), 0); //clang ignores #define NULL
+		}
+
+		//used to recognize forward-declared interfaces
+		HashSet<string> _interfaces = new HashSet<string>();
+
+		void _InitInterfaces()
+		{
+			_interfaces.Add("IUnknown");
+			for(int i = 2; i < _nTokUntilDefUndef; i++) {
+				if(_TokIsChar(i, 'u') && _TokIs(i, "uuid")) {
+					if(!_TokIsChar(i + 5, ':')) continue; //class or IUnknown
+					if(!_TokIs(i - 1, "struct") && !_TokIs(i - 1, "__interface")) continue; //unexpected
+					i += 4;
+					//Out(_tok[i]);
+					_interfaces.Add(_TokToString(i));
+				}
+			}
+		}
+
+		HashSet<string> _csKeywords;
+
+		void _InitCsKeywords()
+		{
+			//we need only those that are not C/C++ keywords
+			_csKeywords = new HashSet<string>() { "abstract", "as", "base", "byte", "checked", "decimal", "delegate", "event", "explicit", "finally", "fixed", "foreach", "implicit", "in", "interface", "internal", "is", "lock", "null", "object", "out", "override", "params", "readonly", "ref", "sbyte", "sealed", "stackalloc", "string", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort" };
 		}
 	}
 }

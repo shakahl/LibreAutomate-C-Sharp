@@ -52,8 +52,8 @@ namespace SdkConverter
 				}
 			}
 
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst =100)]
-            public int[] b;
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 100)]
+			public int[] b;
 
 			public struct STRU
 			{
@@ -73,62 +73,190 @@ namespace SdkConverter
 				}
 			}
 
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst =4)]
-            public STRU[] d;
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+			public STRU[] d;
 		}
 
 		public static Guid IID_IPersist = new Guid("0000010c-0000-0000-C000-000000000046");
 
-		[DllImport("dddd")]
-		static extern void TestReadonlyRef([In] ref Guid g);
+
+		[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]
+		//public static extern string GetCommandLine(); //exception
+		//public static extern StringBuilder GetCommandLine(); //exception
+		//public static extern IntPtr GetCommandLine(); //OK
+		public static unsafe extern char* GetCommandLine(); //OK
+
+		[DllImport("user32.dll", EntryPoint = "CharUpperW", CharSet = CharSet.Unicode)]
+		public static extern IntPtr CharUpper([In] StringBuilder lpsz);
+
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestUnmanaged1(ref SRKH k, ref Guid g);
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestUnmanaged2([In] ref SRKH k, [In] ref Guid g);
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestUnmanaged3(out SRKH k, out Guid g);
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestUnmanaged4([In, Out] ref SRKH k, [In, Out] ref Guid g);
+
+		struct SRKH
+		{
+			long q, w, e, r, t, y, u, i, o, p, a, s, d, f, g, h, j, k;
+		}
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestStructBlit(ref POINT p);
+
+		struct STSTR
+		{
+			public int k;
+			public string s;
+		};
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestStructString(ref STSTR p); //if struct, default is [In,Out], even if has non-blittable members. Can apply [In] to prevent copying non-blittable types back.
+
+		[StructLayout(LayoutKind.Sequential)]
+		class STSTR2
+		{
+			public int k;
+			public string s;
+		};
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestStructString", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestStructString2(STSTR2 p); //if class, default is [In], except for StringBuilder
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestArray(int[] a);
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void TestArrayStr([In, Out]string[] a);
+
+		[ComImport, Guid("3AB5235E-2768-47A2-909A-B5852A9D1868"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		interface ITest
+		{
+			[PreserveSig]
+			int Test1(int i);
+			[PreserveSig]
+			//int Test2(int* p);
+			int Test2([MarshalAs(UnmanagedType.LPArray)] int[] p);
+		};
+
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ITest CreateTestInterface();
 
 		void Test()
 		{
+			var x = CreateTestInterface();
+			x.Test1(3);
+			int[] a = { 1, 2 };
+			//fixed(int* p = a)
+			//{
+			//	x.Test2(p);
+			//}
+			x.Test2(a);
+
+			//string[] a = { "one", "two" };
+			//TestArrayStr(a);
+			//Out(a[0]);
+			//int[] a = { 1, 2 };
+			//TestArray(a);
+			//Out(a[0]);
+
+			//string s = "instr";
+			//var p = new STSTR();
+			////var p = new STSTR2();
+			//p.k = 1;
+			//p.s = s;
+			//TestStructString(ref p);
+			////TestStructString2(p);
+			//Out("returned");
+			//OutList(p.k, p.s);
+			//Out(p.s == s);
+
+			//var p = new POINT();
+			//p.x = 2;
+			//TestStructBlit(ref p);
+			//Out(p.y);
+
+
+			//var v = new SRKH();
+			//var g = new Guid();
+
+			//var a1 = new Action(() => { TestUnmanaged1(ref v, ref g); });
+			//         var a2 = new Action(() => { TestUnmanaged2(ref v, ref g); });
+			//var a3 = new Action(() => { TestUnmanaged3(out v, out g); });
+			//var a4 = new Action(() => { TestUnmanaged4(ref v, ref g); });
+
+			//Perf.ExecuteMulti(5, 10000, a1, a2, a3, a4);
+
+			//var sb = new StringBuilder("test");
+			//CharUpper(sb);
+			//Out(sb);
+
+			//int k = 1;
+			//int R=TestUnmanaged(ref k);
+			//OutList(R, k);
+
+			//bool k = false;
+			//bool R=TestUnmanaged(ref k);
+			//OutList(R, k);
+
+
+			//Out(1);
+			//string s;
+			//s = new string(GetCommandLine());
+			//Out(s);
+			//s = new string(GetCommandLine());
+			//Out(s);
+			//s = new string(GetCommandLine());
+			//Out(s);
+			//Out(2);
+
+
 			//var v = new ARRHOLDER();
 			//v.c[0].i = 5;
 
-			TestReadonlyRef(ref IID_IPersist);
-
-			return;
+			//return;
 
 
-			//var x = new ARR();
-			//for(int i=0; i<4; i++) {
-			//	x[i] = i + 100;
-			//	Out(x[i]);
-			//}
+			////var x = new ARR();
+			////for(int i=0; i<4; i++) {
+			////	x[i] = i + 100;
+			////	Out(x[i]);
+			////}
 
-			int n1 = 0, n2 = 0;
+			//int n1 = 0, n2 = 0;
 
-			var x = new ARRHOLDER();
+			//var x = new ARRHOLDER();
 
+			////x.b = new int[100];
+			////for(int i = 0; i < 100; i++) {
+			////	x.a[i] = i + 100;
+			////	Out(x.a[i]);
+			////}
+			////Out("DONE");
+
+			//var a1 = new Action(() =>
+			//{
+			//	for(int i = 0; i < 100; i++) {
+			//		x.a[i] = i + 100;
+			//		n1 += x.a[i];
+			//	}
+			//});
+
+			//var a2 = new Action(() =>
+			//{
 			//x.b = new int[100];
-			//for(int i = 0; i < 100; i++) {
-			//	x.a[i] = i + 100;
-			//	Out(x.a[i]);
-			//}
-			//Out("DONE");
+			//	for(int i = 0; i < 100; i++) {
+			//		x.b[i] = i + 100;
+			//		n2 += x.b[i];
+			//	}
+			//});
 
-			var a1 = new Action(() =>
-			{
-				for(int i = 0; i < 100; i++) {
-					x.a[i] = i + 100;
-					n1 += x.a[i];
-				}
-			});
+			//Perf.ExecuteMulti(5, 50, a1, a2);
 
-			var a2 = new Action(() =>
-			{
-			x.b = new int[100];
-				for(int i = 0; i < 100; i++) {
-					x.b[i] = i + 100;
-					n2 += x.b[i];
-				}
-			});
-
-			Perf.ExecuteMulti(5, 50, a1, a2);
-
-			OutList(n1, n2);
+			//OutList(n1, n2);
 		}
 	}
 }

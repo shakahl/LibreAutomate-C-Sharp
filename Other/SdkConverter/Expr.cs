@@ -341,13 +341,11 @@ namespace SdkConverter
 			//if(++_debugNFailed > 10) _Err(iFrom, "debug");
 			return new _ExpressionResult(_TokToString(iFrom, iTo), null, true);
 
-			//TODO: need enum members
-
-			//TODO: need functions:
+			//never mind: need functions:
 			//LongToHandle
 			//HRESULT_FROM_WIN32
 
-			//TODO: sizeof pointers, IntPtr, IntLong and Wnd.
+			//never mind: sizeof pointers, IntPtr, LPARAM and Wnd.
 		}
 
 		void __ExprDebugOutValue(_EVAL v)
@@ -563,7 +561,7 @@ namespace SdkConverter
 			}
 			var ct = x as _CppType;
 			if(ct == null) {
-				//support IntLong, HWND
+				//support LPARAM, HWND
 				if(A.op > _OP.OperandUint) return false; //0 in SDK
 				if(x == _sym_IntLong || x == _sym_Wnd) return true;
 				//support enum, callback
@@ -801,7 +799,7 @@ namespace SdkConverter
 		//				s = "IntPtr.Size";
 		//			} else {
 		//				switch(s) {
-		//				case "IntLong":
+		//				case "LPARAM":
 		//					s = "IntPtr.Size";
 		//					break;
 		//				case "SID":

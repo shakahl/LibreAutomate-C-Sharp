@@ -81,7 +81,7 @@ namespace SdkConverter
 						bool defined = false;
 						if(aliasOf is _CppType) {
 
-							//convert LONG_PTR etc to IntLong, not to long/ulong
+							//convert LONG_PTR etc to LPARAM, not to long/ulong
 							if(aliasOf.csTypename == "long" || aliasOf.csTypename == "ulong") {
 								string name = _TokToString(_i);
 								if(name.EndsWith_("_PTR") || name == "POINTER_64_INT") {
@@ -128,22 +128,13 @@ namespace SdkConverter
 		void __DeclareTypedef_Array(string type)
 		{
 			int iName = _i++;
-			string name = _TokToString(iName);
-			string attr = _CArrayToMarshalAsAttribute(); _i--;
-			string indexer = "public int this[int i] { get { return a[i]; } set { _Init(); a[i] = value; } }";
-			int j = attr.IndexOf('=') + 2; string nElem = attr.Substring(j, attr.Length - j - 2);
-			_sbType.AppendFormat("\r\npublic struct {0} {{\r\n"
-				+ "\t{1} public {2}[] a;"
-				+ " {3}"
-				+ " void _Init() {{ if(a == null) a = new {2}[{4}]; }}"
-				+ "\r\n}}\r\n",
-				name, attr, type, indexer, nElem);
+			string name = _TokToString(iName), memberName="a";
+			string attr = _ConvertCArray(ref type, ref memberName); _i--;
+			_sbType.AppendFormat("\r\npublic struct {0} {{\r\n\t{1} public {2} {3};\r\n}}\r\n", name, attr, type, memberName);
 			_AddSymbol(iName, new _Struct(name, false));
 			//info:
 			//SDK has 6 such typedefs, 2 of them are [1] ie used as variable-length array.
 			//We convert to struct, because would be difficult to have this as typedef.
-			//info:
-			//Here we don't replace char[] to string because SDK has just 1 such typedef and it is used for a parameter of type TYPEDEF* (array).
 		}
 
 		_Symbol _CopyStruct(_Symbol xFrom, string name)
@@ -214,7 +205,7 @@ namespace SdkConverter
 			sb.AppendFormat("public delegate {0} {1}", returnType, name);
 
 			//parameters
-			_ConvertParameters(sb, name, true);
+			_ConvertParameters(sb, name, _TypeContext.DelegateParameter);
 
 			var x = new _Callback(name);
 			if(inl == null) _AddSymbol(iName, x);
@@ -459,7 +450,7 @@ namespace SdkConverter
 								"\r\n[ComImport, Guid({0}), ClassInterface(ClassInterfaceType.None)]"
 								+ "\r\npublic class {1} {{}}\r\n"
 								, uuid, name);
-						}
+						} else if(!isInterface && _interfaces.Contains(name)) x.isInterface = true;
 						return;
 					}
 				}
@@ -473,6 +464,7 @@ namespace SdkConverter
 				__haveIUnknown = true;
 				_SkipStatement();
 				x.forwardDecl = false;
+				x.isInterface = true;
 				_DeclareGuid("IID_", name, uuid);
 				return;
 			}
@@ -480,6 +472,7 @@ namespace SdkConverter
 			//is interface?
 			if(__haveIUnknown && (isInterface || uuid != null) && _TokIsChar(_i, ':')) {
 				//info: SDK has only few non-interface struct that have a base, and they don't have uuid.
+				Debug.Assert(_interfaces.Contains(name));
 				isInterface = true;
 				_DeclareGuid("IID_", name, uuid);
 			}
@@ -569,15 +562,10 @@ namespace SdkConverter
 					default: _Err(_i, "unexpected"); break;
 					}
 
-					string typeName = t.typeName;
 					if(t.attributes != null) {
-						if(t.typeName == "char[]") {
-							typeName = "string";
-							t.attributes = t.attributes.Replace(".ByValArray,", ".ByValTStr,");
-						}
 						sb.Append(t.attributes); sb.Append(' ');
 					}
-					sb.AppendFormat("{3}{2} {0} {1};\r\n", typeName, t.name, access, memberAttr);
+					sb.AppendFormat("{3}{2} {0} {1};\r\n", t.typeName, t.name, access, memberAttr);
 					if(!_TokIsChar(_i, ',')) break;
 					_i++;
 
@@ -591,11 +579,10 @@ namespace SdkConverter
 					t.name = _TokToString(_i++);
 
 					if(_TokIsChar(_i, '[')) {
-						t.attributes = _CArrayToMarshalAsAttribute();
-						if(!t.typeName.EndsWith_("[]")) t.typeName += "[]";
+						//if(t.attributes != null) _Err(_i, "example"); //0 in SDK
+						t.attributes = _ConvertCArray(ref t.typeName, ref t.name);
 					} else if(t.attributes != null) {
-						t.attributes = null;
-						if(t.typeName.EndsWith_("[]")) t.typeName = t.typeName.Remove(t.typeName.Length - 2);
+						_Err(_i, "unexpected"); //assume never will be 'TYPE a[n], b'
 					}
 				}
 			}
@@ -775,7 +762,7 @@ namespace SdkConverter
 				} else if(t == _sym_IntLong) {
 					csTypename = "long";
 					return 64;
-					//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using IntLong is difficult because of its variable size.
+					//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using LPARAM is difficult because of its variable size.
 				}
 			}
 			_Err(_i, "unexpected");
@@ -823,7 +810,7 @@ namespace SdkConverter
 				_SkipEnclosed();
 				_i++;
 			} else {
-				string returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.Return);
+				string returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.ComReturn);
 
 				//correct preprocessor-replaced method names that matched #define Func FuncW. Also there are several such struct members, never mind.
 				if(name.EndsWith_("W") && name.Length > 2 && char.IsLower(name[name.Length - 2])) {
@@ -836,7 +823,7 @@ namespace SdkConverter
 				sb.Append(returnType); sb.Append(' '); sb.Append(name);
 
 				//parameters
-				_ConvertParameters(sb, name, false);
+				_ConvertParameters(sb, name, _TypeContext.ComParameter);
 			}
 
 			//skip '= 0'
@@ -856,7 +843,13 @@ namespace SdkConverter
 				if(en) { if(x is _Enum) return x; } else if(x is _Struct) return x;
 			}
 			string name = _TokToString(_i);
-			if(en) x = new _Enum(name, true); else x = new _Struct(name, true);
+            if(en) {
+				x = new _Enum(name, true);
+			} else {
+				_Struct ts = new _Struct(name, true);
+				x = ts;
+				if(_interfaces.Contains(name)) ts.isInterface = true;
+			}
 			_AddSymbol(_i, x, true);
 			return x;
 		}
@@ -927,11 +920,11 @@ namespace SdkConverter
 			//Perf.NextWrite();
 
 			//remove W from struct/interface/delegate names
-			Perf.First();
+			//Perf.First();
 			foreach(var v in _defineW) {
 				__RemoveAW(ref R, v.Key, v.Value);
 			}
-			Perf.Next();
+			//Perf.Next();
 			foreach(var v in _ns[0].sym) { //some A/W are not #define but typedef, eg 'typedef MIXERCAPSW MIXERCAPS;'
 				var td = v.Value as _Typedef; if(td == null) continue;
 				if(td.forwardDecl || td.ptr != 0) continue;
@@ -947,7 +940,7 @@ namespace SdkConverter
 				if(suffixLen == 2) what |= 0x10000;
 				__RemoveAW(ref R, name, what);
 			}
-			Perf.NextWrite(); //800 1000 ms
+			//Perf.NextWrite(); //800 1000 ms
 
 			return R;
 		}

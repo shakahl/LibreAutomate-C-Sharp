@@ -1,4 +1,4 @@
-﻿//#define USETESTAPI
+﻿#define USETESTAPI
 
 // Windows API for C#.
 // Converted commonly used Windows 10 SDK header files.
@@ -8,16 +8,18 @@ using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-//using _EXCEPTION_RECORD = EXCEPTION_RECORD;
+using LPARAM = System.IntPtr;
+using Wnd = System.IntPtr;
 
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
 
 #if USETESTAPI
 
-class TestExpr
+class Api2
 {
-	public const int MAXUHALF_PTR = ((uint)~0);
+	[DllImport("user32.dll", EntryPoint = "SendMessageW")]
+	public static extern LPARAM SendMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
 
 }
 #endif

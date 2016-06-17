@@ -127,14 +127,13 @@ namespace SdkConverter
 			sb.Append('\"');
 			if(nameInDll != null) sb.AppendFormat(", EntryPoint=\"{0}\"", nameInDll);
 			if(callConv != null) sb.AppendFormat(", CallingConvention=CallingConvention.{0}", callConv);
+			if(isHRESULT) sb.Append(", PreserveSig=true"); //default, but makes clear that it returns HRESULT and easier to change to 'false'
 			sb.Append(")]\r\npublic static extern ");
 			sb.Append(returnType);
 			sb.Append(' ');
 			sb.Append(name);
 
-			_ConvertParameters(sb, name, false);
-
-			if(isHRESULT) sb.AppendLine("//                   HRESULT");
+			_ConvertParameters(sb, name, _TypeContext.Parameter);
 
 			string decl = sb.ToString();
 			_func[name] = decl;

@@ -633,4 +633,20 @@ namespace SdkConverter
 	}
 
 	#endregion
+
+	#region debug
+
+	unsafe partial class Converter
+	{
+		string DebugGetLine(int iTok)
+		{
+			if(iTok == 0) return null;
+			char* s = T(iTok), se=s;
+			while(s[-1] != '\n') s--;
+			while(*se != '\r' && *se != '\n') se++;
+			return new string(s, 0, (int)(se - s));
+		}
+	}
+
+	#endregion
 }

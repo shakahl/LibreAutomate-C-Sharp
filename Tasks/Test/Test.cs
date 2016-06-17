@@ -2120,31 +2120,9 @@ bbb"", b3
 	}
 
 
-	[DllImport("kernel32.dll", EntryPoint = "GetCommandLineW")]
-	//public static extern string GetCommandLine(); //exception
-	//public static extern StringBuilder GetCommandLine(); //exception
-	//public static extern IntPtr GetCommandLine(); //OK
-	public static unsafe extern char* GetCommandLine(); //OK
-
-	[DllImport("user32.dll", EntryPoint = "CharUpperW")]
-	public static extern IntPtr CharUpper(StringBuilder lpsz);
-
 	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 	static unsafe void TestX()
 	{
-
-
-		//Out(1);
-		//string s;
-		//s = new string(GetCommandLine());
-		//Out(s);
-		//s = new string(GetCommandLine());
-		//Out(s);
-		//s = new string(GetCommandLine());
-		//Out(s);
-		//Out(2);
-
-
 
 		//string p = @"(\d)\d+", r = "$1R";
 		//string s = "aaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mm";
@@ -2563,9 +2541,6 @@ bbb"", b3
 	//}
 	//}
 	delegate void Dee(object x);
-
-	[DllImport("UnmanagedDll", CallingConvention = CallingConvention.Cdecl)]
-	static extern void TestUnmanaged();
 
 
 	delegate void Del(int t);

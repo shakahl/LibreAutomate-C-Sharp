@@ -108,7 +108,8 @@ namespace SdkConverter
 
 			//is prefix?
 			bool isPrefix = false;
-			_Token pt = _tok[_tok.Count - 1];
+			int iPrevTok = _tok.Count - 1;
+			_Token pt = _tok[iPrevTok];
 			char c = *pt.s;
 			if(_IsCharIdentStart(c) && pt.len == (int)(s - pt.s)) {
 				if(pt.len == 1) {
@@ -147,6 +148,13 @@ namespace SdkConverter
 			}
 
 			for(f = d; f < s; f++) *f = ' '; //erase what is moved to the left
+
+			//ANSI string constant?
+			if(!isPrefix && _nTokUntilDefUndef != 0 && _TokIsChar(iPrevTok - 1, '`')) {
+				//Out(new string(s0, 0, (int)(d - s0)));
+				//_Err(iPrevTok, "ANSI string");
+				*s0 = '\x2'; //later will restore '\"' and add to "FAILED TO CONVERT"
+			}
 
 			return (int)(d - s0);
 

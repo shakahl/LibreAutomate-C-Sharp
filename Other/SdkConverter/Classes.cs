@@ -153,7 +153,7 @@ namespace SdkConverter
 			/// </summary>
 			public byte ptr;
 			/// <summary>
-			/// TODO
+			/// Is const.
 			/// </summary>
 			public bool isConst;
 			/// <summary>
