@@ -1,4 +1,5 @@
-﻿#define TEST_CONST
+﻿//#define TEST_TYPEFUNC
+#define TEST_CONST
 
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,8 @@ namespace SdkConverter
 {
 	unsafe partial class Converter
 	{
+#if TEST_TYPEFUNC
+
 		struct ARR
 		{
 			int a0, a1, a2, a3;
@@ -145,16 +148,23 @@ namespace SdkConverter
 		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ITest CreateTestInterface();
 
+		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ITest TestSimple();
+
+#endif
+
 		void Test()
 		{
-			var x = CreateTestInterface();
-			x.Test1(3);
-			int[] a = { 1, 2 };
-			//fixed(int* p = a)
-			//{
-			//	x.Test2(p);
-			//}
-			x.Test2(a);
+			//TestSimple();
+
+			//var x = CreateTestInterface();
+			//x.Test1(3);
+			//int[] a = { 1, 2 };
+			////fixed(int* p = a)
+			////{
+			////	x.Test2(p);
+			////}
+			//x.Test2(a);
 
 			//string[] a = { "one", "two" };
 			//TestArrayStr(a);

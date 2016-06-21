@@ -76,17 +76,19 @@ namespace SdkConverter
 				if(_TokIsIdent(_i)) {
 					if(ptr < 0) goto ge;
 					if(_TokIsChar(_i + 1, '[')) { //typedef X Y[n];
-						__DeclareTypedef_Array(_ConvertTypeName(aliasOf, ref ptr, false, 0, _TypeContext.Member));
+						string attr, typ = _ConvertTypeName(aliasOf, ref ptr, false, 0, _TypeContext.Member, out attr);
+						Debug.Assert(attr == null); //never mind, 0 in SDK
+						__DeclareTypedef_Array(typ);
 					} else {
 						bool defined = false;
 						if(aliasOf is _CppType) {
 
 							//convert LONG_PTR etc to LPARAM, not to long/ulong
-							if(aliasOf.csTypename == "long" || aliasOf.csTypename == "ulong") {
+							if(_is32bit ? (aliasOf.csTypename == "int" || aliasOf.csTypename == "uint") : (aliasOf.csTypename == "long" || aliasOf.csTypename == "ulong")) {
 								string name = _TokToString(_i);
 								if(name.EndsWith_("_PTR") || name == "POINTER_64_INT") {
 									//OutList(_tok[_i], aliasOf.csTypename, ptr);
-									aliasOf = _sym_IntLong;
+									aliasOf = _sym_LPARAM;
 								} //else OutList(_tok[_i], aliasOf.csTypename, ptr);
 
 							}
@@ -128,8 +130,8 @@ namespace SdkConverter
 		void __DeclareTypedef_Array(string type)
 		{
 			int iName = _i++;
-			string name = _TokToString(iName), memberName="a";
-			string attr = _ConvertCArray(ref type, ref memberName); _i--;
+			string name = _TokToString(iName), memberName = "a", attr = null;
+			_ConvertCArray(ref type, ref memberName, ref attr); _i--;
 			_sbType.AppendFormat("\r\npublic struct {0} {{\r\n\t{1} public {2} {3};\r\n}}\r\n", name, attr, type, memberName);
 			_AddSymbol(iName, new _Struct(name, false));
 			//info:
@@ -171,7 +173,7 @@ namespace SdkConverter
 		void _DeclareTypedefFunc(_Symbol t, int ptr, bool isConst, int iTokTypename, _INLINEFUNCTYPEDATA inl = null)
 		{
 			//return type
-			string returnType = _ConvertTypeName(t, ref ptr, isConst, iTokTypename, _TypeContext.Return);
+			string returnAttr, returnType = _ConvertTypeName(t, ref ptr, isConst, iTokTypename, _TypeContext.Return, out returnAttr);
 
 			Debug.Assert(_TokIsChar(_i, '('));
 			_i++;
@@ -202,6 +204,7 @@ namespace SdkConverter
 			StringBuilder sb = inl != null ? _sbInlineDelegate : _sbType;
 			sb.AppendLine();
 			if(callConv != null) sb.AppendFormat("[UnmanagedFunctionPointer(CallingConvention.{0})]\r\n", callConv);
+			if(returnAttr != null) sb.AppendLine(returnAttr);
 			sb.AppendFormat("public delegate {0} {1}", returnType, name);
 
 			//parameters
@@ -279,8 +282,7 @@ namespace SdkConverter
 			}
 
 			if(!_TokIsChar(_i, '{')) _Err(_i, "unexpected");
-			int iBodyStart = _i++;
-			bool isFlags = false;
+			_i++;
 
 			if(iName == 0) {
 				iName = d.inTypedefNameToken;
@@ -295,8 +297,9 @@ namespace SdkConverter
 
 			//body
 			sb.AppendLine(" {");
+			bool isFlags = false;
 			uint value = 0, nextValue = 0;
-			for(; !_TokIsChar(_i, '}'); _i++, nextValue++) {
+			for(; ; nextValue++) {
 				if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
 				int iMember = _i++;
 				string memberName = _TokToString(iMember);
@@ -338,11 +341,12 @@ namespace SdkConverter
 					_enumValues[_tok[iMember]] = v;
 				}
 
+				if(_TokIsChar(_i, ',')) _i++;
 				if(_TokIsChar(_i, '}')) break;
 				sb.AppendLine(",");
 			}
 			sb.AppendLine("\r\n}");
-			int iBodyEnd = ++_i;
+			_i++;
 
 			if(sBaseType != null) sb.Insert(0, " :" + sBaseType);
 
@@ -544,7 +548,7 @@ namespace SdkConverter
 
 				//type
 				_PARAMDATA t;
-				_ParseParamOrMember(_TypeContext.Member, out t, "TYPEOF", iMember);
+				_ParseParamOrMember(_TypeContext.Member, out t, name != null ? name : "TYPEOF", iMember);
 
 				if(t.isNestedTypeDefinitionWithoutVariables) {
 					//if anonymous type definition without a variable, its members are part of parent in C++, therefore in C# need to add a variable of that type
@@ -562,10 +566,12 @@ namespace SdkConverter
 					default: _Err(_i, "unexpected"); break;
 					}
 
-					if(t.attributes != null) {
-						sb.Append(t.attributes); sb.Append(' ');
+					if(memberAttr != null) {
+						if(t.attributes != null && t.attributes.StartsWith_("//")) sb.Append("//"); //could instead place memberAttr after attributes, but then looks not good visually
+						sb.Append(memberAttr);
 					}
-					sb.AppendFormat("{3}{2} {0} {1};\r\n", t.typeName, t.name, access, memberAttr);
+					if(t.attributes != null) { sb.Append(t.attributes); sb.Append(' '); }
+					sb.AppendFormat("{2} {0} {1};\r\n", t.typeName, t.name, access);
 					if(!_TokIsChar(_i, ',')) break;
 					_i++;
 
@@ -579,8 +585,9 @@ namespace SdkConverter
 					t.name = _TokToString(_i++);
 
 					if(_TokIsChar(_i, '[')) {
-						//if(t.attributes != null) _Err(_i, "example"); //0 in SDK
-						t.attributes = _ConvertCArray(ref t.typeName, ref t.name);
+						//_Err(_i, "example"); //0 in SDK
+						t.attributes = null;
+						_ConvertCArray(ref t.typeName, ref t.name, ref t.attributes);
 					} else if(t.attributes != null) {
 						_Err(_i, "unexpected"); //assume never will be 'TYPE a[n], b'
 					}
@@ -759,9 +766,9 @@ namespace SdkConverter
 					csTypename = ct.csTypename;
 					isUnsigned = ct.isUnsigned;
 					return ct.sizeBytesCpp * 8;
-				} else if(t == _sym_IntLong) {
-					csTypename = "long";
-					return 64;
+				} else if(t == _sym_LPARAM) {
+					csTypename = _is32bit ? "int" : "long";
+					return _is32bit ? 32 : 64;
 					//SDK has 1 such struct (union PSAPI_WORKING_SET_BLOCK), and there the bitfield is at the end, so in most cases it is safe to use C# long instead. Using LPARAM is difficult because of its variable size.
 				}
 			}
@@ -776,10 +783,11 @@ namespace SdkConverter
 		void _DeclareGuid(string prefix, string name, string uuid)
 		{
 			if(uuid == null) return;
-			name = prefix + name;
-			if(_guids.ContainsKey(name)) return;
-			//Out(name); //about 10 in SDK
-			_sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", prefix, name, uuid);
+			string fullName = prefix + name;
+			if(_guids.ContainsKey(fullName)) return;
+			if(prefix == "IID_" && _guids.ContainsKey("DIID_" + name)) return;
+			//Out(fullName);
+			_sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", fullName, uuid);
 			//note: not 'readonly' because then could not be passed as ref.
 		}
 
@@ -810,7 +818,7 @@ namespace SdkConverter
 				_SkipEnclosed();
 				_i++;
 			} else {
-				string returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.ComReturn);
+				string returnAttr, returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.ComReturn, out returnAttr);
 
 				//correct preprocessor-replaced method names that matched #define Func FuncW. Also there are several such struct members, never mind.
 				if(name.EndsWith_("W") && name.Length > 2 && char.IsLower(name[name.Length - 2])) {
@@ -820,6 +828,7 @@ namespace SdkConverter
 
 				//start formatting
 				sb.Append("[PreserveSig] ");
+				if(returnAttr != null) { sb.Append(returnAttr); sb.Append(' '); }
 				sb.Append(returnType); sb.Append(' '); sb.Append(name);
 
 				//parameters
@@ -843,7 +852,7 @@ namespace SdkConverter
 				if(en) { if(x is _Enum) return x; } else if(x is _Struct) return x;
 			}
 			string name = _TokToString(_i);
-            if(en) {
+			if(en) {
 				x = new _Enum(name, true);
 			} else {
 				_Struct ts = new _Struct(name, true);
@@ -942,6 +951,13 @@ namespace SdkConverter
 			}
 			//Perf.NextWrite(); //800 1000 ms
 
+			//remove other known A and old versions
+			R.RegexReplace_(out R, @"(?ms)^public struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "");
+			R.RegexReplace_(out R, @"(?ms)^public struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "");
+			R.RegexReplace_(out R, @"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE");
+			R.RegexReplace_(out R, @"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER");
+			R.RegexReplace_(out R, @"(?ms)^public struct OPENFILENAME_NT4\b.+?^\}\r\n", "", 1);
+
 			return R;
 		}
 
@@ -957,6 +973,7 @@ namespace SdkConverter
 
 				//remove STRUCTA
 
+				g1:
 				string rx = null;
 				switch(what) {
 				case 0: rx = $@"(?ms)^public struct {name}{sA} .+?^\}}\r\n\r\n"; break;
@@ -975,6 +992,12 @@ namespace SdkConverter
 
 					R = R.Remove(i, m.Index - i + m.Length);
 					//OutList(what, name, R.RegexIs_($"\b{name}\b")); //all False
+				} else { //2 in SDK have TYPE/TYPEW instead of TYPEA/TYPEW
+						 //OutList(what, name);
+					if(sA != null) {
+						sA = null;
+						goto g1;
+					}
 				}
 			} else {
 				//Out($"<><c 0xff>{name}</c>"); //0

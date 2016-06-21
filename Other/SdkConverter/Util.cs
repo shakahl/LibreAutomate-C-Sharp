@@ -638,7 +638,7 @@ namespace SdkConverter
 
 	unsafe partial class Converter
 	{
-		string DebugGetLine(int iTok)
+		string _DebugGetLine(int iTok)
 		{
 			if(iTok == 0) return null;
 			char* s = T(iTok), se=s;

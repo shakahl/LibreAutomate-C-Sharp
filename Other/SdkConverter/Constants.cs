@@ -29,7 +29,8 @@ namespace SdkConverter
 			char* s = T(++_i);
 			char c = *s; //was like `d$$$_REALNAME, now s is without `
 			s += 5; int lenName = _tok[_i].len - 5; //skip prefix 'd$$$_' that was added to avoid unexpanding names
-													//_tok[_i] = new _Token(s, lenName);
+			_tok[_i] = new _Token(s, lenName);
+			int iName = _i;
 
 			//is function-style?
 			char* s2 = T(++_i);
@@ -52,15 +53,23 @@ namespace SdkConverter
 				//Out($"#undef {name}");
 			} else if(iValue < iNext) { //preprocessor removes some #define values, it's ok
 				if(isFunc) { //info: for func-style get parameters as part of value
-					_defineOther[name] = _TokToString(iParamOrValue, iNext);
+					__DefineAddToOther(iName, name, _TokToString(iParamOrValue, iNext));
 				} else if(*s2 == '\x2') { //ANSI string constant, when tokenizing replaced the first '\"' to '\x2'
 					*s2 = '\"';
-					_defineOther[name] = " " + _TokToString(iParamOrValue, iNext) + " //ANSI string";
+					__DefineAddToOther(iName, name, " " + _TokToString(iParamOrValue, iNext) + " //ANSI string");
 				} else {
 					_ExpressionResult r = _Expression(iParamOrValue, iNext, name);
 					if(r.typeS == null) {
 						bool isFuncWA = (iNext - iValue == 1) && __DefineWA(name, r.valueS);
-						if(!isFuncWA) _defineOther[name] = " " + r.valueS;
+						if(!isFuncWA) {
+							//don't add '#define NAME1 NAME2'
+							if(iNext - iValue == 1 && _TokIsIdent(iValue)) {
+								//OutList(name, r.valueS);
+							} else {
+								//OutList(name, iNext-iValue);
+								__DefineAddToOther(iName, name, " " + r.valueS);
+							}
+						}
 					} else {
 						__sbDef.Clear();
 						__sbDef.AppendFormat("public {2} {3} {0} = {1};", name, r.valueS, r.notConst ? "readonly" : "const", r.typeS);
@@ -70,6 +79,17 @@ namespace SdkConverter
 			}
 
 			_i = iNext - 1;
+		}
+
+		void __DefineAddToOther(int iName, string name, string value)
+		{
+			//remove those that match other identifiers
+			if(_SymbolExists(iName, false) || _func.ContainsKey(name)) {
+				//Out(name);
+				return;
+			}
+
+			_defineOther[name] = value;
 		}
 
 		StringBuilder __sbDef = new StringBuilder();
@@ -86,8 +106,11 @@ namespace SdkConverter
 
 			string def;
 			if(suffixLen == 1 && _func.TryGetValue(value, out def)) {
-				//if(!_func.Remove(name + "A")) Out($"<><c 0xff>{name}    {value}</c>"); //about 20 in SDK don't not have A versions
 				_func.Remove(name + "A");
+				//most are FuncA+FuncW, but some Func/FuncW and even Func/FuncA/FuncW. Some just FuncW.
+				if(_func.Remove(name)) {
+					//OutList(1, def); //6 in SDK
+				}
 
 				def = def.Replace("W(", "(");
 
@@ -129,12 +152,14 @@ namespace SdkConverter
 
 		void _ConstantsFinally(StreamWriter writer)
 		{
+			//'#define' constants
 			foreach(var v in _defineConst) {
 				//if string constant name ends with "W", remove this if non-W version exists, and remove A version
 				string s = v.Value;
 				if(s.EndsWith_("\";") && v.Key.EndsWith_("W")) {
 					//Out($"{v.Key} = {s}");
 					string k = v.Key.Remove(v.Key.Length - 1); //name without "W"
+					
 					//remove A version from _defineOther
 					if(_defineOther.Remove(k + "A")) {
 						//Out($"removed A version: {v.Key} = {s}");
@@ -151,13 +176,17 @@ namespace SdkConverter
 				}
 				writer.WriteLine(s);
 			}
+
+			//'const' constants
+			foreach(var con in _cppConst) { writer.WriteLine(con); }
+
+			//'#define' function-style macros and other macros that cannot convert to C#
 			writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
 			foreach(var v in _defineOther) {
 				//if(v.Value.StartsWith_(" \"")) Out($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
 
-				writer.Write("public const string {0} = \"#define {0}{1}\";\r\n\r\n", v.Key, v.Value);
+				writer.Write("public const string {0} = null; //#define {0}{1};\r\n\r\n", v.Key, v.Value);
 			}
-
 		}
 	}
 }

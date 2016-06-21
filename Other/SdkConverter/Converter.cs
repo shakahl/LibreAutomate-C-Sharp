@@ -24,25 +24,27 @@ namespace SdkConverter
 		static void Main(string[] args)
 		{
 			Output.Clear();
-			var x = new Converter();
-			x.Convert(
+			Converter x;
+
 #if TEST_SMALL
+			x = new Converter();
+			x.Convert(
 				//@"Q:\app\Catkeys\Other\SdkConverter\Data\Header.h",
 				@"Q:\app\Catkeys\Other\SdkPreprocess\Cpp.cpp",
+				@"Q:\app\Catkeys\Api\Api.cs", false);
 #else
-				@"Q:\app\Catkeys\Api\Api-preprocessed.cpp",
+			x = new Converter();
+			x.Convert(@"Q:\app\Catkeys\Api\Api-preprocessed-64.cpp", @"Q:\app\Catkeys\Api\Api-64.cs", false);
+			x = new Converter();
+			x.Convert(@"Q:\app\Catkeys\Api\Api-preprocessed-32.cpp", @"Q:\app\Catkeys\Api\Api-32.cs", true);
 #endif
-				@"Q:\app\Catkeys\Api\Api.cs"
-);
-
-
-			//ConsoleDriver.Run(new SdkLibrary());
 		}
 	}
 
 	unsafe partial class Converter
 	{
 		string _cppFile;
+		bool _is32bit;
 
 		char[] _src; //C/C++ source code
 		char* _s0; //_src start
@@ -65,7 +67,7 @@ namespace SdkConverter
 		Dictionary<string, string> _func = new Dictionary<string, string>(); //function declaration
 		StringBuilder _sbFuncTemp = new StringBuilder(); //used to format _func values
 
-		//List<string> _cppConst = new List<string>(); //const CONSTANT
+		List<string> _cppConst = new List<string>(); //const CONSTANT
 
 		Dictionary<string, string> _defineConst = new Dictionary<string, string>(); //#define CONSTANT
 		Dictionary<string, int> _defineW = new Dictionary<string, int>(); //#define STRUCT STRUCTW
@@ -75,11 +77,14 @@ namespace SdkConverter
 
 		int _anonymousStructSuffixCounter; //used to create unique name for anonymous struct
 
-		//Regex _rxIndent = new Regex("(?m)^(?=.)", RegexOptions.CultureInvariant);
-
-		public void Convert(string cppFile, string csFile)
+		/// <summary>
+		/// Converts C++ header-list file cppFile to C# declarations and saves in file csFile.
+		/// </summary>
+		/// <param name="is32bit">Prefer 32-bit. Although the converter tries to create declarations that don't depend on 32/64 bit, in some places it will create different declaration if this is true, for example IntPtr size will be 4 bytes.</param>
+		public void Convert(string cppFile, string csFile, bool is32bit)
 		{
 			_cppFile = cppFile;
+			_is32bit = is32bit;
 
 			try {
 				if(_src != null) throw new Exception("cannot call Convert multiple times. Create new Converter instance.");
@@ -124,16 +129,26 @@ namespace SdkConverter
 					//Out(stf);
 				}
 
-				string sh = @"// Windows API for C#.
-// Converted commonly used Windows 10 SDK header files.
+				string sh = @"// Windows API declarations for C#.
+// Download and more info: http://www.quickmacros.com/download.html
+// Don't add this file to your project. Copy-paste only declarations that you need.
+// Not all declarations can be compiled without editing.
+//    For example, cannot declare some struct pointer (use IntPtr instead, or in struct replace non-blittable types with IntPtr etc), cannot use undefined struct pointer/ref/out (use IntPtr instead).
+// Not all declarations are correct, usually because declarations in Windows SDK files from which they have been automatically converted lack some info.
+//    For example, some function parameters that should be 'out' or '[Out]' or '[In]' or array now are just 'ref', because SDK declarations didn't have proper in/out annotations. Also for this reason some parameters that should be 'string' now are 'StringBuilder'.
+//    You may want to create overloads where parameters can be of more than one type.
+//    You may want to add 'SetLastError=true' to DllImport attribute parameters.
+// Some declarations contain pointers and therefore can be used only in 'unsafe' context, in some cases with 'fixed'. Or you can replace pointers to IntPtr.
+// These declarations are for Windows 10. Some Windows API are different or missing on other Windows versions.
+// In some cases need to use different declarations in 32-bit and 64-bit process. This file contains everything that is not different, + 64-bit versions, + 32-bit versions with name suffix ""__32"".
 
 using System;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-using Wnd = System.IntPtr;
-using LPARAM = System.IntPtr;
+using Wnd = System.IntPtr; //HWND (window handle)
+using LPARAM = System.IntPtr; //LPARAM, WPARAM, LRESULT, X_PTR, SIZE_T, ... (non-pointer types that have different size in 64-bit and 32-bit process)
 
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
@@ -173,7 +188,7 @@ public static unsafe class API
 				Marshal.FreeHGlobal((IntPtr)_keywordMemory);
 			}
 
-			Out("DONE");
+			Out($"DONE {(is32bit ? 32 : 64)}-bit");
 		}
 
 		char* _keywordMemory;
@@ -267,13 +282,13 @@ public static unsafe class API
 			//_AddKeywords(new _Keyword(), "__m128", "__m128d", "__m128i"); //our script defined these as struct, because C# does not have a matching type
 			//_AddKeywords(new _Keyword(), "__m64"); //not used in SDK
 			_AddKeyword("auto", new _CppType("var", 1, false)); //has two meanings depending on compiler options. The old auto is a local variable, and we will not encounter it because we skip function bodies. The new auto is like C# var; it can also be applied to global variables too, unlike in C#; we'll ignore all variable declarations.
-			_AddKeyword("IntPtr", new _CppType("IntPtr", 8, false));
+			_AddKeyword("IntPtr", new _CppType("IntPtr", _is32bit ? 4 : 8, false));
 
-			_AddSymbol("LPARAM", _sym_IntLong = new _Struct("LPARAM", false), 0);
+			_AddSymbol("LPARAM", _sym_LPARAM = new _Struct("LPARAM", false), 0);
 			_AddSymbol("HWND", _sym_Wnd = new _Struct("Wnd", false), 0);
 		}
 
-		_Struct _sym_IntLong, _sym_Wnd;
+		_Struct _sym_LPARAM, _sym_Wnd;
 
 		void _ConvertAll(int nestLevel)
 		{
@@ -336,16 +351,15 @@ public static unsafe class API
 						if(_TokIsChar(_i + 1, '{')) _i++;
 						return;
 					} else { //extern T X
-						if(_TokIs(_i + 1, "const")) _i++;
+						if(_TokIs(++_i, "const")) _i++;
 						if(!_ExternConst()) _SkipStatement();
 					}
 				} else if(_TokIs(_i, "const")) {
-					if(!_ExternConst()) _SkipStatement();
+					_i++;
+					if(!_ExternConst(true)) _SkipStatement();
 				} else {
 					//can be:
 					//namespace
-
-
 
 					_Err(_i, "unexpected"); //TODO
 				}
@@ -426,39 +440,70 @@ public static unsafe class API
 			//Out($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
 		}
 
-		bool _ExternConst()
+		bool _ExternConst(bool isJustConst = false)
 		{
-			//skip everything that does not look like extern or const declaration. There are 5 such declarations in SDK, never mind.
-			if(!(_TokIsIdent(_i + 1) && _TokIsIdent(_i + 2) && _TokIsChar(_i + 3, ';'))) return false;
-			//skip everything that is not _Struct, because we need only GUID
+			if(!(_TokIsIdent(_i) && _TokIsIdent(_i + 1))) return false; //must be TYPE name
+			int what = 0;
+			if(_TokIsChar(_i + 2, ';')) what = 1;
+			else if(isJustConst && _TokIsChar(_i + 2, '=')) what = 2;
+			else return false;
+
+			//get type
 			_Symbol x;
-			if(!_TryFindSymbol(++_i, out x, false)) return false;
+			if(!_TryFindSymbol(_i, out x, false)) return false;
 			if(0 != _Unalias(_i, ref x)) return false;
-			//var t = x as _Struct; if(t== null) return false;
-			if(x.csTypename != "GUID") return false;
 			_i++;
 
-			string name = _TokToString(_i), data;
-			if(!_guids.TryGetValue(name, out data)) {
-				//Out(name);
-				return false;
+			if(what == 1) {
+				//we need only GUID
+				if(x.csTypename != "GUID") return false;
+
+				string name = _TokToString(_i), data;
+				if(!_guids.TryGetValue(name, out data)) {
+					//Out(name);
+					return false;
+				}
+
+				if(name.EndsWith_("A") && char.IsLower(name[name.Length - 2])) {
+					//Out(name);
+					return false;
+				} else if(name.EndsWith_("W") && char.IsLower(name[name.Length - 2])) {
+					//Out(name);
+					name = name.Remove(name.Length - 1);
+				}
+
+				if(!_guidsAdded.Add(name)) return false; //prevent duplicates
+
+                _sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", name, data);
+
+				_i++;
+			} else { //C++ const constant
+				var ct = x as _CppType;
+				if(ct == null) {
+					//_Err(_i, "example");
+					return false;
+				}
+
+				int iName = _i++, iValue = ++_i;
+				while(!_TokIsChar(_i, ';')) _i++;
+				string name = _TokToString(iName);
+
+				_ExpressionResult r = _Expression(iValue, _i, name);
+				//OutList(ct.csTypename, r.typeS, r.valueS);
+				if(r.typeS == null) return false;
+
+				_enumValues[_tok[iName]] = r.valueI;
+
+				__sbDef.Clear();
+				__sbDef.AppendFormat("public const {0} {1} = {2};", ct.csTypename, name, r.valueS);
+				//Out(__sbDef);
+				_cppConst.Add(__sbDef.ToString());
 			}
-
-			if(name.EndsWith_("A") && char.IsLower(name[name.Length - 2])) {
-				//Out(name);
-				return false;
-			} else if(name.EndsWith_("W") && char.IsLower(name[name.Length - 2])) {
-				//Out(name);
-				name = name.Remove(name.Length - 1);
-			}
-
-			_sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", name, data);
-
-			_i++;
 			return true;
 		}
 
-		Dictionary<string, string> _guids;
+		Dictionary<string, string> _guids; //all GUID extracted from .lib files
+		HashSet<string> _guidsAdded=new HashSet<string>(); //already declared GUID names, to prevent duplicate declarations
 
 		void _InitMaps()
 		{

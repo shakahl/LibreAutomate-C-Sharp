@@ -510,6 +510,18 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// This overload has parameter 'count' (max number of replacements).
+		/// Returns the number of replacements made.
+		/// </summary>
+		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, int count, RegexOptions options = 0)
+		{
+			var x = new Regex(pattern, options | RegexOptions.CultureInvariant);
+			int n = 0;
+			result = x.Replace(t, (m) => { n++; return m.Result(replacement); }, count);
+			return n;
+		}
+
+		/// <summary>
 		/// Returns string.Join(separator, values).
 		/// If values[0] is null, sets it "". It is a workaround for the documented string.Join bug: it would return "" if values[0] is null.
 		/// </summary>

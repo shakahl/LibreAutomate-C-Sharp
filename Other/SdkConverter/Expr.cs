@@ -24,11 +24,6 @@ namespace SdkConverter
 {
 	unsafe partial class Converter
 	{
-		void TestExpr()
-		{
-
-		}
-
 		_ExpressionResult _Expression(int iFrom, int iTo, string debugConstName = null)
 		{
 			Debug.Assert(iTo > iFrom);
@@ -65,8 +60,23 @@ namespace SdkConverter
 
 				}
 
-				if(_TokIsChar(iFrom, '\"')) return new _ExpressionResult(_TokToString(iFrom), "string", false);
-				if(_TokIsChar(iFrom, '\'')) return new _ExpressionResult(_TokToString(iFrom), "char", false);
+				if(_TokIsChar(iFrom, '\"')) {
+					return new _ExpressionResult(_TokToString(iFrom), "string", false);
+				}
+				if(_TokIsChar(iFrom, '\'')) {
+					//is like 'ABCD'?
+					int len = _tok[iFrom].len - 2;
+					if(len > 1 && len<=4) {
+						char* s = T(iFrom) + 1;
+						if(*s != '\\') {
+							//Out(_DebugGetLine(iFrom));
+							uint k = 0; for(int j = 0; j < len; j++) k = (k << 8) | ((uint)s[j] & 0xff);
+							return new _ExpressionResult($"0x{k:X}", "uint", false, k);
+						}
+					}
+					//string k=_TokToString(iFrom).Re
+					return new _ExpressionResult(_TokToString(iFrom), "char", false);
+				}
 
 				if(_TokIsIdent(iFrom)) {
 					if(_EnumFindValue(iFrom, out value, out type)) {
@@ -563,7 +573,7 @@ namespace SdkConverter
 			if(ct == null) {
 				//support LPARAM, HWND
 				if(A.op > _OP.OperandUint) return false; //0 in SDK
-				if(x == _sym_IntLong || x == _sym_Wnd) return true;
+				if(x == _sym_LPARAM || x == _sym_Wnd) return true;
 				//support enum, callback
 				if(x is _Enum || x is _Callback) return true;
 				//_Err(i, "stop 2"); //0 in SDK
@@ -574,7 +584,9 @@ namespace SdkConverter
 			case 8:
 				if(ct.csTypename[0] == 'd') return false; //double
 				if(ct.csTypename[0] == 'I') { //IntPtr
+					//Out(_DebugGetLine(i));
 					if(A.op > _OP.OperandUint) return false; //0 in SDK
+					break; //let be the same type as in 32-bit mode (no long). All in SDK are like #define HKEY_CURRENT_USER (IntPtr)0x80000001.
 				}
 				A.op = ct.isUnsigned ? _OP.OperandUlong : _OP.OperandLong;
 				return true;
@@ -777,59 +789,5 @@ namespace SdkConverter
 				this.valueI = (uint)valueI;
 			}
 		}
-
-		//string __Expr_UnaliasAndSizeof(int iTokFrom, ref int iCurrent)
-		//{
-		//	string s = null;
-		//	int i = iCurrent;
-		//	_Symbol x;
-		//	if(_TryFindSymbol(i + 1, out x, true) && !(x is _Keyword)) {
-		//		int ptr = _Unalias(i + 1, ref x);
-		//		s = x.csTypename;
-
-		//		bool convertedSizeof = false;
-		//		if(i > iTokFrom && _TokIs(i - 1, "sizeof")) {
-		//			bool failed = false;
-		//			if(ptr != 0) {
-		//				ptr = 0;
-		//				s = "IntPtr.Size";
-		//			} else if(x is _CppType) {
-		//				s = (x as _CppType).sizeBytesCpp.ToString();
-		//			} else if(x is _Callback) {
-		//				s = "IntPtr.Size";
-		//			} else {
-		//				switch(s) {
-		//				case "LPARAM":
-		//					s = "IntPtr.Size";
-		//					break;
-		//				case "SID":
-		//					s = "12";
-		//					break;
-		//				case "WSACMSGHDR":
-		//					s = "IntPtr.Size+8";
-		//					break;
-		//				default:
-		//					failed = true;
-		//					break;
-		//				}
-		//			}
-
-		//			//OutList(_TokToString(i + 1), s);
-		//			if(!failed) {
-		//				__sbDef.Remove(__sbDef.Length - 6, 6); //remove "sizeof"
-		//				convertedSizeof = true;
-		//			}
-		//		}
-
-		//		if(!convertedSizeof) {
-		//			s = "(" + s + ")";
-		//			while(ptr-- > 0) s += "*";
-		//		}
-		//		i += 2;
-		//	}
-
-		//	iCurrent = i;
-		//	return s;
-		//}
 	}
 }

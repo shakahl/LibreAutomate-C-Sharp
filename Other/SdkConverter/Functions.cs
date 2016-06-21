@@ -52,9 +52,10 @@ namespace SdkConverter
 			if(_TokIsIdent(_i + 1)) iCallConv = _i++;
 
 			if(!_TokIsChar(_i + 1, '(')) {
-				//could be 'T var;' //0 in SDK
+				//could be 'T var;' //1 in SDK
 				//_Err(_i, "unexpected");
-				_SkipStatement(true);
+				_i = d.outTypenameToken;
+				if(!_ExternConst()) _SkipStatement(true);
 				return;
 			}
 
@@ -77,12 +78,12 @@ namespace SdkConverter
 			}
 
 			string callConv = iCallConv == 0 ? "Cdecl" : _ConvertCallConv(iCallConv);
-			string returnType; bool isHRESULT = false;
+			string returnType, returnAttr = null; bool isHRESULT = false;
 			if(ptr == 0 && _TokIs(d.outTypenameToken, "HRESULT")) {
 				isHRESULT = true;
 				returnType = "int";
 			} else {
-				returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.Return);
+				returnType = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, _TypeContext.Return, out returnAttr);
 			}
 
 			string dll, nameInDll = null;
@@ -128,7 +129,9 @@ namespace SdkConverter
 			if(nameInDll != null) sb.AppendFormat(", EntryPoint=\"{0}\"", nameInDll);
 			if(callConv != null) sb.AppendFormat(", CallingConvention=CallingConvention.{0}", callConv);
 			if(isHRESULT) sb.Append(", PreserveSig=true"); //default, but makes clear that it returns HRESULT and easier to change to 'false'
-			sb.Append(")]\r\npublic static extern ");
+			sb.AppendLine(")]");
+			if(returnAttr != null) sb.AppendLine(returnAttr);
+			sb.Append("public static extern ");
 			sb.Append(returnType);
 			sb.Append(' ');
 			sb.Append(name);
@@ -153,13 +156,10 @@ namespace SdkConverter
 
 		void _FunctionsFinally()
 		{
-			if(_funcUnknownDll.Count > 30) {
+			if(_funcUnknownDll.Count > 50) {
 				Out("Warning: too many unknown dll:");
 				Out(_funcUnknownDll);
 			}
-
 		}
-
-		//[DllImport("", CallingConvention=CallingConvention.Cdecl, )]
 	}
 }

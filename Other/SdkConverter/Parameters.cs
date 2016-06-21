@@ -101,6 +101,7 @@ namespace SdkConverter
 					//ignore ...
 					if(_TokIsChar(_i, '.') && _TokIsChar(_i + 1, '.') && _TokIsChar(_i + 2, '.') && _TokIsChar(_i + 3, ')')) {
 						_i += 3;
+						sb.Remove(sb.Length - 2, 2); //", "
 						break;
 					}
 
@@ -116,7 +117,9 @@ namespace SdkConverter
 					bool isLast = _TokIsChar(_i, ')');
 					if(!isLast && !_TokIsChar(_i, ',')) _Err(_i, "unexpected");
 
-					sb.AppendFormat("{0}{1} {2}{3}", t.attributes, t.typeName, t.name, isLast ? "" : ", ");
+					if(t.attributes != null) { sb.Append(t.attributes); sb.Append(' '); }
+					sb.Append(t.typeName); sb.Append(' '); sb.Append(t.name);
+					if(!isLast) sb.Append(", ");
 
 					if(isLast) break;
 				}
@@ -149,9 +152,12 @@ namespace SdkConverter
 			t = new _PARAMDATA();
 
 			int iSAL = 0;
-			if(!isMember && _TokIsChar(_i, '^') && _TokIsChar(_i + 1, '\"')) {
-				iSAL = ++_i;
-				_tok[iSAL] = new _Token(_tok[iSAL].s + 1, _tok[iSAL].len - 2);
+			if(_TokIsChar(_i, '^') && _TokIsChar(_i + 1, '\"')) {
+				_i++;
+				if(!isMember) {
+					iSAL = _i;
+					_tok[iSAL] = new _Token(_tok[iSAL].s + 1, _tok[iSAL].len - 2);
+				}
 				_i++;
 			}
 
@@ -179,7 +185,7 @@ namespace SdkConverter
 				t.name = f.paramName;
 			} else {
 				//typename, param/member name
-				t.typeName = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, context, iSAL);
+				t.typeName = _ConvertTypeName(d.outSym, ref ptr, d.outIsConst, d.outTypenameToken, context, out t.attributes, iSAL);
 
 				if(_TokIsIdent(_i)) t.name = _TokToString(_i++);
 				else if(!isMember && _TokIsChar(_i, ",)[=")) t.name = "param" + iParam;
@@ -187,7 +193,7 @@ namespace SdkConverter
 			}
 
 			if(_TokIsChar(_i, '[')) {
-				t.attributes = _ConvertCArray(ref t.typeName, ref t.name, !isMember);
+				_ConvertCArray(ref t.typeName, ref t.name, ref t.attributes, !isMember);
 			}
 
 			//escape names that are C# keywords
@@ -269,16 +275,19 @@ namespace SdkConverter
 		}
 
 		/// <summary>
-		/// Converts type name/pointer to C# type name/ref/pointer.
+		/// Converts type name/pointer to C# type name.
+		/// The return value is type name, possibly with * or []. If parameter, also can have ref/out and [In}/[Out].
 		/// </summary>
 		/// <param name="t">The type.</param>
 		/// <param name="ptr">Pointer level. The function may adjust it depending on typedef pointer level etc.</param>
 		/// <param name="isConst">Is const.</param>
 		/// <param name="iTokTypename">Type name token index. Can be 0 if don't need to unalias etc; then just adds pointer/ref if need.</param>
 		/// <param name="context">Depending on it char* will be converted to "string", "StringBuilder" etc.</param>
+		/// <param name="attributes">Receives null or MarshalAs attribute.</param>
 		/// <param name="iSAL">SAL token index, or 0 if no SAL.</param>
-		string _ConvertTypeName(_Symbol t, ref int ptr, bool isConst, int iTokTypename, _TypeContext context, int iSAL = 0)
+		string _ConvertTypeName(_Symbol t, ref int ptr, bool isConst, int iTokTypename, _TypeContext context, out string attributes, int iSAL = 0)
 		{
+			attributes = null;
 			string name, marshalAs = null;
 
 			bool isLangType = false, isParameter = false, isCOM = false, isBlittable = false;
@@ -320,7 +329,7 @@ namespace SdkConverter
 								} else {
 									//string dangerous, because if the callee changes member pointer, .NET tries to free the new string with CoTaskMemFree.
 									name = "IntPtr";
-									//Out(DebugGetLine(iTokTypename));
+									//Out(_DebugGetLine(iTokTypename));
 									isBlittable = true;
 								}
 								break;
@@ -418,7 +427,11 @@ namespace SdkConverter
 						//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
 						//Out(ptr);
 						//break;
-						case "POINTL": name = "POINT"; break;
+						case "ITEMIDLIST":
+							if(ptr > 0) { ptr--; name = "IntPtr"; isBlittable = true; }
+							//else _Err(iTokTypename, "example"); //0 in SDK
+							break;
+                        case "POINTL": name = "POINT"; break;
 						case "RECTL": name = "RECT"; break;
 						}
 					}
@@ -436,17 +449,17 @@ namespace SdkConverter
 
 					if(iSAL > 0 && ptr == 1) { //if ptr>1, can be TYPE[]* or TYPE*[]
 						if(_In_ && (sal.Contains("_reads_") || sal.Contains("count"))) {
-							//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[In] ");
 						}
 						if(_Inout_ && (sal.Contains("_updates_") || sal.Contains("count"))) {
-							//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[In,Out] ");
 						}
 						if(_Out_ && (sal.Contains("_writes_") || sal.Contains("count"))) {
-							//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 							isArray = true;
 							__ctn.Append("[Out] ");
 						}
@@ -464,17 +477,17 @@ namespace SdkConverter
 						} else if(_In_ || isConst) {
 							if(isBlittable) {
 								if(isConst && ptr == 0 && name != "IntPtr") {
-									//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									isArray = true; //usually array, because there is no sense for eg 'const int* param', unless it is a 64-bit value (SDK usually then uses LARGE_INTEGER etc, not __int64). Those with just _In_ usually are not arrays, because for arrays are used _In_reads_ etc.
 								} else {
 									__ctn.Append("ref ");
-									//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 								}
 							} else {
 								if(isConst) {
 									__ctn.Append("[In] ref "); //prevents copying non-blittable types back to the caller when don't need
 								} else {
-									//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									//__ctn.Append("[In] ref "); //no, because there are many errors in SDK where inout parameters have _In_
 									__ctn.Append("ref ");
 								}
@@ -495,12 +508,12 @@ namespace SdkConverter
 							ptr++;
 							__ctn.Clear();
 							//maybe can be array, not tested. Never mind, in SDK only 4 rarely used.
-							//OutList(_tok[iTokTypename], name, DebugGetLine(iTokTypename));
+							//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 						} else if(marshalAs != null) useMarshalAsSubtype = true;
 
 						if(useMarshalAsSubtype) marshalAs = "LPArray, ArraySubType = UnmanagedType." + marshalAs;
 					}
-				}
+				} //if(isParameter)
 
 				__ctn.Append(name);
 				if(ptr > 0) __ctn.Append('*', ptr);
@@ -509,21 +522,26 @@ namespace SdkConverter
 				name = __ctn.ToString();
 			}
 
-			if(marshalAs != null) name = $"[MarshalAs(UnmanagedType.{marshalAs})] {name}";
+			if(marshalAs != null) {
+				__ctn.Clear();
+				string ret = null; if(context == _TypeContext.Return || context == _TypeContext.ComReturn) ret = "return: ";
+				attributes = $"[{ret}MarshalAs(UnmanagedType.{marshalAs})]";
+			}
 			return name;
 		}
 		StringBuilder __ctn = new StringBuilder();
 
 		/// <summary>
-		/// Converts "[x]" to "[MarshalAs(UnmanagedType.ByValArray, SizeConst = {x})]".
+		/// Converts C-style fixed-size array to C#. Gets MarshalAs attribute, appends "[]" to typeName etc.
 		/// Supports "[y][x]" etc.
 		/// _i must be at '['. Finally it will be after ']'.
-		/// If empty array (like TYPE x[] or TYPE x[0]), returns "//...". If 1-element array, returns "/*...*/".
+		/// If empty array (like TYPE x[] or TYPE x[0]), attributes receives "//...". If 1-element array, receives "/*...*/".
 		/// </summary>
 		/// <param name="typeName">This function appends "[]" if need, or convertes "char" to "string".</param>
 		/// <param name="memberName">If less than 8 elements, and memberName looks like a "Reserved" etc, splits into multiple members like "Reserved_0, Reserved_1, ...".</param>
-		/// <param name="isParameter">Just skip [..] or [...][...], append "[]" to typeName, and return null; used for parameters, because the attribute can be used only with struct fields; C++ arguments for parameters 'TYPE param[n]' are passed like 'TYPE* param', and n is ignored, can be empty.</param>
-		string _ConvertCArray(ref string typeName, ref string memberName, bool isParameter = false)
+		/// <param name="attributes">If !isParameter, receives attribute like "[MarshalAs(UnmanagedType.ByValArray, SizeConst = {x})]". If already is MarshalAs attribute, uses it as ArraySubType.</param>
+		/// <param name="isParameter">Just skip [..] or [...][...] and append "[]" to typeName. Used for parameters, because the attribute can be used only with struct fields; C++ arguments for parameters 'TYPE param[n]' are passed like 'TYPE* param', and n is ignored, can be empty.</param>
+		void _ConvertCArray(ref string typeName, ref string memberName, ref string attributes, bool isParameter = false)
 		{
 			uint elemCount = 1;
 			for(; _TokIsChar(_i, '['); _i++) { //support [a][b]
@@ -541,7 +559,7 @@ namespace SdkConverter
 
 			if(isParameter) {
 				typeName += "[]";
-				return null;
+				return;
 			}
 
 			if(typeName.EndsWith_("[]")) typeName = typeName.Remove(typeName.Length - 2); //'TYPE a[n], b[m]'
@@ -572,9 +590,8 @@ namespace SdkConverter
 				}
 			}
 
-			string R = $"{comment}[MarshalAs(UnmanagedType.{marshalAs}, SizeConst = {elemCount})]{comment2}";
-			//Out(R);
-			return R;
+			if(attributes != null) _Err(_i, "TODO"); //0 in SDK. Should extract its type from [MarshalAs(UnmanagedType.(\w+) and insert in the new attributes.
+			attributes = $"{comment}[MarshalAs(UnmanagedType.{marshalAs}, SizeConst = {elemCount})]{comment2}";
 		}
 
 		/// <summary>

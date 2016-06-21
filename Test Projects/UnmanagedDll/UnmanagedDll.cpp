@@ -22,6 +22,13 @@ void zz(void* v) { zp(L"%i", v); }
 #pragma endregion
 
 extern "C" __declspec(dllexport)
+void TestSimple()
+{
+	zz(_INTEGRAL_MAX_BITS);
+
+}
+
+extern "C" __declspec(dllexport)
 void TestUnmanaged(int& k, int& g)
 {
 //MessageBox(0, L"", L"bb", 0);
