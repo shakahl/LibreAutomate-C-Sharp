@@ -104,13 +104,13 @@ namespace Catkeys
 		{
 			var x = new RTL_OSVERSIONINFOW(); x.dwOSVersionInfoSize = Api.SizeOf(x);
 			try {
-				if(0 == RtlGetVersion(ref x)) return Calc.MakeWord(x.dwMinorVersion, x.dwMajorVersion);
+				if(0 == RtlGetVersion(ref x)) return Calc.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
 				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
 			} catch { }
 			Debug.Fail("RtlGetVersion");
 
 			var v = Environment.OSVersion.Version;
-			return Calc.MakeWord(v.Minor, v.Major);
+			return Calc.MakeUshort(v.Minor, v.Major);
 		}
 
 		public struct RTL_OSVERSIONINFOW

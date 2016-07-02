@@ -787,7 +787,7 @@ namespace SdkConverter
 			if(_guids.ContainsKey(fullName)) return;
 			if(prefix == "IID_" && _guids.ContainsKey("DIID_" + name)) return;
 			//Out(fullName);
-			_sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", fullName, uuid);
+			_sbVar.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", fullName, uuid);
 			//note: not 'readonly' because then could not be passed as ref.
 		}
 

@@ -28,6 +28,16 @@ namespace SdkConverter
 		{
 			char* s = T(++_i);
 			char c = *s; //was like `d$$$_REALNAME, now s is without `
+
+			if(c == 'c') { //`cx "C# code converted by the preprocessor script", where x tells what it is
+				if(!_TokIsChar(++_i, '\x2')) _Err(_i, "unexpected 1");
+				_tok[_i] = new _Token(T(_i) + 1, _tok[_i].len - 2);
+				if(s[1]=='p') {
+					_sbVar.AppendLine(_TokToString(_i));
+				} else _Err(_i-1, "unexpected 2");
+				return;
+			}
+
 			s += 5; int lenName = _tok[_i].len - 5; //skip prefix 'd$$$_' that was added to avoid unexpanding names
 			_tok[_i] = new _Token(s, lenName);
 			int iName = _i;

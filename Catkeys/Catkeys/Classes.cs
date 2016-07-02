@@ -340,37 +340,38 @@ namespace Catkeys
 
 	/// <summary>
 	/// Stores an x or y coordinate as pixels or as a fraction of some rectangle.
-	/// Can be used for function parameters. Accepts values of type int or double.
+	/// Can be used for function parameters. Accepts values of type int or float.
 	/// </summary>
 	public class Coord
 	{
-		public bool isFraction;
 		public int coord;
-		public double fraction;
+		public float fraction;
+
+		public bool IsFraction { get { return fraction != 0f; } }
 
 		public Coord(int coord) { this.coord = coord; }
-		public Coord(double fraction) { this.fraction = fraction; isFraction = true; }
-		public Coord(Coord z) { coord = z.coord; fraction = z.fraction; isFraction = z.isFraction; }
+		public Coord(float fraction) { this.fraction = fraction; }
+		public Coord(Coord z) { coord = z.coord; fraction = z.fraction; }
 
 		public static implicit operator Coord(int coord) { return new Coord(coord); }
-		public static implicit operator Coord(double fraction) { return new Coord(fraction); }
+		public static implicit operator Coord(float fraction) { return new Coord(fraction); }
 
 		/// <summary>
-		/// Sets coord = GetNormalized(min, max); sets isFraction = false.
+		/// Sets coord = GetNormalized(min, max). Sets IsFraction = false.
 		/// </summary>
 		public void Normalize(int min, int max)
 		{
 			coord = GetNormalized(min, max);
-			isFraction = false;
+			fraction = 0f;
 		}
 
 		/// <summary>
-		/// If isFraction == false, returns coord + min.
+		/// If IsFraction == false, returns coord + min.
 		/// Else calculates and returns non-fraction coordinate: (int)((max - min) * fraction) + min.
 		/// </summary>
 		public int GetNormalized(int min, int max)
 		{
-			return (isFraction ? (int)((max - min) * fraction) : coord) + min;
+			return (IsFraction ? (int)((max - min) * fraction) : coord) + min;
 		}
 
 		/// <summary>
@@ -388,8 +389,8 @@ namespace Catkeys
 					if(x != null) p.x = x.GetNormalized(r.left, r.right);
 					if(y != null) p.y = y.GetNormalized(r.top, r.bottom);
 				} else {
-					if(x != null) p.x = x.isFraction ? x.GetNormalized(0, Screen_.Width) : x.coord;
-					if(y != null) p.y = y.isFraction ? y.GetNormalized(0, Screen_.Height) : y.coord;
+					if(x != null) p.x = x.IsFraction ? x.GetNormalized(0, Screen_.Width) : x.coord;
+					if(y != null) p.y = y.IsFraction ? y.GetNormalized(0, Screen_.Height) : y.coord;
 				}
 			}
 			return p;
@@ -403,7 +404,7 @@ namespace Catkeys
 		{
 			var p = new POINT();
 			if(x != null || y != null) {
-				if((x != null && x.isFraction) || (y != null && y.isFraction)) {
+				if((x != null && x.IsFraction) || (y != null && y.IsFraction)) {
 					RECT r = w.ClientRect;
 					if(x != null) p.x = x.GetNormalized(0, r.right);
 					if(y != null) p.y = y.GetNormalized(0, r.bottom);
@@ -417,7 +418,7 @@ namespace Catkeys
 
 		public override string ToString()
 		{
-			return isFraction ? fraction.ToString() : coord.ToString();
+			return IsFraction ? fraction.ToString() : coord.ToString();
 		}
 	}
 

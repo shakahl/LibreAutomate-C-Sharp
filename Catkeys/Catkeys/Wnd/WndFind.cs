@@ -55,12 +55,12 @@ namespace Catkeys
 			public LPARAM propValue;
 			/// <summary>
 			/// The control must contain this x coordinate in parent window's client area. If top-level window - relative to the primary screen.
-			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
+			/// Can be int (pixels) or float (fraction of client area, eg 0.5 is middle).
 			/// </summary>
 			public Coord x;
 			/// <summary>
 			/// The control must contain this y coordinate in parent window's client area. If top-level window - relative to the primary screen.
-			/// Can be int (pixels) or double (fraction of client area, eg 0.5 is middle).
+			/// Can be int (pixels) or float (fraction of client area, eg 0.5 is middle).
 			/// Example of getting control that is at the very right of the parent window w: <c>Wnd c=w.Child(... prop:new Wnd.ChildProp() { x=w.ClientWidth-1 });</c>
 			/// </summary>
 			public Coord y;
@@ -851,8 +851,8 @@ namespace Catkeys
 		/// Unlike FromXYRaw(), this function gets non-transparent controls that are behind (in the Z order) transparent controls (eg a group button or a tab control).
 		/// Also this function supports fractional coordinates and does not skip disabled controls.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
-		/// <param name="y">Y coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
+		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
+		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
 		/// <param name="control">
 		/// If true, gets control; returns Wnd0 if there is no control at that point.
 		/// If false, gets top-level window; if at that point is a control, gets its top-level parent.
@@ -930,8 +930,8 @@ namespace Catkeys
 		/// Returns Wnd0 if the point is not within a child or is outside this window.
 		/// By default, x y must be relative to the client area of this window.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
-		/// <param name="y">Y coordinate. Can be int (pixels) or double (fraction of primary screen).</param>
+		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
+		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <param name="screenXY">x y are relative to the pimary screen.</param>
 		/// <exception cref="CatkeysException">When this window is invalid (not found, closed, etc).</exception>
@@ -967,8 +967,8 @@ namespace Catkeys
 				//is R transparent?
 				//OutList("WM_NCHITTEST", R);
 				LPARAM ht;
-				//if(!R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeLparam(p.x, p.y)) || (int)ht != Api.HTTRANSPARENT) break;
-				if(R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeLparam(p.x, p.y))) {
+				//if(!R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeUint(p.x, p.y)) || (int)ht != Api.HTTRANSPARENT) break;
+				if(R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeUint(p.x, p.y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
 					//break;

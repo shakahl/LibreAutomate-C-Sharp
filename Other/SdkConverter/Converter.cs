@@ -51,7 +51,7 @@ namespace SdkConverter
 
 		StringBuilder _sbInterface = new StringBuilder();
 		//StringBuilder _sbCoclass = new StringBuilder();
-		StringBuilder _sbGuid = new StringBuilder();
+		StringBuilder _sbVar = new StringBuilder();
 		StringBuilder _sbInlineDelegate = new StringBuilder(); //from callback function types defined in parameter list or member list
 
 		List<_Token> _tok = new List<_Token>();
@@ -167,8 +167,8 @@ public static unsafe class API
 					//}
 					//writer.WriteLine("\r\n// COCLASS");
 					//writer.Write(_sbCoclass.ToString());
-					writer.WriteLine("\r\n// GUID");
-					writer.Write(_sbGuid.ToString());
+					writer.WriteLine("\r\n// VARIABLE");
+					writer.Write(_sbVar.ToString());
 					writer.WriteLine("\r\n// CONSTANT\r\n");
 					_ConstantsFinally(writer);
 					writer.Write("\r\n}\r\n");
@@ -178,10 +178,12 @@ public static unsafe class API
 			catch(ConverterException e) {
 				Out(e);
 				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+				throw;
 			}
 			catch(Exception e) {
 				Out(e);
 				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
+				throw;
 			}
 			//#endif
 			finally {
@@ -474,7 +476,7 @@ public static unsafe class API
 
 				if(!_guidsAdded.Add(name)) return false; //prevent duplicates
 
-                _sbGuid.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", name, data);
+                _sbVar.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", name, data);
 
 				_i++;
 			} else { //C++ const constant

@@ -948,7 +948,8 @@ namespace Catkeys
 				_AllowActivate_AllowSetFore();
 				Api.SetForegroundWindow(Get.DesktopWindow); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
 
-			} finally { Api.DestroyWindow(t); }
+			}
+			finally { Api.DestroyWindow(t); }
 		}
 
 		/// <summary>
@@ -1001,7 +1002,8 @@ namespace Catkeys
 						if(this == FocusedControl) { ok = true; break; }
 						WaitMS(speed / 20 + 5);
 					}
-				} finally { Api.AttachThreadInput(th1, th2, false); }
+				}
+				finally { Api.AttachThreadInput(th1, th2, false); }
 
 			if(!ok) throw new CatkeysException("Failed to set focus.");
 
@@ -1419,10 +1421,10 @@ namespace Catkeys
 		/// Moves and/or resizes.
 		/// Applies auto-delay, except when this window is of this thread.
 		/// </summary>
-		/// <param name="x">Left. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
-		/// <param name="y">Top. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
-		/// <param name="width">Width. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change width.</param>
-		/// <param name="height">Height. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change height.</param>
+		/// <param name="x">Left. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
+		/// <param name="y">Top. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
+		/// <param name="width">Width. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change width.</param>
+		/// <param name="height">Height. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change height.</param>
 		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -1467,8 +1469,8 @@ namespace Catkeys
 		/// Applies auto-delay, except when this window is of this thread.
 		/// Calls Move(x, y, null, null, workArea).
 		/// </summary>
-		/// <param name="x">Left. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
-		/// <param name="y">Top. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
+		/// <param name="x">Left. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
+		/// <param name="y">Top. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
 		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -1484,8 +1486,8 @@ namespace Catkeys
 		/// Applies auto-delay, except when this window is of this thread.
 		/// Calls Move(null, null, width, height, workArea).
 		/// </summary>
-		/// <param name="width">Width. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change width.</param>
-		/// <param name="height">Height. Can be int (pixels) or double (fraction of screen or work area or direct parent client area) or null to not change height.</param>
+		/// <param name="width">Width. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change width.</param>
+		/// <param name="height">Height. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change height.</param>
 		/// <param name="workArea">If false, fractional width/height are part of the primary screen, else of its work area. Not used when this is a child window.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -1569,7 +1571,8 @@ namespace Catkeys
 						rs = scr.WorkingArea;
 						if(!(w._Move(rs.left, rs.top) && w._Resize(rs.Width, rs.Height))) return false;
 					}
-				} finally {
+				}
+				finally {
 					if(!hto.Is0) w.Owner = hto;
 				}
 
@@ -2049,7 +2052,8 @@ namespace Catkeys
 						ph = Api.OpenProcess(Api.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
 						if(ph == Zero || !Api.IsWow64Process(ph, out is32bit)) return ThreadError.SetWinError();
 						if(is32bit == 0) return true;
-					} finally {
+					}
+					finally {
 						if(ph != Zero) Api.CloseHandle(ph);
 					}
 				}
@@ -2452,21 +2456,10 @@ namespace Catkeys
 		public IntPtr GetIconHandle(bool big = false)
 		{
 			//support Windows store apps
-			if(WinVer >= Win8) {
-				Wnd t = Wnd0;
-				switch(ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
-				case 1:
-					t = this;
-					break;
-				case 2:
-					t = _WindowsStoreAppFrameChild(this);
-					break;
-				}
-				string s = null;
-				if(!t.Is0 && 0 != _WindowsStoreAppId(t, out s, true)) {
-					IntPtr R = Files.GetIconHandle(s, big ? 32 : 16);
-					if(R != Zero) return R;
-				}
+			string appId = null;
+			if(1== _WindowsStoreAppId(this, out appId, true)) {
+				IntPtr R = Files.GetIconHandle(appId, big ? 32 : 16);
+				if(R != Zero) return R;
 			}
 
 			LPARAM _R;
@@ -2679,7 +2672,8 @@ namespace Catkeys
 					case 5: shell.TileVertically(); break;
 					}
 					Marshal.ReleaseComObject(shell);
-				} catch { }
+				}
+				catch { }
 			}
 		}
 

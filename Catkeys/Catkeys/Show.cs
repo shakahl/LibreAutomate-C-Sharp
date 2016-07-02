@@ -471,7 +471,7 @@ namespace Catkeys
 			CLICK_BUTTON = WM_USER + 102, // wParam = button id
 			SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
 			SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state (0, 1 or 2)
-			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Calc.MakeLparam(min, max)
+			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Calc.MakeUint(min, max)
 			SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
 			SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
 			SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum TDApi.TDE), lParam = new element text (string)
@@ -1655,7 +1655,7 @@ namespace Catkeys
 			IntPtr R = Marshal.AllocHGlobal(structSize * a.Length); //TODO: don't use Marshal Alloc/Free, because in other place it was slow etc
 
 			for(int i = 0; i < a.Length; i++) {
-				TASKDIALOG_BUTTON b; b.id = a[i].ToInt_(out b.text); //"id text" -> TASKDIALOG_BUTTON
+				TASKDIALOG_BUTTON b; b.id = a[i].ToIntAndString_(out b.text); //"id text" -> TASKDIALOG_BUTTON
 
 				if(string.IsNullOrEmpty(b.text)) { b.text = a[i]; if(string.IsNullOrEmpty(b.text)) b.text = " "; } //exception if null or ""
 				else b.text = b.text.Replace("\r\n", "\n").TrimStart('\n'); //the API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts. Also does not like if begins with \n;

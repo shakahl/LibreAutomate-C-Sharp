@@ -1921,47 +1921,6 @@ bbb"", b3
 		Out(w.Transparency(false));
 	}
 
-	static void TestWndGetIcon()
-	{
-		//Wnd w = Wnd.Find("*Notepad");
-		Wnd w = Wnd.Find("Calculator");
-		Out(w);
-		IntPtr hi = w.GetIconHandle(true);
-		Out(hi);
-		if(hi == Zero) return;
-		Show.TaskDialogEx("text", style: hi);
-		Api.DestroyIcon(hi);
-	}
-
-	static void TestFileIcon()
-	{
-		//IntPtr hi = Files._IconCreateEmpty(16, 16);
-
-		string s;
-
-		//s = @"q:\app\qm.exe,-133";
-		//int i = Files._IconGetIndex(ref s);
-		//OutList(i, s);
-		//return;
-
-		s = @"q:\app\paste.ico";
-		s = @"q:\app\qm.exe";
-		s = @"q:\app\qm.exe,1";
-		s = @"q:\app\qm.exe,-133";
-		s = @"q:\app\app.cpp";
-		s = @".dll";
-		s = "CatkeysTasks.exe";
-		s = @"Properties\app.config";
-		s = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
-
-		IntPtr hi = Files.GetIconHandle(s, 32);
-		Out(hi);
-		if(hi == Zero) return;
-		Show.TaskDialogEx("text", style: hi);
-		Api.DestroyIcon(hi);
-	}
-
-
 	[ComImport, Guid("ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	internal interface ITaskbarList3
 	{
@@ -2086,7 +2045,27 @@ bbb"", b3
 		Out(Api.strtoi64("0x8000000000000000"));
 	}
 
+	static void TestRegexAgain()
+	{
+		//string p = @"(\d)\d+", r = "$1R";
+		//string s = "aaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mm";
 
+		////Out(s.RegexReplace_(out s, p, r));
+		////Out(s);
+
+		//string s2 = null; int n = 0;
+		//var a1 = new Action(() => { s2 = s.RegexReplace_(p, r); });
+		//var a2 = new Action(() => { n = s.RegexReplace_(out s2, p, r); });
+
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
+
+		//OutList(n, s2);
+
+		//var k = new UNS.TDARRAY();
+		////k.a = new int[5];
+		//k[0] = 5;
+		//Out(k[0]);
+	}
 
 	public unsafe class UNS
 	{
@@ -2119,34 +2098,8 @@ bbb"", b3
 		}
 	}
 
-
-	//[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
-	static unsafe void TestX()
+	static unsafe void TestFixedArrayMember()
 	{
-		
-
-		//string p = @"(\d)\d+", r = "$1R";
-		//string s = "aaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mmaaa 45 fff 877 mm";
-
-		////Out(s.RegexReplace_(out s, p, r));
-		////Out(s);
-
-		//string s2 = null; int n = 0;
-		//var a1 = new Action(() => { s2 = s.RegexReplace_(p, r); });
-		//var a2 = new Action(() => { n = s.RegexReplace_(out s2, p, r); });
-
-		//Perf.ExecuteMulti(5, 1000, a1, a2);
-
-		//OutList(n, s2);
-
-		//var k = new UNS.TDARRAY();
-		////k.a = new int[5];
-		//k[0] = 5;
-		//Out(k[0]);
-
-
-		//unsafe
-		//{
 		//	OutList(sizeof(UNS.HASARRAY), Marshal.SizeOf(typeof(UNS.HASARRAY)));
 
 		//	var k = new UNS.HASARRAY();
@@ -2162,12 +2115,307 @@ bbb"", b3
 		//	k.s[0] = 'A';
 		//	string s = new string(k.s, 0, 5);
 		//	Out(s);
-		//}
+	}
 
-		//TestStrToI2();
-		//TestStringFold();
+	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	static extern void TestSimple();
+
+	[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	public static void TestExceptions()
+	{
+		Out(1);
+		try {
+			TestSimple();
+		}
+		catch { Out("exc"); }
+		Out(2);
+
+	}
+
+	[ComImport, Guid("3AB5235E-2768-47A2-909A-B5852A9D1868"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	interface ITest
+	{
+		[PreserveSig]
+		int Test1(int i);
+		[PreserveSig]
+		int TestOL(ref int i);
+		[PreserveSig]
+		int TestOL(string s);
+		[PreserveSig]
+		int TestNext(ref sbyte p);
+	};
+
+	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	static extern ITest CreateTestInterface();
+
+	static void TestInterfaceMethodOverload()
+	{
+		var x = CreateTestInterface();
+		int k = 0; sbyte b = 0;
+		x.TestOL(ref k);
+		x.TestOL("ddd"); //calls TestNext
+
+		//x.TestNext(ref b);
+		Out("fin");
+	}
+
+	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	//static extern void CreateTestInterface2(out ITest t);
+	//static extern void CreateTestInterface2(out IntPtr t); //with Marshal.GetTypedObjectForIUnknown is missing 1 Release
+	static extern void CreateTestInterface2([MarshalAs(UnmanagedType.IUnknown)] out object t); //the same number of QI etc as with 'out ITest t'
+	//static extern void CreateTestInterface2(out IUnknown t); //more QI etc
+
+	[ComImport, Guid("00000000-0000-0000-C000-000000000046")]
+	[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	private interface IUnknown
+	{
+		//[PreserveSig]
+		//IntPtr QueryInterface(ref Guid riid, out IntPtr pVoid);
+
+		//[PreserveSig]
+		//IntPtr AddRef();
+
+		//[PreserveSig]
+		//IntPtr Release();
+	}
+
+	static void TestOutAnyInterface()
+	{
+		ITest t; IntPtr p; object o; IUnknown u;
+
+		//CreateTestInterface2(out t);
+
+		//CreateTestInterface2(out p);
+		//t=(ITest)Marshal.GetTypedObjectForIUnknown(p, typeof(ITest));
+
+		//void* v = null;
+		//t = (ITest)v;
+
+		CreateTestInterface2(out o);
+		//t = (ITest)o;
+		t = o as ITest;
+
+		//CreateTestInterface2(out u);
+		//t = (ITest)u;
+
+		t.Test1(4);
+
+		Marshal.FinalReleaseComObject(t);
+		t = null;
+		Out("fin");
+	}
+
+	static void TestWndGetIcon()
+	{
+		//Wnd w = Wnd.Find("*Notepad");
+		Wnd w = Wnd.Find("Calculator");
+		if(w.Is0) { //on Win8 cannot find window, probably must be uiAccess. Find in QM and copy-paste.
+			string s;
+			if(!Show.InputDialog(out s, "hwnd")) return;
+			w = (Wnd)s.ToInt_();
+		}
+		Out(w);
+		IntPtr hi16 = w.GetIconHandle();
+		IntPtr hi32 = w.GetIconHandle(true);
+		OutList(hi16, hi32);
+		if(hi32 == Zero) return;
+		var d = new TaskDialogObject("big icon", style: hi32);
+		d.SetFooterText("small icon", hi16);
+		d.Show();
+		Api.DestroyIcon(hi16);
+		Api.DestroyIcon(hi32);
+
+		var a2 = new Action(() => { hi32 = w.GetIconHandle(true); Api.DestroyIcon(hi32); });
+		Perf.ExecuteMulti(5, 10, a2);
+	}
+
+	static void TestFileIcon()
+	{
+		//IntPtr hi = Files._IconCreateEmpty(16, 16);
+
+		string s;
+
+		//s = @"q:\app\qm.exe,-133";
+		//int i = Files._IconGetIndex(ref s);
+		//OutList(i, s);
+		//return;
+
+		s = @"q:\app\paste.ico";
+		s = @"q:\app\qm.exe";
+		s = @"q:\app\qm.exe,1";
+		s = @"q:\app\qm.exe,-133";
+		s = @"q:\app\app.cpp";
+		s = @".dll";
+		s = "CatkeysTasks.exe";
+		s = @"Properties\app.config";
+		s = "http://ddd.com";
+		s = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
+		//s = "Control Panel"; //no
+		s = "::{20d04fe0-3aea-1069-a2d8-08002b30309d}";
+        //s = "%TEMP%";
+		//s = @"C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_10.1605.1582.0_x64__8wekyb3d8bbwe\Calculator.exe";
+
+		IntPtr hi = Files.GetIconHandle(s, 32);
+		//IntPtr hi = Files.GetIconHandle(Folders.VirtualITEMIDLIST.ControlPanelFolder, 32);
+		Out(hi);
+		if(hi == Zero) return;
+		Show.TaskDialogEx("text", style: hi);
+		Api.DestroyIcon(hi);
+	}
+
+	//static void TestCoord(int x, int y)
+	//{
+	//	Out("int");
+	//}
+
+	static void TestCoord(float x, float y)
+	{
+		OutList("float", x>0.0 && x<1.1);
+	}
+
+	//static void TestCoord(double x, double y)
+	//{
+	//	Out("double");
+	//}
+
+	static void TestCoord()
+	{
+		var w = Wnd.Find("*Notepad");
+		w.Activate();
+		w.Move(0.5f, 1f);
+	}
+
+	static unsafe int ToInt(string s, int numberBase=0)
+	{
+		if(Empty(s)) return 0;
+		fixed(char* p= s)
+		{
+			//OutList((int)p[4], (int)p[5]);
+			return Api.strtoi(p, numberBase);
+		}
+	}
+
+	[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
+	public static extern int strtoi(string s, IntPtr endPtr, int numberBase = 0);
+
+	static unsafe int ToInt2(string s, int numberBase=0)
+	{
+		if(Empty(s)) return 0;
+		return strtoi(s, Zero, numberBase);
+	}
+
+	static unsafe int ToInt(string s, out int end, int start=0, int numberBase = 0)
+	{
+		fixed (char* p = s)
+		{
+			char* pe;
+			int R = Api.strtoi(p+start, out pe, numberBase);
+			end = (int)(pe - p);
+			return R;
+		}
+	}
+
+	static IEnumerable<int> TestYield()
+	{
+		for(int i=0; i<5; i++) {
+			int k = ToInt("5");
+			yield return i+k;
+		}
+	}
+
+	[DllImport("user32.dll", EntryPoint = "CharUpperBuffW")]
+	public static extern uint CharUpperBuff(string lpsz, uint cchLength);
+
+	static unsafe void TestStringZeroTerm(string s)
+	{
+		fixed(char* p= s)
+		{
+			if((int)p[s.Length]!=0 || (int)p[s.Length + 1]!= 0 || (int)p[s.Length + 2] != 0 || (int)p[s.Length + 3] != 0)
+			OutList((long)p, (int)p[s.Length], (int)p[s.Length+1], (int)p[s.Length + 2], (int)p[s.Length + 3]);
+		}
+	}
+
+	static void TestStringMisc()
+	{
+		//Out(int.Parse("+16"));
+
+		//TestStringZeroTerm("aaaaaaaa");
+		//TestStringZeroTerm("aabaaaaa");
+		//TestStringZeroTerm("aacaaaaa");
+		//TestStringZeroTerm("aadaaaaa");
+		//TestStringZeroTerm($"aa{1}aaaaa");
+		//TestStringZeroTerm($"aa{2}aaaaa");
+
+		//for(int i=1; i<100000000; i++) {
+		//	TestStringZeroTerm(new string('a', i&0xff));
+		//      }
+		//Out("fin");
+
+		//foreach(int i in TestYield()) {
+		//	Out(i);
+		//}
+		//Out("fin");
+
+		//string s = "abc";
+		//fixed(char* p= s)
+		//{
+		//	p[0] = 'A';
+		//}
+		//Out(s);
+
+		//string s = "abc";
+		//CharUpperBuff(s, 2);
+		//Out(s);
+
+		OutList(int.MaxValue, uint.MaxValue, long.MaxValue, ulong.MaxValue);
+
+		string s;
+		s = "mm  18446744073709551615 kk";
+		//s = "mm  9999999999999999999 kk";
+		//s = "mm  0xFfffffffffffffff kk";
+
+		s = "mm  4294967295 kk";
+		//s = "mm  999999999 kk";
+		//s = "mm  0xFfffffff kk";
+
+		int iEnd;
+		int R = s.ToInt_(2, out iEnd);
+		uint u = (uint)R;
+		//long R = s.ToInt64_(2, out iEnd);
+		//ulong u = (ulong)R;
+		OutList(s, R, u, iEnd);
+
+
+		//int i1 = 0, i2 = 0, i3 = 0, i4=0;
+
+		////i3 = ToInt(s);
+
+		//Perf.SpinCPU(200);
+		//Action a1 = new Action(() => { i1 = int.Parse(s); });
+		//Action a2 = new Action(() => { i2 = s.ToInt_(); });
+		//Action a3 = new Action(() => { i3 = ToInt(s); });
+		//Action a4 = new Action(() => { i4 = ToInt2(s); });
+
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+		//OutList(i1, i2, i3, i4);
+
+	}
+
+	static unsafe void TestX()
+	{
+
+		//TestStringMisc();
+		//TestCoord();
+		//TestCoord(1, 2);
+		//TestCoord(1.1f, 2.2f);
+		//TestCoord(3.3, 4.4);
 		//TestFileIcon();
 		//TestWndGetIcon();
+		//TestOutAnyInterface();
+		//TestExceptions();
+		//TestStrToI2();
+		//TestStringFold();
 		//TestWndTransparency();
 		//TestWndRegistrySaveRestore();
 		//TestRegistry();

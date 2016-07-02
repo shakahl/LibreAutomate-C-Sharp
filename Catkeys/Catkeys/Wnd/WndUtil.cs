@@ -31,49 +31,90 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets Windows store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+		/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 		/// Returns 1 if gets user model id, 2 if gets path, 0 if fails.
 		/// </summary>
-		/// <param name="w"></param>
-		/// <param name="appID"></param>
-		/// <param name="prependShellAppsFolder">Prepend "shell:AppsFolder\" (to run or get icon).</param>
-		/// <param name="getExePathIfNotWinStoreAppWindow">Get exe full path if hwnd is not a Windows store app.</param>
-		/// <returns></returns>
-		static int _WindowsStoreAppId(Wnd w, out string appID, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+		/// <param name="w">Window.</param>
+		/// <param name="appId">Receives app ID.</param>
+		/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
+		/// <param name="getExePathIfNotWinStoreApp">Get exe full path if hwnd is not a Windows store app.</param>
+		static int _WindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		{
-			appID = null;
+			appId = null;
 
-			if(getExePathIfNotWinStoreApp) {
-				if(WinVer >= Win8) {
-					bool isApp = false;
-					switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
-					case 1:
-						isApp = true;
-						break;
-					case 2:
-						if(WinVer >= Win10) {
-							Wnd t = _WindowsStoreAppFrameChild(w);
-							if(!t.Is0) { w = t; isApp = true; }
+			if(WinVer >= Win8) {
+				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+				case 1:
+					using(var p = new ProcessHandle_(w)) {
+						if(!p.Is0) {
+							uint u = 1000; var sb = new StringBuilder((int)u);
+							if(0 == _Api.GetApplicationUserModelId(p, ref u, sb)) appId = sb.ToString();
 						}
-						break;
 					}
-					if(!isApp) {
-						appID = w.ProcessPath;
-						return (appID == null) ? 0 : 2;
+					break;
+				case 2:
+					if(WinVer >= Win10) {
+						Api.IPropertyStore ps; Api.PROPVARIANT_LPARAM v;
+						if(0 == Api.SHGetPropertyStoreForWindow(w, ref Api.IID_IPropertyStore, out ps)) {
+							if(0 == ps.GetValue(ref Api.PKEY_AppUserModel_ID, out v)) {
+								if(v.vt == (ushort)Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
+								Api.PropVariantClear(ref v);
+							}
+							Marshal.ReleaseComObject(ps);
+						}
 					}
+					break;
 				}
 
+				if(appId != null) {
+					if(prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
+					return 1;
+				}
 			}
 
-			using(var p = new ProcessHandle_(w)) {
-				if(p.Is0) return 0;
-				uint u = 1000;
-				var sb = new StringBuilder((int)u);
-				if(0 != _Api.GetApplicationUserModelId(p, ref u, sb)) return 0;
-				if(prependShellAppsFolder) appID = @"shell:AppsFolder\" + sb.ToString(); else appID = sb.ToString();
-				return 1;
+			if(getExePathIfNotWinStoreApp) {
+				appId = w.ProcessPath;
+				if(appId != null) return 2;
 			}
+
+			return 0;
 		}
+		
+		//static int _WindowsStoreAppId2(Wnd w, out string appID, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+		//{
+		//	appID = null;
+
+		//	if(getExePathIfNotWinStoreApp) {
+		//		if(WinVer >= Win8) {
+		//			bool isApp = false;
+		//			switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+		//			case 1:
+		//				isApp = true;
+		//				break;
+		//			case 2:
+		//				if(WinVer >= Win10) {
+		//					Wnd t = _WindowsStoreAppFrameChild(w);
+		//					if(!t.Is0) { w = t; isApp = true; }
+		//				}
+		//				break;
+		//			}
+		//			if(!isApp) {
+		//				appID = w.ProcessPath;
+		//				return (appID == null) ? 0 : 2;
+		//			}
+		//		}
+
+		//	}
+
+		//	using(var p = new ProcessHandle_(w)) {
+		//		if(p.Is0) return 0;
+		//		uint u = 1000;
+		//		var sb = new StringBuilder((int)u);
+		//		if(0 != _Api.GetApplicationUserModelId(p, ref u, sb)) return 0;
+		//		if(prependShellAppsFolder) appID = @"shell:AppsFolder\" + sb.ToString(); else appID = sb.ToString();
+		//		return 1;
+		//	}
+		//}
 
 		/// <summary>
 		/// On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
@@ -112,7 +153,7 @@ namespace Catkeys
 			string s = w.Name; if(Empty(s)) return Wnd0;
 			return Api.FindWindow("ApplicationFrameWindow", s);
 		}
-    }
+	}
 
 
 	//This can be used, but not much simpler than calling ATI directly and using try/finally.

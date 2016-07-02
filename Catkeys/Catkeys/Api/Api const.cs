@@ -1,8 +1,10 @@
 ﻿//Windows API constants common to multiple API functions, such as WM_, WS_, errors.
 
+using System;
+
 namespace Catkeys.Winapi
 {
-	public static partial class Api
+	public static unsafe partial class Api
 	{
 		#region WM_
 
@@ -564,8 +566,64 @@ namespace Catkeys.Winapi
 		public const uint SMTO_ERRORONEXIT = 0x0020;
 		#endregion
 
-		#region 
+		#region ENUM
 
+		[Flags]
+		public enum VARENUM :ushort
+		{
+			VT_EMPTY,
+			VT_NULL,
+			VT_I2,
+			VT_I4,
+			VT_R4,
+			VT_R8,
+			VT_CY,
+			VT_DATE,
+			VT_BSTR,
+			VT_DISPATCH,
+			VT_ERROR,
+			VT_BOOL,
+			VT_VARIANT,
+			VT_UNKNOWN,
+			VT_DECIMAL,
+			VT_I1 = 16,
+			VT_UI1,
+			VT_UI2,
+			VT_UI4,
+			VT_I8,
+			VT_UI8,
+			VT_INT,
+			VT_UINT,
+			VT_VOID,
+			VT_HRESULT,
+			VT_PTR,
+			VT_SAFEARRAY,
+			VT_CARRAY,
+			VT_USERDEFINED,
+			VT_LPSTR,
+			VT_LPWSTR,
+			VT_RECORD = 36,
+			VT_INT_PTR,
+			VT_UINT_PTR,
+			VT_FILETIME = 64,
+			VT_BLOB,
+			VT_STREAM,
+			VT_STORAGE,
+			VT_STREAMED_OBJECT,
+			VT_STORED_OBJECT,
+			VT_BLOB_OBJECT,
+			VT_CF,
+			VT_CLSID,
+			VT_VERSIONED_STREAM,
+			VT_BSTR_BLOB = 0xFFF,
+			VT_VECTOR,
+			VT_ARRAY = 0x2000,
+			VT_BYREF = 0x4000,
+			VT_RESERVED = 0x8000,
+			VT_ILLEGAL = 0xFFFF,
+			VT_ILLEGALMASKED = 0xFFF,
+			VT_TYPEMASK = 0xFFF
+		}
 
 		#endregion
 	}

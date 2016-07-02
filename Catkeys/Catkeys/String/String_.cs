@@ -254,6 +254,152 @@ namespace Catkeys
 			return t.TrimStart(trimChars.ToCharArray());
 		}
 
+		/// <summary>
+		/// Converts part of string to int.
+		/// Returns the int value, or 0 if fails to convert.
+		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
+		/// Unlike int.Parse and Convert.ToInt32:
+		///		The number in string can be followed by more text, like "123text".
+		///		Has startIndex parameter that allows to get number from middle, like "text123text".
+		///		Gets the end of the number part.
+		///		No exception when cannot convert.
+		///		Supports hexadecimal format, like "0x1E" or "0x1e".
+		///		Much faster.
+		/// </summary>
+		/// <param name="startIndex">Offset in string where to start parsing.</param>
+		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+		/// <remarks>
+		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
+		/// The number can be with "-" or "+", like "-5", but not like "- 5".
+		/// Fails if the number is greater than +- uint.MaxValue (0xffffffff).
+		/// The return value becomes negative if the number is greater than int.MaxValue, for example "0xffffffff" is -1, but it becomes correct if assigned to uint (need cast).
+		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
+		/// </remarks>
+		/// <exception cref="ArgumentOutOfRangeException">When startIndex is less than 0 or greater than string length.</exception>
+		/// <seealso cref="Api.strtoi"/>
+		/// <seealso cref="Api.strtoui"/>
+		public static int ToInt_(this string t, int startIndex, out int numberEndIndex)
+		{
+			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
+		}
+
+		/// <summary>
+		/// This overload does not have parameter numberEndIndex.
+		/// </summary>
+		public static int ToInt_(this string t, int startIndex = 0)
+		{
+			int numberEndIndex;
+			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
+		}
+
+		/// <summary>
+		/// Converts part of string to long.
+		/// Returns the long value, or 0 if fails to convert.
+		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
+		/// Unlike long.Parse and Convert.ToInt64:
+		///		The number in string can be followed by more text, like "123text".
+		///		Has startIndex parameter that allows to get number from middle, like "text123text".
+		///		Gets the end of the number part.
+		///		No exception when cannot convert.
+		///		Supports hexadecimal format, like "0x1E" or "0x1e".
+		///		Much faster.
+		/// </summary>
+		/// <param name="startIndex">Offset in string where to start parsing.</param>
+		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+		/// <remarks>
+		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
+		/// The number can be with "-" or "+", like "-5", but not like "- 5".
+		/// Fails if the number is greater than +- ulong.MaxValue (0xffffffffffffffff).
+		/// The return value becomes negative if the number is greater than long.MaxValue, for example "0xffffffffffffffff" is -1, but it becomes correct if assigned to ulong (need cast).
+		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
+		/// </remarks>
+		/// <exception cref="ArgumentOutOfRangeException">When startIndex is less than 0 or greater than string length.</exception>
+		/// <seealso cref="Api.strtoi64"/>
+		/// <seealso cref="Api.strtoui64"/>
+		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex)
+		{
+			return _ToInt(t, startIndex, out numberEndIndex, true);
+		}
+
+		/// <summary>
+		/// This overload does not have parameter numberEndIndex.
+		/// </summary>
+		public static long ToInt64_(this string t, int startIndex = 0)
+		{
+			int numberEndIndex;
+			return _ToInt(t, startIndex, out numberEndIndex, true);
+		}
+
+		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong)
+		{
+			numberEndIndex = 0;
+			int len = t == null ? 0 : t.Length;
+			if(startIndex < 0 || startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
+			int i = startIndex; char c = default(char);
+
+			//skip spaces
+			for(; ; i++) {
+				if(i == len) return 0;
+				c = t[i];
+				if(c > ' ') break;
+				if(c == ' ') continue;
+				if(c < '\t' || c > '\r') break; //\t \n \v \f \r
+			}
+
+			//skip -+
+			bool minus = false;
+			if(c == '-' || c == '+') {
+				if(++i == len) return 0;
+				if(c == '-') minus = true;
+				c = t[i];
+			}
+
+			long R = 0; //result
+
+			//is hex?
+			bool isHex = false;
+			if(c == '0' && i <= len - 3) {
+				c = t[++i];
+				if(c == 'x' || c == 'X') { i++; isHex = true; } else i--;
+			}
+
+			//skip '0'
+			int i0 = i;
+			while(i < len && t[i] == '0') i++;
+
+			int nDigits = 0, nMaxDigits;
+			if(isHex) {
+				nMaxDigits = toLong ? 16 : 8;
+				for(; i < len; i++) {
+					int k = _CharHexToDec(t[i]); if(k < 0) break;
+					if(++nDigits > nMaxDigits) return 0;
+					R = (R << 4) + k;
+				}
+				if(i == i0) i--; //0xNotHex (decimal 0)
+
+			} else { //decimal or not a number
+				nMaxDigits = toLong ? 20 : 10;
+				for(; i < len; i++) {
+					int k = t[i] - '0'; if(k < 0 || k > 9) break;
+					R = R * 10 + k;
+					//is too long?
+					if(++nDigits >= nMaxDigits) {
+						if(nDigits > nMaxDigits) return 0;
+						if(toLong) {
+							if(string.CompareOrdinal(t, i + 1 - nDigits, "18446744073709551615", 0, nDigits) > 0) return 0;
+						} else {
+							if(R > uint.MaxValue) return 0;
+						}
+					}
+				}
+				if(i == i0) return 0; //not a number
+			}
+
+			if(minus) R = -R;
+			numberEndIndex = i;
+			return R;
+		}
+
 		static int _CharHexToDec(char c)
 		{
 			if(c >= '0' && c <= '9') return c - '0';
@@ -263,104 +409,17 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts part of string to int.
-		/// Returns the int value, or 0 if fails to convert.
-		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
-		/// Unlike int.Parse and Convert.ToInt32:
-		///		The number in string can be followed by more text, like "123text".
-		///		Gets the end of the number part.
-		///		This overload has startIndex parameter.
-		///		No exceptions. If fails to convert, sets numberEndIndex = 0 and returns 0.
-		///		Supports hexadecimal format, like "0x1E" or "0x1e".
-		///		Ignores any culture info.
-		///		7-9 times faster.
-		/// </summary>
-		/// <param name="startIndex">Offset in string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
-		/// <remarks>
-		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
-		/// The number can be with "-", like "-5", but not with "+" or "- ".
-		/// For decimal numbers, fails if the value is less than int.MinValue or greater than int.MaxValue.
-		/// For hexadecimal numbers, fails if the value is more than uint.MaxValue (0xffffffff).
-		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets length=1.
-		/// This is the main overload. Other overloads just call it.
-		/// </remarks>
-		/// <seealso cref="Api.strtoi"/>
-		/// <seealso cref="Api.strtoui"/>
-		/// <seealso cref="Api.strtoi64"/>
-		public static int ToInt_(this string t, int startIndex, out int numberEndIndex)
-		{
-			numberEndIndex = 0;
-			if(t == null) return 0;
-			int i, k, n = 0; bool minus = false;
-
-			for(i = startIndex; i < t.Length; i++) if(t[i] != ' ' && t[i] != '\t' && t[i] != '\r' && t[i] != '\n') break; //skip spaces
-
-			if(i < t.Length && t[i] == '-') { i++; minus = true; } //minus
-
-			long R = 0; //result
-
-			if(i <= t.Length - 3 && t[i] == '0' && t[i + 1] == 'x') { //hex
-				for(i += 2; i < t.Length; i++) {
-					k = _CharHexToDec(t[i]); if(k < 0) break;
-					R = R * 16 + k;
-					if(++n > 8) return 0; //too long for hex int?
-				}
-				if(n == 0) i--; //0xNotHex (decimal 0)
-				else if(minus) R = -R;
-			} else { //decimal or not a number
-				for(; i < t.Length; i++) {
-					k = t[i] - '0'; if(k < 0 || k > 9) break;
-					R = R * 10 + k;
-					if(++n > 10) return 0; //too long for decimal int?
-				}
-				if(n == 0) return 0; //not a number
-
-				if(minus) { R = -R; if(R < int.MinValue) return 0; } else if(R > int.MaxValue) return 0; //too big for int?
-			}
-
-			numberEndIndex = i;
-			return (int)R;
-		}
-
-		/// <summary>
-		/// The same as the main overload, but without startIndex parameter.
-		/// </summary>
-		public static int ToInt_(this string t, out int numberEndIndex)
-		{
-			return ToInt_(t, 0, out numberEndIndex);
-		}
-
-		/// <summary>
-		/// The same as the main overload, but without numberEndIndex parameter.
-		/// </summary>
-		public static int ToInt_(this string t, int startIndex)
-		{
-			int eon;
-			return ToInt_(t, startIndex, out eon);
-		}
-
-		/// <summary>
-		/// The same as the main overload, but without startIndex and numberEndIndex parameters.
-		/// </summary>
-		public static int ToInt_(this string t)
-		{
-			int eon;
-			return ToInt_(t, 0, out eon);
-		}
-
-		/// <summary>
-		/// Converts string to int and gets string part followed by the number.
-		/// For example, for string "123text", sets the tail argument to "text" and returns 123.
-		/// For only-number string like "123", sets tail to "".
-		/// If fails to convert, sets tail to null.
+		/// Converts string to int (calls ToInt_()) and gets string part that follows the number.
+		/// For example, for string "123text" sets the tail variable = "text" and returns 123.
+		/// For string like "123" sets tail = "".
+		/// If fails to convert, sets tail = null.
 		/// Skips 1 ASCII space or tab character after the number part. For example, for string "123 text" sets tail = "text", not " text".
 		/// Everything else is the same as for the main overload.
 		/// </summary>
 		/// <param name="tail">A string variable. Can be this variable.</param>
-		public static int ToInt_(this string t, out string tail)
+		public static int ToIntAndString_(this string t, out string tail)
 		{
-			int eon, R = ToInt_(t, out eon);
+			int eon, R = ToInt_(t, 0, out eon);
 
 			if(eon == 0)
 				tail = null;
@@ -527,7 +586,7 @@ namespace Catkeys
 		/// </summary>
 		public static string Join(string separator, params object[] values)
 		{
-			if(values.Length>0 && values[0] == null) values[0] = "";
+			if(values.Length > 0 && values[0] == null) values[0] = "";
 			return string.Join(separator, values);
 		}
 	}

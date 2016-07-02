@@ -243,6 +243,15 @@ namespace Catkeys
 			}
 		}
 
+		////does not work. SHGetPathFromIDList too. Can get only PIDL, not path, although it is folder "C:\Program Files\WindowsApps".
+		//public static FolderPath WindowsStoreApps
+		//{
+		//	get
+		//	{
+		//		return _Get(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58);
+		//	}
+		//}
+
 		#endregion
 
 		#region private functions
@@ -298,7 +307,7 @@ namespace Catkeys
 			//return x.ToString();
 
 			return "<idlist:" + Convert.ToBase64String(ba).TrimEnd('=') + ">";
-        }
+		}
 
 		#endregion
 
@@ -492,9 +501,11 @@ namespace Catkeys
 						dict.Add(fd.pszName, path);
 					}
 				}
-			} catch {
+			}
+			catch {
 				dict = null;
-			} finally {
+			}
+			finally {
 				Marshal.FreeCoTaskMem(ipIds);
 				Marshal.ReleaseComObject(man);
 			}
@@ -525,9 +536,11 @@ namespace Catkeys
 				man = (IKnownFolderManager)new KnownFolderManager();
 				IKnownFolder kf; if(man.GetFolderByName(folderName, out kf) != 0) return "<unavailable>";
 				if(kf.GetPath(0, out path) != 0) return "<unavailable>";
-			} catch {
+			}
+			catch {
 				return "<unavailable>";
-			} finally {
+			}
+			finally {
 				if(man != null) Marshal.ReleaseComObject(man);
 			}
 
@@ -616,23 +629,32 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if path matches one of these wildcard patterns:
 		///		@"\\*" - network path.
-		///		@"?:\*" - local path.
-		///		@"?:" - drive name.
+		///		@"[A-Z]:\*" - local path.
+		///		@"[A-Z]:" - drive name.
 		///		@"%*%*" - environment variable (usually contains a full path).
 		///		@"˂*˃*" - special string that can be used with some functions of this library.
+		///		@":*" - eg shell object CLSID like "::{CLSID}"
+		///	Also returns true if path looks like a URL (any protocol), eg "http://abc" or "http:" or "shell:abc". Note: don't use "filename:stream" unless it is full path.
 		/// </summary>
 		public static bool IsFullPath(string path)
 		{
 			int len = (path == null) ? 0 : path.Length;
 
 			if(len >= 2) {
-				switch(path[0]) {
+				char c = path[0];
+				switch(c) {
 				case '<': return path.IndexOf('>', 1) >= 0;
 				case '%': return path.IndexOf('%', 1) >= 0;
 				case '\\': return path[1] == '\\';
+				case ':': return true;
 				}
 
-				if(path[1]==':') return len == 2 || path[2] == '\\';
+				if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+					if(path[1] == ':') return len == 2 || path[2] == '\\'; //info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
+
+					//is URL (any protocol)?
+					if(path.IndexOf(':') > 0) return Api.PathIsURL(path); //info: returns true if begins with "x:" where x is 2 or more of alphanumeric, '.', '-' and '+' characters
+				}
 			}
 
 			return false;
@@ -677,7 +699,7 @@ namespace Catkeys
 			else if(R[0] == '%') {
 				R = Environment.ExpandEnvironmentVariables(R);
 				if(R[0] == '%') return R;
-            }
+			}
 
 			if(R.IndexOf_(@".\") >= 0 || R.EndsWith_(".") || R.IndexOf('~') >= 0) {
 				try { R = Path.GetFullPath(R); } catch { }

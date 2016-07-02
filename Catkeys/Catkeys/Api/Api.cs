@@ -10,13 +10,13 @@ using System.Text;
 namespace Catkeys.Winapi
 {
 	[DebuggerStepThrough]
-	public static partial class Api
+	public static unsafe partial class Api
 	{
 		public static uint SizeOf<T>(T v) { return (uint)Marshal.SizeOf(typeof(T)); }
 		//speed: in Release same as with ref and same as plain Marshal.SizeOf(typeof(TYPE)). The object overload is almost 2 times slower (need boxing etc).
 
 		//Tried to make function that creates new struct and sets its first int member = sizeof struct. But cannot get address of generic parameter.
-		//public static unsafe void StructInitSize<T>(out T v) where T :struct
+		//public static void StructInitSize<T>(out T v) where T :struct
 		//{
 		//	v=new T();
 		//	int* cbSize = &v; //error when generic
@@ -777,7 +777,7 @@ namespace Catkeys.Winapi
 		public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, LPARAM pvParam, uint fWinIni);
 
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
-		public static extern unsafe bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
+		public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
 
 		#endregion
 
@@ -791,7 +791,7 @@ namespace Catkeys.Winapi
 		public static extern bool ClientToScreen(Wnd hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern unsafe int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, void* lpPoints, uint cPoints);
+		public static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, void* lpPoints, uint cPoints);
 
 		public struct GUITHREADINFO
 		{
@@ -895,9 +895,9 @@ namespace Catkeys.Winapi
 		//public static extern uint SendInput(uint cInputs, [In] INPUTMOUSE[] pInputs, int cbSize);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern unsafe uint SendInput(int cInputs, void* pInputs, int cbSize);
+		public static extern uint SendInput(int cInputs, void* pInputs, int cbSize);
 
-		public static unsafe bool SendInputKey(ref INPUTKEY ik)
+		public static bool SendInputKey(ref INPUTKEY ik)
 		{
 			fixed (void* p = &ik)
 			{
@@ -905,7 +905,7 @@ namespace Catkeys.Winapi
 			}
 		}
 
-		public static unsafe bool SendInputKey(INPUTKEY[] ik)
+		public static bool SendInputKey(INPUTKEY[] ik)
 		{
 			if(ik == null || ik.Length == 0) return false;
 			fixed (void* p = ik)
@@ -914,7 +914,7 @@ namespace Catkeys.Winapi
 			}
 		}
 
-		public static unsafe bool SendInputMouse(ref INPUTMOUSE ik)
+		public static bool SendInputMouse(ref INPUTMOUSE ik)
 		{
 			fixed (void* p = &ik)
 			{
@@ -922,7 +922,7 @@ namespace Catkeys.Winapi
 			}
 		}
 
-		public static unsafe bool SendInputMouse(INPUTMOUSE[] ik)
+		public static bool SendInputMouse(INPUTMOUSE[] ik)
 		{
 			if(ik == null || ik.Length == 0) return false;
 			fixed (void* p = ik)
@@ -942,6 +942,14 @@ namespace Catkeys.Winapi
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool SetLayeredWindowAttributes(Wnd hwnd, uint crKey, byte bAlpha, uint dwFlags);
+
+		[DllImport("user32.dll")]
+		public static extern IntPtr CreateIcon(IntPtr hInstance, int nWidth, int nHeight, byte cPlanes, byte cBitsPixel, byte[] lpbANDbits, byte[] lpbXORbits);
+
+		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW")]
+		public static extern uint PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, [Out] IntPtr[] phicon, IntPtr piconid, uint nIcons, uint flags);
+		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW")]
+		public static extern uint PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, out IntPtr phicon, IntPtr piconid, uint nIcons, uint flags);
 
 
 
@@ -1163,19 +1171,19 @@ namespace Catkeys.Winapi
 		}
 
 		[DllImport("advapi32.dll", SetLastError = true)]
-		public static extern unsafe bool GetTokenInformation(IntPtr TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, void* TokenInformation, uint TokenInformationLength, out uint ReturnLength);
+		public static extern bool GetTokenInformation(IntPtr TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, void* TokenInformation, uint TokenInformationLength, out uint ReturnLength);
 
 		[DllImport("advapi32.dll")]
-		public static extern unsafe byte* GetSidSubAuthorityCount(IntPtr pSid);
+		public static extern byte* GetSidSubAuthorityCount(IntPtr pSid);
 
 		[DllImport("advapi32.dll")]
-		public static extern unsafe uint* GetSidSubAuthority(IntPtr pSid, uint nSubAuthority);
+		public static extern uint* GetSidSubAuthority(IntPtr pSid, uint nSubAuthority);
 
 		[DllImport("advapi32.dll")]
-		public static extern unsafe int RegSetValueEx(IntPtr hKey, string lpValueName, int Reserved, Microsoft.Win32.RegistryValueKind dwType, void* lpData, int cbData);
+		public static extern int RegSetValueEx(IntPtr hKey, string lpValueName, int Reserved, Microsoft.Win32.RegistryValueKind dwType, void* lpData, int cbData);
 
 		[DllImport("advapi32.dll")]
-		public static extern unsafe int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
+		public static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
 
 
 
@@ -1261,13 +1269,140 @@ namespace Catkeys.Winapi
 		public const uint SFGAO_STORAGECAPMASK = 0x70C50008;
 		public const uint SFGAO_PKEYSFGAOMASK = 0x81044000;
 
+		public static Guid IID_IShellFolder = new Guid(0x000214E6, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+
+		[ComImport, Guid("000214E6-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		public interface IShellFolder
+		{
+			[PreserveSig]
+			int ParseDisplayName(Wnd hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, uint* pchEaten, out IntPtr ppidl, uint* pdwAttributes);
+			[PreserveSig]
+			int EnumObjects(Wnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
+			[PreserveSig]
+			int BindToObject(IntPtr pidl, IntPtr pbc, [In] ref Guid riid, out IntPtr ppv);
+			[PreserveSig]
+			int BindToStorage(IntPtr pidl, IntPtr pbc, [In] ref Guid riid, out IntPtr ppv);
+			[PreserveSig]
+			int CompareIDs(LPARAM lParam, IntPtr pidl1, IntPtr pidl2);
+			[PreserveSig]
+			int CreateViewObject(Wnd hwndOwner, [In] ref Guid riid, out IntPtr ppv);
+			[PreserveSig]
+			int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] [In] IntPtr[] apidl, ref uint rgfInOut);
+			[PreserveSig]
+			//int GetUIObjectOf(Wnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] [In] IntPtr[] apidl, [In] ref Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+			int GetUIObjectOf(Wnd hwndOwner, uint cidl, IntPtr* apidl, [In] ref Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.Interface)] out object ppv);
+			[PreserveSig]
+			int GetDisplayNameOf(IntPtr pidl, uint uFlags, out STRRET pName);
+			[PreserveSig]
+			int SetNameOf(Wnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
+		}
+
+		[ComImport, Guid("000214F2-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		public interface IEnumIDList
+		{
+			[PreserveSig]
+			int Next(uint celt, [MarshalAs(UnmanagedType.LPArray)] [Out] IntPtr[] rgelt, out uint pceltFetched);
+			[PreserveSig]
+			int Skip(uint celt);
+			[PreserveSig]
+			int Reset();
+			[PreserveSig]
+			int Clone(out IEnumIDList ppenum);
+		}
+
+		public struct STRRET
+		{
+			public uint uType;
+
+			[StructLayout(LayoutKind.Explicit)]
+			public struct TYPE_1
+			{
+				[FieldOffset(0)]
+				public IntPtr pOleStr;
+				[FieldOffset(0)]
+				public uint uOffset;
+				[FieldOffset(0)]
+				[MarshalAs(UnmanagedType.ByValArray, SizeConst = 260)]
+				public sbyte[] cStr;
+			}
+			public TYPE_1 _2;
+		}
+
+		public static Guid IID_IExtractIcon = new Guid(0x000214FA, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+
+		[ComImport, Guid("000214fa-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		public interface IExtractIcon
+		{
+			[PreserveSig]
+			int GetIconLocation(uint uFlags, [Out] StringBuilder pszIconFile, uint cchMax, out int piIndex, out uint pwFlags);
+			[PreserveSig]
+			int Extract([MarshalAs(UnmanagedType.LPWStr)] string pszFile, uint nIconIndex, IntPtr* phiconLarge, IntPtr* phiconSmall, uint nIconSize);
+		}
+
+		[DllImport("shell32.dll", PreserveSig = true)]
+		public static extern int SHGetDesktopFolder(out IShellFolder ppshf);
+
 		[DllImport("shell32.dll")]
-		public static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, out uint psfgaoOut);
+		public static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, uint* psfgaoOut);
+
+		[DllImport("shell32.dll", PreserveSig = true)]
+		public static extern int SHBindToParent(IntPtr pidl, [In] ref Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
+
+		public const uint GIL_NOTFILENAME = 0x8;
+		public const uint GIL_SIMULATEDOC = 0x1;
 
 
 
 
 
+		[ComImport, Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		public interface IPropertyStore
+		{
+			[PreserveSig]
+			int GetCount(out uint cProps);
+			[PreserveSig]
+			int GetAt(uint iProp, out PROPERTYKEY pkey);
+			[PreserveSig]
+			int GetValue([In] ref PROPERTYKEY key, out PROPVARIANT_LPARAM pv);
+			[PreserveSig]
+			int SetValue([In] ref PROPERTYKEY key, [In] ref PROPVARIANT_LPARAM propvar);
+			[PreserveSig]
+			int Commit();
+		}
+
+		[DllImport("shell32.dll", PreserveSig = true)]
+		public static extern int SHGetPropertyStoreForWindow(Wnd hwnd, [In] ref Guid riid, out IPropertyStore ppv);
+
+		public static Guid IID_IPropertyStore = new Guid(0x886D8EEB, 0x8CF2, 0x4446, 0x8D, 0x02, 0xCD, 0xBA, 0x1D, 0xBD, 0xCF, 0x99);
+
+		public struct PROPERTYKEY
+		{
+			public Guid fmtid;
+			public uint pid;
+		}
+
+		public struct PROPVARIANT_LPARAM
+		{
+			public ushort vt;
+			public ushort wReserved1;
+			public ushort wReserved2;
+			public ushort wReserved3;
+			public LPARAM value;
+			public IntPtr _u1;
+		}
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		public static extern int PropVariantClear(ref PROPVARIANT_LPARAM pvar);
+
+		public static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
+
+
+
+
+		//SHLWAPI
+
+		[DllImport("shlwapi.dll", EntryPoint = "PathIsURLW")]
+		public static extern bool PathIsURL(string pszPath);
 
 
 
@@ -1303,27 +1438,27 @@ namespace Catkeys.Winapi
 		/// This overload has different parameter types.
 		/// </summary>
 		[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe int strtoi(char* s, out char* endPtr, int numberBase = 0);
+		public static extern int strtoi(char* s, out char* endPtr, int numberBase = 0);
 
 		/// <summary>
 		/// This overload has different parameter types.
 		/// </summary>
-		public static unsafe uint strtoui(char* s, out char* endPtr, int numberBase = 0)
+		public static uint strtoui(char* s, out char* endPtr, int numberBase = 0)
 		{
 			long k = strtoi64(s, out endPtr, numberBase);
 			return k < -int.MaxValue ? 0u : (k > uint.MaxValue ? uint.MaxValue : (uint)k);
 		}
 		//note: don't use the u API because they return 1 if the value is too big and the string contains '-'.
 		//[DllImport("msvcrt.dll", EntryPoint = "wcstoul", CallingConvention = CallingConvention.Cdecl)]
-		//public static extern unsafe uint strtoui(char* s, out char* endPtr, int _base = 0);
+		//public static extern uint strtoui(char* s, out char* endPtr, int _base = 0);
 		[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe ulong strtoui64(char* s, out char* endPtr, int _base = 0);
+		public static extern ulong strtoui64(char* s, out char* endPtr, int _base = 0);
 
 		/// <summary>
 		/// This overload has different parameter types.
 		/// </summary>
 		[DllImport("msvcrt.dll", EntryPoint = "_wcstoi64", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe long strtoi64(char* s, out char* endPtr, int numberBase = 0);
+		public static extern long strtoi64(char* s, out char* endPtr, int numberBase = 0);
 		//info: ntdll also has wcstol, wcstoul, _wcstoui64, but not _wcstoi64.
 
 		/// <summary>
@@ -1337,7 +1472,7 @@ namespace Catkeys.Winapi
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
 		/// <param name="numberBase">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
 		/// <exception cref="ArgumentOutOfRangeException">When startIndex is invalid.</exception>
-		public static unsafe int strtoi(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
+		public static int strtoi(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
 		{
 			int R = 0, len = s == null ? 0 : s.Length - startIndex;
 			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
@@ -1364,7 +1499,7 @@ namespace Catkeys.Winapi
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
 		/// <param name="numberBase">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
 		/// <exception cref="ArgumentOutOfRangeException">When startIndex is invalid.</exception>
-		public static unsafe uint strtoui(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
+		public static uint strtoui(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
 		{
 			uint R = 0;
 			int len = s == null ? 0 : s.Length - startIndex;
@@ -1391,7 +1526,7 @@ namespace Catkeys.Winapi
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
 		/// <param name="numberBase">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
 		/// <exception cref="ArgumentOutOfRangeException">When startIndex is invalid.</exception>
-		public static unsafe long strtoi64(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
+		public static long strtoi64(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
 		{
 			long R = 0;
 			int len = s == null ? 0 : s.Length - startIndex;
@@ -1410,7 +1545,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload does not have parameter 'out int numberEndIndex'.
 		/// </summary>
-		public static unsafe int strtoi(string s, int startIndex = 0, int numberBase = 0)
+		public static int strtoi(string s, int startIndex = 0, int numberBase = 0)
 		{
 			int len;
 			return strtoi(s, startIndex, out len, numberBase);
@@ -1419,7 +1554,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload does not have parameter 'out int numberEndIndex'.
 		/// </summary>
-		public static unsafe uint strtoui(string s, int startIndex = 0, int numberBase = 0)
+		public static uint strtoui(string s, int startIndex = 0, int numberBase = 0)
 		{
 			int len;
 			return strtoui(s, startIndex, out len, numberBase);
@@ -1428,7 +1563,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload does not have parameter 'out int numberEndIndex'.
 		/// </summary>
-		public static unsafe long strtoi64(string s, int startIndex = 0, int numberBase = 0)
+		public static long strtoi64(string s, int startIndex = 0, int numberBase = 0)
 		{
 			int len;
 			return strtoi64(s, startIndex, out len, numberBase);
@@ -1437,7 +1572,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload does not have parameter 'out char* endPtr'.
 		/// </summary>
-		public static unsafe int strtoi(char* s, int numberBase = 0)
+		public static int strtoi(char* s, int numberBase = 0)
 		{
 			char* endPtr;
 			return strtoi(s, out endPtr, numberBase);
@@ -1446,7 +1581,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload does not have parameter 'out char* endPtr'.
 		/// </summary>
-		public static unsafe uint strtoui(char* s, int numberBase = 0)
+		public static uint strtoui(char* s, int numberBase = 0)
 		{
 			char* endPtr;
 			return strtoui(s, out endPtr, numberBase);
@@ -1455,7 +1590,7 @@ namespace Catkeys.Winapi
 		/// <summary>
 		/// This overload does not have parameter 'out char* endPtr'.
 		/// </summary>
-		public static unsafe long strtoi64(char* s, int numberBase = 0)
+		public static long strtoi64(char* s, int numberBase = 0)
 		{
 			char* endPtr;
 			return strtoi64(s, out endPtr, numberBase);

@@ -56,7 +56,7 @@ namespace Catkeys
 	///		The text by default is interpreted as wildcard, match case.
 	///		Can start with "[options]", where options can contain a type character and one or more option characters.
 	///		Type: w - wildcard (default), r - regular expression, f - full text, p - partial text.
-	///		Options: i - case-insensitive, c - use current culture, n - text must not match or is text that must match followed by !![options]text that must not match (see option n examples).
+	///		Options: i - case-insensitive, c - use current culture, n - text must not match (or is "text!![options]nottext" where nottext is text that must not match; see option n examples).
 	///		Example: "[fi]full text, ignore case".
 	///		Text "[]" means 'match only empty text'.
 	///		Text null or "" or "*" means 'match any text'; then the cast string->WildString operator returns null.
