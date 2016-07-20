@@ -72,17 +72,18 @@ namespace Catkeys
 			return R;
 		}
 
-		public struct ProcessInfo
+		//Use ProcessInfoInternal and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory, therefore GetProcesses() converts ProcessInfoInternal to ProcessInfo where ProcessName is string. Almost same speed.
+		internal struct ProcessInfoInternal
 		{
+#pragma warning disable 649 //says never used
 			public uint SessionID;
 			public uint ProcessID;
-#pragma warning disable 649 //says _ProcessName never used
 			IntPtr _ProcessName;
-#pragma warning restore
 			public IntPtr UserSid;
+#pragma warning restore
 
 			/// <summary>
-			/// Pocess executable file name without ".exe" extension. Not full path.
+			/// Process executable file name without ".exe". Not full path.
 			/// </summary>
 			public string ProcessName
 			{
@@ -107,10 +108,9 @@ namespace Catkeys
 		/// <summary>
 		/// Calls callback function for each process, until the function returns true.
 		/// </summary>
-		/// <param name="f">Lambda etc function that is called for each process. The parameter contains process id, name, user session id and pointer to SID.</param>
+		/// <param name="f">Lambda etc function that is called for each process.</param>
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
-		/// <returns></returns>
-		public static bool EnumProcesses(Func<ProcessInfo, bool> f, bool ofThisSession = false)
+		internal static unsafe bool EnumProcesses(Func<ProcessInfoInternal, bool> f, bool ofThisSession = false)
 		{
 			uint sessionId = 0;
 			if(ofThisSession) {
@@ -120,15 +120,13 @@ namespace Catkeys
 			IntPtr pp; uint n;
 			if(!WTSEnumerateProcessesW(Zero, 0, 1, out pp, out n)) return false;
 			try {
-				unsafe
-				{
-					ProcessInfo* p = (ProcessInfo*)pp;
-					for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
-						if(ofThisSession && p[i].SessionID != sessionId) continue;
-						if(f(p[i])) break;
-					}
+				ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
+				for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
+					if(ofThisSession && p[i].SessionID != sessionId) continue;
+					if(f(p[i])) break;
 				}
-			} finally { WTSFreeMemory(pp); }
+			}
+			finally { WTSFreeMemory(pp); }
 
 			return true;
 
@@ -148,6 +146,45 @@ namespace Catkeys
 			////speed: 30% slower
 			//Process p = Process.GetProcessById((int)processId);
 			//if(p != null) try { R = p.ProcessName; } catch { } //fails
+		}
+
+		/// <summary>
+		/// Contains process id, name, user session id.
+		/// </summary>
+		public struct ProcessInfo
+		{
+			public uint SessionID;
+			public uint ProcessID;
+			/// <summary>
+			/// Process executable file name without ".exe". Not full path.
+			/// </summary>
+			public string ProcessName;
+			//public IntPtr UserSid; //where is its memory?
+		}
+
+		/// <summary>
+		/// Gets processes array that contains process name, id and session id.
+		/// </summary>
+		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
+		public static unsafe ProcessInfo[] GetProcesses(bool ofThisSession = false)
+		{
+			uint sessionId = 0;
+			if(ofThisSession) {
+				if(!Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out sessionId)) return null;
+			}
+
+			IntPtr pp; uint n;
+			if(!WTSEnumerateProcessesW(Zero, 0, 1, out pp, out n)) return null;
+
+			var t = new List<ProcessInfo>((int)n);
+			ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
+			for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
+				if(ofThisSession && p[i].SessionID != sessionId) continue;
+				t.Add(new ProcessInfo() { SessionID = p[i].SessionID, ProcessID = p[i].ProcessID, ProcessName = p[i].ProcessName });
+			}
+			WTSFreeMemory(pp);
+
+			return t.ToArray();
 		}
 
 		/// <summary>
@@ -340,8 +377,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns true if the process is a Windows store app.
-		/// Processes of Medium non-uiAccess integrity level cannot access/automate Windows store app windows on Windows 8 (but can on Windows 10).
+		/// Returns true if the process is a Windows Store app.
 		/// </summary>
 		public bool IsAppContainer
 		{
@@ -373,7 +409,7 @@ namespace Catkeys
 		/// Gets process UAC integrity level (IL).
 		/// IL from lowest to highest value:
 		///		Untrusted - the most limited rights. Very rare.
-		///		Low - very limited rights. Used by Internet Explorer tab processes, Windows store apps.
+		///		Low - very limited rights. Used by Internet Explorer tab processes, Windows Store apps.
 		///		Medium - limited rights. Most processes (unless UAC turned off).
 		///		UIAccess - Medium IL + can access/automate High IL windows (user interface).
 		///			Note: Only the IntegrityLevelAndUIAccess property can return UIAccess. This property returns High instead (the same as in Process Explorer).
@@ -406,7 +442,7 @@ namespace Catkeys
 					Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out siz);
 					if(Marshal.GetLastWin32Error() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 					else {
-						TOKEN_MANDATORY_LABEL* tml = (TOKEN_MANDATORY_LABEL*)Marshal.AllocHGlobal((int)siz); //TODO: don't use Marshal Alloc/Free, because in other place it was slow etc
+						TOKEN_MANDATORY_LABEL* tml = (TOKEN_MANDATORY_LABEL*)Marshal.AllocHGlobal((int)siz);
 						if(tml == null) _haveIntegrityLevel = 2;
 						else {
 							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
@@ -425,7 +461,6 @@ namespace Catkeys
 							Marshal.FreeHGlobal((IntPtr)tml);
 						}
 					}
-
 				}
 			}
 			if(Failed = (_haveIntegrityLevel == 2)) return IL.Unknown;
@@ -498,7 +533,8 @@ namespace Catkeys
 						WindowsIdentity id = WindowsIdentity.GetCurrent();
 						WindowsPrincipal principal = new WindowsPrincipal(id);
 						_isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
-					} catch { }
+					}
+					catch { }
 					_haveIsAdmin = true;
 				}
 				return _isAdmin;
@@ -580,7 +616,8 @@ namespace Catkeys
 			int r = 1;
 			try {
 				r = (int)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1);
-			} catch { }
+			}
+			catch { }
 			return r == 0;
 		}
 	}

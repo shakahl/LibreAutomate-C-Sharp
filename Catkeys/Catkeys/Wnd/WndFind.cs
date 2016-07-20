@@ -26,8 +26,10 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public partial struct Wnd
 	{
-		//Base of WinProp and ChildProp.
-		public class _WndProp
+		/// <summary>
+		/// Base of Wnd.WinProp and Wnd.ChildProp. Not used directly as _WndProp variables.
+		/// </summary>
+		public abstract class _WndProp
 		{
 			/// <summary>
 			/// The window must have all these styles (Api.WS_x). Reference: MSDN.
@@ -147,7 +149,7 @@ namespace Catkeys
 		#region find top-level
 
 		/// <summary>
-		/// Contains various window properties to pass to Wnd.Find 'prop' parameter.
+		/// Contains various window properties to pass to Wnd.Find() 'prop' parameter.
 		/// </summary>
 		public class WinProp :_WndProp
 		{
@@ -184,7 +186,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Wnd.Find flags. Documented there.
+		/// Wnd.Find() flags. Documented there.
 		/// </summary>
 		[Flags]
 		public enum WinFlag
@@ -193,7 +195,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Specifies Wnd.Find arguments. Documented there.
+		/// Specifies Wnd.Find() arguments. Documented there.
 		/// </summary>
 		public class WindowDefinition
 		{
@@ -201,13 +203,13 @@ namespace Catkeys
 			readonly WildStringI _className; //default wildcard, ignore case
 			readonly WildStringI _program; //default wildcard, ignore case
 			readonly WinProp _prop;
-			readonly Action<CallbackArgs> _f;
+			readonly Action<_CallbackArgs> _f;
 			readonly int _matchIndex;
 			readonly WinFlag _flags;
 
 			public WindowDefinition(
 				WildString name, WildStringI className = null, WildStringI program = null,
-				WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+				WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
 				)
 			{
 				_name = name;
@@ -225,7 +227,7 @@ namespace Catkeys
 			public Wnd Result { get; private set; }
 
 			/// <summary>
-			/// Finds window, like Wnd.Find.
+			/// Finds window, like Wnd.Find().
 			/// Returns true if found.
 			/// The Result property will be the window.
 			/// </summary>
@@ -253,7 +255,7 @@ namespace Catkeys
 				else if(!p.Init()) return -1;
 
 				List<uint> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
-				CallbackArgs cbArgs = null;
+				_CallbackArgs cbArgs = null;
 				int matchInd = _matchIndex;
 
 				int index = -1;
@@ -349,7 +351,7 @@ namespace Catkeys
 					}
 
 					if(_f != null) {
-						if(cbArgs == null) cbArgs = new CallbackArgs();
+						if(cbArgs == null) cbArgs = new _CallbackArgs();
 						cbArgs.w = w;
 						_f(cbArgs);
 						if(!cbArgs.stop) continue;
@@ -367,7 +369,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds window.
-		/// Returns its handle as Wnd. Returns Wnd0 if not found. No exceptions.
+		/// Returns its handle as Wnd. Returns Wnd0 if not found.
 		/// Example: <c>Wnd w=Wnd.Find("Name"); if(w.Is0) Out("not found");</c>
 		/// </summary>
 		/// <param name="name">Window name. Usually it is the title bar text. Supports wildcard etc, case-sensitive (more info in WildString help).</param>
@@ -380,7 +382,7 @@ namespace Catkeys
 		/// </param>
 		/// <param name="flags">
 		/// HiddenToo - can find hidden windows.
-		/// SkipCloaked - skip cloaked windows. Cloaked windows are windows hidden not in the classic way (Wnd.Visible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows store apps on Windows 8.
+		/// SkipCloaked - skip cloaked windows. Cloaked windows are windows hidden not in the classic way (Wnd.Visible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows Store apps on Windows 8.
 		/// ProgramPath - the 'program' argument is full path. Need this flag because the function cannot auto-detect it when using wildcard or regex.
 		/// </param>
 		/// <param name="prop">More properties, child control, etc. Example: <c>new Wnd.WinProp(){ childClass="Static", childText="Text*" }</c></param>
@@ -389,10 +391,11 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses all arguments that are not omitted/0/null/"".
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
+		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use Wnd.FindRaw().
 		/// </remarks>
 		public static Wnd Find(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+			WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			var d = new WindowDefinition(name, className, program, flags, prop, f, matchIndex);
@@ -406,7 +409,7 @@ namespace Catkeys
 		/// <seealso cref="Find"/>
 		public static Wnd FindH(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+			WinProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			return Find(name, className, program, WinFlag.HiddenToo, prop, f, matchIndex);
@@ -414,13 +417,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds all matching windows.
-		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Returns list containing 0 or more window handles as Wnd.
 		/// Everything except the return type is the same as with Find().
 		/// The list is sorted to match the Z order, however hidden windows (when using WinFlag.HiddenToo) are always placed after visible windows.
 		/// </summary>
 		public static List<Wnd> FindAll(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinFlag flags = 0, WinProp prop = null, Action<CallbackArgs> f = null
+			WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null
 			)
 		{
 			var a = new List<Wnd>();
@@ -447,14 +450,17 @@ namespace Catkeys
 		//}
 
 		/// <summary>
-		/// Finds window by class name.
-		/// Uses Api.FindWindow(). Much faster than Find(), which uses Api.EnumWindows().
+		/// Finds window by class name and optionally name.
+		/// Calls Api.FindWindowEx().
+		/// Faster than Find(), which uses Api.EnumWindows(), but slower when used in a loop to enumerate all windows.
 		/// Does not skip hidden and cloaked windows, and does not prefer visible windows like Find().
 		/// </summary>
-		/// <param name="className">Class name. Full, case-insensitive. Wildcard etc not supported.</param>
-		public static Wnd FindCN(string className)
+		/// <param name="className">Class name. Full, case-insensitive. Wildcard etc not supported. Can be null to match any.</param>
+		/// <param name="fullName">Name. Full, case-insensitive. Wildcard etc not supported. Can be omitted or null to match any.</param>
+		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
+		public static Wnd FindRaw(string className, string fullName = null, Wnd wAfter=default(Wnd))
 		{
-			return Api.FindWindow(className, null);
+			return Api.FindWindowEx(Wnd0, wAfter, className, fullName);
 		}
 
 		#endregion
@@ -462,7 +468,7 @@ namespace Catkeys
 		#region find control
 
 		/// <summary>
-		/// Contains various control properties to pass to Wnd.Child 'prop' parameter.
+		/// Contains various control properties to pass to Wnd.Child() 'prop' parameter.
 		/// </summary>
 		public class ChildProp :_WndProp
 		{
@@ -496,13 +502,14 @@ namespace Catkeys
 			{
 				if(!_Init()) return false;
 
-				_xy=Coord.GetNormalizedInWindowClientArea(x, y, wParent);
+				_xy = Coord.GetNormalizedInWindowClientArea(x, y, wParent);
 
 				if(Empty(wfName)) _wfControls = null;
 				else
 					try {
 						_wfControls = new WindowsFormsControlNames(wParent);
-					} catch(CatkeysException e) { throw new CatkeysException("Cannot get wfName of controls. Try to run as admin.", e); }
+					}
+					catch(CatkeysException e) { throw new CatkeysException("Cannot get wfName of controls. Try to run as admin.", e); }
 
 				return true;
 			}
@@ -527,7 +534,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Wnd.Child flags. Documented there.
+		/// Wnd.Child() flags. Documented there.
 		/// </summary>
 		[Flags]
 		public enum ChildFlag
@@ -536,21 +543,21 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Specifies Wnd.Child arguments. Documented there.
+		/// Specifies Wnd.Child() arguments. Documented there.
 		/// </summary>
 		public class ChildDefinition
 		{
 			readonly WildString _name; //default wildcard, match case
 			readonly WildStringI _className; //default wildcard, ignore case
 			readonly ChildProp _prop;
-			readonly Action<CallbackArgs> _f;
+			readonly Action<_CallbackArgs> _f;
 			readonly int _matchIndex;
 			readonly int _id;
 			readonly ChildFlag _flags;
 
 			public ChildDefinition(
 				WildString name, WildStringI className = null, int id = 0,
-				ChildFlag flags = 0, ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+				ChildFlag flags = 0, ChildProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
 				)
 			{
 				_name = name;
@@ -568,7 +575,7 @@ namespace Catkeys
 			public Wnd Result { get; private set; }
 
 			/// <summary>
-			/// Finds control, like Wnd.Child.
+			/// Finds control, like Wnd.Child().
 			/// Returns true if found.
 			/// The Result property will be the control.
 			/// </summary>
@@ -599,7 +606,7 @@ namespace Catkeys
 				if(_prop != null && !_prop.Init(wParent)) return -1;
 				try { //will need to call _prop.Clear
 
-					CallbackArgs cbArgs = null;
+					_CallbackArgs cbArgs = null;
 					int matchInd = _matchIndex;
 
 					bool mustBeDirectChild = publicCall && _flags.HasFlag(ChildFlag.DirectChild);
@@ -676,7 +683,7 @@ namespace Catkeys
 						}
 
 						if(_f != null) {
-							if(cbArgs == null) cbArgs = new CallbackArgs();
+							if(cbArgs == null) cbArgs = new _CallbackArgs();
 							cbArgs.w = c;
 							_f(cbArgs);
 							if(!cbArgs.stop) continue;
@@ -688,7 +695,8 @@ namespace Catkeys
 						return index;
 					}
 
-				} finally {
+				}
+				finally {
 					if(_prop != null) { _prop.Clear(); }
 				}
 
@@ -725,7 +733,7 @@ namespace Catkeys
 		/// </remarks>
 		public Wnd Child(
 			WildString name, WildStringI className = null, int id = 0,
-			ChildFlag flags = 0, ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+			ChildFlag flags = 0, ChildProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			ValidateThrow();
@@ -737,10 +745,10 @@ namespace Catkeys
 		/// <summary>
 		/// Calls Child() with flag ChildFlag.HiddenToo.
 		/// </summary>
-		/// <seealso cref="Child(WildString, WildStringI, int, ChildFlag, ChildProp, Action{CallbackArgs}, int)"/>
+		/// <seealso cref="Child(WildString, WildStringI, int, ChildFlag, ChildProp, Action{_CallbackArgs}, int)"/>
 		public Wnd ChildH(
 			WildString name, WildStringI className = null, int id = 0,
-			ChildProp prop = null, Action<CallbackArgs> f = null, int matchIndex = 1
+			ChildProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			return Child(name, className, id, ChildFlag.HiddenToo, prop, f, matchIndex);
@@ -748,12 +756,12 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds all matching child controls.
-		/// Returns list containing 0 or more elements (control handles as Wnd).
+		/// Returns list containing 0 or more control handles as Wnd.
 		/// Everything except the return type is the same as with Child().
 		/// </summary>
 		public List<Wnd> ChildAll(
 			WildString name, WildStringI className = null, int id = 0,
-			ChildFlag flags = 0, ChildProp prop = null, Action<CallbackArgs> f = null
+			ChildFlag flags = 0, ChildProp prop = null, Action<_CallbackArgs> f = null
 			)
 		{
 			ValidateThrow();
@@ -818,6 +826,21 @@ namespace Catkeys
 			return R;
 		}
 
+		/// <summary>
+		/// Finds direct child control by its class name and optionally full name.
+		/// Calls Api.FindWindowEx().
+		/// Finds hidden controls too, and does not prefer visible controls like Child().
+		/// </summary>
+		/// <param name="className">Class name. Full, case-insensitive. Wildcard etc not supported. Can be null to match any.</param>
+		/// <param name="fullName">Name. Full, case-insensitive. Wildcard etc not supported. Can be omitted or null to match any.</param>
+		/// <param name="wAfter">If not Wnd0, starts searching from the next control in the Z order.</param>
+		/// <remarks>This window also can be Wnd.Misc.SpecHwnd.Message to find a message-only window.</remarks>
+		public Wnd ChildRaw(string className, string fullName = null, Wnd wAfter=default(Wnd))
+		{
+			//ValidateThrow(); //no, it can be Message
+			return Api.FindWindowEx(this, wAfter, className, fullName);
+		}
+
 		#endregion
 
 		#region from XY
@@ -826,9 +849,9 @@ namespace Catkeys
 		//	Acc location on Win10 with different DPI of monitors.
 
 		/// <summary>
-		/// Gets visible non-transparent top-level window or visible enabled control from point.
+		/// Gets visible top-level window or visible enabled control from point.
 		/// This function just calls Api.WindowFromPoint() and returns its return value.
-		/// Use FromXY instead if you need "more real" controls (include disabled controls, prefer non-transparent controls) or if you want only top-level or only child windows.
+		/// Use FromXY instead if you need "real" controls (include disabled controls, prefer non-transparent controls) or if you want only top-level or only child windows.
 		/// </summary>
 		/// <param name="x">X coordinate.</param>
 		/// <param name="y">Y coordinate.</param>
@@ -837,7 +860,7 @@ namespace Catkeys
 			return Api.WindowFromPoint(new POINT(x, y));
 		}
 		/// <summary>
-		/// Gets visible non-transparent top-level window or visible enabled control from point.
+		/// Gets visible top-level window or visible enabled control from point.
 		/// From other overload differs only by the parameter type.
 		/// </summary>
 		/// <param name="p">X and Y coordinates.</param>
@@ -847,7 +870,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets visible non-transparent top-level window or control from point.
+		/// Gets visible top-level window or control from point.
 		/// Unlike FromXYRaw(), this function gets non-transparent controls that are behind (in the Z order) transparent controls (eg a group button or a tab control).
 		/// Also this function supports fractional coordinates and does not skip disabled controls.
 		/// </summary>
@@ -864,7 +887,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets visible non-transparent top-level window or control from point.
+		/// Gets visible top-level window or control from point.
 		/// From other overload differs only by the parameter type.
 		/// </summary>
 		public static Wnd FromXY(POINT p, bool? control = null)
@@ -912,7 +935,7 @@ namespace Catkeys
 		//}
 
 		/// <summary>
-		/// Gets visible non-transparent top-level window or control from mouse cursor position.
+		/// Gets visible top-level window or control from mouse cursor position.
 		/// Calls FromXY(Mouse.XY, control).
 		/// </summary>
 		/// <param name="control">
@@ -997,7 +1020,7 @@ namespace Catkeys
 			for(Wnd R = Wnd0; ;) {
 				Wnd t = _RealChildWindowFromPoint_RtlAware(w, p);
 				if(directChild) return t;
-				if(t.Is0 || !MapWindowPoints(w, t, ref p)) return R;
+				if(t.Is0 || !w.MapClientToClientOf(t, ref p)) return R;
 				R = w = t;
 			}
 		}
@@ -1111,7 +1134,8 @@ namespace Catkeys
 			if(!IsWindowsForms(c)) return null;
 			try {
 				using(var x = new WindowsFormsControlNames(c)) { return x.GetControlName(c); }
-			} catch { }
+			}
+			catch { }
 			return null;
 		}
 

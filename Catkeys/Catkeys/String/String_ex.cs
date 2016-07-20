@@ -25,26 +25,9 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public static partial class String_
 	{
-		public static string PathExpand(this string t)
-		{
-			return null;
-		}
-
-		public static string PathUnexpand(this string t)
-		{
-			return null;
-		}
-
-		public static string PathAppend(this string t, string s)
-		{
-			s = Path.Combine(t, s); //TODO: if s empty, use $app$
-			return Path.GetFullPath(s); //TODO: only if contains \.
-			//return s;
-		}
-
-		public static string PathPrepend(this string t)
-		{
-			return null;
-		}
+		//public static string X(this string t)
+		//{
+		//	return null;
+		//}
 	}
 }

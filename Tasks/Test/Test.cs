@@ -1,6 +1,4 @@
-﻿//#define NETSM
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,6 +13,7 @@ using System.IO;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
+using System.Drawing;
 using K = System.Windows.Forms.Keys;
 
 using System.Reflection;
@@ -46,9 +45,7 @@ using System.Globalization;
 
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
-#pragma warning disable 162 //unreachable code
-
-#if !NETSM
+#pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 
 
 public class Ooo
@@ -94,6 +91,8 @@ public class Ooo
 
 public partial class Test
 {
+	#region old_test_functions
+
 	static void TestCurrentCulture()
 	{
 		string s = "FILE";
@@ -667,8 +666,6 @@ bbb"", b3
 		//Wnd wq = Wnd.Find(null, "QM_Editor");
 		//Out(wq.GetClassLong(Api.GCW_ATOM));
 
-		//Out(Util.Window.RegWinClassHidden("QM_Editor", _WndProcCompiler));
-
 		//Out(Wnd.GetClassAtom("Edit"));
 		//Out(Wnd.GetClassAtom("QM_Editor"));
 		//Out(Wnd.GetClassAtom("QM_Editor", Util.Misc.GetModuleHandleOfExe()));
@@ -783,7 +780,7 @@ bbb"", b3
 		////List<Wnd> e2 = w.DirectChildControlsFastUnsafe();
 		////Out(e2.Count);
 
-		////Perf.First(true);
+		////Perf.First(100);
 		////for(int uu=0; uu<5; uu++) {
 		////	Perf.First();
 		////	Perf.Execute(1000, () => { e2 =w.DirectChildControlsFastUnsafe(); });
@@ -865,7 +862,7 @@ bbb"", b3
 
 		//Process[] a=null;
 
-		//Perf.First(true);
+		//Perf.First(100);
 		//a = Process.GetProcesses();
 		//Perf.Next();
 		//a = Process.GetProcesses();
@@ -1115,8 +1112,8 @@ bbb"", b3
 
 	static void TestProcessMemory()
 	{
-		//var w = Wnd.FindCN("QM_Editor");
-		var w = Wnd.FindCN("Notepad");
+		//var w = Wnd.FindRaw("QM_Editor");
+		var w = Wnd.FindRaw("Notepad");
 		Out(w);
 		ProcessMemory x = null;
 		try {
@@ -1236,7 +1233,7 @@ bbb"", b3
 		//w = Wnd.Find(Wnd.WinFlag.ProgramPath, null, null, "Q:\\*");
 		//w = Wnd.Find(Wnd.WinFlag.ProgramPath, null, null, "c:\\*");
 		//w = Wnd.Find(null, "QM_*", matchIndex:2);
-		//w = Wnd.Find(null, "QM_*", prop:new Wnd.WinProp() {childClass="QM_Code" } ); //TODO: test when Child implemented
+		//w = Wnd.Find(null, "QM_*", prop:new Wnd.WinProp() {childClass="QM_Code" } );
 		//w = Wnd.Find(null, "QM_*", prop:new Wnd.WinProp() {owner=Wnd.Find("Quick Macros*") } );
 		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {processId= Wnd.Find("Quick Macros*").ProcessId } );
 		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {threadId=Wnd.Find("*Notepad").ThreadId } );
@@ -1265,9 +1262,9 @@ bbb"", b3
 		//w = Wnd.FromXY(1532, 1224, null);
 		//w = Wnd.FromXY(0.1, 0.1, null, true, true);
 
-		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindCN("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
+		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindRaw("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
 
-		//w = Wnd.FindCN("QM_Editor");
+		//w = Wnd.FindRaw("QM_Editor");
 		Out(w);
 		//return;
 
@@ -1478,9 +1475,9 @@ bbb"", b3
 		Out(w.ChildAll("", "QM*"));
 	}
 
-	static bool Activate(Wnd w)
+	static bool _Activate(Wnd w)
 	{
-		if(!Wnd.AllowActivate()) return false;
+		if(!Wnd.Misc.AllowActivate()) return false;
 		Api.SetForegroundWindow(Wnd.ActiveWindow);
 		Api.SetForegroundWindow(Wnd.ActiveWindow);
 		Api.SetForegroundWindow(Wnd.ActiveWindow);
@@ -1507,7 +1504,7 @@ bbb"", b3
 	{
 		//Wnd.ActiveWindow.ShowMinimized();
 		//Out(Wnd.ActiveWindow);
-		//Out(Wnd.ActivateNextMainWindow(true));
+		//Out(Wnd.SwitchActiveWindow(true));
 		//return;
 
 		//Wait(2);
@@ -1533,7 +1530,7 @@ bbb"", b3
 		//Out(Api.SetForegroundWindow(Wnd.Get.DesktopWindow));
 		//WaitMS(100);
 		//Out(Api.SetForegroundWindow(w));
-		//Out(Activate(w));
+		//Out(_Activate(w));
 		//WaitMS(100);
 		Out(Wnd.ActiveWindow);
 
@@ -1562,9 +1559,9 @@ bbb"", b3
 		//w.Activate(); Wait(1); //return;
 
 		Wnd w = Wnd.Find("Registry*");
-		//if(!w.ShowMinimized(Wnd.MinMaxMethod.Auto)) Out(ThreadError.ErrorText);
-		//if(!w.ShowMinimized(Wnd.MinMaxMethod.LikeProgrammer)) Out(ThreadError.ErrorText);
-		//if(!w.ShowMinimized(Wnd.MinMaxMethod.NoAnimation)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd._MinMaxMethod.Auto)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd._MinMaxMethod.LikeProgrammer)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd._MinMaxMethod.NoAnimation)) Out(ThreadError.ErrorText);
 		//return;
 
 		if(false) {
@@ -1584,8 +1581,8 @@ bbb"", b3
 			//w.ShowMaximized();
 			//w.ShowNotMinMax();
 		} else {
-			//var m =Wnd.MinMaxMethod.NoAnimation;
-			var m = Wnd.MinMaxMethod.LikeProgrammer;
+			//var m =Wnd._MinMaxMethod.NoAnimation;
+			var m = Wnd._MinMaxMethod.LikeProgrammer;
 
 			//Out(w.ShowNotMinMax(m));
 			//Wait(1);
@@ -1616,11 +1613,11 @@ bbb"", b3
 	static void TestThreadError()
 	{
 		//Script.Option.speed = 10;
-		var w = Wnd.FindCN("QM_Editor");
+		var w = Wnd.FindRaw("QM_Editor");
 		//Perf.ExecuteMulti(5, 1, ()=> { Time.AutoDelay(w); });
 		Out(w);
 
-		w = Wnd.Spec.Bottom;
+		w = Wnd.Misc.SpecHwnd.Bottom;
 
 		var a1 = new Action(() => { Api.GetCurrentThreadId(); });
 		bool yes = false;
@@ -1684,7 +1681,6 @@ bbb"", b3
 		//w.ResizeRaw(null, 100);
 		//w.ResizeRaw(300, null);
 
-		//TODO: test these. Also with fraction, work area.
 		//w.Move(300, 100, 600, 200);
 		//w.Move(100, 30, 500, 300);
 		//w.Move(100, 30, null, null);
@@ -1740,20 +1736,20 @@ bbb"", b3
 		//Wnd w=Wnd.Find(null, "Dwm", flags:Wnd.WinFlag.HiddenToo);
 		Out(w);
 
-		//Wnd.TaskbarButton.Flash(w, 0);
+		//Wnd.Misc.TaskbarButton.Flash(w, 0);
 		//Wait(3);
-		//Wnd.TaskbarButton.Flash(w, 1);
+		//Wnd.Misc.TaskbarButton.Flash(w, 1);
 
-		//Wnd.TaskbarButton.SetProgressState(w, Wnd.TaskbarButton.ProgressState.Error);
+		//Wnd.Misc.TaskbarButton.SetProgressState(w, Wnd.Misc.TaskbarButton.ProgressState.Error);
 		//for(int i = 0; i < 100; i++) {
-		//	Wnd.TaskbarButton.SetProgressValue(w, i + 1);
+		//	Wnd.Misc.TaskbarButton.SetProgressValue(w, i + 1);
 		//	WaitMS(100);
 		//}
-		//Wnd.TaskbarButton.SetProgressState(w, Wnd.TaskbarButton.ProgressState.NoProgress);
+		//Wnd.Misc.TaskbarButton.SetProgressState(w, Wnd.Misc.TaskbarButton.ProgressState.NoProgress);
 
-		Wnd.TaskbarButton.Delete(w);
+		Wnd.Misc.TaskbarButton.Delete(w);
 		Wait(2);
-		Wnd.TaskbarButton.Add(w);
+		Wnd.Misc.TaskbarButton.Add(w);
 	}
 
 	static void TestWndClose()
@@ -1772,19 +1768,19 @@ bbb"", b3
 	{
 		Wnd w = Wnd.Find("*Notepad");
 		//Out(w);
-		Wnd.Arrange.ToggleDesktop();
+		Wnd.Misc.Arrange.ShowDesktop();
 		Out("ok");
 		Wait(1);
-		Wnd.Arrange.ToggleDesktop();
+		Wnd.Misc.Arrange.ShowDesktop();
 		//Wait(1);
-		//Wnd.Arrange.MinimizeWindows(true);
+		//Wnd.Misc.Arrange.MinimizeWindows(true);
 		//Wait(1);
-		//Wnd.Arrange.MinimizeWindows(false);
-		//Wnd.Arrange.CascadeWindows();
+		//Wnd.Misc.Arrange.MinimizeWindows(false);
+		//Wnd.Misc.Arrange.CascadeWindows();
 		//Wait(1);
-		//Wnd.Arrange.TileWindows(true);
+		//Wnd.Misc.Arrange.TileWindows(true);
 		//Wait(1);
-		//Wnd.Arrange.TileWindows(false);
+		//Wnd.Misc.Arrange.TileWindows(false);
 	}
 
 	static void TestWndShowHide()
@@ -1902,7 +1898,7 @@ bbb"", b3
 		Out(w.RegistrySave("WndSR", "Test", true));
 		Show.TaskDialog("move etc Notepad");
 		w.Visible = false;
-		Wnd.FindCN("QM_Editor").Activate();
+		Wnd.FindRaw("QM_Editor").Activate();
 		Wait(0.2);
 		Out(w.RegistryRestore("WndSR", "Test", true, true));
 		Wait(1);
@@ -2164,7 +2160,7 @@ bbb"", b3
 	//static extern void CreateTestInterface2(out ITest t);
 	//static extern void CreateTestInterface2(out IntPtr t); //with Marshal.GetTypedObjectForIUnknown is missing 1 Release
 	static extern void CreateTestInterface2([MarshalAs(UnmanagedType.IUnknown)] out object t); //the same number of QI etc as with 'out ITest t'
-	//static extern void CreateTestInterface2(out IUnknown t); //more QI etc
+																							   //static extern void CreateTestInterface2(out IUnknown t); //more QI etc
 
 	[ComImport, Guid("00000000-0000-0000-C000-000000000046")]
 	[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -2253,7 +2249,7 @@ bbb"", b3
 		s = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
 		//s = "Control Panel"; //no
 		s = "::{20d04fe0-3aea-1069-a2d8-08002b30309d}";
-        //s = "%TEMP%";
+		//s = "%TEMP%";
 		//s = @"C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_10.1605.1582.0_x64__8wekyb3d8bbwe\Calculator.exe";
 
 		IntPtr hi = Files.GetIconHandle(s, 32);
@@ -2271,7 +2267,7 @@ bbb"", b3
 
 	static void TestCoord(float x, float y)
 	{
-		OutList("float", x>0.0 && x<1.1);
+		OutList("float", x > 0.0 && x < 1.1);
 	}
 
 	//static void TestCoord(double x, double y)
@@ -2286,53 +2282,23 @@ bbb"", b3
 		w.Move(0.5f, 1f);
 	}
 
-	static unsafe int ToInt(string s, int numberBase=0)
-	{
-		if(Empty(s)) return 0;
-		fixed(char* p= s)
-		{
-			//OutList((int)p[4], (int)p[5]);
-			return Api.strtoi(p, numberBase);
-		}
-	}
-
-	[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
-	public static extern int strtoi(string s, IntPtr endPtr, int numberBase = 0);
-
-	static unsafe int ToInt2(string s, int numberBase=0)
-	{
-		if(Empty(s)) return 0;
-		return strtoi(s, Zero, numberBase);
-	}
-
-	static unsafe int ToInt(string s, out int end, int start=0, int numberBase = 0)
-	{
-		fixed (char* p = s)
-		{
-			char* pe;
-			int R = Api.strtoi(p+start, out pe, numberBase);
-			end = (int)(pe - p);
-			return R;
-		}
-	}
-
-	static IEnumerable<int> TestYield()
-	{
-		for(int i=0; i<5; i++) {
-			int k = ToInt("5");
-			yield return i+k;
-		}
-	}
+	//static IEnumerable<int> TestYield()
+	//{
+	//	for(int i=0; i<5; i++) {
+	//		int k = ToInt("5");
+	//		yield return i+k;
+	//	}
+	//}
 
 	[DllImport("user32.dll", EntryPoint = "CharUpperBuffW")]
 	public static extern uint CharUpperBuff(string lpsz, uint cchLength);
 
 	static unsafe void TestStringZeroTerm(string s)
 	{
-		fixed(char* p= s)
+		fixed (char* p = s)
 		{
-			if((int)p[s.Length]!=0 || (int)p[s.Length + 1]!= 0 || (int)p[s.Length + 2] != 0 || (int)p[s.Length + 3] != 0)
-			OutList((long)p, (int)p[s.Length], (int)p[s.Length+1], (int)p[s.Length + 2], (int)p[s.Length + 3]);
+			if((int)p[s.Length] != 0 || (int)p[s.Length + 1] != 0 || (int)p[s.Length + 2] != 0 || (int)p[s.Length + 3] != 0)
+				OutList((long)p, (int)p[s.Length], (int)p[s.Length + 1], (int)p[s.Length + 2], (int)p[s.Length + 3]);
 		}
 	}
 
@@ -2402,9 +2368,1128 @@ bbb"", b3
 
 	}
 
-	static unsafe void TestX()
+	static void TestWndMisc()
 	{
+		Wnd w;
+		Wnd w2 = Wnd.Find("Quick*");
+		//w = Wnd.Get.DesktopWindow;
+		//Out(w);
+		//w = Wnd.Get.Desktop;
+		//Out(w);
+		//w = Wnd.Get.DesktopListview;
+		//Out(w);
+		Out(w2.IsTopmost);
 
+		Action a1 = new Action(() => { w = Wnd.Get.DesktopWindow; });
+		Action a2 = new Action(() => { w = Wnd.Get.Desktop; });
+		Action a3 = new Action(() => { w = Wnd.Get.DesktopListview; });
+		Action a4 = new Action(() => { bool fs = w2.IsFullScreen; });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//w = Wnd.Find("Quick*");
+		//w = Wnd.Find("My QM");
+		//w = Wnd.Get.Desktop;
+		//w = Wnd.Get.DesktopListview;
+		//w = Wnd.Find("* Firefox");
+		//w = Wnd.Get.DesktopWindow;
+		////w = Wnd.Get.ShellWindow;
+		//w = Wnd.Find("*- Google Chrome");
+		//Out(w);
+		////OutList(w.IsOfShellThread, w.IsOfShellProcess);
+		//Out(w.IsFullScreen);
+
+		//while(true) {
+		//	Wait(1);
+		//	w = Wnd.FromMouse(false);
+		//	if(w.ClassNameIs("WorkerW")) break;
+		//	Out(w);
+		//	OutList(w.IsFullScreen, w.Rect);
+		//}
+	}
+
+	#region TestWndRegisterClass
+	static Wnd.Misc.RegisterClass _wndRC, _wndRCSuper;
+	static void TestWndRegisterClass()
+	{
+		_wndRC = new Wnd.Misc.RegisterClass();
+		_wndRC.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size);
+		//_wndRC.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
+		Wnd w = Api.CreateWindowEx(0, "Cat_Test", "Cat_Test", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 100, 300, 200, Wnd0, 0, Zero, 0);
+		if(w.Is0) return;
+
+		//_wndRCSuper = new Wnd.RegisterClass();
+		////_wndRCSuper.Superclass("Cat_Test", "Cat_Test_Super", Cat_Test_WndProcSuper, IntPtr.Size);
+		//_wndRCSuper.Superclass("Cat_Test", "Cat_Test_Super", Cat_Test_WndProcSuper, IntPtr.Size, false, Api.GetModuleHandle(null));
+		//Wnd w2 = Api.CreateWindowEx(0, "Cat_Test_Super", "Cat_Test_Super", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 500, 300, 100, Wnd0, 0, Zero, 0);
+		//if(w2.Is0) return;
+
+		_wndRCSuper = new Wnd.Misc.RegisterClass();
+		_wndRCSuper.Superclass("Edit", "Edit_Super", Cat_Test_WndProcSuper, IntPtr.Size);
+		Wnd w2 = Api.CreateWindowEx(0, "Edit_Super", "Edit_Super", Api.WS_CHILD | Api.WS_VISIBLE, 0, 0, 200, 30, w, 3, Zero, 0);
+		if(w2.Is0) return;
+
+		//Out(Wnd.RegisterClass.GetClassAtom("Cat_Test", Api.GetModuleHandle(null)));
+
+		//Api.SetTimer(w, 1, 1000, null);
+
+		Api.MSG m;
+		while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) {
+
+			//if(m.message == Api.WM_TIMER && m.hwnd==w) {
+			//	Out("timer");
+			//	GC.Collect();
+			//}
+
+			Api.TranslateMessage(ref m);
+			Api.DispatchMessage(ref m);
+		}
+	}
+	static LPARAM Cat_Test_WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	{
+		switch(msg) {
+		case Api.WM_DESTROY:
+			Api.PostQuitMessage(0);
+			break;
+		case Api.WM_CREATE:
+			_wndRC.SetMyLong(w, 1);
+			break;
+		case Api.WM_LBUTTONDOWN:
+			Out(_wndRC.GetMyLong(w));
+			break;
+		}
+
+		return Api.DefWindowProc(w, msg, wParam, lParam);
+	}
+	static LPARAM Cat_Test_WndProcSuper(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	{
+		switch(msg) {
+		case Api.WM_DESTROY:
+			return Api.DefWindowProc(w, msg, wParam, lParam);
+		case Api.WM_CREATE:
+			_wndRCSuper.SetMyLong(w, 2);
+			break;
+		case Api.WM_LBUTTONDOWN:
+			Out(_wndRCSuper.GetMyLong(w));
+			break;
+		}
+
+		return Api.CallWindowProc(_wndRCSuper.BaseClassWndProc, w, msg, wParam, lParam);
+	}
+	#endregion
+
+	static void TestIsGhost()
+	{
+		Wnd w = Wnd.Find("Hung");
+		Out(w);
+		Out(w.IsHung);
+		w = Wnd.Find("Hung*", "Ghost");
+		Out(w);
+		OutList(w.IsHung, w.IsHungGhost);
+
+		//bool y;
+		//var a1 = new Action(() => { y = w.ClassNameIs("Ghost"); });
+		//var a2 = new Action(() => { y = w.ProcessName.Equals_("DWM", true); });
+		//var a3 = new Action(() => { y = w.IsHung; });
+		//Perf.ExecuteMulti(5, 100, a1, a2, a3);
+
+		//Perf.SpinCPU(100);
+		//var a = Wnd.AllWindows(null, true);
+		//foreach(Wnd t in a) {
+		//	Out(t);
+		//	Perf.First();
+		//	y = t.IsHung;
+		//	Perf.Next();
+		//	y=t.ClassNameIs("Ghost");
+		//	Perf.NextWrite();
+		//}
+	}
+
+	static void TestWndGetPropList()
+	{
+		foreach(Wnd w in Wnd.AllWindows(null, true)) {
+			Out(w);
+			foreach(var k in w.GetPropList()) {
+				Out(k);
+			}
+			Out("---------");
+		}
+	}
+
+	static void TestWndMapPoints()
+	{
+		Wnd w = Wnd.Find("", "QM_Editor");
+		Out(w);
+		RECT r = new RECT(1, 2, 3, 4, false);
+		RECT rr;
+		rr = r; w.MapClientToScreen(ref rr);
+		Out(rr);
+		rr = r; w.MapScreenToClient(ref rr);
+		Out(rr);
+
+		Wnd c = w.Child("", "QM_Code");
+		Out(c);
+		//rr = c.Rect;
+		rr = r; c.MapClientToClientOf(w, ref rr);
+		Out(rr);
+
+		c.GetRectInClientOf(w, out rr);
+		Out(rr);
+
+		Out(Wnd.FromXY(1460, 1400));
+
+		//rr = r; c.MapClientToClientOf(w, ref rr);
+		//Out(rr);
+		//rr = r; c.MapClientToClientOf(w, ref rr);
+		//Out(rr);
+		POINT p = new POINT(1, 2), pp;
+		pp = p; w.MapClientToWindow(ref pp);
+		Out(pp);
+		pp = p; w.MapWindowToClient(ref pp);
+		Out(pp);
+
+		rr = r; w.MapClientToWindow(ref rr);
+		Out(rr);
+		rr = r; w.MapWindowToClient(ref rr);
+		Out(rr);
+
+		Out(Wnd.FromMouse().MouseClientXY);
+	}
+
+	static void TestWndIsAbove()
+	{
+		Wnd w1 = Wnd.Find("", "QM_Editor");
+		Wnd w2 = Wnd.Find("", "CabinetWClass");
+		OutList(w1.IsZorderedBefore(w2), w2.IsZorderedBefore(w1));
+	}
+
+	static void TestWndSetParent()
+	{
+		//note: SetParent removed, it did not work well, anyway probably will need to change parent only of form controls, then Form.Parent should be used and works well, even with topmost windows.
+
+		//Wnd w1 = Wnd.Find("", "QM_Editor");
+		//Wnd w2 = w1.Child("Running items");
+		//Wnd w3 = w2.DirectParentOrOwner;
+		//Out(w3);
+
+		//OutList("SetParent", w2.SetParent(Wnd0));
+		//Show.TaskDialog("");
+		//OutList("SetParent", w2.SetParent(w3));
+
+		var f = new Form();
+		var b = new Button();
+		f.Controls.Add(b);
+
+		f.Click += (o, e) =>
+		{
+			Form f2 = null;
+			f2 = new Form();
+			f2.Show();
+			f2.Left = 500;
+			((Wnd)f).ZorderTopmost();
+			//Out(b.Handle);
+
+			b.Parent = f2;
+			//Out(b.Handle);
+			//Wnd w = (Wnd)b;
+			//w.SetParent(Wnd0, true);
+			Show.TaskDialog("");
+			b.Parent = f;
+			//w.SetParent((Wnd)f, true);
+
+			f2.Close();
+		};
+
+		f.ShowDialog();
+	}
+
+	static void TestWndBorder()
+	{
+		Wnd w = Wnd.Find("", "QM_Editor");
+		//w = Wnd.Find("", "QM_Toolbar");
+		Out(w);
+		Out(Wnd.Misc.BorderWidth(w));
+		Out(Wnd.Misc.BorderWidth(w.Style, w.ExStyle));
+
+		RECT r = w.ClientRect;
+		Out(r);
+		Wnd.Misc.WindowRectFromClientRect(ref r, w.Style, w.ExStyle, false);
+		Out(r);
+	}
+
+	static void TestWndStoreApp()
+	{
+		foreach(Wnd w in Wnd.AllWindows()) {
+			bool isWin8Metro = w.IsWin8MetroStyle;
+			int isWin10StoreApp = w.IsWin10StoreApp;
+			string prefix = null, suffix = null;
+			if(isWin8Metro || isWin10StoreApp != 0) { prefix = isWin8Metro ? "<><c 0xff>" : "<><c 0xff0000>"; suffix = "</c>"; }
+			Out($"{prefix}metro={isWin8Metro}, win10={isWin10StoreApp}, cloaked={w.IsCloaked},    {w.ProcessName}  {w}  {w.Rect}{suffix}");
+		}
+	}
+
+	static void TestWndControlCast()
+	{
+		var f = new Form();
+
+		f.Click += (o, e) =>
+		{
+			if(true) {
+				var b = new Button();
+				f.Controls.Add(b);
+				Wnd t = (Wnd)b;
+				var c = (Control)t;
+				Out(c == null); //False
+			} else {
+				Wnd t = Api.CreateWindowEx(0, "Edit", "Edit", Api.WS_CHILD | Api.WS_VISIBLE, 0, 0, 200, 30, (Wnd)f, 3, Zero, 0);
+				if(t.Is0) return;
+				var c = (Control)t;
+				Out(c == null); //True
+								//Out(c.Bounds);
+				f.Controls.Add(c);
+			}
+		};
+
+		f.ShowDialog();
+
+	}
+
+	static void TestWndRect()
+	{
+		//var w=Wnd.Find("*Notepad");
+		var w = Wnd.Find("Options");
+		w = w.Child("OK");
+		Out(w);
+		RECT r;
+
+		r = w.Rect;
+		Out(r);
+		//w.Rect = new RECT(100, 1300, 300, 500, true);
+		//w.Rect = new RECT(100, 320, 80, 50, true);
+
+		r = w.ClientRect;
+		Out(r);
+		//r.Inflate(2, 2); w.ClientRect=r;
+
+		//r =w.ClientRectInScreen;
+		//Out(r);
+		//w.ClientRectInScreen = new RECT(100, 320, 80, 50, true);
+
+		//r.Inflate(2, 2);
+		//w.ClientRectInScreen = r;
+
+		r = w.RectInParent;
+		Out(r);
+	}
+
+	static void TestWndMoveMisc()
+	{
+		var w = Wnd.Find("*Notepad");
+		//w.Move(200, 1500, 400, 200);
+
+		//w.MoveToScreenCenter(2);
+		w.MoveInScreen(-100, -20, 2);
+		w.ActivateRaw();
+	}
+
+	static void _TestWndZorder(Wnd w, Wnd w2)
+	{
+		//Out(w.ZorderTop());
+		//Out(w.ZorderBottom());
+
+		//Out(w.ZorderTopmost());
+		////Show.TaskDialog("");
+		//Wait(1);
+		//Out(w.ZorderNotopmost(true));
+		////Out(w.ZorderBottom());
+
+		Out(w.ZorderAfter(w2));
+		w2.ActivateRaw(); WaitMS(500);
+		Out(w.ZorderBefore(w2));
+
+	}
+
+	static void TestWndZorder()
+	{
+		var w = Wnd.Find("*Notepad");
+		//var w = Wnd.Find("*WordPad");
+		//var w = Wnd.Find("Options");
+		//var w = Wnd.Find("Font");
+		//var w = Wnd.Find("", "QM_Editor");
+		var w2 = Wnd.Find("* - Paint");
+		//OutList(w, w2);
+
+		_TestWndZorder(w, w2);
+
+		//var f = new Form();
+		//f.Click += (o, e) =>
+		//{
+		//	_TestWndZorder((Wnd)f.Handle);
+		//      };
+		//f.ShowDialog();
+	}
+
+	static void TestWndIsUacDenied()
+	{
+		//var w = Wnd.Find("*Notepad");
+		var w = Wnd.Find("", "QM_Editor");
+		//var w = Wnd.Find("Calculator");
+		//w = w.Child("", "Windows.UI.Core.*");
+		if(w.Is0) {
+			int i;
+			if(!Show.InputDialog(out i, "Handle")) return;
+			w = (Wnd)i;
+		}
+
+		Out(w);
+		Out(w.IsUacAccessDenied);
+		//OutList(w.IsUacAccessDenied, w.IsUacAccessDenied2);
+		//Out(w.SetProp("abc", 1)); //fails
+		//Out(w.RemoveProp("abcde"));
+		//Out(w.SetWindowLong());
+		//Out(w.)
+
+
+		//var a1 = new Action(() => { bool b = w.IsUacAccessDenied; });
+		//var a2 = new Action(() => { bool b = w.IsUacAccessDenied2; });
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
+	}
+
+	static void TestTaskDialogActivationEtc()
+	{
+		Wait(3);
+		//Script.Option.dialogTopmostIfNoOwner = true;
+		//Script.Option.dialogAlwaysActivate = true;
+		//Out(Wnd.AllowActivate());
+		//Out(Wnd.Find("*Notepad").ActivateRaw());
+		//Wait(1);
+		//Out(Wnd.ActiveWindow);
+		Show.TaskDialog("test", "", "i");
+		//Wait(3);
+		//Script.Option.dialogAlwaysActivate = false;
+		//Show.TaskDialog("test", "", "a");
+	}
+
+	static void TestWndNextMainWindow()
+	{
+		int f = Show.ListDialog("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
+		if(f == 0) return;
+		Wnd w = Wnd.Get.FirstToplevel();
+		int n = 0;
+		while(!w.Is0) {
+			Out(w);
+			switch(f) {
+			case 1:
+				w = Wnd.Get.NextMainWindow(w);
+				break;
+			case 2:
+				w = Wnd.Get.NextMainWindow(w, allDesktops: true);
+				break;
+			case 3:
+				w = Wnd.Get.NextMainWindow(w, likeAltTab: true);
+				break;
+			case 4:
+				w = Wnd.Get.NextMainWindow(w, retryFromTop: true); if(++n > 20) return;
+				break;
+			case 5:
+				w = Wnd.Get.NextMainWindow(w, skipMinimized: true);
+				break;
+			}
+		}
+	}
+
+	static void TestWndFindRaw()
+	{
+		Wnd w = Wnd0;
+		for(;;) {
+			w = Wnd.FindRaw("QM_Toolbar", null, w);
+			if(w.Is0) break;
+			Out(w);
+		}
+		Out(Wnd.FindRaw("QM_Editor").ChildRaw("QM_Scc"));
+	}
+
+	static void TestWndGetGUIThreadInfo()
+	{
+		Wait(3);
+		Out(Wnd.FocusedControl);
+		RECT r;
+		Out(Input.GetTextCursorRect(out r));
+		Out(r);
+	}
+
+	static class TestStaticInitClass
+	{
+		static int _x = _InitX();
+		static int _InitX() { OutFunc(); return 1; }
+		public static int GetX()
+		{
+			OutFunc();
+			return _x;
+		}
+		public static int Other()
+		{
+			OutFunc();
+			return -1;
+		}
+	}
+
+	static void TestStaticInit1()
+	{
+		OutFunc();
+		Out(TestStaticInitClass.GetX());
+	}
+
+	static void TestStaticInit2()
+	{
+		OutFunc();
+		Out(TestStaticInitClass.Other());
+	}
+
+	static string BytesToHexString_BitConverter(byte[] a)
+	{
+		return BitConverter.ToString(a).Replace("-", "");
+	}
+
+	static void TestHash()
+	{
+		Perf.SpinCPU(100);
+
+		//var b = new byte[] { 0, 1, 0xA, 0xF, 0xBE, 0x59 };
+		//string s;
+		//s = Calc.BytesToHexString(b);
+		//Out(s);
+		////s = Calc.BytesToHexString2(b);
+		////Out(s);
+		//s = BytesToHexString_BitConverter(b);
+		//Out(s);
+
+		//var a1 = new Action(() => { s = BytesToHexString_BitConverter(b); });
+		//var a2 = new Action(() => { s = Calc.BytesToHexString(b); });
+		////var a3 = new Action(() => { s = Calc.BytesToHexString2(b); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
+
+
+		//var b = new byte[] { 0, 1, 0xA, 0xF, 0xBE, 0x59, 0, 0xff, 0x58, 0xD7, 0, 1, 0xA, 0xF, 0xBE, 0x59, 0, 0xff, 0x58, 0xD7 };
+		//var s = Calc.BytesToHexString(b);
+		//Out(s);
+		//Out(Calc.BytesToHexString(Calc.BytesFromHexString(s)));
+		//string sB64 = Convert.ToBase64String(b);
+		//Out(sB64);
+		//Out(Convert.ToBase64String(Convert.FromBase64String(sB64)));
+
+		//var a1 = new Action(() => { Calc.BytesToHexString(b); });
+		//var a2 = new Action(() => { Calc.BytesFromHexString(s); });
+		//var a3 = new Action(() => { Convert.ToBase64String(b); });
+		//var a4 = new Action(() => { Convert.FromBase64String(sB64); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+
+		string s = @"Q:\app\catkeys\tasks\CatkeysTasks.exe";
+		string hash;
+		Perf.First();
+		hash = Calc.HashMD5Hex(s);
+		Perf.NextWrite(); //1700 (.NET 3700)
+		Out(hash);
+		hash = Calc.HashHex(s, "MD5");
+		Out(hash);
+		hash = Calc.HashHex(s, "SHA256");
+		Out(hash);
+		int hashInt = Calc.HashFnv1(s);
+		Out(hashInt);
+		unsafe { fixed (char* p = s) { hashInt = Calc.HashFnv1(p, s.Length); } }
+		Out(hashInt);
+		unsafe { fixed (char* p = s) { hashInt = Calc.HashFnv1((byte*)p, s.Length * 2); } }
+		Out(hashInt);
+
+		byte[] a = Encoding.UTF8.GetBytes(s);
+
+		var a1 = new Action(() => { hash = Calc.HashMD5Hex(s); }); //440 (QM2 350, .NET 2000 with static var, 4000 with local var)
+		var a2 = new Action(() => { hash = Calc.HashHex(s, "MD5"); }); //4200
+		var a3 = new Action(() => { hash = Calc.HashHex(s, "SHA256"); }); //2500
+		var a4 = new Action(() => { hash = Calc.HashMD5Hex(a); }); //320
+		var a5 = new Action(() => { hashInt = Calc.HashFnv1(s); }); //40
+		var a6 = new Action(() => { unsafe { fixed (char* p = s) { hashInt = Calc.HashFnv1((byte*)p, s.Length * 2); } } }); //84 (40 if no *2)
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6);
+	}
+
+	static void TestNewPerf()
+	{
+		Perf.SpinCPU(100);
+
+		//Perf.First();
+		//WaitMS(1);
+		//Perf.Next();
+		//WaitMS(10);
+		//Perf.NextWrite();
+
+		var t = new Perf.Inst();
+		var t2 = new Perf.Inst();
+		for(int j = 0; j < 5; j++) {
+			t.First();
+			for(int i = 0; i < 1000; i++) { t2.First(); }
+			t.Next();
+			for(int i = 0; i < 1000; i++) { t2.First(); t2.Next(); }
+			t.Next();
+			for(int i = 0; i < 1000; i++) { Perf.First(); }
+			t.Next();
+			for(int i = 0; i < 1000; i++) { Perf.First(); Perf.Next(); }
+			t.Next();
+			t.Write();
+		}
+	}
+
+	#endregion
+
+	public class CatMenu :ContextMenuStrip
+	{
+		public CatMenu() : base()
+		{
+		}
+
+		public CatMenu(System.ComponentModel.IContainer container) : base(container)
+		{
+		}
+
+		/// <summary>
+		/// Gets ToolStripItem of the last added item.
+		/// For submenu-item you can cast it to ToolStripMenuItem if need.
+		/// </summary>
+		public ToolStripItem LastItem { get; private set; }
+		//public ToolStripMenuItem CurrentSubmenu { get { return _submenuStack.Peek(); } } //can instead use LastItem or SubmenuBlock.Submenu
+
+		public ItemHandler this[string name, object icon = null, bool disabled = false, string tooltip = null]
+		{
+			set { Add(name, value, icon, disabled, tooltip); }
+		}
+
+		public ToolStripItem Add(string name, ItemHandler code, object icon = null, bool disabled = false, string tooltip = null)
+		{
+			var item = _Items.Add(name, null, _eh);
+			item.Tag = code;
+			_SetItemProp(item, icon, disabled, tooltip);
+			LastItem = item;
+			return item;
+		}
+
+		void _SetItemProp(ToolStripItem item, object icon, bool disabled, string tooltip)
+		{
+#if true
+			if(icon != null) {
+				var s = icon as string;
+				if(s != null) {
+					if(s != "") {
+						bool setSubmenuIL = false;
+						var il = item.Owner.ImageList;
+						if(il == null) {
+							il = this.ImageList;
+							if(il != null) setSubmenuIL = true;
+						}
+						if(il != null && il.Images.ContainsKey(s)) {
+							item.ImageKey = s;
+							if(setSubmenuIL) item.Owner.ImageList = il;
+						} else {
+							//TODO: extract on demand, eg for submenus or offscreen items
+							IntPtr hi = Files.GetIconHandle(s);
+							if(hi != Zero) {
+								Icon ic = Icon.FromHandle(hi);
+								item.Image = ic.ToBitmap();
+								ic.Dispose();
+								Api.DestroyIcon(hi); //note: fails if this is immediately after 'Icon.FromHandle(hi)', although MSDN says need to call DestroyIcon() which implies that FromHandle() copies it.
+							}
+						}
+					} else if(icon is int) {
+						int i = (int)icon;
+						if(i >= 0) {
+							item.ImageIndex = i;
+							if(item.Owner.ImageList == null) item.Owner.ImageList = this.ImageList; //if submenu ImageList not set, use common ImageList for it
+						}
+					} else if(icon is Image) {
+						item.Image = icon as Image;
+					} else if(icon is Icon) {
+						item.Image = (icon as Icon).ToBitmap();
+					} else if(icon is IntPtr) {
+						item.Image = Icon.FromHandle((IntPtr)icon).ToBitmap();
+					} else {
+						throw new ArgumentException("", "icon");
+					}
+				}
+			}
+#endif
+			if(disabled) item.Enabled = false;
+			if(tooltip != null) item.ToolTipText = tooltip;
+		}
+
+		/// <summary>
+		/// Adds item of any type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar, ToolStripButton.
+		/// </summary>
+		/// <param name="item"></param>
+		/// <param name="icon"></param>
+		/// <param name="disabled"></param>
+		/// <param name="tooltip"></param>
+		/// <param name="code"></param>
+		public void Add(ToolStripItem item, object icon = null, bool disabled = false, string tooltip = null, ItemHandler code = null)
+		{
+			_Items.Add(item);
+			if(code != null) item.Tag = code;
+			_SetItemProp(item, icon, disabled, tooltip);
+			//activate menu window on click, or something may not work, eg cannot enter text in Edit control
+			if(!(item is ToolStripMenuItem || item is ToolStripLabel || item is ToolStripSeparator || item is ToolStripProgressBar)) {
+				item.MouseDown += _Item_MouseDown;
+			}
+			LastItem = item;
+		}
+
+		void _Item_MouseDown(object sender, MouseEventArgs e)
+		{
+			//OutFunc();
+			var t = sender as ToolStripItem;
+			var w = (Wnd)t.Owner.Handle;
+			w.ActivateRaw();
+		}
+
+		public ToolStripSeparator AddSeparator()
+		{
+			var item = new ToolStripSeparator();
+			_Items.Add(item);
+			LastItem = item;
+			return item;
+		}
+
+		public SubmenuBlock Submenu(string name, object icon = null, bool disabled = false, string tooltip = null, ItemHandler code = null)
+		{
+			var item = Add(name, code, icon, disabled, tooltip);
+			var sm = item as ToolStripMenuItem;
+			_submenuStack.Push(sm);
+			sm.DropDown.HandleCreated += _DropDown_HandleCreated;
+			return new SubmenuBlock(this, sm);
+		}
+
+		public void EndSubmenu()
+		{
+			if(_submenuStack.Count > 0) _submenuStack.Pop();
+		}
+
+		public class SubmenuBlock :IDisposable
+		{
+			CatMenu _menu;
+			public readonly ToolStripMenuItem Submenu;
+
+			public SubmenuBlock(CatMenu menu, ToolStripMenuItem submenu) { _menu = menu; Submenu = submenu; }
+			//public static implicit operator ToolStripMenuItem(SubmenuBlock smb) { return smb.Submenu; } //no, then does not work with using()
+
+			public void Dispose() { _menu.EndSubmenu(); }
+		}
+
+		Stack<ToolStripMenuItem> _submenuStack = new Stack<ToolStripMenuItem>();
+
+		ToolStripItemCollection _Items
+		{
+			get { return _submenuStack.Count > 0 ? _submenuStack.Peek().DropDownItems : Items; }
+		}
+
+		private void _DropDown_HandleCreated(object sender, EventArgs e)
+		{
+			var sm = sender as ToolStripDropDown;
+			_SetWindowStyle((Wnd)sm.Handle);
+		}
+
+		static EventHandler _eh = _EventHandler;
+
+		static void _EventHandler(object sender, EventArgs args)
+		{
+			var k = sender as ToolStripItem;
+			var t = k.Tag as ItemHandler;
+			if(t != null) t(new ItemData(k));
+
+			//TODO: this is also called on right-click (not on middle-click)
+		}
+
+		public class ItemData
+		{
+			public readonly ToolStripItem MenuItem;
+
+			public ItemData(ToolStripItem item) { MenuItem = item; }
+		}
+
+		public delegate void ItemHandler(ItemData d);
+
+		public new void Show()
+		{
+			_Show(0);
+		}
+
+		public new void Show(Point screenLocation)
+		{
+			_Show(1, screenLocation);
+		}
+
+		public new void Show(Control control, Point position)
+		{
+			_Show(2, position, 0, control);
+		}
+
+		public new void Show(int x, int y)
+		{
+			_Show(3, new Point(x, y));
+		}
+
+		public new void Show(Point position, ToolStripDropDownDirection direction)
+		{
+			_Show(4, position, direction);
+		}
+
+		public new void Show(Control control, Point position, ToolStripDropDownDirection direction)
+		{
+			_Show(5, position, direction, control);
+		}
+
+		public new void Show(Control control, int x, int y)
+		{
+			_Show(6, new Point(x, y), 0, control);
+		}
+
+		void _Show(int overload, Point p = default(Point), ToolStripDropDownDirection direction = 0, Control control = null)
+		{
+			Wnd w = (Wnd)Handle; //creates handle
+			_SetWindowStyle(w);
+			Perf.Next();
+
+			switch(overload) {
+			case 0: base.Show(Mouse.XY); break;
+			case 1: base.Show(p); break;
+			case 2: base.Show(control, p); break;
+			case 3: base.Show(p.X, p.Y); break;
+			case 4: base.Show(p, direction); break;
+			case 5: base.Show(control, p, direction); break;
+			case 6: base.Show(control, p.X, p.Y); break;
+			}
+			Perf.NextWrite();
+
+			//w.ActivateRaw(); //then keyboard works, eg arrows/Enter to select, Esc to close
+
+			if(!NonModal) {
+#if true
+				_idTimer = Api.SetTimer(Wnd0, w.Handle, 100, null);
+
+				Api.MSG u;
+				while(Api.GetMessage(out u, Wnd0, 0, 0) > 0) {
+					//100 ms timer
+					if(u.message == Api.WM_TIMER && u.wParam == _idTimer && u.hwnd == Wnd0) {
+						if(u.lParam == 1) break; //posted from OnClosed
+						if(!w.IsValid) break; //when menu window closed from outside, OnClosedOnClosed isn't called and even m.Visible is true etc
+
+						//TODO: finally test GC:
+						//GC.Collect();
+						continue;
+					}
+					//if(u.message != Api.WM_TIMER && u.message != Api.WM_MOUSEMOVE) Out(u.message);
+					Api.TranslateMessage(ref u);
+					Api.DispatchMessage(ref u);
+				}
+
+				Api.KillTimer(Wnd0, _idTimer);
+#else
+				//Application.Run();
+#endif
+			}
+		}
+
+		public bool NonModal { get; set; }
+
+		void _SetWindowStyle(Wnd w)
+		{
+			w.SetExStyleAdd(Api.WS_EX_NOACTIVATE); //prevents click-activation and adding taskbar button
+		}
+
+		LPARAM _idTimer;
+
+		protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
+		{
+			Wnd0.Post(Api.WM_TIMER, _idTimer, 1);
+			base.OnClosed(e);
+		}
+	}
+
+	static void TestCatMenu()
+	{
+		//TODO: sometimes a submenu does not open at first.
+		//TODO: 'wait' cursor when opening a submenu. Also when mouse enters the main context menu. Also when showing main.
+
+		//Application.EnableVisualStyles();
+
+		Perf.First();
+		var m = new CatMenu();
+
+		var il = new ImageList();
+		IntPtr hi = Files.GetIconHandle(@"q:\app\browse.ico");
+		//il.Images.Add("k1", Icon.FromHandle(hi));
+		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
+		Api.DestroyIcon(hi);
+		//il.Images.Add(SystemIcons.Exclamation); //distorted
+		il.Images.Add(new Icon(SystemIcons.Exclamation, 16, 16)); //distorted, the same
+																  //il.Images.Add(Catkeys.Tasks.Properties.Resources.qm_running); //distorted, as well as with ToBitmap(), because the resource manager adds big icon
+		m.ImageList = il;
+
+		m["One"] = o => Out("-one-");
+		m["Two"] = o => { Out(o.MenuItem); };
+		m.Submenu("Sub");
+		{
+			m["Three"] = o => Out("-three-");
+			m["Four"] = o => Out(o.MenuItem);
+			m.Submenu("Sub2", code: o => Out(o.MenuItem));
+			{
+				m["Five"] = o => Out(o.MenuItem);
+				m.EndSubmenu();
+			}
+			m.Submenu("Sub2", code: o => Out(o.MenuItem));
+			{
+				m["Five"] = o => Out(o.MenuItem);
+				m.EndSubmenu();
+			}
+			m["Six"] = o => Out(o.MenuItem);
+			m.LastItem.ForeColor = Color.BlueViolet;
+			m.EndSubmenu();
+		}
+		using(m.Submenu("Sub with using")) {
+			m["Three"] = o => Out("-three-");
+			m.LastItem.Font = new Font(m.LastItem.Font, FontStyle.Bold);
+			m["Four"] = o => Out(o.MenuItem);
+			m.LastItem.Font = new Font("Tahoma", 25);
+			using(m.Submenu("Sub2", code: o => Out(o.MenuItem))) {
+				m["Five"] = o => Out(o.MenuItem);
+			}
+			m.Submenu("Sub2", code: o => Out(o.MenuItem));
+			{
+				m["Five"] = o => Out(o.MenuItem);
+				m.EndSubmenu();
+			}
+			using(var smb = m.Submenu("Sub with new tooltip", code: o => Out(o.MenuItem))) {
+				smb.Submenu.ToolTipText = "new tooltip";
+				m["Five"] = o => Out(o.MenuItem);
+			}
+			m["Six"] = o => Out(o.MenuItem);
+		}
+		m["Disabled", disabled: true] = null;
+		m["Tooltip", tooltip: "ttttt"] = null;
+		m.Add("Method", o => Out(o.MenuItem));
+		var mi = m.Add("Method2", o => Out(o.MenuItem)); mi.BackColor = Color.AliceBlue; mi.ForeColor = Color.Orchid;
+		m["Icon", @"q:\app\Cut.ico"] = o => Out(o.MenuItem);
+		m["Icon", @"q:\app\Copy.ico"] = o => Out(o.MenuItem);
+		m["Icon", @"q:\app\Paste.ico"] = o => Out(o.MenuItem);
+		m["Icon", @"q:\app\Run.ico"] = o => Out(o.MenuItem);
+		m["Icon", @"q:\app\Tip.ico"] = o => Out(o.MenuItem);
+		//m["Icon resource", 1] = o => Out(o.MenuItem);
+		m["Imagelist icon name", "k0"] = o => Out(o.MenuItem);
+		m["Imagelist icon index", 1] = o => Out(o.MenuItem);
+		using(m.Submenu("Sub3")) {
+			m.LastItem.ForeColor = Color.Red;
+			//m.LastItem.DropDown.ImageList = il;
+			//m.LastItem.Margin=new Padding(8);
+			m["Simple"] = o => Out(o.MenuItem);
+			m["Icon in submenu", @"q:\app\Paste.ico"] = o => Out(o.MenuItem);
+			m["Imagelist icon name in submenu", "k0"] = o => Out(o.MenuItem);
+			m["Imagelist icon index in submenu", 1] = o => Out(o.MenuItem);
+			using(m.Submenu("Sub4", "k0")) {
+				m.LastItem.BackColor = Color.Bisque;
+				m["Simple"] = o => Out(o.MenuItem);
+			}
+			m.Submenu("Sub5", 1);
+			{
+				m["Simple"] = o => Out(o.MenuItem);
+				m.EndSubmenu();
+			}
+		}
+#if false
+		m.AddSeparator();
+		//if(item is ToolStripTextBox || item is ToolStripDropDown || item is ToolStripComboBox || item is ToolStripControlHost || item is ToolStripButton )
+		m.Add(new ToolStripLabel("Label"));
+		m.Add(new ToolStripTextBox("txt"));
+		m.Add(new ToolStripComboBox("cb"));
+		m.Add(new ToolStripProgressBar("pb"));
+		m.Add(new ToolStripButton("Button"));
+		m.Add(new ToolStripDropDownButton("DD button"));
+		m.Add(new ToolStripSplitButton("Split button"));
+		m.Add(new ToolStripStatusLabel("Status label"));
+		m.Add(new ToolStripMenuItem("Menu item"));
+		m.Add(new ToolStripSeparator());
+
+		//this code works, but the control width is several pixels
+		//var ed =new TextBox();
+		//ed.Width = 100;
+		//var host =new ToolStripControlHost(ed, "host");
+		//host.Width = 100;
+		//m.Add(host);
+
+		//test overflow
+		//for(int i=0; i<30; i++) m[$"Overflow {i}"] = o => Out(o.MenuItem);
+#endif
+		m["Last"] = o => { Out(o.MenuItem); };
+		Perf.Next();
+
+		Wait(1);
+		Out(1);
+		Perf.Next();
+		m.Show(500, 300);
+		//m.Show();
+		//m.Show(Mouse.X + 10, Mouse.Y + 10);
+		Out(2);
+		//m.Show(new Point(600, 400));
+		//Out(3);
+		m.Dispose();
+	}
+
+	static void TestCatMenuSimplest()
+	{
+		var m = new CatMenu();
+		m["One"] = o => Out("one");
+		m["Two"] = o => Out("two");
+		using(m.Submenu("Submenu")) {
+			m["Three"] = o => Out("three");
+			m["Four"] = o => Out("four");
+			for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
+		}
+		m.Show();
+	}
+
+	static void TestCatMenuSpeed()
+	{
+		bool suspend = true; //makes faster 37 -> 15 ms (26 if ResumeLayout(true))
+		var speed = new Perf.Inst();
+		speed.First();
+		//System.ComponentModel.IContainer components = new System.ComponentModel.Container();
+		Perf.First();
+		var m = new CatMenu();
+		//var m = new CatMenu(components);
+		Perf.Next();
+		if(suspend) m.SuspendLayout();
+		Perf.Next();
+		//m["One"] = o => Out("one");
+		m.Items.Add("text");
+		Perf.Next();
+		//m["Two"] = o => Out("two");
+		//m.Items.Add("text");
+		for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
+		Perf.Next();
+		using(var sm=m.Submenu("Submenu")) {
+			if(suspend) sm.Submenu.DropDown.SuspendLayout();
+			m["Three"] = o => Out("three");
+			m["Four"] = o => Out("four");
+			Perf.Next();
+			for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
+			Perf.Next();
+			if(suspend) sm.Submenu.DropDown.ResumeLayout(false);
+		}
+		Perf.Next();
+		if(suspend) m.ResumeLayout(false);
+		Perf.Next();
+		speed.NextWrite();
+		Wait(1);
+		Perf.Next();
+		//m.Show();
+		m.Show(Mouse.X + 10, Mouse.Y + 10);
+	}
+
+	static void TestCatMenuArray()
+	{
+		Perf.First();
+		var m = new CatMenu();
+		Perf.Next();
+		var a = new ToolStripItem[30];
+		for(int i = 0; i < a.Length; i++) a[i] = new ToolStripMenuItem("text");
+		Perf.Next();
+		m.Items.AddRange(a);
+		Perf.Next();
+		using(m.Submenu("Submenu")) {
+			m["Three"] = o => Out("three");
+			m["Four"] = o => Out("four");
+		}
+		Perf.Next();
+		Wait(1);
+		Perf.Next();
+		//m.Show();
+		m.Show(Mouse.X + 10, Mouse.Y + 10);
+	}
+
+	public partial class Form1 :Form
+	{
+		System.ComponentModel.IContainer components;
+		CatMenu contextMenuStrip1;
+
+		public Form1()
+		{
+			Perf.First();
+			this.components = new System.ComponentModel.Container();
+			this.contextMenuStrip1 = new CatMenu(this.components);
+			this.contextMenuStrip1.SuspendLayout();
+			this.SuspendLayout();
+
+			this.contextMenuStrip1.ResumeLayout(false);
+			this.contextMenuStrip1.PerformLayout();
+			this.ResumeLayout(false);
+			this.PerformLayout();
+
+			this.Click += Form1_Click;
+			Perf.NextWrite();
+		}
+
+		private void Form1_Click(object sender, EventArgs e)
+		{
+			Perf.First();
+			//var m = new CatMenu();
+			var m = contextMenuStrip1;
+			m["One"] = o => Out("one");
+			Perf.Next();
+			m["Two"] = o => Out("two");
+			for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
+			using(m.Submenu("Submenu")) {
+				m["Three"] = o => Out("three");
+				m["Four"] = o => Out("four");
+			}
+			Perf.NextWrite();
+			m.NonModal = true;
+			//m.Show();
+			//m.Show(Mouse.X + 10, Mouse.Y + 10);
+			m.Show(this, 0, 0);
+		}
+	}
+
+	static void TestCatMenuWithForm()
+	{
+		Application.Run(new Form1());
+	}
+
+	public unsafe Test()
+	{
+		//Wait(1);
+		//TestCatMenu();
+		//TestCatMenuSimplest();
+		//TestCatMenuArray();
+		TestCatMenuSpeed();
+		//TestCatMenuWithForm();
+
+		#region call_old_test_functions
+		//TestNewPerf();
+		//TestHash();
+		//OutFunc(); if((Time.Milliseconds&0x4)==0) TestStaticInit1(); else TestStaticInit2();
+		//TestWndGetGUIThreadInfo();
+		//TestWndFindRaw();
+		//TestWndNextMainWindow();
+		//TestTaskDialogActivationEtc();
+		//TestWndIsUacDenied();
+		//TestWndZorder();
+		//TestWndMoveMisc();
+		//TestWndRect();
+		//TestWndControlCast();
+		//OutList(Calc.AngleDegrees(1, 1), Calc.AngleDegrees(0, 1), Calc.AngleDegrees(1, 0));
+		//TestWndStoreApp();
+		//TestWndBorder();
+		//TestWndSetParent();
+		//TestWndIsAbove();
+		//TestWndMapPoints();
+		//TestWndGetPropList();
+		//TestIsGhost();
+		//TestWndRegisterClass();
+		//TestWndMisc();
 		//TestStringMisc();
 		//TestCoord();
 		//TestCoord(1, 2);
@@ -2449,1242 +3534,39 @@ bbb"", b3
 		//TestCsvSerialization();
 		//TestShow();
 		//TestCurrentCulture();
+		#endregion
 	}
 
-	//static void ScriptDomainThread()
-	//{
-
-	//}
-
-	public Test()
-	{
-		WaitMS(100);
-		TestX();
-	}
-
-	static void TestInScriptDomain()
-	{
-		var domain = AppDomain.CreateDomain("Test");
-
-		try {
-
-			//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
-
-			//domain.DoCallBack(TestX);
-			//Out("after domain.DoCallBack");
-
-			domain.CreateInstance("CatkeysTasks", "Test");
-			//domain.CreateInstanceFrom("CatkeysTasks.exe", "Test");
-			//Out("after domain.CreateInstance");
-
-		}
-		finally {
-			AppDomain.Unload(domain);
-			//Out("after AppDomain.Unload(domain)");
-		}
-	}
-	//static void TestInScriptDomain()
-	//{
-	//	var domain = AppDomain.CreateDomain("Test");
-	//	//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
-	//	domain.DoCallBack(TestX); //Assembly.GetEntryAssembly() fails. OK if ExecuteAssembly.
-	//	Out("after domain.DoCallBack");
-	//	AppDomain.Unload(domain);
-	//	Out("after AppDomain.Unload(domain)");
-	//}
-
-
-	static unsafe void TestAny()
+	public static unsafe void TestMain()
 	{
 		Output.Clear();
+		WaitMS(100);
 
 		//TestX();
 		//TestInScriptDomain();
-		var t = new Thread(TestInScriptDomain);
+		var t = new Thread(() =>
+		{
+			var domain = AppDomain.CreateDomain("Test");
+			try {
+				//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
+
+				//domain.DoCallBack(TestX);
+				//Out("after domain.DoCallBack");
+
+				domain.CreateInstance("CatkeysTasks", "Test");
+				//domain.CreateInstanceFrom("CatkeysTasks.exe", "Test");
+				//Out("after domain.CreateInstance");
+			}
+			finally {
+				AppDomain.Unload(domain);
+				//Out("after AppDomain.Unload(domain)");
+			}
+		}
+		);
 		t.SetApartmentState(ApartmentState.STA); //must be STA, or something will not work, eg some COM components, MSAA in TaskDialog.
 		t.Start();
 		t.Join();
 		//Show.TaskDialog("after all");
 		//Out("after all");
 	}
-
-	#region old
-
-	public static unsafe void _Main()
-	{
-		TestAny();
-		return;
-
-
-
-		//Perf.SpinCPU(); //does nothing
-		long t1 = Stopwatch.GetTimestamp();
-
-		//TODO: instead could simply allocate unmanaged memory with Marshal methods and pass to domains with childDomain.SetData
-		_sm = new OurSharedMemory();
-		_sm.Create("Catkeys_SM_Tasks", 1024 * 1024);
-
-		if(true) //compiler
-		{
-			_sm.x->perf.AddTicksFirst(t1);
-			_sm.x->perf.Next();
-
-			IntPtr ev = Api.CreateEvent(Zero, false, false, null);
-
-			_sm.x->eventCompilerStartup = ev;
-
-			//Mes("before");
-
-			var thr = new Thread(_AppDomainThread);
-			thr.Start();
-
-			_sm.x->perf.Next();
-
-			Api.WaitForSingleObject(ev, ~0U);
-			//Thread.Sleep(100);
-			Api.CloseHandle(ev);
-
-			_sm.x->perf.Next();
-			_sm.x->perf.Write();
-
-			_hwndCompiler = _sm.x->hwndCompiler;
-
-			for(int i = 0; i < 1; i++) {
-				_hwndCompiler.Send(Api.WM_USER, Zero, Marshal.StringToBSTR("test"));
-			}
-
-			//Mes("in");
-
-			_hwndCompiler.Send(Api.WM_CLOSE);
-			//Environment.Exit(0);
-
-			//Mes("after");
-			//return;
-		}
-
-		//Thread.Sleep(100);
-
-		//for(int i = 0; i<5; i++) {
-		//	var thr2 = new Thread(_AppDomainThread2);
-		//	thr2.Start();
-		//	Thread.Sleep(100);
-		//	if(i%10!=9) continue;
-		//	//Perf.First();
-		//	thr2=null;
-		//	GC.Collect(); //releases a lot. Without it, GC runs when Task Manager shows 100 MB.
-		//				  //GC.Collect(2, GCCollectionMode.Optimized); //collects at 26 MB; without - at 36 MB
-		//}
-		//Mes("exit");
-	}
-
-	static void _AppDomainThread2()
-	{
-		Perf.First();
-		var domain = AppDomain.CreateDomain("Compiler");
-		Perf.Next();
-		domain.ExecuteAssembly(@"C:\Test\test1.exe");
-		Perf.Next();
-		AppDomain.Unload(domain);
-		Perf.NextWrite();
-	}
-
-	static void _AppDomainThread()
-	{
-		//_DomainCallback();
-
-		var domain = AppDomain.CreateDomain("Compiler");
-		//var domain=AppDomain.CreateDomain("Compiler", AppDomain.CurrentDomain.Evidence, new AppDomainSetup { LoaderOptimization = LoaderOptimization.MultiDomain }); //by default makes faster, but makes much slower when we use LoaderOptimization attribute on Main(). Assemblies will not be unloaded when appdomain unloaded (will use many MB of memory).
-		//System.IO.Pipes.AnonymousPipeClientStream
-		//childDomain.SetData("hPipe", handle.ToString());
-		unsafe { _sm.x->perf.Next(); }
-
-		domain.DoCallBack(_DomainCallback);
-		//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe"));
-		//domain.DoCallBack(Compiler.Compiler.Main); //faster than ExecuteAssembly by 3-4 ms
-		AppDomain.Unload(domain);
-		domain = null;
-		//Out("_AppDomainThread() ended");
-		GC.Collect(); //releases a lot
-					  //Mes("MinimizeMemory");
-					  //Misc.MinimizeMemory(); //does nothing
-
-		//tested:
-		//Currently speed and memory is similar in both cases - when compiler is in this assembly and when in another.
-		//But will need to test later, when this assembly will be big.
-		//Not using LoaderOptimization.MultiDomain, because then does not unload assemblies of unloaded domains (then uses much memory, and there is no sense to execute compiler in a separate domain).
-	}
-
-	//[System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.NoOptimization)]
-	static unsafe void _DomainCallback()
-	{
-		//if(AppDomain.CurrentDomain.FriendlyName!="Compiler") return;
-		long t1 = Stopwatch.GetTimestamp();
-
-		_sm = new OurSharedMemory();
-		_sm.Open("Catkeys_SM_Tasks");
-
-		_sm.x->perf.AddTicksNext(t1);
-		_sm.x->perf.Next();
-
-		//=AppDomain.CurrentDomain.GetData("hPipe")
-
-		Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
-
-		_sm.x->perf.Next();
-
-		Wnd w = Api.CreateWindowEx(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Spec.Message, Zero, Zero, Zero);
-
-		_sm.x->perf.Next();
-
-		_SHMEM* x = _sm.x;
-		x->hwndCompiler = w;
-		Api.SetEvent(x->eventCompilerStartup);
-
-		//message loop
-		//Application.Run(); //By default would add several ms to the startup time. Same speed if Main() has the LoaderOptimization attribute. Also may be not completely compatible with native wndproc. Also in some cases adds several MB to the working set.
-		Api.MSG m;
-		while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
-	}
-
-	unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		switch(msg) {
-		//case WM.NCCREATE:
-		//	_hwndAM=hWnd;
-		//	break;
-		//case WM.CREATE:
-		//	Perf.Next();
-		//	break;
-		//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
-		//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);
-		//	break;
-		//case WM.DESTROY:
-		//	Out("destroy");
-		//	break;
-		case Api.WM_USER:
-			//Out(Marshal.PtrToStringBSTR(lParam));
-			Marshal.FreeBSTR(lParam);
-			TestRoslyn();
-			return Zero;
-		}
-
-		LPARAM R = Api.DefWindowProc(hWnd, msg, wParam, lParam);
-
-		switch(msg) {
-		case Api.WM_NCDESTROY:
-			Api.PostQuitMessage(0); //Application.Exit[Thread](); does not work
-			break;
-		}
-		return R;
-
-		//tested: .NET class NativeWindow. It semms its purpose is different (to wrap/subclass an existing class).
-	}
-
-	static void TestRoslyn()
-	{
-		//Out("test");
-		//TODO: auto-ngen compiler. Need admin.
-
-		Perf.First();
-		//System.Runtime.ProfileOptimization.SetProfileRoot(@"C:\Test");
-		//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
-		//Perf.Next();
-
-		//Assembly a = Assembly.LoadFile(@"Q:\Test\Csc\csc.exe"); //error
-		//Assembly a = Assembly.LoadFile(@"C:\Program Files (x86)\MSBuild\14.0\Bin\csc.exe"); //error
-		Assembly a = Assembly.LoadFile(Folders.App + "csc.exe"); //ok
-																 //Assembly a = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
-		MethodInfo m = a.EntryPoint;
-		string[] g = new string[] {null, "/nologo", "/noconfig", "/target:winexe",
-		"/r:System.dll", "/r:System.Core.dll", "/r:System.Windows.Forms.dll",
-		  @"C:\Test\test.cs"};
-		object[] p = new object[1] { g };
-
-		//g[0]="/?";
-		Perf.Next(); //16 ms
-		for(int i = 1; i <= 4; i++) {
-			g[0] = $@"/out:C:\Test\test{i}.exe";
-			int r = (int)m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
-			if(r != 0) Out(r);
-			Perf.Next();
-			//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
-			//Perf.Next();
-		}
-		Perf.Write();
-
-		//Mes("now will GC.Collect");
-		GC.Collect(); //releases a lot
-
-		OutLoadedAssemblies();
-		Show.TaskDialog("exit");
-	}
-
-	static void OutLoadedAssemblies()
-	{
-		AppDomain currentDomain = AppDomain.CurrentDomain;
-		Assembly[] assems = currentDomain.GetAssemblies();
-		foreach(Assembly assem in assems) {
-			Out(assem.ToString());
-			Out(assem.CodeBase);
-			Out(assem.Location);
-			Out("");
-		}
-	}
-
-	#region misc
-
-	struct _SHMEM
-	{
-		public IntPtr eventCompilerStartup;
-		public Wnd hwndCompiler;
-		public Perf.PerfInstance perf;
-	}
-
-	//We don't use MemoryMappedFile because it is very slow. Creating/writing is 1500, opening/reading is 5000.
-	//With this class - 1300 and 600 (because of JIT). With ngen - 60 and 20 (same as in C++).
-	unsafe class OurSharedMemory :Util.SharedMemoryFast
-	{
-		public _SHMEM* x { get { return (_SHMEM*)_mem; } }
-	}
-
-	static OurSharedMemory _sm;
-
-	static Wnd _hwndCompiler;
-	static Api.WNDPROC _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
-
-
-	//class DialogVariables { public string lb3, c4; public string[] au; }
-	//class DialogVariables { public object lb3, c4, au; }
-	//here class is better than struct, because:
-	//Don't need ref;
-	//Can be used with modeless dialogs.
-
-	//const string S1="one"+NL+"two"; //ok
-	//const string S2=$"one{NL}two"; //error
-
-
-	static void ShowDialog(object v)
-	{
-		FieldInfo[] a = v.GetType().GetFields();
-		foreach(FieldInfo f in a) {
-			Out(f.Name);
-			//Out(f.FieldType.Equals(typeof(string)));
-			switch(Type.GetTypeCode(f.FieldType)) {
-			case TypeCode.String: Out("string"); break;
-			case TypeCode.Object: Out("object"); break;
-			}
-		}
-	}
-
-	//delegate void Dee(GCHandle x);
-
-	//static void Mee(GCHandle x)
-	//{
-	//Out("here"); return;
-	////Out(x.IsAllocated);
-	//Out(GCHandle.ToIntPtr(x));
-	//if(GCHandle.ToIntPtr(x)==Zero) Out("null");
-	//else {
-	//string s=(x.Target as string);
-	//Out(s);
-	//}
-	//}
-	delegate void Dee(object x);
-
-
-	delegate void Del(int t);
-	//delegate void Del0();
-
-	class TestIndexers
-	{
-		//public int this[int i]
-		//{
-		//get { return i*i; }
-		//set { Out($"{i} {value}"); }
-		//}
-		//public int this[int i, int j=1]
-		//{
-		//	get { return i*j; }
-		//	set { Out($"{i} {j} {value}"); }
-		//}
-		public string this[string s]
-		{
-			get { return s + " ?"; }
-			set { Out($"{s} {value}"); }
-		}
-
-		//static TestIndexers ti_=new TestIndexers();
-		//public static TestIndexers Hotkey => ti_;
-		//or
-		public static readonly TestIndexers Hotkey = new TestIndexers();
-	}
-
-	//[MethodImpl(MethodImplOptions.NoInlining)]
-	//static void TestCallersVariables()
-	//{
-	//	Perf.First();
-	//	StackFrame frame = new StackFrame(1);
-	//	var method = frame.GetMethod();
-	//	MethodBody mb=method.GetMethodBody();
-	//	int n=0;
-	//	foreach(LocalVariableInfo v in mb.LocalVariables) {
-	//		//Out(v.LocalType.ToString());
-	//		if(v.LocalType.Name=="Wnd") {
-	//			n++;
-	//			//v.
-	//		}
-	//	}
-	//	Out(n);
-	//}
-
-
-	[Trigger.Hotkey("Ctrl+K")]
-	public static void Function1(HotkeyTriggers.Message m) { Out("script"); }
-
-	#endregion
 }
-
-
-#endregion
-
-#else
-
-	class Test
-{
-	static MemoryMappedFile _mmf;
-	static MemoryMappedViewAccessor _m;
-	//0 event
-	//8 _hwndCompiler
-
-	static Wnd _hwndCompiler;
-	static api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
-
-
-	public static void _Main()
-	{
-	Speed.First();
-		IntPtr ev=api.CreateEvent(Wnd0, false, false, null);
-
-		_mmf=MemoryMappedFile.CreateNew("Catkeys_SM_Tasks", 1024*1024);
-		_m=_mmf.CreateViewAccessor();
-
-		_m.Write(0, ref ev);
-		
-		var thr=new Thread(_AppDomainThread);
-		thr.Start();
-
-		api.WaitForSingleObject(ev, ~0U);
-		//Thread.Sleep(100);
-		api.CloseHandle(ev);
-
-		_m.Read(8, out _hwndCompiler);
-	Speed.Next();
-		
-		_hwndCompiler.Send(WM.USER, Zero, Marshal.StringToBSTR("test"));
-
-		Msg("exit");
-		
-		_hwndCompiler.Send(WM.CLOSE);
-		//Environment.Exit(0);
-	}
-
-	static void _AppDomainThread()
-	{
-		var domain=AppDomain.CreateDomain("Compiler");
-		//System.IO.Pipes.AnonymousPipeClientStream
-		//childDomain.SetData("hPipe", handle.ToString());
-		domain.DoCallBack(_DomainCallback);
-		AppDomain.Unload(domain);
-		//Out("_AppDomainThread() ended");
-	}
-
-	static void _DomainCallback()
-	{
-		//=AppDomain.CurrentDomain.GetData("hPipe")
-
-		Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
-
-		Wnd w=api.CreateWindowExW(0, "Catkeys_Compiler",
-			null, WS.POPUP, 0, 0, 0, 0, Wnd.Spec.Message,
-			Zero, Zero, Zero);
-
-		_mmf=MemoryMappedFile.OpenExisting("Catkeys_SM_Tasks"); //1.5 ms
-		_m=_mmf.CreateViewAccessor(); //3.5 ms. Why it is so slow? CreateOrOpen is even slower.
-
-		_m.Write(8, ref w);
-		IntPtr ev; _m.Read(0, out ev);
-		api.SetEvent(ev);
-
-		Application.Run(); //message loop
-	}
-
-	unsafe static LPARAM _WndProcCompiler(Wnd hWnd, WM msg, LPARAM wParam, LPARAM lParam)
-	{
-		switch(msg) {
-		//case WM.NCCREATE:
-		//	_hwndAM=hWnd;
-		//	break;
-		//case WM.CREATE:
-		//	Speed.Next();
-		//	break;
-		//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
-		//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);
-		//	break;
-		//case WM.DESTROY:
-		//	Out("destroy");
-		//	break;
-		case WM.USER:
-			Out(Marshal.PtrToStringBSTR(lParam));
-			Marshal.FreeBSTR(lParam);
-			return Zero;
-		}
-
-		LPARAM R = api.DefWindowProcW(hWnd, msg, wParam, lParam);
-
-		switch(msg) {
-		case WM.NCDESTROY:
-			api.PostQuitMessage(0); //Application.Exit[Thread](); does not work
-			break;
-		}
-		return R;
-
-		//tested: .NET class NativeWindow. It semms its purpose is different (to wrap/subclass an existing class).
-	}
-}
-
-
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-#region commented
-
-//TestUnmanaged();
-
-//StackTrace stackTrace = new StackTrace();
-//Out(stackTrace.GetFrame(1).GetMethod().Name);
-////Out(stackTrace.GetFrame(1).GetFileLineNumber()); //always 0, even in Debug build
-//Out(stackTrace.GetFrame(1).GetFileName()); //null
-////Out(stackTrace.GetFrame(1).GetMethod(). //nothing useful
-
-
-
-
-//Dee f=Mee;
-////f(GCHandle.Alloc("test"));
-////f(GCHandle.FromIntPtr(Zero));
-//f("test");
-//f(5);
-
-
-//return;
-
-//UIntPtr ki=1;
-
-//switch(2)
-//{
-//	case 1:
-//	int hdh=8;
-//	break;
-//	case 2:
-//	int koop=8;
-//Out(hdh);
-//	break;
-//}
-
-//Out(hdh);
-
-//Out($"one{_}two");
-//Out("three"+_+"four");
-//Out("one" RN "two"); //error
-//Out($"one{}two"); //error
-
-
-////str controls="3"
-////var d=new DialogVariables("3") { lb3="oooo" };
-////var d=new DialogVariables("3");
-//var d=new DialogVariables();
-//d.lb3="oooo";
-//d.c4=7;
-//d.au=new string[] { "one", "two" };
-////d.au={ "one", "two" }; //error
-//ShowDialog(d);
-//return;
-
-
-//static void AnotherThread()
-//{
-//	//Show.TaskDialog("another thread", "", "", x:1);
-//	MessageBox.Show("another thread");
-//	Out("after msgbox in another thread");
-//}
-
-//[DllImport("comctl32.dll", EntryPoint = "TaskDialog")]
-//static extern int _TaskDialog(Wnd hWndParent, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, TDButton dwCommonButtons, LPARAM pszIcon, out int pnButton);
-
-//static int TD(string s, bool asy)
-//{
-//	int r = 0;
-//	for(int i = 0; i < 100; i++) {
-//		int hr = _TaskDialog(Wnd0, Zero, "Test", s, null, TDButton.Cancel, 0, out r);
-//		//OutList(hr, r, asy);
-//		if(hr == 0 || hr == Api.E_INVALIDARG) break;
-//		Time.WaitMS(20);
-//	}
-//	return r;
-//}
-
-
-
-////string ss = "gggggg.txt";
-////Out(ss.Like_(false, "*.exe", "*.txt"));
-
-////string ss = "5ggggg.txt";
-////Out(ss.LikeEx_(false, "#*.exe", "#*.txt"));
-
-////string ss = "5ggggg.txt";
-////Out(ss.Equals_(false, "moo.exe", "5ggggg.txt"));
-
-////string ss = "5ggggg.txt";
-////Out(ss.EndsWith_(false, ".exe", ".txt"));
-
-////string ss = "file.txt";
-////Out(ss.StartsWith_(false, "kkk", "file."));
-
-//string ss = "file.txt";
-////Out(ss.RegexIs_(".*.TXT"));
-////Out(ss.RegexIs_(".*.txt", RegexOptions.IgnoreCase));
-////Out(ss.RegexIs_(0, ".*.TXT", ".*.txt"));
-////Out(ss.RegexIs_(RegexOptions.IgnoreCase, ".*.TXT", ".*.txt"));
-//ss = "gggg.exe\naaa.txt\nbbb.txt";
-////Out(ss.RegexMatch_(".*.TXT"));
-////Out(ss.RegexMatch_(".*.TXT", RegexOptions.IgnoreCase));
-////Output.Write(ss.RegexMatches_(".*.TXT"));
-////Output.Write(ss.RegexMatches_(".*.TXT", RegexOptions.IgnoreCase));
-
-//Out(ss.RegexReplace_(@"\.txt\b", ".moo"));
-//Out(ss.RegexReplace_(@"\.txt\b", m=> { return ".boo"; }));
-
-////var au = new int[] {1, 2, 3 };
-////var au = new List<int> {1, 2, 3 };
-////var au = new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } };
-////Output.Write(au, ", ");
-
-//return;
-
-
-
-
-//Out(AppDomain.CurrentDomain.FriendlyName);
-
-//new Thread(AnotherThread).Start();
-
-//Show.TaskDialog("appdomain primary thread", "", "e");
-
-////Thread.CurrentThread.Abort();
-////AppDomain.Unload(AppDomain.CurrentDomain);
-//Out("after TaskDialog");
-
-//return;
-
-//Show.TaskDialog("", "<a href=\"test\">test</a>", onLinkClick: ed =>
-//{
-//	Wnd z = ed.hwnd;
-//	string s = null;
-//	Perf.First(true);
-//	for(int j = 0; j<8; j++) {
-//		for(int i=0; i<1000; i++) s= z.ClassName;
-//		//for(int i=0; i<1000; i++) s= z.Name;
-//		//for(int i = 0; i<1000; i++) s= z.ControlText;
-//		//for(int i = 0; i<1000; i++) s= z.ControlTextLength;
-//		Perf.Next();
-//	}
-//	Perf.Write();
-//	Out(s);
-//}
-//);
-
-//return;
-
-////Time.Wait(1);
-//Wnd z = Wnd.Find("Untitled - Notepad");
-////z=(Wnd)2098486; //Inno
-////z=(Wnd)395896; //Static
-////z=(Wnd)1510052; //Edit
-
-////z.Name = "MMMMMMMMGGGG"; return;
-
-////string m = z.Name;
-////string m = z.GetControlText();
-////OutList(m==null, m=="", m);
-////return;
-
-//Out(z);
-
-//string cn = null;
-////cn= z.ControlText; OutList(cn.Length, cn); return;
-//int nt = 0;
-
-//Perf.First(true);
-//for(int j = 0; j<8; j++) {
-//	//for(int i=0; i<1000; i++) cn= z.ClassName;
-//	//for(int i=0; i<1000; i++) cn= z.Name;
-//	for(int i = 0; i<1000; i++) cn= z.GetControlText();
-//	Perf.Next();
-//}
-//Perf.Write();
-//Out(cn);
-//Out(nt);
-
-//Wnd ww = Wnd.Find("Untitled - Notepad");
-//ww.MoveInScreen(100, 100);
-//return;
-
-//OutFunc();
-//Out(FunctionName());
-//Output.WriteHex((sbyte)(-10));
-//OutList(1, "mmm", true, null, 5.6);
-//Out("ff");
-//Print(5);
-//PrintList(1, 2, 3);
-//return;
-
-//Output.Clear();
-//Screen s = null;
-////Output.Write(s);
-////Console.WriteLine(s);
-//Info("stri");
-//Info(5);
-//Info(true);
-//Info(new char[] { 'a', 'b' });
-//Info(new string[] { "aaa", "bbb" });
-//Info(new int[] { 'a', 'b' });
-//Info(new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } });
-//Out("----------");
-//Print("stri");
-//Print(5);
-//Print(true);
-//Print(new char[] { 'a', 'b' });
-//Print(new string[] { "aaa", "bbb" });
-//Print(new int[] { 'a', 'b' });
-//Print(new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } });
-
-////Perf.First(true);
-////for(int j=0; j<5; j++) {
-////	for(int i = 0; i<1000; i++) Info2("ff");
-////	Perf.Next();
-////}
-////Perf.Write();
-
-//return;
-
-
-
-
-//Wait(2);
-//Info("bla");
-//Out("bla");
-//Say("bla");
-//Print("bla");
-//OW("bla");
-
-//Info("bla"); Warning("bla"); Error("bla");
-
-
-
-//Wnd w = Wnd.Find("Untitled - Notepad");
-////Wnd w2 = Wnd.Find("Registry Editor");
-
-////w.MoveInScreen(0, 0, null, limitSize:true, rawXY:false);
-////w.EnsureInScreen(null, limitSize:true, workArea:true);
-
-//RECT k=new RECT(0, 1700, 5000, 400, true);
-////RECT k=new RECT(-1, -1, 500, 400, true);
-
-////Wnd.RectMoveInScreen(ref k, limitSize:true);
-//Wnd.RectEnsureInScreen(ref k, limitSize:true);
-//Out(k);
-
-////w=Wnd.Spec.NoTopmost;
-//Out(Screen_.FromObject(w));
-
-////Screen s1 = Screen_.FromObject(w);
-////Screen s2 = Screen_.FromObject(w);
-//Screen s1 = Screen.PrimaryScreen;
-//Screen s2 = Screen.PrimaryScreen;
-//Out(s1==s2);
-//Out(s1.Equals(s2));
-
-
-//IntPtr hm = DisplayMonitor.GetHandle(w);
-////hm=DisplayMonitor.GetHandle(2);
-////hm=DisplayMonitor.GetHandle(DisplayMonitor.OfMouse);
-////hm=DisplayMonitor.GetHandle(new POINT(2000, 2000));
-////hm=DisplayMonitor.GetHandle(new RECT(2000, 2000, 100, 100, true));
-//Out(hm);
-
-//for(int z=0; z<2; z++) {
-//	Screen[] ad = Screen.AllScreens;
-//	foreach(Screen k in ad) {
-//		RECT rr = k.Bounds;
-//		Out(rr);
-//	}
-//	Show.MessageDialog("aaa");
-//}
-
-//Perf.First(true);
-//for(int rep1=0; rep1<5; rep1++) {
-//	//for(int rep2=0; rep2<100; rep2++) { RECT u1 = DisplayMonitor.GetRectangle(2); }
-//	for(int rep2=0; rep2<100; rep2++) { RECT u2 = ScreenFromIndex(2).Bounds; }
-//	Perf.Next();
-//}
-//Perf.Write();
-
-//Screen k = ScreenFromIndex(1);
-//Out(k.Bounds);
-
-
-//return;
-
-//RECT r1; System.Drawing.Rectangle r2;
-
-//Api.GetWindowRect(w, out r1);
-//GetWindowRect(w, out r2);
-
-//OutList(r1, r2);
-
-//return;
-
-
-//var r1 = new RECT();
-//var r2 = r1;
-//var r3 = RECT.LTRB(1, 8, 10, 50);
-//var r4 = RECT.LTWH(1, 8, 10, 50);
-//var r5 = new RECT() { left=2, top=20, Width=2, Height=10 };
-
-//Out(r2==r1);
-
-//Out(r3);
-//Out(r4);
-//Out(r5);
-
-//return;
-
-//Wnd w = Wnd.Spec.Bottom;
-//Out(w.Equals(Wnd.Spec.Bottom));
-//Wnd w2 = w;
-//Out(w.Equals(w2));
-////Wnd w = Wnd0;
-////Out(w.Equals(Wnd0));
-
-//Wnd wg = Wnd.Get.FirstToplevel();
-
-//return;
-
-//int eon, x = "ab 99 hjk".ToInt_(2, out eon);
-//OutList(x, eon);
-//int x = "ab 99 hjk".ToInt_(2);
-//int x = " 99 hjk".ToInt_();
-//OutList(x);
-//int eon, x = " 99 hjk".ToInt_(out eon);
-//OutList(x, eon);
-
-//return;
-
-//#if NEWRESULT
-//try {
-//Thread.Sleep(5000);
-
-//Api.MessageBox(Wnd0, "dd", "ggg", 0x40000);
-//return;
-
-//Script.Option.dialogRtlLayout=true;
-//Script.Option.dialogTopmostIfNoOwner=true;
-
-//var asm = Assembly.GetEntryAssembly(); //fails if DoCallBack or CreateInstance, OK if ExecuteAssembly
-//var asm = Assembly.GetExecutingAssembly(); //OK
-//Out(asm!=null);
-//Out(asm.Location);
-////var rm = new System.Resources.ResourceManager("", asm);
-////Out(rm);
-//return;
-
-//ScriptOptions.DisplayName="Script display name";
-//Out(Assembly.GetEntryAssembly().FullName); //exception
-
-//Wnd ko = Wnd0;
-////ko = Wnd.Spec.Topmost;
-//Out(ko == null);
-//Out(null==ko);
-//Wnd? mo = null, mo2=null;
-//Out(ko == mo);
-//Out(mo == mo2);
-//POINT po = new POINT();
-//Out(po == null);
-////int io = 0;
-////Out(io == null);
-//IntPtr pi = Zero;
-//Out(pi == null);
-//return;
-
-//Out(sizeof(WPARAM));
-
-////void* b = (void*)1000000;
-////IntPtr b = (IntPtr)(-1);
-////UIntPtr b = (UIntPtr)(0xffffffff);
-//int b = -1;
-////uint b = 0xffffffff;
-////byte b = 5;
-////sbyte b = -5;
-////ushort b = 5;
-////short b = -5;
-////char b = 'A';
-////WPARAM b = -1;
-
-////IntPtr b=(IntPtr)(-1);
-////UIntPtr b=(UIntPtr)(0xffffffff);
-////uint b = 5;
-////char b = 'A';
-
-//LPARAM x;
-//x=b;
-////x=1000;
-//b=x;
-
-////uint u =0xffffffff;
-////int x = (int)u;
-////WPARAM y = u;
-
-//Out("OK");
-//Out($"{x} {b}");
-////Out($"{x} {((int)b).ToString()}");
-////Out(x==-1);
-////Out(x+4);
-
-
-////string s = " 10 more";
-//string s = "-10 more";
-////string s = "0x10 more";
-////string s = "-0x10";
-//s=" 15 text";
-
-////Out(Convert.ToInt32(s));
-////Out(int.Parse(s));
-////Out(SplitNumberString(ref s));
-////Out($"'{s}'");
-
-//int len, r = s.ToInt_(out len);
-//Out($"{r} 0x{r:X} {len}");
-
-//string tail;
-//r=s.ToInt_(out tail);
-//Out($"{r} 0x{r:X} '{tail}' {tail==null}");
-
-//Perf.SpinCPU();
-//int i, j, n1=0, n2=0;
-//for(j=0; j<4; j++) {
-//	Perf.First();
-//	for(i=0; i<1000; i++) n1+=int.Parse(s);
-//	Perf.Next();
-//	for(i=0; i<1000; i++) n2+=ToInt_(s, out len);
-//	Perf.NextWrite();
-//}
-//Out($"{n1} {n2} {len}");
-
-//string[] a = { "one", "two" };
-//Out(a);
-
-//var d = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 } };
-//Out(d);
-
-//var k = new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } };
-////Out(k);
-//Output.Write(k);
-
-//Redirect();
-//Thread.Sleep(100);
-
-//Output.Writer=new MooWriter();
-
-//Perf.SpinCPU();
-//int i, n=10;
-//for(int j=0; j<3; j++) {
-
-//	Perf.First();
-//	for(i=0; i<n; i++) Out("out");
-//	Perf.Next();
-//	for(i=0; i<n; i++) Console.WriteLine("con");
-//	//Perf.Next();
-//	//for(i=0; i<n; i++) Trace.WriteLine("tra");
-//	Perf.NextWrite();
-//}
-//speed: Write unbuffered 35, Console.WriteLine 30, Trace.WriteLine (debug mode) 900
-
-////Perf.First(true);
-////Output.AlwaysOutput=true;
-//Output.RedirectConsoleOutput();
-//Output.RedirectDebugOutput();
-////Perf.NextWrite();
-
-////Console.Write("{0} {1}", 1, true);
-////return;
-//Out("out");
-//Console.WriteLine("con");
-//Trace.WriteLine("tra");
-////Thread.Sleep(1000); try { Console.Clear(); } catch { Out("exc"); }
-//Debug.WriteLine("deb");
-
-////Output.Clear();
-
-
-//var e = new Exception("failed");
-//var e = new ArgumentException(null, "paramName");
-//var e = new FormatException();
-//var e = new InvalidOperationException();
-//var e = new NotImplementedException();
-//var e = new NotSupportedException();
-//var e = new OperationCanceledException();
-//var e = new TimeoutException();
-//var e = new WaitTimeoutException();
-//var e = new WaitTimeoutException(null, new Exception("inner"));
-//var e = new WaitTimeoutException();
-//Out(e.Message);
-
-
-//Out(1);
-//Input.Key("Ctrl+K");
-//Cat.Key("Ctrl+K");
-
-//Show.MessageDialog("dddd");
-//Meow.MessageDialog("dddd");
-
-//Test_str();
-
-//Out($"{(int)Control.ModifierKeys:X}");
-//Out($"{(int)Keys.Control:X}");
-//Out($"{(int)K.Control:X}");
-//Keys("");
-//Key("");
-//SendKeys
-
-
-//Out((IntPtr)WndSpec.NoTopmost);
-//Out(Wnd.Find("Untitled - Notepad"));
-
-//TestUtil.Test_str();
-
-//string s = "file.txt";
-//Out(s.likeS("*.txt"));
-
-////Out(s.Reverse());
-
-//switch(s) {
-//case "*.txt":
-//	Out("txt");
-//	break;
-//case "*.moo":
-//	Out("moo");
-//	break;
-//default:
-//	Out("none");
-//	break;
-//}
-
-//if(s.likeI("*.txt")) {
-//	Out("txt");
-//} else if(s.likeI("*.moo")) {
-//	Out("moo");
-//} else {
-//	Out("none");
-//}
-
-//if(s.endsWithI(".txt")) {
-//	Out("txt");
-//} else if(s.endsWithI(".moo")) {
-//	Out("moo");
-//} else {
-//	Out("none");
-//}
-
-//if(Regex.IsMatch(s, "one")) {
-//	Out("txt");
-//} else if(Regex.IsMatch(s, "two")) {
-//	Out("moo");
-//} else {
-//	Out("none");
-//}
-
-
-//Out(K.A);
-//Keys("dd");
-//Text("uu");
-
-//Trigger.Hotkey["Ctrl+K"] =O=> { Out("lambda"); };
-//Trigger.Hotkey["Ctrl+K"] = delegate(HotkeyTriggers.Message m) { Out("delegate"); };
-
-//HotkeyTriggers.TestFireTrigger();
-
-//var k=new TestIndexers();
-//Out(k[3]); k[7]=5;
-//Out(k[3, 4]); k[7, 2]=5;
-//Out(k[3]); k[7]=5;
-//Out(k["AAA"]); k["BBB"]="C";
-//TestIndexers.Hotkey["test"]="moo";
-
-
-
-////var thr=new Thread(AppDomainThread);
-////thr.Start();
-//AppDomainThread();
-////Uuoo(1);
-////Uuoo(2);
-////Uuoo(3);
-//MessageBox.Show("main domain, tid="+Thread.CurrentThread.ManagedThreadId.ToString());
-
-
-//System.AppDomain.CreateDomain(
-//System.Collections.ArrayList k=new System.Collections.ArrayList();
-//k.Add(object
-//System.Collections.Hashtable t=new System.Collections.Hashtable();
-//t.Add(
-//System.Collections.Generic.HashSet<
-
-//		return;
-//			//Out(OptParam(b:5));
-
-//			//try { Out(1); }catch {}
-
-//			//for(int j=0; j<5; j++)
-//			//{
-//			//	TestLocal();
-//			//	//Out("returned");
-//			//	//GC.Collect(0, GCCollectionMode.Forced, true);
-//			//	Perf.First();
-//			//	GC.Collect();
-//			//	Perf.Next();
-//			//	//Out("collected");
-//			//	GC.WaitForFullGCComplete();
-//			//	//Out("waited");
-//			//}
-
-//			//long g1, g2;
-//			//g1=Stopwatch.GetTimestamp();
-//			//Perf.First();
-//			////Thread.Sleep(1000);
-//			//g2=Stopwatch.GetTimestamp();
-
-//			//Out(g2-g1);
-//			//return;
-
-//			string script = @"
-//import System
-////import System.Runtime.InteropServices
-//import Moo
-//import Catkeys.Winapi
-
-////[DllImport(""user32.dll"")]
-////def MessageBox(hWnd as int, text as string, caption as string, type as int) as int:
-////	pass
-
-//static def Main():
-//	i =8
-//	print ""Hello, World!""
-//	api.MessageBox(0, ""text $(i)"", ""cap"", 0);
-
-//	print Class1.Add(1, 2);
-
-//	//print ""Press a key . . . mm""; Console.ReadKey(true)
-//";
-////static def stringManip(item as string):
-////	return ""'${item}' ? What the hell are you talking about ? ""
-////";
-
-//			for (int i = 0; i < 1; i++)
-//			{
-//				Stopwatch sw = new Stopwatch();
-//				long t1, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
-
-//				sw.Start();
-//				BooCompiler compiler = new BooCompiler();
-//				//compiler.Parameters.Input.Add(new StringInput("_script_", "print('Hello!')"));
-//				compiler.Parameters.Input.Add(new StringInput("Script", script + "//" + i.ToString()));
-//				compiler.Parameters.Pipeline = new CompileToMemory();
-//				//compiler.Parameters.Pipeline = new CompileToFile();
-//				//compiler.Parameters.Ducky = true;
-//				//Out(compiler.Parameters.BooAssembly.FullName);
-//				//Out(compiler.Parameters.Debug);
-//				compiler.Parameters.Debug = false; //default true; 20% faster when Release
-//				//compiler.Parameters.Environment.Provide.
-//				//compiler.Parameters.GenerateInMemory=false; //default is true even if new CompileToFile()
-//				//Out(compiler.Parameters.GenerateInMemory);
-//				//Out(compiler.Parameters.OutputAssembly);
-//				//compiler.Parameters.OutputAssembly=@"q:\test\boo.dll";
-
-//				compiler.Parameters.AddAssembly(Assembly.LoadFile(@"Q:\test\Moo.dll")); //ok
-//				//compiler.Parameters.LoadAssembly(@"Q:\test\Moo.dll", true); //no effect
-//				//compiler.Parameters.LoadReferencesFromPackage(@"Q:\test\Moo.dll"); //error
-//				//compiler.Parameters.References.Add(Assembly.LoadFile(@"Q:\test\Moo.dll")); //ok
-//				compiler.Parameters.AddAssembly(Assembly.LoadFile(@"C:\Users\G\Documents\SharpDevelop Projects\Test\Winapi\bin\Release\Winapi.dll"));
-
-//				CompilerContext context = compiler.Run();
-//				t1 = sw.ElapsedTicks;
-//				//Note that the following code might throw an error if the Boo script had bugs.
-//				//Poke context.Errors to make sure.
-//				if (context.GeneratedAssembly != null)
-//				{
-//					//SaveAssembly(context.GeneratedAssembly, @"q:\test\boo.exe");
-//					//Out(context.GeneratedAssembly.FullName);
-//					//Out(context.GeneratedAssembly.EntryPoint.ToString()); //void Main()
-//					//Out(context.GeneratedAssembly.);
-
-//					Type scriptModule = context.GeneratedAssembly.GetType("ScriptModule");
-//					//Out(scriptModule == null);
-//					MethodInfo met = scriptModule.GetMethod("Main");
-
-//					//MethodInfo[] a = scriptModule.GetMethods();
-//					//foreach(MethodInfo m in a)
-//					//{
-//					//Out(m.Name);
-//					//}
-
-//					met.Invoke(null, null);
-
-//					//string output = (string)stringManip.Invoke(null, new object[] { "Tag" });
-//					//Out(output);
-//				}
-//				else
-//				{
-//					foreach (CompilerError error in context.Errors)
-//						Out(error);
-//				}
-
-//				double f = Stopwatch.Frequency / 1000000.0;
-//				Out("speed: {0} {1} {2} {3} {4}", (long)(t1 / f), (long)((t2 - t1) / f), (long)((t3 - t2) / f), (long)((t4 - t3) / f), (long)((t5 - t4) / f));
-//			}
-//			Out("Press a key . . . ");
-//			Console.ReadKey(true);
-//}
-
-//static void SaveAssembly(Assembly a, string file)
-//{
-//	using (FileStream stream = new FileStream(file, FileMode.Create))
-//	{
-//		BinaryFormatter formatter = new BinaryFormatter();
-
-//		formatter.Serialize(stream, a); //error, assembly not marked as serializable
-//	}
-//}
-
-#endregion
-

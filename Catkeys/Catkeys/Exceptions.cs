@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 //using System.IO;
 //using System.Windows.Forms;
 using System.Runtime.Serialization;
+using System.ComponentModel;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -265,5 +266,23 @@ namespace Catkeys
 		/// Else returns null.
 		/// </summary>
 		public static Exception Exception { get { return _threadError.GetException(); } }
+
+		/// <summary>
+		/// Gets text of the last Windows API error of this thread.
+		/// Does not depend on other functions of this class.
+		/// </summary>
+		public static string GetWinErorText()
+		{
+			return new Win32Exception().Message;
+        }
+
+		/// <summary>
+		/// Gets text of a Windows API error.
+		/// Does not depend on other functions of this class.
+		/// </summary>
+		public static string GetWinErorText(int errorCode)
+		{
+			return new Win32Exception(errorCode).Message;
+        }
 	}
 }

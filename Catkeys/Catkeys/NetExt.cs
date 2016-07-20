@@ -120,8 +120,8 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets Screen object that contains (or is nearest to) the specified window.
-		/// If w is 0 or closed/invalid, gets primary screen (Screen.FromHandle would return an invalid object if the window handle is invalid).
+		/// Gets Screen object of the screen that contains the specified window (the biggest part of it) or is nearest to it.
+		/// If w handle is 0 or invalid, gets the primary screen (Screen.FromHandle would return an invalid object if the window handle is invalid).
 		/// </summary>
 		public static Screen FromWindow(Wnd w)
 		{
@@ -132,7 +132,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets Screen object that contains (or is nearest to) the specified object, which can be (depending on variable type):
+		/// Gets Screen object of the screen that contains (or is nearest to) the specified object, which can be (depending on variable type):
 		///		int: 1-based screen index, or Screen_.Primary (0), Screen_.OfMouse, Screen_.OfActiveWindow.
 		///		Wnd: a window. If invalid, gets primary screen.
 		///		POINT, Point: a point.

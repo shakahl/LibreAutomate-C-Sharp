@@ -1,21 +1,22 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.Threading;
-using System.Windows.Forms;
-
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Windows.Forms;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+
+using System.Reflection;
+//using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
@@ -25,60 +26,68 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	public static class NoClass
 	{
-    }
-
-	[DebuggerStepThrough]
-	public static class Window
-	{
-		/// <summary>
-		/// Registers native window class that can be used for simple hidden windows.
-		/// Returns class atom.
-		/// Sets class name and procedure address. All other properties 0 (including hInstance).
-		/// </summary>
-		public static ushort RegWinClassHidden(string name, Api.WNDPROC wndProc)
-		{
-			var w = new Api.WNDCLASSEX(name, wndProc);
-			return Api.RegisterClassEx(ref w);
-		}
 	}
 
-	//TODO: test SafeMemoryMappedFileHandle, SafeMemoryMappedViewHandle.
 	[DebuggerStepThrough]
-	public class SharedMemoryFast
+	public class NativeSharedMemory
 	{
 		protected IntPtr _hmap, _mem;
+		//or could use SafeMemoryMappedViewHandle. Not tested.
 
 		/// <summary>
 		/// Pointer to the base of the shared memory.
 		/// </summary>
 		public IntPtr mem { get { return _mem; } }
 
-		~SharedMemoryFast() { Close(); }
-
-		public bool Create(string name, uint size)
+		/// <summary>
+		/// Creates shared memory of specified size. Opens if already exists.
+		/// Calls Api.CreateFileMapping() and Api.MapViewOfFile().
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="size"></param>
+		/// <exception cref="Win32Exception">When fails.</exception>
+		public NativeSharedMemory(string name, uint size)
 		{
-			Close();
 			_hmap = Api.CreateFileMapping((IntPtr)(~0), Zero, 4, 0, size, name);
-			if(_hmap==Zero) return false;
-			_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, 0);
-			//if(_mem && nbZero) Zero(_mem, nbZero); //don't zero all, because it maps memory for all possibly unused pages. Tested: although MSDN says that the memory is zero, it is not true.
-			return _mem!=Zero;
+			if(_hmap != Zero) {
+				_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, 0);
+				//if(_mem && nbZero) Zero(_mem, nbZero); //don't zero all, because it maps memory for all possibly unused pages. Tested: although MSDN says that the memory is zero, it is not true.
+			}
+			if(_mem == Zero) throw new Win32Exception();
+			//TODO: option to use SECURITY_ATTRIBUTES to allow low IL processes open the memory.
 		}
 
-		public bool Open(string name)
+		/// <summary>
+		/// Opens shared memory.
+		/// Calls Api.OpenFileMapping() and Api.MapViewOfFile().
+		/// </summary>
+		/// <param name="name"></param>
+		/// <exception cref="Win32Exception">When fails, eg the memory does not exist.</exception>
+		public NativeSharedMemory(string name)
 		{
-			Close();
 			_hmap = Api.OpenFileMapping(0x000F001F, false, name);
-			if(_hmap==Zero) return false;
-			_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, 0);
-			return _mem!=Zero;
+			if(_hmap != Zero) {
+				_mem = Api.MapViewOfFile(_hmap, 0x000F001F, 0, 0, 0);
+			}
+			if(_mem == Zero) throw new Win32Exception();
 		}
+
+		~NativeSharedMemory() { Close(); }
 
 		public void Close()
 		{
-			if(_mem!=Zero) { Api.UnmapViewOfFile(_mem); _mem=Zero; }
-			if(_hmap!=Zero) { Api.CloseHandle(_hmap); _hmap=Zero; }
+			if(_mem != Zero) { Api.UnmapViewOfFile(_mem); _mem = Zero; }
+			if(_hmap != Zero) { Api.CloseHandle(_hmap); _hmap = Zero; }
 		}
+	}
+
+	internal unsafe struct LibSharedMemory
+	{
+		public Perf.Inst perf;
+
+		static NativeSharedMemory _sm = new NativeSharedMemory("Catkeys_SM_0x10000", 0x10000);
+
+		public static LibSharedMemory* Ptr { get { return (LibSharedMemory*)_sm.mem; } }
 	}
 
 	[DebuggerStepThrough]
@@ -92,10 +101,10 @@ namespace Catkeys.Util
 		{
 			get
 			{
-				if(_appdomainAssembly==null) {
+				if(_appdomainAssembly == null) {
 					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
-					if(asm==null) asm=AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
-					_appdomainAssembly=asm;
+					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
+					_appdomainAssembly = asm;
 				}
 				return _appdomainAssembly;
 			}
@@ -104,7 +113,7 @@ namespace Catkeys.Util
 
 		public static IntPtr GetModuleHandleOf(Type t)
 		{
-			return t==null ? Zero : Marshal.GetHINSTANCE(t.Module);
+			return t == null ? Zero : Marshal.GetHINSTANCE(t.Module);
 
 			//Tested these to get caller's module without Type parameter:
 			//This is dirty/dangerous and 50 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(new StackFrame(1).GetMethod().DeclaringType.Module);
@@ -114,7 +123,7 @@ namespace Catkeys.Util
 
 		public static IntPtr GetModuleHandleOf(Assembly asm)
 		{
-			return asm==null ? Zero : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
+			return asm == null ? Zero : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
 		}
 
 		public static IntPtr GetModuleHandleOfAppdomainEntryAssembly()
@@ -154,7 +163,7 @@ namespace Catkeys.Util
 				var asm = Misc.AppdomainAssembly; if(asm == null) return Zero;
 				IntPtr hinst = Misc.GetModuleHandleOf(asm);
 				int size = small ? 16 : 32;
-				hicon = Api.LoadImageRes(hinst, 32512, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
+				hicon = Api.LoadImage(hinst, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
 				//note:
 				//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
 				//I could not find a .NET method to get icon directly from native resources of assembly.
@@ -170,19 +179,20 @@ namespace Catkeys.Util
 		public static void MinimizeMemory()
 		{
 			//return;
+			GC.Collect();
 			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), (UIntPtr)(~0U), (UIntPtr)(~0U));
 		}
 
 		public static unsafe int CharPtrLength(char* p)
 		{
-			if(p==null) return 0;
-			for(int i = 0; ; i++) if(*p=='\0') return i;
+			if(p == null) return 0;
+			for(int i = 0; ; i++) if(*p == '\0') return i;
 		}
 
 		public static unsafe int CharPtrLength(char* p, int nMax)
 		{
-			if(p==null) return 0;
-			for(int i = 0; i<nMax; i++) if(*p=='\0') return i;
+			if(p == null) return 0;
+			for(int i = 0; i < nMax; i++) if(*p == '\0') return i;
 			return nMax;
 		}
 
@@ -211,16 +221,20 @@ namespace Catkeys.Util
 		}
 	}
 
+	public static class Debug_
+	{
+#if DEBUG
+		public static void OutLoadedAssemblies()
+		{
+			AppDomain currentDomain = AppDomain.CurrentDomain;
+			Assembly[] assems = currentDomain.GetAssemblies();
+			foreach(Assembly assem in assems) {
+				OutList(assem.ToString(), assem.CodeBase, assem.Location);
+			}
+		}
+#endif
+	}
 
 
-
-
-	//TEST
-
-
-	//public static class Path //cannot be Path, because hides System.IO.Path
-	//{
-	//	public static string Expand(string path) { return "rrrr"; }
-	//}
 
 }

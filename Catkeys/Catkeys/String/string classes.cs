@@ -433,7 +433,7 @@ namespace Catkeys
 	public class StringList
 	{
 		//For speed and memory usage, better would be struct. Then don't need to alloc new object.
-		//But then cannot assign null, which makes it more difficult/unclear to use.
+		//But then cannot assign null, which makes it more difficult/unclear to use (although could use StringList? parameters).
 		//In this case, easy/clear usage is more important than some spped/memory advantage.
 		//Could inherit from string[] or List<string>, but C# does not allow it. Other tries to make this better failed too.
 		//It's difficult to measure speed because of compiler optimizations etc, but passing a string[] to a function through a parameter of this class is only less than 30% slower than passing directly through a string[] parameter or struct.

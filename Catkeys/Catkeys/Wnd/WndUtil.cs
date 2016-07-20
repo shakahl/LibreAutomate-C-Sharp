@@ -37,7 +37,7 @@ namespace Catkeys
 		/// <param name="w">Window.</param>
 		/// <param name="appId">Receives app ID.</param>
 		/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
-		/// <param name="getExePathIfNotWinStoreApp">Get exe full path if hwnd is not a Windows store app.</param>
+		/// <param name="getExePathIfNotWinStoreApp">Get exe full path if hwnd is not a Windows Store app.</param>
 		static int _WindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		{
 			appId = null;

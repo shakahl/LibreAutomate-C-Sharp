@@ -26,7 +26,34 @@ namespace Catkeys
 	public static class Mouse
 	{
 		public static POINT XY { get { POINT p; Api.GetCursorPos(out p); return p; } }
-		public static int X { get { POINT p=XY; return p.x; } }
-		public static int Y { get { POINT p=XY; return p.y; } }
+		public static int X { get { POINT p = XY; return p.x; } }
+		public static int Y { get { POINT p = XY; return p.y; } }
+	}
+
+	//TODO: create file Input.cs
+	public static class Input
+	{
+		/// <summary>
+		/// Gets current text cursor (caret) rectangle in screen coordinates.
+		/// Returns the control that contains it.
+		/// If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns Wnd0.
+		/// </summary>
+		public static Wnd GetTextCursorRect(out RECT r)
+		{
+			Api.GUITHREADINFO g;
+			if(Wnd.Misc.GetGUIThreadInfo(out g) && !g.hwndCaret.Is0) {
+				if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
+				r = g.rcCaret;
+				g.hwndCaret.MapClientToScreen(ref r);
+				return g.hwndCaret;
+			}
+
+			POINT p; Api.GetCursorPos(out p);
+			r = new RECT(p.x, p.y, 0, 16, true);
+			return Wnd0;
+
+			//note: in Word, after changing caret pos, gets pos 0 0. After 0.5 s gets correct. After typing always correct.
+			//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.
+		}
 	}
 }

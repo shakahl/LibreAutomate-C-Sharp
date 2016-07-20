@@ -78,7 +78,7 @@ namespace Catkeys
 		/// Returns true if this is a child window (control), false if top-level window.
 		/// Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
 		/// </summary>
-		public bool IsControl { get { return !DirectParent.Is0; } }
+		public bool IsChildWindow { get { return !DirectParent.Is0; } }
 
 		/// <summary>
 		/// Returns true if this is a direct or indirect child of window w.
@@ -90,7 +90,7 @@ namespace Catkeys
 		/// <summary>
 		/// Static functions that get windows/controls in Z order, parent/child, owner/owned, special windows.
 		/// Example: <c>Wnd w2=Wnd.Get.NextSibling(w1);</c>
-		/// Wnd also has copies of some often used Wnd.Get functions.
+		/// The Wnd class also has copies of some often used Wnd.Get functions.
 		/// </summary>
 		//[DebuggerStepThrough]
 		public static class Get
@@ -183,17 +183,49 @@ namespace Catkeys
 			public static Wnd DirectParent(Wnd w) { return w.DirectParent; }
 
 			/// <summary>
-			/// Gets the special window that is used like the parent window of all top-level windows.
+			/// Gets the virtual parent window of all top-level windows.
+			/// It is not the window that contains desktop icons.
 			/// Calls Api.GetDesktopWindow().
 			/// </summary>
 			public static Wnd DesktopWindow { get { return _wDesktop; } }
 
 			/// <summary>
-			/// Gets a window of the shell process (usually explorer.exe).
+			/// Gets a window of the shell process (usually process "explorer", class name "Progman").
 			/// The window belongs to the same thread as the window that contains desktop icons.
 			/// Calls Api.GetShellWindow().
 			/// </summary>
 			public static Wnd ShellWindow { get { return Api.GetShellWindow(); } }
+
+			/// <summary>
+			/// Gets the top-level window that contains desktop icons.
+			/// </summary>
+			public static Wnd Desktop { get { return DesktopListview.ToplevelParentOrThis; } }
+
+			/// <summary>
+			/// Gets the "SysListView32" control that contains desktop icons.
+			/// </summary>
+			public static Wnd DesktopListview
+			{
+				get
+				{
+					if(!__wDesktopLV.IsValid) {
+						Wnd wShell = ShellWindow;
+						Wnd wLV = wShell.Child(null, "SysListView32");
+						if(wLV.Is0) {
+							foreach(Wnd t in ThreadWindows(wShell.ThreadId, "WorkerW", true)) {
+								wLV = t.Child(null, "SysListView32"); if(!wLV.Is0) break;
+							}
+						}
+						__wDesktopLV = wLV;
+					}
+					return __wDesktopLV;
+
+					//info:
+					//If no wallpaper, desktop is GetShellWindow, else a visible WorkerW window.
+					//When was no wallpaper and user selects a wallpaper, explorer creates WorkerW and moves the same SysListView32 control to it.
+				}
+			}
+			static Wnd __wDesktopLV; //cached Desktop SysListView32 control
 
 			/// <summary>
 			/// Gets next window in the Z order, skipping invisible and other windows that would not be added to taskbar or not activated by Alt+Tab.
@@ -202,7 +234,7 @@ namespace Catkeys
 			/// <param name="wFrom">Window after (behind) which to search. If omitted or Wnd0, starts from the top of the Z order.</param>
 			/// <param name="retryFromTop">If wFrom is used and there are no matching windows after it, retry from the top of the Z order. Like Alt+Tab does. Can return wFrom.</param>
 			/// <param name="skipMinimized">Skip minimized windows.</param>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
 			/// <param name="likeAltTab">
 			/// Emulate Alt+Tab behavior with owned windows (message boxes, dialogs):
 			///		If wFrom is such owned window, skip its owner.
@@ -215,8 +247,6 @@ namespace Catkeys
 			public static Wnd NextMainWindow(Wnd wFrom = default(Wnd),
 				bool retryFromTop = false, bool skipMinimized = false, bool allDesktops = false, bool likeAltTab = false)
 			{
-				//TODO: test all flags. Test on all OS.
-
 				Wnd lastFound = Wnd0, w2 = Wnd0, w = wFrom;
 				if(w.Is0) retryFromTop = false;
 
@@ -251,7 +281,7 @@ namespace Catkeys
 						}
 					} else if(WinVer >= Win8) {
 						if((exStyle & Api.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Api.WS_CAPTION)) {
-							if(!likeAltTab && (exStyle & Api.WS_EX_TOPMOST) != 0) continue; //skip store apps
+							if(!allDesktops && (exStyle & Api.WS_EX_TOPMOST) != 0) continue; //skip store apps
 							uint pid, pidShell;
 							if(ShellWindow.GetThreadAndProcessId(out pidShell) != 0 && w.GetThreadAndProcessId(out pid) != 0 && pid == pidShell) continue; //skip captionless shell windows
 						}
@@ -290,13 +320,16 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets list of top-level windows.
-		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Returns list containing 0 or more window handles as Wnd.
 		/// Uses Api.EnumWindows().
 		/// By default the list elements are sorted to match the Z order.
 		/// </summary>
 		/// <param name="className">If not null/"", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
 		/// <param name="onlyVisible">Need only visible windows.</param>
 		/// <param name="sortFirstVisible">Place all list elements of hidden windows at the end of the returned list, even if the hidden windows are before some visible windows in the Z order.</param>
+		/// <remarks>
+		/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to get such windows you can use Wnd.FindRaw().
+		/// </remarks>
 		public static List<Wnd> AllWindows(WildStringI className = null, bool onlyVisible = false, bool sortFirstVisible = false)
 		{
 			List<Wnd> a = new List<Wnd>(), aHidden = null;
@@ -325,9 +358,12 @@ namespace Catkeys
 		/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
 		/// <param name="className">If not null/""/"*", gets only windows of this class. String by default is interpreted as wildcard, case-insensitive.</param>
 		/// <param name="onlyVisible">Need only visible windows.</param>
-		public static void AllWindows(Action<CallbackArgs> f, WildStringI className = null, bool onlyVisible = false)
+		/// <remarks>
+		/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to get such windows you can use Wnd.FindRaw().
+		/// </remarks>
+		public static void AllWindows(Action<_CallbackArgs> f, WildStringI className = null, bool onlyVisible = false)
 		{
-			var e = new CallbackArgs();
+			var e = new _CallbackArgs();
 
 			Api.EnumWindows((w, param) =>
 			{
@@ -352,7 +388,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets list of top-level windows of current thread or another thread.
-		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Returns list containing 0 or more window handles as Wnd.
 		/// Uses Api.EnumThreadWindows().
 		/// </summary>
 		/// <param name="threadId">Unmanaged thread id. If 0, gets windows of current thread.</param>
@@ -382,7 +418,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets list of child controls.
-		/// Returns list containing 0 or more elements (control handles as Wnd).
+		/// Returns list containing 0 or more control handles as Wnd.
 		/// Uses Api.EnumChildWindows().
 		/// </summary>
 		/// <param name="className">If not null/"", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
@@ -418,9 +454,9 @@ namespace Catkeys
 		/// <param name="className">If not null/""/"*", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
 		/// <param name="directChild">Need only direct children, not grandchildren.</param>
 		/// <param name="onlyVisible">Need only visible controls.</param>
-		public void ChildAllRaw(Action<CallbackArgs> f, WildStringI className = null, bool directChild = false, bool onlyVisible = false)
+		public void ChildAllRaw(Action<_CallbackArgs> f, WildStringI className = null, bool directChild = false, bool onlyVisible = false)
 		{
-			var e = new CallbackArgs();
+			var e = new _CallbackArgs();
 			Wnd w = this;
 
 			Api.EnumChildWindows(this, (c, param) =>
@@ -466,10 +502,10 @@ namespace Catkeys
 
 		/// <summary>
 		/// Get windows that have taskbar button and/or are included in the Alt+Tab sequence.
-		/// Returns list containing 0 or more elements (window handles as Wnd).
+		/// Returns list containing 0 or more window handles as Wnd.
 		/// Uses Get.NextMainWindow().
 		/// </summary>
-		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
+		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
 		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
 		public static List<Wnd> MainWindows(bool allDesktops = false)
 		{
@@ -488,11 +524,11 @@ namespace Catkeys
 		/// Uses Get.NextMainWindow().
 		/// </summary>
 		/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
-		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows store apps.</param>
+		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
 		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
-		public static void MainWindows(Action<CallbackArgs> f, bool allDesktops = false)
+		public static void MainWindows(Action<_CallbackArgs> f, bool allDesktops = false)
 		{
-			var e = new CallbackArgs();
+			var e = new _CallbackArgs();
 
 			for(Wnd w = Wnd0; ;) {
 				w = Get.NextMainWindow(w, allDesktops: allDesktops);
@@ -504,7 +540,12 @@ namespace Catkeys
 
 		#endregion
 
-		public class CallbackArgs
+		/// <summary>
+		/// Wnd 'find' and 'list' functions pass a _CallbackArgs variable to a delegate that they call for each matching window/control.
+		/// Contains current window/control handle as Wnd.
+		/// Has a method to stop calling the delegate and return.
+		/// </summary>
+		public class _CallbackArgs
 		{
 			public Wnd w;
 			internal bool stop;

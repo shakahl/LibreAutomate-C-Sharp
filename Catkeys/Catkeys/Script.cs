@@ -70,7 +70,8 @@ namespace Catkeys
 			if(o == null) { speed = 100; return; }
 			speed = o.speed;
 			slowMouse = o.slowMouse; slowKeys = o.slowKeys; waitMsg = o.waitMsg;
-			dialogTopmostIfNoOwner = o.dialogTopmostIfNoOwner; dialogRtlLayout = o.dialogRtlLayout;
+			dialogTopmostIfNoOwner = o.dialogTopmostIfNoOwner;
+			dialogRtlLayout = o.dialogRtlLayout;
 			dialogScreenIfNoOwner = o.dialogScreenIfNoOwner;
 		}
 

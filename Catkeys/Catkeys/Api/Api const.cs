@@ -326,6 +326,24 @@ namespace Catkeys.Winapi
 
 		#endregion
 
+		#region CS_
+
+		public const uint CS_VREDRAW = 0x1;
+		public const uint CS_HREDRAW = 0x2;
+		public const uint CS_DBLCLKS = 0x8;
+		public const uint CS_OWNDC = 0x20;
+		public const uint CS_CLASSDC = 0x40;
+		public const uint CS_PARENTDC = 0x80;
+		public const uint CS_NOCLOSE = 0x200;
+		public const uint CS_SAVEBITS = 0x800;
+		public const uint CS_BYTEALIGNCLIENT = 0x1000;
+		public const uint CS_BYTEALIGNWINDOW = 0x2000;
+		public const uint CS_GLOBALCLASS = 0x4000;
+		public const uint CS_IME = 0x10000;
+		public const uint CS_DROPSHADOW = 0x20000;
+
+		#endregion
+
 		#region VK_
 
 		public const int VK_ZOOM = 251;
@@ -564,6 +582,74 @@ namespace Catkeys.Winapi
 		public const uint SMTO_ABORTIFHUNG = 0x0002;
 		public const uint SMTO_NOTIMEOUTIFNOTHUNG = 0x0008;
 		public const uint SMTO_ERRORONEXIT = 0x0020;
+		#endregion
+
+		#region COLOR_
+
+		public const int COLOR_SCROLLBAR = 0;
+		public const int COLOR_BACKGROUND = 1;
+		public const int COLOR_ACTIVECAPTION = 2;
+		public const int COLOR_INACTIVECAPTION = 3;
+		public const int COLOR_MENU = 4;
+		public const int COLOR_WINDOW = 5;
+		public const int COLOR_WINDOWFRAME = 6;
+		public const int COLOR_MENUTEXT = 7;
+		public const int COLOR_WINDOWTEXT = 8;
+		public const int COLOR_CAPTIONTEXT = 9;
+		public const int COLOR_ACTIVEBORDER = 10;
+		public const int COLOR_INACTIVEBORDER = 11;
+		public const int COLOR_APPWORKSPACE = 12;
+		public const int COLOR_HIGHLIGHT = 13;
+		public const int COLOR_HIGHLIGHTTEXT = 14;
+		public const int COLOR_BTNFACE = 15;
+		public const int COLOR_BTNSHADOW = 16;
+		public const int COLOR_GRAYTEXT = 17;
+		public const int COLOR_BTNTEXT = 18;
+		public const int COLOR_INACTIVECAPTIONTEXT = 19;
+		public const int COLOR_BTNHIGHLIGHT = 20;
+		public const int COLOR_3DDKSHADOW = 21;
+		public const int COLOR_3DLIGHT = 22;
+		public const int COLOR_INFOTEXT = 23;
+		public const int COLOR_INFOBK = 24;
+		public const int COLOR_HOTLIGHT = 26;
+		public const int COLOR_GRADIENTACTIVECAPTION = 27;
+		public const int COLOR_GRADIENTINACTIVECAPTION = 28;
+		public const int COLOR_MENUHILIGHT = 29;
+		public const int COLOR_MENUBAR = 30;
+		public const int COLOR_DESKTOP = 1;
+		public const int COLOR_3DFACE = 15;
+		public const int COLOR_3DSHADOW = 16;
+		public const int COLOR_3DHIGHLIGHT = 20;
+		public const int COLOR_3DHILIGHT = 20;
+		public const int COLOR_BTNHILIGHT = 20;
+
+		#endregion
+
+		#region IDC_
+
+		public const int IDC_ARROW = 32512;
+		public const int IDC_IBEAM = 32513;
+		public const int IDC_WAIT = 32514;
+		public const int IDC_CROSS = 32515;
+		public const int IDC_UPARROW = 32516;
+		public const int IDC_SIZE = 32640;
+		public const int IDC_ICON = 32641;
+		public const int IDC_SIZENWSE = 32642;
+		public const int IDC_SIZENESW = 32643;
+		public const int IDC_SIZEWE = 32644;
+		public const int IDC_SIZENS = 32645;
+		public const int IDC_SIZEALL = 32646;
+		public const int IDC_NO = 32648;
+		public const int IDC_HAND = 32649;
+		public const int IDC_APPSTARTING = 32650;
+		public const int IDC_HELP = 32651;
+
+		#endregion
+
+		#region IDI_
+
+		public const int IDI_APPLICATION = 32512;
+
 		#endregion
 
 		#region ENUM

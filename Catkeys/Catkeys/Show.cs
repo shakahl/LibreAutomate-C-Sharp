@@ -264,7 +264,7 @@ namespace Catkeys
 		Error = 0xfffe, //x
 		Info = 0xfffd, //i
 		Shield = 0xfffc, //v
-		App = 32512 //a, IDI_APPLICATION
+		App = Api.IDI_APPLICATION //a
 	}
 
 	/// <summary>
@@ -274,12 +274,14 @@ namespace Catkeys
 	public enum TDFlag
 	{
 		CommandLinks = 1, //c
-		NoTaskbarButton = 2, //b
-		EndThread = 4, //e
-		NeverActivate = 8, //n
-		OwnerCenter = 16, //o
-		RawXY = 32, //r
-		Topmost = 64, //t
+		EndThread = 2, //e
+		OwnerCenter = 4, //o
+		RawXY = 8, //r
+		Topmost = 16, //t
+
+		//NoTaskbarButton = , //b //not so useful
+		//NeverActivate = , //n //don't know how to implement. LockSetForegroundWindow does not work if we can activate windows. HCBT_ACTIVATE can prevent activating but does not prevent deactivating.
+		//AlwaysActivate = , //z //Don't use. Alway allow. Because after AllowActivate (which is also used by Activate etc) always activates dialogs regardless of anything. As well as in uiAccess process.
 	}
 
 	/// <summary>
@@ -289,7 +291,7 @@ namespace Catkeys
 	/// </para>
 	/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 	/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-	/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
+	/// <para>Flags: c command links, e end thread, o owner center, r raw x y, t topmost.</para>
 	/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 	/// <para>Also supports implicit cast from TDButton, TDIcon, TDFlags, int (default button), IntPtr (icon handle) and System.Drawing.Icon.</para>
 	/// </summary>
@@ -312,7 +314,7 @@ namespace Catkeys
 		public TDStyle(TDButton buttons = 0, TDIcon icon = 0, TDFlag flags = 0, int defaultButton = 0, object customIcon = null)
 		{
 			this.buttons = buttons; this.icon = icon; this.flags = flags; this.defaultButton = defaultButton; this.customIcon = customIcon;
-        }
+		}
 
 		public TDStyle(string style)
 		{
@@ -335,9 +337,7 @@ namespace Catkeys
 				case 'a': icon |= TDIcon.App; break;
 				//flags
 				case 'c': flags |= TDFlag.CommandLinks; break;
-				case 'b': flags |= TDFlag.NoTaskbarButton; break;
 				case 'e': flags |= TDFlag.EndThread; break;
-				case 'n': flags |= TDFlag.NeverActivate; break;
 				case 'o': flags |= TDFlag.OwnerCenter; break;
 				case 'r': flags |= TDFlag.RawXY; break;
 				case 't': flags |= TDFlag.Topmost; break;
@@ -609,7 +609,7 @@ namespace Catkeys
 		/// </para>
 		/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 		/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-		/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
+		/// <para>Flags: c command links, e end thread, o owner center, r raw x y, t topmost.</para>
 		/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
@@ -658,7 +658,7 @@ namespace Catkeys
 		/// </para>
 		/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 		/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-		/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
+		/// <para>Flags: c command links, e end thread, o owner center, r raw x y, t topmost.</para>
 		/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
@@ -808,9 +808,7 @@ namespace Catkeys
 			SetButtons(buttons);
 			SetIcon(icon);
 
-			FlagNoTaskbarButton = flags.HasFlag(TDFlag.NoTaskbarButton);
 			FlagEndThread = flags.HasFlag(TDFlag.EndThread);
-			FlagNeverActivate = flags.HasFlag(TDFlag.NeverActivate);
 			if(flags.HasFlag(TDFlag.Topmost)) FlagTopmost = true; //else use Script.Option.dialogTopmostIfNoOwner if no owner
 
 			SetCustomButtons(customButtons, flags.HasFlag(TDFlag.CommandLinks));
@@ -916,7 +914,7 @@ namespace Catkeys
 		/// You can call this function instead of SetButtons(), SetIcon() etc if you prefer to specify all in string:
 		/// <para>Buttons: O OK, C Cancel, Y Yes, N No, R Retry, L Close.</para>
 		/// <para>Icon: x error, ! warning, i info, v shield, a app.</para>
-		/// <para>Flags: c command links, b no taskbar button, e end thread, n never activate, o owner center, r raw x y, t topmost.</para>
+		/// <para>Flags: c command links, e end thread, o owner center, r raw x y, t topmost.</para>
 		/// <para>Default button: d before a common button character (eg "OdC") or custom button id (eg "d3").</para>
 		/// </summary>
 		/// <param name="style">Style string (like "YN!e"), or TDButton (like TDButton.YesNo|TDButton.Retry), or TDIcon (like TDIcon.Info), or TDFlags (like TDFlag.NeverActivate|TDFlag.EndThread), or TDStyle object (like new TDStyle(TDButton.YesNo, TDIcon.Warning, TDFlag.OwnerCenter)).</param>
@@ -928,9 +926,7 @@ namespace Catkeys
 			if(style.customIcon != null) SetIcon(style.customIcon); else SetIcon(style.icon);
 			var f = style.flags;
 			_USE_COMMAND_LINKS = f.HasFlag(TDFlag.CommandLinks); //SetCustomButtons has a bool? parameter for this
-			FlagNoTaskbarButton = f.HasFlag(TDFlag.NoTaskbarButton);
 			FlagEndThread = f.HasFlag(TDFlag.EndThread);
-			FlagNeverActivate = f.HasFlag(TDFlag.NeverActivate);
 			_POSITION_RELATIVE_TO_WINDOW = f.HasFlag(TDFlag.OwnerCenter); //SetOwnerWindow has a bool? parameter for this
 			_rawXY = f.HasFlag(TDFlag.RawXY); //SetXY has a bool? parameter for this
 			if(f.HasFlag(TDFlag.Topmost)) FlagTopmost = true; //else use Option.dialogTopmostIfNoOwner if no owner
@@ -1054,7 +1050,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon">Icon handle (IntPtr) or object (System.Drawing.Icon).</param>
-        public void SetFooterText(string text, object icon)
+		public void SetFooterText(string text, object icon)
 		{
 			_c.pszFooter = text;
 			_c.hFooterIcon = _IconHandleFromObject(icon);
@@ -1145,6 +1141,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Right-to left layout.
+		/// Default is Script.Option.dialogRtlLayout.
 		/// </summary>
 		public bool FlagRtlLayout { set; private get; }
 
@@ -1171,19 +1168,6 @@ namespace Catkeys
 		public bool? FlagTopmost { set; private get; }
 
 		/// <summary>
-		/// Prevents adding taskbar button.
-		/// By default it adds WS_EX_TOOLWINDOW style, which also makes the taskbar smaller and disables FlagCanBeMinimized.
-		/// If combined with FlagNeverActivate, it instead adds WS_EX_NOACTIVATE style, which prevents activating when clicked.
-		/// </summary>
-		public bool FlagNoTaskbarButton { set; private get; }
-
-		/// <summary>
-		/// Don't activate the dialog window when it starts.
-		/// If combined with FlagNoTaskbarButton, also prevents activating when clicked.
-		/// </summary>
-		public bool FlagNeverActivate { set; private get; }
-
-		/// <summary>
 		/// Call Thread.Abort() if clicked OK when there are no other buttons. Also when clicked Cancel, No, and on timeout.
 		/// </summary>
 		public bool FlagEndThread { set; private get; }
@@ -1200,7 +1184,6 @@ namespace Catkeys
 
 		Wnd _dlg;
 		int _threadIdInShow;
-		bool _lockForegroundWindow;
 
 		/// <summary>
 		/// Shows the dialog.
@@ -1235,7 +1218,7 @@ namespace Catkeys
 			if(_POSITION_RELATIVE_TO_WINDOW) f |= TDF_.POSITION_RELATIVE_TO_WINDOW;
 			if(HyperlinkClicked != null) f |= TDF_.ENABLE_HYPERLINKS;
 
-			if(_timeoutS > 0 || Timer != null || FlagNeverActivate) f |= TDF_.CALLBACK_TIMER;
+			if(_timeoutS > 0 || Timer != null) f |= TDF_.CALLBACK_TIMER;
 
 			_timeoutActive = false;
 			if(_timeoutS > 0) {
@@ -1271,7 +1254,7 @@ namespace Catkeys
 					hhook = Api.SetWindowsHookEx(Api.WH_GETMESSAGE, hpHolder = _HookProc, Zero, Api.GetCurrentThreadId());
 				}
 
-				if(_lockForegroundWindow = FlagNeverActivate) Api.LockSetForegroundWindow(Api.LSFW_LOCK);
+				Wnd.AllowActivate(true);
 
 				for(int i = 0; i < 100; i++) { //see the API bug-workaround comment below
 #if DEBUG
@@ -1294,7 +1277,8 @@ namespace Catkeys
 
 					_Util.DoEventsAndWaitForAnActiveWindow();
 				}
-			} finally {
+			}
+			finally {
 				_threadIdInShow = 0;
 
 				if(hhook != Zero) Api.UnhookWindowsHookEx(hhook);
@@ -1339,11 +1323,6 @@ namespace Catkeys
 				if(_enableOwner) _c.hwndParent.Enabled = true;
 				//if(_enableOwner || !_c.hwndParent.IsOfThisThread) _c.hwndParent.Enabled=true; //not sure if it would be useful
 
-				//Add a style to prevent adding taskbar button.
-				//With WS_EX_TOOLWINDOW, title bar looks not good.
-				//With WS_EX_NOACTIVATE, cannot activate after deactivating, although a click works, and the dialog starts active
-				if(FlagNoTaskbarButton) w.SetExStyleAdd(FlagNeverActivate ? Api.WS_EX_NOACTIVATE : Api.WS_EX_TOOLWINDOW); //when combined with the 'never activate' flag, we have a new useful effect
-
 				if(!_POSITION_RELATIVE_TO_WINDOW) {
 					object scr = Screen; if(scr == null && _c.hwndParent.Is0) scr = Script.Option.dialogScreenIfNoOwner;
 					if((_x != 0 || _y != 0 || _rawXY || scr != null)) {
@@ -1368,13 +1347,6 @@ namespace Catkeys
 						_timeoutActive = false;
 						Send.Close(TDResult.Timeout);
 					}
-				}
-
-				if(_lockForegroundWindow) {
-					_lockForegroundWindow = false;
-					Api.LockSetForegroundWindow(Api.LSFW_UNLOCK);
-					Wnd.TaskbarButton.Flash(w, 0);
-					//info: cannot use Api.HCBT_ACTIVATE, does not work. Disables activating this window, but another window is deactivated anyway.
 				}
 
 				e = Timer;
@@ -1642,7 +1614,8 @@ namespace Catkeys
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 				return TaskDialogIndirect(ref c, out pnButton, out pnRadioButton, out pChecked);
-			} catch(Exception e) { throw new Win32Exception($"_CallTDI: {e.Message}"); } //note: not just throw;, and don't add inner exception
+			}
+			catch(Exception e) { throw new Win32Exception($"_CallTDI: {e.Message}"); } //note: not just throw;, and don't add inner exception
 		}
 #endif
 
@@ -1652,7 +1625,7 @@ namespace Catkeys
 			cButtons = a.Length;
 
 			int structSize = Marshal.SizeOf(typeof(TASKDIALOG_BUTTON));
-			IntPtr R = Marshal.AllocHGlobal(structSize * a.Length); //TODO: don't use Marshal Alloc/Free, because in other place it was slow etc
+			IntPtr R = Marshal.AllocHGlobal(structSize * a.Length);
 
 			for(int i = 0; i < a.Length; i++) {
 				TASKDIALOG_BUTTON b; b.id = a[i].ToIntAndString_(out b.text); //"id text" -> TASKDIALOG_BUTTON
@@ -1781,7 +1754,7 @@ namespace Catkeys
 				parent.ChildAllRaw(e =>
 				{
 					var s = e.w.Name;
-					if(s.Length==2 && s[0]=='.' && s[1]>='1' && s[1]<='4') {
+					if(s.Length == 2 && s[0] == '.' && s[1] >= '1' && s[1] <= '4') {
 						e.w.Visible = false;
 						//e.w.Enabled = false; //hiding and disabling does not exclude the radio button from Tab
 						if(s[1] == '4') {
@@ -2081,7 +2054,7 @@ namespace Catkeys
 			return true;
 		}
 
-#if use_vb_inputbox
+#if test_vb_inputbox
 		public static string InputDialogVB(string staticText, string defaultValue = null, string title = null, int x = 0, int y = 0)
 		{
 			if(staticText == null) staticText = "";

@@ -79,51 +79,29 @@ namespace Catkeys.Winapi
 		{
 			public uint cbSize;
 			public uint style;
-			public WNDPROC lpfnWndProc;
+			public WNDPROC lpfnWndProc; //note: GetClassInfoEx gets invalid value if class of other process, but no exception
 			public int cbClsExtra;
 			public int cbWndExtra;
 			public IntPtr hInstance;
 			public IntPtr hIcon;
 			public IntPtr hCursor;
 			public IntPtr hbrBackground;
-			public LPARAM lpszMenuName;
-			public string lpszClassName;
+			public IntPtr lpszMenuName;
+			public IntPtr lpszClassName; //not string because GetClassInfoEx calls CoTaskMemFree, also it is invalid if class of other process
 			public IntPtr hIconSm;
-
-			public WNDCLASSEX(string name, WNDPROC wndProc) : this()
-			{
-				cbSize = (uint)Marshal.SizeOf(typeof(WNDCLASSEX));
-				lpszClassName = name;
-				lpfnWndProc = wndProc;
-				//hInstance=Api.GetModuleHandle(null); //tested: RegisterClassEx uses this if hInstance is Zero, even for app-local classes
-
-				//tested:
-				//For app-global classes, CreateWindowEx and GetClassInfo ignore their hInst argument (always succeed).
-				//For app-local classes, CreateWindowEx and GetClassInfo fail if their hInst argument does not match. However CreateWindowEx always succeeds if its hInst argument is Zero.
-			}
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern ushort RegisterClassEx([In] ref WNDCLASSEX lpwcx);
 
-		public struct WNDCLASSEX_for_GetClassInfoEx
-		{
-			public uint cbSize;
-			public uint style;
-			public LPARAM lpfnWndProc; //invalid pointer in current process, althoug no exception when calling GetClassInfoEx
-			public int cbClsExtra;
-			public int cbWndExtra;
-			public IntPtr hInstance;
-			public IntPtr hIcon;
-			public IntPtr hCursor;
-			public IntPtr hbrBackground;
-			public LPARAM lpszMenuName;
-			public LPARAM lpszClassName_PointerInThatProcess; //invalid pointer in current process, exception when calling GetClassInfoEx if string
-			public IntPtr hIconSm;
-		}
-
 		[DllImport("user32.dll", EntryPoint = "GetClassInfoExW", SetLastError = true)]
-		public static extern ushort GetClassInfoEx(IntPtr hInstance, string lpszClass, out WNDCLASSEX_for_GetClassInfoEx lpwcx);
+		public static extern ushort GetClassInfoEx(IntPtr hInstance, string lpszClass, out WNDCLASSEX lpwcx);
+
+		[DllImport("user32.dll", EntryPoint = "UnregisterClassW", SetLastError = true)]
+		public static extern bool UnregisterClass(string lpClassName, IntPtr hInstance);
+
+		[DllImport("user32.dll", EntryPoint = "UnregisterClassW", SetLastError = true)]
+		public static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
 		public static extern Wnd CreateWindowEx(
@@ -143,6 +121,9 @@ namespace Catkeys.Winapi
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 		public static extern LPARAM DefWindowProc(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", EntryPoint = "CallWindowProcW")]
+		public static extern LPARAM CallWindowProc(WNDPROC lpPrevWndFunc, Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll")]
 		public static extern bool DestroyWindow(Wnd hWnd);
@@ -164,13 +145,13 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll")]
 		public static extern LPARAM DispatchMessage(ref MSG lpmsg);
 
-		public const int PM_NOREMOVE = 0;
-		public const int PM_REMOVE = 1;
-		public const int PM_NOYIELD = 2;
-		//public const int PM_QS_SENDMESSAGE = (QS_SENDMESSAGE) << (16);
-		//public const int PM_QS_POSTMESSAGE = ((QS_POSTMESSAGE | (QS_HOTKEY | QS_TIMER))) << (16);
-		//public const int PM_QS_PAINT = (QS_PAINT) << (16);
-		//public const int PM_QS_INPUT = (QS_INPUT) << (16);
+		public const uint PM_NOREMOVE = 0x0;
+		public const uint PM_REMOVE = 0x1;
+		public const uint PM_NOYIELD = 0x2;
+		public const uint PM_QS_SENDMESSAGE = 0x400000;
+		public const uint PM_QS_POSTMESSAGE = 0x980000;
+		public const uint PM_QS_PAINT = 0x200000;
+		public const uint PM_QS_INPUT = 0x1C070000;
 
 		[DllImport("user32.dll")]
 		public static extern bool PeekMessageW(out MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
@@ -243,19 +224,19 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll")]
 		public static extern Wnd GetFocus();
 
-		public const int SWP_SHOWWINDOW = 64;
-		public const int SWP_NOZORDER = 4;
-		public const int SWP_NOSIZE = 1;
-		public const int SWP_NOSENDCHANGING = 1024;
-		public const int SWP_NOREDRAW = 8;
-		public const int SWP_NOOWNERZORDER = 512;
-		public const int SWP_NOMOVE = 2;
-		public const int SWP_NOCOPYBITS = 256;
-		public const int SWP_NOACTIVATE = 16;
-		public const int SWP_HIDEWINDOW = 128;
-		public const int SWP_FRAMECHANGED = 32;
-		public const int SWP_DEFERERASE = 8192;
-		public const int SWP_ASYNCWINDOWPOS = 16384;
+		public const uint SWP_NOSIZE = 0x1;
+		public const uint SWP_NOMOVE = 0x2;
+		public const uint SWP_NOZORDER = 0x4;
+		public const uint SWP_NOREDRAW = 0x8;
+		public const uint SWP_NOACTIVATE = 0x10;
+		public const uint SWP_FRAMECHANGED = 0x20;
+		public const uint SWP_SHOWWINDOW = 0x40;
+		public const uint SWP_HIDEWINDOW = 0x80;
+		public const uint SWP_NOCOPYBITS = 0x100;
+		public const uint SWP_NOOWNERZORDER = 0x200;
+		public const uint SWP_NOSENDCHANGING = 0x400;
+		public const uint SWP_DEFERERASE = 0x2000;
+		public const uint SWP_ASYNCWINDOWPOS = 0x4000;
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool SetWindowPos(Wnd hWnd, Wnd hWndInsertAfter, int X, int Y, int cx, int cy, uint SWP_X);
@@ -356,14 +337,14 @@ namespace Catkeys.Winapi
 
 		public const int IMAGE_ICON = 1;
 		public const int IMAGE_CURSOR = 2;
-		public const int LR_LOADFROMFILE = 16;
-		public const int LR_CREATEDIBSECTION = 8192;
-		public const int LR_SHARED = 32768;
+		public const uint LR_LOADFROMFILE = 0x10;
+		public const uint LR_CREATEDIBSECTION = 0x2000;
+		public const uint LR_SHARED = 0x8000;
 
 		[DllImport("user32.dll", EntryPoint = "LoadImageW")]
 		public static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint LR_X);
 		[DllImport("user32.dll", EntryPoint = "LoadImageW")]
-		public static extern IntPtr LoadImageRes(IntPtr hInst, LPARAM resId, uint type, int cx, int cy, uint LR_X);
+		public static extern IntPtr LoadImage(IntPtr hInst, LPARAM resId, uint type, int cx, int cy, uint LR_X);
 
 		//public const int MONITOR_DEFAULTTONULL = 0;
 		//public const int MONITOR_DEFAULTTOPRIMARY = 1;
@@ -471,6 +452,11 @@ namespace Catkeys.Winapi
 
 		[DllImport("user32.dll", EntryPoint = "RemovePropW", SetLastError = true)]
 		public static extern LPARAM RemoveProp(Wnd hWnd, LPARAM atom);
+
+		public delegate bool PROPENUMPROCEX(Wnd hwnd, IntPtr lpszString, LPARAM hData, LPARAM dwData);
+
+		[DllImport("user32.dll", EntryPoint = "EnumPropsExW")]
+		public static extern int EnumPropsEx(Wnd hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam);
 
 		public delegate int WNDENUMPROC(Wnd hwnd, LPARAM lParam);
 
@@ -770,8 +756,8 @@ namespace Catkeys.Winapi
 		public const int SPI_GETACTIVEWINDOWTRACKING = 4096;
 		public const int SPI_GETACCESSTIMEOUT = 60;
 
-		public const int SPIF_UPDATEINIFILE = 1;
-		public const int SPIF_SENDCHANGE = 2;
+		public const uint SPIF_UPDATEINIFILE = 0x1;
+		public const uint SPIF_SENDCHANGE = 0x2;
 
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
 		public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, LPARAM pvParam, uint fWinIni);
@@ -789,6 +775,12 @@ namespace Catkeys.Winapi
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool ClientToScreen(Wnd hWnd, ref POINT lpPoint);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref POINT lpPoints, uint cPoints = 1);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref RECT lpPoints, uint cPoints = 2);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, void* lpPoints, uint cPoints);
@@ -951,11 +943,28 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW")]
 		public static extern uint PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, out IntPtr phicon, IntPtr piconid, uint nIcons, uint flags);
 
+		[DllImport("user32.dll", EntryPoint = "LoadCursorW")]
+		public static extern IntPtr LoadCursor(IntPtr hInstance, string lpCursorName);
 
+		[DllImport("user32.dll", EntryPoint = "LoadCursorW")]
+		public static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
 
+		public delegate void TIMERPROC(Wnd param1, uint param2, LPARAM param3, uint param4);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern LPARAM SetTimer(Wnd hWnd, LPARAM nIDEvent, uint uElapse, TIMERPROC lpTimerFunc);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern bool KillTimer(Wnd hWnd, LPARAM uIDEvent);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern Wnd SetParent(Wnd hWndChild, Wnd hWndNewParent);
+
+		[DllImport("user32.dll")]
+		public static extern bool AdjustWindowRectEx(ref RECT lpRect, uint dwStyle, bool bMenu, uint dwExStyle);
+
+		[DllImport("user32.dll")]
+		public static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
 
 
 
@@ -1322,8 +1331,7 @@ namespace Catkeys.Winapi
 				[FieldOffset(0)]
 				public uint uOffset;
 				[FieldOffset(0)]
-				[MarshalAs(UnmanagedType.ByValArray, SizeConst = 260)]
-				public sbyte[] cStr;
+				public fixed sbyte cStr[260];
 			}
 			public TYPE_1 _2;
 		}
@@ -1395,6 +1403,82 @@ namespace Catkeys.Winapi
 		public static extern int PropVariantClear(ref PROPVARIANT_LPARAM pvar);
 
 		public static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
+
+		[DllImport("shell32.dll")]
+		public static extern IntPtr* CommandLineToArgvW(string lpCmdLine, out int pNumArgs);
+
+		public struct NOTIFYICONDATA
+		{
+			public uint cbSize;
+			public Wnd hWnd;
+			public uint uID;
+			public uint uFlags;
+			public uint uCallbackMessage;
+			public IntPtr hIcon;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+			public string szTip;
+			public uint dwState;
+			public uint dwStateMask;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+			public string szInfo;
+
+			[StructLayout(LayoutKind.Explicit)]
+			public struct TYPE_1
+			{
+				[FieldOffset(0)]
+				public uint uTimeout;
+				[FieldOffset(0)]
+				public uint uVersion;
+			}
+			public TYPE_1 _11;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+			public string szInfoTitle;
+			public uint dwInfoFlags;
+			public Guid guidItem;
+			public IntPtr hBalloonIcon;
+		}
+
+		public const uint NIN_SELECT = 0x400;
+		public const uint NINF_KEY = 0x1;
+		public const uint NIN_KEYSELECT = 0x401;
+		public const uint NIN_BALLOONSHOW = 0x402;
+		public const uint NIN_BALLOONHIDE = 0x403;
+		public const uint NIN_BALLOONTIMEOUT = 0x404;
+		public const uint NIN_BALLOONUSERCLICK = 0x405;
+		public const uint NIN_POPUPOPEN = 0x406;
+		public const uint NIN_POPUPCLOSE = 0x407;
+		public const uint NIM_ADD = 0x0;
+		public const uint NIM_MODIFY = 0x1;
+		public const uint NIM_DELETE = 0x2;
+		public const uint NIM_SETFOCUS = 0x3;
+		public const uint NIM_SETVERSION = 0x4;
+		public const int NOTIFYICON_VERSION = 3;
+		public const int NOTIFYICON_VERSION_4 = 4;
+		public const uint NIF_MESSAGE = 0x1;
+		public const uint NIF_ICON = 0x2;
+		public const uint NIF_TIP = 0x4;
+		public const uint NIF_STATE = 0x8;
+		public const uint NIF_INFO = 0x10;
+		public const uint NIF_GUID = 0x20;
+		public const uint NIF_REALTIME = 0x40;
+		public const uint NIF_SHOWTIP = 0x80;
+		public const uint NIS_HIDDEN = 0x1;
+		public const uint NIS_SHAREDICON = 0x2;
+		public const uint NIIF_NONE = 0x0;
+		public const uint NIIF_INFO = 0x1;
+		public const uint NIIF_WARNING = 0x2;
+		public const uint NIIF_ERROR = 0x3;
+		public const uint NIIF_USER = 0x4;
+		public const uint NIIF_ICON_MASK = 0xF;
+		public const uint NIIF_NOSOUND = 0x10;
+		public const uint NIIF_LARGE_ICON = 0x20;
+		public const uint NIIF_RESPECT_QUIET_TIME = 0x80;
+
+		[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
+		public static extern bool Shell_NotifyIcon(uint dwMessage, ref NOTIFYICONDATA lpData);
+
+
+
 
 
 
@@ -1605,6 +1689,16 @@ namespace Catkeys.Winapi
 		public static extern int DwmGetWindowAttribute(Wnd hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 		[DllImport("dwmapi.dll")]
 		public static extern int DwmGetWindowAttribute(Wnd hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
+
+
+
+
+
+		//OTHER
+
+		[DllImport("uxtheme.dll", PreserveSig = true)]
+		public static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
+
 
 
 

@@ -1,210 +1,180 @@
-﻿#region copy-paste-from-Api.cs
-
-using System;
+﻿using System;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Reflection;
 
-using Wnd = System.IntPtr; //HWND (window handle)
-using LPARAM = System.IntPtr; //LPARAM, WPARAM, LRESULT, X_PTR, SIZE_T, ... (non-pointer types that have different size in 64-bit and 32-bit process)
-
-//add this to projects that will use these API
-[module: DefaultCharSet(CharSet.Unicode)]
-
-static unsafe class API
-{
-	//simplest Windows API function declaration  example
-	[DllImport("user32.dll", EntryPoint = "FindWindowW")]
-	public static extern Wnd FindWindow(string lpClassName, string lpWindowName);
-
-	//example of a function that gets text using a caller-allocated buffer
-	[DllImport("user32.dll")]
-	public static extern int InternalGetWindowText(Wnd hWnd, [Out] StringBuilder pString, int cchMaxCount);
-
-	//example of a function that uses a callback function (delegate)
-	[DllImport("user32.dll")]
-	public static extern bool EnumChildWindows(Wnd hWndParent, WNDENUMPROC lpEnumFunc, LPARAM lParam);
-
-	//example delegate type declaration
-	public delegate bool WNDENUMPROC(Wnd param1, LPARAM param2);
-
-	//this is probably the most popular Windows API function, but .NET does not have a wrapper function or class that works with any window
-	[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-	public static extern LPARAM SendMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
-
-	//overload example: lParam is string
-	[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-	public static extern LPARAM SendMessage(Wnd hWnd, uint Msg, LPARAM wParam, string lParam);
-
-	//constant example
-	public const uint WM_SETTEXT = 0xC;
-
-	//struct example
-	public struct RECT
-	{
-		public int left;
-		public int top;
-		public int right;
-		public int bottom;
-
-		//of course here we can add member functions
-		public override string ToString()
-		{
-			return string.Format("L={0} T={1} R={2} B={3}  W={4} H={5}", left, top, right, bottom, right - left, bottom - top);
-		}
-	}
-
-	//and a function that uses the struct
-	[DllImport("user32.dll")]
-	public static extern bool GetWindowRect(Wnd hWnd, out RECT lpRect);
-
-}
-
-#endregion
-
-#region my-console-program
-
-class Program
+public class Program
 {
 	[STAThread]
 	static void Main(string[] args)
 	{
-		//find Notepad window
-		Wnd hwnd = API.FindWindow("Notepad", null);
-		Console.WriteLine(hwnd);
-
-		//get window name
-		var sb = new StringBuilder(1000);
-		API.InternalGetWindowText(hwnd, sb, sb.Capacity);
-		var s = sb.ToString();
-		Console.WriteLine(s);
-
-		//find first child window
-		Wnd hctrl = default(Wnd);
-		API.EnumChildWindows(hwnd, (h, p) => { hctrl = h; return false; }, default(LPARAM));
-
-		//set child window text
-		API.SendMessage(hctrl, API.WM_SETTEXT, default(LPARAM), "Notepad window name is " + s);
-
-		//get window rectangle
-		API.RECT r;
-		API.GetWindowRect(hwnd, out r);
-		Console.WriteLine(r);
+		Console.WriteLine(1);
+		//for(int i=0; i<3; i++) _Compile();
+		_Compile();
+		//_CompileOld();
+        Console.WriteLine(2);
 
 		//don't close console immediately
 		Console.ReadKey();
 	}
+
+	static MethodInfo _compilerMethod;
+
+	static int _Compile()
+	{
+		Perf.First(100);
+
+		if(_compilerMethod == null) {
+			Assembly a = Assembly.LoadFile(@"Q:\app\Catkeys\Test Projects\Test\csc.exe");
+
+			_compilerMethod = a.EntryPoint;
+
+			Perf.Next(); //8 ms
+		}
+
+		var dom = AppDomain.CurrentDomain;
+		string csFile = @"Q:\Test\test.cs", dllFile = @"C:\Users\G\AppData\Local\Catkeys\ScriptDll\form.dll";
+
+		string[] g = new string[] {
+				"/nologo", "/noconfig",
+				"/out:" + dllFile, "/target:winexe",
+				//"/r:System.dll", "/r:System.Core.dll", "/r:System.Windows.Forms.dll",
+				csFile
+			};
+		object[] p = new object[1] { g };
+
+		//g[0]="/?";
+
+		int r = (int)_compilerMethod.Invoke(0, p); //33 ms, first time ~330 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
+		if(r != 0) Console.WriteLine(r);
+
+		for(int i=0; i<4; i++) {
+			Perf.Next();
+			_compilerMethod.Invoke(0, p);
+		}
+
+		Perf.Next();
+		Perf.Write();
+
+		//GC.Collect(); //releases a lot
+		return r;
+	}
+
+	static void _CompileOld()
+	{
+		//Out("test");
+		//TODO: auto-ngen compiler. Need admin.
+
+		Perf.First();
+		//System.Runtime.ProfileOptimization.SetProfileRoot(@"C:\Test");
+		//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
+		//Perf.Next();
+
+		Assembly a = Assembly.LoadFile(@"Q:\app\Catkeys\Test Projects\Test\csc.exe");
+		MethodInfo m = a.EntryPoint;
+		string[] g = new string[] { null, "/nologo", "/noconfig", @"Q:\Test\test.cs" };
+		object[] p = new object[1] { g };
+
+		//g[0]="/?";
+		Perf.Next(); //16 ms
+		for(int i = 1; i <= 4; i++) {
+			g[0] = $@"/out:C:\Test\test{i}.exe";
+			m.Invoke(0, p); //works, 22 ms, first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
+			Perf.Next();
+			//GC.Collect(); //4 ms, makes working set smaller 48 -> 33 MB
+			//Perf.Next();
+		}
+		Perf.Write();
+
+		GC.Collect(); //releases a lot
+	}
 }
 
-#endregion
-
-class TestInsertAPI
+[DebuggerStepThrough]
+public static class Perf
 {
-	//insert new declaration here
+	static long[] _a = new long[11];
+	static uint _counter = 0;
+	static double _freq = 1000000.0 / Stopwatch.Frequency;
 
+	/// <summary>
+	/// Stores current time in the first element of an internal static array to use with Next() and Write().
+	/// </summary>
+	public static void First() { _counter = 0; _a[0] = Stopwatch.GetTimestamp(); }
+	/// <summary>
+	/// Calls SpinCPU(100) and First().
+	/// </summary>
+	public static void First(bool wakeCpu) { SpinCPU(100); First(); }
+	/// <summary>
+	/// Calls SpinCPU(wakeCpuMS, codes) and First().
+	/// </summary>
+	public static void First(int wakeCpuMS, params Action[] codes) { SpinCPU(wakeCpuMS, codes); First(); }
+
+	/// <summary>
+	/// Stores current time in the next element of an internal static array to use with next Next() and Write().
+	/// Don't call Next() more than 10 times after First(), because the array has 11 elements.
+	/// </summary>
+	public static void Next() { if(_counter < 10) _a[++_counter] = Stopwatch.GetTimestamp(); }
+
+	/// <summary>
+	/// Formats a string from time values collected by calling First() and Next(), and shows it in the output or console.
+	/// The string contains the number of microseconds of each code execution between calling First() and each Next().
+	/// Example: <c>Perf.First(100); CODE1; Perf.Next(); CODE2; Perf.Next(); Perf.Write(); //speed: timeOfCODE1 timeOfCODE2</c>
+	/// </summary>
+	public static void Write()
+	{
+		uint i, n = _counter;
+
+		StringBuilder s = new StringBuilder("speed:");
+		for(i = 0; i < n; i++) {
+			s.Append("  ");
+			s.Append((int)(_freq * (_a[i + 1] - _a[i]) - 0.5));
+		}
+
+		Console.WriteLine(s.ToString());
+	}
+
+	/// <summary>
+	/// Calls Next() and Write().
+	/// You can use <c>Perf.NextWrite();</c> instead of <c>Perf.Next(); Perf.Write();</c>
+	/// </summary>
+	public static void NextWrite() { Next(); Write(); }
+
+	/// <summary>
+	/// Executes code (lambda) nTimes times, and then calls Next().
+	/// </summary>
+	public static void Execute(int nTimes, Action code)
+	{
+		while(nTimes-- > 0) code();
+		Next();
+	}
+
+	/// <summary>
+	/// nTimesAll times executes this code: <c>First(); foreach(Action a in codes) Execute(nTimesEach, a); Write();</c>
+	/// </summary>
+	public static void ExecuteMulti(int nTimesAll, int nTimesEach, params Action[] codes)
+	{
+		while(nTimesAll-- > 0) {
+			First();
+			foreach(Action a in codes) Execute(nTimesEach, a);
+			Write();
+		}
+	}
+
+	/// <summary>
+	/// Repeatedly executes codes (zero or more lambda functions) timeMS milliseconds (recommended 100 or more).
+	/// Call before measuring code speed, because after some idle time CPU needs to work some time to gain full speed.
+	/// Also it JIT-compiles First(), Next() and codes.
+	/// </summary>
+	public static void SpinCPU(int timeMS, params Action[] codes)
+	{
+		int n = 0;
+		for(long t0 = Environment.TickCount; Environment.TickCount - t0 < timeMS; n++) {
+			First(); Next(); //JIT-compile
+			for(int i = 0; i < codes.Length; i++) codes[i]();
+		}
+		//Out(n);
+		First();
+	}
 }
-
-/*
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Windows.Forms;
-using System.Diagnostics;
-
-using Catkeys;
-using static Catkeys.NoClass;
-using Catkeys.Automation;
-using static Catkeys.Automation.NoClass;
-using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
-using Catkeys.Winapi;
-*/
-
-//Debug.Assert(false);
-//Debug.Fail("fail"); //same as Debug.Assert(false, "fail");
-//Debug.Write("write"); //only in debug mode (not the same as debug build); shows in VS output, not in console (unless you add a listener for it)
-//Debug.WriteLine("writeline"); //the same as Debug.Write with \n
-//Debug.Print("print"); //the same as Debug.WriteLine. Perhaps for VB.
-
-//Trace.Assert(false);
-//Trace.TraceError("eee"); //VS output shows "Error: 0 : eee"
-//Trace.Write("write");
-
-
-
-//static Wnd _hwndCompiler;
-//static Api.WndProc _wndProcCompiler = _WndProcCompiler; //use static member to prevent GC from collecting the delegate
-
-//[STAThread]
-//static void Main(string[] args)
-//{
-//	Catkeys.Util.Window.RegWinClassHidden("Catkeys_Compiler", _wndProcCompiler);
-
-//	var thr=new Thread(_AppDomainThread);
-//	thr.Start();
-
-//	Thread.Sleep(100);
-//	_hwndCompiler=Api.FindWindow("Catkeys_Compiler", null);
-//	Console.WriteLine($"_hwndCompiler={_hwndCompiler}");
-
-//	_hwndCompiler.Send(Api.WM_USER, Zero, Marshal.StringToBSTR("test"));
-
-//	Console.WriteLine("key...");
-//	Console.ReadKey();
-//}
-
-//static void _AppDomainThread()
-//{
-//	var domain=AppDomain.CreateDomain("Compiler");
-//	//System.IO.Pipes.AnonymousPipeClientStream
-//	//childDomain.SetData("hPipe", handle.ToString());
-//	domain.DoCallBack(_DomainCallback);
-//	AppDomain.Unload(domain);
-//}
-
-//static void _DomainCallback()
-//{
-//	//=AppDomain.CurrentDomain.GetData("hPipe")
-
-//	Api.CreateWindowExW(0, "Catkeys_Compiler",
-//		null, WS_.POPUP, 0, 0, 0, 0, Wnd.Spec.Message,
-//		Zero, Window.hInstModule, Zero);
-
-//	Application.Run(); //message loop
-//}
-
-//unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
-//{
-//	switch(msg) {
-//	//case WM.NCCREATE:
-//	//	_hwndAM=hWnd;
-//	//	break;
-//	//case WM.CREATE:
-//	//	Perf.Next();
-//	//	break;
-//	//case WM.COPYDATA: //TODO: ChangeWindowMessageFilter
-//	//	_OnCopyData(wParam, (api.COPYDATASTRUCT*)lParam);
-//	//	break;
-//	//case WM.DESTROY:
-//	//	Out("destroy");
-//	//	break;
-//	case Api.WM_USER:
-//		Console.WriteLine(Marshal.PtrToStringBSTR(lParam));
-//		Marshal.FreeBSTR(lParam);
-//		return Zero;
-//	}
-
-//	LPARAM R = Api.DefWindowProcW(hWnd, msg, wParam, lParam);
-
-//	//switch(msg) {
-//	//case WM.NCDESTROY:
-//	//	//Out("ncdestroy");
-//	//	Application.Exit();
-//	//	break;
-//	//}
-//	return R;
-
-//	//tested: .NET class NativeWindow. It semms its purpose is different (to wrap/subclass an existing class).
-//}

@@ -68,7 +68,7 @@ partial class Test
 
 		for(i=0; i<10000; i++) n+=Split1(s);
 		for(i=0; i<10000; i++) n+=Split2(s);
-		Perf.First(true);
+		Perf.First(100);
 		for(i=0; i<10000; i++) n+=Split2(s);
 		Perf.Next();
 		for(i=0; i<10000; i++) n+=Split1(s);

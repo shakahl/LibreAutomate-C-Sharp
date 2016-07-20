@@ -148,7 +148,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Wnd = System.IntPtr; //HWND (window handle)
-using LPARAM = System.IntPtr; //LPARAM, WPARAM, LRESULT, X_PTR, SIZE_T, ... (non-pointer types that have different size in 64-bit and 32-bit process)
+using LPARAM = System.IntPtr; //LPARAM, WPARAM, LRESULT, X_PTR, SIZE_T, ... (integer types of pointer size)
 
 //add this to projects that will use these API
 [module: DefaultCharSet(CharSet.Unicode)]
@@ -177,12 +177,12 @@ public static unsafe class API
 			//#if !TEST_SMALL
 			catch(ConverterException e) {
 				Out(e);
-				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+				Wnd.FindRaw("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 				throw;
 			}
 			catch(Exception e) {
 				Out(e);
-				Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
+				Wnd.FindRaw("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 				throw;
 			}
 			//#endif
