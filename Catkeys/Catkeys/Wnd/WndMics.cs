@@ -5,13 +5,14 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
-
-//using System.Reflection;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
 //using System.Linq;
 
 using Catkeys;
@@ -64,7 +65,7 @@ namespace Catkeys
 			//support Windows Store apps
 			string appId = null;
 			if(1 == _WindowsStoreAppId(this, out appId, true)) {
-				IntPtr R = Files.GetIconHandle(appId, big ? 32 : 16);
+				IntPtr R = Files.Icons.GetIconHandle(appId, big ? 32 : 16);
 				if(R != Zero) return R;
 			}
 
@@ -326,6 +327,17 @@ namespace Catkeys
 				return Api.GetGUIThreadInfo(idThread, ref g);
 			}
 
+			/// <summary>
+			/// Creates unmanaged message-only window.
+			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
+			/// </summary>
+			/// <param name="className">Window class name.</param>
+			public static Wnd CreateMessageWindow(string className)
+			{
+				return Api.CreateWindowEx(Api.WS_EX_NOACTIVATE, className, null, Api.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message, 0, Zero, 0);
+				//note: WS_EX_NOACTIVATE is important.
+			}
+
 			//public void ShowAnimate(bool show)
 			//{
 			//	//Don't add Wnd function, because:
@@ -336,14 +348,22 @@ namespace Catkeys
 
 			/// <summary>
 			/// Registers and unregisters a window class.
-			/// Normally you declare a static RegisterClass variable and call Register() or Superclass().
+			/// Example: <c>static Wnd.Misc.WndClass _myWndProc = Wnd.Misc.WndClass.Register("MyClass", _MyWndProc); ... Wnd w = Api.CreateWindowEx(0, _myWndProc.Name, ...);</c>
 			/// </summary>
-			public class RegisterClass
+			public class WndClass
 			{
+				private WndClass() { } //disable '=new WndClass()'
+
 				/// <summary>
 				/// Class atom.
 				/// </summary>
 				public ushort Atom { get; private set; }
+
+				/// <summary>
+				/// Actual class name that must be used to create windows.
+				/// It is not exactly the same as passed to Create() etc. It has a suffix containing current appdomain identifer.
+				/// </summary>
+				public string Name { get { return _className; } }
 
 				/// <summary>
 				/// Base class extra memory size.
@@ -359,15 +379,15 @@ namespace Catkeys
 				Api.WNDPROC _wndProc; //to keep reference to the caller's delegate to prevent garbage collection
 				string _className; //for warning text in Unregister()
 
-				~RegisterClass()
+				~WndClass()
 				{
 					Unregister();
 				}
 
 				/// <summary>
-				/// Registers window class.
-				/// Calls Api.RegisterClassEx() and returns class atom.
-				/// Does nothing and returns class atom if the class is already registered using this variable.
+				/// Registers new window class.
+				/// Returns new WndClass variable that holds class atom and other data.
+				/// Calls Api.RegisterClassEx().
 				/// More info: MSDN -> WNDCLASSEX.
 				/// </summary>
 				/// <param name="className">Class name.</param>
@@ -378,38 +398,44 @@ namespace Catkeys
 				/// Can be used to specify WNDCLASSEX fields other than cbSize, lpszClassName, lpfnWndProc, cbWndExtra and style.
 				/// If not used, the function sets: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; others = 0/null/Zero.
 				/// </param>
-				/// <exception cref="Win32Exception">When fails, for example if class className already exists.</exception>
+				/// <exception cref="Win32Exception">When fails, for example if the class name already exists.</exception>
 				/// <remarks>
+				/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain identifer. The Name property returns it.
 				/// If style does not have CS_GLOBALCLASS and ex is null or its hInstance field is not set, for hInstance uses exe module handle.
 				/// </remarks>
-				public ushort Register(string className, Api.WNDPROC wndProc, int wndExtra = 0, uint style = 0, Api.WNDCLASSEX? ex = null)
+				public static WndClass Register(string className, Api.WNDPROC wndProc, int wndExtra = 0, uint style = 0, Api.WNDCLASSEX? ex = null)
 				{
-					lock (this) {
-						if(Atom == 0) {
-							Api.WNDCLASSEX x = ex == null ? new Api.WNDCLASSEX() : ex.Value;
-							if(ex == null) {
-								x.hCursor = Api.LoadCursor(Zero, Api.IDC_ARROW);
-								x.hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1);
-							}
-
-							_Register(ref x, className, wndProc, wndExtra, style);
-						}
-						return Atom;
-
-						//hInstance=Api.GetModuleHandle(null); //tested: RegisterClassEx uses this if hInstance is Zero, even for app-local classes
-
-						//tested:
-						//For app-global classes, CreateWindowEx and GetClassInfo ignore their hInst argument (always succeed).
-						//For app-local classes, CreateWindowEx and GetClassInfo fail if their hInst argument does not match. However CreateWindowEx always succeeds if its hInst argument is Zero.
+					var r = new WndClass();
+					Api.WNDCLASSEX x = ex == null ? new Api.WNDCLASSEX() : ex.Value;
+					if(ex == null) {
+						x.hCursor = Api.LoadCursor(Zero, Api.IDC_ARROW);
+						x.hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1);
 					}
+
+					r._Register(ref x, className, wndProc, wndExtra, style);
+					return r;
+
+					//hInstance=Api.GetModuleHandle(null); //tested: RegisterClassEx uses this if hInstance is Zero, even for app-local classes
+
+					//tested:
+					//For app-global classes, CreateWindowEx and GetClassInfo ignore their hInst argument (always succeed).
+					//For app-local classes, CreateWindowEx and GetClassInfo fail if their hInst argument does not match. However CreateWindowEx always succeeds if its hInst argument is Zero.
 				}
+
+				//static Dictionary<string, WndClass> _a=new Dictionary<string, WndClass>();
 
 				void _Register(ref Api.WNDCLASSEX x, string className, Api.WNDPROC wndProc, int wndExtra, uint style)
 				{
+					//Add appdomain id to the class name. It solves 2 problems:
+					//	1. Multiple domains cannot register exactly the same class name because they cannot use a common procedure.
+					//	2. In Release build compiler completely removes code 'static Wnd.Misc.WndClass _myWndProc = Wnd.Misc.WndClass.Register("MyClass", _MyWndProc);' if _myWndProc is not referenced elsewhere; then the class is not registered when we create window; now programmers must use _myWndProc.Name with CreateWindowEx etc and it prevents removing the code.
+					className = className + "." + AppDomain.CurrentDomain.Id;
+					//Out(className);
+
 					try {
 						x.cbSize = Api.SizeOf(x);
-						x.lpszClassName = Marshal.StringToCoTaskMemUni(className);
-						x.lpfnWndProc = wndProc;
+						x.lpszClassName = Marshal.StringToHGlobalUni(className);
+						x.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
 						x.cbWndExtra = wndExtra;
 						x.style = style;
 						if(x.hInstance == Zero && (style & Api.CS_GLOBALCLASS) == 0) x.hInstance = Api.GetModuleHandle(null);
@@ -422,14 +448,16 @@ namespace Catkeys
 						_className = className;
 					}
 					finally {
-						Marshal.FreeCoTaskMem(x.lpszClassName);
+						Marshal.FreeHGlobal(x.lpszClassName);
 					}
+
+					//_a.Add(className, this);
 				}
 
 				/// <summary>
-				/// Registers window class that extends an existing class.
-				/// Calls Api.GetClassInfoEx() and Api.RegisterClassEx(), and returns class atom.
-				/// Does nothing and returns class atom if the class is already registered using this variable.
+				/// Registers new window class that extends an existing class.
+				/// Returns new WndClass variable that holds class atom and other data.
+				/// Calls Api.GetClassInfoEx() and Api.RegisterClassEx().
 				/// More info: MSDN -> WNDCLASSEX.
 				/// </summary>
 				/// <param name="baseClassName">Existing class name.</param>
@@ -438,24 +466,25 @@ namespace Catkeys
 				/// <param name="wndExtra">Size of extra window memory not including extra memory of base class. Can be accessed with SetMyLong/GetMyLong. Example: IntPtr.Size.</param>
 				/// <param name="globalClass">If false, the function removes CS_GLOBALCLASS style.</param>
 				/// <param name="baseModuleHandle">If the base class is global (CS_GLOBALCLASS style), don't use this parameter, else pass the module handle of the exe or dll that registered the base class.</param>
-				/// <exception cref="Win32Exception">When fails, for example the base class does not exist, or class className already exists.</exception>
-				public ushort Superclass(string baseClassName, string className, Api.WNDPROC wndProc, int wndExtra = 0, bool globalClass = false, IntPtr baseModuleHandle = default(IntPtr))
+				/// <exception cref="Win32Exception">When fails, for example the base class does not exist, or the class name already exists.</exception>
+				/// <remarks>
+				/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain identifer. The Name property returns it.
+				/// </remarks>
+				public static WndClass Superclass(string baseClassName, string className, Api.WNDPROC wndProc, int wndExtra = 0, bool globalClass = false, IntPtr baseModuleHandle = default(IntPtr))
 				{
-					lock (this) {
-						if(Atom == 0) {
-							var x = new Api.WNDCLASSEX();
-							if(0 == Api.GetClassInfoEx(baseModuleHandle, baseClassName, out x)) throw new Win32Exception();
+					var r = new WndClass();
+					var x = new Api.WNDCLASSEX();
+					x.cbSize = Api.SizeOf(x);
+					if(0 == Api.GetClassInfoEx(baseModuleHandle, baseClassName, ref x)) throw new Win32Exception();
 
-							Api.WNDPROC wp = x.lpfnWndProc;
-							int we = x.cbWndExtra;
+					Api.WNDPROC wp = (Api.WNDPROC)Marshal.GetDelegateForFunctionPointer(x.lpfnWndProc, typeof(Api.WNDPROC));
+					int we = x.cbWndExtra;
 
-							_Register(ref x, className, wndProc, x.cbWndExtra + wndExtra, globalClass ? x.style : x.style & ~Api.CS_GLOBALCLASS);
+					r._Register(ref x, className, wndProc, x.cbWndExtra + wndExtra, globalClass ? x.style : x.style & ~Api.CS_GLOBALCLASS);
 
-							BaseClassWndProc = wp;
-							BaseClassWndExtra = we;
-						}
-						return Atom;
-					}
+					r.BaseClassWndProc = wp;
+					r.BaseClassWndExtra = we;
+					return r;
 				}
 
 				/// <summary>
@@ -506,12 +535,9 @@ namespace Catkeys
 				public static ushort GetClassAtom(string className, IntPtr moduleHandle = default(IntPtr))
 				{
 					var x = new Api.WNDCLASSEX();
-					return _GetClassInfoEx(moduleHandle, className, ref x);
+					x.cbSize = Api.SizeOf(x);
+					return Api.GetClassInfoEx(moduleHandle, className, ref x);
 				}
-
-				//use this with [In], to avoid marshaling lpfnWndProc from native callback to C# delegate
-				[DllImport("user32.dll", EntryPoint = "GetClassInfoExW", SetLastError = true)]
-				static extern ushort _GetClassInfoEx(IntPtr hInstance, string lpszClass, [In] ref Api.WNDCLASSEX lpwcx);
 			}
 
 			/// <summary>
@@ -597,7 +623,7 @@ namespace Catkeys
 					_TaskbarButton.taskbarInstance.DeleteTab(w);
 				}
 
-				internal static class _TaskbarButton
+				static class _TaskbarButton
 				{
 					[ComImport, Guid("ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 					internal interface ITaskbarList3
@@ -648,7 +674,7 @@ namespace Catkeys
 					[ComImport]
 					[Guid("56FDF344-FD6D-11d0-958A-006097C9A090")]
 					[ClassInterface(ClassInterfaceType.None)]
-					internal class TaskbarInstance
+					class TaskbarInstance
 					{
 					}
 
@@ -670,7 +696,7 @@ namespace Catkeys
 				{
 					_Do(0);
 				}
-				
+
 				/// <summary>
 				/// Minimizes main windows.
 				/// </summary>
@@ -686,7 +712,7 @@ namespace Catkeys
 				{
 					_Do(3);
 				}
-				
+
 				/// <summary>
 				/// Arranges non-minimized main windows horizontally or vertically.
 				/// </summary>

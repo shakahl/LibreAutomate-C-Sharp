@@ -37,7 +37,7 @@ namespace WinForms
 
 		private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			Out(comboBox1.SelectedIndex);
+			//Out(comboBox1.SelectedIndex);
 		}
 	}
 }

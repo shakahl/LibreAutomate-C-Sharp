@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
-//using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
-//using System.Windows.Forms;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
@@ -67,7 +70,7 @@ namespace Catkeys
 		/// </summary>
 		public static void Write(object value)
 		{
-			Write((value == null) ? "" : value.ToString());
+			Write(value?.ToString());
 		}
 
 		/// <summary>
@@ -87,7 +90,7 @@ namespace Catkeys
 			var b = new StringBuilder();
 			foreach(object o in value) {
 				if(b.Length != 0) b.Append(separator);
-				b.Append(o.ToString());
+				b.Append(o?.ToString());
 			}
 			Write(b.ToString());
 		}

@@ -16,6 +16,7 @@ Module Module1
 
 	Sub Main()
 
+
 		'Show.MessageDialog("ggg")
 		'Show.TaskDialog("ddd")
 		'TaskDialog("ddd") 'error, ambiguous if Imports Catkeys.Show, although OK in C#

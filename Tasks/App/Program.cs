@@ -40,6 +40,11 @@ namespace Catkeys.Tasks
 		[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //makes new AppDomain creation faster, and unloads non-GAC assemblies, eg frees many MB of compiler memory.
 		static void Main(string[] args)
 		{
+			//if(args.Length >= 1 && args[0] == "/domain") {
+			//	Show.TaskDialog("domain");
+			//	return;
+			//}
+
 			bool measureStartupTime = args.Length >= 1 && args[0] == "/perf";
 			if(measureStartupTime) Perf.Next(); //Perf.Write(); //startup time: 20 ms when ngen-compiled, else >26 ms. After PC restart ~150 ms (Win10, SSD).
 #if true
@@ -55,16 +60,21 @@ namespace Catkeys.Tasks
 			}
 
 #if true
-			Application.EnableVisualStyles();
-			Test.TestMain();
+			//Application.EnableVisualStyles(); //730 mcs
+			//Application.SetCompatibleTextRenderingDefault(false); //70 mcs
+			Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
+            Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
+
+			Test.TestInNewAppDomain();
+			//Test.TestInThisAppDomain();
+			//var thread = new Thread(Test.TestInThisAppDomain); thread.SetApartmentState(ApartmentState.STA); thread.Start(); thread.Join();
 #else
 			Api.ChangeWindowMessageFilter(Api.WM_SETTEXT, 1);
 			Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
 
-			var regWinClass = new Wnd.Misc.RegisterClass();
-			regWinClass.Register("CatkeysTasks", WndProcAppsManager);
+			var regWinClass = Wnd.Misc.WndClass.Register("CatkeysTasks", WndProcAppsManager);
 
-			Api.CreateWindowEx(0, "CatkeysTasks",
+			Api.CreateWindowEx(0, regWinClass.Name,
 				null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message,
 				//"Catkeys Tasks", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 400, 300, 400, 200, Wnd0,
 				0, Zero, 0);
@@ -168,12 +178,12 @@ namespace Catkeys.Tasks
 		{
 			if(_trayMenu == null) {
 				_trayMenu = new ContextMenuStrip();
-				_trayMenu.Items.Add("one", null, (o, e) => { Out("one"); } );
+				_trayMenu.Items.Add("one", null, (o, e) => { Out("one"); });
 			}
 			//Out(_trayMenu.Capture);
 			//_trayMenu.Capture = true;
 
-            _trayMenu.Show(100, 100);
+			_trayMenu.Show(100, 100);
 		}
 #endif
 
@@ -224,7 +234,7 @@ namespace Catkeys.Tasks
 				Api.KillTimer(hWnd, idTimer);
 				//Perf.First();
 				_TrayIcon(true);
-				//Perf.NextWrite();
+				//Perf.NW();
 				break;
 			}
 		}

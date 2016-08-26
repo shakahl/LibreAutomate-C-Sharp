@@ -42,6 +42,7 @@ namespace Catkeys.Automation
 		//	//Named not SendKeys because too long and hides class SendKeys from System.Windows.Forms.
 		//	//Never mind: Key hides enum Key from Microsoft.DirectX.DirectInput and System.Windows.Input. Also various classes have Key property.
 
+		//	if(keys==null) return;
 		//	//Out(keys.Length);
 		//	foreach(object o in keys) {
 		//		//switch(o.GetType().
@@ -65,6 +66,8 @@ namespace Catkeys.Automation
 
 		public static void Keys(params string[] keys_text_keys_text_andSoOn)
 		{
+			var keys = keys_text_keys_text_andSoOn;
+			if(keys == null) return;
 		}
 
 		//public static void Key(params string[] keys_text_keys_text_andSoOn)
@@ -74,14 +77,20 @@ namespace Catkeys.Automation
 		//Uses Script.Option.hybridText.
 		public static void Text(params string[] text_keys_text_keys_andSoOn)
 		{
+			var keys = text_keys_text_keys_andSoOn;
+			if(keys == null) return;
 		}
 
 		public static void Text(bool hybrid, params string[] text_keys_text_keys_andSoOn)
 		{
+			var keys = text_keys_text_keys_andSoOn;
+			if(keys == null) return;
 		}
 
 		public static void Text(ScriptOptions options, params string[] text_keys_text_keys_andSoOn)
 		{
+			var keys = text_keys_text_keys_andSoOn;
+			if(keys == null) return;
 		}
 
 

@@ -2,23 +2,18 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-//using System.Linq;
-
 using System.Diagnostics;
-using System.Threading;
-
-using System.IO;
-//using System.IO.MemoryMappedFiles;
-//using System.Runtime.Serialization;
-//using System.Runtime.Serialization.Formatters.Binary;
-using System.Windows.Forms;
-using System.Drawing;
-using K = System.Windows.Forms.Keys;
-
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -26,6 +21,13 @@ using Util = Catkeys.Util;
 using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
 using Auto = Catkeys.Automation;
+
+
+//using System.IO.MemoryMappedFiles;
+//using System.Runtime.Serialization;
+//using System.Runtime.Serialization.Formatters.Binary;
+using K = System.Windows.Forms.Keys;
+
 using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 
@@ -43,54 +45,30 @@ using System.Xml.Schema;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 
+
+[module: DefaultCharSet(CharSet.Unicode)]
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 
 
-public class Ooo
+
+
+static partial class Test
 {
-	[XmlAttribute]
-	public uint style, styleMask, exStyle, exStyleMask;
-	//[XmlAttribute(DataType ="string")] //cannot be applied to object
-	public object x, y; //int or double, not used if null
-						//[XmlAttribute] //cannot be applied to nullable
-						//public int? x, y;
-	[XmlAttribute]
-	public string control, propName, wfName;
-	//[XmlAttribute] //cannot be applied to LPARAM
-	//public LPARAM propValue_;
-	[XmlAttribute]
-	public long propValue;
-
-	public Ooo() { }
-
-	//speed: TextFieldParser is 8 times slower than XML serialization
-	public Ooo(string csv)
+	/// <summary>
+	/// The main entry point for the application.
+	/// </summary>
+	[STAThread]
+	static void Main()
 	{
-		using(var tr = new StringReader(csv)) { //the usings make 30% faster, but still very slow, much slower than XML serialization
-			using(var p = new TextFieldParser(tr)) {
-				p.SetDelimiters(new string[] { "=" });
+		Application.EnableVisualStyles();
+		Application.SetCompatibleTextRenderingDefault(false);
+		//Perf.Next();
+		//Perf.Write();
 
-				while(!p.EndOfData) {
-					string[] a = p.ReadFields();
-					if(a.Length != 2) break;
-					//Out(a, "|");
-					string s = a[1];
-					switch(a[0]) {
-					case "style": style = (uint)s.ToInt_(); break;
-					case "control": control = s; break;
-					case "x": x = s.ToInt_(); break;
-					case "propValue": propValue = s.ToInt_(); break;
-					}
-				}
-			}
-		}
+		TestMain();
 	}
-}
-
-public partial class Test
-{
 	#region old_test_functions
 
 	static void TestCurrentCulture()
@@ -133,6 +111,49 @@ public partial class Test
 			//var f4 = new WildString("[rci]"+f);
 
 			OutList("find", f1.Match(s), f2.Match(s), f3.Match(s), f4.Match(s));
+		}
+	}
+
+	//This class used to test serialization.
+	//Now probably does not work, must be not a nested class, but I want to collapse the code.
+	public class Ooo
+	{
+		[XmlAttribute]
+		public uint style, styleMask, exStyle, exStyleMask;
+		//[XmlAttribute(DataType ="string")] //cannot be applied to object
+		public object x, y; //int or double, not used if null
+							//[XmlAttribute] //cannot be applied to nullable
+							//public int? x, y;
+		[XmlAttribute]
+		public string control, propName, wfName;
+		//[XmlAttribute] //cannot be applied to LPARAM
+		//public LPARAM propValue_;
+		[XmlAttribute]
+		public long propValue;
+
+		public Ooo() { }
+
+		//speed: TextFieldParser is 8 times slower than XML serialization
+		public Ooo(string csv)
+		{
+			using(var tr = new StringReader(csv)) { //the usings make 30% faster, but still very slow, much slower than XML serialization
+				using(var p = new TextFieldParser(tr)) {
+					p.SetDelimiters(new string[] { "=" });
+
+					while(!p.EndOfData) {
+						string[] a = p.ReadFields();
+						if(a.Length != 2) break;
+						//Out(a, "|");
+						string s = a[1];
+						switch(a[0]) {
+						case "style": style = (uint)s.ToInt_(); break;
+						case "control": control = s; break;
+						case "x": x = s.ToInt_(); break;
+						case "propValue": propValue = s.ToInt_(); break;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -336,11 +357,11 @@ bbb"", b3
 		//if(pd.IsOpen) pd.Send.Close();
 		//Out(pd.Result);
 
-		//var td = new TaskDialogObject("dddd");
+		//var td = new Show.TaskDialogObject("dddd");
 		//Task.Run(() => td.Show());
 		////Perf.First();
 		////td.ThreadWaitOpen();
-		////Perf.NextWrite();
+		////Perf.NW();
 		//td.ThreadWaitClosed();
 		////Task.Run(() => td.Show());
 		////td.ThreadWaitOpen();
@@ -405,13 +426,13 @@ bbb"", b3
 		////		Out(Show.ListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
 		//return;
 
-		//var d = new TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
-		//var d = new TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
-		//var d = new TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
-		//var d = new TaskDialogObject("Head Text.", null, 0, TDIcon.Shield);
-		//var d = new TaskDialogObject("", "More text.", 0, TDIcon.Shield);
-		//var d = new TaskDialogObject();
-		var d = new TaskDialogObject();
+		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
+		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
+		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
+		//var d = new Show.TaskDialogObject("Head Text.", null, 0, TDIcon.Shield);
+		//var d = new Show.TaskDialogObject("", "More text.", 0, TDIcon.Shield);
+		//var d = new Show.TaskDialogObject();
+		var d = new Show.TaskDialogObject();
 
 		d.SetTitleBarText("MOO");
 
@@ -497,7 +518,7 @@ bbb"", b3
 
 		//Perf.First();
 		TDResult r = d.Show();
-		//Perf.NextWrite();
+		//Perf.NW();
 
 		Out(r.ToString());
 
@@ -520,11 +541,11 @@ bbb"", b3
 		//Out(Folders.IsFullPath(@"%temp%"));
 		//Out(Folders.IsFullPath(@"<ff>"));
 
-		//Out(Folders.Combine(@"%temp%\..", null));
-		//Out(Folders.Combine(@"%emp%\..", null));
-		//Out(Folders.Combine(@"%temp", null));
-		//Out(Folders.Combine(@"<ccc>", null));
-		//Out(Folders.Combine(@"<ccc", null));
+		//Out(Path_.Combine(@"%temp%\..", null));
+		//Out(Path_.Combine(@"%emp%\..", null));
+		//Out(Path_.Combine(@"%temp", null));
+		//Out(Path_.Combine(@"<ccc>", null));
+		//Out(Path_.Combine(@"<ccc", null));
 
 		//return;
 
@@ -541,35 +562,35 @@ bbb"", b3
 		//Out(Folders.Virtual.ComputerFolder + "mmm");
 		//Out(Folders.Desktop + "app" + ".end");
 
-		//Out(Folders.Combine(@"c:\one", "two"));
-		//Out(Folders.Combine(@"c:one", "two"));
-		//Out(Folders.Combine(@"c:", "two"));
-		//Out(Folders.Combine(@"\\one", "two"));
+		//Out(Path_.Combine(@"c:\one", "two"));
+		//Out(Path_.Combine(@"c:one", "two"));
+		//Out(Path_.Combine(@"c:", "two"));
+		//Out(Path_.Combine(@"\\one", "two"));
 
-		//Out(Folders.Combine(null, @"c:\one"));
-		//Out(Folders.Combine(null, @"c:one"));
-		//Out(Folders.Combine(null, @"c:"));
-		//Out(Folders.Combine(null, @"\\one"));
+		//Out(Path_.Combine(null, @"c:\one"));
+		//Out(Path_.Combine(null, @"c:one"));
+		//Out(Path_.Combine(null, @"c:"));
+		//Out(Path_.Combine(null, @"\\one"));
 		//Out(1);
-		//Out(Folders.Combine("one", "two"));
-		//Out(Folders.Combine("one", null));
-		//Out(Folders.Combine(null, "two"));
-		//Out(Folders.Combine(@"one\", null));
-		//Out(Folders.Combine(null, @"\two"));
-		//Out(Folders.Combine(@"c:\one\", null));
+		//Out(Path_.Combine("one", "two"));
+		//Out(Path_.Combine("one", null));
+		//Out(Path_.Combine(null, "two"));
+		//Out(Path_.Combine(@"one\", null));
+		//Out(Path_.Combine(null, @"\two"));
+		//Out(Path_.Combine(@"c:\one\", null));
 		//Out(2);
-		//Out(Folders.Combine("one", @"\two"));
-		//Out(Folders.Combine(@"one\", "two"));
-		//Out(Folders.Combine(@"one\", @"\two"));
-		//Out(Folders.Combine("one", @"a:\two"));
-		//Out(Folders.Combine("one", @"a:two"));
+		//Out(Path_.Combine("one", @"\two"));
+		//Out(Path_.Combine(@"one\", "two"));
+		//Out(Path_.Combine(@"one\", @"\two"));
+		//Out(Path_.Combine("one", @"a:\two"));
+		//Out(Path_.Combine("one", @"a:two"));
 		//Out(3);
-		//Out(Folders.Combine(null, @"C:\PROGRA~2\Acer\LIVEUP~1\updater.exe"));
-		//Out(Folders.Combine(null, @"C:PROGRA~2\Acer\LIVEUP~1\updater.exe"));
-		//Out(Folders.Combine(null, @"..\aaa.bbb"));
-		//Out(Folders.Combine(@"C:\PROGRA~2\Acer\LIVEUP~1\..\updater.exe", null));
-		//Out(Folders.Combine("C:\\PROGRA~2\\Acer\\LIVEUP~1\nupdater.exe", null));
-		//Out(Folders.Combine(@"c:\one~", @" space "));
+		//Out(Path_.Combine(null, @"C:\PROGRA~2\Acer\LIVEUP~1\updater.exe"));
+		//Out(Path_.Combine(null, @"C:PROGRA~2\Acer\LIVEUP~1\updater.exe"));
+		//Out(Path_.Combine(null, @"..\aaa.bbb"));
+		//Out(Path_.Combine(@"C:\PROGRA~2\Acer\LIVEUP~1\..\updater.exe", null));
+		//Out(Path_.Combine("C:\\PROGRA~2\\Acer\\LIVEUP~1\nupdater.exe", null));
+		//Out(Path_.Combine(@"c:\one~", @" space "));
 		//return;
 		//Out(Folders.Profile);
 		//Out(Folders.Virtual.ControlPanelFolder);
@@ -913,33 +934,33 @@ bbb"", b3
 
 	static void TestProcessUacInfo()
 	{
-		////Out(UacInfo.ThisProcess.IntegrityLevel);
+		////Out(Process_.UacInfo.ThisProcess.IntegrityLevel);
 		////Out(Api.GetModuleHandle("shell32"));
 		////Out(Api.GetModuleHandle("advapi32"));
 		//bool is1 = false, is2 = false, is3=false;
 		//Perf.SpinCPU(200);
-		//Perf.ExecuteMulti(5, 1, () => { is1 = UacInfo.IsThisProcessAdmin; }, () => { is2 = Api.IsUserAnAdmin(); }, () => { is3 = IsUserAdmin; });
+		//Perf.ExecuteMulti(5, 1, () => { is1 = Process_.UacInfo.IsThisProcessAdmin; }, () => { is2 = Api.IsUserAnAdmin(); }, () => { is3 = IsUserAdmin; });
 		//OutList(is1, is2, is3);
 		////Out(Api.GetModuleHandle("shell32"));
 		////Out(Api.GetModuleHandle("advapi32"));
 
-		//Out(UacInfo.IsUacDisabled);
-		Out(UacInfo.IsAdmin);
+		//Out(Process_.UacInfo.IsUacDisabled);
+		Out(Process_.UacInfo.IsAdmin);
 		return;
 
-		Out(UacInfo.IsAdmin);
+		Out(Process_.UacInfo.IsAdmin);
 
 		Process[] a = Process.GetProcesses();
 		for(int i = -5; i < a.Length; i++) {
 			Process x = null;
-			UacInfo p = null;
+			Process_.UacInfo p = null;
 
 			Perf.First();
-			if(i < 0) p = UacInfo.ThisProcess;
+			if(i < 0) p = Process_.UacInfo.ThisProcess;
 			else {
 				x = a[i];
 				Out($"<><Z 0x80c080>{x.ProcessName}</Z>");
-				p = UacInfo.GetOfProcess((uint)x.Id);
+				p = Process_.UacInfo.GetOfProcess((uint)x.Id);
 			}
 			if(p == null) { Out("failed"); continue; }
 			Perf.Next();
@@ -1115,13 +1136,13 @@ bbb"", b3
 		//var w = Wnd.FindRaw("QM_Editor");
 		var w = Wnd.FindRaw("Notepad");
 		Out(w);
-		ProcessMemory x = null;
+		Process_.Memory x = null;
 		try {
-			x = new ProcessMemory(w, 1000);
-			//x = new ProcessMemory(w, 0);
+			x = new Process_.Memory(w, 1000);
+			//x = new Process_.Memory(w, 0);
 
 		}
-		catch(CatkeysException e) { Out(e); return; }
+		catch(CatException e) { Out(e); return; }
 
 		//Out(1);
 		//Out(x.WriteUnicodeString("Unicode"));
@@ -1154,7 +1175,7 @@ bbb"", b3
 		Out(w);
 		if(w.Is0) return;
 		//Out(c);
-		var x = new WindowsFormsControlNames(w);
+		var x = new Wnd.Misc.WindowsFormsControlNames(w);
 
 		////Out(x.GetControlName(c));
 		//Out(x.GetControlName(w));
@@ -1163,7 +1184,7 @@ bbb"", b3
 		foreach(Wnd k in a) {
 			Out("---");
 			Out(k);
-			Out(WindowsFormsControlNames.IsWindowsForms(k));
+			Out(Wnd.Misc.WindowsFormsControlNames.IsWindowsForms(k));
 			Out(x.GetControlName(k));
 		}
 	}
@@ -1181,11 +1202,11 @@ bbb"", b3
 		var a1 = new Action(() =>
 		{
 			try {
-				using(var x = new WindowsFormsControlNames(w)) { s1 = x.GetControlName(w); }
+				using(var x = new Wnd.Misc.WindowsFormsControlNames(w)) { s1 = x.GetControlName(w); }
 			}
 			catch { s1 = null; }
 		});
-		var a2 = new Action(() => { s2 = WindowsFormsControlNames.CachedGetControlName(w); });
+		var a2 = new Action(() => { s2 = Wnd.Misc.WindowsFormsControlNames.CachedGetControlName(w); });
 
 		Perf.ExecuteMulti(5, 10, a1, a2);
 		OutList(s1, s2);
@@ -1295,7 +1316,7 @@ bbb"", b3
 		//	Wnd w = Wnd.Find("Keyboard*");
 		//	Wnd c = w.Child("", prop: new Wnd.ChildProp() { wfName = "ckControl" });
 		//	Out(c);
-		//} catch(CatkeysException e) {
+		//} catch(CatException e) {
 		//	Out(e);
 		//}
 		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1 });
@@ -1418,7 +1439,7 @@ bbb"", b3
 		sb.Clear();
 		sb.Length = 0;
 		sb.Capacity = 0;
-		Perf.NextWrite();
+		Perf.NW();
 		Out(R);
 	}
 
@@ -1559,9 +1580,9 @@ bbb"", b3
 		//w.Activate(); Wait(1); //return;
 
 		Wnd w = Wnd.Find("Registry*");
-		//if(!w.ShowMinimized(Wnd._MinMaxMethod.Auto)) Out(ThreadError.ErrorText);
-		//if(!w.ShowMinimized(Wnd._MinMaxMethod.LikeProgrammer)) Out(ThreadError.ErrorText);
-		//if(!w.ShowMinimized(Wnd._MinMaxMethod.NoAnimation)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd.HowMinMax.Auto)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd.HowMinMax.LikeProgrammer)) Out(ThreadError.ErrorText);
+		//if(!w.ShowMinimized(Wnd.HowMinMax.NoAnimation)) Out(ThreadError.ErrorText);
 		//return;
 
 		if(false) {
@@ -1581,8 +1602,8 @@ bbb"", b3
 			//w.ShowMaximized();
 			//w.ShowNotMinMax();
 		} else {
-			//var m =Wnd._MinMaxMethod.NoAnimation;
-			var m = Wnd._MinMaxMethod.LikeProgrammer;
+			//var m =Wnd.HowMinMax.NoAnimation;
+			var m = Wnd.HowMinMax.LikeProgrammer;
 
 			//Out(w.ShowNotMinMax(m));
 			//Wait(1);
@@ -1821,6 +1842,15 @@ bbb"", b3
 	static unsafe void TestRegistry()
 	{
 		bool ok;
+
+		//Out(Registry_.CatkeysKey);
+
+		//Out(Registry_.KeyExists(@"SOFTWARE\Microsoft"));
+		//Out(Registry_.KeyExists(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft"));
+		//Out(Registry_.KeyExists(@"SOFTWARE\GinDi", Registry.CurrentUser));
+		//Out(Registry_.KeyExists(@"GinDi", Registry.CurrentUser.OpenSubKey("SOFTWARE")));
+		//Out(Registry_.KeyExists(null, Registry.CurrentUser.OpenSubKey("SOFTWARE")));
+		//return;
 
 		Out("---- int ----");
 
@@ -2216,7 +2246,7 @@ bbb"", b3
 		IntPtr hi32 = w.GetIconHandle(true);
 		OutList(hi16, hi32);
 		if(hi32 == Zero) return;
-		var d = new TaskDialogObject("big icon", style: hi32);
+		var d = new Show.TaskDialogObject("big icon", style: hi32);
 		d.SetFooterText("small icon", hi16);
 		d.Show();
 		Api.DestroyIcon(hi16);
@@ -2252,7 +2282,7 @@ bbb"", b3
 		//s = "%TEMP%";
 		//s = @"C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_10.1605.1582.0_x64__8wekyb3d8bbwe\Calculator.exe";
 
-		IntPtr hi = Files.GetIconHandle(s, 32);
+		IntPtr hi = Files.Icons.GetIconHandle(s, 32);
 		//IntPtr hi = Files.GetIconHandle(Folders.VirtualITEMIDLIST.ControlPanelFolder, 32);
 		Out(hi);
 		if(hi == Zero) return;
@@ -2408,27 +2438,18 @@ bbb"", b3
 	}
 
 	#region TestWndRegisterClass
-	static Wnd.Misc.RegisterClass _wndRC, _wndRCSuper;
+	static Wnd.Misc.WndClass _wndRC, _wndRCSuper;
 	static void TestWndRegisterClass()
 	{
-		_wndRC = new Wnd.Misc.RegisterClass();
-		_wndRC.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size);
-		//_wndRC.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
-		Wnd w = Api.CreateWindowEx(0, "Cat_Test", "Cat_Test", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 100, 300, 200, Wnd0, 0, Zero, 0);
+		_wndRC = Wnd.Misc.WndClass.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size/*, Api.CS_GLOBALCLASS*/);
+		Wnd w = Api.CreateWindowEx(0, _wndRC.Name, _wndRC.Name, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 100, 300, 200, Wnd0, 0, Zero, 0);
 		if(w.Is0) return;
 
-		//_wndRCSuper = new Wnd.RegisterClass();
-		////_wndRCSuper.Superclass("Cat_Test", "Cat_Test_Super", Cat_Test_WndProcSuper, IntPtr.Size);
-		//_wndRCSuper.Superclass("Cat_Test", "Cat_Test_Super", Cat_Test_WndProcSuper, IntPtr.Size, false, Api.GetModuleHandle(null));
-		//Wnd w2 = Api.CreateWindowEx(0, "Cat_Test_Super", "Cat_Test_Super", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 500, 300, 100, Wnd0, 0, Zero, 0);
-		//if(w2.Is0) return;
-
-		_wndRCSuper = new Wnd.Misc.RegisterClass();
-		_wndRCSuper.Superclass("Edit", "Edit_Super", Cat_Test_WndProcSuper, IntPtr.Size);
-		Wnd w2 = Api.CreateWindowEx(0, "Edit_Super", "Edit_Super", Api.WS_CHILD | Api.WS_VISIBLE, 0, 0, 200, 30, w, 3, Zero, 0);
+		_wndRCSuper = Wnd.Misc.WndClass.Superclass("Edit", "Edit_Super", Cat_Test_WndProcSuper, IntPtr.Size);
+		Wnd w2 = Api.CreateWindowEx(0, _wndRCSuper.Name, _wndRCSuper.Name, Api.WS_CHILD | Api.WS_VISIBLE, 0, 0, 200, 30, w, 3, Zero, 0);
 		if(w2.Is0) return;
 
-		//Out(Wnd.RegisterClass.GetClassAtom("Cat_Test", Api.GetModuleHandle(null)));
+		//Out(Wnd.WndClass.GetClassAtom("Cat_Test", Api.GetModuleHandle(null)));
 
 		//Api.SetTimer(w, 1, 1000, null);
 
@@ -2500,7 +2521,7 @@ bbb"", b3
 		//	y = t.IsHung;
 		//	Perf.Next();
 		//	y=t.ClassNameIs("Ghost");
-		//	Perf.NextWrite();
+		//	Perf.NW();
 		//}
 	}
 
@@ -2888,7 +2909,7 @@ bbb"", b3
 		string hash;
 		Perf.First();
 		hash = Calc.HashMD5Hex(s);
-		Perf.NextWrite(); //1700 (.NET 3700)
+		Perf.NW(); //1700 (.NET 3700)
 		Out(hash);
 		hash = Calc.HashHex(s, "MD5");
 		Out(hash);
@@ -2920,7 +2941,7 @@ bbb"", b3
 		//WaitMS(1);
 		//Perf.Next();
 		//WaitMS(10);
-		//Perf.NextWrite();
+		//Perf.NW();
 
 		var t = new Perf.Inst();
 		var t2 = new Perf.Inst();
@@ -2938,536 +2959,967 @@ bbb"", b3
 		}
 	}
 
+	#region test timer
+
+	static void TestTimer()
+	{
+		//Time.SetTimer(1000, (t, p) => { Out(1); });
+		Perf.First();
+		//Time.SetTimer(1000, t => { Out(t.Tag); Application.ExitThread(); }, false, "test 1");
+		//Time.SetTimer(1000, t => { Out(t.Tag); }, true, "test 1");
+		//Perf.Next();
+		//Time.SetTimer(1100, t => { Out(t.Tag); Application.ExitThread(); }, true, "test 2");
+
+		//Api.SetTimer(Wnd0, 1, 1000, (w, m, i, t)=>{ Api.KillTimer(w, i); Out(1); Application.ExitThread(); });
+		//Perf.Next();
+		//Api.SetTimer(Wnd0, 1, 900, (w, m, i, t)=>{ Api.KillTimer(w, i); Out(2); });
+
+		//var t=new System.Threading.Timer()
+
+		//var comp = new Container();
+		//Perf.Next();
+		//var t = new System.Windows.Forms.Timer(comp);
+		//t.Tick += (s, d) => { Out(1); Application.ExitThread(); };
+		//t.Interval = 1000; t.Start();
+		//Perf.Next();
+		//var tt = new System.Windows.Forms.Timer(comp);
+		//tt.Tick += (s, d) => { Out(2); };
+		//tt.Interval = 900; tt.Start();
+
+		//var t1=Time.SetTimer(1000, true, t => { Out(t.Tag); }, "test 1");
+		//Perf.Next();
+		//var t2=Time.SetTimer(1100, true, t => { Out(t.Tag); Application.ExitThread(); }, "test 2");
+
+		Time.SetTimer(1100, false, t => { Out(t.Tag); Application.ExitThread(); }, "test 2");
+		//GC.Collect();
+
+		//t1.Stop();
+		//t2.Tag = "new tag";
+		//t2.Start(5000, true);
+
+		Perf.NW();
+		//OutList(t1, t2);
+		//Application.Run();
+		Show.TaskDialog("message loop");
+
+	}
+
+	static void _StartFormsTimer()
+	{
+		var t = new System.Windows.Forms.Timer();
+		t.Interval = 1000;
+		t.Tick += (a, b) => Out("tick");
+		t.Start();
+	}
+
+	static void TestTimerThread()
+	{
+		//Time.Timer_ u = null;
+
+		var T = new Thread(() =>
+		{
+			Time.SetTimer(1000, true, t => { Out(t.Tag); }, "test 2");
+			//Time.SetTimer(1000, true, t => { Out(t.Tag); t.Start(1000, true); }, "test 2");
+			//u=Time.SetTimer(1000, false, t => { Out(t.Tag); }, "test 2");
+			//_StartFormsTimer();
+
+			//u.Start(3000, false);
+			//u.Stop();
+
+			GC.Collect();
+			Show.TaskDialog("timer thread");
+			GC.Collect();
+			//Show.TaskDialog("timer thread");
+		});
+		T.Start();
+		T.Join(1500);
+		//u.Stop(); //test assert
+		T.Join();
+		Out("thread ended");
+		WaitMS(1000);
+		//u = null;
+		GC.Collect();
+		Show.TaskDialog("main thread");
+
+	}
+
 	#endregion
 
-	public class CatMenu :ContextMenuStrip
+	#region test async
+
+	static Task<int> SomeOperationAsync2()
 	{
-		public CatMenu() : base()
-		{
-		}
+		return Task.Run(() => { WaitMS(800); return 5; });
+	}
 
-		public CatMenu(System.ComponentModel.IContainer container) : base(container)
-		{
-		}
+	static async Task<int> SomeOperationAsync()
+	{
+		return await SomeOperationAsync2();
+	}
 
-		/// <summary>
-		/// Gets ToolStripItem of the last added item.
-		/// For submenu-item you can cast it to ToolStripMenuItem if need.
-		/// </summary>
-		public ToolStripItem LastItem { get; private set; }
-		//public ToolStripMenuItem CurrentSubmenu { get { return _submenuStack.Peek(); } } //can instead use LastItem or SubmenuBlock.Submenu
-
-		public ItemHandler this[string name, object icon = null, bool disabled = false, string tooltip = null]
-		{
-			set { Add(name, value, icon, disabled, tooltip); }
-		}
-
-		public ToolStripItem Add(string name, ItemHandler code, object icon = null, bool disabled = false, string tooltip = null)
-		{
-			var item = _Items.Add(name, null, _eh);
-			item.Tag = code;
-			_SetItemProp(item, icon, disabled, tooltip);
-			LastItem = item;
-			return item;
-		}
-
-		void _SetItemProp(ToolStripItem item, object icon, bool disabled, string tooltip)
-		{
+	static async void TestAsyncAsync()
+	{
+		int timeout = 1000;
+		var task = SomeOperationAsync2();
 #if true
-			if(icon != null) {
-				var s = icon as string;
-				if(s != null) {
-					if(s != "") {
-						bool setSubmenuIL = false;
-						var il = item.Owner.ImageList;
-						if(il == null) {
-							il = this.ImageList;
-							if(il != null) setSubmenuIL = true;
-						}
-						if(il != null && il.Images.ContainsKey(s)) {
-							item.ImageKey = s;
-							if(setSubmenuIL) item.Owner.ImageList = il;
-						} else {
-							//TODO: extract on demand, eg for submenus or offscreen items
-							IntPtr hi = Files.GetIconHandle(s);
-							if(hi != Zero) {
-								Icon ic = Icon.FromHandle(hi);
-								item.Image = ic.ToBitmap();
-								ic.Dispose();
-								Api.DestroyIcon(hi); //note: fails if this is immediately after 'Icon.FromHandle(hi)', although MSDN says need to call DestroyIcon() which implies that FromHandle() copies it.
-							}
-						}
-					} else if(icon is int) {
-						int i = (int)icon;
-						if(i >= 0) {
-							item.ImageIndex = i;
-							if(item.Owner.ImageList == null) item.Owner.ImageList = this.ImageList; //if submenu ImageList not set, use common ImageList for it
-						}
-					} else if(icon is Image) {
-						item.Image = icon as Image;
-					} else if(icon is Icon) {
-						item.Image = (icon as Icon).ToBitmap();
-					} else if(icon is IntPtr) {
-						item.Image = Icon.FromHandle((IntPtr)icon).ToBitmap();
-					} else {
-						throw new ArgumentException("", "icon");
-					}
-				}
-			}
+		await task;
+		Out(task.Result);
+#else //test with timeout
+		if(await Task.WhenAny(task, Task.Delay(timeout)) == task) {
+			Out(task.Result);
+		} else {
+			Out("timeout");
+		}
 #endif
-			if(disabled) item.Enabled = false;
-			if(tooltip != null) item.ToolTipText = tooltip;
-		}
+	}
 
-		/// <summary>
-		/// Adds item of any type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar, ToolStripButton.
-		/// </summary>
-		/// <param name="item"></param>
-		/// <param name="icon"></param>
-		/// <param name="disabled"></param>
-		/// <param name="tooltip"></param>
-		/// <param name="code"></param>
-		public void Add(ToolStripItem item, object icon = null, bool disabled = false, string tooltip = null, ItemHandler code = null)
+	static void TestAsync()
+	{
+		Perf.First();
+		TestAsyncAsync();
+		Perf.NW();
+		Out("END");
+		Show.TaskDialog("waiting");
+	}
+
+	#endregion
+
+	#region test native thread
+
+	public delegate uint PTHREAD_START_ROUTINE(IntPtr lpThreadParameter);
+	[DllImport("kernel32.dll")]
+	public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, LPARAM dwStackSize, PTHREAD_START_ROUTINE lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, out uint lpThreadId);
+
+	[Flags]
+	public enum COINIT :uint
+	{
+		COINIT_APARTMENTTHREADED = 0x2,
+		COINIT_MULTITHREADED = 0x0,
+		COINIT_DISABLE_OLE1DDE = 0x4,
+		COINIT_SPEED_OVER_MEMORY = 0x8
+	}
+
+	[DllImport("ole32.dll", PreserveSig = true)]
+	public static extern int CoInitializeEx(IntPtr pvReserved, COINIT dwCoInit);
+	[DllImport("ole32.dll")]
+	public static extern void CoUninitialize();
+
+	static Thread _iconThread;
+
+	static uint _ThreadProc(IntPtr param)
+	{
+		CoInitializeEx(Zero, COINIT.COINIT_APARTMENTTHREADED | COINIT.COINIT_DISABLE_OLE1DDE); //if before Thread.CurrentThread etc, then Thread.GetApartmentState will get STA. Without this .NET would make MTA.
+		_iconThread = Thread.CurrentThread; //tested: it seems this auto-creates and correctly initializes .NET Thread object etc. Sets IsBackground true.
+
+		//Out(_iconThread.IsBackground);
+		//_iconThread.IsBackground = false;
+		//Out(_iconThread.GetApartmentState());
+		//Out(_iconThread.ThreadState);
+
+		Show.TaskDialog("thread");
+		//WaitMS(30000);
+
+		return 0;
+	}
+
+	static PTHREAD_START_ROUTINE _threadProc = _ThreadProc;
+
+	static void TestNativeThread()
+	{
+		//This works, but probably not useful.
+		//It would be useful only if we want to share the thread between appdomains.
+		//But it is probably impossible because .NET ends threads when the appdomain exits. Also deletes the delegate.
+		//To share a thread, create it in default appdomain.
+
+		uint tid;
+		var ht = CreateThread(Zero, 0, _threadProc, Zero, 0, out tid);
+		OutList(ht, tid);
+		if(ht == Zero) return;
+		Api.CloseHandle(ht);
+		Show.TaskDialogEx("main", y: -300);
+	}
+
+	#endregion
+
+	#endregion
+
+	static void TestExpandPath()
+	{
+		string s1 = @"Q:\app\Catkeys\Tasks\System.Collections.Immutable.dll";
+		string s2 = @"%ProgramFiles%\Quick Macros 2\qm.exe";
+
+		string r1 = null, r2 = null, r3 = null, r4 = null;
+
+		//Out(ExpandPath(s2)); return;
+
+		var a1 = new Action(() => { r1 = Environment.ExpandEnvironmentVariables(s1); });
+		var a2 = new Action(() => { r2 = Environment.ExpandEnvironmentVariables(s2); });
+		var a3 = new Action(() => { r3 = Path_.ExpandEnvVar(s1); });
+		var a4 = new Action(() => { r4 = Path_.ExpandEnvVar(s2); });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		Out(r1);
+		Out(r2);
+		Out(r3);
+		Out(r4);
+	}
+
+	#region test end back thread
+
+	class MyAppContext :ApplicationContext
+	{
+		protected override void ExitThreadCore()
 		{
-			_Items.Add(item);
-			if(code != null) item.Tag = code;
-			_SetItemProp(item, icon, disabled, tooltip);
-			//activate menu window on click, or something may not work, eg cannot enter text in Edit control
-			if(!(item is ToolStripMenuItem || item is ToolStripLabel || item is ToolStripSeparator || item is ToolStripProgressBar)) {
-				item.MouseDown += _Item_MouseDown;
-			}
-			LastItem = item;
-		}
-
-		void _Item_MouseDown(object sender, MouseEventArgs e)
-		{
-			//OutFunc();
-			var t = sender as ToolStripItem;
-			var w = (Wnd)t.Owner.Handle;
-			w.ActivateRaw();
-		}
-
-		public ToolStripSeparator AddSeparator()
-		{
-			var item = new ToolStripSeparator();
-			_Items.Add(item);
-			LastItem = item;
-			return item;
-		}
-
-		public SubmenuBlock Submenu(string name, object icon = null, bool disabled = false, string tooltip = null, ItemHandler code = null)
-		{
-			var item = Add(name, code, icon, disabled, tooltip);
-			var sm = item as ToolStripMenuItem;
-			_submenuStack.Push(sm);
-			sm.DropDown.HandleCreated += _DropDown_HandleCreated;
-			return new SubmenuBlock(this, sm);
-		}
-
-		public void EndSubmenu()
-		{
-			if(_submenuStack.Count > 0) _submenuStack.Pop();
-		}
-
-		public class SubmenuBlock :IDisposable
-		{
-			CatMenu _menu;
-			public readonly ToolStripMenuItem Submenu;
-
-			public SubmenuBlock(CatMenu menu, ToolStripMenuItem submenu) { _menu = menu; Submenu = submenu; }
-			//public static implicit operator ToolStripMenuItem(SubmenuBlock smb) { return smb.Submenu; } //no, then does not work with using()
-
-			public void Dispose() { _menu.EndSubmenu(); }
-		}
-
-		Stack<ToolStripMenuItem> _submenuStack = new Stack<ToolStripMenuItem>();
-
-		ToolStripItemCollection _Items
-		{
-			get { return _submenuStack.Count > 0 ? _submenuStack.Peek().DropDownItems : Items; }
-		}
-
-		private void _DropDown_HandleCreated(object sender, EventArgs e)
-		{
-			var sm = sender as ToolStripDropDown;
-			_SetWindowStyle((Wnd)sm.Handle);
-		}
-
-		static EventHandler _eh = _EventHandler;
-
-		static void _EventHandler(object sender, EventArgs args)
-		{
-			var k = sender as ToolStripItem;
-			var t = k.Tag as ItemHandler;
-			if(t != null) t(new ItemData(k));
-
-			//TODO: this is also called on right-click (not on middle-click)
-		}
-
-		public class ItemData
-		{
-			public readonly ToolStripItem MenuItem;
-
-			public ItemData(ToolStripItem item) { MenuItem = item; }
-		}
-
-		public delegate void ItemHandler(ItemData d);
-
-		public new void Show()
-		{
-			_Show(0);
-		}
-
-		public new void Show(Point screenLocation)
-		{
-			_Show(1, screenLocation);
-		}
-
-		public new void Show(Control control, Point position)
-		{
-			_Show(2, position, 0, control);
-		}
-
-		public new void Show(int x, int y)
-		{
-			_Show(3, new Point(x, y));
-		}
-
-		public new void Show(Point position, ToolStripDropDownDirection direction)
-		{
-			_Show(4, position, direction);
-		}
-
-		public new void Show(Control control, Point position, ToolStripDropDownDirection direction)
-		{
-			_Show(5, position, direction, control);
-		}
-
-		public new void Show(Control control, int x, int y)
-		{
-			_Show(6, new Point(x, y), 0, control);
-		}
-
-		void _Show(int overload, Point p = default(Point), ToolStripDropDownDirection direction = 0, Control control = null)
-		{
-			Wnd w = (Wnd)Handle; //creates handle
-			_SetWindowStyle(w);
-			Perf.Next();
-
-			switch(overload) {
-			case 0: base.Show(Mouse.XY); break;
-			case 1: base.Show(p); break;
-			case 2: base.Show(control, p); break;
-			case 3: base.Show(p.X, p.Y); break;
-			case 4: base.Show(p, direction); break;
-			case 5: base.Show(control, p, direction); break;
-			case 6: base.Show(control, p.X, p.Y); break;
-			}
-			Perf.NextWrite();
-
-			//w.ActivateRaw(); //then keyboard works, eg arrows/Enter to select, Esc to close
-
-			if(!NonModal) {
-#if true
-				_idTimer = Api.SetTimer(Wnd0, w.Handle, 100, null);
-
-				Api.MSG u;
-				while(Api.GetMessage(out u, Wnd0, 0, 0) > 0) {
-					//100 ms timer
-					if(u.message == Api.WM_TIMER && u.wParam == _idTimer && u.hwnd == Wnd0) {
-						if(u.lParam == 1) break; //posted from OnClosed
-						if(!w.IsValid) break; //when menu window closed from outside, OnClosedOnClosed isn't called and even m.Visible is true etc
-
-						//TODO: finally test GC:
-						//GC.Collect();
-						continue;
-					}
-					//if(u.message != Api.WM_TIMER && u.message != Api.WM_MOUSEMOVE) Out(u.message);
-					Api.TranslateMessage(ref u);
-					Api.DispatchMessage(ref u);
-				}
-
-				Api.KillTimer(Wnd0, _idTimer);
-#else
-				//Application.Run();
-#endif
-			}
-		}
-
-		public bool NonModal { get; set; }
-
-		void _SetWindowStyle(Wnd w)
-		{
-			w.SetExStyleAdd(Api.WS_EX_NOACTIVATE); //prevents click-activation and adding taskbar button
-		}
-
-		LPARAM _idTimer;
-
-		protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
-		{
-			Wnd0.Post(Api.WM_TIMER, _idTimer, 1);
-			base.OnClosed(e);
+			OutFunc();
+			base.ExitThreadCore();
 		}
 	}
 
-	static void TestCatMenu()
+	static void _BackThread()
 	{
-		//TODO: sometimes a submenu does not open at first.
-		//TODO: 'wait' cursor when opening a submenu. Also when mouse enters the main context menu. Also when showing main.
-
-		//Application.EnableVisualStyles();
-
-		Perf.First();
-		var m = new CatMenu();
-
-		var il = new ImageList();
-		IntPtr hi = Files.GetIconHandle(@"q:\app\browse.ico");
-		//il.Images.Add("k1", Icon.FromHandle(hi));
-		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
-		Api.DestroyIcon(hi);
-		//il.Images.Add(SystemIcons.Exclamation); //distorted
-		il.Images.Add(new Icon(SystemIcons.Exclamation, 16, 16)); //distorted, the same
-																  //il.Images.Add(Catkeys.Tasks.Properties.Resources.qm_running); //distorted, as well as with ToBitmap(), because the resource manager adds big icon
-		m.ImageList = il;
-
-		m["One"] = o => Out("-one-");
-		m["Two"] = o => { Out(o.MenuItem); };
-		m.Submenu("Sub");
-		{
-			m["Three"] = o => Out("-three-");
-			m["Four"] = o => Out(o.MenuItem);
-			m.Submenu("Sub2", code: o => Out(o.MenuItem));
-			{
-				m["Five"] = o => Out(o.MenuItem);
-				m.EndSubmenu();
-			}
-			m.Submenu("Sub2", code: o => Out(o.MenuItem));
-			{
-				m["Five"] = o => Out(o.MenuItem);
-				m.EndSubmenu();
-			}
-			m["Six"] = o => Out(o.MenuItem);
-			m.LastItem.ForeColor = Color.BlueViolet;
-			m.EndSubmenu();
-		}
-		using(m.Submenu("Sub with using")) {
-			m["Three"] = o => Out("-three-");
-			m.LastItem.Font = new Font(m.LastItem.Font, FontStyle.Bold);
-			m["Four"] = o => Out(o.MenuItem);
-			m.LastItem.Font = new Font("Tahoma", 25);
-			using(m.Submenu("Sub2", code: o => Out(o.MenuItem))) {
-				m["Five"] = o => Out(o.MenuItem);
-			}
-			m.Submenu("Sub2", code: o => Out(o.MenuItem));
-			{
-				m["Five"] = o => Out(o.MenuItem);
-				m.EndSubmenu();
-			}
-			using(var smb = m.Submenu("Sub with new tooltip", code: o => Out(o.MenuItem))) {
-				smb.Submenu.ToolTipText = "new tooltip";
-				m["Five"] = o => Out(o.MenuItem);
-			}
-			m["Six"] = o => Out(o.MenuItem);
-		}
-		m["Disabled", disabled: true] = null;
-		m["Tooltip", tooltip: "ttttt"] = null;
-		m.Add("Method", o => Out(o.MenuItem));
-		var mi = m.Add("Method2", o => Out(o.MenuItem)); mi.BackColor = Color.AliceBlue; mi.ForeColor = Color.Orchid;
-		m["Icon", @"q:\app\Cut.ico"] = o => Out(o.MenuItem);
-		m["Icon", @"q:\app\Copy.ico"] = o => Out(o.MenuItem);
-		m["Icon", @"q:\app\Paste.ico"] = o => Out(o.MenuItem);
-		m["Icon", @"q:\app\Run.ico"] = o => Out(o.MenuItem);
-		m["Icon", @"q:\app\Tip.ico"] = o => Out(o.MenuItem);
-		//m["Icon resource", 1] = o => Out(o.MenuItem);
-		m["Imagelist icon name", "k0"] = o => Out(o.MenuItem);
-		m["Imagelist icon index", 1] = o => Out(o.MenuItem);
-		using(m.Submenu("Sub3")) {
-			m.LastItem.ForeColor = Color.Red;
-			//m.LastItem.DropDown.ImageList = il;
-			//m.LastItem.Margin=new Padding(8);
-			m["Simple"] = o => Out(o.MenuItem);
-			m["Icon in submenu", @"q:\app\Paste.ico"] = o => Out(o.MenuItem);
-			m["Imagelist icon name in submenu", "k0"] = o => Out(o.MenuItem);
-			m["Imagelist icon index in submenu", 1] = o => Out(o.MenuItem);
-			using(m.Submenu("Sub4", "k0")) {
-				m.LastItem.BackColor = Color.Bisque;
-				m["Simple"] = o => Out(o.MenuItem);
-			}
-			m.Submenu("Sub5", 1);
-			{
-				m["Simple"] = o => Out(o.MenuItem);
-				m.EndSubmenu();
-			}
-		}
-#if false
-		m.AddSeparator();
-		//if(item is ToolStripTextBox || item is ToolStripDropDown || item is ToolStripComboBox || item is ToolStripControlHost || item is ToolStripButton )
-		m.Add(new ToolStripLabel("Label"));
-		m.Add(new ToolStripTextBox("txt"));
-		m.Add(new ToolStripComboBox("cb"));
-		m.Add(new ToolStripProgressBar("pb"));
-		m.Add(new ToolStripButton("Button"));
-		m.Add(new ToolStripDropDownButton("DD button"));
-		m.Add(new ToolStripSplitButton("Split button"));
-		m.Add(new ToolStripStatusLabel("Status label"));
-		m.Add(new ToolStripMenuItem("Menu item"));
-		m.Add(new ToolStripSeparator());
-
-		//this code works, but the control width is several pixels
-		//var ed =new TextBox();
-		//ed.Width = 100;
-		//var host =new ToolStripControlHost(ed, "host");
-		//host.Width = 100;
-		//m.Add(host);
-
-		//test overflow
-		//for(int i=0; i<30; i++) m[$"Overflow {i}"] = o => Out(o.MenuItem);
-#endif
-		m["Last"] = o => { Out(o.MenuItem); };
-		Perf.Next();
-
-		Wait(1);
+		//Out(Api.GetCurrentThreadId());
+		//Application.ThreadExit += Application_ThreadExit;
 		Out(1);
-		Perf.Next();
-		m.Show(500, 300);
-		//m.Show();
-		//m.Show(Mouse.X + 10, Mouse.Y + 10);
+		try {
+			//Application.Run(_appContext);
+			Application.Run();
+			//Application.Run(new Form());
+			//_loop.Loop();
+			//WaitMS(1000000);
+			//Api.MSG m; while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) Api.DispatchMessage(ref m);
+		}
+		catch(ThreadAbortException) { Out("abort exception"); }
 		Out(2);
-		//m.Show(new Point(600, 400));
-		//Out(3);
-		m.Dispose();
 	}
 
-	static void TestCatMenuSimplest()
+	static Util.MessageLoop _loop = new Util.MessageLoop();
+	//static MyAppContext _appContext=new MyAppContext();
+
+	private static void Application_ThreadExit1(object sender, EventArgs e)
 	{
-		var m = new CatMenu();
-		m["One"] = o => Out("one");
-		m["Two"] = o => Out("two");
-		using(m.Submenu("Submenu")) {
-			m["Three"] = o => Out("three");
-			m["Four"] = o => Out("four");
-			for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
-		}
-		m.Show();
+		OutFunc();
 	}
 
-	static void TestCatMenuSpeed()
+	private static void Application_ThreadExit2(object sender, EventArgs e)
 	{
-		bool suspend = true; //makes faster 37 -> 15 ms (26 if ResumeLayout(true))
-		var speed = new Perf.Inst();
-		speed.First();
-		//System.ComponentModel.IContainer components = new System.ComponentModel.Container();
+		OutFunc();
+	}
+
+	private static void Application_ApplicationExit(object sender, EventArgs e)
+	{
+		OutFunc();
+		//Application.ApplicationExit -= Application_ApplicationExit;
+		//Out(Api.GetCurrentThreadId());
+	}
+
+	static Thread _thread;
+
+	static void TestBackThreadEnd()
+	{
+		_thread = new Thread(_BackThread);
+		_thread.IsBackground = true;
+		_thread.SetApartmentState(ApartmentState.STA);
+		_thread.Start();
+
+		//GC.Collect();
+		//Show.TaskDialog("main");
+		//MessageBox.Show("");
+		//MessageBoxX(Wnd0, "", "", 0);
+
+		//Time.SetTimer(1000, true, t => { Application.ExitThread(); });
+		//Application.Run();
+		//Out("after main loop");
+
+		//Out(Api.GetCurrentThreadId());
+		//_thread.Abort();
+		//Application.Exit();
+	}
+
+	[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
+	public static extern int MessageBoxX(Wnd hWnd, string lpText, string lpCaption, uint uType);
+
+	//class ExitClass
+	//{
+	//	public ExitClass()
+	//	{
+	//		Out("ctor");
+	//	}
+
+	//	~ExitClass()
+	//	{
+	//		//Out(AppDomain.CurrentDomain.IsFinalizingForUnload());
+	//		Out("dtor");
+	//	}
+	//}
+
+	//static ExitClass _exit=new ExitClass();
+
+	#endregion
+
+	static void TestInterDomain()
+	{
+		//var d=Util.Misc.GetDefaultAppDomain();
+		////var s = d.GetData("testData") as string;
+		////if(s == null) d.SetData("testData", $"dddata {8}");
+		//var s = d.GetData("testData") as List<int>;
+		//if(s == null) d.SetData("testData", new List<int> { 1, 2, 3 });
+		//Out(s);
+
+		//string s = InterDomain.GetVariable("str") as string;
+		//if(s==null) InterDomain.SetVariable("str", "VALUE");
+		//Out(s);
+
+		//int? i = InterDomain.GetVariable("str") as int?;
+		//if(i==null) InterDomain.SetVariable("str", 55);
+		//Out(i);
+		//i = 8;
+
+		//var a = InterDomain.GetVariable("list") as List<int>;
+		//if(a == null) InterDomain.SetVariable("list", new List<int> { 1, 2, 3 });
+		//Out(a);
+		//a.Add(100);
+
+		//var a = InterDomain.GetVariable("list") as string[];
+		//if(a == null) InterDomain.SetVariable("list", new string[] { "one","two","three" });
+		//Out(a);
+
+		//var a = InterDomain.GetVariable("list") as Dictionary<int, string>;
+		//if(a == null) {
+		//	var b = new Dictionary<int, string>();
+		//	b.Add(5, "gg"); b.Add(6, "hh");
+		//	InterDomain.SetVariable("list", b);
+		//}
+		//Out(a);
+
+		//InterDomain.SetVariable("{D6349CB1-0E29-4AFC-B172-2A1D3CCB8A32}", "vvvvv");
+		//Out(InterDomain.GetVariable("{D6349CB1-0E29-4AFC-B172-2A1D3CCB8A32}"));
+
+		//var a1 = new Action(() => { Environment.SetEnvironmentVariable("EnvironmentVariable", "valuevaluevalue"); string s = Environment.GetEnvironmentVariable("EnvironmentVariable"); });
+		//var a2 = new Action(() => { InterDomain.SetVariable("InterDomainVariable", "valuevaluevalue"); string s = InterDomain.GetVariable("InterDomainVariable") as string; });
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
+
+		//var k = new InterDomainData(10, "test");
+		//OutList(k._i, k._s);
+		//InterDomain.SetVariable("k", k);
+		//var b = InterDomain.GetVariable("k") as InterDomainData;
+		//OutList(b._i, b._s);
+
+		//var b = InterDomain.GetVariable("k") as InterDomainData;
+		//if(b == null) {
+		//	Out("null");
+		//	var k = new InterDomainData(10, "test");
+		//	InterDomain.SetVariable("k", k);
+		//	k._i = 11;
+		//} else OutList(b._i, b._s);
+
+		//var k = new InterDomainData(10, "test");
+		//InterDomain.SetVariable("k", k);
+
+		//var o = InterDomain.Get2("test");
+		//if(o == null) { Out("null"); InterDomain.Set2("test", "kkk"); }
+		//Out(o);
+
+		//string x;
+		//if(InterDomain.Get3("nm", out x)) Out(x);
+		//else { Out("no"); InterDomain.Set3("nm", "DATA"); }
+		////else { Out("no"); InterDomain.Set3("nm", (string)null); }
+
+		//int x;
+		//if(InterDomain.GetVariable("nm", out x)) Out(x);
+		//else { Out("no"); InterDomain.SetVariable("nm", 8); }
+		//else { Out("no"); InterDomain.SetVariable("nm", "DATA"); }
+		//else { Out("no"); InterDomain.SetVariable("nm", null); }
+
+		//var a1 = new Action(() => { Environment.SetEnvironmentVariable("EnvironmentVariable", "valuevaluevalue"); string s = Environment.GetEnvironmentVariable("EnvironmentVariable"); });
+		//var a2 = new Action(() => { InterDomain.SetVariable("InterDomainVariable", "valuevaluevalue"); string s = InterDomain.GetVariable("InterDomainVariable") as string; });
+		//var a3 = new Action(() => { InterDomain.Set2("InterDomainVariable2", "valuevaluevalue"); string s = InterDomain.Get2("InterDomainVariable2") as string; });
+		//var k = new Dictionary<string, object>();
+		//var a4 = new Action(() => { k["InterDomainVariable"]="valuevaluevalue"; string s = k["InterDomainVariable"] as string; });
+		//var a5 = new Action(() => { InterDomain.Set3("InterDomain_int1", 5); int s; InterDomain.Get3("InterDomain_int1", out s); });
+		//var a6 = new Action(() => { InterDomain.Set2("InterDomain_int2", 5); int s = (int)InterDomain.Get2("InterDomain_int2"); });
+		//var a7 = new Action(() => { InterDomain.SetVariable("InterDomain_int3", 5); int s = (int)InterDomain.GetVariable("InterDomain_int3"); });
+		////var a8 = new Action(() => { InterDomain.Set2("InterDomain_int4", 5); object s; InterDomain.TryGet("InterDomain_int4", out s); });
+		////var a9 = new Action(() => { InterDomain.Set2("InterDomain_int5", 5); int s; InterDomain.Get4("InterDomain_int5", out s); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7/*, a8, a9*/);
+
+
+		//POINT x;
+		//if(InterDomain.GetVariable("nm", out x)) Out(x);
+		//else { Out("no"); InterDomain.SetVariable("nm", new POINT(5,6)); }
+
+		//IntPtr x;
+		//if(InterDomain.GetVariable("nm", out x)) Out(x);
+		//else { Out("no"); InterDomain.SetVariable("nm", new IntPtr(6)); }
+
+		//LPARAM x;
+		//if(InterDomain.GetVariable("nm", out x)) Out(x);
+		//else { Out("no"); InterDomain.SetVariable("nm", (LPARAM)9); }
+
+		//Wnd x;
+		//if(InterDomain.GetVariable("nm", out x)) Out(x);
+		//else { Out("no"); InterDomain.SetVariable("nm", Wnd.FindRaw("QM_Editor")); }
+
+		//InterDomainData x;
+		//if(InterDomain.GetVariable("nm", out x)) Out(x._s);
+		//else { Out("no"); InterDomain.SetVariable("nm", new InterDomainData(5, "five")); }
+
+		//TODO: move TDx to Show. Or not.
+
+		//OutList("before", AppDomain.CurrentDomain.IsDefaultAppDomain());
+		//var x = InterDomain.DefaultDomainVariable("goo", () => { OutList("delegate", AppDomain.CurrentDomain.IsDefaultAppDomain()); return new InterDomainData(5, "fff"); });
+		InterDomainData x, y, z;
 		Perf.First();
-		var m = new CatMenu();
-		//var m = new CatMenu(components);
+		InterDomain.DefaultDomainVariable("goox", out x);
 		Perf.Next();
-		if(suspend) m.SuspendLayout();
+		InterDomain.DefaultDomainVariable("gooy", out y);
 		Perf.Next();
-		//m["One"] = o => Out("one");
-		m.Items.Add("text");
-		Perf.Next();
-		//m["Two"] = o => Out("two");
-		//m.Items.Add("text");
-		for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
-		Perf.Next();
-		using(var sm=m.Submenu("Submenu")) {
-			if(suspend) sm.Submenu.DropDown.SuspendLayout();
-			m["Three"] = o => Out("three");
-			m["Four"] = o => Out("four");
-			Perf.Next();
-			for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
-			Perf.Next();
-			if(suspend) sm.Submenu.DropDown.ResumeLayout(false);
-		}
-		Perf.Next();
-		if(suspend) m.ResumeLayout(false);
-		Perf.Next();
-		speed.NextWrite();
-		Wait(1);
-		Perf.Next();
-		//m.Show();
-		m.Show(Mouse.X + 10, Mouse.Y + 10);
+		InterDomain.DefaultDomainVariable("gooz", out z);
+		Perf.NW();
+		x.Method();
+		Out(x._s);
+		//Show.TaskDialog("");
 	}
 
-	static void TestCatMenuArray()
+	//[Serializable]
+	class InterDomainData :MarshalByRefObject
 	{
-		Perf.First();
-		var m = new CatMenu();
-		Perf.Next();
-		var a = new ToolStripItem[30];
-		for(int i = 0; i < a.Length; i++) a[i] = new ToolStripMenuItem("text");
-		Perf.Next();
-		m.Items.AddRange(a);
-		Perf.Next();
-		using(m.Submenu("Submenu")) {
-			m["Three"] = o => Out("three");
-			m["Four"] = o => Out("four");
+		public int _i;
+		public string _s;
+
+		public InterDomainData() { _i = 3; _s = "def"; }
+		public InterDomainData(int i, string s) { _i = i; _s = s; OutList("ctor", AppDomain.CurrentDomain.IsDefaultAppDomain()); }
+
+		public void Method()
+		{
+			//OutList("method", AppDomain.CurrentDomain.IsDefaultAppDomain());
 		}
-		Perf.Next();
-		Wait(1);
-		Perf.Next();
-		//m.Show();
-		m.Show(Mouse.X + 10, Mouse.Y + 10);
 	}
 
-	public partial class Form1 :Form
+	static void TestAssoc()
 	{
-		System.ComponentModel.IContainer components;
-		CatMenu contextMenuStrip1;
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey(".txt");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey(".cs");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("http:");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("http://hdhdhdh");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("shell:hdhdhdh");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("c:\\file.bmp");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("invalid");
+		//if(s != null) Out(s); else Out("null");
+	}
 
-		public Form1()
+	static void TestSearchPath()
+	{
+		string s = null;
+		//s = "pythonwin.exe";
+		//s = "blend.exe";
+		//s = "cmmgr32.exe";
+		//s = "excel.exe";
+		//s = "mip.exe";
+		//s = "tests.exe";
+		//s = "notepad.exe";
+		//s = "calc.exe";
+		//s = "typescript.js"; //in PATH
+		//Environment.CurrentDirectory = @"q:\app";
+		//s = "qmdd.exe";
+		//s = "csc.exe";
+		//s = @"C:\windows";
+		//s = @"C:\windows\system32\notepad.exe";
+		//s = @"%SystemRoot%\system32\notepad.exe";
+		//s = @"%SystemRoot%";
+		s = @"\\q7c\q\downloads";
+		s = @"\\q7c\q";
+		s = @"q:\";
+		s = @"q:";
+		s = ":: {jfjfjfjf}";
+		s = @"http://www.quickmacros.com";
+		s = "notepad"; //not found, its OK
+
+		var r = Files.SearchPath(s);
+		//var r =Files.SearchPath(s, @"q:\app");
+		if(r != null) Out(r); else Out("not found");
+	}
+
+	static void TestSynchronizationContext1()
+	{
+		//WindowsFormsSynchronizationContext.AutoInstall = false;
+		//Out(WindowsFormsSynchronizationContext.AutoInstall);
+
+		Out(SynchronizationContext.Current);
+		//Time.SetTimer(100, true, t =>
+		//{
+		//	Out(SynchronizationContext.Current);
+		//	Application.ExitThread();
+		//});
+		//Application.Run();
+		//var f = new Form();
+		//Out(SynchronizationContext.Current);
+		//SynchronizationContext.Current.Post(state => { OutList("posted", SynchronizationContext.Current); }, null);
+		Time.SetTimer(1, true, t => { OutList("posted", SynchronizationContext.Current); });
+		WaitMS(100);
+		//WindowsFormsSynchronizationContext.AutoInstall = false;
+		Out(1);
+		Application.DoEvents();
+		Out(2);
+		Out(SynchronizationContext.Current);
+	}
+
+	static void TestSynchronizationContext2()
+	{
+		OutList("main 1", SynchronizationContext.Current);
+		var f = new Form();
+		OutList("main 2", SynchronizationContext.Current);
+		WindowsFormsSynchronizationContext.AutoInstall = false;
+
+		var thread = new Thread(() =>
 		{
-			Perf.First();
-			this.components = new System.ComponentModel.Container();
-			this.contextMenuStrip1 = new CatMenu(this.components);
-			this.contextMenuStrip1.SuspendLayout();
-			this.SuspendLayout();
+			OutList("thread 1", SynchronizationContext.Current);
+			var ff = new Form();
+			OutList("thread 2", SynchronizationContext.Current);
+		});
+		thread.SetApartmentState(ApartmentState.STA);
+		thread.Start();
+		thread.Join();
+	}
 
-			this.contextMenuStrip1.ResumeLayout(false);
-			this.contextMenuStrip1.PerformLayout();
-			this.ResumeLayout(false);
-			this.PerformLayout();
+	//static void TestSynchronizationContext3()
+	//{
+	//	//Application.DoEvents();
+	//	//var f = new Form();
+	//	OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+	//		OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//		Application.DoEvents();
+	//		OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//	}
+	//	OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//}
 
-			this.Click += Form1_Click;
-			Perf.NextWrite();
+	#region test icons
+
+	static void TestIcons2()
+	{
+		//Out("start");
+		//WaitMS(1000);
+
+		var a = new List<string>();
+		int n = 0;
+#if true
+		foreach(var f in Directory.EnumerateFiles(@"q:\app")) {
+			//Out(f);
+			a.Add(f);
+			//if((n & 1) == 0) a.Add(f);
+			//if(++n == 30) break;
 		}
+#endif
+#if false
+		a.Add("mailto:");
+		a.Add(@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App");
+		a.Add(@"q:\app");
+		a.Add(Folders.Favorites);
+		a.Add("http://www.quickmacros.com/");
+		a.Add("::{21EC2020-3AEA-1069-A2DD-08002B30309D}");
+		a.Add(@"C:\Users\G\Desktop\QM in PF.lnk");
+#endif
+#if false
+		a.Add("q:\\app\\Cut.ico");
+		a.Add(@"Q:\Programs\ILSpy\ILSpy.exe");
+		a.Add(Folders.System + "notepad.exe");
+		a.Add("q:\\app\\Copy.ico");
+		a.Add("q:\\app\\Paste.ico");
+		a.Add("q:\\app\\Run.ico");
+		a.Add("q:\\app\\Tip.ico");
+		//a.Add("notepad.exe");
+		a.Add(Folders.ProgramFilesX86 + @"PicPick\picpick.exe");
+		a.Add(@"Q:\Programs\DebugView\Dbgview.exe");
+		a.Add(@"Q:\Programs\ProcessExplorer\procexp.exe");
+		a.Add(Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe");
+		a.Add(Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe");
+		a.Add(Folders.ProgramFilesX86 + @"FileZilla FTP Client\filezilla.exe");
+		a.Add(Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE");
+		a.Add(@"Q:\Programs\ProcessMonitor\Procmon.exe");
+		a.Add(Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe");
+		a.Add(@"Q:\programs\Autoruns\autoruns.exe");
+		//a.Add(Folders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe");
+		a.Add(@"Q:\Programs\PeView\PEview.exe");
+		a.Add(Folders.System + @"shell32.dll,25");
+#endif
 
-		private void Form1_Click(object sender, EventArgs e)
+		//Out(Api.GetCurrentThreadId());
+		var F = new Form();
+		F.Click += (unu, sed) =>
 		{
+			_n = a.Count;
 			Perf.First();
-			//var m = new CatMenu();
-			var m = contextMenuStrip1;
-			m["One"] = o => Out("one");
-			Perf.Next();
-			m["Two"] = o => Out("two");
-			for(int i = 0; i < 30; i++) m[$"More {i}"] = o => Out(o.MenuItem);
-			using(m.Submenu("Submenu")) {
-				m["Three"] = o => Out("three");
-				m["Four"] = o => Out("four");
+			foreach(var s in a) {
+				//_TestIconsSync(s);
+				_TestIconsAsync(s);
 			}
-			Perf.NextWrite();
-			m.NonModal = true;
-			//m.Show();
-			//m.Show(Mouse.X + 10, Mouse.Y + 10);
-			m.Show(this, 0, 0);
+		};
+		F.ShowDialog();
+		//Out(2);
+
+		//var m = new CatMenu();
+		//m["aaaaaaaaa"] = null;
+		//m.Show();
+		//Show.TaskDialogEx("", timeoutS: 1);
+		//new Form().ShowDialog();
+		//Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
+		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
+		//OutList("end", _n);
+	}
+
+	static Util.MessageLoop _loop2 = new Util.MessageLoop();
+
+	static int _n;
+	static Random _random = new Random();
+
+	static async void _TestIconsAsync(string s)
+	{
+		uint tid = Api.GetCurrentThreadId();
+#if true
+		var task = Task.Run(() =>
+		{
+			//OutList(Api.GetCurrentThreadId(), s);
+			//var perf = new Perf.Inst(true);
+			var R = Files.Icons.GetIconHandle(s, 16, 0);
+			//var R = Zero; WaitMS(s.Length * s.Length / 100);
+			//var R = Zero; WaitMS(_random.Next(1, 10));
+			//perf.Next(); OutList(perf.Times, s);
+			return R;
+		});
+#else
+		var task = Task.Factory.StartNew(() =>
+		{
+			//OutList(Api.GetCurrentThreadId(), s);
+			//var perf = new Perf.Inst(true);
+			var R = Files.Icons.GetIconHandle(s, 16, 0);
+			//var R = Zero; WaitMS(_random.Next(1, 10));
+			//perf.Next(); OutList(perf.Times, s);
+			return R;
+		}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
+#endif
+		await task;
+		IntPtr hi = task.Result;
+
+		//Interlocked.Decrement(ref _n);
+		_n--;
+		if(_n < 1) Perf.NW();
+		//OutList(tid, Api.GetCurrentThreadId());
+
+		if(hi == Zero) {
+			OutList("failed", s);
+			return;
+		}
+		Api.DestroyIcon(hi);
+	}
+
+	//static readonly System.Threading.Tasks.Schedulers.StaTaskScheduler _staTaskScheduler = new System.Threading.Tasks.Schedulers.StaTaskScheduler(4); //tested: without StaTaskScheduler would be 4 threads. With 3 the UI thread is slightly faster.
+
+	static void _TestIconsSync(string s)
+	{
+		//var perf = new Perf.Inst(true);
+		var hi = Files.Icons.GetIconHandle(s, 16, 0);
+		//perf.Next(); OutList(perf.Times, s);
+
+		if(--_n == 0) Perf.NW();
+
+		if(hi == Zero) {
+			OutList("failed", s);
+			return;
+		}
+		Api.DestroyIcon(hi);
+	}
+
+
+	static void TestIcons()
+	{
+		var a = new List<string>();
+		int i, n = 0;
+
+#if true
+		bool lnk = false;
+		string folder, pattern="*";
+
+		if(lnk) {
+			folder = Folders.CommonPrograms;
+			foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
+				//Out(f);
+				a.Add(f);
+				//if(++n == 30) break;
+            }
+		} else {
+			folder = @"q:\app";
+			//folder =@"q:\app\catkeys\tasks";
+			//folder = @"c:\program files (x86)";
+			//folder = @"c:\program files";
+			//folder = @"c:\programdata";
+			//folder = @"c:\users";
+			//folder = @"c:\windows";
+			folder = @"c:\windows\system32"; pattern = "*.msc";
+			//folder = @"c:\windows"; pattern = "*.scr";
+			//folder = @"c:\windows"; pattern = "*.lnk";
+			//folder = @"c:\windows"; pattern = "*.cpl";
+			//folder = @"q:\";
+
+			var oneExt = new HashSet<string>();
+			//foreach(var f in Directory.EnumerateFiles(folder)) {
+			//foreach(var f in Directory.EnumerateFileSystemEntries(folder, pattern, System.IO.SearchOption.AllDirectories)) {
+			foreach(var f in LibTest.EnumerateFiles(folder, pattern, true)) {
+				//Out(f);
+				if(pattern == "*") {
+					var ext = Path.GetExtension(f).ToLower();
+					if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
+				}
+				var s = Path.GetFileName(f);
+				//if(0 != s.Like_(true, "*.aps", "*.tss", "*.bin", "*.wal", "*.???_?*", "*.????_?*")) continue;
+				if(0 != s.RegexIs_(RegexOptions.IgnoreCase, @"\.\w+?[_\-][^\.]+$", @", PublicKeyToken", @"^(LanguageService|TextEditor|WindowManagement)", @"\bVisualStudio\b")) continue;
+				a.Add(f);
+				var k =f.RegexReplace_(@"(?i)^C:\\windows\\system32", @"C:\Users\G\Desktop\system64");
+				Out($"{s} : * {k}");
+				//if(++n == 30) break;
+			}
+		}
+#elif true
+		//a.Add(@"c:\windows\Boot\DVD\PCAT\etfsboot.com");
+		//a.Add(@"c:\windows\System32\Bubbles.scr");
+		a.Add(@"c:\test\Z.appcontent-ms");
+		a.Add(@"c:\test\Z.appref-ms");
+		a.Add(@"c:\test\Z.as");
+		a.Add(@"c:\test\Z.asa");
+		a.Add(@"c:\test\Z.asp");
+		a.Add(@"c:\test\Z.axd");
+		a.Add(@"c:\test\Z.cdx");
+		a.Add(@"c:\test\Z.cdxml");
+		a.Add(@"c:\test\Z.cfm");
+		a.Add(@"c:\test\Z.chk");
+
+		a.Add(@".appcontent-ms");
+		a.Add(@".appref-ms");
+		a.Add(@".as");
+		a.Add(@".asa");
+		a.Add(@".asp");
+		a.Add(@".axd");
+		a.Add(@".cdx");
+		a.Add(@".cdxml");
+		a.Add(@".cfm");
+		a.Add(@".chk");
+		//a.Add(@".txt");
+#else //all registered file types
+		var d = new Dictionary<string, string>();
+		string s;
+		using(var k1 = Registry_.Open(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts")) {
+			string[] sub1 = k1.GetSubKeyNames();
+			//Out(sub1);
+			foreach(var s1 in sub1) {
+				if(!Registry_.GetString(out s, "ProgId", s1 + @"\UserChoice", k1)) { /*OutList(s1, "-");*/ continue; }
+				//OutList(s1, s);
+				d.Add(s1, s);
+			}
+		}
+
+		{
+			string[] sub1 = Registry.ClassesRoot.GetSubKeyNames();
+			//Out(sub1);
+			foreach(var s1 in sub1) {
+				if(s1[0] != '.') continue;
+				if(d.ContainsKey(s1)) continue;
+				if(!Registry_.GetString(out s, "", s1, Registry.ClassesRoot)) { /*OutList(s1, "-");*/ continue; }
+				//OutList(s1, s);
+				d.Add(s1, s);
+			}
+		}
+
+		//Out(d);
+
+		foreach(var v in d) {
+			//Out($"<><Z 0x80E080>{v.Key}</Z>");
+			Out($"{v.Key} : * {v.Key}");
+			a.Add(v.Key);
+			//a.Add(v.Value+":");
+		}
+		//return;
+#endif
+
+		int size = 16;
+
+#if true
+		var m = new CatBar();
+		m.Ex.ImageScalingSize = new Size(size, size);
+
+		//m.Ex.AutoSize = false;
+		m.Ex.LayoutStyle = ToolStripLayoutStyle.Flow;
+
+		m.ItemAdded += g => { g.Margin = new Padding(4, 0, 0, 0); };
+
+		//m["cut", @"q:\app\cut.ico"] = null;
+		//m["copy", @"q:\app\copy.ico"] = null;
+		//m["paste", @"q:\app\paste.ico"] = null;
+
+		for(i = 0; i < a.Count; i++) {
+			var u = a[i];
+			m[Path.GetFileName(u), u] = null;
+		}
+
+		m.Ex.Click += (unu, sed) => _mlTb.Stop();
+        m.Visible = true;
+		//m.Visible = false; m["cut", @"q:\app\cut.ico"] = null; m.Visible = true;
+		_mlTb.Loop();
+		m.Close();
+
+#else
+		var ai = new IntPtr[a.Count];
+
+		var m = new CatMenu();
+		m.CMS.ImageScalingSize = new Size(size, size);
+
+		try {
+			Perf.First();
+			for(i = 0; i < a.Count; i++) {
+				ai[i] = Files.Icons.GetIconHandle(a[i], size);
+				//Out(ai[i]);
+			}
+			Perf.NW();
+
+			for(i = 0; i < a.Count; i++) {
+				var s = a[i];
+				m[Path.GetFileName(s), ai[i]] = null;
+			}
+		}
+		finally {
+			for(i = 0; i < ai.Length; i++) Api.DestroyIcon(ai[i]);
+		}
+
+		m.Show();
+#endif
+	}
+
+#endregion test icons
+
+	static void TestGetIconsOfAllFileTypes()
+	{
+		var d = new Dictionary<string, string>();
+		string s;
+		using(var k1 = Registry_.Open(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts")) {
+			string[] sub1 = k1.GetSubKeyNames();
+			//Out(sub1);
+			foreach(var s1 in sub1) {
+				if(!Registry_.GetString(out s, "ProgId", s1 + @"\UserChoice", k1)) { /*OutList(s1, "-");*/ continue; }
+				//OutList(s1, s);
+				d.Add(s1, s);
+			}
+		}
+
+		{
+			string[] sub1 = Registry.ClassesRoot.GetSubKeyNames();
+			//Out(sub1);
+			foreach(var s1 in sub1) {
+				if(s1[0] != '.') continue;
+				if(d.ContainsKey(s1)) continue;
+				if(!Registry_.GetString(out s, "", s1, Registry.ClassesRoot)) { /*OutList(s1, "-");*/ continue; }
+				//OutList(s1, s);
+				d.Add(s1, s);
+			}
+		}
+
+		//Out(d);
+
+		foreach(var v in d) {
+			Out($"<><Z 0x80E080>{v.Key}</Z>");
+			//var hi = Files.Icons.GetIconHandle(v.Value + ":", 16, 0);
+			var hi = Files.Icons.GetIconHandle(v.Key, 16, 0);
+
+			if(hi == Zero) {
+				OutList("<><c 0xff>", v.Key, v.Value, "</c>");
+				continue;
+			}
+
+			Api.DestroyIcon(hi);
 		}
 	}
 
-	static void TestCatMenuWithForm()
+	public static void TestPidlToString()
 	{
-		Application.Run(new Form1());
+		var a = Directory.GetFiles(@"q:\app");
+		//var a = new string[] { "http://www.quickmacros.com" };
+
+		var ai = new IntPtr[a.Length];
+		var af = new string[a.Length];
+
+		Perf.First();
+		for(int i=0; i<a.Length; i++) {
+			ai[i] = Files.Misc.PidlFromString(a[i]);
+			if(ai[i] == Zero) OutList("PidlFromString", a[i]);
+        }
+		Perf.Next();
+		for(int i=0; i<a.Length; i++) {
+			af[i] = Files.Misc.PidlToString(ai[i], Api.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING);
+			if(af[i] == null) OutList("PidlToString", a[i]);
+        }
+		Perf.NW();
+		for(int i=0; i<a.Length; i++) Marshal.FreeCoTaskMem(ai[i]);
+		Out(af);
 	}
 
-	public unsafe Test()
+	static void TestMain()
 	{
-		//Wait(1);
-		//TestCatMenu();
-		//TestCatMenuSimplest();
-		//TestCatMenuArray();
-		TestCatMenuSpeed();
-		//TestCatMenuWithForm();
+		//TestPidlToString();
 
-		#region call_old_test_functions
+		//Perf.First();
+		//WaitMS(1);
+		//Perf.Next();
+
+		//var perf = new Perf.Inst(true);
+		//perf.NW();
+
+		//WaitMS(1);
+		//Perf.NW();
+
+
+		//TestGetIconsOfAllFileTypes();
+
+
+		//WaitMS(500);
+
+		//TestMenuTB();
+
+		TestIcons();
+
+		//var f = new Form();
+		////f.Click += (unu, sed) => TestIcons();
+		//f.Load += (unu, sed) => { TestIcons(); };
+		//f.ShowDialog();
+		//f.Show(); Application.Run(f);
+		//f.Show(); WaitMS(2000); Time.SetTimer(3000, true, t => Application.ExitThread()); Application.Run();
+
+		//var m = new CatMenu();
+		//m["aaaaaaaaa"] = null;
+		//m.CMS.Opening+=(unu,sed)=> TestIcons();
+		//m.Show();
+
+		//Time.SetTimer(100, true, t => TestIcons());
+		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
+		////Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
+		//Out("exit");
+
+		//TestSynchronizationContext1();
+		//TestSynchronizationContext2();
+		//TestSynchronizationContext3();
+		//TestSearchPath();
+		//TestThreadPoolSTA();
+		//TestIcons();
+		//TestExpandPath();
+		//TestAssoc();
+		//LibTest.TestLibMemory();
+		//TestInterDomain();
+		//TestBackThreadEnd();
+
+#region call_old_test_functions
+		//LibTest.TestLockInternedString();
+		//TestThreadWaitInit();
+		//TestNativeThread();
+		//TestAsync();
+		//TestTimerThread();
+		//TestTimer();
 		//TestNewPerf();
 		//TestHash();
 		//OutFunc(); if((Time.Milliseconds&0x4)==0) TestStaticInit1(); else TestStaticInit2();
@@ -3534,39 +3986,8 @@ bbb"", b3
 		//TestCsvSerialization();
 		//TestShow();
 		//TestCurrentCulture();
-		#endregion
-	}
+#endregion
 
-	public static unsafe void TestMain()
-	{
-		Output.Clear();
-		WaitMS(100);
-
-		//TestX();
-		//TestInScriptDomain();
-		var t = new Thread(() =>
-		{
-			var domain = AppDomain.CreateDomain("Test");
-			try {
-				//domain.ExecuteAssembly(@"..\Test Projects\ScriptClass\bin\Debug\ScriptClass.exe");
-
-				//domain.DoCallBack(TestX);
-				//Out("after domain.DoCallBack");
-
-				domain.CreateInstance("CatkeysTasks", "Test");
-				//domain.CreateInstanceFrom("CatkeysTasks.exe", "Test");
-				//Out("after domain.CreateInstance");
-			}
-			finally {
-				AppDomain.Unload(domain);
-				//Out("after AppDomain.Unload(domain)");
-			}
-		}
-		);
-		t.SetApartmentState(ApartmentState.STA); //must be STA, or something will not work, eg some COM components, MSAA in TaskDialog.
-		t.Start();
-		t.Join();
-		//Show.TaskDialog("after all");
-		//Out("after all");
 	}
 }
+

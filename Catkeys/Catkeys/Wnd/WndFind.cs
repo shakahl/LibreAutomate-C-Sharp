@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.ComponentModel;
-using System.Windows.Forms;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
-//using System.IO;
-using System.Xml.Serialization;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -27,9 +28,10 @@ namespace Catkeys
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// Base of Wnd.WinProp and Wnd.ChildProp. Not used directly as _WndProp variables.
+		/// Base of Wnd.WinProp and Wnd.ChildProp.
 		/// </summary>
-		public abstract class _WndProp
+		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
+		public abstract class Base_WinProp_ChildProp
 		{
 			/// <summary>
 			/// The window must have all these styles (Api.WS_x). Reference: MSDN.
@@ -71,7 +73,7 @@ namespace Catkeys
 			/// The ChildDefinition object specifies Wnd.Child() arguments; more info there.
 			/// Alternatively use childName, childClass and/or childId.
 			/// </summary>
-			public ChildDefinition child;
+			public Wnd.ChildDefinition child;
 			/// <summary>
 			/// The window must have a child window that has this name.
 			/// This value will be passed to Wnd.Child(), together with childClass and childId.
@@ -90,9 +92,9 @@ namespace Catkeys
 			/// </summary>
 			public int childId;
 
-			internal protected POINT _xy;
+			internal POINT _xy;
 			ushort _propAtom;
-			internal ChildDefinition _child;
+			internal Wnd.ChildDefinition _child;
 
 			//info: C# does not allow this: new Wnd.WinProp() { child.Name="..", ... }
 			//TODO, when code or experience will be available:
@@ -102,7 +104,7 @@ namespace Catkeys
 			//4. consider: support string WinProp/ChildProp, eg "<prop x='5' y='5'/>" or just "x='5' y='5'"; also <prop><child name='aaa'/></prop> or just <child name='aaa'/>.
 
 
-			protected bool _Init()
+			internal bool _Init()
 			{
 				_propAtom = 0;
 				if(!Empty(propName)) {
@@ -111,7 +113,7 @@ namespace Catkeys
 				} else propName = null;
 
 				if(childName != null || childClass != null || childId != 0) {
-					_child = new ChildDefinition(childName, childClass, childId);
+					_child = new Wnd.ChildDefinition(childName, childClass, childId);
 				} else _child = child;
 
 				return true;
@@ -151,7 +153,7 @@ namespace Catkeys
 		/// <summary>
 		/// Contains various window properties to pass to Wnd.Find() 'prop' parameter.
 		/// </summary>
-		public class WinProp :_WndProp
+		public class WinProp :Base_WinProp_ChildProp
 		{
 			/// <summary>
 			/// Owner window.
@@ -203,13 +205,13 @@ namespace Catkeys
 			readonly WildStringI _className; //default wildcard, ignore case
 			readonly WildStringI _program; //default wildcard, ignore case
 			readonly WinProp _prop;
-			readonly Action<_CallbackArgs> _f;
+			readonly Action<WndCallbackArgs> _f;
 			readonly int _matchIndex;
 			readonly WinFlag _flags;
 
 			public WindowDefinition(
 				WildString name, WildStringI className = null, WildStringI program = null,
-				WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
+				WinFlag flags = 0, WinProp prop = null, Action<WndCallbackArgs> f = null, int matchIndex = 1
 				)
 			{
 				_name = name;
@@ -255,7 +257,7 @@ namespace Catkeys
 				else if(!p.Init()) return -1;
 
 				List<uint> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
-				_CallbackArgs cbArgs = null;
+				WndCallbackArgs cbArgs = null;
 				int matchInd = _matchIndex;
 
 				int index = -1;
@@ -351,7 +353,7 @@ namespace Catkeys
 					}
 
 					if(_f != null) {
-						if(cbArgs == null) cbArgs = new _CallbackArgs();
+						if(cbArgs == null) cbArgs = new WndCallbackArgs();
 						cbArgs.w = w;
 						_f(cbArgs);
 						if(!cbArgs.stop) continue;
@@ -395,7 +397,7 @@ namespace Catkeys
 		/// </remarks>
 		public static Wnd Find(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
+			WinFlag flags = 0, WinProp prop = null, Action<WndCallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			var d = new WindowDefinition(name, className, program, flags, prop, f, matchIndex);
@@ -409,7 +411,7 @@ namespace Catkeys
 		/// <seealso cref="Find"/>
 		public static Wnd FindH(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
+			WinProp prop = null, Action<WndCallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			return Find(name, className, program, WinFlag.HiddenToo, prop, f, matchIndex);
@@ -423,7 +425,7 @@ namespace Catkeys
 		/// </summary>
 		public static List<Wnd> FindAll(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null
+			WinFlag flags = 0, WinProp prop = null, Action<WndCallbackArgs> f = null
 			)
 		{
 			var a = new List<Wnd>();
@@ -458,7 +460,7 @@ namespace Catkeys
 		/// <param name="className">Class name. Full, case-insensitive. Wildcard etc not supported. Can be null to match any.</param>
 		/// <param name="fullName">Name. Full, case-insensitive. Wildcard etc not supported. Can be omitted or null to match any.</param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
-		public static Wnd FindRaw(string className, string fullName = null, Wnd wAfter=default(Wnd))
+		public static Wnd FindRaw(string className, string fullName = null, Wnd wAfter = default(Wnd))
 		{
 			return Api.FindWindowEx(Wnd0, wAfter, className, fullName);
 		}
@@ -470,7 +472,7 @@ namespace Catkeys
 		/// <summary>
 		/// Contains various control properties to pass to Wnd.Child() 'prop' parameter.
 		/// </summary>
-		public class ChildProp :_WndProp
+		public class ChildProp :Base_WinProp_ChildProp
 		{
 			/// <summary>
 			/// The programming name of the Windows Forms control.
@@ -483,7 +485,7 @@ namespace Catkeys
 			/// </summary>
 			public WildString uiName;
 
-			WindowsFormsControlNames _wfControls;
+			Misc.WindowsFormsControlNames _wfControls;
 
 			//public static implicit operator ChildProp(string s)
 			//{
@@ -507,9 +509,9 @@ namespace Catkeys
 				if(Empty(wfName)) _wfControls = null;
 				else
 					try {
-						_wfControls = new WindowsFormsControlNames(wParent);
+						_wfControls = new Misc.WindowsFormsControlNames(wParent);
 					}
-					catch(CatkeysException e) { throw new CatkeysException("Cannot get wfName of controls. Try to run as admin.", e); }
+					catch(CatException e) { throw new CatException("Cannot get wfName of controls. Try to run as admin.", e); }
 
 				return true;
 			}
@@ -550,14 +552,14 @@ namespace Catkeys
 			readonly WildString _name; //default wildcard, match case
 			readonly WildStringI _className; //default wildcard, ignore case
 			readonly ChildProp _prop;
-			readonly Action<_CallbackArgs> _f;
+			readonly Action<WndCallbackArgs> _f;
 			readonly int _matchIndex;
 			readonly int _id;
 			readonly ChildFlag _flags;
 
 			public ChildDefinition(
 				WildString name, WildStringI className = null, int id = 0,
-				ChildFlag flags = 0, ChildProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
+				ChildFlag flags = 0, ChildProp prop = null, Action<WndCallbackArgs> f = null, int matchIndex = 1
 				)
 			{
 				_name = name;
@@ -606,7 +608,7 @@ namespace Catkeys
 				if(_prop != null && !_prop.Init(wParent)) return -1;
 				try { //will need to call _prop.Clear
 
-					_CallbackArgs cbArgs = null;
+					WndCallbackArgs cbArgs = null;
 					int matchInd = _matchIndex;
 
 					bool mustBeDirectChild = publicCall && _flags.HasFlag(ChildFlag.DirectChild);
@@ -683,7 +685,7 @@ namespace Catkeys
 						}
 
 						if(_f != null) {
-							if(cbArgs == null) cbArgs = new _CallbackArgs();
+							if(cbArgs == null) cbArgs = new WndCallbackArgs();
 							cbArgs.w = c;
 							_f(cbArgs);
 							if(!cbArgs.stop) continue;
@@ -733,7 +735,7 @@ namespace Catkeys
 		/// </remarks>
 		public Wnd Child(
 			WildString name, WildStringI className = null, int id = 0,
-			ChildFlag flags = 0, ChildProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
+			ChildFlag flags = 0, ChildProp prop = null, Action<WndCallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			ValidateThrow();
@@ -748,7 +750,7 @@ namespace Catkeys
 		/// <seealso cref="Child(WildString, WildStringI, int, ChildFlag, ChildProp, Action{_CallbackArgs}, int)"/>
 		public Wnd ChildH(
 			WildString name, WildStringI className = null, int id = 0,
-			ChildProp prop = null, Action<_CallbackArgs> f = null, int matchIndex = 1
+			ChildProp prop = null, Action<WndCallbackArgs> f = null, int matchIndex = 1
 			)
 		{
 			return Child(name, className, id, ChildFlag.HiddenToo, prop, f, matchIndex);
@@ -761,7 +763,7 @@ namespace Catkeys
 		/// </summary>
 		public List<Wnd> ChildAll(
 			WildString name, WildStringI className = null, int id = 0,
-			ChildFlag flags = 0, ChildProp prop = null, Action<_CallbackArgs> f = null
+			ChildFlag flags = 0, ChildProp prop = null, Action<WndCallbackArgs> f = null
 			)
 		{
 			ValidateThrow();
@@ -835,7 +837,7 @@ namespace Catkeys
 		/// <param name="fullName">Name. Full, case-insensitive. Wildcard etc not supported. Can be omitted or null to match any.</param>
 		/// <param name="wAfter">If not Wnd0, starts searching from the next control in the Z order.</param>
 		/// <remarks>This window also can be Wnd.Misc.SpecHwnd.Message to find a message-only window.</remarks>
-		public Wnd ChildRaw(string className, string fullName = null, Wnd wAfter=default(Wnd))
+		public Wnd ChildRaw(string className, string fullName = null, Wnd wAfter = default(Wnd))
 		{
 			//ValidateThrow(); //no, it can be Message
 			return Api.FindWindowEx(this, wAfter, className, fullName);
@@ -1056,111 +1058,114 @@ namespace Catkeys
 		}
 
 		#endregion
-	}
 
-	/// <summary>
-	/// Gets programming names of Windows Forms controls.
-	/// Usually each control has a unique name. It is useful to identify controls without a classic name/text.
-	/// Control id of these controls is not constant and cannot be used.
-	/// </summary>
-	public class WindowsFormsControlNames :IDisposable
-	{
-		ProcessMemory _pm;
-		Wnd _w;
-
-		#region IDisposable Support
-
-		void _Dispose()
+		public static partial class Misc
 		{
-			if(_pm != null) { _pm.Dispose(); _pm = null; }
-		}
+			/// <summary>
+			/// Gets programming names of Windows Forms controls.
+			/// Usually each control has a unique name. It is useful to identify controls without a classic name/text.
+			/// Control id of these controls is not constant and cannot be used.
+			/// </summary>
+			public class WindowsFormsControlNames :IDisposable
+			{
+				Process_.Memory _pm;
+				Wnd _w;
 
-		~WindowsFormsControlNames() { _Dispose(); }
+				#region IDisposable Support
 
-		public void Dispose()
-		{
-			_Dispose();
-			GC.SuppressFinalize(this);
-		}
+				void _Dispose()
+				{
+					if(_pm != null) { _pm.Dispose(); _pm = null; }
+				}
 
-		#endregion
+				~WindowsFormsControlNames() { _Dispose(); }
 
-		static readonly uint WM_GETCONTROLNAME = Api.RegisterWindowMessage("WM_GETCONTROLNAME");
+				public void Dispose()
+				{
+					_Dispose();
+					GC.SuppressFinalize(this);
+				}
 
-		/// <summary>
-		/// Prepares to get control names.
-		/// </summary>
-		/// <param name="w">Any top-level or child window of that process.</param>
-		/// <exception cref="CatkeysException">Throws when cannot allocate process memory (see ProcessMemory) needed to get control names, usually because of UAC.</exception>
-		public WindowsFormsControlNames(Wnd w)
-		{
-			_pm = new ProcessMemory(w, 4096); //throws
-			_w = w;
-		}
+				#endregion
 
-		/// <summary>
-		/// Gets control name.
-		/// Returns null if fails or the name is empty.
-		/// </summary>
-		/// <param name="c">The control. Can be a top-level window too. Must be of the same process as the window specified in the constructor.</param>
-		public string GetControlName(Wnd c)
-		{
-			if(_pm == null) return null;
-			if(!IsWindowsForms(c)) return null;
-			LPARAM R;
-			if(!c.SendTimeout(10000, out R, WM_GETCONTROLNAME, 4096, _pm.Mem) || R < 1) return null;
-			return _pm.ReadUnicodeString(R);
-		}
+				static readonly uint WM_GETCONTROLNAME = Api.RegisterWindowMessage("WM_GETCONTROLNAME");
 
-		/// <summary>
-		/// Returns true if window class name starts with "WindowsForms".
-		/// Usually it means that we can get Windows Forms control name of w and its child controls.
-		/// </summary>
-		/// <param name="w">The window. Can be top-level or control.</param>
-		public static bool IsWindowsForms(Wnd w)
-		{
-			return w.ClassNameIs(_cn);
-		}
-		static WildStringI _cn = new WildStringI("WindowsForms*");
+				/// <summary>
+				/// Prepares to get control names.
+				/// </summary>
+				/// <param name="w">Any top-level or child window of that process.</param>
+				/// <exception cref="CatkeysException">Throws when cannot allocate process memory (see Process_.Memory) needed to get control names, usually because of UAC.</exception>
+				public WindowsFormsControlNames(Wnd w)
+				{
+					_pm = new Process_.Memory(w, 4096); //throws
+					_w = w;
+				}
 
-		/// <summary>
-		/// Gets programming name of a Windows Forms control.
-		/// Returns null if it is not a Windows Forms control or if fails.
-		/// </summary>
-		/// <param name="c">The control. Can be top-level window too.</param>
-		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WindowsFormsControlNames instance (once) and call GetControlName on it (for each control), it will be faster.</remarks>
-		public static string CachedGetControlName(Wnd c)
-		{
-			if(!IsWindowsForms(c)) return null;
-			try {
-				using(var x = new WindowsFormsControlNames(c)) { return x.GetControlName(c); }
+				/// <summary>
+				/// Gets control name.
+				/// Returns null if fails or the name is empty.
+				/// </summary>
+				/// <param name="c">The control. Can be a top-level window too. Must be of the same process as the window specified in the constructor.</param>
+				public string GetControlName(Wnd c)
+				{
+					if(_pm == null) return null;
+					if(!IsWindowsForms(c)) return null;
+					LPARAM R;
+					if(!c.SendTimeout(10000, out R, WM_GETCONTROLNAME, 4096, _pm.Mem) || R < 1) return null;
+					return _pm.ReadUnicodeString(R);
+				}
+
+				/// <summary>
+				/// Returns true if window class name starts with "WindowsForms".
+				/// Usually it means that we can get Windows Forms control name of w and its child controls.
+				/// </summary>
+				/// <param name="w">The window. Can be top-level or control.</param>
+				public static bool IsWindowsForms(Wnd w)
+				{
+					return w.ClassNameIs(_cn);
+				}
+				static WildStringI _cn = new WildStringI("WindowsForms*");
+
+				/// <summary>
+				/// Gets programming name of a Windows Forms control.
+				/// Returns null if it is not a Windows Forms control or if fails.
+				/// </summary>
+				/// <param name="c">The control. Can be top-level window too.</param>
+				/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WindowsFormsControlNames instance (once) and call GetControlName on it (for each control), it will be faster.</remarks>
+				public static string CachedGetControlName(Wnd c)
+				{
+					if(!IsWindowsForms(c)) return null;
+					try {
+						using(var x = new WindowsFormsControlNames(c)) { return x.GetControlName(c); }
+					}
+					catch { }
+					return null;
+				}
+
+				//Don't use this cached version, it does not make significantly faster. Also, keeping process handle in such a way is not good, would need to use other thread to close it after some time.
+				///// <summary>
+				///// Gets programming name of a Windows Forms control.
+				///// Returns null if it is not a Windows Forms control or if fails.
+				///// </summary>
+				///// <param name="c">The control. Can be top-level window too.</param>
+				///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WindowsFormsControlNames instance each time and calling GetControlName on it, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
+				//public static string CachedGetControlName(Wnd c)
+				//{
+				//	if(!IsWindowsForms(c)) return null;
+				//	uint pid = c.ProcessId; if(pid == 0) return null;
+				//	lock (_prevLock) {
+				//		if(pid != _prevPID || Time.Milliseconds - _prevTime > 1000) {
+				//			if(_prev != null) { _prev.Dispose(); _prev = null; }
+				//			try { _prev = new WindowsFormsControlNames(c); } catch { }
+				//			//Out("new");
+				//		} //else Out("cached");
+				//		_prevPID = pid; _prevTime = Time.Milliseconds;
+				//		if(_prev == null) return null;
+				//		return _prev.GetControlName(c);
+				//	}
+				//}
+				//static WindowsFormsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache
 			}
-			catch { }
-			return null;
 		}
-
-		//Don't use this cached version, it does not make significantly faster. Also, keeping process handle in such a way is not good, would need to use other thread to close it after some time.
-		///// <summary>
-		///// Gets programming name of a Windows Forms control.
-		///// Returns null if it is not a Windows Forms control or if fails.
-		///// </summary>
-		///// <param name="c">The control. Can be top-level window too.</param>
-		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating WindowsFormsControlNames instance each time and calling GetControlName on it, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
-		//public static string CachedGetControlName(Wnd c)
-		//{
-		//	if(!IsWindowsForms(c)) return null;
-		//	uint pid = c.ProcessId; if(pid == 0) return null;
-		//	lock (_prevLock) {
-		//		if(pid != _prevPID || Time.Milliseconds - _prevTime > 1000) {
-		//			if(_prev != null) { _prev.Dispose(); _prev = null; }
-		//			try { _prev = new WindowsFormsControlNames(c); } catch { }
-		//			//Out("new");
-		//		} //else Out("cached");
-		//		_prevPID = pid; _prevTime = Time.Milliseconds;
-		//		if(_prev == null) return null;
-		//		return _prev.GetControlName(c);
-		//	}
-		//}
-		//static WindowsFormsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache
 	}
 }

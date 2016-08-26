@@ -5,15 +5,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.ComponentModel;
-using System.Windows.Forms;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
-//using System.IO;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -361,9 +363,9 @@ namespace Catkeys
 		/// <remarks>
 		/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to get such windows you can use Wnd.FindRaw().
 		/// </remarks>
-		public static void AllWindows(Action<_CallbackArgs> f, WildStringI className = null, bool onlyVisible = false)
+		public static void AllWindows(Action<WndCallbackArgs> f, WildStringI className = null, bool onlyVisible = false)
 		{
-			var e = new _CallbackArgs();
+			var e = new WndCallbackArgs();
 
 			Api.EnumWindows((w, param) =>
 			{
@@ -454,9 +456,9 @@ namespace Catkeys
 		/// <param name="className">If not null/""/"*", gets only controls of this class. String by default is interpreted as wildcard, case-insensitive.</param>
 		/// <param name="directChild">Need only direct children, not grandchildren.</param>
 		/// <param name="onlyVisible">Need only visible controls.</param>
-		public void ChildAllRaw(Action<_CallbackArgs> f, WildStringI className = null, bool directChild = false, bool onlyVisible = false)
+		public void ChildAllRaw(Action<WndCallbackArgs> f, WildStringI className = null, bool directChild = false, bool onlyVisible = false)
 		{
-			var e = new _CallbackArgs();
+			var e = new WndCallbackArgs();
 			Wnd w = this;
 
 			Api.EnumChildWindows(this, (c, param) =>
@@ -526,9 +528,9 @@ namespace Catkeys
 		/// <param name="f">Lambda etc callback function to call for each matching window. Example: <c>e =˃ { Out(e.w); if(e.w.Name=="Find") e.Stop(); }</c></param>
 		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
 		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
-		public static void MainWindows(Action<_CallbackArgs> f, bool allDesktops = false)
+		public static void MainWindows(Action<WndCallbackArgs> f, bool allDesktops = false)
 		{
-			var e = new _CallbackArgs();
+			var e = new WndCallbackArgs();
 
 			for(Wnd w = Wnd0; ;) {
 				w = Get.NextMainWindow(w, allDesktops: allDesktops);
@@ -541,11 +543,11 @@ namespace Catkeys
 		#endregion
 
 		/// <summary>
-		/// Wnd 'find' and 'list' functions pass a _CallbackArgs variable to a delegate that they call for each matching window/control.
+		/// Wnd 'find' and 'list' functions pass a WndCallbackArgs variable to a delegate that they call for each matching window/control.
 		/// Contains current window/control handle as Wnd.
 		/// Has a method to stop calling the delegate and return.
 		/// </summary>
-		public class _CallbackArgs
+		public class WndCallbackArgs
 		{
 			public Wnd w;
 			internal bool stop;
@@ -553,4 +555,8 @@ namespace Catkeys
 			public void Stop() { stop = true; }
 		}
 	}
+}
+
+namespace Catkeys.Infrastructure
+{
 }

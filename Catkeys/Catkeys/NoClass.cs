@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-//using System.Linq;
-using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
-//using System.Windows.Forms;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
@@ -61,11 +64,16 @@ namespace Catkeys
 		public static void OutList(params object[] values) { Output.WriteList(values); }
 		public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
 		public static void OutHex<T>(T value) { Output.WriteHex(value); }
+
 		/// <summary>
-		/// Out() that is removed in Release config, ie if DEBUG is not defined.
+		/// Out() that works only in Debug config, ie if DEBUG is defined.
+		/// In Release config the function call statement is removed, and arguments not evalueted.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void OutDebug(string value) { Output.Write(value); }
+		public static void OutDebug(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		{
+			Output.Write($"Debug: {cmn} ({Path.GetFileName(cp)}:{cln}):  {value}");
+		}
 
 		/// <summary>
 		/// Alias of Output.Write and Out.
@@ -79,11 +87,16 @@ namespace Catkeys
 		public static void PrintList(params object[] values) { Output.WriteList(values); }
 		public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
 		public static void PrintHex<T>(T value) { Output.WriteHex(value); }
+
 		/// <summary>
-		/// Print() that is removed in Release config, ie if DEBUG is not defined.
+		/// Print() that works only in Debug config, ie if DEBUG is defined.
+		/// In Release config the function call statement is removed, and arguments not evalueted.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintDebug(string value) { Output.Write(value); }
+		public static void PrintDebug(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		{
+			Output.Write($"Debug: {cmn} ({Path.GetFileName(cp)}:{cln}):  {value}");
+		}
 
 		/// <summary>
 		/// Gets function name.
@@ -97,7 +110,7 @@ namespace Catkeys
 		/// Returns true if the string is null or "".
 		/// The same as string.IsNullOrEmpty.
 		/// </summary>
-		public static bool Empty(string s) { return string.IsNullOrEmpty(s); }
+		public static bool Empty(string s) { return s == null || s.Length == 0; }
 
 		static readonly uint _winver = _GetWinVersion();
 		static uint _GetWinVersion()
@@ -106,7 +119,8 @@ namespace Catkeys
 			try {
 				if(0 == RtlGetVersion(ref x)) return Calc.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
 				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
-			} catch { }
+			}
+			catch { }
 			Debug.Fail("RtlGetVersion");
 
 			var v = Environment.OSVersion.Version;

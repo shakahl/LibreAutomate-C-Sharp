@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
-//using System.IO;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
 using System.Windows.Forms;
-using static System.Math;
 using System.Drawing;
+//using System.Linq;
+using static System.Math;
 
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
@@ -49,6 +51,7 @@ namespace Catkeys
 	///		Some of them work slightly differently with windows of current thread.
 	///		There are several functions that work only with windows of current thread, and it is documented in function help.
 	/// </remarks>
+	[Serializable]
 	public partial struct Wnd :IWin32Window
 	{
 		IntPtr _h;
@@ -104,7 +107,8 @@ namespace Catkeys
 
 		public override int GetHashCode()
 		{
-			return _h.GetHashCode();
+			return (int)_h; //window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables
+			//return _h.GetHashCode();
 		}
 
 		/// <summary>
@@ -120,9 +124,18 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Implements IWin32Window.Handle.
+		/// Implements IWin32Window.
 		/// </summary>
 		public IntPtr Handle { get { return _h; } }
+
+		//not useful. Required eg for SortedList, but better use Dictionary. We'll never need a sorted list of window handles.
+		///// <summary>
+		///// Implements IComparable<Wnd>.
+		///// </summary>
+		//public int CompareTo(Wnd other)
+		//{
+		//	return (int)_h-(int)other._h;
+		//}
 
 		#endregion
 
@@ -272,8 +285,8 @@ namespace Catkeys
 		/// </summary>
 		public void ValidateThrow()
 		{
-			if(Is0) throw new CatkeysException(_errStr_Handle0);
-			if(!IsValid) throw new CatkeysException(_errStr_HandleInvalid);
+			if(Is0) throw new CatException(_errStr_Handle0);
+			if(!IsValid) throw new CatException(_errStr_HandleInvalid);
 		}
 
 		/// <summary>
@@ -282,11 +295,11 @@ namespace Catkeys
 		public bool Validate(bool throwException)
 		{
 			if(Is0) {
-				if(throwException) throw new CatkeysException(_errStr_Handle0);
+				if(throwException) throw new CatException(_errStr_Handle0);
 				return ThreadError.Set(_errStr_Handle0);
 			}
 			if(!IsValid) {
-				if(throwException) throw new CatkeysException(_errStr_HandleInvalid);
+				if(throwException) throw new CatException(_errStr_HandleInvalid);
 				return ThreadError.Set(_errStr_HandleInvalid);
 			}
 			return true;
@@ -410,7 +423,7 @@ namespace Catkeys
 		/// <summary>
 		/// Can be used with Wnd.ShowMinimized() and similar functions.
 		/// </summary>
-		public enum _MinMaxMethod
+		public enum HowMinMax
 		{
 			/// <summary>
 			/// Use LikeUser or LikeProgrammer, depending on window style. In most cases LikeUser.
@@ -434,7 +447,7 @@ namespace Catkeys
 		/// If not minimized, minimizes.
 		/// Also unhides.
 		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowMinimized(_MinMaxMethod.Auto, true, true).
+		/// Calls ShowMinimized(HowMinMax.Auto, true, true).
 		/// </summary>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -442,7 +455,7 @@ namespace Catkeys
 		/// </exception>
 		public void ShowMinimized()
 		{
-			ShowMinimized(_MinMaxMethod.Auto, true, true);
+			ShowMinimized(HowMinMax.Auto, true, true);
 		}
 
 		/// <summary>
@@ -451,23 +464,23 @@ namespace Catkeys
 		/// Returns true if successful or if the window was already in that state.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="method">How.</param>
+		/// <param name="how">How to minimize.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
 		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowMinimized(_MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowMinimized(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
 		{
-			return _MinMaxRes(Api.SW_MINIMIZE, method, validateThrow, applyAutodelay);
+			return _MinMaxRes(Api.SW_MINIMIZE, how, validateThrow, applyAutodelay);
 		}
 
 		/// <summary>
 		/// If not maximized, maximizes.
 		/// Also unhides.
 		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowMaximized(_MinMaxMethod.Auto, true, true).
+		/// Calls ShowMaximized(HowMinMax.Auto, true, true).
 		/// </summary>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -475,7 +488,7 @@ namespace Catkeys
 		/// </exception>
 		public void ShowMaximized()
 		{
-			ShowMaximized(_MinMaxMethod.Auto, true, true);
+			ShowMaximized(HowMinMax.Auto, true, true);
 		}
 
 		/// <summary>
@@ -484,23 +497,23 @@ namespace Catkeys
 		/// Returns true if successful or if the window was already in that state.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="method">How.</param>
+		/// <param name="how">How to maximize.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
 		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowMaximized(_MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowMaximized(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
 		{
-			return _MinMaxRes(Api.SW_SHOWMAXIMIZED, method, validateThrow, applyAutodelay);
+			return _MinMaxRes(Api.SW_SHOWMAXIMIZED, how, validateThrow, applyAutodelay);
 		}
 
 		/// <summary>
 		/// If maximized or minimized, makes normal (not min/max).
 		/// Also unhides.
 		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowNotMinMax(_MinMaxMethod.Auto, true, true).
+		/// Calls ShowNotMinMax(HowMinMax.Auto, true, true).
 		/// </summary>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -508,7 +521,7 @@ namespace Catkeys
 		/// </exception>
 		public void ShowNotMinMax()
 		{
-			ShowNotMinMax(_MinMaxMethod.Auto, true, true);
+			ShowNotMinMax(HowMinMax.Auto, true, true);
 		}
 
 		/// <summary>
@@ -517,23 +530,23 @@ namespace Catkeys
 		/// Returns true if successful or if the window was already in that state.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="method">How.</param>
+		/// <param name="how">How to make normal.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
 		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowNotMinMax(_MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowNotMinMax(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
 		{
-			return _MinMaxRes(Api.SW_SHOWNORMAL, method, validateThrow, applyAutodelay);
+			return _MinMaxRes(Api.SW_SHOWNORMAL, how, validateThrow, applyAutodelay);
 		}
 
 		/// <summary>
 		/// If minimized, restores previous non-minimized state (maximized or normal).
 		/// Also unhides.
 		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowNotMinimized(_MinMaxMethod.Auto, true, true).
+		/// Calls ShowNotMinimized(HowMinMax.Auto, true, true).
 		/// </summary>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
@@ -541,7 +554,7 @@ namespace Catkeys
 		/// </exception>
 		public void ShowNotMinimized()
 		{
-			ShowNotMinimized(_MinMaxMethod.Auto, true, true);
+			ShowNotMinimized(HowMinMax.Auto, true, true);
 		}
 
 		/// <summary>
@@ -550,16 +563,16 @@ namespace Catkeys
 		/// Returns true if successful or if the window was already in that state.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="method">How.</param>
+		/// <param name="how">How to restore.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
 		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
 		/// <exception cref="CatkeysException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowNotMinimized(_MinMaxMethod method, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowNotMinimized(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
 		{
-			return _MinMaxRes(Api.SW_RESTORE, method, validateThrow, applyAutodelay);
+			return _MinMaxRes(Api.SW_RESTORE, how, validateThrow, applyAutodelay);
 		}
 
 		/// <summary>
@@ -568,8 +581,8 @@ namespace Catkeys
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="state">Must be Api.SW_MINIMIZE, Api.SW_RESTORE (restores to normal/max if minimized), Api.SW_SHOWNORMAL or Api.SW_SHOWMAXIMIZED.</param>
-		/// <param name="m">Use WM_SYSCOMMAND, Api.ShowWindow() (animated) or Api.SetWindowPlacement() (no animation).</param>
-		bool _MinMaxRes(int state, _MinMaxMethod m, bool validateThrow, bool applyAutodelay)
+		/// <param name="how">Use WM_SYSCOMMAND, Api.ShowWindow() (animated) or Api.SetWindowPlacement() (no animation).</param>
+		bool _MinMaxRes(int state, HowMinMax how, bool validateThrow, bool applyAutodelay)
 		{
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 
@@ -598,11 +611,11 @@ namespace Catkeys
 				ok = _Show(true) || ThreadError.SetWinError();
 			} else {
 				g1:
-				switch(m) {
-				case _MinMaxMethod.NoAnimation:
+				switch(how) {
+				case HowMinMax.NoAnimation:
 					fast = true;
 					break;
-				case _MinMaxMethod.Auto: //Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
+				case HowMinMax.Auto: //Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
 					uint style = Style;
 					switch(state) {
 					case Api.SW_MINIMIZE: if((style & Api.WS_MINIMIZEBOX) != 0) cmd = Api.SC_MINIMIZE; break;
@@ -610,7 +623,7 @@ namespace Catkeys
 					default: if((style & (Api.WS_MAXIMIZEBOX | Api.WS_MAXIMIZEBOX)) != 0) cmd = Api.SC_RESTORE; break;
 					}
 					break;
-				case _MinMaxMethod.LikeUser:
+				case HowMinMax.LikeUser:
 					switch(state) {
 					case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
 					case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
@@ -645,13 +658,13 @@ namespace Catkeys
 						ok = Api.ShowWindow(this, state) || ThreadError.SetWinError();
 					}
 
-					if(!ok && ThreadError.WinErrorCode == Api.ERROR_ACCESS_DENIED) { m = _MinMaxMethod.LikeUser; goto g1; } //UAC blocks the API but not the message
+					if(!ok && ThreadError.WinErrorCode == Api.ERROR_ACCESS_DENIED) { how = HowMinMax.LikeUser; goto g1; } //UAC blocks the API but not the message
 				}
 
 				if(ok) _SetStateActivateWait(state, wasMinimized);
 			}
 
-			if(ok) { if(applyAutodelay) Time.AutoDelay(this); } else if(validateThrow) throw new CatkeysException();
+			if(ok) { if(applyAutodelay) Time.AutoDelay(this); } else if(validateThrow) throw new CatException();
 
 			return ok;
 		}
@@ -691,7 +704,7 @@ namespace Catkeys
 		//public bool MinimizeAndHide()
 		//{
 		//	if(IsMinimized && !Visible) return true; //because ShowMinimized() unhides
-		//	return ShowMinimized(_MinMaxMethod.NoAnimation) && _Show(false);
+		//	return ShowMinimized(HowMinMax.NoAnimation) && _Show(false);
 		//}
 
 		#endregion
@@ -724,7 +737,7 @@ namespace Catkeys
 		///		1. If this is a control, activates its top-level parent window.
 		///		2. If this is Wnd.Get.DesktopWindow, just deactivates the currently active window.
 		///		3. When the target application instead activates another window of the same thread.
-		/// This overload just calls Activate(_ActivateFlags.CanThrow).
+		/// This overload just calls Activate(HowActivate.CanThrow).
 		/// </remarks>
 		/// <seealso cref="ActivateRaw"/>
 		/// <seealso cref="IsActive"/>
@@ -733,14 +746,14 @@ namespace Catkeys
 		/// <seealso cref="Activate(_ActivateFlags)"/>
 		public void Activate()
 		{
-			Activate(_ActivateFlags.CanThrow);
+			Activate(HowActivate.CanThrow);
 		}
 
 		/// <summary>
 		/// Flags for the Wnd.Activate() overload that accepts flags.
 		/// </summary>
 		[Flags]
-		public enum _ActivateFlags
+		public enum HowActivate
 		{
 			/// <summary>
 			/// Throw exception if invalid window or if fails to activate. Without this flag then sets thread error and returns false.
@@ -766,11 +779,11 @@ namespace Catkeys
 		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
 		/// Everything is the same as with other overload, except that this overload has a 'flags' parameter and by default returns false if failed (does not throw exception).
 		/// </summary>
-		public bool Activate(_ActivateFlags flags)
+		public bool Activate(HowActivate flags)
 		{
-			bool canThrow = flags.HasFlag(_ActivateFlags.CanThrow);
+			bool canThrow = flags.HasFlag(HowActivate.CanThrow);
 			if(!Validate(canThrow)) return false;
-			if(!flags.HasFlag(_ActivateFlags.DontCheckIsControl) && IsChildWindow) return ToplevelParentOrThis.Activate(flags | _ActivateFlags.DontCheckIsControl);
+			if(!flags.HasFlag(HowActivate.DontCheckIsControl) && IsChildWindow) return ToplevelParentOrThis.Activate(flags | HowActivate.DontCheckIsControl);
 
 			bool ofThisThread = IsOfThisThread;
 
@@ -783,7 +796,7 @@ namespace Catkeys
 			bool R = IsActive, noAct = false;
 
 			if(!R) {
-				if(flags.HasFlag(_ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
+				if(flags.HasFlag(HowActivate.IgnoreIfNoActivateStyleEtc)) {
 					uint est = ExStyle;
 					if((est & Api.WS_EX_NOACTIVATE) != 0) noAct = true;
 					else if((est & (Api.WS_EX_TOOLWINDOW | Api.WS_EX_APPWINDOW)) == Api.WS_EX_TOOLWINDOW) noAct = !HasStyle(Api.WS_CAPTION);
@@ -794,13 +807,13 @@ namespace Catkeys
 					bool ok = ActivateRaw();
 
 					if(!ofThisThread) {
-						int speed = flags.HasFlag(_ActivateFlags.Faster) ? 0 : Script.Speed;
+						int speed = flags.HasFlag(HowActivate.Faster) ? 0 : Script.Speed;
 						for(int j = 0; j < 5; j++) {
 							//Out(ActiveWindow);
 							WaitMS(speed / 5 + 2);
 							//Perf.First();
 							SendTimeout(200, 0);
-							//Perf.NextWrite();
+							//Perf.NW();
 						}
 					}
 
@@ -877,7 +890,7 @@ namespace Catkeys
 		{
 			Wnd wa = ActiveWindow;
 			Wnd w = Get.NextMainWindow(wa, retryFromTop: true, skipMinimized: skipMinimized, likeAltTab: true);
-			if(w.Is0 || w == wa || !w.Activate(_ActivateFlags.DontCheckIsControl)) return Wnd0; //does not throw
+			if(w.Is0 || w == wa || !w.Activate(HowActivate.DontCheckIsControl)) return Wnd0; //does not throw
 			return w;
 
 			//TODO: when all minimized (eg after ShowDesktop), activates wrong window.
@@ -1016,7 +1029,7 @@ namespace Catkeys
 		{
 			ValidateThrow();
 			Wnd wTL = ToplevelParentOrThis;
-			if(wTL != Api.GetForegroundWindow()) wTL.Activate(_ActivateFlags.CanThrow | _ActivateFlags.DontCheckIsControl);
+			if(wTL != Api.GetForegroundWindow()) wTL.Activate(HowActivate.CanThrow | HowActivate.DontCheckIsControl);
 
 			uint th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
@@ -1036,7 +1049,7 @@ namespace Catkeys
 				}
 				finally { Api.AttachThreadInput(th1, th2, false); }
 
-			if(!ok) throw new CatkeysException("Failed to set focus.");
+			if(!ok) throw new CatException("Failed to set focus.");
 
 			Time.AutoDelay(this);
 
@@ -1650,7 +1663,7 @@ namespace Catkeys
 
 			//restore min/max, except if child or hidden
 			if(w.Is0 && (IsMinimized || IsMaximized) && Visible) {
-				ShowNotMinMax(_MinMaxMethod.NoAnimation);
+				ShowNotMinMax(HowMinMax.NoAnimation);
 				//info: '&& Visible' because ShowNotMinMax unhides
 			}
 
@@ -1839,7 +1852,7 @@ namespace Catkeys
 		/// <seealso cref="Wnd.Misc.RectMoveInScreen"/>
 		public bool MoveToScreenCenter(object screen = null, bool workArea = true)
 		{
-			return ShowNotMinMax(_MinMaxMethod.NoAnimation) && MoveInScreen(0, 0, screen, workArea);
+			return ShowNotMinMax(HowMinMax.NoAnimation) && MoveInScreen(0, 0, screen, workArea);
 		}
 
 		public static partial class Misc
@@ -2368,8 +2381,8 @@ namespace Catkeys
 			get
 			{
 				//with this is faster when don't need other code, but possibly less reliable, and without this is fast enough
-				//if(UacInfo.IsUacDisabled) return false;
-				//var t = UacInfo.ThisProcess;
+				//if(Process_.UacInfo.IsUacDisabled) return false;
+				//var t = Process_.UacInfo.ThisProcess;
 				//if(t.IsUIAccess) return false;
 
 				Api.SetLastError(0);
@@ -2381,36 +2394,36 @@ namespace Catkeys
 		//{
 		//	get
 		//	{
-		//		if(UacInfo.IsUacDisabled) return false;
-		//		var t = UacInfo.ThisProcess;
+		//		if(Process_.UacInfo.IsUacDisabled) return false;
+		//		var t = Process_.UacInfo.ThisProcess;
 		//		if(t.IsUIAccess) return false;
-		//		var u = UacInfo.GetOfProcess(ProcessId); if(u == null) return true;
+		//		var u = Process_.UacInfo.GetOfProcess(ProcessId); if(u == null) return true;
 		//		if(t.IntegrityLevel < u.IntegrityLevel) return true;
 		//		return false;
 		//	}
 		//}
 
-		//These are not useful. Use IsAccessDenied or class UacInfo.
+		//These are not useful. Use IsAccessDenied or class Process_.UacInfo.
 		///// <summary>
 		///// Gets UAC integrity level of window's process.
 		///// Returns IL.Unknown if fails.
 		///// This function considers UIAccess equal to High.
-		///// See also: class UacInfo.
+		///// See also: class Process_.UacInfo.
 		///// </summary>
-		//public UacInfo.IL UacIntegrityLevel
+		//public Process_.UacInfo.IL UacIntegrityLevel
 		//{
-		//	get { var p = UacInfo.GetOfProcess(ProcessId); return p == null ? UacInfo.IL.Unknown : p.IntegrityLevel; }
+		//	get { var p = Process_.UacInfo.GetOfProcess(ProcessId); return p == null ? UacInfo.IL.Unknown : p.IntegrityLevel; }
 		//}
 
 		///// <summary>
 		///// Returns true if window's process has higher UAC integrity level (IL) than current process.
 		///// Returns true if fails to open process handle, which usually means that the process has higher integrity level.
 		///// This function considers UIAccess equal to High.
-		///// See also: class UacInfo.
+		///// See also: class Process_.UacInfo.
 		///// </summary>
 		//public bool UacIntegrityLevelIsHigher
 		//{
-		//	get { return UacIntegrityLevel > UacInfo.ThisProcess.IntegrityLevel; }
+		//	get { return UacIntegrityLevel > Process_.UacInfo.ThisProcess.IntegrityLevel; }
 		//}
 
 		#endregion
@@ -2698,7 +2711,7 @@ namespace Catkeys
 		/// </summary>
 		public static void CloseAll(
 			WildString name, WildStringI className = null, WildStringI program = null,
-			WinFlag flags = 0, WinProp prop = null, Action<_CallbackArgs> f = null
+			WinFlag flags = 0, WinProp prop = null, Action<WndCallbackArgs> f = null
 			)
 		{
 			foreach(Wnd w in FindAll(name, className, program, flags, prop, f)) w.Close();
@@ -2714,7 +2727,7 @@ namespace Catkeys
 		{
 			if(Api.DestroyWindow(this)) { _h = Zero; return true; }
 			uint tid = ThreadId;
-			if(tid != 0 && tid != Api.GetCurrentThreadId()) throw new CatkeysException("Window of other thread. Use Close.");
+			if(tid != 0 && tid != Api.GetCurrentThreadId()) throw new CatException("Window of other thread. Use Close.");
 			return false;
 		}
 

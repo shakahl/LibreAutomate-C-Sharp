@@ -16,22 +16,24 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Tasks\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <CodeAnalysisRuleSet>..\MinimumRecommendedRules - copy.ruleset</CodeAnalysisRuleSet>
+    <NoWarn>3001,3002,3003,3009</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\Tasks\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3001,3002,3003,3009</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -53,6 +55,12 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
@@ -69,10 +77,13 @@
   <ItemGroup>
     <Compile Include="Automation\Input.cs" />
     <Compile Include="Automation\NoClass.cs" />
+    <Compile Include="Catkeys\Api\Api COM.cs" />
     <Compile Include="Catkeys\Calc.cs" />
     <Compile Include="Catkeys\Classes.cs" />
     <Compile Include="Catkeys\Exceptions.cs" />
     <Compile Include="Catkeys\Folders.cs" />
+    <Compile Include="Catkeys\Menu, TB\CatBar.cs" />
+    <Compile Include="Catkeys\Menu, TB\CatMenu.cs" />
     <Compile Include="Catkeys\Mouse.cs" />
     <Compile Include="Catkeys\NetExt.cs" />
     <Compile Include="Catkeys\NoClass.cs" />
@@ -88,15 +99,22 @@
     <Compile Include="Catkeys\Wnd\WndMics.cs" />
     <Compile Include="Catkeys\Wnd\WndUtil.cs" />
     <Compile Include="Catkeys\Files.cs" />
+    <Compile Include="Test, rejected\_LibTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Catkeys\Script.cs" />
     <Compile Include="Catkeys\String\String_.cs" />
     <Compile Include="Catkeys\Perf.cs" />
     <Compile Include="Catkeys\Api\Api const.cs" />
+    <Compile Include="Test, rejected\StaTaskScheduler.cs" />
     <Compile Include="Util\Util.cs" />
     <Compile Include="Catkeys\Api\Api.cs" />
+    <Compile Include="Util\Workarounds.cs" />
+    <None Include="Test, rejected\_Rejected.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="CatkeysSN.pfx" />
+    <None Include="digicert.p12" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

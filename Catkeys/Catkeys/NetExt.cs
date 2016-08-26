@@ -9,16 +9,18 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.ComponentModel;
-using System.Windows.Forms;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
-//using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
-//using System.IO;
+using System.Reflection;
 using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
+using System.Security; //for XML comments
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -228,34 +230,91 @@ namespace Catkeys
 			return R;
 		}
 
-		static RegistryKey _Open(string key, bool create)
+		static RegistryKey _Open(bool create, string key, RegistryKey parentKeyOrHive)
 		{
-			RegistryKey hive = ParseKeyString(ref key);
-			RegistryKey k = create ? hive.CreateSubKey(key) : hive.OpenSubKey(key);
-			if(k == null) {
-				string sc = create ? " or create" : "";
-				throw new CatkeysException($"Failed to open{sc} registry key \"{hive.Name}\\{key}\".");
+			if(parentKeyOrHive == null) parentKeyOrHive = ParseKeyString(ref key);
+			if(Empty(key)) return parentKeyOrHive;
+			RegistryKey k = null;
+			try {
+				k = create ? parentKeyOrHive.CreateSubKey(key) : parentKeyOrHive.OpenSubKey(key);
+				if(k == null) ThreadError.Set("Failed");
 			}
+			catch(Exception e) { ThreadError.SetException(e); }
 			return k;
 		}
 
 		/// <summary>
-		/// Sets value of REG_DWORD type.
-		/// Creates key and value if don't exist.
-		/// Supports ThreadError.
-		/// If fails, sets thread error and returns false.
+		/// Retrieves a key as read-only.
+		/// Uses <see cref="RegistryKey.OpenSubKey"/>.
+		/// Supports ThreadError. If fails, sets thread error and returns null.
 		/// </summary>
-		/// <param name="data">Data.</param>
-		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool SetInt(int data, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", the function just returns parentKeyOrHive.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static RegistryKey Open(string key, RegistryKey parentKeyOrHive = null)
 		{
+			return _Open(false, key, parentKeyOrHive);
+		}
+
+		/// <summary>
+		/// Creates a new key or opens an existing key for write access.
+		/// Uses <see cref="RegistryKey.CreateSubKey"/>.
+		/// Supports ThreadError. If fails, sets thread error and returns null.
+		/// </summary>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", the function just returns parentKeyOrHive.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static RegistryKey CreateOrOpen(string key, RegistryKey parentKeyOrHive = null)
+		{
+			return _Open(true, key, parentKeyOrHive);
+		}
+
+		/// <summary>
+		/// Returns true if key exists and this process can open it to read.
+		/// Uses <see cref="RegistryKey.OpenSubKey"/>.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool KeyExists(string key, RegistryKey parentKeyOrHive = null)
+		{
+			var k = Open(key, parentKeyOrHive);
+			if(k == null) return false;
+			if(k != parentKeyOrHive) k.Dispose();
+			return true;
+		}
+
+		enum _ResultType { Int, Long, String, StringArray }
+
+		struct _Result
+		{
+			internal int rInt;
+			internal long rLong;
+			internal string rString;
+			internal string[] rStringArray;
+		}
+
+		static bool _Get(_ResultType type, out _Result r, string valueName, string key, RegistryKey parentKeyOrHive)
+		{
+			r = new _Result();
+			var k = Open(key, parentKeyOrHive);
+			if(k == null) return false;
 			try {
-				using(var k = _Open(key, true)) {
-					k.SetValue(valueName, data, RegistryValueKind.DWord);
+				object t = k.GetValue(valueName);
+				if(t != null) {
+					switch(type) {
+					case _ResultType.Int: r.rInt = (int)t; break;
+					case _ResultType.Long: r.rLong = (long)t; break;
+					case _ResultType.String: r.rString = (string)t; break;
+					case _ResultType.StringArray: r.rStringArray = (string[])t; break;
+					}
 					return true;
 				}
-			} catch(Exception e) { ThreadError.SetException(e); }
+				ThreadError.Clear();
+			}
+			catch(Exception e) { ThreadError.SetException(e); }
+			finally { if(k != parentKeyOrHive) k.Dispose(); }
 			return false;
 		}
 
@@ -268,37 +327,15 @@ namespace Catkeys
 		/// <param name="data">Receives data.</param>
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool GetInt(out int data, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool GetInt(out int data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = 0;
-			try {
-				using(var k = _Open(key, false)) {
-					object t = k.GetValue(valueName);
-					if(t != null) { data = (int)t; return true; }
-					ThreadError.Clear();
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
-		}
-
-		/// <summary>
-		/// Sets value of REG_QWORD type.
-		/// Creates key and value if don't exist.
-		/// Supports ThreadError.
-		/// If fails, sets thread error and returns false.
-		/// </summary>
-		/// <param name="data">Data.</param>
-		/// <param name="valueName">Registry value name.</param>
-		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool SetLong(long data, string valueName, string key = null)
-		{
-			try {
-				using(var k = _Open(key, true)) {
-					k.SetValue(valueName, data, RegistryValueKind.QWord);
-					return true;
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
+			_Result r;
+			if(!_Get(_ResultType.Int, out r, valueName, key, parentKeyOrHive)) return false;
+			data = r.rInt;
+			return true;
 		}
 
 		/// <summary>
@@ -310,39 +347,15 @@ namespace Catkeys
 		/// <param name="data">Receives data.</param>
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool GetLong(out long data, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool GetLong(out long data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = 0;
-			try {
-				using(var k = _Open(key, false)) {
-					object t = k.GetValue(valueName);
-					if(t != null) { data = (long)t; return true; }
-					ThreadError.Clear();
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
-		}
-
-		/// <summary>
-		/// Sets string value of REG_SZ or REG_EXPAND_SZ type.
-		/// Creates key and value if don't exist.
-		/// Supports ThreadError.
-		/// If fails, sets thread error and returns false.
-		/// </summary>
-		/// <param name="data">Data.</param>
-		/// <param name="valueName">Registry value name.</param>
-		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool SetString(string data, string valueName, string key = null, bool REG_EXPAND_SZ = false)
-		{
-			try {
-				using(var k = _Open(key, true)) {
-					k.SetValue(valueName, data, REG_EXPAND_SZ ? RegistryValueKind.ExpandString : RegistryValueKind.String);
-					return true;
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
-
-			//info: cannot set multistring with this.
+			_Result r;
+			if(!_Get(_ResultType.Long, out r, valueName, key, parentKeyOrHive)) return false;
+			data = r.rLong;
+			return true;
 		}
 
 		/// <summary>
@@ -354,39 +367,15 @@ namespace Catkeys
 		/// <param name="data">Receives data.</param>
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool GetString(out string data, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool GetString(out string data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = null;
-			try {
-				using(var k = _Open(key, false)) {
-					object t = k.GetValue(valueName);
-					if(t != null) { data = (string)t; return true; }
-					ThreadError.Clear();
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
-		}
-
-		/// <summary>
-		/// Sets string value of REG_MULTI_SZ type.
-		/// Creates key and value if don't exist.
-		/// Supports ThreadError.
-		/// If fails, sets thread error and returns false.
-		/// </summary>
-		/// <param name="data">Data.</param>
-		/// <param name="valueName">Registry value name.</param>
-		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool SetStringArray(string[] data, string valueName, string key = null)
-		{
-			try {
-				using(var k = _Open(key, true)) {
-					k.SetValue(valueName, data, RegistryValueKind.MultiString);
-					return true;
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
-
-			//info: cannot set multistring with this.
+			_Result r;
+			if(!_Get(_ResultType.String, out r, valueName, key, parentKeyOrHive)) return false;
+			data = r.rString;
+			return true;
 		}
 
 		/// <summary>
@@ -398,48 +387,111 @@ namespace Catkeys
 		/// <param name="data">Receives data.</param>
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool GetStringArray(out string[] data, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool GetStringArray(out string[] data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = null;
+			_Result r;
+			if(!_Get(_ResultType.StringArray, out r, valueName, key, parentKeyOrHive)) return false;
+			data = r.rStringArray;
+			return true;
+		}
+
+		static bool _Set(RegistryValueKind type, object data, string valueName, string key, RegistryKey parentKeyOrHive)
+		{
+			var k = CreateOrOpen(key, parentKeyOrHive);
+			if(k == null) return false;
 			try {
-				using(var k = _Open(key, false)) {
-					object t = k.GetValue(valueName);
-					if(t != null) { data = (string[])t; return true; }
-					ThreadError.Clear();
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
+				k.SetValue(valueName, data, type);
+				return true;
+			}
+			catch(Exception e) { ThreadError.SetException(e); return false; }
+			finally { if(k != parentKeyOrHive) k.Dispose(); }
+		}
+
+		/// <summary>
+		/// Sets value of REG_DWORD type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError. If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool SetInt(int data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
+		{
+			return _Set(RegistryValueKind.DWord, data, valueName, key, parentKeyOrHive);
+		}
+
+		/// <summary>
+		/// Sets value of REG_QWORD type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError. If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static bool SetLong(long data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
+		{
+			return _Set(RegistryValueKind.QWord, data, valueName, key, parentKeyOrHive);
+		}
+
+		/// <summary>
+		/// Sets string value of REG_SZ or REG_EXPAND_SZ type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError. If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static unsafe bool SetString(string data, string valueName, string key = null, RegistryKey parentKeyOrHive = null, bool REG_EXPAND_SZ = false)
+		{
+			return _Set(REG_EXPAND_SZ ? RegistryValueKind.ExpandString : RegistryValueKind.String, data, valueName, key, parentKeyOrHive);
+		}
+
+		/// <summary>
+		/// Sets string value of REG_MULTI_SZ type.
+		/// Creates key and value if don't exist.
+		/// Supports ThreadError. If fails, sets thread error and returns false.
+		/// </summary>
+		/// <param name="data">Data.</param>
+		/// <param name="valueName">Registry value name.</param>
+		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static unsafe bool SetStringArray(string[] data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
+		{
+			return _Set(RegistryValueKind.MultiString, data, valueName, key, parentKeyOrHive);
 		}
 
 		/// <summary>
 		/// Sets binary value of REG_BINARY type.
 		/// Creates key and value if don't exist.
-		/// Supports ThreadError.
-		/// If fails, sets thread error and returns false.
+		/// Supports ThreadError. If fails, sets thread error and returns false.
 		/// </summary>
 		/// <param name="data">Data. For example a struct variable (unsafe address).</param>
 		/// <param name="size">Data size. For example, Marshal.SizeOf(variable) or Marshal.SizeOf(typeof(DATA)).</param>
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe bool SetBinary(void* data, int size, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static unsafe bool SetBinary(void* data, int size, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
+			var k = CreateOrOpen(key, parentKeyOrHive);
+			if(k == null) return false;
 			try {
-				using(var k = _Open(key, true)) {
-					return SetBinary(data, size, valueName, k);
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return false;
-		}
-
-		/// <summary>
-		/// Use this overload when you have an open registry key.
-		/// Everything is the same as with other overload.
-		/// </summary>
-		public static unsafe bool SetBinary(void* data, int size, string valueName, RegistryKey key)
-		{
-			IntPtr h = key.Handle.DangerousGetHandle();
-			int e = Api.RegSetValueEx(h, valueName, 0, RegistryValueKind.Binary, data, size);
-			return e == 0 || ThreadError.Set(e);
+				IntPtr h = k.Handle.DangerousGetHandle();
+				int e = Api.RegSetValueEx(h, valueName, 0, RegistryValueKind.Binary, data, size);
+				return e == 0 || ThreadError.Set(e);
+			}
+			catch(Exception e) { ThreadError.SetException(e); return false; }
+			finally { if(k != parentKeyOrHive) k.Dispose(); }
 		}
 
 		/// <summary>
@@ -454,28 +506,22 @@ namespace Catkeys
 		/// <param name="size">Max data size to get. For example, Marshal.SizeOf(variable) or Marshal.SizeOf(typeof(DATA)).</param>
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. <see cref="ParseKeyString"/></param>
-		public static unsafe int GetBinary(void* data, int size, string valueName, string key = null)
+		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
+		/// <exception cref="ArgumentException">When key starts with "HKEY_" but it is an invalid hive name.</exception>
+		public static unsafe int GetBinary(void* data, int size, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
+			var k = Open(key, parentKeyOrHive);
+			if(k == null) return -1;
 			try {
-				using(var k = _Open(key, false)) {
-					return GetBinary(data, size, valueName, k);
-				}
-			} catch(Exception e) { ThreadError.SetException(e); }
-			return -1;
-		}
-
-		/// <summary>
-		/// Use this overload when you have an open registry key.
-		/// Everything is the same as with other overload.
-		/// </summary>
-		public static unsafe int GetBinary(void* data, int size, string valueName, RegistryKey key)
-		{
-			IntPtr h = key.Handle.DangerousGetHandle();
-			RegistryValueKind kind; int z = size;
-			int e = Api.RegQueryValueEx(h, valueName, Zero, out kind, data, ref z);
-			if(e == 0) { ThreadError.Clear(); return z; }
-			ThreadError.Set(e);
-			if(e == Api.ERROR_FILE_NOT_FOUND) return 0;
+				IntPtr h = k.Handle.DangerousGetHandle();
+				RegistryValueKind kind; int z = size;
+				int e = Api.RegQueryValueEx(h, valueName, Zero, out kind, data, ref z);
+				if(e == 0) { ThreadError.Clear(); return z; }
+				ThreadError.Set(e);
+				if(e == Api.ERROR_FILE_NOT_FOUND) return 0;
+			}
+			catch(Exception e) { ThreadError.SetException(e); }
+			finally { if(k != parentKeyOrHive) k.Dispose(); }
 			return -1;
 		}
 	}

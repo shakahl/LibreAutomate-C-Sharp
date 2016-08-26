@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.ComponentModel;
-using System.Windows.Forms;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -31,7 +33,6 @@ namespace Catkeys
 	/// The property-get functions have names of special folders (or similar), some with a suffix like "_Win8" which means that the folder is unavailable in older Windows versions. Note: some known folders, although supported and registerd, may be still not created.
 	/// Some special folders exist only on newer Windows versions or not on all computers. If a function cannot get special folder path, the return value begins with "˂unavailable˃".
 	/// Some special folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array of bytes called "ITEMIDLIST" or "PIDL". Functions of the nested class 'VirtualIDLIST' return the PIDL as IntPtr; you must free it with Marshal.FreeCoTaskMem(). Functions of the nested class 'Virtual' return the ITEMIDLIST as string "˂idlist:Base64_encoded_ITEMIDLIST˃" that can be used with some functions of this library but not with .NET or native functions.
-	/// This class also has several methods that can be used to get custom known folders by string name, expand environment variables, combine paths, etc.
 	/// </summary>
 	[DebuggerStepThrough]
 	public class Folders
@@ -322,6 +323,9 @@ namespace Catkeys
 		[DllImport("Shell32.dll")]
 		static extern int SHGetKnownFolderIDList(ref Guid rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
 
+		//[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
+		//static extern uint ExpandEnvironmentStrings(string lpSrc, [Out] StringBuilder lpDst, uint nSize);
+
 		[Flags]
 		enum KNOWN_FOLDER_FLAG :uint
 		{
@@ -476,13 +480,12 @@ namespace Catkeys
 		/// <summary>
 		/// Gets names and paths of all known folders, including custom known folders registerd by applications.
 		/// Can be useful for information. The names then can be used with GetFolder().
-		/// Output.Write(Folders.GetKnownFolders());
 		/// </summary>
 		public static Dictionary<string, string> GetKnownFolders()
 		{
 			var dict = new Dictionary<string, string>();
 
-			IKnownFolderManager man = (IKnownFolderManager)new KnownFolderManager();
+			var man = new KnownFolderManager() as IKnownFolderManager;
 			IntPtr ipIds = Zero;
 			try {
 				uint nIds; if(man.GetFolderIds(out ipIds, out nIds) != 0) return null;
@@ -490,15 +493,20 @@ namespace Catkeys
 				{
 					Guid* gp = (Guid*)ipIds;
 					for(uint i = 0; i < nIds; i++) {
-						IKnownFolder kf; if(man.GetFolder(gp[i], out kf) != 0) continue;
-						KNOWNFOLDER_DEFINITION fd; if(kf.GetFolderDefinition(out fd) != 0) continue;
-						string path = null;
-						if(fd.category == KF_CATEGORY.KF_CATEGORY_VIRTUAL) {
-							path = "<virtual>";
-						} else {
-							if(kf.GetPath(0, out path) != 0) path = "<unavailable>";
+						IKnownFolder kf = null;
+						try {
+							if(man.GetFolder(gp[i], out kf) != 0) continue;
+							KNOWNFOLDER_DEFINITION fd; if(kf.GetFolderDefinition(out fd) != 0) continue;
+							string path = null;
+							if(fd.category == KF_CATEGORY.KF_CATEGORY_VIRTUAL) {
+								path = "<virtual>";
+							} else {
+								if(kf.GetPath(0, out path) != 0) path = "<unavailable>";
+							}
+							dict.Add(fd.pszName, path);
 						}
-						dict.Add(fd.pszName, path);
+						catch { }
+						finally { Api.ReleaseComObject(kf); }
 					}
 				}
 			}
@@ -507,7 +515,7 @@ namespace Catkeys
 			}
 			finally {
 				Marshal.FreeCoTaskMem(ipIds);
-				Marshal.ReleaseComObject(man);
+				Api.ReleaseComObject(man);
 			}
 			return dict;
 		}
@@ -529,7 +537,7 @@ namespace Catkeys
 			case 4: return AppTemp;
 			case 5: return AppRoot;
 			}
-			if(folderName.StartsWith_("%")) return ExpandEnvVar(folderName);
+			if(folderName.StartsWith_("%")) return Path_.ExpandEnvVar(folderName);
 
 			IKnownFolderManager man = null;
 			try {
@@ -541,7 +549,7 @@ namespace Catkeys
 				return "<unavailable>";
 			}
 			finally {
-				if(man != null) Marshal.ReleaseComObject(man);
+				Api.ReleaseComObject(man);
 			}
 
 			return path;
@@ -555,24 +563,6 @@ namespace Catkeys
 		//		return Zero;
 		//	}
 		//}
-
-		/// <summary>
-		/// Gets the value of an environment variable.
-		/// </summary>
-		public static FolderPath EnvVar(string envVar)
-		{
-			string s = Environment.GetEnvironmentVariable(envVar);
-			if(s == null) s = "<unavailable>";
-			return s;
-		}
-
-		/// <summary>
-		/// Expands environment variables enclosed in %.
-		/// </summary>
-		public static FolderPath ExpandEnvVar(string path)
-		{
-			return Environment.ExpandEnvironmentVariables(path);
-		}
 
 		/// <summary>
 		/// Gets CDDrive drive name, like "D:".
@@ -627,85 +617,15 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns true if path matches one of these wildcard patterns:
-		///		@"\\*" - network path.
-		///		@"[A-Z]:\*" - local path.
-		///		@"[A-Z]:" - drive name.
-		///		@"%*%*" - environment variable (usually contains a full path).
-		///		@"˂*˃*" - special string that can be used with some functions of this library.
-		///		@":*" - eg shell object CLSID like "::{CLSID}"
-		///	Also returns true if path looks like a URL (any protocol), eg "http://abc" or "http:" or "shell:abc". Note: don't use "filename:stream" unless it is full path.
+		/// Gets the value of an environment variable.
+		/// Returns "˂unavailable˃" if the variable does not exist.
 		/// </summary>
-		public static bool IsFullPath(string path)
+		/// <seealso cref="Environment.GetEnvironmentVariable"/>.
+		public static FolderPath EnvVar(string envVar)
 		{
-			int len = (path == null) ? 0 : path.Length;
-
-			if(len >= 2) {
-				char c = path[0];
-				switch(c) {
-				case '<': return path.IndexOf('>', 1) >= 0;
-				case '%': return path.IndexOf('%', 1) >= 0;
-				case '\\': return path[1] == '\\';
-				case ':': return true;
-				}
-
-				if((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
-					if(path[1] == ':') return len == 2 || path[2] == '\\'; //info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
-
-					//is URL (any protocol)?
-					if(path.IndexOf(':') > 0) return Api.PathIsURL(path); //info: returns true if begins with "x:" where x is 2 or more of alphanumeric, '.', '-' and '+' characters
-				}
-			}
-
-			return false;
-		}
-
-		/// <summary>
-		/// Makes fully-qualified path.
-		/// If path is not full path, returns App+path.
-		/// Expands environment variables, processes @"..\" etc (calls Combine()).
-		/// </summary>
-		/// <param name="path">Full path or filename or relative path.</param>
-		public static string FullPath(string path)
-		{
-			return Combine(null, path);
-		}
-
-		/// <summary>
-		/// Combines two paths and makes fully-qualified path. Similar to Path.Combine(), but not the same.
-		/// </summary>
-		/// <remarks>
-		///	Returns fully-qualified path, with processed @"..\" etc, not relative, not short (DOS), with replaced environment variables if starts with "%".
-		///	If the return value would not be full path, prepends App.
-		///	No exceptions.
-		/// </remarks>
-		public static string Combine(string s1, string s2)
-		{
-			string R = null;
-			int len = (s2 == null) ? 0 : s2.Length;
-
-			if(Empty(s1)) {
-				if(len == 0) return "";
-				R = s2;
-			} else {
-				if(len == 0) R = s1.TrimEnd('\\');
-				else if(s2[0] == '\\') R = s1.TrimEnd('\\') + s2;
-				else if(s1.EndsWith_("\\")) R = s1 + s2;
-				else R = s1 + @"\" + s2;
-			}
-
-			if(!IsFullPath(R)) R = App + R;
-			else if(R[0] == '<') return R;
-			else if(R[0] == '%') {
-				R = Environment.ExpandEnvironmentVariables(R);
-				if(R[0] == '%') return R;
-			}
-
-			if(R.IndexOf_(@".\") >= 0 || R.EndsWith_(".") || R.IndexOf('~') >= 0) {
-				try { R = Path.GetFullPath(R); } catch { }
-			}
-
-			return R;
+			string s = Environment.GetEnvironmentVariable(envVar);
+			if(s == null) s = "<unavailable>";
+			return s;
 		}
 
 		#endregion
@@ -718,7 +638,7 @@ namespace Catkeys
 			public static implicit operator FolderPath(string path) { return new FolderPath(path); }
 			public static implicit operator string (FolderPath f) { return f._path; }
 			public override string ToString() { return _path; }
-			public static string operator +(FolderPath f, string append) { return Combine(f._path, append); }
+			public static string operator +(FolderPath f, string append) { return Path_.Combine(f._path, append); }
 		}
 
 		//TODO:

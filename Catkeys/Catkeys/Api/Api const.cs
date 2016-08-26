@@ -511,6 +511,8 @@ namespace Catkeys.Winapi
 
 		#region Errors
 
+		public const int S_OK = 0;
+		public const int S_FALSE = 1;
 		public const int ERROR_FILE_NOT_FOUND = 2;
 		public const int ERROR_ACCESS_DENIED = 5;
 		public const int ERROR_INVALID_HANDLE = 6;
@@ -520,6 +522,7 @@ namespace Catkeys.Winapi
 		public const int ERROR_INVALID_WINDOW_HANDLE = 1400;
 		public const int E_INVALIDARG = unchecked((int)0x80070057);
 		public const int E_FAIL = unchecked((int)0x80004005);
+		public const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
 		#endregion
 
@@ -651,6 +654,131 @@ namespace Catkeys.Winapi
 		public const int IDI_APPLICATION = 32512;
 
 		#endregion
+
+		#region QS_
+
+		public const uint QS_KEY = 0x1;
+		public const uint QS_MOUSEMOVE = 0x2;
+		public const uint QS_MOUSEBUTTON = 0x4;
+		public const uint QS_POSTMESSAGE = 0x8;
+		public const uint QS_TIMER = 0x10;
+		public const uint QS_PAINT = 0x20;
+		public const uint QS_SENDMESSAGE = 0x40;
+		public const uint QS_HOTKEY = 0x80;
+		public const uint QS_ALLPOSTMESSAGE = 0x100;
+		public const uint QS_RAWINPUT = 0x400;
+		public const uint QS_TOUCH = 0x800;
+		public const uint QS_POINTER = 0x1000;
+		public const uint QS_MOUSE = 0x6;
+		public const uint QS_INPUT = 0x1C07;
+		public const uint QS_ALLEVENTS = 0x1CBF;
+		public const uint QS_ALLINPUT = 0x1CFF;
+
+		#endregion
+
+		#region WAIT_
+
+		public const int WAIT_TIMEOUT = 258;
+		public const uint WAIT_FAILED = 0xFFFFFFFF;
+		public const uint WAIT_OBJECT_0 = 0x0;
+		public const uint WAIT_ABANDONED = 0x80;
+		public const uint WAIT_ABANDONED_0 = 0x80;
+		public const uint WAIT_IO_COMPLETION = 0xC0;
+
+		#endregion
+
+		#region LR_, IMAGE_
+
+		public const int IMAGE_BITMAP = 0;
+		public const int IMAGE_ICON = 1;
+		public const int IMAGE_CURSOR = 2;
+		public const uint LR_MONOCHROME = 0x1;
+		public const uint LR_COLOR = 0x2;
+		public const uint LR_COPYRETURNORG = 0x4;
+		public const uint LR_COPYDELETEORG = 0x8;
+		public const uint LR_LOADFROMFILE = 0x10;
+		public const uint LR_LOADTRANSPARENT = 0x20;
+		public const uint LR_DEFAULTSIZE = 0x40;
+		public const uint LR_VGACOLOR = 0x80;
+		public const uint LR_LOADMAP3DCOLORS = 0x1000;
+		public const uint LR_CREATEDIBSECTION = 0x2000;
+		public const uint LR_COPYFROMRESOURCE = 0x4000;
+		public const uint LR_SHARED = 0x8000;
+
+		#endregion
+
+		#region SFGAO_
+
+		public const uint SFGAO_CANCOPY = 1;
+		public const uint SFGAO_CANMOVE = 2;
+		public const uint SFGAO_CANLINK = 4;
+		public const uint SFGAO_STORAGE = 0x00000008;
+		public const uint SFGAO_CANRENAME = 0x00000010;
+		public const uint SFGAO_CANDELETE = 0x00000020;
+		public const uint SFGAO_HASPROPSHEET = 0x00000040;
+		public const uint SFGAO_DROPTARGET = 0x00000100;
+		public const uint SFGAO_CAPABILITYMASK = 0x00000177;
+		public const uint SFGAO_SYSTEM = 0x00001000;
+		public const uint SFGAO_ENCRYPTED = 0x00002000;
+		public const uint SFGAO_ISSLOW = 0x00004000;
+		public const uint SFGAO_GHOSTED = 0x00008000;
+		public const uint SFGAO_LINK = 0x00010000;
+		public const uint SFGAO_SHARE = 0x00020000;
+		public const uint SFGAO_READONLY = 0x00040000;
+		public const uint SFGAO_HIDDEN = 0x00080000;
+		public const uint SFGAO_DISPLAYATTRMASK = 0x000FC000;
+		public const uint SFGAO_FILESYSANCESTOR = 0x10000000;
+		public const uint SFGAO_FOLDER = 0x20000000;
+		public const uint SFGAO_FILESYSTEM = 0x40000000;
+		public const uint SFGAO_HASSUBFOLDER = 0x80000000;
+		public const uint SFGAO_CONTENTSMASK = 0x80000000;
+		public const uint SFGAO_VALIDATE = 0x01000000;
+		public const uint SFGAO_REMOVABLE = 0x02000000;
+		public const uint SFGAO_COMPRESSED = 0x04000000;
+		public const uint SFGAO_BROWSABLE = 0x08000000;
+		public const uint SFGAO_NONENUMERATED = 0x00100000;
+		public const uint SFGAO_NEWCONTENT = 0x00200000;
+		public const uint SFGAO_CANMONIKER = 0x00400000;
+		public const uint SFGAO_HASSTORAGE = 0x00400000;
+		public const uint SFGAO_STREAM = 0x00400000;
+		public const uint SFGAO_STORAGEANCESTOR = 0x00800000;
+		public const uint SFGAO_STORAGECAPMASK = 0x70C50008;
+		public const uint SFGAO_PKEYSFGAOMASK = 0x81044000;
+
+		#endregion
+
+		#region STGM_
+
+		public const uint STGM_DIRECT = 0x0;
+		public const uint STGM_TRANSACTED = 0x10000;
+		public const uint STGM_SIMPLE = 0x8000000;
+		public const uint STGM_READ = 0x0;
+		public const uint STGM_WRITE = 0x1;
+		public const uint STGM_READWRITE = 0x2;
+		public const uint STGM_SHARE_DENY_NONE = 0x40;
+		public const uint STGM_SHARE_DENY_READ = 0x30;
+		public const uint STGM_SHARE_DENY_WRITE = 0x20;
+		public const uint STGM_SHARE_EXCLUSIVE = 0x10;
+		public const uint STGM_PRIORITY = 0x40000;
+		public const uint STGM_DELETEONRELEASE = 0x4000000;
+		public const uint STGM_NOSCRATCH = 0x100000;
+		public const uint STGM_CREATE = 0x1000;
+		public const uint STGM_CONVERT = 0x20000;
+		public const uint STGM_FAILIFTHERE = 0x0;
+		public const uint STGM_NOSNAPSHOT = 0x200000;
+		public const uint STGM_DIRECT_SWMR = 0x400000;
+
+		#endregion
+
+
+
+
+
+		public const uint INFINITE = 0xFFFFFFFF;
+
+
+
+
 
 		#region ENUM
 

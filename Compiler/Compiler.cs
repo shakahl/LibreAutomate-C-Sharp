@@ -33,14 +33,12 @@ namespace Compiler
 {
 	public class Compiler
 	{
-		static Wnd.Misc.RegisterClass _wndClassCompiler;
+		static Wnd.Misc.WndClass _wndClassCompiler = Wnd.Misc.WndClass.Register("Catkeys_Compiler", _WndProcCompiler);
 
 		[STAThread]
 		public static void Main()
 		{
-			_wndClassCompiler = new Wnd.Misc.RegisterClass();
-			_wndClassCompiler.Register("Catkeys_Compiler", _WndProcCompiler);
-			Wnd w = Api.CreateWindowEx(0, "Catkeys_Compiler", null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message, 0, Zero, 0);
+			Wnd w = Wnd.Misc.CreateMessageWindow(_wndClassCompiler.Name);
 
 			var dom = AppDomain.CurrentDomain;
 			dom.SetData("hwndCompiler", w.Handle);

@@ -926,7 +926,7 @@ namespace SdkConverter
 					//Out($"<><c 0x8000>{s} = {t.csTypename}    {t}</c>"); //OK, just not used between typedef and struct definition
 				}
 			}
-			//Perf.NextWrite();
+			//Perf.NW();
 
 			//remove W from struct/interface/delegate names
 			//Perf.First();
@@ -949,7 +949,7 @@ namespace SdkConverter
 				if(suffixLen == 2) what |= 0x10000;
 				__RemoveAW(ref R, name, what);
 			}
-			//Perf.NextWrite(); //800 1000 ms
+			//Perf.NW(); //800 1000 ms
 
 			//remove other known A and old versions
 			R.RegexReplace_(out R, @"(?ms)^public struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "");

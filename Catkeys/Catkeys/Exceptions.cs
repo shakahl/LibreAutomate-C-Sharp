@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-//using System.IO;
-//using System.Windows.Forms;
-using System.Runtime.Serialization;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
+using System.Runtime.Serialization;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -23,20 +25,20 @@ using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
-	public class CatkeysException :Exception
+	public class CatException :Exception
 	{
 		const string _m = "Failed.";
 
-		public CatkeysException() : base(_m) { }
+		public CatException() : base(_m) { }
 
-		public CatkeysException(string message) : base(message) { }
+		public CatException(string message) : base(message) { }
 
-		public CatkeysException(string message, Exception innerException) : base(message ?? _m, innerException) { }
+		public CatException(string message, Exception innerException) : base(message ?? _m, innerException) { }
 
-		protected CatkeysException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+		protected CatException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 	}
 
-	public class WaitTimeoutException :CatkeysException
+	public class WaitTimeoutException :CatException
 	{
 		const string _m = "Wait timeout.";
 
@@ -94,10 +96,10 @@ namespace Catkeys
 			internal static Exception CreateException(int winErrorCode, string catkeysError)
 			{
 				if(catkeysError != null) {
-					return new CatkeysException(CreateErrorString(winErrorCode, catkeysError));
+					return new CatException(CreateErrorString(winErrorCode, catkeysError));
 				}
 				if(winErrorCode != 0) {
-					return new System.ComponentModel.Win32Exception(winErrorCode);
+					return new Win32Exception(winErrorCode);
 				}
 				return null;
 			}
@@ -111,7 +113,7 @@ namespace Catkeys
 			internal static string CreateErrorString(int winErrorCode, string errorText)
 			{
 				if(winErrorCode != 0) {
-					string s = new System.ComponentModel.Win32Exception(winErrorCode).Message;
+					string s = new Win32Exception(winErrorCode).Message;
 					if(errorText == null) return s;
 					return errorText + "  " + s + ".";
 				}
@@ -262,7 +264,7 @@ namespace Catkeys
 		public static string ErrorText { get { return _threadError.GetErrorText(); } }
 
 		/// <summary>
-		/// If there was error, creates and returns an exception object (CatkeysException or System.ComponentModel.Win32Exception).
+		/// If there was error, creates and returns an exception object (CatException or Win32Exception).
 		/// Else returns null.
 		/// </summary>
 		public static Exception Exception { get { return _threadError.GetException(); } }

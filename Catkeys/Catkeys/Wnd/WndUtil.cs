@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.ComponentModel;
-using System.Windows.Forms;
-//using System.Linq;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using System.Reflection;
 using System.Runtime.InteropServices;
-//using System.Runtime.CompilerServices;
-//using System.IO;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -45,7 +47,7 @@ namespace Catkeys
 			if(WinVer >= Win8) {
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
-					using(var p = new ProcessHandle_(w)) {
+					using(var p = new Process_.LibProcessHandle(w)) {
 						if(!p.Is0) {
 							uint u = 1000; var sb = new StringBuilder((int)u);
 							if(0 == _Api.GetApplicationUserModelId(p, ref u, sb)) appId = sb.ToString();
@@ -79,7 +81,7 @@ namespace Catkeys
 
 			return 0;
 		}
-		
+
 		//static int _WindowsStoreAppId2(Wnd w, out string appID, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		//{
 		//	appID = null;
@@ -106,7 +108,7 @@ namespace Catkeys
 
 		//	}
 
-		//	using(var p = new ProcessHandle_(w)) {
+		//	using(var p = new Process_.LibProcessHandle(w)) {
 		//		if(p.Is0) return 0;
 		//		uint u = 1000;
 		//		var sb = new StringBuilder((int)u);
@@ -157,7 +159,7 @@ namespace Catkeys
 
 
 	//This can be used, but not much simpler than calling ATI directly and using try/finally.
-	//internal struct _AttachThreadInput :IDisposable
+	//internal struct LibAttachThreadInput :IDisposable
 	//{
 	//	uint _tid;
 
