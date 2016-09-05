@@ -26,6 +26,7 @@ namespace Catkeys.Tasks
 	static class Program
 	{
 		static Wnd _wMain;
+#pragma warning disable 649
 		static string[] _clArgs;
 
 		//static Program()

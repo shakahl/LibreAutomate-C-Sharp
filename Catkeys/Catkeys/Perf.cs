@@ -68,14 +68,49 @@ namespace Catkeys
 
 			static bool _canWrite;
 
-			public Inst(bool callFirst)
+			public Inst(bool callFirst) : this()
 			{
-				_counter = 0;
 				if(callFirst) First();
 			}
 
-			uint _counter;
-			fixed long _a[11];
+			volatile int _counter;
+			bool _incremental;
+			int _nMeasurements; //used with incremental to display n measurements and average times
+			long _time0;
+			const int nElem = 10;
+			fixed long _a[nElem];
+
+			/// <summary>
+			/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
+			/// Finally you can call Write() or Times to get the sums.
+			/// Usually used to measure code in loops. See example.
+			/// </summary>
+			/// <example>
+			/// var perf = new Perf.Inst();
+			/// perf.Incremental = true;
+			/// for(int i = 0; i ˂ 5; i++) {
+			/// 	WaitMS(100); //not included in the measurement
+			/// 	perf.First();
+			/// 	WaitMS(30); //will make sum ~150000
+			/// 	perf.Next();
+			/// 	WaitMS(10); //will make sum ~50000
+			/// 	perf.Next();
+			/// 	WaitMS(100); //not included in the measurement
+			/// }
+			/// perf.Write(); //speed:  154317  51060  (205377)
+			/// perf.Incremental = false;
+			/// </example>
+			public bool Incremental
+			{
+				get { return _incremental; }
+				set
+				{
+					if(_incremental = value) {
+						fixed (long* p = _a) { for(int i = 0; i < nElem; i++) p[i] = 0; }
+						_nMeasurements = 0;
+					}
+				}
+			}
 
 			/// <summary>
 			/// Stores current time in the first element of an internal array to use with Next() and Write().
@@ -83,9 +118,10 @@ namespace Catkeys
 			public void First()
 			{
 				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
+				_time0 = Stopwatch.GetTimestamp();
+				//QueryPerformanceCounter(out _time0);
 				_counter = 0;
-				fixed (long* p = _a) { p[0] = Stopwatch.GetTimestamp(); }
-				//fixed (long* p = _a) { QueryPerformanceCounter(out p[0]); }
+				_nMeasurements++;
 			}
 			/// <summary>
 			/// Calls SpinCPU(spinCpuMS) and First().
@@ -103,8 +139,9 @@ namespace Catkeys
 			public void Next()
 			{
 				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
-				if(_counter < 10) fixed (long* p = _a) { p[++_counter] = Stopwatch.GetTimestamp(); }
-				//if(_counter < 10) fixed (long* p = _a) { QueryPerformanceCounter(out p[++_counter]); }
+				int n = _counter; if(n >= nElem) return;
+				_counter++;
+				fixed (long* p = _a) { var t = Stopwatch.GetTimestamp() - _time0; if(_incremental) p[n] += t; else p[n] = t; }
 			}
 
 			/// <summary>
@@ -131,26 +168,58 @@ namespace Catkeys
 			{
 				get
 				{
-					uint i, n = _counter;
+					int i, n = _counter;
 					if(n == 0) return null;
+					if(n > nElem) n = nElem;
 					double freq = 1000000.0 / Stopwatch.Frequency;
 					//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
 					StringBuilder s = new StringBuilder("speed:");
+					bool average = false; int nMeasurements = 1;
 
 					fixed (long* p = _a)
 					{
+						g1:
+						double t = 0.0, tPrev = 0.0;
 						for(i = 0; i < n; i++) {
 							s.Append("  ");
-							s.Append((long)(freq * (p[i + 1] - p[i]) - 0.45));
+							t = freq * p[i];
+							double d = t - tPrev; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
+							if(average) d /= nMeasurements;
+							s.Append((long)d);
+							tPrev = t;
 						}
 
 						if(n > 1) {
 							s.Append("  (");
-							s.Append((long)(freq * (p[n] - p[0]) - 0.45));
+							if(average) t /= nMeasurements;
+							s.Append((long)t);
 							s.Append(")");
+						}
+
+						if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
+							average = true;
+                            s.Append(";  measured "); s.Append(nMeasurements); s.Append(" times, average");
+							goto g1;
 						}
 					}
 					return s.ToString();
+				}
+			}
+
+			static void _FormatTimes(StringBuilder s, long* p, int n, int nMeasurements, double freq)
+			{
+				double t = 0.0, tPrev = 0.0;
+				for(int i = 0; i < n; i++) {
+					s.Append("  ");
+					t = freq * p[i];
+					s.Append((long)(t - tPrev)); //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
+					tPrev = t;
+				}
+
+				if(n > 1) {
+					s.Append("  (");
+					s.Append((long)t);
+					s.Append(")");
 				}
 			}
 
@@ -161,9 +230,11 @@ namespace Catkeys
 			{
 				get
 				{
-					if(_counter == 0) return 0;
+					int n = _counter;
+					if(n == 0) return 0;
+					if(n > nElem) n = nElem;
 					double freq = 1000000.0 / Stopwatch.Frequency;
-					fixed (long* p = _a) { return (long)(freq * (p[_counter] - p[0]) - 0.45); }
+					fixed (long* p = _a) { return (long)(freq * p[n - 1]); }
 				}
 			}
 
@@ -204,6 +275,31 @@ namespace Catkeys
 		}
 
 		static Inst* _SM { get { return &Util.LibSharedMemory.Ptr->perf; } }
+
+		/// <summary>
+		/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
+		/// Finally you can call Write() or Times to get the sums.
+		/// Usually used to measure code in loops. See example.
+		/// </summary>
+		/// <example>
+		/// Perf.Incremental = true;
+		/// for(int i = 0; i ˂ 5; i++) {
+		/// 	WaitMS(100); //not included in the measurement
+		/// 	Perf.First();
+		/// 	WaitMS(30); //will make sum ~150000
+		/// 	Perf.Next();
+		/// 	WaitMS(10); //will make sum ~50000
+		/// 	Perf.Next();
+		/// 	WaitMS(100); //not included in the measurement
+		/// }
+		/// Perf.Write(); //speed:  154317  51060  (205377)
+		/// Perf.Incremental = false;
+		/// </example>
+		public static bool Incremental
+		{
+			get { return _SM->Incremental; }
+			set { _SM->Incremental = value; }
+		}
 
 		/// <summary>
 		/// Stores current time in the first element of an internal static array to use with Next() and Write().

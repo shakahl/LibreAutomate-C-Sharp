@@ -468,7 +468,7 @@ namespace Catkeys
 		#endregion
 
 		//Extends ContextMenuStrip of the main menu to change its behavior as we need.
-		class ContextMenuStrip_ :ContextMenuStrip
+		class ContextMenuStrip_ :ContextMenuStrip, _ICatToolStrip
 		{
 			CatMenu _cat;
 
@@ -550,13 +550,20 @@ namespace Catkeys
 				//OutList("CMS disposed", disposing);
 			}
 
-#if DEBUG
 			protected override void OnPaint(PaintEventArgs e)
 			{
+				//var perf = new Perf.Inst(true);
+
 				//OutFunc();
 				base.OnPaint(e);
+
+				//perf.Next(); OutList("------------------ paint", perf.Times);
+
+				_paintedOnce = true;
 			}
-#endif
+
+			bool _paintedOnce;
+			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }
 
 			protected override void OnBackColorChanged(EventArgs e)
 			{
@@ -574,7 +581,7 @@ namespace Catkeys
 		}
 
 		//Extends ToolStripDropDownMenu of a submenu to change its behavior as we need.
-		internal class ToolStripDropDownMenu_ :ToolStripDropDownMenu
+		internal class ToolStripDropDownMenu_ :ToolStripDropDownMenu, _ICatToolStrip
 		{
 			CatMenu _cat;
 			bool _openedOnce;
@@ -624,8 +631,7 @@ namespace Catkeys
 				}
 
 				if(AsyncIcons != null) {
-					_cat._AsyncIcons.Add(AsyncIcons);
-					_cat._AsyncIcons.GetAllAsync(_cat._AsyncCallback, ImageScalingSize.Width);
+					_cat._GetIconsAsync(this, AsyncIcons);
 					AsyncIcons = null;
 				}
 
@@ -633,7 +639,7 @@ namespace Catkeys
 			}
 
 			//Base_CatMenu_CatBar creates this. We call GetAllAsync.
-			internal List<Files.Icons.AsyncIcons.FileObj> AsyncIcons { get; set; }
+			internal List<Icons.AsyncIn> AsyncIcons { get; set; }
 
 			protected override void OnOpened(EventArgs e)
 			{
@@ -664,6 +670,16 @@ namespace Catkeys
 				_cat._OnHandleCreatedDestroyed(false, this);
 				base.OnHandleDestroyed(e);
 			}
+
+			protected override void OnPaint(PaintEventArgs e)
+			{
+				//OutFunc();
+				base.OnPaint(e);
+				_paintedOnce = true;
+			}
+
+			bool _paintedOnce;
+			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }
 		}
 
 		#region wndproc
@@ -756,7 +772,7 @@ namespace Catkeys
 			//	_cm.PerformLayout(); //TODO
 			//}
 
-			if(_AsyncIcons != null && _AsyncIcons.Count > 0) _AsyncIcons.GetAllAsync(_AsyncCallback, _cm.ImageScalingSize.Width, 0, _AsyncOnFinished);
+			_GetIconsAsync(_cm);
 		}
 
 		//Prevents closing when working with focusable child controls and windows created by child controls or event handlers.
@@ -994,6 +1010,11 @@ namespace Catkeys
 		/// </summary>
 		public string IconDirectory { get; set; }
 
+		/// <summary>
+		/// Flags to pass to <see cref="Icons.GetIconHandle"/>. See <see cref="Icons.IconFlag"/>.
+		/// </summary>
+		public Icons.IconFlag IconFlags { get; set; }
+
 		//Sets icon and onClick delegate.
 		//Sets LastItem.
 		//Calls ItemAdded event handlers.
@@ -1020,7 +1041,7 @@ namespace Catkeys
 
 							if(IconDirectory != null && !Path_.IsFullPath(s)) s = Path_.Combine(IconDirectory, s);
 
-							if(_AsyncIcons == null) _AsyncIcons = new Files.Icons.AsyncIcons(); //used by submenus too
+							if(_AsyncIcons == null) _AsyncIcons = new Icons.AsyncIcons(); //used by submenus too
 							var submenu = !isBar ? (owner as CatMenu.ToolStripDropDownMenu_) : null;
 							bool isFirstImage = false;
 
@@ -1029,10 +1050,10 @@ namespace Catkeys
 								_AsyncIcons.Add(s, item);
 							} else {
 								if(submenu.AsyncIcons == null) {
-									submenu.AsyncIcons = new List<Files.Icons.AsyncIcons.FileObj>();
+									submenu.AsyncIcons = new List<Icons.AsyncIn>();
 									isFirstImage = true;
 								}
-								submenu.AsyncIcons.Add(new Files.Icons.AsyncIcons.FileObj(s, item));
+								submenu.AsyncIcons.Add(new Icons.AsyncIn(s, item));
 							}
 
 							if(isBar) {
@@ -1087,54 +1108,77 @@ namespace Catkeys
 		Image _buttonImagePlaceholder;
 
 		//This is shared by toolbars and main menus. Submenus have their own.
-		internal Files.Icons.AsyncIcons _AsyncIcons { get; set; }
+		Icons.AsyncIcons _AsyncIcons { get; set; }
 
-		internal void _AsyncCallback(IntPtr hi, object obj, object objCommon)
+		//list - used by submenus.
+		internal void _GetIconsAsync(ToolStrip ts, List<Icons.AsyncIn> list = null)
 		{
-			var item = obj as ToolStripItem;
-			if(hi != Zero) {
-				//OutList(hi, a.Length);
-				//var perf = new Perf.Inst(true);
-				Icon ic = Icon.FromHandle(hi);
-				//perf.Next();
-				Image im = ic.ToBitmap();
-				//perf.NW();
+			if(_AsyncIcons == null) return;
+			if(list != null) _AsyncIcons.Add(list);
+			if(_AsyncIcons.Count == 0) return;
+			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, IconFlags, ts);
+		}
 
-				_SetItemIcon(item, im);
+		void _AsyncCallback(Icons.AsyncResult r, object objCommon, int nLeft)
+		{
+			var ts = objCommon as ToolStrip;
+			var item = r.obj as ToolStripItem;
 
-				ic.Dispose();
-				Api.DestroyIcon(hi);
-			} else {
-				item.ForeColor = Color.Red;
+			//OutList(r.image, r.hIcon);
+			//Image im = r.image;
+			//if(im == null && r.hIcon != Zero) im = Icons.HandleToImage(r.hIcon);
+
+			Image im = Icons.HandleToImage(r.hIcon);
+
+			if(im != null) _SetItemIcon(ts, item, im);
+
+#if DEBUG
+			if(im==null) item.ForeColor = Color.Red; //TODO
+#endif
+			if(nLeft == 0) {
+				Perf.Next();
+				ts.Update();
+				Perf.NW();
 			}
 		}
 
-		internal void _AsyncOnFinished(object objCommon)
+		void _SetItemIcon(ToolStrip ts, ToolStripItem item, Image im)
 		{
-			Perf.NW();
-			//Out(workId);
-		}
+			Wnd w = Wnd0;
+			var its = ts as _ICatToolStrip;
+			if(its.PaintedOnce) {
+				if(_region1 == Zero) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
+				if(_region2 == Zero) _region2 = Api.CreateRectRgn(0, 0, 0, 0);
 
-		void _SetItemIcon(ToolStripItem item, Image im)
-		{
-			if(_region1 == null) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
-			if(_region2 == null) _region2 = Api.CreateRectRgn(0, 0, 0, 0);
+				w = (Wnd)ts.Handle;
+				Api.GetUpdateRgn(w, _region1, false);
+			}
 
-			Wnd w = (Wnd)item.Owner.Handle;
-			Api.GetUpdateRgn(w, _region1, false);
+			//RECT u;
+			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); OutList(its.PaintedOnce, u);
 
-			item.Owner.SuspendLayout(); //without this much slower, especially when with overflow arrows (when many items)
+			ts.SuspendLayout(); //without this much slower, especially when with overflow arrows (when many items)
 			item.Image = im;
-			item.Owner.ResumeLayout(false);
+			ts.ResumeLayout(false);
 
-			Api.ValidateRect(w); //tested: with WM_SETREDRAW 3 times slower
-			RECT r = item.Bounds; //r.Inflate(-2, -1);
-			Api.SetRectRgn(_region2, r.left, r.top, r.right, r.bottom);
-			Api.CombineRgn(_region1, _region1, _region2, Api.RGN_OR);
-			Api.InvalidateRgn(w, _region1, false);
+			if(its.PaintedOnce) {
+				Api.ValidateRect(w); //tested: with WM_SETREDRAW 3 times slower
+				RECT r = item.Bounds; //r.Inflate(-2, -1);
+									  //r.right = r.left + r.Height; //same speed
+				Api.SetRectRgn(_region2, r.left, r.top, r.right, r.bottom);
+				Api.CombineRgn(_region1, _region1, _region2, Api.RGN_OR);
+
+				//RECT b; GetRgnBox(_region1, out b); OutList(b, _region1);
+
+				Api.InvalidateRgn(w, _region1, false);
+			}
+
+			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); OutList("after", u);
 		}
 
 		IntPtr _region1, _region2;
+
+		//TODO: add properties for icon size and icon flags to pass to GetFileIconHandle.
 
 		bool _isDisposed;
 
@@ -1155,4 +1199,8 @@ namespace Catkeys
 		~Base_CatMenu_CatBar() { /*Out("base dtor");*/ _Dispose(false); }
 	}
 
+	interface _ICatToolStrip
+	{
+		bool PaintedOnce { get; }
+	}
 }

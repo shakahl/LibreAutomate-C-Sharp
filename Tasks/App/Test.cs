@@ -105,9 +105,32 @@ public partial class Test
 							//However when the background thread uses Util.MessageLoop, we have 2 ApplicationExit events; possible workaround: in the event handler unsubscribe the event.
 							domain.DoCallBack(() => { Application.Exit(); });
 
+							//TODO: sometimes IndexOutOfRangeException or NullReferenceException when calling Application.Exit here.
+							/*
+System.IndexOutOfRangeException: Index was outside the bounds of the array.
+   at System.Array.InternalGetReference(Void* elemRef, Int32 rank, Int32* pIndices)
+   at System.Array.SetValue(Object value, Int32 index)
+   at System.Collections.Hashtable.CopyValues(Array array, Int32 arrayIndex)
+   at System.Windows.Forms.Application.ThreadContext.ExitCommon(Boolean disposing)
+   at System.Windows.Forms.Application.ExitInternal()
+   at System.Windows.Forms.Application.Exit(CancelEventArgs e)
+   at Test.<>c.<TestInNewAppDomain>b__1_1() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+   at System.AppDomain.DoCallBack(CrossAppDomainDelegate callBackDelegate)
+   at Test.<>c__DisplayClass1_0.<TestInNewAppDomain>b__0() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at System.Windows.Forms.Application.ThreadContext.ExitCommon(Boolean disposing)
+   at System.Windows.Forms.Application.ExitInternal()
+   at System.Windows.Forms.Application.Exit(CancelEventArgs e)
+   at Test.<>c.<TestInNewAppDomain>b__1_1() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+   at System.AppDomain.DoCallBack(CrossAppDomainDelegate callBackDelegate)
+   at Test.<>c__DisplayClass1_0.<TestInNewAppDomain>b__0() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+
+							*/
+
 							AppDomain.Unload(domain);
 						}
-						catch(Exception e) { Out(e.Message); }
+						catch(Exception e) { Out(e); }
 					}
 				}
 			}
@@ -119,7 +142,7 @@ public partial class Test
 
 		//Out(InterDomain.Get2("test"));
 		//Show.TaskDialog("after all");
-		//Out("after all");
+		//Out("exit default domain");
 	}
 
 	//[DllImport("user32.dll")]

@@ -184,8 +184,7 @@ namespace Catkeys.Util
 
 		//public int test;
 		internal LibWorkarounds.ProcessVariables workarounds;
-		internal Files.Icons.ProcessVariables icons;
-		//internal TaskSTA.TP_CALLBACK_ENVIRON_V3 threadPool;
+		internal ThreadPoolSTA.ProcessVariables threadPool;
 
 		#endregion
 
@@ -289,6 +288,7 @@ namespace Catkeys.Util
 	/// Example: using(new Util.LibEnsureWindowsFormsSynchronizationContext()) { ... }
 	/// </summary>
 	[DebuggerStepThrough]
+	public //TODO
 	class LibEnsureWindowsFormsSynchronizationContext :IDisposable
 	{
 		[ThreadStatic]
@@ -300,7 +300,7 @@ namespace Catkeys.Util
 		/// See class help.
 		/// </summary>
 		/// <param name="onlyIfAutoInstall">Do nothing if WindowsFormsSynchronizationContext.AutoInstall==false. Normally WindowsFormsSynchronizationContext.AutoInstall is true (default).</param>
-		public LibEnsureWindowsFormsSynchronizationContext(bool onlyIfAutoInstall=false)
+		public LibEnsureWindowsFormsSynchronizationContext(bool onlyIfAutoInstall = false)
 		{
 			if(onlyIfAutoInstall && !WindowsFormsSynchronizationContext.AutoInstall) return;
 
@@ -568,7 +568,7 @@ namespace Catkeys.Util
 		public static void OutMsg(ref Message m, params uint[] ignore)
 		{
 			uint msg = (uint)m.Msg;
-			foreach(uint t in ignore) { if(t == msg) return; }
+			if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 
 			Wnd w = (Wnd)m.HWnd;
 			uint counter = w.GetProp("OutMsg"); w.SetProp("OutMsg", ++counter);
@@ -578,9 +578,15 @@ namespace Catkeys.Util
 		[Conditional("DEBUG")]
 		public static void OutMsg(Wnd w, uint msg, LPARAM wParam, LPARAM lParam, params uint[] ignore)
 		{
-			foreach(uint t in ignore) { if(t == msg) return; }
+			if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 			var m = Message.Create(w.Handle, (int)msg, wParam, lParam);
 			OutMsg(ref m);
+		}
+
+		[Conditional("DEBUG")]
+		public static void OutMsg(ref Api.MSG m, params uint[] ignore)
+		{
+			OutMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 		}
 
 		[Conditional("DEBUG")]
@@ -592,6 +598,17 @@ namespace Catkeys.Util
 				OutList(assem.ToString(), assem.CodeBase, assem.Location);
 			}
 		}
+
+		public static int GetComObjRefCount(IntPtr obj)
+		{
+			Marshal.AddRef(obj);
+			return Marshal.Release(obj);
+		}
+
+		public static bool IsScrollLock { get { return (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; } }
+
+		public static Perf.Inst perf2 = new Perf.Inst();
+
 	}
 
 }

@@ -1,4 +1,6 @@
-﻿//-------------------------------------------------------------------------- 
+﻿//TODO: remove this file. Now just build action is None.
+
+//-------------------------------------------------------------------------- 
 //  
 //  Copyright (c) Microsoft Corporation.  All rights reserved.  
 //  

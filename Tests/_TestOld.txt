@@ -1,4 +1,98 @@
-﻿	#region test icons
+﻿#elif false
+				Api.IShellFolder folder = null; IntPtr pidlItem;
+				try {
+					int hr = Api.SHBindToParent(pidl, ref Api.IID_IShellFolder, out folder, out pidlItem);
+					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+
+					int ii = SHMapPIDLToSystemImageListIndex(folder, pidlItem, null);
+					//Out(ii);
+					if(ii < 0) return Zero;
+
+					size = size < 24 ? SHIL_SMALL : SHIL_LARGE;
+					IntPtr il;
+					if(0 != SHGetImageList(size, ref IID_IImageList, out il)) return Zero;
+
+					return Api.ImageList_GetIcon(il, ii, 0);
+				}
+				finally {
+					Api.ReleaseComObject(folder);
+				}
+#else
+				IntPtr R = Zero;
+				Api.IShellFolder folder = null;
+				Api.IExtractIcon eic = null;
+				try {
+					IntPtr pidlItem;
+					int hr = Api.SHBindToParent(pidl, ref Api.IID_IShellFolder, out folder, out pidlItem);
+					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+
+					object o;
+					hr = folder.GetUIObjectOf(Wnd0, 1, &pidlItem, Api.IID_IExtractIcon, Zero, out o);
+					//if(0 != hr) { OutDebug($"{file}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+					if(0 != hr) {
+						if(hr != Api.REGDB_E_CLASSNOTREG) OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}");
+						return Zero;
+					}
+					eic = o as Api.IExtractIcon;
+
+					var sb = new StringBuilder(300); int ii; uint fl;
+					hr = eic.GetIconLocation(0, sb, 300, out ii, out fl);
+					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+					string loc = sb.ToString();
+
+					//OutList(pidl, loc, ii);
+
+					if((fl & (Api.GIL_NOTFILENAME | Api.GIL_SIMULATEDOC)) == 0) {
+						R = GetIconHandleRaw(loc, ii, size);
+						if(R != Zero) return R;
+					}
+
+					//hr = eic.Extract(loc, (uint)ii, &R, null, (uint)size); //no
+					//note:
+					//	Some shell extensions (eg .sln) ignore size and always return 32x32 in phiconLarge and 16x16 in phiconSmall.
+					//	But how then Explorer displays correct icons? Maybe uses SHMapPIDLToSystemImageListIndex/SHGetImageList. Or IExtractImage. Probably it uses other (probably private) functions.
+
+					IntPtr* hiSmall = null, hiBig = null;
+					if(size < 24) { hiSmall = &R; size = 32; } else hiBig = &R;
+					hr = eic.Extract(loc, (uint)ii, hiBig, hiSmall, Calc.MakeUint(size, 16)); //TODO: may have 20 icon
+
+					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}, location={loc}"); return Zero; }
+
+					//OutList(pidl, loc, ii);
+
+					//if(size != 16 && size != 32) { //TODO: test with high DPI
+
+					//	//var perf = new Perf.Inst(true);
+					//	IntPtr R2 = Api.CopyImage(R, Api.IMAGE_ICON, size, size, Api.LR_COPYDELETEORG | Api.LR_COPYRETURNORG | Api.LR_COPYFROMRESOURCE);
+					//	//perf.NW();
+					//	//OutList(R, R2);
+					//	R = R2;
+					//}
+				}
+				catch(Exception e) { OutDebug($"pidl={pidl}, {e.Message}, {e.TargetSite}"); }
+				finally {
+					Api.ReleaseComObject(eic);
+					Api.ReleaseComObject(folder);
+				}
+				return R;
+#endif
+
+
+
+
+					//} else if(isFileType && !isURL) {
+					//	uint n = 300; var sb = new StringBuilder((int)n);
+					//	if(0 == Api.AssocQueryString(0, Api.ASSOCSTR.ASSOCSTR_DEFAULTICON, file, null, sb, ref n)) {
+					//		var icon = sb.ToString();
+					//		OutList(file, icon);
+					//		ParseIconLocation(ref icon, out index);
+					//		return GetIconHandleRaw(icon, index, size);
+					//	}
+
+
+
+
+	#region test icons
 
 	static void TestIcons()
 	{

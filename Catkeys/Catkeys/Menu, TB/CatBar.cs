@@ -147,16 +147,17 @@ namespace Catkeys
 			uint style = Api.WS_POPUP;
 			//style |= Api.WS_CAPTION | Api.WS_SYSMENU;
 
-			var r = Screen.PrimaryScreen.WorkingArea;
+			RECT r = Screen.PrimaryScreen.WorkingArea;
+			r.Inflate(-2, -2); r.top += 4;
 
-			Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, 0, 0, r.Width, r.Height, Wnd0, 0, Zero, (IntPtr)GCHandle.Alloc(this));
+			Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, r.top, r.left, r.Width, r.Height, Wnd0, 0, Zero, (IntPtr)GCHandle.Alloc(this));
 			if(_w.Is0) throw new Win32Exception();
 			Perf.Next();
 
 			_ts = new ToolStrip_(this);
 			_ts.SuspendLayout();
 
-			_ts.SetBounds(0, 0, r.Width, r.Height);
+			_ts.SetBounds(r.top, r.left, r.Width, r.Height);
 
 			//then caller will add buttons etc and call Visible=true, which calls _ts.ResumeLayout and _ts.CreateControl
 		}
@@ -166,7 +167,7 @@ namespace Catkeys
 			get { return _w.Visible; }
 			set
 			{
-				if(_AsyncIcons != null && _AsyncIcons.Count > 0) _AsyncIcons.GetAllAsync(_AsyncCallback, _ts.ImageScalingSize.Width, 0, _AsyncOnFinished);
+				_GetIconsAsync(_ts);
 				if(!_ts.Created) {
 					_ts.ResumeLayout();
 					_ts.CreateControl();
@@ -290,7 +291,7 @@ namespace Catkeys
 
 
 
-		public class ToolStrip_ :ToolStrip
+		public class ToolStrip_ :ToolStrip, _ICatToolStrip
 		{
 			CatBar _parent;
 
@@ -365,13 +366,32 @@ namespace Catkeys
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Out("focus");
 					long td = Time.Milliseconds - _parent._showTime - 500;
-					if(td < 0) { OutDebug("timer"); } //TODO: timer
+					if(td < 0) { /*OutDebug("timer");*/ } //TODO: timer
 					else Focus();
 					//TODO: Time.SetTimer(interval, delegate void TimerHandler(Timer t))
 				}
 				base.OnMouseEnter(e);
 			}
 
+			protected override void OnPaint(PaintEventArgs e)
+			{
+				//var perf = new Perf.Inst(true);
+
+				//ThreadPriority tp = 0;
+				//if(!_paintedOnce) { //this could make the first paint faster if CPU is without hyperthreading
+				//	tp = Thread.CurrentThread.Priority;
+				//	Thread.CurrentThread.Priority = ThreadPriority.Highest;
+				//}
+				base.OnPaint(e);
+				//if(!_paintedOnce) Thread.CurrentThread.Priority = tp;
+
+				//perf.Next(); OutList("------------------ paint", perf.Times);
+
+				_paintedOnce = true;
+			}
+
+			bool _paintedOnce;
+			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }
 		}
 
 	}

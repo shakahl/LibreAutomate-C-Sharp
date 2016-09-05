@@ -65,7 +65,7 @@ namespace Catkeys
 			//support Windows Store apps
 			string appId = null;
 			if(1 == _WindowsStoreAppId(this, out appId, true)) {
-				IntPtr R = Files.Icons.GetIconHandle(appId, big ? 32 : 16);
+				IntPtr R = Icons.GetIconHandle(appId, big ? 32 : 16);
 				if(R != Zero) return R;
 			}
 

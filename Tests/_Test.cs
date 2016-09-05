@@ -69,6 +69,7 @@ static partial class Test
 
 		TestMain();
 	}
+
 	#region old_test_functions
 
 	static void TestCurrentCulture()
@@ -2282,7 +2283,7 @@ bbb"", b3
 		//s = "%TEMP%";
 		//s = @"C:\Program Files\WindowsApps\Microsoft.WindowsCalculator_10.1605.1582.0_x64__8wekyb3d8bbwe\Calculator.exe";
 
-		IntPtr hi = Files.Icons.GetIconHandle(s, 32);
+		IntPtr hi = Icons.GetIconHandle(s, 32);
 		//IntPtr hi = Files.GetIconHandle(Folders.VirtualITEMIDLIST.ControlPanelFolder, 32);
 		Out(hi);
 		if(hi == Zero) return;
@@ -3141,8 +3142,6 @@ bbb"", b3
 
 	#endregion
 
-	#endregion
-
 	static void TestExpandPath()
 	{
 		string s1 = @"Q:\app\Catkeys\Tasks\System.Collections.Immutable.dll";
@@ -3164,97 +3163,104 @@ bbb"", b3
 		Out(r4);
 	}
 
-	#region test end back thread
-
-	class MyAppContext :ApplicationContext
+	static void TestAssoc()
 	{
-		protected override void ExitThreadCore()
-		{
-			OutFunc();
-			base.ExitThreadCore();
-		}
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey(".txt");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey(".cs");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("http:");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("http://hdhdhdh");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("shell:hdhdhdh");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("c:\\file.bmp");
+		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("invalid");
+		//if(s != null) Out(s); else Out("null");
 	}
 
-	static void _BackThread()
+	static void TestSearchPath()
 	{
-		//Out(Api.GetCurrentThreadId());
-		//Application.ThreadExit += Application_ThreadExit;
-		Out(1);
-		try {
-			//Application.Run(_appContext);
-			Application.Run();
-			//Application.Run(new Form());
-			//_loop.Loop();
-			//WaitMS(1000000);
-			//Api.MSG m; while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) Api.DispatchMessage(ref m);
-		}
-		catch(ThreadAbortException) { Out("abort exception"); }
-		Out(2);
+		string s = null;
+		//s = "pythonwin.exe";
+		//s = "blend.exe";
+		//s = "cmmgr32.exe";
+		//s = "excel.exe";
+		//s = "mip.exe";
+		//s = "tests.exe";
+		//s = "notepad.exe";
+		//s = "calc.exe";
+		//s = "typescript.js"; //in PATH
+		//Environment.CurrentDirectory = @"q:\app";
+		//s = "qmdd.exe";
+		//s = "csc.exe";
+		//s = @"C:\windows";
+		//s = @"C:\windows\system32\notepad.exe";
+		//s = @"%SystemRoot%\system32\notepad.exe";
+		//s = @"%SystemRoot%";
+		s = @"\\q7c\q\downloads";
+		s = @"\\q7c\q";
+		s = @"q:\";
+		s = @"q:";
+		s = ":: {jfjfjfjf}";
+		s = @"http://www.quickmacros.com";
+		s = "notepad"; //not found, its OK
+
+		var r = Files.SearchPath(s);
+		//var r =Files.SearchPath(s, @"q:\app");
+		if(r != null) Out(r); else Out("not found");
 	}
 
-	static Util.MessageLoop _loop = new Util.MessageLoop();
-	//static MyAppContext _appContext=new MyAppContext();
-
-	private static void Application_ThreadExit1(object sender, EventArgs e)
+	static void TestSynchronizationContext1()
 	{
-		OutFunc();
-	}
+		//WindowsFormsSynchronizationContext.AutoInstall = false;
+		//Out(WindowsFormsSynchronizationContext.AutoInstall);
 
-	private static void Application_ThreadExit2(object sender, EventArgs e)
-	{
-		OutFunc();
-	}
-
-	private static void Application_ApplicationExit(object sender, EventArgs e)
-	{
-		OutFunc();
-		//Application.ApplicationExit -= Application_ApplicationExit;
-		//Out(Api.GetCurrentThreadId());
-	}
-
-	static Thread _thread;
-
-	static void TestBackThreadEnd()
-	{
-		_thread = new Thread(_BackThread);
-		_thread.IsBackground = true;
-		_thread.SetApartmentState(ApartmentState.STA);
-		_thread.Start();
-
-		//GC.Collect();
-		//Show.TaskDialog("main");
-		//MessageBox.Show("");
-		//MessageBoxX(Wnd0, "", "", 0);
-
-		//Time.SetTimer(1000, true, t => { Application.ExitThread(); });
+		Out(SynchronizationContext.Current);
+		//Time.SetTimer(100, true, t =>
+		//{
+		//	Out(SynchronizationContext.Current);
+		//	Application.ExitThread();
+		//});
 		//Application.Run();
-		//Out("after main loop");
-
-		//Out(Api.GetCurrentThreadId());
-		//_thread.Abort();
-		//Application.Exit();
+		//var f = new Form();
+		//Out(SynchronizationContext.Current);
+		//SynchronizationContext.Current.Post(state => { OutList("posted", SynchronizationContext.Current); }, null);
+		Time.SetTimer(1, true, t => { OutList("posted", SynchronizationContext.Current); });
+		WaitMS(100);
+		//WindowsFormsSynchronizationContext.AutoInstall = false;
+		Out(1);
+		Application.DoEvents();
+		Out(2);
+		Out(SynchronizationContext.Current);
 	}
 
-	[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
-	public static extern int MessageBoxX(Wnd hWnd, string lpText, string lpCaption, uint uType);
+	static void TestSynchronizationContext2()
+	{
+		OutList("main 1", SynchronizationContext.Current);
+		var f = new Form();
+		OutList("main 2", SynchronizationContext.Current);
+		WindowsFormsSynchronizationContext.AutoInstall = false;
 
-	//class ExitClass
+		var thread = new Thread(() =>
+		{
+			OutList("thread 1", SynchronizationContext.Current);
+			var ff = new Form();
+			OutList("thread 2", SynchronizationContext.Current);
+		});
+		thread.SetApartmentState(ApartmentState.STA);
+		thread.Start();
+		thread.Join();
+	}
+
+	//static void TestSynchronizationContext3()
 	//{
-	//	public ExitClass()
-	//	{
-	//		Out("ctor");
+	//	//Application.DoEvents();
+	//	//var f = new Form();
+	//	OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+	//		OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//		Application.DoEvents();
+	//		OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
 	//	}
-
-	//	~ExitClass()
-	//	{
-	//		//Out(AppDomain.CurrentDomain.IsFinalizingForUnload());
-	//		Out("dtor");
-	//	}
+	//	OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
 	//}
-
-	//static ExitClass _exit=new ExitClass();
-
-	#endregion
 
 	static void TestInterDomain()
 	{
@@ -3395,104 +3401,226 @@ bbb"", b3
 		}
 	}
 
-	static void TestAssoc()
+	public static void TestPidlToString()
 	{
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey(".txt");
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey(".cs");
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("http:");
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("http://hdhdhdh");
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("shell:hdhdhdh");
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("c:\\file.bmp");
-		//var s = Files.Misc.GetFileTypeOrProtocolRegistryKey("invalid");
-		//if(s != null) Out(s); else Out("null");
+		var a = Directory.GetFiles(@"q:\app");
+		//var a = new string[] { "http://www.quickmacros.com" };
+
+		var ai = new IntPtr[a.Length];
+		var af = new string[a.Length];
+
+		Perf.First();
+		for(int i = 0; i < a.Length; i++) {
+			ai[i] = Files.Misc.PidlFromString(a[i]);
+			if(ai[i] == Zero) OutList("PidlFromString", a[i]);
+		}
+		Perf.Next();
+		for(int i = 0; i < a.Length; i++) {
+			af[i] = Files.Misc.PidlToString(ai[i], Api.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING);
+			if(af[i] == null) OutList("PidlToString", a[i]);
+		}
+		Perf.NW();
+		for(int i = 0; i < a.Length; i++) Marshal.FreeCoTaskMem(ai[i]);
+		Out(af);
 	}
 
-	static void TestSearchPath()
+	static void TestGetIconsOfAllFileTypes()
 	{
-		string s = null;
-		//s = "pythonwin.exe";
-		//s = "blend.exe";
-		//s = "cmmgr32.exe";
-		//s = "excel.exe";
-		//s = "mip.exe";
-		//s = "tests.exe";
-		//s = "notepad.exe";
-		//s = "calc.exe";
-		//s = "typescript.js"; //in PATH
-		//Environment.CurrentDirectory = @"q:\app";
-		//s = "qmdd.exe";
-		//s = "csc.exe";
-		//s = @"C:\windows";
-		//s = @"C:\windows\system32\notepad.exe";
-		//s = @"%SystemRoot%\system32\notepad.exe";
-		//s = @"%SystemRoot%";
-		s = @"\\q7c\q\downloads";
-		s = @"\\q7c\q";
-		s = @"q:\";
-		s = @"q:";
-		s = ":: {jfjfjfjf}";
-		s = @"http://www.quickmacros.com";
-		s = "notepad"; //not found, its OK
+		var d = new Dictionary<string, string>();
+		string s;
+		using(var k1 = Registry_.Open(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts")) {
+			string[] sub1 = k1.GetSubKeyNames();
+			//Out(sub1);
+			foreach(var s1 in sub1) {
+				if(!Registry_.GetString(out s, "ProgId", s1 + @"\UserChoice", k1)) { /*OutList(s1, "-");*/ continue; }
+				//OutList(s1, s);
+				d.Add(s1, s);
+			}
+		}
 
-		var r = Files.SearchPath(s);
-		//var r =Files.SearchPath(s, @"q:\app");
-		if(r != null) Out(r); else Out("not found");
-	}
-
-	static void TestSynchronizationContext1()
-	{
-		//WindowsFormsSynchronizationContext.AutoInstall = false;
-		//Out(WindowsFormsSynchronizationContext.AutoInstall);
-
-		Out(SynchronizationContext.Current);
-		//Time.SetTimer(100, true, t =>
-		//{
-		//	Out(SynchronizationContext.Current);
-		//	Application.ExitThread();
-		//});
-		//Application.Run();
-		//var f = new Form();
-		//Out(SynchronizationContext.Current);
-		//SynchronizationContext.Current.Post(state => { OutList("posted", SynchronizationContext.Current); }, null);
-		Time.SetTimer(1, true, t => { OutList("posted", SynchronizationContext.Current); });
-		WaitMS(100);
-		//WindowsFormsSynchronizationContext.AutoInstall = false;
-		Out(1);
-		Application.DoEvents();
-		Out(2);
-		Out(SynchronizationContext.Current);
-	}
-
-	static void TestSynchronizationContext2()
-	{
-		OutList("main 1", SynchronizationContext.Current);
-		var f = new Form();
-		OutList("main 2", SynchronizationContext.Current);
-		WindowsFormsSynchronizationContext.AutoInstall = false;
-
-		var thread = new Thread(() =>
 		{
-			OutList("thread 1", SynchronizationContext.Current);
-			var ff = new Form();
-			OutList("thread 2", SynchronizationContext.Current);
-		});
-		thread.SetApartmentState(ApartmentState.STA);
-		thread.Start();
-		thread.Join();
+			string[] sub1 = Registry.ClassesRoot.GetSubKeyNames();
+			//Out(sub1);
+			foreach(var s1 in sub1) {
+				if(s1[0] != '.') continue;
+				if(d.ContainsKey(s1)) continue;
+				if(!Registry_.GetString(out s, "", s1, Registry.ClassesRoot)) { /*OutList(s1, "-");*/ continue; }
+				//OutList(s1, s);
+				d.Add(s1, s);
+			}
+		}
+
+		//Out(d);
+
+		foreach(var v in d) {
+			Out($"<><Z 0x80E080>{v.Key}</Z>");
+			//var hi = Icons.GetIconHandle(v.Value + ":", 16, 0);
+			var hi = Icons.GetIconHandle(v.Key, 16, 0);
+
+			if(hi == Zero) {
+				OutList("<><c 0xff>", v.Key, v.Value, "</c>");
+				continue;
+			}
+
+			Api.DestroyIcon(hi);
+		}
 	}
 
-	//static void TestSynchronizationContext3()
+	static void TestPerfIncremental()
+	{
+		//var perf = new Perf.Inst();
+		//perf.First();
+		//WaitMS(1);
+		//perf.Next();
+		//WaitMS(5);
+		//perf.Next();
+		//perf.Write();
+
+		var perf = new Perf.Inst();
+		perf.Incremental = true;
+		for(int i = 0; i < 5; i++) {
+			perf.First();
+			perf.Next();
+			perf.Next();
+			Api.GetFileAttributes("c:\nofile.tct");
+			perf.Next();
+			perf.Next();
+			//Api.PathIsURL("jdjdjdj:jdjdj");
+			//Api.CloseHandle(Zero);
+			//Api.GetFileAttributes("c:\nofile.tct");
+			perf.Next();
+			perf.Next();
+			Api.GetFileAttributes("c:\nofile.tct");
+			perf.Next();
+			perf.Next();
+			//perf.Write();
+
+			WaitMS(50);
+		}
+		perf.Write();
+		perf.Incremental = false;
+
+		//var perf = new Perf.Inst();
+		//perf.Incremental = true;
+		//for(int i = 0; i < 5; i++) {
+		//	WaitMS(100); //not included in the measurement
+		//	perf.First();
+		//	WaitMS(30); //will make sum ~150000
+		//	perf.Next();
+		//	WaitMS(10); //will make sum ~50000
+		//	perf.Next();
+		//	WaitMS(100); //not included in the measurement
+		//}
+		//perf.Write(); //speed:  154317  51060  (205377)
+		//perf.Incremental = false;
+
+		//Perf.Incremental = true;
+		//for(int i = 0; i < 5; i++) {
+		//	WaitMS(100); //not included in the measurement
+		//	Perf.First();
+		//	WaitMS(30); //will make sum ~150000
+		//	Perf.Next();
+		//	WaitMS(10); //will make sum ~50000
+		//	Perf.Next();
+		//	WaitMS(100); //not included in the measurement
+		//}
+		//Perf.Write(); //speed:  154317  51060  (205377)
+		//Perf.Incremental = false;
+	}
+
+	#endregion
+
+	#region test end back thread
+
+	class MyAppContext :ApplicationContext
+	{
+		protected override void ExitThreadCore()
+		{
+			OutFunc();
+			base.ExitThreadCore();
+		}
+	}
+
+	static void _BackThread()
+	{
+		//Out(Api.GetCurrentThreadId());
+		//Application.ThreadExit += Application_ThreadExit;
+		Out(1);
+		try {
+			//Application.Run(_appContext);
+			Application.Run();
+			//Application.Run(new Form());
+			//_loop.Loop();
+			//WaitMS(1000000);
+			//Api.MSG m; while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) Api.DispatchMessage(ref m);
+		}
+		catch(ThreadAbortException) { Out("abort exception"); }
+		Out(2);
+	}
+
+	static Util.MessageLoop _loop = new Util.MessageLoop();
+	//static MyAppContext _appContext=new MyAppContext();
+
+	private static void Application_ThreadExit1(object sender, EventArgs e)
+	{
+		OutFunc();
+	}
+
+	private static void Application_ThreadExit2(object sender, EventArgs e)
+	{
+		OutFunc();
+	}
+
+	private static void Application_ApplicationExit(object sender, EventArgs e)
+	{
+		OutFunc();
+		//Application.ApplicationExit -= Application_ApplicationExit;
+		//Out(Api.GetCurrentThreadId());
+	}
+
+	static Thread _thread;
+
+	static void TestBackThreadEnd()
+	{
+		_thread = new Thread(_BackThread);
+		_thread.IsBackground = true;
+		_thread.SetApartmentState(ApartmentState.STA);
+		_thread.Start();
+
+		//GC.Collect();
+		//Show.TaskDialog("main");
+		//MessageBox.Show("");
+		//MessageBoxX(Wnd0, "", "", 0);
+
+		//Time.SetTimer(1000, true, t => { Application.ExitThread(); });
+		//Application.Run();
+		//Out("after main loop");
+
+		//Out(Api.GetCurrentThreadId());
+		//_thread.Abort();
+		//Application.Exit();
+	}
+
+	[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
+	public static extern int MessageBoxX(Wnd hWnd, string lpText, string lpCaption, uint uType);
+
+	//class ExitClass
 	//{
-	//	//Application.DoEvents();
-	//	//var f = new Form();
-	//	OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
-	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
-	//		OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
-	//		Application.DoEvents();
-	//		OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+	//	public ExitClass()
+	//	{
+	//		Out("ctor");
 	//	}
-	//	OutList(SynchronizationContext.Current, WindowsFormsSynchronizationContext.AutoInstall);
+
+	//	~ExitClass()
+	//	{
+	//		//Out(AppDomain.CurrentDomain.IsFinalizingForUnload());
+	//		Out("dtor");
+	//	}
 	//}
+
+	//static ExitClass _exit=new ExitClass();
+
+	#endregion
 
 	#region test icons
 
@@ -3581,7 +3709,7 @@ bbb"", b3
 		{
 			//OutList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
-			var R = Files.Icons.GetIconHandle(s, 16, 0);
+			var R = Icons.GetIconHandle(s, 16, 0);
 			//var R = Zero; WaitMS(s.Length * s.Length / 100);
 			//var R = Zero; WaitMS(_random.Next(1, 10));
 			//perf.Next(); OutList(perf.Times, s);
@@ -3592,7 +3720,7 @@ bbb"", b3
 		{
 			//OutList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
-			var R = Files.Icons.GetIconHandle(s, 16, 0);
+			var R = Icons.GetIconHandle(s, 16, 0);
 			//var R = Zero; WaitMS(_random.Next(1, 10));
 			//perf.Next(); OutList(perf.Times, s);
 			return R;
@@ -3618,7 +3746,7 @@ bbb"", b3
 	static void _TestIconsSync(string s)
 	{
 		//var perf = new Perf.Inst(true);
-		var hi = Files.Icons.GetIconHandle(s, 16, 0);
+		var hi = Icons.GetIconHandle(s, 16, 0);
 		//perf.Next(); OutList(perf.Times, s);
 
 		if(--_n == 0) Perf.NW();
@@ -3630,82 +3758,101 @@ bbb"", b3
 		Api.DestroyIcon(hi);
 	}
 
+	[DllImport("kernel32.dll")]
+	public static extern bool SetProcessAffinityMask(IntPtr hProcess, LPARAM dwProcessAffinityMask);
 
 	static void TestIcons()
 	{
+		//SetProcessAffinityMask(Api.GetCurrentProcess(), 9); //like without hyperthreading
+
 		var a = new List<string>();
 		int i, n = 0;
 
 #if true
 		bool lnk = false;
-		string folder, pattern="*";
+		string folder, pattern = "*"; bool recurse = true;
 
 		if(lnk) {
 			folder = Folders.CommonPrograms;
 			foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
 				//Out(f);
 				a.Add(f);
-				//if(++n == 30) break;
-            }
+				n++;
+				if(n == 44) break;
+			}
 		} else {
-			folder = @"q:\app";
+			//folder = @"q:\app"; recurse = false;
+			//folder = @"q:\app"; pattern = "*.ico";
+			//folder = @"q:\app"; pattern = "*.cur";
+			//folder = @"c:\windows\cursors"; pattern = "*.ani";
 			//folder =@"q:\app\catkeys\tasks";
 			//folder = @"c:\program files (x86)";
 			//folder = @"c:\program files";
 			//folder = @"c:\programdata";
 			//folder = @"c:\users";
 			//folder = @"c:\windows";
-			folder = @"c:\windows\system32"; pattern = "*.msc";
+			//folder = @"c:\windows\system32"; pattern = "*.exe"; recurse = false;
+			//folder = @"c:\windows\system32"; pattern = "*.msc";
 			//folder = @"c:\windows"; pattern = "*.scr";
 			//folder = @"c:\windows"; pattern = "*.lnk";
 			//folder = @"c:\windows"; pattern = "*.cpl";
 			//folder = @"q:\";
+			folder = @"q:\downloads"; pattern = "*.exe"; recurse = false;
 
 			var oneExt = new HashSet<string>();
 			//foreach(var f in Directory.EnumerateFiles(folder)) {
 			//foreach(var f in Directory.EnumerateFileSystemEntries(folder, pattern, System.IO.SearchOption.AllDirectories)) {
-			foreach(var f in LibTest.EnumerateFiles(folder, pattern, true)) {
+			foreach(var f in LibTest.EnumerateFiles(folder, pattern, recurse)) {
 				//Out(f);
-				if(pattern == "*") {
-					var ext = Path.GetExtension(f).ToLower();
-					if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
-				}
+				//if(pattern == "*") {
+				//	var ext = Path.GetExtension(f).ToLower();
+				//	if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
+				//}
 				var s = Path.GetFileName(f);
 				//if(0 != s.Like_(true, "*.aps", "*.tss", "*.bin", "*.wal", "*.???_?*", "*.????_?*")) continue;
 				if(0 != s.RegexIs_(RegexOptions.IgnoreCase, @"\.\w+?[_\-][^\.]+$", @", PublicKeyToken", @"^(LanguageService|TextEditor|WindowManagement)", @"\bVisualStudio\b")) continue;
+				//if(n>=3000)
 				a.Add(f);
-				var k =f.RegexReplace_(@"(?i)^C:\\windows\\system32", @"C:\Users\G\Desktop\system64");
-				Out($"{s} : * {k}");
-				//if(++n == 30) break;
+				//var k = f.RegexReplace_(@"(?i)^C:\\windows\\system32", @"C:\Users\G\Desktop\system64");
+				//Out($"{s} : * {k}");
+				n++;
+				//if(n == 45) break;
+				//break;
 			}
 		}
-#elif true
+#elif false
 		//a.Add(@"c:\windows\Boot\DVD\PCAT\etfsboot.com");
 		//a.Add(@"c:\windows\System32\Bubbles.scr");
-		a.Add(@"c:\test\Z.appcontent-ms");
-		a.Add(@"c:\test\Z.appref-ms");
-		a.Add(@"c:\test\Z.as");
-		a.Add(@"c:\test\Z.asa");
-		a.Add(@"c:\test\Z.asp");
-		a.Add(@"c:\test\Z.axd");
-		a.Add(@"c:\test\Z.cdx");
-		a.Add(@"c:\test\Z.cdxml");
-		a.Add(@"c:\test\Z.cfm");
-		a.Add(@"c:\test\Z.chk");
 
-		a.Add(@".appcontent-ms");
-		a.Add(@".appref-ms");
-		a.Add(@".as");
-		a.Add(@".asa");
-		a.Add(@".asp");
-		a.Add(@".axd");
-		a.Add(@".cdx");
-		a.Add(@".cdxml");
-		a.Add(@".cfm");
-		a.Add(@".chk");
-		//a.Add(@".txt");
+		//a.Add(@"c:\test\Z.appcontent-ms");
+		//a.Add(@"c:\test\Z.appref-ms");
+		//a.Add(@"c:\test\Z.as");
+		//a.Add(@"c:\test\Z.asa");
+		//a.Add(@"c:\test\Z.asp");
+		//a.Add(@"c:\test\Z.axd");
+		//a.Add(@"c:\test\Z.cdx");
+		//a.Add(@"c:\test\Z.cdxml");
+		//a.Add(@"c:\test\Z.cfm");
+		//a.Add(@"c:\test\Z.chk");
+
+		//a.Add(@".appcontent-ms");
+		//a.Add(@".appref-ms");
+		//a.Add(@".as");
+		//a.Add(@".asa");
+		//a.Add(@".asp");
+		//a.Add(@".axd");
+		//a.Add(@".cdx");
+		//a.Add(@".cdxml");
+		//a.Add(@".cfm");
+		//a.Add(@".chk");
+		////a.Add(@".txt");
+
+		a.Add(@".com");
+		a.Add(@".p7s");
+		a.Add(@".pano");
+		a.Add(@".sst");
 #else //all registered file types
-		var d = new Dictionary<string, string>();
+		var d = new SortedDictionary<string, string>();
 		string s;
 		using(var k1 = Registry_.Open(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts")) {
 			string[] sub1 = k1.GetSubKeyNames();
@@ -3733,18 +3880,26 @@ bbb"", b3
 
 		foreach(var v in d) {
 			//Out($"<><Z 0x80E080>{v.Key}</Z>");
-			Out($"{v.Key} : * {v.Key}");
+			//Out($"{v.Key} : * {v.Key}");
 			a.Add(v.Key);
 			//a.Add(v.Value+":");
 		}
 		//return;
 #endif
 
+		Out(n);
+		//FileIconInit(false);
+
 		int size = 16;
+		//size = Icons.GetShellIconSize(Icons.ShellSize.Small);
+		//size = Icons.GetShellIconSize(Icons.ShellSize.Large);
+		//size = Icons.GetShellIconSize(Icons.ShellSize.ExtraLarge);
+		//size = Icons.GetShellIconSize(Icons.ShellSize.Jumbo);
 
 #if true
 		var m = new CatBar();
-		m.Ex.ImageScalingSize = new Size(size, size);
+		if(size > 0) m.Ex.ImageScalingSize = new Size(size, size);
+		m.IconFlags = Icons.IconFlag.Shell;
 
 		//m.Ex.AutoSize = false;
 		m.Ex.LayoutStyle = ToolStripLayoutStyle.Flow;
@@ -3755,19 +3910,60 @@ bbb"", b3
 		//m["copy", @"q:\app\copy.ico"] = null;
 		//m["paste", @"q:\app\paste.ico"] = null;
 
+		//m["Calculator", @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"] = null;
+		//m["Virt folder", @"::{20d04fe0-3aea-1069-a2d8-08002b30309d}"] = null;
+		//m[".cs", @".cs"] = null;
+
 		for(i = 0; i < a.Count; i++) {
+			if(size == 256 && i < 12) continue;
 			var u = a[i];
 			m[Path.GetFileName(u), u] = null;
+			//m[Path.GetFileName(u), @"q:\app\paste.ico"] = null;
 		}
 
-		m.Ex.Click += (unu, sed) => _mlTb.Stop();
-        m.Visible = true;
+		//m.Ex.Click += (unu, sed) => _mlTb.Stop();
+		m.Ex.MouseUp += (unu, sed) => _mlTb.Stop();
+		Perf.First();
+		m.Visible = true;
 		//m.Visible = false; m["cut", @"q:\app\cut.ico"] = null; m.Visible = true;
 		_mlTb.Loop();
 		m.Close();
+		//Out("exit");
+#elif true
+		var m = new CatMenu();
+		if(size > 0) m.CMS.ImageScalingSize = new Size(size, size);
+		//m.ActivateMenuWindow = true;
 
+		for(i = 0; i < a.Count; i++) {
+			var s = a[i];
+			m[Path.GetFileName(s), s] = null;
+		}
+
+		Perf.First();
+		m.Show();
+#elif false
+		var m = new CatMenu();
+		m.CMS.ImageScalingSize = new Size(size, size);
+
+		Perf.First();
+		for(i = 0; i < a.Count; i++) {
+			var hi = Icons.GetIconHandle(a[i], size);
+			if(hi != Zero) {
+				//var ic = Icon.FromHandle(hi);
+				//var im = ic.ToBitmap();
+				//m[Path.GetFileName(a[i]), im] = null;
+
+				m[Path.GetFileName(a[i]), hi] = null;
+
+				Api.DestroyIcon(hi);
+			}
+		}
+		Perf.NW();
+
+		m.Show();
 #else
 		var ai = new IntPtr[a.Count];
+		Out(a.Count);
 
 		var m = new CatMenu();
 		m.CMS.ImageScalingSize = new Size(size, size);
@@ -3775,14 +3971,17 @@ bbb"", b3
 		try {
 			Perf.First();
 			for(i = 0; i < a.Count; i++) {
-				ai[i] = Files.Icons.GetIconHandle(a[i], size);
+				ai[i] = Icons.GetIconHandle(a[i], size);
 				//Out(ai[i]);
-			}
+				//Api.DestroyIcon(ai[i]); ai[i] = Zero;
+            }
 			Perf.NW();
 
 			for(i = 0; i < a.Count; i++) {
 				var s = a[i];
-				m[Path.GetFileName(s), ai[i]] = null;
+				//Out(i);
+				//m[Path.GetFileName(s), ai[i]] = null;
+				m[Path.GetFileName(s)] = null;
 			}
 		}
 		finally {
@@ -3793,96 +3992,146 @@ bbb"", b3
 #endif
 	}
 
-#endregion test icons
+	//[DllImport("shell32.dll", EntryPoint ="#660")]
+	//static extern bool FileIconInit(bool restorFromDisk);
 
-	static void TestGetIconsOfAllFileTypes()
+	#endregion test icons
+
+	#region test thread pool
+
+	static int _nTasks = 30;
+
+	static void TestTasksDefault()
 	{
-		var d = new Dictionary<string, string>();
-		string s;
-		using(var k1 = Registry_.Open(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts")) {
-			string[] sub1 = k1.GetSubKeyNames();
-			//Out(sub1);
-			foreach(var s1 in sub1) {
-				if(!Registry_.GetString(out s, "ProgId", s1 + @"\UserChoice", k1)) { /*OutList(s1, "-");*/ continue; }
-				//OutList(s1, s);
-				d.Add(s1, s);
-			}
-		}
-
-		{
-			string[] sub1 = Registry.ClassesRoot.GetSubKeyNames();
-			//Out(sub1);
-			foreach(var s1 in sub1) {
-				if(s1[0] != '.') continue;
-				if(d.ContainsKey(s1)) continue;
-				if(!Registry_.GetString(out s, "", s1, Registry.ClassesRoot)) { /*OutList(s1, "-");*/ continue; }
-				//OutList(s1, s);
-				d.Add(s1, s);
-			}
-		}
-
-		//Out(d);
-
-		foreach(var v in d) {
-			Out($"<><Z 0x80E080>{v.Key}</Z>");
-			//var hi = Files.Icons.GetIconHandle(v.Value + ":", 16, 0);
-			var hi = Files.Icons.GetIconHandle(v.Key, 16, 0);
-
-			if(hi == Zero) {
-				OutList("<><c 0xff>", v.Key, v.Value, "</c>");
-				continue;
-			}
-
-			Api.DestroyIcon(hi);
-		}
-	}
-
-	public static void TestPidlToString()
-	{
-		var a = Directory.GetFiles(@"q:\app");
-		//var a = new string[] { "http://www.quickmacros.com" };
-
-		var ai = new IntPtr[a.Length];
-		var af = new string[a.Length];
-
-		Perf.First();
-		for(int i=0; i<a.Length; i++) {
-			ai[i] = Files.Misc.PidlFromString(a[i]);
-			if(ai[i] == Zero) OutList("PidlFromString", a[i]);
-        }
 		Perf.Next();
-		for(int i=0; i<a.Length; i++) {
-			af[i] = Files.Misc.PidlToString(ai[i], Api.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING);
-			if(af[i] == null) OutList("PidlToString", a[i]);
-        }
-		Perf.NW();
-		for(int i=0; i<a.Length; i++) Marshal.FreeCoTaskMem(ai[i]);
-		Out(af);
+		using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+			_n = _nTasks;
+			for(int i = 0; i < _nTasks; i++) _TestTasksDefault();
+		}
+		Time.SetTimer(500, true, t => _loop.Stop());
+		_loop.Loop();
 	}
+
+	static async void _TestTasksDefault()
+	{
+		var task = Task.Run(() =>
+		{
+			WaitMS(_random.Next(1, 10));
+			return 0;
+		});
+		await task;
+		int hi = task.Result;
+		if(--_n < 1) Perf.NW();
+	}
+
+	//static void TestTasksSta()
+	//{
+	//	_staTaskScheduler = new System.Threading.Tasks.Schedulers.StaTaskScheduler(4);
+	//	Perf.Next();
+	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+	//		_n = _nTasks;
+	//		for(int i = 0; i < _nTasks; i++) _TestTasksSta();
+	//	}
+	//	Time.SetTimer(500, true, t => _loop.Stop());
+	//	_loop.Loop();
+	//}
+
+	//static System.Threading.Tasks.Schedulers.StaTaskScheduler _staTaskScheduler;
+
+	//static async void _TestTasksSta()
+	//{
+	//	var task = Task.Factory.StartNew(() =>
+	//	{
+	//		WaitMS(_random.Next(1, 10));
+	//		return 0;
+	//	}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
+	//	await task;
+	//	int hi = task.Result;
+	//	if(--_n < 1) Perf.NW();
+	//}
+
+	static void TestThreadPoolSTA()
+	{
+		Out("BEGIN");
+		//Out(Api.GetCurrentThreadId());
+		Task.Run(() => { for(;;) { WaitMS(100); GC.Collect(); } });
+		Perf.Next();
+		//using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+		_nTasks = 30;
+		_n = _nTasks;
+		for(int i = 0; i < _nTasks; i++) _TestThreadPoolSTA2();
+		//}
+		Time.SetTimer(1000, true, t => _loop.Stop());
+		_loop.Loop();
+		Out("END");
+	}
+
+	static void _TestThreadPoolSTA()
+	{
+		Util.ThreadPoolSTA.SubmitCallback(null, o =>
+		{
+			OutList("worker", Api.GetCurrentThreadId());
+			//WaitMS(_random.Next(1, 10));
+			WaitMS(_random.Next(10, 100));
+			//WaitMS(2000);
+			//WaitMS(16000);
+			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
+		}, o =>
+		{
+			//OutList("completion", Api.GetCurrentThreadId());
+			if(--_n < 1) Perf.NW();
+		});
+	}
+
+	static void _TestThreadPoolSTA2()
+	{
+		var work = Util.ThreadPoolSTA.CreateWork(null, o =>
+		 {
+			 OutList("worker", Api.GetCurrentThreadId());
+			 //WaitMS(_random.Next(1, 10));
+			 WaitMS(_random.Next(10, 100));
+			 //WaitMS(2000);
+			 //WaitMS(16000);
+			 //if(0==Interlocked.Decrement(ref _n)) Perf.NW();
+		 }, o =>
+		 {
+			 //OutList("completion", Api.GetCurrentThreadId());
+			 if(--_n < 1) Perf.NW();
+		 });
+
+		work.Submit();
+		//for(int i=0; i<10; i++) work.Submit();
+		//WaitMS(10); work.Cancel();
+		//work.Submit();
+		//work.Wait();
+		//work.Submit();
+		work.Wait();
+		work.Dispose();
+		//work.Submit();
+	}
+
+	#endregion
+
+
 
 	static void TestMain()
 	{
-		//TestPidlToString();
+
+
 
 		//Perf.First();
-		//WaitMS(1);
-		//Perf.Next();
-
-		//var perf = new Perf.Inst(true);
-		//perf.NW();
-
-		//WaitMS(1);
-		//Perf.NW();
-
-
-		//TestGetIconsOfAllFileTypes();
-
-
-		//WaitMS(500);
-
+		//TestTasksDefault();
+		//TestTasksSta();
+		//TestTasksOur();
+		//TestTaskSTA();
+		//TestThreadPoolSTA();
+		//GCHandle
 		//TestMenuTB();
 
 		TestIcons();
+
+		//GC.Collect();
+		//WaitMS(1000);
 
 		//var f = new Form();
 		////f.Click += (unu, sed) => TestIcons();
@@ -3901,6 +4150,12 @@ bbb"", b3
 		////Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
 		//Out("exit");
 
+		//TestBackThreadEnd();
+
+		#region call_old_test_functions
+		//TestPerfIncremental();
+		//TestGetIconsOfAllFileTypes();
+		//TestPidlToString();
 		//TestSynchronizationContext1();
 		//TestSynchronizationContext2();
 		//TestSynchronizationContext3();
@@ -3911,9 +4166,6 @@ bbb"", b3
 		//TestAssoc();
 		//LibTest.TestLibMemory();
 		//TestInterDomain();
-		//TestBackThreadEnd();
-
-#region call_old_test_functions
 		//LibTest.TestLockInternedString();
 		//TestThreadWaitInit();
 		//TestNativeThread();
@@ -3986,7 +4238,7 @@ bbb"", b3
 		//TestCsvSerialization();
 		//TestShow();
 		//TestCurrentCulture();
-#endregion
+		#endregion
 
 	}
 }

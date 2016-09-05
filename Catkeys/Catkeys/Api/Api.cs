@@ -353,6 +353,9 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll")]
 		public static extern bool DestroyIcon(IntPtr hIcon);
 
+		[DllImport("user32.dll")]
+		public static extern bool DestroyCursor(IntPtr hCursor);
+
 		//public const int MONITOR_DEFAULTTONULL = 0;
 		//public const int MONITOR_DEFAULTTOPRIMARY = 1;
 		//public const int MONITOR_DEFAULTTONEAREST = 2;
@@ -1077,6 +1080,9 @@ namespace Catkeys.Winapi
 		public static extern bool CloseHandle(IntPtr hObject);
 
 		[DllImport("kernel32.dll")]
+		public static extern IntPtr GetCurrentThread();
+
+		[DllImport("kernel32.dll")]
 		public static extern uint GetCurrentThreadId();
 
 		[DllImport("kernel32.dll")]
@@ -1235,6 +1241,9 @@ namespace Catkeys.Winapi
 
 		[DllImport("kernel32.dll")]
 		public static extern uint SetErrorMode(uint uMode);
+
+		[DllImport("kernel32.dll")]
+		public static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
 
 
 
@@ -1410,9 +1419,6 @@ namespace Catkeys.Winapi
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		public static extern int SHGetPropertyStoreForWindow(Wnd hwnd, [In] ref Guid riid, out IPropertyStore ppv);
-
-		[DllImport("ole32.dll", PreserveSig = true)]
-		public static extern int PropVariantClear(ref PROPVARIANT_LPARAM pvar);
 
 		public static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
 
@@ -1609,7 +1615,20 @@ namespace Catkeys.Winapi
 		[DllImport("shell32.dll", PreserveSig = true)]
 		public static extern int SHGetStockIconInfo(SHSTOCKICONID siid, uint uFlags, ref SHSTOCKICONINFO psii);
 
+		[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
+		public static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, uint nIconSize);
 
+		public const int SHIL_LARGE = 0;
+		public const int SHIL_SMALL = 1;
+		public const int SHIL_EXTRALARGE = 2;
+		public const int SHIL_SYSSMALL = 3;
+		public const int SHIL_JUMBO = 4;
+
+		[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
+		public static extern int SHGetImageList(int iImageList, [In] ref Guid riid, out IImageList ppvObj);
+		//TODO: remove unused
+		[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
+		public static extern int SHGetImageList(int iImageList, [In] ref Guid riid, out IntPtr ppvObj);
 
 
 
@@ -1621,36 +1640,36 @@ namespace Catkeys.Winapi
 		[DllImport("shlwapi.dll", EntryPoint = "PathIsURLW")]
 		public static extern bool PathIsURL(string pszPath);
 
-		public enum ASSOCSTR
-		{
-			ASSOCSTR_COMMAND = 1,
-			ASSOCSTR_EXECUTABLE,
-			ASSOCSTR_FRIENDLYDOCNAME,
-			ASSOCSTR_FRIENDLYAPPNAME,
-			ASSOCSTR_NOOPEN,
-			ASSOCSTR_SHELLNEWVALUE,
-			ASSOCSTR_DDECOMMAND,
-			ASSOCSTR_DDEIFEXEC,
-			ASSOCSTR_DDEAPPLICATION,
-			ASSOCSTR_DDETOPIC,
-			ASSOCSTR_INFOTIP,
-			ASSOCSTR_QUICKTIP,
-			ASSOCSTR_TILEINFO,
-			ASSOCSTR_CONTENTTYPE,
-			ASSOCSTR_DEFAULTICON,
-			ASSOCSTR_SHELLEXTENSION,
-			ASSOCSTR_DROPTARGET,
-			ASSOCSTR_DELEGATEEXECUTE,
-			ASSOCSTR_SUPPORTED_URI_PROTOCOLS,
-			ASSOCSTR_PROGID,
-			ASSOCSTR_APPID,
-			ASSOCSTR_APPPUBLISHER,
-			ASSOCSTR_APPICONREFERENCE,
-			ASSOCSTR_MAX
-		}
+		//public enum ASSOCSTR
+		//{
+		//	ASSOCSTR_COMMAND = 1,
+		//	ASSOCSTR_EXECUTABLE,
+		//	ASSOCSTR_FRIENDLYDOCNAME,
+		//	ASSOCSTR_FRIENDLYAPPNAME,
+		//	ASSOCSTR_NOOPEN,
+		//	ASSOCSTR_SHELLNEWVALUE,
+		//	ASSOCSTR_DDECOMMAND,
+		//	ASSOCSTR_DDEIFEXEC,
+		//	ASSOCSTR_DDEAPPLICATION,
+		//	ASSOCSTR_DDETOPIC,
+		//	ASSOCSTR_INFOTIP,
+		//	ASSOCSTR_QUICKTIP,
+		//	ASSOCSTR_TILEINFO,
+		//	ASSOCSTR_CONTENTTYPE,
+		//	ASSOCSTR_DEFAULTICON,
+		//	ASSOCSTR_SHELLEXTENSION,
+		//	ASSOCSTR_DROPTARGET,
+		//	ASSOCSTR_DELEGATEEXECUTE,
+		//	ASSOCSTR_SUPPORTED_URI_PROTOCOLS,
+		//	ASSOCSTR_PROGID,
+		//	ASSOCSTR_APPID,
+		//	ASSOCSTR_APPPUBLISHER,
+		//	ASSOCSTR_APPICONREFERENCE,
+		//	ASSOCSTR_MAX
+		//}
 
-		[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
-		public static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
+		//[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
+		//public static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
 
 
 
@@ -1675,6 +1694,45 @@ namespace Catkeys.Winapi
 
 		[DllImport("comctl32.dll")]
 		public static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, uint flags);
+
+		[DllImport("comctl32.dll")]
+		public static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
+		//TODO: remove if unused.
+
+
+
+
+
+
+
+
+
+
+
+		//OLE32
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		public static extern int PropVariantClear(ref PROPVARIANT_LPARAM pvar);
+
+		[Flags]
+		public enum COWAIT_FLAGS :uint
+		{
+			COWAIT_DEFAULT,
+			COWAIT_WAITALL,
+			COWAIT_ALERTABLE,
+			COWAIT_INPUTAVAILABLE = 4,
+			COWAIT_DISPATCH_CALLS = 8,
+			COWAIT_DISPATCH_WINDOW_MESSAGES = 0x10
+		}
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		public static extern int CoWaitForMultipleHandles(COWAIT_FLAGS dwFlags, uint dwTimeout, uint cHandles, [In] IntPtr[] pHandles, out uint lpdwindex);
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		public static extern int CoWaitForMultipleHandles(COWAIT_FLAGS dwFlags, uint dwTimeout, uint cHandles, ref IntPtr pHandles, out uint lpdwindex);
+
+
+
 
 
 
