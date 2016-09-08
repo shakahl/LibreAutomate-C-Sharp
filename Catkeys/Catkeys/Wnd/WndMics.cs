@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -398,20 +399,19 @@ namespace Catkeys
 				/// Can be used to specify WNDCLASSEX fields other than cbSize, lpszClassName, lpfnWndProc, cbWndExtra and style.
 				/// If not used, the function sets: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; others = 0/null/Zero.
 				/// </param>
-				/// <exception cref="Win32Exception">When fails, for example if the class name already exists.</exception>
+				/// <exception cref="Win32Exception">When fails, for example if the class already exists.</exception>
 				/// <remarks>
 				/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain identifer. The Name property returns it.
 				/// If style does not have CS_GLOBALCLASS and ex is null or its hInstance field is not set, for hInstance uses exe module handle.
+				/// Not thread-safe.
 				/// </remarks>
 				public static WndClass Register(string className, Api.WNDPROC wndProc, int wndExtra = 0, uint style = 0, Api.WNDCLASSEX? ex = null)
 				{
-					var r = new WndClass();
-					Api.WNDCLASSEX x = ex == null ? new Api.WNDCLASSEX() : ex.Value;
-					if(ex == null) {
-						x.hCursor = Api.LoadCursor(Zero, Api.IDC_ARROW);
-						x.hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1);
-					}
+					Api.WNDCLASSEX x;
+					if(ex != null) x = ex.Value;
+					else x = new Api.WNDCLASSEX() { hCursor = Api.LoadCursor(Zero, Api.IDC_ARROW), hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1) };
 
+					var r = new WndClass();
 					r._Register(ref x, className, wndProc, wndExtra, style);
 					return r;
 
@@ -466,9 +466,10 @@ namespace Catkeys
 				/// <param name="wndExtra">Size of extra window memory not including extra memory of base class. Can be accessed with SetMyLong/GetMyLong. Example: IntPtr.Size.</param>
 				/// <param name="globalClass">If false, the function removes CS_GLOBALCLASS style.</param>
 				/// <param name="baseModuleHandle">If the base class is global (CS_GLOBALCLASS style), don't use this parameter, else pass the module handle of the exe or dll that registered the base class.</param>
-				/// <exception cref="Win32Exception">When fails, for example the base class does not exist, or the class name already exists.</exception>
+				/// <exception cref="Win32Exception">When fails, for example if the class already exists.</exception>
 				/// <remarks>
 				/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain identifer. The Name property returns it.
+				/// Not thread-safe.
 				/// </remarks>
 				public static WndClass Superclass(string baseClassName, string className, Api.WNDPROC wndProc, int wndExtra = 0, bool globalClass = false, IntPtr baseModuleHandle = default(IntPtr))
 				{
@@ -537,6 +538,76 @@ namespace Catkeys
 					var x = new Api.WNDCLASSEX();
 					x.cbSize = Api.SizeOf(x);
 					return Api.GetClassInfoEx(moduleHandle, className, ref x);
+				}
+
+				/// <summary>
+				/// Registers new window class that can be used by all app domains of this process.
+				/// Returns class atom.
+				/// Calls Api.RegisterClassEx().
+				/// More info: MSDN -> WNDCLASSEX.
+				/// </summary>
+				/// <param name="className">Class name.</param>
+				/// <param name="wndProc">Window procedure. Can be classic window procedure that calls Api.DefWindowProc(). Don't need to protect it from GC.</param>
+				/// <param name="wndExtra">Size of extra window memory which can be accessed with SetWindowLong/GetWindowLong with >=0 offset. Example: IntPtr.Size.</param>
+				/// <param name="style">Class style. Adds CS_GLOBALCLASS.</param>
+				/// <param name="ex">
+				/// Can be used to specify WNDCLASSEX fields other than cbSize, hInstance, lpszClassName, lpfnWndProc, cbWndExtra and style.
+				/// If not used, the function sets: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; others = 0/null/Zero.
+				/// </param>
+				/// <exception cref="Win32Exception">When fails, for example if the class already exists and was registered not with this function.</exception>
+				/// <remarks>
+				/// This function can be called multiple times for the same class, for example called once in each app domain. Next time it just returns class atom.
+				/// <para />Each domain that calls this function uses its own instance of window procedure delegate.
+				/// <para />The window class remains registered until this process ends. Don't need to unregister.
+				/// <para />Thread-safe.
+				/// </remarks>
+				public static ushort InterDomainRegister(string className, Api.WNDPROC wndProc, int wndExtra = 0, uint style = 0, Api.WNDCLASSEX? ex = null)
+				{
+					lock ("jU0tLiIbtE6KWg5aCu7RDg") {
+						ushort atom = 0;
+						string interDomainVarName = "Catkeys_wcidr_" + className.ToLower_();
+						if(!InterDomain.GetVariable(interDomainVarName, out atom)) {
+							Api.WNDCLASSEX x;
+							if(ex != null) x = ex.Value;
+							else x = new Api.WNDCLASSEX() { hCursor = Api.LoadCursor(Zero, Api.IDC_ARROW), hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1) };
+
+							try {
+								x.cbSize = Api.SizeOf(x);
+								x.lpszClassName = Marshal.StringToHGlobalUni(className);
+								x.lpfnWndProc = Api.GetProcAddress("user32", "DefWindowProcW");
+								x.cbWndExtra = wndExtra;
+								x.style = style | Api.CS_GLOBALCLASS;
+								x.hInstance = Zero;
+
+								atom = Api.RegisterClassEx(ref x);
+								if(atom == 0) throw new Win32Exception();
+							}
+							finally { Marshal.FreeHGlobal(x.lpszClassName); }
+
+							InterDomain.SetVariable(interDomainVarName, atom);
+						}
+						_interDomain[className] = wndProc;
+						return atom;
+					}
+				}
+
+				//className/wndProc of classes registered with InterDomainRegister in this app domain.
+				//InterDomainCreateWindow() uses it to get wndProc. Also it protects wndProc from GC.
+				static ConcurrentDictionary<string, Api.WNDPROC> _interDomain = new ConcurrentDictionary<string, Api.WNDPROC>(StringComparer.OrdinalIgnoreCase);
+
+				/// <summary>
+				/// Creates new window of a class registered with <see cref="InterDomainRegister"/>.
+				/// All parameters are the same as with Api.CreateWindowEx().
+				/// </summary>
+				/// <remarks>
+				/// The window procedure does not receive messages until this function returns. It never receives creation messages, eg WM_CREATE.
+				/// </remarks>
+				public static Wnd InterDomainCreateWindow(uint exStyle, string className, string name, uint style, int x, int y, int width, int height, Wnd parent = default(Wnd), LPARAM id = default(LPARAM))
+				{
+					Api.WNDPROC wndProc; if(!_interDomain.TryGetValue(className, out wndProc)) return Wnd0;
+					Wnd w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, id, Zero, 0);
+					if(!w.Is0) w.SetWindowLong(Api.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+					return w;
 				}
 			}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -35,6 +36,9 @@ namespace Catkeys
 		/// </summary>
 		public ContextMenuStrip CMS { get { return _cm; } }
 
+		//Our base uses this.
+		protected override ToolStrip MainToolStrip { get { return _cm; } }
+
 		/// <summary>
 		/// Initializes a new instance of the CatMenu class.
 		/// </summary>
@@ -56,6 +60,15 @@ namespace Catkeys
 		public void Dispose()
 		{
 			if(!_cm.IsDisposed) _cm.Dispose();
+			//Out(_cm.Items.Count); //0
+			//tested: ContextMenuStrip disposes its items but not their ToolStripDropDownMenu. And not their Image, therefore base._Dispose disposes images.
+			if(_submenusToDispose != null) {
+				foreach(var dd in _submenusToDispose) {
+					Debug.Assert(!dd.IsDisposed);
+					if(!dd.IsDisposed) dd.Dispose();
+				}
+				_submenusToDispose = null;
+			}
 			base._Dispose(true);
 		}
 
@@ -126,7 +139,7 @@ namespace Catkeys
 		void _Add(ToolStripItem item, Action<ClickEventData> onClick, object icon)
 		{
 			var dd = CurrentAddMenu;
-			dd.SuspendLayout(); //makes adding items much faster; will resume when showing
+			dd.SuspendLayout(); //makes adding items much faster. It's OK to suspend/resume when already suspended; .NET uses a layoutSuspendCount.
 			dd.Items.Add(item);
 			_SetItemProp(false, item, onClick, icon);
 			dd.ResumeLayout(false);
@@ -238,8 +251,14 @@ namespace Catkeys
 			//t.NW();
 
 			if(_AddingSubmenuItems) item.MouseHover += _Item_MouseHover;
+
+			if(_submenusToDispose == null) _submenusToDispose = new List<ToolStripDropDownMenu_>();
+			_submenusToDispose.Add(dd);
+
 			return item;
 		}
+
+		List<ToolStripDropDownMenu_> _submenusToDispose;
 
 		//Workaround for ToolStripDropDown bug: sometimes does not show 3-rd level submenu; it happens when the mouse moves from the 1-level menu to the 2-nd level submenu-item over an unrelated item of 1-st level menu.
 		void _Item_MouseHover(object sender, EventArgs e)
@@ -399,7 +418,7 @@ namespace Catkeys
 			if(_cm.Items.Count == 0) return;
 
 			if(!_showedOnce) {
-				_showedOnce = true;
+				//_showedOnce = true; //OnOpening() sets it
 				if(!ActivateMenuWindow) Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc();
 			}
 			Perf.Next(); //TODO
@@ -547,7 +566,7 @@ namespace Catkeys
 			{
 				if(disposing && Visible) Close(); //else OnClosed not called etc
 				base.Dispose(disposing);
-				//OutList("CMS disposed", disposing);
+				//OutList("menu disposed", disposing);
 			}
 
 			protected override void OnPaint(PaintEventArgs e)
@@ -561,6 +580,8 @@ namespace Catkeys
 
 				_paintedOnce = true;
 			}
+
+			//ToolStrip _ICatToolStrip.ToolStrip { get { return this; } }
 
 			bool _paintedOnce;
 			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }
@@ -618,13 +639,11 @@ namespace Catkeys
 
 					//call the caller-provided callback function that should add submenu items on demand
 					if(_lazySubmenuDelegate != null) {
-						SuspendLayout(); //TODO
-						Items.Clear();
+						Items.Clear(); //remove the placeholder separator
 						_cat._submenuStack.Push(this);
 						_lazySubmenuDelegate(_cat);
 						_cat._submenuStack.Pop();
 						_lazySubmenuDelegate = null;
-						ResumeLayout(false);
 					}
 
 					PerformLayout();
@@ -671,12 +690,20 @@ namespace Catkeys
 				base.OnHandleDestroyed(e);
 			}
 
+			//protected override void Dispose(bool disposing)
+			//{
+			//	base.Dispose(disposing);
+			//	OutList("submenu disposed", disposing);
+			//}
+
 			protected override void OnPaint(PaintEventArgs e)
 			{
 				//OutFunc();
 				base.OnPaint(e);
 				_paintedOnce = true;
 			}
+
+			//ToolStrip _ICatToolStrip.ToolStrip { get { return this; } }
 
 			bool _paintedOnce;
 			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }
@@ -767,10 +794,10 @@ namespace Catkeys
 				MultiShow = true; //programmers would forget it
 			}
 
-			//if(!_showedOnce) {
-			//	_showedOnce = true;
-			//	_cm.PerformLayout(); //TODO
-			//}
+			if(!_showedOnce) {
+				_showedOnce = true;
+				_cm.PerformLayout();
+			}
 
 			_GetIconsAsync(_cm);
 		}
@@ -945,7 +972,7 @@ namespace Catkeys
 	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
 	public abstract class Base_CatMenu_CatBar
 	{
-		protected bool m_inRightClick;
+		internal bool m_inRightClick;
 		EventHandler _onClick;
 		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
 
@@ -992,6 +1019,9 @@ namespace Catkeys
 			}
 		}
 
+		//Gets ToolStrip from CatMenu and CatBar, which override this.
+		protected abstract ToolStrip MainToolStrip { get; }
+
 		/// <summary>
 		/// Gets the last added item as ToolStripItem, which is the base type of ToolStripMenuItem, ToolStripButton and other supported types.
 		/// The item can be added with m.Add(...), m[...]=, m.Separator() and m.Submenu(...).
@@ -1006,6 +1036,16 @@ namespace Catkeys
 		public event Action<ToolStripItem> ItemAdded;
 
 		/// <summary>
+		/// ContextMenu to show when right-clicked.
+		/// //todo: how to know which item clicked? Maybe add a common default context menu. Currently not used.
+		/// </summary>
+		//public ContextMenu ContextMenu
+		//{
+		//	get { return MainToolStrip.ContextMenu; }
+		//	set { MainToolStrip.ContextMenu = value; }
+		//}
+
+		/// <summary>
 		/// Folder path to prepend to icon filenames specified when adding items.
 		/// </summary>
 		public string IconDirectory { get; set; }
@@ -1014,6 +1054,19 @@ namespace Catkeys
 		/// Flags to pass to <see cref="Icons.GetIconHandle"/>. See <see cref="Icons.IconFlag"/>.
 		/// </summary>
 		public Icons.IconFlag IconFlags { get; set; }
+
+		/// <summary>
+		/// Image width and height.
+		/// Set it before adding items.
+		/// </summary>
+		/// <remarks>
+		/// To set different size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
+		/// </remarks>
+		public int IconSize
+		{
+			get { return MainToolStrip.ImageScalingSize.Width; }
+			set { MainToolStrip.ImageScalingSize = new Size(value, value); }
+		}
 
 		//Sets icon and onClick delegate.
 		//Sets LastItem.
@@ -1027,77 +1080,26 @@ namespace Catkeys
 
 #if true //to quickly disable icons when measuring speed
 			if(icon != null) {
-				var s = icon as string;
-				g1:
-				if(s != null) {
-					if(s != "") {
-						var owner = item.Owner;
-						var il = owner.ImageList;
-						if(il != null && il.Images.ContainsKey(s)) {
-							item.ImageKey = s;
-						} else {
-							//var t = new Perf.Inst(); t.First();
-							item.ImageScaling = ToolStripItemImageScaling.None; //TODO: maybe don't need. But use while debugging.
-
-							if(IconDirectory != null && !Path_.IsFullPath(s)) s = Path_.Combine(IconDirectory, s);
-
-							if(_AsyncIcons == null) _AsyncIcons = new Icons.AsyncIcons(); //used by submenus too
-							var submenu = !isBar ? (owner as CatMenu.ToolStripDropDownMenu_) : null;
-							bool isFirstImage = false;
-
-							if(submenu == null) {
-								if(_AsyncIcons.Count == 0) isFirstImage = true;
-								_AsyncIcons.Add(s, item);
-							} else {
-								if(submenu.AsyncIcons == null) {
-									submenu.AsyncIcons = new List<Icons.AsyncIn>();
-									isFirstImage = true;
-								}
-								submenu.AsyncIcons.Add(new Icons.AsyncIn(s, item));
-							}
-
-							if(isBar) {
-								//Reserve space for button image.
-								//Need to do it before adding actual images async. I did not find other ways.
-								if(isFirstImage) {
-									var z = owner.ImageScalingSize;
-									_buttonImagePlaceholder = new Bitmap(z.Width, z.Height);
-								}
-								item.Image = _buttonImagePlaceholder;
-							} else if(isFirstImage) {
-								//Reserve correct space for item images.
-								//This makes all items of this size. By default would be reserved space for 16x16 images.
-								//Need to do it before adding actual images async. I did not find other ways.
-								var z = owner.ImageScalingSize;
-								if(z.Width > 16 || z.Height > 16) item.Image = new Bitmap(z.Width, z.Height);
-							}
-							//t.NW();
-
-							//Out(item.DisplayStyle); //TODO: use DisplayStyle
-						}
+				try {
+					var s = icon as string;
+					if(s != null) {
+						_SetItemFileIcon(isBar, item, s);
+					} else if(icon is int) {
+						int i = (int)icon;
+						if(i >= 0) item.ImageIndex = i;
+					} else if(icon is Image) {
+						item.Image = icon as Image;
+					} else if(icon is Icon) {
+						item.Image = (icon as Icon).ToBitmap();
+					} else if(icon is IntPtr) {
+						var hi = (IntPtr)icon;
+						item.Image = hi == Zero ? null : Icon.FromHandle(hi).ToBitmap();
+					} else {
+						s = icon.ToString();
+						if(0 != Files.FileOrDirectoryExists(s)) _SetItemFileIcon(isBar, item, s);
 					}
-				} else if(icon is int) {
-					int i = (int)icon;
-					if(i >= 0) {
-						item.ImageIndex = i;
-					}
-				} else if(icon is Image) {
-					item.Image = icon as Image;
-				} else if(icon is Icon) {
-					item.Image = (icon as Icon).ToBitmap();
-				} else if(icon is IntPtr) {
-					var hi = (IntPtr)icon;
-					item.Image = hi == Zero ? null : Icon.FromHandle(hi).ToBitmap();
-				} else if(icon is Folders.FolderPath) {
-					s = icon.ToString();
-					if(!Empty(s)) goto g1;
-				} else {
-					s = icon.ToString();
-					if(0 != Files.FileOrDirectoryExists(s)) goto g1;
-					//throw new ArgumentException("", "icon"); //better no icon than exception
 				}
-
-				//TODO: maybe after disposing menu also need to dispose all item.Image that we implicitly set.
+				catch(Exception e) { OutDebug(e.Message); } //ToBitmap() may throw
 			}
 #endif
 			LastItem = item;
@@ -1105,7 +1107,45 @@ namespace Catkeys
 			if(ItemAdded != null) ItemAdded(item);
 		}
 
-		Image _buttonImagePlaceholder;
+		void _SetItemFileIcon(bool isBar, ToolStripItem item, string s)
+		{
+			if(Empty(s)) return;
+			var owner = item.Owner;
+			var il = owner.ImageList;
+			if(il != null && il.Images.ContainsKey(s)) {
+				item.ImageKey = s;
+			} else {
+				//var perf = new Perf.Inst(true);
+				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
+
+				if(IconDirectory != null && !Path_.IsFullPath(s)) s = Path_.Combine(IconDirectory, s);
+
+				if(_AsyncIcons == null) _AsyncIcons = new Icons.AsyncIcons(); //used by submenus too
+				var submenu = !isBar ? (owner as CatMenu.ToolStripDropDownMenu_) : null;
+				bool isFirstImage = false;
+
+				if(submenu == null) {
+					if(_AsyncIcons.Count == 0) isFirstImage = true;
+					_AsyncIcons.Add(s, item);
+				} else {
+					if(submenu.AsyncIcons == null) {
+						submenu.AsyncIcons = new List<Icons.AsyncIn>();
+						isFirstImage = true;
+					}
+					submenu.AsyncIcons.Add(new Icons.AsyncIn(s, item));
+				}
+
+				//Reserve space for image.
+				//If toolbar, need to do it for each button, else only for the first item (it sets size of all items).
+				if(isFirstImage) {
+					var z = owner.ImageScalingSize;
+					_imagePlaceholder = new Bitmap(z.Width, z.Height);
+				}
+				if(isBar || isFirstImage) item.Image = _imagePlaceholder;
+				//perf.NW();
+			}
+		}
+		Image _imagePlaceholder;
 
 		//This is shared by toolbars and main menus. Submenus have their own.
 		Icons.AsyncIcons _AsyncIcons { get; set; }
@@ -1130,11 +1170,18 @@ namespace Catkeys
 
 			Image im = Icons.HandleToImage(r.hIcon);
 
-			if(im != null) _SetItemIcon(ts, item, im);
+			//if(im != null) _SetItemIcon(ts, item, im);
+			if(im != null) {
+				_SetItemIcon(ts, item, im);
 
-#if DEBUG
-			if(im==null) item.ForeColor = Color.Red; //TODO
-#endif
+				//to dispose images in our Dispose()
+				if(_images == null) _images = new List<Image>();
+				_images.Add(im);
+			}
+
+			//#if DEBUG
+			//			if(im == null) item.ForeColor = Color.Red;
+			//#endif
 			if(nLeft == 0) {
 				Perf.Next();
 				ts.Update();
@@ -1177,9 +1224,7 @@ namespace Catkeys
 		}
 
 		IntPtr _region1, _region2;
-
-		//TODO: add properties for icon size and icon flags to pass to GetFileIconHandle.
-
+		internal List<Image> _images;
 		bool _isDisposed;
 
 		internal void _Dispose(bool disposing)
@@ -1188,7 +1233,14 @@ namespace Catkeys
 			if(_isDisposed) return;
 			_isDisposed = true;
 
-			if(disposing && _AsyncIcons != null) _AsyncIcons.Dispose();
+			if(disposing) {
+				if(_AsyncIcons != null) _AsyncIcons.Dispose();
+
+				if(_images != null) {
+					foreach(var im in _images) im.Dispose();
+					_images = null;
+				}
+			}
 
 			if(_region1 != Zero) Api.DeleteObject(_region1);
 			if(_region2 != Zero) Api.DeleteObject(_region2);
@@ -1201,6 +1253,7 @@ namespace Catkeys
 
 	interface _ICatToolStrip
 	{
+		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
 		bool PaintedOnce { get; }
 	}
 }

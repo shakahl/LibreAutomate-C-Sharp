@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -47,7 +48,7 @@ namespace Catkeys
 			static Inst()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				if(!Util.Misc.IsCatkeysInNgened) {
+				if(!Util.Misc.IsCatkeysNgened) {
 					Stopwatch.GetTimestamp(); //maybe the .NET assembly not ngened
 #if false
 					//RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("First", new Type[0]).MethodHandle);
@@ -60,7 +61,7 @@ namespace Catkeys
 #else
 					Perf.Next(); Perf.NW(); Perf.First(); //JIT-compiles everything we need. _canWrite prevents calling Output.Write.
 #endif
-					//speed: 5 ms. The slowest part is creating shared memory. Also JITing and calling IsCatkeysInNgened takes time.
+					//speed: 5 ms. The slowest part is creating shared memory. Also JITing and calling IsCatkeysNgened takes time.
 					//With PrepareMethod also 5 ms. It also creates shared memory.
 				}
 				_canWrite = true;

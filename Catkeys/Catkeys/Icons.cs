@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -44,16 +45,15 @@ namespace Catkeys
 			/// <summary>
 			/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
 			/// </summary>
-			DefaultIfFails = 4, //TODO: apply better
+			//DefaultIfFails = 4, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns Zero.
 
 			/// <summary>
 			/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for Zero and null. This is to make whole process as fast as possible.
 			/// </summary>
 			//NeedImage = 128, //rejected because with our menu/toolbar almost always makes slower
 
-			Shell=8,
-			//TODO: Shell
-			//TODO: test shield icon
+			/// Use shell API for all file types, including exe and ico.
+			//Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay
 		}
 
 		/// <summary>
@@ -159,7 +159,7 @@ namespace Catkeys
 			IntPtr R = Zero, pidl = Zero;
 			int index = 0;
 			bool extractFromFile = false, isFileType = false, isURL = false, isCLSID = false, isPath = true;
-			bool getDefaultIfFails = flags.HasFlag(IconFlag.DefaultIfFails);
+			//bool getDefaultIfFails = flags.HasFlag(IconFlag.DefaultIfFails);
 
 			bool searchPath = flags.HasFlag(IconFlag.SearchPath);
 
@@ -181,7 +181,7 @@ namespace Catkeys
 				if(file == null) return Zero; //ignore getDefaultIfFails
 			}
 
-			if(isPath && (extractFromFile || !flags.HasFlag(IconFlag.Shell))) {
+			if(isPath /*&& (extractFromFile || !flags.HasFlag(IconFlag.Shell))*/) {
 				int ext = 0;
 				if(!extractFromFile && file.Length > 4) ext = file.EndsWith_(true, ".exe", ".scr", ".ico", ".cur", ".ani");
 				if(extractFromFile || ext > 0) {
@@ -189,8 +189,9 @@ namespace Catkeys
 					if(R != Zero || extractFromFile) return R;
 					switch(Files.FileOrDirectoryExists(file)) {
 					case 0:
-						if(!getDefaultIfFails) return Zero;
-						goto case 1;
+						return Zero;
+					//if(!getDefaultIfFails) return Zero;
+					//goto case 1;
 					case 1:
 						var siid = Api.SHSTOCKICONID.SIID_DOCNOASSOC;
 						if(ext >= 1 && ext <= 2) siid = Api.SHSTOCKICONID.SIID_APPLICATION;
@@ -214,9 +215,8 @@ namespace Catkeys
 			//Can use this code to avoid slow shell API if possible.
 			//In some test cases can make ~2 times faster (with thread pool), especially in MTA thread.
 			//But now, after other optimizations applied, in real life makes faster just 10-20%.
-			//TODO: consider whether to use this. If not, remove this and related code.
 #if false
-			if(!flags.HasFlag(IconFlag.Shell)){
+			//if(!flags.HasFlag(IconFlag.Shell)){
 			string progId = isCLSID ? null : Files.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : Registry_.Open(progId, Registry.ClassesRoot);
@@ -270,7 +270,7 @@ namespace Catkeys
 					if(R != Zero) return R;
 				}
 			}
-			}
+			//}
 			gr:
 #endif
 			return _GetShellIcon(!isExt, file, Zero, size);
@@ -501,23 +501,35 @@ namespace Catkeys
 		/// <summary>
 		/// Gets a shell stock icon handle.
 		/// </summary>
-		/// <param name="icon">Shell stock icon id.</param>
+		/// <param name="icon">Shell stock icon id. For example Api.SHSTOCKICONID.SIID_APPLICATION.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		public static IntPtr GetShellStockIconHandle(Api.SHSTOCKICONID icon, int size)
+		public static unsafe IntPtr GetShellStockIconHandle(Api.SHSTOCKICONID icon, int size)
 		{
 			size = _NormalizeIconSizeParameter(size);
-			int i; var s = _GetShellStockIconLocation(out i, icon);
-			return s == null ? Zero : GetIconHandleRaw(s, i, size);
-			//TODO: use system imagelist
+			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
+			if(0 != Api.SHGetStockIconInfo(icon, 0, ref x)) return Zero;
+			var s = new string(x.szPath);
+			return GetIconHandleRaw(s, x.iIcon, size);
+			//CONSIDER: cache. At least exe and document icons; maybe also folder and open folder.
 		}
 
-		static unsafe string _GetShellStockIconLocation(out int index, Api.SHSTOCKICONID icon)
+		/// <summary>
+		/// Gets native icon handle of the entry assembly of current appdomain.
+		/// It is the assembly icon, not an icon from managed resources.
+		/// Returns Zero if the assembly is without icon. You can use GetShellStockIconHandle(Api.SHSTOCKICONID.SIID_APPLICATION) to get default exe icon.
+		/// Don't need to destroy the icon.
+		/// </summary>
+		/// <param name="size">Icon width and height.</param>
+		public static IntPtr GetAppIconHandle(int size)
 		{
-			index = 0;
-			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
-			if(0 != Api.SHGetStockIconInfo(icon, 0, ref x)) return null;
-			index = x.iIcon;
-			return new string(x.szPath);
+			IntPtr hinst = Util.Misc.GetModuleHandleOfAppDomainEntryAssembly(); if(hinst == Zero) return Zero;
+			return Api.LoadImage(hinst, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
+
+			//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
+			//I could not find a .NET method to get icon directly from native resources of assembly.
+			//Could use the resource emumeration API...
+			//Never mind. Anyway, we use hInstance/resId with MessageBoxIndirect (which does not support handles) etc.
+			//info: MSDN says that LR_SHARED gets cached icon regardless of size argument, but it is not true. Caches each size separately. Tested on Win 10, 7, XP.
 		}
 
 		/// <summary>

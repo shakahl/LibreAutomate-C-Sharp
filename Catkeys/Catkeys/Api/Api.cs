@@ -1110,11 +1110,25 @@ namespace Catkeys.Winapi
 		public static extern IntPtr GetModuleHandle(string name);
 		//see also Util.Misc.GetModuleHandleOf(Type|Assembly).
 
+		[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW")]
+		public static extern IntPtr LoadLibrary([In] string lpLibFileName);
+
 		[DllImport("kernel32.dll", BestFitMapping = false)]
 		public static extern IntPtr GetProcAddress(IntPtr hModule, [In] [MarshalAs(UnmanagedType.LPStr)] string lpProcName);
 
-		[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW")]
-		public static extern IntPtr LoadLibrary([In] string lpLibFileName);
+		/// <summary>
+		/// Gets dll module handle (Api.GetModuleHandle) or loads dll (Api.LoadLibrary), and returns unmanaged exported function address (Api.GetProcAddress).
+		/// </summary>
+		/// <param name="dllName"></param>
+		/// <param name="funcName"></param>
+		/// <seealso cref="GetDelegate"/>
+		public static IntPtr GetProcAddress(string dllName, string funcName)
+		{
+			IntPtr hmod = GetModuleHandle(dllName);
+			if(hmod == default(IntPtr)) { hmod = LoadLibrary(dllName); if(hmod == default(IntPtr)) return hmod; }
+
+			return GetProcAddress(hmod, funcName);
+		}
 
 		public const uint PROCESS_TERMINATE = 0x0001;
 		public const uint PROCESS_CREATE_THREAD = 0x0002;
@@ -1929,18 +1943,10 @@ namespace Catkeys.Winapi
 
 		//UTIL
 
-		static IntPtr _GetProcAddress(string dllName, string funcName)
-		{
-			IntPtr hmod = GetModuleHandle(dllName);
-			if(hmod == default(IntPtr)) { hmod = LoadLibrary(dllName); if(hmod == default(IntPtr)) return default(IntPtr); }
-
-			return GetProcAddress(hmod, funcName);
-		}
-
 		public static bool GetDelegate<T>(out T deleg, string dllName, string funcName) where T : class
 		{
 			deleg = null;
-			IntPtr fa = _GetProcAddress(dllName, funcName); if(fa == default(IntPtr)) return false;
+			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default(IntPtr)) return false;
 			//deleg = (T)Marshal.GetDelegateForFunctionPointer(fa, typeof(T)); //error
 			Type t = typeof(T);
 			deleg = (T)Convert.ChangeType(Marshal.GetDelegateForFunctionPointer(fa, t), t);

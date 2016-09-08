@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -1232,8 +1233,8 @@ namespace Catkeys
 
 				_c.dwFlags = f;
 
-				if((_c.hMainIcon == (IntPtr)TDIcon.App || _c.hFooterIcon == (IntPtr)TDIcon.App) && Util.Misc.GetAppIconHandle(32) != Zero)
-					_c.hInstance = Util.Misc.GetModuleHandleOfAppdomainEntryAssembly();
+				if((_c.hMainIcon == (IntPtr)TDIcon.App || _c.hFooterIcon == (IntPtr)TDIcon.App) && Icons.GetAppIconHandle(32) != Zero)
+					_c.hInstance = Util.Misc.GetModuleHandleOfAppDomainEntryAssembly();
 				//info: TDIcon.App is IDI_APPLICATION (32512).
 				//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 				//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.

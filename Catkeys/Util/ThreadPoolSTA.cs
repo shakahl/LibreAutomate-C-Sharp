@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -242,11 +243,13 @@ namespace Catkeys.Util
 
 			if(AppDomain.CurrentDomain.IsDefaultAppDomain()) AppDomain.CurrentDomain.ProcessExit += _CurrentDomain_DomainExit;
 			else AppDomain.CurrentDomain.DomainUnload += _CurrentDomain_DomainExit;
+			AppDomain.CurrentDomain.UnhandledException += _CurrentDomain_DomainExit;
+			//We subscribe to UnhandledException because ProcessExit is missing on exception.
+			//If non-default domain, on exception normally we receive DomainExit and not UnhandledException, because default domain handles domain exceptions. But somebody may create domains without domain exception handling.
 		}
 
 		static void _CurrentDomain_DomainExit(object sender, EventArgs e)
 		{
-			//OutFunc();
 			_isAppDomainDying = true;
 			//var perf = new Perf.Inst(true);
 			CloseThreadpoolCleanupGroupMembers(_env.CleanupGroup, true, Zero);

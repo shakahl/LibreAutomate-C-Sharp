@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -32,6 +33,9 @@ namespace Catkeys
 		ToolStrip_ _ts;
 
 		public ToolStrip Ex { get { return _ts; } }
+
+		//Our base uses this.
+		protected override ToolStrip MainToolStrip { get { return _ts; } }
 
 		public CatBar()
 		{
@@ -389,6 +393,8 @@ namespace Catkeys
 
 				_paintedOnce = true;
 			}
+
+			//ToolStrip _ICatToolStrip.ToolStrip { get { return this; } }
 
 			bool _paintedOnce;
 			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }

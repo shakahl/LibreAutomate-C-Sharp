@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -11,10 +12,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Runtime.ExceptionServices;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -282,6 +283,7 @@ namespace Catkeys
 
 			#endregion
 
+#if false //currently not used
 			/// <summary>
 			/// Gets HKEY_CLASSES_ROOT registry key of file type or protocol.
 			/// The key usually contains subkeys "shell", "DefaultIcon", sometimes "shellex" and more.
@@ -335,6 +337,7 @@ namespace Catkeys
 				}
 				return path;
 			}
+#endif
 
 			/// <summary>
 			/// Returns true if path is like ".ext" and the ext part does not contain characters ".\\/:".

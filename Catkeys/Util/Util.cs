@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -288,7 +290,6 @@ namespace Catkeys.Util
 	/// Example: using(new Util.LibEnsureWindowsFormsSynchronizationContext()) { ... }
 	/// </summary>
 	[DebuggerStepThrough]
-	public //TODO
 	class LibEnsureWindowsFormsSynchronizationContext :IDisposable
 	{
 		[ThreadStatic]
@@ -331,148 +332,13 @@ namespace Catkeys.Util
 		}
 	}
 
-	/// <summary>
-	/// Miscellaneous functions.
-	/// </summary>
-	[DebuggerStepThrough]
-	public static class Misc
+	public static class AppDomain_
 	{
-		/// <summary>
-		/// Gets the entry assembly of current appdomain.
-		/// Normally instead can be used Assembly.GetEntryAssembly(), but it fails if appdomain launched through DoCallBack.
-		/// </summary>
-		public static Assembly AppdomainAssembly
-		{
-			get
-			{
-				if(_appdomainAssembly == null) {
-					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
-					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
-					_appdomainAssembly = asm;
-				}
-				return _appdomainAssembly;
-			}
-		}
-		static Assembly _appdomainAssembly;
-
-		public static IntPtr GetModuleHandleOf(Type t)
-		{
-			return t == null ? Zero : Marshal.GetHINSTANCE(t.Module);
-
-			//Tested these to get caller's module without Type parameter:
-			//This is dirty/dangerous and 50 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(new StackFrame(1).GetMethod().DeclaringType.Module);
-			//This is dirty/dangerous, does not support multi-module assemblies and 12 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(Assembly.GetCallingAssembly().GetLoadedModules()[0]);
-			//This is dirty/dangerous/untested and 12 times slower: [MethodImpl(MethodImplOptions.AggressiveInlining)] ... return Marshal.GetHINSTANCE(MethodBase.GetCurrentMethod().DeclaringType.Module);
-		}
-
-		public static IntPtr GetModuleHandleOf(Assembly asm)
-		{
-			return asm == null ? Zero : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
-		}
-
-		public static IntPtr GetModuleHandleOfAppdomainEntryAssembly()
-		{
-			return GetModuleHandleOf(AppdomainAssembly);
-		}
-
-		public static IntPtr GetModuleHandleOfCatkeysDll()
-		{
-			return Marshal.GetHINSTANCE(typeof(Misc).Module);
-		}
-
-		public static IntPtr GetModuleHandleOfExe()
-		{
-			return Api.GetModuleHandle(null);
-		}
-
-		public static bool IsCatkeysInGAC { get { return Assembly.GetExecutingAssembly().GlobalAssemblyCache; } }
-
-		public static bool IsCatkeysInNgened { get { return Assembly.GetExecutingAssembly().CodeBase.Contains("/GAC_MSIL/"); } }
-		//tested: Module.GetPEKind always gets ILOnly.
-
-		/// <summary>
-		/// Gets native icon handle of the entry assembly of current appdomain.
-		/// It is the assembly icon, not an icon from managed resources.
-		/// Returns Zero if the assembly is without icon.
-		/// The icon is extracted first time and then cached; don't destroy it.
-		/// </summary>
-		/// <param name="size">Icon size, 16 or 32.</param>
-		public static IntPtr GetAppIconHandle(int size)
-		{
-			if(size < 24) return _GetAppIconHandle(ref _AppIcon16, true);
-			return _GetAppIconHandle(ref _AppIcon32, false);
-		}
-
-		static IntPtr _AppIcon32, _AppIcon16;
-
-		static IntPtr _GetAppIconHandle(ref IntPtr hicon, bool small = false)
-		{
-			if(hicon == Zero) {
-				var asm = Misc.AppdomainAssembly; if(asm == null) return Zero;
-				IntPtr hinst = Misc.GetModuleHandleOf(asm);
-				int size = small ? 16 : 32;
-				hicon = Api.LoadImage(hinst, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
-				//note:
-				//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
-				//I could not find a .NET method to get icon directly from native resources of assembly.
-				//Could use Icon.ExtractAssociatedIcon(asm.Location), but it always gets 32 icon and is several times slower.
-				//Also could use PrivateExtractIcons. But it uses file path, not module handle.
-				//Also could use the resource emumeration API...
-				//Never mind. Anyway, we use hInstance/resId with MessageBoxIndirect (which does not support handles) etc.
-				//info: MSDN says that LR_SHARED gets cached icon regardless of size, but it is not true. Caches each size separately. Tested on Win 10, 7, XP.
-			}
-			return hicon;
-		}
-
-		public static void MinimizeMemory()
-		{
-			//return;
-			GC.Collect();
-			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), (UIntPtr)(~0U), (UIntPtr)(~0U));
-		}
-
-		public static unsafe int CharPtrLength(char* p)
-		{
-			if(p == null) return 0;
-			for(int i = 0; ; i++) if(*p == '\0') return i;
-		}
-
-		public static unsafe int CharPtrLength(char* p, int nMax)
-		{
-			if(p == null) return 0;
-			for(int i = 0; i < nMax; i++) if(*p == '\0') return i;
-			return nMax;
-		}
-
-		/// <summary>
-		/// Removes '&amp;' characters from string.
-		/// Replaces "&amp;&amp;" to "&amp;".
-		/// Returns true if s had '&amp;' characters.
-		/// </summary>
-		/// <remarks>
-		/// Character '&amp;' is used to underline next character in displayed text of controls. Two '&amp;' are used to display single '&amp;'.
-		/// Normally the underline is displayed only when using the keyboard to select dialog controls.
-		/// </remarks>
-		public static bool StringRemoveMnemonicUnderlineAmpersand(ref string s)
-		{
-			if(!Empty(s)) {
-				int i = s.IndexOf('&');
-				if(i >= 0) {
-					i = s.IndexOf_("&&");
-					if(i >= 0) s = s.Replace("&&", "\0");
-					s = s.Replace("&", "");
-					if(i >= 0) s = s.Replace("\0", "&");
-					return true;
-				}
-			}
-			return false;
-		}
-
 		/// <summary>
 		/// Gets default app domain.
 		/// </summary>
 		/// <param name="isCurrentDomain">Receives true if called from default app domain.</param>
-		public static AppDomain GetDefaultAppDomain(out bool isCurrentDomain)
+		public static AppDomain GetDefaultDomain(out bool isCurrentDomain)
 		{
 			if(_defaultAppDomain == null) {
 				var d = AppDomain.CurrentDomain;
@@ -506,10 +372,10 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Gets default app domain.
 		/// </summary>
-		public static AppDomain GetDefaultAppDomain()
+		public static AppDomain GetDefaultDomain()
 		{
 			bool isThisDef;
-			return GetDefaultAppDomain(out isThisDef);
+			return GetDefaultDomain(out isThisDef);
 		}
 
 		[ComImport, Guid("CB2F6722-AB3A-11d2-9C40-00C04FA30A3E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -558,8 +424,190 @@ namespace Catkeys.Util
 
 		[ComImport, Guid("CB2F6723-AB3A-11d2-9C40-00C04FA30A3E"), ClassInterface(ClassInterfaceType.None)]
 		class CorRuntimeHost { }
+
+		/// <summary>
+		/// Occurs when current app domain exits.
+		/// </summary>
+		/// <remarks>
+		/// The event handler is called when one of these AppDomain events occur, with their parameters:
+		/// <see cref="AppDomain.ProcessExit"/> (in default domain);
+		/// <see cref="AppDomain.DomainUnload"/> (in non-default domain);
+		/// <see cref="AppDomain.UnhandledException"/>.
+		/// The event handler is called before static object finalizers.
+		/// </remarks>
+		public static event EventHandler Exit
+		{
+			add
+			{
+				if(!_subscribedADE) {
+					lock ("AVCyoRcQCkSl+3W8ZTi5oA") {
+						if(!_subscribedADE) {
+							var d = AppDomain.CurrentDomain;
+							if(d.IsDefaultAppDomain()) d.ProcessExit += _CurrentDomain_DomainExit;
+							else d.DomainUnload += _CurrentDomain_DomainExit;
+							d.UnhandledException += _CurrentDomain_DomainExit;
+							_subscribedADE = true;
+							//We subscribe to UnhandledException because ProcessExit is missing on exception.
+							//If non-default domain, on exception normally we receive DomainExit and not UnhandledException, because default domain handles domain exceptions. But somebody may create domains without domain exception handling.
+						}
+					}
+				}
+				_eventADE += value;
+			}
+			remove
+			{
+				_eventADE -= value;
+			}
+		}
+		static EventHandler _eventADE;
+		static bool _subscribedADE;
+
+		//[HandleProcessCorruptedStateExceptions, System.Security.SecurityCritical] ;;tried to enable this event for corrupted state exceptions, but does not work
+		static void _CurrentDomain_DomainExit(object sender, EventArgs e)
+		{
+			var k = _eventADE;
+			if(k != null) try { k(sender, e); } catch { }
+		}
+
+		/// <summary>
+		/// Gets the entry assembly of current appdomain.
+		/// Normally instead can be used Assembly.GetEntryAssembly(), but it fails if appdomain launched through DoCallBack.
+		/// </summary>
+		public static Assembly EntryAssembly
+		{
+			get
+			{
+				if(_appdomainAssembly == null) {
+					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
+					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
+					_appdomainAssembly = asm;
+				}
+				return _appdomainAssembly;
+			}
+		}
+		static Assembly _appdomainAssembly;
+
 	}
 
+	/// <summary>
+	/// Miscellaneous functions.
+	/// </summary>
+	[DebuggerStepThrough]
+	public static class Misc
+	{
+		public static IntPtr GetModuleHandleOf(Type t)
+		{
+			return t == null ? Zero : Marshal.GetHINSTANCE(t.Module);
+
+			//Tested these to get caller's module without Type parameter:
+			//This is dirty/dangerous and 50 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(new StackFrame(1).GetMethod().DeclaringType.Module);
+			//This is dirty/dangerous, does not support multi-module assemblies and 12 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(Assembly.GetCallingAssembly().GetLoadedModules()[0]);
+			//This is dirty/dangerous/untested and 12 times slower: [MethodImpl(MethodImplOptions.AggressiveInlining)] ... return Marshal.GetHINSTANCE(MethodBase.GetCurrentMethod().DeclaringType.Module);
+		}
+
+		/// <summary>
+		/// Gets native module handle of an assembly.
+		/// If the assembly consists of multiple modules, gets its first loaded module.
+		/// </summary>
+		public static IntPtr GetModuleHandleOfAssembly(Assembly asm)
+		{
+			return asm == null ? Zero : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
+		}
+
+		/// <summary>
+		/// Gets native module handle of current app domain entry assembly.
+		/// If the assembly consists of multiple modules, gets its first loaded module.
+		/// </summary>
+		public static IntPtr GetModuleHandleOfAppDomainEntryAssembly()
+		{
+			return GetModuleHandleOfAssembly(AppDomain_.EntryAssembly);
+		}
+
+		/// <summary>
+		/// Gets native module handle of Catkeys.dll.
+		/// </summary>
+		public static IntPtr GetModuleHandleOfCatkeysDll()
+		{
+			return Marshal.GetHINSTANCE(typeof(Misc).Module);
+		}
+
+		/// <summary>
+		/// Gets native module handle of the exe file of this process.
+		/// </summary>
+		public static IntPtr GetModuleHandleOfExe()
+		{
+			return Api.GetModuleHandle(null);
+		}
+
+		/// <summary>
+		/// Returns true if Catkeys.dll is installed in the global assembly cache.
+		/// </summary>
+		public static bool IsCatkeysInGAC { get { return Assembly.GetExecutingAssembly().GlobalAssemblyCache; } }
+
+		/// <summary>
+		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
+		/// It means that there are no delay caused by JIT-compiling when its functions are called first time in process or app domain.
+		/// </summary>
+		public static bool IsCatkeysNgened { get { return Assembly.GetExecutingAssembly().CodeBase.Contains("/GAC_MSIL/"); } }
+		//tested: Module.GetPEKind always gets ILOnly.
+
+		/// <summary>
+		/// Frees as much as possible physical memory used by this process.
+		/// Calls GC.Collect() and Api.SetProcessWorkingSetSize().
+		/// </summary>
+		public static void MinimizeMemory()
+		{
+			//return;
+			GC.Collect();
+			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), (UIntPtr)(~0U), (UIntPtr)(~0U));
+		}
+
+		/// <summary>
+		/// Finds unmanaged '\0'-terminated string length.
+		/// Scans the string until '\0' character found.
+		/// </summary>
+		public static unsafe int CharPtrLength(char* p)
+		{
+			if(p == null) return 0;
+			for(int i = 0; ; i++) if(*p == '\0') return i;
+		}
+
+		/// <summary>
+		/// Finds unmanaged '\0'-terminated string length.
+		/// Scans the string until '\0' character found, but not exceeding the specified length.
+		/// </summary>
+		/// <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+		public static unsafe int CharPtrLength(char* p, int nMax)
+		{
+			if(p == null) return 0;
+			for(int i = 0; i < nMax; i++) if(*p == '\0') return i;
+			return nMax;
+		}
+
+		/// <summary>
+		/// Removes '&amp;' characters from string.
+		/// Replaces "&amp;&amp;" to "&amp;".
+		/// Returns true if s had '&amp;' characters.
+		/// </summary>
+		/// <remarks>
+		/// Character '&amp;' is used to underline next character in displayed text of controls. Two '&amp;' are used to display single '&amp;'.
+		/// Normally the underline is displayed only when using the keyboard to select dialog controls.
+		/// </remarks>
+		public static bool StringRemoveMnemonicUnderlineAmpersand(ref string s)
+		{
+			if(!Empty(s)) {
+				int i = s.IndexOf('&');
+				if(i >= 0) {
+					i = s.IndexOf_("&&");
+					if(i >= 0) s = s.Replace("&&", "\0");
+					s = s.Replace("&", "");
+					if(i >= 0) s = s.Replace("\0", "&");
+					return true;
+				}
+			}
+			return false;
+		}
+	}
 
 	[DebuggerStepThrough]
 	public static class Debug_

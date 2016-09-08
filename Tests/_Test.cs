@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -44,6 +45,8 @@ using System.Xml.Schema;
 
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
+
+using ImapX;
 
 
 [module: DefaultCharSet(CharSet.Unicode)]
@@ -3264,7 +3267,7 @@ bbb"", b3
 
 	static void TestInterDomain()
 	{
-		//var d=Util.Misc.GetDefaultAppDomain();
+		//var d=Util.AppDomain_.GetDefaultDomain();
 		////var s = d.GetData("testData") as string;
 		////if(s == null) d.SetData("testData", $"dddata {8}");
 		//var s = d.GetData("testData") as List<int>;
@@ -3528,6 +3531,173 @@ bbb"", b3
 		//Perf.Incremental = false;
 	}
 
+	#region test thread pool
+
+	static int _nTasks = 30;
+
+	//static void TestTasksDefault()
+	//{
+	//	Perf.Next();
+	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+	//		_n = _nTasks;
+	//		for(int i = 0; i < _nTasks; i++) _TestTasksDefault();
+	//	}
+	//	Time.SetTimer(500, true, t => _loop.Stop());
+	//	_loop.Loop();
+	//}
+
+	//static async void _TestTasksDefault()
+	//{
+	//	var task = Task.Run(() =>
+	//	{
+	//		WaitMS(_random.Next(1, 10));
+	//		return 0;
+	//	});
+	//	await task;
+	//	int hi = task.Result;
+	//	if(--_n < 1) Perf.NW();
+	//}
+
+	//static void TestTasksSta()
+	//{
+	//	_staTaskScheduler = new System.Threading.Tasks.Schedulers.StaTaskScheduler(4);
+	//	Perf.Next();
+	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+	//		_n = _nTasks;
+	//		for(int i = 0; i < _nTasks; i++) _TestTasksSta();
+	//	}
+	//	Time.SetTimer(500, true, t => _loop.Stop());
+	//	_loop.Loop();
+	//}
+
+	//static System.Threading.Tasks.Schedulers.StaTaskScheduler _staTaskScheduler;
+
+	//static async void _TestTasksSta()
+	//{
+	//	var task = Task.Factory.StartNew(() =>
+	//	{
+	//		WaitMS(_random.Next(1, 10));
+	//		return 0;
+	//	}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
+	//	await task;
+	//	int hi = task.Result;
+	//	if(--_n < 1) Perf.NW();
+	//}
+
+	static void TestThreadPoolSTA()
+	{
+		Out("BEGIN");
+		//Out(Api.GetCurrentThreadId());
+		Task.Run(() => { for(;;) { WaitMS(100); GC.Collect(); } });
+		Perf.Next();
+		//using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
+		_nTasks = 30;
+		_n = _nTasks;
+		for(int i = 0; i < _nTasks; i++) _TestThreadPoolSTA2();
+		//}
+		Time.SetTimer(1000, true, t => _loop.Stop());
+		_loop.Loop();
+		Out("END");
+	}
+
+	static void _TestThreadPoolSTA()
+	{
+		Util.ThreadPoolSTA.SubmitCallback(null, o =>
+		{
+			OutList("worker", Api.GetCurrentThreadId());
+			//WaitMS(_random.Next(1, 10));
+			WaitMS(_random.Next(10, 100));
+			//WaitMS(2000);
+			//WaitMS(16000);
+			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
+		}, o =>
+		{
+			//OutList("completion", Api.GetCurrentThreadId());
+			if(--_n < 1) Perf.NW();
+		});
+	}
+
+	static void _TestThreadPoolSTA2()
+	{
+		var work = Util.ThreadPoolSTA.CreateWork(null, o =>
+		{
+			OutList("worker", Api.GetCurrentThreadId());
+			//WaitMS(_random.Next(1, 10));
+			WaitMS(_random.Next(10, 100));
+			//WaitMS(2000);
+			//WaitMS(16000);
+			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
+		}, o =>
+		{
+			//OutList("completion", Api.GetCurrentThreadId());
+			if(--_n < 1) Perf.NW();
+		});
+
+		work.Submit();
+		//for(int i=0; i<10; i++) work.Submit();
+		//WaitMS(10); work.Cancel();
+		//work.Submit();
+		//work.Wait();
+		//work.Submit();
+		work.Wait();
+		work.Dispose();
+		//work.Submit();
+	}
+
+	#endregion
+
+	public static string[] Receive(string user, string password, string filter = "ALL", bool markSeen = false)
+	{
+		using(var client = new ImapClient("imap.googlemail.com", true)) {
+			//client.Port=993; client.UseSsl=true; //default
+			if(!client.Connect()) { Out("failed to connect"); return null; }
+			if(!client.Login(user, password)) { Out("failed to login"); return null; }
+			var folder = client.Folders.Inbox;
+			List<string> a = new List<string>();
+			foreach(var m in folder.Search(filter, ImapX.Enums.MessageFetchMode.Tiny)) {
+				Out(m.From);
+				if(markSeen) m.Seen = true;
+				//a.Add(m.ToEml());
+				a.Add(m.DownloadRawMessage());
+			}
+			return a.ToArray();
+		}
+	}
+
+	static void TestImapX()
+	{
+		var a = Receive("qmgindi@gmail.com", "jucakgoogle", "UNSEEN", false);
+		Out(a);
+	}
+
+	static unsafe LPARAM _WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	{
+		Util.Debug_.OutMsg(w, msg, wParam, lParam);
+
+		var R = Api.DefWindowProc(w, msg, wParam, lParam);
+
+		switch(msg) {
+		case Api.WM_DESTROY:
+		//case Api.WM_LBUTTONUP:
+			Application.ExitThread();
+			break;
+		}
+
+		return R;
+	}
+	static Api.WNDPROC _wndProcDelegate = _WndProc;
+
+	static void TestWindowClassInterDomain()
+	{
+		var atom = Wnd.Misc.WndClass.InterDomainRegister("InterDomain", _WndProc);
+		Out(atom);
+		Wnd w = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "InterDomain", "InterDomain", Api.WS_OVERLAPPEDWINDOW, 100, 100, 300, 100);
+		Out(w);
+		w.Visible = true;
+		Application.Run();
+		Out("exit");
+	}
+
 	#endregion
 
 	#region test end back thread
@@ -3781,7 +3951,7 @@ bbb"", b3
 				if(n == 44) break;
 			}
 		} else {
-			//folder = @"q:\app"; recurse = false;
+			folder = @"q:\app"; recurse = false;
 			//folder = @"q:\app"; pattern = "*.ico";
 			//folder = @"q:\app"; pattern = "*.cur";
 			//folder = @"c:\windows\cursors"; pattern = "*.ani";
@@ -3797,7 +3967,7 @@ bbb"", b3
 			//folder = @"c:\windows"; pattern = "*.lnk";
 			//folder = @"c:\windows"; pattern = "*.cpl";
 			//folder = @"q:\";
-			folder = @"q:\downloads"; pattern = "*.exe"; recurse = false;
+			//folder = @"q:\downloads"; pattern = "*.exe"; recurse = false;
 
 			var oneExt = new HashSet<string>();
 			//foreach(var f in Directory.EnumerateFiles(folder)) {
@@ -3816,7 +3986,7 @@ bbb"", b3
 				//var k = f.RegexReplace_(@"(?i)^C:\\windows\\system32", @"C:\Users\G\Desktop\system64");
 				//Out($"{s} : * {k}");
 				n++;
-				//if(n == 45) break;
+				if(n == 15) break;
 				//break;
 			}
 		}
@@ -3890,7 +4060,7 @@ bbb"", b3
 		Out(n);
 		//FileIconInit(false);
 
-		int size = 16;
+		int size = 0;
 		//size = Icons.GetShellIconSize(Icons.ShellSize.Small);
 		//size = Icons.GetShellIconSize(Icons.ShellSize.Large);
 		//size = Icons.GetShellIconSize(Icons.ShellSize.ExtraLarge);
@@ -3899,7 +4069,7 @@ bbb"", b3
 #if true
 		var m = new CatBar();
 		if(size > 0) m.Ex.ImageScalingSize = new Size(size, size);
-		m.IconFlags = Icons.IconFlag.Shell;
+		//m.IconFlags = Icons.IconFlag.Shell;
 
 		//m.Ex.AutoSize = false;
 		m.Ex.LayoutStyle = ToolStripLayoutStyle.Flow;
@@ -3930,17 +4100,27 @@ bbb"", b3
 		m.Close();
 		//Out("exit");
 #elif true
-		var m = new CatMenu();
-		if(size > 0) m.CMS.ImageScalingSize = new Size(size, size);
-		//m.ActivateMenuWindow = true;
+		for(int c = 0; c < 1; c++) {
+			var m = new CatMenu();
+			//if(size > 0) m.CMS.ImageScalingSize = new Size(size, size);
+			if(size > 0) m.IconSize = size;
+			//m.ActivateMenuWindow = true;
 
-		for(i = 0; i < a.Count; i++) {
-			var s = a[i];
-			m[Path.GetFileName(s), s] = null;
+			for(i = 0; i < a.Count; i++) {
+				var s = a[i];
+				m[Path.GetFileName(s), s] = null;
+
+				//if(i == 0) m.LastItem.DisplayStyle = ToolStripItemDisplayStyle.Text;
+			}
+
+			using(m.Submenu("sub")) {
+				m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);
+				m["two", a[0]] = null;
+			}
+
+			Perf.First();
+			m.Show();
 		}
-
-		Perf.First();
-		m.Show();
 #elif false
 		var m = new CatMenu();
 		m.CMS.ImageScalingSize = new Size(size, size);
@@ -3997,162 +4177,18 @@ bbb"", b3
 
 	#endregion test icons
 
-	#region test thread pool
-
-	static int _nTasks = 30;
-
-	static void TestTasksDefault()
-	{
-		Perf.Next();
-		using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
-			_n = _nTasks;
-			for(int i = 0; i < _nTasks; i++) _TestTasksDefault();
-		}
-		Time.SetTimer(500, true, t => _loop.Stop());
-		_loop.Loop();
-	}
-
-	static async void _TestTasksDefault()
-	{
-		var task = Task.Run(() =>
-		{
-			WaitMS(_random.Next(1, 10));
-			return 0;
-		});
-		await task;
-		int hi = task.Result;
-		if(--_n < 1) Perf.NW();
-	}
-
-	//static void TestTasksSta()
-	//{
-	//	_staTaskScheduler = new System.Threading.Tasks.Schedulers.StaTaskScheduler(4);
-	//	Perf.Next();
-	//	using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
-	//		_n = _nTasks;
-	//		for(int i = 0; i < _nTasks; i++) _TestTasksSta();
-	//	}
-	//	Time.SetTimer(500, true, t => _loop.Stop());
-	//	_loop.Loop();
-	//}
-
-	//static System.Threading.Tasks.Schedulers.StaTaskScheduler _staTaskScheduler;
-
-	//static async void _TestTasksSta()
-	//{
-	//	var task = Task.Factory.StartNew(() =>
-	//	{
-	//		WaitMS(_random.Next(1, 10));
-	//		return 0;
-	//	}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
-	//	await task;
-	//	int hi = task.Result;
-	//	if(--_n < 1) Perf.NW();
-	//}
-
-	static void TestThreadPoolSTA()
-	{
-		Out("BEGIN");
-		//Out(Api.GetCurrentThreadId());
-		Task.Run(() => { for(;;) { WaitMS(100); GC.Collect(); } });
-		Perf.Next();
-		//using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
-		_nTasks = 30;
-		_n = _nTasks;
-		for(int i = 0; i < _nTasks; i++) _TestThreadPoolSTA2();
-		//}
-		Time.SetTimer(1000, true, t => _loop.Stop());
-		_loop.Loop();
-		Out("END");
-	}
-
-	static void _TestThreadPoolSTA()
-	{
-		Util.ThreadPoolSTA.SubmitCallback(null, o =>
-		{
-			OutList("worker", Api.GetCurrentThreadId());
-			//WaitMS(_random.Next(1, 10));
-			WaitMS(_random.Next(10, 100));
-			//WaitMS(2000);
-			//WaitMS(16000);
-			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
-		}, o =>
-		{
-			//OutList("completion", Api.GetCurrentThreadId());
-			if(--_n < 1) Perf.NW();
-		});
-	}
-
-	static void _TestThreadPoolSTA2()
-	{
-		var work = Util.ThreadPoolSTA.CreateWork(null, o =>
-		 {
-			 OutList("worker", Api.GetCurrentThreadId());
-			 //WaitMS(_random.Next(1, 10));
-			 WaitMS(_random.Next(10, 100));
-			 //WaitMS(2000);
-			 //WaitMS(16000);
-			 //if(0==Interlocked.Decrement(ref _n)) Perf.NW();
-		 }, o =>
-		 {
-			 //OutList("completion", Api.GetCurrentThreadId());
-			 if(--_n < 1) Perf.NW();
-		 });
-
-		work.Submit();
-		//for(int i=0; i<10; i++) work.Submit();
-		//WaitMS(10); work.Cancel();
-		//work.Submit();
-		//work.Wait();
-		//work.Submit();
-		work.Wait();
-		work.Dispose();
-		//work.Submit();
-	}
-
-	#endregion
-
-
-
 	static void TestMain()
 	{
 
 
 
-		//Perf.First();
-		//TestTasksDefault();
-		//TestTasksSta();
-		//TestTasksOur();
-		//TestTaskSTA();
-		//TestThreadPoolSTA();
-		//GCHandle
-		//TestMenuTB();
 
-		TestIcons();
-
-		//GC.Collect();
-		//WaitMS(1000);
-
-		//var f = new Form();
-		////f.Click += (unu, sed) => TestIcons();
-		//f.Load += (unu, sed) => { TestIcons(); };
-		//f.ShowDialog();
-		//f.Show(); Application.Run(f);
-		//f.Show(); WaitMS(2000); Time.SetTimer(3000, true, t => Application.ExitThread()); Application.Run();
-
-		//var m = new CatMenu();
-		//m["aaaaaaaaa"] = null;
-		//m.CMS.Opening+=(unu,sed)=> TestIcons();
-		//m.Show();
-
-		//Time.SetTimer(100, true, t => TestIcons());
-		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
-		////Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
-		//Out("exit");
-
-		//TestBackThreadEnd();
 
 		#region call_old_test_functions
+		//TestBackThreadEnd();
+		//TestIcons();
+		//TestWindowClassInterDomain();
+		//TestImapX();
 		//TestPerfIncremental();
 		//TestGetIconsOfAllFileTypes();
 		//TestPidlToString();

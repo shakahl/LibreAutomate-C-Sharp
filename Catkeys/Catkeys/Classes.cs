@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -458,7 +459,7 @@ namespace Catkeys
 		/// <exception cref="SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
 		public static void SetVariable(string name, object value)
 		{
-			Util.Misc.GetDefaultAppDomain().SetData("Catkeys\x5" + name, value);
+			Util.AppDomain_.GetDefaultDomain().SetData("Catkeys\x5" + name, value);
 		}
 
 		/// <summary>
@@ -468,7 +469,7 @@ namespace Catkeys
 		/// <param name="name">Name. Case-sensitive.</param>
 		public static object GetVariable(string name)
 		{
-			return Util.Misc.GetDefaultAppDomain().GetData("Catkeys\x5" + name);
+			return Util.AppDomain_.GetDefaultDomain().GetData("Catkeys\x5" + name);
 		}
 #else
 		//Tried to make faster than AppDomain.GetData/SetData, but same speed, and first time much slower.
@@ -525,7 +526,7 @@ namespace Catkeys
 					lock ("r1+6n6nPoEeix2QbYV0n+Q") {
 						if(_mbr == null) {
 							bool isThisDomainDefault;
-							var dd = Util.Misc.GetDefaultAppDomain(out isThisDomainDefault);
+							var dd = Util.AppDomain_.GetDefaultDomain(out isThisDomainDefault);
 							_mbr = dd.GetData("Catkeys_InterDomain") as _MBR;
 							if(_mbr == null) {
 								if(isThisDomainDefault) _Init();
@@ -629,7 +630,7 @@ namespace Catkeys
 				if(o != null) { value = (T)o; return false; }
 
 				bool isThisDomainDefault;
-				var d = Util.Misc.GetDefaultAppDomain(out isThisDomainDefault);
+				var d = Util.AppDomain_.GetDefaultDomain(out isThisDomainDefault);
 				if(isThisDomainDefault) {
 					value = new T();
 				} else {
@@ -700,7 +701,7 @@ namespace Catkeys
 		{
 			if(_inDD == null) {
 				bool isThisDomainDefault;
-				var defDomain = Util.Misc.GetDefaultAppDomain(out isThisDomainDefault);
+				var defDomain = Util.AppDomain_.GetDefaultDomain(out isThisDomainDefault);
 				_inDD = defDomain.GetData("Catkeys_InterDomain") as LibObjectInDefaultDomain;
 				if(_inDD == null) {
 					if(isThisDomainDefault) {

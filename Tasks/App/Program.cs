@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -48,7 +49,7 @@ namespace Catkeys.Tasks
 
 			bool measureStartupTime = args.Length >= 1 && args[0] == "/perf";
 			if(measureStartupTime) Perf.Next(); //Perf.Write(); //startup time: 20 ms when ngen-compiled, else >26 ms. After PC restart ~150 ms (Win10, SSD).
-#if true
+
 			//single process instance
 			bool isOwner;
 			var mutex = new Mutex(true, "{8AE35071-A3F5-423A-8F67-7C3AC0FFC8E3}", out isOwner);
@@ -60,26 +61,22 @@ namespace Catkeys.Tasks
 				return;
 			}
 
-#if true
 			//Application.EnableVisualStyles(); //730 mcs
 			//Application.SetCompatibleTextRenderingDefault(false); //70 mcs
 			Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
             Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-			Test.TestInNewAppDomain();
-			//Test.TestInThisAppDomain();
-			//var thread = new Thread(Test.TestInThisAppDomain); thread.SetApartmentState(ApartmentState.STA); thread.Start(); thread.Join();
-#else
 			Api.ChangeWindowMessageFilter(Api.WM_SETTEXT, 1);
 			Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
 
-			var regWinClass = Wnd.Misc.WndClass.Register("CatkeysTasks", WndProcAppsManager);
-
-			Api.CreateWindowEx(0, regWinClass.Name,
-				null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message,
-				//"Catkeys Tasks", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 400, 300, 400, 200, Wnd0,
-				0, Zero, 0);
-			//Out($"{_hwndAM}");
+#if false
+			Test.TestInNewAppDomain();
+			//Test.TestInThisAppDomain();
+#else
+			Wnd.Misc.WndClass.InterDomainRegister("CatkeysTasks", WndProcAppsManager);
+			_wMain = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "CatkeysTasks",
+				//null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message);
+				"Catkeys Tasks", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 400, 300, 400, 200, Wnd0);
 
 			//Perf.Next();
 			//_TrayIcon(true); //13 ms
@@ -87,7 +84,7 @@ namespace Catkeys.Tasks
 			//Task.Run(() => { _TrayIcon(true); }); //4 ms
 			new Thread(() => { _TrayIcon(true); }).Start(); //0.15 ms
 
-			if(measureStartupTime) Perf.NextWrite();
+			if(measureStartupTime) Perf.NW();
 
 			if(args.Length > 0) {
 				_clArgs = args;
@@ -99,11 +96,9 @@ namespace Catkeys.Tasks
 			while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 
 			if(!_compilerWindow.Is0) _compilerWindow.Send(Api.WM_CLOSE);
-			GC.KeepAlive(regWinClass);
 			_TrayIcon(false);
 #endif
 			mutex.ReleaseMutex(); //also keeps mutex alive
-#endif
 		}
 
 #if false //15-16 ms; Crashes on process exit, maybe because not using Application.Run etc, didn't try to debug it seriously.
@@ -143,14 +138,12 @@ namespace Catkeys.Tasks
 			x.uID = 1;
 			if(add) {
 				x.uFlags = Api.NIF_ICON | Api.NIF_MESSAGE | Api.NIF_TIP;
-				//x.hIcon = Files.GetIconHandle(@"Q:\app\js.ico"); //first time 0.5-1.5 ms
 				//x.hIcon = Properties.Resources.trayIcon.Handle; //27-28 ms (later in this appdomain - 0.25 ms)
-				x.hIcon = Api.LoadImage(Util.Misc.GetModuleHandleOfExe(), Api.IDI_APPLICATION, Api.IMAGE_ICON, 16, 16, Api.LR_SHARED); //190 mcs
+				x.hIcon = Icons.GetAppIconHandle(16); //TODO: DPI
 				x.uCallbackMessage = Api.WM_USER + 3;
 				x.szTip = "Catkeys Tasks";
 				//Perf.Next();
 				Api.Shell_NotifyIcon(Api.NIM_ADD, ref x);
-				//Api.DestroyIcon(x.hIcon); //if GetIconHandle
 			} else {
 				Api.Shell_NotifyIcon(Api.NIM_DELETE, ref x);
 			}
@@ -173,30 +166,25 @@ namespace Catkeys.Tasks
 			}
 		}
 
-		static ContextMenuStrip _trayMenu; //info: at first tried ContextMenu, but difficult because need a visible form
+		static CatMenu _trayMenu; //info: at first tried ContextMenu, but difficult because need a visible form
 
 		static void _TrayIcon_Menu()
 		{
 			if(_trayMenu == null) {
-				_trayMenu = new ContextMenuStrip();
-				_trayMenu.Items.Add("one", null, (o, e) => { Out("one"); });
+				_trayMenu = new CatMenu();
+				_trayMenu.MultiShow = true;
+				_trayMenu["one"] = o => Out("one");
 			}
 			//Out(_trayMenu.Capture);
 			//_trayMenu.Capture = true;
 
-			_trayMenu.Show(100, 100);
+			_trayMenu.Show();
 		}
 #endif
 
 		unsafe static LPARAM WndProcAppsManager(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
 		{
 			switch(msg) {
-			case Api.WM_NCCREATE:
-				_wMain = hWnd;
-				break;
-			//case WM.CREATE:
-			//	Perf.Next();
-			//	break;
 			//case WM.DESTROY:
 			//	Out("destroy");
 			//	break;

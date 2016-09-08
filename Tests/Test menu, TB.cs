@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -311,35 +312,35 @@ public partial class Test
 
 		var a = new List<string>();
 		int n = 0;
-		bool lnk = true;
+		bool lnk = false;
 		string folder;
 
-		if(lnk) {
-			folder = Folders.CommonPrograms;
-			foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
-				//Out(f);
-				a.Add(f);
-				if(++n == 30) break;
-			}
-		} else {
-			folder = @"q:\app";
-			//folder =@"q:\app\catkeys\tasks";
-			var oneExt = new HashSet<string>();
-			foreach(var f in Directory.EnumerateFiles(folder)) {
-				//Out(f);
-				var ext = Path.GetExtension(f).ToLower(); if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
-				if(0 != f.EndsWith_(true, ".aps", ".tss", ".bin", ".wal")) continue;
-				a.Add(f);
-				if(++n == 30) break;
-			}
-		}
+		//if(lnk) {
+		//	folder = Folders.CommonPrograms;
+		//	foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
+		//		//Out(f);
+		//		a.Add(f);
+		//		if(++n == 30) break;
+		//	}
+		//} else {
+		//	folder = @"q:\app";
+		//	//folder =@"q:\app\catkeys\tasks";
+		//	var oneExt = new HashSet<string>();
+		//	foreach(var f in Directory.EnumerateFiles(folder)) {
+		//		//Out(f);
+		//		var ext = Path.GetExtension(f).ToLower(); if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
+		//		if(0 != f.EndsWith_(true, ".aps", ".tss", ".bin", ".wal")) continue;
+		//		a.Add(f);
+		//		if(++n == 30) break;
+		//	}
+		//}
 
 		Perf.First();
 
 		var m = new CatMenu();
 		m.MouseClosingDistance = 50;
 		//m.ActivateMenuWindow = true;
-		//m.IconDir = @"q:\app";
+		m.IconDirectory = @"q:\app";
 		//m.CMS.ImageScalingSize = new Size(32, 32);
 		//m.CMS.ImageScalingSize = new Size(48,48);
 		//m.CMS.ImageScalingSize = new Size(64,64);
@@ -360,63 +361,63 @@ public partial class Test
 			////});
 		}
 
-		using(m.Submenu("sub")) {
+		//using(m.Submenu("sub")) {
 #if true
-			//m["One", "Cut.ico"] = o => Out(o);
-			//m["ILSpy", @"Q:\Programs\ILSpy\ILSpy.exe"] = o => Out(o);
-			//m["Notepad", Folders.System+"notepad.exe"] = o => Out(o);
-			//m["Two", "Copy.ico"] = o => Out(o);
-			//m["Three", "Paste.ico"] = o => Out(o);
-			//m["Four", "Run.ico"] = o => Out(o);
-			//m["Five", "Tip.ico"] = o => Out(o);
-			////m["Six", "notepad.exe"] = o => Out(o);
-			m["Calc", @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"] = o => Out(o);
-			//m["PicPick", Folders.ProgramFilesX86 + @"PicPick\picpick.exe"] = o => Out(o);
-			//m["Dbgview", @"Q:\Programs\DebugView\Dbgview.exe"] = o => Out(o);
-			//m["Procexp", @"Q:\Programs\ProcessExplorer\procexp.exe"] = o => Out(o);
-			//m["Inno", Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Out(o);
-			//m["hhw", Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Out(o);
-			//m["FileZilla", Folders.ProgramFilesX86 + @"FileZilla FTP Client\filezilla.exe"] = o => Out(o);
-			//m["IE", Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Out(o);
-			//m["Procmon", @"Q:\Programs\ProcessMonitor\Procmon.exe"] = o => Out(o);
-			//m["ResourceHacker", Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Out(o);
-			//m["autoruns", @"Q:\programs\Autoruns\autoruns.exe"] = o => Out(o);
-			//m["SyncBack", Folders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe"] = o => Out(o);
-			//m["PEview", @"Q:\Programs\PeView\PEview.exe"] = o => Out(o);
-			//m["shell32.dll,25", Folders.System + @"shell32.dll,25"] = o => Out(o);
-			m["app", @"q:\app"] = null;
-			m["Favorites", Folders.Favorites] = o => Out(o);
-			////m["", @""] = o => Out(o);
-			m["http://www...", "http://www.quickmacros.com/"] = o => Out(o);
-			m[".txt", ".txt"] = o => Out(o);
-			m[".bmp", ".bmp"] = o => Out(o);
-			m["mailto:", "mailto:"] = o => Out(o);
-			m["CLSID", "::{21EC2020-3AEA-1069-A2DD-08002B30309D}"] = o => Out(o);
-			//m["ProgId", "Word.Document.8"] = o => Out(o);
-			m["lnk", @"C:\Users\G\Desktop\QM in PF.lnk"] = o => Out(o);
-			m[".. exe", @"q:\app\catkeys\..\qm.exe"] = null;
-			m[".. cpp", @"q:\app\catkeys\..\app.cpp"] = null;
-			m["txtfile:", @"txtfile:"] = null;
-			m[".cat", @".cat"] = null;
-			m[".cat", @".cat"] = null;
-			//m["ani", @"C:\WINDOWS\Cursors\aero_busy.ani"] =null;
+		m["One", "Cut.ico"] = o => Out(o);
+		m["ILSpy", @"Q:\Programs\ILSpy\ILSpy.exe"] = o => Out(o);
+		m["Notepad", Folders.System + "notepad.exe"] = o => Out(o);
+		m["Two", "Copy.ico"] = o => Out(o);
+		m["Three", "Paste.ico"] = o => Out(o);
+		m["Four", "Run.ico"] = o => Out(o);
+		m["Five", "Tip.ico"] = o => Out(o);
+		//m["Six", "notepad.exe"] = o => Out(o);
+		m["Calc", @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"] = o => Out(o);
+		m["PicPick", Folders.ProgramFilesX86 + @"PicPick\picpick.exe"] = o => Out(o);
+		m["Dbgview", @"Q:\Programs\DebugView\Dbgview.exe"] = o => Out(o);
+		m["Procexp", @"Q:\Programs\ProcessExplorer\procexp.exe"] = o => Out(o);
+		m["Inno", Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Out(o);
+		m["hhw", Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Out(o);
+		m["FileZilla", Folders.ProgramFilesX86 + @"FileZilla FTP Client\filezilla.exe"] = o => Out(o);
+		m["IE", Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Out(o);
+		m["Procmon", @"Q:\Programs\ProcessMonitor\Procmon.exe"] = o => Out(o);
+		m["ResourceHacker", Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Out(o);
+		m["autoruns", @"Q:\programs\Autoruns\autoruns.exe"] = o => Out(o);
+		m["SyncBack", Folders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe"] = o => Out(o);
+		m["PEview", @"Q:\Programs\PeView\PEview.exe"] = o => Out(o);
+		m["shell32.dll,25", Folders.System + @"shell32.dll,25"] = o => Out(o);
+		m["app", @"q:\app"] = null;
+		m["Favorites", Folders.Favorites] = o => Out(o);
+		//m["", @""] = o => Out(o);
+		m["http://www...", "http://www.quickmacros.com/"] = o => Out(o);
+		m[".txt", ".txt"] = o => Out(o);
+		m[".bmp", ".bmp"] = o => Out(o);
+		m["mailto:", "mailto:"] = o => Out(o);
+		m["CLSID", "::{21EC2020-3AEA-1069-A2DD-08002B30309D}"] = o => Out(o);
+		m["ProgId", "Word.Document.8"] = o => Out(o);
+		m["lnk", @"C:\Users\G\Desktop\QM in PF.lnk"] = o => Out(o);
+		m[".. exe", @"q:\app\catkeys\..\qm.exe"] = null;
+		m[".. cpp", @"q:\app\catkeys\..\app.cpp"] = null;
+		m["txtfile:", @"txtfile:"] = null;
+		m[".cat", @".cat"] = null;
+		m[".cat", @".cat"] = null;
+		m["ani", @"C:\WINDOWS\Cursors\aero_busy.ani"] = null;
 #endif
 
-			m["no icon"] = null;
+		m["no icon"] = null;
 			m["no icon"] = null;
 			m.Separator();
 			//using(m.Submenu("sub")) {
 			m["no icon"] = null;
 			m["no icon"] = null;
 			m[".cat", @".cat"] = null;
-		}
+		//}
 
 		//Time.SetTimer(1000, true, t => { m.CMS.Close(); });
 		//Time.SetTimer(1000, true, t => { m.CMS.Visible=false; });
 		//Time.SetTimer(1000, true, t => { m.Dispose(); });
 		//Time.SetTimer(1000, true, t => { m.CMS.Dispose(); });
 
-		m.MultiShow = true;
+		//m.MultiShow = true;
 		m.Show();
 		//WaitMS(500);
 		//m.Separator();
@@ -1235,6 +1236,8 @@ public partial class Test
 		//m.ImageList = il;
 		Perf.Next();
 
+		m.Ex.SetBounds(100, 100, 400, 100);
+
 		m["Close"] = o => { Out(o); _mlTb.Stop(); };
 		Perf.Next();
 #if true
@@ -1267,7 +1270,7 @@ public partial class Test
 	static void TestToolbar()
 	{
 		//OutFunc();
-		for(int i = 0; i < 1; i++) { TestCatBar(); WaitMS(500); }
+		for(int i = 0; i < 1; i++) { TestCatBar(); /*WaitMS(500);*/ }
 
 		//for(int i=0; i<1; i++) TestOldToolbar();
 		//for(int i=0; i<1; i++) TestOldToolbarInNativeWindow();
@@ -1291,8 +1294,8 @@ public partial class Test
 		//Show.TaskDialog("");
 
 		//WaitMS(500);
-		//TestToolbar();
-		TestCatMenu();
+		TestToolbar();
+		//TestCatMenu();
 		//TestCatMenuWithForm();
 		//WaitMS(500);
 		//TestWpfContextMenu();
