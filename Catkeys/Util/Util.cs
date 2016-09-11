@@ -542,14 +542,27 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Returns true if Catkeys.dll is installed in the global assembly cache.
 		/// </summary>
-		public static bool IsCatkeysInGAC { get { return Assembly.GetExecutingAssembly().GlobalAssemblyCache; } }
+		public static bool IsCatkeysInGAC { get { return typeof(Misc).Assembly.GlobalAssemblyCache; } }
 
 		/// <summary>
 		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
-		/// It means that there are no delay caused by JIT-compiling when its functions are called first time in process or app domain.
+		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
 		/// </summary>
-		public static bool IsCatkeysNgened { get { return Assembly.GetExecutingAssembly().CodeBase.Contains("/GAC_MSIL/"); } }
+		public static bool IsCatkeysNgened { get { return IsAssemblyNgened(typeof(Misc).Assembly); } }
 		//tested: Module.GetPEKind always gets ILOnly.
+
+		/// <summary>
+		/// Returns true if assembly asm is compiled to native code using ngen.exe.
+		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+		/// </summary>
+		public static bool IsAssemblyNgened(Assembly asm)
+		{
+			var s = asm.CodeBase;
+			if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
+			s = Path.GetFileName(s);
+			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
+			return Zero != Api.GetModuleHandle(s);
+		}
 
 		/// <summary>
 		/// Frees as much as possible physical memory used by this process.
@@ -637,7 +650,7 @@ namespace Catkeys.Util
 			OutMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 		}
 
-		[Conditional("DEBUG")]
+		//[Conditional("DEBUG")]
 		public static void OutLoadedAssemblies()
 		{
 			AppDomain currentDomain = AppDomain.CurrentDomain;

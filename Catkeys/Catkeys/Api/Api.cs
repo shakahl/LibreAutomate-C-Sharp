@@ -348,9 +348,6 @@ namespace Catkeys.Winapi
 		public static extern IntPtr CopyImage(IntPtr h, uint type, int cx, int cy, uint flags);
 
 		[DllImport("user32.dll")]
-		public static extern IntPtr CopyIcon(IntPtr hIcon); //3 times slower than CopyImage. But CopyImage maybe cannot be used to copy icons retrieved from other processes, eg with WM_GETICON.
-
-		[DllImport("user32.dll")]
 		public static extern bool DestroyIcon(IntPtr hIcon);
 
 		[DllImport("user32.dll")]

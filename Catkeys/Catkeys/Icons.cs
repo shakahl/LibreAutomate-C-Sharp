@@ -42,6 +42,8 @@ namespace Catkeys
 			/// </summary>
 			SearchPath = 2,
 
+			//TODO: DpiScale - scale the specified size according to DPI (text size) specified in Control Panel.
+
 			/// <summary>
 			/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
 			/// </summary>
@@ -400,7 +402,7 @@ namespace Catkeys
 		//If size is in enum ShellSize range (<=0), calls GetShellIconSize. If size is invalid, uses nearest valid value.
 		static int _NormalizeIconSizeParameter(int size)
 		{
-			if(size > 256) size = 256; else if(size < (int)ShellSize.Jumbo) size = (int)ShellSize.Small;
+			if(size > 256) size = 256; else if(size < (int)ShellSize.Jumbo) size = (int)ShellSize.SysSmall;
 			if(size > 0) return size;
 			return GetShellIconSize((ShellSize)size);
 		}
@@ -408,51 +410,52 @@ namespace Catkeys
 		public enum ShellSize
 		{
 			/// <summary>
+			/// Icons displayed in window title bar and system notification area (tray). Usually the same as Small. Default 16x16.
+			/// </summary>
+			SysSmall = 0,
+			/// <summary>
 			/// Small icons displayed in Explorer folders. Default 16x16.
 			/// </summary>
-			Small = 0,
+			Small = -1,
 			/// <summary>
 			/// Large icons displayed in Explorer folders. Default 32x32.
 			/// </summary>
-			Large = -1,
+			Large = -2,
 			/// <summary>
 			/// Extra large icons displayed in Explorer folders. Default 48x48.
 			/// </summary>
-			ExtraLarge = -2,
+			ExtraLarge = -3,
 			/// <summary>
 			/// 256x256 icons displayed in Explorer folders.
 			/// </summary>
-			Jumbo = -3,
+			Jumbo = -4,
 
-			//It seems this is obsolete. Now always the same as shell small icons.
+			//It seems SysSmall/SysLarge are obsolete. Now always the same as shell small icons.
 			//On Win XP can be changed in CP -> Display -> Appearance -> Advanced -> Caption Buttons. On Win7 it does not change icon size. On Win10 completely hidden.
-			//Instead can use SystemInformation.SmallIconSize.
-			///// <summary>
-			///// Window title bar icons. Default 16x16.
-			///// </summary>
-			//Window = -4
+			//But to get it we use SystemInformation.SmallIconSize or Api.GetSystemMetrics(Api.SM_CXSMICON/SM_CXICON) which is faster etc than through shell imagelist.
 		}
 
 		/// <summary>
 		/// Gets the width and height of shell icons of standard sizes - small, large, extra large and jumbo.
-		/// The first four sizes depend on text size (DPI) that can be changed in Control Panel. If text size is 100%, they usually are 16, 32, 48.
-		/// Jumbo is always 256.
+		/// Jumbo is always 256. Others depend on text size (DPI) that can be changed in Control Panel. If text size is 100%, they usually are 16, 32, 48.
 		/// </summary>
 		/// <param name="shellSize"><see cref="ShellSize"/></param>
 		public static int GetShellIconSize(ShellSize shellSize)
 		{
 			switch(shellSize) {
-			case ShellSize.Jumbo: return 256;
+			case ShellSize.Small:
+				if(_shellIconSizeSmall == 0) _shellIconSizeSmall = _GetShellIconSize(Api.SHIL_SMALL, 16);
+				return _shellIconSizeSmall;
 			case ShellSize.Large:
 				if(_shellIconSizeLarge == 0) _shellIconSizeLarge = _GetShellIconSize(Api.SHIL_LARGE, 32);
 				return _shellIconSizeLarge;
 			case ShellSize.ExtraLarge:
 				if(_shellIconSizeExtraLarge == 0) _shellIconSizeExtraLarge = _GetShellIconSize(Api.SHIL_EXTRALARGE, 48);
 				return _shellIconSizeExtraLarge;
-			default:
-				if(_shellIconSizeSmall == 0) _shellIconSizeSmall = _GetShellIconSize(Api.SHIL_SMALL, 16);
-				return _shellIconSizeSmall;
+			case ShellSize.Jumbo: return 256;
 			}
+			//SysSmall
+			return Api.GetSystemMetrics(Api.SM_CXSMICON); //SystemInformation.SmallIconSize calls the same, but for both cx and cy
 		}
 
 		static int _shellIconSizeSmall, _shellIconSizeLarge, _shellIconSizeExtraLarge;
@@ -467,7 +470,7 @@ namespace Catkeys
 
 		static bool _GetShellImageList(int ilIndex, out IntPtr R)
 		{
-			lock ("vK6Z4XiSxkGSfC14/or5Mw") { //strange, the API fails if called simultaneously by multiple threads
+			lock ("vK6Z4XiSxkGSfC14/or5Mw") { //the API fails if called simultaneously by multiple threads
 				if(0 == Api.SHGetImageList(ilIndex, ref Api.IID_IImageList, out R)) return true;
 			}
 			Debug.Assert(false);
@@ -505,7 +508,6 @@ namespace Catkeys
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static unsafe IntPtr GetShellStockIconHandle(Api.SHSTOCKICONID icon, int size)
 		{
-			size = _NormalizeIconSizeParameter(size);
 			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
 			if(0 != Api.SHGetStockIconInfo(icon, 0, ref x)) return Zero;
 			var s = new string(x.szPath);
@@ -517,12 +519,13 @@ namespace Catkeys
 		/// Gets native icon handle of the entry assembly of current appdomain.
 		/// It is the assembly icon, not an icon from managed resources.
 		/// Returns Zero if the assembly is without icon. You can use GetShellStockIconHandle(Api.SHSTOCKICONID.SIID_APPLICATION) to get default exe icon.
-		/// Don't need to destroy the icon.
+		/// The icon is cached and protected from destroying, therefore don't need to call Api.DestroyIcon() and not error to call it.
 		/// </summary>
-		/// <param name="size">Icon width and height.</param>
+		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static IntPtr GetAppIconHandle(int size)
 		{
 			IntPtr hinst = Util.Misc.GetModuleHandleOfAppDomainEntryAssembly(); if(hinst == Zero) return Zero;
+			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(hinst, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
 
 			//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.

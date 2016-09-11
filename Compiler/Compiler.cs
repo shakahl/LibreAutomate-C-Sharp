@@ -36,7 +36,6 @@ namespace Compiler
 	{
 		static Wnd.Misc.WndClass _wndClassCompiler = Wnd.Misc.WndClass.Register("Catkeys_Compiler", _WndProcCompiler);
 
-		[STAThread]
 		public static void Main()
 		{
 			Wnd w = Wnd.Misc.CreateMessageWindow(_wndClassCompiler.Name);
@@ -79,9 +78,10 @@ namespace Compiler
 			//Perf.Next();
 
 			if(_compilerMethod == null) {
-				//Assembly a = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
-				Assembly a = Assembly.LoadFile(Folders.App + "csc.exe");
-				_compilerMethod = a.EntryPoint;
+				//Assembly asm = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
+				Assembly asm = Assembly.LoadFile(Folders.App + "csc.exe");
+				if(!Util.Misc.IsAssemblyNgened(asm)) Output.Warning("csc.exe not ngened. The first compiling will be slow.");
+				_compilerMethod = asm.EntryPoint;
 
 				//get compiler output (errors etc)
 				Console.SetOut(_consoleRedirWriter); //35 mcs

@@ -60,24 +60,28 @@ namespace Catkeys
 		/// Gets icon that is displayed in window title bar and in its taskbar button.
 		/// Returns icon handle if successful, else Zero. Later call Api.DestroyIcon().
 		/// </summary>
-		/// <param name="big">Get 32x32 icon.</param>
-		public IntPtr GetIconHandle(bool big = false)
+		/// <param name="large">Get large icon.</param>
+		/// <remarks>Icon size depends on DPI (text size, can be changed in Control Panel). By default small is 16, large 32.</remarks>
+		public IntPtr GetIconHandle(bool large = false)
 		{
+			int size = Api.GetSystemMetrics(large ? Api.SM_CXICON : Api.SM_CXSMICON);
+
 			//support Windows Store apps
 			string appId = null;
 			if(1 == _WindowsStoreAppId(this, out appId, true)) {
-				IntPtr R = Icons.GetIconHandle(appId, big ? 32 : 16);
-				if(R != Zero) return R;
+				IntPtr hi = Icons.GetIconHandle(appId, size);
+				if(hi != Zero) return hi;
 			}
 
-			LPARAM _R;
-			SendTimeout(1000, out _R, Api.WM_GETICON, big);
-			if(_R == 0) SendTimeout(1000, out _R, Api.WM_GETICON, !big);
-			if(_R == 0) _R = GetClassLong(big ? Api.GCL_HICON : Api.GCL_HICONSM);
-			if(_R == 0) _R = GetClassLong(big ? Api.GCL_HICONSM : Api.GCL_HICON);
+			LPARAM R;
+			SendTimeout(1000, out R, Api.WM_GETICON, large);
+			if(R == 0) SendTimeout(1000, out R, Api.WM_GETICON, !large);
+			if(R == 0) R = GetClassLong(large ? Api.GCL_HICON : Api.GCL_HICONSM);
+			if(R == 0) R = GetClassLong(large ? Api.GCL_HICONSM : Api.GCL_HICON);
+			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
 
-			if(_R != 0) return Api.CopyIcon(_R);
-
+			//Copy, because will DestroyIcon, also it resizes if need.
+			if(R != 0) return Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
 			return Zero;
 		}
 

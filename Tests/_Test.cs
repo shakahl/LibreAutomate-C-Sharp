@@ -4179,7 +4179,19 @@ bbb"", b3
 
 	static void TestMain()
 	{
-
+		//var w = Wnd.Find("*Notepad"); //16
+		//var w = Wnd.Find("Quick Macros*"); //20
+		//var w = Wnd.Find("Catkeys*"); //20
+		//var w = Wnd.Find("*app*"); //20
+		var w = Wnd.Find("*Word"); //20
+		//var w = Wnd.Find("*Paint"); //20
+		//var w = Wnd.Find("*Process Expl*"); //20
+		//var w = Wnd.Find("*Firefox*"); //20
+		//var w = Wnd.Find("*Internet Explorer*"); //24
+		//var w = Wnd.Find("*Calculator*"); //20
+		var hi = w.GetIconHandle();
+		var im = Icons.HandleToImage(hi);
+		Out(im.Width);
 
 
 

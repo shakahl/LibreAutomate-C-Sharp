@@ -1057,6 +1057,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Image width and height.
+		/// Also can be enum <see cref="Icons.ShellSize"/>, cast to int.
 		/// Set it before adding items.
 		/// </summary>
 		/// <remarks>

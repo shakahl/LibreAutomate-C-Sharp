@@ -2648,7 +2648,7 @@ namespace Catkeys
 		/// This function waits a while until the window is destroyed or hidden or disabled, but does not wait indefinitely. Also applies auto-delay.
 		/// If finally the window is destroyed (or was already destroyed when calling this function), sets this=Wnd0 and returns true.
 		/// Else returns false (although in many cases the window is already hidden and will be destroyed soon, and another window is activated).
-		/// If the window is of this thread, just sends (not posts) Api.WM_CLOSE or Api.WM_SYSCOMMAND and does not wait.
+		/// If the window is of this thread, just sends (not posts, use CloseRawAsync for it) Api.WM_CLOSE or Api.WM_SYSCOMMAND and does not wait.
 		/// </summary>
 		/// <param name="closeLikeUser">
 		/// If true, uses Api.WM_SYSCOMMAND, like when the user clicks the Close button in the title bar.
@@ -2704,6 +2704,14 @@ namespace Catkeys
 			}
 			_h = Zero;
 			return true;
+		}
+
+		/// <summary>
+		/// Posts WM_CLOSE message.
+		/// </summary>
+		public void CloseRawAsync()
+		{
+			Post(Api.WM_CLOSE);
 		}
 
 		/// <summary>
