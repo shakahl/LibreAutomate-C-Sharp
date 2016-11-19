@@ -672,4 +672,23 @@ namespace Catkeys.Util
 
 	}
 
+	public static class Dpi
+	{
+		/// <summary>
+		/// Gets DPI of primary monitor at Windows startup.
+		/// </summary>
+		public static int BaseDPI
+		{
+			get
+			{
+				if(_baseDPI == 0) {
+					var dc = Api.GetDC(Wnd0);
+					_baseDPI = Api.GetDeviceCaps(dc, 90); //LOGPIXELSY
+					Api.ReleaseDC(Wnd0, dc);
+				}
+				return _baseDPI;
+			}
+		}
+		static int _baseDPI;
+	}
 }

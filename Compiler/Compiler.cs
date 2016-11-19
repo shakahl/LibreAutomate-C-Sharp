@@ -23,6 +23,11 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+//using System.Reflection.Metadata;
+//using Microsoft.CodeAnalysis.CSharp.Scripting;
+
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
@@ -53,7 +58,17 @@ namespace Compiler
 		{
 			switch(msg) {
 			case Api.WM_USER:
-				return _Compile();
+				var r = _Compile();
+				//if(r == 0) { _Compile(); _Compile(); _Compile(); }
+				Perf.NW();
+				return r;
+
+				//_TestScript();
+				//_TestScript();
+				//_TestScript();
+				//_TestScript();
+				//Perf.NW();
+				//return 0;
 			}
 
 			LPARAM R = Api.DefWindowProc(hWnd, msg, wParam, lParam);
@@ -66,6 +81,179 @@ namespace Compiler
 			return R;
 		}
 
+#if true
+		static int _Compile()
+		{
+			//Perf.First(100);
+			Perf.Next(); //3 ms first time (ngen-compiled), then <50 mcs
+
+			var dom = AppDomain.CurrentDomain;
+			string csFile = (string)dom.GetData("cs"), outFile = (string)dom.GetData("out");
+
+			bool inMemoryAsm = true;
+
+			//Out(csFile);
+			//Out(outFile);
+
+			//var source = File.ReadAllText(csFile);
+			var source = @"
+using System;
+using Catkeys;
+using static Catkeys.NoClass;
+
+public static class Test
+{
+		public static void Main()
+		{
+			Out(Folders.App);
+//WaitMS(5000);
+			//Out(""end"");
+		}
+	}
+";
+
+			var sRef = new string[] { typeof(object).Assembly.Location, Folders.App + "Catkeys.dll" };
+			//var sRef = new string[] { typeof(object).Assembly.Location };
+
+			var references = new List<PortableExecutableReference>();
+			foreach(var s in sRef) {
+				references.Add(MetadataReference.CreateFromFile(s));
+			}
+
+			var tree = CSharpSyntaxTree.ParseText(source);
+
+			CSharpCompilationOptions options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
+
+			var compilation = CSharpCompilation.Create("A", new[] { tree }, references, options);
+
+			MemoryStream ms = inMemoryAsm ? new MemoryStream() : null;
+
+			//Emitting to file is available through an extension method in the Microsoft.CodeAnalysis namespace
+			var emitResult = inMemoryAsm ? compilation.Emit(ms) : compilation.Emit(outFile);
+
+			//If our compilation failed, we can discover exactly why.
+			if(!emitResult.Success) {
+				foreach(var diagnostic in emitResult.Diagnostics) {
+					Out(diagnostic.ToString());
+				}
+				return 1;
+			}
+
+			//copy non-.NET references to the output directory
+			var outDir = Path.GetDirectoryName(outFile);
+			var netDir = Folders.Windows + "Microsoft.NET\\";
+			for(int i = 1; i < references.Count; i++) {
+				var r = references[i];
+				var s1 = r.FilePath;
+				if(s1.StartsWith_(netDir, true)) continue;
+				var s2 = outDir + "\\" + Path.GetFileName(s1);
+				//OutList(s1, s2);
+
+				if(Files.FileExists(s2)) {
+					FileInfo f1 = new FileInfo(s1), f2 = new FileInfo(s2);
+					if(f1.LastWriteTimeUtc == f2.LastWriteTimeUtc && f1.Length == f2.Length) continue;
+				}
+				File.Copy(s1, s2, true);
+				//TODO: exception handling
+			}
+
+			GC.Collect();
+
+#if true
+			var ad = AppDomain.CreateDomain("ad1");
+			Out(ad.BaseDirectory);
+			if(inMemoryAsm) {
+				ad.SetData("ms", ms);
+				ad.DoCallBack(() =>
+				{
+					var ad2 =AppDomain.CurrentDomain;
+					var ms2 = ad2.GetData("ms") as MemoryStream;
+					Assembly asm = ad2.Load(ms2.ToArray());
+					asm.EntryPoint.Invoke(null, null);
+				});
+			} else {
+				ad.ExecuteAssembly(outFile);
+			}
+			AppDomain.Unload(ad);
+#endif
+
+			return 0;
+		}
+
+		//		static int _Compile()
+		//		{
+		//			//Perf.First(100);
+		//			Perf.Next(); //3 ms first time (ngen-compiled), then <50 mcs
+
+		//			var dom = AppDomain.CurrentDomain;
+		//			string csFile = (string)dom.GetData("cs"), outFile = (string)dom.GetData("out");
+
+		//			//Out(csFile);
+		//			//Out(outFile);
+
+		//			var source = File.ReadAllText(csFile);
+		////			var source = @"
+		////using System;
+		////public static class Test{
+		////public static int Main(){
+		////return 1+2;
+		////}
+		////}
+		////";
+
+		//			var sRef = new string[] { typeof(object).Assembly.Location, Folders.App + "Catkeys.dll" };
+		//			//var sRef = new string[] { typeof(object).Assembly.Location };
+
+		//			var perf = new Perf.Inst(true);
+		//			var references = new List<PortableExecutableReference>();
+		//			foreach(var s in sRef) {
+		//				references.Add(MetadataReference.CreateFromFile(s));
+		//			}
+		//			perf.Next();
+
+		//			var tree = CSharpSyntaxTree.ParseText(source);
+		//			perf.Next();
+
+		//			CSharpCompilationOptions options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
+
+		//			var compilation = CSharpCompilation.Create("A", new[] { tree }, references, options);
+		//			perf.Next();
+
+		//			//Emit to stream
+		//			var ms = new MemoryStream();
+		//			var emitResult = compilation.Emit(ms);
+		//			perf.Next();
+
+		//			//If our compilation failed, we can discover exactly why.
+		//			if(!emitResult.Success) {
+		//				foreach(var diagnostic in emitResult.Diagnostics) {
+		//					Out(diagnostic.ToString());
+		//				}
+		//			} else {
+		//				//Load into currently running assembly. Normally we'd probably
+		//				//want to do this in an AppDomain
+		//				var ourAssembly = Assembly.Load(ms.ToArray());
+		//				var type = ourAssembly.GetType("Test");
+		//			perf.Next();
+
+		//				//Invokes our main method and writes "Hello World" :)
+		//				//object r=type.InvokeMember("Main", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, null);
+		//				//Out(r);
+		//				type.InvokeMember("Main", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, null);
+		//			perf.NW();
+		//			}
+
+		//			return 0;
+		//		}
+
+
+		//static async void _TestScript()
+		//{
+		//	Perf.Next();
+		//	object result = await CSharpScript.EvaluateAsync("1 + 2");
+		//	Out(result);
+		//}
+#else
 		static MethodInfo _compilerMethod;
 
 		static int _Compile()
@@ -129,7 +317,7 @@ namespace Compiler
 
 			return r;
 		}
-
+#endif
 		static ConsoleRedirWriter _consoleRedirWriter = new ConsoleRedirWriter();
 		static StringBuilder _compilerOutput = new StringBuilder();
 

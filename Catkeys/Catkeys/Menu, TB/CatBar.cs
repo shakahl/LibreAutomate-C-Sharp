@@ -25,7 +25,7 @@ using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
-	public class CatBar :Base_CatMenu_CatBar, IWin32Window
+	public class CatBar :Base_CatMenu_CatBar
 	{
 		static Wnd.Misc.WndClass _WndClass = Wnd.Misc.WndClass.Register("CatBar", _WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
 
@@ -190,9 +190,8 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Implements IWin32Window.
+		/// Gets the main toolbar window.
 		/// </summary>
-		public IntPtr Handle { get { return _w.Handle; } }
 		public Wnd MainWnd { get { return _w; } }
 
 #pragma warning disable 649
@@ -308,7 +307,7 @@ namespace Catkeys
 					//Out("CreateParams");
 					var p = base.CreateParams;
 					if(_parent != null) { //this prop is called 3 times, first time before ctor
-						p.Parent = _parent.Handle;
+						p.Parent = _parent.MainWnd.Handle;
 					}
 					return p;
 				}

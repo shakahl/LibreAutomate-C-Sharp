@@ -150,6 +150,25 @@ namespace Catkeys
 			//info: returns true if begins with "xx:" where xx is 2 or more of alphanumeric, '.', '-' and '+' characters.
 		}
 
+		/// <summary>
+		/// Replaces characters that cannot be used in file names.
+		/// Also corrects other forms of invalid or problematic filename (except invalid length): trims spaces and other blank characters; replaces "." at the end; prepends "@" if just an extension like ".txt" or a reserved name like "CON" or "CON.txt".
+		/// Returns valid filename. Returns null if name is null. Returns "" if name is "" or contains just blank characters.
+		/// Does not check name length; no correction or exception if it is 0 (or null) or greater than max filename length which is less than max path length 259.
+		/// </summary>
+		/// <param name="name">Initial filename.</param>
+		/// <param name="invalidCharReplacement">A string that will replace each invalid character. Default "-".</param>
+		public static string CorrectFileName(string name, string invalidCharReplacement = "-")
+		{
+			if(name != null) {
+				name = name.Trim();
+				if(name.Length > 0) {
+					name = name.RegexReplace_(@"\.$|[\\/|<>?*:""\x00-\x1f]", invalidCharReplacement).Trim();
+					if(name.RegexIs_(@"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)|^\.[^\.]+$")) name = "@" + name;
+				}
+			}
+			return name;
+		}
 	}
 
 	//[DebuggerStepThrough]

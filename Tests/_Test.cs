@@ -46,8 +46,11 @@ using System.Xml.Schema;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 
-using ImapX;
+//using ImapX;
+//using System.Data.SQLite;
+using SQLite;
 
+using CsvHelper;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
@@ -2031,8 +2034,7 @@ bbb"", b3
 
 		unsafe
 		{
-			fixed (char* p = c)
-			{
+			fixed (char* p = c) {
 				Out(s.ToInt_());
 				char* t = p, e;
 				Out(Api.strtoi(t, out e));
@@ -2329,8 +2331,7 @@ bbb"", b3
 
 	static unsafe void TestStringZeroTerm(string s)
 	{
-		fixed (char* p = s)
-		{
+		fixed (char* p = s) {
 			if((int)p[s.Length] != 0 || (int)p[s.Length + 1] != 0 || (int)p[s.Length + 2] != 0 || (int)p[s.Length + 3] != 0)
 				OutList((long)p, (int)p[s.Length], (int)p[s.Length + 1], (int)p[s.Length + 2], (int)p[s.Length + 3]);
 		}
@@ -3646,29 +3647,29 @@ bbb"", b3
 
 	#endregion
 
-	public static string[] Receive(string user, string password, string filter = "ALL", bool markSeen = false)
-	{
-		using(var client = new ImapClient("imap.googlemail.com", true)) {
-			//client.Port=993; client.UseSsl=true; //default
-			if(!client.Connect()) { Out("failed to connect"); return null; }
-			if(!client.Login(user, password)) { Out("failed to login"); return null; }
-			var folder = client.Folders.Inbox;
-			List<string> a = new List<string>();
-			foreach(var m in folder.Search(filter, ImapX.Enums.MessageFetchMode.Tiny)) {
-				Out(m.From);
-				if(markSeen) m.Seen = true;
-				//a.Add(m.ToEml());
-				a.Add(m.DownloadRawMessage());
-			}
-			return a.ToArray();
-		}
-	}
+	//public static string[] Receive(string user, string password, string filter = "ALL", bool markSeen = false)
+	//{
+	//	using(var client = new ImapClient("imap.googlemail.com", true)) {
+	//		//client.Port=993; client.UseSsl=true; //default
+	//		if(!client.Connect()) { Out("failed to connect"); return null; }
+	//		if(!client.Login(user, password)) { Out("failed to login"); return null; }
+	//		var folder = client.Folders.Inbox;
+	//		List<string> a = new List<string>();
+	//		foreach(var m in folder.Search(filter, ImapX.Enums.MessageFetchMode.Tiny)) {
+	//			Out(m.From);
+	//			if(markSeen) m.Seen = true;
+	//			//a.Add(m.ToEml());
+	//			a.Add(m.DownloadRawMessage());
+	//		}
+	//		return a.ToArray();
+	//	}
+	//}
 
-	static void TestImapX()
-	{
-		var a = Receive("qmgindi@gmail.com", "jucakgoogle", "UNSEEN", false);
-		Out(a);
-	}
+	//static void TestImapX()
+	//{
+	//	var a = Receive("qmgindi@gmail.com", "jucakgoogle", "UNSEEN", false);
+	//	Out(a);
+	//}
 
 	static unsafe LPARAM _WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
@@ -3678,7 +3679,7 @@ bbb"", b3
 
 		switch(msg) {
 		case Api.WM_DESTROY:
-		//case Api.WM_LBUTTONUP:
+			//case Api.WM_LBUTTONUP:
 			Application.ExitThread();
 			break;
 		}
@@ -4177,25 +4178,319 @@ bbb"", b3
 
 	#endregion test icons
 
+	#region test sqlite
+
+#if false
+	static void TestSqlite()
+	{
+		var sb = new StringBuilder();
+
+		Perf.First();
+		var file = Folders.Temp + "test.db3";
+		bool isNew = !Files.FileExists(file);
+		if(isNew) SQLiteConnection.CreateFile(file);
+		Perf.Next();
+
+		SQLiteConnection m_dbConnection;
+		m_dbConnection = new SQLiteConnection($"Data Source={file};Version=3;");
+		m_dbConnection.Open();
+		Perf.Next();
+		try {
+			string sql;
+
+			if(isNew) {
+				sql = "create table highscores (name varchar(20), score int)";
+				using(var c = new SQLiteCommand(sql, m_dbConnection)) c.ExecuteNonQuery();
+
+				using(var tran = m_dbConnection.BeginTransaction()) {
+					sql = "insert into highscores (name, score) values ('Me', 9001)";
+					using(var c = new SQLiteCommand(sql, m_dbConnection)) c.ExecuteNonQuery();
+
+					tran.Commit();
+				}
+				Perf.Next();
+			}
+
+			for(int i = 0; i < 5; i++) {
+				sql = "select * from highscores order by score desc";
+				using(var c = new SQLiteCommand(sql, m_dbConnection)) {
+					using(var reader = c.ExecuteReader())
+						while(reader.Read())
+							sb.AppendLine("Name: " + reader["name"] + "\tScore: " + reader["score"]);
+				}
+				Perf.Next();
+			}
+		}
+		finally {
+			m_dbConnection.Close();
+		}
+		Perf.NW();
+		Out(sb);
+	}
+#elif false
+	static void TestSqlite()
+	{
+		var sb = new StringBuilder();
+
+		Perf.First();
+		var file = Folders.Temp + "test3.db3";
+		bool isNew = !Files.FileExists(file);
+		//if(isNew) SQLiteConnection.CreateFile(file);
+		Perf.Next();
+
+		Perf.NW();
+		Out(sb);
+	}
+#else
+
+	public class Stock
+	{
+		[PrimaryKey, AutoIncrement]
+		public int Id { get; set; }
+		[MaxLength(8)]
+		public string Symbol { get; set; }
+	}
+
+	const string LibraryPath = "Sqlite.Interop.dll";
+	static void TestSqlite()
+	{
+		var sb = new StringBuilder();
+
+		Perf.First();
+		var file = Folders.Temp + "test2.db3";
+		bool isNew = !Files.FileExists(file);
+		Perf.Next();
+
+		using(var db = new SQLiteConnection(file)) {
+			Perf.Next();
+
+			if(isNew) {
+				db.CreateTable<Stock>();
+
+				var s = db.Insert(new Stock() {
+					Symbol = "one"
+				});
+				Perf.Next();
+			}
+
+			for(int i = 0; i < 5; i++) {
+#if true
+				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
+
+				var query = db.Table<Stock>();
+				foreach(var stock in query)
+					sb.AppendLine("Stock: " + stock.Symbol);
+#else
+				foreach(var stock in db.Query<Stock>("select * from Stock"))
+					sb.AppendLine("Stock: " + stock.Symbol);
+#endif
+				Perf.Next();
+			}
+		}
+		Perf.NW();
+
+		Out(sb);
+	}
+#endif
+
+	static void TestSqlite2()
+	{
+	}
+
+	#endregion
+
+	static void TestCorrectFileName()
+	{
+		string s = null;
+		s = "valid";
+		s = "a ?*<>\"/\\| \x01 \x1f \x00 b";
+		s = ".txt";
+		s = "a.";
+		//s = " ab ";
+		//s = "CON";
+		//s = "con";
+		//s = "LPT5.txt";
+		//s = "qwertyuiopasdfghjklzxcvbnm";
+		Out(Path_.CorrectFileName(s));
+
+		//var a1 = new Action(() => { s = Path_.CorrectFileName(s); });
+		//Perf.ExecuteMulti(5, 1000, a1);
+
+	}
+
+	static void TestCsvHelper()
+	{
+		string s = @"A1,B1,C1
+A2,B2,C2
+A3,B3,C3
+A4,B4,C4
+A5,B5,C5
+A6,B6,C6
+A7,B7,C7
+A8,B8,C8
+A9,""a,b
+c"",C9
+A,""B """"Q"""" Z"",C
+";
+		var csv = new CsvReader(new StringReader(s));
+		csv.Configuration.HasHeaderRecord = false;
+		csv.Configuration.TrimFields = true;
+		while(csv.Read()) {
+			var t = csv.GetField<string>(1);
+			if(t == "mmm") Out(t);
+		}
+		csv.Dispose();
+	}
+
+	static void TestCsvNET()
+	{
+		string s = @"A1,B1,C1
+A2,B2,C2
+A3,B3,C3
+A4,B4,C4
+A5,B5,C5
+A6,B6,C6
+A7,B7,C7
+A8,B8,C8
+A9,""a,b
+c"",C9
+A,""B """"Q"""" Z"",C
+";
+		var p = new TextFieldParser(new StringReader(s));
+		//Out(p.HasFieldsEnclosedInQuotes);
+		//Out(p.TrimWhiteSpace);
+		p.SetDelimiters(new string[] { "," });
+
+		while(!p.EndOfData) {
+			string[] a = p.ReadFields();
+			if(a.Length == 0) Out(a, "|");
+		}
+
+		p.Dispose();
+	}
+
+	static void TestCsvCatkeys()
+	{
+		//		string s = @"A1,B1,C1
+		//A2,B2,C2
+		//A3,B3,C3
+		//A4,B4,C4
+		//A5,B5,C5
+		//A6,B6,C6
+		//A7,B7,C7
+		//A8,B8,C8
+		//A9,""a,b
+		//c"",C9
+		//A,""B """"Q"""" Z"",C
+		//";
+
+		string s = @"  A1  ,  B1  ,  Ŧͷת  
+A2,
+A9,  ""a,b""  ,
+""new
+line""	,	m	,		"" n ""	
+A,""B """"Q"""" Z"",C
+";
+		var file = Folders.Temp + "csv.csv";
+		File.WriteAllText(file, s);
+
+		//s = @"  A1  ;  B1  ;  C1  
+		//A2
+		//A9;  ""a;b""  ;
+		//""new
+		//line"";m;"" n ""
+		//A;""B """"Q"""" Z"";C
+		//";
+
+//		s = @"  A1  ,  B1  ,  Ŧͷת  
+//A2,
+//A9,  'a,b'  ,
+//'new
+//line',m,' n '
+//A,'B ''Q'' Z',C
+//";
+
+		try {
+			//var x = new CsvTable(s);
+			var x = new CsvTable();
+			//x.TrimSpaces = false;
+			//x.Separator = ';';
+			//x.Quote = '\'';
+			x.FromString(s);
+			//x.FromString(File.ReadAllText(file));
+			//x[-1, 0] = "A1";
+			//x[-1, 2] = "B3";
+			//x.ColumnCount = 6;
+			//x.ColumnCount = 2;
+			//x.RowCount = 2;
+			////x.ColumnCount = 6;
+			//x[0,3]="r";
+			//x[0] = new string[] { "a", "b" };
+			//x[-1] = new string[] { null, "", "c", "d" };
+			//Out(x[0]);
+			//x.InsertRow(2);
+			//x.InsertRow(2, new string[] { "a", "b" });
+			//x.InsertRow(2, new string[] { null, "", "c", "d" });
+			//x.RemoveRow(1, 3);
+			//x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));
+			//x.Data.RemoveRange(0, 4);
+			//x[0, 0] = 20.ToString();
+			//int y = x[0, 0].ToInt_(); Out(y);
+			//x.SetInt(0, 0, 20, true);
+			//int y = x.GetInt(0, 0)); Out(y);
+			//x.SetDouble(0, 0, 0.00055);
+			//Out(x.GetDouble(0, 0));
+			//x.InsertRow(0, new string[] { "g", "h" });
+			//x.InsertRow(0, "n", "m");
+			//x.InsertRow(-1);
+			//x.Data[0] = new string[] { "x", "y", "z" };
+			//x.ColumnCount = 3;
+
+			OutList(x.RowCount, x.ColumnCount);
+			Out("----------");
+			for(int r = 0; r < x.RowCount; r++) {
+				Out(r);
+				for(int c = 0; c < x.ColumnCount; c++) {
+					string f = x[r, c];
+					Out(f == null ? "<NULL>" : f);
+				}
+			}
+			Out("----------");
+			Out(x);
+		}
+		catch(Exception e) { Out(e.Message); }
+
+
+
+		//p.Dispose();
+	}
+
 	static void TestMain()
 	{
-		//var w = Wnd.Find("*Notepad"); //16
-		//var w = Wnd.Find("Quick Macros*"); //20
-		//var w = Wnd.Find("Catkeys*"); //20
-		//var w = Wnd.Find("*app*"); //20
-		var w = Wnd.Find("*Word"); //20
-		//var w = Wnd.Find("*Paint"); //20
-		//var w = Wnd.Find("*Process Expl*"); //20
-		//var w = Wnd.Find("*Firefox*"); //20
-		//var w = Wnd.Find("*Internet Explorer*"); //24
-		//var w = Wnd.Find("*Calculator*"); //20
-		var hi = w.GetIconHandle();
-		var im = Icons.HandleToImage(hi);
-		Out(im.Width);
+		Output.Clear();
+
+		//TestCsvHelper();
+		//TestCsvNET();
+		TestCsvCatkeys();
 
 
+		//var a1 = new Action(() => { TestCsvHelper(); });
+		////var a2 = new Action(() => { TestCsvNET(); });
+		//var a2 = new Action(() => { TestCsvCatkeys(); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2);
 
+		//TODO: all window text etc should be case-insensitive by default.
 
+		//TestCorrectFileName();
+
+		//Out(Util.Dpi.BaseDPI);
+
+		//Graphics g =Graphics.FromHwnd(Zero);
+		//Out(g.DpiX);
+
+		//Show.TaskDialog("");
+
+		//TestSqlite();
 		#region call_old_test_functions
 		//TestBackThreadEnd();
 		//TestIcons();

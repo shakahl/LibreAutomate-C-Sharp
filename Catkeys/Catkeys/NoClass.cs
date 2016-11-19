@@ -64,7 +64,7 @@ namespace Catkeys
 		public static void Out<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void OutList(params object[] values) { Output.WriteList(values); }
 		public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
-		public static void OutHex<T>(T value) { Output.WriteHex(value); }
+		public static void OutHex(object value) { Output.WriteHex(value); }
 
 		/// <summary>
 		/// Out() that works only in Debug config, ie if DEBUG is defined.
@@ -87,7 +87,7 @@ namespace Catkeys
 		public static void Print<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
 		public static void PrintList(params object[] values) { Output.WriteList(values); }
 		public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
-		public static void PrintHex<T>(T value) { Output.WriteHex(value); }
+		public static void PrintHex(object value) { Output.WriteHex(value); }
 
 		/// <summary>
 		/// Print() that works only in Debug config, ie if DEBUG is defined.

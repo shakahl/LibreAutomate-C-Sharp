@@ -53,7 +53,7 @@ namespace Catkeys
 	///		There are several functions that work only with windows of current thread, and it is documented in function help.
 	/// </remarks>
 	[Serializable]
-	public partial struct Wnd :IWin32Window
+	public partial struct Wnd
 	{
 		IntPtr _h;
 
@@ -69,11 +69,6 @@ namespace Catkeys
 		public static explicit operator Wnd(int hwnd) { return new Wnd((IntPtr)hwnd); } //Wnd=(Wnd)int
 		public static explicit operator Wnd(Control c) { return new Wnd(c == null ? Zero : c.Handle); } //Wnd=Control //implicit would allow Wnd==null
 		public static explicit operator Control(Wnd w) { return Control.FromHandle(w._h); } //Control=(Control)Wnd //works only if it is a Control handle, null if other handle
-
-		//public Wnd(IWin32Window hwnd) { _h=hwnd==null ? Zero : hwnd.Handle; } //ok, but not useful when we cannot have the cast operator
-		//public Wnd(string name) { _h=Find(name); } //if need class etc, use Find() instead. Not useful if we don't use the cast operator.
-		//public static implicit operator Wnd(IWin32Window hwnd) { return new Wnd(hwnd); } //Wnd=IWin32Window //error: user-defined conversions to or from an interface are not allowed
-		//public static implicit operator Wnd(string name) { OutFunc(); return new Wnd(name); } //Wnd=string. DON'T. In some cases compiler would pick wrong overload, creating strange bugs.
 
 		public static bool operator ==(Wnd w1, Wnd w2) { return w1._h == w2._h; }
 		public static bool operator !=(Wnd w1, Wnd w2) { return w1._h != w2._h; }
@@ -109,7 +104,7 @@ namespace Catkeys
 		public override int GetHashCode()
 		{
 			return (int)_h; //window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables
-			//return _h.GetHashCode();
+							//return _h.GetHashCode();
 		}
 
 		/// <summary>
@@ -125,9 +120,18 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Implements IWin32Window.
+		/// Gets window handle as IntPtr.
+		/// The same as (IntPtr) cast.
 		/// </summary>
 		public IntPtr Handle { get { return _h; } }
+
+		/// <summary>
+		/// Gets IWin32Window interface.
+		/// IWin32Window is used as a parameter type of some .NET functions (MessageBox.Show and similar), usually as owner window.
+		/// This class does not implement IWin32Window because it would require a reference to System.Windows.Forms just to use this class.
+		/// Actually this function returns a copy of this variable as Wnd.Misc.Win32Window which implements IWin32Window interface.
+		/// </summary>
+		public IWin32Window IWin32Window { get { return new Misc.Win32Window(this); } }
 
 		//not useful. Required eg for SortedList, but better use Dictionary. We'll never need a sorted list of window handles.
 		///// <summary>

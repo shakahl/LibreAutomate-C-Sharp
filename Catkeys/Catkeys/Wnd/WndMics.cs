@@ -616,6 +616,17 @@ namespace Catkeys
 			}
 
 			/// <summary>
+			/// Stores a copy of a Wnd variable, and implements IWin32Window.Handle which gets its handle as IntPtr.
+			/// Used to implement 'get IWin32Window' functions in classes thand don't want to implement IWin32Window (it would require a reference to System.Windows.Forms just to use the class, even if IWin32Window not used).
+			/// </summary>
+			public struct Win32Window :IWin32Window
+			{
+				Wnd _w;
+				public Win32Window(Wnd w) { _w = w; }
+				public IntPtr Handle { get { return _w.Handle; } }
+			}
+
+			/// <summary>
 			/// Taskbar button flash, progress, add/delete.
 			/// </summary>
 			public static class TaskbarButton

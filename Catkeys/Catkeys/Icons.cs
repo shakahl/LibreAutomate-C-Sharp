@@ -38,24 +38,27 @@ namespace Catkeys
 			LiteralPath = 1,
 
 			/// <summary>
-			/// If file is not full path, call SearchPath(). Without this flag searches only in Folders.App.
+			/// If file is not full path, call Files.SearchPath(). Without this flag searches only in Folders.App.
 			/// </summary>
 			SearchPath = 2,
 
-			//TODO: DpiScale - scale the specified size according to DPI (text size) specified in Control Panel.
+			/// <summary>
+			/// Scale the specified size according to DPI (text size) specified in Control Panel.
+			/// </summary>
+			//DpiScale = 4, //rejected. In most cases can use standard-size icons from enum ShellSize, they are DPI-scaled. Or pass size * Util.Dpi.BaseDPI.
+
+			/// Use shell API for all file types, including exe and ico.
+			//Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay
 
 			/// <summary>
 			/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
 			/// </summary>
-			//DefaultIfFails = 4, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns Zero.
+			//DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns Zero.
 
 			/// <summary>
 			/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for Zero and null. This is to make whole process as fast as possible.
 			/// </summary>
 			//NeedImage = 128, //rejected because with our menu/toolbar almost always makes slower
-
-			/// Use shell API for all file types, including exe and ico.
-			//Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay
 		}
 
 		/// <summary>

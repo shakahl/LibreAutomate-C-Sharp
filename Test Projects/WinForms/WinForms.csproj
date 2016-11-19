@@ -30,8 +30,12 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="QWhale.Common, Version=2.5.0.0, Culture=neutral, PublicKeyToken=da632fd1713dff10" />
+    <Reference Include="QWhale.Editor, Version=2.5.0.0, Culture=neutral, PublicKeyToken=da632fd1713dff10, processorArchitecture=MSIL" />
+    <Reference Include="QWhale.Syntax, Version=2.5.0.0, Culture=neutral, PublicKeyToken=da632fd1713dff10" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

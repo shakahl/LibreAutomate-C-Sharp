@@ -1044,6 +1044,17 @@ namespace Catkeys.Winapi
 		[DllImport("gdi32.dll")]
 		public static extern bool SetRectRgn(IntPtr hrgn, int left, int top, int right, int bottom);
 
+		[DllImport("user32.dll")]
+		public static extern IntPtr GetDC(Wnd hWnd);
+
+		[DllImport("user32.dll")]
+		public static extern int ReleaseDC(Wnd hWnd, IntPtr hDC);
+
+		[DllImport("gdi32.dll")]
+		public static extern int GetDeviceCaps(IntPtr hdc, int index);
+
+
+
 
 
 
@@ -1635,9 +1646,8 @@ namespace Catkeys.Winapi
 		public const int SHIL_SYSSMALL = 3;
 		public const int SHIL_JUMBO = 4;
 
-		[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
-		public static extern int SHGetImageList(int iImageList, [In] ref Guid riid, out IImageList ppvObj);
-		//TODO: remove unused
+		//[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
+		//public static extern int SHGetImageList(int iImageList, [In] ref Guid riid, out IImageList ppvObj);
 		[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
 		public static extern int SHGetImageList(int iImageList, [In] ref Guid riid, out IntPtr ppvObj);
 
@@ -1708,7 +1718,6 @@ namespace Catkeys.Winapi
 
 		[DllImport("comctl32.dll")]
 		public static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
-		//TODO: remove if unused.
 
 
 

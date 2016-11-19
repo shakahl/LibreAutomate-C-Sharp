@@ -69,12 +69,14 @@ namespace Catkeys.Tasks
 			Api.ChangeWindowMessageFilter(Api.WM_SETTEXT, 1);
 			Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
 
-#if false
+#if true
 			Test.TestInNewAppDomain();
 			//Test.TestInThisAppDomain();
 
 			mutex.ReleaseMutex(); //also keeps mutex alive
 #else
+			Output.Clear();
+
 			try {
 				Wnd.Misc.WndClass.InterDomainRegister("CatkeysTasks", WndProcAppsManager);
 				_wMain = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "CatkeysTasks",
@@ -289,9 +291,9 @@ namespace Catkeys.Tasks
 		static void CompileScript(string csFile)
 		{
 			Perf.First();
-			string dllFolder = Folders.LocalAppData + @"Catkeys\ScriptDll\";
-			if(!Directory.Exists(dllFolder)) Directory.CreateDirectory(dllFolder);
-			string dllFile = dllFolder + Path.GetFileNameWithoutExtension(csFile) + ".exe";
+			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
+			if(!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
 			//OutList(csFile, dllFile);
 
 			if(!_compilerWindow.IsValid) {
@@ -304,10 +306,35 @@ namespace Catkeys.Tasks
 			}
 
 			_compilerDomain.SetData("cs", csFile);
-			_compilerDomain.SetData("dll", dllFile);
+			_compilerDomain.SetData("out", outFile);
 			Perf.Next(); //20 ms first time, then <100 mcs
 			int R = _compilerWindow.Send(Api.WM_USER, 0, 0);
 			Out(R);
+			if(R != 0) return;
+
+#if false
+			//Show.TaskDialog("start");
+			int i, n = 1;
+			Thread[] at = new Thread[n];
+			for(i = 0; i < n; i++) {
+				//Show.TaskDialog("domain", i);
+				//WaitMS(5);
+				at[i] = new Thread(() =>
+				  {
+					  var ad = AppDomain.CreateDomain("ad" + i);
+					  ad.ExecuteAssembly(outFile);
+					  AppDomain.Unload(ad);
+				  });
+				at[i].Start();
+				//GC.Collect();
+			}
+			for(i = 0; i < n; i++) {
+				at[i].Join();
+			}
+
+			//GC.Collect();
+			//Show.TaskDialog("fin");
+#endif
 		}
 
 		static AppDomain _compilerDomain;

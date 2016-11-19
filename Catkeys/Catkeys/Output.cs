@@ -117,7 +117,8 @@ namespace Catkeys
 		/// <summary>
 		/// Writes an integer in hexadecimal format, like "0x5A".
 		/// </summary>
-		public static void WriteHex<T>(T value) { Write($"0x{value:X}"); }
+		public static void WriteHex(object value) { Write($"0x{value:X}"); }
+		//note: this is slower and less "correct" way, but with Write("0x" + value.ToString("X")); we'd need overloads for all 8 integer types. This func is not so important.
 
 		/// <summary>
 		/// Writes a string prefixed with "Warning: " and optionally followed by the stack trace.

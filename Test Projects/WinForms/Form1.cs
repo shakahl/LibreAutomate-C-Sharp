@@ -19,26 +19,9 @@ namespace WinForms
 		public Form1()
 		{
 			InitializeComponent();
+
+			//edit.LoadFile(@"C:\Users\G\Desktop\Program.cs");
 		}
 
-		private void button1_Click(object sender, EventArgs e)
-		{
-
-		}
-
-		private void checkBox1_CheckedChanged(object sender, EventArgs e)
-		{
-
-		}
-
-		private void textBox1_TextChanged(object sender, EventArgs e)
-		{
-
-		}
-
-		private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-		{
-			//Out(comboBox1.SelectedIndex);
-		}
 	}
 }

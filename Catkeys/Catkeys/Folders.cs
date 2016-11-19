@@ -197,23 +197,25 @@ namespace Catkeys
 
 		#region other paths
 
+		static string _sTemp, _sApp, _sAppRoot;
+
 		/// <summary>
 		/// Gets path of current user's Temp folder.
 		/// Calls Path.GetTempPath().
 		/// </summary>
-		public static FolderPath Temp { get { return Path.GetTempPath(); } }
+		public static FolderPath Temp { get { return _sTemp ?? (_sTemp = Path.GetTempPath().TrimEnd('\\')); } }
 
 		/// <summary>
 		/// Gets path of current app domain's main assembly file.
 		/// Calls AppDomain.CurrentDomain.BaseDirectory.
 		/// </summary>
-		public static FolderPath App { get { return AppDomain.CurrentDomain.BaseDirectory; } }
+		public static FolderPath App { get { return _sApp ?? (_sApp = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')); } }
 
 		/// <summary>
 		/// Gets root (drive) of path of current app domain's main assembly file, eg "C:".
 		/// Calls Path.GetPathRoot(App).
 		/// </summary>
-		public static FolderPath AppRoot { get { return Path.GetPathRoot(App); } }
+		public static FolderPath AppRoot { get { return _sAppRoot ?? (_sAppRoot = Path.GetPathRoot(App).TrimEnd('\\')); } }
 
 		/// <summary>
 		/// Gets path of current user's Temp folder + @"\Catkeys".
@@ -239,7 +241,7 @@ namespace Catkeys
 		{
 			get
 			{
-				string path = Documents + "Catkeys"; //TODO: support custom "Catkeys" path eg specified in registry
+				string path = Documents + "Catkeys"; //TODO_LATER: support custom "Catkeys" path eg specified in registry
 				if(!Directory.Exists(path)) Directory.CreateDirectory(path);
 				return path;
 			}
@@ -270,19 +272,18 @@ namespace Catkeys
 		//Gets non-virtual known folder path from KNOWNFOLDERID specified with 4 uints.
 		static FolderPath _Get(uint a, uint b, uint c, uint d)
 		{
-			//info: we don't use caching, because this is quite fast, 0.5 mcs.
-			//tested: with IKnownFolder >6 times slower.
+			//info: we don't use caching. It seems the API use caching internally.
+			//Speed first time (ngened, shell32.dll loaded (almost 1 ms)) - 200, then 90. It is for each folder first time; next time 1.
+			//tested: with IKnownFolder much slower.
 
 			var guid = _MakeGuid(a, b, c, d);
-			IntPtr path;
-			if(SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out path) != 0) return "<unavailable>";
-			string R = Marshal.PtrToStringUni(path);
-			Marshal.FreeCoTaskMem(path);
+			string R;
+			if(SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out R) != 0) return "<unavailable>";
 			return R;
 		}
 
 		//Retrieves virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
-		//Returns PIDL (unmanaged).
+		//Returns PIDL. Will need Marshal.FreeCoTaskMem().
 		static IntPtr _GetVI(uint a, uint b, uint c, uint d)
 		{
 			var guid = _MakeGuid(a, b, c, d);
@@ -319,7 +320,7 @@ namespace Catkeys
 		static extern uint ILGetSize(IntPtr pidl);
 
 		[DllImport("Shell32.dll")]
-		static extern int SHGetKnownFolderPath(ref Guid rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppszPath);
+		static extern int SHGetKnownFolderPath(ref Guid rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out string ppszPath);
 
 		[DllImport("Shell32.dll")]
 		static extern int SHGetKnownFolderIDList(ref Guid rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
@@ -637,17 +638,13 @@ namespace Catkeys
 			FolderPath(string path) { _path = path; }
 
 			public static implicit operator FolderPath(string path) { return new FolderPath(path); }
-			public static implicit operator string (FolderPath f) { return f._path; }
+			public static implicit operator string(FolderPath f) { return f._path; }
 			public override string ToString() { return _path; }
 			public static string operator +(FolderPath f, string append) { return Path_.Combine(f._path, append); }
 		}
 
-		//TODO:
-		//	Unexpand()
-		//	Let other library functions also support spec folder name embedded in string like "<Temp>\file", "<App>\file".
-		//		Maybe only the most often used functions like Run().
-		//		For it use GetFolder().
-		//		Then also support in EnvVar and ExpandEnvVar.
+		//TODO_LATER:
+		//	Unexpand(). Would create string like @"Windows + ""...""".
 
 		//CONSIDER: public static class VirtualNAME.
 		//	It would return eg "::{26EE0668-A00A-44D7-9371-BEB064C98683}\0" for Control Panel.

@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.ComponentModel;
 //using System.Linq;
-
+using Microsoft.Win32;
 using System.IO;
 //using System.IO.MemoryMappedFiles;
 //using System.Runtime.Serialization;
@@ -208,19 +208,55 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		}
 	}
 
+
+	private static void Get45or451FromRegistry()
+	{
+		using(RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\")) {
+			int releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
+			if(true) {
+				Out("Version: " + CheckFor45DotVersion(releaseKey));
+			}
+		}
+	}
+
+
+	// Checking the version using >= will enable forward compatibility,  
+	// however you should always compile your code on newer versions of 
+	// the framework to ensure your app works the same. 
+	private static string CheckFor45DotVersion(int releaseKey)
+	{
+		if(releaseKey >= 393273) {
+			return "4.6 or later";
+		}
+		if((releaseKey >= 379893)) {
+			return "4.5.2 or later";
+		}
+		if((releaseKey >= 378675)) {
+			return "4.5.1 or later";
+		}
+		if((releaseKey >= 378389)) {
+			return "4.5 or later";
+		}
+		// This line should never execute. A non-null release key should mean 
+		// that 4.5 or later is installed. 
+		return "No 4.5 or later version detected";
+	}
+
 	public static unsafe void TestInThisAppDomain()
 	{
 		Output.Clear();
 
-#if false
-		Perf.First();
-		Perf.Next();
-		Perf.NW();
-#else
-		var perf = new Perf.Inst(true);
-		perf.Next();
-		perf.NW();
-#endif
+		Get45or451FromRegistry();
+
+		//#if false
+		//		Perf.First();
+		//		Perf.Next();
+		//		Perf.NW();
+		//#else
+		//		var perf = new Perf.Inst(true);
+		//		perf.Next();
+		//		perf.NW();
+		//#endif
 
 
 
