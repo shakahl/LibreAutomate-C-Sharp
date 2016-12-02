@@ -1,19 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
-//using System.Threading.Tasks;
-//using System.Threading;
-using System.Linq;
-using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+//using System.Windows.Forms;
+//using System.Drawing;
+using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys.Triggers
 {
@@ -52,7 +58,7 @@ namespace Catkeys.Triggers
 				foreach(var a in (Trigger.HotkeyAttribute[])m.GetCustomAttributes(typeof(Trigger.HotkeyAttribute), false)) {
 					Out($"\t\t{a.hotkey}");
 					Trigger.Hotkey[a.hotkey]=(Target)m.CreateDelegate(typeof(Target));
-					//Trigger.Hotkey[a.hotkey] = (Target)Delegate.CreateDelegate(typeof(Target), m);
+					//Trigger.Hotkey[a.hotkey] = (TargetPath)Delegate.CreateDelegate(typeof(TargetPath), m);
 				}
 			}
 

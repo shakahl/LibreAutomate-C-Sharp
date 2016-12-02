@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -12,16 +11,14 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using static System.Math;
 
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
@@ -1755,8 +1752,8 @@ namespace Catkeys
 					if(y0 < 0) y = ymax + y0; else if(y0 == 0) y = (rs.top + rs.bottom - hei) / 2; else y = rs.top + y0;
 				}
 
-				x = Max(Min(x, xmax), rs.left);
-				y = Max(Min(y, ymax), rs.top);
+				x = Math.Max(Math.Min(x, xmax), rs.left);
+				y = Math.Max(Math.Min(y, ymax), rs.top);
 			}
 
 			r.Offset(x - r.left, y - r.top);
@@ -2578,7 +2575,7 @@ namespace Catkeys
 			if(ofThisThread) nt = SendSB(Api.WM_GETTEXT, na, sb);
 			else if(!SendTimeoutSB(timeoutMS, out nt, Api.WM_GETTEXT, na, sb)) return null;
 
-			return sb.ToString(0, Min(nt, sb.Length)); //info: sb.Length is Min(na, text.IndexOf('\0'))
+			return sb.ToString(0, Math.Min(nt, sb.Length)); //info: sb.Length is Min(na, text.IndexOf('\0'))
 
 			//speed:
 			//	If of same thread: same speed as getwindowtext. With sendtimeout 6 times slower.
@@ -2691,7 +2688,7 @@ namespace Catkeys
 					}
 
 					for(int i = 2, n = useSysCmd ? 100 : 10; i < n; i++) {
-						WaitMS(Min(i, 10));
+						WaitMS(Math.Min(i, 10));
 						if(!Visible || !Enabled) goto g1; //destroyed, hidden or disabled (most likely because displays a modal dialog box, eg "Save?")
 						if(i > n / 2) {
 							if(!SendTimeout(200, 0)) {

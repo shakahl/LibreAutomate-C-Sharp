@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -15,19 +14,17 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Collections.Concurrent;
 
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 
 //using System.IO.MemoryMappedFiles;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
-using K = System.Windows.Forms.Keys;
 
 using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
@@ -51,6 +48,9 @@ using System.Globalization;
 using SQLite;
 
 using CsvHelper;
+
+//using Newtonsoft.Json;
+//using Newtonsoft.Json.Linq;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
@@ -607,7 +607,6 @@ bbb"", b3
 		//Out(Folders.App + "file.c");
 		//Out(Folders.AppTemp + "file.c");
 		//Out(Folders.AppDoc + "file.c");
-		//Out(Folders.AppRoot + "file.c");
 		//Out(1);
 		//Out(Folders.GetFolder("Start menu") + "append.nnn");
 		//Out(Folders.GetFolder("APp") + "append.nnn");
@@ -3699,6 +3698,25 @@ bbb"", b3
 		Out("exit");
 	}
 
+	static void TestCorrectFileName()
+	{
+		string s = null;
+		s = "valid";
+		s = "a ?*<>\"/\\| \x01 \x1f \x00 b";
+		//s = ".txt"; //valid
+		//s = "a.";
+		//s = " ab ";
+		//s = "CON";
+		s = "con";
+		//s = "LPT5.txt";
+		//s = "qwertyuiopasdfghjklzxcvbnm";
+		Out(Path_.CorrectFileName(s));
+
+		//var a1 = new Action(() => { s = Path_.CorrectFileName(s); });
+		//Perf.ExecuteMulti(5, 1000, a1);
+
+	}
+
 	#endregion
 
 	#region test end back thread
@@ -3940,7 +3958,7 @@ bbb"", b3
 		int i, n = 0;
 
 #if true
-		bool lnk = false;
+		bool lnk = true;
 		string folder, pattern = "*"; bool recurse = true;
 
 		if(lnk) {
@@ -3949,7 +3967,7 @@ bbb"", b3
 				//Out(f);
 				a.Add(f);
 				n++;
-				if(n == 44) break;
+				//if(n == 44) break;
 			}
 		} else {
 			folder = @"q:\app"; recurse = false;
@@ -4299,25 +4317,6 @@ bbb"", b3
 
 	#endregion
 
-	static void TestCorrectFileName()
-	{
-		string s = null;
-		s = "valid";
-		s = "a ?*<>\"/\\| \x01 \x1f \x00 b";
-		s = ".txt";
-		s = "a.";
-		//s = " ab ";
-		//s = "CON";
-		//s = "con";
-		//s = "LPT5.txt";
-		//s = "qwertyuiopasdfghjklzxcvbnm";
-		Out(Path_.CorrectFileName(s));
-
-		//var a1 = new Action(() => { s = Path_.CorrectFileName(s); });
-		//Perf.ExecuteMulti(5, 1000, a1);
-
-	}
-
 	static void TestCsvHelper()
 	{
 		string s = @"A1,B1,C1
@@ -4402,13 +4401,13 @@ A,""B """"Q"""" Z"",C
 		//A;""B """"Q"""" Z"";C
 		//";
 
-//		s = @"  A1  ,  B1  ,  Ŧͷת  
-//A2,
-//A9,  'a,b'  ,
-//'new
-//line',m,' n '
-//A,'B ''Q'' Z',C
-//";
+		//		s = @"  A1  ,  B1  ,  Ŧͷת  
+		//A2,
+		//A9,  'a,b'  ,
+		//'new
+		//line',m,' n '
+		//A,'B ''Q'' Z',C
+		//";
 
 		try {
 			//var x = new CsvTable(s);
@@ -4465,23 +4464,209 @@ A,""B """"Q"""" Z"",C
 		//p.Dispose();
 	}
 
+	static void TestCatkeysListFileCSV()
+	{
+		int size = 0, nRows = 0;
+		List<string> k = null;
+		for(int i = 0; i < 5; i++) {
+			Perf.First();
+			var s = File.ReadAllText(@"q:\test\ok\LIST.csv");
+			size = s.Length;
+			Perf.Next();
+			var x = new CsvTable(); x.Separator = '|';
+			x.FromString(s);
+			nRows = x.RowCount;
+			//Perf.Next();
+			//k = new List<string>(nRows);
+			//for(int j = 0; j < nRows; j++) {
+			//	k.Add(x[j, 0]);
+			//}
+			Perf.NW();
+		}
+		Out(k);
+		Out($"{size / 1024.0:F3} KB, {nRows} rows");
+	}
+
+	static void TestCatkeysListFileXML()
+	{
+		int size = 0, nRows = 0;
+		List<string> k = null;
+		for(int i = 0; i < 5; i++) {
+			Perf.First();
+#if true
+			var s = "";
+			var x = new XmlDocument();
+			x.Load(@"q:\test\ok\LIST.xml");
+#else
+			var s = File.ReadAllText(@"q:\test\ok\LIST.xml");
+			Perf.Next();
+			var x = new XmlDocument();
+			x.LoadXml(s);
+#endif
+			Perf.Next();
+			//nRows = x.FirstChild.ChildNodes.Count;
+			var f = x.FirstChild.ChildNodes;
+			nRows = f.Count;
+			k = new List<string>(nRows);
+
+			//for(int j = 0; j<nRows; j++) {
+			//	//k.Add(f[j].Attributes["n"].Value);
+			//	//size += f[j].Attributes["n"].Value.Length;
+			//	var p =f[j]; //very slow
+			//	k.Add(p.InnerText);
+			//	//size += f[j].Value.Length;
+			//}
+
+			foreach(XmlNode p in f) {
+				k.Add(p.InnerText); //quite fast but 3-4 times slower than CSV
+			}
+
+			Perf.NW();
+			size = s.Length;
+		}
+		Out(k);
+		Out($"{size / 1024.0:F3} KB, {nRows} rows");
+	}
+
+	//static void TestCatkeysListFileJSON()
+	//{
+	//	int size = 0, nRows = 0;
+	//	for(int i = 0; i < 5; i++) {
+	//		Perf.First();
+	//		var s = File.ReadAllText(@"q:\test\ok\LIST.json");
+	//		Perf.Next();
+	//		var x = JArray.Parse(s);
+	//		Perf.NW();
+	//		size = s.Length;
+	//	}
+	//	Out($"{size / 1024.0:F3} KB, {nRows} rows");
+	//}
+
+	static void TestLnkShortcut()
+	{
+		string s;
+		s = Folders.Programs + @"QTranslate\QTranslate.lnk"; //target is in the 32-bit PF
+		s = Folders.CommonPrograms + @"Microsoft Office\Microsoft Office Access 2003.lnk"; //test MSI
+		s = Folders.Desktop + @"ClassicStartMenu.exe - Shortcut.lnk"; //test the PF (x86) problem
+		s = Folders.Programs + @"Test\test.lnk";
+		//s = Folders.Programs + @"Test\virtual.lnk";
+		//s = Folders.Programs + @"Test\URL.lnk";
+		s = Folders.CommonPrograms + @"Accessories\Math Input Panel.lnk"; //test the PF (x86) problem in icon path (env var)
+
+		try {
+			//Out(Files.LnkShortcut.GetTarget(s));
+
+			//Files.LnkShortcut.Delete(s);
+			//return;
+
+			Files.LnkShortcut x;
+
+#if true
+			x = Files.LnkShortcut.Open(s);
+			Out("TargetPath: " + x.TargetPath);
+			Out("TargetPathMSI: " + x.TargetPathRawMSI);
+			Out("URL: " + x.TargetURL);
+			Out("Shell name: " + x.TargetAnyType);
+			var pidl = x.TargetIDList; Out("Name from IDList: " + Files.Misc.PidlToString(pidl, Api.SIGDN.SIGDN_NORMALDISPLAY)); Marshal.FreeCoTaskMem(pidl);
+			Out("Hotkey: " + x.Hotkey);
+			int ii; var iloc = x.GetIconLocation(out ii); Out($"Icon: {iloc}          ii={ii}");
+			Out("Arguments: " + x.Arguments);
+			Out("Description: " + x.Description);
+			Out("WorkingDirectory: " + x.WorkingDirectory);
+			Out("ShowState: " + x.ShowState);
+#else
+			x = Files.Shortcut.Create(s);
+			x.Target = Folders.System + "notepad.exe";
+			//x.SetIconLocation(@"q:\app\paste.ico");
+			//Out(x.Hotkey);
+			x.Hotkey = Keys.O | Keys.Control | Keys.Alt;
+			//x.Hotkey = 0;
+			x.Arguments = @"""q:\test\a.txt""";
+			x.Description = "comments mmm";
+			x.WorkingDirectory = @"c:\Test";
+			x.Save();
+
+			//x = Files.Shortcut.OpenOrCreate(s);
+			////x.Target = Folders.System + "notepad.exe";
+			//x.SetIconLocation(@"q:\app\paste.ico");
+			//Out(x.Hotkey);
+			//x.Hotkey = Keys.E | Keys.Control | Keys.Alt;
+			////x.Hotkey = 0;
+			//x.Save();
+
+			//x = Files.Shortcut.Create(s);
+			//x.TargetIDList = Folders.VirtualITEMIDLIST.ControlPanelFolder;
+			////x.SetIconLocation(@"q:\app\paste.ico");
+			//x.Save();
+
+			//x = Files.Shortcut.OpenOrCreate(s);
+			//x.SetIconLocation(@"q:\app\run.ico");
+			//x.Save();
+
+			//x = Files.Shortcut.Create(s);
+			//x.TargetURL = "http://www.quickmacros.com";
+			//x.SetIconLocation(Folders.System+"shell32.dll", 10);
+			//x.Save();
+#endif
+			Out("fin");
+		}
+		catch(Exception e) { Out(e.Message); }
+
+	}
+
+	static void TestLnkShortcut2()
+	{
+		string folder = Folders.CommonPrograms;
+		foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
+			var x = Files.LnkShortcut.Open(f);
+			string s = x.TargetAnyType;
+			//s = x.TargetPath;
+			//s = x.TargetPathRawMSI;
+			//s = x.TargetURL;
+			//var pidl = x.TargetIDList; s=Files.Misc.PidlToString(pidl, Api.SIGDN.SIGDN_NORMALDISPLAY); Marshal.FreeCoTaskMem(pidl);
+			//s = x.Arguments;
+			//s = x.Description;
+			//s = x.WorkingDirectory;
+			Out($"{Path.GetFileNameWithoutExtension(f),-50} {s}");
+
+			//int ii; s = x.GetIconLocation(out ii); Out($"{Path.GetFileNameWithoutExtension(f),-50} {s}____{ii}");
+			//Out($"{Path.GetFileNameWithoutExtension(f),-50} {x.Hotkey} {x.ShowState}");
+		}
+	}
+
 	static void TestMain()
 	{
 		Output.Clear();
 
+		string s = null;
+		Out(s + "hhh");
+
+		//Out(Folders.CDDrive());
+
+		//string s = null, s2=null;
+		//var a1 = new Action(() => { s = Path.GetTempPath(); });
+		//var a2 = new Action(() => { Files.DirectoryExists(s); });
+		//var a3 = new Action(() => { Directory.Exists(s); });
+		//var a4 = new Action(() => { s2= AppDomain.CurrentDomain.BaseDirectory; });
+		//var a5 = new Action(() => { s2 = Folders.Documents; });
+		//var a6 = new Action(() => { s2 = Folders.AppDoc; });
+		//Perf.ExecuteMulti(5, 10, a1, a2, a3, a4, a5, a6);
+
+
+		//TestLnkShortcut2();
+
 		//TestCsvHelper();
 		//TestCsvNET();
-		TestCsvCatkeys();
-
+		//TestCsvCatkeys();
+		//TestCatkeysListFileCSV(); //~8 ms
+		//TestCatkeysListFileXML(); //~30 ms
+		//TestCatkeysListFileJSON(); //~110 ms
 
 		//var a1 = new Action(() => { TestCsvHelper(); });
 		////var a2 = new Action(() => { TestCsvNET(); });
 		//var a2 = new Action(() => { TestCsvCatkeys(); });
 		//Perf.ExecuteMulti(5, 1000, a1, a2);
 
-		//TODO: all window text etc should be case-insensitive by default.
-
-		//TestCorrectFileName();
 
 		//Out(Util.Dpi.BaseDPI);
 
@@ -4492,6 +4677,7 @@ A,""B """"Q"""" Z"",C
 
 		//TestSqlite();
 		#region call_old_test_functions
+		//TestCorrectFileName();
 		//TestBackThreadEnd();
 		//TestIcons();
 		//TestWindowClassInterDomain();
@@ -4504,7 +4690,6 @@ A,""B """"Q"""" Z"",C
 		//TestSynchronizationContext3();
 		//TestSearchPath();
 		//TestThreadPoolSTA();
-		//TestIcons();
 		//TestExpandPath();
 		//TestAssoc();
 		//LibTest.TestLibMemory();

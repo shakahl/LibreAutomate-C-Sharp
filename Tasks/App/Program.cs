@@ -1,27 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Windows.Forms;
-using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
-
-//using System.Reflection;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+using System.Windows.Forms;
+using System.Drawing;
 //using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys.Tasks
 {
@@ -292,7 +290,7 @@ namespace Catkeys.Tasks
 		{
 			Perf.First();
 			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
-			if(!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+			if(!Files.DirectoryExists(outDir)) Directory.CreateDirectory(outDir);
 			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
 			//OutList(csFile, dllFile);
 

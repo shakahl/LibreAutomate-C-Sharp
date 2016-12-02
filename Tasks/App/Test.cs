@@ -1,32 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Diagnostics;
-using System.Threading;
-using System.ComponentModel;
-//using System.Linq;
-using Microsoft.Win32;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
 //using System.IO.MemoryMappedFiles;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
-using System.Windows.Forms;
-using System.Drawing;
-using K = System.Windows.Forms.Keys;
 
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
+using K = System.Windows.Forms.Keys;
 
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -20,9 +19,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
@@ -152,7 +149,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Replaces characters that cannot be used in file names.
-		/// Also corrects other forms of invalid or problematic filename (except invalid length): trims spaces and other blank characters; replaces "." at the end; prepends "@" if just an extension like ".txt" or a reserved name like "CON" or "CON.txt".
+		/// Also corrects other forms of invalid or problematic filename (except invalid length): trims spaces and other blank characters; replaces "." at the end; prepends "@" if a reserved name like "CON" or "CON.txt".
 		/// Returns valid filename. Returns null if name is null. Returns "" if name is "" or contains just blank characters.
 		/// Does not check name length; no correction or exception if it is 0 (or null) or greater than max filename length which is less than max path length 259.
 		/// </summary>
@@ -164,7 +161,7 @@ namespace Catkeys
 				name = name.Trim();
 				if(name.Length > 0) {
 					name = name.RegexReplace_(@"\.$|[\\/|<>?*:""\x00-\x1f]", invalidCharReplacement).Trim();
-					if(name.RegexIs_(@"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)|^\.[^\.]+$")) name = "@" + name;
+					if(name.RegexIs_(@"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)")) name = "@" + name;
 				}
 			}
 			return name;
@@ -177,12 +174,12 @@ namespace Catkeys
 		#region exists, search
 
 		/// <summary>
-		/// Returns non-zero if file or directory exists: 1 if file, 2 if directory (folder or drive).
+		/// Returns non-zero if file or directory (folder or drive) exists: 1 file, 2 directory.
 		/// Returns 0 if does not exist or path is empty or invalid. No exceptions.
 		/// Uses Api.GetFileAttributes().
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
-		public static int FileOrDirectoryExists(string path)
+		public static int FileOrDirectory(string path)
 		{
 			if(Empty(path)) return 0;
 			int r = (int)Api.GetFileAttributes(Path_.ExpandEnvVar(path));
@@ -192,23 +189,33 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Returns true if file or directory exists.
+		/// Uses FileOrDirectory(), which calls Api.GetFileAttributes().
+		/// </summary>
+		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
+		public static bool FileOrDirectoryExists(string path)
+		{
+			return FileOrDirectory(path) != 0;
+		}
+
+		/// <summary>
 		/// Returns true if file exists and is not a directory.
-		/// Uses FileOrDirectoryExists(), which calls Api.GetFileAttributes().
+		/// Uses FileOrDirectory(), which calls Api.GetFileAttributes().
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
 		public static bool FileExists(string path)
 		{
-			return FileOrDirectoryExists(path) == 1;
+			return FileOrDirectory(path) == 1;
 		}
 
 		/// <summary>
 		/// Returns true if directory (folder or drive) exists.
-		/// Uses FileOrDirectoryExists(), which calls Api.GetFileAttributes().
+		/// Uses FileOrDirectory(), which calls Api.GetFileAttributes().
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
 		public static bool DirectoryExists(string path)
 		{
-			return FileOrDirectoryExists(path) == 2;
+			return FileOrDirectory(path) == 2;
 		}
 
 		/// <summary>
@@ -228,7 +235,7 @@ namespace Catkeys
 
 			if(Path_.IsFullPath(path)) {
 				path = Path_.MakeFullPath(path); //make fully-qualified, ie without %envvar%, \..\, ~.
-				if(0 != FileOrDirectoryExists(path)) return path;
+				if(FileOrDirectoryExists(path)) return path;
 				return null;
 			}
 
@@ -236,13 +243,13 @@ namespace Catkeys
 				foreach(var d in dirs) {
 					if(Empty(d)) continue;
 					var s = Path_.Combine(d, path);
-					if(0 != FileOrDirectoryExists(s)) return s;
+					if(FileOrDirectoryExists(s)) return s;
 				}
 			}
 
 			{
 				var s = Folders.App + path;
-				if(0 != FileOrDirectoryExists(s)) return s;
+				if(FileOrDirectoryExists(s)) return s;
 			}
 
 			var sb = new StringBuilder(300);
@@ -252,7 +259,7 @@ namespace Catkeys
 				string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 				if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
 					path = Path_.MakeFullPath(path.Trim('\"'));
-					if(0 != FileOrDirectoryExists(path)) return path;
+					if(FileOrDirectoryExists(path)) return path;
 				}
 			}
 
@@ -260,6 +267,417 @@ namespace Catkeys
 		}
 
 		#endregion
+
+		public class LnkShortcut :IDisposable
+		{
+			//info: name Shortcut used in .NET.
+			//TODO: document exceptions.
+
+			Api.IShellLink _isl;
+			Api.IPersistFile _ipf;
+			string _lnkPath;
+			bool _isOpen;
+			bool _changedHotkey;
+
+			/// <summary>
+			/// Releases internally used COM objects (IShellLink, IPersistFile).
+			/// </summary>
+			public void Dispose()
+			{
+				if(_isl != null) {
+					Api.ReleaseComObject(_ipf); _ipf = null;
+					Api.ReleaseComObject(_isl); _isl = null;
+				}
+			}
+
+			/// <summary>
+			/// Returns the internally used IShellLink COM interface.
+			/// </summary>
+			public Api.IShellLink IShellLink { get { return _isl; } }
+
+			LnkShortcut(string lnkPath, uint mode)
+			{
+				_isl = new Api.ShellLink() as Api.IShellLink;
+				_ipf = _isl as Api.IPersistFile;
+				_lnkPath = lnkPath;
+				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || FileExists(_lnkPath))) {
+					int hr = _ipf.Load(_lnkPath, mode);
+					if(hr != 0) throw new COMException("Failed to open .lnk file.", hr);
+					_isOpen = true;
+				}
+			}
+
+			/// <summary>
+			/// Creates a new instance of the LnkShortcut class that can be used to get shortcut properties.
+			/// Exception if shortcut file does not exist or cannot open it for read access.
+			/// </summary>
+			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			public static LnkShortcut Open(string lnkPath)
+			{
+				return new LnkShortcut(lnkPath, Api.STGM_READ);
+			}
+
+			/// <summary>
+			/// Creates a new instance of the LnkShortcut class that can be used to create or replace a shortcut file.
+			/// You can set properties and finally call Save().
+			/// If the shortcut file already exists, Save() replaces it.
+			/// </summary>
+			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			public static LnkShortcut Create(string lnkPath)
+			{
+				return new LnkShortcut(lnkPath, Api.STGM_WRITE);
+			}
+
+			/// <summary>
+			/// Creates a new instance of the LnkShortcut class that can be used to create or modify a shortcut file.
+			/// Exception if file exists but cannot open it for read-write access.
+			/// You can get and set properties and finally call Save().
+			/// If the shortcut file already exists, Save() updates it.
+			/// </summary>
+			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			public static LnkShortcut OpenOrCreate(string lnkPath)
+			{
+				return new LnkShortcut(lnkPath, Api.STGM_READWRITE);
+			}
+
+			/// <summary>
+			/// Saves the LnkShortcut variable properties to the shortcut file.
+			/// </summary>
+			public void Save()
+			{
+				if(_changedHotkey && !_isOpen && FileExists(_lnkPath)) _UnregisterHotkey(_lnkPath);
+
+				int hr = _ipf.Save(_lnkPath, true);
+				if(hr != 0) throw new COMException("Failed to save .lnk file.", hr);
+				//Marshal.ThrowExceptionForHR()
+			}
+
+			/// <summary>
+			/// Gets or sets shortcut target path.
+			/// This property is null if target isn't a file system object, eg Control Panel or URL; use TargetIDList or TargetURL.
+			/// </summary>
+			/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
+			public string TargetPath
+			{
+				get
+				{
+					var sb = new StringBuilder(300);
+					if(0 != _isl.GetPath(sb, 300)) return null;
+					return _CorrectPath(sb, true);
+				}
+				set
+				{
+					_isl.SetPath(value);
+				}
+			}
+
+			/// <summary>
+			/// Gets shortcut target path and does not correct wrong MSI shortcut target.
+			/// </summary>
+			public string TargetPathRawMSI
+			{
+				get
+				{
+					var sb = new StringBuilder(300);
+					if(0 != _isl.GetPath(sb, 300)) return null;
+					return _CorrectPath(sb);
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets a non-file-system target (eg Control Panel) through its ITEMIDLIST.
+			/// Use Marshal.FreeCoTaskMem() to free the return value of the 'get' function.
+			/// </summary>
+			/// <remarks>
+			/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
+			/// Most but not all shortcuts have this property; returns Zero if the shortcut does not have it.
+			/// </remarks>
+			public IntPtr TargetIDList
+			{
+				get
+				{
+					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return Zero;
+					return pidl;
+				}
+				set
+				{
+					_isl.SetIDList(value);
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets a URL target.
+			/// Note: it is a .lnk shortcut, not a .url shortcut.
+			/// The 'get' function returns string "file:///..." if target is a file.
+			/// </summary>
+			public string TargetURL
+			{
+				get
+				{
+					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return null;
+					try { return Misc.PidlToString(pidl, Api.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
+				}
+				set
+				{
+					var pidl = Misc.PidlFromString(value); if(pidl == Zero) throw new CatException();
+					try { _isl.SetIDList(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets target of any type - file/folder path, virtual shell object parsing name, URL.
+			/// The string can be used with the shell execute function.
+			/// Virtual object string can be like "::{CLSID}".
+			/// </summary>
+			public string TargetAnyType
+			{
+				get
+				{
+					var R = TargetPath; if(R != null) return R; //support MSI etc
+					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return null;
+					try { return Misc.PidlToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+				}
+				set
+				{
+					var pidl = Misc.PidlFromString(value); if(pidl == Zero) throw new CatException();
+					try { _isl.SetIDList(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+				}
+			}
+
+			/// <summary>
+			/// Gets custom icon file path and icon index.
+			/// Returns null if the shortcut does not have a custom icon (then you see its target icon).
+			/// </summary>
+			/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
+			public string GetIconLocation(out int iconIndex)
+			{
+				var sb = new StringBuilder(300);
+				if(0 != _isl.GetIconLocation(sb, 300, out iconIndex)) return null;
+				return _CorrectPath(sb);
+			}
+
+			/// <summary>
+			/// Sets icon file path and icon index.
+			/// </summary>
+			/// <param name="iconIndex">0 or icon index or negative icon resource id.</param>
+			public void SetIconLocation(string path, int iconIndex = 0)
+			{
+				_isl.SetIconLocation(path, iconIndex);
+			}
+
+			/// <summary>
+			/// Gets or sets the working directory path (Start in).
+			/// </summary>
+			public string WorkingDirectory
+			{
+				get
+				{
+					var sb = new StringBuilder(300);
+					if(0 != _isl.GetWorkingDirectory(sb, 300)) return null;
+					return _CorrectPath(sb);
+				}
+				set
+				{
+					_isl.SetWorkingDirectory(value);
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets the command-line arguments.
+			/// </summary>
+			public string Arguments
+			{
+				get
+				{
+					var sb = new StringBuilder(1024);
+					if(0 != _isl.GetArguments(sb, 1024) || 0 == sb.Length) return null;
+					return sb.ToString();
+				}
+				set
+				{
+					_isl.SetArguments(value);
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets the description text (Comment).
+			/// </summary>
+			public string Description
+			{
+				get
+				{
+					var sb = new StringBuilder(1024);
+					if(0 != _isl.GetDescription(sb, 1024) || 0 == sb.Length) return null; //info: in my tests was E_FAIL for 1 shortcut (Miracast)
+					return sb.ToString();
+				}
+				set
+				{
+					_isl.SetDescription(value);
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets hotkey.
+			/// </summary>
+			/// <example>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</example>
+			public Keys Hotkey
+			{
+				get
+				{
+					ushort k2; if(0 != _isl.GetHotkey(out k2)) return 0;
+					uint k = k2;
+					return (Keys)((k & 0xFF) | ((k & 0x700) << 8));
+				}
+				set
+				{
+					uint k = (uint)value;
+					_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8)));
+					_changedHotkey = true;
+				}
+			}
+
+			/// <summary>
+			/// Gets or sets the window show state.
+			/// The value can be Api.SW_SHOWNORMAL (default), Api.SW_SHOWMAXIMIZED or Api.SW_SHOWMINIMIZED.
+			/// Most programs ignore it.
+			/// </summary>
+			public int ShowState
+			{
+				get { int R; if(0 != _isl.GetShowCmd(out R)) R = Api.SW_SHOWNORMAL; return R; }
+				set { _isl.SetShowCmd(value); }
+			}
+
+			//Not implemented wrappers for these IShellLink methods:
+			//SetRelativePath, Resolve - not useful.
+			//All are easy to call through the IShellLink property.
+
+			#region public static
+
+			/// <summary>
+			/// Gets shortcut target path or URL or virtual shell object parsing name.
+			/// Uses <see cref="Shortcut.TargetAnyType"/>.
+			/// </summary>
+			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			public static string GetTarget(string lnkPath)
+			{
+				return Open(lnkPath).TargetAnyType;
+			}
+
+			/// <summary>
+			/// If shortcut file exists, unregisters its hotkey and deletes it.
+			/// </summary>
+			/// <param name="lnkPath">.lnk file path.</param>
+			public static void Delete(string lnkPath)
+			{
+				if(!FileExists(lnkPath)) return;
+				_UnregisterHotkey(lnkPath);
+				File.Delete(lnkPath);
+			}
+
+			#endregion
+			#region private
+
+			static void _UnregisterHotkey(string lnkPath)
+			{
+				Debug.Assert(FileExists(lnkPath));
+				using(var x = OpenOrCreate(lnkPath)) {
+					var k = x.Hotkey;
+					if(k != 0) {
+						x.Hotkey = 0;
+						x.Save();
+					}
+				}
+			}
+
+			string _CorrectPath(StringBuilder sb, bool fixMSI = false)
+			{
+				if(sb.Length == 0) return null;
+				string R = sb.ToString();
+
+				if(!fixMSI) {
+					R = Path_.ExpandEnvVar(R);
+				} else if(R.IndexOf_(@"\Installer\{") > 0) {
+					//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
+					var product = new StringBuilder(40);
+					var component = new StringBuilder(40);
+					if(0 != _Api.MsiGetShortcutTarget(_lnkPath, product, null, component)) return null;
+					//note: for some shortcuts MsiGetShortcutTarget gets empty component. Then MsiGetComponentPath fails.
+					//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
+					//	Could not find a workaround.
+
+					int n = 300; sb.EnsureCapacity(n);
+					int hr = _Api.MsiGetComponentPath(product.ToString(), component.ToString(), sb, ref n);
+					if(hr < 0 || sb.Length == 0) return null; //eg not installed, just advertised
+
+					R = sb.ToString();
+					//note: can be a registry key instead of file path. No such shortcuts on my PC.
+				}
+
+				//GetPath problem: replaces "c:\program files" to "c:\program files (x86)".
+				//These don't help: SLGP_RAWPATH, GetIDList, disabled redirection.
+				//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
+				if(!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem) {
+					if(_pf == null) { string s = Folders.ProgramFilesX86; _pf = s + "\\"; }
+					if(R.StartsWith_(_pf, true) && !FileOrDirectoryExists(R)) {
+						var s2 = R.Remove(_pf.Length - 7, 6);
+						if(FileOrDirectoryExists(s2)) R = s2;
+						//info: "C:\\Program Files (x86)\\" in English, "C:\\Programme (x86)\\" in German etc.
+						//never mind: System32 folder also has similar problem, because of redirection.
+						//note: ShellExecuteEx also has this problem.
+					}
+				}
+
+				return R;
+			}
+			static string _pf;
+
+			string _GetMsiShortcutTarget()
+			{
+				var product = new StringBuilder(40);
+				var component = new StringBuilder(40);
+				if(0 != _Api.MsiGetShortcutTarget(_lnkPath, product, null, component)) return null;
+				//note: for some shortcuts MsiGetShortcutTarget gets empty component. Then MsiGetComponentPath fails.
+				//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
+				//	Could not find a workaround.
+
+				int n = 300; var sb = new StringBuilder(n);
+				int hr = _Api.MsiGetComponentPath(product.ToString(), component.ToString(), sb, ref n);
+				if(hr < 0 || sb.Length == 0) return null; //eg not installed, just advertised
+
+				return sb.ToString();
+				//note: can be a registry key instead of file path. No such shortcuts on my PC.
+			}
+
+			static partial class _Api
+			{
+				[DllImport("msi.dll", EntryPoint = "#217")]
+				public static extern int MsiGetShortcutTarget(string szShortcutPath, [Out] StringBuilder szProductCode, [Out] StringBuilder szFeatureId, [Out] StringBuilder szComponentCode);
+
+				[DllImport("msi.dll", EntryPoint = "#173")]
+				public static extern int MsiGetComponentPath(string szProduct, string szComponent, [Out] StringBuilder lpPathBuf, ref int pcchBuf);
+
+				//MsiGetComponentPath returns:
+				//public enum INSTALLSTATE
+				//{
+				//	INSTALLSTATE_NOTUSED = -7,
+				//	INSTALLSTATE_BADCONFIG,
+				//	INSTALLSTATE_INCOMPLETE,
+				//	INSTALLSTATE_SOURCEABSENT,
+				//	INSTALLSTATE_MOREDATA,
+				//	INSTALLSTATE_INVALIDARG,
+				//	INSTALLSTATE_UNKNOWN,
+				//	INSTALLSTATE_BROKEN,
+				//	INSTALLSTATE_ADVERTISED,
+				//	INSTALLSTATE_REMOVED = 1,
+				//	INSTALLSTATE_ABSENT,
+				//	INSTALLSTATE_LOCAL,
+				//	INSTALLSTATE_SOURCE,
+				//	INSTALLSTATE_DEFAULT
+				//}
+			}
+
+			#endregion
+		}
 
 		public static class Misc
 		{

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -12,6 +11,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,9 +19,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
@@ -40,7 +38,7 @@ namespace Catkeys
 	{
 		Any, //pattern is "*"
 		AnyNotEmpty, //pattern is "?*"
-		Empty, //match empty string (pattern is "" or null with the main constructor, or "[]" with the cast string->WildStrin operator)
+		Empty, //match empty string (pattern is "" or null with the main constructor, or "[]" with the cast string->WildString operator)
 		Literal, //no wildcard chars in pattern, use Equals_
 		StartsWith, //pattern is "literal*", use StartsWith_
 		EndsWith, //pattern is "*literal", use EndsWith_

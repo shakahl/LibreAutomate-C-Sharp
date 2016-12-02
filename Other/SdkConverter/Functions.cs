@@ -17,9 +17,7 @@ using System.ComponentModel; //Win32Exception
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace SdkConverter
 {

@@ -20,9 +20,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 

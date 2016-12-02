@@ -93,42 +93,36 @@ namespace Catkeys.Winapi
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		public interface IShellLink
 		{
+			//info:
+			//Let .NET throw exceptions for 'set' functions. Else my code would have to throw anyway.
+			//Use [PreserveSig] for 'get' functions to avoid exception handling. Eg in my tests for 1 shortcut GetDescription returned E_FAIL.
+
 			[PreserveSig]
-			int GetPath([Out] StringBuilder pszFile, int cch, IntPtr pfd, uint fFlags);
+			int GetPath([Out] StringBuilder pszFile, int cch, IntPtr pfd=default(IntPtr), uint fFlags=0);
 			[PreserveSig]
 			int GetIDList(out IntPtr ppidl);
-			[PreserveSig]
-			int SetIDList(IntPtr pidl);
+			void SetIDList(IntPtr pidl);
 			[PreserveSig]
 			int GetDescription([Out] StringBuilder pszName, int cch);
-			[PreserveSig]
-			int SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
+			void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
 			[PreserveSig]
 			int GetWorkingDirectory([Out] StringBuilder pszDir, int cch);
-			[PreserveSig]
-			int SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
+			void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
 			[PreserveSig]
 			int GetArguments([Out] StringBuilder pszArgs, int cch);
-			[PreserveSig]
-			int SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
+			void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
 			[PreserveSig]
 			int GetHotkey(out ushort pwHotkey);
-			[PreserveSig]
-			int SetHotkey(ushort wHotkey);
+			void SetHotkey(ushort wHotkey);
 			[PreserveSig]
 			int GetShowCmd(out int piShowCmd);
-			[PreserveSig]
-			int SetShowCmd(int iShowCmd);
+			void SetShowCmd(int iShowCmd);
 			[PreserveSig]
 			int GetIconLocation([Out] StringBuilder pszIconPath, int cch, out int piIcon);
-			[PreserveSig]
-			int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
-			[PreserveSig]
-			int SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved);
-			[PreserveSig]
-			int Resolve(Wnd hwnd, uint fFlags);
-			[PreserveSig]
-			int SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
+			void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
+			void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved=0);
+			void Resolve(Wnd hwnd, uint fFlags);
+			void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
 		}
 
 		[ComImport, Guid("00021401-0000-0000-C000-000000000046"), ClassInterface(ClassInterfaceType.None)]

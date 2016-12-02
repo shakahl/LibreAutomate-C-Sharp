@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -12,6 +11,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,9 +19,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
@@ -197,7 +195,7 @@ namespace Catkeys
 
 		#region other paths
 
-		static string _sTemp, _sApp, _sAppRoot;
+		static string _sTemp, _sApp;
 
 		/// <summary>
 		/// Gets path of current user's Temp folder.
@@ -212,38 +210,31 @@ namespace Catkeys
 		public static FolderPath App { get { return _sApp ?? (_sApp = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')); } }
 
 		/// <summary>
-		/// Gets root (drive) of path of current app domain's main assembly file, eg "C:".
-		/// Calls Path.GetPathRoot(App).
-		/// </summary>
-		public static FolderPath AppRoot { get { return _sAppRoot ?? (_sAppRoot = Path.GetPathRoot(App).TrimEnd('\\')); } }
-
-		/// <summary>
 		/// Gets path of current user's Temp folder + @"\Catkeys".
-		/// Calls Path.GetTempPath().
-		/// Creates the "Catkeys" folder if does not exist.
+		/// Creates the folder if does not exist.
 		/// </summary>
 		public static FolderPath AppTemp
 		{
 			get
 			{
-				string path = Path.GetTempPath() + "Catkeys";
-				if(!Directory.Exists(path)) Directory.CreateDirectory(path);
-				return path;
+				string s = Path.GetTempPath() + "Catkeys"; //speed: much faster than DirectoryExists
+				if(!Files.DirectoryExists(s)) Directory.CreateDirectory(s);
+				return s;
 			}
 		}
 
 		/// <summary>
 		/// Gets path of Catkeys user's files folder.
-		/// Calls Documents("Catkeys").
-		/// Creates the "Catkeys" folder if does not exist.
+		/// Creates the folder if does not exist.
 		/// </summary>
 		public static FolderPath AppDoc
 		{
 			get
 			{
-				string path = Documents + "Catkeys"; //TODO_LATER: support custom "Catkeys" path eg specified in registry
-				if(!Directory.Exists(path)) Directory.CreateDirectory(path);
-				return path;
+				string s = Documents + "Catkeys";  //speed: much faster than DirectoryExists
+				if(!Files.DirectoryExists(s)) Directory.CreateDirectory(s);
+				return s;
+				//TODO_LATER: support custom path eg saved in registry
 			}
 		}
 
@@ -527,17 +518,16 @@ namespace Catkeys
 		/// Can be used to get paths of custom known folders for which there are no functions in this class.
 		/// To see all names of known folders: <c>Output.Write(Folders.GetKnownFolders());</c>
 		/// </summary>
-		/// <param name="folderName">A known folder name, or "Temp", "App", "AppDoc", "AppTemp", "AppRoot", or "%environmentVariable%...". Case-insensitive.</param>
+		/// <param name="folderName">A known folder name, or "Temp", "App", "AppDoc", "AppTemp", or "%environmentVariable%...". Case-insensitive.</param>
 		public static FolderPath GetFolder(string folderName)
 		{
 			string path = null;
 
-			switch(folderName.Equals_(true, "Temp", "App", "AppDoc", "AppTemp", "AppRoot")) {
+			switch(folderName.Equals_(true, "Temp", "App", "AppDoc", "AppTemp")) {
 			case 1: return Temp;
 			case 2: return App;
 			case 3: return AppDoc;
 			case 4: return AppTemp;
-			case 5: return AppRoot;
 			}
 			if(folderName.StartsWith_("%")) return Path_.ExpandEnvVar(folderName);
 
@@ -567,7 +557,7 @@ namespace Catkeys
 		//}
 
 		/// <summary>
-		/// Gets CDDrive drive name, like "D:".
+		/// Gets CD/DVD drive name, like @"D:\".
 		/// </summary>
 		public static FolderPath CDDrive()
 		{
@@ -583,9 +573,10 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets removable/external/USB drive name, like "F:".
+		/// Gets removable/external/USB drive name, like @"F:\".
 		/// </summary>
-		/// <param name="driveIndex">0-based drive index in array returned by DriveInfo.GetDrives().</param>
+		/// <param name="driveIndex">0-based removable drive index.</param>
+		/// <remarks>Uses DriveInfo.GetDrives() and counts only drives of type DriveType.Removable.</remarks>
 		public static FolderPath RemovableDrive(int driveIndex)
 		{
 			string s = null;
@@ -595,12 +586,12 @@ namespace Catkeys
 					break;
 				}
 			}
-			if(s == null) s = "<unavailable>";
+			if(s == null) s = "<unavailable>"; //TODO: everywhere throw exception instead of "<unavailable>" because will fail later anyway.
 			return s;
 		}
 
 		/// <summary>
-		/// Gets removable/external/USB drive name (like "F:") by its volume label.
+		/// Gets removable/external/USB drive name (like @"F:\") by its volume label.
 		/// </summary>
 		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
 		public static FolderPath RemovableDrive(string volumeLabel)
@@ -642,6 +633,8 @@ namespace Catkeys
 			public override string ToString() { return _path; }
 			public static string operator +(FolderPath f, string append) { return Path_.Combine(f._path, append); }
 		}
+
+		//TODO: maybe better use string "path\", not FolderPath. Now possible confusion etc.
 
 		//TODO_LATER:
 		//	Unexpand(). Would create string like @"Windows + ""...""".

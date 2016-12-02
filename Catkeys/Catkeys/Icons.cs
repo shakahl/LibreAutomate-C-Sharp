@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -20,9 +19,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
@@ -86,10 +83,10 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="pidl">ITEMIDLIST pointer.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		/// <param name="flags">Can be IconFlag.BlankIfFails. See <see cref="IconFlag"/>.</param>
-		public static Image GetIconImage(IntPtr pidl, int size, IconFlag flags = 0)
+		/// <param name="freePidl">Call Marshal.FreeCoTaskMem(pidl).</param>
+		public static Image GetIconImage(IntPtr pidl, int size, bool freePidl = false)
 		{
-			return HandleToImage(GetIconHandle(pidl, size, flags));
+			return HandleToImage(GetIconHandle(pidl, size, freePidl));
 		}
 
 		/// <summary>
@@ -151,12 +148,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="pidl">ITEMIDLIST pointer.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		/// <param name="flags">Can be IconFlag.BlankIfFails. See <see cref="IconFlag"/>.</param>
-		public static IntPtr GetIconHandle(IntPtr pidl, int size, IconFlag flags = 0)
+		/// <param name="freePidl">Call Marshal.FreeCoTaskMem(pidl).</param>
+		public static IntPtr GetIconHandle(IntPtr pidl, int size, bool freePidl = false)
 		{
 			if(pidl == Zero) return Zero;
 			size = _NormalizeIconSizeParameter(size);
-			return _GetShellIcon(true, null, pidl, size, false);
+			return _GetShellIcon(true, null, pidl, size, freePidl);
 		}
 
 		internal static IntPtr _GetFileIcon(string file, int size, IconFlag flags)
@@ -192,7 +189,7 @@ namespace Catkeys
 				if(extractFromFile || ext > 0) {
 					R = GetIconHandleRaw(file, index, size);
 					if(R != Zero || extractFromFile) return R;
-					switch(Files.FileOrDirectoryExists(file)) {
+					switch(Files.FileOrDirectory(file)) {
 					case 0:
 						return Zero;
 					//if(!getDefaultIfFails) return Zero;
@@ -340,7 +337,7 @@ namespace Catkeys
 			} else { ilIndex = Api.SHIL_JUMBO; realSize = 256; }
 
 			//Need to lock this part, or randomly fails with some file types.
-			lock ("TK6Z4XiSxkGSfC14/or5Mw") {
+			lock("TK6Z4XiSxkGSfC14/or5Mw") {
 				try {
 					uint fl = Api.SHGFI_SYSICONINDEX | Api.SHGFI_SHELLICONSIZE;
 					if(ilIndex == Api.SHIL_SMALL) fl |= Api.SHGFI_SMALLICON;
@@ -376,30 +373,18 @@ namespace Catkeys
 		//Much faster than other shell API.
 		//Also gets correct icon where iextracticon fails and/or shgetfileinfo gets blank document icon, don't know why.
 		//Usually fails only when target does not exist. Then iextracticon also fails, and shgetfileinfo gets blank document icon.
+		//If fails, returns Zero. No exceptions.
 		static IntPtr _GetLnkIcon(string file, int size)
 		{
-			var psl = new Api.ShellLink() as Api.IShellLink;
-			var ppf = psl as Api.IPersistFile;
 			try {
-				if(ppf == null || 0 != ppf.Load(file, Api.STGM_READ)) return Zero;
-				var sb = new StringBuilder(1024); //1024 (INFOTIPSIZE) is max buffer length that a property can require
-				int ii;
-				if(0 == psl.GetIconLocation(sb, 1024, out ii) && sb.Length > 0) {
-					var R = GetIconHandleRaw(sb.ToString(), ii, size);
-					if(R != Zero) return R;
+				using(var x = Files.LnkShortcut.Open(file)) {
+					int ii; var s = x.GetIconLocation(out ii); if(s != null) return GetIconHandleRaw(s, ii, size);
+					s = x.TargetPathRawMSI; if(s != null) return GetIconHandle(s, size);
+					//OutList("need IDList", file);
+					return GetIconHandle(x.TargetIDList, size, true);
 				}
-				sb.EnsureCapacity(1024);
-				if(0 == psl.GetPath(sb, 1024, Zero, 0) && sb.Length > 0)
-					return _GetFileIcon(sb.ToString(), size, IconFlag.LiteralPath);
-				IntPtr pidl;
-				if(0 == psl.GetIDList(out pidl))
-					return _GetShellIcon(true, null, pidl, size, true);
-				return Zero;
 			}
-			finally {
-				Api.ReleaseComObject(ppf);
-				Api.ReleaseComObject(psl);
-			}
+			catch { return Zero; }
 		}
 
 		//If size is in enum ShellSize range (<=0), calls GetShellIconSize. If size is invalid, uses nearest valid value.
@@ -473,7 +458,7 @@ namespace Catkeys
 
 		static bool _GetShellImageList(int ilIndex, out IntPtr R)
 		{
-			lock ("vK6Z4XiSxkGSfC14/or5Mw") { //the API fails if called simultaneously by multiple threads
+			lock("vK6Z4XiSxkGSfC14/or5Mw") { //the API fails if called simultaneously by multiple threads
 				if(0 == Api.SHGetImageList(ilIndex, ref Api.IID_IImageList, out R)) return true;
 			}
 			Debug.Assert(false);

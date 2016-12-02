@@ -16,9 +16,7 @@ using System.Windows.Forms;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 //using static System.StringComparison; //ok
 //using static Catkeys.Winapi.api; //ok

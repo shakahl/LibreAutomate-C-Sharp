@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -12,6 +11,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,9 +19,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using Util = Catkeys.Util;
-using static Catkeys.Util.NoClass;
 using Catkeys.Winapi;
-using Auto = Catkeys.Automation;
 
 namespace Catkeys
 {
@@ -1097,7 +1095,7 @@ namespace Catkeys
 						item.Image = hi == Zero ? null : Icon.FromHandle(hi).ToBitmap();
 					} else {
 						s = icon.ToString();
-						if(0 != Files.FileOrDirectoryExists(s)) _SetItemFileIcon(isBar, item, s);
+						if(Files.FileOrDirectoryExists(s)) _SetItemFileIcon(isBar, item, s);
 					}
 				}
 				catch(Exception e) { OutDebug(e.Message); } //ToBitmap() may throw
