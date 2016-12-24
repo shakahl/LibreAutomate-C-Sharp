@@ -9,17 +9,13 @@ Imports Catkeys.Automation
 Imports Catkeys.Automation.NoClass
 Imports Catkeys.Automation.Input
 
-Imports Catkeys.Show
+Imports Catkeys.TaskDialog
 
 
 Module Module1
 
 	Sub Main()
 
-
-		'Show.MessageDialog("ggg")
-		'Show.TaskDialog("ddd")
-		'TaskDialog("ddd") 'error, ambiguous if Imports Catkeys.Show, although OK in C#
 
 		'Console.WriteLine("test")
 		''Util.Tesst.Koo()

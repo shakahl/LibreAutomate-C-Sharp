@@ -1103,7 +1103,7 @@ namespace Catkeys
 		/// <param name="r">A variable that receives the rectangle in screen coordinates. Will be empty if failed.</param>
 		/// <seealso cref="GetClientRect"/>
 		/// <seealso cref="RectInClientOf"/>
-		bool GetWindowRect(out RECT r)
+		bool GetRect(out RECT r)
 		{
 			if(Api.GetWindowRect(this, out r)) return true;
 			ThreadError.SetWinError();
@@ -1112,11 +1112,27 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Gets window width and height.
+		/// Calls Api.GetWindowRect() and returns its return value.
+		/// Supports ThreadError.
+		/// When you don't need the bool return value, you can instead use the Size property, which calls this function.
+		/// </summary>
+		/// <param name="z">A variable that receives width and height. Will be empty if failed.</param>
+		bool GetSize(out SIZE z)
+		{
+			RECT r;
+			if(Api.GetWindowRect(this, out r)) { z = new SIZE(r.Width, r.Height); return true; }
+			ThreadError.SetWinError();
+			z = new SIZE();
+			return false;
+		}
+
+		/// <summary>
 		/// Gets or sets window rectangle.
 		/// <para>
-		/// The 'get' function calls GetWindowRect(). Uses primary screen coordinates.
+		/// The 'get' function calls GetRect(). Uses primary screen coordinates.
 		/// Returns empty rectangle if fails (eg window closed).
-		/// Use GetWindowRect() instead when you need a bool return value.
+		/// Use GetRect() instead when you need a bool return value.
 		/// </para>
 		/// <para>
 		/// The 'set' function for controls uses coordinates in direct parent's client area. For top-level windows - in primary screen. Uses MoveRaw().
@@ -1128,10 +1144,27 @@ namespace Catkeys
 			get
 			{
 				ThreadError.Clear();
-				RECT r; GetWindowRect(out r);
+				RECT r; GetRect(out r);
 				return r;
 			}
 			set { _Move(value.left, value.top, value.Width, value.Height); }
+		}
+
+		/// <summary>
+		/// Gets or sets window width and height.
+		/// The 'get' function returns empty SIZE value if fails (eg window closed).
+		/// Supports ThreadError. Sets thread error if failed, clears if succeeded.
+		/// Use GetSize() instead when you need a bool return value.
+		/// </summary>
+		public SIZE Size
+		{
+			get
+			{
+				ThreadError.Clear();
+				SIZE z; GetSize(out z);
+				return z;
+			}
+			set { ResizeRaw(value.cx, value.cy); }
 		}
 
 		/// <summary>
@@ -1305,35 +1338,24 @@ namespace Catkeys
 			return false;
 		}
 
-		//don't use this because: rarely used; can use GetWindowAndClientRectInScreen; the 'set' function is unclear how it should work.
-		///// <summary>
-		///// Gets or sets client area rectangle in primary screen coordinates.
-		///// <para>
-		///// The 'get' function returns empty rectangle if fails (eg window closed).
-		///// Use GetWindowAndClientRectInScreen() instead when you need a bool return value.
-		///// </para>
-		///// <para>
-		///// The 'set' function calculates and sets window rectangle from the specified client area rectangle. Uses MoveRaw().
-		///// The 'set' function for controls use parent coordinates, not screen coordinates.
-		///// </para>
-		///// Supports ThreadError. Sets thread error if failed, clears if succeeded.
-		///// </summary>
-		//public RECT ClientRectInScreen
-		//{
-		//	get
-		//	{
-		//		RECT rw, rc;
-		//		GetWindowAndClientRectInScreen(out rw, out rc);
-		//		return rc;
-		//	}
-		//	set
-		//	{
-		//		RECT rw, rc;
-		//		if(!GetWindowAndClientRectInScreen(out rw, out rc)) return;
-		//		int bL = rc.left - rw.left, bT = rc.top - rw.top, bR = rw.right - rc.right, bB = rw.bottom - rc.bottom;
-		//		_Move(value.left - bL, value.top - bT, value.Width + bL + bR, value.Height + bT + bB);
-		//	}
-		//}
+		/// <summary>
+		/// Gets client area rectangle in primary screen coordinates.
+		/// Returns empty rectangle if fails (eg window closed).
+		/// Use GetWindowAndClientRectInScreen() instead when you need a bool return value.
+		/// Supports ThreadError. Sets thread error if failed, clears if succeeded.
+		/// </summary>
+		public RECT ClientRectInScreen
+		{
+			get
+			{
+				RECT rw, rc;
+				GetWindowAndClientRectInScreen(out rw, out rc);
+				return rc;
+			}
+			//set //not useful, and would be unclear how it should work
+			//{
+			//}
+		}
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
@@ -1463,8 +1485,8 @@ namespace Catkeys
 		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is Wnd0, gets rectangle in screen.</param>
 		public bool GetRectInClientOf(Wnd w, out RECT r)
 		{
-			if(w.Is0) return GetWindowRect(out r);
-			return GetWindowRect(out r) && w.MapScreenToClient(ref r);
+			if(w.Is0) return GetRect(out r);
+			return GetRect(out r) && w.MapScreenToClient(ref r);
 		}
 
 		/// <summary>
@@ -1904,54 +1926,66 @@ namespace Catkeys
 		const uint _SWP_ZORDER = Api.SWP_NOMOVE | Api.SWP_NOSIZE | Api.SWP_NOACTIVATE;
 
 		/// <summary>
-		/// Places this window after another window in the Z order. If it is a control - after another control.
+		/// Places this window after window w in the Z order.
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
+		/// This window and w can be both top-level windows or both controls of same parent.
+		/// May not work with top-level windows when it would move an inactive window above the active window.
 		/// Supports ThreadError.
 		/// If w is Wnd0, calls ZorderTop().
 		/// </summary>
 		public bool ZorderAfter(Wnd w)
 		{
-			if(w.Is0) return ZorderTop();
-			if(!w.IsTopmost) ZorderNotopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, w);
+			return _ZorderAfterBefore(w, false);
 		}
+
 		/// <summary>
-		/// Places this window before another window in the Z order. If it is a control - before another control.
+		/// Places this window before window w in the Z order.
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
+		/// This window and w can be both top-level windows or both controls of same parent.
+		/// May not work with top-level windows when it would move an inactive window above the active window.
 		/// Supports ThreadError.
-		/// If w is Wnd0, calls ZorderTop().
+		/// If w is Wnd0, calls ZorderBottom().
 		/// </summary>
 		public bool ZorderBefore(Wnd w)
 		{
-			return ZorderAfter(Get.PreviousSibling(w));
+			return _ZorderAfterBefore(w, true);
 		}
+
+		bool _ZorderAfterBefore(Wnd w, bool before)
+		{
+			if(w.Is0) return before ? ZorderBottom() : ZorderTop();
+			if(w == this) return true;
+			if(IsTopmost && !w.IsTopmost) ZorderNotopmost(); //see comments below
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, before ? Get.PreviousSibling(w) : w);
+		}
+
 		/// <summary>
-		/// Places this window or control at the top of its Z order.
+		/// Places this window or control at the top of the Z order.
 		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows (after topmost windows).
 		/// Does not activate.
+		/// In most cases does not work with top-level inactive windows; instead use <see cref="ActivateRaw"/>.
 		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderTop()
 		{
-			Wnd wa = Misc.SpecHwnd.Top;
-			if(!IsChildWindow) {
-				//SWP does not work if this window is inactive, unless wndInsertAfter is used
-				if(IsTopmost) {
-					//insert this after the first window, then insert the first window after this
-					wa = Get.FirstToplevel();
-					return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa) && wa.SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, this);
-				} else {
-					//insert after the last topmost window. This window does not become topmost.
-					for(wa = this; !wa.Is0;) {
-						wa = Api.GetWindow(wa, Api.GW_HWNDPREV);
-						if(wa.IsTopmost) break;
-					}
-				}
-			}
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.Top);
 		}
+		//This version tries a workaround, but on latest Windows it does not work.
+		//Better don't use workarounds here.
+		//public bool ZorderTop()
+		//{
+		//	Wnd wa = Misc.SpecHwnd.Top;
+		//	if(!IsChildWindow) {
+		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
+		//		//Workaround: insert this after the first window, then insert the first window after this.
+		//		wa = Api.GetTopWindow(IsTopmost ? Wnd0 : this);
+		//		return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa) && wa.SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, this);
+		//	}
+		//	return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
+		//}
+
 		/// <summary>
-		/// Places this window or control at the bottom of its Z order.
+		/// Places this window or control at the bottom of the Z order.
 		/// If the window was topmost, makes it and its owner window non-topmost.
 		/// Supports ThreadError.
 		/// </summary>
@@ -1960,19 +1994,23 @@ namespace Catkeys
 			ZorderNotopmost(); //see comments below
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.Bottom);
 		}
+
 		/// <summary>
 		/// Makes this window topmost (always on top of non-topmost windows in the Z order).
 		/// Does not activate.
-		/// If this window has an owner wndow, the owner does not become topmost.
+		/// If this window has an owner window, the owner does not become topmost.
+		/// Thic cannot be a control.
 		/// Supports ThreadError.
 		/// </summary>
 		public bool ZorderTopmost()
 		{
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.Topmost);
 		}
+
 		/// <summary>
 		/// Makes this window non-topmost.
-		/// If this window has an owner wndow, makes the owner window non-topmost too.
+		/// If this window has an owner window, makes the owner window non-topmost too.
+		/// Thic cannot be a control.
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>

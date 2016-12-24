@@ -76,15 +76,16 @@ namespace Catkeys
 			bool _incremental;
 			int _nMeasurements; //used with incremental to display n measurements and average times
 			long _time0;
-			const int nElem = 10;
-			fixed long _a[nElem];
+			const int _nElem = 16;
+			fixed long _a[_nElem];
+			fixed char _aMark[_nElem];
 
 			/// <summary>
 			/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
 			/// Finally you can call Write() or Times to get the sums.
 			/// Usually used to measure code in loops. See example.
 			/// </summary>
-			/// <example>
+			/// <example><code>
 			/// var perf = new Perf.Inst();
 			/// perf.Incremental = true;
 			/// for(int i = 0; i ˂ 5; i++) {
@@ -98,21 +99,21 @@ namespace Catkeys
 			/// }
 			/// perf.Write(); //speed:  154317  51060  (205377)
 			/// perf.Incremental = false;
-			/// </example>
+			/// </code></example>
 			public bool Incremental
 			{
 				get { return _incremental; }
 				set
 				{
 					if(_incremental = value) {
-						fixed (long* p = _a) { for(int i = 0; i < nElem; i++) p[i] = 0; }
+						fixed (long* p = _a) { for(int i = 0; i < _nElem; i++) p[i] = 0; }
 						_nMeasurements = 0;
 					}
 				}
 			}
 
 			/// <summary>
-			/// Stores current time in the first element of an internal array to use with Next() and Write().
+			/// Stores current time in the first element of an internal array.
 			/// </summary>
 			public void First()
 			{
@@ -129,18 +130,27 @@ namespace Catkeys
 			/// <summary>
 			/// Calls SpinCPU(spinCpuMS, codes) and First().
 			/// </summary>
-			public void First(int spinCpuMS, params Action[] codes) { SpinCPU(spinCpuMS, codes); First(); }
+			public void First(int spinCpuMS, params Action[] codes)
+			{
+				SpinCPU(spinCpuMS, codes);
+				First();
+			}
 
 			/// <summary>
-			/// Stores current time in next element of an internal array to use with next Next() and Write().
-			/// Don't call Next() more than 10 times after First(), because the array has fixed size.
+			/// Stores current time in next element of an internal array.
+			/// Don't call Next() more than 16 times after First(), because the array has fixed size.
 			/// </summary>
-			public void Next()
+			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+			public void Next(char cMark = '\0')
 			{
 				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
-				int n = _counter; if(n >= nElem) return;
+				int n = _counter; if(n >= _nElem) return;
 				_counter++;
-				fixed (long* p = _a) { var t = Stopwatch.GetTimestamp() - _time0; if(_incremental) p[n] += t; else p[n] = t; }
+				fixed (long* p = _a) {
+					var t = Stopwatch.GetTimestamp() - _time0;
+					if(_incremental) p[n] += t; else p[n] = t;
+					fixed (char* c = _aMark) c[n] = cMark;
+				}
 			}
 
 			/// <summary>
@@ -155,9 +165,10 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// Calls Next() and Write().
+			/// Calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
-			public void NW() { Next(); Write(); }
+			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+			public void NW(char cMark = '\0') { Next(cMark); Write(); }
 
 			/// <summary>
 			/// Formats a string from time values collected by calling First() and Next().
@@ -169,18 +180,21 @@ namespace Catkeys
 				{
 					int i, n = _counter;
 					if(n == 0) return null;
-					if(n > nElem) n = nElem;
+					if(n > _nElem) n = _nElem;
 					double freq = 1000000.0 / Stopwatch.Frequency;
 					//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
 					StringBuilder s = new StringBuilder("speed:");
 					bool average = false; int nMeasurements = 1;
 
-					fixed (long* p = _a)
-					{
+					fixed (long* p = _a) fixed (char* c = _aMark) {
 						g1:
 						double t = 0.0, tPrev = 0.0;
 						for(i = 0; i < n; i++) {
 							s.Append("  ");
+							if(c[i] != '\0') {
+								s.Append(c[i]);
+								s.Append('=');
+							}
 							t = freq * p[i];
 							double d = t - tPrev; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
 							if(average) d /= nMeasurements;
@@ -197,7 +211,7 @@ namespace Catkeys
 
 						if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
 							average = true;
-                            s.Append(";  measured "); s.Append(nMeasurements); s.Append(" times, average");
+							s.Append(";  measured "); s.Append(nMeasurements); s.Append(" times, average");
 							goto g1;
 						}
 					}
@@ -205,25 +219,8 @@ namespace Catkeys
 				}
 			}
 
-			static void _FormatTimes(StringBuilder s, long* p, int n, int nMeasurements, double freq)
-			{
-				double t = 0.0, tPrev = 0.0;
-				for(int i = 0; i < n; i++) {
-					s.Append("  ");
-					t = freq * p[i];
-					s.Append((long)(t - tPrev)); //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
-					tPrev = t;
-				}
-
-				if(n > 1) {
-					s.Append("  (");
-					s.Append((long)t);
-					s.Append(")");
-				}
-			}
-
 			/// <summary>
-			/// Gets the number of microseconds from First() to the last Next().
+			/// Gets the number of microseconds between First() and the last Next().
 			/// </summary>
 			public long TimeTotal
 			{
@@ -231,7 +228,7 @@ namespace Catkeys
 				{
 					int n = _counter;
 					if(n == 0) return 0;
-					if(n > nElem) n = nElem;
+					if(n > _nElem) n = _nElem;
 					double freq = 1000000.0 / Stopwatch.Frequency;
 					fixed (long* p = _a) { return (long)(freq * p[n - 1]); }
 				}
@@ -280,7 +277,7 @@ namespace Catkeys
 		/// Finally you can call Write() or Times to get the sums.
 		/// Usually used to measure code in loops. See example.
 		/// </summary>
-		/// <example>
+		/// <example><code>
 		/// Perf.Incremental = true;
 		/// for(int i = 0; i ˂ 5; i++) {
 		/// 	WaitMS(100); //not included in the measurement
@@ -293,7 +290,7 @@ namespace Catkeys
 		/// }
 		/// Perf.Write(); //speed:  154317  51060  (205377)
 		/// Perf.Incremental = false;
-		/// </example>
+		/// </code></example>
 		public static bool Incremental
 		{
 			get { return _SM->Incremental; }
@@ -301,23 +298,24 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Stores current time in the first element of an internal static array to use with Next() and Write().
+		/// Stores current time in the first element of an internal array.
 		/// </summary>
 		public static void First() { _SM->First(); }
 		/// <summary>
-		/// Calls SpinCPU(spinCpuMS) and First().
+		/// Calls <see cref="SpinCPU"/>(spinCpuMS) and First().
 		/// </summary>
 		public static void First(int spinCpuMS) { _SM->First(spinCpuMS); }
 		/// <summary>
-		/// Calls SpinCPU(spinCpuMS, codes) and First().
+		/// Calls <see cref="SpinCPU"/>(spinCpuMS, codes) and First().
 		/// </summary>
 		public static void First(int spinCpuMS, params Action[] codes) { _SM->First(spinCpuMS, codes); }
 
 		/// <summary>
-		/// Stores current time in next element of an internal static array to use with next Next() and Write().
-		/// Don't call Next() more than 10 times after First(), because the array has fixed size.
+		/// Stores current time in next element of an internal array.
+		/// Don't call Next() more than 16 times after First(), because the array has fixed size.
 		/// </summary>
-		public static void Next() { _SM->Next(); }
+		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+		public static void Next(char cMark = '\0') { _SM->Next(cMark); }
 
 		/// <summary>
 		/// Formats a string from time values collected by calling First() and Next(), and shows it in the output.
@@ -327,10 +325,11 @@ namespace Catkeys
 		public static void Write() { _SM->Write(); }
 
 		/// <summary>
-		/// Calls Next() and Write().
+		/// Calls <see cref="Next"/> and <see cref="Write"/>.
 		/// You can use <c>Perf.NW();</c> instead of <c>Perf.Next(); Perf.Write();</c>
 		/// </summary>
-		public static void NW() { _SM->NW(); }
+		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+		public static void NW(char cMark = '\0') { _SM->NW(cMark); }
 
 		/// <summary>
 		/// Formats a string from time values collected by calling First() and Next().
@@ -339,7 +338,7 @@ namespace Catkeys
 		public static string Times { get { return _SM->Times; } }
 
 		/// <summary>
-		/// Gets the number of microseconds from First() to the last Next().
+		/// Gets the number of microseconds between First() and the last Next().
 		/// </summary>
 		public static long TimeTotal { get { return _SM->TimeTotal; } }
 
@@ -355,8 +354,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Repeatedly executes codes (zero or more lambda functions) timeMS milliseconds (recommended 100 or more).
-		/// Call before measuring code speed, because after some idle time CPU needs to work some time to gain full speed.
-		/// Also it JIT-compiles First(), Next() and codes.
+		/// Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
 		/// </summary>
 		public static void SpinCPU(int timeMS, params Action[] codes) { _SM->SpinCPU(timeMS, codes); }
 	}

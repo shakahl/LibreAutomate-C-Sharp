@@ -60,7 +60,7 @@ namespace Catkeys
 		/// You can do anything with the List. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
 		/// All row arrays have Length equal to ColumnCount, and it must remain so; you can change Length, but then need to call ColumnCount=newLength.
 		/// </summary>
-		/// <example>x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));</example>
+		/// <example><code>x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));</code></example>
 		public List<string[]> Data { get { return _a; } }
 
 		/// <summary>

@@ -154,19 +154,17 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW")]
 		public static extern bool PeekMessage(out MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 
-		//public const int WH_MSGFILTER = -1;
-		//public const int WH_JOURNALRECORD = 0;
-		//public const int WH_JOURNALPLAYBACK = 1;
-		//public const int WH_KEYBOARD = 2;
+		public const int WH_MSGFILTER = -1;
+		public const int WH_KEYBOARD = 2;
 		public const int WH_GETMESSAGE = 3;
-		//public const int WH_CALLWNDPROC = 4;
+		public const int WH_CALLWNDPROC = 4;
 		public const int WH_CBT = 5;
-		//public const int WH_SYSMSGFILTER = 6;
-		//public const int WH_MOUSE = 7;
-		//public const int WH_DEBUG = 9;
-		//public const int WH_SHELL = 10;
-		//public const int WH_FOREGROUNDIDLE = 11;
-		//public const int WH_CALLWNDPROCRET = 12;
+		public const int WH_SYSMSGFILTER = 6;
+		public const int WH_MOUSE = 7;
+		public const int WH_DEBUG = 9;
+		public const int WH_SHELL = 10;
+		public const int WH_FOREGROUNDIDLE = 11;
+		public const int WH_CALLWNDPROCRET = 12;
 		public const int WH_KEYBOARD_LL = 13;
 		public const int WH_MOUSE_LL = 14;
 
@@ -1718,8 +1716,6 @@ namespace Catkeys.Winapi
 
 		[DllImport("comctl32.dll")]
 		public static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
-
-
 
 
 

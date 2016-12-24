@@ -5,10 +5,72 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        <CheckBox x:Name="checkBox" Content="CheckBox" HorizontalAlignment="Left" Height="15" Margin="10,10,0,0" VerticalAlignment="Top" Width="79"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="20" Margin="10,37,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="67"/>
+		xmlns:ad="clr-namespace:AvalonDock;assembly=AvalonDock"
+        Title="MainWindow" Height="706.693" Width="964.393">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="24"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="24"/>
+		</Grid.RowDefinitions>
+		<Menu>
+			<MenuItem Header="File">
+				<MenuItem Header="Exit"/>
+			</MenuItem>
+		</Menu>
 
-    </Grid>
+
+
+		<ad:DockingManager x:Name="dockManager" Grid.Row="1">
+			<ad:ResizingPanel Orientation="Vertical">
+				<ad:ResizingPanel Orientation="Horizontal">
+					<ad:DockablePane ad:ResizingPanel.ResizeWidth="250">
+						<ad:DockableContent x:Name="filesContent" Title="Files">
+							<WindowsFormsHost>
+							</WindowsFormsHost>
+							<!--<TreeView>
+								<TreeViewItem Header="Class1"/>
+								<TreeViewItem Header="Class2"/>
+							</TreeView>-->
+						</ad:DockableContent>
+						<!--<ad:DockableContent x:Name="toolsContent" Title="Tools">
+							<ListBox>
+								<ListBoxItem Content="Tool1"/>
+								<ListBoxItem Content="Tool2"/>
+								<ListBoxItem Content="Tool3"/>
+							</ListBox>
+						</ad:DockableContent>-->
+					</ad:DockablePane>
+					<ad:DocumentPane>
+						<ad:DocumentContent Title="doc">
+							<WindowsFormsHost>
+							</WindowsFormsHost>
+						</ad:DocumentContent>
+					</ad:DocumentPane>
+				</ad:ResizingPanel>
+				<ad:DockablePane ad:ResizingPanel.ResizeHeight="150">
+					<ad:DockableContent Title="Find" x:Name="findContent">
+						<ListView>
+							<ListView.View>
+								<GridView>
+									<GridView.Columns>
+										<GridViewColumn Header="File"/>
+										<GridViewColumn Header="Text"/>
+									</GridView.Columns>
+								</GridView>
+							</ListView.View>
+						</ListView>
+					</ad:DockableContent>
+					<ad:DockableContent Title="Output" x:Name="output">
+						<TextBox IsReadOnly="True" AcceptsReturn="True"/>
+					</ad:DockableContent>
+				</ad:DockablePane>
+			</ad:ResizingPanel>
+		</ad:DockingManager>
+
+
+		<StatusBar Grid.Row="2">
+			<StatusBarItem Content="AvalonDock 1.3 Sample Project"/>
+		</StatusBar>
+	</Grid>
 </Window>

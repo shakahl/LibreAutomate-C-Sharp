@@ -917,7 +917,7 @@ namespace SQLite
 		/// <summary>
 		/// Begins a new transaction. Call <see cref="Commit"/> to end the transaction.
 		/// </summary>
-		/// <example cref="System.InvalidOperationException">Throws if a transaction has already begun.</example>
+		/// <exception cref="System.InvalidOperationException">Throws if a transaction has already begun.</exception>
 		public void BeginTransaction ()
 		{
 			// The BEGIN command only works if the transaction stack is empty, 

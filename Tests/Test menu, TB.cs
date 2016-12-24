@@ -227,7 +227,7 @@ public partial class Test
 			var wo = (Wnd)tb.Owner.Handle;
 			//var wo = (Wnd)tb.Control.Handle;
 			//Out(wo);
-			Show.TaskDialog("td", owner: wo);
+			TaskDialog.Show("td", owner: wo);
 			//MessageBox.Show(wo, "txt");
 		};
 		m.Add(tb);
@@ -279,7 +279,7 @@ public partial class Test
 		if(c != null) {
 			//m.ModalAlways = true;
 			m.Show(c, 100, 100);
-			//Show.TaskDialog("");
+			//TaskDialog.Show("");
 			//m.Show(c, 200, 200);
 		} else {
 			//Wait(1);
@@ -425,7 +425,7 @@ public partial class Test
 		//m.Show(Mouse.X + 10, Mouse.Y);
 
 		//Out(1);
-		//Show.TaskDialog("");
+		//TaskDialog.Show("");
 		//Out(2);
 
 		//using(m) { }
@@ -852,7 +852,7 @@ public partial class Test
 
 		//for(int i = 0; i < 1; i++) {
 		//	GC.Collect();
-		//	Show.TaskDialog("f");
+		//	TaskDialog.Show("f");
 		//}
 	}
 
@@ -1289,7 +1289,7 @@ public partial class Test
 	{
 
 		//MessageBox.Show("");
-		//Show.TaskDialog("");
+		//TaskDialog.Show("");
 
 		//WaitMS(500);
 		TestToolbar();
@@ -1306,7 +1306,7 @@ public partial class Test
 		//t.Join();
 
 		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
-		//Show.TaskDialog(""); //active, OK
+		//TaskDialog.Show(""); //active, OK
 
 		//Form f=new Form();
 		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK

@@ -312,7 +312,7 @@ public static class Test
 			GC.Collect(); //releases a lot
 
 			//Util.Debug_.OutLoadedAssemblies();
-			//Show.TaskDialog("exit");
+			//ShowRen.Show("exit");
 
 			return r;
 		}

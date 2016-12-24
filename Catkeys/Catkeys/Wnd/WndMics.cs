@@ -287,6 +287,15 @@ namespace Catkeys
 			}
 
 			/// <summary>
+			/// Returns true if w is one of enum <see cref="SpecHwnd"/> members.
+			/// </summary>
+			public static bool IsSpecHwnd(Wnd w)
+			{
+				int i = (int)(LPARAM)w;
+				return (i <= 1 && i >= -3) || i == 0xffff;
+			}
+
+			/// <summary>
 			/// Calculates window rectangle from client area rectangle and style.
 			/// Calls Api.AdjustWindowRectEx().
 			/// </summary>

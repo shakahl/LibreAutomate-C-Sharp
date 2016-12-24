@@ -41,7 +41,7 @@ namespace Catkeys.Tasks
 		static void Main(string[] args)
 		{
 			//if(args.Length >= 1 && args[0] == "/domain") {
-			//	Show.TaskDialog("domain");
+			//	TaskDialog.Show("domain");
 			//	return;
 			//}
 
@@ -311,11 +311,11 @@ namespace Catkeys.Tasks
 			if(R != 0) return;
 
 #if false
-			//Show.TaskDialog("start");
+			//ShowRen.Show("start");
 			int i, n = 1;
 			Thread[] at = new Thread[n];
 			for(i = 0; i < n; i++) {
-				//Show.TaskDialog("domain", i);
+				//ShowRen.Show("domain", i);
 				//WaitMS(5);
 				at[i] = new Thread(() =>
 				  {
@@ -331,7 +331,7 @@ namespace Catkeys.Tasks
 			}
 
 			//GC.Collect();
-			//Show.TaskDialog("fin");
+			//ShowRen.Show("fin");
 #endif
 		}
 

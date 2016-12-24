@@ -92,15 +92,15 @@ namespace Catkeys
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
 		/// Icon, Image, Folders.FolderPath.
 		/// </param>
-		/// <example>
+		/// <example><code>
 		/// var m = new CatMenu();
 		/// m["One"] = o => Out(o);
-		/// m["Two", @"icon file path"] = o => { Out(o); Show.TaskDialog(o.ToString()); };
+		/// m["Two", @"icon file path"] = o => { Out(o); TaskDialog.Show(o.ToString()); };
 		/// m.LastItem.ToolTipText = "tooltip";
 		/// m["Three"] = o => { Out(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.Show();
-		/// </example>
+		/// </code></example>
 		public Action<ClickEventData> this[string text, object icon = null]
 		{
 			set { Add(text, value, icon); }
@@ -120,16 +120,16 @@ namespace Catkeys
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
 		/// Icon, Image, Folders.FolderPath.
 		/// </param>
-		/// <example>
+		/// <example><code>
 		/// var m = new CatMenu();
 		/// m.Add("One", o => Out(o), @"icon file path");
 		/// m.Add("Two", o => { Out(o.MenuItem.Checked); });
 		/// m.LastMenuItem.Checked = true;
 		/// m.Show();
-		/// </example>
+		/// </code></example>
 		public ToolStripMenuItem Add(string text, Action<ClickEventData> onClick, object icon = null)
 		{
-			var item = new ToolStripMenuItem(text);
+			var item = new ToolStripMenuItem(text); //TODO: set text later, after SuspendLayout
 			_Add(item, onClick, icon);
 			return item;
 		}
@@ -198,7 +198,7 @@ namespace Catkeys
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
 		/// BackgroundImage, BackgroundImageLayout, ContextMenu, Cursor, Font, ForeColor, ImageList, ImageScalingSize, Renderer, ShowCheckMargin, ShowImageMargin.
 		/// </remarks>
-		/// <example>
+		/// <example><code>
 		/// var m = new CatMenu();
 		/// m.CMS.BackColor = Color.PaleGoldenrod;
 		/// m["One"] = o => Out(o);
@@ -214,7 +214,7 @@ namespace Catkeys
 		/// }
 		/// m["Eight"] = o => Out(o);
 		/// m.Show();
-		/// </example>
+		/// </code></example>
 		public SubmenuBlock Submenu(string text, object icon = null, Action<ClickEventData> onClick = null)
 		{
 			ToolStripDropDownMenu_ dd;
@@ -273,7 +273,7 @@ namespace Catkeys
 		/// <summary>
 		/// Call this to end adding items to the current submenu if Submenu() was called without 'using' and without a callback function that adds submenu items.
 		/// </summary>
-		/// <example>
+		/// <example><code>
 		/// var m = new CatMenu();
 		/// m["One"] = o => Out(o);
 		/// m["Two"] = o => Out(o);
@@ -283,7 +283,7 @@ namespace Catkeys
 		/// 	m.EndSubmenu();
 		/// m["Five"] = o => Out(o);
 		/// m.Show();
-		/// </example>
+		/// </code></example>
 		public void EndSubmenu()
 		{
 			var dd = _submenuStack.Pop();
@@ -308,7 +308,7 @@ namespace Catkeys
 		/// <param name="onOpening">Lambda etc callback function that should add submenu items.</param>
 		/// <param name="icon">The same as with <see cref="Add"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
-		/// <example>
+		/// <example><code>
 		/// var m = new CatMenu();
 		/// m["One"] = o => Out(o);
 		/// m["Two"] = o => Out(o);
@@ -327,7 +327,7 @@ namespace Catkeys
 		/// });
 		/// m["Eight"] = o => Out(o);
 		/// m.Show();
-		/// </example>
+		/// </code></example>
 		public ToolStripMenuItem Submenu(string text, Action<CatMenu> onOpening, object icon = null, Action<ClickEventData> onClick = null)
 		{
 			ToolStripDropDownMenu_ dd;

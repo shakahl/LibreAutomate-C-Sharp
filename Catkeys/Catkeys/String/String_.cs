@@ -15,6 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Globalization;
 
 //for LikeEx_
 using Microsoft.VisualBasic;
@@ -431,6 +432,32 @@ namespace Catkeys
 			}
 
 			return R;
+		}
+
+		/// <summary>
+		/// Converts string to double.
+		/// Calls <see cref="double.Parse"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+		/// </summary>
+		/// <param name="canThrow">If true, exception if the string is not a valid number for <see cref="double.Parse"/>. If false, then returns 0.</param>
+		public static double ToDouble_(this string t, bool canThrow = false)
+		{
+			if(canThrow) return double.Parse(t, CultureInfo.InvariantCulture);
+			double R;
+			if(double.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out R)) return R;
+			return 0.0;
+		}
+
+		/// <summary>
+		/// Converts string to float.
+		/// Calls <see cref="float.Parse"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+		/// </summary>
+		/// <param name="canThrow">If true, exception if the string is not a valid number for <see cref="float.Parse"/>. If false, then returns 0.</param>
+		public static float ToFloat_(this string t, bool canThrow = false)
+		{
+			if(canThrow) return float.Parse(t, CultureInfo.InvariantCulture);
+			float R;
+			if(float.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out R)) return R;
+			return 0.0F;
 		}
 
 		/// <summary>

@@ -140,7 +140,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		}
 
 		//Out(InterDomain.Get2("test"));
-		//Show.TaskDialog("after all");
+		//TaskDialog.Show("after all");
 		//Out("exit default domain");
 	}
 
@@ -284,7 +284,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 
 		//var w = Api.CreateWindowEx(0, "#32770", null, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 300, 300, 300, Wnd0, 0, Zero, 0);
 
-		//TODO: test wait cursor with Show.TaskDialog
+		//TODO: test wait cursor with TaskDialog.Show
 	}
 
 	static Util.MessageLoop _mlTb = new Util.MessageLoop();

@@ -96,6 +96,8 @@ namespace Catkeys
 		/// <param name="hi">Icon handle.</param>
 		public static Image HandleToImage(IntPtr hi)
 		{
+			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc. Icon.ToBitmap works around it.
+
 			if(hi == Zero) return null;
 			//var perf = new Perf.Inst(true);
 			Icon ic = Icon.FromHandle(hi);
@@ -473,7 +475,7 @@ namespace Catkeys
 		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables.</param>
 		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		public static unsafe IntPtr GetIconHandleRaw(string file, int index, int size)
+		public static unsafe IntPtr GetIconHandleRaw(string file, int index=0, int size=16)
 		{
 			if(Empty(file)) return Zero;
 			size = _NormalizeIconSizeParameter(size);

@@ -166,7 +166,7 @@
 		//var m = new CatMenu();
 		//m["aaaaaaaaa"] = null;
 		//m.Show();
-		//Show.TaskDialogEx("", timeoutS: 1);
+		//ShowRen.ShowEx("", timeoutS: 1);
 		//new Form().ShowDialog();
 		//Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
 		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
@@ -456,16 +456,16 @@
 		//Out(f.IsDisposed);
 		f.Dispose();
 		//Out(2);
-		//Show.TaskDialog("after");
+		//ShowRen.Show("after");
 
 		//GC.Collect();
-		//Show.TaskDialog("after");
+		//ShowRen.Show("after");
 	}
 
 	static object _WorkCallback(object state)
 	{
 		OutList("_WorkCallback", Api.GetCurrentThreadId(), state);
-		//Show.TaskDialog("work");
+		//ShowRen.Show("work");
 		//MessageBox.Show("work");
 		return null;
 	}
@@ -1467,7 +1467,7 @@
 
 //static void AnotherThread()
 //{
-//	//Show.TaskDialog("another thread", "", "", x:1);
+//	//ShowRen.Show("another thread", "", "", x:1);
 //	MessageBox.Show("another thread");
 //	Out("after msgbox in another thread");
 //}
@@ -1532,7 +1532,7 @@
 
 //new Thread(AnotherThread).Start();
 
-//Show.TaskDialog("appdomain primary thread", "", "e");
+//ShowRen.Show("appdomain primary thread", "", "e");
 
 ////Thread.CurrentThread.Abort();
 ////AppDomain.Unload(AppDomain.CurrentDomain);
@@ -1540,7 +1540,7 @@
 
 //return;
 
-//Show.TaskDialog("", "<a href=\"test\">test</a>", onLinkClick: ed =>
+//ShowRen.Show("", "<a href=\"test\">test</a>", onLinkClick: ed =>
 //{
 //	Wnd z = ed.hwnd;
 //	string s = null;
@@ -1682,7 +1682,7 @@
 //		RECT rr = k.Bounds;
 //		Out(rr);
 //	}
-//	Show.MessageDialog("aaa");
+//	ShowRen.MessageDialog("aaa");
 //}
 
 //Perf.First(100);
@@ -1908,7 +1908,7 @@
 //Input.Key("Ctrl+K");
 //Cat.Key("Ctrl+K");
 
-//Show.MessageDialog("dddd");
+//ShowRen.MessageDialog("dddd");
 //Meow.MessageDialog("dddd");
 
 //Test_str();

@@ -45,19 +45,19 @@ namespace Catkeys
 
 		/// <summary>
 		/// If dialog owner window not specified, let the dialog be always on top of most other windows.
-		/// Used by Show.TaskDialog and similar functions.
+		/// Used by TaskDialog.Show and similar functions.
 		/// </summary>
 		public bool dialogTopmostIfNoOwner { get; set; }
 
 		/// <summary>
 		/// Dialog right-to-left layout.
-		/// Used by Show.TaskDialog and similar functions.
+		/// Used by TaskDialog.Show and similar functions.
 		/// </summary>
 		public bool dialogRtlLayout { get; set; }
 
 		/// <summary>
 		/// Dialog screen.
-		/// Used by Show.TaskDialog and similar functions.
+		/// Used by TaskDialog.Show and similar functions.
 		/// </summary>
 		public object dialogScreenIfNoOwner { get; set; }
 
@@ -95,14 +95,12 @@ namespace Catkeys
 		///		New ScriptOptions objects created like var o=new ScriptOptions();.
 		/// Initially default speed is 100, other options false/0/null.
 		/// You can modify them in scripts and script templates. Do it in ScriptClass static constructor.
-		/// <example>
-		///	<code>
+		/// <example><code>
 		/// 	static ScriptClass() { ScriptOptions.Default.speed=50; } //constructor
 		///		...
 		///		Out(Option.speed); //speed of this thread
 		///		Option.speed=10; //changes only for this thread
-		/// </code>
-		/// </example>
+		/// </code></example>
 		/// </summary>
 		public static ScriptOptions Default { get; set; } = new ScriptOptions(null);
 
@@ -115,7 +113,7 @@ namespace Catkeys
 		//}
 
 		/// <summary>
-		/// Default title text for standard dialogs (function Show.MessageDialog() etc). Also can be displayed in other places.
+		/// Default title text for standard dialogs (function TaskDialog.MessageDialog() etc). Also can be displayed in other places.
 		/// Default value - current appdomain name. In exe it is exe file name like "example.exe", else it is script name.
 		/// </summary>
 		public static string DisplayName

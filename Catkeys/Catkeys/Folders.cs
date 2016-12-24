@@ -24,14 +24,15 @@ using Catkeys.Winapi;
 namespace Catkeys
 {
 	/// <summary>
-	/// Gets special folder paths (Desktop, Temp etc).
-	/// The property-get functions return special folder paths. Actually they are of type Folders.FolderPath, but it is implicitly convertible to string.
+	/// Gets special folder paths (Desktop, Temp, etc).
+	/// Most functions return special folder paths. Actually the return value is of type Folders.FolderPath, but it is implicitly convertible to string.
 	/// The Folders.FolderPath type has operator + that appends a filename or relative path string; it also appends @"\" if need, processes @"..\" etc and returns fully-qualified path string.
-	/// Example: <c>string path=Folders.Desktop+"file.txt";</c>
-	/// Most functions use Windows "Known Folders" API, such as SHGetKnownFolderPath.
+	/// Example: <c>string s=Folders.Desktop+"file.txt";</c>
+	/// If a function cannot get special folder path, the return value contains null string. Then the above-mentioned + operator throws CatException.
+	/// Some special folders exist only on newer Windows versions or not on all computers.
 	/// The property-get functions have names of special folders (or similar), some with a suffix like "_Win8" which means that the folder is unavailable in older Windows versions. Note: some known folders, although supported and registerd, may be still not created.
-	/// Some special folders exist only on newer Windows versions or not on all computers. If a function cannot get special folder path, the return value begins with "˂unavailable˃".
 	/// Some special folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array of bytes called "ITEMIDLIST" or "PIDL". Functions of the nested class 'VirtualIDLIST' return the PIDL as IntPtr; you must free it with Marshal.FreeCoTaskMem(). Functions of the nested class 'Virtual' return the ITEMIDLIST as string "˂idlist:Base64_encoded_ITEMIDLIST˃" that can be used with some functions of this library but not with .NET or native functions.
+	/// Most functions use Windows "Known Folders" API, such as SHGetKnownFolderPath.
 	/// </summary>
 	[DebuggerStepThrough]
 	public class Folders
@@ -199,7 +200,6 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets path of current user's Temp folder.
-		/// Calls Path.GetTempPath().
 		/// </summary>
 		public static FolderPath Temp { get { return _sTemp ?? (_sTemp = Path.GetTempPath().TrimEnd('\\')); } }
 
@@ -269,7 +269,7 @@ namespace Catkeys
 
 			var guid = _MakeGuid(a, b, c, d);
 			string R;
-			if(SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out R) != 0) return "<unavailable>";
+			if(SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out R) != 0) return null;
 			return R;
 		}
 
@@ -288,7 +288,7 @@ namespace Catkeys
 		static FolderPath _GetV(uint a, uint b, uint c, uint d)
 		{
 			IntPtr pidl = _GetVI(a, b, c, d);
-			if(pidl == Zero) return "<unavailable>";
+			if(pidl == Zero) return null;
 
 			uint n = ILGetSize(pidl);
 			var ba = new byte[n];
@@ -515,36 +515,32 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets a special folder path by its name.
+		/// Returns null if unavailable.
 		/// Can be used to get paths of custom known folders for which there are no functions in this class.
 		/// To see all names of known folders: <c>Output.Write(Folders.GetKnownFolders());</c>
 		/// </summary>
-		/// <param name="folderName">A known folder name, or "Temp", "App", "AppDoc", "AppTemp", or "%environmentVariable%...". Case-insensitive.</param>
+		/// <param name="folderName">A known folder name, or "Temp", "App", "AppDoc", "AppTemp". Case-insensitive.</param>
 		public static FolderPath GetFolder(string folderName)
 		{
-			string path = null;
-
 			switch(folderName.Equals_(true, "Temp", "App", "AppDoc", "AppTemp")) {
 			case 1: return Temp;
 			case 2: return App;
 			case 3: return AppDoc;
 			case 4: return AppTemp;
 			}
-			if(folderName.StartsWith_("%")) return Path_.ExpandEnvVar(folderName);
 
+			string R = null;
 			IKnownFolderManager man = null;
 			try {
 				man = (IKnownFolderManager)new KnownFolderManager();
-				IKnownFolder kf; if(man.GetFolderByName(folderName, out kf) != 0) return "<unavailable>";
-				if(kf.GetPath(0, out path) != 0) return "<unavailable>";
+				IKnownFolder kf; if(man.GetFolderByName(folderName, out kf) != 0) return null;
+				if(kf.GetPath(0, out R) != 0) return null;
+				//TODO: get "<idlist>..." for virtual folders?
 			}
-			catch {
-				return "<unavailable>";
-			}
-			finally {
-				Api.ReleaseComObject(man);
-			}
+			catch { }
+			finally { Api.ReleaseComObject(man); }
 
-			return path;
+			return R;
 		}
 
 		//public static partial class VirtualITEMIDLIST
@@ -558,67 +554,55 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets CD/DVD drive name, like @"D:\".
+		/// Returns null if unavailable.
 		/// </summary>
 		public static FolderPath CDDrive()
 		{
-			string s = null;
 			foreach(DriveInfo di in DriveInfo.GetDrives()) {
-				if(di.DriveType == DriveType.CDRom) {
-					s = di.Name;
-					break;
-				}
+				if(di.DriveType == DriveType.CDRom) return di.Name;
 			}
-			if(s == null) s = "<unavailable>";
-			return s;
+			return null;
 		}
 
 		/// <summary>
 		/// Gets removable/external/USB drive name, like @"F:\".
+		/// Returns null if unavailable.
 		/// </summary>
 		/// <param name="driveIndex">0-based removable drive index.</param>
 		/// <remarks>Uses DriveInfo.GetDrives() and counts only drives of type DriveType.Removable.</remarks>
-		public static FolderPath RemovableDrive(int driveIndex)
+		public static FolderPath RemovableDrive(int driveIndex=0)
 		{
-			string s = null;
 			foreach(DriveInfo di in DriveInfo.GetDrives()) {
-				if(di.DriveType == DriveType.Removable && driveIndex-- == 0) {
-					s = di.Name;
-					break;
-				}
+				if(di.DriveType == DriveType.Removable && driveIndex-- == 0) return di.Name;
 			}
-			if(s == null) s = "<unavailable>"; //TODO: everywhere throw exception instead of "<unavailable>" because will fail later anyway.
-			return s;
+			return null;
 		}
 
 		/// <summary>
 		/// Gets removable/external/USB drive name (like @"F:\") by its volume label.
+		/// Returns null if unavailable.
 		/// </summary>
 		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
 		public static FolderPath RemovableDrive(string volumeLabel)
 		{
-			string s = null;
 			foreach(DriveInfo di in DriveInfo.GetDrives()) {
 				if(di.DriveType == DriveType.Removable) {
 					string v = null; try { v = di.VolumeLabel; } catch { continue; }
 					if(!v.Equals_(volumeLabel, true)) continue;
-					s = di.Name;
-					break;
+					return di.Name;
 				}
 			}
-			if(s == null) s = "<unavailable>";
-			return s;
+			return null;
 		}
 
 		/// <summary>
 		/// Gets the value of an environment variable.
-		/// Returns "˂unavailable˃" if the variable does not exist.
+		/// Returns null if unavailable.
 		/// </summary>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>.
 		public static FolderPath EnvVar(string envVar)
 		{
-			string s = Environment.GetEnvironmentVariable(envVar);
-			if(s == null) s = "<unavailable>";
-			return s;
+			return Environment.GetEnvironmentVariable(envVar);
 		}
 
 		#endregion
@@ -631,10 +615,18 @@ namespace Catkeys
 			public static implicit operator FolderPath(string path) { return new FolderPath(path); }
 			public static implicit operator string(FolderPath f) { return f._path; }
 			public override string ToString() { return _path; }
-			public static string operator +(FolderPath f, string append) { return Path_.Combine(f._path, append); }
-		}
 
-		//TODO: maybe better use string "path\", not FolderPath. Now possible confusion etc.
+			/// <summary>
+			/// Calls <see cref="Path_.Combine"/>(fp, append).
+			/// Example: <c>string s=Folders.Desktop+"file.txt";</c>
+			/// </summary>
+			/// <exception cref="CatException">When f is empty, which probably means that a previously called Folders property failed to get path.</exception>
+			public static string operator +(FolderPath fp, string append)
+			{
+				if(Empty(fp._path)) throw new CatException("No folder path.");
+				return Path_.Combine(fp._path, append);
+			}
+		}
 
 		//TODO_LATER:
 		//	Unexpand(). Would create string like @"Windows + ""...""".

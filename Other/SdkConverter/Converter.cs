@@ -374,7 +374,7 @@ public static unsafe class API
 			//catch(ConverterException e) {
 			//	//Out(e);
 			//	Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
-			//	if(Show.TaskDialog("Error. Skip statement and continue?", e.Message, "YN").ButtonName != "Yes") throw e as Exception;
+			//	if(TaskDialog.Show("Error. Skip statement and continue?", e.Message, "YN").ButtonName != "Yes") throw e as Exception;
 			//	_SkipStatement();
 			//         }
 		}

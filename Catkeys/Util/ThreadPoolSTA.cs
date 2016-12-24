@@ -75,12 +75,12 @@ namespace Catkeys.Util
 		/// Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
 		/// Can be used when need more options than SubmitCallback() has.
 		/// </summary>
-		/// <example>
+		/// <example><code>
 		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =˃ { WaitMS(100); })) {
 		/// 	work.Submit();
 		/// 	work.Wait();
 		/// }
-		/// </example>
+		/// </code></example>
 		public class Work :IDisposable
 		{
 			GCHandle _gc; //to manage the lifetime of this object

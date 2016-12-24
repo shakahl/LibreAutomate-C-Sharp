@@ -560,6 +560,11 @@ namespace Catkeys.Util
 			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
 			return Zero != Api.GetModuleHandle(s);
 		}
+		/// <summary>
+		/// Returns true if assembly of type is compiled to native code using ngen.exe.
+		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+		/// </summary>
+		public static bool IsAssemblyNgened(Type type) { return IsAssemblyNgened(type.Assembly); }
 
 		/// <summary>
 		/// Frees as much as possible physical memory used by this process.

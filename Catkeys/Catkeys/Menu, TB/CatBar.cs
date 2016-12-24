@@ -53,12 +53,12 @@ namespace Catkeys
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
 		/// Icon, Image, Folders.FolderPath.
 		/// </param>
-		/// <example>
+		/// <example><code>
 		/// var t = new CatBar();
 		/// t["One"] = o => Out(o);
-		/// t["Two", @"icon file path"] = o => { Out(o); Show.TaskDialog(o.ToString()); };
+		/// t["Two", @"icon file path"] = o => { Out(o); TaskDialog.Show(o.ToString()); };
 		/// t.LastItem.ToolTipText = "tooltip";
-		/// </example>
+		/// </code></example>
 		public Action<ClickEventData> this[string text, object icon = null]
 		{
 			set { Add(text, value, icon); }
@@ -78,12 +78,12 @@ namespace Catkeys
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
 		/// Icon, Image, Folders.FolderPath.
 		/// </param>
-		/// <example>
+		/// <example><code>
 		/// var m = new CatBar();
 		/// t.Add("One", o => Out(o), @"icon file path");
 		/// t.LastItem.ToolTipText = "tooltip";
 		/// t.Add("Two", o => { Out(o.MenuItem.Checked); });
-		/// </example>
+		/// </code></example>
 		public ToolStripButton Add(string text, Action<ClickEventData> onClick, object icon = null)
 		{
 			var item = new ToolStripButton(text);

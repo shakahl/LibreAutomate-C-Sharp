@@ -927,7 +927,7 @@ namespace ScintillaNET
 		private static string GetModulePath()
 		{
 			if(modulePath == null) {
-				modulePath = AppDomain.CurrentDomain.BaseDirectory + "SciLexer.dll";
+				modulePath = AppDomain.CurrentDomain.BaseDirectory + "SciLexer" + IntPtr.Size * 8 + ".dll";
 			}
 
 			return modulePath;

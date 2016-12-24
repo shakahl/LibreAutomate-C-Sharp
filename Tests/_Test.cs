@@ -52,12 +52,12 @@ using CsvHelper;
 //using Newtonsoft.Json;
 //using Newtonsoft.Json.Linq;
 
+using static Test.CatAlias;
+
 [module: DefaultCharSet(CharSet.Unicode)]
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
-
-
 
 
 static partial class Test
@@ -251,16 +251,16 @@ bbb"", b3
 
 	}
 
-	static void TestShow()
+	static void TestTaskDialog()
 	{
-		//Show.TaskDialog(Wnd0, "text", icon:TDIcon.Warning);
-		//Show.TaskDialog("text", "", "!");
-		//Show.TaskDialog("text", "", new System.Drawing.Icon(@"q:\app\find.ico"));
+		//TaskDialog.Show(Wnd0, "text", icon:TDIcon.Warning);
+		//TaskDialog.Show("text", "", "!");
+		//TaskDialog.Show("text", "", new System.Drawing.Icon(@"q:\app\find.ico"));
 
-		//Show.TaskDialog(Wnd0, "text", flags: TDFlag.RawXY);
-		//Show.TaskDialogEx(Wnd0, "text", flags: TDFlag.RawXY, x:-100);
-		//Show.TaskDialog("text", null, "r");
-		//Show.TaskDialogEx("text", null, "r", x:-100);
+		//TaskDialog.Show(Wnd0, "text", flags: TDFlag.RawXY);
+		//TaskDialog.ShowEx(Wnd0, "text", flags: TDFlag.RawXY, x:-100);
+		//TaskDialog.Show("text", null, "r");
+		//TaskDialog.ShowEx("text", null, "r", x:-100);
 
 		//Task.Run(() =>
 		//{
@@ -279,18 +279,18 @@ bbb"", b3
 		//Wait(10);
 
 
-		//Show.TaskDialogNoWait(null, "Text."); //simplest example
-		//var td=Show.TaskDialogNoWait(ed => { Out(ed); }, "Text.", style: "OCi");
-		//var td=Show.TaskDialogNoWaitEx(ed => { Out(ed); }, "Text.", "text", "OCi", Wnd0, "1 Cust", "1 ra", "Check", "exp", "foo", "Tii", 100, -100, 30);
+		//TaskDialog.ShowNoWait(null, "Text."); //simplest example
+		//var td=TaskDialog.ShowNoWait(ed => { Out(ed); }, "Text.", style: "OCi");
+		//var td=TaskDialog.ShowNoWaitEx(ed => { Out(ed); }, "Text.", "text", "OCi", Wnd0, "1 Cust", "1 ra", "Check", "exp", "foo", "Tii", 100, -100, 30);
 		//Wait(3); //do something while the dialog is open in other thread
 		//td.ThreadWaitClosed(); //wait until dialog closed (optional, but if the main thread will exit before closing the dialog, dialog's thread then will be aborted)
 
 
-		//Show.TaskDialog("aaa");
+		//TaskDialog.Show("aaa");
 
 		//bool marquee = false;
-		//var pd = Show.ProgressDialog(marquee, "Working", customButtons: "1 Stop", y: -1);
-		////var pd = Show.ProgressDialogEx(marquee, "Working", "ttt", "a", Wnd0, "1 Stop", "1 r1|2 r2", "Check", "exp", "foo", "Tii", 100, -1, 30);
+		//var pd = TaskDialog.ShowProgress(marquee, "Working", customButtons: "1 Stop", y: -1);
+		////var pd = TaskDialog.ShowProgressEx(marquee, "Working", "ttt", "a", Wnd0, "1 Stop", "1 r1|2 r2", "Check", "exp", "foo", "Tii", 100, -1, 30);
 		//for(int i = 1; i <= 100; i++) {
 		//	if(!pd.IsOpen) { Out(pd.Result); break; } //if the user closed the dialog
 		//	if(!marquee) pd.Send.Progress(i);
@@ -298,14 +298,14 @@ bbb"", b3
 		//}
 		//pd.Send.Close();
 
-		//Out(Show.ListDialog("1 one|2 two|3 three\r\n").ToString());
-		//Out(Show.ListDialog("1 One|2 Two|3 Three|Cancel", "Main instruction.", "More info.", "Cxb").ToString());
-		//Out(Show.ListDialog("1 One|2 Two|3 Three|Cancel", "Main instruction.", "More info.", TDIcon.App).ToString());
-		//Out(Show.ListDialogEx("1 One|2 Two|3 Three|Cancel", "Main instruction.", "More info.", TDIcon.App, Wnd0, "", "exp\r\n<a href=\"mmm\">link</a>", "foo: <a href=\"mmm\">link</a>", "Moo", -1, 100, 30, (ed)=>Out(ed.linkHref)).ToString());
+		//Out(TaskDialog.ShowList("1 one|2 two|3 three\r\n").ToString());
+		//Out(TaskDialog.ShowList("1 One|2 Two|3 Three|Cancel", "Main instruction.", "More info.", "Cxb").ToString());
+		//Out(TaskDialog.ShowList("1 One|2 Two|3 Three|Cancel", "Main instruction.", "More info.", TDIcon.App).ToString());
+		//Out(TaskDialog.ShowListEx("1 One|2 Two|3 Three|Cancel", "Main instruction.", "More info.", TDIcon.App, Wnd0, "", "exp\r\n<a href=\"mmm\">link</a>", "foo: <a href=\"mmm\">link</a>", "Moo", -1, 100, 30, (ed)=>Out(ed.linkHref)).ToString());
 
-		//Show.ListDialog("1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30");
-		//Show.ListDialog("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBBBBBB");
-		//Out(Show.ListDialogEx("1 one|2 two|3 three\r\n", footerText: "!|foo").ToString());
+		//TaskDialog.ShowList("1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30");
+		//TaskDialog.ShowList("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA BBBBBBBBBBBBBBBBBBBBBBBBB");
+		//Out(TaskDialog.ShowListEx("1 one|2 two|3 three\r\n", footerText: "!|foo").ToString());
 		//return;
 
 		//var f = new Form();
@@ -313,29 +313,29 @@ bbb"", b3
 
 		//Script.Option.dialogRtlLayout=true;
 		//string s; //int i;
-		//if(!Show.InputDialog(out s)) return;
-		//if(!Show.InputDialog(out s, "Text.", owner: Wnd.Find("Untitled - Notepad"))) return;
-		//if(!Show.InputDialog(out s, "Text gggggggggggg.")) return;
-		//if(!Show.InputDialog(out s, "Text.", "Default")) return;
-		//if(!Show.InputDialogEx(out s, "Text.", "0", editType: TDEdit.Number, expandedText:"exp")) return;
-		//if(!Show.InputDialog(out i, "Text.", 5)) return; Out(i); return;
-		//if(!Show.InputDialogEx(out s, "Text.", "pas", editType: TDEdit.Password)) return;
-		//if(!Show.InputDialog(out s, "Text.", "one\r\ntwo\r\nthree", editType: TDEdit.Multiline)) return;
-		//if(!Show.InputDialog(out s, "Text.", "def\none\r\ntwo\nthree", editType: TDEdit.Combo)) return;
-		//if(!Show.InputDialogEx(out s, "Text.", "def\none\r\ntwo\nthree", Wnd0, TDEdit.Combo, "i", "exp", "foo", "Tii", 200, -100, 30, "1 Browse...", ed => { if(ed.wParam == 1) { string _s; if(Show.InputDialog(out _s, owner:ed.hwnd)) ed.obj.EditControl.SetControlText(_s); ed.returnValue = 1; } })) return;
-		//if(!Show.InputDialogEx(out s, "Text.", "def\none\r\ntwo\nthree", Wnd0, TDEdit.Combo, "i", "exp", "foo", "Tii", 200, -100, 30, "", ed => { if(ed.wParam == TDResult.OK) { string _s=ed.obj.EditControl.Name; if(Empty(_s)) { Show.TaskDialog("Text cannot be empty.", owner: ed.hwnd); ed.returnValue = 1; } } })) return;
-		//if(!Show.InputDialogEx(out s, "Text.", "def\none\r\ntwo\nthree", Wnd0, TDEdit.Combo, "i", "exp", "foo", "Tii", 200, -100, 30, "1 Browse...", ed=>
+		//if(!TaskDialog.ShowInput(out s)) return;
+		//if(!TaskDialog.ShowInput(out s, "Text.", owner: Wnd.Find("Untitled - Notepad"))) return;
+		//if(!TaskDialog.ShowInput(out s, "Text gggggggggggg.")) return;
+		//if(!TaskDialog.ShowInput(out s, "Text.", "Default")) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", "0", editType: TDEdit.Number, expandedText:"exp")) return;
+		//if(!TaskDialog.ShowInput(out i, "Text.", 5)) return; Out(i); return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", "pas", editType: TDEdit.Password)) return;
+		//if(!TaskDialog.ShowInput(out s, "Text.", "one\r\ntwo\r\nthree", editType: TDEdit.Multiline)) return;
+		//if(!TaskDialog.ShowInput(out s, "Text.", "def\none\r\ntwo\nthree", editType: TDEdit.Combo)) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", "def\none\r\ntwo\nthree", Wnd0, TDEdit.Combo, "i", "exp", "foo", "Tii", 200, -100, 30, "1 Browse...", ed => { if(ed.wParam == 1) { string _s; if(TaskDialog.ShowInput(out _s, owner:ed.hwnd)) ed.obj.EditControl.SetControlText(_s); ed.returnValue = 1; } })) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", "def\none\r\ntwo\nthree", Wnd0, TDEdit.Combo, "i", "exp", "foo", "Tii", 200, -100, 30, "", ed => { if(ed.wParam == TDResult.OK) { string _s=ed.obj.EditControl.Name; if(Empty(_s)) { TaskDialog.Show("Text cannot be empty.", owner: ed.hwnd); ed.returnValue = 1; } } })) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", "def\none\r\ntwo\nthree", Wnd0, TDEdit.Combo, "i", "exp", "foo", "Tii", 200, -100, 30, "1 Browse...", ed=>
 		//{
 		//	if(ed.wParam != 1) return;
-		//	string _s; if(Show.InputDialog(out _s, owner:ed.hwnd)) ed.obj.EditControl.SetControlText(_s);
+		//	string _s; if(TaskDialog.ShowInput(out _s, owner:ed.hwnd)) ed.obj.EditControl.SetControlText(_s);
 		//	ed.returnValue = 1;
 		//})) return;
-		//if(!Show.InputDialogEx(out s, "Text.")) return;
-		//if(!Show.InputDialogEx(out s, "Text.", footerText:"a|Foooooo.")) return;
-		//if(!Show.InputDialogEx(out s, "Text.", footerText:"a|Foooooo.", timeoutS:30)) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.")) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", footerText:"a|Foooooo.")) return;
+		//if(!TaskDialog.ShowInputEx(out s, "Text.", footerText:"a|Foooooo.", timeoutS:30)) return;
 		//bool ch;
-		//if(!Show.InputDialogEx(out s, out ch, "Check", "Text.", "one\r\ntwo\r\nthree", editType:TDEdit.Multiline, expandedText:"More\ntext.", timeoutS: 60)) return;
-		//if(!Show.InputDialog(out s, out ch, "Check", "Text.", "txt", editType:TDEdit.Multiline)) return;
+		//if(!TaskDialog.ShowInputEx(out s, out ch, "Check", "Text.", "one\r\ntwo\r\nthree", editType:TDEdit.Multiline, expandedText:"More\ntext.", timeoutS: 60)) return;
+		//if(!TaskDialog.ShowInput(out s, out ch, "Check", "Text.", "txt", editType:TDEdit.Multiline)) return;
 		//Out(s);
 		//Out(ch);
 
@@ -345,7 +345,7 @@ bbb"", b3
 		//}
 
 		//MessageBox.Show("ddddddddddddddddddd");
-		//Show.MessageDialog("fffffffffff");
+		//TaskDialog.MessageDialog("fffffffffff");
 
 		//return;
 
@@ -354,28 +354,28 @@ bbb"", b3
 		//TDResult rr=await TaskDialogAsync("async"); //error, the caller must be marked with async. But then fails to run altogether.
 
 		//Task<TDResult> t=TaskDialogAsync("async");
-		//Show.TaskDialog("continue");
+		//TaskDialog.Show("continue");
 		//t.Wait();
 		//Out(t.Result);
 
-		//var pd = TaskDialogNoWait("async", y=>Out(y));
-		//var pd = TaskDialogNoWait("async");
+		//var pd = ShowNoWait("async", y=>Out(y));
+		//var pd = ShowNoWait("async");
 		//Wait(2);
 		//if(pd.IsOpen) pd.Send.Close();
 		//Out(pd.Result);
 
-		//var td = new Show.TaskDialogObject("dddd");
-		//Task.Run(() => td.Show());
+		//var td = new TaskDialog("dddd");
+		//Task.Run(() => td.ShowDialog());
 		////Perf.First();
 		////td.ThreadWaitOpen();
 		////Perf.NW();
 		//td.ThreadWaitClosed();
-		////Task.Run(() => td.Show());
+		////Task.Run(() => td.ShowDialog());
 		////td.ThreadWaitOpen();
 		////td.ThreadWaitClosed();
 		//Out(td.Result);
 
-		//Show.TaskDialog("continue", y:300);
+		//TaskDialog.Show("continue", y:300);
 
 
 		//Out("finished");
@@ -385,18 +385,18 @@ bbb"", b3
 		//	//Thread.Sleep(100);
 
 		//	//Out("run");
-		//	Out(Show.TaskDialog("async", style: "OC", x: 1));
+		//	Out(TaskDialog.Show("async", style: "OC", x: 1));
 		//	//MessageBox.Show("another thread");
-		//	//Show.MessageDialog("async",style:"OC");
+		//	//TaskDialog.MessageDialog("async",style:"OC");
 		//	//TD("async", true);
 		//}
 		//);
 
 		////Thread.Sleep(7);
 
-		//Out(Show.TaskDialog("continue", style: "OC"));
+		//Out(TaskDialog.Show("continue", style: "OC"));
 		////TD("continue", false);
-		////Show.MessageDialog("continue",style:"OC");
+		////TaskDialog.MessageDialog("continue",style:"OC");
 		////Thread.Sleep(1000);
 		//t.Wait();
 		//Out("after all");
@@ -405,41 +405,41 @@ bbb"", b3
 
 		//Out(GetThemeAppProperties());
 		//MessageBox.Show("sss");
-		//Out(Show.MessageDialog("test", MDButtons.OKCancel, MDIcon.App, MDFlag.DefaultButton2));
-		//Out(Show.MessageDialog("One\ntwooooooooooooo."));
-		//Out(Show.MessageDialog("One\ntwooooooooooooo.", "YNC!t2"));
-		//Show.MessageDialog("One\ntwooooooooooooo.");
+		//Out(TaskDialog.MessageDialog("test", MDButtons.OKCancel, MDIcon.App, MDFlag.DefaultButton2));
+		//Out(TaskDialog.MessageDialog("One\ntwooooooooooooo."));
+		//Out(TaskDialog.MessageDialog("One\ntwooooooooooooo.", "YNC!t2"));
+		//TaskDialog.MessageDialog("One\ntwooooooooooooo.");
 		//Out(Wnd.ActiveWindow);
 
-		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, TDResult.Cancel, "1 one|2 two", new string[] { "101 r1|||", "102 r2" }, "Chick|check", "expanded", "", "TTT", 0, 0, 20).ToString());
-		//Out(Show.TaskDialog("Head1\nHead2.", "Text1\nText2.", "OCd2!t", Wnd0, "1 one|2 two", null, null, "expanded", "foo", 60, "TTT").ToString());
-		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info).ToString());
-		//Out(Show.TaskDialog(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0).ToString());
-		//Out(Show.TaskDialog("head", "content", "OCYNLRio", owner: Wnd.Find("Untitled - Notepad")).ToString());
-		//Out(Show.TaskDialog("head", "content", "OCYNLRi", x:100, y:-11, timeoutS:15).ToString());
-		//Out(Show.TaskDialog("", "<a href=\"example\">link</a>.", onLinkClick: ed => { Out(ed.linkHref); }).ToString());
-		//Out(Show.TaskDialog("head", "content", "i", customButtons: "-1 Mo OK|-2 My Cancel").ToString());
+		//Out(TaskDialog.Show(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel, TDIcon.App, TDFlag.CommandLinks, TDResult.Cancel, "1 one|2 two", new string[] { "101 r1|||", "102 r2" }, "Chick|check", "expanded", "", "TTT", 0, 0, 20).ToString());
+		//Out(TaskDialog.Show("Head1\nHead2.", "Text1\nText2.", "OCd2!t", Wnd0, "1 one|2 two", null, null, "expanded", "foo", 60, "TTT").ToString());
+		//Out(TaskDialog.Show(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, TDIcon.Info).ToString());
+		//Out(TaskDialog.Show(Wnd0, "Head1\nHead2.", "Text1\nText2.", TDButton.OKCancel|TDButton.YesNo|TDButton.Retry|TDButton.Close, (TDIcon)0xfff0).ToString());
+		//Out(TaskDialog.Show("head", "content", "OCYNLRio", owner: Wnd.Find("Untitled - Notepad")).ToString());
+		//Out(TaskDialog.Show("head", "content", "OCYNLRi", x:100, y:-11, timeoutS:15).ToString());
+		//Out(TaskDialog.Show("", "<a href=\"example\">link</a>.", onLinkClick: ed => { Out(ed.linkHref); }).ToString());
+		//Out(TaskDialog.Show("head", "content", "i", customButtons: "-1 Mo OK|-2 My Cancel").ToString());
 
-		//Out(Show.ListDialog("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
-		//Out(Show.ListDialog(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
-		//Out(Show.ListDialog(new List<string> { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
-		////		Out(Show.ListDialog(@"
+		//Out(TaskDialog.ShowList("1 one| 2 two| 3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten|0Cancel|1 one|2 two|3three|4 four\nnnn|5 five|6 six|7 seven|8 eight|9 nine|10Ten", "Main", "More."));
+		//Out(TaskDialog.ShowList(new string[] { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
+		//Out(TaskDialog.ShowList(new List<string> { "1 one", "2 two", "Cancel" }, "Main", "More").ToString());
+		////		Out(TaskDialog.ShowList(@"
 		////|1 one
 		////|2 two
 		////comments
 		////|3 three
 		////" , "Main", "More\r\nmore"));
 
-		////		Out(Show.ListDialog("1 one|2 two\nN|3 three\r\nRN|4 four"));
+		////		Out(TaskDialog.ShowList("1 one|2 two\nN|3 three\r\nRN|4 four"));
 		//return;
 
-		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
-		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
-		//var d = new Show.TaskDialogObject("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
-		//var d = new Show.TaskDialogObject("Head Text.", null, 0, TDIcon.Shield);
-		//var d = new Show.TaskDialogObject("", "More text.", 0, TDIcon.Shield);
-		//var d = new Show.TaskDialogObject();
-		var d = new Show.TaskDialogObject();
+		//var d = new TaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, TDIcon.Shield, "Title");
+		//var d = new TaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", TDButton.OKCancel|TDButton.Retry, (TDIcon)0xfff0, "Title");
+		//var d = new TaskDialog("Head", "Text <A HREF=\"xxx\">link</A>.", (TDButton)111);
+		//var d = new TaskDialog("Head Text.", null, 0, TDIcon.Shield);
+		//var d = new TaskDialog("", "More text.", 0, TDIcon.Shield);
+		//var d = new TaskDialog();
+		var d = new TaskDialog();
 
 		d.SetTitleBarText("MOO");
 
@@ -457,7 +457,7 @@ bbb"", b3
 		//d.SetIcon(new System.Drawing.Icon("Resources/output.ico", 16, 16)); //OK
 		//d.SetIcon(new System.Drawing.Icon(typeof(Test), "output.ico")); //exception
 		//Out(Catkeys.Tasks.Properties.Resources.output.Width);
-		//d.SetIcon(new System.Drawing.Icon(Show.Resources.AppIconHandle32));
+		//d.SetIcon(new System.Drawing.Icon(TaskDialog.Resources.AppIconHandle32));
 		//d.SetIcon(TDIcon.App);
 
 		Wnd w = Wnd.Find("Untitled - Notepad");
@@ -524,7 +524,7 @@ bbb"", b3
 		//d.FlagShowProgressBar = true; d.Timer += ed => ed.obj.Send.Progress(ed.wParam / 100);
 
 		//Perf.First();
-		TDResult r = d.Show();
+		TDResult r = d.ShowDialog();
 		//Perf.NW();
 
 		Out(r.ToString());
@@ -536,38 +536,23 @@ bbb"", b3
 	static void TestFolders()
 	{
 
-		//Out(Folders.IsFullPath(@""));
-		//Out(Folders.IsFullPath(@"\"));
-		//Out(Folders.IsFullPath(@"\\"));
-		//Out(Folders.IsFullPath(@"c:"));
-		//Out(Folders.IsFullPath(@"c:\"));
-		//Out(Folders.IsFullPath(@"c:aa"));
-		//Out(Folders.IsFullPath(@"c\dd"));
-		//Out(Folders.IsFullPath(@"%aa"));
-		//Out(Folders.IsFullPath(@"<ff"));
-		//Out(Folders.IsFullPath(@"%temp%"));
-		//Out(Folders.IsFullPath(@"<ff>"));
+		//Out(Path_.IsFullPath(@""));
+		//Out(Path_.IsFullPath(@"\"));
+		//Out(Path_.IsFullPath(@"\\"));
+		//Out(Path_.IsFullPath(@"c:"));
+		//Out(Path_.IsFullPath(@"c:\"));
+		//Out(Path_.IsFullPath(@"c:aa"));
+		//Out(Path_.IsFullPath(@"c\dd"));
+		//Out(Path_.IsFullPath(@"%aa"));
+		//Out(Path_.IsFullPath(@"<ff"));
+		//Out(Path_.IsFullPath(@"%temp%"));
+		//Out(Path_.IsFullPath(@"<ff>"));
 
 		//Out(Path_.Combine(@"%temp%\..", null));
 		//Out(Path_.Combine(@"%emp%\..", null));
 		//Out(Path_.Combine(@"%temp", null));
 		//Out(Path_.Combine(@"<ccc>", null));
 		//Out(Path_.Combine(@"<ccc", null));
-
-		//return;
-
-		//Output.Write(Folders.GetKnownFolders());
-
-		//Out(Folders.Desktop);
-		//Out(Folders.Desktop + "app.end");
-		//string path = Folders.Desktop + "file.txt";
-		//Out(path);
-		//path = Folders.Desktop;
-		//Out(path);
-		//path = Folders.Desktop + "..\\file.txt";
-		//Out(path);
-		//Out(Folders.Virtual.ComputerFolder + "mmm");
-		//Out(Folders.Desktop + "app" + ".end");
 
 		//Out(Path_.Combine(@"c:\one", "two"));
 		//Out(Path_.Combine(@"c:one", "two"));
@@ -598,7 +583,15 @@ bbb"", b3
 		//Out(Path_.Combine(@"C:\PROGRA~2\Acer\LIVEUP~1\..\updater.exe", null));
 		//Out(Path_.Combine("C:\\PROGRA~2\\Acer\\LIVEUP~1\nupdater.exe", null));
 		//Out(Path_.Combine(@"c:\one~", @" space "));
-		//return;
+
+		//Output.Write(Folders.GetKnownFolders());
+
+		//Out(Folders.Desktop);
+		//Out(Folders.Desktop + "app.end");
+		//Out(Folders.Desktop + "..\\file.txt");
+		//Out(Folders.Desktop.ToString());
+		//Out(Folders.Virtual.ComputerFolder + "mmm");
+		//Out(Folders.Desktop + "app" + ".end");
 		//Out(Folders.Profile);
 		//Out(Folders.Virtual.ControlPanelFolder);
 		//Out(Folders.CommonPrograms + "append.this");
@@ -610,14 +603,13 @@ bbb"", b3
 		//Out(1);
 		//Out(Folders.GetFolder("Start menu") + "append.nnn");
 		//Out(Folders.GetFolder("APp") + "append.nnn");
-		//Out(Folders.GetFolder("%temp%") + "append.nnn");
-		//Out(Folders.GetFolder("UnknownFolder") + "append.nnn");
 		//Out(Folders.EnvVar("Temp") + "append.txt");
-		//Out(Folders.ExpandEnvVar("%Temp%") + "append.txt");
-		//Out(Folders.EnvVar("unknown") + "append.txt");
-		//Out(Folders.ExpandEnvVar("%unknown%") + "append.txt");
+		//Out(Folders.GetFolder("UnknownFolder") + "append.nnn"); //throws
+		//Out(Folders.EnvVar("unknown") + "append.txt"); //throws
 		//Out(2);
+		//Out(Folders.CDDrive());
 		//Out(Folders.CDDrive() + "in CDDrive.txt");
+		//Out(Folders.RemovableDrive(0));
 		//Out(Folders.RemovableDrive(0) + "in Removable.txt");
 		//Out(Folders.RemovableDrive(1) + "in Removable.txt");
 		//Out(Folders.RemovableDrive("PortableApp") + "in Removable.txt");
@@ -626,7 +618,6 @@ bbb"", b3
 		//Out(Folders.Desktop + @"\file.txt");
 		//Out($@"{Folders.Desktop}\file.txt");
 		//Out(Folders.Desktop + @"\file.txt");
-		//Out(Folders.Desktop + @"\\file.txt");
 		//Out(Folders.Desktop + @"C:\file.txt");
 		//Out(Folders.Desktop);
 		//Out(Folders.Desktop + "file.txt");
@@ -769,7 +760,7 @@ bbb"", b3
 		////Output.Write(Wnd.All.ThreadWindows(wq.ThreadId, "QM_toolbar"));
 		//Output.Write(Wnd.All.ThreadWindows(wq.ThreadId, "", true));
 
-		//Show.TaskDialogEx("", "<a href=\"test\">test</a>", onLinkClick: ed =>
+		//TaskDialog.ShowEx("", "<a href=\"test\">test</a>", onLinkClick: ed =>
 		//{
 		//	var a = Wnd.All.ThreadWindows();
 		//	Output.Write(a);
@@ -1457,11 +1448,11 @@ bbb"", b3
 		//Out(w.GetControlText());
 		//return;
 
-		while(Show.TaskDialog("test", style: "OC") == TDResult.OK) {
+		while(TaskDialog.Show("test", style: "OC") == TDResult.OK) {
 			for(int i = 0; i < 1; i++) {
 				TestMemory3(w);
 			}
-			Show.TaskDialog("allocated 2 MB");
+			TaskDialog.Show("allocated 2 MB");
 		}
 	}
 
@@ -1566,7 +1557,7 @@ bbb"", b3
 		Out(Wnd.FocusedControl);
 		Out(Wnd.FocusedControlOfThisThread);
 
-		//Show.TaskDialog("a");
+		//TaskDialog.Show("a");
 		return;
 		Wait(2);
 		w = Wnd.Find("[p]Notepad");
@@ -1932,7 +1923,7 @@ bbb"", b3
 		Wnd w = Wnd.FindH("*Notepad", "Notepad");
 		Out(w);
 		Out(w.RegistrySave("WndSR", "Test", true));
-		Show.TaskDialog("move etc Notepad");
+		TaskDialog.Show("move etc Notepad");
 		w.Visible = false;
 		Wnd.FindRaw("QM_Editor").Activate();
 		Wait(0.2);
@@ -2243,7 +2234,7 @@ bbb"", b3
 		Wnd w = Wnd.Find("Calculator");
 		if(w.Is0) { //on Win8 cannot find window, probably must be uiAccess. Find in QM and copy-paste.
 			string s;
-			if(!Show.InputDialog(out s, "hwnd")) return;
+			if(!TaskDialog.ShowInput(out s, "hwnd")) return;
 			w = (Wnd)s.ToInt_();
 		}
 		Out(w);
@@ -2251,9 +2242,9 @@ bbb"", b3
 		IntPtr hi32 = w.GetIconHandle(true);
 		OutList(hi16, hi32);
 		if(hi32 == Zero) return;
-		var d = new Show.TaskDialogObject("big icon", style: hi32);
+		var d = new TaskDialog("big icon", style: hi32);
 		d.SetFooterText("small icon", hi16);
-		d.Show();
+		d.ShowDialog();
 		Api.DestroyIcon(hi16);
 		Api.DestroyIcon(hi32);
 
@@ -2291,7 +2282,7 @@ bbb"", b3
 		//IntPtr hi = Files.GetIconHandle(Folders.VirtualITEMIDLIST.ControlPanelFolder, 32);
 		Out(hi);
 		if(hi == Zero) return;
-		Show.TaskDialogEx("text", style: hi);
+		TaskDialog.ShowEx("text", style: hi);
 		Api.DestroyIcon(hi);
 	}
 
@@ -2597,7 +2588,7 @@ bbb"", b3
 		//Out(w3);
 
 		//OutList("SetParent", w2.SetParent(Wnd0));
-		//Show.TaskDialog("");
+		//TaskDialog.Show("");
 		//OutList("SetParent", w2.SetParent(w3));
 
 		var f = new Form();
@@ -2617,7 +2608,7 @@ bbb"", b3
 			//Out(b.Handle);
 			//Wnd w = (Wnd)b;
 			//w.SetParent(Wnd0, true);
-			Show.TaskDialog("");
+			TaskDialog.Show("");
 			b.Parent = f;
 			//w.SetParent((Wnd)f, true);
 
@@ -2722,7 +2713,7 @@ bbb"", b3
 		//Out(w.ZorderBottom());
 
 		//Out(w.ZorderTopmost());
-		////Show.TaskDialog("");
+		////TaskDialog.Show("");
 		//Wait(1);
 		//Out(w.ZorderNotopmost(true));
 		////Out(w.ZorderBottom());
@@ -2761,7 +2752,7 @@ bbb"", b3
 		//w = w.Child("", "Windows.UI.Core.*");
 		if(w.Is0) {
 			int i;
-			if(!Show.InputDialog(out i, "Handle")) return;
+			if(!TaskDialog.ShowInput(out i, "Handle")) return;
 			w = (Wnd)i;
 		}
 
@@ -2788,15 +2779,15 @@ bbb"", b3
 		//Out(Wnd.Find("*Notepad").ActivateRaw());
 		//Wait(1);
 		//Out(Wnd.ActiveWindow);
-		Show.TaskDialog("test", "", "i");
+		TaskDialog.Show("test", "", "i");
 		//Wait(3);
 		//Script.Option.dialogAlwaysActivate = false;
-		//Show.TaskDialog("test", "", "a");
+		//TaskDialog.Show("test", "", "a");
 	}
 
 	static void TestWndNextMainWindow()
 	{
-		int f = Show.ListDialog("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
+		int f = TaskDialog.ShowList("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
 		if(f == 0) return;
 		Wnd w = Wnd.Get.FirstToplevel();
 		int n = 0;
@@ -3004,7 +2995,7 @@ bbb"", b3
 		Perf.NW();
 		//OutList(t1, t2);
 		//Application.Run();
-		Show.TaskDialog("message loop");
+		TaskDialog.Show("message loop");
 
 	}
 
@@ -3031,9 +3022,9 @@ bbb"", b3
 			//u.Stop();
 
 			GC.Collect();
-			Show.TaskDialog("timer thread");
+			TaskDialog.Show("timer thread");
 			GC.Collect();
-			//Show.TaskDialog("timer thread");
+			//TaskDialog.Show("timer thread");
 		});
 		T.Start();
 		T.Join(1500);
@@ -3043,7 +3034,7 @@ bbb"", b3
 		WaitMS(1000);
 		//u = null;
 		GC.Collect();
-		Show.TaskDialog("main thread");
+		TaskDialog.Show("main thread");
 
 	}
 
@@ -3083,7 +3074,7 @@ bbb"", b3
 		TestAsyncAsync();
 		Perf.NW();
 		Out("END");
-		Show.TaskDialog("waiting");
+		TaskDialog.Show("waiting");
 	}
 
 	#endregion
@@ -3120,7 +3111,7 @@ bbb"", b3
 		//Out(_iconThread.GetApartmentState());
 		//Out(_iconThread.ThreadState);
 
-		Show.TaskDialog("thread");
+		TaskDialog.Show("thread");
 		//WaitMS(30000);
 
 		return 0;
@@ -3140,7 +3131,7 @@ bbb"", b3
 		OutList(ht, tid);
 		if(ht == Zero) return;
 		Api.CloseHandle(ht);
-		Show.TaskDialogEx("main", y: -300);
+		TaskDialog.ShowEx("main", y: -300);
 	}
 
 	#endregion
@@ -3372,7 +3363,7 @@ bbb"", b3
 		//if(InterDomain.GetVariable("nm", out x)) Out(x._s);
 		//else { Out("no"); InterDomain.SetVariable("nm", new InterDomainData(5, "five")); }
 
-		//TODO: move TDx to Show. Or not.
+		//TODO: move TDx to TaskDialog. Or not.
 
 		//OutList("before", AppDomain.CurrentDomain.IsDefaultAppDomain());
 		//var x = InterDomain.DefaultDomainVariable("goo", () => { OutList("delegate", AppDomain.CurrentDomain.IsDefaultAppDomain()); return new InterDomainData(5, "fff"); });
@@ -3386,7 +3377,7 @@ bbb"", b3
 		Perf.NW();
 		x.Method();
 		Out(x._s);
-		//Show.TaskDialog("");
+		//TaskDialog.Show("");
 	}
 
 	//[Serializable]
@@ -3777,7 +3768,7 @@ bbb"", b3
 		_thread.Start();
 
 		//GC.Collect();
-		//Show.TaskDialog("main");
+		//TaskDialog.Show("main");
 		//MessageBox.Show("");
 		//MessageBoxX(Wnd0, "", "", 0);
 
@@ -3878,7 +3869,7 @@ bbb"", b3
 		//var m = new CatMenu();
 		//m["aaaaaaaaa"] = null;
 		//m.Show();
-		//Show.TaskDialogEx("", timeoutS: 1);
+		//TaskDialog.ShowEx("", timeoutS: 1);
 		//new Form().ShowDialog();
 		//Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
 		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
@@ -4634,12 +4625,131 @@ A,""B """"Q"""" Z"",C
 		}
 	}
 
+	static void TestTaskDialogAgain()
+	{
+		//var x = new TaskDialog("Async", "text", "YN");
+		//x.ShowDialog(); return;
+		////x.ShowNoWait();
+		//x.ShowNoWait(e=>OutList(e.ButtonName, Thread.CurrentThread.ManagedThreadId, Thread.CurrentThread.IsBackground), true);
+		TaskDialog.ShowNoWait(null, "Async", backgroundThread: true);
+		TaskDialog.Show("Sync");
+	}
+
+
+
+
+
+	//using l = Catkeys;
+	//using static Catkeys.NoClass;
+	////using Catkeys.Winapi;
+
+	//using System.Collections.Generic;
+	//using SysText = System.Text;
+	//using SysRX = System.Text.RegularExpressions;
+	//using SysDiag = System.Diagnostics;
+	//using SysInterop = System.Runtime.InteropServices;
+	//using SysCompil = System.Runtime.CompilerServices;
+	//using SysIO = System.IO;
+	//using SysThread = System.Threading;
+	//using SysTask = System.Threading.Tasks;
+	//using SysReg = Microsoft.Win32;
+	//using SysForm = System.Windows.Forms;
+	//using SysDraw = System.Drawing;
+	////using System.Linq;
+
+
+
+	//using SysColl = System.Collections.Generic; //add directly, because often used, and almost everything is useful
+	//using SysCompon = System.ComponentModel;
+	//using SysExcept = System.Runtime.ExceptionServices; //only HandleProcessCorruptedStateExceptionsAttribute
+
+	public static class CatAlias
+	{
+		public static int speed { get { return Script.Speed; } set { Script.Speed = value; } }
+	}
+
 	static void TestMain()
 	{
 		Output.Clear();
 
-		string s = null;
-		Out(s + "hhh");
+		//string s = "5.48E-3";
+		//string s = "5,478E10";
+		//s = "";
+
+		//try {
+
+		//	Out(s.ToDouble_(true));
+		//}
+		//catch(Exception e) { Out(e.Message); }
+
+		//Wnd w1 = Wnd.Find("*Notepad");
+		//Wnd w2 = Wnd.Find("*Word");
+		//OutList(w1, w2);
+
+		//Out(w1.ZorderAfter(w2));
+		//Out(w1.ZorderBefore(w2));
+		//Out(w1.ZorderAfter(Wnd0));
+		//Out(w1.ZorderBefore(Wnd0));
+		//Out(w1.ZorderBottom());
+		//WaitMS(500);
+		//Out(w1.ZorderTop());
+
+		//Out(w1.ZorderTopmost());
+		//WaitMS(500);
+		//Out(w1.ZorderNotopmost());
+
+
+		//TestTaskDialogAgain();
+
+		/*
+		
+		using static CatAlias;
+
+		say(...); //Output.Write(...); //or print
+		key(...); //Input.Keys(...);
+		tkey(...); //Input.TextKeys(...); //or txt
+		paste(...); //Input.Paste(...);
+		msgbox(...); //TaskDialog.Show(...); //or TaskDialog.InfoDialog
+		wait(...); //Time.Wait(...);
+		click(...); //Mouse.Click(...);
+		mmove(...); //Mouse.Move(...);
+		run(...); //Shell.Run(...);
+		act(...); //Wnd.Activate(...);
+		win(...); //Wnd.Find(...);
+		speed=...; //Script.Speed=...;
+
+		using(Script.TempOptions(speed
+
+		*/
+
+		//[SysCompil.MethodImpl(SysCompil.MethodImplOptions.NoOptimization)]
+
+		//SysColl.List<int> a;
+		//SysText.StringBuilder sb;
+		//SysRX.Regex rx;
+		//SysDiag.Debug.Assert(true);
+		//SysInterop.SafeHandle se;
+		//SysIO.File.Create("");
+		//SysThread.Thread th;
+		//SysTask.Task task;
+		//SysReg.RegistryKey k;
+		//SysForm.Form form;
+		//SysDraw.Rectangle rect;
+		//System.Runtime.CompilerServices
+
+
+
+		//l.Perf.First();
+		//l.TaskDialog.Show("f");
+		//l.Util.Debug_.OutLoadedAssemblies();
+		//Out(l.TDIcon.Info);
+
+
+
+
+
+
+
 
 		//Out(Folders.CDDrive());
 
@@ -4673,7 +4783,7 @@ A,""B """"Q"""" Z"",C
 		//Graphics g =Graphics.FromHwnd(Zero);
 		//Out(g.DpiX);
 
-		//Show.TaskDialog("");
+		//TaskDialog.Show("");
 
 		//TestSqlite();
 		#region call_old_test_functions
@@ -4764,8 +4874,10 @@ A,""B """"Q"""" Z"",C
 		//TestSerialization();
 		//TestCsv();
 		//TestCsvSerialization();
-		//TestShow();
+		//TestTaskDialog();
 		//TestCurrentCulture();
+		//try { TestFolders(); } catch(Exception e) { Out(e.Message); }
+
 		#endregion
 
 	}

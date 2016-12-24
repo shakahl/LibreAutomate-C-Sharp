@@ -27,28 +27,68 @@ namespace Catkeys
 	public static class Calc
 	{
 		/// <summary>
-		/// Creates uint by placing (ushort)loWord in low-order 16-bits and (ushort)hiWord in high-order 16 bits.
+		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
+		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
 		/// </summary>
 		public static uint MakeUint(uint loWord, uint hiWord)
 		{
 			return ((hiWord & 0xffff) << 16) | (loWord & 0xffff);
 		}
 		/// <summary>
-		/// Creates uint by placing (ushort)loWord in low-order 16-bits and (ushort)hiWord in high-order 16 bits.
+		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
+		/// Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
 		/// </summary>
 		public static uint MakeUint(int loWord, int hiWord) { return MakeUint((uint)loWord, (uint)hiWord); }
 
 		/// <summary>
-		/// Creates ushort by placing (byte)loByte in low-order 8-bits and (byte)hiByte in high-order 8 bits.
+		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
+		/// Like C macro MAKEWORD.
 		/// </summary>
 		public static ushort MakeUshort(uint loByte, uint hiByte)
 		{
 			return (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
 		}
 		/// <summary>
-		/// Creates ushort by placing (byte)loByte in low-order 8-bits and (byte)hiByte in high-order 8 bits.
+		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
+		/// Like C macro MAKEWORD.
 		/// </summary>
 		public static ushort MakeUshort(int loByte, int hiByte) { return MakeUshort((uint)loByte, (uint)hiByte); }
+
+		/// <summary>
+		/// Gets bits 1-16 as ushort.
+		/// Like C macro LOWORD.
+		/// </summary>
+		public static ushort LoUshort(LPARAM x) { return (ushort)((uint)x & 0xFFFF); }
+
+		/// <summary>
+		/// Gets bits 17-32 as ushort.
+		/// Like C macro HIWORD.
+		/// </summary>
+		public static ushort HiUshort(LPARAM x) { return (ushort)((uint)x >> 16); }
+
+		/// <summary>
+		/// Gets bits 1-16 as short.
+		/// Like C macro GET_X_LPARAM.
+		/// </summary>
+		public static short LoShort(LPARAM x) { return (short)((uint)x & 0xFFFF); }
+
+		/// <summary>
+		/// Gets bits 17-32 as short.
+		/// Like C macro GET_Y_LPARAM.
+		/// </summary>
+		public static short HiShort(LPARAM x) { return (short)((uint)x >> 16); }
+
+		/// <summary>
+		/// Gets bits 1-8 as byte.
+		/// Like C macro LOBYTE.
+		/// </summary>
+		public static byte LoByte(LPARAM x) { return (byte)((uint)x & 0xFF); }
+
+		/// <summary>
+		/// Gets bits 9-16 as byte.
+		/// Like C macro HIBYTE.
+		/// </summary>
+		public static byte HiByte(LPARAM x) { return (byte)((uint)x >> 8); }
 
 		/// <summary>
 		/// Multiplies number and numerator without overflow, and divides by denominator.
@@ -99,18 +139,44 @@ namespace Catkeys
 		/// <summary>
 		/// Converts from System.Drawing.Color (ARGB) to native Windows COLORREF (ABGR).
 		/// </summary>
-		public static uint ColorToNative(System.Drawing.Color color)
+		public static uint ColorToNative(Color color)
 		{
 			uint t = (uint)color.ToArgb();
 			return (t & 0xff00ff00) | ((t << 16) & 0xff0000) | ((t >> 16) & 0xff);
 		}
 
 		/// <summary>
-		/// Converts from native Windows COLORREF (ABGR) to System.Drawing.Color (ARGB).
+		/// Converts from native Windows COLORREF with alpha (ABGR) to System.Drawing.Color (ARGB).
 		/// </summary>
-		public static System.Drawing.Color ColorFromNative(uint color)
+		public static Color ColorFromABGR(uint color)
 		{
-			return System.Drawing.Color.FromArgb((int)((color & 0xff00ff00) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff)));
+			return Color.FromArgb((int)((color & 0xff00ff00) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff)));
+		}
+
+		/// <summary>
+		/// Converts from native Windows COLORREF without alpha (BGR) to opaque System.Drawing.Color (ARGB).
+		/// </summary>
+		public static Color ColorFromBGR(uint color)
+		{
+			return Color.FromArgb((int)((color & 0xff00ff00) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff) | 0xFF000000));
+		}
+
+		/// <summary>
+		/// Converts from ARGB uint to System.Drawing.Color.
+		/// Same as Color.FromArgb but don't need unchecked((int)0xFF...).
+		/// </summary>
+		public static Color ColorFromARGB(uint color)
+		{
+			return Color.FromArgb((int)color);
+		}
+
+		/// <summary>
+		/// Converts from RGB uint to opaque System.Drawing.Color.
+		/// Same as Color.FromArgb but don't need to specify alpha. You can replace Color.FromArgb(unchecked((int)0xFF123456)) with Calc.ColorFromRGB(0x123456).
+		/// </summary>
+		public static Color ColorFromRGB(uint color)
+		{
+			return Color.FromArgb((int)(color | 0xFF000000));
 		}
 
 		/// <summary>
@@ -303,8 +369,7 @@ namespace Catkeys
 			if(a == null) return null;
 			int i, n = a.Length;
 			string R = new string('\0', n * 2);
-			fixed (char* p = R)
-			{
+			fixed (char* p = R) {
 				if(upperCase) {
 					for(i = 0; i < n; i++) {
 						p[i * 2] = _HalfByteToHexCharU(a[i] >> 4);
@@ -336,8 +401,8 @@ namespace Catkeys
 		static int _HexCharToHalfByte(char c)
 		{
 			if(c >= '0' && c <= '9') return c - '0';
-			if(c >= 'A' && c <= 'F') return c - ('A'-10);
-			if(c >= 'a' && c <= 'f') return c - ('a'-10);
+			if(c >= 'A' && c <= 'F') return c - ('A' - 10);
+			if(c >= 'a' && c <= 'f') return c - ('a' - 10);
 			//throw new ArgumentException(); //makes slower
 			return 0;
 		}
@@ -352,7 +417,7 @@ namespace Catkeys
 			var r = new byte[n];
 			for(i = 0; i < n; i++) {
 				r[i] = (byte)((_HexCharToHalfByte(s[i * 2]) << 4) | _HexCharToHalfByte(s[i * 2 + 1]));
-            }
+			}
 			return r;
 
 			//speed: fast enough without a lookup table. Faster than BytesToHexString.

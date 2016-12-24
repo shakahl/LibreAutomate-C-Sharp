@@ -22,80 +22,79 @@ using static Catkeys.NoClass;
 using Util = Catkeys.Util;
 using Catkeys.Winapi;
 
-
-//using l = Catkeys;
-//using static Catkeys.NoClass;
-////using Catkeys.Winapi;
-
-//using System.Collections.Generic;
-//using SysText = System.Text;
-//using SysRX = System.Text.RegularExpressions;
-//using SysDiag = System.Diagnostics;
-//using SysInterop = System.Runtime.InteropServices;
-//using SysCompil = System.Runtime.CompilerServices;
-//using SysIO = System.IO;
-//using SysThread = System.Threading;
-//using SysTask = System.Threading.Tasks;
-//using SysReg = Microsoft.Win32;
-//using SysForm = System.Windows.Forms;
-//using SysDraw = System.Drawing;
-////using System.Linq;
-
-
-
-//using SysColl = System.Collections.Generic; //add directly, because often used, and almost everything is useful
-//using SysCompon = System.ComponentModel;
-//using SysExcept = System.Runtime.ExceptionServices; //only HandleProcessCorruptedStateExceptionsAttribute
-
-
-
-
 namespace Editor
 {
 	static class Program
 	{
+		static void Test()
+		{
+			var a = new object[] { "ggg", 5, 2.5 };
+			foreach(var s in a.OfType<string>()) {
+				Out(s);
+			}
+		}
+
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
 		[System.STAThread]
-		//[SysCompil.MethodImpl(SysCompil.MethodImplOptions.NoOptimization)]
 		static void Main()
 		{
-			//SysColl.List<int> a;
-			//SysText.StringBuilder sb;
-			//SysRX.Regex rx;
-			//SysDiag.Debug.Assert(true);
-			//SysInterop.SafeHandle se;
-			//SysIO.File.Create("");
-			//SysThread.Thread th;
-			//SysTask.Task task;
-			//SysReg.RegistryKey k;
-			//SysForm.Form form;
-			//SysDraw.Rectangle rect;
-			//System.Runtime.CompilerServices
+			try {
+				Output.Clear();
+				//Test(); return;
+				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
+				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
+				Perf.First();
+				var p = new Perf.Inst(true);
 
+				//Run some code in other thread, to make it faster later in main thread.
+				if(Environment.ProcessorCount > 1) {
+				//if(false) { //TODO: currently the init code is too fast...
+					var t = new Thread(() =>
+						{
+							//Control.BackColor first time takes 15 ms here, 9 ms in main thread where actually used.
+							//However this does not make the app load faster. Maybe slightly slower.
+							//var c = new Splitter(); c.BackColor = Color.DarkBlue; c.Dispose();
+							//p.Next(); //15
 
+							//Accessing .NET resources and creating imagelist first time takes 50-70 ms...
+							EImageList.LoadImageLists();
+							p.Next(); //60 with resources (now 45 *), 30 with imagelist png file (now 13 *), 14 if c.BackColor used above
+							//* after updating Windows 10 to 14986 and ngening all used .NET assemblies everything starts much faster, and program starts almost 2 times faster!
 
-			//l.Perf.First();
-			//l.Show.TaskDialog("f");
-			//l.Util.Debug_.OutLoadedAssemblies();
-			//Out(l.TDIcon.Info);
+							//new WeifenLuo.WinFormsUI.Docking.DockPanel().Dispose(); //ok if ngened, else spends too long, main thread has to wait anyway. Assume will always be ngened; then saves not much time.
+							//Assembly.LoadFile(Folders.App + "WeifenLuo.WinFormsUI.Docking.dll");
+							//p.Next(); //57 ms, ngen 16 ms
 
-			//zPerf.First();
-			//zShow.TaskDialog("f");
-			//zOut(zTDIcon.Info);
+							//var m = new ToolStrip();
+							//m.Items.Add("a");
+							////m.Show();
+							//var h = m.Handle;
+							//m.Dispose();
 
-			//qPerf.First();
-			//qShow.TaskDialog("f");
-			//qOut(zTDIcon.Info);
+							//p.Write();
+							//Out(1);
+						});
+					//t.SetApartmentState(ApartmentState.STA);
+					t.Start();
 
-			//QPerf.First();
-			//QShow.TaskDialog("f");
-			//QOut(zTDIcon.Info);
+					//WaitMS(50);
+				} else {
+					EImageList.LoadImageLists();
+					//p.NW();
+				}
 
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new Form1());
+				Application.EnableVisualStyles();
+				Application.SetCompatibleTextRenderingDefault(false);
+#if FORM2
+			Application.Run(new Form2());
+#else
+				Application.Run(new Form4());
+#endif
+
+			}
+			catch(Exception e) { Out(e); }
 		}
 	}
 }

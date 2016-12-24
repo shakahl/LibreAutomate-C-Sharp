@@ -104,6 +104,7 @@ namespace Catkeys
 
 			/// <summary>
 			/// Gets the first top-level window in the Z order.
+			/// Normally it is a topmost window.
 			/// Calls Api.GetTopWindow(Wnd0).
 			/// </summary>
 			public static Wnd FirstToplevel() { return Api.GetTopWindow(Wnd0); }

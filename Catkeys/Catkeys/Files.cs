@@ -103,13 +103,13 @@ namespace Catkeys
 		public static string Combine(string s1, string s2)
 		{
 			string R = null;
-			int len = (s2 == null) ? 0 : s2.Length;
+			int len2 = (s2 == null) ? 0 : s2.Length;
 
 			if(Empty(s1)) {
-				if(len == 0) return "";
+				if(len2 == 0) return "";
 				R = s2;
 			} else {
-				if(len == 0) R = s1.TrimEnd('\\');
+				if(len2 == 0) R = s1.TrimEnd('\\');
 				else if(s2[0] == '\\') R = s1.TrimEnd('\\') + s2;
 				else if(s1.EndsWith_("\\")) R = s1 + s2;
 				else R = s1 + @"\" + s2;
@@ -120,11 +120,16 @@ namespace Catkeys
 			if(!IsFullPath(R)) R = Folders.App + R;
 			else if(R[0] == ':' || R[0] == '<' || R[0] == '%') return R;
 
-			if(R.IndexOf_(@".\") >= 0 || R.EndsWith_(".") || R.IndexOf('~') >= 0) {
-				try { R = Path.GetFullPath(R); } catch { }
-			}
+			return _CorrectDotsAndDOS(R);
+		}
 
-			return R;
+		internal static string _CorrectDotsAndDOS(string path)
+		{
+			Debug.Assert(!Empty(path));
+			if(path.IndexOf_(@".\") >= 0 || path.EndsWith_(".") || path.IndexOf('~') >= 0) {
+				try { path = Path.GetFullPath(path); } catch { }
+			}
+			return path;
 		}
 
 		//Better don't use such things. If need, a function can instead have a parameter for it.
@@ -518,8 +523,8 @@ namespace Catkeys
 
 			/// <summary>
 			/// Gets or sets hotkey.
+			/// Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
 			/// </summary>
-			/// <example>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</example>
 			public Keys Hotkey
 			{
 				get

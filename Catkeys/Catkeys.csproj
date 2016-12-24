@@ -89,7 +89,7 @@
     <Compile Include="Catkeys\NoClass.cs" />
     <Compile Include="Catkeys\Output.cs" />
     <Compile Include="Catkeys\Process_.cs" />
-    <Compile Include="Catkeys\Show.cs" />
+    <Compile Include="Catkeys\TaskDialog.cs" />
     <Compile Include="Catkeys\String\Csv.cs" />
     <Compile Include="Catkeys\String\string classes.cs" />
     <Compile Include="Catkeys\String\String_ex.cs" />
