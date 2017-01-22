@@ -19,11 +19,12 @@ using System.Security.Principal;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
+	/// <summary>
+	/// Extends the .NET class Process.
+	/// </summary>
 	//[DebuggerStepThrough]
 	public static class Process_
 	{
@@ -64,7 +65,7 @@ namespace Catkeys
 						{
 							if(p.ProcessID != processId) return false;
 							R = GetFileNameWithoutExe(p.ProcessName);
-							//Out(R);
+							//Print(R);
 							return true;
 						});
 				}
@@ -154,7 +155,9 @@ namespace Catkeys
 		/// </summary>
 		public struct ProcessInfo
 		{
+			///
 			public uint SessionID;
+			///
 			public uint ProcessID;
 			/// <summary>
 			/// Process executable file name without ".exe". Not full path.
@@ -204,9 +207,15 @@ namespace Catkeys
 		/// Returns list of process id of all processes whose names match processName.
 		/// Returns empty list if there are no matching processes.
 		/// </summary>
-		/// <param name="processName">Process name. String by default is interpreted as wildcard, case-insensitive.</param>
+		/// <param name="processName">Process name. <see cref="Wildex">Wildcard expression</see>.</param>
 		/// <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
-		public static List<uint> GetProcessesByName(WildStringI processName, bool fullPath = false)
+		public static List<uint> GetProcessesByName(string processName, bool fullPath = false)
+		{
+			if(Empty(processName)) throw new ArgumentException();
+			return GetProcessesByName((Wildex)processName, fullPath);
+		}
+
+		internal static List<uint> GetProcessesByName(Wildex processName, bool fullPath = false)
 		{
 			List<uint> a = new List<uint>();
 			EnumProcesses(p =>
@@ -225,43 +234,6 @@ namespace Catkeys
 
 			return a;
 		}
-		///// <summary>
-		///// Returns Dictionary (id, name) of all processes whose names match processName wildcard.
-		///// Returns null if there are no matching processes.
-		///// </summary>
-		///// <param name="processName">Process name wildcard. String by default is interpreted as wildcard, case-insensitive.</param>
-		///// <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
-		//public static Dictionary<uint, string> GetProcessesByName(WildStringI processName, bool fullPath = false)
-		//{
-		//	Dictionary<uint, string> a = null;
-		//	EnumProcesses(p =>
-		//	{
-		//		string s;
-		//		if(fullPath) {
-		//			s = GetProcessName(p.ProcessID, true);
-		//			if(s == null) return false;
-		//		} else s = GetFileNameWithoutExe(p.ProcessName);
-
-		//		if(processName.Match(s)) {
-		//			if(a == null) a = new Dictionary<uint, string>();
-		//			a.Add(p.ProcessID, s);
-		//		}
-		//		return false;
-		//	});
-
-		//	return a;
-		//}
-
-		///// <summary>
-		///// Gets window process executable file name without ".exe", or full path.
-		///// Returns null if fails.
-		///// </summary>
-		///// <param name="w">Window.</param>
-		///// <param name="fullPath">Get full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
-		//public static string GetWindowProcessName(Wnd w, bool fullPath = false)
-		//{
-		//	return _GetProcessName(w.ProcessId, fullPath);
-		//}
 
 		/// <summary>
 		/// Removes path and ".exe" extension from file name.
@@ -362,8 +334,10 @@ namespace Catkeys
 
 			#region IDisposable Support
 
+			///
 			~Memory() { _Dispose(); }
 
+			///
 			public void Dispose()
 			{
 				_Dispose();
@@ -408,7 +382,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="w">A window in that process.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="CatkeysException">Throws when fails to open process handle (usually because of UAC) or allocate memory.</exception>
+			/// <exception cref="CatException">Throws when fails to open process handle (usually because of UAC) or allocate memory.</exception>
 			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of UAC High integrity level when this process is Medium+uiAccess.</remarks>
 			public Memory(Wnd w, int nBytes)
 			{
@@ -421,7 +395,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="CatkeysException">Thrown when fails to open process handle or allocate memory.</exception>
+			/// <exception cref="CatException">Thrown when fails to open process handle or allocate memory.</exception>
 			public Memory(uint processId, int nBytes)
 			{
 				_Alloc(processId, Wnd0, nBytes);
@@ -576,8 +550,10 @@ namespace Catkeys
 				if(_htoken != Zero) { Api.CloseHandle(_htoken); _htoken = Zero; }
 			}
 
+			///
 			~UacInfo() { _Dispose(); }
 
+			///
 			public void Dispose()
 			{
 				_Dispose();
@@ -587,6 +563,9 @@ namespace Catkeys
 
 			IntPtr _htoken;
 
+			/// <summary>
+			/// Access token handle.
+			/// </summary>
 			public IntPtr TokenHandle { get { return _htoken; } }
 
 			/// <summary>
@@ -595,6 +574,7 @@ namespace Catkeys
 			/// </summary>
 			public bool Failed { get; private set; }
 
+#pragma warning disable 1591 //XML doc
 			/// <summary>
 			/// UacInfo.IntegrityLevel.
 			/// </summary>
@@ -604,6 +584,7 @@ namespace Catkeys
 			/// UacInfo.Elevation.
 			/// </summary>
 			public enum ElevationType { Unknown, Default, Full, Limited }
+#pragma warning restore 1591
 
 			ElevationType _Elevation; byte _haveElevation;
 			/// <summary>
@@ -799,7 +780,7 @@ namespace Catkeys
 			///// <summary>
 			///// Returns true if this process has UAC integrity level (IL) High or System, which means that it has most administrative privileges.
 			///// Returns false if this process has lower UAC integrity level (Medium, Medium+UIAccess, Low, Untrusted).
-			///// Note: although the name incluses 'Admin', this function does not check whether the user is in Administrators group; it returns true if <c>UacInfo.ThisProcess.IntegrityLevelAndUIAccess ˃= UacInfo.IL.High</c>.
+			///// Note: although the name incluses 'Admin', this function does not check whether the user is in Administrators group; it returns true if <c>UacInfo.ThisProcess.IntegrityLevelAndUIAccess &gt;= UacInfo.IL.High</c>.
 			///// If UAC is turned off, on administrator account most processes have High IL. On non-administrator account most processes always have Medium or Low IL.
 			///// </summary>
 			//public static bool IsAdmin

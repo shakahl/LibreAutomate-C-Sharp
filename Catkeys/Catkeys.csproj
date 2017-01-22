@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\Tasks\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -24,16 +24,18 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <CodeAnalysisRuleSet>..\MinimumRecommendedRules - copy.ruleset</CodeAnalysisRuleSet>
     <NoWarn>3001,3002,3003,3009</NoWarn>
+    <DocumentationFile>Catkeys.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\Tasks\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009</NoWarn>
+    <DocumentationFile>Catkeys.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -78,28 +80,40 @@
     <Compile Include="Automation\Input.cs" />
     <Compile Include="Automation\NoClass.cs" />
     <Compile Include="Catkeys\Api\Api COM.cs" />
+    <Compile Include="Catkeys\Api\Api public.cs" />
     <Compile Include="Catkeys\Calc.cs" />
     <Compile Include="Catkeys\Classes.cs" />
+    <Compile Include="Catkeys\common.cs" />
     <Compile Include="Catkeys\Exceptions.cs" />
     <Compile Include="Catkeys\Folders.cs" />
     <Compile Include="Catkeys\Menu, TB\CatBar.cs" />
     <Compile Include="Catkeys\Menu, TB\CatMenu.cs" />
+    <Compile Include="Catkeys\Menu, TB\CatToolStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Catkeys\Mouse.cs" />
     <Compile Include="Catkeys\NetExt.cs" />
     <Compile Include="Catkeys\NoClass.cs" />
     <Compile Include="Catkeys\Output.cs" />
     <Compile Include="Catkeys\Process_.cs" />
+    <Compile Include="Catkeys\String\wildcard.cs" />
     <Compile Include="Catkeys\TaskDialog.cs" />
     <Compile Include="Catkeys\String\Csv.cs" />
     <Compile Include="Catkeys\String\string classes.cs" />
     <Compile Include="Catkeys\String\String_ex.cs" />
+    <Compile Include="Catkeys\Wnd\Wnd_child.cs" />
+    <Compile Include="Catkeys\Wnd\Wnd_fromxy.cs" />
+    <Compile Include="Catkeys\Wnd\Wnd_misc_cls.cs" />
+    <Compile Include="Registry_.cs" />
+    <Compile Include="Util\AppDomain_.cs" />
+    <Compile Include="Util\Memory.cs" />
+    <Compile Include="Util\MessageLoops.cs" />
     <Compile Include="Util\ThreadPoolSTA.cs" />
     <Compile Include="Catkeys\WaitFor.cs" />
     <Compile Include="Catkeys\Wnd\Wnd.cs" />
-    <Compile Include="Catkeys\Wnd\WndFind.cs" />
-    <Compile Include="Catkeys\Wnd\WndGet.cs" />
-    <Compile Include="Catkeys\Wnd\WndMics.cs" />
-    <Compile Include="Catkeys\Wnd\WndUtil.cs" />
+    <Compile Include="Catkeys\Wnd\Wnd_find.cs" />
+    <Compile Include="Catkeys\Wnd\Wnd_get.cs" />
+    <Compile Include="Catkeys\Wnd\Wnd_mics.cs" />
     <Compile Include="Catkeys\Files.cs" />
     <Compile Include="Catkeys\Icons.cs" />
     <Compile Include="Test, rejected\_LibTest.cs" />
@@ -116,7 +130,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CatkeysSN.pfx" />
-    <None Include="digicert.p12" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

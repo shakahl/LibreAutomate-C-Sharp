@@ -8,18 +8,20 @@
 	Users can copy buttons to custom toolbars.
 	Users can assign and change keyboard shortcuts.
 	-->
-	<!-- default row 1 -->
-	<Menu side='top' x='0' y='0'>
+	<common>
+		<common_New>
+			<File_NewScript i='0'/>
+			<File_NewLibrary/>
+			<File_NewFolder/>
+			<File_Templates>
+				<sep/>
+			</File_Templates>
+			<File_Import t='Import...' i='34'/>
+		</common_New>
+	</common>
+	<Menu>
 		<Menu_File>
-			<File_New>
-				<File_NewScript i='0'/>
-				<File_NewLibrary/>
-				<File_NewFolder/>
-				<File_Templates>
-					<sep/>
-				</File_Templates>
-				<File_Import t='Import...' i='34'/>
-			</File_New>
+			<File_New dd='common_New'/>
 			<sep/>
 			<File_Disable/>
 			<File_Rename/>
@@ -207,13 +209,13 @@
 			<Help_About/>
 		</Menu_Help>
 	</Menu>
-	<File side='top' x='0' y='25'>
-		<File_NewScript i='0' dd='File_New'/>
+	<File>
+		<File_NewScript i='0' dd='common_New'/>
 		<File_Properties i='1'/>
 		<File_PreviousDocument i='16'/>
 		<File_SaveAllNow i='2'/>
 	</File>
-	<Edit side='top' x='300' y='25' order='Undo,Redo,...,Cut,Copy,Paste'>
+	<Edit>
 		<Edit_Find i='23'/>
 		<sep/>
 		<Edit_Undo i='11'/>
@@ -226,7 +228,7 @@
 		<Edit_ImagesInCode c='' i='18'/>
 		<Edit_WrapLines c='' i='19'/>
 	</Edit>
-	<Run side='top' x='150' y='25' width='120'>
+	<Run>
 		<Run_Compile i='4'/>
 		<Run_Run i='3'/>
 		<!--<Run_Run i='3' dd=''>
@@ -242,17 +244,27 @@
 		<Debug_StepOver i='5'/>
 		<Debug_StepOut i='7'/>
 	</Run>
-	<Tools side='top' x='500' y='0'>
+	<Tools>
 		<Tools_Record i='22'/>
 		<Tools_DialogEditor i='37'/>
 		<Tools_FilesAndTriggers i='24'/>
 		<Tools_Resources i='26'/>
 		<Tools_Icons i='27'/>
 		<Tools_Options i='28'/>
+		<!--<Tools_Options i='28' dd=''>
+			<Edit_ImagesInCode c='' i='18'/>
+			<Edit_WrapLines c='' i='19'/>
+		</Tools_Options>-->
 	</Tools>
-	<Help side='top' x='250' y='0'>
+	<Help>
 		<Help_Reference i='20'/>
-		<Help_Find type='edit' width='200' cue='Find help, functions, tools'/>
+		<!-- note: don't use combo, it adds ~12 ms of startup time -->"
+		<Help_Find type='edit' cue='Find help, functions, tools' tt='Enter - search.
+Esc - focus the code editor.
+Down arrow - recent.
+Middle click - clear.
+F1 - function help.
+F2 - function definition.'/>
 	</Help>
 
 	<!--
@@ -261,12 +273,12 @@
 	Users can delete and reorder buttons: Alt + drag-drop.
 	Users can assign and change keyboard shortcuts.
 	-->
-	<Custom1 side='top' x='0' y='50' hide=''>
+	<Custom1>
 	</Custom1>
-	<Custom2 side='top' x='100' y='50' hide=''>
+	<Custom2>
 	</Custom2>
-	<Custom3 side='top' x='200' y='50' hide=''>
+	<Custom3>
 	</Custom3>
-	<Custom4 side='top' x='300' y='50' hide=''>
+	<Custom4>
 	</Custom4>
 </strips>

@@ -9,8 +9,6 @@ using System.Diagnostics;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 
 class ScriptClass :Script
@@ -28,7 +26,7 @@ class ScriptClass :Script
 
 	//public void Meth1()
 	//{
-	//	Out("Meth1");
+	//	Print("Meth1");
 	//}
 
 	void Script()
@@ -36,15 +34,15 @@ class ScriptClass :Script
 	//void Script(string unu)
 	//void Script(int unu, string unus)
 	{
-		//OutFunc();
-		//Out(unu);
+		//PrintFunc();
+		//Print(unu);
 		//ScriptOptions.ThreadDefault.speed=50;
 
-		Out(Option.speed);
-		Option.speed=10;
-		//Out(Option.speed);
+		Print(Option.Speed);
+		Option.Speed=10;
+		//Print(Option.speed);
 		TestStatic();
-		Option.speed=20;
+		Option.Speed=20;
 		AnotherClass.TestAnother();
 
 		//var t=new Thread(ThreadProc);
@@ -53,8 +51,8 @@ class ScriptClass :Script
 		Thread.Sleep(300);
 
 		//var m=new Macro();
-		//m.speed=10; m.slowKeys=true;
-		//Out(m.waitMsg);
+		//m.speed=10; m.SlowKeys=true;
+		//Print(m.WaitMsg);
 
 		//m.Key("Ctrl+K");
 		//m.Click();
@@ -64,18 +62,18 @@ class ScriptClass :Script
 
 	public void Meth2()
 	{
-		Out("Meth2");
+		Print("Meth2");
 	}
 
 
 	void ThreadProc()
 	{
-		Out(Option.speed);
+		Print(Option.Speed);
 	}
 
 	public static void TestStatic()
 	{
-		Out(Option.speed);
+		Print(Option.Speed);
 	}
 }
 
@@ -83,16 +81,16 @@ class AnotherClass
 {
 	public static void TestAnother()
 	{
-		Out(Script.Option.speed);
+		Print(Script.Option.Speed);
 
 		var o = new ScriptOptions();
-		Out(o.speed);
-		Moo(new ScriptOptions() { speed=6, slowKeys=true });
+		Print(o.Speed);
+		Moo(new ScriptOptions() { Speed=6, SlowKeys=true });
 	}
 
 	public static void Moo(ScriptOptions o)
 	{
-		Out(o.speed);
+		Print(o.Speed);
 	}
 }
 

@@ -1,0 +1,347 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>G.Controls</name>
+    </assembly>
+    <members>
+        <member name="T:G.Controls.GDockPanel.GNode">
+            <summary>
+            Base of GSplit, GContentNode (GPanel and GTab) and GDummyNode.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.GNode.IsDocked">
+            <summary>
+            Returns true if is docked in main window or in a floating tab.
+            <seealso cref="M:G.Controls.GDockPanel.GContentNode.IsDockedOn(System.Windows.Forms.Control)"/>.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GContentNode">
+            <summary>
+            Base of GPanel and GTab.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GContentNode.HitTestCaption(System.Windows.Forms.Control,System.Int32,System.Int32)">
+            <summary>
+            Returns true if x/y is in caption and this is visible and is a child of parent.
+            For tabbed GPanel returns true only if x/y is in its tab button, unless there are no visible siblings.
+            For GTab returns true even if on a tab button.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GContentNode.Show">
+            <summary>
+            Shows in the most recent visible state. Activates tab group panel.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GContentNode.Hide">
+            <summary>
+            Hides, does not close.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GContentNode.DockBy(G.Controls.GDockPanel.GContentNode,G.Controls.GDockPanel.DockSide)">
+            <summary>
+            Docks this GPanel or GTab in an existing or new GTab or GSplit.
+            If need, creates new GTab or GSplit in gcTarget place and adds gcTarget and this to it. Else reorders if need.
+            This can be a new GPanel, with null ParentSplit and ParentTab, dock state not Docked.
+            </summary>
+            <param name="gcTarget">New sibling GPanel (side can be any) or sibling GTab (when side is SplitX) or parent GTab (when side is TabX).</param>
+            <param name="side">Specifies whether to add on a GTab or GSplit, and at which side of gcTarget.</param>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GFloat">
+            <summary>
+            Floating parent form of a GPanel.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.GFloat.ShowWithoutActivation">
+            <summary>
+            1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GFloat._DockIndicator">
+            <summary>
+            Calculates and shows transparent rectangles where the floating panel can be docked when dragging it.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._OnFloatMoved(Catkeys.POINT,Catkeys.RECT@,Catkeys.RECT@)">
+            <summary>
+            Everything is in _manager client area.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._CalcDockRectPart(Catkeys.RECT,Catkeys.POINT)">
+            <summary>
+            Returns the left, top, right or bottom half of r, depending on where p is in it.
+            Sets _target.side.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._CalcNewTabButtonRectInFullCaption(G.Controls.GDockPanel.GPanel,Catkeys.RECT,Catkeys.POINT)">
+            <summary>
+            Returns a half of r (gp full caption, not just tab button), depending on where p is (even if not in r).
+            Sets _target.side.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GFloat.DockTarget">
+            <summary>
+            GFloat.Drag() and _DockIndicator.OnFloatDropped() return this if can be docked.
+            </summary>
+        </member>
+        <member name="F:G.Controls.GDockPanel.GFloat.DockTarget.gc">
+            <summary>
+            The target.
+            Note: when dockAsTab is true, it currently may be tabbed or not; if tabbed, may be docked or not.
+            </summary>
+        </member>
+        <member name="F:G.Controls.GDockPanel.GFloat.DockTarget.side">
+            <summary>Specifies whether to add on a GTab or GSplit, and at which side of gc.</summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GPanel">
+            <summary>
+            Contains single Control.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GPanel.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.XmlElement)">
+            <summary>
+            This ctor is used at startup, when adding from XML.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.GPanel.PreferredCaptionHorzVert">
+            <summary>
+            Returns 1 if caption should be horizontal, 2 if vertical, 0 if any.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GPanel.IsReallyVisible(System.Boolean)">
+            <summary>
+            Returns true if this isn't hidden and isn't in a hidden tab group.
+            </summary>
+            <param name="andContentVisible">And isn't an inactive tab.</param>
+        </member>
+        <member name="M:G.Controls.GDockPanel.Create(System.String,System.Windows.Forms.ImageList,System.Windows.Forms.Control[])">
+            <summary>
+            Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
+            Adjusts control properties and positions everything according to the XML.
+            </summary>
+            <param name="xmlFile">XML file containing panel/toolbar layout. Used to load and save. If missing, will load Folders.ThisApp + Path.GetFileName(xmlFile) and save to xmlFile.</param>
+            <param name="imageList">ImageList containing panel icons that are displayed when tabbed panel button is too small to display text.</param>
+            <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
+        </member>
+        <member name="P:G.Controls.GDockPanel._HitTestData.ParentTab">
+            <summary>
+            If hit test on a tabbed GPanel, returns its parent GTab, else null.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel._HitTestData.ContentNode">
+            <summary>
+            If hit test on a GContentNode, returns it, else null.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel._HitTest(System.Windows.Forms.Control,System.Int32,System.Int32,G.Controls.GDockPanel._HitTestData@)">
+            <summary>
+            If hit-test on a splitter, sets ht.gs and returns _HitTestResult.Splitter.
+            Else if on a GPanel caption or GPanel tab button, sets gp and returns _HitTestResult.Caption.
+            Else (if on a GTab caption but not a  GPanel tab button) sets gt and returns _HitTestResult.Caption.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.FindPanel(System.String)">
+            <summary>
+            Gets control by name.
+            Returns null if not found.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.HidePanel(System.Windows.Forms.Control)">
+            <summary>
+            Hides the panel, but does not close.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.HidePanel(System.String)">
+            <summary>
+            Hides the panel, but does not close.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.ShowPanel(System.Windows.Forms.Control)">
+            <summary>
+            Shows the panel in the most recent state (docked or floating) and activates tabbed panel if need.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.ShowPanel(System.String)">
+            <summary>
+            Shows the panel in the most recent state (docked or floating) and activates tabbed panel if need.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.IsPanelVisible(System.Windows.Forms.Control,System.Boolean)">
+            <summary>
+            Returns true if the panel is visible (docked or floating).
+            </summary>
+            <param name="control"></param>
+            <param name="andContentVisible">And isn't an inactive tab.</param>
+        </member>
+        <member name="M:G.Controls.GDockPanel.IsPanelVisible(System.String,System.Boolean)">
+            <summary>
+            Returns true if the panel is visible (docked or floating).
+            </summary>
+            <param name="name"></param>
+            <param name="andContentVisible">And isn't an inactive tab.</param>
+        </member>
+        <member name="M:G.Controls.GDockPanel.SetPanelText(System.Windows.Forms.Control,System.String)">
+            <summary>
+            Changes panel caption (or tab button) text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.SetPanelText(System.String,System.String)">
+            <summary>
+            Changes panel caption (or tab button) text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.SetPanelToolTipText(System.Windows.Forms.Control,System.String)">
+            <summary>
+            Changes panel tooltip text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.SetPanelToolTipText(System.String,System.String)">
+            <summary>
+            Changes panel tooltip text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.AddShowPanelsToMenu(System.Windows.Forms.ToolStripDropDown,System.Boolean)">
+            <summary>
+            Adds menu items for all panels or toolbars, except the doc panel, to a menu.
+            On menu item click will show that panel.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.EnableDisableAllFloatingWindows(System.Boolean)">
+            <summary>
+            Call this in main window's WndProc override on WM_ENABLE.
+            </summary>
+            <param name="enable">Enable or disable.</param>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GDockPanelEventArgs">
+            <summary>
+            Used with many GDockPanel events and othe callbacks.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GDockPanelEventArgs.#ctor(System.Object)">
+            <summary>ctor.</summary>
+            <param name="gPanel">Must be GPanel. We use object because C# compiler does not allow to use GPanel (less accessible).</param>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GDockPanelEventHandler`1">
+            <summary>
+            Used with many GDockPanel events and other callbacks.
+            </summary>
+        </member>
+        <member name="E:G.Controls.GDockPanel.PanelContextMenu">
+            <summary>
+            Before showing the context menu when the user right-clicks a panel tab button or caption.
+            The event handler can add/remove/etc menu items.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GSplit">
+            <summary>
+            Contains 2 GNode (GPanel, GTab, GSplit or GDummyNode) and a splitter.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.XmlElement)">
+            <summary>
+            This ctor is used at startup, when adding from XML.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,G.Controls.GDockPanel.GNode,G.Controls.GDockPanel.GNode,System.Boolean)">
+            <summary>
+            This ctor is used when a floating GContentNode dropped on a docked GContentNode.
+            child1 or child2 must be docked, but not both.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.OnChildRemoved(G.Controls.GDockPanel.GNode)">
+            <summary>
+            Puts gn sibling in parent split of this, in place of this.
+            Makes this invalid and removes from _aSplit.
+            Does not update layout.
+            </summary>
+            <param name="gn">One of children. The caller is removing it from this.</param>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.ReplaceChild(G.Controls.GDockPanel.GNode,G.Controls.GDockPanel.GNode)">
+            <summary>
+            Replaces child gnOld with gnNew.
+            Sets gnNew.ParentSplit = this.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.RepositionChild(G.Controls.GDockPanel.GNode,System.Boolean,System.Boolean)">
+            <summary>
+            Changes IsVerticalSplit, Child1 and Child2 if need.
+            Does not update layout.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.DragSplitter">
+            <summary>
+            Called on mouse left button down on splitter.
+            Returns when the drag operation ends.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.Paint(System.Drawing.Graphics)">
+            <summary>
+            Called from GDockPanel.OnPaint, for its _firstSplit.
+            Paints all descendants.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.SetChildFixedSize(G.Controls.GDockPanel.GNode,System.Boolean,System.Boolean)">
+            <summary>
+            Sets a child (of this, or of an ancestor if need) to have fixed width or height.
+            Used for context menu.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GSplit.IsChildFixedSize(G.Controls.GDockPanel.GNode,System.Boolean)">
+            <summary>
+            Gets whether a child (of this, or of an ancestor if need) has fixed width or height.
+            Used for context menu.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GTab">
+            <summary>
+            Contains multiple GPanel.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GTab.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.XmlElement)">
+            <summary>
+            This ctor is used at startup, when adding from XML.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GTab.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,G.Controls.GDockPanel.GPanel,G.Controls.GDockPanel.GPanel)">
+            <summary>
+            This ctor is used when a floating GPanel dropped on a docked non-tabbed GPanel caption.
+            item1 or item2 must be docked, but not both.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GTab._CalcButtonsBounds(System.Drawing.Graphics)">
+            <summary>
+            Returns buttons width.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GTab.SetActiveItem(G.Controls.GDockPanel.GPanel)">
+            <summary>
+            Sets ActiveItem, shows its contents, hides previous ActiveItem contents, invalidate caption, calls DockedDocumentPanelActivated event.
+            </summary>
+            <param name="gp">Can be null to deactivate all.</param>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GTab.OnItemRemoved(G.Controls.GDockPanel.GPanel)">
+            <summary>
+            Removes a child panel from Items.
+            If single item left, moves it to this parent and invalidates/removes this.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.GTab.AddOrReorderItem(G.Controls.GDockPanel.GPanel,G.Controls.GDockPanel.GPanel,System.Boolean)">
+            <summary>
+            If gp is child of this, moves it to the place before or after target (a child of this).
+            Else just inserts gp there.
+            If target is null, adds to the end (does nothing if gp is child).
+            Does not update layout.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GAccContainer">
+            <summary>
+            Used by GDockPanel and GFloat.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.GAccNode">
+            <summary>
+            AccessibleObject of GNode.
+            We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
+            </summary>
+        </member>
+    </members>
+</doc>

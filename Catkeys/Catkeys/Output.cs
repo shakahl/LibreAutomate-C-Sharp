@@ -17,8 +17,6 @@ using System.Drawing;
 //using System.Linq;
 
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -73,7 +71,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Writes array, List˂T˃ or other generic collection as a list of element values.
+		/// Writes array, List&lt;T&gt; or other generic collection as a list of element values.
 		/// </summary>
 		public static void Write<T>(IEnumerable<T> value, string separator = "\r\n")
 		{
@@ -102,15 +100,21 @@ namespace Catkeys
 			Write((value == null) ? "" : string.Join(separator, value));
 		}
 
+		//TODO:
+		//WriteList -> Write(params object[])
+		//Write(collection, sep="...") -> Write(collection) and WriteSep(sep, collection).
+		//WriteListSep(sep, params object[]) -> WriteSep(sep, params object[])  (just rename)
+
 		/// <summary>
 		/// Writes multiple argument values using separator ", ".
 		/// </summary>
-		public static void WriteList(params object[] values) { Write(String_.Join(", ", values)); }
+		public static void WriteList(params object[] values) { WriteListSep(", ", values); }
 
 		/// <summary>
 		/// Writes multiple argument values using the specified separator.
 		/// </summary>
-		public static void WriteListSep(string separator, params object[] values) { Write(String_.Join(separator, values)); }
+		public static void WriteListSep(string separator, params object[] values) { Write(string.Join(separator, values as IEnumerable<object>)); }
+		//info: the 'as IEnumerable<object>' is a workaround for string.Join(string sep, params object[] a) bug: returns "" if a[0] is null.
 
 		/// <summary>
 		/// Writes an integer in hexadecimal format, like "0x5A".
@@ -122,7 +126,7 @@ namespace Catkeys
 		/// Writes a string prefixed with "Warning: " and optionally followed by the stack trace.
 		/// </summary>
 		/// <param name="s">Warning text.</param>
-		/// <param name="showStackFromThisFrame">If ˃= 0, appends stack trace, skipping this number of frames.</param>
+		/// <param name="showStackFromThisFrame">If &gt;= 0, appends stack trace, skipping this number of frames.</param>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void Warning(string s, int showStackFromThisFrame = -1)
 		{
@@ -133,7 +137,7 @@ namespace Catkeys
 				sb.AppendLine();
 				sb.Append(x.ToString());
 			}
-			Out(sb.ToString());
+			Print(sb.ToString());
 			sb.Clear();
 		}
 
@@ -141,7 +145,7 @@ namespace Catkeys
 		//In library don't redirect console and don't use Console.WriteLine.
 		//Because there is no way to auto-run a class library initialization code that would redirect console.
 		//Static ctors run before the class is used first time, not when assembly loaded.
-		//Instead use Out() (Output.Write()).
+		//Instead use Print() (Output.Write()).
 		//To redirect Console.WriteLine used in scripts, call Output.RedirectConsoleOutput in script code.
 
 		//Used to redirect Console and Debug/Trace output.

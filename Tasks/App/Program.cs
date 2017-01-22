@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys.Tasks
 {
@@ -91,7 +89,7 @@ namespace Catkeys.Tasks
 				ProcessCommandLine(args);
 
 				//message loop (not Application.Run() because then loads slower etc)
-				Api.MSG m;
+				Native.MSG m;
 				while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 			}
 			finally {
@@ -193,7 +191,7 @@ namespace Catkeys.Tasks
 		static void _TrayIcon_Menu()
 		{
 			var m = new CatMenu();
-			m["one"] = o => Out("one");
+			m["one"] = o => Print("one");
 
 			m.Show();
 		}
@@ -204,7 +202,7 @@ namespace Catkeys.Tasks
 
 			switch(msg) {
 			//case WM.DESTROY:
-			//	Out("destroy");
+			//	Print("destroy");
 			//	break;
 			case Api.WM_SETTEXT:
 				return _OnSetText(wParam, lParam);
@@ -245,12 +243,12 @@ namespace Catkeys.Tasks
 
 		unsafe static int _OnCopyData(Wnd hwndSender, Api.COPYDATASTRUCT* c)
 		{
-			Out((uint)c->dwData);
+			Print((uint)c->dwData);
 			string s;
 			switch((uint)c->dwData) {
 			case 4:
 				s = Marshal.PtrToStringUni(c->lpData, c->cbData / 2);
-				Out(s);
+				Print(s);
 				break;
 			}
 			return 0;
@@ -264,7 +262,7 @@ namespace Catkeys.Tasks
 			try {
 				for(; i < a.Length; i++) {
 					string s = a[i];
-					//Out(s);
+					//Print(s);
 					if(s[0] == '/' || s[0] == '-') {
 						switch(s.Substring(1)) {
 						case "run":
@@ -276,7 +274,7 @@ namespace Catkeys.Tasks
 				}
 			}
 			catch {
-				Out($"CatkeysTasks: Failed to parse command line at '{a[i < a.Length ? i : a.Length - 1]}'.");
+				Print($"CatkeysTasks: Failed to parse command line at '{a[i < a.Length ? i : a.Length - 1]}'.");
 				return;
 			}
 
@@ -292,7 +290,7 @@ namespace Catkeys.Tasks
 			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
 			if(!Files.DirectoryExists(outDir)) Directory.CreateDirectory(outDir);
 			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
-			//OutList(csFile, dllFile);
+			//PrintList(csFile, dllFile);
 
 			if(!_compilerWindow.IsValid) {
 				IntPtr ev = Api.CreateEvent(Zero, false, false, null);
@@ -307,7 +305,7 @@ namespace Catkeys.Tasks
 			_compilerDomain.SetData("out", outFile);
 			Perf.Next(); //20 ms first time, then <100 mcs
 			int R = _compilerWindow.Send(Api.WM_USER, 0, 0);
-			Out(R);
+			Print(R);
 			if(R != 0) return;
 
 #if false
@@ -342,7 +340,7 @@ namespace Catkeys.Tasks
 		{
 			_compilerDomain = AppDomain.CreateDomain("Compiler");
 			_compilerDomain.SetData("eventInited", ev);
-			_compilerDomain.ExecuteAssembly(Folders.App + "Catkeys.Compiler.exe");
+			_compilerDomain.ExecuteAssembly(Folders.ThisApp + "Catkeys.Compiler.exe");
 			AppDomain.Unload(_compilerDomain);
 		}
 	}

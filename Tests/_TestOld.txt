@@ -1,11 +1,486 @@
-﻿#elif false
+﻿
+
+
+
+
+
+
+#if false //struct much slower
+		/// <summary>
+		/// Used with <see cref="Match_"/>. 
+		/// </summary>
+		public struct MatchContext
+		{
+			//internal Regex rx;
+			//internal _MatchContext[] multi;
+			internal object x; //Regex or _MatchContext[]
+			internal int offset;
+			internal byte type; //0 wild, 1 text, 2 regex, 3 multi
+			internal bool c;
+			internal bool n;
+		}
+
+		public static unsafe bool Match_(this string t, string wildcardExpression, ref MatchContext context)
+		{
+			var w = wildcardExpression;
+			if(w == null) return t == null;
+			if(t == null) return false;
+
+			int lenW = w.Length;
+			bool ignoreCase = true, not = false;
+
+			if(context.offset == 0 && lenW >= 3 && w[0] == '*' && w[1] == '*') {
+				var c = new MatchContext();
+				for(int i = 2; i < lenW; i++) {
+					switch(w[i]) {
+					case 't': c.type = 1; break;
+					case 'r': c.type = 2; break;
+					case 'm': c.type = 3; break;
+					case 'c': c.c = true; break;
+					case 'n': c.n = true; break;
+					case '|': c.offset = ++i; goto g1;
+					}
+				}
+				g1:
+				if(c.offset > 0) {
+					//var s = (c.type>=2) ? w.Substring(c.offset) : null;
+					switch(c.type) {
+					//case 1:
+					//	c.x = s;
+					//	break;
+					case 2:
+						c.x = new Regex(w.Substring(c.offset), c.c ? RegexOptions.CultureInvariant : (RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
+						break;
+					case 3:
+
+						break;
+					}
+					context = c;
+				}
+			}
+
+			if(context.offset > 0) {
+				lenW -= context.offset;
+				ignoreCase = !context.c; not = context.n;
+				switch(context.type) {
+				case 1:
+					//return not != (lenW == t.Length && (context.x as string).Equals_(t, ignoreCase));
+					return not != (lenW == t.Length && w.EndsWith_(t, ignoreCase));
+				case 2:
+					return (context.x as Regex).IsMatch(t);
+				case 3:
+					break;
+				}
+			}
+
+			if(lenW == 0) return t.Length == 0;
+			if(lenW == 1 && w[0] == '*') return true;
+			if(t.Length == 0) return false;
+
+			fixed (char* tt = t, ww = w) {
+				return not != __WildcardCmp(tt, ww + context.offset, t.Length, lenW, ignoreCase ? Util.LibProcessMemory.Ptr->str.GetCaseTable() : null);
+			}
+		}
+#else
+		class _MatchContext
+		{
+			//internal Regex rx;
+			//internal _MatchContext[] multi;
+			internal object x; //Regex or _MatchContext[]
+			internal int offset;
+			internal byte type; //0 wild, 1 text, 2 regex, 3 multi
+			internal bool c;
+			internal bool n;
+		}
+
+		public static unsafe bool Match_(this string t, string wildcardExpression, ref object context)
+		{
+			var w = wildcardExpression;
+			if(w == null) return t == null;
+			if(t == null) return false;
+
+			int lenW = w.Length, offsW = 0;
+			bool ignoreCase = true, not = false;
+
+			_MatchContext c = null;
+			if(context != null) c = context as _MatchContext;
+			else if(lenW >= 3 && w[0] == '*' && w[1] == '*') {
+				context = c = new _MatchContext();
+				for(int i = 2; i < lenW; i++) {
+					switch(w[i]) {
+					case 't': c.type = 1; break;
+					case 'r': c.type = 2; break;
+					case 'm': c.type = 3; break;
+					case 'c': c.c = true; break;
+					case 'n': c.n = true; break;
+					case '|': c.offset = ++i; goto g1;
+					}
+				}
+				g1:
+				if(c.offset > 0) {
+					var s = (c.type >= 2) ? w.Substring(c.offset) : null;
+					switch(c.type) {
+					//case 1:
+					//	c.x = s;
+					//	break;
+					case 2:
+						c.x = new Regex(s, c.c ? RegexOptions.CultureInvariant : (RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
+						break;
+					case 3:
+						//var a = s.Split(new string[] { "[]" }, StringSplitOptions.None);
+						//var multi = new _MatchContext[a.Length];
+						//for(int i = 0; i < a.Length; i++) {
+						//	multi[i] = new _MatchContext(a[i]);
+						//}
+						//c.x = multi;
+						break;
+					}
+				}
+			}
+
+			if(c != null && c.offset > 0) {
+				offsW = c.offset; lenW -= c.offset;
+				ignoreCase = !c.c; not = c.n;
+				switch(c.type) {
+				case 1:
+					//return not != (lenW == t.Length && (c.x as string).Equals_(t, ignoreCase));
+					return not != (lenW == t.Length && w.EndsWith_(t, ignoreCase));
+				case 2:
+					return (c.x as Regex).IsMatch(t);
+				case 3:
+					break;
+				}
+			}
+
+			if(lenW == 0) return t.Length == 0;
+			if(lenW == 1 && w[0] == '*') return true;
+			if(t.Length == 0) return false;
+
+			fixed (char* tt = t, ww = w) {
+				return not != __WildcardCmp(tt, ww + offsW, t.Length, lenW, ignoreCase ? Util.LibProcessMemory.Ptr->str.GetCaseTable() : null);
+			}
+		}
+#endif
+
+		//public static unsafe bool Match_(this string t, string wildcardExpression)
+		//{
+		//	var w = wildcardExpression;
+		//	if(w == null) return t == null;
+		//	if(t == null) return false;
+		//	int lenW = w.Length;
+
+		//	bool ignoreCase = true, not = false; int offsW = 0;
+
+		//	if(lenW >= 3 && w[0] == '*' && w[1] == '*') {
+		//		int i, o = 0; //1 t, 2 r, 3 m, 8 c, 16 n, 0x100 |
+		//		for(i = 2; i < lenW && o < 0x100; i++) {
+		//			switch(w[i]) {
+		//			case 't': o |= 1; break;
+		//			case 'r': o |= 2; break;
+		//			case 'm': o |= 3; break;
+		//			case 'c': o |= 8; break;
+		//			case 'n': o |= 16; break;
+		//			case '|': o |= 0x100; break;
+		//			}
+		//		}
+		//		if((o & 0x100) != 0) {
+		//			if((o & 8) != 0) ignoreCase = false;
+		//			if((o & 16) != 0) not = true;
+		//			lenW -= i;
+		//			switch(o & 3) {
+		//			case 1:
+		//				return not != (lenW == t.Length && w.EndsWith_(t, ignoreCase));
+		//			case 2:
+		//				//return not != t.RegexIs_(w.Substring(i), ignoreCase ? RegexOptions.IgnoreCase : 0);
+		//				return not != _regexCache.CreateOrGetCached(w, w.Substring(i), ignoreCase ? RegexOptions.IgnoreCase : 0).IsMatch(t);
+		//			case 3:
+		//				break;
+		//			}
+		//			offsW = i;
+		//		}
+		//	}
+
+		//	if(lenW == 0) return t.Length == 0;
+		//	if(lenW == 1 && w[0] == '*') return true;
+		//	if(t.Length == 0) return false;
+
+		//	fixed (char* tt = t, ww = w) {
+		//		return not != __WildcardCmp(tt, ww + offsW, t.Length, lenW, ignoreCase ? Util.LibProcessMemory.Ptr->str.GetCaseTable() : null);
+		//	}
+		//}
+
+
+
+		/// <summary>
+		/// Faster Regex cache.
+		/// </summary>
+		struct _RegexCache
+		{
+			struct _CacheItem
+			{
+				internal object wildex;
+				internal Regex r;
+			}
+
+			static _CacheItem[] _a;
+			static int _i;
+
+			internal Regex CreateOrGetCached(string wildex, string regex, RegexOptions ro)
+			{
+				//lock("jskdjsiyvtdftfhch") { //slower, and I think that better to use ThreadStatic
+				object o = wildex;
+				if(_a != null) {
+					if(_a[0].wildex == o) return _a[0].r;
+					if(_a[1].wildex == o) return _a[1].r;
+					if(_a[2].wildex == o) return _a[2].r;
+					if(_a[3].wildex == o) return _a[3].r;
+				} else _a = new _CacheItem[4];
+
+				var r = _a[_i].r = new Regex(regex, ro);
+				_a[_i].wildex = o;
+				_i = (_i + 1) & 3;
+				return r;
+				//}
+			}
+
+			internal void Clear()
+			{
+				_a = null;
+			}
+		}
+		[ThreadStatic]
+		static _RegexCache _regexCache;
+
+		internal static void TestClearRegexCache()
+		{
+			_regexCache.Clear();
+		}
+
+
+
+
+
+
+
+
+	public class WildexC
+	{
+		/// <summary>
+		/// The type of text (wildcard expression) used when creating the Wildex variable.
+		/// </summary>
+		public enum WildType :byte
+		{
+			/// <summary>Simple text (option t, or no *? characters and no t r options). Match() calls <see cref="String_.Equals_(string, string, bool)"/>.</summary>
+			Text,
+			/// <summary>Wildcard (has *? characters and no t r options). Match() calls <see cref="String_.Like_(string, string, bool)"/>.</summary>
+			Wildcard,
+			/// <summary>Regular expression (option r). Match() calls <see cref="Regex.IsMatch(string)"/>.</summary>
+			Regex,
+			/// <summary>Multiple parts (option m). Match() calls Match() for each part (see <see cref="MultiArray"/>) and returns true if some non-[n] part returns true and all [n] parts return true.</summary>
+			Multi,
+		}
+
+		object _obj; //string, Regex or Wildex[]. Tested: getting string etc with '_obj as string' is fast.
+		WildType _type;
+		bool _ignoreCase;
+		bool _not;
+
+		public WildexC(string wildcardExpression)
+		{
+			var w = wildcardExpression;
+			if(w == null) return;
+			_type = WildType.Wildcard;
+			_ignoreCase = true;
+
+			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') {
+				WildType t = _type; bool isC = false, isN = false, hasOptions = false;
+				int i;
+				for(i = 2; i < w.Length && !hasOptions; i++) {
+					switch(w[i]) {
+					case 't': t = WildType.Text; break;
+					case 'r': t = WildType.Regex; break;
+					case 'm': t = WildType.Multi; break;
+					case 'c': isC = true; break;
+					case 'n': isN = true; break;
+					case '|': hasOptions = true; break;
+					}
+				}
+				if(hasOptions) {
+					w = w.Substring(i);
+					_type = t;
+					_ignoreCase = !isC;
+					_not = isN;
+					if(_type == WildType.Multi) {
+						var a = w.Split(new string[] { "[]" }, StringSplitOptions.None);
+						var multi = new Wildex[a.Length];
+						for(i = 0; i < a.Length; i++) {
+							multi[i] = new Wildex(a[i]);
+						}
+						_obj = multi;
+						w = null;
+						_type = WildType.Multi;
+						return;
+					}
+
+					if(_type == WildType.Regex) {
+						var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
+						_obj = new Regex(w, ro);
+						return;
+					}
+				}
+			}
+
+			if(_type == WildType.Wildcard && !Wildex.HasWildcards(w)) _type = WildType.Text;
+			_obj = w;
+		}
+
+		public bool Match(string s)
+		{
+			if(s == null) return _obj == null;
+			if(_obj == null) return false;
+
+			bool R = false;
+			switch(_type) {
+			case WildType.Wildcard: R = s.Like_(_obj as string, _ignoreCase); break;
+			case WildType.Text: R = s.Equals_(_obj as string, _ignoreCase); break;
+			case WildType.Regex: R = (_obj as Regex).IsMatch(s); break;
+			case WildType.Multi:
+				var multi = _obj as Wildex[];
+				//[n] parts: all must match (with their [n] applied)
+				for(int i = 0; i < multi.Length; i++) {
+					var v = multi[i];
+					if(v.Not && !v.Match(s)) return _not;
+				}
+				//non-[n] parts: at least one must match
+				for(int i = 0; i < multi.Length; i++) {
+					var v = multi[i];
+					if(!v.Not && v.Match(s)) return !_not;
+				}
+				break;
+			}
+			return R ^ _not;
+		}
+	}
+
+	public struct WildexS
+	{
+		/// <summary>
+		/// The type of text (wildcard expression) used when creating the Wildex variable.
+		/// </summary>
+		public enum WildType :byte
+		{
+			/// <summary>Simple text (option t, or no *? characters and no t r options). Match() calls <see cref="String_.Equals_(string, string, bool)"/>.</summary>
+			Text,
+			/// <summary>Wildcard (has *? characters and no t r options). Match() calls <see cref="String_.Like_(string, string, bool)"/>.</summary>
+			Wildcard,
+			/// <summary>Regular expression (option r). Match() calls <see cref="Regex.IsMatch(string)"/>.</summary>
+			Regex,
+			/// <summary>Multiple parts (option m). Match() calls Match() for each part (see <see cref="MultiArray"/>) and returns true if some non-[n] part returns true and all [n] parts return true.</summary>
+			Multi,
+		}
+
+		object _obj; //string, Regex or Wildex[]. Tested: getting string etc with '_obj as string' is fast.
+		WildType _type;
+		bool _ignoreCase;
+		bool _not;
+
+		public WildexS(string wildcardExpression):this()
+		{
+			var w = wildcardExpression;
+			if(w == null) return;
+			_type = WildType.Wildcard;
+			_ignoreCase = true;
+
+			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') {
+				WildType t = _type; bool isC = false, isN = false, hasOptions = false;
+				int i;
+				for(i = 2; i < w.Length && !hasOptions; i++) {
+					switch(w[i]) {
+					case 't': t = WildType.Text; break;
+					case 'r': t = WildType.Regex; break;
+					case 'm': t = WildType.Multi; break;
+					case 'c': isC = true; break;
+					case 'n': isN = true; break;
+					case '|': hasOptions = true; break;
+					}
+				}
+				if(hasOptions) {
+					w = w.Substring(i);
+					_type = t;
+					_ignoreCase = !isC;
+					_not = isN;
+					if(_type == WildType.Multi) {
+						var a = w.Split(new string[] { "[]" }, StringSplitOptions.None);
+						var multi = new Wildex[a.Length];
+						for(i = 0; i < a.Length; i++) {
+							multi[i] = new Wildex(a[i]);
+						}
+						_obj = multi;
+						w = null;
+						_type = WildType.Multi;
+						return;
+					}
+
+					if(_type == WildType.Regex) {
+						var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
+						_obj = new Regex(w, ro);
+						return;
+					}
+				}
+			}
+
+			if(_type == WildType.Wildcard && !Wildex.HasWildcards(w)) _type = WildType.Text;
+			_obj = w;
+		}
+
+		public bool Match(string s)
+		{
+			if(s == null) return _obj == null;
+			if(_obj == null) return false;
+
+			bool R = false;
+			switch(_type) {
+			case WildType.Wildcard: R = s.Like_(_obj as string, _ignoreCase); break;
+			case WildType.Text: R = s.Equals_(_obj as string, _ignoreCase); break;
+			case WildType.Regex: R = (_obj as Regex).IsMatch(s); break;
+			case WildType.Multi:
+				var multi = _obj as Wildex[];
+				//[n] parts: all must match (with their [n] applied)
+				for(int i = 0; i < multi.Length; i++) {
+					var v = multi[i];
+					if(v.Not && !v.Match(s)) return _not;
+				}
+				//non-[n] parts: at least one must match
+				for(int i = 0; i < multi.Length; i++) {
+					var v = multi[i];
+					if(!v.Not && v.Match(s)) return !_not;
+				}
+				break;
+			}
+			return R ^ _not;
+		}
+
+		public bool IsNull { get { return _obj == null; } }
+	}
+
+
+
+
+
+
+
+
+
+
+
+#elif false
 				Api.IShellFolder folder = null; IntPtr pidlItem;
 				try {
 					int hr = Api.SHBindToParent(pidl, ref Api.IID_IShellFolder, out folder, out pidlItem);
-					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+					if(0 != hr) { PrintDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
 
 					int ii = SHMapPIDLToSystemImageListIndex(folder, pidlItem, null);
-					//Out(ii);
+					//Print(ii);
 					if(ii < 0) return Zero;
 
 					size = size < 24 ? SHIL_SMALL : SHIL_LARGE;
@@ -24,23 +499,23 @@
 				try {
 					IntPtr pidlItem;
 					int hr = Api.SHBindToParent(pidl, ref Api.IID_IShellFolder, out folder, out pidlItem);
-					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+					if(0 != hr) { PrintDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
 
 					object o;
 					hr = folder.GetUIObjectOf(Wnd0, 1, &pidlItem, Api.IID_IExtractIcon, Zero, out o);
-					//if(0 != hr) { OutDebug($"{file}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+					//if(0 != hr) { PrintDebug($"{file}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
 					if(0 != hr) {
-						if(hr != Api.REGDB_E_CLASSNOTREG) OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}");
+						if(hr != Api.REGDB_E_CLASSNOTREG) PrintDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}");
 						return Zero;
 					}
 					eic = o as Api.IExtractIcon;
 
 					var sb = new StringBuilder(300); int ii; uint fl;
 					hr = eic.GetIconLocation(0, sb, 300, out ii, out fl);
-					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
+					if(0 != hr) { PrintDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}"); return Zero; }
 					string loc = sb.ToString();
 
-					//OutList(pidl, loc, ii);
+					//PrintList(pidl, loc, ii);
 
 					if((fl & (Api.GIL_NOTFILENAME | Api.GIL_SIMULATEDOC)) == 0) {
 						R = GetIconHandleRaw(loc, ii, size);
@@ -56,20 +531,20 @@
 					if(size < 24) { hiSmall = &R; size = 32; } else hiBig = &R;
 					hr = eic.Extract(loc, (uint)ii, hiBig, hiSmall, Calc.MakeUint(size, 16)); //TODO: may have 20 icon
 
-					if(0 != hr) { OutDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}, location={loc}"); return Zero; }
+					if(0 != hr) { PrintDebug($"{pidl}, {Marshal.GetExceptionForHR(hr)?.Message}, location={loc}"); return Zero; }
 
-					//OutList(pidl, loc, ii);
+					//PrintList(pidl, loc, ii);
 
 					//if(size != 16 && size != 32) { //TODO: test with high DPI
 
 					//	//var perf = new Perf.Inst(true);
 					//	IntPtr R2 = Api.CopyImage(R, Api.IMAGE_ICON, size, size, Api.LR_COPYDELETEORG | Api.LR_COPYRETURNORG | Api.LR_COPYFROMRESOURCE);
 					//	//perf.NW();
-					//	//OutList(R, R2);
+					//	//PrintList(R, R2);
 					//	R = R2;
 					//}
 				}
-				catch(Exception e) { OutDebug($"pidl={pidl}, {e.Message}, {e.TargetSite}"); }
+				catch(Exception e) { PrintDebug($"pidl={pidl}, {e.Message}, {e.TargetSite}"); }
 				finally {
 					Api.ReleaseComObject(eic);
 					Api.ReleaseComObject(folder);
@@ -84,7 +559,7 @@
 					//	uint n = 300; var sb = new StringBuilder((int)n);
 					//	if(0 == Api.AssocQueryString(0, Api.ASSOCSTR.ASSOCSTR_DEFAULTICON, file, null, sb, ref n)) {
 					//		var icon = sb.ToString();
-					//		OutList(file, icon);
+					//		PrintList(file, icon);
 					//		ParseIconLocation(ref icon, out index);
 					//		return GetIconHandleRaw(icon, index, size);
 					//	}
@@ -96,14 +571,14 @@
 
 	static void TestIcons()
 	{
-		//Out("start");
+		//Print("start");
 		//WaitMS(1000);
 
 		var a = new List<string>();
 		int n = 0;
 #if true
 		foreach(var f in Directory.EnumerateFiles(@"q:\app")) {
-			//Out(f);
+			//Print(f);
 			a.Add(f);
 			//if((n & 1) == 0) a.Add(f);
 			//if(++n == 30) break;
@@ -142,7 +617,7 @@
 		a.Add(Folders.System + @"shell32.dll,25");
 #endif
 
-		//Out(Api.GetCurrentThreadId());
+		//Print(Api.GetCurrentThreadId());
 		var F = new Form();
 		F.Click += (unu, sed) =>
 		{
@@ -161,7 +636,7 @@
 			}
 		};
 		F.ShowDialog();
-		//Out(2);
+		//Print(2);
 
 		//var m = new CatMenu();
 		//m["aaaaaaaaa"] = null;
@@ -170,7 +645,7 @@
 		//new Form().ShowDialog();
 		//Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
 		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
-		//OutList("end", _n);
+		//PrintList("end", _n);
 	}
 
 	static Util.MessageLoop _loop2 = new Util.MessageLoop();
@@ -194,12 +669,12 @@
 		var hi = Files.GetIconHandle(k.s, 16, 0);
 
 		int n = Interlocked.Decrement(ref _n);
-		//Out(n);
+		//Print(n);
 		if(n < 1) Perf.NextWrite();
-		//OutList(tid, Api.GetCurrentThreadId());
+		//PrintList(tid, Api.GetCurrentThreadId());
 
 		if(hi == Zero) {
-			OutList("failed", k.s);
+			PrintList("failed", k.s);
 			return null;
 		}
 		Api.DestroyIcon(hi);
@@ -234,12 +709,12 @@
 		var hi = Files.GetIconHandle(path, 16, 0);
 
 		int n = Interlocked.Decrement(ref _n);
-		//Out(n);
+		//Print(n);
 		if(n < 1) Perf.NextWrite();
-		//OutList(tid, Api.GetCurrentThreadId());
+		//PrintList(tid, Api.GetCurrentThreadId());
 
 		if(hi == Zero) {
-			OutList("failed", path);
+			PrintList("failed", path);
 			return null;
 		}
 		Api.DestroyIcon(hi);
@@ -263,18 +738,18 @@
 
 	static void _IconCompletionCallback(object state, object workResult)
 	{
-		//OutList("_CompletionCallback", Api.GetCurrentThreadId(), state);
+		//PrintList("_CompletionCallback", Api.GetCurrentThreadId(), state);
 
 		_n--;
 		if(_n < 1) Perf.NextWrite();
-		//OutList(tid, Api.GetCurrentThreadId());
+		//PrintList(tid, Api.GetCurrentThreadId());
 
 		var k = state as _StringAndHandle;
 		var s = k.s;
 		var hi = k.h;
 
 		if(hi == Zero) {
-			OutList("failed", s);
+			PrintList("failed", s);
 			return;
 		}
 		Api.DestroyIcon(hi);
@@ -282,20 +757,20 @@
 
 	static void _IconCompletionCallback_W(object state, object workResult)
 	{
-		//OutList("_CompletionCallback", Api.GetCurrentThreadId(), state);
+		//PrintList("_CompletionCallback", Api.GetCurrentThreadId(), state);
 
 		_n--;
 		if(_n < 1) Perf.NextWrite();
-		//OutList(tid, Api.GetCurrentThreadId());
+		//PrintList(tid, Api.GetCurrentThreadId());
 
 		var k = state as _IconPathsAndHandles;
 		int counter = (int)workResult;
 		var s = k._paths[counter];
 		var hi = k._handles[counter];
-		//OutList(counter, hi, s);
+		//PrintList(counter, hi, s);
 
 		if(hi == Zero) {
-			OutList("failed", s);
+			PrintList("failed", s);
 			return;
 		}
 		Api.DestroyIcon(hi);
@@ -313,22 +788,22 @@
 #if true
 		var task = Task.Run(() =>
 		{
-			//OutList(Api.GetCurrentThreadId(), s);
+			//PrintList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
 			var R = Files.GetIconHandle(s, 16, 0);
 			//var R = Zero; WaitMS(s.Length * s.Length / 100);
 			//var R = Zero; WaitMS(_random.Next(1, 10));
-			//perf.Next(); OutList(perf.Times, s);
+			//perf.Next(); PrintList(perf.Times, s);
 			return R;
 		});
 #else
 		var task = Task.Factory.StartNew(() =>
 		{
-			//OutList(Api.GetCurrentThreadId(), s);
+			//PrintList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
 			var R = Files.GetIconHandle(s, 16, 0);
 			//var R = Zero; WaitMS(_random.Next(1, 10));
-			//perf.Next(); OutList(perf.Times, s);
+			//perf.Next(); PrintList(perf.Times, s);
 			return R;
 		}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
 #endif
@@ -338,10 +813,10 @@
 		//Interlocked.Decrement(ref _n);
 		_n--;
 		if(_n < 1) Perf.NextWrite();
-		//OutList(tid, Api.GetCurrentThreadId());
+		//PrintList(tid, Api.GetCurrentThreadId());
 
 		if(hi == Zero) {
-			OutList("failed", s);
+			PrintList("failed", s);
 			return;
 		}
 		Api.DestroyIcon(hi);
@@ -353,12 +828,12 @@
 	{
 		//var perf = new Perf.Inst(true);
 		var hi = Files.GetIconHandle(s, 16, 0);
-		//perf.Next(); OutList(perf.Times, s);
+		//perf.Next(); PrintList(perf.Times, s);
 
 		if(--_n == 0) Perf.NextWrite();
 
 		if(hi == Zero) {
-			OutList("failed", s);
+			PrintList("failed", s);
 			return;
 		}
 		Api.DestroyIcon(hi);
@@ -366,7 +841,7 @@
 
 	//	static async void _TestIcons(List<string> a)
 	//	{
-	//		Out(Api.GetCurrentThreadId());
+	//		Print(Api.GetCurrentThreadId());
 	//		Perf.First();
 
 	//		foreach(var s in a) {
@@ -375,21 +850,21 @@
 	//#if true
 	//			var task = Task.Run(() =>
 	//			{
-	//				OutList(Api.GetCurrentThreadId(), s);
+	//				PrintList(Api.GetCurrentThreadId(), s);
 	//				var perf = new Perf.Inst(true);
 	//				//var R = Files.GetIconHandle(s, 16, 0);
 	//				var R = Zero;
 	//				WaitMS(s.Length * s.Length / 5);
-	//				perf.Next(); OutList(perf.Times, s);
+	//				perf.Next(); PrintList(perf.Times, s);
 	//				return R;
 	//			});
 	//#else
 	//			var task = Task.Factory.StartNew(() =>
 	//			{
-	//				OutList(Api.GetCurrentThreadId(), s);
+	//				PrintList(Api.GetCurrentThreadId(), s);
 	//				var perf = new Perf.Inst(true);
 	//				var R= Files.GetIconHandle(s, 16, 0);
-	//				perf.Next(); OutList(perf.Times, s);
+	//				perf.Next(); PrintList(perf.Times, s);
 	//				return R;
 	//			}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
 	//#endif
@@ -397,7 +872,7 @@
 
 	//			IntPtr hi = task.Result;
 	//			if(hi == Zero) {
-	//				//OutList("failed", s);
+	//				//PrintList("failed", s);
 	//				continue;
 	//			}
 	//			Api.DestroyIcon(hi);
@@ -417,7 +892,7 @@
 
 			var hi= Files.GetIconHandle(s, 16, 0);
 			if(hi == Zero) {
-				OutList("failed", s); continue;
+				PrintList("failed", s); continue;
 			}
 			Api.DestroyIcon(hi);
 		}
@@ -429,7 +904,7 @@
 
 	static void TestThreadPoolSTA()
 	{
-		//Out(Api.GetCurrentThreadId());
+		//Print(Api.GetCurrentThreadId());
 		//Util.ThreadPoolSTA.AddWork(_WorkCallback, 100);
 		new Util.TaskSTA(_WorkCallback, 100).Run();
 
@@ -444,18 +919,18 @@
 
 		//f.Load += (unu, sed) =>
 		//{
-		//	//Out(f.IsHandleCreated);
+		//	//Print(f.IsHandleCreated);
 		//	for(int i = 0; i < 1; i++) {
 		//		Util.ThreadPoolSTA.AddWork(_WorkCallback, _CompletionCallback, f, i);
 		//		new Util.TaskSTA(_WorkCallback, _CompletionCallback, f, i).Run();
 		//	}
 		//};
 
-		//Out(1);
+		//Print(1);
 		f.ShowDialog();
-		//Out(f.IsDisposed);
+		//Print(f.IsDisposed);
 		f.Dispose();
-		//Out(2);
+		//Print(2);
 		//ShowRen.Show("after");
 
 		//GC.Collect();
@@ -464,7 +939,7 @@
 
 	static object _WorkCallback(object state)
 	{
-		OutList("_WorkCallback", Api.GetCurrentThreadId(), state);
+		PrintList("_WorkCallback", Api.GetCurrentThreadId(), state);
 		//ShowRen.Show("work");
 		//MessageBox.Show("work");
 		return null;
@@ -472,7 +947,7 @@
 
 	static void _CompletionCallback(object state, object workResult)
 	{
-		OutList("_CompletionCallback", Api.GetCurrentThreadId(), state);
+		PrintList("_CompletionCallback", Api.GetCurrentThreadId(), state);
 	}
 
 	#endregion test icons
@@ -534,7 +1009,7 @@
 				if(0 == CoGetApartmentType(out apt, out aptq) && apt != APTTYPE.APTTYPE_STA)
 					CoInitializeEx(Zero, COINIT.COINIT_APARTMENTTHREADED | COINIT.COINIT_DISABLE_OLE1DDE);
 
-				//OutFunc();
+				//PrintFunc();
 				_workCallback(_state);
 				var c = _control;
 				if(c != null && !c.IsDisposed) {
@@ -547,10 +1022,10 @@
 					}
 					catch(InvalidOperationException e) {
 						if(!c.IsDisposed) {
-							OutDebug(e);
+							PrintDebug(e);
 						}
 					}
-					catch(Exception e) { OutDebug(e); }
+					catch(Exception e) { PrintDebug(e); }
 				}
 
 				_gch.Free();
@@ -558,7 +1033,7 @@
 
 			//~_Work()
 			//{
-			//	Out("dtor");
+			//	Print("dtor");
 			//}
 		}
 
@@ -682,7 +1157,7 @@
 
 			Perf.Next();
 			string name = "Catkeys_LibMem";
-			//Out(name);
+			//Print(name);
 			string s;
 			s = Environment.GetEnvironmentVariable(name);
 			//if(s != null) return (IntPtr)s.ToInt64_();
@@ -710,7 +1185,7 @@
 			var p = Process.GetCurrentProcess();
 			string name = $"Catkeys_{p.Id}_{p.StartTime.ToBinary()}"; //p.StartTime.ToBinary is the slowest part
 			Perf.Next();
-			//Out(name);
+			//Print(name);
 			string s = Environment.GetEnvironmentVariable(name);
 			//if(s != null) return (IntPtr)s.ToInt64_();
 			if(s != null) return (IntPtr)Convert.ToInt64(s);
@@ -914,11 +1389,11 @@
 		//		if(_defaultAppDomain == null) {
 		//			object oIcf, oHost, oDom;
 		//			if(0 != CoCreateInstance(ref CLSID_CorRuntimeHost, Zero, CLSCTX_SERVER, ref IID_ICorRuntimeHost, out oHost)) return null;
-		//			Out(1);
+		//			Print(1);
 		//			var host=(ICorRuntimeHost)oHost;
-		//			OutHex(host.GetDefaultDomain(out oDom));
+		//			PrintHex(host.GetDefaultDomain(out oDom));
 		//			if(0 != host.GetDefaultDomain(out oDom)) return null;
-		//			Out(3);
+		//			Print(3);
 		//			_defaultAppDomain = oDom as AppDomain;
 		//		}
 		//		return _defaultAppDomain;
@@ -931,13 +1406,13 @@
 		//		if(_defaultAppDomain == null) {
 		//			object oIcf, oHost, oDom;
 		//			if(0 != DllGetClassObject(ref CLSID_CorRuntimeHost, ref IID_IClassFactory, out oIcf)) return null;
-		//			Out(1);
+		//			Print(1);
 		//			if(0!=((IClassFactory)oIcf).CreateInstance(Zero, ref IID_ICorRuntimeHost, out oHost)) return null;
-		//			Out(2);
+		//			Print(2);
 		//			var host=(ICorRuntimeHost)oHost;
-		//			OutHex(host.GetDefaultDomain(out oDom));
+		//			PrintHex(host.GetDefaultDomain(out oDom));
 		//			if(0 != host.GetDefaultDomain(out oDom)) return null;
-		//			Out(3);
+		//			Print(3);
 		//			_defaultAppDomain = oDom as AppDomain;
 		//		}
 		//		return _defaultAppDomain;
@@ -982,18 +1457,18 @@
 		Perf.First();
 		var m = c != null ? new CatMenu(new Container()) : new CatMenu();
 		Perf.Next();
-		m["One"] = o => Out("one");
+		m["One"] = o => Print("one");
 		Perf.Next();
-		//m["Two"] = o => Out("two");
+		//m["Two"] = o => Print("two");
 		//m.Items.Add("text");
-		for(int i = 0; i < 20; i++) m[$"More {i}"] = o => Out(o);
+		for(int i = 0; i < 20; i++) m[$"More {i}"] = o => Print(o);
 		Perf.Next();
-		//Out(m.LastItem.Height);
+		//Print(m.LastItem.Height);
 		using(var sm = m.Submenu("Submenu")) {
-			m["Three"] = o => Out("three");
-			m["Four"] = o => Out("four");
+			m["Three"] = o => Print("three");
+			m["Four"] = o => Print("four");
 			Perf.Next();
-			for(int i = 0; i < 20; i++) m[$"More {i}"] = o => Out(o);
+			for(int i = 0; i < 20; i++) m[$"More {i}"] = o => Print(o);
 			Perf.Next();
 		}
 		Perf.Next();
@@ -1019,8 +1494,8 @@
 		m.CMS.Items.AddRange(a);
 		Perf.Next();
 		using(m.Submenu("Submenu")) {
-			m["Three"] = o => Out("three");
-			m["Four"] = o => Out("four");
+			m["Three"] = o => Print("three");
+			m["Four"] = o => Print("four");
 		}
 		Perf.Next();
 		if(c != null) {
@@ -1064,7 +1539,7 @@
 
 		protected override void WndProc(ref Message m)
 		{
-			//Out(m);
+			//Print(m);
 			base.WndProc(ref m);
 
 			switch((uint)m.Msg) {
@@ -1072,7 +1547,7 @@
 				_mlTb.Stop();
 				break;
 			case Api.WM_PAINT:
-				//Out("painted");
+				//Print("painted");
 				//if(_tbStrip2 != null) {
 				//	ToolStrip2 t = _tbStrip2; _tbStrip2 = null;
 				//	if(!t.Focused) t.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting.
@@ -1125,7 +1600,7 @@
 			t.Stop();
 			foreach(var tw in Wnd.ThreadWindows()) {
 				if(tw.ClassNameIs("#32768")) {
-					//Out(tw);
+					//Print(tw);
 					tw.SetExStyleAdd(Api.WS_EX_NOACTIVATE);
 					break;
 				}
@@ -1143,19 +1618,19 @@
 
 	private static void K_MeasureItem(object sender, MeasureItemEventArgs e)
 	{
-		OutList(e.ItemHeight, e.ItemWidth);
+		PrintList(e.ItemHeight, e.ItemWidth);
 	}
 
 	private static void K_DrawItem(object sender, DrawItemEventArgs e)
 	{
-		//OutFunc();
+		//PrintFunc();
 	}
 
 	static EventHandler _eho = _EventHandlerOld;
 
 	static void _EventHandlerOld(object sender, EventArgs args)
 	{
-		OutFunc();
+		PrintFunc();
 	}
 
 	#endregion
@@ -1259,7 +1734,7 @@
 //	//domain.DoCallBack(Compiler.Compiler.Main); //faster than ExecuteAssembly by 3-4 ms
 //	AppDomain.Unload(domain);
 //	domain = null;
-//	//Out("_AppDomainThread() ended");
+//	//Print("_AppDomainThread() ended");
 //	GC.Collect(); //releases a lot
 //				  //Mes("MinimizeMemory");
 //				  //Misc.MinimizeMemory(); //does nothing
@@ -1299,7 +1774,7 @@
 
 //	//message loop
 //	//Application.Run(); //By default would add several ms to the startup time. Same speed if Main() has the LoaderOptimization attribute. Also may be not completely compatible with native wndproc. Also in some cases adds several MB to the working set.
-//	Api.MSG m;
+//	Native.MSG m;
 //	while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 //}
 
@@ -1336,11 +1811,11 @@
 //{
 //	FieldInfo[] a = v.GetType().GetFields();
 //	foreach(FieldInfo f in a) {
-//		Out(f.Name);
-//		//Out(f.FieldType.Equals(typeof(string)));
+//		Print(f.Name);
+//		//Print(f.FieldType.Equals(typeof(string)));
 //		switch(Type.GetTypeCode(f.FieldType)) {
-//		case TypeCode.String: Out("string"); break;
-//		case TypeCode.Object: Out("object"); break;
+//		case TypeCode.String: Print("string"); break;
+//		case TypeCode.Object: Print("object"); break;
 //		}
 //	}
 //}
@@ -1349,13 +1824,13 @@
 
 ////static void Mee(GCHandle x)
 ////{
-////Out("here"); return;
-//////Out(x.IsAllocated);
-////Out(GCHandle.ToIntPtr(x));
-////if(GCHandle.ToIntPtr(x)==Zero) Out("null");
+////Print("here"); return;
+//////Print(x.IsAllocated);
+////Print(GCHandle.ToIntPtr(x));
+////if(GCHandle.ToIntPtr(x)==Zero) Print("null");
 ////else {
 ////string s=(x.Target as string);
-////Out(s);
+////Print(s);
 ////}
 ////}
 //delegate void Dee(object x);
@@ -1369,17 +1844,17 @@
 //	//public int this[int i]
 //	//{
 //	//get { return i*i; }
-//	//set { Out($"{i} {value}"); }
+//	//set { Print($"{i} {value}"); }
 //	//}
 //	//public int this[int i, int j=1]
 //	//{
 //	//	get { return i*j; }
-//	//	set { Out($"{i} {j} {value}"); }
+//	//	set { Print($"{i} {j} {value}"); }
 //	//}
 //	public string this[string s]
 //	{
 //		get { return s + " ?"; }
-//		set { Out($"{s} {value}"); }
+//		set { Print($"{s} {value}"); }
 //	}
 
 //	//static TestIndexers ti_=new TestIndexers();
@@ -1397,28 +1872,28 @@
 ////	MethodBody mb=method.GetMethodBody();
 ////	int n=0;
 ////	foreach(LocalVariableInfo v in mb.LocalVariables) {
-////		//Out(v.LocalType.ToString());
+////		//Print(v.LocalType.ToString());
 ////		if(v.LocalType.Name=="Wnd") {
 ////			n++;
 ////			//v.
 ////		}
 ////	}
-////	Out(n);
+////	Print(n);
 ////}
 
 
 //[Trigger.Hotkey("Ctrl+K")]
-//public static void Function1(HotkeyTriggers.Message m) { Out("script"); }
+//public static void Function1(HotkeyTriggers.Message m) { Print("script"); }
 
 
 
 //TestUnmanaged();
 
 //StackTrace stackTrace = new StackTrace();
-//Out(stackTrace.GetFrame(1).GetMethod().Name);
-////Out(stackTrace.GetFrame(1).GetFileLineNumber()); //always 0, even in Debug build
-//Out(stackTrace.GetFrame(1).GetFileName()); //null
-////Out(stackTrace.GetFrame(1).GetMethod(). //nothing useful
+//Print(stackTrace.GetFrame(1).GetMethod().Name);
+////Print(stackTrace.GetFrame(1).GetFileLineNumber()); //always 0, even in Debug build
+//Print(stackTrace.GetFrame(1).GetFileName()); //null
+////Print(stackTrace.GetFrame(1).GetMethod(). //nothing useful
 
 
 
@@ -1441,16 +1916,16 @@
 //	break;
 //	case 2:
 //	int koop=8;
-//Out(hdh);
+//Print(hdh);
 //	break;
 //}
 
-//Out(hdh);
+//Print(hdh);
 
-//Out($"one{_}two");
-//Out("three"+_+"four");
-//Out("one" RN "two"); //error
-//Out($"one{}two"); //error
+//Print($"one{_}two");
+//Print("three"+_+"four");
+//Print("one" RN "two"); //error
+//Print($"one{}two"); //error
 
 
 ////str controls="3"
@@ -1469,18 +1944,18 @@
 //{
 //	//ShowRen.Show("another thread", "", "", x:1);
 //	MessageBox.Show("another thread");
-//	Out("after msgbox in another thread");
+//	Print("after msgbox in another thread");
 //}
 
 //[DllImport("comctl32.dll", EntryPoint = "TaskDialog")]
-//static extern int _TaskDialog(Wnd hWndParent, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, TDButton dwCommonButtons, LPARAM pszIcon, out int pnButton);
+//static extern int _TaskDialog(Wnd hWndParent, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, TDButtons dwCommonButtons, LPARAM pszIcon, out int pnButton);
 
 //static int TD(string s, bool asy)
 //{
 //	int r = 0;
 //	for(int i = 0; i < 100; i++) {
-//		int hr = _TaskDialog(Wnd0, Zero, "Test", s, null, TDButton.Cancel, 0, out r);
-//		//OutList(hr, r, asy);
+//		int hr = _TaskDialog(Wnd0, Zero, "Test", s, null, TDButtons.Cancel, 0, out r);
+//		//PrintList(hr, r, asy);
 //		if(hr == 0 || hr == Api.E_INVALIDARG) break;
 //		Time.WaitMS(20);
 //	}
@@ -1490,33 +1965,33 @@
 
 
 ////string ss = "gggggg.txt";
-////Out(ss.Like_(false, "*.exe", "*.txt"));
+////Print(ss.Like_(false, "*.exe", "*.txt"));
 
 ////string ss = "5ggggg.txt";
-////Out(ss.LikeEx_(false, "#*.exe", "#*.txt"));
+////Print(ss.LikeEx_(false, "#*.exe", "#*.txt"));
 
 ////string ss = "5ggggg.txt";
-////Out(ss.Equals_(false, "moo.exe", "5ggggg.txt"));
+////Print(ss.Equals_(false, "moo.exe", "5ggggg.txt"));
 
 ////string ss = "5ggggg.txt";
-////Out(ss.EndsWith_(false, ".exe", ".txt"));
+////Print(ss.EndsWith_(false, ".exe", ".txt"));
 
 ////string ss = "file.txt";
-////Out(ss.StartsWith_(false, "kkk", "file."));
+////Print(ss.StartsWith_(false, "kkk", "file."));
 
 //string ss = "file.txt";
-////Out(ss.RegexIs_(".*.TXT"));
-////Out(ss.RegexIs_(".*.txt", RegexOptions.IgnoreCase));
-////Out(ss.RegexIs_(0, ".*.TXT", ".*.txt"));
-////Out(ss.RegexIs_(RegexOptions.IgnoreCase, ".*.TXT", ".*.txt"));
+////Print(ss.RegexIs_(".*.TXT"));
+////Print(ss.RegexIs_(".*.txt", RegexOptions.IgnoreCase));
+////Print(ss.RegexIs_(0, ".*.TXT", ".*.txt"));
+////Print(ss.RegexIs_(RegexOptions.IgnoreCase, ".*.TXT", ".*.txt"));
 //ss = "gggg.exe\naaa.txt\nbbb.txt";
-////Out(ss.RegexMatch_(".*.TXT"));
-////Out(ss.RegexMatch_(".*.TXT", RegexOptions.IgnoreCase));
+////Print(ss.RegexMatch_(".*.TXT"));
+////Print(ss.RegexMatch_(".*.TXT", RegexOptions.IgnoreCase));
 ////Output.Write(ss.RegexMatches_(".*.TXT"));
 ////Output.Write(ss.RegexMatches_(".*.TXT", RegexOptions.IgnoreCase));
 
-//Out(ss.RegexReplace_(@"\.txt\b", ".moo"));
-//Out(ss.RegexReplace_(@"\.txt\b", m=> { return ".boo"; }));
+//Print(ss.RegexReplace_(@"\.txt\b", ".moo"));
+//Print(ss.RegexReplace_(@"\.txt\b", m=> { return ".boo"; }));
 
 ////var au = new int[] {1, 2, 3 };
 ////var au = new List<int> {1, 2, 3 };
@@ -1528,7 +2003,7 @@
 
 
 
-//Out(AppDomain.CurrentDomain.FriendlyName);
+//Print(AppDomain.CurrentDomain.FriendlyName);
 
 //new Thread(AnotherThread).Start();
 
@@ -1536,7 +2011,7 @@
 
 ////Thread.CurrentThread.Abort();
 ////AppDomain.Unload(AppDomain.CurrentDomain);
-//Out("after TaskDialog");
+//Print("after TaskDialog");
 
 //return;
 
@@ -1553,7 +2028,7 @@
 //		Perf.Next();
 //	}
 //	Perf.Write();
-//	Out(s);
+//	Print(s);
 //}
 //);
 
@@ -1569,13 +2044,13 @@
 
 ////string m = z.Name;
 ////string m = z.GetControlText();
-////OutList(m==null, m=="", m);
+////PrintList(m==null, m=="", m);
 ////return;
 
-//Out(z);
+//Print(z);
 
 //string cn = null;
-////cn= z.ControlText; OutList(cn.Length, cn); return;
+////cn= z.ControlText; PrintList(cn.Length, cn); return;
 //int nt = 0;
 
 //Perf.First(100);
@@ -1586,18 +2061,18 @@
 //	Perf.Next();
 //}
 //Perf.Write();
-//Out(cn);
-//Out(nt);
+//Print(cn);
+//Print(nt);
 
 //Wnd ww = Wnd.Find("Untitled - Notepad");
 //ww.MoveInScreen(100, 100);
 //return;
 
-//OutFunc();
-//Out(FunctionName());
+//PrintFunc();
+//Print(FunctionName());
 //Output.WriteHex((sbyte)(-10));
-//OutList(1, "mmm", true, null, 5.6);
-//Out("ff");
+//PrintList(1, "mmm", true, null, 5.6);
+//Print("ff");
 //Print(5);
 //PrintList(1, 2, 3);
 //return;
@@ -1613,7 +2088,7 @@
 //Info(new string[] { "aaa", "bbb" });
 //Info(new int[] { 'a', 'b' });
 //Info(new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } });
-//Out("----------");
+//Print("----------");
 //Print("stri");
 //Print(5);
 //Print(true);
@@ -1636,7 +2111,7 @@
 
 //Wait(2);
 //Info("bla");
-//Out("bla");
+//Print("bla");
 //Say("bla");
 //Print("bla");
 //OW("bla");
@@ -1656,17 +2131,17 @@
 
 ////Wnd.RectMoveInScreen(ref k, limitSize:true);
 //Wnd.RectEnsureInScreen(ref k, limitSize:true);
-//Out(k);
+//Print(k);
 
 ////w=Wnd.Misc.SpecHwnd.NoTopmost;
-//Out(Screen_.FromObject(w));
+//Print(Screen_.FromObject(w));
 
 ////Screen s1 = Screen_.FromObject(w);
 ////Screen s2 = Screen_.FromObject(w);
 //Screen s1 = Screen.PrimaryScreen;
 //Screen s2 = Screen.PrimaryScreen;
-//Out(s1==s2);
-//Out(s1.Equals(s2));
+//Print(s1==s2);
+//Print(s1.Equals(s2));
 
 
 //IntPtr hm = DisplayMonitor.GetHandle(w);
@@ -1674,13 +2149,13 @@
 ////hm=DisplayMonitor.GetHandle(DisplayMonitor.OfMouse);
 ////hm=DisplayMonitor.GetHandle(new POINT(2000, 2000));
 ////hm=DisplayMonitor.GetHandle(new RECT(2000, 2000, 100, 100, true));
-//Out(hm);
+//Print(hm);
 
 //for(int z=0; z<2; z++) {
 //	Screen[] ad = Screen.AllScreens;
 //	foreach(Screen k in ad) {
 //		RECT rr = k.Bounds;
-//		Out(rr);
+//		Print(rr);
 //	}
 //	ShowRen.MessageDialog("aaa");
 //}
@@ -1694,7 +2169,7 @@
 //Perf.Write();
 
 //Screen k = ScreenFromIndex(1);
-//Out(k.Bounds);
+//Print(k.Bounds);
 
 
 //return;
@@ -1704,7 +2179,7 @@
 //Api.GetWindowRect(w, out r1);
 //GetWindowRect(w, out r2);
 
-//OutList(r1, r2);
+//PrintList(r1, r2);
 
 //return;
 
@@ -1715,32 +2190,32 @@
 //var r4 = RECT.LTWH(1, 8, 10, 50);
 //var r5 = new RECT() { left=2, top=20, Width=2, Height=10 };
 
-//Out(r2==r1);
+//Print(r2==r1);
 
-//Out(r3);
-//Out(r4);
-//Out(r5);
+//Print(r3);
+//Print(r4);
+//Print(r5);
 
 //return;
 
 //Wnd w = Wnd.Misc.SpecHwnd.Bottom;
-//Out(w.Equals(Wnd.Misc.SpecHwnd.Bottom));
+//Print(w.Equals(Wnd.Misc.SpecHwnd.Bottom));
 //Wnd w2 = w;
-//Out(w.Equals(w2));
+//Print(w.Equals(w2));
 ////Wnd w = Wnd0;
-////Out(w.Equals(Wnd0));
+////Print(w.Equals(Wnd0));
 
 //Wnd wg = Wnd.Get.FirstToplevel();
 
 //return;
 
 //int eon, x = "ab 99 hjk".ToInt_(2, out eon);
-//OutList(x, eon);
+//PrintList(x, eon);
 //int x = "ab 99 hjk".ToInt_(2);
 //int x = " 99 hjk".ToInt_();
-//OutList(x);
+//PrintList(x);
 //int eon, x = " 99 hjk".ToInt_(out eon);
-//OutList(x, eon);
+//PrintList(x, eon);
 
 //return;
 
@@ -1756,31 +2231,31 @@
 
 //var asm = Assembly.GetEntryAssembly(); //fails if DoCallBack or CreateInstance, OK if ExecuteAssembly
 //var asm = Assembly.GetExecutingAssembly(); //OK
-//Out(asm!=null);
-//Out(asm.Location);
+//Print(asm!=null);
+//Print(asm.Location);
 ////var rm = new System.Resources.ResourceManager("", asm);
-////Out(rm);
+////Print(rm);
 //return;
 
 //ScriptOptions.DisplayName="Script display name";
-//Out(Assembly.GetEntryAssembly().FullName); //exception
+//Print(Assembly.GetEntryAssembly().FullName); //exception
 
 //Wnd ko = Wnd0;
 ////ko = Wnd.Misc.SpecHwnd.Topmost;
-//Out(ko == null);
-//Out(null==ko);
+//Print(ko == null);
+//Print(null==ko);
 //Wnd? mo = null, mo2=null;
-//Out(ko == mo);
-//Out(mo == mo2);
+//Print(ko == mo);
+//Print(mo == mo2);
 //POINT po = new POINT();
-//Out(po == null);
+//Print(po == null);
 ////int io = 0;
-////Out(io == null);
+////Print(io == null);
 //IntPtr pi = Zero;
-//Out(pi == null);
+//Print(pi == null);
 //return;
 
-//Out(sizeof(WPARAM));
+//Print(sizeof(WPARAM));
 
 ////void* b = (void*)1000000;
 ////IntPtr b = (IntPtr)(-1);
@@ -1808,11 +2283,11 @@
 ////int x = (int)u;
 ////WPARAM y = u;
 
-//Out("OK");
-//Out($"{x} {b}");
-////Out($"{x} {((int)b).ToString()}");
-////Out(x==-1);
-////Out(x+4);
+//Print("OK");
+//Print($"{x} {b}");
+////Print($"{x} {((int)b).ToString()}");
+////Print(x==-1);
+////Print(x+4);
 
 
 ////string s = " 10 more";
@@ -1821,17 +2296,17 @@
 ////string s = "-0x10";
 //s=" 15 text";
 
-////Out(Convert.ToInt32(s));
-////Out(int.Parse(s));
-////Out(SplitNumberString(ref s));
-////Out($"'{s}'");
+////Print(Convert.ToInt32(s));
+////Print(int.Parse(s));
+////Print(SplitNumberString(ref s));
+////Print($"'{s}'");
 
 //int len, r = s.ToInt_(out len);
-//Out($"{r} 0x{r:X} {len}");
+//Print($"{r} 0x{r:X} {len}");
 
 //string tail;
 //r=s.ToInt_(out tail);
-//Out($"{r} 0x{r:X} '{tail}' {tail==null}");
+//Print($"{r} 0x{r:X} '{tail}' {tail==null}");
 
 //Perf.SpinCPU();
 //int i, j, n1=0, n2=0;
@@ -1842,16 +2317,16 @@
 //	for(i=0; i<1000; i++) n2+=ToInt_(s, out len);
 //	Perf.NextWrite();
 //}
-//Out($"{n1} {n2} {len}");
+//Print($"{n1} {n2} {len}");
 
 //string[] a = { "one", "two" };
-//Out(a);
+//Print(a);
 
 //var d = new Dictionary<int, int>() { { 1, 1 }, { 2, 2 } };
-//Out(d);
+//Print(d);
 
 //var k = new Dictionary<string, string>() { { "A", "B" }, { "C", "D" } };
-////Out(k);
+////Print(k);
 //Output.Write(k);
 
 //Redirect();
@@ -1864,7 +2339,7 @@
 //for(int j=0; j<3; j++) {
 
 //	Perf.First();
-//	for(i=0; i<n; i++) Out("out");
+//	for(i=0; i<n; i++) Print("out");
 //	Perf.Next();
 //	for(i=0; i<n; i++) Console.WriteLine("con");
 //	//Perf.Next();
@@ -1881,10 +2356,10 @@
 
 ////Console.Write("{0} {1}", 1, true);
 ////return;
-//Out("out");
+//Print("out");
 //Console.WriteLine("con");
 //Trace.WriteLine("tra");
-////Thread.Sleep(1000); try { Console.Clear(); } catch { Out("exc"); }
+////Thread.Sleep(1000); try { Console.Clear(); } catch { Print("exc"); }
 //Debug.WriteLine("deb");
 
 ////Output.Clear();
@@ -1901,10 +2376,10 @@
 //var e = new WaitTimeoutException();
 //var e = new WaitTimeoutException(null, new Exception("inner"));
 //var e = new WaitTimeoutException();
-//Out(e.Message);
+//Print(e.Message);
 
 
-//Out(1);
+//Print(1);
 //Input.Key("Ctrl+K");
 //Cat.Key("Ctrl+K");
 
@@ -1913,75 +2388,75 @@
 
 //Test_str();
 
-//Out($"{(int)Control.ModifierKeys:X}");
-//Out($"{(int)Keys.Control:X}");
-//Out($"{(int)K.Control:X}");
+//Print($"{(int)Control.ModifierKeys:X}");
+//Print($"{(int)Keys.Control:X}");
+//Print($"{(int)K.Control:X}");
 //Keys("");
 //Key("");
 //SendKeys
 
 
-//Out((IntPtr)WndSpec.NoTopmost);
-//Out(Wnd.Find("Untitled - Notepad"));
+//Print((IntPtr)WndSpec.NoTopmost);
+//Print(Wnd.Find("Untitled - Notepad"));
 
 //TestUtil.Test_str();
 
 //string s = "file.txt";
-//Out(s.likeS("*.txt"));
+//Print(s.likeS("*.txt"));
 
-////Out(s.Reverse());
+////Print(s.Reverse());
 
 //switch(s) {
 //case "*.txt":
-//	Out("txt");
+//	Print("txt");
 //	break;
 //case "*.moo":
-//	Out("moo");
+//	Print("moo");
 //	break;
 //default:
-//	Out("none");
+//	Print("none");
 //	break;
 //}
 
 //if(s.likeI("*.txt")) {
-//	Out("txt");
+//	Print("txt");
 //} else if(s.likeI("*.moo")) {
-//	Out("moo");
+//	Print("moo");
 //} else {
-//	Out("none");
+//	Print("none");
 //}
 
 //if(s.endsWithI(".txt")) {
-//	Out("txt");
+//	Print("txt");
 //} else if(s.endsWithI(".moo")) {
-//	Out("moo");
+//	Print("moo");
 //} else {
-//	Out("none");
+//	Print("none");
 //}
 
 //if(Regex.IsMatch(s, "one")) {
-//	Out("txt");
+//	Print("txt");
 //} else if(Regex.IsMatch(s, "two")) {
-//	Out("moo");
+//	Print("moo");
 //} else {
-//	Out("none");
+//	Print("none");
 //}
 
 
-//Out(K.A);
+//Print(K.A);
 //Keys("dd");
 //Text("uu");
 
-//Trigger.Hotkey["Ctrl+K"] =O=> { Out("lambda"); };
-//Trigger.Hotkey["Ctrl+K"] = delegate(HotkeyTriggers.Message m) { Out("delegate"); };
+//Trigger.Hotkey["Ctrl+K"] =O=> { Print("lambda"); };
+//Trigger.Hotkey["Ctrl+K"] = delegate(HotkeyTriggers.Message m) { Print("delegate"); };
 
 //HotkeyTriggers.TestFireTrigger();
 
 //var k=new TestIndexers();
-//Out(k[3]); k[7]=5;
-//Out(k[3, 4]); k[7, 2]=5;
-//Out(k[3]); k[7]=5;
-//Out(k["AAA"]); k["BBB"]="C";
+//Print(k[3]); k[7]=5;
+//Print(k[3, 4]); k[7, 2]=5;
+//Print(k[3]); k[7]=5;
+//Print(k["AAA"]); k["BBB"]="C";
 //TestIndexers.Hotkey["test"]="moo";
 
 
@@ -2003,21 +2478,21 @@
 //System.Collections.Generic.HashSet<
 
 //		return;
-//			//Out(OptParam(b:5));
+//			//Print(OptParam(b:5));
 
-//			//try { Out(1); }catch {}
+//			//try { Print(1); }catch {}
 
 //			//for(int j=0; j<5; j++)
 //			//{
 //			//	TestLocal();
-//			//	//Out("returned");
+//			//	//Print("returned");
 //			//	//GC.Collect(0, GCCollectionMode.Forced, true);
 //			//	Perf.First();
 //			//	GC.Collect();
 //			//	Perf.Next();
-//			//	//Out("collected");
+//			//	//Print("collected");
 //			//	GC.WaitForFullGCComplete();
-//			//	//Out("waited");
+//			//	//Print("waited");
 //			//}
 
 //			//long g1, g2;
@@ -2026,7 +2501,7 @@
 //			////Thread.Sleep(1000);
 //			//g2=Stopwatch.GetTimestamp();
 
-//			//Out(g2-g1);
+//			//Print(g2-g1);
 //			//return;
 
 //			string script = @"
@@ -2064,13 +2539,13 @@
 //				compiler.Parameters.Pipeline = new CompileToMemory();
 //				//compiler.Parameters.Pipeline = new CompileToFile();
 //				//compiler.Parameters.Ducky = true;
-//				//Out(compiler.Parameters.BooAssembly.FullName);
-//				//Out(compiler.Parameters.Debug);
+//				//Print(compiler.Parameters.BooAssembly.FullName);
+//				//Print(compiler.Parameters.Debug);
 //				compiler.Parameters.Debug = false; //default true; 20% faster when Release
 //				//compiler.Parameters.Environment.Provide.
 //				//compiler.Parameters.GenerateInMemory=false; //default is true even if new CompileToFile()
-//				//Out(compiler.Parameters.GenerateInMemory);
-//				//Out(compiler.Parameters.OutputAssembly);
+//				//Print(compiler.Parameters.GenerateInMemory);
+//				//Print(compiler.Parameters.OutputAssembly);
 //				//compiler.Parameters.OutputAssembly=@"q:\test\boo.dll";
 
 //				compiler.Parameters.AddAssembly(Assembly.LoadFile(@"Q:\test\Moo.dll")); //ok
@@ -2086,35 +2561,35 @@
 //				if (context.GeneratedAssembly != null)
 //				{
 //					//SaveAssembly(context.GeneratedAssembly, @"q:\test\boo.exe");
-//					//Out(context.GeneratedAssembly.FullName);
-//					//Out(context.GeneratedAssembly.EntryPoint.ToString()); //void Main()
-//					//Out(context.GeneratedAssembly.);
+//					//Print(context.GeneratedAssembly.FullName);
+//					//Print(context.GeneratedAssembly.EntryPoint.ToString()); //void Main()
+//					//Print(context.GeneratedAssembly.);
 
 //					Type scriptModule = context.GeneratedAssembly.GetType("ScriptModule");
-//					//Out(scriptModule == null);
+//					//Print(scriptModule == null);
 //					MethodInfo met = scriptModule.GetMethod("Main");
 
 //					//MethodInfo[] a = scriptModule.GetMethods();
 //					//foreach(MethodInfo m in a)
 //					//{
-//					//Out(m.Name);
+//					//Print(m.Name);
 //					//}
 
 //					met.Invoke(null, null);
 
 //					//string output = (string)stringManip.Invoke(null, new object[] { "Tag" });
-//					//Out(output);
+//					//Print(output);
 //				}
 //				else
 //				{
 //					foreach (CompilerError error in context.Errors)
-//						Out(error);
+//						Print(error);
 //				}
 
 //				double f = Stopwatch.Frequency / 1000000.0;
-//				Out("speed: {0} {1} {2} {3} {4}", (long)(t1 / f), (long)((t2 - t1) / f), (long)((t3 - t2) / f), (long)((t4 - t3) / f), (long)((t5 - t4) / f));
+//				Print("speed: {0} {1} {2} {3} {4}", (long)(t1 / f), (long)((t2 - t1) / f), (long)((t3 - t2) / f), (long)((t4 - t3) / f), (long)((t5 - t4) / f));
 //			}
-//			Out("Press a key . . . ");
+//			Print("Press a key . . . ");
 //			Console.ReadKey(true);
 //}
 

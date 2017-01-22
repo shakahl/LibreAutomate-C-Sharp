@@ -18,11 +18,12 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
+	/// <summary>
+	/// Time functions.
+	/// </summary>
 	//[DebuggerStepThrough]
 	public static class Time
 	{
@@ -40,6 +41,11 @@ namespace Catkeys
 		/// </summary>
 		public static long Milliseconds { get { return Api.GetTickCount64(); } }
 
+		/// <summary>
+		/// Waits the specified number of seconds.
+		/// Calls <see cref="Thread.Sleep(int)"/>.
+		/// </summary>
+		/// <param name="timeS">The wait time, seconds. Precision - 0.002 s (2 ms).</param>
 		public static void Wait(double timeS)
 		{
 			int ms;
@@ -52,11 +58,34 @@ namespace Catkeys
 			WaitMS(ms);
 		}
 
+		/// <summary>
+		/// Waits the specified number of milliseconds.
+		/// Calls <see cref="Thread.Sleep(int)"/>.
+		/// </summary>
+		/// <param name="timeMS">The number of milliseconds to wait. Precision - 2 ms.</param>
 		public static void WaitMS(int timeMS)
 		{
 			//if(timeMS < 0) timeMS = Timeout.Infinite;
 			Thread.Sleep(timeMS);
 			//TODO
+		}
+
+		/// <summary>
+		/// Retrieves and dispatches messages from the message queue of current thread.
+		/// Similar to Application.DoEvents, but more lightweight.
+		/// Just calls Api.PeekMessage, Api.TranslateMessage and Api.DispatchMessage.
+		/// Returns false if received WM_QUIT message (reposts it), else returns true.
+		/// </summary>
+		public static bool DoEvents()
+		{
+			Native.MSG m;
+			while(Api.PeekMessage(out m, Wnd0, 0, 0, Api.PM_REMOVE)) {
+				//Util.Debug_.PrintMsg(ref m);
+				if(m.message == Api.WM_QUIT) { Api.PostQuitMessage(m.wParam); return false; }
+				Api.TranslateMessage(ref m);
+				Api.DispatchMessage(ref m);
+			}
+			return true;
 		}
 
 #if true
@@ -72,7 +101,7 @@ namespace Catkeys
 		/// Uses class Time.Timer_, which calls Api.SetTimer().
 		/// Similar to System.Windows.Forms.Timer, but has less overhead, for example does not create a hidden window.
 		/// The callback function will be called in this thread.
-		/// This thread must have a message loop, eg call Application.Run() or Form.ShowModal() or show a modal dialog or menu or repeatedly call Application.DoEvents().
+		/// This thread must have a message loop, eg call Application.Run() or Form.ShowModal().
 		/// The timer interval precision is 10 ms. For example, if you specify intervalMS=15, actual interval time will be between 10 and 20 ms, not exactly 15.
 		/// Some intervals may be longer, because the callback function is not called while this thread is processing something or waiting and not retrieving Windows messages from the thread's message queue.
 		/// </remarks>
@@ -112,8 +141,8 @@ namespace Catkeys
 			public object Tag { get; set; }
 
 			/// <summary>
-			/// Creates new Timer_ object.
-			/// Used by Time.SetTimer(), more info there.
+			/// Initializes a new <see cref="Timer_"/> instance.
+			/// Used by <see cref="Time.SetTimer"/>.
 			/// </summary>
 			public Timer_(Action<Timer_> callback, object tag = null) : base()
 			{
@@ -133,7 +162,6 @@ namespace Catkeys
 			/// </remarks>
 			public void Start(int intervalMS, bool singlePeriod)
 			{
-				if(intervalMS < 0) throw new ArgumentOutOfRangeException("intervalMS");
 				bool isNew = _id == 0;
 				if(!isNew) {
 					if(!_IsSameThread()) return;
@@ -182,7 +210,7 @@ namespace Catkeys
 			/// </remarks>
 			public void Stop()
 			{
-				//Out("Stop: " + _id);
+				//Print("Stop: " + _id);
 				if(_id != 0) {
 					if(!_IsSameThread()) return;
 					Api.KillTimer(Wnd0, _id);
@@ -200,7 +228,7 @@ namespace Catkeys
 				return isSameThread;
 			}
 
-			//~Timer_() { Out("dtor"); } //don't call Stop() here, we are in other thread
+			//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
 		}
 #else //tried with System.Windows.Forms.Timer. Works, but creates hidden windows, I don't like it.
 		public static void SetTimer(int intervalMS, TimerHandler onTick, bool singleTick = false, object tag = null)
@@ -250,7 +278,7 @@ namespace Catkeys
 
 			for(int i = 0, t = 0; t < ms;) {
 				i += 2; t += i; if(t > ms) i -= t - ms;
-				//Out(i);
+				//Print(i);
 				WaitMS(i);
 				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = Wnd0;
 			}
@@ -276,6 +304,9 @@ namespace Catkeys
 		public static void AutoDelay() { AutoDelay(Wnd0, 0, 0); }
 	}
 
+	/// <summary>
+	/// Functions to wait for a condition.
+	/// </summary>
 	//[DebuggerStepThrough]
 	public static class WaitFor
 	{

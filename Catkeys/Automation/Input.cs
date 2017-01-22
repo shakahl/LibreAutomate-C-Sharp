@@ -18,8 +18,8 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
+
+#pragma warning disable 1591 //XML doc. //TODO
 
 namespace Catkeys.Automation
 {
@@ -41,63 +41,32 @@ namespace Catkeys.Automation
 
 
 
-		//public static void Keys(params object[] keys)
-		//{
-		//	//info:
-		//	//Named not Keys because then hides enum Keys from System.Windows.Forms. Also various interfaces have members named Keys.
-		//	//Named not SendKeys because too long and hides class SendKeys from System.Windows.Forms.
-		//	//Never mind: Key hides enum Key from Microsoft.DirectX.DirectInput and System.Windows.Input. Also various classes have Key property.
-
-		//	if(keys==null) return;
-		//	//Out(keys.Length);
-		//	foreach(object o in keys) {
-		//		//switch(o.GetType().
-		//		if(o is string) {
-		//			var s=o as string;
-		//			Out($"string: {s}");
-		//		} else if(o is KeysToSend) {
-		//			var k=o as KeysToSend;
-		//			Out($"KeysToSend: len={k.Length}");
-		//		} else if(o is double) {
-		//			var d=(double)o;
-		//			Out($"double: {d}");
-		//		} else if(o is int) {
-		//			var i=(int)o;
-		//			Out($"int: {i}");
-		//		} else {
-		//			Out("error");
-		//		}
-		//	}
-		//}
-
 		public static void Keys(params string[] keys_text_keys_text_andSoOn)
 		{
 			var keys = keys_text_keys_text_andSoOn;
 			if(keys == null) return;
 		}
 
-		//public static void Key(params string[] keys_text_keys_text_andSoOn)
+		//note:
+		//	Don't use the hybrid option in Catkeys. In many apps sending keys for text snippets etc is too slow, better to paste always.
+		//	Then probably don't need Text(). In that rare cases when need, can use Keys("", "text");
+		//public static void Text(params string[] text_keys_text_keys_andSoOn)
 		//{
+		//	var keys = text_keys_text_keys_andSoOn;
+		//	if(keys == null) return;
 		//}
 
-		//Uses Script.Option.hybridText.
-		public static void Text(params string[] text_keys_text_keys_andSoOn)
-		{
-			var keys = text_keys_text_keys_andSoOn;
-			if(keys == null) return;
-		}
+		//public static void Text(bool hybrid, params string[] text_keys_text_keys_andSoOn)
+		//{
+		//	var keys = text_keys_text_keys_andSoOn;
+		//	if(keys == null) return;
+		//}
 
-		public static void Text(bool hybrid, params string[] text_keys_text_keys_andSoOn)
-		{
-			var keys = text_keys_text_keys_andSoOn;
-			if(keys == null) return;
-		}
-
-		public static void Text(ScriptOptions options, params string[] text_keys_text_keys_andSoOn)
-		{
-			var keys = text_keys_text_keys_andSoOn;
-			if(keys == null) return;
-		}
+		//public static void Text(ScriptOptions options, params string[] text_keys_text_keys_andSoOn)
+		//{
+		//	var keys = text_keys_text_keys_andSoOn;
+		//	if(keys == null) return;
+		//}
 
 
 		//public class KeysToSend

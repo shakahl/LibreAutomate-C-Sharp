@@ -20,17 +20,15 @@ using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 using static Catkeys.Automation.NoClass;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
-
+#pragma warning disable 1591 //XML doc
 
 namespace Catkeys
 {
-	public static class LibTest
+	internal static class LibTest
 	{
 		#region old_test_functions
 
@@ -55,20 +53,22 @@ namespace Catkeys
 
 		//		Perf.Next();
 		//		//Perf.NW();
-		//		Out((IntPtr)m);
+		//		Print((IntPtr)m);
 		//		//int* k = (int*)m;
-		//		//Out(*k);
+		//		//Print(*k);
 		//		//if(*k == 0) *k = 7;
-		//		Out(m->test);
+		//		Print(m->test);
 		//		if(m->test == 0) m->test = 7;
 		//	}
 		//	Perf.Write();
-		//	//Out(m);
+		//	//Print(m);
 
 		//	//GC.Collect();
 		//}
 
 		#endregion
+
+		#region enum files
 
 		public static IEnumerable<string> EnumerateFiles(string path, string pattern, bool recursive)
 		{
@@ -145,6 +145,9 @@ namespace Catkeys
 				yield return file;
 			}
 		}
+
+		#endregion
+
 
 		public static void TestFuture()
 		{

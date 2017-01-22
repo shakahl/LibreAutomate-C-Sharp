@@ -18,16 +18,10 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Editor
 {
-#if FORM2
-	public partial class Form2
-#else
-	public partial class Form4
-#endif
+	public partial class MainForm
 	{
 		partial class _Commands
 		{
@@ -441,7 +435,7 @@ namespace Editor
 
 			public void View_Output()
 			{
-
+				_form._dock.ShowPanel(_form._outputPane);
 			}
 
 			public void View_Find()

@@ -18,8 +18,6 @@ using System.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys.Triggers
 {
@@ -34,7 +32,7 @@ namespace Catkeys.Triggers
 		///Trigger event data sent to the target function.
 		public class Message { }
 
-		//Indexer that allows to assign triggers to target functions like this: Trigger.Hotkey["Ctrl+K"] =m=> { Out("target"); };
+		//Indexer that allows to assign triggers to target functions like this: Trigger.Hotkey["Ctrl+K"] =m=> { Print("target"); };
 		public Target this[string hotkey]
 		{
 			set
@@ -54,9 +52,9 @@ namespace Catkeys.Triggers
 						.Where(m => m.GetCustomAttributes(typeof(Trigger.HotkeyAttribute), false).Length > 0)
 						.ToArray();
 			foreach(MethodInfo m in methods) {
-				Out($"\t{m.Name}");
+				Print($"\t{m.Name}");
 				foreach(var a in (Trigger.HotkeyAttribute[])m.GetCustomAttributes(typeof(Trigger.HotkeyAttribute), false)) {
-					Out($"\t\t{a.hotkey}");
+					Print($"\t\t{a.hotkey}");
 					Trigger.Hotkey[a.hotkey]=(Target)m.CreateDelegate(typeof(Target));
 					//Trigger.Hotkey[a.hotkey] = (TargetPath)Delegate.CreateDelegate(typeof(TargetPath), m);
 				}
@@ -64,14 +62,14 @@ namespace Catkeys.Triggers
 
 			//foreach(Type t in k.GetTypes())
 			//{
-			//	Out(t.Name);
+			//	Print(t.Name);
 			//	foreach(MethodInfo m in t.GetMethods())
 			//	{
 			//	foreach(CustomAttributeData d in m.CustomAttributes)
 			//	{
-			//		Out(
+			//		Print(
 			//		Attribute[] attrs = m.CustomAttributes Attribute
-			//		Out($"\t{m.Name}");
+			//		Print($"\t{m.Name}");
 			//             }
 			//	//
 			//	//if(

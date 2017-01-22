@@ -18,8 +18,8 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
+
+#pragma warning disable 1591 //XML doc. //TODO
 
 namespace Catkeys
 {
@@ -41,7 +41,7 @@ namespace Catkeys
 		/// </summary>
 		public static Wnd GetTextCursorRect(out RECT r)
 		{
-			Api.GUITHREADINFO g;
+			Native.GUITHREADINFO g;
 			if(Wnd.Misc.GetGUIThreadInfo(out g) && !g.hwndCaret.Is0) {
 				if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
 				r = g.rcCaret;

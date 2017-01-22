@@ -24,8 +24,6 @@ using System.Xml.Schema;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -45,6 +43,7 @@ namespace Catkeys
 	[Serializable]
 	public unsafe struct LPARAM :IXmlSerializable
 	{
+#pragma warning disable 1591 //XML doc
 		void* _v; //Not IntPtr, because it throws exception on overflow when casting from uint etc.
 
 		LPARAM(void* v) { _v = v; }
@@ -90,22 +89,24 @@ namespace Catkeys
 		public XmlSchema GetSchema() { return null; }
 		public void ReadXml(XmlReader reader) { _v = (void*)reader.ReadElementContentAsLong(); }
 		public void WriteXml(XmlWriter writer) { writer.WriteValue((long)_v); }
+#pragma warning restore 1591 //XML doc
 	}
 
 	/// <summary>
 	/// Contains point coordinates.
-	/// The same as System.Drawing.Point.
+	/// The same as Point.
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
 	public struct POINT
 	{
+#pragma warning disable 1591 //XML doc
 		public int x, y;
 
 		public POINT(int x, int y) { this.x = x; this.y = y; }
 
-		public static implicit operator POINT(System.Drawing.Point p) { return new POINT(p.X, p.Y); }
-		public static implicit operator System.Drawing.Point(POINT p) { return new System.Drawing.Point(p.x, p.y); }
+		public static implicit operator POINT(Point p) { return new POINT(p.X, p.Y); }
+		public static implicit operator Point(POINT p) { return new Point(p.x, p.y); }
 
 		public static bool operator ==(POINT p1, POINT p2) { return p1.x == p2.x && p1.y == p2.y; }
 		public static bool operator !=(POINT p1, POINT p2) { return !(p1 == p2); }
@@ -116,22 +117,24 @@ namespace Catkeys
 		/// POINT with all fields 0.
 		/// </summary>
 		public static readonly POINT Empty;
+#pragma warning restore 1591 //XML doc
 	}
 
 	/// <summary>
 	/// Contains width and height.
-	/// The same as System.Drawing.Size.
+	/// The same as Size.
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
 	public struct SIZE
 	{
+#pragma warning disable 1591 //XML doc
 		public int cx, cy;
 
 		public SIZE(int cx, int cy) { this.cx = cx; this.cy = cy; }
 
-		public static implicit operator SIZE(System.Drawing.Size z) { return new SIZE(z.Width, z.Height); }
-		public static implicit operator System.Drawing.Size(SIZE z) { return new System.Drawing.Size(z.cx, z.cy); }
+		public static implicit operator SIZE(Size z) { return new SIZE(z.Width, z.Height); }
+		public static implicit operator Size(SIZE z) { return new Size(z.cx, z.cy); }
 
 		public static bool operator ==(SIZE s1, SIZE s2) { return s1.cx == s2.cx && s1.cy == s2.cy; }
 		public static bool operator !=(SIZE s1, SIZE s2) { return !(s1 == s2); }
@@ -142,16 +145,18 @@ namespace Catkeys
 		/// SIZE with all fields 0.
 		/// </summary>
 		public static readonly SIZE Empty;
+#pragma warning restore 1591 //XML doc
 	}
 
 	/// <summary>
 	/// Contains rectangle coordinates.
-	/// Unlike System.Drawing.Rectangle, which contains fields for width and height and therefore cannot be used with Windows API functions, RECT contains fields for right and bottom and can be used with Windows API.
+	/// Unlike Rectangle, which contains fields for width and height and therefore cannot be used with Windows API functions, RECT contains fields for right and bottom and can be used with Windows API.
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
 	public struct RECT
 	{
+#pragma warning disable 1591 //XML doc
 		public int left, top, right, bottom;
 
 		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight)
@@ -161,8 +166,8 @@ namespace Catkeys
 			if(useWidthHeight) { right += left; bottom += top; }
 		}
 
-		public static implicit operator RECT(System.Drawing.Rectangle r) { return new RECT(r.Left, r.Top, r.Width, r.Height, true); }
-		public static implicit operator System.Drawing.Rectangle(RECT r) { return new System.Drawing.Rectangle(r.left, r.top, r.Width, r.Height); }
+		public static implicit operator RECT(Rectangle r) { return new RECT(r.Left, r.Top, r.Width, r.Height, true); }
+		public static implicit operator Rectangle(RECT r) { return new Rectangle(r.left, r.top, r.Width, r.Height); }
 
 		public static bool operator ==(RECT r1, RECT r2) { return r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom; }
 		public static bool operator !=(RECT r1, RECT r2) { return !(r1 == r2); }
@@ -181,7 +186,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if this rectangle is empty or invalid:
-		/// return right˂=left || bottom˂=top;
+		/// return right&lt;=left || bottom&lt;=top;
 		/// </summary>
 		public bool IsEmpty { get { return right <= left || bottom <= top; } }
 
@@ -224,7 +229,7 @@ namespace Catkeys
 		/// <summary>
 		/// Makes the rectangle bigger or smaller:
 		/// left-=dx; right+=dx; top-=dy; bottom+=dy;
-		/// Note: negative coordinates can make the rectangle invalid (right˂left or bottom˂top).
+		/// Note: negative coordinates can make the rectangle invalid (right&lt;left or bottom&lt;top).
 		/// </summary>
 		public void Inflate(int dx, int dy) { left -= dx; right += dx; top -= dy; bottom += dy; }
 
@@ -245,6 +250,7 @@ namespace Catkeys
 		public static readonly RECT Empty;
 
 		public override string ToString() { return $"{{L={left} T={top} R={right} B={bottom}  Width={Width} Height={Height}}}"; }
+#pragma warning restore 1591 //XML doc
 	}
 #pragma warning restore 660, 661
 
@@ -359,6 +365,7 @@ namespace Catkeys
 	[DebuggerStepThrough]
 	public class Coord
 	{
+#pragma warning disable 1591 //XML doc
 		public int coord;
 		public float fraction;
 
@@ -370,6 +377,12 @@ namespace Catkeys
 
 		public static implicit operator Coord(int coord) { return new Coord(coord); }
 		public static implicit operator Coord(float fraction) { return new Coord(fraction); }
+
+		public override string ToString()
+		{
+			return IsFraction ? fraction.ToString() : coord.ToString();
+		}
+#pragma warning restore 1591 //XML doc
 
 		/// <summary>
 		/// Sets coord = GetNormalized(min, max). Sets IsFraction = false.
@@ -393,6 +406,8 @@ namespace Catkeys
 		/// Returns new POINT(x, y), relative to the primary screen, where fractional x and/or y are converted to pixels.
 		/// x or y can be null, then the returned x or y value will be 0.
 		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
 		/// <param name="workArea">If false, coordinates are in primary screen, else in its work area.</param>
 		/// <param name="widthHeight">Don't add work area offset. Use when x and y are width and height.</param>
 		public static POINT GetNormalizedInScreen(Coord x, Coord y, bool workArea = false, bool widthHeight = false)
@@ -430,11 +445,6 @@ namespace Catkeys
 			}
 			return p;
 		}
-
-		public override string ToString()
-		{
-			return IsFraction ? fraction.ToString() : coord.ToString();
-		}
 	}
 
 	/// <summary>
@@ -453,7 +463,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="name">Name. Can be any unique string, for example a GUID string. Case-sensitive.</param>
 		/// <param name="value">Value.</param>
-		/// <exception cref="SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
+		/// <exception cref="System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
 		public static void SetVariable(string name, object value)
 		{
 			Util.AppDomain_.GetDefaultDomain().SetData("Catkeys\x5" + name, value);
@@ -597,7 +607,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="name">Name. Case-sensitive.</param>
 		/// <param name="initValue">A callback function delegate (eg lambda) that is called when the variable does not exist or is null. It must return an initial value.</param>
-		/// <exception cref="SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
+		/// <exception cref="System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
 		/// <exception cref="InvalidCastException">Value type mismatch.</exception>
 		/// <example><code>int test = InterDomain.GetVariable("test", () => 10);</code></example>
 		public static T GetVariable<T>(string name, Func<T> initValue)

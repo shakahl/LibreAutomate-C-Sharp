@@ -18,11 +18,12 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
+	/// <summary>
+	/// Simple calculation functions, similar to Math.
+	/// </summary>
 	[DebuggerStepThrough]
 	public static class Calc
 	{
@@ -94,13 +95,12 @@ namespace Catkeys
 		/// Multiplies number and numerator without overflow, and divides by denominator.
 		/// The return value is rounded up or down to the nearest integer.
 		/// If either an overflow occurred or denominator was 0, the return value is –1.
-		/// See also: Percent().
 		/// </summary>
 		public static int MulDiv(int number, int numerator, int denominator)
 		{
 			return _MulDiv(number, numerator, denominator);
 
-			//could use this, but the API rounds down or up to the nearst integer, but this always rounds down
+			//could use this, but the API rounds down or up to the nearest integer, but this always rounds down
 			//return (int)(((long)number * numerator) / denominator);
 		}
 
@@ -134,7 +134,30 @@ namespace Catkeys
 			return (value + (alignment - 1)) & ~(alignment - 1);
 		}
 
+		/// <summary>
+		/// If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
+		/// </summary>
+		/// <param name="value">An integer value.</param>
+		/// <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
+		/// <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
 		public static int AlignUp(int value, uint alignment) { return (int)AlignUp((uint)value, alignment); }
+
+		/// <summary>
+		/// Returns value but not less than min and not greater than max.
+		/// If value is less than min, returns min.
+		/// If value is greater than max, returns max.
+		/// </summary>
+		public static int MinMax(int value, int min, int max)
+		{
+			Debug.Assert(max >= min);
+			if(value < min) return min;
+			if(value > max) return max;
+			return value;
+
+			//why this is not an extension method:
+			//1. Less chances to not use the return value (expecting that the function modifies variable's value, which it can't do). There is no attribute to warn about it, unless you have ReSharper (then [Pure] etc).
+			//2. All similar functions are in Calc class. Like most similar .NET functions are in .NET class, and not in Int32 etc.
+		}
 
 		/// <summary>
 		/// Converts from System.Drawing.Color (ARGB) to native Windows COLORREF (ABGR).
@@ -324,6 +347,7 @@ namespace Catkeys
 		/// <summary>
 		/// Computes binary data hash using a specified cryptographic algorithm.
 		/// </summary>
+		/// <param name="a"></param>
 		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
 		public static byte[] Hash(byte[] a, string algorithm)
 		{
@@ -335,6 +359,7 @@ namespace Catkeys
 		/// <summary>
 		/// Computes string hash using a specified cryptographic algorithm.
 		/// </summary>
+		/// <param name="s"></param>
 		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
 		/// <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
 		public static byte[] Hash(string s, string algorithm)
@@ -345,7 +370,9 @@ namespace Catkeys
 		/// <summary>
 		/// Computes binary data hash using a specified cryptographic algorithm and converts to hex string.
 		/// </summary>
+		/// <param name="a"></param>
 		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
+		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		public static string HashHex(byte[] a, string algorithm, bool upperCase = false)
 		{
 			return BytesToHexString(Hash(a, algorithm), upperCase);
@@ -354,7 +381,9 @@ namespace Catkeys
 		/// <summary>
 		/// Computes string hash using a specified cryptographic algorithm and converts to hex string.
 		/// </summary>
+		/// <param name="s"></param>
 		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
+		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		/// <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
 		public static string HashHex(string s, string algorithm, bool upperCase = false)
 		{
@@ -364,6 +393,8 @@ namespace Catkeys
 		/// <summary>
 		/// Converts byte array (binary data) to hex-encoded string.
 		/// </summary>
+		/// <param name="a"></param>
+		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		public static unsafe string BytesToHexString(byte[] a, bool upperCase = false)
 		{
 			if(a == null) return null;

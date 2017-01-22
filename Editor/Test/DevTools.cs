@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Editor.Test
 {
@@ -92,7 +90,7 @@ namespace Editor.Test
 			int x = 0;
 
 			foreach(var s in iconFiles) {
-				var im = Icons.GetIconImage(s, imageSize);
+				var im = Icons.GetFileIconImage(s, imageSize);
 				g.DrawImage(im, x, 0);
 				x += imageSize;
 			}

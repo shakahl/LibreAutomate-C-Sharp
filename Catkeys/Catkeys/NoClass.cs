@@ -17,24 +17,31 @@ using System.Drawing;
 //using System.Linq;
 
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
+	/// <summary>
+	/// Often-used static functions and fields, to be used like Func instead of Class.Func.
+	/// Mostly aliases of functions and fields of this library and .NET.
+	/// In C# source files add <c>using static Catkeys.NoClass;</c>. Then you can use:
+	///		<c>Print</c> instead of <c>Output.Write</c>;
+	///		<c>Empty</c> instead of <c>string.IsNullOrEmpty</c>;
+	///		<c>Zero</c> instead of <c>IntPtr.Zero</c>;
+	///		and more.
+	/// </summary>
 	[DebuggerStepThrough]
 	public static class NoClass
 	{
 		/// <summary>
 		/// Default (0) value for IntPtr, LPARAM and some other types. The same as IntPtr.Zero or default(IntPtr).
-		/// These types are struct types, therefore you cannot assign 0 or null.
+		/// These types are struct, therefore you cannot assign 0 or null.
 		/// However this is error: <c>void Func(IntPtr x=Zero){}</c>; use <c>void Func(IntPtr x=default(IntPtr)){}</c>.
 		/// </summary>
 		public static readonly IntPtr Zero;
 
 		/// <summary>
 		/// Default (0) value for Wnd.
-		/// These types are struct types, therefore you cannot assign 0 or null.
+		/// The Wnd type is struct, therefore you cannot assign 0 or null.
 		/// However this is error: <c>void Func(Wnd x=Wnd0){}</c>; use <c>void Func(Wnd x=default(Wnd)){}</c>.
 		/// </summary>
 		public static readonly Wnd Wnd0;
@@ -48,43 +55,33 @@ namespace Catkeys
 		////public static readonly string _ = Environment.NewLine; //compiler does not optimize "one"+_+"two"+_+"three"
 		////Not so useful, and interferes with intellisense.
 
-		//public const StringComparison CaseSens = StringComparison.Ordinal;
-		//public const StringComparison CaseInsens = StringComparison.OrdinalIgnoreCase;
-
 		/// <summary>
-		/// Alias of Output.Write and Print.
-		/// Info: The Output class has more similar functions.
-		/// </summary>
-		public static void Out(string value) { Output.Write(value); }
-		public static void Out(object value) { Output.Write(value); }
-		public static void Out<T>(IEnumerable<T> value, string separator = "\r\n") { Output.Write(value, separator); }
-		public static void Out(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
-		public static void Out<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
-		public static void OutList(params object[] values) { Output.WriteList(values); }
-		public static void OutListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
-		public static void OutHex(object value) { Output.WriteHex(value); }
-
-		/// <summary>
-		/// Out() that works only in Debug config, ie if DEBUG is defined.
-		/// In Release config the function call statement is removed, and arguments not evalueted.
-		/// </summary>
-		[Conditional("DEBUG")]
-		public static void OutDebug(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-		{
-			Output.Write($"Debug: {cmn} ({Path.GetFileName(cp)}:{cln}):  {value}");
-		}
-
-		/// <summary>
-		/// Alias of Output.Write and Out.
-		/// Info: The Output class has more similar functions.
+		/// Alias of <see cref="Output.Write(string)"/>.
 		/// </summary>
 		public static void Print(string value) { Output.Write(value); }
+		/// <summary>
+		/// Alias of <see cref="Output.Write(object)"/>.
+		/// </summary>
 		public static void Print(object value) { Output.Write(value); }
+		/// <summary>
+		/// Alias of <see cref="Output.Write{T}(IEnumerable{T}, string)"/>.
+		/// </summary>
 		public static void Print<T>(IEnumerable<T> value, string separator = "\r\n") { Output.Write(value, separator); }
+		/// <summary>
+		/// Alias of <see cref="Output.Write(System.Collections.IEnumerable, string)"/>.
+		/// </summary>
 		public static void Print(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
+		/// <summary>
+		/// Alias of <see cref="Output.Write{K, V}(IDictionary{K, V}, string)"/>.
+		/// </summary>
 		public static void Print<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
+		/// <summary>
+		/// Alias of <see cref="Output.WriteList"/>.
+		/// </summary>
 		public static void PrintList(params object[] values) { Output.WriteList(values); }
-		public static void PrintListSep(string separator, params object[] values) { Output.WriteListSep(separator, values); }
+		/// <summary>
+		/// Alias of <see cref="Output.WriteHex"/>.
+		/// </summary>
 		public static void PrintHex(object value) { Output.WriteHex(value); }
 
 		/// <summary>
@@ -98,11 +95,14 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets function name.
+		/// Gets caller function name.
 		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
 		/// </summary>
 		public static string FunctionName([CallerMemberName] string name = null) { return name; }
-		public static void OutFunc([CallerMemberName] string name = null) { Output.Write(name); }
+		/// <summary>
+		/// Calls Output.Write(caller function name).
+		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
+		/// </summary>
 		public static void PrintFunc([CallerMemberName] string name = null) { Output.Write(name); }
 
 		/// <summary>
@@ -126,7 +126,7 @@ namespace Catkeys
 			return Calc.MakeUshort(v.Minor, v.Major);
 		}
 
-		public struct RTL_OSVERSIONINFOW
+		struct RTL_OSVERSIONINFOW
 		{
 			public uint dwOSVersionInfoSize;
 			public uint dwMajorVersion;
@@ -143,6 +143,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets classic Windows major+minor version value:
 		/// Win7 (0x601), Win8 (0x602), Win8_1 (0x603), Win10 (0xA00).
+		/// Example: <c>if(WinVer>=Win8) ...</c>
 		/// </summary>
 		public static uint WinVer
 		{
@@ -155,7 +156,21 @@ namespace Catkeys
 		/// </summary>
 		public const uint Win7 = 0x601, Win8 = 0x602, Win8_1 = 0x603, Win10 = 0xA00;
 
-		//public static void Wait(double timeS) { Time.Wait(timeS); } //in Automation; here it could be easily confused with WaitMS
+		/// <summary>
+		/// Alias for <see cref="Time.WaitMS"/>.
+		/// </summary>
+		/// <param name="timeMS"></param>
 		public static void WaitMS(int timeMS) { Time.WaitMS(timeMS); }
+		//public static void Wait(double timeS) { Time.Wait(timeS); } //in Automation; here it could be easily confused with WaitMS
+
+		//public static void Key(params string[] keys)
+		//{
+		//	//info:
+		//	//Named not Keys because then hides enum Keys from System.Windows.Forms. Also various interfaces have members named Keys.
+		//	//Named not SendKeys because too long and hides class SendKeys from System.Windows.Forms.
+		//	//Never mind: Key hides enum Key from Microsoft.DirectX.DirectInput and System.Windows.Input. Also various classes have Key property.
+
+		//	Input.Keys(keys);
+		//}
 	}
 }

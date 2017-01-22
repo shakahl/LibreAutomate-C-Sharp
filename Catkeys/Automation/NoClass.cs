@@ -18,8 +18,8 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
+
+#pragma warning disable 1591 //XML doc. //TODO
 
 namespace Catkeys.Automation
 {

@@ -37,7 +37,7 @@
 //			{
 //				base.OnPaint(e);
 //				//if(Floaty.IsFloating) return;
-//				//Out(e.ClipRectangle);
+//				//Print(e.ClipRectangle);
 
 //				var r = this.ClientRectangle;
 //				if(_vertical) r.Width = CaptionHeight; else r.Height = CaptionHeight;
@@ -131,7 +131,7 @@
 //					//templ.ToLogFont(x);
 
 //					if(vertical) x.lfEscapement = x.lfOrientation = 270 * 10;
-//					OutList(x.lfFaceName, x.lfHeight);
+//					PrintList(x.lfFaceName, x.lfHeight);
 //					f = CreateFontIndirect(ref x);
 //					if(vertical) _hfontVert = f; else _hfontHorz = f;
 //				}
@@ -236,7 +236,7 @@
 		//	//this.Font = SystemFonts.DialogFont; //Tahoma
 		//	//this.Font = SystemFonts.MessageBoxFont; //Segoe UI
 		//	//Font = new Font("Segoe UI", 9); //now this is set in form dsigner
-		//	//Out(this.Font);
+		//	//Print(this.Font);
 
 		//	int tvWidth = 300;
 		//	Size contentSize = this.ClientSize; contentSize.Height -= _contentY;
@@ -274,7 +274,7 @@
 		//	//_splitV1.Dock=DockStyle.Fill;
 		//	_splitV1.Panel1MinSize = 30; _splitV1.Panel2MinSize = 30;
 		//	_splitV1.SplitterDistance = tvWidth;
-		//	//Out(_splitV1.SplitterWidth); //4
+		//	//Print(_splitV1.SplitterWidth); //4
 		//	_tv.Dock = DockStyle.Fill;
 		//	_splitV1.FixedPanel = FixedPanel.Panel1;
 		//	_splitV1.Panel1.Controls.Add(_tv);
@@ -307,8 +307,8 @@
 			//il.ColorDepth = ColorDepth.Depth32Bit;
 			////il.Images.Add(Icons.HandleToImage(Icons.CreateBlankIcon(16, 16)));
 			//il.Images.Add(Icons.GetIconImage(".cs", 16));
-			////il.Images.Add(Icons.HandleToImage(Icons.GetShellStockIconHandle(Api.SHSTOCKICONID.SIID_FOLDER, 16)));
-			////il.Images.Add(Icons.HandleToImage(Icons.GetShellStockIconHandle(Api.SHSTOCKICONID.SIID_FOLDEROPEN, 16))); //same icon as SIID_FOLDER
+			////il.Images.Add(Icons.HandleToImage(Icons.GetShellStockIconHandle(Native.SHSTOCKICONID.SIID_FOLDER, 16)));
+			////il.Images.Add(Icons.HandleToImage(Icons.GetShellStockIconHandle(Native.SHSTOCKICONID.SIID_FOLDEROPEN, 16))); //same icon as SIID_FOLDER
 			//il.Images.Add(Icons.GetIconImage(@"q:\app\folder.ico", 16));
 			//il.Images.Add(Icons.GetIconImage(@"q:\app\folder_open.ico", 16));
 

@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -67,6 +65,7 @@ namespace Catkeys
 
 			static bool _canWrite;
 
+			/// <param name="callFirst">Call <see cref="First()"/>.</param>
 			public Inst(bool callFirst) : this()
 			{
 				if(callFirst) First();
@@ -88,7 +87,7 @@ namespace Catkeys
 			/// <example><code>
 			/// var perf = new Perf.Inst();
 			/// perf.Incremental = true;
-			/// for(int i = 0; i ˂ 5; i++) {
+			/// for(int i = 0; i &lt; 5; i++) {
 			/// 	WaitMS(100); //not included in the measurement
 			/// 	perf.First();
 			/// 	WaitMS(30); //will make sum ~150000
@@ -265,7 +264,7 @@ namespace Catkeys
 					First(); Next(); //JIT-compile
 					for(int i = 0; i < codes.Length; i++) codes[i]();
 				}
-				//Out(n);
+				//Print(n);
 				First();
 			}
 		}
@@ -279,7 +278,7 @@ namespace Catkeys
 		/// </summary>
 		/// <example><code>
 		/// Perf.Incremental = true;
-		/// for(int i = 0; i ˂ 5; i++) {
+		/// for(int i = 0; i &lt; 5; i++) {
 		/// 	WaitMS(100); //not included in the measurement
 		/// 	Perf.First();
 		/// 	WaitMS(30); //will make sum ~150000

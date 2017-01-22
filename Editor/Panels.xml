@@ -1,23 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <panels>
-	<split vh='v' w1='200'>
-		<panel name='Files'/>
-		<split vh='h' w2='150'>
-			<split vh='v' w2='100'>
-				<document name='Code'/>
-				<split vh='h' f='0.5'>
-					<panel name='Open'/>
-					<panel name='Running'/>
+	<split w1='20' splitter='1'>
+		<!--toolbars-->
+		<split w1='10' splitter='1'>
+			<!--row1-->
+			<split vert='' f='0.4'>
+				<panel name='Menu'/>
+				<split vert='' f='0.5'>
+					<panel name='Help'/>
+					<split vert='' f='0.99'>
+						<panel name='Tools'/>
+						<panel name='Custom1'/>
+					</split>
 				</split>
 			</split>
-			<!--<split vh='v' f='0.5'>
-				<panel name='Output'/>
-				<panel name='Find'/>
-			</split>-->
-			<tab w='150'>
-				<panel name='Output'/>
-				<panel name='Find'/>
-			</tab>
+			<!--row2-->
+			<split vert='' w1='200'>
+				<panel name='File'/>
+				<split vert='' w1='120'>
+					<panel name='Run'/>
+					<split vert='' w1='300'>
+						<panel name='Edit'/>
+						<panel name='Custom2'/>
+					</split>
+				</split>
+			</split>
+		</split>
+		<!--panels-->
+		<split vert='' w1='200'>
+			<panel name='Files' tooltip='All scripts and other files of current collection'/>
+			<split w2='150'>
+				<split vert='' w2='130'>
+					<panel name='Code' doc=''/>
+					<split f='0.5'>
+						<panel name='Open' image='34' tooltip='Currently open files'/>
+						<tab>
+							<panel name='Running' tooltip='Running scripts'/>
+							<panel name='Recent' tooltip='Recently started scripts'/>
+						</tab>
+					</split>
+				</split>
+				<tab>
+					<panel name='Output' image='29' tooltip='Errors and other information'/>
+					<panel name='Find' image='23' tooltip='Find files, text, triggers'/>
+					<panel name='Results' image='15' tooltip='New panel'/>
+				</tab>
+			</split>
 		</split>
 	</split>
 </panels>

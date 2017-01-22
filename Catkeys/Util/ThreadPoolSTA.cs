@@ -18,13 +18,14 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys.Util
 {
+	/// <summary>
+	/// Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
+	/// </summary>
 	//[DebuggerStepThrough]
-	public static unsafe class ThreadPoolSTA
+	internal static unsafe class ThreadPoolSTA
 	{
 		/// <summary>
 		/// Work callback function parameter type.
@@ -32,7 +33,9 @@ namespace Catkeys.Util
 		/// </summary>
 		public class WorkCallbackData
 		{
+			///
 			public object state;
+			///
 			public SendOrPostCallback completionCallback;
 		}
 
@@ -76,7 +79,7 @@ namespace Catkeys.Util
 		/// Can be used when need more options than SubmitCallback() has.
 		/// </summary>
 		/// <example><code>
-		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =˃ { WaitMS(100); })) {
+		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { WaitMS(100); })) {
 		/// 	work.Submit();
 		/// 	work.Wait();
 		/// }
@@ -206,7 +209,7 @@ namespace Catkeys.Util
 					//info: Post() throws InvalidOperationException when appdomain is being unloaded. Usually then _isAppDomainDying is true.
 					//note: don't use Send(), it is very slow with icons, maybe paints each time because there are no other messages in the queue.
 				}
-				catch(Exception e) { OutDebug(e); }
+				catch(Exception e) { PrintDebug(e); }
 				finally {
 					if(_work == Zero) _gc.Free(); //free now if this is a simple callback (ThreadPoolSTA.SubmitCallback()). Else Dispose() frees.
 				}
@@ -214,7 +217,7 @@ namespace Catkeys.Util
 
 			//~Work()
 			//{
-			//	Out("dtor");
+			//	Print("dtor");
 			//}
 		}
 
@@ -351,7 +354,7 @@ namespace Catkeys.Util
 		static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
 
 		[DllImport("ole32.dll", PreserveSig = true)]
-		public static extern int OleInitialize(IntPtr pvReserved);
+		static extern int OleInitialize(IntPtr pvReserved);
 
 		#endregion
 

@@ -19,11 +19,13 @@ using System.Runtime.Serialization;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
+#pragma warning disable 1591 //XML doc
+	/// <summary>
+	/// Exception "Failed.".
+	/// </summary>
 	public class CatException :Exception
 	{
 		const string _m = "Failed.";
@@ -37,18 +39,23 @@ namespace Catkeys
 		protected CatException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 	}
 
-	public class WaitTimeoutException :CatException
-	{
-		const string _m = "Wait timeout.";
+	//use TimeoutException instead.
+	///// <summary>
+	///// Exception "Wait timeout.".
+	///// </summary>
+	//public class WaitTimeoutException :CatException
+	//{
+	//	const string _m = "Wait timeout.";
 
-		public WaitTimeoutException() : base(_m) { }
+	//	public WaitTimeoutException() : base(_m) { }
 
-		public WaitTimeoutException(string message) : base(message) { }
+	//	public WaitTimeoutException(string message) : base(message) { }
 
-		public WaitTimeoutException(string message, Exception innerException) : base(message ?? _m, innerException) { }
+	//	public WaitTimeoutException(string message, Exception innerException) : base(message ?? _m, innerException) { }
 
-		protected WaitTimeoutException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-	}
+	//	protected WaitTimeoutException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+	//}
+#pragma warning restore 1591 //XML doc
 
 	/// <summary>
 	/// An alternative (to exceptions) way of indicating that a function failed.
@@ -207,6 +214,7 @@ namespace Catkeys
 		/// Sets thread error (calls Set()) or throws exception, depending on the 'throwException' argument.
 		/// Always returns false.
 		/// </summary>
+		/// <param name="throwException"></param>
 		/// <param name="winErrorCode">A Windows error code, such as those retrieved by Marshal.GetLastWin32Error() or returned by some Windows API functions. If 0, gets last Windows error (Marshal.GetLastWin32Error()); if it returns 0, uses Api.E_FAIL.</param>
 		/// <param name="errorText">Error text.</param>
 		[MethodImpl(MethodImplOptions.NoInlining)]
@@ -222,6 +230,7 @@ namespace Catkeys
 		/// Sets thread error (calls Set()) or throws exception, depending on the 'throwException' argument.
 		/// Always returns false.
 		/// </summary>
+		/// <param name="throwException"></param>
 		/// <param name="errorText">Error text. If null, uses "Failed."</param>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static bool ThrowOrSet(bool throwException, string errorText)

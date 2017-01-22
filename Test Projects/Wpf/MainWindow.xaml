@@ -5,9 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Wpf"
         mc:Ignorable="d"
-		xmlns:ad="clr-namespace:AvalonDock;assembly=AvalonDock"
         Title="MainWindow" Height="706.693" Width="964.393">
-	<Grid>
+	<!--<Grid>
+		xmlns:ad="clr-namespace:AvalonDock;assembly=AvalonDock" //this was above, in Window attributes
+
+
+
 		<Grid.RowDefinitions>
 			<RowDefinition Height="24"/>
 			<RowDefinition Height="*"/>
@@ -28,18 +31,18 @@
 						<ad:DockableContent x:Name="filesContent" Title="Files">
 							<WindowsFormsHost>
 							</WindowsFormsHost>
-							<!--<TreeView>
+							--><!--<TreeView>
 								<TreeViewItem Header="Class1"/>
 								<TreeViewItem Header="Class2"/>
-							</TreeView>-->
+							</TreeView>--><!--
 						</ad:DockableContent>
-						<!--<ad:DockableContent x:Name="toolsContent" Title="Tools">
+						--><!--<ad:DockableContent x:Name="toolsContent" Title="Tools">
 							<ListBox>
 								<ListBoxItem Content="Tool1"/>
 								<ListBoxItem Content="Tool2"/>
 								<ListBoxItem Content="Tool3"/>
 							</ListBox>
-						</ad:DockableContent>-->
+						</ad:DockableContent>--><!--
 					</ad:DockablePane>
 					<ad:DocumentPane>
 						<ad:DocumentContent Title="doc">
@@ -72,5 +75,5 @@
 		<StatusBar Grid.Row="2">
 			<StatusBarItem Content="AvalonDock 1.3 Sample Project"/>
 		</StatusBar>
-	</Grid>
+	</Grid>-->
 </Window>

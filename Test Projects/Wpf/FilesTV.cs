@@ -60,14 +60,14 @@ namespace Wpf
 				//n=1000; //TODO: remove
 				var s = x[i, 1]; uint flags = 0;
 				if(!Empty(s)) {
-					int numLen; flags = (uint)s.ToInt_(0, out numLen);
+					int numLen; flags = (uint)s.ToInt32_(0, out numLen);
 					if(s.Length > numLen) {
 						switch(s[numLen]) {
 						case '>':
 							stack.Push(prevNode.Nodes);
 							break;
 						case '<':
-							int k = s.ToInt_(numLen + 1);
+							int k = s.ToInt32_(numLen + 1);
 							do stack.Pop(); while(--k > 0);
 							break;
 						}

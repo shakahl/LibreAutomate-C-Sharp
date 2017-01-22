@@ -21,7 +21,7 @@ using Catkeys.Winapi;
 using F = System.Windows.Forms;
 
 //using Xceed.Wpf.AvalonDock; //v2
-using AvalonDock; //v1.3
+//using AvalonDock; //v1.3
 using ScintillaNET;
 
 namespace Wpf
@@ -36,34 +36,34 @@ namespace Wpf
 			Perf.Next();
 			InitializeComponent();
 
-			//treeview
-			_tv = new CatTreeView(this);
-			_tv.Name = nameof(_tv);
-			_tv.ShowNodeToolTips = true;
-			_tv.HideSelection = false;
-			if(true) {
-				_tv.LabelEdit = true;
-			} else {
-				_tv.ShowPlusMinus = false;
-				_tv.FullRowSelect = true;
-				_tv.ShowLines = false;
-				//_tv.SingleClickExpand //no such prop
-			}
+			////treeview
+			//_tv = new CatTreeView(this);
+			//_tv.Name = nameof(_tv);
+			//_tv.ShowNodeToolTips = true;
+			//_tv.HideSelection = false;
+			//if(true) {
+			//	_tv.LabelEdit = true;
+			//} else {
+			//	_tv.ShowPlusMinus = false;
+			//	_tv.FullRowSelect = true;
+			//	_tv.ShowLines = false;
+			//	//_tv.SingleClickExpand //no such prop
+			//}
 
-			//code
-			_code = new Scintilla();
-			_code.Name = nameof(_code);
-			//_code.Dock = DockStyle.Fill;
+			////code
+			//_code = new Scintilla();
+			//_code.Name = nameof(_code);
+			////_code.Dock = DockStyle.Fill;
 
 			Perf.Next();
 
 			//Out(dockManager.DockableContents[0].Content);
 
-			var wfHost1 = dockManager.DockableContents[0].Content as F.Integration.WindowsFormsHost;
-			wfHost1.Child = _tv;
+			//var wfHost1 = dockManager.DockableContents[0].Content as F.Integration.WindowsFormsHost;
+			//wfHost1.Child = _tv;
 
-			var wfHost2 = dockManager.ActiveDocument.Content as F.Integration.WindowsFormsHost;
-			wfHost2.Child = _code;
+			//var wfHost2 = dockManager.ActiveDocument.Content as F.Integration.WindowsFormsHost;
+			//wfHost2.Child = _code;
 
 			Perf.Next();
 

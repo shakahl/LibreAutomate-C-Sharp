@@ -15,8 +15,6 @@ using System.Windows.Forms;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 //using static System.StringComparison; //ok
 //using static Catkeys.Winapi.api; //ok
@@ -47,7 +45,7 @@ partial class Test
 	{
 		int n = 0;
 		foreach(string s2 in s.SplitLines_()) {
-			//Out(s2);
+			//Print(s2);
 			n+=s2.Length;
 		}
 		return n;
@@ -76,20 +74,20 @@ partial class Test
 
 
 		//str s = "abcd";
-		//Out(s.IndexOf('c'));
-		//Out(string.Join(",", s, s)); //ok
+		//Print(s.IndexOf('c'));
+		//Print(string.Join(",", s, s)); //ok
 		//str[] a = { "one", "two" };
-		//Out(string.Join(",", a)); //ok
+		//Print(string.Join(",", a)); //ok
 		//var a=new List<str>{ "one", "two" };
-		//Out(string.Join(",", a)); //ok
+		//Print(string.Join(",", a)); //ok
 
 		//string[] a = { "hh", "kk" };
 		//str[] b = { "tr", "rr" };
 		//a=b;
 		//b=a;
 
-		//Out($"{DateTime.Now}");
-		//Out($"{DateTime.Now:yyyy.MM.dd}");
+		//Print($"{DateTime.Now}");
+		//Print($"{DateTime.Now:yyyy.MM.dd}");
 
 		//DateTime t = DateTime.Now;
 		//string s = "ddd";
@@ -98,12 +96,12 @@ partial class Test
 		//int i = 5;
 		//string s = "    oooo  ";
 		//s=Path.Expand("ff");
-		//Out("one"+_+"two"+_+"three");
-		//Out($"one{_}two{_}three");
-		//Out("exe".Equals("EXE", CaseInsens));
+		//Print("one"+_+"two"+_+"three");
+		//Print($"one{_}two{_}three");
+		//Print("exe".Equals("EXE", CaseInsens));
 		//Console.Ted();
 
-		//Out(Ordinal);
+		//Print(Ordinal);
 
 		//string s1=null, s2 = null, s3 = null;
 		//int i;
@@ -117,7 +115,7 @@ partial class Test
 		////for(i = 0; i<1000; i++) s3=$"one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}one{_}two{_}three{_}";
 		//Perf.Next();
 		//Perf.Write();
-		//Out(s1+s2+s3);
+		//Print(s1+s2+s3);
 	}
 }
 
@@ -134,7 +132,7 @@ partial class Test
 	//{
 	//	public static void ExtMeth(this str s)
 	//	{
-	//		Out(s);
+	//		Print(s);
 	//	}
 	//}
 
@@ -150,10 +148,10 @@ partial class Test
 	{
 		//static void Func(str s1, string s2, StringBuilder s3, str? s4=null)
 		//{
-		//	Out(s1);
-		//	Out(s2);
-		//	Out(s3);
-		//	if(s4!=null) Out(s4);
+		//	Print(s1);
+		//	Print(s2);
+		//	Print(s3);
+		//	if(s4!=null) Print(s4);
 		//}
 
 		//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -169,28 +167,28 @@ partial class Test
 
 		static void TestSB(str s)
 		{
-			Out(s);
+			Print(s);
 		}
 
 		//unsafe
 		public static void Test_str()
 		{
 			//str s1 = "abc-me";
-			//Out(s1.EndsWith("cme"));
+			//Print(s1.EndsWith("cme"));
 
 			//sbyte[] b = { 65, 66, 67 };
 			//char[] b = { 'a', 'b' };
 			//str s = new string(b);
 
 			//var s = new StringBuilder("ddd");
-			////Out(s);
+			////Print(s);
 			////str k = s;
-			////Out(k);
+			////Print(k);
 			//TestSB(s);
 
 			str s = "fff";
 			StringBuilder k = s;
-			Out(k);
+			Print(k);
 
 			//	string s = "asd";
 			//	str g = "bsf";
@@ -210,16 +208,16 @@ partial class Test
 			//		Perf.Write();
 
 			//	}
-			//		Out($"{n1} {n2}");
+			//		Print($"{n1} {n2}");
 
 			//	return;
-			////	Out(sizeof(Dekk));
+			////	Print(sizeof(Dekk));
 
 			////	Dekk d1=default(Dekk), d2=d1; d1.x=4; d2.x=5;
 			////	Dekk[] b = new Dekk[3] { new Dekk(5), new Dekk(4), new Dekk(1) };
-			////	fixed(int* p= &b[0].x) { Out((int)&p[1]-(int)&p[0]); }
+			////	fixed(int* p= &b[0].x) { Print((int)&p[1]-(int)&p[0]); }
 			////	Array.Sort(b);
-			////	foreach(Dekk h in b) Out(h.x);
+			////	foreach(Dekk h in b) Print(h.x);
 
 			////	return;
 
@@ -241,41 +239,41 @@ partial class Test
 			//	//int i = Convert.ToInt32(s2);
 
 			//	//str s5 = "55";
-			//	//int i = Convert.ToInt32(s5); Out(i);
-			//	//if(int.TryParse(s5, out i)) Out(i);
+			//	//int i = Convert.ToInt32(s5); Print(i);
+			//	//if(int.TryParse(s5, out i)) Print(i);
 
-			//	//foreach(char c in s1) Out(c);
-			//	//Out(s1==s2);
+			//	//foreach(char c in s1) Print(c);
+			//	//Print(s1==s2);
 
 			//	//TODO: test speed of casting str to/from string.
 
 			//	//object o = "8";
-			//	//////Out(s1.Equals(o));
-			//	////Out(s1.CompareTo(o));
-			//	//Out(s1.Equals(o));
-			//	//Out(s1.CompareTo(o));
+			//	//////Print(s1.Equals(o));
+			//	////Print(s1.CompareTo(o));
+			//	//Print(s1.Equals(o));
+			//	//Print(s1.CompareTo(o));
 
 			//	str[] a = { "Z", "A", "K" };
 			//	//Array.Sort(a);
 			//	Array.Sort(a, (X,Y)=>str.Compare(X, Y));
 			//	//Array.Sort(a, (X,Y)=>X.CompareTo(Y));
-			//	foreach(string j in a) Out(j);
+			//	foreach(string j in a) Print(j);
 
 			//var a=new List<str>{ "Z", "A", "K" };
 			//a.Sort();
-			//foreach(string j in a) Out(j);
+			//foreach(string j in a) Print(j);
 
 
 			//s1=str.Null;
-			//Out(s1.TestExc(0));
-			//Out(s1[0]);
-			//Out(s2[0]);
-			//Out(s3[0]);
-			////Out(s4[0]); //error
+			//Print(s1.TestExc(0));
+			//Print(s1[0]);
+			//Print(s2[0]);
+			//Print(s3[0]);
+			////Print(s4[0]); //error
 			////s1[0]='s'; //error
-			//Out(s1+", "+s1);
-			//Out(s1.Length);
-			////str s5 = "aaa"; Out(s5==s1); Out(s5=="aaa");
+			//Print(s1+", "+s1);
+			//Print(s1.Length);
+			////str s5 = "aaa"; Print(s5==s1); Print(s5=="aaa");
 
 			//s1=s2;
 			//s1=s3;

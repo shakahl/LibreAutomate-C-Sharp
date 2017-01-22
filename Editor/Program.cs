@@ -16,33 +16,93 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
+//using System.Configuration;
+using System.Xml;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Editor
 {
+
 	static class Program
 	{
 		static void Test()
 		{
-			var a = new object[] { "ggg", 5, 2.5 };
-			foreach(var s in a.OfType<string>()) {
-				Out(s);
-			}
+			//TODO: why Output.Write causes Xml assembly to load?
+			//TODO: in TaskDialog edit field use correct font.
+
+
+			//TaskDialog.Show("test");
+
+
+			//Print(Application.CompanyName);
+			//Print(Application.ProductName);
+			//Print(Application.ProductVersion);
+			//Print(Application.UserAppDataPath);
+			//Print(Application.CommonAppDataPath);
+
+			//PrintList("ThisApp", Folders.ThisApp);
+			//PrintList("ThisAppData", Folders.ThisAppData);
+			//PrintList("ThisAppDataCommon", Folders.ThisAppDataCommon);
+			//PrintList("ThisAppDataLocal", Folders.ThisAppDataLocal);
+			//PrintList("ThisAppDocuments", Folders.ThisAppDocuments);
+			//PrintList("ThisAppTemp", Folders.ThisAppTemp);
+			//PrintList("ThisProcess", Folders.ThisProcess);
+
+			//Perf.Next();
+			////var s = Properties.Settings.Default.Setting;
+			////Perf.Next();
+			//var xml = Properties.Settings.Default.PanelsXML;
+			//Perf.Next();
+			//XmlElement xFirstSplit = xml.SelectSingleNode("panels/split") as XmlElement;
+			//Perf.NW();
+			//Print(xml.InnerXml);
+			//doc.DocumentElement.InnerText = "neew";
+			//Properties.Settings.Default.Save();
+
+			//Print(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoaming).FilePath);
+			//Print(Properties.Settings.Default.Setting);
+			//Properties.Settings.Default.Setting = "kkk";
+			//Properties.Settings.Default.Save();
+
+			//Print(Folders.RoamingAppData);
+			//Print(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
+
+			//Print(Folders.ThisApp);
+			//Print(Folders.ThisAppTemp);
+			//Print(Folders.ThisAppDocuments);
+			//Print(Folders.ThisAppData);
+			//Print(Folders.ThisAppDataLocal);
+			//Print(Folders.ThisAppDataCommon);
+
+
+			//Application.Run(new Form1());
+
+			//var f = new Form();
+			//var t = new TextBox();
+			//t.Font = new Font("Segoe UI", 9);
+			//PrintList(t.MaximumSize, t.MinimumSize, t.AutoSize, t.Size);
+			//t.AutoSize = false;
+			////t.MaximumSize = new Size(10000, 10);
+			//f.Height -=3;
+			//PrintList(t.MaximumSize, t.MinimumSize, t.AutoSize, t.Size);
+
+			//f.Controls.Add(t);
+			//f.ShowDialog();
 		}
 
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
-		[System.STAThread]
+		[STAThread]
 		static void Main()
 		{
 			try {
+				//Task.Run(() => { while(true) { WaitMS(100); GC.Collect(); } });
+
 				Output.Clear();
-				//Test(); return;
+				Test(); return;
 				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
 				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
 				Perf.First();
@@ -63,10 +123,6 @@ namespace Editor
 							p.Next(); //60 with resources (now 45 *), 30 with imagelist png file (now 13 *), 14 if c.BackColor used above
 							//* after updating Windows 10 to 14986 and ngening all used .NET assemblies everything starts much faster, and program starts almost 2 times faster!
 
-							//new WeifenLuo.WinFormsUI.Docking.DockPanel().Dispose(); //ok if ngened, else spends too long, main thread has to wait anyway. Assume will always be ngened; then saves not much time.
-							//Assembly.LoadFile(Folders.App + "WeifenLuo.WinFormsUI.Docking.dll");
-							//p.Next(); //57 ms, ngen 16 ms
-
 							//var m = new ToolStrip();
 							//m.Items.Add("a");
 							////m.Show();
@@ -74,7 +130,7 @@ namespace Editor
 							//m.Dispose();
 
 							//p.Write();
-							//Out(1);
+							//Print(1);
 						});
 					//t.SetApartmentState(ApartmentState.STA);
 					t.Start();
@@ -87,14 +143,10 @@ namespace Editor
 
 				Application.EnableVisualStyles();
 				Application.SetCompatibleTextRenderingDefault(false);
-#if FORM2
-			Application.Run(new Form2());
-#else
-				Application.Run(new Form4());
-#endif
 
+				Application.Run(new MainForm());
 			}
-			catch(Exception e) { Out(e); }
+			catch(Exception e) { Print(e); }
 		}
 	}
 }

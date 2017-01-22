@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -89,8 +87,6 @@ namespace Editor
 		//public static extern void OleUninitialize();
 		//[DllImport("ole32.dll", PreserveSig = true)]
 		//public static extern int OleInitialize(IntPtr pvReserved);
-
-		public const uint EM_SETCUEBANNER = 0x1501;
 
 
 

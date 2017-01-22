@@ -18,8 +18,6 @@ using System.Runtime.ExceptionServices;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys.Triggers
 {

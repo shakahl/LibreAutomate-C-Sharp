@@ -17,8 +17,6 @@ using System.Drawing;
 //using System.Linq;
 
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -32,7 +30,7 @@ namespace Catkeys
 		/// Auto-delay in milliseconds.
 		/// Used by some automation functions.
 		/// </summary>
-		public int speed
+		public int Speed
 		{
 			get { return _speed; }
 			set { if(value < 0 || value > 60000) throw new ArgumentOutOfRangeException(); _speed = value; }
@@ -44,43 +42,32 @@ namespace Catkeys
 		//Alternative implementation: set function's speed in its attributes.
 
 		/// <summary>
-		/// If dialog owner window not specified, let the dialog be always on top of most other windows.
-		/// Used by TaskDialog.Show and similar functions.
+		/// TODO
 		/// </summary>
-		public bool dialogTopmostIfNoOwner { get; set; }
-
+		public bool SlowMouse { get; set; }
 		/// <summary>
-		/// Dialog right-to-left layout.
-		/// Used by TaskDialog.Show and similar functions.
+		/// TODO
 		/// </summary>
-		public bool dialogRtlLayout { get; set; }
-
+		public bool SlowKeys { get; set; }
 		/// <summary>
-		/// Dialog screen.
-		/// Used by TaskDialog.Show and similar functions.
+		/// TODO
 		/// </summary>
-		public object dialogScreenIfNoOwner { get; set; }
-
-		public bool slowMouse { get; set; }
-		public bool slowKeys { get; set; }
-		public bool waitMsg { get; set; }
+		public bool WaitMsg { get; set; }
 
 		/// <summary>
 		/// Copies all options from ScriptOptions.Default.
 		/// </summary>
 		public ScriptOptions() : this(Default) { }
+
 		/// <summary>
 		/// Copies all options from another ScriptOptions object.
 		/// </summary>
 		/// <param name="o">If null, sets speed = 100 and other members = false/0/null.</param>
 		public ScriptOptions(ScriptOptions o)
 		{
-			if(o == null) { speed = 100; return; }
-			speed = o.speed;
-			slowMouse = o.slowMouse; slowKeys = o.slowKeys; waitMsg = o.waitMsg;
-			dialogTopmostIfNoOwner = o.dialogTopmostIfNoOwner;
-			dialogRtlLayout = o.dialogRtlLayout;
-			dialogScreenIfNoOwner = o.dialogScreenIfNoOwner;
+			if(o == null) { Speed = 100; return; }
+			Speed = o.Speed;
+			SlowMouse = o.SlowMouse; SlowKeys = o.SlowKeys; WaitMsg = o.WaitMsg;
 		}
 
 		/// <summary>
@@ -98,7 +85,7 @@ namespace Catkeys
 		/// <example><code>
 		/// 	static ScriptClass() { ScriptOptions.Default.speed=50; } //constructor
 		///		...
-		///		Out(Option.speed); //speed of this thread
+		///		Print(Option.speed); //speed of this thread
 		///		Option.speed=10; //changes only for this thread
 		/// </code></example>
 		/// </summary>
@@ -109,20 +96,8 @@ namespace Catkeys
 		//CONSIDER:
 		//public override string ToString()
 		//{
-		//	return $"(speed={speed}, slowMouse={slowMouse}, slowKeys={slowKeys}, waitMsg={waitMsg}, ...)";
+		//	return $"(speed={speed}, SlowMouse={SlowMouse}, SlowKeys={SlowKeys}, WaitMsg={WaitMsg}, ...)";
 		//}
-
-		/// <summary>
-		/// Default title text for standard dialogs (function TaskDialog.MessageDialog() etc). Also can be displayed in other places.
-		/// Default value - current appdomain name. In exe it is exe file name like "example.exe", else it is script name.
-		/// </summary>
-		public static string DisplayName
-		{
-			get { return _DisplayName ?? AppDomain.CurrentDomain.FriendlyName; }
-			set { _DisplayName = value; }
-		}
-		static string _DisplayName;
-		//consider: use [assembly: AssemblyTitle("...")]. var a=Assembly.GetEntryAssembly(); But exception if appdomain runs with DoCallBack().
 	}
 
 	/// <summary>
@@ -144,19 +119,23 @@ namespace Catkeys
 		/// </summary>
 		public static int Speed
 		{
-			get { var t = _opt; return t != null ? t.speed : ScriptOptions.Default.speed; }
-			set { Option.speed = value; }
+			get { var t = _opt; return t != null ? t.Speed : ScriptOptions.Default.Speed; }
+			set { Option.Speed = value; }
 		}
 
+		/// <summary>
+		/// Calls the first non-static method of the derived class.
+		/// The method must have 0 parameters.
+		/// </summary>
 		public void CallFirstMethod()
 		{
-			//Out(this.GetType().GetMethods(BindingFlags.Public|BindingFlags.Instance).Length);
+			//Print(this.GetType().GetMethods(BindingFlags.Public|BindingFlags.Instance).Length);
 			//foreach(var m in this.GetType().GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly)) {
-			//	Out(m.Name);
+			//	Print(m.Name);
 			//}
 
 			var a = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-			if(a.Length == 0) { Out("Info: Script code should be in a non-static method. Example:\nvoid Script() { Out(\"test\"); }"); return; }
+			if(a.Length == 0) { Print("Info: Script code should be in a non-static method. Example:\nvoid Script() { Print(\"test\"); }"); return; }
 
 			_CallMethod(a[0], null);
 
@@ -165,14 +144,15 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls a non-static method of the derived class by string name.
+		/// Calls a non-static method of the derived class by name.
 		/// </summary>
 		/// <param name="name">Method name. The method must have 0 or 1 parameter.</param>
+		/// <param name="eventData">An argument.</param>
 		public void CallTriggerMethod(string name, object eventData)
 		{
 			var m = GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-			//Out(m);
-			if(m == null) { Out($"Error: Method {name} not found."); return; }
+			//Print(m);
+			if(m == null) { Print($"Error: Method {name} not found."); return; }
 			_CallMethod(m, eventData);
 			//object[] a=null; if(parameter!=null) a=new object[1] { parameter };
 			//m.Invoke(this, a);
@@ -181,11 +161,11 @@ namespace Catkeys
 		void _CallMethod(MethodInfo m, object arg)
 		{
 			int n = m.GetParameters().Length;
-			if(n != 0 && n != 1) { Out($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
+			if(n != 0 && n != 1) { Print($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
 			try {
 				m.Invoke(this, n == 0 ? null : new object[1] { arg });
 			} catch(Exception e) {
-				Out($"Error: Failed to call method {m.Name}. {e.Message}");
+				Print($"Error: Failed to call method {m.Name}. {e.Message}");
 			}
 		}
 	}

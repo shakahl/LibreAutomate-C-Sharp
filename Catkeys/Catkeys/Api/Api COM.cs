@@ -3,9 +3,11 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Catkeys.Winapi
+#pragma warning disable 1591 //missing XML documentation
+
+namespace Catkeys
 {
-	public static unsafe partial class Api
+	static unsafe partial class Api
 	{
 		public struct STRRET
 		{

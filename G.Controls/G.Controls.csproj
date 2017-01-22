@@ -16,22 +16,33 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\Editor\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3001,3002,3003,3009,1591</NoWarn>
+    <DocumentationFile>G.Controls.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\Editor\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3001,3002,3003,3009,1591</NoWarn>
+    <DocumentationFile>G.Controls.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Accessibility" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -43,34 +54,28 @@
   <ItemGroup>
     <Compile Include="ControlsApi.cs" />
     <Compile Include="ControlUtil.cs" />
-    <Compile Include="GDockPanels\GDP other.cs">
+    <Compile Include="GDockPanel\GDP common.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanels\GFloat.cs">
+    <Compile Include="GDockPanel\GFloat.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanels\GPanel.cs">
+    <Compile Include="GDockPanel\GPanel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanels\GDockPanels.cs">
+    <Compile Include="GDockPanel\GDockPanel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanels\GSplit.cs">
+    <Compile Include="GDockPanel\GSplit.cs">
       <SubType>Component</SubType>
     </Compile>
-    <None Include="old\Floaty.cs">
-      <SubType>Component</SubType>
-    </None>
-    <None Include="old\GPanel.cs">
-      <SubType>Component</SubType>
-    </None>
-    <None Include="old\GPanels.cs" />
-    <None Include="old\MultiGPanel.cs">
-      <SubType>Component</SubType>
-    </None>
-    <Compile Include="GDockPanels\GTab.cs">
+    <Compile Include="GDockPanel\GTab.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="GDockPanel\GAcc.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Other\ToolStripSpringBox.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -81,6 +86,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="unused.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CatkeysSN.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

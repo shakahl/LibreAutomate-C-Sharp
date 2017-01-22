@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 #if MONO
 using Mono.CSharp;
@@ -37,7 +35,7 @@ namespace Catkeys.Tasks
 
 		static void _AppDomainThread()
 		{
-			//Out(AppDomain.CurrentDomain.FriendlyName);
+			//Print(AppDomain.CurrentDomain.FriendlyName);
 			Perf.First();
 
 			//AppDomainSetup domainSetup = new AppDomainSetup()
@@ -64,7 +62,7 @@ namespace Catkeys.Tasks
 
 		static void _DomainCallback()
 		{
-			//Out(AppDomain.CurrentDomain.FriendlyName);
+			//Print(AppDomain.CurrentDomain.FriendlyName);
 			//while(true) {
 			//	break;
 			//}
@@ -77,82 +75,14 @@ namespace Catkeys.Tasks
 		//{ //note CreateInstance(... "Catkeys.Compiler") fails if this is a child class of Compile, even if both classes are public
 		//	public Compiler()
 		//	{
-		//		Out(AppDomain.CurrentDomain.FriendlyName);
+		//		Print(AppDomain.CurrentDomain.FriendlyName);
 		//	}
 		//}
-
-#if MONO
-	static void MonoCompile(Assembly a, string inFile, string outFile)
-	{
-		//var g=new string[] { $"-out:{outFile}", inFile};
-		var g=new string[] { "-noconfig", $"-out:{outFile}", inFile};
-
-		CommandLineParser commandLineParser = new CommandLineParser(Console.Out);
-		CompilerSettings compilerSettings = commandLineParser.ParseArguments(g);
-		if (commandLineParser.HasBeenStopped)
-		{
-			return;
-		}
-
-		CompilerContext c=new CompilerContext(compilerSettings, new ConsoleReportPrinter());
-		object o=a.CreateInstance("Mono.CSharp.Driver", false,
-				BindingFlags.CreateInstance,
-				null, new object[1] {c}, null, null);
-				
-		MethodInfo mi=o.GetType().GetMethod("Compile");
-
-		//Speed.Next();
-		if((bool)mi.Invoke(o, null) && c.Report.Errors==0) //40 ms; with -noconfig 20 ms
-		{
-			if (c.Report.Warnings > 0)
-			{
-				Out($"Compilation succeeded - {c.Report.Warnings} warning(s)");
-			}
-		}
-		else
-		{
-			Out($"Compilation failed: {c.Report.Errors} error(s), {c.Report.Warnings} warnings");
-		}
-
-		//Can be used either mcs.ehe or Mono.CSharp.dll. Both have Driver and other classes with same code.
-		//However Mono.CSharp.dll is much slower. Maybe mcs is compiled with VS and the dll with Mono?
-		//mcs.exe speed: default 40, -noconfig 20
-		//Mono.CSharp.dll speed: default 100, -noconfig 50
-
-		//could use this, but Driver is internal, need to use reflection to access it
-		//Driver driver = new Driver();
-		//if (driver.Compile() && driver.Report.Errors == 0)
-		//{
-		//	if (driver.Report.Warnings > 0)
-		//	{
-		//		Out($"Compilation succeeded - {c.Report.Warnings} warning(s)");
-		//	}
-		//	return;
-		//}
-		//Out($"Compilation failed: {c.Report.Errors} error(s), {c.Report.Warnings} warnings");
-	}
-
-	static void TestMono()
-	{
-		Speed.First();
-		Assembly a = Assembly.Load(@"mcs, Version=4.0.3.0, Culture=neutral, PublicKeyToken=null"); //60 ms
-		//Assembly a = Assembly.LoadFile(Path.Combine(Application.StartupPath, "mcs.exe")); //a little slower
-		//Assembly a = Assembly.Load(@"Mono.CSharp, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756"); //60 ms
-		Speed.Next();
-
-		for(int i=1; i<=5; i++)
-		{
-			MonoCompile(a, @"Q:\Test\test.cs", $@"Q:\Test\test{i}.exe");
-			Speed.Next();
-		}
-
-	}
-#endif //#if MONO
 
 #if ROSLYN
 	static void TestRoslyn()
 	{
-		//Out("test");
+		//Print("test");
 		//TODO: auto-ngen compiler. Need admin.
 
 		Speed.First();

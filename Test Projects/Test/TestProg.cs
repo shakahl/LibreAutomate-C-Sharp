@@ -1,22 +1,45 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Linq;
+//using System.Configuration;
+using System.Xml;
+
+using Catkeys;
+using static Catkeys.NoClass;
 
 public class Program
 {
 	[STAThread]
 	static void Main(string[] args)
 	{
-		Console.WriteLine(1);
-		//for(int i=0; i<3; i++) _Compile();
-		_Compile();
-		//_CompileOld();
-        Console.WriteLine(2);
+		TaskDialog.Show("text", icon: TDIcon.App);
+
+		//PrintList(Application.ExecutablePath, Folders.ThisApp, Folders.ThisProcess);
+
+
+		//Console.WriteLine(1);
+		////for(int i=0; i<3; i++) _Compile();
+		//_Compile();
+		////_CompileOld();
+		//      Console.WriteLine(2);
 
 		//don't close console immediately
-		Console.ReadKey();
+		//Console.ReadKey();
 	}
 
 	static MethodInfo _compilerMethod;

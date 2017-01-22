@@ -18,17 +18,18 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
+	/// <summary>
+	/// Extends the .NET class Path.
+	/// </summary>
 	public static class Path_
 	{
 		/// <summary>
 		/// If path starts with '%' character, expands environment variables enclosed in %, else just returns path.
 		/// </summary>
-		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>.
+		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>
 		public static string ExpandEnvVar(string path)
 		{
 			if(Empty(path) || path[0] != '%') return path;
@@ -39,7 +40,7 @@ namespace Catkeys
 			//var b = new StringBuilder(n);
 			//for(;;) {
 			//	r = (int)ExpandEnvironmentStrings(path, b, (uint)n);
-			//	//OutList(n, r, b.Length, b);
+			//	//PrintList(n, r, b.Length, b);
 			//	if(r <= n) break;
 			//	b.EnsureCapacity(n = r);
 			//}
@@ -52,7 +53,7 @@ namespace Catkeys
 		///		@"[A-Z]:\*" - local path.
 		///		@"[A-Z]:" - drive name.
 		///		@"%*%*" - environment variable (usually contains a full path).
-		///		@"˂*˃*" - special string that can be used with some functions of this library.
+		///		@"&lt;*&gt;*" - special string that can be used with some functions of this library.
 		///		@":*" - eg shell object CLSID like "::{CLSID}"
 		///	Also returns true if path looks like a URL (any protocol), eg "http://abc" or "http:" or "shell:abc". Note: don't use "filename:stream" unless it is full path.
 		/// </summary>
@@ -82,7 +83,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Makes fully-qualified path.
-		/// If path is not full path, returns App+path.
+		/// If path is not full path, returns Folders.ThisApp+path.
 		/// Expands environment variables, processes @"..\" etc (calls Combine()).
 		/// </summary>
 		/// <param name="path">Full path or filename or relative path.</param>
@@ -96,7 +97,7 @@ namespace Catkeys
 		/// </summary>
 		/// <remarks>
 		///	Returns fully-qualified path, with processed @"..\" etc, not relative, not short (DOS), with replaced environment variables if starts with "%".
-		///	If the return value would not be full path, prepends Folders.App.
+		///	If the return value would not be full path, prepends Folders.ThisApp.
 		/// If s1 and s2 are null or "", returns "".
 		///	No exceptions.
 		/// </remarks>
@@ -117,7 +118,7 @@ namespace Catkeys
 
 			R = ExpandEnvVar(R);
 
-			if(!IsFullPath(R)) R = Folders.App + R;
+			if(!IsFullPath(R)) R = Folders.ThisApp + R;
 			else if(R[0] == ':' || R[0] == '<' || R[0] == '%') return R;
 
 			return _CorrectDotsAndDOS(R);
@@ -135,7 +136,7 @@ namespace Catkeys
 		//Better don't use such things. If need, a function can instead have a parameter for it.
 		//public static string ThreadDefaultDirectory
 		//{
-		//	get { return _threadDefDir ?? (_threadDefDir = Folders.App); }
+		//	get { return _threadDefDir ?? (_threadDefDir = Folders.ThisApp); }
 		//	set { _threadDefDir = value; }
 		//}
 		//[ThreadStatic]
@@ -171,8 +172,32 @@ namespace Catkeys
 			}
 			return name;
 		}
+
+		internal class Internal
+		{
+			/// <summary>
+			/// Returns true if path is like ".ext" and the ext part does not contain characters ".\\/:".
+			/// </summary>
+			internal static bool IsExtension(string path)
+			{
+				if(path == null || path.Length < 2 || path[0] != '.') return false;
+				return path.IndexOfAny_(".\\/:", 1) < 0;
+			}
+
+			/// <summary>
+			/// Returns true if path is like "protocol:" and not like "c:".
+			/// </summary>
+			internal static bool IsProtocol(string path)
+			{
+				if(path == null) return false;
+				return path.Length >= 3 && path[path.Length - 1] == ':';
+			}
+		}
 	}
 
+	/// <summary>
+	/// File-system functions.
+	/// </summary>
 	//[DebuggerStepThrough]
 	public static partial class Files
 	{
@@ -228,7 +253,7 @@ namespace Catkeys
 		/// Returns null if cannot be found.
 		/// If the path argument is not full path, searches in these places:
 		///	1. defDirs, if used.
-		/// 2. <see cref="Folders.App"/>.
+		/// 2. <see cref="Folders.ThisApp"/>.
 		/// 3. Calls Api.SearchPath(), which searches in process directory, Windows system directories, current directory, PATH environment variable.
 		/// 4. If .exe, tries to get path from registry "App Paths" keys.
 		/// </summary>
@@ -253,7 +278,7 @@ namespace Catkeys
 			}
 
 			{
-				var s = Folders.App + path;
+				var s = Folders.ThisApp + path;
 				if(FileOrDirectoryExists(s)) return s;
 			}
 
@@ -273,6 +298,9 @@ namespace Catkeys
 
 		#endregion
 
+		/// <summary>
+		/// Creates shell shortcuts (.lnk files) and gets shortcut properties.
+		/// </summary>
 		public class LnkShortcut :IDisposable
 		{
 			//info: name Shortcut used in .NET.
@@ -294,11 +322,13 @@ namespace Catkeys
 					Api.ReleaseComObject(_isl); _isl = null;
 				}
 			}
+			//~LnkShortcut() { Dispose(); } //don't need, we have only COM objects, GC will release them anyway
 
 			/// <summary>
 			/// Returns the internally used IShellLink COM interface.
 			/// </summary>
-			public Api.IShellLink IShellLink { get { return _isl; } }
+			internal Api.IShellLink IShellLink { get { return _isl; } }
+			//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
 
 			LnkShortcut(string lnkPath, uint mode)
 			{
@@ -420,7 +450,7 @@ namespace Catkeys
 				get
 				{
 					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return null;
-					try { return Misc.PidlToString(pidl, Api.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
+					try { return Misc.PidlToString(pidl, Native.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
@@ -464,6 +494,7 @@ namespace Catkeys
 			/// <summary>
 			/// Sets icon file path and icon index.
 			/// </summary>
+			/// <param name="path"></param>
 			/// <param name="iconIndex">0 or icon index or negative icon resource id.</param>
 			public void SetIconLocation(string path, int iconIndex = 0)
 			{
@@ -560,7 +591,7 @@ namespace Catkeys
 
 			/// <summary>
 			/// Gets shortcut target path or URL or virtual shell object parsing name.
-			/// Uses <see cref="Shortcut.TargetAnyType"/>.
+			/// Uses <see cref="TargetAnyType"/>.
 			/// </summary>
 			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
 			public static string GetTarget(string lnkPath)
@@ -684,6 +715,9 @@ namespace Catkeys
 			#endregion
 		}
 
+		/// <summary>
+		/// Miscellaneous functions.
+		/// </summary>
 		public static class Misc
 		{
 
@@ -708,15 +742,16 @@ namespace Catkeys
 			/// Converts PIDL to file path or URL or shell object parsing name.
 			/// Returns null if pidl is Zero or failed.
 			/// </summary>
+			/// <param name="pidl"></param>
 			/// <param name="stringType">
-			/// A value from the <see cref="Api.SIGDN"/> enumeration that specifies the type of string to retrieve.
+			/// A value from the <see cref="Native.SIGDN"/> enumeration that specifies the type of string to retrieve.
 			/// With the default value returns string that can be passed to PidlFromString. It can be a path, URL, "::{CLSID}", etc.
 			/// Other often used values:
-			/// Api.SIGDN.SIGDN_FILESYSPATH - returns null if pidl is not of a file system object.
-			/// Api.SIGDN.SIGDN_URL - returns null if pidl is not of a URL or path. If path, returns its URL form, like "file:///C:/a/b.txt".
-			/// Api.SIGDN.SIGDN_NORMALDISPLAY - returns string that is best to display in UI but cannot be passed to PidlFromString.
+			/// Native.SIGDN.SIGDN_FILESYSPATH - returns null if pidl is not of a file system object.
+			/// Native.SIGDN.SIGDN_URL - returns null if pidl is not of a URL or path. If path, returns its URL form, like "file:///C:/a/b.txt".
+			/// Native.SIGDN.SIGDN_NORMALDISPLAY - returns string that is best to display in UI but cannot be passed to PidlFromString.
 			/// </param>
-			public static string PidlToString(IntPtr pidl, Api.SIGDN stringType = Api.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING)
+			public static string PidlToString(IntPtr pidl, Native.SIGDN stringType = Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING)
 			{
 				string R;
 				if(0 != Api.SHGetNameFromIDList(pidl, stringType, out R)) return null;
@@ -780,24 +815,6 @@ namespace Catkeys
 				return path;
 			}
 #endif
-
-			/// <summary>
-			/// Returns true if path is like ".ext" and the ext part does not contain characters ".\\/:".
-			/// </summary>
-			internal static bool PathIsExtension(string path)
-			{
-				if(path == null || path.Length < 2 || path[0] != '.') return false;
-				return path.IndexOfAny_(".\\/:", 1) < 0;
-			}
-
-			/// <summary>
-			/// Returns true if path is like "protocol:" and not like "c:".
-			/// </summary>
-			internal static bool PathIsProtocol(string path)
-			{
-				if(path == null) return false;
-				return path.Length >= 3 && path[path.Length - 1] == ':';
-			}
 		}
 	}
 }

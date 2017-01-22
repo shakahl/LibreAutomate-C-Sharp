@@ -18,18 +18,24 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
+
+#pragma warning disable 1591 //XML doc //TODO
 
 namespace Catkeys
 {
-	public class CatBar :Base_CatMenu_CatBar
+	/// <summary>
+	/// TODO
+	/// </summary>
+	public class CatBar :CatMenu_CatBar_Base
 	{
 		static Wnd.Misc.WndClass _WndClass = Wnd.Misc.WndClass.Register("CatBar", _WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
 
 		Wnd _w;
 		ToolStrip_ _ts;
 
+		/// <summary>
+		/// Gets ToolStrip.
+		/// </summary>
 		public ToolStrip Ex { get { return _ts; } }
 
 		//Our base uses this.
@@ -43,11 +49,11 @@ namespace Catkeys
 		/// <summary>
 		/// Adds new button as ToolStripButton.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-		/// Code <c>t.Add("text", o => Out(o));</c> is the same as <c>t["text"] = o => Out(o);</c>.
+		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>.
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon">Can be:
-		/// string - icon file, as with <see cref="Files.GetIconHandle"/>.
+		/// string - icon file, as with <see cref="Icons.GetFileIconHandle"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -55,8 +61,8 @@ namespace Catkeys
 		/// </param>
 		/// <example><code>
 		/// var t = new CatBar();
-		/// t["One"] = o => Out(o);
-		/// t["Two", @"icon file path"] = o => { Out(o); TaskDialog.Show(o.ToString()); };
+		/// t["One"] = o => Print(o);
+		/// t["Two", @"icon file path"] = o => { Print(o); TaskDialog.Show(o.ToString()); };
 		/// t.LastItem.ToolTipText = "tooltip";
 		/// </code></example>
 		public Action<ClickEventData> this[string text, object icon = null]
@@ -67,12 +73,12 @@ namespace Catkeys
 		/// <summary>
 		/// Adds new button as ToolStripButton.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-		/// Code <c>t.Add("text", o => Out(o));</c> is the same as <c>t["text"] = o => Out(o);</c>.
+		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>.
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onClick">Lambda etc function to be called when the button clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - icon file, as with <see cref="Files.GetIconHandle"/>.
+		/// string - icon file, as with <see cref="Icons.GetFileIconHandle"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -80,9 +86,9 @@ namespace Catkeys
 		/// </param>
 		/// <example><code>
 		/// var m = new CatBar();
-		/// t.Add("One", o => Out(o), @"icon file path");
+		/// t.Add("One", o => Print(o), @"icon file path");
 		/// t.LastItem.ToolTipText = "tooltip";
-		/// t.Add("Two", o => { Out(o.MenuItem.Checked); });
+		/// t.Add("Two", o => { Print(o.MenuItem.Checked); });
 		/// </code></example>
 		public ToolStripButton Add(string text, Action<ClickEventData> onClick, object icon = null)
 		{
@@ -111,7 +117,7 @@ namespace Catkeys
 
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//OutFunc();
+			//PrintFunc();
 			//_w.ActivateRaw();
 			Api.SetForegroundWindow(_w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 		}
@@ -166,7 +172,7 @@ namespace Catkeys
 
 		public bool Visible
 		{
-			get { return _w.Visible; }
+			get { return _w.IsVisible; }
 			set
 			{
 				_GetIconsAsync(_ts);
@@ -175,7 +181,7 @@ namespace Catkeys
 					_ts.CreateControl();
 					Perf.Next();
 				}
-				_w.Visible = value;
+				_w.Show(value);
 				_showTime = Time.Milliseconds;
 			}
 		}
@@ -208,7 +214,7 @@ namespace Catkeys
 			public IntPtr lpszClass;
 			public uint dwExStyle;
 		}
-#pragma warning restore
+#pragma warning restore 649
 
 		[ThreadStatic]
 		//static Dictionary<Wnd, CatBar> _objects=new Dictionary<Wnd, CatBar>(); //adds 3.3 ms at startup
@@ -232,7 +238,7 @@ namespace Catkeys
 				x = _objects[w] as CatBar; if(x == null) return Api.DefWindowProc(w, msg, wParam, lParam);
 			}
 			//Perf.NW();
-			//Out(x.MainWnd);
+			//Print(x.MainWnd);
 
 			LPARAM R = x._WndProc(msg, wParam, lParam);
 
@@ -258,7 +264,7 @@ namespace Catkeys
 		//	var x = gch.TargetPath as CatBar;
 		//	if(msg == Api.WM_NCCREATE) x._w = w;
 		//	Perf.NW();
-		//	//Out(x.MainWnd);
+		//	//Print(x.MainWnd);
 
 		//	LPARAM R = x._WndProc(msg, wParam, lParam);
 
@@ -279,7 +285,7 @@ namespace Catkeys
 				//_mlTb.Stop();
 				break;
 			case Api.WM_PAINT:
-				//Out("painted");
+				//Print("painted");
 				//if(!_focusedOnce) {
 				//	Perf.NW();
 				//	_focusedOnce = true;
@@ -292,7 +298,7 @@ namespace Catkeys
 
 
 
-		public class ToolStrip_ :ToolStrip, _ICatToolStrip
+		class ToolStrip_ :ToolStrip, _ICatToolStrip
 		{
 			CatBar _parent;
 
@@ -302,7 +308,7 @@ namespace Catkeys
 			{
 				get
 				{
-					//Out("CreateParams");
+					//Print("CreateParams");
 					var p = base.CreateParams;
 					if(_parent != null) { //this prop is called 3 times, first time before ctor
 						p.Parent = _parent.MainWnd.Handle;
@@ -324,7 +330,7 @@ namespace Catkeys
 			//	base.WndProc(ref m);
 
 			//	if(m.Msg == (int)Api.WM_MOUSEACTIVATE) {
-			//		//Out(m.Result);
+			//		//Print(m.Result);
 			//		m.Result = (IntPtr)1;
 			//		//Was MA_ACTIVATEANDEAT, return MA_ACTIVATE. It does not activate the window if it has the no-activate style.
 			//		//If it does not have the style, returning MA_NOACTIVATE causes anomalies, eg showing tooltip activates another window...
@@ -334,9 +340,9 @@ namespace Catkeys
 			////Solves ToolStrip problem in inactive window: no tooltips.
 			//protected override void OnMouseHover(EventArgs e)
 			//{
-			//	//OutFunc();
+			//	//PrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
-			//		//Out("focus");
+			//		//Print("focus");
 			//		Focus();
 			//		//problem: toolbar starts slower if then mouse is in it
 			//	}
@@ -349,10 +355,10 @@ namespace Catkeys
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			//protected override void OnMouseEnter(EventArgs e)
 			//{
-			//	//OutFunc();
+			//	//PrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
-			//		//Out("focus");
-			//		Out(_parent._showTime);
+			//		//Print("focus");
+			//		Print(_parent._showTime);
 			//		Focus();
 			//	}
 			//	base.OnMouseEnter(e);
@@ -363,11 +369,11 @@ namespace Catkeys
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			protected override void OnMouseEnter(EventArgs e)
 			{
-				//OutFunc();
+				//PrintFunc();
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
-					//Out("focus");
+					//Print("focus");
 					long td = Time.Milliseconds - _parent._showTime - 500;
-					if(td < 0) { /*OutDebug("timer");*/ } //TODO: timer
+					if(td < 0) { /*PrintDebug("timer");*/ } //TODO: timer
 					else Focus();
 					//TODO: Time.SetTimer(interval, delegate void TimerHandler(Timer t))
 				}
@@ -386,7 +392,7 @@ namespace Catkeys
 				base.OnPaint(e);
 				//if(!_paintedOnce) Thread.CurrentThread.Priority = tp;
 
-				//perf.Next(); OutList("------------------ paint", perf.Times);
+				//perf.Next(); PrintList("------------------ paint", perf.Times);
 
 				_paintedOnce = true;
 			}

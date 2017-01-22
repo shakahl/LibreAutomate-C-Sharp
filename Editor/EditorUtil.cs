@@ -19,8 +19,6 @@ using System.Xml;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Editor
 {
@@ -55,7 +53,7 @@ namespace Editor
 			t.ColorDepth = ColorDepth.Depth32Bit;
 			using(Image img = Image.FromFile(pngFile)) {
 				R=t.Images.AddStrip(img);
-				//OutList(il.ImageSize, il.Images.Count);
+				//PrintList(il.ImageSize, il.Images.Count);
 				var h = t.Handle; //workaround for the lazy ImageList behavior that causes exception later because the Image is disposed when actually used
 			}
 			return R;
@@ -74,12 +72,12 @@ namespace Editor
 		public static void LoadImageLists()
 		{
 			ImageList il = new ImageList();
-			il.LoadFromImageFile_(Folders.App + @"Resources\il_tv.png"); //TODO: maybe later use resources. Now resources too slow.
+			il.LoadFromImageFile_(Folders.ThisApp + @"Resources\il_tv.png"); //TODO: maybe later use resources. Now resources too slow.
 			//il.LoadFromImage_(Properties.Resources.il_tv);
 			__ilFile = il;
 
 			il = new ImageList();
-			il.LoadFromImageFile_(Folders.App + @"Resources\il_tb.png");
+			il.LoadFromImageFile_(Folders.ThisApp + @"Resources\il_tb.png");
 			//il.LoadFromImage_(Properties.Resources.il_tb);
 			__ilStrip = il;
 

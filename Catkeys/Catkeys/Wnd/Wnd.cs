@@ -17,8 +17,6 @@ using System.Drawing;
 //using System.Linq;
 
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -52,22 +50,27 @@ namespace Catkeys
 	[Serializable]
 	public partial struct Wnd
 	{
+		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when Wnd used.
+
 		IntPtr _h;
 
 		#region constructors, operators, overrides, constants
 
-		Wnd(IntPtr hwnd) { _h = hwnd; } //don't need public
+#pragma warning disable 1591 //XML doc
+		public Wnd(IntPtr hwnd) { _h = hwnd; }
 
 		public static explicit operator Wnd(IntPtr hwnd) { return new Wnd(hwnd); } //Wnd=(Wnd)IntPtr //don't need implicit, it creates more problems than is useful
 		public static explicit operator IntPtr(Wnd w) { return w._h; } //IntPtr=(IntPtr)Wnd //could be implicit, but then problems with operator ==
 		public static explicit operator Wnd(LPARAM hwnd) { return new Wnd(hwnd); } //Wnd=(Wnd)LPARAM
 		public static explicit operator LPARAM(Wnd w) { return w._h; } //LPARAM=(LPARAM)Wnd
-		public static implicit operator Wnd(Misc.SpecHwnd value) { return new Wnd((IntPtr)value); } //Wnd=Wnd.SpecHwnd
+		public static implicit operator Wnd(Misc.SpecHwnd value) { return new Wnd((IntPtr)value); } //Wnd=Wnd.Misc.SpecHwnd
 		public static explicit operator Wnd(int hwnd) { return new Wnd((IntPtr)hwnd); } //Wnd=(Wnd)int
-		public static explicit operator Wnd(Control c) { return new Wnd(c == null ? Zero : c.Handle); } //Wnd=Control //implicit would allow Wnd==null
+		public static explicit operator Wnd(Control c) { return new Wnd(c == null ? Zero : c.Handle); } //Wnd=(Wnd)Control //implicit would allow Wnd==null
 		public static explicit operator Control(Wnd w) { return Control.FromHandle(w._h); } //Control=(Control)Wnd //works only if it is a Control handle, null if other handle
 
+		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(Wnd w1, Wnd w2) { return w1._h == w2._h; }
+		/// <summary>Compares window handles.</summary>
 		public static bool operator !=(Wnd w1, Wnd w2) { return w1._h != w2._h; }
 
 		//Prevent accidental usage Wnd==null. The C# compiler allows it without a warning. As a side effect, the above also disables Wnd==Wnd?.
@@ -80,11 +83,6 @@ namespace Catkeys
 		[Obsolete("Replace Wnd==Wnd? with Wnd.Equals(Wnd?). Replace Wnd==null with Wnd.Is0.", true)]
 		public static bool operator !=(Wnd? w1, Wnd w2) { return true; }
 
-		public bool Equals(Wnd w)
-		{
-			return w._h == _h;
-		}
-
 		/// <summary>
 		/// Returns true if w!=null and w.Value == this.
 		/// </summary>
@@ -92,16 +90,22 @@ namespace Catkeys
 		{
 			return w != null && w.Value == this;
 		}
+#pragma warning restore 1591 //XML doc
 
+		/// <summary>
+		/// Returns true if obj is this Wnd.
+		/// </summary>
 		public override bool Equals(object obj)
 		{
 			return obj is Wnd && this == (Wnd)obj;
 		}
 
+		///
 		public override int GetHashCode()
 		{
-			return (int)_h; //window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables
-							//return _h.GetHashCode();
+			return (int)_h;
+			//window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables.
+			//IntPtr.GetHashCode also returns this.
 		}
 
 		/// <summary>
@@ -118,17 +122,9 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets window handle as IntPtr.
-		/// The same as (IntPtr) cast.
+		/// Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c>.
 		/// </summary>
 		public IntPtr Handle { get { return _h; } }
-
-		/// <summary>
-		/// Gets IWin32Window interface.
-		/// IWin32Window is used as a parameter type of some .NET functions (MessageBox.Show and similar), usually as owner window.
-		/// This class does not implement IWin32Window because it would require a reference to System.Windows.Forms just to use this class.
-		/// Actually this function returns a copy of this variable as Wnd.Misc.Win32Window which implements IWin32Window interface.
-		/// </summary>
-		public IWin32Window IWin32Window { get { return new Misc.Win32Window(this); } }
 
 		//not useful. Required eg for SortedList, but better use Dictionary. We'll never need a sorted list of window handles.
 		///// <summary>
@@ -308,32 +304,26 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets or sets the visible state.
-		/// <para>
-		/// The 'get' function calls Api.IsWindowVisible().
+		/// Gets the visible state.
+		/// Calls Api.IsWindowVisible().
 		/// Returns true if the window is visible. Returns false if is invisible or is a child of invisible parent or when fails (eg window closed).
-		/// </para>
-		/// <para>
-		/// The 'set' function calls Api.ShowWindow(). Does not activate/deactivate/zorder. Supports ThreadError.
-		/// </para>
 		/// </summary>
+		/// <seealso cref="Show"/>
 		/// <seealso cref="Activate"/>
-		/// <seealso cref="MinimizeAndHide"/>
-		public bool Visible
+		public bool IsVisible
 		{
 			get { return Api.IsWindowVisible(this); } //note: ThreadError here would not be very useful, better let it be as fast as possible.
-			set { _Show(value); }
 		}
 
 		/// <summary>
-		/// Shows this window if not visible.
+		/// Shows (if hidden) or hides this window.
 		/// Does not activate/deactivate/zorder.
 		/// Calls Api.ShowWindow(this, Api.SW_SHOWNA/SW_HIDE).
 		/// Supports ThreadError.
 		/// </summary>
-		internal bool _Show(bool show)
+		public bool Show(bool show)
 		{
-			if(show && Visible) return true; //note: don't use this when !show, because then would not hide if the parent window is currently hidden.
+			if(show && IsVisible) return true; //note: don't use this when !show, because then would not hide if the parent window is currently hidden.
 			return Api.ShowWindow(this, show ? Api.SW_SHOWNA : Api.SW_HIDE) || ThreadError.SetWinError();
 
 			//speed when the window already is in the requested state:
@@ -347,20 +337,23 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets or sets the enabled state.
-		/// <para>
-		/// The 'get' function calls Api.IsWindowEnabled().
+		/// Gets the enabled state.
 		/// Returns true if the window is enabled. Returns false if is disabled or is a child of disabled parent or when fails (eg window closed).
-		/// </para>
-		/// <para>
-		/// The 'set' function enables or disables the window.
-		/// Calls Api.EnableWindow().
-		/// </para>
+		/// Calls Api.IsWindowEnabled().
 		/// </summary>
-		public bool Enabled
+		public bool IsEnabled
 		{
 			get { return Api.IsWindowEnabled(this); }
-			set { Api.EnableWindow(this, value); }
+		}
+
+		/// <summary>
+		/// Enables or disables the window.
+		/// Calls Api.EnableWindow().
+		/// </summary>
+		/// <param name="enable">Enable or disable.</param>
+		public void Enable(bool enable)
+		{
+			Api.EnableWindow(this, enable);
 		}
 
 		/// <summary>
@@ -425,7 +418,7 @@ namespace Catkeys
 		/// <summary>
 		/// Can be used with Wnd.ShowMinimized() and similar functions.
 		/// </summary>
-		public enum HowMinMax
+		public enum MinMaxHow
 		{
 			/// <summary>
 			/// Use LikeUser or LikeProgrammer, depending on window style. In most cases LikeUser.
@@ -448,16 +441,16 @@ namespace Catkeys
 		/// <summary>
 		/// If not minimized, minimizes.
 		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowMinimized(HowMinMax.Auto, true, true).
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
+		/// Calls ShowMinimized(MinMaxHow.Auto, true, true).
 		/// </summary>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
 		public void ShowMinimized()
 		{
-			ShowMinimized(HowMinMax.Auto, true, true);
+			ShowMinimized(MinMaxHow.Auto, true, true);
 		}
 
 		/// <summary>
@@ -468,12 +461,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="how">How to minimize.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
-		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
-		/// <exception cref="CatkeysException">
+		/// <param name="applyAutodelay">Apply auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.</param>
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowMinimized(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowMinimized(MinMaxHow how, bool validateThrow = false, bool applyAutodelay = false)
 		{
 			return _MinMaxRes(Api.SW_MINIMIZE, how, validateThrow, applyAutodelay);
 		}
@@ -481,16 +474,16 @@ namespace Catkeys
 		/// <summary>
 		/// If not maximized, maximizes.
 		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowMaximized(HowMinMax.Auto, true, true).
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
+		/// Calls ShowMaximized(MinMaxHow.Auto, true, true).
 		/// </summary>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
 		public void ShowMaximized()
 		{
-			ShowMaximized(HowMinMax.Auto, true, true);
+			ShowMaximized(MinMaxHow.Auto, true, true);
 		}
 
 		/// <summary>
@@ -501,12 +494,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="how">How to maximize.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
-		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
-		/// <exception cref="CatkeysException">
+		/// <param name="applyAutodelay">Apply auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.</param>
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowMaximized(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowMaximized(MinMaxHow how, bool validateThrow = false, bool applyAutodelay = false)
 		{
 			return _MinMaxRes(Api.SW_SHOWMAXIMIZED, how, validateThrow, applyAutodelay);
 		}
@@ -514,16 +507,16 @@ namespace Catkeys
 		/// <summary>
 		/// If maximized or minimized, makes normal (not min/max).
 		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowNotMinMax(HowMinMax.Auto, true, true).
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
+		/// Calls ShowNotMinMax(MinMaxHow.Auto, true, true).
 		/// </summary>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
 		public void ShowNotMinMax()
 		{
-			ShowNotMinMax(HowMinMax.Auto, true, true);
+			ShowNotMinMax(MinMaxHow.Auto, true, true);
 		}
 
 		/// <summary>
@@ -534,12 +527,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="how">How to make normal.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
-		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
-		/// <exception cref="CatkeysException">
+		/// <param name="applyAutodelay">Apply auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.</param>
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowNotMinMax(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowNotMinMax(MinMaxHow how, bool validateThrow = false, bool applyAutodelay = false)
 		{
 			return _MinMaxRes(Api.SW_SHOWNORMAL, how, validateThrow, applyAutodelay);
 		}
@@ -547,16 +540,16 @@ namespace Catkeys
 		/// <summary>
 		/// If minimized, restores previous non-minimized state (maximized or normal).
 		/// Also unhides.
-		/// Applies auto-delay, except when this window is of this thread.
-		/// Calls ShowNotMinimized(HowMinMax.Auto, true, true).
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
+		/// Calls ShowNotMinimized(MinMaxHow.Auto, true, true).
 		/// </summary>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
 		public void ShowNotMinimized()
 		{
-			ShowNotMinimized(HowMinMax.Auto, true, true);
+			ShowNotMinimized(MinMaxHow.Auto, true, true);
 		}
 
 		/// <summary>
@@ -567,12 +560,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="how">How to restore.</param>
 		/// <param name="validateThrow">Throw exception (listed below) if fails or the window is invalid.</param>
-		/// <param name="applyAutodelay">Apply auto-delay, except when this window is of this thread.</param>
-		/// <exception cref="CatkeysException">
+		/// <param name="applyAutodelay">Apply auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.</param>
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails.
 		/// </exception>
-		public bool ShowNotMinimized(HowMinMax how, bool validateThrow = false, bool applyAutodelay = false)
+		public bool ShowNotMinimized(MinMaxHow how, bool validateThrow = false, bool applyAutodelay = false)
 		{
 			return _MinMaxRes(Api.SW_RESTORE, how, validateThrow, applyAutodelay);
 		}
@@ -584,7 +577,9 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="state">Must be Api.SW_MINIMIZE, Api.SW_RESTORE (restores to normal/max if minimized), Api.SW_SHOWNORMAL or Api.SW_SHOWMAXIMIZED.</param>
 		/// <param name="how">Use WM_SYSCOMMAND, Api.ShowWindow() (animated) or Api.SetWindowPlacement() (no animation).</param>
-		bool _MinMaxRes(int state, HowMinMax how, bool validateThrow, bool applyAutodelay)
+		/// <param name="validateThrow"></param>
+		/// <param name="applyAutodelay"></param>
+		bool _MinMaxRes(int state, MinMaxHow how, bool validateThrow, bool applyAutodelay)
 		{
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 
@@ -601,7 +596,7 @@ namespace Catkeys
 				ok = !wasMinimized;
 				break;
 			case Api.SW_SHOWNORMAL:
-				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, _Show() will return false, don't need to check here.
+				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
 				break;
 			case Api.SW_SHOWMAXIMIZED:
 				ok = IsMaximized;
@@ -609,15 +604,15 @@ namespace Catkeys
 			}
 
 			if(ok) {
-				if(Visible) return true;
-				ok = _Show(true) || ThreadError.SetWinError();
+				if(IsVisible) return true;
+				ok = Show(true) || ThreadError.SetWinError();
 			} else {
 				g1:
 				switch(how) {
-				case HowMinMax.NoAnimation:
+				case MinMaxHow.NoAnimation:
 					fast = true;
 					break;
-				case HowMinMax.Auto: //Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
+				case MinMaxHow.Auto: //Send WM_SYSCOMMAND if has minimize/maximize button. Else call Api.ShowWindow.
 					uint style = Style;
 					switch(state) {
 					case Api.SW_MINIMIZE: if((style & Api.WS_MINIMIZEBOX) != 0) cmd = Api.SC_MINIMIZE; break;
@@ -625,7 +620,7 @@ namespace Catkeys
 					default: if((style & (Api.WS_MAXIMIZEBOX | Api.WS_MAXIMIZEBOX)) != 0) cmd = Api.SC_RESTORE; break;
 					}
 					break;
-				case HowMinMax.LikeUser:
+				case MinMaxHow.LikeUser:
 					switch(state) {
 					case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
 					case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
@@ -640,7 +635,7 @@ namespace Catkeys
 					if(ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = SendTimeout(10000, Api.WM_SYSCOMMAND, cmd);
 				} else {
 					if(fast) {
-						Api.WINDOWPLACEMENT p;
+						Native.WINDOWPLACEMENT p;
 						if(!GetWindowPlacement(out p)) return false;
 
 						switch(state) {
@@ -660,7 +655,7 @@ namespace Catkeys
 						ok = Api.ShowWindow(this, state) || ThreadError.SetWinError();
 					}
 
-					if(!ok && ThreadError.WinErrorCode == Api.ERROR_ACCESS_DENIED) { how = HowMinMax.LikeUser; goto g1; } //UAC blocks the API but not the message
+					if(!ok && ThreadError.WinErrorCode == Api.ERROR_ACCESS_DENIED) { how = MinMaxHow.LikeUser; goto g1; } //UAC blocks the API but not the message
 				}
 
 				if(ok) _SetStateActivateWait(state, wasMinimized);
@@ -679,12 +674,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Initializes wp and calls Api.GetWindowPlacement.
+		/// Initializes a WINDOWPLACEMENT struct and calls Api.GetWindowPlacement.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool GetWindowPlacement(out Api.WINDOWPLACEMENT wp)
+		/// <param name="wp"></param>
+		public bool GetWindowPlacement(out Native.WINDOWPLACEMENT wp)
 		{
-			wp = new Api.WINDOWPLACEMENT(); wp.length = Api.SizeOf(wp);
+			wp = new Native.WINDOWPLACEMENT(); wp.length = Api.SizeOf(wp);
 			return Api.GetWindowPlacement(this, ref wp) || ThreadError.SetWinError();
 		}
 
@@ -692,7 +688,8 @@ namespace Catkeys
 		/// Sets wp.length and calls Api.SetWindowPlacement.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool SetWindowPlacement(ref Api.WINDOWPLACEMENT wp)
+		/// <param name="wp"></param>
+		public bool SetWindowPlacement(ref Native.WINDOWPLACEMENT wp)
 		{
 			wp.length = Api.SizeOf(wp);
 			return Api.SetWindowPlacement(this, ref wp) || ThreadError.SetWinError();
@@ -705,8 +702,8 @@ namespace Catkeys
 		///// </summary>
 		//public bool MinimizeAndHide()
 		//{
-		//	if(IsMinimized && !Visible) return true; //because ShowMinimized() unhides
-		//	return ShowMinimized(HowMinMax.NoAnimation) && _Show(false);
+		//	if(IsMinimized && !IsVisible) return true; //because ShowMinimized() unhides
+		//	return ShowMinimized(MinMaxHow.NoAnimation) && Show(false);
 		//}
 
 		#endregion
@@ -727,9 +724,9 @@ namespace Catkeys
 		/// <summary>
 		/// Activates this window (brings to the foreground).
 		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// </summary>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails to activate (unlikely).
 		/// </exception>
@@ -739,23 +736,23 @@ namespace Catkeys
 		///		1. If this is a control, activates its top-level parent window.
 		///		2. If this is Wnd.Get.DesktopWindow, just deactivates the currently active window.
 		///		3. When the target application instead activates another window of the same thread.
-		/// This overload just calls Activate(HowActivate.CanThrow).
+		/// Calls TryActivate(TryActivateFlags.CanThrow).
 		/// </remarks>
+		/// <seealso cref="TryActivate"/>
 		/// <seealso cref="ActivateRaw"/>
 		/// <seealso cref="IsActive"/>
-		/// <seealso cref="Wnd.ActiveWindow"/>
-		/// <seealso cref="Wnd.SwitchActiveWindow"/>
-		/// <seealso cref="Activate(_ActivateFlags)"/>
+		/// <seealso cref="ActiveWindow"/>
+		/// <seealso cref="SwitchActiveWindow"/>
 		public void Activate()
 		{
-			Activate(HowActivate.CanThrow);
+			TryActivate(TryActivateFlags.CanThrow);
 		}
 
 		/// <summary>
-		/// Flags for the Wnd.Activate() overload that accepts flags.
+		/// Flags for <see cref="TryActivate"/>.
 		/// </summary>
 		[Flags]
-		public enum HowActivate
+		public enum TryActivateFlags
 		{
 			/// <summary>
 			/// Throw exception if invalid window or if fails to activate. Without this flag then sets thread error and returns false.
@@ -766,39 +763,39 @@ namespace Catkeys
 			/// </summary>
 			IgnoreIfNoActivateStyleEtc = 2,
 			/// <summary>
-			/// Don't check is this a control (child window). Without this flag activates control's top-level parent window.
+			/// Don't apply auto-delay (<see cref="Script.Speed"/>).
+			/// Anyway, always waits at least 20 ms. You can instead use <see cref="ActivateRaw"/>, it is as fast as possible.
 			/// </summary>
-			DontCheckIsControl = 4,
-			/// <summary>
-			/// Don't apply auto-delay.
-			/// Anyway, always waits at least 20 ms. You can instead use ActivateRaw(), it is as fast as possible.
-			/// </summary>
-			Faster = 8,
+			Faster = 4,
 		}
 
 		/// <summary>
 		/// Activates this window (brings to the foreground).
 		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
-		/// Everything is the same as with other overload, except that this overload has a 'flags' parameter and by default returns false if failed (does not throw exception).
+		/// The same as <see cref="Activate"/>, except: if failed, by default returns false instead of throwing exception; has a 'flags' parameter.
 		/// </summary>
-		public bool Activate(HowActivate flags)
+		/// <param name="flags"><see cref="TryActivateFlags"/>.</param>
+		public bool TryActivate(TryActivateFlags flags = 0)
 		{
-			bool canThrow = flags.HasFlag(HowActivate.CanThrow);
-			if(!Validate(canThrow)) return false;
-			if(!flags.HasFlag(HowActivate.DontCheckIsControl) && IsChildWindow) return ToplevelParentOrThis.Activate(flags | HowActivate.DontCheckIsControl);
+			if(!Validate(flags.HasFlag(TryActivateFlags.CanThrow))) return false;
+			if(IsChildWindow) return ToplevelParentOrThis._Activate(flags);
+			return _Activate(flags);
+		}
 
-			bool ofThisThread = IsOfThisThread;
+		bool _Activate(TryActivateFlags flags)
+		{
+			Debug.Assert(!IsChildWindow);
+			bool R = false, noAct = false, ofThisThread = IsOfThisThread;
 
 			if(IsMinimized) {
 				ShowNotMinimized();
 				if(!ofThisThread) WaitMS(100); //need minimum 20 for Excel
 			}
-			if(!Visible) Visible = true;
+			if(!IsVisible && !Show(true)) goto ge;
 
-			bool R = IsActive, noAct = false;
-
+			R = IsActive;
 			if(!R) {
-				if(flags.HasFlag(HowActivate.IgnoreIfNoActivateStyleEtc)) {
+				if(flags.HasFlag(TryActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					uint est = ExStyle;
 					if((est & Api.WS_EX_NOACTIVATE) != 0) noAct = true;
 					else if((est & (Api.WS_EX_TOOLWINDOW | Api.WS_EX_APPWINDOW)) == Api.WS_EX_TOOLWINDOW) noAct = !HasStyle(Api.WS_CAPTION);
@@ -809,9 +806,9 @@ namespace Catkeys
 					bool ok = ActivateRaw();
 
 					if(!ofThisThread) {
-						int speed = flags.HasFlag(HowActivate.Faster) ? 0 : Script.Speed;
+						int speed = flags.HasFlag(TryActivateFlags.Faster) ? 0 : Script.Speed;
 						for(int j = 0; j < 5; j++) {
-							//Out(ActiveWindow);
+							//Print(ActiveWindow);
 							WaitMS(speed / 5 + 2);
 							//Perf.First();
 							SendTimeout(200, 0);
@@ -849,11 +846,12 @@ namespace Catkeys
 			}
 
 			if(R) return R;
-			return ThreadError.ThrowOrSet(canThrow, "Failed to activate window.");
+			ge:
+			return ThreadError.ThrowOrSet(flags.HasFlag(TryActivateFlags.CanThrow), "Failed to activate window.");
 		}
 
 		/// <summary>
-		/// Low-level version of Activate().
+		/// Low-level version of <see cref="TryActivate"/>.
 		/// Just calls AllowActivate(), Api.SetForegroundWindow() and makes sure that it actually worked, but does not check whether it activated exactly this window.
 		/// No exceptions, no auto-delay, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
 		/// Returns false if fails (unlikely).
@@ -885,14 +883,14 @@ namespace Catkeys
 		/// <summary>
 		/// Activates another main window, like with Alt+Tab.
 		/// Returns the window. Returns Wnd0 if there is no such window or if fails to activate (unlikely).
-		/// Uses Wnd.Get.NextMainWindow() and Activate().
+		/// Uses <see cref="Wnd.Get.NextMainWindow"/> and <see cref="TryActivate"/>.
 		/// </summary>
 		/// <param name="skipMinimized">Don't activate minimized windows.</param>
 		public static Wnd SwitchActiveWindow(bool skipMinimized = false)
 		{
 			Wnd wa = ActiveWindow;
 			Wnd w = Get.NextMainWindow(wa, retryFromTop: true, skipMinimized: skipMinimized, likeAltTab: true);
-			if(w.Is0 || w == wa || !w.Activate(HowActivate.DontCheckIsControl)) return Wnd0; //does not throw
+			if(w.Is0 || w == wa || !w._Activate(0)) return Wnd0; //does not throw
 			return w;
 
 			//TODO: when all minimized (eg after ShowDesktop), activates wrong window.
@@ -902,17 +900,24 @@ namespace Catkeys
 		{
 			/// <summary>
 			/// Waits while there is no active window.
-			/// It sometimes happens after switching the active window (and it is not of this thread), very briefly until Windows makes the new window active after making the old window inactive.
-			/// Don't need to call this after Activate(), ActivateRaw() and other functions of this library that activate windows.
+			/// It sometimes happens after switching the active window (and it is not of this thread), very briefly until Windows makes the new window active after making the old window inactive (or after closing the old window).
+			/// Don't need to call this after Activate() and other functions of this library that activate windows.
 			/// Waits max about 200 ms, then returns false if there is no active window.
+			/// Processes Windows messages that are in the message queue of this thread.
 			/// </summary>
 			public static bool WaitForAnActiveWindow()
 			{
 				for(int i = 2; i < 20; i++) {
+					Time.DoEvents();
 					if(!ActiveWindow.Is0) return true;
 					WaitMS(i);
 				}
 				return false;
+				//Call this after showing a dialog API.
+				//In my previous experience, in a thread that does not process messages, after closing a dialog may be not updated key states.
+				//Processing remaining unprocessed messages fixes it.
+				//In my tests, it fixed even the no-active-window-briefly-after-a-dialog problem, although probably it is not reliable.
+				//It spends about 200 mcs, an it is enough for the system to activate a window. Even Thread.Sleep() often works.
 			}
 		}
 
@@ -922,8 +927,8 @@ namespace Catkeys
 			/// Temporarily enables this process to activate windows with Api.SetForegroundWindow().
 			/// Returns false if fails (unlikely).
 			/// In some cases you may need this function because Windows often disables SetForegroundWindow() to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow() just makes the window's taskbar button flash which indicates that the windows wants attention. More info in SetForegroundWindow() help in MSDN.
-			/// Usually you will not call Api.SetForegroundWindow() directly. It is called by some other functions, for example some API dialog functions.
-			/// Don't need to call this function to enable Activate(), ActivateRaw() and other functions of this library that activate windows.
+			/// Usually you don't call Api.SetForegroundWindow() directly. It is called by some other functions, for example Form.Show.
+			/// Don't need to call this function before calling functions of this library that activate windows.
 			/// </summary>
 			public static bool AllowActivate()
 			{
@@ -969,7 +974,7 @@ namespace Catkeys
 		/// </summary>
 		static void _AllowActivate_SendKey(bool debugOut)
 		{
-			if(debugOut) OutDebug("AllowActivate: need key");
+			if(debugOut) PrintDebug("AllowActivate: need key");
 
 			var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
 			Api.SendInputKey(ref x);
@@ -982,12 +987,12 @@ namespace Catkeys
 		/// </summary>
 		static void _AllowActivate_MinRes()
 		{
-			OutDebug("AllowActivate: need min/res");
+			PrintDebug("AllowActivate: need min/res");
 
 			Wnd t = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW, "#32770", null, Api.WS_POPUP | Api.WS_MINIMIZE | Api.WS_VISIBLE, 0, 0, 0, 0, Wnd0, 0, Zero, 0);
 			//info: When restoring, the window must be visible, or may not work.
 			try {
-				var wp = new Api.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
+				var wp = new Native.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
 				t.SetWindowPlacement(ref wp); //activates t; fast (no animation)
 				_AllowActivate_SendKey(false); //makes so that later our process can always activate
 				_AllowActivate_AllowSetFore();
@@ -1019,9 +1024,9 @@ namespace Catkeys
 		/// Makes this control the focused (receiving keyboard input) control.
 		/// Also activetes its top-level parent window.
 		/// This control can belong to any process/thread. To focus controls of this thread usually it's better to use FocusControlOfThisThread(); it is lightweight, no exceptions.
-		/// Applies auto-delay, except when this control is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this control is of this thread.
 		/// </summary>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails to activate parent window.
 		/// 3. When fails to set focus, for example because of UAC.
@@ -1031,7 +1036,7 @@ namespace Catkeys
 		{
 			ValidateThrow();
 			Wnd wTL = ToplevelParentOrThis;
-			if(wTL != Api.GetForegroundWindow()) wTL.Activate(HowActivate.CanThrow | HowActivate.DontCheckIsControl);
+			if(wTL != Api.GetForegroundWindow()) wTL._Activate(TryActivateFlags.CanThrow);
 
 			uint th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
@@ -1084,11 +1089,23 @@ namespace Catkeys
 		{
 			get
 			{
-				Api.GUITHREADINFO g;
+				Native.GUITHREADINFO g;
 				Misc.GetGUIThreadInfo(out g);
 				return g.hwndFocus;
 			}
 		}
+
+		/// <summary>
+		/// Returns true if this is the focused (receiving keyboard input) control of this thread and its top-level parent window is active.
+		/// Calls <see cref="FocusedControlOfThisThread"/>, which calls Api.GetFocus().
+		/// </summary>
+		public bool IsFocusedControlOfThisThread { get { return !this.Is0 && this == FocusedControlOfThisThread; } }
+
+		/// <summary>
+		/// Returns true if this is the focused (receiving keyboard input) control of the currently active process/thread.
+		/// Calls <see cref="FocusedControl"/>.
+		/// </summary>
+		public bool IsFocusedControl { get { return !this.Is0 && this == FocusedControl; } }
 
 		#endregion
 
@@ -1102,7 +1119,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="r">A variable that receives the rectangle in screen coordinates. Will be empty if failed.</param>
 		/// <seealso cref="GetClientRect"/>
-		/// <seealso cref="RectInClientOf"/>
+		/// <seealso cref="GetRectInClientOf"/>
 		bool GetRect(out RECT r)
 		{
 			if(Api.GetWindowRect(this, out r)) return true;
@@ -1303,7 +1320,7 @@ namespace Catkeys
 
 		bool _SetClientSize(int? width, int? height)
 		{
-			Api.WINDOWINFO u; if(!GetWindowInfo(out u)) return false;
+			Native.WINDOWINFO u; if(!GetWindowInfo(out u)) return false;
 
 			int W = width != null ? width.Value : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
 			int H = height != null ? height.Value : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
@@ -1316,10 +1333,10 @@ namespace Catkeys
 		/// All info in MSDN, WINDOWINFO topic.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="wi">A Api.WINDOWINFO variable that receives window/client rectangles, styles etc. This function clears it and sets cbSize before calling Api.GetWindowInfo().</param>
-		public bool GetWindowInfo(out Api.WINDOWINFO wi)
+		/// <param name="wi">A Native.WINDOWINFO variable that receives window/client rectangles, styles etc. This function clears it and sets cbSize before calling Api.GetWindowInfo().</param>
+		public bool GetWindowInfo(out Native.WINDOWINFO wi)
 		{
-			wi = new Api.WINDOWINFO(); wi.cbSize = Api.SizeOf(wi);
+			wi = new Native.WINDOWINFO(); wi.cbSize = Api.SizeOf(wi);
 			return Api.GetWindowInfo(this, ref wi) || ThreadError.SetWinError();
 		}
 
@@ -1332,7 +1349,7 @@ namespace Catkeys
 		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
 		{
 			ThreadError.Clear(); //because this func is used by some property-set functions
-			Api.WINDOWINFO u;
+			Native.WINDOWINFO u;
 			if(GetWindowInfo(out u)) { rWindow = u.rcWindow; rClient = u.rcClient; return true; }
 			rWindow = new RECT(); rClient = new RECT();
 			return false;
@@ -1483,6 +1500,7 @@ namespace Catkeys
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is Wnd0, gets rectangle in screen.</param>
+		/// <param name="r"></param>
 		public bool GetRectInClientOf(Wnd w, out RECT r)
 		{
 			if(w.Is0) return GetRect(out r);
@@ -1518,7 +1536,7 @@ namespace Catkeys
 		/// </summary>
 		public bool GetNormalStateRect(out RECT r)
 		{
-			Api.WINDOWPLACEMENT p;
+			Native.WINDOWPLACEMENT p;
 			bool ok = GetWindowPlacement(out p);
 			r = p.rcNormalPosition;
 			return ok;
@@ -1645,14 +1663,14 @@ namespace Catkeys
 		/// <summary>
 		/// Moves and/or resizes.
 		/// For top-level windows use primary screen coordinates. For controls - direct parent client coordinates.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// </summary>
 		/// <param name="x">Left. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
 		/// <param name="y">Top. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
 		/// <param name="width">Width. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change width.</param>
 		/// <param name="height">Height. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change height.</param>
 		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails (unlikely).
 		/// </exception>
@@ -1686,9 +1704,9 @@ namespace Catkeys
 			}
 
 			//restore min/max, except if child or hidden
-			if(w.Is0 && (IsMinimized || IsMaximized) && Visible) {
-				ShowNotMinMax(HowMinMax.NoAnimation);
-				//info: '&& Visible' because ShowNotMinMax unhides
+			if(w.Is0 && (IsMinimized || IsMaximized) && IsVisible) {
+				ShowNotMinMax(MinMaxHow.NoAnimation);
+				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 
 			if(!_Move(xy.x, xy.y, wh.x, wh.y, f)) ThreadError.ThrowIfError();
@@ -1700,13 +1718,13 @@ namespace Catkeys
 		/// <summary>
 		/// Moves.
 		/// For top-level windows use primary screen coordinates. For controls - direct parent client coordinates.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// Calls Move(x, y, null, null, workArea).
 		/// </summary>
 		/// <param name="x">Left. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
 		/// <param name="y">Top. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
 		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails (unlikely).
 		/// </exception>
@@ -1720,13 +1738,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Resizes.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// Calls Move(null, null, width, height, workArea).
 		/// </summary>
 		/// <param name="width">Width. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change width.</param>
 		/// <param name="height">Height. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change height.</param>
 		/// <param name="workArea">If false, fractional width/height are part of the primary screen, else of its work area. Not used when this is a child window.</param>
-		/// <exception cref="CatkeysException">
+		/// <exception cref="CatException">
 		/// 1. When this window is invalid (not found, closed, etc).
 		/// 2. When fails (unlikely).
 		/// </exception>
@@ -1786,12 +1804,12 @@ namespace Catkeys
 			}
 
 			if(useWindow) { //move window
-				Api.WINDOWPLACEMENT wp;
+				Native.WINDOWPLACEMENT wp;
 				if(!w.GetWindowPlacement(out wp)) return false;
 				bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.FromWindow(w));
 				if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return true;
 
-				Wnd hto = Wnd0; bool visible = w.Visible;
+				Wnd hto = Wnd0; bool visible = w.IsVisible;
 				try {
 					//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
 					//There are several workarounds. The best of them - temporarily set owner window 0.
@@ -1825,18 +1843,18 @@ namespace Catkeys
 
 		/// <summary>
 		/// Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
-		/// By default, 0 and negative x y are interpreted as: 0 - screen center, ˂0 - relative to the right or bottom edge of the screen.
+		/// By default, 0 and negative x y are interpreted as: 0 - screen center, &lt;0 - relative to the right or bottom edge of the screen.
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen.</param>
 		/// <param name="y">Y coordinate in the specified screen.</param>
-		/// <param name="screen">Move to this screen. If null, use screen of this window. The same as with Screen_.FromObject().</param>
+		/// <param name="screen">Move to this screen. If null, use screen of this window. The same as with <see cref="Screen_.FromObject"/>.</param>
 		/// <param name="workArea">Use the work area, not whole screen.</param>
 		/// <param name="limitSize">If window is bigger than screen, resize it.</param>
 		/// <param name="rawXY">Don't interpret 0 and negative x y in a special way. They are relative to the top-left corner of the screen.</param>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// Returns false if fails. Supports ThreadError.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// </remarks>
 		/// <seealso cref="Wnd.Misc.RectMoveInScreen"/>
 		public bool MoveInScreen(int x, int y, object screen = null, bool workArea = true, bool limitSize = false, bool rawXY = false)
@@ -1854,7 +1872,7 @@ namespace Catkeys
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// Returns false if fails. Supports ThreadError.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// </remarks>
 		/// <seealso cref="Wnd.Misc.RectEnsureInScreen"/>
 		public bool EnsureInScreen(object screen = null, bool workArea = true, bool limitSize = false)
@@ -1871,19 +1889,19 @@ namespace Catkeys
 		/// <param name="workArea">Use the work area, not whole screen.</param>
 		/// <remarks>
 		/// Returns false if fails. Supports ThreadError.
-		/// Applies auto-delay, except when this window is of this thread.
+		/// Applies auto-delay (<see cref="Script.Speed"/>), except when this window is of this thread.
 		/// </remarks>
 		/// <seealso cref="Wnd.Misc.RectMoveInScreen"/>
 		public bool MoveToScreenCenter(object screen = null, bool workArea = true)
 		{
-			return ShowNotMinMax(HowMinMax.NoAnimation) && MoveInScreen(0, 0, screen, workArea);
+			return ShowNotMinMax(MinMaxHow.NoAnimation) && MoveInScreen(0, 0, screen, workArea);
 		}
 
 		public static partial class Misc
 		{
 			/// <summary>
 			/// Adjusts a rectangle so that it can be used to create a new window that will be entirely in specified screen.
-			/// By default, 0 and negative x y (r.left r.top) are interpreted as: 0 - screen center, ˂0 - relative to the right or bottom edge of the screen.
+			/// By default, 0 and negative x y (r.left r.top) are interpreted as: 0 - screen center, &lt;0 - relative to the right or bottom edge of the screen.
 			/// </summary>
 			/// <param name="r">The rectangle. Initially must contain rectangle coordinates relative to the specified screen. The function replaces them with normal coordinates relative to the primary screen.</param>
 			/// <param name="screen">Use this screen. If null, use the primary screen. The same as with Screen_.FromObject().</param>
@@ -2021,7 +2039,7 @@ namespace Catkeys
 			for(int i = 0; i < 4; i++) {
 				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.NoTopmost)) return false;
 				if(i == 0 && !IsTopmost) break;
-				//Out("retry");
+				//Print("retry");
 			}
 
 			//place this after the active window
@@ -2111,36 +2129,38 @@ namespace Catkeys
 
 		/// <summary>
 		/// Changes window style.
-		/// SetStyle sets style as specified. Adding/removing some style bits is easier with SetStyleAdd/SetStyleRemove.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="style">One or more WS_x flags. Documented in MSDN, "Window Styles" topic.</param>
+		/// <param name="style">One or more WS_x flags (not WS_EX_x). Documented in MSDN, "Window Styles" topic.</param>
+		/// <param name="how"></param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
 		/// <param name="updateClient">Update client area.</param>
-		public bool SetStyle(uint style, bool updateNC = false, bool updateClient = false) { return _SetStyle(style, 0, false, updateNC, updateClient); }
-		public bool SetStyleAdd(uint style, bool updateNC = false, bool updateClient = false) { return _SetStyle(style, 1, false, updateNC, updateClient); }
-		public bool SetStyleRemove(uint style, bool updateNC = false, bool updateClient = false) { return _SetStyle(style, 2, false, updateNC, updateClient); }
+		public bool SetStyle(uint style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
+		{
+			return _SetStyle(style, how, false, updateNC, updateClient);
+		}
 
 		/// <summary>
 		/// Changes window extended style.
-		/// SetExStyle sets extended style as specified. Adding/removing some extended style bits is easier with SetExStyleAdd/SetExStyleRemove.
 		/// Supports ThreadError.
 		/// </summary>
-		/// <param name="style">One or more WS_x flags. Documented in MSDN, "Extended Window Styles" topic.</param>
+		/// <param name="style">One or more WS_EX_x flags. Documented in MSDN, "Extended Window Styles" topic.</param>
+		/// <param name="how"></param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
 		/// <param name="updateClient">Update client area.</param>
-		public bool SetExStyle(uint style, bool updateNC = false, bool updateClient = false) { return _SetStyle(style, 0, true, updateNC, updateClient); }
-		public bool SetExStyleAdd(uint style, bool updateNC = false, bool updateClient = false) { return _SetStyle(style, 1, true, updateNC, updateClient); }
-		public bool SetExStyleRemove(uint style, bool updateNC = false, bool updateClient = false) { return _SetStyle(style, 2, true, updateNC, updateClient); }
+		public bool SetExStyle(uint style, SetAddRemove how= SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
+		{
+			return _SetStyle(style, how, true, updateNC, updateClient);
+		}
 
-		bool _SetStyle(uint style, uint how, bool exStyle = false, bool updateNC = false, bool updateClient = false)
+		bool _SetStyle(uint style, SetAddRemove how, bool exStyle = false, bool updateNC = false, bool updateClient = false)
 		{
 			int gwl = exStyle ? Api.GWL_EXSTYLE : Api.GWL_STYLE;
-			if(how != 0) {
+			if(how != SetAddRemove.Set) {
 				uint pstyle = GetWindowLong(gwl);
-				if(how == 1) style |= pstyle;
-				else if(how == 2) style = pstyle & ~style;
-				else style = pstyle ^ style;
+				if(how == SetAddRemove.Add) style |= pstyle;
+				else if(how == SetAddRemove.Remove) style = pstyle & ~style;
+				else if(how == SetAddRemove.Xor) style = pstyle ^ style;
 			}
 
 			if(SetWindowLong(gwl, (int)style) == 0 && ThreadError.IsError) return false;
@@ -2174,6 +2194,12 @@ namespace Catkeys
 
 			[DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
 			internal static extern LPARAM GetClassLong64(Wnd hWnd, int nIndex);
+
+			[DllImport("user32.dll", EntryPoint = "SetClassLongW", SetLastError = true)]
+			internal static extern int SetClassLong32(Wnd hWnd, int nIndex, int dwNewLong);
+
+			[DllImport("user32.dll", EntryPoint = "SetClassLongPtrW", SetLastError = true)]
+			internal static extern LPARAM SetClassLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
 		}
 
 		/// <summary>
@@ -2198,6 +2224,7 @@ namespace Catkeys
 		/// Supports ThreadError.
 		/// </summary>
 		/// <param name="index">One of Api.GWL_x or Api.DWL_x.</param>
+		/// <param name="newValue"></param>
 		/// <remarks>
 		/// All GWL_ values are the same in 32-bit and 64-bit process. Some DWL_ values are different, therefore they are defined as properties, not as constants.
 		/// </remarks>
@@ -2223,6 +2250,24 @@ namespace Catkeys
 			Api.SetLastError(0);
 			LPARAM R;
 			if(IntPtr.Size == 8) R = _Api.GetClassLong64(this, index); else R = _Api.GetClassLong32(this, index);
+			if(R == 0) ThreadError.SetWinError();
+			return R;
+		}
+
+		/// <summary>
+		/// Calls API SetClassLong if this process is 32-bit, SetClassLongPtr if 64-bit.
+		/// Supports ThreadError.
+		/// </summary>
+		/// <param name="index">One of Api.GCL_x.</param>
+		/// <param name="newValue"></param>
+		/// <remarks>
+		/// All GCL_ values are the same in 32-bit and 64-bit process.
+		/// </remarks>
+		public LPARAM SetClassLong(int index, LPARAM newValue)
+		{
+			Api.SetLastError(0);
+			LPARAM R;
+			if(IntPtr.Size == 8) R = _Api.SetClassLong64(this, index, newValue); else R = _Api.SetClassLong32(this, index, newValue);
 			if(R == 0) ThreadError.SetWinError();
 			return R;
 		}
@@ -2642,25 +2687,25 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if the class name of this window matches className.
-		/// String by default is interpreted as wildcard, case-insensitive.
 		/// Supports ThreadError.
 		/// </summary>
-		public bool ClassNameIs(WildStringI className)
+		/// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
+		public bool ClassNameIs(string className)
 		{
-			return className.Match(ClassName);
+			return ClassName.Like_(className, true);
 		}
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
-		/// Strings by default are interpreted as wildcard, case-insensitive.
 		/// Supports ThreadError.
 		/// </summary>
-		public int ClassNameIs(params WildStringI[] classNames)
+		/// <param name="classNames">Class names. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
+		public int ClassNameIs(params string[] classNames)
 		{
 			string cn = ClassName; if(cn == null) return 0;
-			for(int i = 0; i < classNames.Length; i++) if(classNames[i].Match(cn)) return i + 1;
+			int i = cn.Like_(true, classNames);
 			ThreadError.Clear();
-			return 0;
+			return i;
 		}
 
 		/// <summary>
@@ -2684,7 +2729,7 @@ namespace Catkeys
 		/// <summary>
 		/// Tries to close the window.
 		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or simply need more time until it is finally destroyed.
-		/// This function waits a while until the window is destroyed or hidden or disabled, but does not wait indefinitely. Also applies auto-delay.
+		/// This function waits a while until the window is destroyed or hidden or disabled, but does not wait indefinitely. Also applies auto-delay (<see cref="Script.Speed"/>).
 		/// If finally the window is destroyed (or was already destroyed when calling this function), sets this=Wnd0 and returns true.
 		/// Else returns false (although in many cases the window is already hidden and will be destroyed soon, and another window is activated).
 		/// If the window is of this thread, just sends (not posts, use CloseRawAsync for it) Api.WM_CLOSE or Api.WM_SYSCOMMAND and does not wait.
@@ -2721,13 +2766,13 @@ namespace Catkeys
 
 					bool ok = useSysCmd ? Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE) : Post(Api.WM_CLOSE);
 					if(!ok) {
-						//Out(Marshal.GetLastWin32Error()); //0 when UAC access denied
+						//Print(Marshal.GetLastWin32Error()); //0 when UAC access denied
 						if(useSysCmd || !Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE)) goto g1; //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
 					}
 
 					for(int i = 2, n = useSysCmd ? 100 : 10; i < n; i++) {
 						WaitMS(Math.Min(i, 10));
-						if(!Visible || !Enabled) goto g1; //destroyed, hidden or disabled (most likely because displays a modal dialog box, eg "Save?")
+						if(!IsVisible || !IsEnabled) goto g1; //destroyed, hidden or disabled (most likely because displays a modal dialog box, eg "Save?")
 						if(i > n / 2) {
 							if(!SendTimeout(200, 0)) {
 								if(!IsValid || IsHung) goto g1;
@@ -2758,8 +2803,8 @@ namespace Catkeys
 		/// Calls Wnd.FindAll(). All parameters etc are the same. Then calls Close() for each found window.
 		/// </summary>
 		public static void CloseAll(
-			WildString name, WildStringI className = null, WildStringI program = null,
-			WinFlag flags = 0, WinProp prop = null, Action<WndCallbackArgs> f = null
+			string name, string className = null, string program = null,
+			WinFlag flags = 0, WinProp prop = null, Func<Wnd, bool> f = null
 			)
 		{
 			foreach(Wnd w in FindAll(name, className, program, flags, prop, f)) w.Close();
@@ -2769,7 +2814,7 @@ namespace Catkeys
 		/// Destroys the window, which must be of this thread and should not be a modal dialog.
 		/// Calls Api.DestroyWindow(). If it succeeds, sets this=Wnd0 and returns true. Else returns false.
 		/// </summary>
-		/// <exception cref="CatkeysException">If the window is not of this thread.</exception>
+		/// <exception cref="CatException">If the window is not of this thread.</exception>
 		/// <seealso cref="Close"/>
 		public bool Destroy()
 		{

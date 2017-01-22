@@ -18,12 +18,9 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
-	//[DebuggerStepThrough]
 	public static partial class String_
 	{
 		//public static string X(this string t)

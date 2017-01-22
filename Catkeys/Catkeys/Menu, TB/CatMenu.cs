@@ -18,12 +18,13 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
-	public class CatMenu :Base_CatMenu_CatBar, IDisposable
+	/// <summary>
+	/// TODO
+	/// </summary>
+	public class CatMenu :CatMenu_CatBar_Base, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
@@ -34,31 +35,21 @@ namespace Catkeys
 		/// </summary>
 		public ContextMenuStrip CMS { get { return _cm; } }
 
+#pragma warning disable 1591 //XML doc
 		//Our base uses this.
 		protected override ToolStrip MainToolStrip { get { return _cm; } }
 
-		/// <summary>
-		/// Initializes a new instance of the CatMenu class.
-		/// </summary>
 		public CatMenu()
 		{
 			_cm = new ContextMenuStrip_(this);
 		}
 
-		/// <summary>
-		/// Initializes a new instance of the CatMenu class and associates its ContextMenuStrip with the specified container.
-		/// </summary>
-		public CatMenu(IContainer container)
-		{
-			_cm = new ContextMenuStrip_(this, container);
-		}
-
-		//~CatMenu() { Out("main dtor"); } //info: don't need finalizer. _cm and base have their own, and we don't have other unmanaged resources.
+		//~CatMenu() { Print("main dtor"); } //info: don't need finalizer. _cm and base have their own, and we don't have other unmanaged resources.
 
 		public void Dispose()
 		{
 			if(!_cm.IsDisposed) _cm.Dispose();
-			//Out(_cm.Items.Count); //0
+			//Print(_cm.Items.Count); //0
 			//tested: ContextMenuStrip disposes its items but not their ToolStripDropDownMenu. And not their Image, therefore base._Dispose disposes images.
 			if(_submenusToDispose != null) {
 				foreach(var dd in _submenusToDispose) {
@@ -71,6 +62,7 @@ namespace Catkeys
 		}
 
 		public bool IsDisposed { get { return _cm.IsDisposed; } }
+#pragma warning restore 1591 //XML doc
 
 		void _CheckDisposed()
 		{
@@ -82,11 +74,11 @@ namespace Catkeys
 		/// <summary>
 		/// Adds new item as ToolStripMenuItem.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-		/// Code <c>m.Add("text", o => Out(o));</c> is the same as <c>m["text"] = o => Out(o);</c>.
+		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c>.
 		/// </summary>
-		/// <param name="text">Text.</param>
+		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="icon">Can be:
-		/// string - icon file, as with <see cref="Files.GetIconHandle"/>.
+		/// string - icon file, as with <see cref="Icons.GetFileIconHandle"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -94,10 +86,10 @@ namespace Catkeys
 		/// </param>
 		/// <example><code>
 		/// var m = new CatMenu();
-		/// m["One"] = o => Out(o);
-		/// m["Two", @"icon file path"] = o => { Out(o); TaskDialog.Show(o.ToString()); };
+		/// m["One"] = o => Print(o);
+		/// m["Two", @"icon file path"] = o => { Print(o); TaskDialog.Show(o.ToString()); };
 		/// m.LastItem.ToolTipText = "tooltip";
-		/// m["Three"] = o => { Out(o.MenuItem.Checked); };
+		/// m["Three"] = o => { Print(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.Show();
 		/// </code></example>
@@ -109,12 +101,12 @@ namespace Catkeys
 		/// <summary>
 		/// Adds new item as ToolStripMenuItem.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-		/// Code <c>m.Add("text", o => Out(o));</c> is the same as <c>m["text"] = o => Out(o);</c>.
+		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c>.
 		/// </summary>
-		/// <param name="text">Text.</param>
+		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - icon file, as with <see cref="Files.GetIconHandle"/>.
+		/// string - icon file, as with <see cref="Icons.GetFileIconHandle"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -122,14 +114,23 @@ namespace Catkeys
 		/// </param>
 		/// <example><code>
 		/// var m = new CatMenu();
-		/// m.Add("One", o => Out(o), @"icon file path");
-		/// m.Add("Two", o => { Out(o.MenuItem.Checked); });
+		/// m.Add("One", o => Print(o), @"icon file path");
+		/// m.Add("Two", o => { Print(o.MenuItem.Checked); });
 		/// m.LastMenuItem.Checked = true;
 		/// m.Show();
 		/// </code></example>
 		public ToolStripMenuItem Add(string text, Action<ClickEventData> onClick, object icon = null)
 		{
+			string sk = null;
+			if(!Empty(text)) {
+				int i = text.IndexOf('\t');
+				if(i >= 0) { sk = text.Substring(i + 1); text = text.Remove(i); }
+			}
+
 			var item = new ToolStripMenuItem(text); //TODO: set text later, after SuspendLayout
+
+			if(sk != null) item.ShortcutKeyDisplayString = sk;
+
 			_Add(item, onClick, icon);
 			return item;
 		}
@@ -162,7 +163,7 @@ namespace Catkeys
 		//Called when a text box or combo box clicked. Before MouseDown, which does not work well with combo box.
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//OutFunc();
+			//PrintFunc();
 			if(!(_isOwned || ActivateMenuWindow)) {
 				var t = sender as ToolStripItem;
 
@@ -192,7 +193,7 @@ namespace Catkeys
 		/// 2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">The same as with <see cref="Add"/>.</param>
+		/// <param name="icon">The same as with <see cref="Add(string, Action{CatMenu_CatBar_Base.ClickEventData}, object)"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
@@ -201,18 +202,18 @@ namespace Catkeys
 		/// <example><code>
 		/// var m = new CatMenu();
 		/// m.CMS.BackColor = Color.PaleGoldenrod;
-		/// m["One"] = o => Out(o);
-		/// m["Two"] = o => Out(o);
+		/// m["One"] = o => Print(o);
+		/// m["Two"] = o => Print(o);
 		/// using(m.Submenu("Submenu")) {
-		/// 	m["Three"] = o => Out(o);
-		/// 	m["Four"] = o => Out(o);
+		/// 	m["Three"] = o => Print(o);
+		/// 	m["Four"] = o => Print(o);
 		/// 	using(m.Submenu("Submenu")) {
-		/// 		m["Five"] = o => Out(o);
-		/// 		m["Six"] = o => Out(o);
+		/// 		m["Five"] = o => Print(o);
+		/// 		m["Six"] = o => Print(o);
 		/// 	}
-		/// 	m["Seven"] = o => Out(o);
+		/// 	m["Seven"] = o => Print(o);
 		/// }
-		/// m["Eight"] = o => Out(o);
+		/// m["Eight"] = o => Print(o);
 		/// m.Show();
 		/// </code></example>
 		public SubmenuBlock Submenu(string text, object icon = null, Action<ClickEventData> onClick = null)
@@ -275,13 +276,13 @@ namespace Catkeys
 		/// </summary>
 		/// <example><code>
 		/// var m = new CatMenu();
-		/// m["One"] = o => Out(o);
-		/// m["Two"] = o => Out(o);
+		/// m["One"] = o => Print(o);
+		/// m["Two"] = o => Print(o);
 		/// m.Submenu("Submenu");
-		/// 	m["Three"] = o => Out(o);
-		/// 	m["Four"] = o => Out(o);
+		/// 	m["Three"] = o => Print(o);
+		/// 	m["Four"] = o => Print(o);
 		/// 	m.EndSubmenu();
-		/// m["Five"] = o => Out(o);
+		/// m["Five"] = o => Print(o);
 		/// m.Show();
 		/// </code></example>
 		public void EndSubmenu()
@@ -289,15 +290,24 @@ namespace Catkeys
 			var dd = _submenuStack.Pop();
 		}
 
-		//Allows to use code: using(m.Submenu(...)) { add items; }
+		/// <summary>
+		/// Allows to use code: <c>using(m.Submenu("Name")) { add items; }</c>
+		/// </summary>
 		public class SubmenuBlock :IDisposable
 		{
-			CatMenu _cat;
+			CatMenu _m;
+
+			/// <summary>
+			/// Gets ToolStripMenuItem of the submenu-item.
+			/// </summary>
 			public ToolStripMenuItem MenuItem { get; }
 
-			internal SubmenuBlock(CatMenu cat, ToolStripMenuItem mi) { _cat = cat; MenuItem = mi; }
+			internal SubmenuBlock(CatMenu m, ToolStripMenuItem mi) { _m = m; MenuItem = mi; }
 
-			public void Dispose() { _cat.EndSubmenu(); }
+			/// <summary>
+			/// Calls m.EndSubmenu().
+			/// </summary>
+			public void Dispose() { _m.EndSubmenu(); }
 		}
 
 		/// <summary>
@@ -306,26 +316,26 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onOpening">Lambda etc callback function that should add submenu items.</param>
-		/// <param name="icon">The same as with <see cref="Add"/>.</param>
+		/// <param name="icon">The same as with <see cref="Add(string, Action{CatMenu_CatBar_Base.ClickEventData}, object)"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <example><code>
 		/// var m = new CatMenu();
-		/// m["One"] = o => Out(o);
-		/// m["Two"] = o => Out(o);
+		/// m["One"] = o => Print(o);
+		/// m["Two"] = o => Print(o);
 		/// m.Submenu("Submenu 1", m1 =>
 		/// {
-		/// 	Out("adding items of " + m.CurrentAddMenu.OwnerItem);
-		/// 	m["Three"] = o => Out(o);
-		/// 	m["Four"] = o => Out(o);
+		/// 	Print("adding items of " + m.CurrentAddMenu.OwnerItem);
+		/// 	m["Three"] = o => Print(o);
+		/// 	m["Four"] = o => Print(o);
 		/// 	m.Submenu("Submenu 2", m2 =>
 		/// 	{
-		/// 		Out("adding items of " + m.CurrentAddMenu.OwnerItem);
-		/// 		m["Five"] = o => Out(o);
-		/// 		m["Six"] = o => Out(o);
+		/// 		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
+		/// 		m["Five"] = o => Print(o);
+		/// 		m["Six"] = o => Print(o);
 		/// 	});
-		/// 	m["Seven"] = o => Out(o);
+		/// 	m["Seven"] = o => Print(o);
 		/// });
-		/// m["Eight"] = o => Out(o);
+		/// m["Eight"] = o => Print(o);
 		/// m.Show();
 		/// </code></example>
 		public ToolStripMenuItem Submenu(string text, Action<CatMenu> onOpening, object icon = null, Action<ClickEventData> onClick = null)
@@ -494,17 +504,12 @@ namespace Catkeys
 				_cat = cat;
 			}
 
-			internal ContextMenuStrip_(CatMenu cat, IContainer container) : base(container)
-			{
-				_cat = cat;
-			}
-
 			protected override CreateParams CreateParams
 			{
 				get
 				{
 					//note: this func is called several times, first time before ctor
-					//OutList("CreateParams", _cat, IsHandleCreated, p.ExStyle.ToString("X"));
+					//PrintList("CreateParams", _cat, IsHandleCreated, p.ExStyle.ToString("X"));
 					var p = base.CreateParams;
 					if(_cat != null) p.ExStyle |= (int)_cat._ExStyle;
 					return p;
@@ -513,12 +518,12 @@ namespace Catkeys
 
 			protected override void WndProc(ref Message m)
 			{
-				//Util.Debug_.OutMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
+				//Util.Debug_.PrintMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
 
 				if(_cat._WndProc_Before(true, this, ref m)) return;
 				//var t = new Perf.Inst(true);
 				base.WndProc(ref m);
-				//t.Next(); if(t.TimeTotal >= 100) { OutList(t.Times, m); }
+				//t.Next(); if(t.TimeTotal >= 100) { PrintList(t.Times, m); }
 				_cat._WndProc_After(true, this, ref m);
 			}
 
@@ -564,17 +569,17 @@ namespace Catkeys
 			{
 				if(disposing && Visible) Close(); //else OnClosed not called etc
 				base.Dispose(disposing);
-				//OutList("menu disposed", disposing);
+				//PrintList("menu disposed", disposing);
 			}
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
 				//var perf = new Perf.Inst(true);
 
-				//OutFunc();
+				//PrintFunc();
 				base.OnPaint(e);
 
-				//perf.Next(); OutList("------------------ paint", perf.Times);
+				//perf.Next(); PrintList("------------------ paint", perf.Times);
 
 				_paintedOnce = true;
 			}
@@ -616,7 +621,7 @@ namespace Catkeys
 				get
 				{
 					//note: this prop is called several times, first time before ctor
-					//Out("CreateParams");
+					//Print("CreateParams");
 					var p = base.CreateParams;
 					if(_cat != null) p.ExStyle |= (int)_cat._ExStyle;
 					return p;
@@ -655,7 +660,7 @@ namespace Catkeys
 				base.OnOpening(e);
 			}
 
-			//Base_CatMenu_CatBar creates this. We call GetAllAsync.
+			//CatMenu_CatBar_Base creates this. We call GetAllAsync.
 			internal List<Icons.AsyncIn> AsyncIcons { get; set; }
 
 			protected override void OnOpened(EventArgs e)
@@ -691,12 +696,12 @@ namespace Catkeys
 			//protected override void Dispose(bool disposing)
 			//{
 			//	base.Dispose(disposing);
-			//	OutList("submenu disposed", disposing);
+			//	PrintList("submenu disposed", disposing);
 			//}
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//OutFunc();
+				//PrintFunc();
 				base.OnPaint(e);
 				_paintedOnce = true;
 			}
@@ -723,7 +728,7 @@ namespace Catkeys
 
 			switch((uint)m.Msg) {
 			case Api.WM_CLOSE:
-				//OutList("WM_CLOSE", dd.Visible);
+				//PrintList("WM_CLOSE", dd.Visible);
 				if((int)m.WParam != _wmCloseWparam && dd.Visible) { Close(); return true; } //something tried to close from outside
 				break;
 			case Api.WM_WINDOWPOSCHANGING:
@@ -732,7 +737,7 @@ namespace Catkeys
 					var p = (Api.WINDOWPOS*)m.LParam;
 					//after right-click, enabling etc somebody tries to make the menu non-topmost by placing it after some window, eg a hidden tooltip (which is topmost...???)
 					if((p->flags & Api.SWP_NOZORDER) == 0 && !p->hwndInsertAfter.Is0) {
-						//OutList(p->hwndInsertAfter, p->hwndInsertAfter.IsTopmost);
+						//PrintList(p->hwndInsertAfter, p->hwndInsertAfter.IsTopmost);
 						p->flags |= Api.SWP_NOZORDER;
 					}
 				}
@@ -771,7 +776,7 @@ namespace Catkeys
 
 			switch((uint)m.Msg) {
 			//case Api.WM_DESTROY:
-			//	OutList("WM_DESTROY", isMainMenu, m.HWnd);
+			//	PrintList("WM_DESTROY", isMainMenu, m.HWnd);
 			//	break;
 			case Api.WM_RBUTTONUP:
 				if(!dd.IsDisposed) dd.AutoClose = _restoreAutoClose;
@@ -786,7 +791,7 @@ namespace Catkeys
 			//Support showing not through our Show, for example when assigned to a control or toolstrip's drop-down button.
 			if(!_inOurShow) {
 
-				//OutList(_cm.OwnerItem, _cm.SourceControl);
+				//PrintList(_cm.OwnerItem, _cm.SourceControl);
 				_isOwned = _cm.SourceControl != null || _cm.OwnerItem != null;
 				_isModal = false;
 				MultiShow = true; //programmers would forget it
@@ -804,7 +809,7 @@ namespace Catkeys
 		void _OnClosingAny(bool isSubmenu, ToolStripDropDownMenu dd, ToolStripDropDownClosingEventArgs e)
 		{
 			if(!_isOwned && !e.Cancel) {
-				//OutList(e.CloseReason, dd.Focused, dd.ContainsFocus, Wnd.ActiveWindow, Wnd.Get.RootOwnerOrThis(Wnd.ActiveWindow));
+				//PrintList(e.CloseReason, dd.Focused, dd.ContainsFocus, Wnd.ActiveWindow, Wnd.Get.RootOwnerOrThis(Wnd.ActiveWindow));
 				switch(e.CloseReason) {
 				case ToolStripDropDownCloseReason.AppClicked: //eg clicked a context menu item of a child textbox. Note: the AppClicked documentation lies; actually we receive this when clicked a window of this thread (or maybe this process, not tested).
 					if(Wnd.ActiveWindow.Handle == dd.Handle) e.Cancel = true;
@@ -816,7 +821,7 @@ namespace Catkeys
 					} else if(Wnd.Get.RootOwnerOrThis(wa).Handle == dd.Handle) e.Cancel = true;
 					break;
 				}
-				//Out(e.Cancel);
+				//Print(e.Cancel);
 			}
 		}
 
@@ -848,7 +853,7 @@ namespace Catkeys
 
 		void _OnHandleCreatedDestroyed(bool created, ToolStripDropDownMenu dd)
 		{
-			//OutList("_OnHandleCreatedDestroyed", created);
+			//PrintList("_OnHandleCreatedDestroyed", created);
 			if(created) {
 				_windows.Add(dd);
 			} else {
@@ -887,7 +892,7 @@ namespace Catkeys
 		void _InitUninitClosing(bool init)
 		{
 			if(init == (_timer != null)) return;
-			//Out(init);
+			//Print(init);
 			_visibleSubmenus.Clear();
 			_mouseWasIn = false;
 			if(init) {
@@ -940,7 +945,7 @@ namespace Catkeys
 		{
 			Debug.Assert(!IsDisposed); if(IsDisposed) return;
 
-			Api.GUITHREADINFO g;
+			Native.GUITHREADINFO g;
 			if(Wnd.Misc.GetGUIThreadInfo(out g, Api.GetCurrentThreadId()) && !g.hwndMenuOwner.Is0) {
 				Api.EndMenu();
 				if(onEsc) return;
@@ -968,13 +973,13 @@ namespace Catkeys
 	/// Base class of CatMenu and CatBar.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-	public abstract class Base_CatMenu_CatBar
+	public abstract class CatMenu_CatBar_Base
 	{
 		internal bool m_inRightClick;
 		EventHandler _onClick;
 		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
 
-		internal Base_CatMenu_CatBar()
+		internal CatMenu_CatBar_Base()
 		{
 			_onClick = _OnClick;
 		}
@@ -983,7 +988,7 @@ namespace Catkeys
 		//Calls true item's onClick delegate if need.
 		void _OnClick(object sender, EventArgs args)
 		{
-			//Out(_inRightClick);
+			//Print(_inRightClick);
 			if(m_inRightClick) return;
 			var d = _clickDelegates[sender] as Action<ClickEventData>;
 			Debug.Assert(d != null); if(d == null) return;
@@ -1017,7 +1022,9 @@ namespace Catkeys
 			}
 		}
 
-		//Gets ToolStrip from CatMenu and CatBar, which override this.
+		/// <summary>
+		/// Gets ToolStrip of CatMenu and CatBar, which override this.
+		/// </summary>
 		protected abstract ToolStrip MainToolStrip { get; }
 
 		/// <summary>
@@ -1033,10 +1040,10 @@ namespace Catkeys
 		/// </summary>
 		public event Action<ToolStripItem> ItemAdded;
 
-		/// <summary>
-		/// ContextMenu to show when right-clicked.
-		/// //todo: how to know which item clicked? Maybe add a common default context menu. Currently not used.
-		/// </summary>
+		///// <summary>
+		///// ContextMenu to show when right-clicked.
+		///// //todo: how to know which item clicked? Maybe add a common default context menu. Currently not used.
+		///// </summary>
 		//public ContextMenu ContextMenu
 		//{
 		//	get { return MainToolStrip.ContextMenu; }
@@ -1049,9 +1056,9 @@ namespace Catkeys
 		public string IconDirectory { get; set; }
 
 		/// <summary>
-		/// Flags to pass to <see cref="Icons.GetIconHandle"/>. See <see cref="Icons.IconFlag"/>.
+		/// Flags to pass to <see cref="Icons.GetPidlIconHandle"/>. See <see cref="Icons.IconFlags"/>.
 		/// </summary>
-		public Icons.IconFlag IconFlags { get; set; }
+		public Icons.IconFlags IconFlags { get; set; }
 
 		/// <summary>
 		/// Image width and height.
@@ -1098,7 +1105,7 @@ namespace Catkeys
 						if(Files.FileOrDirectoryExists(s)) _SetItemFileIcon(isBar, item, s);
 					}
 				}
-				catch(Exception e) { OutDebug(e.Message); } //ToBitmap() may throw
+				catch(Exception e) { PrintDebug(e.Message); } //ToBitmap() may throw
 			}
 #endif
 			LastItem = item;
@@ -1163,7 +1170,7 @@ namespace Catkeys
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;
 
-			//OutList(r.image, r.hIcon);
+			//PrintList(r.image, r.hIcon);
 			//Image im = r.image;
 			//if(im == null && r.hIcon != Zero) im = Icons.HandleToImage(r.hIcon);
 
@@ -1201,7 +1208,7 @@ namespace Catkeys
 			}
 
 			//RECT u;
-			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); OutList(its.PaintedOnce, u);
+			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); PrintList(its.PaintedOnce, u);
 
 			ts.SuspendLayout(); //without this much slower, especially when with overflow arrows (when many items)
 			item.Image = im;
@@ -1214,12 +1221,12 @@ namespace Catkeys
 				Api.SetRectRgn(_region2, r.left, r.top, r.right, r.bottom);
 				Api.CombineRgn(_region1, _region1, _region2, Api.RGN_OR);
 
-				//RECT b; GetRgnBox(_region1, out b); OutList(b, _region1);
+				//RECT b; GetRgnBox(_region1, out b); PrintList(b, _region1);
 
 				Api.InvalidateRgn(w, _region1, false);
 			}
 
-			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); OutList("after", u);
+			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); PrintList("after", u);
 		}
 
 		IntPtr _region1, _region2;
@@ -1228,7 +1235,7 @@ namespace Catkeys
 
 		internal void _Dispose(bool disposing)
 		{
-			//OutList("_Dispose", _isDisposed);
+			//PrintList("_Dispose", _isDisposed);
 			if(_isDisposed) return;
 			_isDisposed = true;
 
@@ -1247,7 +1254,8 @@ namespace Catkeys
 			LastItem = null;
 		}
 
-		~Base_CatMenu_CatBar() { /*Out("base dtor");*/ _Dispose(false); }
+		///
+		~CatMenu_CatBar_Base() { /*Print("base dtor");*/ _Dispose(false); }
 	}
 
 	interface _ICatToolStrip

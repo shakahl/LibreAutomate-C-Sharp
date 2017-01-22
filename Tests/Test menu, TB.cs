@@ -19,8 +19,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 
@@ -31,7 +29,7 @@ public partial class Test
 	static ImageList _TestCreateImageList()
 	{
 		var il = new ImageList();
-		IntPtr hi = Icons.GetIconHandle(@"q:\app\browse.ico", 16);
+		IntPtr hi = Icons.GetFileIconHandle(@"q:\app\browse.ico", 16);
 		//il.Images.Add("k1", Icon.FromHandle(hi));
 		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
 		Api.DestroyIcon(hi);
@@ -50,7 +48,7 @@ public partial class Test
 		//CatMenu.DefaultMouseClosingDistance = 30;
 
 		Perf.First();
-		var m = c != null ? new CatMenu(new Container()) : new CatMenu();
+		var m = new CatMenu();
 
 		Perf.Next();
 		m.CMS.ImageList = il;
@@ -69,7 +67,7 @@ public partial class Test
 		m.CMS.ShowImageMargin=false;
 		//m.CMS.ShowItemToolTips=false; //not useful
 
-		//Out(m.CMS.Renderer); //ToolStripProfessionalRenderer
+		//Print(m.CMS.Renderer); //ToolStripProfessionalRenderer
 		//m.CMS.Renderer = new ToolStripSystemRenderer(); //looks more like XP menus
 		//m.CMS.Renderer = new TestToolStripRenderer();
 		//m.CMS.RenderMode=ToolStripRenderMode.System; //submenus auto-inherit
@@ -77,113 +75,113 @@ public partial class Test
 #endif
 
 		var cm = new ContextMenu();
-		cm.MenuItems.Add("test").Click += (o, d) => { Out("cm"); };
+		cm.MenuItems.Add("test").Click += (o, d) => { Print("cm"); };
 		m.CMS.ContextMenu = cm;
 		Perf.Next();
 
-		m["One"] = o => Out("-one-");
-		m["Two"] = o => { Out(o); };
+		m["One"] = o => Print("-one-");
+		m["Two"] = o => { Print(o); };
 		m.LastItem.ToolTipText = "tooltip";
 		m.Submenu("Sub");
 		{
-			m["Three"] = o => Out("-three-");
-			m["Four"] = o => Out(o);
+			m["Three"] = o => Print("-three-");
+			m["Four"] = o => Print(o);
 			m.LastItem.ToolTipText = "tooltip";
-			m.Submenu("Level 3", onClick: o => Out(o));
+			m.Submenu("Level 3", onClick: o => Print(o));
 			{
-				m["Five"] = o => Out(o);
+				m["Five"] = o => Print(o);
 #if false
 				using(m.Submenu("Level 4")) {
-					m["Test"] = o => Out(o);
+					m["Test"] = o => Print(o);
 					using(m.Submenu("Level 5")) {
-						m["Test"] = o => Out(o);
+						m["Test"] = o => Print(o);
 						using(m.Submenu("Level 6")) {
-							m["Test"] = o => Out(o);
+							m["Test"] = o => Print(o);
 							using(m.Submenu("Level 7")) {
-								m["Test"] = o => Out(o);
+								m["Test"] = o => Print(o);
 								using(m.Submenu("Level 8")) {
-									m["Test"] = o => Out(o);
+									m["Test"] = o => Print(o);
 									using(m.Submenu("Level 9")) {
-										m["Test"] = o => Out(o);
+										m["Test"] = o => Print(o);
 									}
-									m["Test"] = o => Out(o);
+									m["Test"] = o => Print(o);
 								}
-								m["Test"] = o => Out(o);
+								m["Test"] = o => Print(o);
 							}
-							m["Test"] = o => Out(o);
+							m["Test"] = o => Print(o);
 						}
-						m["Test"] = o => Out(o);
+						m["Test"] = o => Print(o);
 					}
-					m["Test"] = o => Out(o);
+					m["Test"] = o => Print(o);
 				}
-				m["Test"] = o => Out(o);
+				m["Test"] = o => Print(o);
 #endif
 				m.EndSubmenu();
 			}
-			m.Submenu("Sub2", onClick: o => Out(o));
+			m.Submenu("Sub2", onClick: o => Print(o));
 			{
-				m["Five"] = o => Out(o);
+				m["Five"] = o => Print(o);
 				m.EndSubmenu();
 			}
-			m["Six"] = o => Out(o);
+			m["Six"] = o => Print(o);
 			m.LastItem.ForeColor = Color.BlueViolet;
 			m.EndSubmenu();
 		}
 
-		m["One"] = o => Out("-one-");
-		m["Two"] = o => { Out(o); };
+		m["One"] = o => Print("-one-");
+		m["Two"] = o => { Print(o); };
 #if true
 		using(m.Submenu("Sub with using")) {
-			m["Three"] = o => Out("-three-");
+			m["Three"] = o => Print("-three-");
 			m.LastItem.Font = new Font(m.LastItem.Font, FontStyle.Bold);
-			m["Four"] = o => Out(o);
+			m["Four"] = o => Print(o);
 			m.LastItem.Font = new Font("Tahoma", 25);
-			using(m.Submenu("Sub2", onClick: o => Out(o))) {
-				m["Five"] = o => Out(o);
+			using(m.Submenu("Sub2", onClick: o => Print(o))) {
+				m["Five"] = o => Print(o);
 			}
-			m.Submenu("Sub2", onClick: o => Out(o));
+			m.Submenu("Sub2", onClick: o => Print(o));
 			{
-				m["Five"] = o => Out(o);
+				m["Five"] = o => Print(o);
 				m.EndSubmenu();
 			}
 			using(var smb = m.Submenu("Sub with new tooltip")) {
 				smb.MenuItem.ToolTipText = "new tooltip";
-				m["Five"] = o => Out(o);
+				m["Five"] = o => Print(o);
 			}
-			m["Six"] = o => Out(o);
+			m["Six"] = o => Print(o);
 		}
 		//m.Add(new ToolStripTextBox("txt"));
 		m["Disabled"] = null;
 		m.LastItem.Enabled = false;
 		m["Tooltip"] = null;
 		m.LastItem.ToolTipText = "ttttttttt";
-		m.Add("Check", o => Out(o));
+		m.Add("Check", o => Print(o));
 		m.LastMenuItem.Checked = true;
-		var mi = m.Add("Add()", o => Out(o)); mi.BackColor = Color.AliceBlue; mi.ForeColor = Color.Orchid;
-		m["Icon", @"q:\app\Cut.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Copy.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Paste.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Run.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Tip.ico"] = o => Out(o);
-		//m["Icon resource", 1] = o => Out(o);
-		m["Imagelist icon name", "k0"] = o => Out(o);
-		m["Imagelist icon index", 1] = o => Out(o);
+		var mi = m.Add("Add()", o => Print(o)); mi.BackColor = Color.AliceBlue; mi.ForeColor = Color.Orchid;
+		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
+		//m["Icon resource", 1] = o => Print(o);
+		m["Imagelist icon name", "k0"] = o => Print(o);
+		m["Imagelist icon index", 1] = o => Print(o);
 		using(m.Submenu("Sub3")) {
 			m.LastItem.ToolTipText = "tooltip";
 			m.LastItem.ForeColor = Color.Red;
 			//m.LastItem.DropDown.ImageList = il;
 			//m.LastItem.Margin=new Padding(8);
-			m["Simple"] = o => Out(o);
-			m["Icon in submenu", @"q:\app\Paste.ico"] = o => Out(o);
-			m["Imagelist icon name in submenu", "k0"] = o => Out(o);
-			m["Imagelist icon index in submenu", 1] = o => Out(o);
+			m["Simple"] = o => Print(o);
+			m["Icon in submenu", @"q:\app\Paste.ico"] = o => Print(o);
+			m["Imagelist icon name in submenu", "k0"] = o => Print(o);
+			m["Imagelist icon index in submenu", 1] = o => Print(o);
 			using(m.Submenu("Sub4", "k0")) {
 				m.LastItem.BackColor = Color.Bisque;
-				m["Simple"] = o => Out(o);
+				m["Simple"] = o => Print(o);
 			}
 			m.Submenu("Sub5", 1);
 			{
-				m["Simple"] = o => Out(o);
+				m["Simple"] = o => Print(o);
 				m.Add(new ToolStripTextBox("txt"));
 				m.EndSubmenu();
 			}
@@ -215,56 +213,56 @@ public partial class Test
 		//m.Add(host);
 
 		//test overflow
-		//for(int i=0; i<30; i++) m[$"Overflow {i}"] = o => Out(o);
-		m["Last"] = o => { Out(o); };
+		//for(int i=0; i<30; i++) m[$"Overflow {i}"] = o => Print(o);
+		m["Last"] = o => { Print(o); };
 
-		m.LastMenuItem.MouseUp += (o, d) => { Out("MouseUp event"); };
+		m.LastMenuItem.MouseUp += (o, d) => { Print("MouseUp event"); };
 
 		var tb = new ToolStripTextBox("txt");
 		tb.Click += (o, oo) =>
 		{
-			//Out("click");
+			//Print("click");
 			var wo = (Wnd)tb.Owner.Handle;
 			//var wo = (Wnd)tb.Control.Handle;
-			//Out(wo);
-			TaskDialog.Show("td", owner: wo);
+			//Print(wo);
+			TaskDialog.Show("td", ownerWindow: wo);
 			//MessageBox.Show(wo, "txt");
 		};
 		m.Add(tb);
 
 		m.Submenu("Lazy", m1 =>
 		{
-			Out("adding items to " + m.CurrentAddMenu.OwnerItem.Text);
-			m1["Lazy 1"] = o => Out(o);
-			m["Lazy 2"] = o => Out(o);
+			Print("adding items to " + m.CurrentAddMenu.OwnerItem.Text);
+			m1["Lazy 1"] = o => Print(o);
+			m["Lazy 2"] = o => Print(o);
 			using(m.Submenu("Lazy sub")) {
-				m["Lazy 3"] = o => Out(o);
+				m["Lazy 3"] = o => Print(o);
 			}
-			m["Lazy 4"] = o => Out(o);
+			m["Lazy 4"] = o => Print(o);
 		});
 
 		m.Submenu("Lazy lazy", m1 =>
 		{
-			Out("adding items to " + m.CurrentAddMenu.OwnerItem.Text);
+			Print("adding items to " + m.CurrentAddMenu.OwnerItem.Text);
 			m.CurrentAddMenu.BackColor = Color.Beige;
-			m1["Lazy 1"] = o => Out(o);
-			m["Lazy 2"] = o => Out(o);
+			m1["Lazy 1"] = o => Print(o);
+			m["Lazy 2"] = o => Print(o);
 			m.Submenu("Lazy sub", m2 =>
 			{
-				Out("adding lazy lazy items");
+				Print("adding lazy lazy items");
 				using(m.Submenu("Lazy sub")) {
-					m["Lazy 3"] = o => Out(o);
+					m["Lazy 3"] = o => Print(o);
 				}
-				m["Lazy 3"] = o => Out(o);
+				m["Lazy 3"] = o => Print(o);
 			});
-			m["Lazy 4"] = o => Out(o);
+			m["Lazy 4"] = o => Print(o);
 		});
 
 		Perf.Next();
 
 		//GC.Collect(); GC.Collect();
 
-		//m.CMS.Items.Add("TTTTT", null, (o, oo) => Out(10));
+		//m.CMS.Items.Add("TTTTT", null, (o, oo) => Print(10));
 		//m.CMS.ResumeLayout();
 		//m.CMS.Show();
 		//m.CMS.Show(c, 0, 0);
@@ -283,13 +281,13 @@ public partial class Test
 			//m.Show(c, 200, 200);
 		} else {
 			//Wait(1);
-			//Out(1);
+			//Print(1);
 			//Perf.Next();
 			//m.Show(500, 300);
 			//m.Show();
 			m.Show(Mouse.X + 10, Mouse.Y + 10);
-			//Out(2);
-			//WaitMS(200); Perf.First(); m.Show(); Out(3);
+			//Print(2);
+			//WaitMS(200); Perf.First(); m.Show(); Print(3);
 		}
 	}
 
@@ -304,7 +302,7 @@ public partial class Test
 
 	static void TestCatMenuIcons()
 	{
-		//Out(Api.GetCurrentThreadId());
+		//Print(Api.GetCurrentThreadId());
 
 		//Environment.CurrentDirectory = @"q:\app";
 
@@ -316,7 +314,7 @@ public partial class Test
 		//if(lnk) {
 		//	folder = Folders.CommonPrograms;
 		//	foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
-		//		//Out(f);
+		//		//Print(f);
 		//		a.Add(f);
 		//		if(++n == 30) break;
 		//	}
@@ -325,7 +323,7 @@ public partial class Test
 		//	//folder =@"q:\app\catkeys\tasks";
 		//	var oneExt = new HashSet<string>();
 		//	foreach(var f in Directory.EnumerateFiles(folder)) {
-		//		//Out(f);
+		//		//Print(f);
 		//		var ext = Path.GetExtension(f).ToLower(); if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
 		//		if(0 != f.EndsWith_(true, ".aps", ".tss", ".bin", ".wal")) continue;
 		//		a.Add(f);
@@ -346,7 +344,7 @@ public partial class Test
 		//m.CMS.ImageScalingSize = new Size(24,24);
 
 		foreach(var f in a) {
-			//Out(f);
+			//Print(f);
 			m[Path.GetFileName(f), f] = null;
 			//m[Path.GetFileName(f), Path.GetFileName(f)] = null;
 			//m[Path.GetFileName(f), @"C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcpackages\VCProject.dll,2"] = null;
@@ -355,44 +353,44 @@ public partial class Test
 			////{
 			//	var hi = Files.GetIconHandle(f);
 			//	if(hi != Zero) Api.DestroyIcon(hi);
-			//	else Out("no icon: " + f);
+			//	else Print("no icon: " + f);
 			////});
 		}
 
 		//using(m.Submenu("sub")) {
 #if true
-		m["One", "Cut.ico"] = o => Out(o);
-		m["ILSpy", @"Q:\Programs\ILSpy\ILSpy.exe"] = o => Out(o);
-		m["Notepad", Folders.System + "notepad.exe"] = o => Out(o);
-		m["Two", "Copy.ico"] = o => Out(o);
-		m["Three", "Paste.ico"] = o => Out(o);
-		m["Four", "Run.ico"] = o => Out(o);
-		m["Five", "Tip.ico"] = o => Out(o);
-		//m["Six", "notepad.exe"] = o => Out(o);
-		m["Calc", @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"] = o => Out(o);
-		m["PicPick", Folders.ProgramFilesX86 + @"PicPick\picpick.exe"] = o => Out(o);
-		m["Dbgview", @"Q:\Programs\DebugView\Dbgview.exe"] = o => Out(o);
-		m["Procexp", @"Q:\Programs\ProcessExplorer\procexp.exe"] = o => Out(o);
-		m["Inno", Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Out(o);
-		m["hhw", Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Out(o);
-		m["FileZilla", Folders.ProgramFilesX86 + @"FileZilla FTP Client\filezilla.exe"] = o => Out(o);
-		m["IE", Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Out(o);
-		m["Procmon", @"Q:\Programs\ProcessMonitor\Procmon.exe"] = o => Out(o);
-		m["ResourceHacker", Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Out(o);
-		m["autoruns", @"Q:\programs\Autoruns\autoruns.exe"] = o => Out(o);
-		m["SyncBack", Folders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe"] = o => Out(o);
-		m["PEview", @"Q:\Programs\PeView\PEview.exe"] = o => Out(o);
-		m["shell32.dll,25", Folders.System + @"shell32.dll,25"] = o => Out(o);
+		m["One", "Cut.ico"] = o => Print(o);
+		m["ILSpy", @"Q:\Programs\ILSpy\ILSpy.exe"] = o => Print(o);
+		m["Notepad", Folders.System + "notepad.exe"] = o => Print(o);
+		m["Two", "Copy.ico"] = o => Print(o);
+		m["Three", "Paste.ico"] = o => Print(o);
+		m["Four", "Run.ico"] = o => Print(o);
+		m["Five", "Tip.ico"] = o => Print(o);
+		//m["Six", "notepad.exe"] = o => Print(o);
+		m["Calc", @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"] = o => Print(o);
+		m["PicPick", Folders.ProgramFilesX86 + @"PicPick\picpick.exe"] = o => Print(o);
+		m["Dbgview", @"Q:\Programs\DebugView\Dbgview.exe"] = o => Print(o);
+		m["Procexp", @"Q:\Programs\ProcessExplorer\procexp.exe"] = o => Print(o);
+		m["Inno", Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Print(o);
+		m["hhw", Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Print(o);
+		m["FileZilla", Folders.ProgramFilesX86 + @"FileZilla FTP Client\filezilla.exe"] = o => Print(o);
+		m["IE", Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Print(o);
+		m["Procmon", @"Q:\Programs\ProcessMonitor\Procmon.exe"] = o => Print(o);
+		m["ResourceHacker", Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Print(o);
+		m["autoruns", @"Q:\programs\Autoruns\autoruns.exe"] = o => Print(o);
+		m["SyncBack", Folders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe"] = o => Print(o);
+		m["PEview", @"Q:\Programs\PeView\PEview.exe"] = o => Print(o);
+		m["shell32.dll,25", Folders.System + @"shell32.dll,25"] = o => Print(o);
 		m["app", @"q:\app"] = null;
-		m["Favorites", Folders.Favorites] = o => Out(o);
-		//m["", @""] = o => Out(o);
-		m["http://www...", "http://www.quickmacros.com/"] = o => Out(o);
-		m[".txt", ".txt"] = o => Out(o);
-		m[".bmp", ".bmp"] = o => Out(o);
-		m["mailto:", "mailto:"] = o => Out(o);
-		m["CLSID", "::{21EC2020-3AEA-1069-A2DD-08002B30309D}"] = o => Out(o);
-		m["ProgId", "Word.Document.8"] = o => Out(o);
-		m["lnk", @"C:\Users\G\Desktop\QM in PF.lnk"] = o => Out(o);
+		m["Favorites", Folders.Favorites] = o => Print(o);
+		//m["", @""] = o => Print(o);
+		m["http://www...", "http://www.quickmacros.com/"] = o => Print(o);
+		m[".txt", ".txt"] = o => Print(o);
+		m[".bmp", ".bmp"] = o => Print(o);
+		m["mailto:", "mailto:"] = o => Print(o);
+		m["CLSID", "::{21EC2020-3AEA-1069-A2DD-08002B30309D}"] = o => Print(o);
+		m["ProgId", "Word.Document.8"] = o => Print(o);
+		m["lnk", @"C:\Users\G\Desktop\QM in PF.lnk"] = o => Print(o);
 		m[".. exe", @"q:\app\catkeys\..\qm.exe"] = null;
 		m[".. cpp", @"q:\app\catkeys\..\app.cpp"] = null;
 		m["txtfile:", @"txtfile:"] = null;
@@ -424,9 +422,9 @@ public partial class Test
 		//m["plus", @"q:\app\paste.ico"] = null;
 		//m.Show(Mouse.X + 10, Mouse.Y);
 
-		//Out(1);
+		//Print(1);
 		//TaskDialog.Show("");
-		//Out(2);
+		//Print(2);
 
 		//using(m) { }
 	}
@@ -436,90 +434,90 @@ public partial class Test
 		Perf.First();
 
 		var m = new CatMenu();
-		m["One"] = o => Out(o);
-		m["Two"] = o => Out(o);
+		m["One"] = o => Print(o);
+		m["Two"] = o => Print(o);
 		using(m.Submenu("Submenu")) {
-			m["Three"] = o => Out(o);
-			m["Four"] = o => Out(o);
+			m["Three"] = o => Print(o);
+			m["Four"] = o => Print(o);
 			using(m.Submenu("Submenu")) {
-				m["Five"] = o => Out(o);
-				m["Six"] = o => Out(o);
+				m["Five"] = o => Print(o);
+				m["Six"] = o => Print(o);
 			}
-			m["Seven"] = o => Out(o);
+			m["Seven"] = o => Print(o);
 		}
-		m["Eight"] = o => Out(o);
+		m["Eight"] = o => Print(o);
 		m.Show();
 
 		//var m = new CatMenu();
-		//m["One"] = o => Out(o);
-		//m["Two"] = o => Out(o);
+		//m["One"] = o => Print(o);
+		//m["Two"] = o => Print(o);
 		//m.Submenu("Submenu 1", m1 =>
 		//{
-		//	Out("adding items of " + m.CurrentAddMenu.OwnerItem);
-		//	m["Three"] = o => Out(o);
-		//	m["Four"] = o => Out(o);
+		//	Print("adding items of " + m.CurrentAddMenu.OwnerItem);
+		//	m["Three"] = o => Print(o);
+		//	m["Four"] = o => Print(o);
 		//	m.Submenu("Submenu 2", m2 =>
 		//	{
-		//		Out("adding items of " + m.CurrentAddMenu.OwnerItem);
-		//		m["Five"] = o => Out(o);
-		//		m["Six"] = o => Out(o);
+		//		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
+		//		m["Five"] = o => Print(o);
+		//		m["Six"] = o => Print(o);
 		//	});
-		//	m["Seven"] = o => Out(o);
+		//	m["Seven"] = o => Print(o);
 		//});
-		//m["Eight"] = o => Out(o);
+		//m["Eight"] = o => Print(o);
 		//m.Show();
 
 		//var m = new CatMenu();
-		//m.Add("One", o => Out(o), @"icon file path");
-		//m.Add("Two", o => { Out(o.MenuItem.Checked); });
+		//m.Add("One", o => Print(o), @"icon file path");
+		//m.Add("Two", o => { Print(o.MenuItem.Checked); });
 		//m.LastMenuItem.Checked = true;
 
 		//m.Separator();
-		//m.Add(new ToolStripLabel("Label"), null, o => Out(o));
-		//m.Add(new ToolStripTextBox("txt"), null, o => Out(o));
+		//m.Add(new ToolStripLabel("Label"), null, o => Print(o));
+		//m.Add(new ToolStripTextBox("txt"), null, o => Print(o));
 		//var cb = new ToolStripComboBox("cb"); cb.Items.Add("one");
-		//m.Add(cb, null, o => Out(o));
-		//m.Add(new ToolStripProgressBar("pb"), null, o => Out(o));
-		//m.Add(new ToolStripButton("Button"), null, o => Out(o));
-		//m.Add(new ToolStripDropDownButton("DD button"), null, o => Out(o));
-		//m.Add(new ToolStripSplitButton("Split button"), null, o => Out(o));
-		//m.Add(new ToolStripStatusLabel("Status label"), null, o => Out(o));
-		//m.Add(new ToolStripMenuItem("Menu item"), null, o => Out(o));
+		//m.Add(cb, null, o => Print(o));
+		//m.Add(new ToolStripProgressBar("pb"), null, o => Print(o));
+		//m.Add(new ToolStripButton("Button"), null, o => Print(o));
+		//m.Add(new ToolStripDropDownButton("DD button"), null, o => Print(o));
+		//m.Add(new ToolStripSplitButton("Split button"), null, o => Print(o));
+		//m.Add(new ToolStripStatusLabel("Status label"), null, o => Print(o));
+		//m.Add(new ToolStripMenuItem("Menu item"), null, o => Print(o));
 
 		//m.Show();
 
 #if false
 		var b = new CatBar();
-		b["One"] = o => Out(o);
+		b["One"] = o => Print(o);
 
 		using(b.DropDownButton("Drop")) {
-			b["Two"] = o => Out(o);
+			b["Two"] = o => Print(o);
 		}
 
 		using(b.SplitButton("Split")) {
-			b["Two"] = o => Out(o);
+			b["Two"] = o => Print(o);
 		}
 
 		using(var m as b.SplitButton("Drop")) {
-			m["Two"] = o => Out(o);
+			m["Two"] = o => Print(o);
 		}
 
 		var m = b.DropMenu("Drop"));
-		m["Two"] = o => Out(o);
+		m["Two"] = o => Print(o);
 
 		b["ToolStripDropDownButton"] = o =>
 		{
 			var m = new CatMenu();
-			m["One"] = o => Out(o);
-			m["Two"] = o => Out(o);
+			m["One"] = o => Print(o);
+			m["Two"] = o => Print(o);
 			m.Show(o.Item);
 		};
 
 		b["ToolStripDropDownButton"] = null;  //test ShowDropDown
 		{
 			var m = new CatMenu();
-			m["One"] = o => Out(o);
-			m["Two"] = o => Out(o);
+			m["One"] = o => Print(o);
+			m["Two"] = o => Print(o);
 			m.Show(o.Item);
 			(b.LastItem as ToolStripDropDownButton).DropDown = m.CMS;
         };
@@ -527,20 +525,20 @@ public partial class Test
 		b["ToolStripSplitButton"] = o =>
 		{
 			var m = new CatMenu();
-			m["One"] = o => Out(o);
-			m["Two"] = o => Out(o);
+			m["One"] = o => Print(o);
+			m["Two"] = o => Print(o);
 			m.Show(b.LastItem);
 			//or
 			(o.Item as ToolStripSplitButton).DropDown = m.CMS;
 		}
-		//(b.LastItem as ToolStripSplitButton).ButtonClick+=(o,oo)=>Out(o);
-		//b.LastButton.Click=o=>Out(o);
+		//(b.LastItem as ToolStripSplitButton).ButtonClick+=(o,oo)=>Print(o);
+		//b.LastButton.Click=o=>Print(o);
 
-		b["ToolStripSplitButton"] = o => Out(o);
+		b["ToolStripSplitButton"] = o => Print(o);
 		{
 			var m = new CatMenu();
-			m["One"] = o => Out(o);
-			m["Two"] = o => Out(o);
+			m["One"] = o => Print(o);
+			m["Two"] = o => Print(o);
 			(b.LastItem as ToolStripSplitButton).DropDown = m.CMS;
 		}
 
@@ -555,7 +553,7 @@ public partial class Test
 		{
 			//this.MouseClick += (sender, e) =>
 			//{
-			//	//Out(e.Button); //no right-click event if a context menu assigned
+			//	//Print(e.Button); //no right-click event if a context menu assigned
 			//	//if(e.Button == MouseButtons.Right) Wnd.FindRaw("QM_Editor").ActivateRaw();
 			//	//TestCatMenu(sender as Form);
 			//	Time.SetTimer(100, true, o => TestCatMenu(sender as Form));
@@ -570,9 +568,9 @@ public partial class Test
 			var m = new CatMenu();
 
 			//return;
-			m["One f"] = o => Out(o);
+			m["One f"] = o => Print(o);
 			using(m.Submenu("Sub f")) {
-				m["Two f"] = o => Out(o);
+				m["Two f"] = o => Print(o);
 			}
 			m.Add(new ToolStripTextBox());
 			this.ContextMenuStrip = m.CMS;
@@ -589,12 +587,12 @@ public partial class Test
 			ddb.DropDownOpening += (unu, sed) =>
 			{
 				if(ddb.HasDropDownItems) return;
-				Out("adding items");
+				Print("adding items");
 				var m = new CatMenu();
 				ddb.DropDown = m.CMS;
-				m["One"] = o => Out(o);
+				m["One"] = o => Print(o);
 				using(m.Submenu("Sub")) {
-					m["Two"] = o => Out(o);
+					m["Two"] = o => Print(o);
 				}
 				m.Add(new ToolStripTextBox());
 			};
@@ -602,12 +600,12 @@ public partial class Test
 
 		protected override void WndProc(ref Message m)
 		{
-			if(_outMsg) Util.Debug_.OutMsg(ref m);
+			//if(_outMsg) Catkeys.Util.Debug_.PrintMsg(ref m);
 
 			base.WndProc(ref m);
 		}
 
-		bool _outMsg;
+		//bool _outMsg;
 
 	}
 
@@ -617,7 +615,7 @@ public partial class Test
 		new Form1().ShowDialog();
 
 		//with this loop does not show f
-		//Api.MSG u;
+		//Native.MSG u;
 		//while(Api.GetMessage(out u, Wnd0, 0, 0) > 0) {
 		//	Api.TranslateMessage(ref u);
 		//	Api.DispatchMessage(ref u);
@@ -633,9 +631,9 @@ public partial class Test
 	//		//_cm = new ContextMenuStrip();
 	//		_cm = new ContextMenuStrip_(this);
 	//	}
-	//	~TestDtor() { Out("~TestDtor"); }
+	//	~TestDtor() { Print("~TestDtor"); }
 
-	//	void Met() { OutFunc(); }
+	//	void Met() { PrintFunc(); }
 
 	//	class ContextMenuStrip_ :ContextMenuStrip
 	//	{
@@ -666,9 +664,9 @@ public partial class Test
 			_components = new Container();
 			_cm = new ContextMenuStrip_(this, _components);
 		}
-		~TestDtor() { Out("~TestDtor"); }
+		~TestDtor() { Print("~TestDtor"); }
 
-		void Met() { OutFunc(); }
+		void Met() { PrintFunc(); }
 
 		class ContextMenuStrip_ :ContextMenuStrip
 		{
@@ -704,7 +702,7 @@ public partial class Test
 
 				//_cat = null;
 
-				OutFunc();
+				PrintFunc();
 
 				((Wnd)Handle).Post(Api.WM_CLOSE);
 
@@ -712,7 +710,7 @@ public partial class Test
 
 			protected override void WndProc(ref Message m)
 			{
-				Util.Debug_.OutMsg(ref m);
+				//Catkeys.Util.Debug_.PrintMsg(ref m);
 
 				base.WndProc(ref m);
 
@@ -728,18 +726,18 @@ public partial class Test
 
 		public ContextMenuStrip CMS { get { return this; } }
 
-		~TestDtor2() { Out("~TestDtor2"); }
+		~TestDtor2() { Print("~TestDtor2"); }
 
-		void Met() { OutFunc(); }
+		void Met() { PrintFunc(); }
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void TestCatMenuDtors()
 	{
 		var m = new CatMenu();
-		m["One"] = o => Out(o);
+		m["One"] = o => Print(o);
 		using(m.Submenu("sub")) {
-			m["Two"] = o => Out(o);
+			m["Two"] = o => Print(o);
 		}
 		m.MultiShow = true;
 		//m.MouseClosingDistance = 2000;
@@ -749,10 +747,10 @@ public partial class Test
 		//Time.SetTimer(2000, true, t => m.CMS.Close());
 		//Time.SetTimer(2000, true, t => m.CMS.Dispose());
 		m.Show();
-		//Out(1);
+		//Print(1);
 		//GC.Collect();
 		//WaitMS(500);
-		//Out(2);
+		//Print(2);
 		m.Show();
 
 		//var f = new Form();
@@ -777,11 +775,11 @@ public partial class Test
 		//			t.CMS.Show();
 		//			//Application.Run();
 		//			_loop.Loop();
-		//			Out("after loop");
+		//			Print("after loop");
 
 		//			//Api.DestroyWindow((Wnd)t.CMS.Handle);
-		//			//Out(t.CMS.IsHandleCreated);
-		//			//if(t.CMS.IsHandleCreated) Out(((Wnd)t.CMS.Handle).IsValid);
+		//			//Print(t.CMS.IsHandleCreated);
+		//			//if(t.CMS.IsHandleCreated) Print(((Wnd)t.CMS.Handle).IsValid);
 
 		//			//t.CMS.Closed -= del;
 
@@ -800,7 +798,7 @@ public partial class Test
 #if true
 		//t.Closed += (unu, sed) => Application.ExitThread();
 		t.Closed += (unu, sed) => _loop.Stop();
-		t.Disposed += (unu, sed) => Out("disposed");
+		t.Disposed += (unu, sed) => Print("disposed");
 		t.Show();
 		//Application.Run();
 		_loop.Loop();
@@ -813,20 +811,20 @@ public partial class Test
 	{
 		var m = new CatMenu();
 
-		m.ItemAdded += x => { Out(x.Text); if(x.Text.Length > 3) x.BackColor = Color.Azure; };
+		m.ItemAdded += x => { Print(x.Text); if(x.Text.Length > 3) x.BackColor = Color.Azure; };
 
-		m["One"] = o => Out(o);
-		m["Two"] = o => Out(o);
+		m["One"] = o => Print(o);
+		m["Two"] = o => Print(o);
 		using(m.Submenu("Submenu")) {
-			m["Three"] = o => Out(o);
-			m["Four"] = o => Out(o);
+			m["Three"] = o => Print(o);
+			m["Four"] = o => Print(o);
 			using(m.Submenu("Submenu")) {
-				m["Five"] = o => Out(o);
-				m["Six"] = o => Out(o);
+				m["Five"] = o => Print(o);
+				m["Six"] = o => Print(o);
 			}
-			m["Seven"] = o => Out(o);
+			m["Seven"] = o => Print(o);
 		}
-		m["Eight"] = o => Out(o);
+		m["Eight"] = o => Print(o);
 		m.Show();
 	}
 
@@ -892,7 +890,7 @@ public partial class Test
 		//f.Show();
 		//f.Visible = true;
 		Wnd w = (Wnd)f;
-		w.Visible = true;
+		w.Show(true);
 		//w.ActivateRaw();
 		Perf.Next();
 
@@ -904,11 +902,11 @@ public partial class Test
 
 	private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
 	{
-		OutFunc();
+		PrintFunc();
 		_mlTb.Stop();
 	}
 
-	static Util.MessageLoop _mlTb = new Util.MessageLoop();
+	static Catkeys.Util.MessageLoop _mlTb = new Catkeys.Util.MessageLoop();
 
 	#endregion
 
@@ -933,7 +931,7 @@ public partial class Test
 
 	static LPARAM _WndprocCatBar(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
-		//Out(msg);
+		//Print(msg);
 		//switch(msg) {
 		//case Api.WM_DESTROY:
 		//	break;
@@ -975,7 +973,7 @@ public partial class Test
 		f.Controls.Add(t);
 		t.ResumeLayout();
 		Perf.Next();
-		//Wnd w = (Wnd)f; w.Visible = true; //slightly faster, but then need 2 clicks to make a button to respond
+		//Wnd w = (Wnd)f; w.Show(true); //slightly faster, but then need 2 clicks to make a button to respond
 		f.Show(); //does not activate if WS_EX_NOACTIVATE
 		Perf.Next();
 
@@ -987,7 +985,7 @@ public partial class Test
 
 	private static void B_Click1(object sender, EventArgs e)
 	{
-		OutFunc();
+		PrintFunc();
 		_mlTb.Stop();
 	}
 
@@ -997,7 +995,7 @@ public partial class Test
 
 	static LPARAM _WndprocCatBar2(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
-		//Out(msg);
+		//Print(msg);
 		switch(msg) {
 		case Api.WM_DESTROY:
 			_mlTb.Stop();
@@ -1008,7 +1006,7 @@ public partial class Test
 
 		switch(msg) {
 		case Api.WM_PAINT:
-			//Out("painted");
+			//Print("painted");
 			//if(_tbStrip2 != null) {
 			//	ToolStrip2 t = _tbStrip2; _tbStrip2 = null;
 			//	if(!t.Focused) t.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting.
@@ -1071,10 +1069,10 @@ public partial class Test
 		Perf.Next();
 
 		//Wnd wt = (Wnd)t.Handle;
-		//Out(wt);
-		//Out(wt.DirectParent);
-		//if(Api.SetParent(wt, w).Is0) Out(new Win32Exception().Message);
-		//Out(wt.DirectParentOrOwner);
+		//Print(wt);
+		//Print(wt.DirectParent);
+		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
+		//Print(wt.DirectParentOrOwner);
 
 		t.ResumeLayout();
 		t.CreateControl();
@@ -1082,7 +1080,7 @@ public partial class Test
 
 		Perf.Next();
 #endif
-		w.Visible = true;
+		w.Show(true);
 		//w.ActivateRaw();
 		//Perf.Next();
 		//Wnd wt = (Wnd)t.Handle;
@@ -1103,7 +1101,7 @@ public partial class Test
 
 	static LPARAM _WndprocCatBar3(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
-		//Out(msg);
+		//Print(msg);
 		switch(msg) {
 		case Api.WM_DESTROY:
 			_mlTb.Stop();
@@ -1168,7 +1166,7 @@ public partial class Test
 		//Wnd wt = (Wnd)t.Handle;
 
 		Perf.Next();
-		w.Visible = true;
+		w.Show(true);
 		//w.ActivateRaw();
 		Perf.Next();
 		_mlTb.Loop();
@@ -1181,7 +1179,7 @@ public partial class Test
 
 	static LPARAM _WndprocNW(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
-		//Out(msg);
+		//Print(msg);
 		switch(msg) {
 		case Api.WM_DESTROY:
 			_mlTb.Stop();
@@ -1207,7 +1205,7 @@ public partial class Test
 		Wnd w = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOPMOST, _WndClassNW.Name, null,
 			Api.WS_POPUP | Api.WS_CAPTION | Api.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
 		Perf.Next();
-		w.Visible = true;
+		w.Show(true);
 		//w.ActivateRaw();
 		//Perf.Next();
 		//Wnd wt = (Wnd)t.Handle;
@@ -1236,7 +1234,7 @@ public partial class Test
 
 		m.Ex.SetBounds(100, 100, 400, 100);
 
-		m["Close"] = o => { Out(o); _mlTb.Stop(); };
+		m["Close"] = o => { Print(o); _mlTb.Stop(); };
 		Perf.Next();
 #if true
 		for(int i = 0; i < 30; i++) {
@@ -1244,21 +1242,21 @@ public partial class Test
 		}
 #else
 		m.Separator();
-		m["Icon", @"q:\app\Cut.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Copy.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Paste.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Run.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Tip.ico"] = o => Out(o);
+		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
 		m.LastItem.ForeColor = Color.OrangeRed;
-		//m["Icon resource", 1] = o => Out(o);
-		m["Imagelist icon name", "k0"] = o => Out(o);
-		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Out(o);
+		//m["Icon resource", 1] = o => Print(o);
+		m["Imagelist icon name", "k0"] = o => Print(o);
+		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Print(o);
 		m.Separator();
 		m.Add(new ToolStripTextBox());
 #endif
 		Perf.Next();
 
-		//Out(w);
+		//Print(w);
 		m.Visible = true;
 		Perf.Next();
 		_mlTb.Loop();
@@ -1267,7 +1265,7 @@ public partial class Test
 
 	static void TestToolbar()
 	{
-		//OutFunc();
+		//PrintFunc();
 		for(int i = 0; i < 1; i++) { TestCatBar(); /*WaitMS(500);*/ }
 
 		//for(int i=0; i<1; i++) TestOldToolbar();

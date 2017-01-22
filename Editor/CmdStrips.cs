@@ -20,20 +20,15 @@ using System.Xml;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
+using G.Controls;
 
 namespace Editor
 {
 	//[DebuggerStepThrough]
-#if FORM2
-	public partial class Form2
-#else
-	public partial class Form4
-#endif
+	public partial class MainForm
 	{
 		MenuStrip _tsMenu;
-		ToolStrip _tsFile, _tsEdit, _tsRun, _tsTools, _tsHelp, _tsCustom1, _tsCustom2, _tsCustom3, _tsCustom4;
+		CatToolStrip _tsFile, _tsEdit, _tsRun, _tsTools, _tsHelp, _tsCustom1, _tsCustom2;
 		_Commands _cmd;
 
 		void InitStrips()
@@ -42,7 +37,7 @@ namespace Editor
 
 			//load XML
 			var x = new XmlDocument();
-			x.Load(Folders.App + "CmdStrips.xml");
+			x.Load(Folders.ThisApp + "CmdStrips.xml");
 			p.Next();
 
 			_cmd = new _Commands();
@@ -50,24 +45,17 @@ namespace Editor
 			p.Next();
 
 			_tsMenu = new MenuStrip();
-			_tsFile = new ToolStrip();
-			_tsEdit = new ToolStrip();
-			_tsRun = new ToolStrip();
-			_tsTools = new ToolStrip();
-			_tsHelp = new ToolStrip();
-			_tsCustom1 = new ToolStrip();
-			_tsCustom2 = new ToolStrip();
-			_tsCustom3 = new ToolStrip();
-			_tsCustom4 = new ToolStrip();
+			_tsFile = new CatToolStrip();
+			_tsEdit = new CatToolStrip();
+			_tsRun = new CatToolStrip();
+			_tsTools = new CatToolStrip();
+			_tsHelp = new CatToolStrip();
+			_tsCustom1 = new CatToolStrip();
+			_tsCustom2 = new CatToolStrip();
 
-			var tsArr = new List<ToolStrip> { _tsMenu, _tsHelp, _tsTools, _tsFile, _tsRun, _tsEdit, _tsCustom1, _tsCustom2, _tsCustom3, _tsCustom4 };
-			var tsNames = new string[] { "Menu", "Help", "Tools", "File", "Run", "Edit", "Custom1", "Custom2", "Custom3", "Custom4" };
-#if FORM2
-			var controls = this.toolStripContainer1.TopToolStripPanel.Controls;
-#else
-			var controls = _strips.Controls;
-			_strips.SuspendLayout();
-#endif
+			var tsArr = new List<ToolStrip> { _tsMenu, _tsFile, _tsEdit, _tsRun, _tsTools, _tsHelp, _tsCustom1, _tsCustom2 };
+			var tsNames = new string[] { "Menu", "File", "Edit", "Run", "Tools", "Help", "Custom1", "Custom2" };
+
 			foreach(var t in tsArr) {
 				t.SuspendLayout();
 			}
@@ -75,95 +63,55 @@ namespace Editor
 			var ddMenus = new Dictionary<string, ToolStripDropDownMenu>();
 			//var il = EImageList.Strips;
 
+			var tsRenderer = new DockedToolStripRenderer();
+
 			p.Next();
 			XmlElement xDoc = x.DocumentElement;
+
+			//common submenus, ie the same submenu can be used by one or more submenus and/or toolbar dropdown buttons
+			var xCommon = xDoc["common"];
+			var ddCommon = new ToolStripDropDownMenu();
+			__InitStrips_AddChildItems(xCommon, ddCommon, true, ddMenus);
+
 			for(int i = 0; i < tsArr.Count; i++) {
 				string name = tsNames[i];
 				var xStrip = xDoc[name]; if(xStrip == null) continue;
 				var t = tsArr[i];
 
+				//PrintList(name, t.Height, t.Width);
+
 				t.Name = t.Text = name;
 				t.AllowItemReorder = true;
-				t.Dock = DockStyle.None;
-				//t.TabIndex = i+;
-				if(i == 0) {
-					t.Stretch = false;
-					//t.AutoSize=false;
-					t.GripStyle = ToolStripGripStyle.Visible;
-					var mpad = t.Padding; mpad.Left = 0; t.Padding = mpad;
-					//} else if(t== _tsFile) {
+				t.Renderer = tsRenderer;
+				//GDockPanel will set other styles
 
-				} else {
-
-				}
-
-				if(xStrip.HasAttribute("hide")) t.Visible = false;
-
-				_InitStrips_AddChildItems(xStrip, t, i == 0, ddMenus);
-
-				//if(t == _tsFile) {
-
-				//}else {
-				t.Location = new Point(xStrip.GetAttribute("x").ToInt_(), xStrip.GetAttribute("y").ToInt_());
-				var s = xStrip.GetAttribute("width");
-				if(s.Length > 0) {
-					t.AutoSize = false; //TODO
-					t.Width = s.ToInt_();
-				}
-				//OutList(name, t.Location, t.Width);
-				//}
-
-				//t.ResumeLayout();
-				//t.ResumeLayout(false);t.PerformLayout();
-				//t.AutoSize=false;
-				//t.Size = new Size(200, 25);
-				//OutList(name, t.Size, t.Items.Count);
-
-				//controls.Add(t);
-				//t.ImageList = il;
-				//t.ResumeLayout();
-				//break;
+				__InitStrips_AddChildItems(xStrip, t, i == 0, ddMenus);
 			}
 
 			p.Next();
+			_tsMenu.Padding = new Padding();
 			this.MainMenuStrip = _tsMenu;
 			var il = EImageList.Strips;
 			foreach(var t in tsArr) t.ImageList = il;
+#if !LAZY_MENUS
 			foreach(var t in ddMenus) t.Value.ImageList = il;
-
-			//tsArr.Sort((t1, t2) =>
-			//{
-			//	int y1 = t1.Top, y2 = t2.Top;
-			//	if(y1 < y2) return -1;
-			//	if(y1 > y2) return 1;
-			//	int x1 = t1.Left, x2 = t2.Left;
-			//	if(x1 < x2) return 1;
-			//	if(x1 > x2) return -1;
-			//	return 0;
-			//});
-
-			controls.AddRange(tsArr.ToArray());
-			foreach(var t in tsArr) {
-				//Out(t.Name);
-				//controls.Add(t);
-				t.ResumeLayout();
-			}
-#if FORM2
-			this.toolStripContainer1.BottomToolStripPanel.ResumeLayout();
-			this.toolStripContainer1.ContentPanel.ResumeLayout();
-			this.toolStripContainer1.TopToolStripPanel.ResumeLayout();
-			this.toolStripContainer1.ResumeLayout();
-#else
-			_strips.ResumeLayout();
 #endif
+
+			//#if DEBUG
+			//			var mi = _tsMenu.Items[0] as ToolStripMenuItem;
+			//			(mi.DropDown.Items.Add("test", null, (unu, sed) => Print("test")) as ToolStripMenuItem).ShortcutKeys = Keys.Control | Keys.P;
+			//#endif
+
+			foreach(var t in tsArr) {
+				//Print(t.Name);
+				t.ResumeLayout(false);
+			}
 
 			//p.NW();
 		}
 
-		void _InitStrips_AddChildItems(XmlElement xParent, ToolStrip tsParent, bool isMenu, Dictionary<string, ToolStripDropDownMenu> ddMenus)
+		void __InitStrips_AddChildItems(XmlElement xParent, ToolStrip tsParent, bool isMenu, Dictionary<string, ToolStripDropDownMenu> ddMenus)
 		{
-			//TODO: in C#7 nest in caller.
-
 			foreach(XmlNode xn in xParent) {
 				XmlElement x = xn as XmlElement; if(x == null) continue;
 				string s, tag = x.Name;
@@ -176,8 +124,8 @@ namespace Editor
 				_Commands.CommandHandler onClick = null;
 				bool isCmd = _cmd.Commands.TryGetValue(tag, out onClick);
 
-				string text = x.GetAttribute("t");
-				if(text.Length == 0) {
+				string text = x.Attribute_("t");
+				if(text == null) {
 					text = tag.Remove(0, tag.LastIndexOf('_') + 1);
 					//TODO: insert spaces before uppercase letters, and measure speed.
 					//TODO: hotkey.
@@ -187,50 +135,37 @@ namespace Editor
 				bool isControl = false, isDropDownButton = false;
 				if(!isCmd && x.HasAttribute("type")) {
 					isControl = true;
+					string cue = x.Attribute_("cue");
 					s = x.GetAttribute("type");
 					switch(s) {
 					case "edit":
-						var ed = new ToolStripTextBox();
+						var ed = new ToolStripSpringTextBox();
+						if(cue != null) ed.SetCueBanner(cue);
 						item = ed;
-						//ed.BorderStyle = BorderStyle.FixedSingle;
-
-						s = x.GetAttribute("cue");
-						if(s.Length > 0) ((Wnd)ed.TextBox.Handle).SendS(_Api.EM_SETCUEBANNER, 0, s);
-
+						break;
+					case "combo":
+						var combo = new ToolStripSpringComboBox();
+						if(cue != null) combo.SetCueBanner(cue);
+						item = combo;
 						break;
 					default: continue;
 					}
-
-					int width = x.GetAttribute("width").ToInt_();
-					if(width > 0) { item.AutoSize = false; item.Width = width; }
-
+					if(cue != null) item.AccessibleName = cue;
 				} else if(isMenu) {
 					var k = new ToolStripMenuItem(text);
 					item = k;
-#if !LAZY_MENUS
-					if(!isCmd) {
-						var dd = new ToolStripDropDownMenu();
-						_InitStrips_AddChildItems(x, dd, true, ddMenus);
-						k.DropDown = dd;
-						ddMenus.Add(tag, dd);
-					}
-#endif
+					if(!isCmd) __InitStrips_AddChildItems_Submenu(x, k, tag, ddMenus);
 				} else if(isDropDownButton = x.HasAttribute("dd")) {
 					var k = isCmd ? (new ToolStripSplitButton(text) as ToolStripDropDownItem) : (new ToolStripDropDownButton(text) as ToolStripDropDownItem);
 					item = k;
-#if !LAZY_MENUS
-					ToolStripDropDownMenu dd;
-					s = x.GetAttribute("dd");
-					if(s.Length > 0) dd = ddMenus[s];
-					else {
-						dd = new ToolStripDropDownMenu();
-						_InitStrips_AddChildItems(x, dd, true, ddMenus);
-					}
-					k.DropDown = dd;
-#endif
-				} else item = new ToolStripButton(text);
+					__InitStrips_AddChildItems_Submenu(x, k, tag, ddMenus);
+				} else {
+					item = new ToolStripButton(text);
+				}
 
-				s = x.GetAttribute("i"); if(s.Length > 0) item.ImageIndex = s.ToInt_();
+				int ii = x.Attribute_("i", -1); if(ii >= 0) item.ImageIndex = ii;
+
+				var tt = x.Attribute_("tt"); if(tt != null) item.ToolTipText = tt;
 
 				if(!isMenu && !isControl) {
 					if(false) { //option: show labels
@@ -245,13 +180,64 @@ namespace Editor
 				//xParent.SelectSingleNode("//")
 				if(isCmd) {
 				} else {
-					//Out(tag);
+					//Print(tag);
 
 					//_InitStrips_AddChildItems(x, , true);
 				}
 
-
+				item.Name = tag;
 				tsParent.Items.Add(item);
+			}
+		}
+
+
+		void __InitStrips_AddChildItems_Submenu(XmlElement x, ToolStripDropDownItem ddItem, string tag, Dictionary<string, ToolStripDropDownMenu> ddMenus)
+		{
+			ToolStripDropDownMenu dd;
+			var s = x.GetAttribute("dd");
+			if(s.Length > 0) {
+				ddItem.DropDown = ddMenus[s];
+			} else {
+				dd = new ToolStripDropDownMenu();
+				ddItem.DropDown = dd;
+				ddMenus.Add(tag, dd);
+#if !LAZY_MENUS
+				__InitStrips_AddChildItems(x, dd, true, ddMenus);
+#else
+				//This saves ~50 ms of startup time, eg 170 -> 120 ms.
+				//Can do it with Opening event or with timer. With timer easier. With event users cannot use MSAA etc to automate clicking menu items (with timer cannot use it only the first 1-2 seconds).
+#if false
+				dd.Items.Add(new ToolStripSeparator());
+				CancelEventHandler eh = null;
+				eh = (sender, e) =>
+				{
+					dd.Opening -= eh;
+					dd.Items.Clear();
+					dd.ImageList = EImageList.Strips;
+					__InitStrips_AddChildItems(x, dd, true, ddMenus);
+				};
+				dd.Opening += eh;
+#else
+				Time.SetTimer(500, true, t =>
+				{
+					dd.ImageList = EImageList.Strips;
+					__InitStrips_AddChildItems(x, dd, true, ddMenus);
+				});
+#endif
+#endif
+			}
+		}
+
+		//private void DdItem_DropDownOpening(object sender, EventArgs e)
+		//{
+		//	Print(1);
+		//}
+
+		public class DockedToolStripRenderer :ToolStripProfessionalRenderer
+		{
+			public DockedToolStripRenderer()
+			{
+				this.RoundedEdges = false;
 			}
 		}
 
@@ -270,7 +256,7 @@ namespace Editor
 			//Calls true item's onClick delegate if need.
 			void _OnClick(object sender, EventArgs args)
 			{
-				//Out(_inRightClick);
+				//Print(_inRightClick);
 				if(m_inRightClick) return;
 				var d = _clickDelegates[sender] as CommandHandler;
 				Debug.Assert(d != null); if(d == null) return;

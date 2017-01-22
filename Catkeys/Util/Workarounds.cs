@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys.Util
 {
@@ -44,20 +42,20 @@ namespace Catkeys.Util
 			//Perf.First();
 			//tested: this workaround can be executed once in process, in any thread.
 			if(_workaroundWaitCursor) return; _workaroundWaitCursor = true;
-			var onceInProcess = &Util.LibProcessMemory.Ptr->workarounds.doneWaitCursorWhenShowingMenuEtc;
+			var onceInProcess = &LibProcessMemory.Ptr->workarounds.doneWaitCursorWhenShowingMenuEtc;
 			if(*onceInProcess) return; *onceInProcess = true;
-			//OutList("workaround", AppDomain.CurrentDomain.Id);
+			//PrintList("workaround", AppDomain.CurrentDomain.Id);
 
-			//Out(Api.GetActiveWindow());
+			//Print(Api.GetActiveWindow());
 			if(Wnd.ActiveWindow.IsOfThisProcess) return;
 #if true
 			Wnd w = Wnd.Misc.CreateMessageWindow("#32770");
 			//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster and prevents setting foreground; empty class same speed.
 			Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
 									//Api.SetForegroundWindow(w);
-									//Out(Wnd.ActiveWindow);
+									//Print(Wnd.ActiveWindow);
 			w.Destroy();
-			//Out(Wnd.ActiveWindow);
+			//Print(Wnd.ActiveWindow);
 			//Perf.NW(); //1 ms when ngened, else 2 ms
 #else
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
@@ -67,7 +65,7 @@ namespace Catkeys.Util
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
-				//Out(Wnd.ActiveWindow);
+				//Print(Wnd.ActiveWindow);
 				//Perf.NW();
 				w.Destroy();
 			};

@@ -31,8 +31,6 @@ using Microsoft.CodeAnalysis.CSharp;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Compiler
 {
@@ -49,7 +47,7 @@ namespace Compiler
 			Api.SetEvent((IntPtr)dom.GetData("eventInited"));
 
 			//message loop (not Application.Run() because then loads slower etc)
-			Api.MSG m;
+			Native.MSG m;
 			while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 		}
 
@@ -91,8 +89,8 @@ namespace Compiler
 
 			bool inMemoryAsm = true;
 
-			//Out(csFile);
-			//Out(outFile);
+			//Print(csFile);
+			//Print(outFile);
 
 			//var source = File.ReadAllText(csFile);
 			var source = @"
@@ -104,14 +102,14 @@ public static class Test
 {
 		public static void Main()
 		{
-			Out(Folders.App);
+			Print(Folders.ThisApp);
 //WaitMS(5000);
-			//Out(""end"");
+			//Print(""end"");
 		}
 	}
 ";
 
-			var sRef = new string[] { typeof(object).Assembly.Location, Folders.App + "Catkeys.dll" };
+			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Catkeys.dll" };
 			//var sRef = new string[] { typeof(object).Assembly.Location };
 
 			var references = new List<PortableExecutableReference>();
@@ -133,7 +131,7 @@ public static class Test
 			//If our compilation failed, we can discover exactly why.
 			if(!emitResult.Success) {
 				foreach(var diagnostic in emitResult.Diagnostics) {
-					Out(diagnostic.ToString());
+					Print(diagnostic.ToString());
 				}
 				return 1;
 			}
@@ -146,7 +144,7 @@ public static class Test
 				var s1 = r.FilePath;
 				if(s1.StartsWith_(netDir, true)) continue;
 				var s2 = outDir + "\\" + Path.GetFileName(s1);
-				//OutList(s1, s2);
+				//PrintList(s1, s2);
 
 				if(Files.FileExists(s2)) {
 					FileInfo f1 = new FileInfo(s1), f2 = new FileInfo(s2);
@@ -160,7 +158,6 @@ public static class Test
 
 #if true
 			var ad = AppDomain.CreateDomain("ad1");
-			Out(ad.BaseDirectory);
 			if(inMemoryAsm) {
 				ad.SetData("ms", ms);
 				ad.DoCallBack(() =>
@@ -187,8 +184,8 @@ public static class Test
 		//			var dom = AppDomain.CurrentDomain;
 		//			string csFile = (string)dom.GetData("cs"), outFile = (string)dom.GetData("out");
 
-		//			//Out(csFile);
-		//			//Out(outFile);
+		//			//Print(csFile);
+		//			//Print(outFile);
 
 		//			var source = File.ReadAllText(csFile);
 		////			var source = @"
@@ -200,7 +197,7 @@ public static class Test
 		////}
 		////";
 
-		//			var sRef = new string[] { typeof(object).Assembly.Location, Folders.App + "Catkeys.dll" };
+		//			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Catkeys.dll" };
 		//			//var sRef = new string[] { typeof(object).Assembly.Location };
 
 		//			var perf = new Perf.Inst(true);
@@ -226,7 +223,7 @@ public static class Test
 		//			//If our compilation failed, we can discover exactly why.
 		//			if(!emitResult.Success) {
 		//				foreach(var diagnostic in emitResult.Diagnostics) {
-		//					Out(diagnostic.ToString());
+		//					Print(diagnostic.ToString());
 		//				}
 		//			} else {
 		//				//Load into currently running assembly. Normally we'd probably
@@ -237,7 +234,7 @@ public static class Test
 
 		//				//Invokes our main method and writes "Hello World" :)
 		//				//object r=type.InvokeMember("Main", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, null);
-		//				//Out(r);
+		//				//Print(r);
 		//				type.InvokeMember("Main", BindingFlags.Default | BindingFlags.InvokeMethod, null, null, null);
 		//			perf.NW();
 		//			}
@@ -250,7 +247,7 @@ public static class Test
 		//{
 		//	Perf.Next();
 		//	object result = await CSharpScript.EvaluateAsync("1 + 2");
-		//	Out(result);
+		//	Print(result);
 		//}
 #else
 		static MethodInfo _compilerMethod;
@@ -266,7 +263,7 @@ public static class Test
 
 			if(_compilerMethod == null) {
 				//Assembly asm = Assembly.Load("csc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"); //works, same speed as LoadFile, but VS shows many warnings if this project uses different .NET framework version than csc (which is added to project references). Also, possibly could make the app start slower, especially if HDD. Better to load on demand through reflection.
-				Assembly asm = Assembly.LoadFile(Folders.App + "csc.exe");
+				Assembly asm = Assembly.LoadFile(Folders.ThisApp + "csc.exe");
 				if(!Util.Misc.IsAssemblyNgened(asm)) Output.Warning("csc.exe not ngened. The first compiling will be slow.");
 				_compilerMethod = asm.EntryPoint;
 
@@ -282,7 +279,7 @@ public static class Test
 			string[] g = new string[] {
 				"/nologo", "/noconfig",
 				"/out:" + dllFile, "/target:winexe",
-				$"/r:{Folders.App}\\Catkeys.dll",
+				$"/r:{Folders.ThisApp}\\Catkeys.dll",
 				//"/r:System.dll", "/r:System.Core.dll", "/r:System.Windows.Forms.dll",
 				csFile
 			};
@@ -293,9 +290,9 @@ public static class Test
 			_compilerOutput.Clear();
 			int r = (int)_compilerMethod.Invoke(0, p); //18-23 ms minimal (everything ngen-compiled, recently PC restarted), 33 ms with several /r; first time ~300 ms on Win10/.NET4.6 and ~600 on older Win/.NET.
 			if(r != 0) {
-				Out(_compilerOutput);
+				Print(_compilerOutput);
 			} else if(_compilerOutput.Length > 0) {
-				Out(_compilerOutput);
+				Print(_compilerOutput);
 			}
 
 			if(r == 0) {

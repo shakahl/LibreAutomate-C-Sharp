@@ -17,13 +17,7 @@ using System.Drawing;
 //using System.Linq;
 using System.Globalization;
 
-//for LikeEx_
-using Microsoft.VisualBasic;
-using Microsoft.VisualBasic.CompilerServices;
-
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -31,8 +25,9 @@ namespace Catkeys
 	/// Adds extension methods to System.String.
 	/// Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
 	/// Extension method names have suffix _.
+	/// Most of these extension methods throw NullReferenceException if called for a string variable that is null.
 	/// </summary>
-	[DebuggerStepThrough]
+	//[DebuggerStepThrough]
 	public static partial class String_
 	{
 		/// <summary>
@@ -214,7 +209,7 @@ namespace Catkeys
 		{
 			return t.Split(_newlines, removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
 		}
-		static readonly string[] _newlines = { "\r\n", "\n", "\r" }; //error if const; not public because elements can be changed
+		static readonly string[] _newlines = { "\r\n", "\n", "\r" }; //error if const. Not public because elements can be changed.
 
 		/// <summary>
 		/// Returns ToLowerInvariant().
@@ -269,6 +264,7 @@ namespace Catkeys
 		///		Supports hexadecimal format, like "0x1E" or "0x1e".
 		///		Much faster.
 		/// </summary>
+		/// <param name="t"></param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <remarks>
@@ -279,9 +275,7 @@ namespace Catkeys
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">When startIndex is less than 0 or greater than string length.</exception>
-		/// <seealso cref="Api.strtoi"/>
-		/// <seealso cref="Api.strtoui"/>
-		public static int ToInt_(this string t, int startIndex, out int numberEndIndex)
+		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex)
 		{
 			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
 		}
@@ -289,10 +283,19 @@ namespace Catkeys
 		/// <summary>
 		/// This overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static int ToInt_(this string t, int startIndex = 0)
+		public static int ToInt32_(this string t, int startIndex = 0)
 		{
 			int numberEndIndex;
 			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
+		}
+
+		/// <summary>
+		/// This overload does not have parameters.
+		/// </summary>
+		public static int ToInt32_(this string t)
+		{
+			int numberEndIndex;
+			return (int)_ToInt(t, 0, out numberEndIndex, false);
 		}
 
 		/// <summary>
@@ -307,6 +310,7 @@ namespace Catkeys
 		///		Supports hexadecimal format, like "0x1E" or "0x1e".
 		///		Much faster.
 		/// </summary>
+		/// <param name="t"></param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <remarks>
@@ -317,8 +321,6 @@ namespace Catkeys
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">When startIndex is less than 0 or greater than string length.</exception>
-		/// <seealso cref="Api.strtoi64"/>
-		/// <seealso cref="Api.strtoui64"/>
 		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex)
 		{
 			return _ToInt(t, startIndex, out numberEndIndex, true);
@@ -331,6 +333,15 @@ namespace Catkeys
 		{
 			int numberEndIndex;
 			return _ToInt(t, startIndex, out numberEndIndex, true);
+		}
+
+		/// <summary>
+		/// This overload does not have parameters.
+		/// </summary>
+		public static long ToInt64_(this string t)
+		{
+			int numberEndIndex;
+			return _ToInt(t, 0, out numberEndIndex, true);
 		}
 
 		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong)
@@ -417,12 +428,13 @@ namespace Catkeys
 		/// For string like "123" sets tail = "".
 		/// If fails to convert, sets tail = null.
 		/// Skips 1 ASCII space or tab character after the number part. For example, for string "123 text" sets tail = "text", not " text".
-		/// Everything else is the same as for the main overload.
+		/// Everything else is the same as with ToInt32_.
 		/// </summary>
+		/// <param name="t"></param>
 		/// <param name="tail">A string variable. Can be this variable.</param>
 		public static int ToIntAndString_(this string t, out string tail)
 		{
-			int eon, R = ToInt_(t, 0, out eon);
+			int eon, R = ToInt32_(t, 0, out eon);
 
 			if(eon == 0)
 				tail = null;
@@ -436,9 +448,10 @@ namespace Catkeys
 
 		/// <summary>
 		/// Converts string to double.
-		/// Calls <see cref="double.Parse"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+		/// Calls <see cref="double.Parse(string, NumberStyles, IFormatProvider)"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
 		/// </summary>
-		/// <param name="canThrow">If true, exception if the string is not a valid number for <see cref="double.Parse"/>. If false, then returns 0.</param>
+		/// <param name="t"></param>
+		/// <param name="canThrow">If true, exception if the string is not a valid number or is null. If false, then returns 0.</param>
 		public static double ToDouble_(this string t, bool canThrow = false)
 		{
 			if(canThrow) return double.Parse(t, CultureInfo.InvariantCulture);
@@ -449,9 +462,10 @@ namespace Catkeys
 
 		/// <summary>
 		/// Converts string to float.
-		/// Calls <see cref="float.Parse"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+		/// Calls <see cref="float.Parse(string, NumberStyles, IFormatProvider)"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
 		/// </summary>
-		/// <param name="canThrow">If true, exception if the string is not a valid number for <see cref="float.Parse"/>. If false, then returns 0.</param>
+		/// <param name="t"></param>
+		/// <param name="canThrow">If true, exception if the string is not a valid number or is null. If false, then returns 0.</param>
 		public static float ToFloat_(this string t, bool canThrow = false)
 		{
 			if(canThrow) return float.Parse(t, CultureInfo.InvariantCulture);
@@ -469,66 +483,6 @@ namespace Catkeys
 			int k = t.Length;
 			if(k <= length || length < 4) return t;
 			return t.Remove(length - 3) + "...";
-		}
-
-		/// <summary>
-		/// Returns true if this string matches wildcard pattern, which can contain these special characters:
-		///   * - 0 or more characters;
-		///   ? - 1 character;
-		///   ?* - 1 or more characters;
-		///   ** - literal *;
-		///   *? - literal ?.
-		/// </summary>
-		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <param name="useCurrentCulture">Use current culture. If false, uses ordinal matching which does not depend on a culture.</param>
-		/// <remarks>
-		/// Both "" and null match pattern "". This variable can be null because this is an extension method.
-		/// Uses class WildString, but does not support "[options]". You can use the class when comparing multiple strings with the same pattern, it will be faster.
-		/// </remarks>
-		public static bool Like_(this string t, string pattern, bool ignoreCase = false, bool useCurrentCulture = false)
-		{
-			var x = new WildString(pattern, WildStringType.Wildcard, ignoreCase, useCurrentCulture);
-			return x.Match(t, true);
-		}
-
-		/// <summary>
-		/// Calls Like_() (other overload) for each wildcard pattern specified in the argument list until one matches this string.
-		/// Returns 1-based index of matching pattern, or 0 if none.
-		/// </summary>
-		public static int Like_(this string t, bool ignoreCase = false, params string[] patterns)
-		{
-			for(int i = 0; i < patterns.Length; i++) if(t.Like_(patterns[i], ignoreCase)) return i + 1;
-			return 0;
-		}
-
-		/// <summary>
-		/// Calls Microsoft.VisualBasic.CompilerServices.Operators.LikeString().
-		/// More info: https://msdn.microsoft.com/en-us/library/swf8kaxw%28v=vs.100%29.aspx
-		/// Wildcards: * (0 or more characters), ? (any 1 character), # (any digit), [chars], [!chars]. Escape sequences: [*], [?], [#], [[].
-		/// Usually slower than Like_() (especially when ignoreCase is true).
-		/// Throws exception if pattern is invalid (eg "text[text").
-		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevent compiling Operators.LikeString (slow first time) when actually not used
-		public static bool LikeEx_(this string t, string pattern, bool ignoreCase = false)
-		{
-			return Operators.LikeString(t, pattern, ignoreCase ? CompareMethod.Text : CompareMethod.Binary);
-		}
-		//Speed for 1000 times (@"C:\Users\G\Documents\dictionary.xls", "*.xls"):
-		//	This 85, regex 830, compiled regex 440, regex with WildcardToRegex 1200, QM2 FindRX 400, QM2 MatchW ~30 (matchw 70 + rep 35).
-		//Not tested System.Management.Automation.WildcardPattern, because assembly System.Management.Automation is not installed. It seems need to install it through NuGet.
-		//Exception if pattern contains unclosed [, for example "abc[5" (must be "abc[5]" or "abc[[]5"). Also if pattern is "?*" and string is empty (why?).
-		//Like_() (which is used eg to compare window class names etc) does not support # (number) and [charset] that are supported by LikeEx_().
-		//	Usually they are too limited to be useful. It's better to keep Like_ as simple as possible, and use Regex when need something more.
-		//	For example, if we support #[, users that are unaware/forget of this would use window class name like "#32770", or with [ characters, and wonder why it does not work.
-
-		/// <summary>
-		/// Calls LikeEx_() for each wildcard pattern specified in the argument list until one matches this string.
-		/// Returns 1-based index of matching pattern, or 0 if none.
-		/// </summary>
-		public static int LikeEx_(this string t, bool ignoreCase = false, params string[] patterns)
-		{
-			for(int i = 0; i < patterns.Length; i++) if(t.LikeEx_(patterns[i], ignoreCase)) return i + 1;
-			return 0;
 		}
 
 		/// <summary>
@@ -607,16 +561,6 @@ namespace Catkeys
 			int n = 0;
 			result = x.Replace(t, (m) => { n++; return m.Result(replacement); }, count);
 			return n;
-		}
-
-		/// <summary>
-		/// Returns string.Join(separator, values).
-		/// If values[0] is null, sets it "". It is a workaround for the documented string.Join bug: it would return "" if values[0] is null.
-		/// </summary>
-		public static string Join(string separator, params object[] values)
-		{
-			if(values.Length > 0 && values[0] == null) values[0] = "";
-			return string.Join(separator, values);
 		}
 	}
 

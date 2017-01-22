@@ -23,8 +23,6 @@ using K = System.Windows.Forms.Keys;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 
@@ -81,7 +79,7 @@ public partial class Test
 					//	ApplicationName = AppDomain.CurrentDomain.SetupInformation.ApplicationName,
 					//	LoaderOptimization = LoaderOptimization.MultiDomain
 					//};
-					domain.ExecuteAssembly(Folders.App + @"Tests.exe", new string[] { "/domain" });
+					domain.ExecuteAssembly(Folders.ThisApp + @"Tests.exe", new string[] { "/domain" });
 
 					//domain.DoCallBack(TestX);
 
@@ -91,7 +89,7 @@ public partial class Test
 				catch(Exception e) {
 					var s = e.ToString();
 					int iSys = s.IndexOf("\r\n   at System.AppDomain._"); if(iSys > 0) s = s.Remove(iSys);
-					Out($"Unhandled exception in {domainName}: {s}");
+					Print($"Unhandled exception in {domainName}: {s}");
 				}
 				finally {
 					if(domain != null) {
@@ -129,7 +127,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 
 							AppDomain.Unload(domain);
 						}
-						catch(Exception e) { Out(e); }
+						catch(Exception e) { Print(e); }
 					}
 				}
 			}
@@ -139,9 +137,9 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 			t.Join();
 		}
 
-		//Out(InterDomain.Get2("test"));
+		//Print(InterDomain.Get2("test"));
 		//TaskDialog.Show("after all");
-		//Out("exit default domain");
+		//Print("exit default domain");
 	}
 
 	//[DllImport("user32.dll")]
@@ -179,13 +177,13 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		{
 			protected override void OnMouseHover(EventArgs e)
 			{
-				Out("hover 1");
+				Print("hover 1");
 				base.OnMouseHover(e);
-				Out("hover 2, dd visible=" + this.DropDown.Visible);
+				Print("hover 2, dd visible=" + this.DropDown.Visible);
 				Perf.First();
 				bool y = this.HasDropDownItems && !this.DropDown.Visible;
 				Perf.NW();
-				Out(y);
+				Print(y);
 				if(this.HasDropDownItems && !this.DropDown.Visible) this.ShowDropDown();
 				//Perf.First();
 			}
@@ -193,15 +191,15 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 			protected override void OnDropDownShow(EventArgs e)
 			{
 				//Perf.NW();
-				Out("show");
+				Print("show");
 				base.OnDropDownShow(e);
 			}
 
 			//protected override void OnDropDownOpened(EventArgs e)
 			//{
-			//	Out("opened 1");
+			//	Print("opened 1");
 			//	base.OnDropDownShow(e);
-			//	Out("opened 2");
+			//	Print("opened 2");
 			//}
 		}
 	}
@@ -212,7 +210,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		using(RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\")) {
 			int releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
 			if(true) {
-				Out("Version: " + CheckFor45DotVersion(releaseKey));
+				Print("Version: " + CheckFor45DotVersion(releaseKey));
 			}
 		}
 	}
@@ -262,7 +260,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		return;
 
 		//To hide the 'wait' cursor when the primary thread of a new process is going to wait:
-		//Wnd0.Post(0); Api.MSG k; Api.PeekMessage(out k, Wnd0, 0, 0, 1);
+		//Wnd0.Post(0); Native.MSG k; Api.PeekMessage(out k, Wnd0, 0, 0, 1);
 
 		//WaitMS(1000); return;
 
@@ -287,7 +285,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//TODO: test wait cursor with TaskDialog.Show
 	}
 
-	static Util.MessageLoop _mlTb = new Util.MessageLoop();
+	static Catkeys.Util.MessageLoop _mlTb = new Catkeys.Util.MessageLoop();
 
 	static void TestCatBar()
 	{
@@ -298,7 +296,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//m.CMS.ImageList = il;
 		Perf.Next();
 
-		m["Close"] = o => { Out(o); _mlTb.Stop(); };
+		m["Close"] = o => { Print(o); _mlTb.Stop(); };
 		Perf.Next();
 #if true
 		for(int i = 0; i < 30; i++) {
@@ -306,21 +304,21 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		}
 #else
 		m.Separator();
-		m["Icon", @"q:\app\Cut.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Copy.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Paste.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Run.ico"] = o => Out(o);
-		m["Icon", @"q:\app\Tip.ico"] = o => Out(o);
+		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
+		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
 		m.LastItem.ForeColor = Color.OrangeRed;
-		//m["Icon resource", 1] = o => Out(o);
-		m["Imagelist icon name", "k0"] = o => Out(o);
-		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Out(o);
+		//m["Icon resource", 1] = o => Print(o);
+		m["Imagelist icon name", "k0"] = o => Print(o);
+		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Print(o);
 		m.Separator();
 		m.Add(new ToolStripTextBox());
 #endif
 		Perf.Next();
 
-		//Out(w);
+		//Print(w);
 		m.Visible = true;
 		Perf.Next();
 		_mlTb.Loop();

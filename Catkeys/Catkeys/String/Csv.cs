@@ -18,8 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace Catkeys
 {
@@ -38,17 +36,16 @@ namespace Catkeys
 	{
 		List<string[]> _a;
 
-		/// <summary>
-		/// Initializes a new instance of the class that is empty.
-		/// Then you can set properties and add data.
-		/// </summary>
+		///
 		public CsvTable() { _a = new List<string[]>(); }
 
 		/// <summary>
-		/// Initializes a new instance of the class and parses CSV text, the same as <see cref="FromString"/>.
-		/// Uses default Separator, Quote and TrimSpaces values (',', '"', true).
+		/// Initializes a new <see cref="CsvTable"/> instance and parses CSV text, the same as <see cref="FromString"/>.
+		/// Uses default <see cref="Separator"/>, <see cref="Quote"/> and <see cref="TrimSpaces"/> values (',', '"', true).
 		/// </summary>
 		/// <param name="csv">CSV text.</param>
+		/// <remarks>
+		/// </remarks>
 		public CsvTable(string csv)
 		{
 			_Parse(csv);
@@ -151,12 +148,12 @@ namespace Catkeys
 					}
 					g1:
 
-					//Out(field);
+					//Print(field);
 
 					tempRow.Add(field);
 					if(s >= se || *s == '\n') {
-						//Out(_a.Count);
-						//Out(tempRow);
+						//Print(_a.Count);
+						//Print(tempRow);
 
 						_a.Add(tempRow.ToArray());
 						if(tempRow.Count > nCol) nCol = tempRow.Count;
@@ -167,7 +164,7 @@ namespace Catkeys
 				//Make all rows equal length and set _columnCount.
 				ColumnCount = nCol;
 
-				//OutList(RowCount, ColumnCount);
+				//PrintList(RowCount, ColumnCount);
 			} //fixed
 		}
 
@@ -259,7 +256,7 @@ namespace Catkeys
 		/// Gets or sets a field.
 		/// </summary>
 		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to RowCount; then adds new row.</param>
-		/// <param name="column">0-based column index. With the 'set' function it can be ˃= ColumnCount and ˂ 1000; then makes ColumnCount = column + 1.</param>
+		/// <param name="column">0-based column index. With the 'set' function it can be &gt;= ColumnCount and &lt; 1000; then makes ColumnCount = column + 1.</param>
 		public string this[int row, int column]
 		{
 			get
@@ -375,7 +372,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Loads and parses a CSV file.
-		/// Calls <see cref="File.ReadAllText"/> and <see cref="FromString"/>.
+		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="FromString"/>.
 		/// </summary>
 		/// <param name="file"></param>
 		public void FromFile(string file)
@@ -385,30 +382,52 @@ namespace Catkeys
 
 		/// <summary>
 		/// Composes CSV and saves to file.
-		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText"/>.
+		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>.
 		/// </summary>
-		/// <param name="file"></param>
 		public void ToFile(string file)
 		{
 			File.WriteAllText(file, ToString());
 			//TODO: flags: 1 append, 0x100 safe, 0x200 safe+backup
 		}
 
+		/// <summary>
+		/// Sets an int number field.
+		/// </summary>
+		/// <param name="row"><see cref="this[int, int]"/></param>
+		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <param name="value">The number.</param>
+		/// <param name="hex">Let the number be in hexadecimal format, like 0x3A.</param>
 		public void SetInt(int row, int column, int value, bool hex = false)
 		{
 			this[row, column] = hex ? "0x" + value.ToString("X") : value.ToString();
 		}
 
+		/// <summary>
+		/// Gets an int number field.
+		/// </summary>
+		/// <param name="row"><see cref="this[int, int]"/></param>
+		/// <param name="column"><see cref="this[int, int]"/></param>
 		public int GetInt(int row, int column)
 		{
-			return this[row, column].ToInt_();
+			return this[row, column].ToInt32_();
 		}
 
+		/// <summary>
+		/// Sets a double number field.
+		/// </summary>
+		/// <param name="row"><see cref="this[int, int]"/></param>
+		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <param name="value">The number.</param>
 		public void SetDouble(int row, int column, double value)
 		{
 			this[row, column] = value.ToString();
 		}
 
+		/// <summary>
+		/// Gets a double number field.
+		/// </summary>
+		/// <param name="row"><see cref="this[int, int]"/></param>
+		/// <param name="column"><see cref="this[int, int]"/></param>
 		public double GetDouble(int row, int column)
 		{
 			double r;

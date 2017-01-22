@@ -2,9 +2,11 @@
 
 using System;
 
-namespace Catkeys.Winapi
+#pragma warning disable 1591 //missing XML documentation
+
+namespace Catkeys
 {
-	public static unsafe partial class Api
+	static unsafe partial class Api
 	{
 		#region WM_
 
@@ -312,6 +314,7 @@ namespace Catkeys.Winapi
 		public const uint ES_AUTOHSCROLL = 128;
 
 		public const int EM_SETSEL = 177;
+		public const uint EM_SETCUEBANNER = 0x1501;
 
 		//public const int EN_CHANGE = 768;
 
@@ -323,6 +326,7 @@ namespace Catkeys.Winapi
 
 		public const int CB_INSERTSTRING = 330;
 		public const int CB_RESETCONTENT = 331;
+		public const uint CB_SETCUEBANNER = 0x1703;
 
 		#endregion
 
@@ -519,6 +523,7 @@ namespace Catkeys.Winapi
 		public const int ERROR_FILE_EXISTS = 80;
 		public const int ERROR_INVALID_PARAMETER = 87;
 		public const int ERROR_INSUFFICIENT_BUFFER = 122;
+		public const int ERROR_ALREADY_EXISTS = 183;
 		public const int ERROR_INVALID_WINDOW_HANDLE = 1400;
 		public const int E_INVALIDARG = unchecked((int)0x80070057);
 		public const int E_FAIL = unchecked((int)0x80004005);
@@ -770,7 +775,12 @@ namespace Catkeys.Winapi
 
 		#endregion
 
-
+		#region MA_
+		public const int MA_ACTIVATE = 1;
+		public const int MA_ACTIVATEANDEAT = 2;
+		public const int MA_NOACTIVATE = 3;
+		public const int MA_NOACTIVATEANDEAT = 4;
+		#endregion
 
 
 

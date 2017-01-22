@@ -1,20 +1,44 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Text;
 
-//Change default DllImport CharSet from Ansi to Unicode.
-[module: DefaultCharSet(CharSet.Unicode)]
+#pragma warning disable 1591 //missing XML documentation
+
+[module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
+
 //[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
 
-namespace Catkeys.Winapi
+[assembly: InternalsVisibleTo("G.Controls, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+[assembly: InternalsVisibleTo("CatEdit, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+[assembly: InternalsVisibleTo("CatkeysTasks, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+[assembly: InternalsVisibleTo("Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+[assembly: InternalsVisibleTo("Catkeys.Compiler, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+[assembly: InternalsVisibleTo("Catkeys.Triggers, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+
+namespace Catkeys
 {
 	[DebuggerStepThrough]
-	[CLSCompliant(false)]
-	public static unsafe partial class Api
+	//[CLSCompliant(false)]
+	internal static unsafe partial class Api
 	{
+		/// <summary>
+		/// Gets the native size of a struct variable.
+		/// Returns (uint)Marshal.SizeOf(typeof(T)).
+		/// Speed: the same (in Release config) as of Marshal.SizeOf(typeof(T)) and 2 times faster than Marshal.SizeOf(v).
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="v"></param>
 		public static uint SizeOf<T>(T v) { return (uint)Marshal.SizeOf(typeof(T)); }
-		//speed: in Release same as with ref and same as plain Marshal.SizeOf(typeof(TYPE)). The object overload is almost 2 times slower (need boxing etc).
+
+		/// <summary>
+		/// Gets the native size of a type.
+		/// Returns (uint)Marshal.SizeOf(typeof(T)).
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		public static uint SizeOf<T>() { return (uint)Marshal.SizeOf(typeof(T)); }
+		//TODO: use this everywhere
 
 		//Tried to make function that creates new struct and sets its first int member = sizeof struct. But cannot get address of generic parameter.
 		//public static void StructInitSize<T>(out T v) where T :struct
@@ -80,9 +104,6 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll", EntryPoint = "FindWindowExW")]
 		public static extern Wnd FindWindowEx(Wnd hWndParent, Wnd hWndChildAfter, string lpszClass, string lpszWindow);
 
-		public delegate LPARAM WNDPROC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam);
-		public delegate int DLGPROC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam);
-
 		public struct WNDCLASSEX
 		{
 			public uint cbSize;
@@ -97,6 +118,26 @@ namespace Catkeys.Winapi
 			public IntPtr lpszMenuName;
 			public IntPtr lpszClassName; //not string because CLR would call CoTaskMemFree
 			public IntPtr hIconSm;
+
+			public WNDCLASSEX(bool setCursorAndBrush) : this()
+			{
+				this.cbSize = Api.SizeOf<WNDCLASSEX>();
+				if(setCursorAndBrush) {
+					hCursor = Api.LoadCursor(default(IntPtr), Api.IDC_ARROW);
+					hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1);
+				}
+			}
+
+			public WNDCLASSEX(Wnd.Misc.WndClass.WndClassEx ex) : this()
+			{
+				this.cbSize = Api.SizeOf<WNDCLASSEX>();
+				this.cbClsExtra = ex.cbClsExtra;
+				this.hInstance = ex.hInstance;
+				this.hIcon = ex.hIcon;
+				this.hCursor = ex.hCursor;
+				this.hbrBackground = ex.hbrBackground;
+				this.hIconSm = ex.hIconSm;
+			}
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
@@ -118,7 +159,7 @@ namespace Catkeys.Winapi
 		public static extern LPARAM DefWindowProc(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "CallWindowProcW")]
-		public static extern LPARAM CallWindowProc(WNDPROC lpPrevWndFunc, Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+		public static extern LPARAM CallWindowProc(Native.WNDPROC lpPrevWndFunc, Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll")]
 		public static extern bool DestroyWindow(Wnd hWnd);
@@ -126,19 +167,14 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll")]
 		public static extern void PostQuitMessage(int nExitCode);
 
-		//[DllImport("user32.dll", EntryPoint = "MessageBoxW", SetLastError = true)]
-		//public static extern int MessageBox(Wnd hWnd, string text, string caption, int options);
-
-		public struct MSG { public Wnd hwnd; public uint message; public LPARAM wParam; public LPARAM lParam; public uint time; public POINT pt; }
+		[DllImport("user32.dll")]
+		public static extern int GetMessage(out Native.MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
 		[DllImport("user32.dll")]
-		public static extern int GetMessage(out MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+		public static extern bool TranslateMessage(ref Native.MSG lpMsg);
 
 		[DllImport("user32.dll")]
-		public static extern bool TranslateMessage(ref MSG lpMsg);
-
-		[DllImport("user32.dll")]
-		public static extern LPARAM DispatchMessage(ref MSG lpmsg);
+		public static extern LPARAM DispatchMessage(ref Native.MSG lpmsg);
 
 		[DllImport("user32.dll")]
 		public static extern bool WaitMessage();
@@ -152,7 +188,7 @@ namespace Catkeys.Winapi
 		public const uint PM_QS_INPUT = 0x1C070000;
 
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW")]
-		public static extern bool PeekMessage(out MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+		public static extern bool PeekMessage(out Native.MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 
 		public const int WH_MSGFILTER = -1;
 		public const int WH_KEYBOARD = 2;
@@ -390,38 +426,14 @@ namespace Catkeys.Winapi
 		public const uint WPF_RESTORETOMAXIMIZED = 2;
 		public const uint WPF_ASYNCWINDOWPLACEMENT = 4;
 
-		public struct WINDOWPLACEMENT
-		{
-			public uint length;
-			public uint flags; //WPF_
-			public int showCmd; //SW_
-			public POINT ptMinPosition;
-			public POINT ptMaxPosition;
-			public RECT rcNormalPosition;
-		}
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern bool GetWindowPlacement(Wnd hWnd, ref Native.WINDOWPLACEMENT lpwndpl);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern bool GetWindowPlacement(Wnd hWnd, ref WINDOWPLACEMENT lpwndpl);
+		public static extern bool SetWindowPlacement(Wnd hWnd, [In] ref Native.WINDOWPLACEMENT lpwndpl);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern bool SetWindowPlacement(Wnd hWnd, [In] ref WINDOWPLACEMENT lpwndpl);
-
-		public struct WINDOWINFO
-		{
-			public uint cbSize;
-			public RECT rcWindow;
-			public RECT rcClient;
-			public uint dwStyle;
-			public uint dwExStyle;
-			public uint dwWindowStatus;
-			public uint cxWindowBorders;
-			public uint cyWindowBorders;
-			public ushort atomWindowType;
-			public ushort wCreatorVersion;
-		}
-
-		[DllImport("user32.dll", SetLastError = true)]
-		public static extern bool GetWindowInfo(Wnd hwnd, ref WINDOWINFO pwi);
+		public static extern bool GetWindowInfo(Wnd hwnd, ref Native.WINDOWINFO pwi);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool IsZoomed(Wnd hWnd);
@@ -790,21 +802,8 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, void* lpPoints, uint cPoints);
 
-		public struct GUITHREADINFO
-		{
-			public uint cbSize;
-			public uint flags;
-			public Wnd hwndActive;
-			public Wnd hwndFocus;
-			public Wnd hwndCapture;
-			public Wnd hwndMenuOwner;
-			public Wnd hwndMoveSize;
-			public Wnd hwndCaret;
-			public RECT rcCaret;
-		}
-
 		[DllImport("user32.dll", SetLastError = true)]
-		public static extern bool GetGUIThreadInfo(uint idThread, ref GUITHREADINFO pgui);
+		public static extern bool GetGUIThreadInfo(uint idThread, ref Native.GUITHREADINFO pgui);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
@@ -896,8 +895,7 @@ namespace Catkeys.Winapi
 
 		public static bool SendInputKey(ref INPUTKEY ik)
 		{
-			fixed (void* p = &ik)
-			{
+			fixed (void* p = &ik) {
 				return SendInput(1, p, INPUTKEY.Size) != 0;
 			}
 		}
@@ -905,16 +903,14 @@ namespace Catkeys.Winapi
 		public static bool SendInputKey(INPUTKEY[] ik)
 		{
 			if(ik == null || ik.Length == 0) return false;
-			fixed (void* p = ik)
-			{
+			fixed (void* p = ik) {
 				return SendInput(ik.Length, p, INPUTKEY.Size) != 0;
 			}
 		}
 
 		public static bool SendInputMouse(ref INPUTMOUSE ik)
 		{
-			fixed (void* p = &ik)
-			{
+			fixed (void* p = &ik) {
 				return SendInput(1, p, INPUTMOUSE.Size) != 0;
 			}
 		}
@@ -922,8 +918,7 @@ namespace Catkeys.Winapi
 		public static bool SendInputMouse(INPUTMOUSE[] ik)
 		{
 			if(ik == null || ik.Length == 0) return false;
-			fixed (void* p = ik)
-			{
+			fixed (void* p = ik) {
 				return SendInput(ik.Length, p, INPUTMOUSE.Size) != 0;
 			}
 		}
@@ -1015,6 +1010,20 @@ namespace Catkeys.Winapi
 		[DllImport("user32.dll")]
 		public static extern bool InvalidateRgn(Wnd hWnd, IntPtr hRgn, bool bErase);
 
+		[DllImport("user32.dll")]
+		public static extern bool DragDetect(Wnd hwnd, POINT pt);
+
+		[DllImport("user32.dll")]
+		public static extern IntPtr SetCursor(IntPtr hCursor);
+
+		[DllImport("user32.dll")]
+		public static extern Wnd SetCapture(Wnd hWnd);
+
+		[DllImport("user32.dll")]
+		public static extern Wnd GetCapture();
+
+		[DllImport("user32.dll")]
+		public static extern bool ReleaseCapture();
 
 
 
@@ -1049,9 +1058,28 @@ namespace Catkeys.Winapi
 		public static extern int ReleaseDC(Wnd hWnd, IntPtr hDC);
 
 		[DllImport("gdi32.dll")]
+		public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+		[DllImport("gdi32.dll")]
+		public static extern bool DeleteDC(IntPtr hdc);
+
+		[DllImport("gdi32.dll")]
+		public static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
+
+		[DllImport("gdi32.dll")]
 		public static extern int GetDeviceCaps(IntPtr hdc, int index);
 
+		[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
+		public static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out SIZE psizl);
 
+		[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
+		public static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, uint bItalic = 0, uint bUnderline = 0, uint bStrikeOut = 0, uint iCharSet = 0, uint iOutPrecision = 0, uint iClipPrecision = 0, uint iQuality = 0, uint iPitchAndFamily = 0, string pszFaceName = null);
+
+		//[DllImport("user32.dll", EntryPoint = "CharUpperBuffW")]
+		//public static unsafe extern uint CharUpperBuff(char* lpsz, uint cchLength);
+
+		[DllImport("user32.dll", EntryPoint = "CharLowerBuffW")]
+		public static unsafe extern uint CharLowerBuff(char* lpsz, uint cchLength);
 
 
 
@@ -1095,16 +1123,16 @@ namespace Catkeys.Winapi
 		public static extern uint GetCurrentProcessId();
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		public static extern IntPtr CreateFileMapping(IntPtr hFile, IntPtr lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
+		public static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES* lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
-		[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
-		public static extern IntPtr OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+		//[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
+		//public static extern IntPtr OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		public static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, LPARAM dwNumberOfBytesToMap);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		public static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//public static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
 
 		[DllImport("kernel32.dll")]
 		public static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
@@ -1124,10 +1152,10 @@ namespace Catkeys.Winapi
 
 		/// <summary>
 		/// Gets dll module handle (Api.GetModuleHandle) or loads dll (Api.LoadLibrary), and returns unmanaged exported function address (Api.GetProcAddress).
+		/// See also: GetDelegate.
 		/// </summary>
 		/// <param name="dllName"></param>
 		/// <param name="funcName"></param>
-		/// <seealso cref="GetDelegate"/>
 		public static IntPtr GetProcAddress(string dllName, string funcName)
 		{
 			IntPtr hmod = GetModuleHandle(dllName);
@@ -1265,6 +1293,8 @@ namespace Catkeys.Winapi
 		[DllImport("kernel32.dll")]
 		public static extern bool SetThreadPriority(IntPtr hThread, int nPriority);
 
+		[DllImport("kernel32.dll")]
+		public static extern IntPtr LocalFree(void* hMem);
 
 
 
@@ -1362,6 +1392,39 @@ namespace Catkeys.Winapi
 		[DllImport("advapi32.dll")]
 		public static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
 
+		public struct ACL
+		{
+			public byte AclRevision;
+			public byte Sbz1;
+			public ushort AclSize;
+			public ushort AceCount;
+			public ushort Sbz2;
+		}
+
+		public struct SECURITY_DESCRIPTOR
+		{
+			public byte Revision;
+			public byte Sbz1;
+			public ushort Control;
+			public IntPtr Owner;
+			public IntPtr Group;
+			public ACL* Sacl;
+			public ACL* Dacl;
+		}
+
+		public struct SECURITY_ATTRIBUTES
+		{
+			public uint nLength;
+			public SECURITY_DESCRIPTOR* lpSecurityDescriptor;
+			public int bInheritHandle;
+		}
+
+		[DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW")]
+		public static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(string StringSecurityDescriptor, uint StringSDRevision, out SECURITY_DESCRIPTOR* SecurityDescriptor, uint* SecurityDescriptorSize=null);
+
+		//[DllImport("advapi32.dll", EntryPoint = "ConvertSecurityDescriptorToStringSecurityDescriptorW")]
+		//public static extern bool ConvertSecurityDescriptorToStringSecurityDescriptor(SECURITY_DESCRIPTOR* SecurityDescriptor, uint RequestedStringSDRevision, uint SecurityInformation, out char* StringSecurityDescriptor, out uint StringSecurityDescriptorLen);
+
 
 
 
@@ -1416,23 +1479,8 @@ namespace Catkeys.Winapi
 		[DllImport("shell32.dll")]
 		public static extern int SHParseDisplayName(string pszName, IntPtr pbc, out IntPtr pidl, uint sfgaoIn, uint* psfgaoOut);
 
-		[Flags]
-		public enum SIGDN :uint
-		{
-			SIGDN_NORMALDISPLAY,
-			SIGDN_PARENTRELATIVEPARSING = 0x80018001,
-			SIGDN_DESKTOPABSOLUTEPARSING = 0x80028000,
-			SIGDN_PARENTRELATIVEEDITING = 0x80031001,
-			SIGDN_DESKTOPABSOLUTEEDITING = 0x8004C000,
-			SIGDN_FILESYSPATH = 0x80058000,
-			SIGDN_URL = 0x80068000,
-			SIGDN_PARENTRELATIVEFORADDRESSBAR = 0x8007C001,
-			SIGDN_PARENTRELATIVE = 0x80080001,
-			SIGDN_PARENTRELATIVEFORUI = 0x80094001
-		}
-
 		[DllImport("shell32.dll", PreserveSig = true)]
-		public static extern int SHGetNameFromIDList(IntPtr pidl, SIGDN sigdnName, out string ppszName);
+		public static extern int SHGetNameFromIDList(IntPtr pidl, Native.SIGDN sigdnName, out string ppszName);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		public static extern int SHBindToParent(IntPtr pidl, [In] ref Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
@@ -1515,104 +1563,6 @@ namespace Catkeys.Winapi
 		[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
 		public static extern bool Shell_NotifyIcon(uint dwMessage, ref NOTIFYICONDATA lpData);
 
-		public enum SHSTOCKICONID
-		{
-			SIID_DOCNOASSOC,
-			SIID_DOCASSOC,
-			SIID_APPLICATION,
-			SIID_FOLDER,
-			SIID_FOLDEROPEN,
-			SIID_DRIVE525,
-			SIID_DRIVE35,
-			SIID_DRIVEREMOVE,
-			SIID_DRIVEFIXED,
-			SIID_DRIVENET,
-			SIID_DRIVENETDISABLED,
-			SIID_DRIVECD,
-			SIID_DRIVERAM,
-			SIID_WORLD,
-			SIID_SERVER = 15,
-			SIID_PRINTER,
-			SIID_MYNETWORK,
-			SIID_FIND = 22,
-			SIID_HELP,
-			SIID_SHARE = 28,
-			SIID_LINK,
-			SIID_SLOWFILE,
-			SIID_RECYCLER,
-			SIID_RECYCLERFULL,
-			SIID_MEDIACDAUDIO = 40,
-			SIID_LOCK = 47,
-			SIID_AUTOLIST = 49,
-			SIID_PRINTERNET,
-			SIID_SERVERSHARE,
-			SIID_PRINTERFAX,
-			SIID_PRINTERFAXNET,
-			SIID_PRINTERFILE,
-			SIID_STACK,
-			SIID_MEDIASVCD,
-			SIID_STUFFEDFOLDER,
-			SIID_DRIVEUNKNOWN,
-			SIID_DRIVEDVD,
-			SIID_MEDIADVD,
-			SIID_MEDIADVDRAM,
-			SIID_MEDIADVDRW,
-			SIID_MEDIADVDR,
-			SIID_MEDIADVDROM,
-			SIID_MEDIACDAUDIOPLUS,
-			SIID_MEDIACDRW,
-			SIID_MEDIACDR,
-			SIID_MEDIACDBURN,
-			SIID_MEDIABLANKCD,
-			SIID_MEDIACDROM,
-			SIID_AUDIOFILES,
-			SIID_IMAGEFILES,
-			SIID_VIDEOFILES,
-			SIID_MIXEDFILES,
-			SIID_FOLDERBACK,
-			SIID_FOLDERFRONT,
-			SIID_SHIELD,
-			SIID_WARNING,
-			SIID_INFO,
-			SIID_ERROR,
-			SIID_KEY,
-			SIID_SOFTWARE,
-			SIID_RENAME,
-			SIID_DELETE,
-			SIID_MEDIAAUDIODVD,
-			SIID_MEDIAMOVIEDVD,
-			SIID_MEDIAENHANCEDCD,
-			SIID_MEDIAENHANCEDDVD,
-			SIID_MEDIAHDDVD,
-			SIID_MEDIABLURAY,
-			SIID_MEDIAVCD,
-			SIID_MEDIADVDPLUSR,
-			SIID_MEDIADVDPLUSRW,
-			SIID_DESKTOPPC,
-			SIID_MOBILEPC,
-			SIID_USERS,
-			SIID_MEDIASMARTMEDIA,
-			SIID_MEDIACOMPACTFLASH,
-			SIID_DEVICECELLPHONE,
-			SIID_DEVICECAMERA,
-			SIID_DEVICEVIDEOCAMERA,
-			SIID_DEVICEAUDIOPLAYER,
-			SIID_NETWORKCONNECT,
-			SIID_INTERNET,
-			SIID_ZIPFILE,
-			SIID_SETTINGS,
-			SIID_DRIVEHDDVD = 132,
-			SIID_DRIVEBD,
-			SIID_MEDIAHDDVDROM,
-			SIID_MEDIAHDDVDR,
-			SIID_MEDIAHDDVDRAM,
-			SIID_MEDIABDROM,
-			SIID_MEDIABDR,
-			SIID_MEDIABDRE,
-			SIID_CLUSTEREDDRIVE,
-			SIID_MAX_ICONS = 181
-		}
-
 		//public struct SHSTOCKICONINFO
 		//{
 		//	public uint cbSize;
@@ -1633,7 +1583,7 @@ namespace Catkeys.Winapi
 		}
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		public static extern int SHGetStockIconInfo(SHSTOCKICONID siid, uint uFlags, ref SHSTOCKICONINFO psii);
+		public static extern int SHGetStockIconInfo(Native.SHSTOCKICONID siid, uint uFlags, ref SHSTOCKICONINFO psii);
 
 		[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
 		public static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, uint nIconSize);
@@ -1688,7 +1638,7 @@ namespace Catkeys.Winapi
 		//}
 
 		//[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
-		//public static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
+		//public static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, [Print] StringBuilder pszOut, ref uint pcchOut);
 
 
 
@@ -1801,8 +1751,7 @@ namespace Catkeys.Winapi
 			int R = 0, len = s == null ? 0 : s.Length - startIndex;
 			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
 			if(len != 0)
-				fixed (char* p = s)
-				{
+				fixed (char* p = s) {
 					char* t = p + startIndex, e = t;
 					R = strtoi(t, out e, numberBase);
 					len = (int)(e - t);
@@ -1829,8 +1778,7 @@ namespace Catkeys.Winapi
 			int len = s == null ? 0 : s.Length - startIndex;
 			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
 			if(len != 0)
-				fixed (char* p = s)
-				{
+				fixed (char* p = s) {
 					char* t = p + startIndex, e = t;
 					R = strtoui(t, out e, numberBase);
 					len = (int)(e - t);
@@ -1856,8 +1804,7 @@ namespace Catkeys.Winapi
 			int len = s == null ? 0 : s.Length - startIndex;
 			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
 			if(len != 0)
-				fixed (char* p = s)
-				{
+				fixed (char* p = s) {
 					char* t = p + startIndex, e = t;
 					R = strtoi64(t, out e, numberBase);
 					len = (int)(e - t);
