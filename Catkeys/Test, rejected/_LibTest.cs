@@ -90,10 +90,9 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// List all subdirectories inside the provided <paramref name="path"/>.
+		/// Gets full paths of subdirectories within the parent directory.
 		/// </summary>
-		/// <param name="path">The full file system path to the parent directory.</param>
-		/// <returns>A list of full paths to subdirectories within the parent directory.</returns>
+		/// <param name="path">Parent directory.</param>
 		static IEnumerable<string> _EnumerateDirectories(string path)
 		{
 			IEnumerable<string> directories = null;
@@ -117,11 +116,10 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// List all files matching a certain file system <paramref name="pattern"/> inside the parent directory.
+		/// Gets all files matching a certain wildcard pattern inside the parent directory.
 		/// </summary>
 		/// <param name="path">The directory containing files to match.</param>
 		/// <param name="pattern">The file system pattern (such as *.txt or *.*).</param>
-		/// <returns>A list of files inside the <paramref name="path"/> matching the <paramref name="pattern"/>.</returns>
 		/// <remarks>This is not a recursive search.</remarks>
 		static IEnumerable<string> _EnumerateFileSystemEntries(string path, string pattern)
 		{

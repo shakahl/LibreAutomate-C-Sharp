@@ -1105,7 +1105,7 @@ namespace Catkeys
 						if(Files.FileOrDirectoryExists(s)) _SetItemFileIcon(isBar, item, s);
 					}
 				}
-				catch(Exception e) { PrintDebug(e.Message); } //ToBitmap() may throw
+				catch(Exception e) { DebugPrint(e.Message); } //ToBitmap() may throw
 			}
 #endif
 			LastItem = item;

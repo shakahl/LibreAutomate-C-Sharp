@@ -51,9 +51,6 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public partial class TaskDialog
 	{
-		//This part of the class - low-level instance methods.
-		//Other parts (below in this file) - static methods that use an instance.
-
 		#region API
 		#region public API
 #pragma warning disable 1591 //missing XML documentation
@@ -263,7 +260,7 @@ namespace Catkeys
 		/// All parameters are the same as of <see cref="ShowEx"/>.
 		/// </summary>
 		public TaskDialog(
-			string text1, object text2 = null,
+			string text1, string text2 = null,
 			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0, int defaultButton = 0,
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
 			object ownerWindow = null, int x = 0, int y = 0, int timeoutS = 0,
@@ -318,10 +315,10 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
-		public void SetText(string text1, object text2 = null)
+		public void SetText(string text1, string text2 = null)
 		{
 			_c.pszMainInstruction = text1;
-			_c.pszContent = text2?.ToString();
+			_c.pszContent = text2;
 		}
 
 		/// <summary>
@@ -387,7 +384,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Adds radio (option) buttons.
-		/// To get selected radio button id after closing the dialog, use the RadioButton property of the TDResult object returned by Show() or Result.
+		/// To get selected radio button id after closing the dialog, use the RadioButton property of the TDResult variable returned by Show() or Result.
 		/// </summary>
 		/// <param name="buttons">A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List&lt;string&gt;.</param>
 		/// <param name="defaultId">Check the radio button that has this id. If omitted or 0, checks the first. If -1, does not check.</param>
@@ -400,7 +397,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Adds check box (if text is not null/empty).
-		/// To get check box state after closing the dialog, use the IsChecked property of the TDResult object returned by Show() or Result.
+		/// To get check box state after closing the dialog, use the IsChecked property of the TDResult variable returned by Show() or Result.
 		/// </summary>
 		public void SetCheckbox(string text, bool check = false)
 		{
@@ -489,19 +486,19 @@ namespace Catkeys
 
 		/// <summary>
 		/// Adds Edit or Combo control (if editType is not TDEdit.None (0)).
-		/// To get its text after closing the dialog, use the EditText property of the TDResult object returned by Show() or Result.
+		/// To get its text after closing the dialog, use the EditText property of the TDResult variable returned by Show() or Result.
 		/// </summary>
 		/// <param name="editType">Control type/style.</param>
-		/// <param name="initText">Initial text.</param>
+		/// <param name="editText">Initial text.</param>
 		/// <param name="comboItems">Combo box items, like "one|two|three". Also can be string[] or List&lt;string&gt;.</param>
 		/// <remarks>
 		/// The API TaskDialogIndirect does not have an option to add an edit control. This class itself creates it.
 		/// Does not support progress bar.
 		/// </remarks>
-		public void SetEditControl(TDEdit editType, string initText = null, StringList comboItems = null)
+		public void SetEditControl(TDEdit editType, string editText = null, StringList comboItems = null)
 		{
 			_editType = editType;
-			_editText = initText;
+			_editText = editText;
 			_editComboItems = comboItems;
 			//will set other props later, because need to override user-set props
 		}
@@ -512,7 +509,7 @@ namespace Catkeys
 		/// The actual width will depend on DPI (the Windows "text size" setting).
 		/// If less than default width, will be used default width.
 		/// </summary>
-		public int Width { set { _c.cxWidth = value/2; } }
+		public int Width { set { _c.cxWidth = value / 2; } }
 		//tested: TDIF_SIZE_TO_CONTENT can make wider, but not much. The flag is obsolete.
 
 		/// <summary>
@@ -894,8 +891,8 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets clicked button id and other results packed in a TDResult object.
-		/// It is the same object as the Show() return value.
+		/// Gets clicked button id and other results packed in a TDResult variable.
+		/// It is the same variable as the Show() return value.
 		/// If the result is still unavailable (eg the dialog still not closed):
 		///		If called from the same thread that called Show(), returns null.
 		///		If called from another thread, waits until the dialog is closed and the return value is available.
@@ -980,7 +977,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Used to send task dialog API messages, like <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c>
-		/// Before showing the dialog returns null. After closing the dialog the returned object is deactivated; its method calls are ignored.
+		/// Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
 		/// </summary>
 		public TDMessageSender Send { get; private set; }
 
@@ -1217,6 +1214,7 @@ namespace Catkeys
 			if(!_IsEdit) return;
 			FlagShowMarqueeProgressBar = true;
 			FlagShowProgressBar = false;
+			if(_c.pszContent == null) _c.pszContent = "";
 			if(_c.pszExpandedInformation != null && _editType == TDEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
 
 			//create font and calculate control height
@@ -1465,7 +1463,7 @@ namespace Catkeys
 	}
 
 	/// <summary>
-	/// TaskDialog result. Used with <see cref="TaskDialog.Show"/> and similar functions.
+	/// TaskDialog result. Used with <see cref="TaskDialog.ShowEx"/> and similar functions.
 	/// Contains multiple result values: clicked button, selected radio button, check box state, input text.
 	/// </summary>
 	public class TDResult
@@ -1541,13 +1539,13 @@ namespace Catkeys
 
 	#endregion global definitions
 
-	#region Show
-
 	public partial class TaskDialog
 	{
+		#region Show
+
 		/// <summary>
 		/// Shows task dialog.
-		/// Returns clicked button id and other results packed in a TDResult object (more info in Remarks).
+		/// Returns clicked button id and other results packed in a TDResult variable (more info in Remarks).
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
@@ -1576,15 +1574,15 @@ namespace Catkeys
 		/// </param>
 		/// <remarks>
 		/// Uses TaskDialog class instance, which uses Windows API function TaskDialogIndirect (you can find more info in MSDN).
-		/// The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
+		/// The returned TDResult variable has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
 		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog.ShowEx(...))</c> instead of <c>switch(TaskDialog.ShowEx(...).Button)</c>.
 		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.ShowEx("Text.", icon: TDIcon.Info, title: "Title")</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
 		/// If ownerWindow, x, y, flag 'owner center', flag 'raw x y' and screen are not specified, the dialog will be in the center of the primary screen or of the screen that contains another window of current process.
-		/// Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
+		/// <para>Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.</para>
 		/// </remarks>
 		public static TDResult ShowEx(
-			string text1, object text2 = null,
+			string text1, string text2 = null,
 			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0, int defaultButton = 0,
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
 			object ownerWindow = null, int x = 0, int y = 0, int timeoutS = 0,
@@ -1599,14 +1597,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Shows task dialog.
-		/// Returns clicked button id and other results packed in a TDResult object (more info in Remarks).
+		/// Returns clicked button id and name in a TDResult variable (more info in Remarks).
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="buttons"><see cref="TDButtons"/>. If omitted or 0, adds OK button.</param>
+		/// <param name="buttons"><see cref="TDButtons"/>.</param>
 		/// <param name="icon"><see cref="TDIcon"/>.</param>
 		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="defaultButton">Specifies which button id to return on Enter key. Can be one of common buttons (eg TDResult.Cancel) or a custom button id (eg 1).</param>
 		/// <param name="customButtons">
 		/// Adds buttons that have custom text and id.
 		/// A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List&lt;string&gt;.
@@ -1616,19 +1613,28 @@ namespace Catkeys
 		/// <param name="ownerWindow">Owner window or null. <see cref="SetOwnerWindow"/>.</param>
 		/// <remarks>
 		/// Calls <see cref="ShowEx"/>.
-		/// The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
+		/// The returned TDResult variable has these properties: clicked button id (eg TDResult.OK, 1 (custom button)) and name.
 		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog.Show(...))</c> instead of <c>switch(TaskDialog.Show(...).Button)</c>.
 		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.Show("Text.", icon: TDIcon.Info)</c>
 		/// If common and custom buttons are not specified, the dialog will have OK button.
-		/// Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
+		/// <para>Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.</para>
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// switch(TaskDialog.Show("Save changes?",	"info", customButtons:"1 Save|2 Don't Save|Cancel")) {
+		/// case 1: Print("save"); break;
+		/// case 2: Print("don't"); break;
+		/// default: Print("cancel"); break;
+		/// }
+		/// ]]></code>
+		/// </example>
 		public static TDResult Show(
-			string text1, object text2 = null,
-			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0, int defaultButton = 0,
+			string text1, string text2 = null,
+			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0,
 			StringList customButtons = null, object ownerWindow = null
 			)
 		{
-			return ShowEx(text1, text2, buttons, icon, flags, defaultButton, customButtons, ownerWindow: ownerWindow);
+			return ShowEx(text1, text2, buttons, icon, flags, 0, customButtons, ownerWindow: ownerWindow);
 		}
 
 		#endregion Show
@@ -1637,11 +1643,12 @@ namespace Catkeys
 
 		/// <summary>
 		/// Shows dialog with a text edit field, buttons OK and Cancel, optionally check box and custom buttons.
-		/// Returns results packed in a TDResult object: clicked button id (TDResult.OK or TDResult.Cancel), text and check box state.
+		/// Returns results packed in a TDResult variable: clicked button id (TDResult.OK or TDResult.Cancel), text and check box state.
 		/// </summary>
-		/// <param name="staticText">Read-only text above the edit field.</param>
-		/// <param name="initText">Initial edit field text. If editType == TDEdit.Combo, the first line sets edit field text, other lines add drop-down list items.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
 		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <param name="editText">Initial edit field text. If editType == TDEdit.Combo, the first line sets edit field text, other lines add drop-down list items.</param>
 		/// <param name="flags"><see cref="TDFlags"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To check, use "Text|true" or "Text|check" or "Text|checked".</param>
 		/// <param name="radioButtons">Adds radio (option) buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List&lt;string&gt;.</param>
@@ -1661,11 +1668,17 @@ namespace Catkeys
 		/// <c>e => { if(e.Button == TDResult.OK) { string _s=e.EditText; if(Empty(_s)) { TaskDialog.Show("Text cannot be empty.", ownerWindow: e.hwnd); e.DoNotCloseDialog = true; } } }</c>
 		/// </param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
-		/// <remarks>
-		/// Uses TaskDialog class instance, like <see cref="ShowEx"/>.
-		/// </remarks>
+		/// <seealso cref="ShowEx"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// var r = TaskDialog.ShowInputEx("Example", "Comments.", checkBox: "Check");
+		/// if(r.Button != TDResult.OK) return;
+		/// PrintList(r.EditText, r.IsChecked);
+		/// ]]></code>
+		/// </example>
 		public static TDResult ShowInputEx(
-			string staticText, string initText = null, TDEdit editType = TDEdit.Text,
+			string text1, string text2 = null,
+			TDEdit editType = TDEdit.Text, string editText = null,
 			TDFlags flags = 0, string checkBox = null, StringList radioButtons = null,
 			object ownerWindow = null, int x = 0, int y = 0, int timeoutS = 0,
 			string expandedText = null, string footerText = null, string title = null,
@@ -1673,10 +1686,10 @@ namespace Catkeys
 			Action<TDEventArgs> onLinkClick = null
 			)
 		{
-			var d = new TaskDialog(null, staticText, TDButtons.OKCancel, 0, flags, 0, customButtons, radioButtons,
+			var d = new TaskDialog(text1, text2, TDButtons.OKCancel, 0, flags, 0, customButtons, radioButtons,
 				checkBox, ownerWindow, x, y, timeoutS, expandedText, footerText, title, onLinkClick);
 
-			d.SetEditControl((editType == TDEdit.None) ? TDEdit.Text : editType, initText);
+			d.SetEditControl((editType == TDEdit.None) ? TDEdit.Text : editType, editText);
 			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
 
 			return d.ShowDialog();
@@ -1687,22 +1700,31 @@ namespace Catkeys
 		/// Returns true if clicked OK, false if Cancel.
 		/// </summary>
 		/// <param name="s">Variable that receives the text.</param>
-		/// <param name="staticText">Read-only text above the edit field.</param>
-		/// <param name="initText">Initial edit field text.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
 		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <param name="editText">Initial edit field text.</param>
 		/// <param name="flags"><see cref="TDFlags"/>.</param>
 		/// <param name="ownerWindow">Owner window or null. <see cref="SetOwnerWindow"/>.</param>
 		/// <remarks>
 		/// Calls <see cref="ShowInputEx"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// string s;
+		/// if(!TaskDialog.ShowInput(out s, "Example")) return;
+		/// Print(s);
+		/// ]]></code>
+		/// </example>
 		public static bool ShowInput(
 			out string s,
-			string staticText = null, string initText = null, TDEdit editType = TDEdit.Text,
+			string text1, string text2 = null,
+			TDEdit editType = TDEdit.Text, string editText = null,
 			TDFlags flags = 0, object ownerWindow = null
 			)
 		{
 			s = null;
-			TDResult r = ShowInputEx(staticText, initText, editType, flags, ownerWindow: ownerWindow);
+			TDResult r = ShowInputEx(text1, text2, editType, editText, flags, ownerWindow: ownerWindow);
 			if(r != TDResult.OK) return false;
 			s = r.EditText;
 			return true;
@@ -1713,37 +1735,42 @@ namespace Catkeys
 		/// Returns true if clicked OK, false if Cancel.
 		/// </summary>
 		/// <param name="i">Variable that receives the number.</param>
-		/// <param name="staticText">Read-only text above the edit field.</param>
-		/// <param name="initValue">Initial edit field text.</param>
-		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
+		/// <param name="editType">Edit field type.</param>
+		/// <param name="editText">Initial edit field text.</param>
 		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="ownerWindow">Owner window or null. <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="ownerWindow">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
 		/// <remarks>
 		/// Calls <see cref="ShowInputEx"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// int i;
+		/// if(!TaskDialog.ShowInput(out i, "Example")) return;
+		/// Print(i);
+		/// ]]></code>
+		/// </example>
 		public static bool ShowInput(
 			out int i,
-			string staticText = null, int initValue = 0, TDEdit editType = TDEdit.Text,
+			string text1, string text2 = null, TDEdit editType = TDEdit.Number, string editText = null,
 			TDFlags flags = 0, object ownerWindow = null
 			)
 		{
 			i = 0;
 			string s;
-			if(!ShowInput(out s, staticText, initValue.ToString(), editType, flags, ownerWindow)) return false;
+			if(!ShowInput(out s, text1, text2, editType, editText, flags, ownerWindow)) return false;
 			i = s.ToInt32_();
 			return true;
 		}
-	}
 
-	#endregion ShowInput
+		#endregion ShowInput
 
-	#region ShowList
+		#region ShowList
 
-	public partial class TaskDialog
-	{
 		/// <summary>
 		/// Shows task dialog with a list of command-link buttons.
-		/// Returns clicked button id and other results packed in a TDResult object (if assigned to an int variable or switch, it is button id). Returns 0 if closed with the X button or the clicked button has no id.
+		/// Returns clicked button id and other results packed in a TDResult variable (if assigned to an int variable or switch, it is button id). Returns 0 if closed with the X button or the clicked button has no id.
 		/// </summary>
 		/// <param name="list">List items (buttons). A list of strings "id text" separated by |, like "1 One|2 Two|3 Three|Cancel". Also can be string[] or List&lt;string&gt;. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel).</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
@@ -1763,7 +1790,7 @@ namespace Catkeys
 		/// Uses TaskDialog class instance, like <see cref="ShowEx"/>.
 		/// </remarks>
 		public static TDResult ShowListEx(
-			StringList list, string text1 = null, object text2 = null,
+			StringList list, string text1 = null, string text2 = null,
 			TDFlags flags = 0, int defaultButton = 0, string checkBox = null,
 			object ownerWindow = null, int x = 0, int y = 0, int timeoutS = 0,
 			string expandedText = null, string footerText = null, string title = null,
@@ -1792,23 +1819,20 @@ namespace Catkeys
 		/// <remarks>
 		/// Calls <see cref="ShowListEx"/>.
 		/// </remarks>
-		public static int ShowList(StringList list, string text1 = null, object text2 = null, TDFlags flags = 0, object ownerWindow = null)
+		public static int ShowList(StringList list, string text1 = null, string text2 = null, TDFlags flags = 0, object ownerWindow = null)
 		{
 			return ShowListEx(list, text1, text2, flags, ownerWindow: ownerWindow);
 		}
-	}
 
-	#endregion ShowList
+		#endregion ShowList
 
-	#region ShowProgress
+		#region ShowProgress
 #pragma warning disable 1573 //missing XML documentation for parameters
 
-	public partial class TaskDialog
-	{
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in new thread and returns without waiting until it is closed.
-		/// Returns TaskDialog object that can be used to control the dialog: set progress bar position, update text, close etc.
+		/// Returns TaskDialog variable that can be used to control the dialog: set progress bar position, update text, close etc.
 		/// Most parameters are the same as with <see cref="ShowEx"/>.
 		/// If no custom buttons specified, adds Cancel.
 		/// </summary>
@@ -1826,7 +1850,7 @@ namespace Catkeys
 		/// Uses TaskDialog class instance, like <see cref="ShowEx"/>.
 		/// </remarks>
 		public static TaskDialog ShowProgressEx(bool marquee,
-			string text1, object text2 = null, TDFlags flags = 0,
+			string text1, string text2 = null, TDFlags flags = 0,
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
 			object ownerWindow = null, int x = 0, int y = 0, int timeoutS = 0,
 			string expandedText = null, string footerText = null, string title = null,
@@ -1850,7 +1874,7 @@ namespace Catkeys
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns TaskDialog object that can be used to control the dialog: set progress bar position, close etc.
+		/// Returns TaskDialog variable that can be used to control the dialog: set progress bar position, close etc.
 		/// All parameters except marquee are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
@@ -1867,25 +1891,22 @@ namespace Catkeys
 		/// Calls <see cref="ShowProgressEx"/>.
 		/// </remarks>
 		public static TaskDialog ShowProgress(bool marquee,
-			string text1, object text2 = null, TDFlags flags = 0,
+			string text1, string text2 = null, TDFlags flags = 0,
 			StringList customButtons = null, object ownerWindow = null, int x = 0, int y = 0)
 		{
 			return ShowProgressEx(marquee, text1, text2, flags, customButtons, ownerWindow: ownerWindow, x: x, y: y);
 		}
-	}
 
 #pragma warning restore 1573 //missing XML documentation for parameters
-	#endregion ShowProgress
+		#endregion ShowProgress
 
-	#region ShowNoWait
+		#region ShowNoWait
 #pragma warning disable 1573 //missing XML documentation for parameters
 
-	public partial class TaskDialog
-	{
 		/// <summary>
 		/// Shows task dialog like <see cref="ShowEx"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns TaskDialog object that can be used to control the dialog, eg close.
+		/// Returns TaskDialog variable that can be used to control the dialog, eg close.
 		/// Most parameters are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
@@ -1901,7 +1922,7 @@ namespace Catkeys
 		/// </remarks>
 		public static TaskDialog ShowNoWaitEx(
 			Action<TDResult> whenClosed, bool closeOnExit,
-			string text1, object text2 = null,
+			string text1, string text2 = null,
 			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0, int defaultButton = 0,
 			StringList customButtons = null, StringList radioButtons = null, string checkBox = null,
 			object ownerWindow = null, int x = 0, int y = 0, int timeoutS = 0,
@@ -1918,8 +1939,8 @@ namespace Catkeys
 		/// <summary>
 		/// Shows task dialog like <see cref="Show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns TaskDialog object that can be used to control the dialog, eg close.
-		/// Most parameters are the same as with <see cref="Show"/>.
+		/// Returns TaskDialog variable that can be used to control the dialog, eg close.
+		/// Most parameters are the same as with Show().
 		/// </summary>
 		/// <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
 		/// <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
@@ -1934,15 +1955,15 @@ namespace Catkeys
 		/// </remarks>
 		public static TaskDialog ShowNoWait(
 			Action<TDResult> whenClosed, bool closeOnExit,
-			string text1, object text2 = null,
-			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0, int defaultButton = 0,
+			string text1, string text2 = null,
+			TDButtons buttons = 0, TDIcon icon = 0, TDFlags flags = 0,
 			StringList customButtons = null, object ownerWindow = null
 			)
 		{
-			return ShowNoWaitEx(whenClosed, closeOnExit, text1, text2, buttons, icon, flags, defaultButton, customButtons, ownerWindow: ownerWindow);
+			return ShowNoWaitEx(whenClosed, closeOnExit, text1, text2, buttons, icon, flags, 0, customButtons, ownerWindow: ownerWindow);
 		}
-	}
 
 #pragma warning restore 1573 //missing XML documentation for parameters
-	#endregion ShowNoWait
+		#endregion ShowNoWait
+	}
 }

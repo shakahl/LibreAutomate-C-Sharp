@@ -213,18 +213,6 @@ namespace Catkeys.Util
 	/// <summary>
 	/// Functions such as PrintMsg, available only in Debug config.
 	/// </summary>
-	/// <remarks>
-	/// <list type="table"> 
-	///   <listHeader> 
-	///     <term>Multi-column table header</term> 
-	///     <term>Add additional term or description elements to create new header columns</term>
-	///   </listHeader> 
-	///   <item> 
-	///     <description>Multi-column table</description> 
-	///     <description>Add additional term or description elements to create new columns</description>
-	///   </item>
-	/// </list>
-	/// </remarks>
 	[DebuggerStepThrough]
 	public static class Debug_
 	{

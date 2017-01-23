@@ -974,7 +974,7 @@ namespace Catkeys
 		/// </summary>
 		static void _AllowActivate_SendKey(bool debugOut)
 		{
-			if(debugOut) PrintDebug("AllowActivate: need key");
+			if(debugOut) DebugPrint("AllowActivate: need key");
 
 			var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
 			Api.SendInputKey(ref x);
@@ -987,7 +987,7 @@ namespace Catkeys
 		/// </summary>
 		static void _AllowActivate_MinRes()
 		{
-			PrintDebug("AllowActivate: need min/res");
+			DebugPrint("AllowActivate: need min/res");
 
 			Wnd t = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW, "#32770", null, Api.WS_POPUP | Api.WS_MINIMIZE | Api.WS_VISIBLE, 0, 0, 0, 0, Wnd0, 0, Zero, 0);
 			//info: When restoring, the window must be visible, or may not work.

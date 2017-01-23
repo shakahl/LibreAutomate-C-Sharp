@@ -108,7 +108,7 @@ namespace Catkeys
 			//var perf = new Perf.Inst(true);
 			Icon ic = Icon.FromHandle(hi);
 			Image im = null;
-			try { im = ic.ToBitmap(); } catch(Exception e) { PrintDebug(e.Message); }
+			try { im = ic.ToBitmap(); } catch(Exception e) { DebugPrint(e.Message); }
 			ic.Dispose();
 			Api.DestroyIcon(hi);
 			//perf.NW();
@@ -355,7 +355,7 @@ namespace Catkeys
 					if(il != Zero) index = x.iIcon;
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}
-				catch { PrintDebug("exception"); }
+				catch { DebugPrint("exception"); }
 			}
 			if(index < 0) return Zero;
 
@@ -372,7 +372,7 @@ namespace Catkeys
 					}
 				}
 			}
-			catch(Exception e) { PrintDebug(e.Message); }
+			catch(Exception e) { DebugPrint(e.Message); }
 			//finally { if(il != Zero) Marshal.Release(il); }
 			return R;
 		}

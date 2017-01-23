@@ -4425,8 +4425,58 @@ A,""B """"Q"""" Z"",C
 	static void TestTaskDialog2()
 	{
 
-		TaskDialog.Show("text", icon: TDIcon.App);
+		//TaskDialog.Show("text", icon: TDIcon.App);
+		//switch(TaskDialog.Show("text", TDButtons.OKCancel)) {
+		//case TDResult.OK: Print("ok"); break;
+		//default: Print("cancel"); break;
+		//}
 
+		//switch(TaskDialog.Show("Save changes?",	"info", customButtons:"1 Save|2 Don't Save|Cancel")) {
+		//case 1: Print("save"); break;
+		//case 2: Print("don't"); break;
+		//default: Print("cancel"); break;
+		//}
+
+		//TaskDialog.Show("test", null, TDButtons.OKCancel | TDButtons.YesNo | TDButtons.Retry | TDButtons.Close);
+		////TaskDialog.Show("test", customButtons:"1 Gerai|2 Kartoti");
+
+		//switch(TaskDialog.Show("test", null, TDButtons.OKCancel)) {
+		//case TDResult.OK: break;
+		//}
+
+		//switch(TaskDialog.Show("test", null, "1 OK|2 Cancel")) {
+		//case 1: break;
+		//}
+
+		//DebugDialog("aaa");
+
+		//switch(TaskDialog.Show("Header|Comment", "1 OK|2 Cancel")) {
+		//switch(TaskDialog.Show("Header|Comment", "1 O|2 C|3 X")) {
+		////switch(TaskDialog.Show("Header|Comment", "-1 OK|-2 Cancel")) {
+		//case 1: Print(1); break;
+		//case 2: Print(2); break;
+		//}
+		//TDButtons.
+
+		//if(!TaskDialog.Debug("text", TDButtons.OKCancel)) return;
+		//Print("OK");
+
+		//TaskDialog.ShowInputEx("Big text.", "Small text bbbbhhhh gggg ccc.");
+		//TaskDialog.ShowInputEx("Big text.");
+		//TaskDialog.ShowInputEx("Big text.", editType:TDEdit.Multiline);
+		//TaskDialog.ShowInputEx("Big text.", "Small jjj.", editType:TDEdit.Multiline);
+
+		//string s;
+		//if(!TaskDialog.ShowInput(out s, "Example")) return;
+		//Print(s);
+
+		//int i;
+		//if(!TaskDialog.ShowInput(out i, "Example.")) return;
+		//Print(i);
+
+		//var r = TaskDialog.ShowInputEx("Header.", "Comments.", checkBox: "Check");
+		//if(r.Button != TDResult.OK) return;
+		//PrintList(r.EditText, r.IsChecked);
 
 
 		//var d = new OpenFileDialog();
@@ -4582,7 +4632,7 @@ A,""B """"Q"""" Z"",C
 		//Debug.Assert(s.LikeEx_(p) == r);
 	}
 
-	static bool LikeEx_(this string t, string pattern, bool ignoreCase = false)
+	static bool TestLikeEx_(this string t, string pattern, bool ignoreCase = false)
 	{
 		return Operators.LikeString(t, pattern, ignoreCase ? CompareMethod.Text : CompareMethod.Binary);
 	}
@@ -4727,8 +4777,8 @@ A,""B """"Q"""" Z"",C
 		var a5 = new Action(() => { b5 = s.Like_(rx); });
 		var a6 = new Action(() => { b6 = s.Equals_(rx); });
 		var a7 = new Action(() => { b6 = s.Equals_(rx, true); });
-		var a8 = new Action(() => { b7 = s.LikeEx_(rx); });
-		var a9 = new Action(() => { b8 = s.LikeEx_(rx, true); });
+		var a8 = new Action(() => { b7 = s.TestLikeEx_(rx); });
+		var a9 = new Action(() => { b8 = s.TestLikeEx_(rx, true); });
 		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7, a8, a9);
 
 		PrintList(b1, b2, b3, b4, b5, b6, b7, b8);
@@ -4813,7 +4863,7 @@ A,""B """"Q"""" Z"",C
 		//Wnd w = Wnd.Find("qm message", f: e => e.HasChild("two"));
 		//Wnd w = Wnd.AllWindows
 
-		var s ="Help - Sandcastle Help File Builder";
+		var s = "Help - Sandcastle Help File Builder";
 		//Wildex x = "**c|*sandcastle*";
 		//Print(x.Match(s));
 		//Print(s.Like_("*sandcastle*"));
@@ -4858,34 +4908,19 @@ A,""B """"Q"""" Z"",C
 	{
 		Output.Clear();
 		WaitMS(100);
-
-		//TestStructSpeed();
-		//return;
-
-		//try {
-		//	string s1 = null, s2 = null;
-		//	Print(s1 == s2); //true
-		//	//Print(s1.Equals(s2)); //exc
-		//	Print("".Equals(s2)); //false
-		//						  //Print(s1.Equals_(s2));
-		//						  //s1 = "kk";
-		//						  //Print(s1.Count());
-
-		//	//Print(s1.ToFloat_());
-		//	//Print(s1.RegexIs_(""));
-		//	Print(string.Equals(s1, ""));
-		//}
-		//catch(Exception e) { Print(e.Message); }
-		//return;
-
 		try {
-			TestWndWithWildex();
+			TestTaskDialog2();
+
 
 		}
 		catch(Exception e) { Print(e.Message); }
+
+		//TestWndWithWildex();
 		//TestWildex();
 		//TestWildcard();
-		//TestRegexEtcSpeed();
+
+
+
 
 		/*
 
@@ -4929,143 +4964,6 @@ A,""B """"Q"""" Z"",C
 		//l.TaskDialog.Show("f");
 		//l.Util.Debug_.PrintLoadedAssemblies();
 		//Print(l.TDIcon.Info);
-
-
-
-
-
-
-
-
-		//Print(Folders.CDDrive());
-
-		//string s = null, s2=null;
-		//var a1 = new Action(() => { s = Path.GetTempPath(); });
-		//var a2 = new Action(() => { Files.DirectoryExists(s); });
-		//var a3 = new Action(() => { Directory.Exists(s); });
-		//var a4 = new Action(() => { s2= AppDomain.CurrentDomain.BaseDirectory; });
-		//var a5 = new Action(() => { s2 = Folders.Documents; });
-		//var a6 = new Action(() => { s2 = Folders.ThisAppDocuments; });
-		//Perf.ExecuteMulti(5, 10, a1, a2, a3, a4, a5, a6);
-
-
-		//TestLnkShortcut2();
-
-		//TestCsvHelper();
-		//TestCsvNET();
-		//TestCsvCatkeys();
-		//TestCatkeysListFileCSV(); //~8 ms
-		//TestCatkeysListFileXML(); //~30 ms
-		//TestCatkeysListFileJSON(); //~110 ms
-
-		//var a1 = new Action(() => { TestCsvHelper(); });
-		////var a2 = new Action(() => { TestCsvNET(); });
-		//var a2 = new Action(() => { TestCsvCatkeys(); });
-		//Perf.ExecuteMulti(5, 1000, a1, a2);
-
-
-		//Print(Util.Dpi.BaseDPI);
-
-		//Graphics g =Graphics.FromHwnd(Zero);
-		//Print(g.DpiX);
-
-		//TaskDialog.Show("");
-
-		//TestSharedMemory();
-		//TestSqlite();
-		#region call_old_test_functions
-		//TestCorrectFileName();
-		//TestBackThreadEnd();
-		//TestIcons();
-		//TestWindowClassInterDomain();
-		//TestImapX();
-		//TestPerfIncremental();
-		//TestGetIconsOfAllFileTypes();
-		//TestPidlToString();
-		//TestSynchronizationContext1();
-		//TestSynchronizationContext2();
-		//TestSynchronizationContext3();
-		//TestSearchPath();
-		//TestThreadPoolSTA();
-		//TestExpandPath();
-		//TestAssoc();
-		//LibTest.TestLibMemory();
-		//TestInterDomain();
-		//LibTest.TestLockInternedString();
-		//TestThreadWaitInit();
-		//TestNativeThread();
-		//TestAsync();
-		//TestTimerThread();
-		//TestTimer();
-		//TestNewPerf();
-		//TestHash();
-		//PrintFunc(); if((Time.Milliseconds&0x4)==0) TestStaticInit1(); else TestStaticInit2();
-		//TestWndGetGUIThreadInfo();
-		//TestWndFindRaw();
-		//TestWndNextMainWindow();
-		//TestTaskDialogActivationEtc();
-		//TestWndIsUacDenied();
-		//TestWndZorder();
-		//TestWndMoveMisc();
-		//TestWndRect();
-		//TestWndControlCast();
-		//PrintList(Calc.AngleDegrees(1, 1), Calc.AngleDegrees(0, 1), Calc.AngleDegrees(1, 0));
-		//TestWndStoreApp();
-		//TestWndBorder();
-		//TestWndSetParent();
-		//TestWndIsAbove();
-		//TestWndMapPoints();
-		//TestWndGetPropList();
-		//TestIsGhost();
-		//TestWndRegisterClass();
-		//TestWndMisc();
-		//TestStringMisc();
-		//TestCoord();
-		//TestCoord(1, 2);
-		//TestCoord(1.1f, 2.2f);
-		//TestCoord(3.3, 4.4);
-		//TestFileIcon();
-		//TestWndGetIcon();
-		//TestOutAnyInterface();
-		//TestExceptions();
-		//TestStrToI2();
-		//TestStringFold();
-		//TestWndTransparency();
-		//TestWndRegistrySaveRestore();
-		//TestRegistry();
-		//TestWndShowHide();
-		//TestWndArrange();
-		//TestWndClose();
-		//TestWndtaskbarButton();
-		//TestWindowDimensions();
-		//TestThreadError();
-		//TestWndMinMaxRes();
-		//TestWndActivateFocus();
-		//TestArrayAndList(new string[] { "one", "two" });
-		//TestArrayAndList(new List<string> { "three", "four", "five" });
-		//TestWndFindAll();
-		//TestWndAll();
-		//TestStringPlusConcatInterpolation();
-		//TestMemory();
-		//TestChildFromXY();
-		//TestWndFromXY();
-		//TestWndFind();
-		//TestWildNot();
-		//TestDotNetControls();
-		//TestProcessMemory();
-		//TestRegexSpeed();
-		//TestStringEmpty("df");
-		//TestWildString();
-		//TestProcessUacInfo();
-		//TestProcesses();
-		//TestSerialization();
-		//TestCsv();
-		//TestCsvSerialization();
-		//TestTaskDialog();
-		//TestCurrentCulture();
-		//try { TestFolders(); } catch(Exception e) { Print(e.Message); }
-
-		#endregion
 
 	}
 }

@@ -85,13 +85,26 @@ namespace Catkeys
 		public static void PrintHex(object value) { Output.WriteHex(value); }
 
 		/// <summary>
-		/// Print() that works only in Debug config, ie if DEBUG is defined.
-		/// In Release config the function call statement is removed, and arguments not evalueted.
+		/// Print() that works only in Debug configuration, ie if DEBUG is defined.
+		/// In Release configuration the function call statement is removed, and arguments not evalueted.
+		/// The 3 optional parameters are not used.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintDebug(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		public static void DebugPrint(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
 			Output.Write($"Debug: {cmn} ({Path.GetFileName(cp)}:{cln}):  {value}");
+		}
+
+		/// <summary>
+		/// Shows simplest task dialog that works only in Debug configuration, ie if DEBUG is defined.
+		/// In Release configuration the function call statement is removed, and arguments not evalueted.
+		/// The 3 optional parameters are not used.
+		/// Calls <see cref="TaskDialog.Show"/>.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void DebugDialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		{
+			TaskDialog.ShowEx("Debug", text?.ToString(), flags:TDFlags.ExpandDown, expandedText: $"{cmn} ({Path.GetFileName(cp)}:{cln})");
 		}
 
 		/// <summary>

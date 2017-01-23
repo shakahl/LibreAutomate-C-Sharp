@@ -1441,10 +1441,19 @@
             Alias of <see cref="M:Catkeys.Output.WriteHex(System.Object)"/>.
             </summary>
         </member>
-        <member name="M:Catkeys.NoClass.PrintDebug(System.Object,System.String,System.Int32,System.String)">
+        <member name="M:Catkeys.NoClass.DebugPrint(System.Object,System.String,System.Int32,System.String)">
             <summary>
-            Print() that works only in Debug config, ie if DEBUG is defined.
-            In Release config the function call statement is removed, and arguments not evalueted.
+            Print() that works only in Debug configuration, ie if DEBUG is defined.
+            In Release configuration the function call statement is removed, and arguments not evalueted.
+            The 3 optional parameters are not used.
+            </summary>
+        </member>
+        <member name="M:Catkeys.NoClass.DebugDialog(System.Object,System.String,System.Int32,System.String)">
+            <summary>
+            Shows simplest task dialog that works only in Debug configuration, ie if DEBUG is defined.
+            In Release configuration the function call statement is removed, and arguments not evalueted.
+            The 3 optional parameters are not used.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.NoClass.FunctionName(System.String)">
@@ -2277,7 +2286,7 @@
             <item>r - regular expression. See <see cref="T:System.Text.RegularExpressions.Regex"/>.</item>
             <item>c - case-sensitive. Example: <c>"**rc|regex, match case"</c>. Info: case-sensitive regular expression is about 4 times faster.</item>
             <item>n - must not match.</item>
-            <item>m - multi-part. Use separator []. Example: <c>"**m|findThis[]orThis[]**r|orThisRegex[]**n|butNotThis[]**nr|andNotThisRegex".</c></item>
+            <item>m - multi-part. Use separator []. Example: <c>"**m|findThis[]orThis[]**r|orThisRegex[]**n|butNotThis[]**nr|andNotThisRegex".</c> Example 2: <c>"**mn|notThis[]andNotThis"</c>.</item>
             </list>
             <para>
             Pattern "" matches only "". Pattern null usually means 'match any'.
@@ -2352,7 +2361,7 @@
             <summary>Regular expression (option r). Match() calls <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.</summary>
         </member>
         <member name="F:Catkeys.Wildex.WildType.Multi">
-            <summary>Multiple parts (option m). Match() calls Match() for each part (see <see cref="P:Catkeys.Wildex.MultiArray"/>) and returns true if some non-[n] part returns true and all [n] parts return true.</summary>
+            <summary>Multiple parts (option m). Match() calls Match() for each part (see <see cref="P:Catkeys.Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).</summary>
         </member>
         <member name="P:Catkeys.Wildex.Text">
             <summary>
@@ -2401,7 +2410,7 @@
             Standard dialogs to show information to the user or get input from the user.
             Uses Windows API function TaskDialogIndirect. You can find more info in MSDN.
             You can use static functions (less code) or create class instances (more options).
-            More info: <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            More info: <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
             <example>
             This example creates a class instance, sets properties, shows dialog and uses events.
@@ -2494,10 +2503,10 @@
         <member name="M:Catkeys.TaskDialog.#ctor">
             
         </member>
-        <member name="M:Catkeys.TaskDialog.#ctor(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.#ctor(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
             Initializes a new <see cref="T:Catkeys.TaskDialog"/> instance and sets commonly used properties.
-            All parameters are the same as of <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            All parameters are the same as of <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
         </member>
         <member name="M:Catkeys.TaskDialog.SetTitleBarText(System.String)">
@@ -2506,7 +2515,7 @@
             If you don't call this method or text is null or "", the dialog uses ScriptOptions.DefaultTitle (default is appdomain name).
             </summary>
         </member>
-        <member name="M:Catkeys.TaskDialog.SetText(System.String,System.Object)">
+        <member name="M:Catkeys.TaskDialog.SetText(System.String,System.String)">
             <summary>
             Sets text.
             </summary>
@@ -2549,7 +2558,7 @@
         <member name="M:Catkeys.TaskDialog.SetRadioButtons(Catkeys.StringList,System.Int32)">
             <summary>
             Adds radio (option) buttons.
-            To get selected radio button id after closing the dialog, use the RadioButton property of the TDResult object returned by Show() or Result.
+            To get selected radio button id after closing the dialog, use the RadioButton property of the TDResult variable returned by Show() or Result.
             </summary>
             <param name="buttons">A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List&lt;string&gt;.</param>
             <param name="defaultId">Check the radio button that has this id. If omitted or 0, checks the first. If -1, does not check.</param>
@@ -2557,7 +2566,7 @@
         <member name="M:Catkeys.TaskDialog.SetCheckbox(System.String,System.Boolean)">
             <summary>
             Adds check box (if text is not null/empty).
-            To get check box state after closing the dialog, use the IsChecked property of the TDResult object returned by Show() or Result.
+            To get check box state after closing the dialog, use the IsChecked property of the TDResult variable returned by Show() or Result.
             </summary>
         </member>
         <member name="M:Catkeys.TaskDialog.SetExpandedText(System.String,System.Boolean)">
@@ -2598,10 +2607,10 @@
         <member name="M:Catkeys.TaskDialog.SetEditControl(Catkeys.TDEdit,System.String,Catkeys.StringList)">
             <summary>
             Adds Edit or Combo control (if editType is not TDEdit.None (0)).
-            To get its text after closing the dialog, use the EditText property of the TDResult object returned by Show() or Result.
+            To get its text after closing the dialog, use the EditText property of the TDResult variable returned by Show() or Result.
             </summary>
             <param name="editType">Control type/style.</param>
-            <param name="initText">Initial text.</param>
+            <param name="editText">Initial text.</param>
             <param name="comboItems">Combo box items, like "one|two|three". Also can be string[] or List&lt;string&gt;.</param>
             <remarks>
             The API TaskDialogIndirect does not have an option to add an edit control. This class itself creates it.
@@ -2688,7 +2697,7 @@
         <member name="M:Catkeys.TaskDialog.ShowDialog">
             <summary>
             Shows the dialog.
-            The return value is the same as of <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            The return value is the same as of <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             Call this method after setting text and other properties.
             </summary>
         </member>
@@ -2785,8 +2794,8 @@
         </member>
         <member name="P:Catkeys.TaskDialog.Result">
             <summary>
-            Gets clicked button id and other results packed in a TDResult object.
-            It is the same object as the Show() return value.
+            Gets clicked button id and other results packed in a TDResult variable.
+            It is the same variable as the Show() return value.
             If the result is still unavailable (eg the dialog still not closed):
             	If called from the same thread that called Show(), returns null.
             	If called from another thread, waits until the dialog is closed and the return value is available.
@@ -2819,7 +2828,7 @@
         <member name="P:Catkeys.TaskDialog.Send">
             <summary>
             Used to send task dialog API messages, like <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c>
-            Before showing the dialog returns null. After closing the dialog the returned object is deactivated; its method calls are ignored.
+            Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
             </summary>
         </member>
         <member name="T:Catkeys.TaskDialog.TDMessageSender">
@@ -2889,10 +2898,10 @@
             Gets edit control handle as Wnd.
             </summary>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
             Shows task dialog.
-            Returns clicked button id and other results packed in a TDResult object (more info in Remarks).
+            Returns clicked button id and other results packed in a TDResult variable (more info in Remarks).
             </summary>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
@@ -2921,25 +2930,24 @@
             </param>
             <remarks>
             Uses TaskDialog class instance, which uses Windows API function TaskDialogIndirect (you can find more info in MSDN).
-            The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
+            The returned TDResult variable has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
             Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog.ShowEx(...))</c> instead of <c>switch(TaskDialog.ShowEx(...).Button)</c>.
             Tip: For optional parameters use named arguments. Example: <c>TaskDialog.ShowEx("Text.", icon: TDIcon.Info, title: "Title")</c>
             If common and custom buttons are not specified, the dialog will have OK button.
             If ownerWindow, x, y, flag 'owner center', flag 'raw x y' and screen are not specified, the dialog will be in the center of the primary screen or of the screen that contains another window of current process.
-            Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
+            <para>Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.</para>
             </remarks>
         </member>
-        <member name="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)">
+        <member name="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)">
             <summary>
             Shows task dialog.
-            Returns clicked button id and other results packed in a TDResult object (more info in Remarks).
+            Returns clicked button id and name in a TDResult variable (more info in Remarks).
             </summary>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
-            <param name="buttons"><see cref="T:Catkeys.TDButtons"/>. If omitted or 0, adds OK button.</param>
+            <param name="buttons"><see cref="T:Catkeys.TDButtons"/>.</param>
             <param name="icon"><see cref="T:Catkeys.TDIcon"/>.</param>
             <param name="flags"><see cref="T:Catkeys.TDFlags"/>.</param>
-            <param name="defaultButton">Specifies which button id to return on Enter key. Can be one of common buttons (eg TDResult.Cancel) or a custom button id (eg 1).</param>
             <param name="customButtons">
             Adds buttons that have custom text and id.
             A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List&lt;string&gt;.
@@ -2948,22 +2956,32 @@
             </param>
             <param name="ownerWindow">Owner window or null. <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(System.Object,System.Boolean,System.Boolean)"/>.</param>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
-            The returned TDResult object has these properties: clicked button id (eg TDResult.OK, 1 (custom button), TDResult.Timeout), name, selected radio button id, check box state.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            The returned TDResult variable has these properties: clicked button id (eg TDResult.OK, 1 (custom button)) and name.
             Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog.Show(...))</c> instead of <c>switch(TaskDialog.Show(...).Button)</c>.
             Tip: For optional parameters use named arguments. Example: <c>TaskDialog.Show("Text.", icon: TDIcon.Info)</c>
             If common and custom buttons are not specified, the dialog will have OK button.
-            Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.
+            <para>Note: the program must have manifest that tells to use comctl32.dll version 6 or later. C# projects by default use old dll, and this function fails.</para>
             </remarks>
+            <example>
+            <code><![CDATA[
+            switch(TaskDialog.Show("Save changes?",	"info", customButtons:"1 Save|2 Don't Save|Cancel")) {
+            case 1: Print("save"); break;
+            case 2: Print("don't"); break;
+            default: Print("cancel"); break;
+            }
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
             Shows dialog with a text edit field, buttons OK and Cancel, optionally check box and custom buttons.
-            Returns results packed in a TDResult object: clicked button id (TDResult.OK or TDResult.Cancel), text and check box state.
+            Returns results packed in a TDResult variable: clicked button id (TDResult.OK or TDResult.Cancel), text and check box state.
             </summary>
-            <param name="staticText">Read-only text above the edit field.</param>
-            <param name="initText">Initial edit field text. If editType == TDEdit.Combo, the first line sets edit field text, other lines add drop-down list items.</param>
+            <param name="text1">Main instruction. Bigger font.</param>
+            <param name="text2">Read-only text below main instruction, above the edit field.</param>
             <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+            <param name="editText">Initial edit field text. If editType == TDEdit.Combo, the first line sets edit field text, other lines add drop-down list items.</param>
             <param name="flags"><see cref="T:Catkeys.TDFlags"/>.</param>
             <param name="checkBox">If not empty, shows a check box with this text. To check, use "Text|true" or "Text|check" or "Text|checked".</param>
             <param name="radioButtons">Adds radio (option) buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three". Also can be string[] or List&lt;string&gt;.</param>
@@ -2982,45 +3000,66 @@
             Or on OK click it can verify edit control text and don't allow to close the dialog if the text is invalid. Example (lambda):
             <c>e => { if(e.Button == TDResult.OK) { string _s=e.EditText; if(Empty(_s)) { TaskDialog.Show("Text cannot be empty.", ownerWindow: e.hwnd); e.DoNotCloseDialog = true; } } }</c>
             </param>
-            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.</param>
-            <remarks>
-            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
-            </remarks>
+            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.</param>
+            <seealso cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>
+            <example>
+            <code><![CDATA[
+            var r = TaskDialog.ShowInputEx("Example", "Comments.", checkBox: "Check");
+            if(r.Button != TDResult.OK) return;
+            PrintList(r.EditText, r.IsChecked);
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowInput(System.String@,System.String,System.String,Catkeys.TDEdit,Catkeys.TDFlags,System.Object)">
+        <member name="M:Catkeys.TaskDialog.ShowInput(System.String@,System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.Object)">
             <summary>
             Shows dialog with a text edit field, and gets that text.
             Returns true if clicked OK, false if Cancel.
             </summary>
             <param name="s">Variable that receives the text.</param>
-            <param name="staticText">Read-only text above the edit field.</param>
-            <param name="initText">Initial edit field text.</param>
+            <param name="text1">Main instruction. Bigger font.</param>
+            <param name="text2">Read-only text below main instruction, above the edit field.</param>
             <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+            <param name="editText">Initial edit field text.</param>
             <param name="flags"><see cref="T:Catkeys.TDFlags"/>.</param>
             <param name="ownerWindow">Owner window or null. <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(System.Object,System.Boolean,System.Boolean)"/>.</param>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
+            <example>
+            <code><![CDATA[
+            string s;
+            if(!TaskDialog.ShowInput(out s, "Example")) return;
+            Print(s);
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowInput(System.Int32@,System.String,System.Int32,Catkeys.TDEdit,Catkeys.TDFlags,System.Object)">
+        <member name="M:Catkeys.TaskDialog.ShowInput(System.Int32@,System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.Object)">
             <summary>
             Shows dialog with a numeric text edit field, and gets that number.
             Returns true if clicked OK, false if Cancel.
             </summary>
             <param name="i">Variable that receives the number.</param>
-            <param name="staticText">Read-only text above the edit field.</param>
-            <param name="initValue">Initial edit field text.</param>
-            <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+            <param name="text1">Main instruction. Bigger font.</param>
+            <param name="text2">Read-only text below main instruction, above the edit field.</param>
+            <param name="editType">Edit field type.</param>
+            <param name="editText">Initial edit field text.</param>
             <param name="flags"><see cref="T:Catkeys.TDFlags"/>.</param>
-            <param name="ownerWindow">Owner window or null. <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(System.Object,System.Boolean,System.Boolean)"/>.</param>
+            <param name="ownerWindow">Owner window or null. See <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(System.Object,System.Boolean,System.Boolean)"/>.</param>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
+            <example>
+            <code><![CDATA[
+            int i;
+            if(!TaskDialog.ShowInput(out i, "Example")) return;
+            Print(i);
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowListEx(Catkeys.StringList,System.String,System.Object,Catkeys.TDFlags,System.Int32,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.ShowListEx(Catkeys.StringList,System.String,System.String,Catkeys.TDFlags,System.Int32,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
             Shows task dialog with a list of command-link buttons.
-            Returns clicked button id and other results packed in a TDResult object (if assigned to an int variable or switch, it is button id). Returns 0 if closed with the X button or the clicked button has no id.
+            Returns clicked button id and other results packed in a TDResult variable (if assigned to an int variable or switch, it is button id). Returns 0 if closed with the X button or the clicked button has no id.
             </summary>
             <param name="list">List items (buttons). A list of strings "id text" separated by |, like "1 One|2 Two|3 Three|Cancel". Also can be string[] or List&lt;string&gt;. You can also use common button ids, which are negative, for example id -2 (TDResult.Cancel).</param>
             <param name="text1">Main instruction. Bigger font.</param>
@@ -3035,12 +3074,12 @@
             <param name="expandedText">Text that the user can show and hide.</param>
             <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
             <param name="title">Title bar text. If omitted, null or "", uses ScriptOptions.DefaultTitle (default is appdomain name).</param>
-            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.</param>
+            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.</param>
             <remarks>
-            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowList(Catkeys.StringList,System.String,System.Object,Catkeys.TDFlags,System.Object)">
+        <member name="M:Catkeys.TaskDialog.ShowList(Catkeys.StringList,System.String,System.String,Catkeys.TDFlags,System.Object)">
             <summary>
             Shows dialog with a list of command-link buttons.
             Returns clicked button id. Returns 0 if the window closed with the X button or the clicked button has no id.
@@ -3051,15 +3090,15 @@
             <param name="flags"><see cref="T:Catkeys.TDFlags"/>.</param>
             <param name="ownerWindow">Owner window or null. <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(System.Object,System.Boolean,System.Boolean)"/>.</param>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowListEx(Catkeys.StringList,System.String,System.Object,Catkeys.TDFlags,System.Int32,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowListEx(Catkeys.StringList,System.String,System.String,Catkeys.TDFlags,System.Int32,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowProgressEx(System.Boolean,System.String,System.Object,Catkeys.TDFlags,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.ShowProgressEx(System.Boolean,System.String,System.String,Catkeys.TDFlags,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
             Shows dialog with progress bar.
             Creates dialog in new thread and returns without waiting until it is closed.
-            Returns TaskDialog object that can be used to control the dialog: set progress bar position, update text, close etc.
-            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Returns TaskDialog variable that can be used to control the dialog: set progress bar position, update text, close etc.
+            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             If no custom buttons specified, adds Cancel.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
@@ -3073,15 +3112,15 @@
             pd.Send.Close();
             </code></example>
             <remarks>
-            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowProgress(System.Boolean,System.String,System.Object,Catkeys.TDFlags,Catkeys.StringList,System.Object,System.Int32,System.Int32)">
+        <member name="M:Catkeys.TaskDialog.ShowProgress(System.Boolean,System.String,System.String,Catkeys.TDFlags,Catkeys.StringList,System.Object,System.Int32,System.Int32)">
             <summary>
             Shows dialog with progress bar.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns TaskDialog object that can be used to control the dialog: set progress bar position, close etc.
-            All parameters except marquee are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Returns TaskDialog variable that can be used to control the dialog: set progress bar position, close etc.
+            All parameters except marquee are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
             <example><code>
@@ -3094,15 +3133,15 @@
             pd.Send.Close();
             </code></example>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowProgressEx(System.Boolean,System.String,System.Object,Catkeys.TDFlags,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowProgressEx(System.Boolean,System.String,System.String,Catkeys.TDFlags,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
-            Shows task dialog like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/> but does not wait.
+            Shows task dialog like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns TaskDialog object that can be used to control the dialog, eg close.
-            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Returns TaskDialog variable that can be used to control the dialog, eg close.
+            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
             <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
             <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
@@ -3113,15 +3152,15 @@
             td.ThreadWaitClosed(); //wait until dialog closed (optional, just an example)
             </code></example>
             <remarks>
-            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Uses TaskDialog class instance, like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowNoWait(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)">
+        <member name="M:Catkeys.TaskDialog.ShowNoWait(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)">
             <summary>
-            Shows task dialog like <see cref="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)"/> but does not wait.
+            Shows task dialog like <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns TaskDialog object that can be used to control the dialog, eg close.
-            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)"/>.
+            Returns TaskDialog variable that can be used to control the dialog, eg close.
+            Most parameters are the same as with Show().
             </summary>
             <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
             <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
@@ -3132,17 +3171,17 @@
             td.ThreadWaitClosed(); //wait until dialog closed (optional, just an example)
             </code></example>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
         </member>
         <member name="T:Catkeys.TDButtons">
             <summary>
-            TaskDialog buttons. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)"/> and similar functions.
+            TaskDialog buttons. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)"/> and similar functions.
             </summary>
         </member>
         <member name="T:Catkeys.TDIcon">
             <summary>
-            TaskDialog icon. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)"/> and similar functions.
+            TaskDialog icon. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Catkeys.TDIcon.App">
@@ -3153,19 +3192,19 @@
         </member>
         <member name="T:Catkeys.TDEdit">
             <summary>
-            Text edit field type for <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})"/> and <see cref="M:Catkeys.TaskDialog.SetEditControl(Catkeys.TDEdit,System.String,Catkeys.StringList)"/>.
+            Text edit field type for <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})"/> and <see cref="M:Catkeys.TaskDialog.SetEditControl(Catkeys.TDEdit,System.String,Catkeys.StringList)"/>.
             </summary>
         </member>
         <member name="T:Catkeys.TDFlags">
             <summary>
-            TaskDialog flags. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)"/> and similar functions.
+            TaskDialog flags. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Catkeys.TDFlags.CommandLinks">
             <summary>
             Display custom buttons as a column of commandl-links, not as a row of classic buttons.
             Command links can have multi-line text. The first line has bigger font.
-            More info about custom buttons: <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            More info about custom buttons: <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
         </member>
         <member name="F:Catkeys.TDFlags.EndThread">
@@ -3202,7 +3241,7 @@
         </member>
         <member name="T:Catkeys.TDResult">
             <summary>
-            TaskDialog result. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.Object,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,System.Object)"/> and similar functions.
+            TaskDialog result. Used with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/> and similar functions.
             Contains multiple result values: clicked button, selected radio button, check box state, input text.
             </summary>
         </member>
@@ -6474,18 +6513,6 @@
             <summary>
             Functions such as PrintMsg, available only in Debug config.
             </summary>
-            <remarks>
-            <list type="table"> 
-              <listHeader> 
-                <term>Multi-column table header</term> 
-                <term>Add additional term or description elements to create new header columns</term>
-              </listHeader> 
-              <item> 
-                <description>Multi-column table</description> 
-                <description>Add additional term or description elements to create new columns</description>
-              </item>
-            </list>
-            </remarks>
         </member>
         <member name="T:Catkeys.Util.Dpi">
             <summary>
@@ -7175,18 +7202,16 @@
         </member>
         <member name="M:Catkeys.LibTest._EnumerateDirectories(System.String)">
             <summary>
-            List all subdirectories inside the provided <paramref name="path"/>.
+            Gets full paths of subdirectories within the parent directory.
             </summary>
-            <param name="path">The full file system path to the parent directory.</param>
-            <returns>A list of full paths to subdirectories within the parent directory.</returns>
+            <param name="path">Parent directory.</param>
         </member>
         <member name="M:Catkeys.LibTest._EnumerateFileSystemEntries(System.String,System.String)">
             <summary>
-            List all files matching a certain file system <paramref name="pattern"/> inside the parent directory.
+            Gets all files matching a certain wildcard pattern inside the parent directory.
             </summary>
             <param name="path">The directory containing files to match.</param>
             <param name="pattern">The file system pattern (such as *.txt or *.*).</param>
-            <returns>A list of files inside the <paramref name="path"/> matching the <paramref name="pattern"/>.</returns>
             <remarks>This is not a recursive search.</remarks>
         </member>
         <member name="T:Catkeys.ScriptOptions">

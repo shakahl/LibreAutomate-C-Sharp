@@ -1,0 +1,1716 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topics>
+  <topic id="N:Catkeys" project="_Namespaces" file="N_Catkeys">
+    <topic id="T:Catkeys.Calc" project="Catkeys" file="T_Catkeys_Calc">
+      <topic id="Methods.T:Catkeys.Calc" project="Catkeys" file="Methods_T_Catkeys_Calc">
+        <topic id="Overload:Catkeys.Calc.AlignUp" project="Catkeys" file="Overload_Catkeys_Calc_AlignUp">
+          <topic id="M:Catkeys.Calc.AlignUp(System.Int32,System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_AlignUp" />
+          <topic id="M:Catkeys.Calc.AlignUp(System.UInt32,System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_AlignUp_1" />
+        </topic>
+        <topic id="M:Catkeys.Calc.AngleFromXY(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_AngleFromXY" />
+        <topic id="M:Catkeys.Calc.BytesFromHexString(System.String)" project="Catkeys" file="M_Catkeys_Calc_BytesFromHexString" />
+        <topic id="M:Catkeys.Calc.BytesToHexString(System.Byte[],System.Boolean)" project="Catkeys" file="M_Catkeys_Calc_BytesToHexString" />
+        <topic id="M:Catkeys.Calc.ColorFromABGR(System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_ColorFromABGR" />
+        <topic id="M:Catkeys.Calc.ColorFromARGB(System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_ColorFromARGB" />
+        <topic id="M:Catkeys.Calc.ColorFromBGR(System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_ColorFromBGR" />
+        <topic id="M:Catkeys.Calc.ColorFromRGB(System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_ColorFromRGB" />
+        <topic id="M:Catkeys.Calc.ColorToNative(System.Drawing.Color)" project="Catkeys" file="M_Catkeys_Calc_ColorToNative" />
+        <topic id="Overload:Catkeys.Calc.Hash" project="Catkeys" file="Overload_Catkeys_Calc_Hash">
+          <topic id="M:Catkeys.Calc.Hash(System.Byte[],System.String)" project="Catkeys" file="M_Catkeys_Calc_Hash" />
+          <topic id="M:Catkeys.Calc.Hash(System.String,System.String)" project="Catkeys" file="M_Catkeys_Calc_Hash_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Calc.HashFnv1" project="Catkeys" file="Overload_Catkeys_Calc_HashFnv1">
+          <topic id="M:Catkeys.Calc.HashFnv1(System.Byte[])" project="Catkeys" file="M_Catkeys_Calc_HashFnv1_1" />
+          <topic id="M:Catkeys.Calc.HashFnv1(System.String)" project="Catkeys" file="M_Catkeys_Calc_HashFnv1_3" />
+          <topic id="M:Catkeys.Calc.HashFnv1(System.Byte*,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_HashFnv1" />
+          <topic id="M:Catkeys.Calc.HashFnv1(System.Char*,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_HashFnv1_2" />
+        </topic>
+        <topic id="Overload:Catkeys.Calc.HashHex" project="Catkeys" file="Overload_Catkeys_Calc_HashHex">
+          <topic id="M:Catkeys.Calc.HashHex(System.Byte[],System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_Calc_HashHex" />
+          <topic id="M:Catkeys.Calc.HashHex(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_Calc_HashHex_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Calc.HashMD5" project="Catkeys" file="Overload_Catkeys_Calc_HashMD5">
+          <topic id="M:Catkeys.Calc.HashMD5(System.Byte[])" project="Catkeys" file="M_Catkeys_Calc_HashMD5" />
+          <topic id="M:Catkeys.Calc.HashMD5(System.String)" project="Catkeys" file="M_Catkeys_Calc_HashMD5_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Calc.HashMD5Hex" project="Catkeys" file="Overload_Catkeys_Calc_HashMD5Hex">
+          <topic id="M:Catkeys.Calc.HashMD5Hex(System.Byte[],System.Boolean)" project="Catkeys" file="M_Catkeys_Calc_HashMD5Hex" />
+          <topic id="M:Catkeys.Calc.HashMD5Hex(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_Calc_HashMD5Hex_1" />
+        </topic>
+        <topic id="M:Catkeys.Calc.HiByte(Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Calc_HiByte" />
+        <topic id="M:Catkeys.Calc.HiShort(Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Calc_HiShort" />
+        <topic id="M:Catkeys.Calc.HiUshort(Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Calc_HiUshort" />
+        <topic id="M:Catkeys.Calc.IsDigit(System.Char)" project="Catkeys" file="M_Catkeys_Calc_IsDigit" />
+        <topic id="M:Catkeys.Calc.LoByte(Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Calc_LoByte" />
+        <topic id="M:Catkeys.Calc.LoShort(Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Calc_LoShort" />
+        <topic id="M:Catkeys.Calc.LoUshort(Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Calc_LoUshort" />
+        <topic id="Overload:Catkeys.Calc.MakeUint" project="Catkeys" file="Overload_Catkeys_Calc_MakeUint">
+          <topic id="M:Catkeys.Calc.MakeUint(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_MakeUint" />
+          <topic id="M:Catkeys.Calc.MakeUint(System.UInt32,System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_MakeUint_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Calc.MakeUshort" project="Catkeys" file="Overload_Catkeys_Calc_MakeUshort">
+          <topic id="M:Catkeys.Calc.MakeUshort(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_MakeUshort" />
+          <topic id="M:Catkeys.Calc.MakeUshort(System.UInt32,System.UInt32)" project="Catkeys" file="M_Catkeys_Calc_MakeUshort_1" />
+        </topic>
+        <topic id="M:Catkeys.Calc.MinMax(System.Int32,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_MinMax" />
+        <topic id="M:Catkeys.Calc.MulDiv(System.Int32,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_MulDiv" />
+        <topic id="Overload:Catkeys.Calc.Percent" project="Catkeys" file="Overload_Catkeys_Calc_Percent">
+          <topic id="M:Catkeys.Calc.Percent(System.Double,System.Double)" project="Catkeys" file="M_Catkeys_Calc_Percent" />
+          <topic id="M:Catkeys.Calc.Percent(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Calc_Percent_1" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.CatBar" project="Catkeys" file="T_Catkeys_CatBar">
+      <topic id="M:Catkeys.CatBar.#ctor" project="Catkeys" file="M_Catkeys_CatBar__ctor" />
+      <topic id="Properties.T:Catkeys.CatBar" project="Catkeys" file="Properties_T_Catkeys_CatBar">
+        <topic id="P:Catkeys.CatBar.Ex" project="Catkeys" file="P_Catkeys_CatBar_Ex" />
+        <topic id="P:Catkeys.CatBar.Item(System.String,System.Object)" project="Catkeys" file="P_Catkeys_CatBar_Item" />
+        <topic id="P:Catkeys.CatBar.LastButton" project="Catkeys" file="P_Catkeys_CatBar_LastButton" />
+        <topic id="P:Catkeys.CatBar.MainToolStrip" project="Catkeys" file="P_Catkeys_CatBar_MainToolStrip" />
+        <topic id="P:Catkeys.CatBar.MainWnd" project="Catkeys" file="P_Catkeys_CatBar_MainWnd" />
+        <topic id="P:Catkeys.CatBar.Visible" project="Catkeys" file="P_Catkeys_CatBar_Visible" />
+      </topic>
+      <topic id="Methods.T:Catkeys.CatBar" project="Catkeys" file="Methods_T_Catkeys_CatBar">
+        <topic id="Overload:Catkeys.CatBar.Add" project="Catkeys" file="Overload_Catkeys_CatBar_Add">
+          <topic id="M:Catkeys.CatBar.Add(System.String,System.Action{Catkeys.CatMenu_CatBar_Base.ClickEventData},System.Object)" project="Catkeys" file="M_Catkeys_CatBar_Add" />
+          <topic id="M:Catkeys.CatBar.Add(System.Windows.Forms.ToolStripItem,System.Object,System.Action{Catkeys.CatMenu_CatBar_Base.ClickEventData})" project="Catkeys" file="M_Catkeys_CatBar_Add_1" />
+        </topic>
+        <topic id="M:Catkeys.CatBar.Close" project="Catkeys" file="M_Catkeys_CatBar_Close" />
+        <topic id="M:Catkeys.CatBar.Separator" project="Catkeys" file="M_Catkeys_CatBar_Separator" />
+      </topic>
+      <topic id="Events.T:Catkeys.CatBar" project="Catkeys" file="Events_T_Catkeys_CatBar" />
+    </topic>
+    <topic id="T:Catkeys.CatException" project="Catkeys" file="T_Catkeys_CatException">
+      <topic id="Overload:Catkeys.CatException.#ctor" project="Catkeys" file="Overload_Catkeys_CatException__ctor">
+        <topic id="M:Catkeys.CatException.#ctor" project="Catkeys" file="M_Catkeys_CatException__ctor" />
+        <topic id="M:Catkeys.CatException.#ctor(System.String)" project="Catkeys" file="M_Catkeys_CatException__ctor_2" />
+        <topic id="M:Catkeys.CatException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)" project="Catkeys" file="M_Catkeys_CatException__ctor_1" />
+        <topic id="M:Catkeys.CatException.#ctor(System.String,System.Exception)" project="Catkeys" file="M_Catkeys_CatException__ctor_3" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.CatMenu" project="Catkeys" file="T_Catkeys_CatMenu">
+      <topic id="M:Catkeys.CatMenu.#ctor" project="Catkeys" file="M_Catkeys_CatMenu__ctor" />
+      <topic id="Properties.T:Catkeys.CatMenu" project="Catkeys" file="Properties_T_Catkeys_CatMenu">
+        <topic id="P:Catkeys.CatMenu.ActivateMenuWindow" project="Catkeys" file="P_Catkeys_CatMenu_ActivateMenuWindow" />
+        <topic id="P:Catkeys.CatMenu.CMS" project="Catkeys" file="P_Catkeys_CatMenu_CMS" />
+        <topic id="P:Catkeys.CatMenu.CurrentAddMenu" project="Catkeys" file="P_Catkeys_CatMenu_CurrentAddMenu" />
+        <topic id="P:Catkeys.CatMenu.DefaultActivateMenuWindow" project="Catkeys" file="P_Catkeys_CatMenu_DefaultActivateMenuWindow" />
+        <topic id="P:Catkeys.CatMenu.DefaultMouseClosingDistance" project="Catkeys" file="P_Catkeys_CatMenu_DefaultMouseClosingDistance" />
+        <topic id="P:Catkeys.CatMenu.DefaultMultiShow" project="Catkeys" file="P_Catkeys_CatMenu_DefaultMultiShow" />
+        <topic id="P:Catkeys.CatMenu.IsDisposed" project="Catkeys" file="P_Catkeys_CatMenu_IsDisposed" />
+        <topic id="P:Catkeys.CatMenu.Item(System.String,System.Object)" project="Catkeys" file="P_Catkeys_CatMenu_Item" />
+        <topic id="P:Catkeys.CatMenu.LastMenuItem" project="Catkeys" file="P_Catkeys_CatMenu_LastMenuItem" />
+        <topic id="P:Catkeys.CatMenu.MainToolStrip" project="Catkeys" file="P_Catkeys_CatMenu_MainToolStrip" />
+        <topic id="P:Catkeys.CatMenu.ModalAlways" project="Catkeys" file="P_Catkeys_CatMenu_ModalAlways" />
+        <topic id="P:Catkeys.CatMenu.MouseClosingDistance" project="Catkeys" file="P_Catkeys_CatMenu_MouseClosingDistance" />
+        <topic id="P:Catkeys.CatMenu.MultiShow" project="Catkeys" file="P_Catkeys_CatMenu_MultiShow" />
+      </topic>
+      <topic id="Methods.T:Catkeys.CatMenu" project="Catkeys" file="Methods_T_Catkeys_CatMenu">
+        <topic id="Overload:Catkeys.CatMenu.Add" project="Catkeys" file="Overload_Catkeys_CatMenu_Add">
+          <topic id="M:Catkeys.CatMenu.Add(System.String,System.Action{Catkeys.CatMenu_CatBar_Base.ClickEventData},System.Object)" project="Catkeys" file="M_Catkeys_CatMenu_Add" />
+          <topic id="M:Catkeys.CatMenu.Add(System.Windows.Forms.ToolStripItem,System.Object,System.Action{Catkeys.CatMenu_CatBar_Base.ClickEventData})" project="Catkeys" file="M_Catkeys_CatMenu_Add_1" />
+        </topic>
+        <topic id="M:Catkeys.CatMenu.Close" project="Catkeys" file="M_Catkeys_CatMenu_Close" />
+        <topic id="M:Catkeys.CatMenu.Dispose" project="Catkeys" file="M_Catkeys_CatMenu_Dispose" />
+        <topic id="M:Catkeys.CatMenu.EndSubmenu" project="Catkeys" file="M_Catkeys_CatMenu_EndSubmenu" />
+        <topic id="M:Catkeys.CatMenu.Separator" project="Catkeys" file="M_Catkeys_CatMenu_Separator" />
+        <topic id="Overload:Catkeys.CatMenu.Show" project="Catkeys" file="Overload_Catkeys_CatMenu_Show">
+          <topic id="M:Catkeys.CatMenu.Show" project="Catkeys" file="M_Catkeys_CatMenu_Show" />
+          <topic id="M:Catkeys.CatMenu.Show(System.Int32,System.Int32,System.Windows.Forms.ToolStripDropDownDirection)" project="Catkeys" file="M_Catkeys_CatMenu_Show_1" />
+          <topic id="M:Catkeys.CatMenu.Show(System.Windows.Forms.Control,System.Int32,System.Int32,System.Windows.Forms.ToolStripDropDownDirection)" project="Catkeys" file="M_Catkeys_CatMenu_Show_2" />
+        </topic>
+        <topic id="Overload:Catkeys.CatMenu.Submenu" project="Catkeys" file="Overload_Catkeys_CatMenu_Submenu">
+          <topic id="M:Catkeys.CatMenu.Submenu(System.String,System.Object,System.Action{Catkeys.CatMenu_CatBar_Base.ClickEventData})" project="Catkeys" file="M_Catkeys_CatMenu_Submenu_1" />
+          <topic id="M:Catkeys.CatMenu.Submenu(System.String,System.Action{Catkeys.CatMenu},System.Object,System.Action{Catkeys.CatMenu_CatBar_Base.ClickEventData})" project="Catkeys" file="M_Catkeys_CatMenu_Submenu" />
+        </topic>
+      </topic>
+      <topic id="Events.T:Catkeys.CatMenu" project="Catkeys" file="Events_T_Catkeys_CatMenu" />
+    </topic>
+    <topic id="T:Catkeys.CatMenu.SubmenuBlock" project="Catkeys" file="T_Catkeys_CatMenu_SubmenuBlock">
+      <topic id="Properties.T:Catkeys.CatMenu.SubmenuBlock" project="Catkeys" file="Properties_T_Catkeys_CatMenu_SubmenuBlock">
+        <topic id="P:Catkeys.CatMenu.SubmenuBlock.MenuItem" project="Catkeys" file="P_Catkeys_CatMenu_SubmenuBlock_MenuItem" />
+      </topic>
+      <topic id="Methods.T:Catkeys.CatMenu.SubmenuBlock" project="Catkeys" file="Methods_T_Catkeys_CatMenu_SubmenuBlock">
+        <topic id="M:Catkeys.CatMenu.SubmenuBlock.Dispose" project="Catkeys" file="M_Catkeys_CatMenu_SubmenuBlock_Dispose" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.CatMenu_CatBar_Base" project="Catkeys" file="T_Catkeys_CatMenu_CatBar_Base">
+      <topic id="Properties.T:Catkeys.CatMenu_CatBar_Base" project="Catkeys" file="Properties_T_Catkeys_CatMenu_CatBar_Base">
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.IconDirectory" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_IconDirectory" />
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.IconFlags" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_IconFlags" />
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.IconSize" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_IconSize" />
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.LastItem" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_LastItem" />
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.MainToolStrip" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_MainToolStrip" />
+      </topic>
+      <topic id="Methods.T:Catkeys.CatMenu_CatBar_Base" project="Catkeys" file="Methods_T_Catkeys_CatMenu_CatBar_Base">
+        <topic id="M:Catkeys.CatMenu_CatBar_Base.Finalize" project="Catkeys" file="M_Catkeys_CatMenu_CatBar_Base_Finalize" />
+      </topic>
+      <topic id="Events.T:Catkeys.CatMenu_CatBar_Base" project="Catkeys" file="Events_T_Catkeys_CatMenu_CatBar_Base">
+        <topic id="E:Catkeys.CatMenu_CatBar_Base.ItemAdded" project="Catkeys" file="E_Catkeys_CatMenu_CatBar_Base_ItemAdded" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.CatMenu_CatBar_Base.ClickEventData" project="Catkeys" file="T_Catkeys_CatMenu_CatBar_Base_ClickEventData">
+      <topic id="Properties.T:Catkeys.CatMenu_CatBar_Base.ClickEventData" project="Catkeys" file="Properties_T_Catkeys_CatMenu_CatBar_Base_ClickEventData">
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.ClickEventData.Item" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_ClickEventData_Item" />
+        <topic id="P:Catkeys.CatMenu_CatBar_Base.ClickEventData.MenuItem" project="Catkeys" file="P_Catkeys_CatMenu_CatBar_Base_ClickEventData_MenuItem" />
+      </topic>
+      <topic id="Methods.T:Catkeys.CatMenu_CatBar_Base.ClickEventData" project="Catkeys" file="Methods_T_Catkeys_CatMenu_CatBar_Base_ClickEventData">
+        <topic id="M:Catkeys.CatMenu_CatBar_Base.ClickEventData.ToString" project="Catkeys" file="M_Catkeys_CatMenu_CatBar_Base_ClickEventData_ToString" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.CatToolStrip" project="Catkeys" file="T_Catkeys_CatToolStrip">
+      <topic id="M:Catkeys.CatToolStrip.#ctor" project="Catkeys" file="M_Catkeys_CatToolStrip__ctor" />
+      <topic id="Methods.T:Catkeys.CatToolStrip" project="Catkeys" file="Methods_T_Catkeys_CatToolStrip">
+        <topic id="M:Catkeys.CatToolStrip.Dispose(System.Boolean)" project="Catkeys" file="M_Catkeys_CatToolStrip_Dispose" />
+        <topic id="M:Catkeys.CatToolStrip.OnControlAdded(System.Windows.Forms.ControlEventArgs)" project="Catkeys" file="M_Catkeys_CatToolStrip_OnControlAdded" />
+        <topic id="M:Catkeys.CatToolStrip.OnControlRemoved(System.Windows.Forms.ControlEventArgs)" project="Catkeys" file="M_Catkeys_CatToolStrip_OnControlRemoved" />
+        <topic id="M:Catkeys.CatToolStrip.OnMouseLeave(System.EventArgs)" project="Catkeys" file="M_Catkeys_CatToolStrip_OnMouseLeave" />
+        <topic id="M:Catkeys.CatToolStrip.OnMouseMove(System.Windows.Forms.MouseEventArgs)" project="Catkeys" file="M_Catkeys_CatToolStrip_OnMouseMove" />
+        <topic id="M:Catkeys.CatToolStrip.OnVisibleChanged(System.EventArgs)" project="Catkeys" file="M_Catkeys_CatToolStrip_OnVisibleChanged" />
+        <topic id="M:Catkeys.CatToolStrip.WndProc(System.Windows.Forms.Message@)" project="Catkeys" file="M_Catkeys_CatToolStrip_WndProc" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Coord" project="Catkeys" file="T_Catkeys_Coord">
+      <topic id="Overload:Catkeys.Coord.#ctor" project="Catkeys" file="Overload_Catkeys_Coord__ctor">
+        <topic id="M:Catkeys.Coord.#ctor(System.Int32)" project="Catkeys" file="M_Catkeys_Coord__ctor_1" />
+        <topic id="M:Catkeys.Coord.#ctor(System.Single)" project="Catkeys" file="M_Catkeys_Coord__ctor_2" />
+        <topic id="M:Catkeys.Coord.#ctor(Catkeys.Coord)" project="Catkeys" file="M_Catkeys_Coord__ctor" />
+      </topic>
+      <topic id="Properties.T:Catkeys.Coord" project="Catkeys" file="Properties_T_Catkeys_Coord">
+        <topic id="P:Catkeys.Coord.IsFraction" project="Catkeys" file="P_Catkeys_Coord_IsFraction" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Coord" project="Catkeys" file="Methods_T_Catkeys_Coord">
+        <topic id="M:Catkeys.Coord.GetNormalized(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Coord_GetNormalized" />
+        <topic id="M:Catkeys.Coord.GetNormalizedInScreen(Catkeys.Coord,Catkeys.Coord,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Coord_GetNormalizedInScreen" />
+        <topic id="M:Catkeys.Coord.GetNormalizedInWindowClientArea(Catkeys.Coord,Catkeys.Coord,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Coord_GetNormalizedInWindowClientArea" />
+        <topic id="M:Catkeys.Coord.Normalize(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Coord_Normalize" />
+        <topic id="M:Catkeys.Coord.ToString" project="Catkeys" file="M_Catkeys_Coord_ToString" />
+      </topic>
+      <topic id="Operators.T:Catkeys.Coord" project="Catkeys" file="Operators_T_Catkeys_Coord">
+        <topic id="Overload:Catkeys.Coord.op_Implicit" project="Catkeys" file="Overload_Catkeys_Coord_op_Implicit">
+          <topic id="M:Catkeys.Coord.op_Implicit(System.Int32)~Catkeys.Coord" project="Catkeys" file="M_Catkeys_Coord_op_Implicit" />
+          <topic id="M:Catkeys.Coord.op_Implicit(System.Single)~Catkeys.Coord" project="Catkeys" file="M_Catkeys_Coord_op_Implicit_1" />
+        </topic>
+      </topic>
+      <topic id="Fields.T:Catkeys.Coord" project="Catkeys" file="Fields_T_Catkeys_Coord">
+        <topic id="F:Catkeys.Coord.coord" project="Catkeys" file="F_Catkeys_Coord_coord" />
+        <topic id="F:Catkeys.Coord.fraction" project="Catkeys" file="F_Catkeys_Coord_fraction" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.CsvTable" project="Catkeys" file="T_Catkeys_CsvTable">
+      <topic id="Overload:Catkeys.CsvTable.#ctor" project="Catkeys" file="Overload_Catkeys_CsvTable__ctor">
+        <topic id="M:Catkeys.CsvTable.#ctor" project="Catkeys" file="M_Catkeys_CsvTable__ctor" />
+        <topic id="M:Catkeys.CsvTable.#ctor(System.String)" project="Catkeys" file="M_Catkeys_CsvTable__ctor_1" />
+      </topic>
+      <topic id="Properties.T:Catkeys.CsvTable" project="Catkeys" file="Properties_T_Catkeys_CsvTable">
+        <topic id="P:Catkeys.CsvTable.ColumnCount" project="Catkeys" file="P_Catkeys_CsvTable_ColumnCount" />
+        <topic id="P:Catkeys.CsvTable.Data" project="Catkeys" file="P_Catkeys_CsvTable_Data" />
+        <topic id="Overload:Catkeys.CsvTable.Item" project="Catkeys" file="Overload_Catkeys_CsvTable_Item">
+          <topic id="P:Catkeys.CsvTable.Item(System.Int32)" project="Catkeys" file="P_Catkeys_CsvTable_Item" />
+          <topic id="P:Catkeys.CsvTable.Item(System.Int32,System.Int32)" project="Catkeys" file="P_Catkeys_CsvTable_Item_1" />
+        </topic>
+        <topic id="P:Catkeys.CsvTable.Quote" project="Catkeys" file="P_Catkeys_CsvTable_Quote" />
+        <topic id="P:Catkeys.CsvTable.RowCount" project="Catkeys" file="P_Catkeys_CsvTable_RowCount" />
+        <topic id="P:Catkeys.CsvTable.Separator" project="Catkeys" file="P_Catkeys_CsvTable_Separator" />
+        <topic id="P:Catkeys.CsvTable.TrimSpaces" project="Catkeys" file="P_Catkeys_CsvTable_TrimSpaces" />
+      </topic>
+      <topic id="Methods.T:Catkeys.CsvTable" project="Catkeys" file="Methods_T_Catkeys_CsvTable">
+        <topic id="M:Catkeys.CsvTable.FromFile(System.String)" project="Catkeys" file="M_Catkeys_CsvTable_FromFile" />
+        <topic id="M:Catkeys.CsvTable.FromString(System.String)" project="Catkeys" file="M_Catkeys_CsvTable_FromString" />
+        <topic id="M:Catkeys.CsvTable.GetDouble(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_CsvTable_GetDouble" />
+        <topic id="M:Catkeys.CsvTable.GetInt(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_CsvTable_GetInt" />
+        <topic id="Overload:Catkeys.CsvTable.InsertRow" project="Catkeys" file="Overload_Catkeys_CsvTable_InsertRow">
+          <topic id="M:Catkeys.CsvTable.InsertRow(System.Int32)" project="Catkeys" file="M_Catkeys_CsvTable_InsertRow" />
+          <topic id="M:Catkeys.CsvTable.InsertRow(System.Int32,System.String[])" project="Catkeys" file="M_Catkeys_CsvTable_InsertRow_1" />
+        </topic>
+        <topic id="M:Catkeys.CsvTable.RemoveRow(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_CsvTable_RemoveRow" />
+        <topic id="M:Catkeys.CsvTable.SetDouble(System.Int32,System.Int32,System.Double)" project="Catkeys" file="M_Catkeys_CsvTable_SetDouble" />
+        <topic id="M:Catkeys.CsvTable.SetInt(System.Int32,System.Int32,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_CsvTable_SetInt" />
+        <topic id="M:Catkeys.CsvTable.ToFile(System.String)" project="Catkeys" file="M_Catkeys_CsvTable_ToFile" />
+        <topic id="M:Catkeys.CsvTable.ToString" project="Catkeys" file="M_Catkeys_CsvTable_ToString" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.DotNetExtensions" project="Catkeys" file="T_Catkeys_DotNetExtensions">
+      <topic id="Methods.T:Catkeys.DotNetExtensions" project="Catkeys" file="Methods_T_Catkeys_DotNetExtensions">
+        <topic id="Overload:Catkeys.DotNetExtensions.Attribute_" project="Catkeys" file="Overload_Catkeys_DotNetExtensions_Attribute_">
+          <topic id="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.XmlElement,System.String,System.Int32)" project="Catkeys" file="M_Catkeys_DotNetExtensions_Attribute_" />
+          <topic id="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.XmlElement,System.String,System.Single)" project="Catkeys" file="M_Catkeys_DotNetExtensions_Attribute__1" />
+          <topic id="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.XmlElement,System.String,System.String)" project="Catkeys" file="M_Catkeys_DotNetExtensions_Attribute__2" />
+        </topic>
+        <topic id="M:Catkeys.DotNetExtensions.IsEmpty_(System.Drawing.Rectangle)" project="Catkeys" file="M_Catkeys_DotNetExtensions_IsEmpty_" />
+        <topic id="M:Catkeys.DotNetExtensions.MouseClientXY(System.Windows.Forms.Control)" project="Catkeys" file="M_Catkeys_DotNetExtensions_MouseClientXY" />
+        <topic id="M:Catkeys.DotNetExtensions.MouseWindowXY(System.Windows.Forms.Control)" project="Catkeys" file="M_Catkeys_DotNetExtensions_MouseWindowXY" />
+        <topic id="Overload:Catkeys.DotNetExtensions.SetCueBanner" project="Catkeys" file="Overload_Catkeys_DotNetExtensions_SetCueBanner">
+          <topic id="M:Catkeys.DotNetExtensions.SetCueBanner(System.Windows.Forms.ComboBox,System.String)" project="Catkeys" file="M_Catkeys_DotNetExtensions_SetCueBanner" />
+          <topic id="M:Catkeys.DotNetExtensions.SetCueBanner(System.Windows.Forms.TextBox,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_DotNetExtensions_SetCueBanner_1" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Files" project="Catkeys" file="T_Catkeys_Files">
+      <topic id="Methods.T:Catkeys.Files" project="Catkeys" file="Methods_T_Catkeys_Files">
+        <topic id="M:Catkeys.Files.DirectoryExists(System.String)" project="Catkeys" file="M_Catkeys_Files_DirectoryExists" />
+        <topic id="M:Catkeys.Files.FileExists(System.String)" project="Catkeys" file="M_Catkeys_Files_FileExists" />
+        <topic id="M:Catkeys.Files.FileOrDirectory(System.String)" project="Catkeys" file="M_Catkeys_Files_FileOrDirectory" />
+        <topic id="M:Catkeys.Files.FileOrDirectoryExists(System.String)" project="Catkeys" file="M_Catkeys_Files_FileOrDirectoryExists" />
+        <topic id="M:Catkeys.Files.SearchPath(System.String,System.String[])" project="Catkeys" file="M_Catkeys_Files_SearchPath" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Files.LnkShortcut" project="Catkeys" file="T_Catkeys_Files_LnkShortcut">
+      <topic id="Properties.T:Catkeys.Files.LnkShortcut" project="Catkeys" file="Properties_T_Catkeys_Files_LnkShortcut">
+        <topic id="P:Catkeys.Files.LnkShortcut.Arguments" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_Arguments" />
+        <topic id="P:Catkeys.Files.LnkShortcut.Description" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_Description" />
+        <topic id="P:Catkeys.Files.LnkShortcut.Hotkey" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_Hotkey" />
+        <topic id="P:Catkeys.Files.LnkShortcut.ShowState" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_ShowState" />
+        <topic id="P:Catkeys.Files.LnkShortcut.TargetAnyType" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_TargetAnyType" />
+        <topic id="P:Catkeys.Files.LnkShortcut.TargetIDList" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_TargetIDList" />
+        <topic id="P:Catkeys.Files.LnkShortcut.TargetPath" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_TargetPath" />
+        <topic id="P:Catkeys.Files.LnkShortcut.TargetPathRawMSI" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_TargetPathRawMSI" />
+        <topic id="P:Catkeys.Files.LnkShortcut.TargetURL" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_TargetURL" />
+        <topic id="P:Catkeys.Files.LnkShortcut.WorkingDirectory" project="Catkeys" file="P_Catkeys_Files_LnkShortcut_WorkingDirectory" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Files.LnkShortcut" project="Catkeys" file="Methods_T_Catkeys_Files_LnkShortcut">
+        <topic id="M:Catkeys.Files.LnkShortcut.Create(System.String)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_Create" />
+        <topic id="M:Catkeys.Files.LnkShortcut.Delete(System.String)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_Delete" />
+        <topic id="M:Catkeys.Files.LnkShortcut.Dispose" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_Dispose" />
+        <topic id="M:Catkeys.Files.LnkShortcut.GetIconLocation(System.Int32@)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_GetIconLocation" />
+        <topic id="M:Catkeys.Files.LnkShortcut.GetTarget(System.String)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_GetTarget" />
+        <topic id="M:Catkeys.Files.LnkShortcut.Open(System.String)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_Open" />
+        <topic id="M:Catkeys.Files.LnkShortcut.OpenOrCreate(System.String)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_OpenOrCreate" />
+        <topic id="M:Catkeys.Files.LnkShortcut.Save" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_Save" />
+        <topic id="M:Catkeys.Files.LnkShortcut.SetIconLocation(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_Files_LnkShortcut_SetIconLocation" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Files.Misc" project="Catkeys" file="T_Catkeys_Files_Misc">
+      <topic id="Methods.T:Catkeys.Files.Misc" project="Catkeys" file="Methods_T_Catkeys_Files_Misc">
+        <topic id="M:Catkeys.Files.Misc.PidlFromString(System.String)" project="Catkeys" file="M_Catkeys_Files_Misc_PidlFromString" />
+        <topic id="M:Catkeys.Files.Misc.PidlToString(System.IntPtr,Catkeys.Native.SIGDN)" project="Catkeys" file="M_Catkeys_Files_Misc_PidlToString" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Folders" project="Catkeys" file="T_Catkeys_Folders">
+      <topic id="Properties.T:Catkeys.Folders" project="Catkeys" file="Properties_T_Catkeys_Folders">
+        <topic id="P:Catkeys.Folders.AccountPictures_Win8" project="Catkeys" file="P_Catkeys_Folders_AccountPictures_Win8" />
+        <topic id="P:Catkeys.Folders.AdminTools" project="Catkeys" file="P_Catkeys_Folders_AdminTools" />
+        <topic id="P:Catkeys.Folders.ApplicationShortcuts_Win8" project="Catkeys" file="P_Catkeys_Folders_ApplicationShortcuts_Win8" />
+        <topic id="P:Catkeys.Folders.CameraRoll_Win81" project="Catkeys" file="P_Catkeys_Folders_CameraRoll_Win81" />
+        <topic id="P:Catkeys.Folders.CDBurning" project="Catkeys" file="P_Catkeys_Folders_CDBurning" />
+        <topic id="P:Catkeys.Folders.CommonAdminTools" project="Catkeys" file="P_Catkeys_Folders_CommonAdminTools" />
+        <topic id="P:Catkeys.Folders.CommonOEMLinks" project="Catkeys" file="P_Catkeys_Folders_CommonOEMLinks" />
+        <topic id="P:Catkeys.Folders.CommonPrograms" project="Catkeys" file="P_Catkeys_Folders_CommonPrograms" />
+        <topic id="P:Catkeys.Folders.CommonStartMenu" project="Catkeys" file="P_Catkeys_Folders_CommonStartMenu" />
+        <topic id="P:Catkeys.Folders.CommonStartup" project="Catkeys" file="P_Catkeys_Folders_CommonStartup" />
+        <topic id="P:Catkeys.Folders.CommonTemplates" project="Catkeys" file="P_Catkeys_Folders_CommonTemplates" />
+        <topic id="P:Catkeys.Folders.Contacts" project="Catkeys" file="P_Catkeys_Folders_Contacts" />
+        <topic id="P:Catkeys.Folders.Cookies" project="Catkeys" file="P_Catkeys_Folders_Cookies" />
+        <topic id="P:Catkeys.Folders.Desktop" project="Catkeys" file="P_Catkeys_Folders_Desktop" />
+        <topic id="P:Catkeys.Folders.DeviceMetadataStore" project="Catkeys" file="P_Catkeys_Folders_DeviceMetadataStore" />
+        <topic id="P:Catkeys.Folders.Documents" project="Catkeys" file="P_Catkeys_Folders_Documents" />
+        <topic id="P:Catkeys.Folders.DocumentsLibrary" project="Catkeys" file="P_Catkeys_Folders_DocumentsLibrary" />
+        <topic id="P:Catkeys.Folders.Downloads" project="Catkeys" file="P_Catkeys_Folders_Downloads" />
+        <topic id="P:Catkeys.Folders.Favorites" project="Catkeys" file="P_Catkeys_Folders_Favorites" />
+        <topic id="P:Catkeys.Folders.Fonts" project="Catkeys" file="P_Catkeys_Folders_Fonts" />
+        <topic id="P:Catkeys.Folders.GameTasks" project="Catkeys" file="P_Catkeys_Folders_GameTasks" />
+        <topic id="P:Catkeys.Folders.History" project="Catkeys" file="P_Catkeys_Folders_History" />
+        <topic id="P:Catkeys.Folders.ImplicitAppShortcuts" project="Catkeys" file="P_Catkeys_Folders_ImplicitAppShortcuts" />
+        <topic id="P:Catkeys.Folders.InternetCache" project="Catkeys" file="P_Catkeys_Folders_InternetCache" />
+        <topic id="P:Catkeys.Folders.Libraries" project="Catkeys" file="P_Catkeys_Folders_Libraries" />
+        <topic id="P:Catkeys.Folders.Links" project="Catkeys" file="P_Catkeys_Folders_Links" />
+        <topic id="P:Catkeys.Folders.LocalAppData" project="Catkeys" file="P_Catkeys_Folders_LocalAppData" />
+        <topic id="P:Catkeys.Folders.LocalAppDataLow" project="Catkeys" file="P_Catkeys_Folders_LocalAppDataLow" />
+        <topic id="P:Catkeys.Folders.LocalizedResourcesDir" project="Catkeys" file="P_Catkeys_Folders_LocalizedResourcesDir" />
+        <topic id="P:Catkeys.Folders.Music" project="Catkeys" file="P_Catkeys_Folders_Music" />
+        <topic id="P:Catkeys.Folders.MusicLibrary" project="Catkeys" file="P_Catkeys_Folders_MusicLibrary" />
+        <topic id="P:Catkeys.Folders.NetHood" project="Catkeys" file="P_Catkeys_Folders_NetHood" />
+        <topic id="P:Catkeys.Folders.OriginalImages" project="Catkeys" file="P_Catkeys_Folders_OriginalImages" />
+        <topic id="P:Catkeys.Folders.PhotoAlbums" project="Catkeys" file="P_Catkeys_Folders_PhotoAlbums" />
+        <topic id="P:Catkeys.Folders.Pictures" project="Catkeys" file="P_Catkeys_Folders_Pictures" />
+        <topic id="P:Catkeys.Folders.PicturesLibrary" project="Catkeys" file="P_Catkeys_Folders_PicturesLibrary" />
+        <topic id="P:Catkeys.Folders.Playlists" project="Catkeys" file="P_Catkeys_Folders_Playlists" />
+        <topic id="P:Catkeys.Folders.PrintHood" project="Catkeys" file="P_Catkeys_Folders_PrintHood" />
+        <topic id="P:Catkeys.Folders.Profile" project="Catkeys" file="P_Catkeys_Folders_Profile" />
+        <topic id="P:Catkeys.Folders.ProgramData" project="Catkeys" file="P_Catkeys_Folders_ProgramData" />
+        <topic id="P:Catkeys.Folders.ProgramFiles" project="Catkeys" file="P_Catkeys_Folders_ProgramFiles" />
+        <topic id="P:Catkeys.Folders.ProgramFilesCommon" project="Catkeys" file="P_Catkeys_Folders_ProgramFilesCommon" />
+        <topic id="P:Catkeys.Folders.ProgramFilesCommonX64" project="Catkeys" file="P_Catkeys_Folders_ProgramFilesCommonX64" />
+        <topic id="P:Catkeys.Folders.ProgramFilesCommonX86" project="Catkeys" file="P_Catkeys_Folders_ProgramFilesCommonX86" />
+        <topic id="P:Catkeys.Folders.ProgramFilesX64" project="Catkeys" file="P_Catkeys_Folders_ProgramFilesX64" />
+        <topic id="P:Catkeys.Folders.ProgramFilesX86" project="Catkeys" file="P_Catkeys_Folders_ProgramFilesX86" />
+        <topic id="P:Catkeys.Folders.Programs" project="Catkeys" file="P_Catkeys_Folders_Programs" />
+        <topic id="P:Catkeys.Folders.Public" project="Catkeys" file="P_Catkeys_Folders_Public" />
+        <topic id="P:Catkeys.Folders.PublicDesktop" project="Catkeys" file="P_Catkeys_Folders_PublicDesktop" />
+        <topic id="P:Catkeys.Folders.PublicDocuments" project="Catkeys" file="P_Catkeys_Folders_PublicDocuments" />
+        <topic id="P:Catkeys.Folders.PublicDownloads" project="Catkeys" file="P_Catkeys_Folders_PublicDownloads" />
+        <topic id="P:Catkeys.Folders.PublicGameTasks" project="Catkeys" file="P_Catkeys_Folders_PublicGameTasks" />
+        <topic id="P:Catkeys.Folders.PublicLibraries" project="Catkeys" file="P_Catkeys_Folders_PublicLibraries" />
+        <topic id="P:Catkeys.Folders.PublicMusic" project="Catkeys" file="P_Catkeys_Folders_PublicMusic" />
+        <topic id="P:Catkeys.Folders.PublicPictures" project="Catkeys" file="P_Catkeys_Folders_PublicPictures" />
+        <topic id="P:Catkeys.Folders.PublicRingtones" project="Catkeys" file="P_Catkeys_Folders_PublicRingtones" />
+        <topic id="P:Catkeys.Folders.PublicUserTiles_Win8" project="Catkeys" file="P_Catkeys_Folders_PublicUserTiles_Win8" />
+        <topic id="P:Catkeys.Folders.PublicVideos" project="Catkeys" file="P_Catkeys_Folders_PublicVideos" />
+        <topic id="P:Catkeys.Folders.QuickLaunch" project="Catkeys" file="P_Catkeys_Folders_QuickLaunch" />
+        <topic id="P:Catkeys.Folders.Recent" project="Catkeys" file="P_Catkeys_Folders_Recent" />
+        <topic id="P:Catkeys.Folders.RecordedTV" project="Catkeys" file="P_Catkeys_Folders_RecordedTV" />
+        <topic id="P:Catkeys.Folders.ResourceDir" project="Catkeys" file="P_Catkeys_Folders_ResourceDir" />
+        <topic id="P:Catkeys.Folders.Ringtones" project="Catkeys" file="P_Catkeys_Folders_Ringtones" />
+        <topic id="P:Catkeys.Folders.RoamedTileImages_Win8" project="Catkeys" file="P_Catkeys_Folders_RoamedTileImages_Win8" />
+        <topic id="P:Catkeys.Folders.RoamingAppData" project="Catkeys" file="P_Catkeys_Folders_RoamingAppData" />
+        <topic id="P:Catkeys.Folders.RoamingTiles_Win8" project="Catkeys" file="P_Catkeys_Folders_RoamingTiles_Win8" />
+        <topic id="P:Catkeys.Folders.SampleMusic" project="Catkeys" file="P_Catkeys_Folders_SampleMusic" />
+        <topic id="P:Catkeys.Folders.SamplePictures" project="Catkeys" file="P_Catkeys_Folders_SamplePictures" />
+        <topic id="P:Catkeys.Folders.SamplePlaylists" project="Catkeys" file="P_Catkeys_Folders_SamplePlaylists" />
+        <topic id="P:Catkeys.Folders.SampleVideos" project="Catkeys" file="P_Catkeys_Folders_SampleVideos" />
+        <topic id="P:Catkeys.Folders.SavedGames" project="Catkeys" file="P_Catkeys_Folders_SavedGames" />
+        <topic id="P:Catkeys.Folders.SavedPictures" project="Catkeys" file="P_Catkeys_Folders_SavedPictures" />
+        <topic id="P:Catkeys.Folders.SavedPicturesLibrary" project="Catkeys" file="P_Catkeys_Folders_SavedPicturesLibrary" />
+        <topic id="P:Catkeys.Folders.SavedSearches" project="Catkeys" file="P_Catkeys_Folders_SavedSearches" />
+        <topic id="P:Catkeys.Folders.Screenshots_Win8" project="Catkeys" file="P_Catkeys_Folders_Screenshots_Win8" />
+        <topic id="P:Catkeys.Folders.SearchHistory_Win81" project="Catkeys" file="P_Catkeys_Folders_SearchHistory_Win81" />
+        <topic id="P:Catkeys.Folders.SearchTemplates_Win81" project="Catkeys" file="P_Catkeys_Folders_SearchTemplates_Win81" />
+        <topic id="P:Catkeys.Folders.SendTo" project="Catkeys" file="P_Catkeys_Folders_SendTo" />
+        <topic id="P:Catkeys.Folders.SidebarDefaultParts" project="Catkeys" file="P_Catkeys_Folders_SidebarDefaultParts" />
+        <topic id="P:Catkeys.Folders.SidebarParts" project="Catkeys" file="P_Catkeys_Folders_SidebarParts" />
+        <topic id="P:Catkeys.Folders.System" project="Catkeys" file="P_Catkeys_Folders_System" />
+        <topic id="P:Catkeys.Folders.SystemX86" project="Catkeys" file="P_Catkeys_Folders_SystemX86" />
+        <topic id="P:Catkeys.Folders.SkyDrive_Win81" project="Catkeys" file="P_Catkeys_Folders_SkyDrive_Win81" />
+        <topic id="P:Catkeys.Folders.SkyDriveCameraRoll_Win81" project="Catkeys" file="P_Catkeys_Folders_SkyDriveCameraRoll_Win81" />
+        <topic id="P:Catkeys.Folders.SkyDriveDocuments_Win81" project="Catkeys" file="P_Catkeys_Folders_SkyDriveDocuments_Win81" />
+        <topic id="P:Catkeys.Folders.SkyDrivePictures_Win81" project="Catkeys" file="P_Catkeys_Folders_SkyDrivePictures_Win81" />
+        <topic id="P:Catkeys.Folders.StartMenu" project="Catkeys" file="P_Catkeys_Folders_StartMenu" />
+        <topic id="P:Catkeys.Folders.Startup" project="Catkeys" file="P_Catkeys_Folders_Startup" />
+        <topic id="P:Catkeys.Folders.Temp" project="Catkeys" file="P_Catkeys_Folders_Temp" />
+        <topic id="P:Catkeys.Folders.Templates" project="Catkeys" file="P_Catkeys_Folders_Templates" />
+        <topic id="P:Catkeys.Folders.ThisApp" project="Catkeys" file="P_Catkeys_Folders_ThisApp" />
+        <topic id="P:Catkeys.Folders.ThisAppData" project="Catkeys" file="P_Catkeys_Folders_ThisAppData" />
+        <topic id="P:Catkeys.Folders.ThisAppDataCommon" project="Catkeys" file="P_Catkeys_Folders_ThisAppDataCommon" />
+        <topic id="P:Catkeys.Folders.ThisAppDataLocal" project="Catkeys" file="P_Catkeys_Folders_ThisAppDataLocal" />
+        <topic id="P:Catkeys.Folders.ThisAppDocuments" project="Catkeys" file="P_Catkeys_Folders_ThisAppDocuments" />
+        <topic id="P:Catkeys.Folders.ThisAppTemp" project="Catkeys" file="P_Catkeys_Folders_ThisAppTemp" />
+        <topic id="P:Catkeys.Folders.ThisProcess" project="Catkeys" file="P_Catkeys_Folders_ThisProcess" />
+        <topic id="P:Catkeys.Folders.TreeProperties" project="Catkeys" file="P_Catkeys_Folders_TreeProperties" />
+        <topic id="P:Catkeys.Folders.UserProfiles" project="Catkeys" file="P_Catkeys_Folders_UserProfiles" />
+        <topic id="P:Catkeys.Folders.UserProgramFiles" project="Catkeys" file="P_Catkeys_Folders_UserProgramFiles" />
+        <topic id="P:Catkeys.Folders.UserProgramFilesCommon" project="Catkeys" file="P_Catkeys_Folders_UserProgramFilesCommon" />
+        <topic id="P:Catkeys.Folders.Videos" project="Catkeys" file="P_Catkeys_Folders_Videos" />
+        <topic id="P:Catkeys.Folders.VideosLibrary" project="Catkeys" file="P_Catkeys_Folders_VideosLibrary" />
+        <topic id="P:Catkeys.Folders.Windows" project="Catkeys" file="P_Catkeys_Folders_Windows" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Folders" project="Catkeys" file="Methods_T_Catkeys_Folders">
+        <topic id="M:Catkeys.Folders.CDDrive" project="Catkeys" file="M_Catkeys_Folders_CDDrive" />
+        <topic id="M:Catkeys.Folders.EnvVar(System.String)" project="Catkeys" file="M_Catkeys_Folders_EnvVar" />
+        <topic id="M:Catkeys.Folders.GetFolder(System.String)" project="Catkeys" file="M_Catkeys_Folders_GetFolder" />
+        <topic id="M:Catkeys.Folders.GetKnownFolders" project="Catkeys" file="M_Catkeys_Folders_GetKnownFolders" />
+        <topic id="Overload:Catkeys.Folders.RemovableDrive" project="Catkeys" file="Overload_Catkeys_Folders_RemovableDrive">
+          <topic id="M:Catkeys.Folders.RemovableDrive(System.Int32)" project="Catkeys" file="M_Catkeys_Folders_RemovableDrive" />
+          <topic id="M:Catkeys.Folders.RemovableDrive(System.String)" project="Catkeys" file="M_Catkeys_Folders_RemovableDrive_1" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Folders.FolderPath" project="Catkeys" file="T_Catkeys_Folders_FolderPath">
+      <topic id="Methods.T:Catkeys.Folders.FolderPath" project="Catkeys" file="Methods_T_Catkeys_Folders_FolderPath">
+        <topic id="M:Catkeys.Folders.FolderPath.ToString" project="Catkeys" file="M_Catkeys_Folders_FolderPath_ToString" />
+      </topic>
+      <topic id="Operators.T:Catkeys.Folders.FolderPath" project="Catkeys" file="Operators_T_Catkeys_Folders_FolderPath">
+        <topic id="M:Catkeys.Folders.FolderPath.op_Addition(Catkeys.Folders.FolderPath,System.String)" project="Catkeys" file="M_Catkeys_Folders_FolderPath_op_Addition" />
+        <topic id="Overload:Catkeys.Folders.FolderPath.op_Implicit" project="Catkeys" file="Overload_Catkeys_Folders_FolderPath_op_Implicit">
+          <topic id="M:Catkeys.Folders.FolderPath.op_Implicit(System.String)~Catkeys.Folders.FolderPath" project="Catkeys" file="M_Catkeys_Folders_FolderPath_op_Implicit_1" />
+          <topic id="M:Catkeys.Folders.FolderPath.op_Implicit(Catkeys.Folders.FolderPath)~System.String" project="Catkeys" file="M_Catkeys_Folders_FolderPath_op_Implicit" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Folders.Virtual" project="Catkeys" file="T_Catkeys_Folders_Virtual">
+      <topic id="Properties.T:Catkeys.Folders.Virtual" project="Catkeys" file="Properties_T_Catkeys_Folders_Virtual">
+        <topic id="P:Catkeys.Folders.Virtual.AddNewPrograms" project="Catkeys" file="P_Catkeys_Folders_Virtual_AddNewPrograms" />
+        <topic id="P:Catkeys.Folders.Virtual.AppsFolder_Win8" project="Catkeys" file="P_Catkeys_Folders_Virtual_AppsFolder_Win8" />
+        <topic id="P:Catkeys.Folders.Virtual.AppUpdates" project="Catkeys" file="P_Catkeys_Folders_Virtual_AppUpdates" />
+        <topic id="P:Catkeys.Folders.Virtual.ChangeRemovePrograms" project="Catkeys" file="P_Catkeys_Folders_Virtual_ChangeRemovePrograms" />
+        <topic id="P:Catkeys.Folders.Virtual.ComputerFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_ComputerFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.ConflictFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_ConflictFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.ConnectionsFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_ConnectionsFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.ControlPanelFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_ControlPanelFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.Games" project="Catkeys" file="P_Catkeys_Folders_Virtual_Games" />
+        <topic id="P:Catkeys.Folders.Virtual.HomeGroup" project="Catkeys" file="P_Catkeys_Folders_Virtual_HomeGroup" />
+        <topic id="P:Catkeys.Folders.Virtual.HomeGroupCurrentUser_Win8" project="Catkeys" file="P_Catkeys_Folders_Virtual_HomeGroupCurrentUser_Win8" />
+        <topic id="P:Catkeys.Folders.Virtual.InternetFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_InternetFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.NetworkFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_NetworkFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.PrintersFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_PrintersFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.RecycleBinFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_RecycleBinFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.SEARCH_CSC" project="Catkeys" file="P_Catkeys_Folders_Virtual_SEARCH_CSC" />
+        <topic id="P:Catkeys.Folders.Virtual.SEARCH_MAPI" project="Catkeys" file="P_Catkeys_Folders_Virtual_SEARCH_MAPI" />
+        <topic id="P:Catkeys.Folders.Virtual.SearchHome" project="Catkeys" file="P_Catkeys_Folders_Virtual_SearchHome" />
+        <topic id="P:Catkeys.Folders.Virtual.SyncManagerFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_SyncManagerFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.SyncResultsFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_SyncResultsFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.SyncSetupFolder" project="Catkeys" file="P_Catkeys_Folders_Virtual_SyncSetupFolder" />
+        <topic id="P:Catkeys.Folders.Virtual.UsersFiles" project="Catkeys" file="P_Catkeys_Folders_Virtual_UsersFiles" />
+        <topic id="P:Catkeys.Folders.Virtual.UsersLibraries" project="Catkeys" file="P_Catkeys_Folders_Virtual_UsersLibraries" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Folders.VirtualITEMIDLIST" project="Catkeys" file="T_Catkeys_Folders_VirtualITEMIDLIST">
+      <topic id="Properties.T:Catkeys.Folders.VirtualITEMIDLIST" project="Catkeys" file="Properties_T_Catkeys_Folders_VirtualITEMIDLIST">
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.AddNewPrograms" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_AddNewPrograms" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.AppsFolder_Win8" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_AppsFolder_Win8" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.AppUpdates" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_AppUpdates" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.ChangeRemovePrograms" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_ChangeRemovePrograms" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.ComputerFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_ComputerFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.ConflictFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_ConflictFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.ConnectionsFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_ConnectionsFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.ControlPanelFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_ControlPanelFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.Games" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_Games" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.HomeGroup" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_HomeGroup" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.HomeGroupCurrentUser_Win8" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_HomeGroupCurrentUser_Win8" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.InternetFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_InternetFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.NetworkFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_NetworkFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.PrintersFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_PrintersFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.RecycleBinFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_RecycleBinFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.SEARCH_CSC" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_SEARCH_CSC" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.SEARCH_MAPI" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_SEARCH_MAPI" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.SearchHome" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_SearchHome" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.SyncManagerFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_SyncManagerFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.SyncResultsFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_SyncResultsFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.SyncSetupFolder" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_SyncSetupFolder" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.UsersFiles" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_UsersFiles" />
+        <topic id="P:Catkeys.Folders.VirtualITEMIDLIST.UsersLibraries" project="Catkeys" file="P_Catkeys_Folders_VirtualITEMIDLIST_UsersLibraries" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Icons" project="Catkeys" file="T_Catkeys_Icons">
+      <topic id="Methods.T:Catkeys.Icons" project="Catkeys" file="Methods_T_Catkeys_Icons">
+        <topic id="M:Catkeys.Icons.CreateBlankIcon(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Icons_CreateBlankIcon" />
+        <topic id="M:Catkeys.Icons.GetAppIconHandle(System.Int32)" project="Catkeys" file="M_Catkeys_Icons_GetAppIconHandle" />
+        <topic id="M:Catkeys.Icons.GetFileIconHandle(System.String,System.Int32,Catkeys.Icons.IconFlags)" project="Catkeys" file="M_Catkeys_Icons_GetFileIconHandle" />
+        <topic id="M:Catkeys.Icons.GetFileIconHandleRaw(System.String,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Icons_GetFileIconHandleRaw" />
+        <topic id="M:Catkeys.Icons.GetFileIconImage(System.String,System.Int32,Catkeys.Icons.IconFlags)" project="Catkeys" file="M_Catkeys_Icons_GetFileIconImage" />
+        <topic id="M:Catkeys.Icons.GetPidlIconHandle(System.IntPtr,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_Icons_GetPidlIconHandle" />
+        <topic id="M:Catkeys.Icons.GetPidlIconImage(System.IntPtr,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_Icons_GetPidlIconImage" />
+        <topic id="M:Catkeys.Icons.GetProcessExeIconHandle(System.Int32)" project="Catkeys" file="M_Catkeys_Icons_GetProcessExeIconHandle" />
+        <topic id="M:Catkeys.Icons.GetShellIconSize(Catkeys.Icons.ShellSize)" project="Catkeys" file="M_Catkeys_Icons_GetShellIconSize" />
+        <topic id="M:Catkeys.Icons.GetShellStockIconHandle(Catkeys.Native.SHSTOCKICONID,System.Int32)" project="Catkeys" file="M_Catkeys_Icons_GetShellStockIconHandle" />
+        <topic id="M:Catkeys.Icons.HandleToImage(System.IntPtr)" project="Catkeys" file="M_Catkeys_Icons_HandleToImage" />
+        <topic id="M:Catkeys.Icons.ParseIconLocation(System.String@,System.Int32@)" project="Catkeys" file="M_Catkeys_Icons_ParseIconLocation" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Icons.AsyncCallback" project="Catkeys" file="T_Catkeys_Icons_AsyncCallback" />
+    <topic id="T:Catkeys.Icons.AsyncIcons" project="Catkeys" file="T_Catkeys_Icons_AsyncIcons">
+      <topic id="M:Catkeys.Icons.AsyncIcons.#ctor" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons__ctor" />
+      <topic id="Properties.T:Catkeys.Icons.AsyncIcons" project="Catkeys" file="Properties_T_Catkeys_Icons_AsyncIcons">
+        <topic id="P:Catkeys.Icons.AsyncIcons.Count" project="Catkeys" file="P_Catkeys_Icons_AsyncIcons_Count" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Icons.AsyncIcons" project="Catkeys" file="Methods_T_Catkeys_Icons_AsyncIcons">
+        <topic id="Overload:Catkeys.Icons.AsyncIcons.Add" project="Catkeys" file="Overload_Catkeys_Icons_AsyncIcons_Add">
+          <topic id="M:Catkeys.Icons.AsyncIcons.Add(System.Collections.Generic.IEnumerable{Catkeys.Icons.AsyncIn})" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_Add" />
+          <topic id="M:Catkeys.Icons.AsyncIcons.Add(System.String,System.Object)" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_Add_1" />
+        </topic>
+        <topic id="M:Catkeys.Icons.AsyncIcons.Cancel" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_Cancel" />
+        <topic id="M:Catkeys.Icons.AsyncIcons.Clear" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_Clear" />
+        <topic id="M:Catkeys.Icons.AsyncIcons.Dispose" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_Dispose" />
+        <topic id="M:Catkeys.Icons.AsyncIcons.Finalize" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_Finalize" />
+        <topic id="M:Catkeys.Icons.AsyncIcons.GetAllAsync(Catkeys.Icons.AsyncCallback,System.Int32,Catkeys.Icons.IconFlags,System.Object)" project="Catkeys" file="M_Catkeys_Icons_AsyncIcons_GetAllAsync" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Icons.AsyncIn" project="Catkeys" file="T_Catkeys_Icons_AsyncIn">
+      <topic id="M:Catkeys.Icons.AsyncIn.#ctor(System.String,System.Object)" project="Catkeys" file="M_Catkeys_Icons_AsyncIn__ctor" />
+      <topic id="Fields.T:Catkeys.Icons.AsyncIn" project="Catkeys" file="Fields_T_Catkeys_Icons_AsyncIn">
+        <topic id="F:Catkeys.Icons.AsyncIn.file" project="Catkeys" file="F_Catkeys_Icons_AsyncIn_file" />
+        <topic id="F:Catkeys.Icons.AsyncIn.obj" project="Catkeys" file="F_Catkeys_Icons_AsyncIn_obj" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Icons.AsyncResult" project="Catkeys" file="T_Catkeys_Icons_AsyncResult">
+      <topic id="M:Catkeys.Icons.AsyncResult.#ctor(System.String,System.Object)" project="Catkeys" file="M_Catkeys_Icons_AsyncResult__ctor" />
+      <topic id="Fields.T:Catkeys.Icons.AsyncResult" project="Catkeys" file="Fields_T_Catkeys_Icons_AsyncResult">
+        <topic id="F:Catkeys.Icons.AsyncResult.file" project="Catkeys" file="F_Catkeys_Icons_AsyncResult_file" />
+        <topic id="F:Catkeys.Icons.AsyncResult.hIcon" project="Catkeys" file="F_Catkeys_Icons_AsyncResult_hIcon" />
+        <topic id="F:Catkeys.Icons.AsyncResult.obj" project="Catkeys" file="F_Catkeys_Icons_AsyncResult_obj" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Icons.IconFlags" project="Catkeys" file="T_Catkeys_Icons_IconFlags" />
+    <topic id="T:Catkeys.Icons.ShellSize" project="Catkeys" file="T_Catkeys_Icons_ShellSize" />
+    <topic id="T:Catkeys.Input" project="Catkeys" file="T_Catkeys_Input">
+      <topic id="Methods.T:Catkeys.Input" project="Catkeys" file="Methods_T_Catkeys_Input">
+        <topic id="M:Catkeys.Input.GetTextCursorRect(Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Input_GetTextCursorRect" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.InterDomain" project="Catkeys" file="T_Catkeys_InterDomain">
+      <topic id="Methods.T:Catkeys.InterDomain" project="Catkeys" file="Methods_T_Catkeys_InterDomain">
+        <topic id="M:Catkeys.InterDomain.DefaultDomainVariable``1(System.String,``0@)" project="Catkeys" file="M_Catkeys_InterDomain_DefaultDomainVariable__1" />
+        <topic id="Overload:Catkeys.InterDomain.GetVariable" project="Catkeys" file="Overload_Catkeys_InterDomain_GetVariable">
+          <topic id="M:Catkeys.InterDomain.GetVariable(System.String)" project="Catkeys" file="M_Catkeys_InterDomain_GetVariable" />
+          <topic id="M:Catkeys.InterDomain.GetVariable``1(System.String,System.Func{``0})" project="Catkeys" file="M_Catkeys_InterDomain_GetVariable__1" />
+          <topic id="M:Catkeys.InterDomain.GetVariable``1(System.String,``0@)" project="Catkeys" file="M_Catkeys_InterDomain_GetVariable__1_1" />
+        </topic>
+        <topic id="M:Catkeys.InterDomain.SetVariable(System.String,System.Object)" project="Catkeys" file="M_Catkeys_InterDomain_SetVariable" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.LPARAM" project="Catkeys" file="T_Catkeys_LPARAM">
+      <topic id="Methods.T:Catkeys.LPARAM" project="Catkeys" file="Methods_T_Catkeys_LPARAM">
+        <topic id="M:Catkeys.LPARAM.GetSchema" project="Catkeys" file="M_Catkeys_LPARAM_GetSchema" />
+        <topic id="M:Catkeys.LPARAM.ReadXml(System.Xml.XmlReader)" project="Catkeys" file="M_Catkeys_LPARAM_ReadXml" />
+        <topic id="M:Catkeys.LPARAM.ToString" project="Catkeys" file="M_Catkeys_LPARAM_ToString" />
+        <topic id="M:Catkeys.LPARAM.WriteXml(System.Xml.XmlWriter)" project="Catkeys" file="M_Catkeys_LPARAM_WriteXml" />
+      </topic>
+      <topic id="Operators.T:Catkeys.LPARAM" project="Catkeys" file="Operators_T_Catkeys_LPARAM">
+        <topic id="M:Catkeys.LPARAM.op_Equality(Catkeys.LPARAM,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_LPARAM_op_Equality" />
+        <topic id="Overload:Catkeys.LPARAM.op_Implicit" project="Catkeys" file="Overload_Catkeys_LPARAM_op_Implicit">
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Byte)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_13" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Boolean)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_14" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Char)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_15" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Int16)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_16" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Int32)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_17" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Int64)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_18" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.IntPtr)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_19" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.SByte)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_20" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.UInt16)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_21" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.UInt32)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_22" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.UInt64)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_23" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.UIntPtr)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_24" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(System.Void*)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_25" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Void*" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.IntPtr" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_1" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.UIntPtr" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_2" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Int32" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_3" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.UInt32" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_4" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.SByte" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_5" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Byte" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_6" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Int16" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_7" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.UInt16" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_8" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Char" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_9" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Int64" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_10" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.UInt64" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_11" />
+          <topic id="M:Catkeys.LPARAM.op_Implicit(Catkeys.LPARAM)~System.Boolean" project="Catkeys" file="M_Catkeys_LPARAM_op_Implicit_12" />
+        </topic>
+        <topic id="M:Catkeys.LPARAM.op_Inequality(Catkeys.LPARAM,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_LPARAM_op_Inequality" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Mouse" project="Catkeys" file="T_Catkeys_Mouse">
+      <topic id="Properties.T:Catkeys.Mouse" project="Catkeys" file="Properties_T_Catkeys_Mouse">
+        <topic id="P:Catkeys.Mouse.Y" project="Catkeys" file="P_Catkeys_Mouse_Y" />
+        <topic id="P:Catkeys.Mouse.X" project="Catkeys" file="P_Catkeys_Mouse_X" />
+        <topic id="P:Catkeys.Mouse.XY" project="Catkeys" file="P_Catkeys_Mouse_XY" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.NoClass" project="Catkeys" file="T_Catkeys_NoClass">
+      <topic id="Properties.T:Catkeys.NoClass" project="Catkeys" file="Properties_T_Catkeys_NoClass">
+        <topic id="P:Catkeys.NoClass.WinVer" project="Catkeys" file="P_Catkeys_NoClass_WinVer" />
+      </topic>
+      <topic id="Methods.T:Catkeys.NoClass" project="Catkeys" file="Methods_T_Catkeys_NoClass">
+        <topic id="M:Catkeys.NoClass.DebugDialog(System.Object,System.String,System.Int32,System.String)" project="Catkeys" file="M_Catkeys_NoClass_DebugDialog" />
+        <topic id="M:Catkeys.NoClass.DebugPrint(System.Object,System.String,System.Int32,System.String)" project="Catkeys" file="M_Catkeys_NoClass_DebugPrint" />
+        <topic id="M:Catkeys.NoClass.Empty(System.String)" project="Catkeys" file="M_Catkeys_NoClass_Empty" />
+        <topic id="M:Catkeys.NoClass.FunctionName(System.String)" project="Catkeys" file="M_Catkeys_NoClass_FunctionName" />
+        <topic id="Overload:Catkeys.NoClass.Print" project="Catkeys" file="Overload_Catkeys_NoClass_Print">
+          <topic id="M:Catkeys.NoClass.Print(System.Object)" project="Catkeys" file="M_Catkeys_NoClass_Print_1" />
+          <topic id="M:Catkeys.NoClass.Print(System.String)" project="Catkeys" file="M_Catkeys_NoClass_Print_2" />
+          <topic id="M:Catkeys.NoClass.Print``2(System.Collections.Generic.IDictionary{``0,``1},System.String)" project="Catkeys" file="M_Catkeys_NoClass_Print__2" />
+          <topic id="M:Catkeys.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0},System.String)" project="Catkeys" file="M_Catkeys_NoClass_Print__1" />
+          <topic id="M:Catkeys.NoClass.Print(System.Collections.IEnumerable,System.String)" project="Catkeys" file="M_Catkeys_NoClass_Print" />
+        </topic>
+        <topic id="M:Catkeys.NoClass.PrintFunc(System.String)" project="Catkeys" file="M_Catkeys_NoClass_PrintFunc" />
+        <topic id="M:Catkeys.NoClass.PrintHex(System.Object)" project="Catkeys" file="M_Catkeys_NoClass_PrintHex" />
+        <topic id="M:Catkeys.NoClass.PrintList(System.Object[])" project="Catkeys" file="M_Catkeys_NoClass_PrintList" />
+        <topic id="M:Catkeys.NoClass.WaitMS(System.Int32)" project="Catkeys" file="M_Catkeys_NoClass_WaitMS" />
+      </topic>
+      <topic id="Fields.T:Catkeys.NoClass" project="Catkeys" file="Fields_T_Catkeys_NoClass">
+        <topic id="F:Catkeys.NoClass.Win10" project="Catkeys" file="F_Catkeys_NoClass_Win10" />
+        <topic id="F:Catkeys.NoClass.Win7" project="Catkeys" file="F_Catkeys_NoClass_Win7" />
+        <topic id="F:Catkeys.NoClass.Win8" project="Catkeys" file="F_Catkeys_NoClass_Win8" />
+        <topic id="F:Catkeys.NoClass.Win8_1" project="Catkeys" file="F_Catkeys_NoClass_Win8_1" />
+        <topic id="F:Catkeys.NoClass.Wnd0" project="Catkeys" file="F_Catkeys_NoClass_Wnd0" />
+        <topic id="F:Catkeys.NoClass.Zero" project="Catkeys" file="F_Catkeys_NoClass_Zero" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Output" project="Catkeys" file="T_Catkeys_Output">
+      <topic id="Properties.T:Catkeys.Output" project="Catkeys" file="Properties_T_Catkeys_Output">
+        <topic id="P:Catkeys.Output.AlwaysOutput" project="Catkeys" file="P_Catkeys_Output_AlwaysOutput" />
+        <topic id="P:Catkeys.Output.IsConsoleProcess" project="Catkeys" file="P_Catkeys_Output_IsConsoleProcess" />
+        <topic id="P:Catkeys.Output.Writer" project="Catkeys" file="P_Catkeys_Output_Writer" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Output" project="Catkeys" file="Methods_T_Catkeys_Output">
+        <topic id="M:Catkeys.Output.Clear" project="Catkeys" file="M_Catkeys_Output_Clear" />
+        <topic id="M:Catkeys.Output.RedirectConsoleOutput" project="Catkeys" file="M_Catkeys_Output_RedirectConsoleOutput" />
+        <topic id="M:Catkeys.Output.RedirectDebugOutput" project="Catkeys" file="M_Catkeys_Output_RedirectDebugOutput" />
+        <topic id="M:Catkeys.Output.Warning(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_Output_Warning" />
+        <topic id="Overload:Catkeys.Output.Write" project="Catkeys" file="Overload_Catkeys_Output_Write">
+          <topic id="M:Catkeys.Output.Write(System.Object)" project="Catkeys" file="M_Catkeys_Output_Write_1" />
+          <topic id="M:Catkeys.Output.Write(System.String)" project="Catkeys" file="M_Catkeys_Output_Write_2" />
+          <topic id="M:Catkeys.Output.Write``2(System.Collections.Generic.IDictionary{``0,``1},System.String)" project="Catkeys" file="M_Catkeys_Output_Write__2" />
+          <topic id="M:Catkeys.Output.Write``1(System.Collections.Generic.IEnumerable{``0},System.String)" project="Catkeys" file="M_Catkeys_Output_Write__1" />
+          <topic id="M:Catkeys.Output.Write(System.Collections.IEnumerable,System.String)" project="Catkeys" file="M_Catkeys_Output_Write" />
+        </topic>
+        <topic id="M:Catkeys.Output.WriteDirectly(System.String)" project="Catkeys" file="M_Catkeys_Output_WriteDirectly" />
+        <topic id="M:Catkeys.Output.WriteHex(System.Object)" project="Catkeys" file="M_Catkeys_Output_WriteHex" />
+        <topic id="M:Catkeys.Output.WriteList(System.Object[])" project="Catkeys" file="M_Catkeys_Output_WriteList" />
+        <topic id="M:Catkeys.Output.WriteListSep(System.String,System.Object[])" project="Catkeys" file="M_Catkeys_Output_WriteListSep" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Path_" project="Catkeys" file="T_Catkeys_Path_">
+      <topic id="Methods.T:Catkeys.Path_" project="Catkeys" file="Methods_T_Catkeys_Path_">
+        <topic id="M:Catkeys.Path_.Combine(System.String,System.String)" project="Catkeys" file="M_Catkeys_Path__Combine" />
+        <topic id="M:Catkeys.Path_.CorrectFileName(System.String,System.String)" project="Catkeys" file="M_Catkeys_Path__CorrectFileName" />
+        <topic id="M:Catkeys.Path_.ExpandEnvVar(System.String)" project="Catkeys" file="M_Catkeys_Path__ExpandEnvVar" />
+        <topic id="M:Catkeys.Path_.IsFullPath(System.String)" project="Catkeys" file="M_Catkeys_Path__IsFullPath" />
+        <topic id="M:Catkeys.Path_.IsURL(System.String)" project="Catkeys" file="M_Catkeys_Path__IsURL" />
+        <topic id="M:Catkeys.Path_.MakeFullPath(System.String)" project="Catkeys" file="M_Catkeys_Path__MakeFullPath" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Perf" project="Catkeys" file="T_Catkeys_Perf">
+      <topic id="Properties.T:Catkeys.Perf" project="Catkeys" file="Properties_T_Catkeys_Perf">
+        <topic id="P:Catkeys.Perf.Incremental" project="Catkeys" file="P_Catkeys_Perf_Incremental" />
+        <topic id="P:Catkeys.Perf.Times" project="Catkeys" file="P_Catkeys_Perf_Times" />
+        <topic id="P:Catkeys.Perf.TimeTotal" project="Catkeys" file="P_Catkeys_Perf_TimeTotal" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Perf" project="Catkeys" file="Methods_T_Catkeys_Perf">
+        <topic id="M:Catkeys.Perf.Execute(System.Int32,System.Action)" project="Catkeys" file="M_Catkeys_Perf_Execute" />
+        <topic id="M:Catkeys.Perf.ExecuteMulti(System.Int32,System.Int32,System.Action[])" project="Catkeys" file="M_Catkeys_Perf_ExecuteMulti" />
+        <topic id="Overload:Catkeys.Perf.First" project="Catkeys" file="Overload_Catkeys_Perf_First">
+          <topic id="M:Catkeys.Perf.First" project="Catkeys" file="M_Catkeys_Perf_First" />
+          <topic id="M:Catkeys.Perf.First(System.Int32)" project="Catkeys" file="M_Catkeys_Perf_First_1" />
+          <topic id="M:Catkeys.Perf.First(System.Int32,System.Action[])" project="Catkeys" file="M_Catkeys_Perf_First_2" />
+        </topic>
+        <topic id="M:Catkeys.Perf.Next(System.Char)" project="Catkeys" file="M_Catkeys_Perf_Next" />
+        <topic id="M:Catkeys.Perf.NW(System.Char)" project="Catkeys" file="M_Catkeys_Perf_NW" />
+        <topic id="M:Catkeys.Perf.SpinCPU(System.Int32,System.Action[])" project="Catkeys" file="M_Catkeys_Perf_SpinCPU" />
+        <topic id="M:Catkeys.Perf.Write" project="Catkeys" file="M_Catkeys_Perf_Write" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Perf.Inst" project="Catkeys" file="T_Catkeys_Perf_Inst">
+      <topic id="M:Catkeys.Perf.Inst.#ctor(System.Boolean)" project="Catkeys" file="M_Catkeys_Perf_Inst__ctor" />
+      <topic id="Properties.T:Catkeys.Perf.Inst" project="Catkeys" file="Properties_T_Catkeys_Perf_Inst">
+        <topic id="P:Catkeys.Perf.Inst.Incremental" project="Catkeys" file="P_Catkeys_Perf_Inst_Incremental" />
+        <topic id="P:Catkeys.Perf.Inst.Times" project="Catkeys" file="P_Catkeys_Perf_Inst_Times" />
+        <topic id="P:Catkeys.Perf.Inst.TimeTotal" project="Catkeys" file="P_Catkeys_Perf_Inst_TimeTotal" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Perf.Inst" project="Catkeys" file="Methods_T_Catkeys_Perf_Inst">
+        <topic id="M:Catkeys.Perf.Inst.Execute(System.Int32,System.Action)" project="Catkeys" file="M_Catkeys_Perf_Inst_Execute" />
+        <topic id="M:Catkeys.Perf.Inst.ExecuteMulti(System.Int32,System.Int32,System.Action[])" project="Catkeys" file="M_Catkeys_Perf_Inst_ExecuteMulti" />
+        <topic id="Overload:Catkeys.Perf.Inst.First" project="Catkeys" file="Overload_Catkeys_Perf_Inst_First">
+          <topic id="M:Catkeys.Perf.Inst.First" project="Catkeys" file="M_Catkeys_Perf_Inst_First" />
+          <topic id="M:Catkeys.Perf.Inst.First(System.Int32)" project="Catkeys" file="M_Catkeys_Perf_Inst_First_1" />
+          <topic id="M:Catkeys.Perf.Inst.First(System.Int32,System.Action[])" project="Catkeys" file="M_Catkeys_Perf_Inst_First_2" />
+        </topic>
+        <topic id="M:Catkeys.Perf.Inst.Next(System.Char)" project="Catkeys" file="M_Catkeys_Perf_Inst_Next" />
+        <topic id="M:Catkeys.Perf.Inst.NW(System.Char)" project="Catkeys" file="M_Catkeys_Perf_Inst_NW" />
+        <topic id="M:Catkeys.Perf.Inst.SpinCPU(System.Int32,System.Action[])" project="Catkeys" file="M_Catkeys_Perf_Inst_SpinCPU" />
+        <topic id="M:Catkeys.Perf.Inst.Write" project="Catkeys" file="M_Catkeys_Perf_Inst_Write" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.POINT" project="Catkeys" file="T_Catkeys_POINT">
+      <topic id="M:Catkeys.POINT.#ctor(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_POINT__ctor" />
+      <topic id="Methods.T:Catkeys.POINT" project="Catkeys" file="Methods_T_Catkeys_POINT">
+        <topic id="M:Catkeys.POINT.ToString" project="Catkeys" file="M_Catkeys_POINT_ToString" />
+      </topic>
+      <topic id="Operators.T:Catkeys.POINT" project="Catkeys" file="Operators_T_Catkeys_POINT">
+        <topic id="M:Catkeys.POINT.op_Equality(Catkeys.POINT,Catkeys.POINT)" project="Catkeys" file="M_Catkeys_POINT_op_Equality" />
+        <topic id="Overload:Catkeys.POINT.op_Implicit" project="Catkeys" file="Overload_Catkeys_POINT_op_Implicit">
+          <topic id="M:Catkeys.POINT.op_Implicit(System.Drawing.Point)~Catkeys.POINT" project="Catkeys" file="M_Catkeys_POINT_op_Implicit_1" />
+          <topic id="M:Catkeys.POINT.op_Implicit(Catkeys.POINT)~System.Drawing.Point" project="Catkeys" file="M_Catkeys_POINT_op_Implicit" />
+        </topic>
+        <topic id="M:Catkeys.POINT.op_Inequality(Catkeys.POINT,Catkeys.POINT)" project="Catkeys" file="M_Catkeys_POINT_op_Inequality" />
+      </topic>
+      <topic id="Fields.T:Catkeys.POINT" project="Catkeys" file="Fields_T_Catkeys_POINT">
+        <topic id="F:Catkeys.POINT.Empty" project="Catkeys" file="F_Catkeys_POINT_Empty" />
+        <topic id="F:Catkeys.POINT.y" project="Catkeys" file="F_Catkeys_POINT_y" />
+        <topic id="F:Catkeys.POINT.x" project="Catkeys" file="F_Catkeys_POINT_x" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Process_" project="Catkeys" file="T_Catkeys_Process_">
+      <topic id="Methods.T:Catkeys.Process_" project="Catkeys" file="Methods_T_Catkeys_Process_">
+        <topic id="M:Catkeys.Process_.GetFileNameWithoutExe(System.String)" project="Catkeys" file="M_Catkeys_Process__GetFileNameWithoutExe" />
+        <topic id="M:Catkeys.Process_.GetProcesses(System.Boolean)" project="Catkeys" file="M_Catkeys_Process__GetProcesses" />
+        <topic id="M:Catkeys.Process_.GetProcessesByName(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_Process__GetProcessesByName" />
+        <topic id="M:Catkeys.Process_.GetProcessName(System.UInt32,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Process__GetProcessName" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Process_.Memory" project="Catkeys" file="T_Catkeys_Process__Memory">
+      <topic id="Overload:Catkeys.Process_.Memory.#ctor" project="Catkeys" file="Overload_Catkeys_Process__Memory__ctor">
+        <topic id="M:Catkeys.Process_.Memory.#ctor(System.UInt32,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory__ctor_1" />
+        <topic id="M:Catkeys.Process_.Memory.#ctor(Catkeys.Wnd,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory__ctor" />
+      </topic>
+      <topic id="Properties.T:Catkeys.Process_.Memory" project="Catkeys" file="Properties_T_Catkeys_Process__Memory">
+        <topic id="P:Catkeys.Process_.Memory.Mem" project="Catkeys" file="P_Catkeys_Process__Memory_Mem" />
+        <topic id="P:Catkeys.Process_.Memory.ProcessHandle" project="Catkeys" file="P_Catkeys_Process__Memory_ProcessHandle" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Process_.Memory" project="Catkeys" file="Methods_T_Catkeys_Process__Memory">
+        <topic id="M:Catkeys.Process_.Memory.Dispose" project="Catkeys" file="M_Catkeys_Process__Memory_Dispose" />
+        <topic id="M:Catkeys.Process_.Memory.Finalize" project="Catkeys" file="M_Catkeys_Process__Memory_Finalize" />
+        <topic id="M:Catkeys.Process_.Memory.Read(System.Void*,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_Read" />
+        <topic id="M:Catkeys.Process_.Memory.ReadAnsiString(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_ReadAnsiString" />
+        <topic id="M:Catkeys.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_ReadOther" />
+        <topic id="M:Catkeys.Process_.Memory.ReadUnicodeString(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_ReadUnicodeString" />
+        <topic id="M:Catkeys.Process_.Memory.Write(System.Void*,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_Write" />
+        <topic id="M:Catkeys.Process_.Memory.WriteAnsiString(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_WriteAnsiString" />
+        <topic id="M:Catkeys.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_WriteOther" />
+        <topic id="M:Catkeys.Process_.Memory.WriteUnicodeString(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_Process__Memory_WriteUnicodeString" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Process_.ProcessInfo" project="Catkeys" file="T_Catkeys_Process__ProcessInfo">
+      <topic id="Fields.T:Catkeys.Process_.ProcessInfo" project="Catkeys" file="Fields_T_Catkeys_Process__ProcessInfo">
+        <topic id="F:Catkeys.Process_.ProcessInfo.ProcessID" project="Catkeys" file="F_Catkeys_Process__ProcessInfo_ProcessID" />
+        <topic id="F:Catkeys.Process_.ProcessInfo.ProcessName" project="Catkeys" file="F_Catkeys_Process__ProcessInfo_ProcessName" />
+        <topic id="F:Catkeys.Process_.ProcessInfo.SessionID" project="Catkeys" file="F_Catkeys_Process__ProcessInfo_SessionID" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Process_.UacInfo" project="Catkeys" file="T_Catkeys_Process__UacInfo">
+      <topic id="Properties.T:Catkeys.Process_.UacInfo" project="Catkeys" file="Properties_T_Catkeys_Process__UacInfo">
+        <topic id="P:Catkeys.Process_.UacInfo.Elevation" project="Catkeys" file="P_Catkeys_Process__UacInfo_Elevation" />
+        <topic id="P:Catkeys.Process_.UacInfo.Failed" project="Catkeys" file="P_Catkeys_Process__UacInfo_Failed" />
+        <topic id="P:Catkeys.Process_.UacInfo.IntegrityLevel" project="Catkeys" file="P_Catkeys_Process__UacInfo_IntegrityLevel" />
+        <topic id="P:Catkeys.Process_.UacInfo.IntegrityLevelAndUIAccess" project="Catkeys" file="P_Catkeys_Process__UacInfo_IntegrityLevelAndUIAccess" />
+        <topic id="P:Catkeys.Process_.UacInfo.IsAdmin" project="Catkeys" file="P_Catkeys_Process__UacInfo_IsAdmin" />
+        <topic id="P:Catkeys.Process_.UacInfo.IsAppContainer" project="Catkeys" file="P_Catkeys_Process__UacInfo_IsAppContainer" />
+        <topic id="P:Catkeys.Process_.UacInfo.IsUacDisabled" project="Catkeys" file="P_Catkeys_Process__UacInfo_IsUacDisabled" />
+        <topic id="P:Catkeys.Process_.UacInfo.IsUIAccess" project="Catkeys" file="P_Catkeys_Process__UacInfo_IsUIAccess" />
+        <topic id="P:Catkeys.Process_.UacInfo.ThisProcess" project="Catkeys" file="P_Catkeys_Process__UacInfo_ThisProcess" />
+        <topic id="P:Catkeys.Process_.UacInfo.TokenHandle" project="Catkeys" file="P_Catkeys_Process__UacInfo_TokenHandle" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Process_.UacInfo" project="Catkeys" file="Methods_T_Catkeys_Process__UacInfo">
+        <topic id="M:Catkeys.Process_.UacInfo.Dispose" project="Catkeys" file="M_Catkeys_Process__UacInfo_Dispose" />
+        <topic id="M:Catkeys.Process_.UacInfo.Finalize" project="Catkeys" file="M_Catkeys_Process__UacInfo_Finalize" />
+        <topic id="M:Catkeys.Process_.UacInfo.GetOfProcess(System.UInt32)" project="Catkeys" file="M_Catkeys_Process__UacInfo_GetOfProcess" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Process_.UacInfo.ElevationType" project="Catkeys" file="T_Catkeys_Process__UacInfo_ElevationType" />
+    <topic id="T:Catkeys.Process_.UacInfo.IL" project="Catkeys" file="T_Catkeys_Process__UacInfo_IL" />
+    <topic id="T:Catkeys.RECT" project="Catkeys" file="T_Catkeys_RECT">
+      <topic id="M:Catkeys.RECT.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_RECT__ctor" />
+      <topic id="Properties.T:Catkeys.RECT" project="Catkeys" file="Properties_T_Catkeys_RECT">
+        <topic id="P:Catkeys.RECT.Height" project="Catkeys" file="P_Catkeys_RECT_Height" />
+        <topic id="P:Catkeys.RECT.IsEmpty" project="Catkeys" file="P_Catkeys_RECT_IsEmpty" />
+        <topic id="P:Catkeys.RECT.Width" project="Catkeys" file="P_Catkeys_RECT_Width" />
+      </topic>
+      <topic id="Methods.T:Catkeys.RECT" project="Catkeys" file="Methods_T_Catkeys_RECT">
+        <topic id="Overload:Catkeys.RECT.Contains" project="Catkeys" file="Overload_Catkeys_RECT_Contains">
+          <topic id="M:Catkeys.RECT.Contains(Catkeys.POINT)" project="Catkeys" file="M_Catkeys_RECT_Contains" />
+          <topic id="M:Catkeys.RECT.Contains(Catkeys.RECT)" project="Catkeys" file="M_Catkeys_RECT_Contains_1" />
+          <topic id="M:Catkeys.RECT.Contains(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_RECT_Contains_2" />
+        </topic>
+        <topic id="M:Catkeys.RECT.Inflate(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_RECT_Inflate" />
+        <topic id="M:Catkeys.RECT.Intersect(Catkeys.RECT,Catkeys.RECT)" project="Catkeys" file="M_Catkeys_RECT_Intersect" />
+        <topic id="M:Catkeys.RECT.Intersects(Catkeys.RECT)" project="Catkeys" file="M_Catkeys_RECT_Intersects" />
+        <topic id="M:Catkeys.RECT.Offset(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_RECT_Offset" />
+        <topic id="M:Catkeys.RECT.Set(System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_RECT_Set" />
+        <topic id="M:Catkeys.RECT.SetEmpty" project="Catkeys" file="M_Catkeys_RECT_SetEmpty" />
+        <topic id="M:Catkeys.RECT.ToString" project="Catkeys" file="M_Catkeys_RECT_ToString" />
+        <topic id="M:Catkeys.RECT.Union(Catkeys.RECT,Catkeys.RECT)" project="Catkeys" file="M_Catkeys_RECT_Union" />
+      </topic>
+      <topic id="Operators.T:Catkeys.RECT" project="Catkeys" file="Operators_T_Catkeys_RECT">
+        <topic id="M:Catkeys.RECT.op_Equality(Catkeys.RECT,Catkeys.RECT)" project="Catkeys" file="M_Catkeys_RECT_op_Equality" />
+        <topic id="Overload:Catkeys.RECT.op_Implicit" project="Catkeys" file="Overload_Catkeys_RECT_op_Implicit">
+          <topic id="M:Catkeys.RECT.op_Implicit(System.Drawing.Rectangle)~Catkeys.RECT" project="Catkeys" file="M_Catkeys_RECT_op_Implicit_1" />
+          <topic id="M:Catkeys.RECT.op_Implicit(Catkeys.RECT)~System.Drawing.Rectangle" project="Catkeys" file="M_Catkeys_RECT_op_Implicit" />
+        </topic>
+        <topic id="M:Catkeys.RECT.op_Inequality(Catkeys.RECT,Catkeys.RECT)" project="Catkeys" file="M_Catkeys_RECT_op_Inequality" />
+      </topic>
+      <topic id="Fields.T:Catkeys.RECT" project="Catkeys" file="Fields_T_Catkeys_RECT">
+        <topic id="F:Catkeys.RECT.bottom" project="Catkeys" file="F_Catkeys_RECT_bottom" />
+        <topic id="F:Catkeys.RECT.Empty" project="Catkeys" file="F_Catkeys_RECT_Empty" />
+        <topic id="F:Catkeys.RECT.left" project="Catkeys" file="F_Catkeys_RECT_left" />
+        <topic id="F:Catkeys.RECT.right" project="Catkeys" file="F_Catkeys_RECT_right" />
+        <topic id="F:Catkeys.RECT.top" project="Catkeys" file="F_Catkeys_RECT_top" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Registry_" project="Catkeys" file="T_Catkeys_Registry_">
+      <topic id="Methods.T:Catkeys.Registry_" project="Catkeys" file="Methods_T_Catkeys_Registry_">
+        <topic id="M:Catkeys.Registry_.CreateOrOpen(System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__CreateOrOpen" />
+        <topic id="M:Catkeys.Registry_.GetBinary(System.Void*,System.Int32,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__GetBinary" />
+        <topic id="M:Catkeys.Registry_.GetInt(System.Int32@,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__GetInt" />
+        <topic id="M:Catkeys.Registry_.GetLong(System.Int64@,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__GetLong" />
+        <topic id="M:Catkeys.Registry_.GetString(System.String@,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__GetString" />
+        <topic id="M:Catkeys.Registry_.GetStringArray(System.String[]@,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__GetStringArray" />
+        <topic id="M:Catkeys.Registry_.KeyExists(System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__KeyExists" />
+        <topic id="M:Catkeys.Registry_.Open(System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__Open" />
+        <topic id="M:Catkeys.Registry_.ParseKeyString(System.String@)" project="Catkeys" file="M_Catkeys_Registry__ParseKeyString" />
+        <topic id="M:Catkeys.Registry_.SetBinary(System.Void*,System.Int32,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__SetBinary" />
+        <topic id="M:Catkeys.Registry_.SetInt(System.Int32,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__SetInt" />
+        <topic id="M:Catkeys.Registry_.SetLong(System.Int64,System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__SetLong" />
+        <topic id="M:Catkeys.Registry_.SetString(System.String,System.String,System.String,Microsoft.Win32.RegistryKey,System.Boolean)" project="Catkeys" file="M_Catkeys_Registry__SetString" />
+        <topic id="M:Catkeys.Registry_.SetStringArray(System.String[],System.String,System.String,Microsoft.Win32.RegistryKey)" project="Catkeys" file="M_Catkeys_Registry__SetStringArray" />
+      </topic>
+      <topic id="Fields.T:Catkeys.Registry_" project="Catkeys" file="Fields_T_Catkeys_Registry_">
+        <topic id="F:Catkeys.Registry_.CatkeysKey" project="Catkeys" file="F_Catkeys_Registry__CatkeysKey" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Screen_" project="Catkeys" file="T_Catkeys_Screen_">
+      <topic id="Properties.T:Catkeys.Screen_" project="Catkeys" file="Properties_T_Catkeys_Screen_">
+        <topic id="P:Catkeys.Screen_.Height" project="Catkeys" file="P_Catkeys_Screen__Height" />
+        <topic id="P:Catkeys.Screen_.Width" project="Catkeys" file="P_Catkeys_Screen__Width" />
+        <topic id="P:Catkeys.Screen_.WorkArea" project="Catkeys" file="P_Catkeys_Screen__WorkArea" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Screen_" project="Catkeys" file="Methods_T_Catkeys_Screen_">
+        <topic id="M:Catkeys.Screen_.FromIndex(System.Int32)" project="Catkeys" file="M_Catkeys_Screen__FromIndex" />
+        <topic id="M:Catkeys.Screen_.FromObject(System.Object,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Screen__FromObject" />
+        <topic id="M:Catkeys.Screen_.FromWindow(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Screen__FromWindow" />
+      </topic>
+      <topic id="Fields.T:Catkeys.Screen_" project="Catkeys" file="Fields_T_Catkeys_Screen_">
+        <topic id="F:Catkeys.Screen_.OfActiveWindow" project="Catkeys" file="F_Catkeys_Screen__OfActiveWindow" />
+        <topic id="F:Catkeys.Screen_.OfMouse" project="Catkeys" file="F_Catkeys_Screen__OfMouse" />
+        <topic id="F:Catkeys.Screen_.Primary" project="Catkeys" file="F_Catkeys_Screen__Primary" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Script" project="Catkeys" file="T_Catkeys_Script">
+      <topic id="M:Catkeys.Script.#ctor" project="Catkeys" file="M_Catkeys_Script__ctor" />
+      <topic id="Properties.T:Catkeys.Script" project="Catkeys" file="Properties_T_Catkeys_Script">
+        <topic id="P:Catkeys.Script.Option" project="Catkeys" file="P_Catkeys_Script_Option" />
+        <topic id="P:Catkeys.Script.Speed" project="Catkeys" file="P_Catkeys_Script_Speed" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Script" project="Catkeys" file="Methods_T_Catkeys_Script">
+        <topic id="M:Catkeys.Script.CallFirstMethod" project="Catkeys" file="M_Catkeys_Script_CallFirstMethod" />
+        <topic id="M:Catkeys.Script.CallTriggerMethod(System.String,System.Object)" project="Catkeys" file="M_Catkeys_Script_CallTriggerMethod" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.ScriptOptions" project="Catkeys" file="T_Catkeys_ScriptOptions">
+      <topic id="Overload:Catkeys.ScriptOptions.#ctor" project="Catkeys" file="Overload_Catkeys_ScriptOptions__ctor">
+        <topic id="M:Catkeys.ScriptOptions.#ctor" project="Catkeys" file="M_Catkeys_ScriptOptions__ctor" />
+        <topic id="M:Catkeys.ScriptOptions.#ctor(Catkeys.ScriptOptions)" project="Catkeys" file="M_Catkeys_ScriptOptions__ctor_1" />
+      </topic>
+      <topic id="Properties.T:Catkeys.ScriptOptions" project="Catkeys" file="Properties_T_Catkeys_ScriptOptions">
+        <topic id="P:Catkeys.ScriptOptions.Default" project="Catkeys" file="P_Catkeys_ScriptOptions_Default" />
+        <topic id="P:Catkeys.ScriptOptions.SlowKeys" project="Catkeys" file="P_Catkeys_ScriptOptions_SlowKeys" />
+        <topic id="P:Catkeys.ScriptOptions.SlowMouse" project="Catkeys" file="P_Catkeys_ScriptOptions_SlowMouse" />
+        <topic id="P:Catkeys.ScriptOptions.Speed" project="Catkeys" file="P_Catkeys_ScriptOptions_Speed" />
+        <topic id="P:Catkeys.ScriptOptions.WaitMsg" project="Catkeys" file="P_Catkeys_ScriptOptions_WaitMsg" />
+      </topic>
+      <topic id="Methods.T:Catkeys.ScriptOptions" project="Catkeys" file="Methods_T_Catkeys_ScriptOptions">
+        <topic id="M:Catkeys.ScriptOptions.Copy" project="Catkeys" file="M_Catkeys_ScriptOptions_Copy" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.SetAddRemove" project="Catkeys" file="T_Catkeys_SetAddRemove" />
+    <topic id="T:Catkeys.SIZE" project="Catkeys" file="T_Catkeys_SIZE">
+      <topic id="M:Catkeys.SIZE.#ctor(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_SIZE__ctor" />
+      <topic id="Methods.T:Catkeys.SIZE" project="Catkeys" file="Methods_T_Catkeys_SIZE">
+        <topic id="M:Catkeys.SIZE.ToString" project="Catkeys" file="M_Catkeys_SIZE_ToString" />
+      </topic>
+      <topic id="Operators.T:Catkeys.SIZE" project="Catkeys" file="Operators_T_Catkeys_SIZE">
+        <topic id="M:Catkeys.SIZE.op_Equality(Catkeys.SIZE,Catkeys.SIZE)" project="Catkeys" file="M_Catkeys_SIZE_op_Equality" />
+        <topic id="Overload:Catkeys.SIZE.op_Implicit" project="Catkeys" file="Overload_Catkeys_SIZE_op_Implicit">
+          <topic id="M:Catkeys.SIZE.op_Implicit(System.Drawing.Size)~Catkeys.SIZE" project="Catkeys" file="M_Catkeys_SIZE_op_Implicit_1" />
+          <topic id="M:Catkeys.SIZE.op_Implicit(Catkeys.SIZE)~System.Drawing.Size" project="Catkeys" file="M_Catkeys_SIZE_op_Implicit" />
+        </topic>
+        <topic id="M:Catkeys.SIZE.op_Inequality(Catkeys.SIZE,Catkeys.SIZE)" project="Catkeys" file="M_Catkeys_SIZE_op_Inequality" />
+      </topic>
+      <topic id="Fields.T:Catkeys.SIZE" project="Catkeys" file="Fields_T_Catkeys_SIZE">
+        <topic id="F:Catkeys.SIZE.cy" project="Catkeys" file="F_Catkeys_SIZE_cy" />
+        <topic id="F:Catkeys.SIZE.cx" project="Catkeys" file="F_Catkeys_SIZE_cx" />
+        <topic id="F:Catkeys.SIZE.Empty" project="Catkeys" file="F_Catkeys_SIZE_Empty" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.String_" project="Catkeys" file="T_Catkeys_String_">
+      <topic id="Methods.T:Catkeys.String_" project="Catkeys" file="Methods_T_Catkeys_String_">
+        <topic id="Overload:Catkeys.String_.EndsWith_" project="Catkeys" file="Overload_Catkeys_String__EndsWith_">
+          <topic id="M:Catkeys.String_.EndsWith_(System.String,System.Boolean,System.String[])" project="Catkeys" file="M_Catkeys_String__EndsWith_" />
+          <topic id="M:Catkeys.String_.EndsWith_(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__EndsWith__1" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.Equals_" project="Catkeys" file="Overload_Catkeys_String__Equals_">
+          <topic id="M:Catkeys.String_.Equals_(System.String,System.Boolean,System.String[])" project="Catkeys" file="M_Catkeys_String__Equals_" />
+          <topic id="M:Catkeys.String_.Equals_(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__Equals__1" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.IndexOf_" project="Catkeys" file="Overload_Catkeys_String__IndexOf_">
+          <topic id="M:Catkeys.String_.IndexOf_(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__IndexOf_" />
+          <topic id="M:Catkeys.String_.IndexOf_(System.String,System.String,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_String__IndexOf__1" />
+          <topic id="M:Catkeys.String_.IndexOf_(System.String,System.String,System.Int32,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_String__IndexOf__2" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.IndexOfAny_" project="Catkeys" file="Overload_Catkeys_String__IndexOfAny_">
+          <topic id="M:Catkeys.String_.IndexOfAny_(System.String,System.String)" project="Catkeys" file="M_Catkeys_String__IndexOfAny_" />
+          <topic id="M:Catkeys.String_.IndexOfAny_(System.String,System.String,System.Int32)" project="Catkeys" file="M_Catkeys_String__IndexOfAny__1" />
+          <topic id="M:Catkeys.String_.IndexOfAny_(System.String,System.String,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_String__IndexOfAny__2" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.LastIndexOf_" project="Catkeys" file="Overload_Catkeys_String__LastIndexOf_">
+          <topic id="M:Catkeys.String_.LastIndexOf_(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__LastIndexOf_" />
+          <topic id="M:Catkeys.String_.LastIndexOf_(System.String,System.String,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_String__LastIndexOf__1" />
+          <topic id="M:Catkeys.String_.LastIndexOf_(System.String,System.String,System.Int32,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_String__LastIndexOf__2" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.LastIndexOfAny_" project="Catkeys" file="Overload_Catkeys_String__LastIndexOfAny_">
+          <topic id="M:Catkeys.String_.LastIndexOfAny_(System.String,System.String)" project="Catkeys" file="M_Catkeys_String__LastIndexOfAny_" />
+          <topic id="M:Catkeys.String_.LastIndexOfAny_(System.String,System.String,System.Int32)" project="Catkeys" file="M_Catkeys_String__LastIndexOfAny__1" />
+          <topic id="M:Catkeys.String_.LastIndexOfAny_(System.String,System.String,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_String__LastIndexOfAny__2" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.Like_" project="Catkeys" file="Overload_Catkeys_String__Like_">
+          <topic id="M:Catkeys.String_.Like_(System.String,System.Boolean,System.String[])" project="Catkeys" file="M_Catkeys_String__Like_" />
+          <topic id="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__Like__1" />
+        </topic>
+        <topic id="M:Catkeys.String_.Limit_(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_String__Limit_" />
+        <topic id="Overload:Catkeys.String_.RegexIs_" project="Catkeys" file="Overload_Catkeys_String__RegexIs_">
+          <topic id="M:Catkeys.String_.RegexIs_(System.String,System.String,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexIs_" />
+          <topic id="M:Catkeys.String_.RegexIs_(System.String,System.Text.RegularExpressions.RegexOptions,System.String[])" project="Catkeys" file="M_Catkeys_String__RegexIs__1" />
+        </topic>
+        <topic id="M:Catkeys.String_.RegexMatch_(System.String,System.String,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexMatch_" />
+        <topic id="M:Catkeys.String_.RegexMatches_(System.String,System.String,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexMatches_" />
+        <topic id="Overload:Catkeys.String_.RegexReplace_" project="Catkeys" file="Overload_Catkeys_String__RegexReplace_">
+          <topic id="M:Catkeys.String_.RegexReplace_(System.String,System.String,System.String,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexReplace_" />
+          <topic id="M:Catkeys.String_.RegexReplace_(System.String,System.String,System.Text.RegularExpressions.MatchEvaluator,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexReplace__1" />
+          <topic id="M:Catkeys.String_.RegexReplace_(System.String,System.String@,System.String,System.String,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexReplace__3" />
+          <topic id="M:Catkeys.String_.RegexReplace_(System.String,System.String@,System.String,System.String,System.Int32,System.Text.RegularExpressions.RegexOptions)" project="Catkeys" file="M_Catkeys_String__RegexReplace__2" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.Split_" project="Catkeys" file="Overload_Catkeys_String__Split_">
+          <topic id="M:Catkeys.String_.Split_(System.String,System.String)" project="Catkeys" file="M_Catkeys_String__Split_" />
+          <topic id="M:Catkeys.String_.Split_(System.String,System.String,System.Int32)" project="Catkeys" file="M_Catkeys_String__Split__1" />
+          <topic id="M:Catkeys.String_.Split_(System.String,System.String,System.StringSplitOptions)" project="Catkeys" file="M_Catkeys_String__Split__3" />
+          <topic id="M:Catkeys.String_.Split_(System.String,System.String,System.Int32,System.StringSplitOptions)" project="Catkeys" file="M_Catkeys_String__Split__2" />
+        </topic>
+        <topic id="M:Catkeys.String_.SplitLines_(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__SplitLines_" />
+        <topic id="Overload:Catkeys.String_.StartsWith_" project="Catkeys" file="Overload_Catkeys_String__StartsWith_">
+          <topic id="M:Catkeys.String_.StartsWith_(System.String,System.Boolean,System.String[])" project="Catkeys" file="M_Catkeys_String__StartsWith_" />
+          <topic id="M:Catkeys.String_.StartsWith_(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__StartsWith__1" />
+        </topic>
+        <topic id="M:Catkeys.String_.ToDouble_(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__ToDouble_" />
+        <topic id="M:Catkeys.String_.ToFloat_(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_String__ToFloat_" />
+        <topic id="Overload:Catkeys.String_.ToInt32_" project="Catkeys" file="Overload_Catkeys_String__ToInt32_">
+          <topic id="M:Catkeys.String_.ToInt32_(System.String)" project="Catkeys" file="M_Catkeys_String__ToInt32_" />
+          <topic id="M:Catkeys.String_.ToInt32_(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_String__ToInt32__1" />
+          <topic id="M:Catkeys.String_.ToInt32_(System.String,System.Int32,System.Int32@)" project="Catkeys" file="M_Catkeys_String__ToInt32__2" />
+        </topic>
+        <topic id="Overload:Catkeys.String_.ToInt64_" project="Catkeys" file="Overload_Catkeys_String__ToInt64_">
+          <topic id="M:Catkeys.String_.ToInt64_(System.String)" project="Catkeys" file="M_Catkeys_String__ToInt64_" />
+          <topic id="M:Catkeys.String_.ToInt64_(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_String__ToInt64__1" />
+          <topic id="M:Catkeys.String_.ToInt64_(System.String,System.Int32,System.Int32@)" project="Catkeys" file="M_Catkeys_String__ToInt64__2" />
+        </topic>
+        <topic id="M:Catkeys.String_.ToIntAndString_(System.String,System.String@)" project="Catkeys" file="M_Catkeys_String__ToIntAndString_" />
+        <topic id="M:Catkeys.String_.ToLower_(System.String)" project="Catkeys" file="M_Catkeys_String__ToLower_" />
+        <topic id="M:Catkeys.String_.ToUpper_(System.String)" project="Catkeys" file="M_Catkeys_String__ToUpper_" />
+        <topic id="M:Catkeys.String_.Trim_(System.String,System.String)" project="Catkeys" file="M_Catkeys_String__Trim_" />
+        <topic id="M:Catkeys.String_.TrimEnd_(System.String,System.String)" project="Catkeys" file="M_Catkeys_String__TrimEnd_" />
+        <topic id="M:Catkeys.String_.TrimStart_(System.String,System.String)" project="Catkeys" file="M_Catkeys_String__TrimStart_" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.StringList" project="Catkeys" file="T_Catkeys_StringList">
+      <topic id="Properties.T:Catkeys.StringList" project="Catkeys" file="Properties_T_Catkeys_StringList">
+        <topic id="P:Catkeys.StringList.Arr" project="Catkeys" file="P_Catkeys_StringList_Arr" />
+      </topic>
+      <topic id="Operators.T:Catkeys.StringList" project="Catkeys" file="Operators_T_Catkeys_StringList">
+        <topic id="Overload:Catkeys.StringList.op_Implicit" project="Catkeys" file="Overload_Catkeys_StringList_op_Implicit">
+          <topic id="M:Catkeys.StringList.op_Implicit(System.Collections.Generic.List{System.String})~Catkeys.StringList" project="Catkeys" file="M_Catkeys_StringList_op_Implicit_1" />
+          <topic id="M:Catkeys.StringList.op_Implicit(System.String)~Catkeys.StringList" project="Catkeys" file="M_Catkeys_StringList_op_Implicit_2" />
+          <topic id="M:Catkeys.StringList.op_Implicit(System.String[])~Catkeys.StringList" project="Catkeys" file="M_Catkeys_StringList_op_Implicit_3" />
+          <topic id="M:Catkeys.StringList.op_Implicit(Catkeys.StringList)~System.String[]" project="Catkeys" file="M_Catkeys_StringList_op_Implicit" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.TaskDialog" project="Catkeys" file="T_Catkeys_TaskDialog">
+      <topic id="Overload:Catkeys.TaskDialog.#ctor" project="Catkeys" file="Overload_Catkeys_TaskDialog__ctor">
+        <topic id="M:Catkeys.TaskDialog.#ctor" project="Catkeys" file="M_Catkeys_TaskDialog__ctor" />
+        <topic id="M:Catkeys.TaskDialog.#ctor(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})" project="Catkeys" file="M_Catkeys_TaskDialog__ctor_1" />
+      </topic>
+      <topic id="Properties.T:Catkeys.TaskDialog" project="Catkeys" file="Properties_T_Catkeys_TaskDialog">
+        <topic id="P:Catkeys.TaskDialog.DefaultButton" project="Catkeys" file="P_Catkeys_TaskDialog_DefaultButton" />
+        <topic id="P:Catkeys.TaskDialog.DialogWindow" project="Catkeys" file="P_Catkeys_TaskDialog_DialogWindow" />
+        <topic id="P:Catkeys.TaskDialog.EditControl" project="Catkeys" file="P_Catkeys_TaskDialog_EditControl" />
+        <topic id="P:Catkeys.TaskDialog.FlagAllowCancel" project="Catkeys" file="P_Catkeys_TaskDialog_FlagAllowCancel" />
+        <topic id="P:Catkeys.TaskDialog.FlagCanBeMinimized" project="Catkeys" file="P_Catkeys_TaskDialog_FlagCanBeMinimized" />
+        <topic id="P:Catkeys.TaskDialog.FlagEndThread" project="Catkeys" file="P_Catkeys_TaskDialog_FlagEndThread" />
+        <topic id="P:Catkeys.TaskDialog.FlagRtlLayout" project="Catkeys" file="P_Catkeys_TaskDialog_FlagRtlLayout" />
+        <topic id="P:Catkeys.TaskDialog.FlagShowMarqueeProgressBar" project="Catkeys" file="P_Catkeys_TaskDialog_FlagShowMarqueeProgressBar" />
+        <topic id="P:Catkeys.TaskDialog.FlagShowProgressBar" project="Catkeys" file="P_Catkeys_TaskDialog_FlagShowProgressBar" />
+        <topic id="P:Catkeys.TaskDialog.FlagTopmost" project="Catkeys" file="P_Catkeys_TaskDialog_FlagTopmost" />
+        <topic id="P:Catkeys.TaskDialog.IsOpen" project="Catkeys" file="P_Catkeys_TaskDialog_IsOpen" />
+        <topic id="P:Catkeys.TaskDialog.Result" project="Catkeys" file="P_Catkeys_TaskDialog_Result" />
+        <topic id="P:Catkeys.TaskDialog.Screen" project="Catkeys" file="P_Catkeys_TaskDialog_Screen" />
+        <topic id="P:Catkeys.TaskDialog.Send" project="Catkeys" file="P_Catkeys_TaskDialog_Send" />
+        <topic id="P:Catkeys.TaskDialog.Width" project="Catkeys" file="P_Catkeys_TaskDialog_Width" />
+      </topic>
+      <topic id="Methods.T:Catkeys.TaskDialog" project="Catkeys" file="Methods_T_Catkeys_TaskDialog">
+        <topic id="M:Catkeys.TaskDialog.SetButtons(Catkeys.TDButtons)" project="Catkeys" file="M_Catkeys_TaskDialog_SetButtons" />
+        <topic id="M:Catkeys.TaskDialog.SetCheckbox(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_SetCheckbox" />
+        <topic id="M:Catkeys.TaskDialog.SetCustomButtons(Catkeys.StringList,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_SetCustomButtons" />
+        <topic id="M:Catkeys.TaskDialog.SetEditControl(Catkeys.TDEdit,System.String,Catkeys.StringList)" project="Catkeys" file="M_Catkeys_TaskDialog_SetEditControl" />
+        <topic id="M:Catkeys.TaskDialog.SetExpandControl(System.Boolean,System.String,System.String)" project="Catkeys" file="M_Catkeys_TaskDialog_SetExpandControl" />
+        <topic id="M:Catkeys.TaskDialog.SetExpandedText(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_SetExpandedText" />
+        <topic id="Overload:Catkeys.TaskDialog.SetFooterText" project="Catkeys" file="Overload_Catkeys_TaskDialog_SetFooterText">
+          <topic id="M:Catkeys.TaskDialog.SetFooterText(System.String)" project="Catkeys" file="M_Catkeys_TaskDialog_SetFooterText" />
+          <topic id="M:Catkeys.TaskDialog.SetFooterText(System.String,Catkeys.TDIcon)" project="Catkeys" file="M_Catkeys_TaskDialog_SetFooterText_1" />
+          <topic id="M:Catkeys.TaskDialog.SetFooterText(System.String,System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_SetFooterText_2" />
+        </topic>
+        <topic id="Overload:Catkeys.TaskDialog.SetIcon" project="Catkeys" file="Overload_Catkeys_TaskDialog_SetIcon">
+          <topic id="M:Catkeys.TaskDialog.SetIcon(System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_SetIcon_1" />
+          <topic id="M:Catkeys.TaskDialog.SetIcon(Catkeys.TDIcon)" project="Catkeys" file="M_Catkeys_TaskDialog_SetIcon" />
+        </topic>
+        <topic id="M:Catkeys.TaskDialog.SetOwnerWindow(System.Object,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_SetOwnerWindow" />
+        <topic id="M:Catkeys.TaskDialog.SetRadioButtons(Catkeys.StringList,System.Int32)" project="Catkeys" file="M_Catkeys_TaskDialog_SetRadioButtons" />
+        <topic id="M:Catkeys.TaskDialog.SetText(System.String,System.String)" project="Catkeys" file="M_Catkeys_TaskDialog_SetText" />
+        <topic id="M:Catkeys.TaskDialog.SetTimeout(System.Int32,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_SetTimeout" />
+        <topic id="M:Catkeys.TaskDialog.SetTitleBarText(System.String)" project="Catkeys" file="M_Catkeys_TaskDialog_SetTitleBarText" />
+        <topic id="M:Catkeys.TaskDialog.SetXY(System.Int32,System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_SetXY" />
+        <topic id="M:Catkeys.TaskDialog.Show(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_Show" />
+        <topic id="M:Catkeys.TaskDialog.ShowDialog" project="Catkeys" file="M_Catkeys_TaskDialog_ShowDialog" />
+        <topic id="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})" project="Catkeys" file="M_Catkeys_TaskDialog_ShowEx" />
+        <topic id="Overload:Catkeys.TaskDialog.ShowInput" project="Catkeys" file="Overload_Catkeys_TaskDialog_ShowInput">
+          <topic id="M:Catkeys.TaskDialog.ShowInput(System.Int32@,System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_ShowInput" />
+          <topic id="M:Catkeys.TaskDialog.ShowInput(System.String@,System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_ShowInput_1" />
+        </topic>
+        <topic id="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,System.String,Catkeys.TDFlags,System.String,Catkeys.StringList,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,Catkeys.StringList,System.Action{Catkeys.TaskDialog.TDEventArgs},System.Action{Catkeys.TaskDialog.TDEventArgs})" project="Catkeys" file="M_Catkeys_TaskDialog_ShowInputEx" />
+        <topic id="M:Catkeys.TaskDialog.ShowList(Catkeys.StringList,System.String,System.String,Catkeys.TDFlags,System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_ShowList" />
+        <topic id="M:Catkeys.TaskDialog.ShowListEx(Catkeys.StringList,System.String,System.String,Catkeys.TDFlags,System.Int32,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})" project="Catkeys" file="M_Catkeys_TaskDialog_ShowListEx" />
+        <topic id="Overload:Catkeys.TaskDialog.ShowNoWait" project="Catkeys" file="Overload_Catkeys_TaskDialog_ShowNoWait">
+          <topic id="M:Catkeys.TaskDialog.ShowNoWait(System.Action{Catkeys.TDResult},System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_ShowNoWait" />
+          <topic id="M:Catkeys.TaskDialog.ShowNoWait(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.StringList,System.Object)" project="Catkeys" file="M_Catkeys_TaskDialog_ShowNoWait_1" />
+        </topic>
+        <topic id="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,Catkeys.TDButtons,Catkeys.TDIcon,Catkeys.TDFlags,System.Int32,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})" project="Catkeys" file="M_Catkeys_TaskDialog_ShowNoWaitEx" />
+        <topic id="M:Catkeys.TaskDialog.ShowProgress(System.Boolean,System.String,System.String,Catkeys.TDFlags,Catkeys.StringList,System.Object,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_TaskDialog_ShowProgress" />
+        <topic id="M:Catkeys.TaskDialog.ShowProgressEx(System.Boolean,System.String,System.String,Catkeys.TDFlags,Catkeys.StringList,Catkeys.StringList,System.String,System.Object,System.Int32,System.Int32,System.Int32,System.String,System.String,System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})" project="Catkeys" file="M_Catkeys_TaskDialog_ShowProgressEx" />
+        <topic id="M:Catkeys.TaskDialog.ThreadWaitClosed" project="Catkeys" file="M_Catkeys_TaskDialog_ThreadWaitClosed" />
+        <topic id="M:Catkeys.TaskDialog.ThreadWaitOpen" project="Catkeys" file="M_Catkeys_TaskDialog_ThreadWaitOpen" />
+      </topic>
+      <topic id="Events.T:Catkeys.TaskDialog" project="Catkeys" file="Events_T_Catkeys_TaskDialog">
+        <topic id="E:Catkeys.TaskDialog.ButtonClicked" project="Catkeys" file="E_Catkeys_TaskDialog_ButtonClicked" />
+        <topic id="E:Catkeys.TaskDialog.Created" project="Catkeys" file="E_Catkeys_TaskDialog_Created" />
+        <topic id="E:Catkeys.TaskDialog.Destroyed" project="Catkeys" file="E_Catkeys_TaskDialog_Destroyed" />
+        <topic id="E:Catkeys.TaskDialog.HelpF1" project="Catkeys" file="E_Catkeys_TaskDialog_HelpF1" />
+        <topic id="E:Catkeys.TaskDialog.HyperlinkClicked" project="Catkeys" file="E_Catkeys_TaskDialog_HyperlinkClicked" />
+        <topic id="E:Catkeys.TaskDialog.OtherEvents" project="Catkeys" file="E_Catkeys_TaskDialog_OtherEvents" />
+        <topic id="E:Catkeys.TaskDialog.Timer" project="Catkeys" file="E_Catkeys_TaskDialog_Timer" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.TaskDialog.Options" project="Catkeys" file="T_Catkeys_TaskDialog_Options">
+      <topic id="Properties.T:Catkeys.TaskDialog.Options" project="Catkeys" file="Properties_T_Catkeys_TaskDialog_Options">
+        <topic id="P:Catkeys.TaskDialog.Options.DefaultTitle" project="Catkeys" file="P_Catkeys_TaskDialog_Options_DefaultTitle" />
+        <topic id="P:Catkeys.TaskDialog.Options.RtlLayout" project="Catkeys" file="P_Catkeys_TaskDialog_Options_RtlLayout" />
+        <topic id="P:Catkeys.TaskDialog.Options.ScreenIfNoOwner" project="Catkeys" file="P_Catkeys_TaskDialog_Options_ScreenIfNoOwner" />
+        <topic id="P:Catkeys.TaskDialog.Options.TopmostIfNoOwner" project="Catkeys" file="P_Catkeys_TaskDialog_Options_TopmostIfNoOwner" />
+        <topic id="P:Catkeys.TaskDialog.Options.UseAppIcon" project="Catkeys" file="P_Catkeys_TaskDialog_Options_UseAppIcon" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.TaskDialog.TDEventArgs" project="Catkeys" file="T_Catkeys_TaskDialog_TDEventArgs">
+      <topic id="Properties.T:Catkeys.TaskDialog.TDEventArgs" project="Catkeys" file="Properties_T_Catkeys_TaskDialog_TDEventArgs">
+        <topic id="P:Catkeys.TaskDialog.TDEventArgs.Button" project="Catkeys" file="P_Catkeys_TaskDialog_TDEventArgs_Button" />
+        <topic id="P:Catkeys.TaskDialog.TDEventArgs.ButtonName" project="Catkeys" file="P_Catkeys_TaskDialog_TDEventArgs_ButtonName" />
+        <topic id="P:Catkeys.TaskDialog.TDEventArgs.DoNotCloseDialog" project="Catkeys" file="P_Catkeys_TaskDialog_TDEventArgs_DoNotCloseDialog" />
+        <topic id="P:Catkeys.TaskDialog.TDEventArgs.EditText" project="Catkeys" file="P_Catkeys_TaskDialog_TDEventArgs_EditText" />
+        <topic id="P:Catkeys.TaskDialog.TDEventArgs.LinkHref" project="Catkeys" file="P_Catkeys_TaskDialog_TDEventArgs_LinkHref" />
+        <topic id="P:Catkeys.TaskDialog.TDEventArgs.TimerTimeMS" project="Catkeys" file="P_Catkeys_TaskDialog_TDEventArgs_TimerTimeMS" />
+      </topic>
+      <topic id="Fields.T:Catkeys.TaskDialog.TDEventArgs" project="Catkeys" file="Fields_T_Catkeys_TaskDialog_TDEventArgs">
+        <topic id="F:Catkeys.TaskDialog.TDEventArgs.dialog" project="Catkeys" file="F_Catkeys_TaskDialog_TDEventArgs_dialog" />
+        <topic id="F:Catkeys.TaskDialog.TDEventArgs.hwnd" project="Catkeys" file="F_Catkeys_TaskDialog_TDEventArgs_hwnd" />
+        <topic id="F:Catkeys.TaskDialog.TDEventArgs.message" project="Catkeys" file="F_Catkeys_TaskDialog_TDEventArgs_message" />
+        <topic id="F:Catkeys.TaskDialog.TDEventArgs.returnValue" project="Catkeys" file="F_Catkeys_TaskDialog_TDEventArgs_returnValue" />
+        <topic id="F:Catkeys.TaskDialog.TDEventArgs.wParam" project="Catkeys" file="F_Catkeys_TaskDialog_TDEventArgs_wParam" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.TaskDialog.TDMessageSender" project="Catkeys" file="T_Catkeys_TaskDialog_TDMessageSender">
+      <topic id="Methods.T:Catkeys.TaskDialog.TDMessageSender" project="Catkeys" file="Methods_T_Catkeys_TaskDialog_TDMessageSender">
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.ChangeExpandedText(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_ChangeExpandedText" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.ChangeFooterText(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_ChangeFooterText" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.ChangeText1(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_ChangeText1" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.ChangeText2(System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_ChangeText2" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.Close(System.Int32)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_Close" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.EnableButton(System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_EnableButton" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.Message(Catkeys.TaskDialog.TDApi.TDM,Catkeys.LPARAM,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_Message" />
+        <topic id="M:Catkeys.TaskDialog.TDMessageSender.Progress(System.Int32)" project="Catkeys" file="M_Catkeys_TaskDialog_TDMessageSender_Progress" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.TDButtons" project="Catkeys" file="T_Catkeys_TDButtons" />
+    <topic id="T:Catkeys.TDEdit" project="Catkeys" file="T_Catkeys_TDEdit" />
+    <topic id="T:Catkeys.TDFlags" project="Catkeys" file="T_Catkeys_TDFlags" />
+    <topic id="T:Catkeys.TDIcon" project="Catkeys" file="T_Catkeys_TDIcon" />
+    <topic id="T:Catkeys.TDResult" project="Catkeys" file="T_Catkeys_TDResult">
+      <topic id="Properties.T:Catkeys.TDResult" project="Catkeys" file="Properties_T_Catkeys_TDResult">
+        <topic id="P:Catkeys.TDResult.Button" project="Catkeys" file="P_Catkeys_TDResult_Button" />
+        <topic id="P:Catkeys.TDResult.ButtonName" project="Catkeys" file="P_Catkeys_TDResult_ButtonName" />
+        <topic id="P:Catkeys.TDResult.EditText" project="Catkeys" file="P_Catkeys_TDResult_EditText" />
+        <topic id="P:Catkeys.TDResult.IsChecked" project="Catkeys" file="P_Catkeys_TDResult_IsChecked" />
+        <topic id="P:Catkeys.TDResult.RadioButton" project="Catkeys" file="P_Catkeys_TDResult_RadioButton" />
+      </topic>
+      <topic id="Methods.T:Catkeys.TDResult" project="Catkeys" file="Methods_T_Catkeys_TDResult">
+        <topic id="M:Catkeys.TDResult.ToString" project="Catkeys" file="M_Catkeys_TDResult_ToString" />
+      </topic>
+      <topic id="Operators.T:Catkeys.TDResult" project="Catkeys" file="Operators_T_Catkeys_TDResult">
+        <topic id="M:Catkeys.TDResult.op_Implicit(Catkeys.TDResult)~System.Int32" project="Catkeys" file="M_Catkeys_TDResult_op_Implicit" />
+      </topic>
+      <topic id="Fields.T:Catkeys.TDResult" project="Catkeys" file="Fields_T_Catkeys_TDResult">
+        <topic id="F:Catkeys.TDResult.Cancel" project="Catkeys" file="F_Catkeys_TDResult_Cancel" />
+        <topic id="F:Catkeys.TDResult.Close" project="Catkeys" file="F_Catkeys_TDResult_Close" />
+        <topic id="F:Catkeys.TDResult.Yes" project="Catkeys" file="F_Catkeys_TDResult_Yes" />
+        <topic id="F:Catkeys.TDResult.No" project="Catkeys" file="F_Catkeys_TDResult_No" />
+        <topic id="F:Catkeys.TDResult.OK" project="Catkeys" file="F_Catkeys_TDResult_OK" />
+        <topic id="F:Catkeys.TDResult.Retry" project="Catkeys" file="F_Catkeys_TDResult_Retry" />
+        <topic id="F:Catkeys.TDResult.Timeout" project="Catkeys" file="F_Catkeys_TDResult_Timeout" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.ThreadError" project="Catkeys" file="T_Catkeys_ThreadError">
+      <topic id="Properties.T:Catkeys.ThreadError" project="Catkeys" file="Properties_T_Catkeys_ThreadError">
+        <topic id="P:Catkeys.ThreadError.ErrorText" project="Catkeys" file="P_Catkeys_ThreadError_ErrorText" />
+        <topic id="P:Catkeys.ThreadError.Exception" project="Catkeys" file="P_Catkeys_ThreadError_Exception" />
+        <topic id="P:Catkeys.ThreadError.IsError" project="Catkeys" file="P_Catkeys_ThreadError_IsError" />
+        <topic id="P:Catkeys.ThreadError.WinErrorCode" project="Catkeys" file="P_Catkeys_ThreadError_WinErrorCode" />
+      </topic>
+      <topic id="Methods.T:Catkeys.ThreadError" project="Catkeys" file="Methods_T_Catkeys_ThreadError">
+        <topic id="M:Catkeys.ThreadError.Clear" project="Catkeys" file="M_Catkeys_ThreadError_Clear" />
+        <topic id="Overload:Catkeys.ThreadError.GetWinErorText" project="Catkeys" file="Overload_Catkeys_ThreadError_GetWinErorText">
+          <topic id="M:Catkeys.ThreadError.GetWinErorText" project="Catkeys" file="M_Catkeys_ThreadError_GetWinErorText" />
+          <topic id="M:Catkeys.ThreadError.GetWinErorText(System.Int32)" project="Catkeys" file="M_Catkeys_ThreadError_GetWinErorText_1" />
+        </topic>
+        <topic id="Overload:Catkeys.ThreadError.Set" project="Catkeys" file="Overload_Catkeys_ThreadError_Set">
+          <topic id="M:Catkeys.ThreadError.Set(System.String)" project="Catkeys" file="M_Catkeys_ThreadError_Set_1" />
+          <topic id="M:Catkeys.ThreadError.Set(System.Int32,System.String)" project="Catkeys" file="M_Catkeys_ThreadError_Set" />
+        </topic>
+        <topic id="M:Catkeys.ThreadError.SetException(System.Exception)" project="Catkeys" file="M_Catkeys_ThreadError_SetException" />
+        <topic id="M:Catkeys.ThreadError.SetIfWinError" project="Catkeys" file="M_Catkeys_ThreadError_SetIfWinError" />
+        <topic id="M:Catkeys.ThreadError.SetWinError" project="Catkeys" file="M_Catkeys_ThreadError_SetWinError" />
+        <topic id="M:Catkeys.ThreadError.ThrowIfError" project="Catkeys" file="M_Catkeys_ThreadError_ThrowIfError" />
+        <topic id="Overload:Catkeys.ThreadError.ThrowOrSet" project="Catkeys" file="Overload_Catkeys_ThreadError_ThrowOrSet">
+          <topic id="M:Catkeys.ThreadError.ThrowOrSet(System.Boolean,System.String)" project="Catkeys" file="M_Catkeys_ThreadError_ThrowOrSet_1" />
+          <topic id="M:Catkeys.ThreadError.ThrowOrSet(System.Boolean,System.Int32,System.String)" project="Catkeys" file="M_Catkeys_ThreadError_ThrowOrSet" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Time" project="Catkeys" file="T_Catkeys_Time">
+      <topic id="Properties.T:Catkeys.Time" project="Catkeys" file="Properties_T_Catkeys_Time">
+        <topic id="P:Catkeys.Time.Microseconds" project="Catkeys" file="P_Catkeys_Time_Microseconds" />
+        <topic id="P:Catkeys.Time.Milliseconds" project="Catkeys" file="P_Catkeys_Time_Milliseconds" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Time" project="Catkeys" file="Methods_T_Catkeys_Time">
+        <topic id="Overload:Catkeys.Time.AutoDelay" project="Catkeys" file="Overload_Catkeys_Time_AutoDelay">
+          <topic id="M:Catkeys.Time.AutoDelay" project="Catkeys" file="M_Catkeys_Time_AutoDelay" />
+          <topic id="M:Catkeys.Time.AutoDelay(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Time_AutoDelay_1" />
+          <topic id="M:Catkeys.Time.AutoDelay(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Time_AutoDelay_3" />
+          <topic id="M:Catkeys.Time.AutoDelay(Catkeys.Wnd,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Time_AutoDelay_2" />
+        </topic>
+        <topic id="M:Catkeys.Time.DoEvents" project="Catkeys" file="M_Catkeys_Time_DoEvents" />
+        <topic id="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)" project="Catkeys" file="M_Catkeys_Time_SetTimer" />
+        <topic id="M:Catkeys.Time.Wait(System.Double)" project="Catkeys" file="M_Catkeys_Time_Wait" />
+        <topic id="M:Catkeys.Time.WaitMS(System.Int32)" project="Catkeys" file="M_Catkeys_Time_WaitMS" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Time.Timer_" project="Catkeys" file="T_Catkeys_Time_Timer_">
+      <topic id="M:Catkeys.Time.Timer_.#ctor(System.Action{Catkeys.Time.Timer_},System.Object)" project="Catkeys" file="M_Catkeys_Time_Timer___ctor" />
+      <topic id="Properties.T:Catkeys.Time.Timer_" project="Catkeys" file="Properties_T_Catkeys_Time_Timer_">
+        <topic id="P:Catkeys.Time.Timer_.Tag" project="Catkeys" file="P_Catkeys_Time_Timer__Tag" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Time.Timer_" project="Catkeys" file="Methods_T_Catkeys_Time_Timer_">
+        <topic id="M:Catkeys.Time.Timer_.Start(System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_Time_Timer__Start" />
+        <topic id="M:Catkeys.Time.Timer_.Stop" project="Catkeys" file="M_Catkeys_Time_Timer__Stop" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.WaitFor" project="Catkeys" file="T_Catkeys_WaitFor" />
+    <topic id="T:Catkeys.Wildex" project="Catkeys" file="T_Catkeys_Wildex">
+      <topic id="M:Catkeys.Wildex.#ctor(System.String)" project="Catkeys" file="M_Catkeys_Wildex__ctor" />
+      <topic id="Properties.T:Catkeys.Wildex" project="Catkeys" file="Properties_T_Catkeys_Wildex">
+        <topic id="P:Catkeys.Wildex.IgnoreCase" project="Catkeys" file="P_Catkeys_Wildex_IgnoreCase" />
+        <topic id="P:Catkeys.Wildex.MultiArray" project="Catkeys" file="P_Catkeys_Wildex_MultiArray" />
+        <topic id="P:Catkeys.Wildex.Not" project="Catkeys" file="P_Catkeys_Wildex_Not" />
+        <topic id="P:Catkeys.Wildex.Regex" project="Catkeys" file="P_Catkeys_Wildex_Regex" />
+        <topic id="P:Catkeys.Wildex.Text" project="Catkeys" file="P_Catkeys_Wildex_Text" />
+        <topic id="P:Catkeys.Wildex.TextType" project="Catkeys" file="P_Catkeys_Wildex_TextType" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Wildex" project="Catkeys" file="Methods_T_Catkeys_Wildex">
+        <topic id="M:Catkeys.Wildex.HasWildcards(System.String)" project="Catkeys" file="M_Catkeys_Wildex_HasWildcards" />
+        <topic id="M:Catkeys.Wildex.Match(System.String)" project="Catkeys" file="M_Catkeys_Wildex_Match" />
+        <topic id="M:Catkeys.Wildex.ToString" project="Catkeys" file="M_Catkeys_Wildex_ToString" />
+      </topic>
+      <topic id="Operators.T:Catkeys.Wildex" project="Catkeys" file="Operators_T_Catkeys_Wildex">
+        <topic id="M:Catkeys.Wildex.op_Implicit(System.String)~Catkeys.Wildex" project="Catkeys" file="M_Catkeys_Wildex_op_Implicit" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wildex.WildType" project="Catkeys" file="T_Catkeys_Wildex_WildType" />
+    <topic id="T:Catkeys.Wnd" project="Catkeys" file="T_Catkeys_Wnd">
+      <topic id="M:Catkeys.Wnd.#ctor(System.IntPtr)" project="Catkeys" file="M_Catkeys_Wnd__ctor" />
+      <topic id="Properties.T:Catkeys.Wnd" project="Catkeys" file="Properties_T_Catkeys_Wnd">
+        <topic id="P:Catkeys.Wnd.ActiveWindow" project="Catkeys" file="P_Catkeys_Wnd_ActiveWindow" />
+        <topic id="P:Catkeys.Wnd.ClassName" project="Catkeys" file="P_Catkeys_Wnd_ClassName" />
+        <topic id="P:Catkeys.Wnd.ClientHeight" project="Catkeys" file="P_Catkeys_Wnd_ClientHeight" />
+        <topic id="P:Catkeys.Wnd.ClientRect" project="Catkeys" file="P_Catkeys_Wnd_ClientRect" />
+        <topic id="P:Catkeys.Wnd.ClientRectInScreen" project="Catkeys" file="P_Catkeys_Wnd_ClientRectInScreen" />
+        <topic id="P:Catkeys.Wnd.ClientSize" project="Catkeys" file="P_Catkeys_Wnd_ClientSize" />
+        <topic id="P:Catkeys.Wnd.ClientWidth" project="Catkeys" file="P_Catkeys_Wnd_ClientWidth" />
+        <topic id="P:Catkeys.Wnd.ControlId" project="Catkeys" file="P_Catkeys_Wnd_ControlId" />
+        <topic id="P:Catkeys.Wnd.DirectParent" project="Catkeys" file="P_Catkeys_Wnd_DirectParent" />
+        <topic id="P:Catkeys.Wnd.DirectParentOrOwner" project="Catkeys" file="P_Catkeys_Wnd_DirectParentOrOwner" />
+        <topic id="P:Catkeys.Wnd.ExStyle" project="Catkeys" file="P_Catkeys_Wnd_ExStyle" />
+        <topic id="P:Catkeys.Wnd.FocusedControl" project="Catkeys" file="P_Catkeys_Wnd_FocusedControl" />
+        <topic id="P:Catkeys.Wnd.FocusedControlOfThisThread" project="Catkeys" file="P_Catkeys_Wnd_FocusedControlOfThisThread" />
+        <topic id="P:Catkeys.Wnd.FontHandle" project="Catkeys" file="P_Catkeys_Wnd_FontHandle" />
+        <topic id="P:Catkeys.Wnd.Handle" project="Catkeys" file="P_Catkeys_Wnd_Handle" />
+        <topic id="P:Catkeys.Wnd.Height" project="Catkeys" file="P_Catkeys_Wnd_Height" />
+        <topic id="P:Catkeys.Wnd.Y" project="Catkeys" file="P_Catkeys_Wnd_Y" />
+        <topic id="P:Catkeys.Wnd.Is0" project="Catkeys" file="P_Catkeys_Wnd_Is0" />
+        <topic id="P:Catkeys.Wnd.Is64Bit" project="Catkeys" file="P_Catkeys_Wnd_Is64Bit" />
+        <topic id="P:Catkeys.Wnd.IsActive" project="Catkeys" file="P_Catkeys_Wnd_IsActive" />
+        <topic id="P:Catkeys.Wnd.IsChildWindow" project="Catkeys" file="P_Catkeys_Wnd_IsChildWindow" />
+        <topic id="P:Catkeys.Wnd.IsCloaked" project="Catkeys" file="P_Catkeys_Wnd_IsCloaked" />
+        <topic id="P:Catkeys.Wnd.IsCloakedGetState" project="Catkeys" file="P_Catkeys_Wnd_IsCloakedGetState" />
+        <topic id="P:Catkeys.Wnd.IsConsole" project="Catkeys" file="P_Catkeys_Wnd_IsConsole" />
+        <topic id="P:Catkeys.Wnd.IsEnabled" project="Catkeys" file="P_Catkeys_Wnd_IsEnabled" />
+        <topic id="P:Catkeys.Wnd.IsFocusedControl" project="Catkeys" file="P_Catkeys_Wnd_IsFocusedControl" />
+        <topic id="P:Catkeys.Wnd.IsFocusedControlOfThisThread" project="Catkeys" file="P_Catkeys_Wnd_IsFocusedControlOfThisThread" />
+        <topic id="P:Catkeys.Wnd.IsFullScreen" project="Catkeys" file="P_Catkeys_Wnd_IsFullScreen" />
+        <topic id="P:Catkeys.Wnd.IsHung" project="Catkeys" file="P_Catkeys_Wnd_IsHung" />
+        <topic id="P:Catkeys.Wnd.IsHungGhost" project="Catkeys" file="P_Catkeys_Wnd_IsHungGhost" />
+        <topic id="P:Catkeys.Wnd.IsMaximized" project="Catkeys" file="P_Catkeys_Wnd_IsMaximized" />
+        <topic id="P:Catkeys.Wnd.IsMinimized" project="Catkeys" file="P_Catkeys_Wnd_IsMinimized" />
+        <topic id="P:Catkeys.Wnd.IsOfShellProcess" project="Catkeys" file="P_Catkeys_Wnd_IsOfShellProcess" />
+        <topic id="P:Catkeys.Wnd.IsOfShellThread" project="Catkeys" file="P_Catkeys_Wnd_IsOfShellThread" />
+        <topic id="P:Catkeys.Wnd.IsOfThisProcess" project="Catkeys" file="P_Catkeys_Wnd_IsOfThisProcess" />
+        <topic id="P:Catkeys.Wnd.IsOfThisThread" project="Catkeys" file="P_Catkeys_Wnd_IsOfThisThread" />
+        <topic id="P:Catkeys.Wnd.IsTopmost" project="Catkeys" file="P_Catkeys_Wnd_IsTopmost" />
+        <topic id="P:Catkeys.Wnd.IsUacAccessDenied" project="Catkeys" file="P_Catkeys_Wnd_IsUacAccessDenied" />
+        <topic id="P:Catkeys.Wnd.IsUnicode" project="Catkeys" file="P_Catkeys_Wnd_IsUnicode" />
+        <topic id="P:Catkeys.Wnd.IsValid" project="Catkeys" file="P_Catkeys_Wnd_IsValid" />
+        <topic id="P:Catkeys.Wnd.IsVisible" project="Catkeys" file="P_Catkeys_Wnd_IsVisible" />
+        <topic id="P:Catkeys.Wnd.IsWin10StoreApp" project="Catkeys" file="P_Catkeys_Wnd_IsWin10StoreApp" />
+        <topic id="P:Catkeys.Wnd.IsWin8MetroStyle" project="Catkeys" file="P_Catkeys_Wnd_IsWin8MetroStyle" />
+        <topic id="P:Catkeys.Wnd.MouseClientXY" project="Catkeys" file="P_Catkeys_Wnd_MouseClientXY" />
+        <topic id="P:Catkeys.Wnd.Name" project="Catkeys" file="P_Catkeys_Wnd_Name" />
+        <topic id="P:Catkeys.Wnd.Owner" project="Catkeys" file="P_Catkeys_Wnd_Owner" />
+        <topic id="P:Catkeys.Wnd.ProcessId" project="Catkeys" file="P_Catkeys_Wnd_ProcessId" />
+        <topic id="P:Catkeys.Wnd.ProcessName" project="Catkeys" file="P_Catkeys_Wnd_ProcessName" />
+        <topic id="P:Catkeys.Wnd.ProcessPath" project="Catkeys" file="P_Catkeys_Wnd_ProcessPath" />
+        <topic id="P:Catkeys.Wnd.Rect" project="Catkeys" file="P_Catkeys_Wnd_Rect" />
+        <topic id="P:Catkeys.Wnd.RectInParent" project="Catkeys" file="P_Catkeys_Wnd_RectInParent" />
+        <topic id="P:Catkeys.Wnd.Screen" project="Catkeys" file="P_Catkeys_Wnd_Screen" />
+        <topic id="P:Catkeys.Wnd.Size" project="Catkeys" file="P_Catkeys_Wnd_Size" />
+        <topic id="P:Catkeys.Wnd.Style" project="Catkeys" file="P_Catkeys_Wnd_Style" />
+        <topic id="P:Catkeys.Wnd.ThreadId" project="Catkeys" file="P_Catkeys_Wnd_ThreadId" />
+        <topic id="P:Catkeys.Wnd.ToplevelParentOrThis" project="Catkeys" file="P_Catkeys_Wnd_ToplevelParentOrThis" />
+        <topic id="P:Catkeys.Wnd.Width" project="Catkeys" file="P_Catkeys_Wnd_Width" />
+        <topic id="P:Catkeys.Wnd.X" project="Catkeys" file="P_Catkeys_Wnd_X" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Wnd" project="Catkeys" file="Methods_T_Catkeys_Wnd">
+        <topic id="M:Catkeys.Wnd.Activate" project="Catkeys" file="M_Catkeys_Wnd_Activate" />
+        <topic id="M:Catkeys.Wnd.ActivateRaw" project="Catkeys" file="M_Catkeys_Wnd_ActivateRaw" />
+        <topic id="Overload:Catkeys.Wnd.AllWindows" project="Catkeys" file="Overload_Catkeys_Wnd_AllWindows">
+          <topic id="M:Catkeys.Wnd.AllWindows(System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_AllWindows" />
+          <topic id="M:Catkeys.Wnd.AllWindows(System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_AllWindows_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.Child(System.String,System.String,System.Int32,Catkeys.Wnd.ChildFlag,Catkeys.Wnd.ChildProp,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_Child" />
+        <topic id="M:Catkeys.Wnd.ChildAll(System.String,System.String,System.Int32,Catkeys.Wnd.ChildFlag,Catkeys.Wnd.ChildProp,System.Func{Catkeys.Wnd,System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_ChildAll" />
+        <topic id="Overload:Catkeys.Wnd.ChildAllRaw" project="Catkeys" file="Overload_Catkeys_Wnd_ChildAllRaw">
+          <topic id="M:Catkeys.Wnd.ChildAllRaw(System.Boolean,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ChildAllRaw" />
+          <topic id="M:Catkeys.Wnd.ChildAllRaw(System.Func{Catkeys.Wnd,System.Boolean},System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ChildAllRaw_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.ChildByClass(System.String,System.Boolean,System.Boolean,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_ChildByClass" />
+        <topic id="M:Catkeys.Wnd.ChildById(System.Int32,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ChildById" />
+        <topic id="M:Catkeys.Wnd.ChildFromXY(Catkeys.Coord,Catkeys.Coord,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ChildFromXY" />
+        <topic id="M:Catkeys.Wnd.ChildRaw(System.String,System.String,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_ChildRaw" />
+        <topic id="Overload:Catkeys.Wnd.ClassNameIs" project="Catkeys" file="Overload_Catkeys_Wnd_ClassNameIs">
+          <topic id="M:Catkeys.Wnd.ClassNameIs(System.String)" project="Catkeys" file="M_Catkeys_Wnd_ClassNameIs" />
+          <topic id="M:Catkeys.Wnd.ClassNameIs(System.String[])" project="Catkeys" file="M_Catkeys_Wnd_ClassNameIs_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.Close(System.Nullable{System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_Close" />
+        <topic id="M:Catkeys.Wnd.CloseAll(System.String,System.String,System.String,Catkeys.Wnd.WinFlag,Catkeys.Wnd.WinProp,System.Func{Catkeys.Wnd,System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_CloseAll" />
+        <topic id="M:Catkeys.Wnd.CloseRawAsync" project="Catkeys" file="M_Catkeys_Wnd_CloseRawAsync" />
+        <topic id="M:Catkeys.Wnd.Destroy" project="Catkeys" file="M_Catkeys_Wnd_Destroy" />
+        <topic id="M:Catkeys.Wnd.Enable(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Enable" />
+        <topic id="M:Catkeys.Wnd.EnsureInScreen(System.Object,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_EnsureInScreen" />
+        <topic id="Overload:Catkeys.Wnd.Equals" project="Catkeys" file="Overload_Catkeys_Wnd_Equals">
+          <topic id="M:Catkeys.Wnd.Equals(System.Object)" project="Catkeys" file="M_Catkeys_Wnd_Equals_1" />
+          <topic id="M:Catkeys.Wnd.Equals(System.Nullable{Catkeys.Wnd})" project="Catkeys" file="M_Catkeys_Wnd_Equals" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.Find(System.String,System.String,System.String,Catkeys.Wnd.WinFlag,Catkeys.Wnd.WinProp,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_Find" />
+        <topic id="M:Catkeys.Wnd.FindAll(System.String,System.String,System.String,Catkeys.Wnd.WinFlag,Catkeys.Wnd.WinProp,System.Func{Catkeys.Wnd,System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_FindAll" />
+        <topic id="M:Catkeys.Wnd.FindH(System.String,System.String,System.String,Catkeys.Wnd.WinProp,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_FindH" />
+        <topic id="M:Catkeys.Wnd.FindRaw(System.String,System.String,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_FindRaw" />
+        <topic id="M:Catkeys.Wnd.FocusControl" project="Catkeys" file="M_Catkeys_Wnd_FocusControl" />
+        <topic id="M:Catkeys.Wnd.FocusControlOfThisThread" project="Catkeys" file="M_Catkeys_Wnd_FocusControlOfThisThread" />
+        <topic id="M:Catkeys.Wnd.FromMouse(System.Nullable{System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_FromMouse" />
+        <topic id="Overload:Catkeys.Wnd.FromXY" project="Catkeys" file="Overload_Catkeys_Wnd_FromXY">
+          <topic id="M:Catkeys.Wnd.FromXY(Catkeys.POINT,System.Nullable{System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_FromXY_1" />
+          <topic id="M:Catkeys.Wnd.FromXY(Catkeys.Coord,Catkeys.Coord,System.Nullable{System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_FromXY" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.FromXYRaw" project="Catkeys" file="Overload_Catkeys_Wnd_FromXYRaw">
+          <topic id="M:Catkeys.Wnd.FromXYRaw(Catkeys.POINT)" project="Catkeys" file="M_Catkeys_Wnd_FromXYRaw" />
+          <topic id="M:Catkeys.Wnd.FromXYRaw(System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_FromXYRaw_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.GetClassLong(System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_GetClassLong" />
+        <topic id="M:Catkeys.Wnd.GetControlName(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_GetControlName" />
+        <topic id="M:Catkeys.Wnd.GetControlText(System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_GetControlText" />
+        <topic id="M:Catkeys.Wnd.GetHashCode" project="Catkeys" file="M_Catkeys_Wnd_GetHashCode" />
+        <topic id="M:Catkeys.Wnd.GetIconHandle(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_GetIconHandle" />
+        <topic id="M:Catkeys.Wnd.GetNormalStateRect(Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_GetNormalStateRect" />
+        <topic id="Overload:Catkeys.Wnd.GetProp" project="Catkeys" file="Overload_Catkeys_Wnd_GetProp">
+          <topic id="M:Catkeys.Wnd.GetProp(System.String)" project="Catkeys" file="M_Catkeys_Wnd_GetProp" />
+          <topic id="M:Catkeys.Wnd.GetProp(System.UInt16)" project="Catkeys" file="M_Catkeys_Wnd_GetProp_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.GetPropList" project="Catkeys" file="M_Catkeys_Wnd_GetPropList" />
+        <topic id="M:Catkeys.Wnd.GetRectInClientOf(Catkeys.Wnd,Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_GetRectInClientOf" />
+        <topic id="M:Catkeys.Wnd.GetThreadAndProcessId(System.UInt32@)" project="Catkeys" file="M_Catkeys_Wnd_GetThreadAndProcessId" />
+        <topic id="M:Catkeys.Wnd.GetWindowAndClientRectInScreen(Catkeys.RECT@,Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_GetWindowAndClientRectInScreen" />
+        <topic id="M:Catkeys.Wnd.GetWindowInfo(Catkeys.Native.WINDOWINFO@)" project="Catkeys" file="M_Catkeys_Wnd_GetWindowInfo" />
+        <topic id="M:Catkeys.Wnd.GetWindowLong(System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_GetWindowLong" />
+        <topic id="M:Catkeys.Wnd.GetWindowPlacement(Catkeys.Native.WINDOWPLACEMENT@)" project="Catkeys" file="M_Catkeys_Wnd_GetWindowPlacement" />
+        <topic id="M:Catkeys.Wnd.HasChild(System.String,System.String,System.Int32,Catkeys.Wnd.ChildFlag,Catkeys.Wnd.ChildProp,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_HasChild" />
+        <topic id="M:Catkeys.Wnd.HasExStyle(System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_HasExStyle" />
+        <topic id="M:Catkeys.Wnd.HasStyle(System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_HasStyle" />
+        <topic id="M:Catkeys.Wnd.IsChildOf(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_IsChildOf" />
+        <topic id="M:Catkeys.Wnd.IsZorderedBefore(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_IsZorderedBefore" />
+        <topic id="Overload:Catkeys.Wnd.MainWindows" project="Catkeys" file="Overload_Catkeys_Wnd_MainWindows">
+          <topic id="M:Catkeys.Wnd.MainWindows(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_MainWindows" />
+          <topic id="M:Catkeys.Wnd.MainWindows(System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_MainWindows_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.MapClientToClientOf" project="Catkeys" file="Overload_Catkeys_Wnd_MapClientToClientOf">
+          <topic id="M:Catkeys.Wnd.MapClientToClientOf(Catkeys.Wnd,Catkeys.POINT@)" project="Catkeys" file="M_Catkeys_Wnd_MapClientToClientOf" />
+          <topic id="M:Catkeys.Wnd.MapClientToClientOf(Catkeys.Wnd,Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_MapClientToClientOf_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.MapClientToScreen" project="Catkeys" file="Overload_Catkeys_Wnd_MapClientToScreen">
+          <topic id="M:Catkeys.Wnd.MapClientToScreen(Catkeys.POINT@)" project="Catkeys" file="M_Catkeys_Wnd_MapClientToScreen" />
+          <topic id="M:Catkeys.Wnd.MapClientToScreen(Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_MapClientToScreen_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.MapClientToWindow" project="Catkeys" file="Overload_Catkeys_Wnd_MapClientToWindow">
+          <topic id="M:Catkeys.Wnd.MapClientToWindow(Catkeys.POINT@)" project="Catkeys" file="M_Catkeys_Wnd_MapClientToWindow" />
+          <topic id="M:Catkeys.Wnd.MapClientToWindow(Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_MapClientToWindow_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.MapScreenToClient" project="Catkeys" file="Overload_Catkeys_Wnd_MapScreenToClient">
+          <topic id="M:Catkeys.Wnd.MapScreenToClient(Catkeys.POINT@)" project="Catkeys" file="M_Catkeys_Wnd_MapScreenToClient" />
+          <topic id="M:Catkeys.Wnd.MapScreenToClient(Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_MapScreenToClient_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.MapWindowToClient" project="Catkeys" file="Overload_Catkeys_Wnd_MapWindowToClient">
+          <topic id="M:Catkeys.Wnd.MapWindowToClient(Catkeys.POINT@)" project="Catkeys" file="M_Catkeys_Wnd_MapWindowToClient" />
+          <topic id="M:Catkeys.Wnd.MapWindowToClient(Catkeys.RECT@)" project="Catkeys" file="M_Catkeys_Wnd_MapWindowToClient_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.Move" project="Catkeys" file="Overload_Catkeys_Wnd_Move">
+          <topic id="M:Catkeys.Wnd.Move(Catkeys.Coord,Catkeys.Coord,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Move_1" />
+          <topic id="M:Catkeys.Wnd.Move(Catkeys.Coord,Catkeys.Coord,Catkeys.Coord,Catkeys.Coord,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Move" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.MoveInScreen(System.Int32,System.Int32,System.Object,System.Boolean,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_MoveInScreen" />
+        <topic id="Overload:Catkeys.Wnd.MoveRaw" project="Catkeys" file="Overload_Catkeys_Wnd_MoveRaw">
+          <topic id="M:Catkeys.Wnd.MoveRaw(System.Nullable{System.Int32},System.Nullable{System.Int32})" project="Catkeys" file="M_Catkeys_Wnd_MoveRaw" />
+          <topic id="M:Catkeys.Wnd.MoveRaw(System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.Int32},System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_MoveRaw_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.MoveToScreenCenter(System.Object,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_MoveToScreenCenter" />
+        <topic id="M:Catkeys.Wnd.Post(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_Post" />
+        <topic id="M:Catkeys.Wnd.RegistryRestore(System.String,System.String,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_RegistryRestore" />
+        <topic id="M:Catkeys.Wnd.RegistrySave(System.String,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_RegistrySave" />
+        <topic id="Overload:Catkeys.Wnd.RemoveProp" project="Catkeys" file="Overload_Catkeys_Wnd_RemoveProp">
+          <topic id="M:Catkeys.Wnd.RemoveProp(System.String)" project="Catkeys" file="M_Catkeys_Wnd_RemoveProp" />
+          <topic id="M:Catkeys.Wnd.RemoveProp(System.UInt16)" project="Catkeys" file="M_Catkeys_Wnd_RemoveProp_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.Resize(Catkeys.Coord,Catkeys.Coord,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Resize" />
+        <topic id="M:Catkeys.Wnd.ResizeRaw(System.Nullable{System.Int32},System.Nullable{System.Int32})" project="Catkeys" file="M_Catkeys_Wnd_ResizeRaw" />
+        <topic id="M:Catkeys.Wnd.Send(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_Send" />
+        <topic id="M:Catkeys.Wnd.SendNotify(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_SendNotify" />
+        <topic id="M:Catkeys.Wnd.SendS(System.UInt32,Catkeys.LPARAM,System.String)" project="Catkeys" file="M_Catkeys_Wnd_SendS" />
+        <topic id="M:Catkeys.Wnd.SendSB(System.UInt32,Catkeys.LPARAM,System.Text.StringBuilder)" project="Catkeys" file="M_Catkeys_Wnd_SendSB" />
+        <topic id="Overload:Catkeys.Wnd.SendTimeout" project="Catkeys" file="Overload_Catkeys_Wnd_SendTimeout">
+          <topic id="M:Catkeys.Wnd.SendTimeout(System.Int32,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_SendTimeout_1" />
+          <topic id="M:Catkeys.Wnd.SendTimeout(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_SendTimeout" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.SendTimeoutS" project="Catkeys" file="Overload_Catkeys_Wnd_SendTimeoutS">
+          <topic id="M:Catkeys.Wnd.SendTimeoutS(System.Int32,System.UInt32,Catkeys.LPARAM,System.String,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_SendTimeoutS_1" />
+          <topic id="M:Catkeys.Wnd.SendTimeoutS(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,System.String,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_SendTimeoutS" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.SendTimeoutSB(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,System.Text.StringBuilder,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_SendTimeoutSB" />
+        <topic id="M:Catkeys.Wnd.SetClassLong(System.Int32,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_SetClassLong" />
+        <topic id="M:Catkeys.Wnd.SetControlText(System.String,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_SetControlText" />
+        <topic id="M:Catkeys.Wnd.SetExStyle(System.UInt32,Catkeys.SetAddRemove,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_SetExStyle" />
+        <topic id="Overload:Catkeys.Wnd.SetProp" project="Catkeys" file="Overload_Catkeys_Wnd_SetProp">
+          <topic id="M:Catkeys.Wnd.SetProp(System.String,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_SetProp" />
+          <topic id="M:Catkeys.Wnd.SetProp(System.UInt16,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_SetProp_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.SetStyle(System.UInt32,Catkeys.SetAddRemove,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_SetStyle" />
+        <topic id="M:Catkeys.Wnd.SetWindowLong(System.Int32,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_SetWindowLong" />
+        <topic id="M:Catkeys.Wnd.SetWindowPlacement(Catkeys.Native.WINDOWPLACEMENT@)" project="Catkeys" file="M_Catkeys_Wnd_SetWindowPlacement" />
+        <topic id="M:Catkeys.Wnd.SetWindowPos(System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_SetWindowPos" />
+        <topic id="M:Catkeys.Wnd.Show(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Show" />
+        <topic id="M:Catkeys.Wnd.ShowDesktop(System.Nullable{System.Boolean})" project="Catkeys" file="M_Catkeys_Wnd_ShowDesktop" />
+        <topic id="Overload:Catkeys.Wnd.ShowMaximized" project="Catkeys" file="Overload_Catkeys_Wnd_ShowMaximized">
+          <topic id="M:Catkeys.Wnd.ShowMaximized" project="Catkeys" file="M_Catkeys_Wnd_ShowMaximized" />
+          <topic id="M:Catkeys.Wnd.ShowMaximized(Catkeys.Wnd.MinMaxHow,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ShowMaximized_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.ShowMinimized" project="Catkeys" file="Overload_Catkeys_Wnd_ShowMinimized">
+          <topic id="M:Catkeys.Wnd.ShowMinimized" project="Catkeys" file="M_Catkeys_Wnd_ShowMinimized" />
+          <topic id="M:Catkeys.Wnd.ShowMinimized(Catkeys.Wnd.MinMaxHow,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ShowMinimized_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.ShowNotMinimized" project="Catkeys" file="Overload_Catkeys_Wnd_ShowNotMinimized">
+          <topic id="M:Catkeys.Wnd.ShowNotMinimized" project="Catkeys" file="M_Catkeys_Wnd_ShowNotMinimized" />
+          <topic id="M:Catkeys.Wnd.ShowNotMinimized(Catkeys.Wnd.MinMaxHow,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ShowNotMinimized_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.ShowNotMinMax" project="Catkeys" file="Overload_Catkeys_Wnd_ShowNotMinMax">
+          <topic id="M:Catkeys.Wnd.ShowNotMinMax" project="Catkeys" file="M_Catkeys_Wnd_ShowNotMinMax" />
+          <topic id="M:Catkeys.Wnd.ShowNotMinMax(Catkeys.Wnd.MinMaxHow,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ShowNotMinMax_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.SwitchActiveWindow(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_SwitchActiveWindow" />
+        <topic id="M:Catkeys.Wnd.ThreadWindows(System.UInt32,System.String,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ThreadWindows" />
+        <topic id="M:Catkeys.Wnd.ToString" project="Catkeys" file="M_Catkeys_Wnd_ToString" />
+        <topic id="M:Catkeys.Wnd.Transparency(System.Boolean,System.Nullable{System.Double},System.Nullable{System.UInt32})" project="Catkeys" file="M_Catkeys_Wnd_Transparency" />
+        <topic id="M:Catkeys.Wnd.TryActivate(Catkeys.Wnd.TryActivateFlags)" project="Catkeys" file="M_Catkeys_Wnd_TryActivate" />
+        <topic id="M:Catkeys.Wnd.Validate(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Validate" />
+        <topic id="M:Catkeys.Wnd.ValidateThrow" project="Catkeys" file="M_Catkeys_Wnd_ValidateThrow" />
+        <topic id="M:Catkeys.Wnd.ZorderAfter(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_ZorderAfter" />
+        <topic id="M:Catkeys.Wnd.ZorderBefore(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_ZorderBefore" />
+        <topic id="M:Catkeys.Wnd.ZorderBottom" project="Catkeys" file="M_Catkeys_Wnd_ZorderBottom" />
+        <topic id="M:Catkeys.Wnd.ZorderNotopmost(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_ZorderNotopmost" />
+        <topic id="M:Catkeys.Wnd.ZorderTop" project="Catkeys" file="M_Catkeys_Wnd_ZorderTop" />
+        <topic id="M:Catkeys.Wnd.ZorderTopmost" project="Catkeys" file="M_Catkeys_Wnd_ZorderTopmost" />
+      </topic>
+      <topic id="Operators.T:Catkeys.Wnd" project="Catkeys" file="Operators_T_Catkeys_Wnd">
+        <topic id="Overload:Catkeys.Wnd.op_Equality" project="Catkeys" file="Overload_Catkeys_Wnd_op_Equality">
+          <topic id="M:Catkeys.Wnd.op_Equality(Catkeys.Wnd,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_op_Equality" />
+          <topic id="M:Catkeys.Wnd.op_Equality(Catkeys.Wnd,System.Nullable{Catkeys.Wnd})" project="Catkeys" file="M_Catkeys_Wnd_op_Equality_1" />
+          <topic id="M:Catkeys.Wnd.op_Equality(System.Nullable{Catkeys.Wnd},Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_op_Equality_2" />
+        </topic>
+        <topic id="Overload:Catkeys.Wnd.op_Explicit" project="Catkeys" file="Overload_Catkeys_Wnd_op_Explicit">
+          <topic id="M:Catkeys.Wnd.op_Explicit(System.Int32)~Catkeys.Wnd" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit_4" />
+          <topic id="M:Catkeys.Wnd.op_Explicit(System.IntPtr)~Catkeys.Wnd" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit_5" />
+          <topic id="M:Catkeys.Wnd.op_Explicit(System.Windows.Forms.Control)~Catkeys.Wnd" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit_6" />
+          <topic id="M:Catkeys.Wnd.op_Explicit(Catkeys.LPARAM)~Catkeys.Wnd" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit" />
+          <topic id="M:Catkeys.Wnd.op_Explicit(Catkeys.Wnd)~System.IntPtr" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit_1" />
+          <topic id="M:Catkeys.Wnd.op_Explicit(Catkeys.Wnd)~Catkeys.LPARAM" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit_2" />
+          <topic id="M:Catkeys.Wnd.op_Explicit(Catkeys.Wnd)~System.Windows.Forms.Control" project="Catkeys" file="M_Catkeys_Wnd_op_Explicit_3" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.op_Implicit(Catkeys.Wnd.Misc.SpecHwnd)~Catkeys.Wnd" project="Catkeys" file="M_Catkeys_Wnd_op_Implicit" />
+        <topic id="Overload:Catkeys.Wnd.op_Inequality" project="Catkeys" file="Overload_Catkeys_Wnd_op_Inequality">
+          <topic id="M:Catkeys.Wnd.op_Inequality(Catkeys.Wnd,Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_op_Inequality" />
+          <topic id="M:Catkeys.Wnd.op_Inequality(Catkeys.Wnd,System.Nullable{Catkeys.Wnd})" project="Catkeys" file="M_Catkeys_Wnd_op_Inequality_1" />
+          <topic id="M:Catkeys.Wnd.op_Inequality(System.Nullable{Catkeys.Wnd},Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_op_Inequality_2" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.ChildDefinition" project="Catkeys" file="T_Catkeys_Wnd_ChildDefinition">
+      <topic id="M:Catkeys.Wnd.ChildDefinition.#ctor(System.String,System.String,System.Int32,Catkeys.Wnd.ChildFlag,Catkeys.Wnd.ChildProp,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_ChildDefinition__ctor" />
+      <topic id="Properties.T:Catkeys.Wnd.ChildDefinition" project="Catkeys" file="Properties_T_Catkeys_Wnd_ChildDefinition">
+        <topic id="P:Catkeys.Wnd.ChildDefinition.Result" project="Catkeys" file="P_Catkeys_Wnd_ChildDefinition_Result" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Wnd.ChildDefinition" project="Catkeys" file="Methods_T_Catkeys_Wnd_ChildDefinition">
+        <topic id="M:Catkeys.Wnd.ChildDefinition.Find(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_ChildDefinition_Find" />
+        <topic id="M:Catkeys.Wnd.ChildDefinition.FindInList(Catkeys.Wnd,System.Collections.Generic.List{Catkeys.Wnd})" project="Catkeys" file="M_Catkeys_Wnd_ChildDefinition_FindInList" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.ChildFlag" project="Catkeys" file="T_Catkeys_Wnd_ChildFlag" />
+    <topic id="T:Catkeys.Wnd.ChildProp" project="Catkeys" file="T_Catkeys_Wnd_ChildProp">
+      <topic id="M:Catkeys.Wnd.ChildProp.#ctor" project="Catkeys" file="M_Catkeys_Wnd_ChildProp__ctor" />
+      <topic id="Methods.T:Catkeys.Wnd.ChildProp" project="Catkeys" file="Methods_T_Catkeys_Wnd_ChildProp">
+        <topic id="M:Catkeys.Wnd.ChildProp.Init(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_ChildProp_Init" />
+      </topic>
+      <topic id="Fields.T:Catkeys.Wnd.ChildProp" project="Catkeys" file="Fields_T_Catkeys_Wnd_ChildProp">
+        <topic id="F:Catkeys.Wnd.ChildProp.uiName" project="Catkeys" file="F_Catkeys_Wnd_ChildProp_uiName" />
+        <topic id="F:Catkeys.Wnd.ChildProp.wfName" project="Catkeys" file="F_Catkeys_Wnd_ChildProp_wfName" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.Get" project="Catkeys" file="T_Catkeys_Wnd_Get">
+      <topic id="Properties.T:Catkeys.Wnd.Get" project="Catkeys" file="Properties_T_Catkeys_Wnd_Get">
+        <topic id="P:Catkeys.Wnd.Get.Desktop" project="Catkeys" file="P_Catkeys_Wnd_Get_Desktop" />
+        <topic id="P:Catkeys.Wnd.Get.DesktopListview" project="Catkeys" file="P_Catkeys_Wnd_Get_DesktopListview" />
+        <topic id="P:Catkeys.Wnd.Get.DesktopWindow" project="Catkeys" file="P_Catkeys_Wnd_Get_DesktopWindow" />
+        <topic id="P:Catkeys.Wnd.Get.ShellWindow" project="Catkeys" file="P_Catkeys_Wnd_Get_ShellWindow" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Wnd.Get" project="Catkeys" file="Methods_T_Catkeys_Wnd_Get">
+        <topic id="M:Catkeys.Wnd.Get.Active" project="Catkeys" file="M_Catkeys_Wnd_Get_Active" />
+        <topic id="M:Catkeys.Wnd.Get.DirectParent(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_DirectParent" />
+        <topic id="M:Catkeys.Wnd.Get.DirectParentOrOwner(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_DirectParentOrOwner" />
+        <topic id="M:Catkeys.Wnd.Get.FirstChild(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_FirstChild" />
+        <topic id="M:Catkeys.Wnd.Get.FirstEnabledOwnedOrThis(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_FirstEnabledOwnedOrThis" />
+        <topic id="M:Catkeys.Wnd.Get.FirstSibling(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_FirstSibling" />
+        <topic id="M:Catkeys.Wnd.Get.FirstToplevel" project="Catkeys" file="M_Catkeys_Wnd_Get_FirstToplevel" />
+        <topic id="M:Catkeys.Wnd.Get.LastSeenActiveOwnedOrThis(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_LastSeenActiveOwnedOrThis" />
+        <topic id="M:Catkeys.Wnd.Get.LastSibling(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_LastSibling" />
+        <topic id="M:Catkeys.Wnd.Get.NextMainWindow(Catkeys.Wnd,System.Boolean,System.Boolean,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Get_NextMainWindow" />
+        <topic id="M:Catkeys.Wnd.Get.NextSibling(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_NextSibling" />
+        <topic id="M:Catkeys.Wnd.Get.Owner(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_Owner" />
+        <topic id="M:Catkeys.Wnd.Get.PreviousSibling(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_PreviousSibling" />
+        <topic id="M:Catkeys.Wnd.Get.RootOwnerOrThis(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_RootOwnerOrThis" />
+        <topic id="M:Catkeys.Wnd.Get.ToplevelParentOrThis(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Get_ToplevelParentOrThis" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.MinMaxHow" project="Catkeys" file="T_Catkeys_Wnd_MinMaxHow" />
+    <topic id="T:Catkeys.Wnd.Misc" project="Catkeys" file="T_Catkeys_Wnd_Misc">
+      <topic id="Methods.T:Catkeys.Wnd.Misc" project="Catkeys" file="Methods_T_Catkeys_Wnd_Misc">
+        <topic id="M:Catkeys.Wnd.Misc.AllowActivate" project="Catkeys" file="M_Catkeys_Wnd_Misc_AllowActivate" />
+        <topic id="Overload:Catkeys.Wnd.Misc.BorderWidth" project="Catkeys" file="Overload_Catkeys_Wnd_Misc_BorderWidth">
+          <topic id="M:Catkeys.Wnd.Misc.BorderWidth(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_BorderWidth" />
+          <topic id="M:Catkeys.Wnd.Misc.BorderWidth(System.UInt32,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_Misc_BorderWidth_1" />
+        </topic>
+        <topic id="M:Catkeys.Wnd.Misc.CreateMessageWindow(System.String)" project="Catkeys" file="M_Catkeys_Wnd_Misc_CreateMessageWindow" />
+        <topic id="M:Catkeys.Wnd.Misc.GetGUIThreadInfo(Catkeys.Native.GUITHREADINFO@,System.UInt32)" project="Catkeys" file="M_Catkeys_Wnd_Misc_GetGUIThreadInfo" />
+        <topic id="M:Catkeys.Wnd.Misc.IsSpecHwnd(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_IsSpecHwnd" />
+        <topic id="M:Catkeys.Wnd.Misc.RectEnsureInScreen(Catkeys.RECT@,System.Object,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Misc_RectEnsureInScreen" />
+        <topic id="M:Catkeys.Wnd.Misc.RectMoveInScreen(Catkeys.RECT@,System.Object,System.Boolean,System.Boolean,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Misc_RectMoveInScreen" />
+        <topic id="M:Catkeys.Wnd.Misc.WaitForAnActiveWindow" project="Catkeys" file="M_Catkeys_Wnd_Misc_WaitForAnActiveWindow" />
+        <topic id="M:Catkeys.Wnd.Misc.WindowRectFromClientRect(Catkeys.RECT@,System.UInt32,System.UInt32,System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowRectFromClientRect" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.Misc.Arrange" project="Catkeys" file="T_Catkeys_Wnd_Misc_Arrange">
+      <topic id="Methods.T:Catkeys.Wnd.Misc.Arrange" project="Catkeys" file="Methods_T_Catkeys_Wnd_Misc_Arrange">
+        <topic id="M:Catkeys.Wnd.Misc.Arrange.CascadeWindows" project="Catkeys" file="M_Catkeys_Wnd_Misc_Arrange_CascadeWindows" />
+        <topic id="M:Catkeys.Wnd.Misc.Arrange.MinimizeWindows" project="Catkeys" file="M_Catkeys_Wnd_Misc_Arrange_MinimizeWindows" />
+        <topic id="M:Catkeys.Wnd.Misc.Arrange.ShowDesktop" project="Catkeys" file="M_Catkeys_Wnd_Misc_Arrange_ShowDesktop" />
+        <topic id="M:Catkeys.Wnd.Misc.Arrange.TileWindows(System.Boolean)" project="Catkeys" file="M_Catkeys_Wnd_Misc_Arrange_TileWindows" />
+        <topic id="M:Catkeys.Wnd.Misc.Arrange.UndoMinimizeCascadeTile" project="Catkeys" file="M_Catkeys_Wnd_Misc_Arrange_UndoMinimizeCascadeTile" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.Misc.SpecHwnd" project="Catkeys" file="T_Catkeys_Wnd_Misc_SpecHwnd" />
+    <topic id="T:Catkeys.Wnd.Misc.TaskbarButton" project="Catkeys" file="T_Catkeys_Wnd_Misc_TaskbarButton">
+      <topic id="Methods.T:Catkeys.Wnd.Misc.TaskbarButton" project="Catkeys" file="Methods_T_Catkeys_Wnd_Misc_TaskbarButton">
+        <topic id="M:Catkeys.Wnd.Misc.TaskbarButton.Add(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_TaskbarButton_Add" />
+        <topic id="M:Catkeys.Wnd.Misc.TaskbarButton.Delete(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_TaskbarButton_Delete" />
+        <topic id="M:Catkeys.Wnd.Misc.TaskbarButton.Flash(Catkeys.Wnd,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_Misc_TaskbarButton_Flash" />
+        <topic id="M:Catkeys.Wnd.Misc.TaskbarButton.SetProgressState(Catkeys.Wnd,Catkeys.Wnd.Misc.TaskbarButton.ProgressState)" project="Catkeys" file="M_Catkeys_Wnd_Misc_TaskbarButton_SetProgressState" />
+        <topic id="M:Catkeys.Wnd.Misc.TaskbarButton.SetProgressValue(Catkeys.Wnd,System.Int32,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_Misc_TaskbarButton_SetProgressValue" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.Misc.TaskbarButton.ProgressState" project="Catkeys" file="T_Catkeys_Wnd_Misc_TaskbarButton_ProgressState" />
+    <topic id="T:Catkeys.Wnd.Misc.WindowsFormsControlNames" project="Catkeys" file="T_Catkeys_Wnd_Misc_WindowsFormsControlNames">
+      <topic id="M:Catkeys.Wnd.Misc.WindowsFormsControlNames.#ctor(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowsFormsControlNames__ctor" />
+      <topic id="Methods.T:Catkeys.Wnd.Misc.WindowsFormsControlNames" project="Catkeys" file="Methods_T_Catkeys_Wnd_Misc_WindowsFormsControlNames">
+        <topic id="M:Catkeys.Wnd.Misc.WindowsFormsControlNames.CachedGetControlName(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowsFormsControlNames_CachedGetControlName" />
+        <topic id="M:Catkeys.Wnd.Misc.WindowsFormsControlNames.Dispose" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowsFormsControlNames_Dispose" />
+        <topic id="M:Catkeys.Wnd.Misc.WindowsFormsControlNames.Finalize" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowsFormsControlNames_Finalize" />
+        <topic id="M:Catkeys.Wnd.Misc.WindowsFormsControlNames.GetControlName(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowsFormsControlNames_GetControlName" />
+        <topic id="M:Catkeys.Wnd.Misc.WindowsFormsControlNames.IsWindowsForms(Catkeys.Wnd)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WindowsFormsControlNames_IsWindowsForms" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.Misc.WndClass" project="Catkeys" file="T_Catkeys_Wnd_Misc_WndClass">
+      <topic id="Properties.T:Catkeys.Wnd.Misc.WndClass" project="Catkeys" file="Properties_T_Catkeys_Wnd_Misc_WndClass">
+        <topic id="P:Catkeys.Wnd.Misc.WndClass.Atom" project="Catkeys" file="P_Catkeys_Wnd_Misc_WndClass_Atom" />
+        <topic id="P:Catkeys.Wnd.Misc.WndClass.BaseClassWndExtra" project="Catkeys" file="P_Catkeys_Wnd_Misc_WndClass_BaseClassWndExtra" />
+        <topic id="P:Catkeys.Wnd.Misc.WndClass.BaseClassWndProc" project="Catkeys" file="P_Catkeys_Wnd_Misc_WndClass_BaseClassWndProc" />
+        <topic id="P:Catkeys.Wnd.Misc.WndClass.Name" project="Catkeys" file="P_Catkeys_Wnd_Misc_WndClass_Name" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Wnd.Misc.WndClass" project="Catkeys" file="Methods_T_Catkeys_Wnd_Misc_WndClass">
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.Finalize" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_Finalize" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.GetClassAtom(System.String,System.IntPtr)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_GetClassAtom" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.GetMyLong(Catkeys.Wnd,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_GetMyLong" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.InterDomainCreateWindow(System.UInt32,System.String,System.String,System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd,Catkeys.LPARAM)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_InterDomainCreateWindow" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.InterDomainRegister(System.String,Catkeys.Native.WNDPROC,System.Int32,System.UInt32,Catkeys.Wnd.Misc.WndClass.WndClassEx)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_InterDomainRegister" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.Register(System.String,Catkeys.Native.WNDPROC,System.Int32,System.UInt32,Catkeys.Wnd.Misc.WndClass.WndClassEx)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_Register" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.SetMyLong(Catkeys.Wnd,Catkeys.LPARAM,System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_SetMyLong" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.Superclass(System.String,System.String,Catkeys.Native.WNDPROC,System.Int32,System.Boolean,System.IntPtr)" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_Superclass" />
+        <topic id="M:Catkeys.Wnd.Misc.WndClass.Unregister" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_Unregister" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.Misc.WndClass.WndClassEx" project="Catkeys" file="T_Catkeys_Wnd_Misc_WndClass_WndClassEx">
+      <topic id="M:Catkeys.Wnd.Misc.WndClass.WndClassEx.#ctor" project="Catkeys" file="M_Catkeys_Wnd_Misc_WndClass_WndClassEx__ctor" />
+      <topic id="Fields.T:Catkeys.Wnd.Misc.WndClass.WndClassEx" project="Catkeys" file="Fields_T_Catkeys_Wnd_Misc_WndClass_WndClassEx">
+        <topic id="F:Catkeys.Wnd.Misc.WndClass.WndClassEx.cbClsExtra" project="Catkeys" file="F_Catkeys_Wnd_Misc_WndClass_WndClassEx_cbClsExtra" />
+        <topic id="F:Catkeys.Wnd.Misc.WndClass.WndClassEx.hbrBackground" project="Catkeys" file="F_Catkeys_Wnd_Misc_WndClass_WndClassEx_hbrBackground" />
+        <topic id="F:Catkeys.Wnd.Misc.WndClass.WndClassEx.hCursor" project="Catkeys" file="F_Catkeys_Wnd_Misc_WndClass_WndClassEx_hCursor" />
+        <topic id="F:Catkeys.Wnd.Misc.WndClass.WndClassEx.hIcon" project="Catkeys" file="F_Catkeys_Wnd_Misc_WndClass_WndClassEx_hIcon" />
+        <topic id="F:Catkeys.Wnd.Misc.WndClass.WndClassEx.hIconSm" project="Catkeys" file="F_Catkeys_Wnd_Misc_WndClass_WndClassEx_hIconSm" />
+        <topic id="F:Catkeys.Wnd.Misc.WndClass.WndClassEx.hInstance" project="Catkeys" file="F_Catkeys_Wnd_Misc_WndClass_WndClassEx_hInstance" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.TryActivateFlags" project="Catkeys" file="T_Catkeys_Wnd_TryActivateFlags" />
+    <topic id="T:Catkeys.Wnd.WindowDefinition" project="Catkeys" file="T_Catkeys_Wnd_WindowDefinition">
+      <topic id="M:Catkeys.Wnd.WindowDefinition.#ctor(System.String,System.String,System.String,Catkeys.Wnd.WinFlag,Catkeys.Wnd.WinProp,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)" project="Catkeys" file="M_Catkeys_Wnd_WindowDefinition__ctor" />
+      <topic id="Properties.T:Catkeys.Wnd.WindowDefinition" project="Catkeys" file="Properties_T_Catkeys_Wnd_WindowDefinition">
+        <topic id="P:Catkeys.Wnd.WindowDefinition.Result" project="Catkeys" file="P_Catkeys_Wnd_WindowDefinition_Result" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Wnd.WindowDefinition" project="Catkeys" file="Methods_T_Catkeys_Wnd_WindowDefinition">
+        <topic id="M:Catkeys.Wnd.WindowDefinition.Find" project="Catkeys" file="M_Catkeys_Wnd_WindowDefinition_Find" />
+        <topic id="M:Catkeys.Wnd.WindowDefinition.FindInList(System.Collections.Generic.List{Catkeys.Wnd})" project="Catkeys" file="M_Catkeys_Wnd_WindowDefinition_FindInList" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.WinFlag" project="Catkeys" file="T_Catkeys_Wnd_WinFlag" />
+    <topic id="T:Catkeys.Wnd.WinProp" project="Catkeys" file="T_Catkeys_Wnd_WinProp">
+      <topic id="M:Catkeys.Wnd.WinProp.#ctor" project="Catkeys" file="M_Catkeys_Wnd_WinProp__ctor" />
+      <topic id="Fields.T:Catkeys.Wnd.WinProp" project="Catkeys" file="Fields_T_Catkeys_Wnd_WinProp">
+        <topic id="F:Catkeys.Wnd.WinProp.owner" project="Catkeys" file="F_Catkeys_Wnd_WinProp_owner" />
+        <topic id="F:Catkeys.Wnd.WinProp.processId" project="Catkeys" file="F_Catkeys_Wnd_WinProp_processId" />
+        <topic id="F:Catkeys.Wnd.WinProp.threadId" project="Catkeys" file="F_Catkeys_Wnd_WinProp_threadId" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Wnd.WinProp_ChildProp_Base" project="Catkeys" file="T_Catkeys_Wnd_WinProp_ChildProp_Base">
+      <topic id="M:Catkeys.Wnd.WinProp_ChildProp_Base.#ctor" project="Catkeys" file="M_Catkeys_Wnd_WinProp_ChildProp_Base__ctor" />
+      <topic id="Fields.T:Catkeys.Wnd.WinProp_ChildProp_Base" project="Catkeys" file="Fields_T_Catkeys_Wnd_WinProp_ChildProp_Base">
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.childClass" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_childClass" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.childId" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_childId" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.childName" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_childName" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.exStyleHas" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_exStyleHas" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.exStyleNot" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_exStyleNot" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.y" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_y" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.propName" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_propName" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.propValue" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_propValue" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.styleHas" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_styleHas" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.styleNot" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_styleNot" />
+        <topic id="F:Catkeys.Wnd.WinProp_ChildProp_Base.x" project="Catkeys" file="F_Catkeys_Wnd_WinProp_ChildProp_Base_x" />
+      </topic>
+    </topic>
+  </topic>
+  <topic id="N:Catkeys.Automation" project="_Namespaces" file="N_Catkeys_Automation">
+    <topic id="T:Catkeys.Automation.Input" project="Catkeys" file="T_Catkeys_Automation_Input">
+      <topic id="Methods.T:Catkeys.Automation.Input" project="Catkeys" file="Methods_T_Catkeys_Automation_Input">
+        <topic id="M:Catkeys.Automation.Input.Keys(System.String[])" project="Catkeys" file="M_Catkeys_Automation_Input_Keys" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Automation.NoClass" project="Catkeys" file="T_Catkeys_Automation_NoClass">
+      <topic id="Methods.T:Catkeys.Automation.NoClass" project="Catkeys" file="Methods_T_Catkeys_Automation_NoClass">
+        <topic id="M:Catkeys.Automation.NoClass.SendKeys(System.String[])" project="Catkeys" file="M_Catkeys_Automation_NoClass_SendKeys" />
+        <topic id="M:Catkeys.Automation.NoClass.Wait(System.Double)" project="Catkeys" file="M_Catkeys_Automation_NoClass_Wait" />
+      </topic>
+    </topic>
+  </topic>
+  <topic id="N:Catkeys.Util" project="_Namespaces" file="N_Catkeys_Util">
+    <topic id="T:Catkeys.Util.AppDomain_" project="Catkeys" file="T_Catkeys_Util_AppDomain_">
+      <topic id="Properties.T:Catkeys.Util.AppDomain_" project="Catkeys" file="Properties_T_Catkeys_Util_AppDomain_">
+        <topic id="P:Catkeys.Util.AppDomain_.EntryAssembly" project="Catkeys" file="P_Catkeys_Util_AppDomain__EntryAssembly" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Util.AppDomain_" project="Catkeys" file="Methods_T_Catkeys_Util_AppDomain_">
+        <topic id="Overload:Catkeys.Util.AppDomain_.GetDefaultDomain" project="Catkeys" file="Overload_Catkeys_Util_AppDomain__GetDefaultDomain">
+          <topic id="M:Catkeys.Util.AppDomain_.GetDefaultDomain" project="Catkeys" file="M_Catkeys_Util_AppDomain__GetDefaultDomain" />
+          <topic id="M:Catkeys.Util.AppDomain_.GetDefaultDomain(System.Boolean@)" project="Catkeys" file="M_Catkeys_Util_AppDomain__GetDefaultDomain_1" />
+        </topic>
+      </topic>
+      <topic id="Events.T:Catkeys.Util.AppDomain_" project="Catkeys" file="Events_T_Catkeys_Util_AppDomain_">
+        <topic id="E:Catkeys.Util.AppDomain_.Exit" project="Catkeys" file="E_Catkeys_Util_AppDomain__Exit" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.Debug_" project="Catkeys" file="T_Catkeys_Util_Debug_">
+      <topic id="Properties.T:Catkeys.Util.Debug_" project="Catkeys" file="Properties_T_Catkeys_Util_Debug_">
+        <topic id="P:Catkeys.Util.Debug_.IsScrollLock" project="Catkeys" file="P_Catkeys_Util_Debug__IsScrollLock" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Util.Debug_" project="Catkeys" file="Methods_T_Catkeys_Util_Debug_">
+        <topic id="M:Catkeys.Util.Debug_.GetComObjRefCount(System.IntPtr)" project="Catkeys" file="M_Catkeys_Util_Debug__GetComObjRefCount" />
+        <topic id="M:Catkeys.Util.Debug_.PrintLoadedAssemblies" project="Catkeys" file="M_Catkeys_Util_Debug__PrintLoadedAssemblies" />
+        <topic id="Overload:Catkeys.Util.Debug_.PrintMsg" project="Catkeys" file="Overload_Catkeys_Util_Debug__PrintMsg">
+          <topic id="M:Catkeys.Util.Debug_.PrintMsg(System.Windows.Forms.Message@,System.UInt32[])" project="Catkeys" file="M_Catkeys_Util_Debug__PrintMsg_2" />
+          <topic id="M:Catkeys.Util.Debug_.PrintMsg(Catkeys.Native.MSG@,System.UInt32[])" project="Catkeys" file="M_Catkeys_Util_Debug__PrintMsg" />
+          <topic id="M:Catkeys.Util.Debug_.PrintMsg(Catkeys.Wnd,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32[])" project="Catkeys" file="M_Catkeys_Util_Debug__PrintMsg_1" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.Dpi" project="Catkeys" file="T_Catkeys_Util_Dpi">
+      <topic id="Properties.T:Catkeys.Util.Dpi" project="Catkeys" file="Properties_T_Catkeys_Util_Dpi">
+        <topic id="P:Catkeys.Util.Dpi.BaseDPI" project="Catkeys" file="P_Catkeys_Util_Dpi_BaseDPI" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.DragDrop" project="Catkeys" file="T_Catkeys_Util_DragDrop">
+      <topic id="Methods.T:Catkeys.Util.DragDrop" project="Catkeys" file="Methods_T_Catkeys_Util_DragDrop">
+        <topic id="Overload:Catkeys.Util.DragDrop.SimpleDragDrop" project="Catkeys" file="Overload_Catkeys_Util_DragDrop_SimpleDragDrop">
+          <topic id="M:Catkeys.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})" project="Catkeys" file="M_Catkeys_Util_DragDrop_SimpleDragDrop_1" />
+          <topic id="M:Catkeys.Util.DragDrop.SimpleDragDrop(Catkeys.Wnd,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})" project="Catkeys" file="M_Catkeys_Util_DragDrop_SimpleDragDrop" />
+        </topic>
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs" project="Catkeys" file="T_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs">
+      <topic id="M:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.#ctor" project="Catkeys" file="M_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs__ctor" />
+      <topic id="Methods.T:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs" project="Catkeys" file="Methods_T_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs">
+        <topic id="M:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Stop" project="Catkeys" file="M_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs_Stop" />
+      </topic>
+      <topic id="Fields.T:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs" project="Catkeys" file="Fields_T_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs">
+        <topic id="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Cursor" project="Catkeys" file="F_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs_Cursor" />
+        <topic id="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Msg" project="Catkeys" file="F_Catkeys_Util_DragDrop_SimpleDragDropCallbackArgs_Msg" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.MessageLoop" project="Catkeys" file="T_Catkeys_Util_MessageLoop">
+      <topic id="M:Catkeys.Util.MessageLoop.#ctor" project="Catkeys" file="M_Catkeys_Util_MessageLoop__ctor" />
+      <topic id="Methods.T:Catkeys.Util.MessageLoop" project="Catkeys" file="Methods_T_Catkeys_Util_MessageLoop">
+        <topic id="M:Catkeys.Util.MessageLoop.Loop" project="Catkeys" file="M_Catkeys_Util_MessageLoop_Loop" />
+        <topic id="M:Catkeys.Util.MessageLoop.Stop" project="Catkeys" file="M_Catkeys_Util_MessageLoop_Stop" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.Misc" project="Catkeys" file="T_Catkeys_Util_Misc">
+      <topic id="Properties.T:Catkeys.Util.Misc" project="Catkeys" file="Properties_T_Catkeys_Util_Misc">
+        <topic id="P:Catkeys.Util.Misc.IsCatkeysInGAC" project="Catkeys" file="P_Catkeys_Util_Misc_IsCatkeysInGAC" />
+        <topic id="P:Catkeys.Util.Misc.IsCatkeysNgened" project="Catkeys" file="P_Catkeys_Util_Misc_IsCatkeysNgened" />
+      </topic>
+      <topic id="Methods.T:Catkeys.Util.Misc" project="Catkeys" file="Methods_T_Catkeys_Util_Misc">
+        <topic id="Overload:Catkeys.Util.Misc.CharPtrLength" project="Catkeys" file="Overload_Catkeys_Util_Misc_CharPtrLength">
+          <topic id="M:Catkeys.Util.Misc.CharPtrLength(System.Char*)" project="Catkeys" file="M_Catkeys_Util_Misc_CharPtrLength" />
+          <topic id="M:Catkeys.Util.Misc.CharPtrLength(System.Char*,System.Int32)" project="Catkeys" file="M_Catkeys_Util_Misc_CharPtrLength_1" />
+        </topic>
+        <topic id="Overload:Catkeys.Util.Misc.IsAssemblyNgened" project="Catkeys" file="Overload_Catkeys_Util_Misc_IsAssemblyNgened">
+          <topic id="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Reflection.Assembly)" project="Catkeys" file="M_Catkeys_Util_Misc_IsAssemblyNgened" />
+          <topic id="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Type)" project="Catkeys" file="M_Catkeys_Util_Misc_IsAssemblyNgened_1" />
+        </topic>
+        <topic id="M:Catkeys.Util.Misc.MinimizeMemory" project="Catkeys" file="M_Catkeys_Util_Misc_MinimizeMemory" />
+        <topic id="M:Catkeys.Util.Misc.StringRemoveMnemonicUnderlineAmpersand(System.String@)" project="Catkeys" file="M_Catkeys_Util_Misc_StringRemoveMnemonicUnderlineAmpersand" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.ModuleHandle" project="Catkeys" file="T_Catkeys_Util_ModuleHandle">
+      <topic id="Methods.T:Catkeys.Util.ModuleHandle" project="Catkeys" file="Methods_T_Catkeys_Util_ModuleHandle">
+        <topic id="M:Catkeys.Util.ModuleHandle.OfAppDomainEntryAssembly" project="Catkeys" file="M_Catkeys_Util_ModuleHandle_OfAppDomainEntryAssembly" />
+        <topic id="M:Catkeys.Util.ModuleHandle.OfAssembly(System.Reflection.Assembly)" project="Catkeys" file="M_Catkeys_Util_ModuleHandle_OfAssembly" />
+        <topic id="M:Catkeys.Util.ModuleHandle.OfCatkeysDll" project="Catkeys" file="M_Catkeys_Util_ModuleHandle_OfCatkeysDll" />
+        <topic id="M:Catkeys.Util.ModuleHandle.OfProcessExe" project="Catkeys" file="M_Catkeys_Util_ModuleHandle_OfProcessExe" />
+        <topic id="M:Catkeys.Util.ModuleHandle.OfType(System.Type)" project="Catkeys" file="M_Catkeys_Util_ModuleHandle_OfType" />
+      </topic>
+    </topic>
+    <topic id="T:Catkeys.Util.SharedMemory" project="Catkeys" file="T_Catkeys_Util_SharedMemory">
+      <topic id="Methods.T:Catkeys.Util.SharedMemory" project="Catkeys" file="Methods_T_Catkeys_Util_SharedMemory">
+        <topic id="M:Catkeys.Util.SharedMemory.CreateOrGet(System.String,System.UInt32,System.Boolean)" project="Catkeys" file="M_Catkeys_Util_SharedMemory_CreateOrGet" />
+      </topic>
+    </topic>
+  </topic>
+</topics>

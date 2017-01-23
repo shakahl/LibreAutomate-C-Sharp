@@ -373,7 +373,7 @@ namespace Catkeys
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
 					long td = Time.Milliseconds - _parent._showTime - 500;
-					if(td < 0) { /*PrintDebug("timer");*/ } //TODO: timer
+					if(td < 0) { /*DebugPrint("timer");*/ } //TODO: timer
 					else Focus();
 					//TODO: Time.SetTimer(interval, delegate void TimerHandler(Timer t))
 				}
