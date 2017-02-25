@@ -41,7 +41,7 @@ namespace G.Controls
 				return AccObj;
 			}
 
-			internal string AccName { get { return _gc.AccName; } }
+			internal string AccName { get => _gc.AccName; }
 		}
 
 		partial class GNode
@@ -58,22 +58,22 @@ namespace G.Controls
 
 		partial class GPanel
 		{
-			internal override string AccName { get { return Name; } }
-			internal override string AccDescription { get { return ToolTipText; } }
+			internal override string AccName { get => Name; }
+			internal override string AccDescription { get => ToolTipText; }
 
 		}
 
 		partial class GTab
 		{
-			internal override string AccName { get { return "Tab group " + _manager._aTab.IndexOf(this); } }
-			internal override string AccDescription { get { return string.Join(", ", this.Items.Select(v => v.AccName)); } }
+			internal override string AccName { get => "Tab group " + _manager._aTab.IndexOf(this); }
+			internal override string AccDescription { get => string.Join(", ", this.Items.Select(v => v.AccName)); }
 
 		}
 
 		partial class GSplit
 		{
-			internal override string AccName { get { return "Splitter " + _manager._aSplit.IndexOf(this); } }
-			internal override string AccDescription { get { return (this.IsVerticalSplit ? "Vertical" : "Horizontal"); } }
+			internal override string AccName { get => "Splitter " + _manager._aSplit.IndexOf(this); }
+			internal override string AccDescription { get => (this.IsVerticalSplit ? "Vertical" : "Horizontal"); }
 
 		}
 
@@ -95,13 +95,13 @@ namespace G.Controls
 
 			}
 
-			//public override AccessibleRole Role { get { return AccessibleRole.Client; } }
+			//public override AccessibleRole Role { get => AccessibleRole.Client; }
 
-			public override string Name { get { return (_gf == null) ? "Panels" : _gf.AccName; } }
+			public override string Name { get => (_gf == null) ? "Panels" : _gf.AccName; }
 
-			public override AccessibleStates State { get { return AccessibleStates.None; } } //default is Focusable
+			public override AccessibleStates State { get => AccessibleStates.None; } //default is Focusable
 
-			//public override Rectangle Bounds { get { return base.Bounds; } }
+			//public override Rectangle Bounds { get => base.Bounds; }
 
 			public override AccessibleObject HitTest(int x, int y)
 			{
@@ -169,7 +169,7 @@ namespace G.Controls
 				return null;
 			}
 
-			//public override AccessibleObject Parent { get { return base.Parent; } }
+			//public override AccessibleObject Parent { get => base.Parent; }
 
 			public override string DefaultAction
 			{
@@ -205,7 +205,7 @@ namespace G.Controls
 				}
 			}
 
-			public override string Name { get { return _gn.AccName; } }
+			public override string Name { get => _gn.AccName; }
 
 			public override AccessibleStates State
 			{
@@ -252,7 +252,7 @@ namespace G.Controls
 				}
 			}
 
-			public override string Description { get { return _gn.AccDescription; } }
+			public override string Description { get => _gn.AccDescription; }
 
 			public override string DefaultAction
 			{

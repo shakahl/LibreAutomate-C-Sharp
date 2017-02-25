@@ -32,7 +32,7 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this is a console process.
 		/// </summary>
-		public static bool IsConsoleProcess { get { return _isConsole; } }
+		public static bool IsConsoleProcess { get => _isConsole; }
 
 		/// <summary>
 		/// If true, Output.WriteX and Output.Clear functions will use output even in console process.
@@ -44,7 +44,7 @@ namespace Catkeys
 
 		static bool _InitHwndEditor()
 		{
-			if(!_hwndEditor.IsValid) _hwndEditor = Api.FindWindow("QM_Editor", null);
+			if(!_hwndEditor.IsAlive) _hwndEditor = Api.FindWindow("QM_Editor", null);
 			return !_hwndEditor.Is0;
 		}
 
@@ -75,7 +75,7 @@ namespace Catkeys
 		/// </summary>
 		public static void Write<T>(IEnumerable<T> value, string separator = "\r\n")
 		{
-			Write((value==null) ? "" : string.Join(separator, value));
+			Write((value == null) ? "" : string.Join(separator, value));
 		}
 
 		/// <summary>
@@ -83,7 +83,7 @@ namespace Catkeys
 		/// </summary>
 		public static void Write(System.Collections.IEnumerable value, string separator = "\r\n")
 		{
-			if(value==null) { Write(""); return; }
+			if(value == null) { Write(""); return; }
 			var b = new StringBuilder();
 			foreach(object o in value) {
 				if(b.Length != 0) b.Append(separator);
@@ -99,11 +99,6 @@ namespace Catkeys
 		{
 			Write((value == null) ? "" : string.Join(separator, value));
 		}
-
-		//TODO:
-		//WriteList -> Write(params object[])
-		//Write(collection, sep="...") -> Write(collection) and WriteSep(sep, collection).
-		//WriteListSep(sep, params object[]) -> WriteSep(sep, params object[])  (just rename)
 
 		/// <summary>
 		/// Writes multiple argument values using separator ", ".
@@ -153,7 +148,7 @@ namespace Catkeys
 		{
 			public override void WriteLine(string value) { WriteDirectly(value); }
 			public override void Write(string value) { WriteDirectly(value); }
-			public override Encoding Encoding { get { return Encoding.Unicode; } }
+			public override Encoding Encoding { get => Encoding.Unicode; }
 		}
 
 		static TextWriter _writer;
@@ -162,7 +157,7 @@ namespace Catkeys
 		/// Gets or sets object that actually writes text when your script or the automation library calls Output.Write or Write.
 		/// If you want to redirect or modify output text (for example write to a file or add time), use code like this:
 		/// <c>Output.Writer=myWriter;</c>, where myWriter is a variable of your class that is derived from TextWriter and overrides its functions WriteLine, Write and Encoding.
-		/// It is like redirecting console output with code <c>Console.SetOut(myWriter);</c> (google for more info).
+		/// It is like redirecting console output with code <c>Console.SetOut(myWriter);</c> (see <see cref="Console.SetOut"/>).
 		/// Usually the best place to redirect is in static ScriptClass() {  }.
 		/// Redirection is applied to whole script appdomain, and does not affect other scripts.
 		/// Redirection affects Write, RedirectConsoleOutput, RedirectDebugOutput, AlwaysOutput and all OutX. It does not affect WriteDirectly and Clear.
@@ -170,7 +165,7 @@ namespace Catkeys
 		/// </summary>
 		public static TextWriter Writer
 		{
-			get { return _writer ?? (_writer = new _OutputWriter()); }
+			get => _writer ?? (_writer = new _OutputWriter());
 			set { _writer = value; }
 		}
 
@@ -211,6 +206,6 @@ namespace Catkeys
 			//speed: 6100
 		}
 
-		//TODO: WriteStatusBar()
+		//FUTURE: WriteStatusBar()
 	}
 }

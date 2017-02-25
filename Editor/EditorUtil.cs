@@ -52,7 +52,7 @@ namespace Editor
 			int R = 0;
 			t.ColorDepth = ColorDepth.Depth32Bit;
 			using(Image img = Image.FromFile(pngFile)) {
-				R=t.Images.AddStrip(img);
+				R = t.Images.AddStrip(img);
 				//PrintList(il.ImageSize, il.Images.Count);
 				var h = t.Handle; //workaround for the lazy ImageList behavior that causes exception later because the Image is disposed when actually used
 			}
@@ -73,7 +73,7 @@ namespace Editor
 		{
 			ImageList il = new ImageList();
 			il.LoadFromImageFile_(Folders.ThisApp + @"Resources\il_tv.png"); //TODO: maybe later use resources. Now resources too slow.
-			//il.LoadFromImage_(Properties.Resources.il_tv);
+																			 //il.LoadFromImage_(Properties.Resources.il_tv);
 			__ilFile = il;
 
 			il = new ImageList();
@@ -90,7 +90,7 @@ namespace Editor
 			get
 			{
 				Debug.Assert(__ilFile != null);
-				while(__ilFile == null) WaitMS(2);
+				while(__ilFile == null) Time.WaitMS(5);
 				return __ilFile;
 			}
 		}
@@ -100,7 +100,7 @@ namespace Editor
 			get
 			{
 				Debug.Assert(__ilStrip != null);
-				while(__ilStrip == null) WaitMS(2);
+				while(__ilStrip == null) Time.WaitMS(5);
 				return __ilStrip;
 			}
 		}

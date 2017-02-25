@@ -24,7 +24,7 @@ using static Catkeys.NoClass;
 namespace Catkeys.Automation
 {
 	public static class Input
-    {
+	{
 		//VS 2015 bug: EditorBrowsableAttribute does not work. I tried to hide Equals and ReferenceEquals in intellisense lists. Note: in Options is checked 'Hide advanced members'.
 
 		//[EditorBrowsable(EditorBrowsableState.Never)]
@@ -73,7 +73,7 @@ namespace Catkeys.Automation
 		//{
 		//	List<int> _a;
 
-		//	public int Length { get { return _a.Count; } }
+		//	public int Length { get => _a.Count; }
 
 		//	public KeysToSend Tab { get { _a.Add(9); return this; } }
 		//	public KeysToSend Enter { get { _a.Add(13); return this; } }
@@ -84,12 +84,12 @@ namespace Catkeys.Automation
 
 		//}
 
-		//public static KeysToSend K { get { return new KeysToSend(); } }
+		//public static KeysToSend K { get => new KeysToSend(); }
 
 
 		static void Test()
 		{
 			//Key("text", K.Ctrl.A.Tab.Execute(9).Enter);
 		}
-    }
+	}
 }

@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="0248143b-a0dd-4fa1-84f9-76831db6714a" revisionNumber="1">
+ <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <introduction>
+   <para>
+    A Catkeys <newTerm>wildcard expression</newTerm> is a very simple text format that allows you to use wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Typically used for arguments of 'find' functions, for example <codeEntityReference qualifyHint="true" autoUpgrade="true">M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.Wnd.WinFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)</codeEntityReference> (name, className, program).
+   </para>
+  </introduction>
+
+  <section address="Section1">
+   <title>Wildcard expression reference</title>
+   <content>
+    <para>By default case-insensitive. Always culture-insensitive.</para>
+    <para>
+     By default, if contains <newTerm>wildcard characters</newTerm>, is compared as wildcard pattern (see <codeEntityReference qualifyHint="false">M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)</codeEntityReference>), else as simple text (whole, not partial).
+    </para>
+    <table>
+     <title>Wildcard characters</title>
+     <row>
+      <entry>
+       <para>*</para>
+      </entry>
+      <entry>
+       <para>Zero or more of any characters.</para>
+       <para>
+        Examples: <literal>"start*"</literal>, <literal>"*end"</literal>, <literal>"*middle*"</literal>.
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>?</para>
+      </entry>
+      <entry>
+       <para>Any character.</para>
+       <para>
+        Example: <literal>"date ????-??-??"</literal>
+       </para>
+      </entry>
+     </row>
+    </table>
+
+    <alert>
+     <para>There are no escape sequences for * and ? characters. To match literal * or ? character, usually can be used the ? wildcard character. Or you can use regular expression instead.</para>
+    </alert>
+
+    <para>
+     Can start with <literal>**options|</literal>, like <literal>"**tc|text"</literal>.
+    </para>
+
+    <table>
+     <title>Options</title>
+     <row>
+      <entry>
+       <para>t</para>
+      </entry>
+      <entry>
+       <para>Simple text, not wildcard.</para>
+       <para>
+        Example: <literal>"**t|text"</literal>
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>r</para>
+      </entry>
+      <entry>
+       <para>
+        Regular expression. See <codeEntityReference qualifyHint="false">T:System.Text.RegularExpressions.Regex</codeEntityReference>.
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>c</para>
+      </entry>
+      <entry>
+       <para>Case-sensitive.</para>
+       <para>
+        Example: <literal>"**rc|regex, match case"</literal>
+       </para>
+       <para>Info: case-sensitive regular expression is about 4 times faster.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>n</para>
+      </entry>
+      <entry>
+       <para>Must not match.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>m</para>
+      </entry>
+      <entry>
+       <para>Multi-part. Use separator [].</para>
+       <para>
+        Example: <literal>"**m|findThis[]orThis[]**r|orThisRegex[]**n|butNotThis[]**nr|andNotThisRegex"</literal>
+       </para>
+       <para>
+        Example 2: <literal>"**mn|notThis[]andNotThis"</literal>
+       </para>
+      </entry>
+     </row>
+    </table>
+
+    <alert>
+     <para>
+      Exception <codeEntityReference qualifyHint="false">T:System.ArgumentException</codeEntityReference>
+      if invalid <literal>**options|</literal> or regular expression.
+     </para>
+    </alert>
+
+    <para>
+     Wildcard expression <literal>""</literal> matches only <literal>""</literal>.
+    </para>
+    <para>
+     If the parameter is <languageKeyword>null</languageKeyword> or omitted, it usually means 'match any'.
+    </para>
+    <alert class="tip">
+     <para>
+      To avoid many nulls in code, you can omit optional parameters,
+      for example instaed of <codeInline>Wnd.Find(null, null, "notepad")</codeInline>
+      use <codeInline>Wnd.Find(program:"notepad")</codeInline> .
+     </para>
+    </alert>
+   </content>
+  </section>
+
+  <section>
+   <title>Example</title>
+   <content>
+    <code>
+     //Find item whose property 1 is "example" (case-insensitive), property 2 starts with "2017-" and property 3 matches a case-sensitive regular expression.
+     var item = x.FindItem("example", "2017-*", "**rc|regex");
+    </code>
+   </content>
+  </section>
+
+  <relatedTopics>
+   <codeEntityReference qualifyHint="false">T:Catkeys.Wildex</codeEntityReference>
+   <codeEntityReference qualifyHint="false">M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)</codeEntityReference>
+  </relatedTopics>
+ </developerConceptualDocument>
+</topic>

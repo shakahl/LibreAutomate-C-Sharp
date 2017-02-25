@@ -39,12 +39,16 @@ namespace Catkeys.Util
 					Application.DoEvents(); //info: with Time.DoEvents something does not work, don't remember.
 
 					for(;;) {
-						uint k = Api.MsgWaitForMultipleObjects(1, ref _loopEndEvent, false, Api.INFINITE, Api.QS_ALLINPUT);
+						//this would not respond to Thread.Abort
+						//uint k = Api.MsgWaitForMultipleObjectsEx(1, ref _loopEndEvent, Api.INFINITE, Api.QS_ALLINPUT);
+						//this responds to Thread.Abort
+						uint k = Api.MsgWaitForMultipleObjectsEx(1, ref _loopEndEvent, 100, Api.QS_ALLINPUT);
+						if(k == Api.WAIT_TIMEOUT) continue;
+
 						Application.DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.
 
-						Native.MSG u;
-						if(Api.PeekMessage(out u, Wnd0, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
+						if(Api.PeekMessage(out var u, Wnd0, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
 					}
 				}
 				finally {
@@ -195,7 +199,7 @@ namespace Catkeys.Util
 		public class SimpleDragDropCallbackArgs
 		{
 			/// <summary>
-			/// Current message retrieved by Api.GetMessage.
+			/// Current message retrieved by API <msdn>GetMessage</msdn>.
 			/// </summary>
 			public Native.MSG Msg;
 

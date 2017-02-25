@@ -225,7 +225,7 @@ public partial class Test
 			var wo = (Wnd)tb.Owner.Handle;
 			//var wo = (Wnd)tb.Control.Handle;
 			//Print(wo);
-			TaskDialog.Show("td", ownerWindow: wo);
+			TaskDialog.Show("td", owner: wo);
 			//MessageBox.Show(wo, "txt");
 		};
 		m.Add(tb);
@@ -400,12 +400,12 @@ public partial class Test
 #endif
 
 		m["no icon"] = null;
-			m["no icon"] = null;
-			m.Separator();
-			//using(m.Submenu("sub")) {
-			m["no icon"] = null;
-			m["no icon"] = null;
-			m[".cat", @".cat"] = null;
+		m["no icon"] = null;
+		m.Separator();
+		//using(m.Submenu("sub")) {
+		m["no icon"] = null;
+		m["no icon"] = null;
+		m[".cat", @".cat"] = null;
 		//}
 
 		//Time.SetTimer(1000, true, t => { m.CMS.Close(); });
@@ -554,7 +554,7 @@ public partial class Test
 			//this.MouseClick += (sender, e) =>
 			//{
 			//	//Print(e.Button); //no right-click event if a context menu assigned
-			//	//if(e.Button == MouseButtons.Right) Wnd.FindRaw("QM_Editor").ActivateRaw();
+			//	//if(e.Button == MouseButtons.Right) Wnd.FindFast("QM_Editor").ActivateLL();
 			//	//TestCatMenu(sender as Form);
 			//	Time.SetTimer(100, true, o => TestCatMenu(sender as Form));
 			//};
@@ -600,7 +600,7 @@ public partial class Test
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(_outMsg) Catkeys.Util.Debug_.PrintMsg(ref m);
+			//if(_outMsg) Catkeys.Util.LibDebug_.PrintMsg(ref m);
 
 			base.WndProc(ref m);
 		}
@@ -710,7 +710,7 @@ public partial class Test
 
 			protected override void WndProc(ref Message m)
 			{
-				//Catkeys.Util.Debug_.PrintMsg(ref m);
+				//Catkeys.Util.LibDebug_.PrintMsg(ref m);
 
 				base.WndProc(ref m);
 
@@ -779,7 +779,7 @@ public partial class Test
 
 		//			//Api.DestroyWindow((Wnd)t.CMS.Handle);
 		//			//Print(t.CMS.IsHandleCreated);
-		//			//if(t.CMS.IsHandleCreated) Print(((Wnd)t.CMS.Handle).IsValid);
+		//			//if(t.CMS.IsHandleCreated) Print(((Wnd)t.CMS.Handle).IsAlive);
 
 		//			//t.CMS.Closed -= del;
 
@@ -843,7 +843,7 @@ public partial class Test
 
 			if(c != null) break;
 			//Application.DoEvents();
-			WaitMS(100);
+			Time.WaitMS(100);
 			//Application.DoEvents();
 			//WaitMS(1000);
 		}
@@ -891,7 +891,7 @@ public partial class Test
 		//f.Visible = true;
 		Wnd w = (Wnd)f;
 		w.Show(true);
-		//w.ActivateRaw();
+		//w.ActivateLL();
 		Perf.Next();
 
 		//Application.Run();
@@ -919,8 +919,8 @@ public partial class Test
 			get
 			{
 				var p = base.CreateParams;
-				p.Style = unchecked((int)Api.WS_POPUP);
-				p.ExStyle = (int)(Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOPMOST);
+				p.Style = unchecked((int)Native.WS_POPUP);
+				p.ExStyle = (int)(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST);
 				//p.Height = 50; p.Width = 1200;
 				p.X = 400; p.Y = 200;
 				//p.ClassName = _tbWndClass.Name;
@@ -939,12 +939,12 @@ public partial class Test
 
 		return Api.DefWindowProc(w, msg, wParam, lParam);
 	}
-	static Wnd.Misc.WndClass _tbWndClass;
+	static Wnd.Misc.WindowClass _tbWndClass;
 
 	static void TestToolbarStrip()
 	{
 		if(_tbWndClass == null) {
-			_tbWndClass = Wnd.Misc.WndClass.Register("CatBar1", _WndprocCatBar, 0, Api.CS_GLOBALCLASS);
+			_tbWndClass = Wnd.Misc.WindowClass.Register("CatBar1", _WndprocCatBar, 0, Api.CS_GLOBALCLASS);
 		}
 
 		Perf.First();
@@ -1017,7 +1017,7 @@ public partial class Test
 		return R;
 	}
 
-	static Wnd.Misc.WndClass _tbWndClass2;
+	static Wnd.Misc.WindowClass _tbWndClass2;
 
 	class ToolStrip2 :ToolStrip
 	{
@@ -1040,13 +1040,13 @@ public partial class Test
 	{
 		Perf.First();
 		if(_tbWndClass2 == null) {
-			_tbWndClass2 = Wnd.Misc.WndClass.Register("CatBar2", _WndprocCatBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
+			_tbWndClass2 = Wnd.Misc.WindowClass.Register("CatBar2", _WndprocCatBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
 			Perf.Next();
 		}
 
 		//bool topMost = true;
-		Wnd w = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOPMOST, _tbWndClass2.Name, null,
-			Api.WS_POPUP | Api.WS_CAPTION | Api.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
+		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass2.Name, null,
+			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
 		Perf.Next();
 
 #if true
@@ -1070,9 +1070,9 @@ public partial class Test
 
 		//Wnd wt = (Wnd)t.Handle;
 		//Print(wt);
-		//Print(wt.DirectParent);
+		//Print(wt.WndDirectParent);
 		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
-		//Print(wt.DirectParentOrOwner);
+		//Print(wt.WndDirectParentOrOwner);
 
 		t.ResumeLayout();
 		t.CreateControl();
@@ -1081,7 +1081,7 @@ public partial class Test
 		Perf.Next();
 #endif
 		w.Show(true);
-		//w.ActivateRaw();
+		//w.ActivateLL();
 		//Perf.Next();
 		//Wnd wt = (Wnd)t.Handle;
 		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
@@ -1091,7 +1091,7 @@ public partial class Test
 		//t.Focus();
 		Perf.Next();
 		_mlTb.Loop();
-		w.Destroy();
+		Api.DestroyWindow(w);
 		//if(!t.IsDisposed) t.Dispose();
 	}
 
@@ -1111,7 +1111,7 @@ public partial class Test
 		return Api.DefWindowProc(w, msg, wParam, lParam);
 	}
 
-	static Wnd.Misc.WndClass _tbWndClass3;
+	static Wnd.Misc.WindowClass _tbWndClass3;
 
 	class ToolBar2 :ToolBar
 	{
@@ -1133,13 +1133,13 @@ public partial class Test
 	static void TestOldToolbarInNativeWindow()
 	{
 		if(_tbWndClass3 == null) {
-			_tbWndClass3 = Wnd.Misc.WndClass.Register("CatBar3", _WndprocCatBar2, 0, Api.CS_GLOBALCLASS);
+			_tbWndClass3 = Wnd.Misc.WindowClass.Register("CatBar3", _WndprocCatBar2, 0, Api.CS_GLOBALCLASS);
 		}
 
 		Perf.First();
 		//bool topMost = true;
-		Wnd w = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOPMOST, _tbWndClass3.Name, null,
-			Api.WS_POPUP | Api.WS_CAPTION | Api.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
+		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass3.Name, null,
+			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
 		Perf.Next();
 
 
@@ -1167,10 +1167,10 @@ public partial class Test
 
 		Perf.Next();
 		w.Show(true);
-		//w.ActivateRaw();
+		//w.ActivateLL();
 		Perf.Next();
 		_mlTb.Loop();
-		w.Destroy();
+		Api.DestroyWindow(w);
 	}
 
 	#endregion
@@ -1191,22 +1191,22 @@ public partial class Test
 		return R;
 	}
 
-	static Wnd.Misc.WndClass _WndClassNW;
+	static Wnd.Misc.WindowClass _WndClassNW;
 
 	static void TestNativeWindow()
 	{
 		Perf.First();
 		if(_WndClassNW == null) {
-			_WndClassNW = Wnd.Misc.WndClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
+			_WndClassNW = Wnd.Misc.WindowClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
 			Perf.Next();
 		}
 
 		//bool topMost = true;
-		Wnd w = Api.CreateWindowEx(Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOPMOST, _WndClassNW.Name, null,
-			Api.WS_POPUP | Api.WS_CAPTION | Api.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
+		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _WndClassNW.Name, null,
+			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
 		Perf.Next();
 		w.Show(true);
-		//w.ActivateRaw();
+		//w.ActivateLL();
 		//Perf.Next();
 		//Wnd wt = (Wnd)t.Handle;
 		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
@@ -1216,7 +1216,7 @@ public partial class Test
 		//t.Focus();
 		Perf.Next();
 		_mlTb.Loop();
-		w.Destroy();
+		Api.DestroyWindow(w);
 		//if(!t.IsDisposed) t.Dispose();
 	}
 

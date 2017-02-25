@@ -32,7 +32,6 @@ namespace Catkeys
 	{
 		/// <summary>
 		/// Returns Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
-		/// The same as the .NET String.Equals, but provided for consistency and to make immediately clear that it uses ordinal, not current culture like part of .NET String methods.
 		/// </summary>
 		public static bool Equals_(this string t, string value, bool ignoreCase = false)
 		{
@@ -40,7 +39,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Equals_() for each string specified in the argument list until one matches this string.
+		/// Calls Equals_(strings[i], ignoreCase) for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
 		public static int Equals_(this string t, bool ignoreCase = false, params string[] strings)
@@ -58,7 +57,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls EndsWith_() for each string specified in the argument list until one matches this string.
+		/// Calls EndsWith_(strings[i], ignoreCase) for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
 		public static int EndsWith_(this string t, bool ignoreCase = false, params string[] strings)
@@ -76,12 +75,31 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls StartsWith_() for each string specified in the argument list until one matches this string.
+		/// Calls StartsWith_(strings[i], ignoreCase) for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
 		public static int StartsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.StartsWith_(strings[i], ignoreCase)) return i + 1;
+			return 0;
+		}
+
+		/// <summary>
+		/// Compares part of this string with another string and returns true if matches.
+		/// Calls <see cref="string.Compare(string, int, string, int, int, StringComparison)"/>.
+		/// </summary>
+		public static bool EqualsPart_(this string t, int startIndex, string value, bool ignoreCase = false)
+		{
+			return 0 == string.Compare(t, startIndex, value, 0, value.Length, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+		}
+
+		/// <summary>
+		/// Calls EqualsPart_(startIndex, strings[i], ignoreCase) for each string specified in the argument list until it returns true.
+		/// Returns 1-based index of matching string, or 0 if none.
+		/// </summary>
+		public static int EqualsPart_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
+		{
+			for(int i = 0; i < strings.Length; i++) if(t.EqualsPart_(startIndex, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -274,7 +292,7 @@ namespace Catkeys
 		/// The return value becomes negative if the number is greater than int.MaxValue, for example "0xffffffff" is -1, but it becomes correct if assigned to uint (need cast).
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">When startIndex is less than 0 or greater than string length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
 		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex)
 		{
 			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
@@ -285,8 +303,7 @@ namespace Catkeys
 		/// </summary>
 		public static int ToInt32_(this string t, int startIndex = 0)
 		{
-			int numberEndIndex;
-			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
+			return (int)_ToInt(t, startIndex, out var i, false);
 		}
 
 		/// <summary>
@@ -294,8 +311,7 @@ namespace Catkeys
 		/// </summary>
 		public static int ToInt32_(this string t)
 		{
-			int numberEndIndex;
-			return (int)_ToInt(t, 0, out numberEndIndex, false);
+			return (int)_ToInt(t, 0, out var i, false);
 		}
 
 		/// <summary>
@@ -320,7 +336,7 @@ namespace Catkeys
 		/// The return value becomes negative if the number is greater than long.MaxValue, for example "0xffffffffffffffff" is -1, but it becomes correct if assigned to ulong (need cast).
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">When startIndex is less than 0 or greater than string length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
 		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex)
 		{
 			return _ToInt(t, startIndex, out numberEndIndex, true);
@@ -331,8 +347,7 @@ namespace Catkeys
 		/// </summary>
 		public static long ToInt64_(this string t, int startIndex = 0)
 		{
-			int numberEndIndex;
-			return _ToInt(t, startIndex, out numberEndIndex, true);
+			return _ToInt(t, startIndex, out var i, true);
 		}
 
 		/// <summary>
@@ -340,8 +355,7 @@ namespace Catkeys
 		/// </summary>
 		public static long ToInt64_(this string t)
 		{
-			int numberEndIndex;
-			return _ToInt(t, 0, out numberEndIndex, true);
+			return _ToInt(t, 0, out var i, true);
 		}
 
 		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong)
@@ -423,7 +437,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts string to int (calls ToInt_()) and gets string part that follows the number.
+		/// Converts string to int (calls <see cref="ToInt32_(string, int, out int)"/>) and gets string part that follows the number.
 		/// For example, for string "123text" sets the tail variable = "text" and returns 123.
 		/// For string like "123" sets tail = "".
 		/// If fails to convert, sets tail = null.
@@ -455,9 +469,7 @@ namespace Catkeys
 		public static double ToDouble_(this string t, bool canThrow = false)
 		{
 			if(canThrow) return double.Parse(t, CultureInfo.InvariantCulture);
-			double R;
-			if(double.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out R)) return R;
-			return 0.0;
+			return double.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out double R) ? R : 0.0;
 		}
 
 		/// <summary>
@@ -469,9 +481,7 @@ namespace Catkeys
 		public static float ToFloat_(this string t, bool canThrow = false)
 		{
 			if(canThrow) return float.Parse(t, CultureInfo.InvariantCulture);
-			float R;
-			if(float.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out R)) return R;
-			return 0.0F;
+			return float.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out float R) ? R : 0.0F;
 		}
 
 		/// <summary>
@@ -495,7 +505,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls RegexIs_() for each regular expression pattern specified in the argument list until one matches this string.
+		/// Calls RegexIs_(patterns[i], options) for each regular expression pattern specified in the argument list until it returns true.
 		/// Returns 1-based index of matching pattern, or 0 if none.
 		/// </summary>
 		public static int RegexIs_(this string t, RegexOptions options, params string[] patterns)
@@ -547,7 +557,7 @@ namespace Catkeys
 		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, RegexOptions options = 0)
 		{
 			int n = 0;
-			result = Regex.Replace(t, pattern, (m) => { n++; return m.Result(replacement); }, options | RegexOptions.CultureInvariant);
+			result = Regex.Replace(t, pattern, me => { n++; return me.Result(replacement); }, options | RegexOptions.CultureInvariant);
 			return n;
 		}
 
@@ -561,6 +571,24 @@ namespace Catkeys
 			int n = 0;
 			result = x.Replace(t, (m) => { n++; return m.Result(replacement); }, count);
 			return n;
+		}
+
+		/// <summary>
+		/// Returns a new string in which a specified string replaces a spcified count of characters at a specified position in this instance.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">startIndex or startIndex+count is outside of this string bounds.</exception>
+		public static string ReplaceAt_(this string t, int startIndex, int count, string value)
+		{
+			return t.Remove(startIndex, count).Insert(startIndex, value);
+
+			//almost the same speed, 1 more allocations
+			//return t.Substring(0, startIndex) + value + t.Substring(startIndex + count);
+
+			//2.5 times slower
+			//var s = new StringBuilder(t);
+			//s.Remove(startIndex, count);
+			//s.Insert(startIndex, value);
+			//return s.ToString();
 		}
 	}
 

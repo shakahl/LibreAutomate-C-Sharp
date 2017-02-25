@@ -32,20 +32,22 @@ namespace Catkeys.Util
 	/// <summary>
 	/// Creates and manages native font handle.
 	/// </summary>
-	internal class NativeFont :IDisposable
+	internal class LibNativeFont :IDisposable
 	{
 		public IntPtr Handle { get; private set; }
 		public int HeightOnScreen { get; private set; }
 
-		public static implicit operator IntPtr(NativeFont f) { return (f == null) ? Zero : f.Handle; }
+		public LibNativeFont(IntPtr handle) { Handle = handle; }
 
-		~NativeFont() { Dispose(); }
+		public static implicit operator IntPtr(LibNativeFont f) { return (f == null) ? Zero : f.Handle; }
+
+		~LibNativeFont() { Dispose(); }
 		public void Dispose()
 		{
 			if(Handle != Zero) { Api.DeleteObject(Handle); Handle = Zero; }
 		}
 
-		public NativeFont(string name, int height, bool calculateHeightOnScreen = false)
+		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
 		{
 			var dcScreen = Api.GetDC(Wnd0);
 			int h2 = -Calc.MulDiv(height, Api.GetDeviceCaps(dcScreen, 90), 72);
@@ -53,7 +55,7 @@ namespace Catkeys.Util
 			if(calculateHeightOnScreen) {
 				var dcMem = Api.CreateCompatibleDC(dcScreen);
 				var of = Api.SelectObject(dcMem, Handle);
-				SIZE z; Api.GetTextExtentPoint32(dcMem, "A", 1, out z);
+				Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
 				HeightOnScreen = z.cy;
 				Api.SelectObject(dcMem, of);
 				Api.DeleteDC(dcMem);
@@ -124,13 +126,13 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Returns true if Catkeys.dll is installed in the global assembly cache.
 		/// </summary>
-		public static bool IsCatkeysInGAC { get { return typeof(Misc).Assembly.GlobalAssemblyCache; } }
+		public static bool IsCatkeysInGAC { get => typeof(Misc).Assembly.GlobalAssemblyCache; }
 
 		/// <summary>
 		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
 		/// </summary>
-		public static bool IsCatkeysNgened { get { return IsAssemblyNgened(typeof(Misc).Assembly); } }
+		public static bool IsCatkeysNgened { get => IsAssemblyNgened(typeof(Misc).Assembly); }
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
@@ -153,7 +155,7 @@ namespace Catkeys.Util
 
 		/// <summary>
 		/// Frees as much as possible physical memory used by this process.
-		/// Calls GC.Collect() and Api.SetProcessWorkingSetSize().
+		/// Calls <see cref="GC.Collect()"/> and API <msdn>SetProcessWorkingSetSize</msdn>.
 		/// </summary>
 		public static void MinimizeMemory()
 		{
@@ -169,7 +171,7 @@ namespace Catkeys.Util
 		public static unsafe int CharPtrLength(char* p)
 		{
 			if(p == null) return 0;
-			for(int i = 0; ; i++) if(*p == '\0') return i;
+			for(int i = 0; ; i++) if(p[i] == '\0') return i;
 		}
 
 		/// <summary>
@@ -181,68 +183,21 @@ namespace Catkeys.Util
 		public static unsafe int CharPtrLength(char* p, int nMax)
 		{
 			if(p == null) return 0;
-			for(int i = 0; i < nMax; i++) if(*p == '\0') return i;
+			for(int i = 0; i < nMax; i++) if(p[i] == '\0') return i;
 			return nMax;
-		}
-
-		/// <summary>
-		/// Removes '&amp;' characters from string.
-		/// Replaces "&amp;&amp;" to "&amp;".
-		/// Returns true if s had '&amp;' characters.
-		/// </summary>
-		/// <remarks>
-		/// Character '&amp;' is used to underline next character in displayed text of controls. Two '&amp;' are used to display single '&amp;'.
-		/// Normally the underline is displayed only when using the keyboard to select dialog controls.
-		/// </remarks>
-		public static bool StringRemoveMnemonicUnderlineAmpersand(ref string s)
-		{
-			if(!Empty(s)) {
-				int i = s.IndexOf('&');
-				if(i >= 0) {
-					i = s.IndexOf_("&&");
-					if(i >= 0) s = s.Replace("&&", "\0");
-					s = s.Replace("&", "");
-					if(i >= 0) s = s.Replace("\0", "&");
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 
+#if DEBUG
 	/// <summary>
-	/// Functions such as PrintMsg, available only in Debug config.
+	/// Functions useful when testing and debugging.
 	/// </summary>
 	[DebuggerStepThrough]
-	public static class Debug_
+	public static class LibDebug_
 	{
-#if DEBUG
 #pragma warning disable 1591 //XML doc
 
-		//[Conditional("DEBUG")]
-		public static void PrintMsg(ref Message m, params uint[] ignore)
-		{
-			uint msg = (uint)m.Msg;
-			if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
-
-			Wnd w = (Wnd)m.HWnd;
-			uint counter = w.GetProp("PrintMsg"); w.SetProp("PrintMsg", ++counter);
-			PrintList(counter, m);
-		}
-
-		public static void PrintMsg(Wnd w, uint msg, LPARAM wParam, LPARAM lParam, params uint[] ignore)
-		{
-			if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
-			var m = Message.Create(w.Handle, (int)msg, wParam, lParam);
-			PrintMsg(ref m);
-		}
-
-		public static void PrintMsg(ref Native.MSG m, params uint[] ignore)
-		{
-			PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
-		}
-
-		public static void PrintLoadedAssemblies()
+		internal static void PrintLoadedAssemblies()
 		{
 			AppDomain currentDomain = AppDomain.CurrentDomain;
 			Assembly[] assems = currentDomain.GetAssemblies();
@@ -251,16 +206,16 @@ namespace Catkeys.Util
 			}
 		}
 
-		public static int GetComObjRefCount(IntPtr obj)
+		internal static int GetComObjRefCount(IntPtr obj)
 		{
 			Marshal.AddRef(obj);
 			return Marshal.Release(obj);
 		}
 
-		public static bool IsScrollLock { get { return (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; } }
+		internal static bool IsScrollLock { get => (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; }
 #pragma warning restore 1591 //XML doc
-#endif
 	}
+#endif
 
 	/// <summary>
 	/// Functions for high-DPI screen support.

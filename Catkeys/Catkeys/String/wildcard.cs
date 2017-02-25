@@ -26,25 +26,20 @@ namespace Catkeys
 		#region Like_
 
 		/// <summary>
-		/// <para>
-		/// Compares this string with a string that possibly contains wildcard characters.<br/>
+		/// Compares this string with a string that possibly contains wildcard characters.
 		/// Returns true if the strings match.
-		/// </para>
-		/// <para>
-		/// Wildcard characters:<br/>
-		/// * - zero or more of any characters.<br/>
+		/// 
+		/// Wildcard characters:
+		/// * - zero or more of any characters.
 		/// ? - any character.
-		/// </para>
 		/// </summary>
 		/// <param name="t">This string. If null, returns true if pattern is null. If "", returns true if pattern is "" or "*".</param>
 		/// <param name="pattern">String that possibly contains wildcard characters. If null, returns true if this string is null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <remarks>
-		/// <para>Like all String_ functions, performs ordinal comparison, ie does not depend on current culture.</para>
-		/// <para>This function is fast, not much slower than Equals_, EndsWith_, IndexOf_ etc, even when ignoreCase is true.</para>
-		/// <para>Similar .NET function Microsoft.VisualBasic.CompilerServices.Operators.LikeString() supports more wildcard characters etc, depends on current culture, is 6-250 times slower (case-insensitive is even much slower than Regex), has bugs.</para>
+		/// Like all String_ functions, performs ordinal comparison, ie does not depend on current culture.
+		/// Much faster than Regex.IsMatch and not much slower than Equals_, EndsWith_, IndexOf_ etc.
 		/// </remarks>
-		/// <seealso cref="Wildex"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = @"C:\abc\mno.xyz";
@@ -56,6 +51,8 @@ namespace Catkeys
 		/// if(s.Like_(@"?:*")) Print("any character, : and possibly more text");
 		/// ]]></code>
 		/// </example>
+		/// <seealso cref="Wildex"/>
+		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>
 		public static unsafe bool Like_(this string t, string pattern, bool ignoreCase = false)
 		{
 			if(pattern == null) return t == null;
@@ -68,6 +65,10 @@ namespace Catkeys
 			fixed (char* str = t, pat = pattern) {
 				return __WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.LibProcessMemory.Ptr->str.GetCaseTable() : null);
 			}
+
+			//info:
+			//	Similar .NET function Microsoft.VisualBasic.CompilerServices.Operators.LikeString()
+			//	supports more wildcard characters etc, depends on current culture, is 6-250 times slower, has bugs.
 		}
 
 		static unsafe bool __WildcardCmp(char* s, char* w, int lenS, int lenW, char* table)
@@ -126,12 +127,12 @@ namespace Catkeys
 
 			//The first two loops are fast, but Equals_ much faster when !ignoreCase. We cannot use such optimizations that it can.
 			//The slowest case is "*substring*", because then the first two loops don't help.
-			//	Then similar speed as string.IndexOf(ordinal) and Api.FindStringOrdinal.
+			//	Then similar speed as string.IndexOf(ordinal) and API <msdn>FindStringOrdinal</msdn>.
 			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
 		}
 
 		/// <summary>
-		/// Calls <see cref="Like_(string, string, bool)"/>  for each wildcard pattern specified in the argument list until one matches this string.
+		/// Calls <see cref="Like_(string, string, bool)">Like_</see>(patterns[i], ignoreCase) for each wildcard pattern specified in the argument list until it returns true.
 		/// Returns 1-based index of matching pattern, or 0 if none.
 		/// </summary>
 		public static int Like_(this string t, bool ignoreCase = false, params string[] patterns)
@@ -161,45 +162,11 @@ namespace Catkeys
 	}
 
 	/// <summary>
-	/// <para>A Catkeys wildcard expression is a text string that can be compared with other string as wildcard text, regular expression, multi-part, etc.
-	/// Like a regular expression, but in most cases easier to use, faster and more lightweight.
-	/// Typically used for string parameters of find-item functions, like <see cref="Wnd.Find">Wnd.Find</see>.
-	/// </para>
-	/// <h3>Wildcard expression reference</h3>
-	/// <para>
-	/// By default case-insensitive. Always culture-insensitive.<br/>
-	/// By default, if contains *? characters, is compared as wildcard pattern (see <see cref="String_.Like_(string, string, bool)">Like_</see>), else as simple text.
-	/// </para>
-	/// <para>
-	/// Wildcard characters:<br/>
-	/// * - zero or more of any characters.<br/>
-	/// ? - any character.
-	/// </para>
-	/// <para>Can start with **options|, like <c>"**tc|text"</c>. Options:</para>
-	/// <list type="bullet">
-	/// <item>t - simple text, not wildcard. Example: <c>"**t|text"</c></item>
-	/// <item>r - regular expression. See <see cref="System.Text.RegularExpressions.Regex"/>.</item>
-	/// <item>c - case-sensitive. Example: <c>"**rc|regex, match case"</c>. Info: case-sensitive regular expression is about 4 times faster.</item>
-	/// <item>n - must not match.</item>
-	/// <item>m - multi-part. Use separator []. Example: <c>"**m|findThis[]orThis[]**r|orThisRegex[]**n|butNotThis[]**nr|andNotThisRegex".</c> Example 2: <c>"**mn|notThis[]andNotThis"</c>.</item>
-	///	</list>
-	/// <para>
-	/// Pattern "" matches only "". Pattern null usually means 'match any'.
-	/// Tip: to avoid many nulls in code, you can omit optional parameters, for example instaed of <c>Wnd.Find(null, null, "notepad")</c> use <c>Wnd.Find(program:"notepad")</c>.
-	/// </para>
-	/// <para>Exception <see cref="ArgumentException"/> if invalid **options| or regular expression.</para>
-	/// <para>Example for users of such find-item functions.</para>
-	/// <code><![CDATA[
-	/// //Find item whose name is "example" (case-insensitive), date starts with "2017-" and some third property matches a case-sensitive regular expression.
-	/// var item = x.FindItem("example", "2017-*", "**rc|regex");
-	/// ]]></code>
-	/// <para>That's all. The information below is only for authors of such find-item functions.</para>
+	/// This class implements <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> parsing and matching (comparing).
+	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find">Wnd.Find</see> uses it to compare window name, class name and program.
+	/// The 'find' function creates a Wildex instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </summary>
-	/// <remarks>
-	/// The Wildex class implements wildcard expression parsing and matching (comparing).
-	/// An instance of this class contains a wildcard or simple text string, or a Regex object, or a Wildex[] array.
-	/// You use it like Regex. Create a Wildex instance, then call its Match method for each item text when searching for some item.<br/>
-	/// </remarks>
+	/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// //This version does not support wildcard expressions.
@@ -215,6 +182,10 @@ namespace Catkeys
 	/// 	Wildex n = name, d = date; //null if the string is null
 	/// 	return Documents.Find(x => (n == null || n.Match(x.Name)) && (d == null || d.Match(x.Date)));
 	/// }
+	/// 
+	/// //Example of calling such function.
+	/// //Find item whose name is "example" (case-insensitive) and date starts with "2017-".
+	/// var item = x.Find2("example", "2017-*");
 	/// ]]></code>
 	/// </example>
 	public class Wildex
@@ -227,7 +198,7 @@ namespace Catkeys
 		bool _not;
 
 		/// <param name="wildcardExpression">
-		/// String (<see cref="Wildex">wildcard expression</see>) to compare with other strings when calling <see cref="Match"/>.<br/>
+		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
 		/// null will match null. "" will match "".
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
@@ -276,13 +247,13 @@ namespace Catkeys
 		/// If the string is null, returns null, else creates and returns new Wildex.
 		/// </summary>
 		/// <param name="wildcardExpression">
-		/// String (<see cref="Wildex">wildcard expression</see>) to compare with other strings when calling <see cref="Match"/>.<br/>
+		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
 		/// </param>
 		public static implicit operator Wildex(string wildcardExpression) { return (wildcardExpression == null) ? null : new Wildex(wildcardExpression); }
 
 		/// <summary>
-		/// Compares a string with the string (<see cref="Wildex">wildcard expression</see>) used to create this <see cref="Wildex"/>.<br/>
-		/// Returns true if they match.<br/>
+		/// Compares a string with the <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> used to create this <see cref="Wildex"/>.
+		/// Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns true if wildcardExpression was null. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
 		public bool Match(string s)
@@ -323,48 +294,61 @@ namespace Catkeys
 		/// </summary>
 		public enum WildType :byte
 		{
-			/// <summary>Simple text (option t, or no *? characters and no t r options). Match() calls <see cref="String_.Equals_(string, string, bool)"/>.</summary>
+			/// <summary>
+			/// Simple text (option t, or no *? characters and no t r options).
+			/// Match() calls <see cref="String_.Equals_(string, string, bool)"/>.
+			/// </summary>
 			Text,
-			/// <summary>Wildcard (has *? characters and no t r options). Match() calls <see cref="String_.Like_(string, string, bool)"/>.</summary>
+			/// <summary>
+			/// Wildcard (has *? characters and no t r options).
+			/// Match() calls <see cref="String_.Like_(string, string, bool)"/>.
+			/// </summary>
 			Wildcard,
-			/// <summary>Regular expression (option r). Match() calls <see cref="Regex.IsMatch(string)"/>.</summary>
+			/// <summary>
+			/// Regular expression (option r).
+			/// Match() calls <see cref="Regex.IsMatch(string)"/>.
+			/// </summary>
 			Regex,
-			/// <summary>Multiple parts (option m). Match() calls Match() for each part (see <see cref="MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).</summary>
+			/// <summary>
+			/// Multiple parts (option m).
+			/// Match() calls Match() for each part (see <see cref="MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+			/// If you want to implement a different logic, call Match() for each <see cref="MultiArray"/> element (instead of calling Match() for this variable).
+			/// </summary>
 			Multi,
 		}
 
 		/// <summary>
-		/// Gets the wildcard or simple text.<br/>
+		/// Gets the wildcard or simple text.
 		/// null if TextType is Regex or Multi.
 		/// </summary>
-		public string Text { get { return _obj as string; } }
+		public string Text { get => _obj as string; }
 
 		/// <summary>
-		/// Gets the Regex object created from regular expression string.<br/>
+		/// Gets the Regex object created from regular expression string.
 		/// null if TextType is not Regex (no option r).
 		/// </summary>
-		public Regex Regex { get { return _obj as Regex; } }
+		public Regex Regex { get => _obj as Regex; }
 
 		/// <summary>
-		/// Array of Wildex variables, one for each part in multi-part text.<br/>
+		/// Array of Wildex variables, one for each part in multi-part text.
 		/// null if TextType is not Multi (no option m).
 		/// </summary>
-		public Wildex[] MultiArray { get { return _obj as Wildex[]; } }
+		public Wildex[] MultiArray { get => _obj as Wildex[]; }
 
 		/// <summary>
 		/// Gets the type of text (wildcard, regex, etc).
 		/// </summary>
-		public WildType TextType { get { return _type; } }
+		public WildType TextType { get => _type; }
 
 		/// <summary>
 		/// Is case-insensitive?
 		/// </summary>
-		public bool IgnoreCase { get { return _ignoreCase; } }
+		public bool IgnoreCase { get => _ignoreCase; }
 
 		/// <summary>
 		/// Has option n?
 		/// </summary>
-		public bool Not { get { return _not; } }
+		public bool Not { get => _not; }
 
 		///
 		public override string ToString()

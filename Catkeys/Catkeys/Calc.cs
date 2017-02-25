@@ -24,7 +24,7 @@ namespace Catkeys
 	/// <summary>
 	/// Simple calculation functions, similar to Math.
 	/// </summary>
-	[DebuggerStepThrough]
+	//[DebuggerStepThrough]
 	public static class Calc
 	{
 		/// <summary>
@@ -160,33 +160,43 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts from System.Drawing.Color (ARGB) to native Windows COLORREF (ABGR).
+		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
+		/// ARGB is used in .NET, GDI+ and HTML/CSS.
+		/// ABGR is used by most Windows native API.
 		/// </summary>
-		public static uint ColorToNative(Color color)
+		public static uint ColorSwapRedBlue(uint color)
 		{
-			uint t = (uint)color.ToArgb();
-			return (t & 0xff00ff00) | ((t << 16) & 0xff0000) | ((t >> 16) & 0xff);
+			return (color & 0xff00ff00) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff);
 		}
 
 		/// <summary>
-		/// Converts from native Windows COLORREF with alpha (ABGR) to System.Drawing.Color (ARGB).
+		/// Converts from System.Drawing.Color to native Windows COLORREF with alpha (0xAABBGGRR).
+		/// </summary>
+		public static uint ColorToABGR(Color color)
+		{
+			return ColorSwapRedBlue((uint)color.ToArgb());
+		}
+
+		/// <summary>
+		/// Converts from native Windows COLORREF with alpha (0xAABBGGRR) to System.Drawing.Color.
 		/// </summary>
 		public static Color ColorFromABGR(uint color)
 		{
-			return Color.FromArgb((int)((color & 0xff00ff00) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff)));
+			return Color.FromArgb((int)ColorSwapRedBlue(color));
 		}
 
 		/// <summary>
-		/// Converts from native Windows COLORREF without alpha (BGR) to opaque System.Drawing.Color (ARGB).
+		/// Converts from native Windows COLORREF without alpha (0x00BBGGRR) to opaque System.Drawing.Color.
+		/// The alpha byte of the color argument can be 0 or any other value. Makes it 0xFF.
 		/// </summary>
 		public static Color ColorFromBGR(uint color)
 		{
-			return Color.FromArgb((int)((color & 0xff00ff00) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff) | 0xFF000000));
+			return Color.FromArgb((int)(ColorSwapRedBlue(color) | 0xFF000000));
 		}
 
 		/// <summary>
-		/// Converts from ARGB uint to System.Drawing.Color.
-		/// Same as Color.FromArgb but don't need unchecked((int)0xFF...).
+		/// Converts from ARGB uint (0xAARRGGBB) to System.Drawing.Color.
+		/// Same as <see cref="Color.FromArgb(int)"/> but don't need <c>unchecked((int)0xFF...)</c>.
 		/// </summary>
 		public static Color ColorFromARGB(uint color)
 		{
@@ -194,8 +204,8 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts from RGB uint to opaque System.Drawing.Color.
-		/// Same as Color.FromArgb but don't need to specify alpha. You can replace Color.FromArgb(unchecked((int)0xFF123456)) with Calc.ColorFromRGB(0x123456).
+		/// Converts from RGB uint (0x00RRGGBB) to opaque System.Drawing.Color.
+		/// Same as <see cref="Color.FromArgb(int)"/> but don't need to specify alpha. You can replace <c>Color.FromArgb(unchecked((int)0xFF123456))</c> with <c>Calc.ColorFromRGB(0x123456)</c>.
 		/// </summary>
 		public static Color ColorFromRGB(uint color)
 		{
@@ -295,8 +305,7 @@ namespace Catkeys
 		public static unsafe byte[] HashMD5(byte[] a)
 		{
 			try {
-				MD5_CTX x;
-				MD5Init(out x);
+				MD5Init(out MD5_CTX x);
 				MD5Update(ref x, a, a.Length);
 				MD5Final(ref x);
 
@@ -393,21 +402,36 @@ namespace Catkeys
 		/// <summary>
 		/// Converts byte array (binary data) to hex-encoded string.
 		/// </summary>
-		/// <param name="a"></param>
+		/// <param name="a">The data. Can be null.</param>
 		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
 		public static unsafe string BytesToHexString(byte[] a, bool upperCase = false)
 		{
 			if(a == null) return null;
-			int i, n = a.Length;
-			string R = new string('\0', n * 2);
+			fixed (byte* p = a) {
+				return BytesToHexString(p, a.Length, upperCase);
+			}
+		}
+
+		/// <summary>
+		/// Converts binary data to hex-encoded string.
+		/// </summary>
+		/// <param name="data">The data. Can be any valid memory of specified size, for example a struct address. Can be null.</param>
+		/// <param name="size">data memory size.</param>
+		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+		public static unsafe string BytesToHexString(void* data, int size, bool upperCase = false)
+		{
+			if(data == null) return null;
+			byte* a = (byte*)data;
+			int i;
+			string R = new string('\0', size * 2);
 			fixed (char* p = R) {
 				if(upperCase) {
-					for(i = 0; i < n; i++) {
+					for(i = 0; i < size; i++) {
 						p[i * 2] = _HalfByteToHexCharU(a[i] >> 4);
 						p[i * 2 + 1] = _HalfByteToHexCharU(a[i] & 0xf);
 					}
 				} else {
-					for(i = 0; i < n; i++) {
+					for(i = 0; i < size; i++) {
 						p[i * 2] = _HalfByteToHexCharL(a[i] >> 4);
 						p[i * 2 + 1] = _HalfByteToHexCharL(a[i] & 0xf);
 					}
@@ -441,6 +465,7 @@ namespace Catkeys
 		/// <summary>
 		/// Converts hex-encoded string to byte array (binary data).
 		/// </summary>
+		/// <param name="s">Hex-encoded string. Can be null.</param>
 		public static byte[] BytesFromHexString(string s)
 		{
 			if(s == null) return null;
@@ -453,6 +478,32 @@ namespace Catkeys
 
 			//speed: fast enough without a lookup table. Faster than BytesToHexString.
 			//These functions have similar speed as Convert.ToBase64String and Convert.FromBase64String.
+		}
+
+		/// <summary>
+		/// Converts hex-encoded string to binary data.
+		/// Returns the number of bytes stored in data memory. It is Math.Min(s.Length/2, size).
+		/// </summary>
+		/// <param name="s">Hex-encoded string. Can be null.</param>
+		/// <param name="data">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
+		/// <param name="size">data memory size.</param>
+		/// <remarks>
+		/// <note>This function is unsafe, it will damage process memory if using bad data or size.</note>
+		/// </remarks>
+		public static unsafe int BytesFromHexString(string s, void* data, int size)
+		{
+			if(s == null) return 0;
+			int i, n = s.Length / 2;
+			if(n > size) n = size;
+			var r = (byte*)data;
+			for(i = 0; i < n; i++) {
+				r[i] = (byte)((_HexCharToHalfByte(s[i * 2]) << 4) | _HexCharToHalfByte(s[i * 2 + 1]));
+			}
+			return n;
+
+			//info: this is very unsafe.
+			//	Cannot use generic because C# does not allow to get generic parameter address.
+			//	Cannot use GCHandle.AddrOfPinnedObject because it gets address of own copy of the variable.
 		}
 	}
 }

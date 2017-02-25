@@ -28,7 +28,7 @@ namespace Catkeys
 	/// </summary>
 	public class CatBar :CatMenu_CatBar_Base
 	{
-		static Wnd.Misc.WndClass _WndClass = Wnd.Misc.WndClass.Register("CatBar", _WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
+		static Wnd.Misc.WindowClass _WndClass = Wnd.Misc.WindowClass.Register("CatBar", _WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
 
 		Wnd _w;
 		ToolStrip_ _ts;
@@ -36,10 +36,10 @@ namespace Catkeys
 		/// <summary>
 		/// Gets ToolStrip.
 		/// </summary>
-		public ToolStrip Ex { get { return _ts; } }
+		public ToolStrip Ex { get => _ts; }
 
 		//Our base uses this.
-		protected override ToolStrip MainToolStrip { get { return _ts; } }
+		protected override ToolStrip MainToolStrip { get => _ts; }
 
 		public CatBar()
 		{
@@ -49,7 +49,7 @@ namespace Catkeys
 		/// <summary>
 		/// Adds new button as ToolStripButton.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>.
+		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon">Can be:
@@ -73,7 +73,7 @@ namespace Catkeys
 		/// <summary>
 		/// Adds new button as ToolStripButton.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>.
+		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onClick">Lambda etc function to be called when the button clicked.</param>
@@ -118,7 +118,7 @@ namespace Catkeys
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
 			//PrintFunc();
-			//_w.ActivateRaw();
+			//_w.ActivateLL();
 			Api.SetForegroundWindow(_w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 		}
 
@@ -135,7 +135,7 @@ namespace Catkeys
 
 		ToolStripItemCollection _Items
 		{
-			get { return _ts.Items; }
+			get => _ts.Items;
 		}
 
 		/// <summary>
@@ -146,14 +146,14 @@ namespace Catkeys
 		/// <remarks>
 		/// You can instead use LastItem, which gets ToolStripItem, which is the base class of all supported item types; cast it to a derived type if need.
 		/// </remarks>
-		public ToolStripButton LastButton { get { return LastItem as ToolStripButton; } }
+		public ToolStripButton LastButton { get => LastItem as ToolStripButton; }
 
 		void _Init()
 		{
 			Perf.Next();
-			uint exStyle = Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOPMOST;
-			uint style = Api.WS_POPUP;
-			//style |= Api.WS_CAPTION | Api.WS_SYSMENU;
+			uint exStyle = Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST;
+			uint style = Native.WS_POPUP;
+			//style |= Native.WS_CAPTION | Native.WS_SYSMENU;
 
 			RECT r = Screen.PrimaryScreen.WorkingArea;
 			r.Inflate(-2, -2); r.top += 4;
@@ -172,7 +172,7 @@ namespace Catkeys
 
 		public bool Visible
 		{
-			get { return _w.IsVisible; }
+			get => _w.IsVisible;
 			set
 			{
 				_GetIconsAsync(_ts);
@@ -181,7 +181,7 @@ namespace Catkeys
 					_ts.CreateControl();
 					Perf.Next();
 				}
-				_w.Show(value);
+				_w.ShowLL(value);
 				_showTime = Time.Milliseconds;
 			}
 		}
@@ -190,13 +190,13 @@ namespace Catkeys
 
 		public void Close()
 		{
-			if(_w.IsValid) _w.Destroy();
+			if(_w.IsAlive) _w.Close();
 		}
 
 		/// <summary>
 		/// Gets the main toolbar window.
 		/// </summary>
-		public Wnd MainWnd { get { return _w; } }
+		public Wnd MainWnd { get => _w; }
 
 #pragma warning disable 649
 		struct _CREATESTRUCT
@@ -312,6 +312,11 @@ namespace Catkeys
 					var p = base.CreateParams;
 					if(_parent != null) { //this prop is called 3 times, first time before ctor
 						p.Parent = _parent.MainWnd.Handle;
+
+						//TODO: window name should be not exactly as script name.
+						//	Because need to prevent finding it instead of eg its owner window when Wnd.Find is used with partial name and without class name.
+						//	Even if ucase like QM 2, because Wnd.Find is case-insensitive.
+						//	Maybe "s.c.r.i.p.t".
 					}
 					return p;
 				}
@@ -397,10 +402,10 @@ namespace Catkeys
 				_paintedOnce = true;
 			}
 
-			//ToolStrip _ICatToolStrip.ToolStrip { get { return this; } }
+			//ToolStrip _ICatToolStrip.ToolStrip { get => this; }
 
 			bool _paintedOnce;
-			bool _ICatToolStrip.PaintedOnce { get { return _paintedOnce; } }
+			bool _ICatToolStrip.PaintedOnce { get => _paintedOnce; }
 		}
 
 	}

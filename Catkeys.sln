@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26020.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test Projects\Test\Test.csproj", "{E40D1949-97DE-43E0-80AE-D7EBFFD18C32}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test old", "Test Projects\Test\Test old.csproj", "{E40D1949-97DE-43E0-80AE-D7EBFFD18C32}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wpf", "Test Projects\Wpf\Wpf.csproj", "{9D4A6C32-247C-42CB-B9B8-12C6AE764AD5}"
 EndProject
@@ -45,9 +45,31 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Editor", "Editor\Editor.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "G.Controls", "G.Controls\G.Controls.csproj", "{4C53EA3E-D770-41AC-9A19-381B840CD14A}"
 EndProject
-Project("{7CF6DF6D-3B04-46F8-A40B-537D21BCA0B4}") = "Help", "Catkeys\Doc\Help.shfbproj", "{93E7057D-8ACB-4674-889D-D8B094C927F5}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Help", "Help", "{63A18AE7-A97F-4D92-939A-6FE708D79F6E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlDocPreprocessor", "Other\XmlDocPreprocessor\XmlDocPreprocessor.csproj", "{7B492F48-1D85-4795-946E-6F906BAC07F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LineBreaks", "Help\LineBreaks\LineBreaks.csproj", "{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HelpHtml", "Help\HelpHtml\", "{5F2E4298-39D0-4F15-8D9F-558414281BF4}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
+		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
+		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "65384"
+		SlnRelativePath = "Help\HelpHtml\"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -215,26 +237,29 @@ Global
 		{4C53EA3E-D770-41AC-9A19-381B840CD14A}.Release|x64.Build.0 = Release|Any CPU
 		{4C53EA3E-D770-41AC-9A19-381B840CD14A}.Release|x86.ActiveCfg = Release|Any CPU
 		{4C53EA3E-D770-41AC-9A19-381B840CD14A}.Release|x86.Build.0 = Release|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Debug|x64.Build.0 = Debug|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Debug|x86.Build.0 = Debug|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Release|x64.ActiveCfg = Release|Any CPU
-		{93E7057D-8ACB-4674-889D-D8B094C927F5}.Release|x86.ActiveCfg = Release|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Debug|x64.Build.0 = Debug|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Debug|x86.Build.0 = Debug|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Release|x64.ActiveCfg = Release|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Release|x64.Build.0 = Release|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Release|x86.ActiveCfg = Release|Any CPU
-		{7B492F48-1D85-4795-946E-6F906BAC07F4}.Release|x86.Build.0 = Release|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Debug|x64.Build.0 = Debug|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Debug|x86.Build.0 = Debug|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Release|x64.ActiveCfg = Release|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Release|x64.Build.0 = Release|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Release|x86.ActiveCfg = Release|Any CPU
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}.Release|x86.Build.0 = Release|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Debug|x64.Build.0 = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Debug|x86.Build.0 = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Release|x64.ActiveCfg = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Release|x64.Build.0 = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Release|x86.ActiveCfg = Debug|Any CPU
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4}.Release|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -257,6 +282,7 @@ Global
 		{22AE2386-60F1-476E-9303-61CDB0AAC4CF} = {0C880B80-8ECC-4252-A9C9-00BAF5C58A3C}
 		{466DE975-A615-4871-98BA-07C13E192953} = {82D5A236-3610-446D-95BA-3888BF6E8F25}
 		{4C53EA3E-D770-41AC-9A19-381B840CD14A} = {0C880B80-8ECC-4252-A9C9-00BAF5C58A3C}
-		{7B492F48-1D85-4795-946E-6F906BAC07F4} = {4B65F34E-129D-46F9-9464-25737BC43029}
+		{5E4EF1F4-388E-4FFE-B896-C126116FEEA5} = {63A18AE7-A97F-4D92-939A-6FE708D79F6E}
+		{5F2E4298-39D0-4F15-8D9F-558414281BF4} = {63A18AE7-A97F-4D92-939A-6FE708D79F6E}
 	EndGlobalSection
 EndGlobal

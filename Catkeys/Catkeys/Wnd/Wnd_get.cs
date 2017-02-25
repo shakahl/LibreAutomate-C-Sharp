@@ -25,34 +25,60 @@ namespace Catkeys
 {
 	public partial struct Wnd
 	{
-		static Wnd _wDesktop = Api.GetDesktopWindow();
-
 		/// <summary>
 		/// Gets or sets the owner window of this top-level window.
 		/// A window that has an owner window is always on top of its owner window.
 		/// Don't call this for controls, they don't have an owner window.
-		/// <para>The 'get' function calls Api.GetWindow(Api.GW_OWNER). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().</para>
-		/// <para>The 'set' function calls Api.SetWindowLong(Api.GWL_HWNDPARENT, (LPARAM)value); it can fail, eg if the owner's process has higher UAC integrity level; supports ThreadError.</para>
+		/// The 'get' function supports <see cref="Native.GetError"/>.
+		/// The 'set' function can fail, eg if the owner's process has higher UAC integrity level.
 		/// </summary>
-		public Wnd Owner
+		/// <exception cref="WndException">Failed (only 'set' function).</exception>
+		public Wnd WndOwner
 		{
-			get { return Api.GetWindow(this, Api.GW_OWNER); }
-			set { SetWindowLong(Api.GWL_HWNDPARENT, (LPARAM)value); }
+			get => Api.GetWindow(this, Api.GW_OWNER);
+			set { SetWindowLong(Native.GWL_HWNDPARENT, (LPARAM)value); }
 		}
 
 		/// <summary>
 		/// Gets the top-level parent window of this control.
 		/// If this is a top-level window, returns this window.
-		/// Calls Api.GetAncestor(Api.GA_ROOT). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+		/// Calls API <msdn>GetAncestor</msdn>(GA_ROOT).
 		/// </summary>
-		public Wnd ToplevelParentOrThis { get { return Api.GetAncestor(this, Api.GA_ROOT); } }
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndWindow
+		{
+			get
+			{
+				var w = Api.GetAncestor(this, Api.GA_ROOT);
+				if(w.Is0 && this == Misc.WndRoot) w = this;
+				return w;
+			}
+		}
 
 		/// <summary>
-		/// Gets direct parent of this control. It can be its top-level parent window or parent control.
-		/// Returns Wnd0 (0) if this is a top-level window.
-		/// Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+		/// Returns true if this is a child window (control), false if top-level window.
 		/// </summary>
-		public Wnd DirectParent
+		/// <remarks>
+		/// Supports <see cref="Native.GetError"/>.
+		/// Uses <see cref="WndDirectParent"/>.
+		/// Another way is <c>w.HasStyle(Native.WS_CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
+		/// </remarks>
+		public bool IsChildWindow { get => !WndDirectParent.Is0; }
+
+		/// <summary>
+		/// Returns true if this is a direct or indirect child (descendant) of window w.
+		/// Calls API <msdn>IsChild</msdn>.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public bool IsChildOf(Wnd w) { return Api.IsChild(w, this); }
+
+		/// <summary>
+		/// Gets the window or control that is the direct parent of this control.
+		/// Returns Wnd0 (0) if this is a top-level window.
+		/// If need top-level parent window, use <see cref="WndWindow"/>.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndDirectParent
 		{
 			get
 			{
@@ -66,294 +92,409 @@ namespace Catkeys
 			}
 		}
 
-		/// <summary>
-		/// Gets direct parent of this control. It can be its top-level parent window or parent control.
-		/// If this is a top-level window, gets its owner, or returns Wnd0 (0) if it is unowned.
-		/// Calls Api.GetParent(). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-		/// </summary>
-		public Wnd DirectParentOrOwner { get { return Api.GetParent(this); } }
+		static Wnd _wDesktop = Api.GetDesktopWindow();
 
 		/// <summary>
-		/// Returns true if this is a child window (control), false if top-level window.
-		/// Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+		/// Gets the window or control that is the direct parent of this control or owner of this top-level window.
+		/// Calls API <msdn>GetParent</msdn>. Faster than <see cref="WndDirectParent"/>.
 		/// </summary>
-		public bool IsChildWindow { get { return !DirectParent.Is0; } }
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndDirectParentOrOwner { get => Api.GetParent(this); }
 
 		/// <summary>
-		/// Returns true if this is a direct or indirect child of window w.
-		/// Calls Api.IsChild(). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+		/// Gets the window of the same type that is highest in the Z order.
+		/// If this is a top-level window, gets first top-level window, else gets first control of the same direct parent.
+		/// If this is the first, returns this, not Wnd0.
+		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
 		/// </summary>
-		/// <param name="w">A top-level window or control.</param>
-		public bool IsChildOf(Wnd w) { return Api.IsChild(w, this); }
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndFirstSibling { get => Api.GetWindow(this, Api.GW_HWNDFIRST); }
 
 		/// <summary>
-		/// Static functions that get windows/controls in Z order, parent/child, owner/owned, special windows.
-		/// Example: <c>Wnd w2=Wnd.Get.NextSibling(w1);</c>
-		/// The Wnd class also has copies of some often used Wnd.Get functions.
+		/// Gets the window of the same type that is lowest in the Z order.
+		/// If this is a top-level window, gets last top-level window, else gets last control of the same direct parent.
+		/// If this is the last, returns this, not Wnd0.
+		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
 		/// </summary>
-		//[DebuggerStepThrough]
-		public static class Get
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndLastSibling { get => Api.GetWindow(this, Api.GW_HWNDLAST); }
+
+		/// <summary>
+		/// Gets the window of the same type that is next (below this) in the Z order.
+		/// If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
+		/// If this is the last, returns Wnd0.
+		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDNEXT).
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndNext { get => Api.GetWindow(this, Api.GW_HWNDNEXT); }
+
+		/// <summary>
+		/// Gets the window of the same type that is previous (above this) in the Z order.
+		/// If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
+		/// If this is the first, returns Wnd0.
+		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDPREV).
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndPrev { get => Api.GetWindow(this, Api.GW_HWNDPREV); }
+
+		/// <summary>
+		/// Gets the child control at the top of the Z order.
+		/// Returns Wnd0 if no children.
+		/// The same as <see cref="WndChild">WndChild</see>(0).
+		/// Calls API <msdn>GetWindow</msdn>(this, GW_CHILD).
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndFirstChild { get => Api.GetWindow(this, Api.GW_CHILD); }
+
+		/// <summary>
+		/// Gets the child control at the bottom of the Z order.
+		/// Returns Wnd0 if no children.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndLastChild { get { var c = Api.GetWindow(this, Api.GW_CHILD); return c.Is0 ? c : Api.GetWindow(c, Api.GW_HWNDLAST); } }
+
+		/// <summary>
+		/// Gets the child control at the specified position in the Z order.
+		/// Returns Wnd0 if no children or if index is invalid.
+		/// </summary>
+		/// <param name="index">0-based index of the child control in the Z order.</param>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public Wnd WndChild(int index)
+		{
+			if(index < 0) return Wnd0;
+			Wnd c = Api.GetWindow(this, Api.GW_CHILD);
+			for(; index > 0 && !c.Is0; index--) c = Api.GetWindow(c, Api.GW_HWNDNEXT);
+			return c;
+		}
+
+		/// <summary>
+		/// Gets the active (foreground) window.
+		/// Calls API <msdn>GetForegroundWindow</msdn>.
+		/// Returns Wnd0 if there is no active window; more info: <see cref="Misc.WaitForAnActiveWindow"/>.
+		/// </summary>
+		public static Wnd WndActive { get => Api.GetForegroundWindow(); }
+
+		/// <summary>
+		/// Returns true if this window is the active (foreground) window.
+		/// </summary>
+		public bool IsActive { get => !Is0 && this == Api.GetForegroundWindow(); }
+
+		/// <summary>
+		/// Returns true if this window is the active (foreground) window.
+		/// If this is <see cref="Misc.WndRoot"/>, returns true if there is no active window.
+		/// </summary>
+		internal bool LibIsActiveOrNoActiveAndThisIsWndRoot
+		{
+			get
+			{
+				if(Is0) return false;
+				var f = Api.GetForegroundWindow();
+				return this == (f.Is0 ? Misc.WndRoot : f);
+			}
+		}
+
+		public static partial class Misc
 		{
 			/// <summary>
-			/// Gets the foreground window, like Wnd.ActiveWindow.
-			/// Calls Api.GetForegroundWindow().
+			/// Gets the active window of this thread.
+			/// Calls API <msdn>GetActiveWindow</msdn>.
 			/// </summary>
-			public static Wnd Active() { return Api.GetForegroundWindow(); }
+			public static Wnd WndActiveOfThisThread { get => Api.GetActiveWindow(); }
 
 			/// <summary>
-			/// Gets the first top-level window in the Z order.
-			/// Normally it is a topmost window.
-			/// Calls Api.GetTopWindow(Wnd0).
+			/// Gets the very first top-level window in the Z order.
+			/// Usually it is a topmost window.
+			/// Calls API <msdn>GetTopWindow</msdn>(Wnd0).
 			/// </summary>
-			public static Wnd FirstToplevel() { return Api.GetTopWindow(Wnd0); }
-
-			/// <summary>
-			/// Gets the first window in the same Z order as w. If w is top-level, gets a top-level window, else gets a control of the same parent.
-			/// Calls Api.GetWindow(w, Api.GW_HWNDFIRST). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd FirstSibling(Wnd w) { return Api.GetWindow(w, Api.GW_HWNDFIRST); }
-
-			/// <summary>
-			/// Gets the last window in the same Z order as w. If w is top-level, gets a top-level window, else gets a control of the same parent.
-			/// Calls Api.GetWindow(w, Api.GW_HWNDLAST). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd LastSibling(Wnd w) { return Api.GetWindow(w, Api.GW_HWNDLAST); }
-
-			/// <summary>
-			/// Gets next window in the same Z order as w. If w is top-level, gets a top-level window, else gets a control of the same parent.
-			/// Calls Api.GetWindow(w, Api.GW_HWNDNEXT). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd NextSibling(Wnd w) { return Api.GetWindow(w, Api.GW_HWNDNEXT); }
-
-			/// <summary>
-			/// Gets next window in the same Z order as w. If w is top-level, gets a top-level window, else gets a control of the same parent.
-			/// Calls Api.GetWindow(w, Api.GW_HWNDPREV). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd PreviousSibling(Wnd w) { return Api.GetWindow(w, Api.GW_HWNDPREV); }
-
-			/// <summary>
-			/// Gets the first w child control in the Z order.
-			/// Calls Api.GetWindow(w, Api.GW_CHILD). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd FirstChild(Wnd w) { return Api.GetWindow(w, Api.GW_CHILD); }
-
-			/// <summary>
-			/// Gets the owner window of top-level window w.
-			/// A window that has an owner window is always on top of its owner window.
-			/// Calls Api.GetWindow(w, Api.GW_OWNER). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd Owner(Wnd w) { return Api.GetWindow(w, Api.GW_OWNER); }
+			public static Wnd WndTop { get => Api.GetTopWindow(Wnd0); }
 
 			/// <summary>
 			/// Gets the first (top) enabled window in the chain of windows owned by w, or w itself if there are no such windows.
-			/// Calls Api.GetWindow(w, Api.GW_ENABLEDPOPUP). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+			/// Calls API <msdn>GetWindow</msdn>(w, GW_ENABLEDPOPUP).
 			/// </summary>
-			public static Wnd FirstEnabledOwnedOrThis(Wnd w) { return Api.GetWindow(w, Api.GW_ENABLEDPOPUP); }
+			/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+			public static Wnd WndFirstEnabledOwnedOrThis(Wnd w) { return Api.GetWindow(w, Api.GW_ENABLEDPOPUP); }
 
 			/// <summary>
 			/// Gets the most recently active window owned by w, or w itself if it was the most recently active.
-			/// Calls Api.GetLastActivePopup(w). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+			/// Calls API <msdn>GetLastActivePopup</msdn>(w).
 			/// </summary>
-			public static Wnd LastSeenActiveOwnedOrThis(Wnd w) { return Api.GetLastActivePopup(w); }
-
-			/// <summary>
-			/// Gets the top-level parent window of control w. If w is a top-level window, returns w.
-			/// Calls Api.GetAncestor(Api.GA_ROOT). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd ToplevelParentOrThis(Wnd w) { return Api.GetAncestor(w, Api.GA_ROOT); }
+			/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+			public static Wnd WndLastSeenActiveOwnedOrThis(Wnd w) { return Api.GetLastActivePopup(w); }
 
 			/// <summary>
 			/// Gets the most bottom owner window in the chain of owner windows of w. If w is not owned, returns w.
-			/// Calls Api.GetAncestor(Api.GA_ROOTOWNER). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
+			/// Calls API <msdn>GetAncestor</msdn>(GA_ROOTOWNER).
 			/// </summary>
-			public static Wnd RootOwnerOrThis(Wnd w) { return Api.GetAncestor(w, Api.GA_ROOTOWNER); }
-
-			/// <summary>
-			/// Gets direct parent of the specified control. It can be its top-level parent window or parent control.
-			/// If w is a top-level window, gets its owner, or returns Wnd0 (0) if it is unowned.
-			/// Calls Api.GetParent(). Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd DirectParentOrOwner(Wnd w) { return Api.GetParent(w); }
-
-			/// <summary>
-			/// Gets direct parent of the specified control. It can be its top-level parent window or parent control.
-			/// Returns Wnd0 (0) if w is a top-level window.
-			/// Supports Api.SetLastError(0)/Marshal.GetLastWin32Error().
-			/// </summary>
-			public static Wnd DirectParent(Wnd w) { return w.DirectParent; }
+			/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+			public static Wnd WndRootOwnerOrThis(Wnd w) { return Api.GetAncestor(w, Api.GA_ROOTOWNER); }
 
 			/// <summary>
 			/// Gets the virtual parent window of all top-level windows.
-			/// It is not the window that contains desktop icons.
-			/// Calls Api.GetDesktopWindow().
+			/// Calls API <msdn>GetDesktopWindow</msdn>.
+			/// <note>It is not the visible desktop window (see <see cref="WndDesktop"/>)</note>.
 			/// </summary>
-			public static Wnd DesktopWindow { get { return _wDesktop; } }
+			public static Wnd WndRoot { get => _wDesktop; }
 
 			/// <summary>
 			/// Gets a window of the shell process (usually process "explorer", class name "Progman").
-			/// The window belongs to the same thread as the window that contains desktop icons.
-			/// Calls Api.GetShellWindow().
+			/// Calls API <msdn>GetShellWindow</msdn>.
+			/// <note>In most cases it is not the window that contains desktop icons (see <see cref="WndDesktop"/>). But it belongs to the same thread.</note>
 			/// </summary>
-			public static Wnd ShellWindow { get { return Api.GetShellWindow(); } }
+			public static Wnd WndShell { get => Api.GetShellWindow(); }
 
 			/// <summary>
-			/// Gets the top-level window that contains desktop icons.
+			/// Gets the desktop window.
+			/// It displays desktop icons and wallpaper in its child control <see cref="WndDesktopControl"/>. The "Show Desktop" command (Win+D) activates it.
+			/// <note>It is not the same as API <msdn>GetDesktopWindow</msdn> (see <see cref="WndRoot"/>)</note>.
+			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
 			/// </summary>
-			public static Wnd Desktop { get { return DesktopListview.ToplevelParentOrThis; } }
+			public static Wnd WndDesktop { get => _WndDesktop(out var lv); }
 
 			/// <summary>
-			/// Gets the "SysListView32" control that contains desktop icons.
+			/// Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="WndDesktop"/>.
+			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
 			/// </summary>
-			public static Wnd DesktopListview
+			public static Wnd WndDesktopControl { get { _WndDesktop(out var lv); return lv; } }
+
+			static Wnd _WndDesktop(out Wnd lvControl)
 			{
-				get
-				{
-					if(!__wDesktopLV.IsValid) {
-						Wnd wShell = ShellWindow;
-						Wnd wLV = wShell.Child(null, "SysListView32");
-						if(wLV.Is0) {
-							foreach(Wnd t in ThreadWindows(wShell.ThreadId, "WorkerW", true)) {
-								wLV = t.Child(null, "SysListView32"); if(!wLV.Is0) break;
-							}
-						}
-						__wDesktopLV = wLV;
+				Wnd wShell = WndShell;
+				lvControl = wShell.Child(className: "SysListView32");
+				if(lvControl.Is0) {
+					foreach(Wnd t in ThreadWindows(wShell.ThreadId, true, also: t => t.ClassNameIs("WorkerW"))) {
+						lvControl = t.Child(className: "SysListView32");
+						if(!lvControl.Is0) return t;
 					}
-					return __wDesktopLV;
-
-					//info:
-					//If no wallpaper, desktop is GetShellWindow, else a visible WorkerW window.
-					//When was no wallpaper and user selects a wallpaper, explorer creates WorkerW and moves the same SysListView32 control to it.
 				}
-			}
-			static Wnd __wDesktopLV; //cached Desktop SysListView32 control
+				return Wnd0;
 
-			/// <summary>
-			/// Gets next window in the Z order, skipping invisible and other windows that would not be added to taskbar or not activated by Alt+Tab.
-			/// Returns Wnd0 if there are no such windows.
-			/// </summary>
-			/// <param name="wFrom">Window after (behind) which to search. If omitted or Wnd0, starts from the top of the Z order.</param>
-			/// <param name="retryFromTop">If wFrom is used and there are no matching windows after it, retry from the top of the Z order. Like Alt+Tab does. Can return wFrom.</param>
-			/// <param name="skipMinimized">Skip minimized windows.</param>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
-			/// <param name="likeAltTab">
-			/// Emulate Alt+Tab behavior with owned windows (message boxes, dialogs):
-			///		If wFrom is such owned window, skip its owner.
-			///		If the found window has an owned window that was active more recently, return that owned window.
-			/// </param>
-			/// <remarks>
-			/// NextMainWindow(Wnd.ActiveWindow, retryFromTop:true, likeAltTab:true) ideally should get the same window as would be activated by Alt+Tab. However it is not always possible. Sometimes it will be a different window.
-			/// Without retryFromTop:true, likeAltTab:true this function can be used to get main application windows like in taskbar. It is used by All.MainWindows.
-			/// </remarks>
-			public static Wnd NextMainWindow(Wnd wFrom = default(Wnd),
-				bool retryFromTop = false, bool skipMinimized = false, bool allDesktops = false, bool likeAltTab = false)
-			{
-				Wnd lastFound = Wnd0, w2 = Wnd0, w = wFrom;
-				if(w.Is0) retryFromTop = false;
-
-				for(;;) {
-					w = w.Is0 ? FirstToplevel() : NextSibling(w);
-					if(w.Is0) {
-						if(retryFromTop) { retryFromTop = false; continue; }
-						return lastFound;
-					}
-
-					if(!w.IsVisible) continue;
-
-					uint exStyle = w.ExStyle;
-					if((exStyle & Api.WS_EX_APPWINDOW) == 0) {
-						if((exStyle & (Api.WS_EX_TOOLWINDOW | Api.WS_EX_NOACTIVATE)) != 0) continue;
-						w2 = w.Owner; if(!w2.Is0) { if(!likeAltTab || w2.IsVisible) continue; }
-					}
-
-					#region IsVisibleReally
-
-					if(skipMinimized && w.IsMinimized) continue;
-
-					if(WinVer >= Win10) {
-						if(w.IsCloaked) {
-							if(!allDesktops) continue;
-							if((exStyle & Api.WS_EX_NOREDIRECTIONBITMAP) != 0) { //probably a store app
-								switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
-								case 1: continue; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
-								case 2: if(_WindowsStoreAppFrameChild(w).Is0) continue; break;
-								}
-							}
-						}
-					} else if(WinVer >= Win8) {
-						if((exStyle & Api.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Api.WS_CAPTION)) {
-							if(!allDesktops && (exStyle & Api.WS_EX_TOPMOST) != 0) continue; //skip store apps
-							uint pid, pidShell;
-							if(ShellWindow.GetThreadAndProcessId(out pidShell) != 0 && w.GetThreadAndProcessId(out pid) != 0 && pid == pidShell) continue; //skip captionless shell windows
-						}
-						//On Win8 impossible to get next window like Alt+Tab.
-						//	All store apps are topmost, covering non-topmost desktop windows.
-						//	DwmGetWindowAttribute has no sense here.
-						//	Desktop windows are never cloaked, inactive store windows are cloaked, etc.
-					}
-
-					#endregion
-
-					if(likeAltTab) {
-						w2 = LastSeenActiveOwnedOrThis(RootOwnerOrThis(w)); //call with the root owner, because GLAP returns w if w has an owner (documented)
-						if(w2 != w) {
-							if(!w2.IsVisible || (skipMinimized && w2.IsMinimized)) w2 = w; //don't check cloaked etc for owned window if its owner passed
-							if(w2 == wFrom) { lastFound = w2; continue; }
-							w = w2;
-						}
-					}
-
-					return w;
-				}
+				//info:
+				//If no wallpaper, desktop is GetShellWindow, else a visible WorkerW window.
+				//When was no wallpaper and user selects a wallpaper, explorer creates WorkerW and moves the same SysListView32 control to it.
 			}
 
-			//TODO: impl these
+
+			//FUTURE: impl these
 
 			//public static Wnd CatkeysManager { get { return ; } }
 
 			//public static Wnd CatkeysEditor { get { return ; } }
 
 			//public static Wnd CatkeysCodeEditControl { get { return ; } }
-
-		}
-
-		#region enum main windows
-
-		/// <summary>
-		/// Get windows that have taskbar button and/or are included in the Alt+Tab sequence.
-		/// Returns list containing 0 or more window handles as Wnd.
-		/// Uses Get.NextMainWindow().
-		/// </summary>
-		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
-		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
-		public static List<Wnd> MainWindows(bool allDesktops = false)
-		{
-			List<Wnd> a = new List<Wnd>();
-
-			MainWindows(e =>
-			{
-				a.Add(e);
-				return false;
-			}, allDesktops: allDesktops);
-
-			return a;
 		}
 
 		/// <summary>
-		/// Calls callback function for each window that has taskbar button and/or is included in the Alt+Tab sequence.
-		/// Uses Get.NextMainWindow().
+		/// Gets next window in the Z order, skipping invisible and other windows that would not be added to taskbar or not activated by Alt+Tab.
+		/// Returns Wnd0 if there are no such windows.
+		/// If this is Wnd0, starts from the top of the Z order.
 		/// </summary>
-		/// <param name="f">Lambda etc callback function to call for each matching window. Can return true to stop.</param>
-		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has uiAccess).</param>
-		/// <remarks>Can get not exactly the same windows than are in the taskbar and Alt+Tab.</remarks>
-		public static void MainWindows(Func<Wnd, bool> f, bool allDesktops = false)
+		/// <param name="retryFromTop">If this is not Wnd0 and there are no matching windows after it, retry from the top of the Z order. Like Alt+Tab does. Can return wFrom.</param>
+		/// <param name="skipMinimized">Skip minimized windows.</param>
+		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has UAC integrity level uiAccess).</param>
+		/// <param name="likeAltTab">
+		/// Emulate Alt+Tab behavior with owned windows (message boxes, dialogs):
+		///		If this is such owned window, skip its owner.
+		///		If the found window has an owned window that was active more recently, return that owned window.
+		/// </param>
+		/// <remarks>
+		/// This function is quite slow and does not exactly match the behavior of the Windows taskbar and Alt+Tab.
+		/// </remarks>
+		/// <seealso cref="Misc.MainWindows"/>
+		public Wnd WndNextMain(bool retryFromTop = false, bool skipMinimized = false, bool allDesktops = false, bool likeAltTab = false)
 		{
-			for(Wnd w = Wnd0; ;) {
-				w = Get.NextMainWindow(w, allDesktops: allDesktops);
-				if(w.Is0) break;
-				if(f(w)) break;
+			Wnd lastFound = Wnd0, w2 = Wnd0, w = this;
+			if(w.Is0) retryFromTop = false;
+
+			for(;;) {
+				w = w.Is0 ? Misc.WndTop : w.WndNext;
+				if(w.Is0) {
+					if(retryFromTop) { retryFromTop = false; continue; }
+					return lastFound;
+				}
+
+				if(!w.IsVisible) continue;
+
+				uint exStyle = w.ExStyle;
+				if((exStyle & Native.WS_EX_APPWINDOW) == 0) {
+					if((exStyle & (Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE)) != 0) continue;
+					w2 = w.WndOwner; if(!w2.Is0) { if(!likeAltTab || w2.IsVisible) continue; }
+				}
+
+				#region IsVisibleReally
+
+				if(skipMinimized && w.IsMinimized) continue;
+
+				if(WinVer >= Win10) {
+					if(w.IsCloaked) {
+						if(!allDesktops) continue;
+						if((exStyle & Native.WS_EX_NOREDIRECTIONBITMAP) != 0) { //probably a store app
+							switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+							case 1: continue; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
+							case 2: if(_WindowsStoreAppFrameChild(w).Is0) continue; break;
+							}
+						}
+					}
+				} else if(WinVer >= Win8) {
+					if((exStyle & Native.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Native.WS_CAPTION)) {
+						if(!allDesktops && (exStyle & Native.WS_EX_TOPMOST) != 0) continue; //skip store apps
+						if(Misc.WndShell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) continue; //skip captionless shell windows
+					}
+					//On Win8 impossible to get next window like Alt+Tab.
+					//	All store apps are topmost, covering non-topmost desktop windows.
+					//	DwmGetWindowAttribute has no sense here.
+					//	Desktop windows are never cloaked, inactive store windows are cloaked, etc.
+				}
+
+				#endregion
+
+				if(likeAltTab) {
+					w2 = Misc.WndLastSeenActiveOwnedOrThis(Misc.WndRootOwnerOrThis(w)); //call with the root owner, because GLAP returns w if w has an owner (documented)
+					if(w2 != w) {
+						if(!w2.IsVisible || (skipMinimized && w2.IsMinimized)) w2 = w; //don't check cloaked etc for owned window if its owner passed
+						if(w2 == this) { lastFound = w2; continue; }
+						w = w2;
+					}
+				}
+
+				return w;
 			}
 		}
 
-		#endregion
+		public static partial class Misc
+		{
+			/// <summary>
+			/// Get windows that have taskbar button and/or are included in the Alt+Tab sequence.
+			/// Returns list containing 0 or more window handles as Wnd.
+			/// </summary>
+			/// <param name="allDesktops">See <see cref="WndNextMain"/>.</param>
+			/// <param name="likeAltTab">See <see cref="WndNextMain"/>.</param>
+			/// <remarks>
+			/// The list order does not match the order of buttons in the Windows taskbar. Possibly also does not exactly match the list of Alt+Tab windows.
+			/// </remarks>
+			/// <seealso cref="WndNextMain"/>
+			public static List<Wnd> MainWindows(bool allDesktops = false, bool likeAltTab = false)
+			{
+				List<Wnd> a = new List<Wnd>();
+				for(Wnd w = Wnd0; ;) {
+					w = w.WndNextMain(allDesktops: allDesktops, likeAltTab: likeAltTab);
+					if(w.Is0) break;
+					a.Add(w);
+				}
+				return a;
+
+				//SHOULDDO: instaed of WndNextMain, get all windows and filter like now WndNextMain does.
+			}
+
+			///// <summary>
+			///// Gets all visible windows.
+			///// Sorts minimized windows after visible and in reverse order. Like Win10 Alt+Tab.
+			///// Cannot use this. Alt+Tab works differently.
+			///// </summary>
+			//public static List<Wnd> __MainWindows_GetAll()
+			//{
+			//	var a = new List<Wnd>();
+			//	int i = 0;
+			//	LibAllWindows(t =>
+			//	{
+			//		uint k = t.ExStyle;
+			//		if(((k & Native.WS_EX_APPWINDOW) == 0) && ((k & (Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE)) != 0)) return false;
+
+			//		if(t.IsCloaked) return false;
+
+			//		a.Insert(i, t);
+			//		//i++;
+			//		if(!t.IsMinimized) i++;
+			//		return false;
+			//	}, true);
+			//	return a;
+			//}
+
+			/// <summary>
+			/// Activates next non-minimized main window, like with Alt+Tab.
+			/// Returns true if activated, false if there is no such window or failed to activate.
+			/// Calls <see cref="WndNextMain">WndNextMain</see> and <see cref="Activate()"/>.
+			/// An alternative way - send Alt+Tab keys, but it works not everywhere; it can activate a minimized window too.
+			/// </summary>
+			public static bool SwitchActiveWindow()
+			{
+				try {
+					//Prefer non-minimized windows. But if all minimized, restore the first main window.
+					Wnd wa = WndActive;
+					Wnd w = wa.WndNextMain(retryFromTop: true, skipMinimized: true, likeAltTab: true);
+					if(!(w.Is0 || w == wa)) {
+						w.Activate();
+						return true;
+					}
+				}
+				catch(WndException) { }
+				return false;
+
+				//notes:
+				//This function ignores minimized windows, because:
+				//	Impossible to get exactly the same window as Alt+Tab, which on Win10 is the most recently minimized.
+				//	Activating a random minimized window is not very useful. Maybe in the future.
+				//The order of windows used by Alt+Tab is not the same as the Z order, especially when there are minimized windows.
+				//	We cannot get that order and have to use the Z order. It seems that the order is different on Win10 but not on Win7.
+				//After minimizing a window its position in the Z order is undefined.
+				//	Most windows then are at the bottom when used the Minimize button or ShowWindow etc.
+				//	But some are at the top, just after the active window, for example MS Document Explorer (Win7 SDK).
+				//	Also at the top when minimized with the taskbar button.
+			}
+
+			///// <summary>
+			///// Activates another main window, like with Alt+Tab.
+			///// Returns the window. Returns Wnd0 if there is no such window or fails to activate.
+			///// Calls <see cref="WndNextMain"/> and <see cref="Activate()"/>.
+			///// When all or all except one windows are minimized, may restore a different window than Alt+Tab would.
+			///// An alternative way - send Alt+Tab keys, but it works not everywhere.
+			///// </summary>
+			//public static Wnd SwitchActiveWindow()
+			//{
+			//	try {
+			//		//Prefer non-minimized windows. But if all minimized, restore the first main window.
+			//		Wnd wa = WndActive;
+			//		Wnd w = wa.WndNextMain(retryFromTop: true, skipMinimized: true, likeAltTab: true);
+			//		if(w.Is0 || w == wa) { //0 or 1 non-minimized windows; activate the most recently minimized, which usually is at the Z bottom.
+			//			w = Wnd0;
+			//			var a = Misc.MainWindows(likeAltTab: true);
+			//			int i = a.Count - 1;
+			//			if(i >= 0 && a[i] != wa) w = a[i];
+			//		}
+			//		if(!w.Is0) w._Activate();
+			//		return w;
+			//	}
+			//	catch(WndException) { }
+			//	return Wnd0;
+
+			//	//notes:
+			//	//The order of windows used by Alt+Tab is not the same as the Z order, especially when there are minimized windows.
+			//	//	We cannot get that order and have to use the Z order. It seems that the order is different on Win10 but not on Win7.
+			//	//After minimizing a window its position in the Z order is undefined.
+			//	//	Most windows then are at the bottom when used the Minimize button or ShowWindow etc.
+			//	//	But some are at the top, just after the active window, for example MS Document Explorer (Win7 SDK).
+			//	//	Also at the top when minimized with the taskbar button.
+			//}
+
+			//This works more like Alt+Tab on Win7. The above code - more like on Win10, which is better.
+			//public static Wnd SwitchActiveWindow()
+			//{
+			//	try {
+			//		//Prefer non-minimized windows. But if all minimized, restore the first main window.
+			//		Wnd wa = WndActive;
+			//		for(int i = 0; i < 2; i++) {
+			//			Wnd w = WndNextMain(wa, retryFromTop: true, skipMinimized: i == 0, likeAltTab: true);
+			//			if(w.Is0 || w == wa) {
+			//				if(i == 0 && w.Is0) wa = Wnd0; //0 non-minimized windows; activate the first minimized.
+			//				continue;
+			//			}
+			//			w._Activate();
+			//			return w;
+			//		}
+			//	}
+			//	catch(WndException) { }
+			//	return Wnd0;
+			//}
+		}
 	}
 }

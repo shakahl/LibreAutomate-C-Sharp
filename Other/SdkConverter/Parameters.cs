@@ -16,8 +16,6 @@ using System.ComponentModel; //Win32Exception
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace SdkConverter
 {
@@ -198,7 +196,7 @@ namespace SdkConverter
 
 			//escape names that are C# keywords
 			if(_csKeywords.Contains(t.name)) {
-				//Out(t.name);
+				//Print(t.name);
 				t.name = "@" + t.name;
 			}
 		}
@@ -299,7 +297,7 @@ namespace SdkConverter
 
 			bool _In_ = false, _Out_ = false, _Inout_ = false;
 			if(iSAL > 0) {
-				//Out(_tok[iSAL]);
+				//Print(_tok[iSAL]);
 				if(_TokStarts(iSAL, "_In_")) _In_ = true;
 				else if(_TokStarts(iSAL, "_Out")) _Out_ = true;
 				else if(_TokStarts(iSAL, "_Inout_")) _Inout_ = true;
@@ -329,7 +327,7 @@ namespace SdkConverter
 								} else {
 									//string dangerous, because if the callee changes member pointer, .NET tries to free the new string with CoTaskMemFree.
 									name = "IntPtr";
-									//Out(_DebugGetLine(iTokTypename));
+									//Print(_DebugGetLine(iTokTypename));
 									isBlittable = true;
 								}
 								break;
@@ -348,7 +346,7 @@ namespace SdkConverter
 								if(isConst || _In_ || isBSTR) {
 									name = "string";
 									if(isCOM) {
-										//if(!isBSTR) Out(_tok[iTokTypename]);
+										//if(!isBSTR) Print(_tok[iTokTypename]);
 										if(!isBSTR) marshalAs = "LPWStr";
 									} else {
 										if(isBSTR) marshalAs = "BStr";
@@ -425,7 +423,7 @@ namespace SdkConverter
 							if(context == _TypeContext.ComParameter) name = "object";
 							break;
 						//case "SAFEARRAY": //in SDK used only with SafeArrayX functions, with several other not-important functions and as [PROP]VARIANT members
-						//Out(ptr);
+						//Print(ptr);
 						//break;
 						case "ITEMIDLIST":
 							if(ptr > 0) { ptr--; name = "IntPtr"; isBlittable = true; }
@@ -574,7 +572,7 @@ namespace SdkConverter
 				marshalAs = "ByValTStr";
 			} else {
 				if(elemCount < 8 && (memberName.IndexOf_("Reserved", true) >= 0 || memberName.IndexOf_("pad", true) >= 0 || memberName.StartsWith_("Spare", true))) {
-					//Out(memberName);
+					//Print(memberName);
 					var sb = new StringBuilder();
 					for(int i = 0; i < elemCount; i++) {
 						if(i > 0) sb.Append(", ");
@@ -585,7 +583,7 @@ namespace SdkConverter
 					memberName = sb.ToString();
 					comment = "/*"; comment2 = "*/";
 				} else {
-					//if(elemCount<8) Out(memberName);
+					//if(elemCount<8) Print(memberName);
 					typeName += "[]";
 				}
 			}

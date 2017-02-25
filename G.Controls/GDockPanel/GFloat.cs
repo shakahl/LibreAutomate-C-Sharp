@@ -64,7 +64,7 @@ namespace G.Controls
 			private void ManagerForm_VisibleChanged(object sender, EventArgs e)
 			{
 				var f = sender as Form;
-				this.Visible=f.Visible;
+				this.Visible = f.Visible;
 			}
 
 			protected override CreateParams CreateParams
@@ -74,9 +74,9 @@ namespace G.Controls
 					//This prevents resizing the window 3 times. But need to set FormBorderStyle, or will be wider.
 					//note: this func is called several times, first time before ctor
 					var p = base.CreateParams;
-					p.Style = unchecked((int)(Api.WS_POPUP | Api.WS_THICKFRAME | Api.WS_CLIPCHILDREN));
-					var ex = Api.WS_EX_TOOLWINDOW;
-					if(_hasToolbar) ex |= Api.WS_EX_NOACTIVATE;
+					p.Style = unchecked((int)(Native.WS_POPUP | Native.WS_THICKFRAME | Native.WS_CLIPCHILDREN));
+					var ex = Native.WS_EX_TOOLWINDOW;
+					if(_hasToolbar) ex |= Native.WS_EX_NOACTIVATE;
 					p.ExStyle = (int)ex;
 					return p;
 				}
@@ -85,7 +85,7 @@ namespace G.Controls
 			/// <summary>
 			/// 1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
 			/// </summary>
-			protected override bool ShowWithoutActivation { get { return _hasToolbar; } }
+			protected override bool ShowWithoutActivation { get => _hasToolbar; }
 
 			internal void OnReplacedChild(GContentNode newChild)
 			{
@@ -96,7 +96,7 @@ namespace G.Controls
 			{
 				if(_manager._WndProcBefore_Common(this, ref m)) return;
 
-				//Util.Debug_.PrintMsg(ref m);
+				//Util.LibDebug_.PrintMsg(ref m);
 				//LPARAM WP = m.WParam, LP = m.LParam;
 
 				switch((uint)m.Msg) {
@@ -186,13 +186,13 @@ namespace G.Controls
 					get
 					{
 						CreateParams k = base.CreateParams;
-						k.ExStyle = (int)(Api.WS_EX_LAYERED | Api.WS_EX_NOACTIVATE | Api.WS_EX_TOOLWINDOW);
-						k.Style = unchecked((int)(Api.WS_POPUP));
+						k.ExStyle = (int)(Native.WS_EX_LAYERED | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOOLWINDOW);
+						k.Style = unchecked((int)(Native.WS_POPUP));
 						return k;
 					}
 				}
 
-				protected override bool ShowWithoutActivation { get { return true; } }
+				protected override bool ShowWithoutActivation { get => true; }
 
 				protected override void OnPaint(PaintEventArgs e)
 				{
@@ -247,7 +247,7 @@ namespace G.Controls
 							var gt = gp.ParentTab;
 							//r = gp.Content.Bounds; //better don't display the big blue rect
 							rb = gp.CaptionBounds;
-							if(gt != null && gt.ShowsTabButtons) _target.side=DockSide.TabBefore;
+							if(gt != null && gt.ShowsTabButtons) _target.side = DockSide.TabBefore;
 							else rb = _CalcNewTabButtonRectInFullCaption(gp, rb, p); //sets _target.side
 							_target.gc = gp;
 							return true;
@@ -273,7 +273,7 @@ namespace G.Controls
 								_target.gc = gt.Items.Last();
 							} else {
 								rb = gt.CaptionBounds;
-								_target.side=DockSide.TabBefore;
+								_target.side = DockSide.TabBefore;
 								_target.gc = gt;
 							}
 							return true;
@@ -363,12 +363,12 @@ namespace G.Controls
 					  if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 
 					  p = Mouse.XY;
-					  w.MoveRaw(p.x - offs.x, p.y - offs.y);
+					  w.MoveLL(p.x - offs.x, p.y - offs.y);
 
 					  if(!canDock && ModifierKeys.HasFlag(Keys.Alt)) {
 						  canDock = true;
 						  //this.AllowTransparency = true; this.Opacity = 0.5; //exception
-						  ((Wnd)this).Transparency(true, 0.5);
+						  ((Wnd)this).SetTransparency(true, 0.5);
 						  _dockIndic = new _DockIndicator(_manager, this);
 						  _dockIndic.Show(this);
 					  }
@@ -376,7 +376,7 @@ namespace G.Controls
 				  });
 
 				if(canDock) {
-					((Wnd)this).Transparency(false);
+					((Wnd)this).SetTransparency(false);
 					_dockIndic.Close();
 					if(ok) {
 						target = _dockIndic.OnFloatDropped();

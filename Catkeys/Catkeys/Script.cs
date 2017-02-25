@@ -32,7 +32,7 @@ namespace Catkeys
 		/// </summary>
 		public int Speed
 		{
-			get { return _speed; }
+			get => _speed;
 			set { if(value < 0 || value > 60000) throw new ArgumentOutOfRangeException(); _speed = value; }
 		}
 		int _speed;
@@ -72,7 +72,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Creates new object with all the same option values.
-		/// Code <c>var o2=o1.Copy();</c> does the same as <c>var o2=new ScriptOptions(o1);</c>.
+		/// Code <c>var o2=o1.Copy();</c> does the same as <c>var o2=new ScriptOptions(o1);</c> .
 		/// </summary>
 		public ScriptOptions Copy() { return new ScriptOptions(this); }
 
@@ -82,13 +82,15 @@ namespace Catkeys
 		///		New ScriptOptions objects created like var o=new ScriptOptions();.
 		/// Initially default speed is 100, other options false/0/null.
 		/// You can modify them in scripts and script templates. Do it in ScriptClass static constructor.
-		/// <example><code>
+		/// </summary>
+		/// <example>
+		/// <code>
 		/// 	static ScriptClass() { ScriptOptions.Default.speed=50; } //constructor
 		///		...
 		///		Print(Option.speed); //speed of this thread
 		///		Option.speed=10; //changes only for this thread
-		/// </code></example>
-		/// </summary>
+		/// </code>
+		/// </example>
 		public static ScriptOptions Default { get; set; } = new ScriptOptions(null);
 
 		//Equals() - don't need.
@@ -112,7 +114,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets ScriptOptions object of this thread.
 		/// </summary>
-		public static ScriptOptions Option { get { return _opt ?? (_opt = new ScriptOptions()); } }
+		public static ScriptOptions Option { get => _opt ?? (_opt = new ScriptOptions()); }
 
 		/// <summary>
 		/// Gets or sets Option.speed (auto-delay and speed for some automation functions, for this thread).
@@ -164,7 +166,8 @@ namespace Catkeys
 			if(n != 0 && n != 1) { Print($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
 			try {
 				m.Invoke(this, n == 0 ? null : new object[1] { arg });
-			} catch(Exception e) {
+			}
+			catch(Exception e) {
 				Print($"Error: Failed to call method {m.Name}. {e.Message}");
 			}
 		}

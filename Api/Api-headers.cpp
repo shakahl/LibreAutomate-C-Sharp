@@ -111,7 +111,7 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #include <lm.h> //LAN management, NetServerEnum
 #include <Wlanapi.h> //WiFi
 #include <adhoc.h> //WiFi
-#include <mscoree.h> //unmanaged .NET API
+//#include <mscoree.h> //unmanaged .NET API. Somehow this file disappeared.
 #include <Pla.h> //performance logs and alerts
 
 //core audio API

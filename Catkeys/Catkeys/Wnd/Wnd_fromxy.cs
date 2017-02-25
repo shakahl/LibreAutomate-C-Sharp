@@ -25,60 +25,60 @@ namespace Catkeys
 	{
 		#region top-level or child
 
-		//TODO: test when this process is not DPI-aware:
+		//FUTURE: test when this process is not DPI-aware:
 		//	Coordinate-related API on Win7 high DPI.
 		//	Acc location on Win10 with different DPI of monitors.
 
-		/// <summary>
-		/// Gets visible top-level window or visible enabled control from point.
-		/// This function just calls Api.WindowFromPoint() and returns its return value.
-		/// Use FromXY instead if you need "real" controls (include disabled controls, prefer non-transparent controls) or if you want only top-level or only child windows.
-		/// </summary>
-		/// <param name="x">X coordinate.</param>
-		/// <param name="y">Y coordinate.</param>
-		public static Wnd FromXYRaw(int x, int y)
-		{
-			return Api.WindowFromPoint(new POINT(x, y));
-		}
-		/// <summary>
-		/// Gets visible top-level window or visible enabled control from point.
-		/// From other overload differs only by the parameter type.
-		/// </summary>
-		/// <param name="p">X and Y coordinates.</param>
-		public static Wnd FromXYRaw(POINT p)
-		{
-			return Api.WindowFromPoint(p);
-		}
+		//Not useful.
+		///// <summary>
+		///// Gets visible top-level window or visible enabled control from point.
+		///// This function just calls API <msdn>WindowFromPoint</msdn> and returns its return value.
+		///// Use <see cref="FromXY"/> instead if you need "real" controls (include disabled controls, prefer non-transparent controls) or if you want only top-level or only child windows.
+		///// The coordinates are relative to the primary screen.
+		///// </summary>
+		///// <param name="x">X coordinate.</param>
+		///// <param name="y">Y coordinate.</param>
+		//public static Wnd FromXYRaw(int x, int y)
+		//{
+		//	return Api.WindowFromPoint(new POINT(x, y));
+		//}
 
 		/// <summary>
 		/// Gets visible top-level window or control from point.
-		/// Unlike FromXYRaw(), this function gets non-transparent controls that are behind (in the Z order) transparent controls (eg a group button or a tab control).
-		/// Also this function supports fractional coordinates and does not skip disabled controls.
+		/// By default the coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
-		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
+		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen or its work area).</param>
+		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen or its work area).</param>
 		/// <param name="control">
-		/// If true, gets control; returns Wnd0 if there is no control at that point.
-		/// If false, gets top-level window; if at that point is a control, gets its top-level parent.
+		/// true if you need a control (child window); returns Wnd0 if there is no control at that point.
+		/// false if you need top-level window; if at that point is a control, gets its top-level parent.
 		/// If omitted or null, gets exactly what is at that point (control or top-level window).
 		/// </param>
-		public static Wnd FromXY(Coord x, Coord y, bool? control = null)
+		/// <param name="workArea">The coordinates are relative to the work area.</param>
+		/// <remarks>
+		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
+		/// For example, this function:
+		/// <list type="bullet">
+		/// <item>Gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc). Supports more control types than <b>RealChildWindowFromPoint</b>.</item>
+		/// <item>Does not skip disabled controls.</item>
+		/// <item>Can get only top-level window or only control or any.</item>
+		/// <item>Supports fractional coordinates.</item>
+		/// <item>Supports work area coordinates.</item>
+		/// </list>
+		/// </remarks>
+		public static Wnd FromXY(Types<int, float> x, Types<int, float> y, bool? control = null, bool workArea = false)
 		{
-			return FromXY(Coord.GetNormalizedInScreen(x, y), control);
+			return _FromXY(_Coord.GetNormalizedInScreen(x, y, workArea), control);
 		}
 
-		/// <summary>
-		/// Gets visible top-level window or control from point.
-		/// From other overload differs only by the parameter type.
-		/// </summary>
-		public static Wnd FromXY(POINT p, bool? control = null)
+		static Wnd _FromXY(POINT p, bool? control = null)
 		{
 			if(control != null && !control.Value) return _ToplevelWindowFromPoint(p);
 
 			Wnd w = Api.WindowFromPoint(p);
 			if(w.Is0) return w;
 
-			Wnd t = w.DirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
+			Wnd t = w.WndDirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
 			if(!t.Is0) w = t;
 
 			t = w._ChildFromXY(p, false, true);
@@ -90,8 +90,8 @@ namespace Catkeys
 		static Wnd _ToplevelWindowFromPoint(POINT p)
 		{
 			Wnd w = Api.RealChildWindowFromPoint(Api.GetDesktopWindow(), p);
-			if(!w.HasExStyle(Api.WS_EX_TRANSPARENT | Api.WS_EX_LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
-			return Api.WindowFromPoint(p).ToplevelParentOrThis; //ChildWindowFromPointEx would be faster, but less reliable
+			if(!w.HasExStyle(Native.WS_EX_TRANSPARENT | Native.WS_EX_LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
+			return Api.WindowFromPoint(p).WndWindow; //ChildWindowFromPointEx would be faster, but less reliable
 
 			//info:
 			//WindowFromPoint is the most reliable. It skips really transparent top-level windows (TL). Unfortunately it skips disabled controls (but not TL).
@@ -104,7 +104,7 @@ namespace Catkeys
 			//speed:
 			//RealChildWindowFromPoint is the fastest. About 5 mcs.
 			//ChildWindowFromPointEx is 50% slower.
-			//WindowFromPoint is 4 times slower; ToplevelParentOrThis does not make significantly slower.
+			//WindowFromPoint is 4 times slower; WndWindow does not make significantly slower.
 			//AccessibleObjectFromPoint.get_Parent often is of RealChildWindowFromPoint speed, but often much slower than all others.
 			//IUIAutomationElement.ElementFromPoint super slow, 6-10 ms. Getting window handle from it is not easy, > 0.5 ms.
 		}
@@ -142,13 +142,13 @@ namespace Catkeys
 		/// Calls FromXY(Mouse.XY, control).
 		/// </summary>
 		/// <param name="control">
-		/// If true, gets control; returns Wnd0 if there is no control at that point.
-		/// If false, gets top-level window; if at that point is a control, gets its top-level parent.
+		/// true if you need a control (child window); returns Wnd0 if there is no control at that point.
+		/// false if you need top-level window; if at that point is a control, gets its top-level parent.
 		/// If omitted or null, gets exactly what is at that point (control or top-level window).
 		/// </param>
 		public static Wnd FromMouse(bool? control = null)
 		{
-			return FromXY(Mouse.XY, control);
+			return _FromXY(Mouse.XY, control);
 		}
 
 		#endregion
@@ -160,16 +160,15 @@ namespace Catkeys
 		/// Returns Wnd0 if the point is not within a child or is outside this window.
 		/// By default, x y must be relative to the client area of this window.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
-		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen).</param>
+		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction of the client area or primary screen).</param>
+		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction of the client area or primary screen).</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <param name="screenXY">x y are relative to the pimary screen.</param>
-		/// <exception cref="CatException">When this window is invalid (not found, closed, etc).</exception>
-		/// <seealso cref="Wnd.FromXY(Coord, Coord, bool?)"/>
-		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
+		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		public Wnd ChildFromXY(Types<int, float> x, Types<int, float> y, bool directChild = false, bool screenXY = false)
 		{
-			ValidateThrow();
-			POINT p = screenXY ? Coord.GetNormalizedInScreen(x, y) : Coord.GetNormalizedInWindowClientArea(x, y, this);
+			ThrowIfInvalid();
+			POINT p = screenXY ? _Coord.GetNormalizedInScreen(x, y) : _Coord.GetNormalizedInWindowClientArea(x, y, this);
 			return _ChildFromXY(p, directChild, screenXY);
 		}
 
@@ -182,7 +181,7 @@ namespace Catkeys
 			//Test whether it is a transparent control, like tab, covering other controls.
 			//RealChildWindowFromPoint does it only for group button.
 
-			if(R.HasExStyle(Api.WS_EX_MDICHILD)) return R;
+			if(R.HasExStyle(Native.WS_EX_MDICHILD)) return R;
 
 			if(!screenXY) Api.ClientToScreen(this, ref p);
 			g1:
@@ -196,13 +195,11 @@ namespace Catkeys
 
 				//is R transparent?
 				//PrintList("WM_NCHITTEST", R);
-				LPARAM ht;
-				//if(!R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeUint(p.x, p.y)) || (int)ht != Api.HTTRANSPARENT) break;
-				if(R.SendTimeout(100, out ht, Api.WM_NCHITTEST, 0, Calc.MakeUint(p.x, p.y))) {
+				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Calc.MakeUint(p.x, p.y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
 					//break;
-					if(Marshal.GetLastWin32Error() != Api.ERROR_ACCESS_DENIED) break; //higher UAC level?
+					if(Native.GetError() != Api.ERROR_ACCESS_DENIED) break; //higher UAC level?
 					if(rr.left <= r.left || rr.top <= r.top || rr.right >= r.right || rr.bottom >= r.bottom) break; //R must fully cover t, like a tab or group control
 				}
 
@@ -235,7 +232,7 @@ namespace Catkeys
 		//Returns direct child or Wnd0.
 		static Wnd _RealChildWindowFromPoint_RtlAware(Wnd w, POINT p)
 		{
-			RECT rc; if(w.HasExStyle(Api.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out rc)) { p.x = rc.right - p.x; }
+			if(w.HasExStyle(Native.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
 			Wnd R = Api.RealChildWindowFromPoint(w, p);
 			return R == w ? Wnd0 : R;
 		}

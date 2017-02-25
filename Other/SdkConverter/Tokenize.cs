@@ -16,8 +16,6 @@ using System.ComponentModel; //Win32Exception
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace SdkConverter
 {
@@ -150,7 +148,7 @@ namespace SdkConverter
 
 			//ANSI string constant?
 			if(!isPrefix && _nTokUntilDefUndef != 0 && _TokIsChar(iPrevTok - 1, '`')) {
-				//Out(new string(s0, 0, (int)(d - s0)));
+				//Print(new string(s0, 0, (int)(d - s0)));
 				//_Err(iPrevTok, "ANSI string");
 				*s0 = '\x2'; //later will restore '\"' and add to "FAILED TO CONVERT"
 			}

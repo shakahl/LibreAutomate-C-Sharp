@@ -197,7 +197,7 @@
 
 			}
 
-			protected override bool ShowWithoutActivation { get { return true; } }
+			protected override bool ShowWithoutActivation { get => true; }
 		}
 
 

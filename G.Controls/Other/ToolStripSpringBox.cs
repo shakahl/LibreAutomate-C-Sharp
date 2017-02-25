@@ -111,9 +111,9 @@ namespace G.Controls
 		{
 			var c = this.Control as TextBox;
 			if(c.IsHandleCreated) {
-				c.SetCueBanner(text);
+				c.SetCueBanner_(text);
 			} else if(!Empty(text)) {
-				c.HandleCreated += (unu, sed) => c.SetCueBanner(text);
+				c.HandleCreated += (unu, sed) => c.SetCueBanner_(text);
 			}
 		}
 	}
@@ -134,9 +134,9 @@ namespace G.Controls
 		{
 			var c = this.Control as ComboBox;
 			if(c.IsHandleCreated) {
-				c.SetCueBanner(text);
+				c.SetCueBanner_(text);
 			} else if(!Empty(text)) {
-				c.HandleCreated += (unu, sed) => c.SetCueBanner(text);
+				c.HandleCreated += (unu, sed) => c.SetCueBanner_(text);
 			}
 		}
 	}

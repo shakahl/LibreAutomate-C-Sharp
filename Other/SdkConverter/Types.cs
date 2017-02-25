@@ -11,8 +11,6 @@ using System.Runtime.CompilerServices;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace SdkConverter
 {
@@ -67,7 +65,7 @@ namespace SdkConverter
 			//don't declare typedef to typedef
 			if(typedefType == 0 && aliasOf is _Typedef) {
 				var t = aliasOf as _Typedef;
-				//Out($"unaliased: {_tok[_i-1]} -> {t.aliasOf.csTypename}");
+				//Print($"unaliased: {_tok[_i-1]} -> {t.aliasOf.csTypename}");
 				aliasOf = t.aliasOf;
 				ptrBase = t.ptr;
 			}
@@ -97,7 +95,7 @@ namespace SdkConverter
 							defined = true;
 						} else if(_nsCurrent == 0 && aliasOf.forwardDecl && ptrBase + ptr == 0) {
 							string alias = _TokToString(_i);
-							//if(!(aliasOf is _Struct)) Out(aliasOf); //0 in SDK
+							//if(!(aliasOf is _Struct)) Print(aliasOf); //0 in SDK
 							//OutList(aliasOf.csTypename, alias, ptr != 0);
 							try { _forwardDeclTypedefs.Add(aliasOf.csTypename, _i); } catch { } //info: try/catch because SDK contains 1 duplicate typedef
 						}
@@ -132,7 +130,7 @@ namespace SdkConverter
 			int iName = _i++;
 			string name = _TokToString(iName), memberName = "a", attr = null;
 			_ConvertCArray(ref type, ref memberName, ref attr); _i--;
-			_sbType.AppendFormat("\r\npublic struct {0} {{\r\n\t{1} public {2} {3};\r\n}}\r\n", name, attr, type, memberName);
+			_sbType.AppendFormat("\r\ninternal struct {0} {{\r\n\t{1} public {2} {3};\r\n}}\r\n", name, attr, type, memberName);
 			_AddSymbol(iName, new _Struct(name, false));
 			//info:
 			//SDK has 6 such typedefs, 2 of them are [1] ie used as variable-length array.
@@ -205,7 +203,7 @@ namespace SdkConverter
 			sb.AppendLine();
 			if(callConv != null) sb.AppendFormat("[UnmanagedFunctionPointer(CallingConvention.{0})]\r\n", callConv);
 			if(returnAttr != null) sb.AppendLine(returnAttr);
-			sb.AppendFormat("public delegate {0} {1}", returnType, name);
+			sb.AppendFormat("internal delegate {0} {1}", returnType, name);
 
 			//parameters
 			_ConvertParameters(sb, name, _TypeContext.DelegateParameter);
@@ -290,7 +288,7 @@ namespace SdkConverter
 					//borrow enum name from first member. Benefits: easier for users to find the enum; will not be a name conflict; easy.
 					if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
 					iName = _i;
-					//Out(_TokToString(iName));
+					//Print(_TokToString(iName));
 				}
 				name = _TokToString(iName);
 			}
@@ -378,7 +376,7 @@ namespace SdkConverter
 			StringBuilder sb = _sbType;
 			sb.AppendLine();
 			if(x.isFlags) sb.AppendLine("[Flags]");
-			sb.Append("public enum ");
+			sb.Append("internal enum ");
 			sb.Append(x.csTypename);
 			sb.Append(x.defAfterName);
 		}
@@ -421,7 +419,7 @@ namespace SdkConverter
 				if(d.inTypedefNameToken == 0 && _nsCurrent == 0 && !isThisForwardDecl) {
 					string tag = _TokToString(_i); int k;
 					if(_forwardDeclTypedefs.TryGetValue(tag, out k)) {
-						//Out($"<><c 0xff0000>{tag}, {_TokToString(k)}</c>");
+						//Print($"<><c 0xff0000>{tag}, {_TokToString(k)}</c>");
 						d.inTypedefNameToken = k;
 						_forwardDeclTypedefs.Remove(tag);
 					}
@@ -446,13 +444,13 @@ namespace SdkConverter
 						x.isInterface = isInterface;
 						x.isClass = isClass;
 						//info: don't need name in this case
-						//if(uuid != null) Out(isClass); //all True
+						//if(uuid != null) Print(isClass); //all True
 						if(isClass && uuid != null && _nsCurrent == 0) { //coclass
 																		 //OutList(keyword, name, uuid);
 							_DeclareGuid("CLSID_", name, uuid);
 							_sbInterface.AppendFormat(
 								"\r\n[ComImport, Guid({0}), ClassInterface(ClassInterfaceType.None)]"
-								+ "\r\npublic class {1} {{}}\r\n"
+								+ "\r\ninternal class {1} {{}}\r\n"
 								, uuid, name);
 						} else if(!isInterface && _interfaces.Contains(name)) x.isInterface = true;
 						return;
@@ -579,7 +577,7 @@ namespace SdkConverter
 					while(_TokIsChar(_i, '*', '&')) _i++;
 					//int ptr = 0;
 					//while(_TokIsChar(_i, '*', '&')) { _i++; ptr++; }
-					//Out(ptr);
+					//Print(ptr);
 
 					if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
 					t.name = _TokToString(_i++);
@@ -642,7 +640,7 @@ namespace SdkConverter
 			StringBuilder sb = x.isInterface ? _sbInterface : _sbType;
 			sb.AppendLine();
 			if(x.attributes != null) sb.Append(x.attributes);
-			sb.Append(x.isInterface ? "public interface " : "public struct ");
+			sb.Append(x.isInterface ? "internal interface " : "internal struct ");
 			sb.Append(x.csTypename);
 			if(x.members != null) {
 				sb.Append(" {\r\n");
@@ -786,8 +784,8 @@ namespace SdkConverter
 			string fullName = prefix + name;
 			if(_guids.ContainsKey(fullName)) return;
 			if(prefix == "IID_" && _guids.ContainsKey("DIID_" + name)) return;
-			//Out(fullName);
-			_sbVar.AppendFormat("\r\npublic static Guid {0} = new Guid({1});\r\n", fullName, uuid);
+			//Print(fullName);
+			_sbVar.AppendFormat("\r\ninternal static Guid {0} = new Guid({1});\r\n", fullName, uuid);
 			//note: not 'readonly' because then could not be passed as ref.
 		}
 
@@ -822,7 +820,7 @@ namespace SdkConverter
 
 				//correct preprocessor-replaced method names that matched #define Func FuncW. Also there are several such struct members, never mind.
 				if(name.EndsWith_("W") && name.Length > 2 && char.IsLower(name[name.Length - 2])) {
-					//Out(name);
+					//Print(name);
 					name = name.Remove(name.Length - 1);
 				}
 
@@ -888,7 +886,7 @@ namespace SdkConverter
 				//most forward declarations were converted to definitions, but some don't have definitions; replace their pointers to IntPtr
 				if(sym.forwardDecl) {
 					var ts = sym as _Struct;
-					//if(ts==null) Out(v.Key); //0 in SDK
+					//if(ts==null) Print(v.Key); //0 in SDK
 					if(ts != null && ts.isClass) continue; //all in SDK are with GUID, converted to coclass
 					string s = v.Key.ToString();
 
@@ -899,7 +897,7 @@ namespace SdkConverter
 					if(ts != null && ts.isInterface) n = R.RegexReplace_(out R, $@"\b{s}\b", repl); //decremented pointer level. 0 in SDK
 					else n = R.RegexReplace_(out R, $@"\b{s}\*", repl) + R.RegexReplace_(out R, $@"\bref {s}\b", repl);
 					if(n != 0) {
-						//Out($"<><c 0xff0000>{n}  {s}* = IntPtr</c>");
+						//Print($"<><c 0xff0000>{n}  {s}* = IntPtr</c>");
 						continue;
 					}
 
@@ -920,10 +918,10 @@ namespace SdkConverter
 					//if(_FindIdentifierInString(R, s) >= 0) { //makes slower
 					//if(ts!=null) _FormatStruct(ts); else _FormatEnum(te);
 					if(0 != R.RegexReplace_(out R, $@"\b{s}\b", t.csTypename)) {
-						//Out($"<><c 0xff0000>{s} = {t.csTypename}    {t}</c>"); //all struct (0 enum) in SDK
+						//Print($"<><c 0xff0000>{s} = {t.csTypename}    {t}</c>"); //all struct (0 enum) in SDK
 						continue;
 					}
-					//Out($"<><c 0x8000>{s} = {t.csTypename}    {t}</c>"); //OK, just not used between typedef and struct definition
+					//Print($"<><c 0x8000>{s} = {t.csTypename}    {t}</c>"); //OK, just not used between typedef and struct definition
 				}
 			}
 			//Perf.NW();
@@ -952,11 +950,11 @@ namespace SdkConverter
 			//Perf.NW(); //800 1000 ms
 
 			//remove other known A and old versions
-			R.RegexReplace_(out R, @"(?ms)^public struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "");
-			R.RegexReplace_(out R, @"(?ms)^public struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "");
+			R.RegexReplace_(out R, @"(?ms)^internal struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "");
+			R.RegexReplace_(out R, @"(?ms)^internal struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "");
 			R.RegexReplace_(out R, @"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE");
 			R.RegexReplace_(out R, @"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER");
-			R.RegexReplace_(out R, @"(?ms)^public struct OPENFILENAME_NT4\b.+?^\}\r\n", "", 1);
+			R.RegexReplace_(out R, @"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", 1);
 
 			return R;
 		}
@@ -969,23 +967,23 @@ namespace SdkConverter
 			what &= 0xff;
 
 			if(0 != R.RegexReplace_(out R, $@"\b{name}{sW}\b", name)) {
-				//Out($"<><c 0xff0000>{name}</c>");
+				//Print($"<><c 0xff0000>{name}</c>");
 
 				//remove STRUCTA
 
 				g1:
 				string rx = null;
 				switch(what) {
-				case 0: rx = $@"(?ms)^public struct {name}{sA} .+?^\}}\r\n\r\n"; break;
-				case 1: rx = $@"(?ms)^public interface {name}{sA} .+?^\}}\r\n\r\n"; break;
-				case 2: rx = $@"(?m)^public delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
+				case 0: rx = $@"(?ms)^internal struct {name}{sA} .+?^\}}\r\n\r\n"; break;
+				case 1: rx = $@"(?ms)^internal interface {name}{sA} .+?^\}}\r\n\r\n"; break;
+				case 2: rx = $@"(?m)^internal delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
 				}
 				Match m = R.RegexMatch_(rx);
 				if(m.Success) {
 					//find attributes (regex with attributes would be very slow)
 					int i = m.Index - 3;
 					while(0 == string.Compare(R, i, "]\r\n", 0, 3)) {
-						//Out("attr");
+						//Print("attr");
 						i = R.LastIndexOf('\n', i) - 2;
 					}
 					i += 3;
@@ -1000,8 +998,8 @@ namespace SdkConverter
 					}
 				}
 			} else {
-				//Out($"<><c 0xff>{name}</c>"); //0
-				//Out(R.IndexOf_($"public struct {name}A "));
+				//Print($"<><c 0xff>{name}</c>"); //0
+				//Print(R.IndexOf_($"internal struct {name}A "));
 			}
 		}
 	}

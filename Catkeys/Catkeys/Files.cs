@@ -83,8 +83,8 @@ namespace Catkeys
 
 		/// <summary>
 		/// Makes fully-qualified path.
-		/// If path is not full path, returns Folders.ThisApp+path.
-		/// Expands environment variables, processes @"..\" etc (calls Combine()).
+		/// If path is not full path, returns <see cref="Folders.ThisApp"/> + path.
+		/// Calls <see cref="Combine">Combine</see>, which expands environment variables, processes @"..\" etc.
 		/// </summary>
 		/// <param name="path">Full path or filename or relative path.</param>
 		public static string MakeFullPath(string path)
@@ -93,11 +93,11 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Combines two paths and makes fully-qualified path. Similar to Path.Combine(), but not the same.
+		/// Combines two paths and makes fully-qualified path. Similar to Path.Combine (.NET function), but not the same.
 		/// </summary>
 		/// <remarks>
 		///	Returns fully-qualified path, with processed @"..\" etc, not relative, not short (DOS), with replaced environment variables if starts with "%".
-		///	If the return value would not be full path, prepends Folders.ThisApp.
+		///	If the return value would not be full path, prepends <see cref="Folders.ThisApp"/>.
 		/// If s1 and s2 are null or "", returns "".
 		///	No exceptions.
 		/// </remarks>
@@ -136,7 +136,7 @@ namespace Catkeys
 		//Better don't use such things. If need, a function can instead have a parameter for it.
 		//public static string ThreadDefaultDirectory
 		//{
-		//	get { return _threadDefDir ?? (_threadDefDir = Folders.ThisApp); }
+		//	get => _threadDefDir ?? (_threadDefDir = Folders.ThisApp);
 		//	set { _threadDefDir = value; }
 		//}
 		//[ThreadStatic]
@@ -205,8 +205,8 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns non-zero if file or directory (folder or drive) exists: 1 file, 2 directory.
-		/// Returns 0 if does not exist or path is empty or invalid. No exceptions.
-		/// Uses Api.GetFileAttributes().
+		/// Returns 0 if does not exist or path is empty or invalid.
+		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
 		public static int FileOrDirectory(string path)
@@ -215,12 +215,12 @@ namespace Catkeys
 			int r = (int)Api.GetFileAttributes(Path_.ExpandEnvVar(path));
 			if(r == -1) return 0;
 			var a = (FileAttributes)r;
-			return a.HasFlag(FileAttributes.Directory) ? 2 : 1;
+			return (0 != (a & FileAttributes.Directory)) ? 2 : 1;
 		}
 
 		/// <summary>
 		/// Returns true if file or directory exists.
-		/// Uses FileOrDirectory(), which calls Api.GetFileAttributes().
+		/// Calls <see cref="FileOrDirectory">FileOrDirectory</see>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
 		public static bool FileOrDirectoryExists(string path)
@@ -230,7 +230,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if file exists and is not a directory.
-		/// Uses FileOrDirectory(), which calls Api.GetFileAttributes().
+		/// Calls <see cref="FileOrDirectory">FileOrDirectory</see>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
 		public static bool FileExists(string path)
@@ -240,7 +240,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if directory (folder or drive) exists.
-		/// Uses FileOrDirectory(), which calls Api.GetFileAttributes().
+		/// Calls <see cref="FileOrDirectory">FileOrDirectory</see>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
 		/// <param name="path">Full path. Supports "%EnvVar%path" and "path\..\path".</param>
 		public static bool DirectoryExists(string path)
@@ -252,12 +252,12 @@ namespace Catkeys
 		/// Finds file or directory and returns full and fully-qualified path.
 		/// Returns null if cannot be found.
 		/// If the path argument is not full path, searches in these places:
-		///	1. defDirs, if used.
+		///	1. dirs, if used.
 		/// 2. <see cref="Folders.ThisApp"/>.
-		/// 3. Calls Api.SearchPath(), which searches in process directory, Windows system directories, current directory, PATH environment variable.
-		/// 4. If .exe, tries to get path from registry "App Paths" keys.
+		/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable.
+		/// 4. If path ends with ".exe", tries to get path from registry "App Paths" keys.
 		/// </summary>
-		/// <param name="path">Full or relative path or just filename with extension. Supports network paths.</param>
+		/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
 		/// <param name="dirs">0 or more directories where to search.</param>
 		public static string SearchPath(string path, params string[] dirs)
 		{
@@ -304,7 +304,6 @@ namespace Catkeys
 		public class LnkShortcut :IDisposable
 		{
 			//info: name Shortcut used in .NET.
-			//TODO: document exceptions.
 
 			Api.IShellLink _isl;
 			Api.IPersistFile _ipf;
@@ -327,7 +326,7 @@ namespace Catkeys
 			/// <summary>
 			/// Returns the internally used IShellLink COM interface.
 			/// </summary>
-			internal Api.IShellLink IShellLink { get { return _isl; } }
+			internal Api.IShellLink IShellLink { get => _isl; }
 			//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
 
 			LnkShortcut(string lnkPath, uint mode)
@@ -336,8 +335,7 @@ namespace Catkeys
 				_ipf = _isl as Api.IPersistFile;
 				_lnkPath = lnkPath;
 				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || FileExists(_lnkPath))) {
-					int hr = _ipf.Load(_lnkPath, mode);
-					if(hr != 0) throw new COMException("Failed to open .lnk file.", hr);
+					CatException.ThrowIfFailed(_ipf.Load(_lnkPath, mode), "*open");
 					_isOpen = true;
 				}
 			}
@@ -347,6 +345,7 @@ namespace Catkeys
 			/// Exception if shortcut file does not exist or cannot open it for read access.
 			/// </summary>
 			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			/// <exception cref="CatException">Failed to open .lnk file.</exception>
 			public static LnkShortcut Open(string lnkPath)
 			{
 				return new LnkShortcut(lnkPath, Api.STGM_READ);
@@ -354,8 +353,8 @@ namespace Catkeys
 
 			/// <summary>
 			/// Creates a new instance of the LnkShortcut class that can be used to create or replace a shortcut file.
-			/// You can set properties and finally call Save().
-			/// If the shortcut file already exists, Save() replaces it.
+			/// You can set properties and finally call <see cref="Save"/>.
+			/// If the shortcut file already exists, Save replaces it.
 			/// </summary>
 			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
 			public static LnkShortcut Create(string lnkPath)
@@ -366,10 +365,11 @@ namespace Catkeys
 			/// <summary>
 			/// Creates a new instance of the LnkShortcut class that can be used to create or modify a shortcut file.
 			/// Exception if file exists but cannot open it for read-write access.
-			/// You can get and set properties and finally call Save().
-			/// If the shortcut file already exists, Save() updates it.
+			/// You can get and set properties and finally call <see cref="Save"/>.
+			/// If the shortcut file already exists, Save updates it.
 			/// </summary>
 			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			/// <exception cref="CatException">Failed to open existing .lnk file.</exception>
 			public static LnkShortcut OpenOrCreate(string lnkPath)
 			{
 				return new LnkShortcut(lnkPath, Api.STGM_READWRITE);
@@ -378,13 +378,12 @@ namespace Catkeys
 			/// <summary>
 			/// Saves the LnkShortcut variable properties to the shortcut file.
 			/// </summary>
+			/// <exception cref="CatException">Failed to save .lnk file.</exception>
 			public void Save()
 			{
 				if(_changedHotkey && !_isOpen && FileExists(_lnkPath)) _UnregisterHotkey(_lnkPath);
 
-				int hr = _ipf.Save(_lnkPath, true);
-				if(hr != 0) throw new COMException("Failed to save .lnk file.", hr);
-				//Marshal.ThrowExceptionForHR()
+				CatException.ThrowIfFailed(_ipf.Save(_lnkPath, true), "*save");
 			}
 
 			/// <summary>
@@ -392,6 +391,7 @@ namespace Catkeys
 			/// This property is null if target isn't a file system object, eg Control Panel or URL; use TargetIDList or TargetURL.
 			/// </summary>
 			/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string TargetPath
 			{
 				get
@@ -402,7 +402,7 @@ namespace Catkeys
 				}
 				set
 				{
-					_isl.SetPath(value);
+					CatException.ThrowIfFailed(_isl.SetPath(value));
 				}
 			}
 
@@ -425,19 +425,13 @@ namespace Catkeys
 			/// </summary>
 			/// <remarks>
 			/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
-			/// Most but not all shortcuts have this property; returns Zero if the shortcut does not have it.
+			/// Most but not all shortcuts have this property; the 'get' function returns Zero if the shortcut does not have it.
 			/// </remarks>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public IntPtr TargetIDList
 			{
-				get
-				{
-					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return Zero;
-					return pidl;
-				}
-				set
-				{
-					_isl.SetIDList(value);
-				}
+				get => (0 == _isl.GetIDList(out var pidl)) ? pidl : Zero;
+				set { CatException.ThrowIfFailed(_isl.SetIDList(value)); }
 			}
 
 			/// <summary>
@@ -445,17 +439,17 @@ namespace Catkeys
 			/// Note: it is a .lnk shortcut, not a .url shortcut.
 			/// The 'get' function returns string "file:///..." if target is a file.
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string TargetURL
 			{
 				get
 				{
-					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return null;
+					if(0 != _isl.GetIDList(out var pidl)) return null;
 					try { return Misc.PidlToString(pidl, Native.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
-					var pidl = Misc.PidlFromString(value); if(pidl == Zero) throw new CatException();
-					try { _isl.SetIDList(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+					TargetAnyType = value;
 				}
 			}
 
@@ -464,18 +458,19 @@ namespace Catkeys
 			/// The string can be used with the shell execute function.
 			/// Virtual object string can be like "::{CLSID}".
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string TargetAnyType
 			{
 				get
 				{
 					var R = TargetPath; if(R != null) return R; //support MSI etc
-					IntPtr pidl; if(0 != _isl.GetIDList(out pidl)) return null;
+					if(0 != _isl.GetIDList(out var pidl)) return null;
 					try { return Misc.PidlToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
-					var pidl = Misc.PidlFromString(value); if(pidl == Zero) throw new CatException();
-					try { _isl.SetIDList(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+					var pidl = Misc.PidlFromString(value, true);
+					try { CatException.ThrowIfFailed(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 			}
 
@@ -496,14 +491,16 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="path"></param>
 			/// <param name="iconIndex">0 or icon index or negative icon resource id.</param>
+			/// <exception cref="CatException"/>
 			public void SetIconLocation(string path, int iconIndex = 0)
 			{
-				_isl.SetIconLocation(path, iconIndex);
+				CatException.ThrowIfFailed(_isl.SetIconLocation(path, iconIndex));
 			}
 
 			/// <summary>
 			/// Gets or sets the working directory path (Start in).
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string WorkingDirectory
 			{
 				get
@@ -514,13 +511,14 @@ namespace Catkeys
 				}
 				set
 				{
-					_isl.SetWorkingDirectory(value);
+					CatException.ThrowIfFailed(_isl.SetWorkingDirectory(value));
 				}
 			}
 
 			/// <summary>
 			/// Gets or sets the command-line arguments.
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string Arguments
 			{
 				get
@@ -531,13 +529,14 @@ namespace Catkeys
 				}
 				set
 				{
-					_isl.SetArguments(value);
+					CatException.ThrowIfFailed(_isl.SetArguments(value));
 				}
 			}
 
 			/// <summary>
 			/// Gets or sets the description text (Comment).
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string Description
 			{
 				get
@@ -548,7 +547,7 @@ namespace Catkeys
 				}
 				set
 				{
-					_isl.SetDescription(value);
+					CatException.ThrowIfFailed(_isl.SetDescription(value));
 				}
 			}
 
@@ -556,31 +555,33 @@ namespace Catkeys
 			/// Gets or sets hotkey.
 			/// Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public Keys Hotkey
 			{
 				get
 				{
-					ushort k2; if(0 != _isl.GetHotkey(out k2)) return 0;
+					if(0 != _isl.GetHotkey(out ushort k2)) return 0;
 					uint k = k2;
 					return (Keys)((k & 0xFF) | ((k & 0x700) << 8));
 				}
 				set
 				{
 					uint k = (uint)value;
-					_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8)));
+					CatException.ThrowIfFailed(_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8))));
 					_changedHotkey = true;
 				}
 			}
 
 			/// <summary>
 			/// Gets or sets the window show state.
-			/// The value can be Api.SW_SHOWNORMAL (default), Api.SW_SHOWMAXIMIZED or Api.SW_SHOWMINIMIZED.
+			/// The value can be 1 (normal, default), 2 (minimized) or 3 (maximized).
 			/// Most programs ignore it.
 			/// </summary>
+			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public int ShowState
 			{
-				get { int R; if(0 != _isl.GetShowCmd(out R)) R = Api.SW_SHOWNORMAL; return R; }
-				set { _isl.SetShowCmd(value); }
+				get => (0 == _isl.GetShowCmd(out var R)) ? R : Api.SW_SHOWNORMAL;
+				set { CatException.ThrowIfFailed(_isl.SetShowCmd(value)); }
 			}
 
 			//Not implemented wrappers for these IShellLink methods:
@@ -591,9 +592,10 @@ namespace Catkeys
 
 			/// <summary>
 			/// Gets shortcut target path or URL or virtual shell object parsing name.
-			/// Uses <see cref="TargetAnyType"/>.
+			/// Uses <see cref="Open"/> and <see cref="TargetAnyType"/>.
 			/// </summary>
 			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			/// <exception cref="CatException">Failed to open.</exception>
 			public static string GetTarget(string lnkPath)
 			{
 				return Open(lnkPath).TargetAnyType;
@@ -603,6 +605,8 @@ namespace Catkeys
 			/// If shortcut file exists, unregisters its hotkey and deletes it.
 			/// </summary>
 			/// <param name="lnkPath">.lnk file path.</param>
+			/// <exception cref="CatException">Failed to unregister hotkey.</exception>
+			/// <exception cref="Exception">Exceptions of <see cref="File.Delete"/>.</exception>
 			public static void Delete(string lnkPath)
 			{
 				if(!FileExists(lnkPath)) return;
@@ -613,6 +617,7 @@ namespace Catkeys
 			#endregion
 			#region private
 
+			/// <exception cref="CatException">Failed to open or save.</exception>
 			static void _UnregisterHotkey(string lnkPath)
 			{
 				Debug.Assert(FileExists(lnkPath));
@@ -725,14 +730,20 @@ namespace Catkeys
 
 			/// <summary>
 			/// Converts file path or URL or shell object parsing name to PIDL.
+			/// Returns Zero if s is empty. If failed, returns Zero or throws exception.
 			/// Later call Marshal.FreeCoTaskMem();
 			/// </summary>
-			public static unsafe IntPtr PidlFromString(string s)
+			/// <param name="s"></param>
+			/// <param name="canThrow">If fails, throw CatException.</param>
+			/// <exception cref="CatException">Failed, and canThrow is true. Probably invalid s.</exception>
+			public static unsafe IntPtr PidlFromString(string s, bool canThrow = false)
 			{
-				if(Empty(s)) return Zero;
-				IntPtr R;
-				if(0 != Api.SHParseDisplayName(s, Zero, out R, 0, null)) return Zero;
-				return R;
+				if(!Empty(s)) {
+					var hr = Api.SHParseDisplayName(s, Zero, out IntPtr R, 0, null);
+					if(hr == 0) return R;
+					if(canThrow) throw new CatException(hr);
+				}
+				return Zero;
 				//the same as
 				//Api.IShellFolder isf; if(0 != Api.SHGetDesktopFolder(out isf)) return Zero;
 				//try { if(0 != isf.ParseDisplayName(Wnd0, Zero, s, null, out R, null)) return Zero; } finally { Marshal.ReleaseComObject(isf); }
@@ -740,7 +751,7 @@ namespace Catkeys
 
 			/// <summary>
 			/// Converts PIDL to file path or URL or shell object parsing name.
-			/// Returns null if pidl is Zero or failed.
+			/// Returns null if pidl is Zero. If failed, returns null or throws exception.
 			/// </summary>
 			/// <param name="pidl"></param>
 			/// <param name="stringType">
@@ -751,11 +762,16 @@ namespace Catkeys
 			/// Native.SIGDN.SIGDN_URL - returns null if pidl is not of a URL or path. If path, returns its URL form, like "file:///C:/a/b.txt".
 			/// Native.SIGDN.SIGDN_NORMALDISPLAY - returns string that is best to display in UI but cannot be passed to PidlFromString.
 			/// </param>
-			public static string PidlToString(IntPtr pidl, Native.SIGDN stringType = Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING)
+			/// <param name="canThrow">If fails, throw CatException.</param>
+			/// <exception cref="CatException">Failed, and canThrow is true.</exception>
+			public static string PidlToString(IntPtr pidl, Native.SIGDN stringType = Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING, bool canThrow = false)
 			{
-				string R;
-				if(0 != Api.SHGetNameFromIDList(pidl, stringType, out R)) return null;
-				return R;
+				if(pidl != Zero) {
+					var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
+					if(hr == 0) return R;
+					if(canThrow) throw new CatException(hr);
+				}
+				return null;
 			}
 
 			#endregion

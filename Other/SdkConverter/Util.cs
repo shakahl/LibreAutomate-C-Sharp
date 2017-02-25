@@ -16,8 +16,6 @@ using System.ComponentModel; //Win32Exception
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace SdkConverter
 {
@@ -80,7 +78,7 @@ namespace SdkConverter
 		//[DebuggerStepThrough]
 		void _AddSymbol(string name, _Symbol x, int iTokError, bool addToGlobal = false)
 		{
-			//Out(name);
+			//Print(name);
 			__AddSymbol(_TokenFromString(name), x, iTokError, addToGlobal);
 		}
 
@@ -96,7 +94,7 @@ namespace SdkConverter
 			Debug.Assert(_IsCharIdentStart(*name.s));
 			if(_keywords.ContainsKey(name)) _Err(iTokError, "name already exists (keyword)");
 			int ns = addToGlobal ? 0 : _nsCurrent;
-			//Out(name);
+			//Print(name);
 			try {
 				_ns[ns].sym.Add(name, x);
 			}

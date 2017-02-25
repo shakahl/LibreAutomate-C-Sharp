@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="505d663b-04af-4fdf-84b1-e618a6bd84a6" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>Para before</para>
+   	<para><command>norm <system>sys</system>, <replaceable>rep</replaceable></command></para>
+<para></para>
+
+
+      <para>Para after</para>
+    </introduction>
+  </developerConceptualDocument>
+</topic>

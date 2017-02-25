@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HelpKI>
+  <HelpKINode Title="AddShowPanelsToMenu method" Url="html/M_G_Controls_GDockPanel_AddShowPanelsToMenu.htm" />
+  <HelpKINode Title="control property" Url="html/P_G_Controls_GDockPanel_GDockPanelEventArgs_control.htm" />
+  <HelpKINode Title="ControlUtil class">
+    <HelpKINode Title="ControlUtil Class" Url="html/T_G_Controls_ControlUtil.htm" />
+    <HelpKINode Title="about ControlUtil class" Url="html/T_G_Controls_ControlUtil.htm" />
+  </HelpKINode>
+  <HelpKINode Title="Create method" Url="html/M_G_Controls_GDockPanel_Create.htm" />
+  <HelpKINode Title="dp property" Url="html/P_G_Controls_GDockPanel_GDockPanelEventArgs_dp.htm" />
+  <HelpKINode Title="EnableDisableAllFloatingWindows method" Url="html/M_G_Controls_GDockPanel_EnableDisableAllFloatingWindows.htm" />
+  <HelpKINode Title="FindPanel method" Url="html/M_G_Controls_GDockPanel_FindPanel.htm" />
+  <HelpKINode Title="G.Controls namespace" Url="html/N_G_Controls.htm" />
+  <HelpKINode Title="G.Controls.ControlUtil class" Url="html/T_G_Controls_ControlUtil.htm" />
+  <HelpKINode Title="G.Controls.GDockPanel class" Url="html/T_G_Controls_GDockPanel.htm" />
+  <HelpKINode Title="G.Controls.GDockPanel.DockSide enumeration" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="G.Controls.GDockPanel.GDockPanelContextMenuEventArgs class" Url="html/T_G_Controls_GDockPanel_GDockPanelContextMenuEventArgs.htm" />
+  <HelpKINode Title="G.Controls.GDockPanel.GDockPanelEventArgs class" Url="html/T_G_Controls_GDockPanel_GDockPanelEventArgs.htm" />
+  <HelpKINode Title="G.Controls.GDockPanel.GDockPanelEventHandler(Of T) delegate" Url="html/T_G_Controls_GDockPanel_GDockPanelEventHandler_1.htm" />
+  <HelpKINode Title="G.Controls.GDockPanel.GDockPanelEventHandler&lt;T&gt; delegate" Url="html/T_G_Controls_GDockPanel_GDockPanelEventHandler_1.htm" />
+  <HelpKINode Title="G.Controls.ToolStripSpringComboBox class" Url="html/T_G_Controls_ToolStripSpringComboBox.htm" />
+  <HelpKINode Title="G.Controls.ToolStripSpringTextBox class" Url="html/T_G_Controls_ToolStripSpringTextBox.htm" />
+  <HelpKINode Title="GDockPanel class">
+    <HelpKINode Title="GDockPanel Class" Url="html/T_G_Controls_GDockPanel.htm" />
+    <HelpKINode Title="about GDockPanel class" Url="html/T_G_Controls_GDockPanel.htm" />
+    <HelpKINode Title="constructor" Url="html/M_G_Controls_GDockPanel__ctor.htm" />
+    <HelpKINode Title="events" Url="html/Events_T_G_Controls_GDockPanel.htm" />
+    <HelpKINode Title="methods" Url="html/Methods_T_G_Controls_GDockPanel.htm" />
+  </HelpKINode>
+  <HelpKINode Title="GDockPanel.AddShowPanelsToMenu method" Url="html/M_G_Controls_GDockPanel_AddShowPanelsToMenu.htm" />
+  <HelpKINode Title="GDockPanel.Create method" Url="html/M_G_Controls_GDockPanel_Create.htm" />
+  <HelpKINode Title="GDockPanel.DockSide enumeration" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="GDockPanel.EnableDisableAllFloatingWindows method" Url="html/M_G_Controls_GDockPanel_EnableDisableAllFloatingWindows.htm" />
+  <HelpKINode Title="GDockPanel.FindPanel method" Url="html/M_G_Controls_GDockPanel_FindPanel.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanel constructor" Url="html/M_G_Controls_GDockPanel__ctor.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanelContextMenuEventArgs class">
+    <HelpKINode Title="GDockPanel.GDockPanelContextMenuEventArgs Class" Url="html/T_G_Controls_GDockPanel_GDockPanelContextMenuEventArgs.htm" />
+    <HelpKINode Title="about GDockPanel.GDockPanelContextMenuEventArgs class" Url="html/T_G_Controls_GDockPanel_GDockPanelContextMenuEventArgs.htm" />
+  </HelpKINode>
+  <HelpKINode Title="GDockPanel.GDockPanelContextMenuEventArgs.menu property" Url="html/P_G_Controls_GDockPanel_GDockPanelContextMenuEventArgs_menu.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanelEventArgs class">
+    <HelpKINode Title="GDockPanel.GDockPanelEventArgs Class" Url="html/T_G_Controls_GDockPanel_GDockPanelEventArgs.htm" />
+    <HelpKINode Title="about GDockPanel.GDockPanelEventArgs class" Url="html/T_G_Controls_GDockPanel_GDockPanelEventArgs.htm" />
+  </HelpKINode>
+  <HelpKINode Title="GDockPanel.GDockPanelEventArgs.control property" Url="html/P_G_Controls_GDockPanel_GDockPanelEventArgs_control.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanelEventArgs.dp property" Url="html/P_G_Controls_GDockPanel_GDockPanelEventArgs_dp.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanelEventArgs.panelName property" Url="html/P_G_Controls_GDockPanel_GDockPanelEventArgs_panelName.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanelEventHandler(Of T) delegate" Url="html/T_G_Controls_GDockPanel_GDockPanelEventHandler_1.htm" />
+  <HelpKINode Title="GDockPanel.GDockPanelEventHandler&lt;T&gt; delegate" Url="html/T_G_Controls_GDockPanel_GDockPanelEventHandler_1.htm" />
+  <HelpKINode Title="GDockPanel.HidePanel method" Url="html/Overload_G_Controls_GDockPanel_HidePanel.htm" />
+  <HelpKINode Title="GDockPanel.IsPanelVisible method" Url="html/Overload_G_Controls_GDockPanel_IsPanelVisible.htm" />
+  <HelpKINode Title="GDockPanel.PanelContextMenu event" Url="html/E_G_Controls_GDockPanel_PanelContextMenu.htm" />
+  <HelpKINode Title="GDockPanel.SetPanelText method" Url="html/Overload_G_Controls_GDockPanel_SetPanelText.htm" />
+  <HelpKINode Title="GDockPanel.SetPanelToolTipText method" Url="html/Overload_G_Controls_GDockPanel_SetPanelToolTipText.htm" />
+  <HelpKINode Title="GDockPanel.ShowPanel method" Url="html/Overload_G_Controls_GDockPanel_ShowPanel.htm" />
+  <HelpKINode Title="GDockPanel.Test method" Url="html/M_G_Controls_GDockPanel_Test.htm" />
+  <HelpKINode Title="GDockPanelContextMenuEventArgs class">
+    <HelpKINode Title="properties" Url="html/Properties_T_G_Controls_GDockPanel_GDockPanelContextMenuEventArgs.htm" />
+  </HelpKINode>
+  <HelpKINode Title="GDockPanelEventArgs class">
+    <HelpKINode Title="properties" Url="html/Properties_T_G_Controls_GDockPanel_GDockPanelEventArgs.htm" />
+  </HelpKINode>
+  <HelpKINode Title="GetPreferredSize method">
+    <HelpKINode Title="ToolStripSpringComboBox.GetPreferredSize Method " Url="html/M_G_Controls_ToolStripSpringComboBox_GetPreferredSize.htm" />
+    <HelpKINode Title="ToolStripSpringTextBox.GetPreferredSize Method " Url="html/M_G_Controls_ToolStripSpringTextBox_GetPreferredSize.htm" />
+  </HelpKINode>
+  <HelpKINode Title="HidePanel method" Url="html/Overload_G_Controls_GDockPanel_HidePanel.htm" />
+  <HelpKINode Title="IsPanelVisible method" Url="html/Overload_G_Controls_GDockPanel_IsPanelVisible.htm" />
+  <HelpKINode Title="menu property" Url="html/P_G_Controls_GDockPanel_GDockPanelContextMenuEventArgs_menu.htm" />
+  <HelpKINode Title="PanelContextMenu event" Url="html/E_G_Controls_GDockPanel_PanelContextMenu.htm" />
+  <HelpKINode Title="panelName property" Url="html/P_G_Controls_GDockPanel_GDockPanelEventArgs_panelName.htm" />
+  <HelpKINode Title="SetCueBanner method">
+    <HelpKINode Title="ToolStripSpringComboBox.SetCueBanner Method " Url="html/M_G_Controls_ToolStripSpringComboBox_SetCueBanner.htm" />
+    <HelpKINode Title="ToolStripSpringTextBox.SetCueBanner Method " Url="html/M_G_Controls_ToolStripSpringTextBox_SetCueBanner.htm" />
+  </HelpKINode>
+  <HelpKINode Title="SetPanelText method" Url="html/Overload_G_Controls_GDockPanel_SetPanelText.htm" />
+  <HelpKINode Title="SetPanelToolTipText method" Url="html/Overload_G_Controls_GDockPanel_SetPanelToolTipText.htm" />
+  <HelpKINode Title="ShowPanel method" Url="html/Overload_G_Controls_GDockPanel_ShowPanel.htm" />
+  <HelpKINode Title="SplitAbove enumeration member" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="SplitBelow enumeration member" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="SplitLeft enumeration member" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="SplitRight enumeration member" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="TabAfter enumeration member" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="TabBefore enumeration member" Url="html/T_G_Controls_GDockPanel_DockSide.htm" />
+  <HelpKINode Title="Test method" Url="html/M_G_Controls_GDockPanel_Test.htm" />
+  <HelpKINode Title="ToolStripSpringComboBox class">
+    <HelpKINode Title="ToolStripSpringComboBox Class" Url="html/T_G_Controls_ToolStripSpringComboBox.htm" />
+    <HelpKINode Title="about ToolStripSpringComboBox class" Url="html/T_G_Controls_ToolStripSpringComboBox.htm" />
+    <HelpKINode Title="constructor" Url="html/M_G_Controls_ToolStripSpringComboBox__ctor.htm" />
+    <HelpKINode Title="methods" Url="html/Methods_T_G_Controls_ToolStripSpringComboBox.htm" />
+  </HelpKINode>
+  <HelpKINode Title="ToolStripSpringComboBox.GetPreferredSize method" Url="html/M_G_Controls_ToolStripSpringComboBox_GetPreferredSize.htm" />
+  <HelpKINode Title="ToolStripSpringComboBox.SetCueBanner method" Url="html/M_G_Controls_ToolStripSpringComboBox_SetCueBanner.htm" />
+  <HelpKINode Title="ToolStripSpringComboBox.ToolStripSpringComboBox constructor" Url="html/M_G_Controls_ToolStripSpringComboBox__ctor.htm" />
+  <HelpKINode Title="ToolStripSpringTextBox class">
+    <HelpKINode Title="ToolStripSpringTextBox Class" Url="html/T_G_Controls_ToolStripSpringTextBox.htm" />
+    <HelpKINode Title="about ToolStripSpringTextBox class" Url="html/T_G_Controls_ToolStripSpringTextBox.htm" />
+    <HelpKINode Title="constructor" Url="html/M_G_Controls_ToolStripSpringTextBox__ctor.htm" />
+    <HelpKINode Title="methods" Url="html/Methods_T_G_Controls_ToolStripSpringTextBox.htm" />
+  </HelpKINode>
+  <HelpKINode Title="ToolStripSpringTextBox.GetPreferredSize method" Url="html/M_G_Controls_ToolStripSpringTextBox_GetPreferredSize.htm" />
+  <HelpKINode Title="ToolStripSpringTextBox.SetCueBanner method" Url="html/M_G_Controls_ToolStripSpringTextBox_SetCueBanner.htm" />
+  <HelpKINode Title="ToolStripSpringTextBox.ToolStripSpringTextBox constructor" Url="html/M_G_Controls_ToolStripSpringTextBox__ctor.htm" />
+</HelpKI>

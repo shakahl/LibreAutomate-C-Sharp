@@ -24,6 +24,7 @@ namespace Catkeys
 {
 	/// <summary>
 	/// Extends the .NET class Process.
+	/// Also has some thread functions.
 	/// </summary>
 	//[DebuggerStepThrough]
 	public static class Process_
@@ -119,8 +120,7 @@ namespace Catkeys
 				if(!Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out sessionId)) return false;
 			}
 
-			IntPtr pp; uint n;
-			if(!WTSEnumerateProcessesW(Zero, 0, 1, out pp, out n)) return false;
+			if(!WTSEnumerateProcessesW(Zero, 0, 1, out IntPtr pp, out uint n)) return false;
 			try {
 				ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
 				for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
@@ -195,7 +195,7 @@ namespace Catkeys
 		/// Gets process executable file name without ".exe", or full path.
 		/// Returns null if fails.
 		/// </summary>
-		/// <param name="processId">Process id. If you have a window, use its ProcessId property.</param>
+		/// <param name="processId">Process id. If you have a window, use its <see cref="Wnd.ProcessId">ProcessId</see> property.</param>
 		/// <param name="fullPath">Get full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
 		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if fullPath is true.</param>
 		public static string GetProcessName(uint processId, bool fullPath = false, bool noSlowAPI = false)
@@ -207,8 +207,15 @@ namespace Catkeys
 		/// Returns list of process id of all processes whose names match processName.
 		/// Returns empty list if there are no matching processes.
 		/// </summary>
-		/// <param name="processName">Process name. <see cref="Wildex">Wildcard expression</see>.</param>
+		/// <param name="processName">
+		/// Process name.
+		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// </param>
 		/// <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
+		/// <exception cref="ArgumentException">
+		/// processName is "" or null.
+		/// Invalid wildcard expression ("**options|" or regular expression).
+		/// </exception>
 		public static List<uint> GetProcessesByName(string processName, bool fullPath = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
@@ -249,7 +256,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Opens and manages a process handle.
-		/// Calls Api.CloseHandle in Dispose (which normally is implicitly called at the end of <c>using(...){...}</c>) or in finalizer (which is called later by the GC).
+		/// Calls API <msdn>CloseHandle</msdn> in Dispose (which normally is implicitly called at the end of <c>using(...){...}</c>) or in finalizer (which is called later by the GC).
 		/// </summary>
 		internal sealed class LibProcessHandle :IDisposable
 		{
@@ -282,8 +289,8 @@ namespace Catkeys
 
 			/// <summary>
 			/// Opens a process handle.
-			/// Calls Api.OpenProcess.
-			/// No exception when fails; use Is0.
+			/// Calls API OpenProcess.
+			/// No exception when fails; use Is0. Supports Native.GetError().
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="desiredAccess">Desired access, as documented in MSDN -> OpenProcess.</param>
@@ -291,22 +298,28 @@ namespace Catkeys
 
 			/// <summary>
 			/// Opens window's process handle.
-			/// This overload is more powerful: if Api.OpenProcess fails, it tries Api.GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only Api.PROCESS_DUP_HANDLE, Api.PROCESS_VM_OPERATION, Api.PROCESS_VM_READ, Api.PROCESS_VM_WRITE, Api.SYNCHRONIZE.
-			/// No exception when fails; use Is0.
+			/// This overload is more powerful: if API OpenProcess fails, it tries GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
+			/// No exception when fails; use Is0. Supports Native.GetError().
 			/// </summary>
 			/// <param name="w">Window.</param>
-			/// <param name="desiredAccess">Desired access, as documented in MSDN -> OpenProcess.</param>
+			/// <param name="desiredAccess">Api.PROCESS_</param>
 			public LibProcessHandle(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) { _Open(w.ProcessId, desiredAccess, w); }
 
 			void _Open(uint processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default(Wnd))
 			{
-				if(processId != 0) _h = Api.OpenProcess(desiredAccess, false, processId);
-				if(Is0 && !processWindow.Is0
-					&& (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE)) == 0
+				int e = 0;
+				if(processId != 0) {
+					_h = Api.OpenProcess(desiredAccess, false, processId);
+					if(!Is0) return;
+					e = Native.GetError();
+				}
+				if(!processWindow.Is0) {
+					if((desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE)) == 0
 					&& UacInfo.ThisProcess.IsUIAccess
-					)
-					_h = GetProcessHandleFromHwnd(processWindow);
-				if(Is0) GC.SuppressFinalize(this);
+					) _h = GetProcessHandleFromHwnd(processWindow);
+
+					if(Is0) Api.SetLastError(e);
+				}
 			}
 
 			[DllImport("oleacc.dll")]
@@ -321,7 +334,7 @@ namespace Catkeys
 			//public static implicit operator LibProcessHandle(IntPtr handle) { return handle == Zero ? null : new LibProcessHandle(handle); } //unsafe, because does not dispose the left-side object immediately if it already holds a handle; but it is unlikely, and not dangerous, because the handle eventually would be disposed by the finalizer.
 			public static implicit operator IntPtr(LibProcessHandle p) { return p._h; }
 
-			public bool Is0 { get { return _h == Zero; } }
+			public bool Is0 { get => _h == Zero; }
 
 		}
 
@@ -358,7 +371,7 @@ namespace Catkeys
 			/// Process handle.
 			/// Opened with access PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE.
 			/// </summary>
-			public IntPtr ProcessHandle { get { return _hproc; } }
+			public IntPtr ProcessHandle { get => _hproc; }
 
 			/// <summary>
 			/// Address of memory allocated in that process. Invalid in this process.
@@ -369,11 +382,11 @@ namespace Catkeys
 			{
 				const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
 				_hproc = w.Is0 ? new LibProcessHandle(pid, fl) : new LibProcessHandle(w, fl);
-				if(_hproc.Is0) { _Dispose(); throw new CatException("Failed to open process handle."); }
+				if(_hproc.Is0) { var e = new CatException(0, "Failed to open process handle."); _Dispose(); throw e; }
 
 				if(nBytes != 0) {
 					Mem = Api.VirtualAllocEx(_hproc, Zero, nBytes);
-					if(Mem == Zero) { _Dispose(); throw new CatException("Failed to allocate process memory."); }
+					if(Mem == Zero) { var e = new CatException(0, "Failed to allocate process memory."); _Dispose(); throw e; }
 				}
 			}
 
@@ -382,11 +395,12 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="w">A window in that process.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="CatException">Throws when fails to open process handle (usually because of UAC) or allocate memory.</exception>
 			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of UAC High integrity level when this process is Medium+uiAccess.</remarks>
+			/// <exception cref="WndException">w invalid.</exception>
+			/// <exception cref="CatException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(Wnd w, int nBytes)
 			{
-				w.ValidateThrow();
+				w.ThrowIfInvalid();
 				_Alloc(0, w, nBytes);
 			}
 
@@ -395,7 +409,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="CatException">Thrown when fails to open process handle or allocate memory.</exception>
+			/// <exception cref="CatException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(uint processId, int nBytes)
 			{
 				_Alloc(processId, Wnd0, nBytes);
@@ -566,7 +580,7 @@ namespace Catkeys
 			/// <summary>
 			/// Access token handle.
 			/// </summary>
-			public IntPtr TokenHandle { get { return _htoken; } }
+			public IntPtr TokenHandle { get => _htoken; }
 
 			/// <summary>
 			/// Gets true if the last called property function failed.
@@ -603,8 +617,8 @@ namespace Catkeys
 					if(_haveElevation == 0) {
 						unsafe
 						{
-							uint siz; ElevationType elev;
-							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out siz)) _haveElevation = 2;
+							ElevationType elev;
+							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out var siz)) _haveElevation = 2;
 							else {
 								_haveElevation = 1;
 								_Elevation = elev;
@@ -631,8 +645,8 @@ namespace Catkeys
 					if(_haveIsUIAccess == 0) {
 						unsafe
 						{
-							uint siz; uint uia;
-							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out siz)) _haveIsUIAccess = 2;
+							uint uia;
+							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
 							else {
 								_haveIsUIAccess = 1;
 								_isUIAccess = uia != 0;
@@ -654,8 +668,8 @@ namespace Catkeys
 					if(WinVer < Win8) return false;
 					unsafe
 					{
-						uint siz; uint isac;
-						if(Failed = !Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out siz)) return false;
+						uint isac;
+						if(Failed = !Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out var siz)) return false;
 						return isac != 0;
 					}
 				}
@@ -680,17 +694,17 @@ namespace Catkeys
 			///		Low - very limited rights. Used by Internet Explorer tab processes, Windows Store apps.
 			///		Medium - limited rights. Most processes (unless UAC turned off).
 			///		UIAccess - Medium IL + can access/automate High IL windows (user interface).
-			///			Note: Only the IntegrityLevelAndUIAccess property can return UIAccess. This property returns High instead (the same as in Process Explorer).
+			///			Note: Only the <see cref="IntegrityLevelAndUIAccess"/> property can return UIAccess. This property returns High instead (the same as in Process Explorer).
 			///		High - most rights. Processes that run as administrator.
 			///		System - almost all rights. Services, some system processes.
 			///		Protected - undocumented. Never seen.
 			///		Unknown - failed to get IL. Never seen.
-			/// The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c>.
+			/// The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
 			/// If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
 			/// </summary>
 			public IL IntegrityLevel
 			{
-				get { return _GetIntegrityLevel(false); }
+				get => _GetIntegrityLevel(false);
 			}
 
 			/// <summary>
@@ -698,7 +712,7 @@ namespace Catkeys
 			/// </summary>
 			public IL IntegrityLevelAndUIAccess
 			{
-				get { return _GetIntegrityLevel(true); }
+				get => _GetIntegrityLevel(true);
 			}
 
 			IL _GetIntegrityLevel(bool andUIAccess)
@@ -706,9 +720,8 @@ namespace Catkeys
 				if(_haveIntegrityLevel == 0) {
 					unsafe
 					{
-						uint siz;
-						Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out siz);
-						if(Marshal.GetLastWin32Error() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
+						Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
+						if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 						else {
 							TOKEN_MANDATORY_LABEL* tml = (TOKEN_MANDATORY_LABEL*)Marshal.AllocHGlobal((int)siz);
 							if(tml == null) _haveIntegrityLevel = 2;
@@ -740,8 +753,7 @@ namespace Catkeys
 
 			static UacInfo _Create(IntPtr hProcess)
 			{
-				IntPtr hToken;
-				if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out hToken)) return null;
+				if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out var hToken)) return null;
 				return new UacInfo(hToken);
 			}
 
@@ -751,7 +763,7 @@ namespace Catkeys
 			/// Returns null if failed. For example fails for services and some other processes if current process is not administrator.
 			/// To get UacInfo of this process, instead use UacInfo.ThisProcess.
 			/// </summary>
-			/// <param name="processId">Process id. If you have a window, use its ProcessId property.</param>
+			/// <param name="processId">Process id. If you have a window, use its <see cref="Wnd.ProcessId">ProcessId</see> property.</param>
 			public static UacInfo GetOfProcess(uint processId)
 			{
 				if(processId == 0) return null;
@@ -780,12 +792,12 @@ namespace Catkeys
 			///// <summary>
 			///// Returns true if this process has UAC integrity level (IL) High or System, which means that it has most administrative privileges.
 			///// Returns false if this process has lower UAC integrity level (Medium, Medium+UIAccess, Low, Untrusted).
-			///// Note: although the name incluses 'Admin', this function does not check whether the user is in Administrators group; it returns true if <c>UacInfo.ThisProcess.IntegrityLevelAndUIAccess &gt;= UacInfo.IL.High</c>.
+			///// Note: although the name incluses 'Admin', this function does not check whether the user is in Administrators group; it returns true if <c>UacInfo.ThisProcess.IntegrityLevelAndUIAccess &gt;= UacInfo.IL.High</c> .
 			///// If UAC is turned off, on administrator account most processes have High IL. On non-administrator account most processes always have Medium or Low IL.
 			///// </summary>
 			//public static bool IsAdmin
 			//{
-			//	get { return ThisProcess.IntegrityLevelAndUIAccess >= IL.High; }
+			//	get => ThisProcess.IntegrityLevelAndUIAccess >= IL.High;
 			//}
 
 			/// <summary>
@@ -889,6 +901,30 @@ namespace Catkeys
 				return r == 0;
 			}
 		}
+
+		/// <summary>
+		/// Calls <msdn>GetCurrentThreadId</msdn>.
+		/// </summary>
+		public static uint CurrentThreadId { get => Api.GetCurrentThreadId(); }
+
+		/// <summary>
+		/// Calls <msdn>GetCurrentProcessId</msdn>.
+		/// </summary>
+		public static uint CurrentProcessId { get => Api.GetCurrentProcessId(); }
+
+		/// <summary>
+		/// Returns current thread handle.
+		/// Calls <msdn>GetCurrentThread</msdn>.
+		/// Don't need to close the handle.
+		/// </summary>
+		public static IntPtr CurrentThreadHandle { get => Api.GetCurrentThread(); }
+
+		/// <summary>
+		/// Returns current process handle.
+		/// Calls <msdn>GetCurrentProcess</msdn>.
+		/// Don't need to close the handle.
+		/// </summary>
+		public static IntPtr CurrentProcessHandle { get => Api.GetCurrentProcess(); }
 	} //Process_
 
 }

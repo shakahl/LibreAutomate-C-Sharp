@@ -81,7 +81,7 @@ namespace G.Controls
 		abstract partial class GNode
 		{
 			protected readonly GDockPanel _manager;
-			internal GDockPanel Manager { get { return _manager; } }
+			internal GDockPanel Manager { get => _manager; }
 
 			internal GSplit ParentSplit; //null if new panel added in this app version
 			internal Rectangle Bounds; //in current parent Control client area
@@ -98,15 +98,15 @@ namespace G.Controls
 			/// Returns true if is docked in main window or in a floating tab.
 			/// <seealso cref="GContentNode.IsDockedOn"/>.
 			/// </summary>
-			internal bool IsDocked { get { return DockState == GDockState.Docked; } }
-			internal bool IsHidden { get { return DockState == GDockState.Hidden; } }
+			internal bool IsDocked { get => DockState == GDockState.Docked; }
+			internal bool IsHidden { get => DockState == GDockState.Hidden; }
 
-			internal virtual Control ParentControl { get { return _manager; } }
+			internal virtual Control ParentControl { get => _manager; }
 			internal virtual void Paint(Graphics g) { }
 			internal virtual void UpdateLayout(Rectangle r) { }
-			internal virtual Rectangle RectangleInScreen { get { return _manager.RectangleToScreen(this.Bounds); } }
-			internal virtual int MinimalWidth { get { return 0; } }
-			internal virtual int MinimalHeight { get { return 0; } }
+			internal virtual Rectangle RectangleInScreen { get => _manager.RectangleToScreen(this.Bounds); }
+			internal virtual int MinimalWidth { get => 0; }
+			internal virtual int MinimalHeight { get => 0; }
 		}
 
 		class GDummyNode :GNode
@@ -127,7 +127,7 @@ namespace G.Controls
 			internal Rectangle SavedDockedBounds; //when floating etc, contains bounds when was docked, to restore when docking again
 			internal Rectangle SavedFloatingBounds; //when docked etc, contains bounds when was floating, to restore when floating again
 			protected Control _parentControl;
-			internal override Control ParentControl { get { return _parentControl; } } //_manager or a GFloat
+			internal override Control ParentControl { get => _parentControl; } //_manager or a GFloat
 			internal GDockState SavedVisibleDockState; //when hidden, in what state to show
 			internal bool IsVerticalCaption; //whether caption currently is vertical (depends on width/height ratio)
 
@@ -140,13 +140,13 @@ namespace G.Controls
 
 			internal bool IsDockedOn(Control parent) { return this.IsDocked && this.ParentControl == parent; }
 
-			internal bool IsFloating { get { return DockState == GDockState.Floating; } }
-			//internal bool IsAutoHide { get { return DockState == GDockState.AutoHide; } }
-			//internal bool IsFloatingOrAutoHide { get { return IsFloating || IsAutoHide; } }
+			internal bool IsFloating { get => DockState == GDockState.Floating; }
+			//internal bool IsAutoHide { get => DockState == GDockState.AutoHide; }
+			//internal bool IsFloatingOrAutoHide { get => IsFloating || IsAutoHide; }
 
-			internal virtual bool IsTabbedPanel { get { return false; } }
+			internal virtual bool IsTabbedPanel { get => false; }
 
-			internal override Rectangle RectangleInScreen { get { return this.ParentControl.RectangleToScreen(this.Bounds); } }
+			internal override Rectangle RectangleInScreen { get => this.ParentControl.RectangleToScreen(this.Bounds); }
 
 			internal override void UpdateLayout(Rectangle r)
 			{
@@ -281,8 +281,7 @@ namespace G.Controls
 							gp.ParentTab.SetDockState(GDockState.LastVisible);
 							if(this.IsDocked) gp.ParentTab.SetActiveItem(gp);
 						}
-						var gf = this.ParentControl as GFloat;
-						if(gf != null) ((Wnd)gf).EnsureInScreen();
+						if(this.ParentControl is GFloat gf) ((Wnd)gf).EnsureInScreen();
 						return;
 					}
 					state = this.SavedVisibleDockState;
@@ -291,8 +290,8 @@ namespace G.Controls
 				var prevState = this.DockState;
 				if(state == prevState) return;
 
-				if(this.ParentSplit==null && state==GDockState.Docked) { //new panel
-					TaskDialog.Show("", "Alt+drag and drop to dock it where you want.", icon:TDIcon.Info, ownerWindow:_manager.ParentForm);
+				if(this.ParentSplit == null && state == GDockState.Docked) { //new panel
+					TaskDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager.ParentForm);
 					return;
 				}
 
@@ -307,14 +306,14 @@ namespace G.Controls
 				if(state == GDockState.Floating) {
 					if(!onStartDrag && !SavedFloatingBounds.IsEmpty_()) {
 						rect = SavedFloatingBounds;
-						Wnd.Misc.RectEnsureInScreen(ref rect);
-					} else if(this.ParentSplit!=null) {
+						rect.EnsureInScreen();
+					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						Wnd.Misc.WindowRectFromClientRect(ref rect, Api.WS_POPUP | Api.WS_THICKFRAME, Api.WS_EX_TOOLWINDOW);
-					}else { //new panel, empty bounds
+						Wnd.Misc.WindowRectFromClientRect(ref rect, Native.WS_POPUP | Native.WS_THICKFRAME, Native.WS_EX_TOOLWINDOW);
+					} else { //new panel, empty bounds
 						var mp = Mouse.XY;
 						rect = new RECT(mp.x - 15, mp.y - 15, 300, 150, true);
-						Wnd.Misc.RectEnsureInScreen(ref rect);
+						rect.EnsureInScreen();
 					}
 				}
 
@@ -418,7 +417,7 @@ namespace G.Controls
 					}
 				} else {
 					if(gcTarget.IsTabbedPanel) gcTarget = (gcTarget as GPanel).ParentTab;
-					bool after = side == DockSide.SplitRight || side==DockSide.SplitBelow;
+					bool after = side == DockSide.SplitRight || side == DockSide.SplitBelow;
 					bool verticalSplit = side == DockSide.SplitLeft || side == DockSide.SplitRight;
 
 					if(gsTargetParent == gsThisParent && gtThisParent == null) {
@@ -454,7 +453,7 @@ namespace G.Controls
 			internal void InitDockStateFromXML(XmlElement x)
 			{
 				this.DockState = (GDockState)x.Attribute_("state", 0);
-				bool hide =x.HasAttribute("hide"), floating=this.DockState == GDockState.Floating;
+				bool hide = x.HasAttribute("hide"), floating = this.DockState == GDockState.Floating;
 				if(hide || floating) {
 					this.SavedVisibleDockState = this.DockState;
 					this.DockState = GDockState.Hidden;

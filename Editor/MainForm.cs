@@ -99,7 +99,7 @@ namespace Editor
 			Perf.Next();
 
 			var c = new RichTextBox();
-			c.Name =c.Text= "Results";
+			c.Name = c.Text = "Results";
 
 			_dock = new GDockPanel();
 			_dock.Create(Folders.ThisAppData + "Panels.xml", EImageList.Strips,
@@ -210,7 +210,7 @@ namespace Editor
 
 		protected override void WndProc(ref Message m)
 		{
-			uint msg =(uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
+			uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			base.WndProc(ref m);
 
@@ -238,11 +238,11 @@ namespace Editor
 
 			protected override void OnHandleCreated(EventArgs e)
 			{
-				uint style = Api.WS_CHILD | Api.WS_VISIBLE | _Api.TVS_INFOTIP | _Api.TVS_FULLROWSELECT | _Api.TVS_SHOWSELALWAYS;
+				uint style = Native.WS_CHILD | Native.WS_VISIBLE | _Api.TVS_INFOTIP | _Api.TVS_FULLROWSELECT | _Api.TVS_SHOWSELALWAYS;
 				if(true) style |= _Api.TVS_HASBUTTONS | _Api.TVS_HASLINES | _Api.TVS_LINESATROOT | _Api.TVS_EDITLABELS;
 				else style |= _Api.TVS_SINGLEEXPAND | _Api.TVS_TRACKSELECT;
-				_w = Api.CreateWindowEx(0, "SysTreeView32", "Files", style, 0, 0, 100, 100, (Wnd)Handle, 2202, Zero, 0);
-				_tvWndproc = (Native.WNDPROC)Marshal.GetDelegateForFunctionPointer(_w.GetWindowLong(Api.GWL_WNDPROC), typeof(Native.WNDPROC));
+				_w = Wnd.Misc.CreateWindow(0, "SysTreeView32", "Files", style, 0, 0, 100, 100, (Wnd)Handle, 2202);
+				_tvWndproc = (Native.WNDPROC)Marshal.GetDelegateForFunctionPointer(_w.GetWindowLong(Native.GWL_WNDPROC), typeof(Native.WNDPROC));
 
 				base.OnHandleCreated(e);
 			}
@@ -262,7 +262,7 @@ namespace Editor
 				//Print("tree OnClientSizeChanged");
 				if(!_w.Is0) {
 					var z = this.ClientSize;
-					_w.ResizeRaw(z.Width, z.Height);
+					_w.ResizeLL(z.Width, z.Height);
 				}
 				base.OnClientSizeChanged(e);
 			}

@@ -63,7 +63,7 @@ namespace Catkeys
 
 		bool _ShowTooltip()
 		{
-			ToolStripItem b1 = this.GetItemAt(this.MouseClientXY()); if(b1 == null) return false;
+			ToolStripItem b1 = this.GetItemAt(this.MouseClientXY_()); if(b1 == null) return false;
 			var s1 = b1.ToolTipText; if(Empty(s1)) return false; //null if separator
 			if(b1 == _ttItem) return true;
 			if(_ttToolTip == null) _ttToolTip = new ToolTip();
@@ -75,7 +75,7 @@ namespace Catkeys
 				if(_ttItem == null) return;
 				_ttToolTip.Hide(_TopLevelParent);
 				var par = _TopLevelParent;
-				var p = par.MouseWindowXY();
+				var p = par.MouseWindowXY_();
 				_ttToolTip.Show(_ttItem.ToolTipText, par, p.X, p.Y + 20, 5000);
 				//info: why here we use _TopLevelParent (not this ToolStrip Control):
 				//	Shortly: to enable tooltip in inactive form.
@@ -141,12 +141,12 @@ namespace Catkeys
 
 		protected override void WndProc(ref Message m)
 		{
-			//Util.Debug_.PrintMsg(ref m);
+			//Wnd.Misc.PrintMsg(ref m);
 			//LPARAM WP = m.WParam, LP = m.LParam;
 
 			switch((uint)m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
-				m.Result = (IntPtr)(((Wnd)_TopLevelParent).HasExStyle(Api.WS_EX_NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
+				m.Result = (IntPtr)(((Wnd)_TopLevelParent).HasExStyle(Native.WS_EX_NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
 			}
 

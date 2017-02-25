@@ -16,8 +16,6 @@ using System.ComponentModel; //Win32Exception
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace SdkConverter
 {
@@ -59,7 +57,7 @@ namespace SdkConverter
 			string name = new string(s, 0, lenName);
 			if(c == 'u') { //#undef
 				if(!_defineConst.Remove(name) && !_defineOther.Remove(name)) _defineW.Remove(name);
-				//Out($"#undef {name}");
+				//Print($"#undef {name}");
 			} else if(iValue < iNext) { //preprocessor removes some #define values, it's ok
 				if(isFunc) { //info: for func-style get parameters as part of value
 					__DefineAddToOther(iName, name, _TokToString(iParamOrValue, iNext));
@@ -81,7 +79,7 @@ namespace SdkConverter
 						}
 					} else {
 						__sbDef.Clear();
-						__sbDef.AppendFormat("public {2} {3} {0} = {1};", name, r.valueS, r.notConst ? "readonly" : "const", r.typeS);
+						__sbDef.AppendFormat("internal {2} {3} {0} = {1};", name, r.valueS, r.notConst ? "readonly" : "const", r.typeS);
 						_defineConst[name] = __sbDef.ToString();
 					}
 				}
@@ -94,7 +92,7 @@ namespace SdkConverter
 		{
 			//remove those that match other identifiers
 			if(_SymbolExists(iName, false) || _func.ContainsKey(name)) {
-				//Out(name);
+				//Print(name);
 				return;
 			}
 
@@ -109,7 +107,7 @@ namespace SdkConverter
 			if(value.Length == name.Length + 1 && value.EndsWith_("W")) suffixLen = 1;
 			else if(value.Length == name.Length + 2 && value.EndsWith_("_W")) suffixLen = 2; //some struct
 			if(!(suffixLen > 0 && value.StartsWith_(name))) {
-				//Out($"<><c 0xff>{name}    {value}</c>");
+				//Print($"<><c 0xff>{name}    {value}</c>");
 				return false;
 			}
 
@@ -129,29 +127,29 @@ namespace SdkConverter
 
 				_func[value] = def;
 
-				//Out($"<><c 0xff0000>{name}    {value}</c>");
-				//Out(def);
+				//Print($"<><c 0xff0000>{name}    {value}</c>");
+				//Print(def);
 				return true;
 			} else {
 				_Symbol x;
 				if(_ns[0].sym.TryGetValue(_TokenFromString(value), out x)) {
 					var t = x as _Struct;
 					if(t != null || x is _Callback) {
-						//if(x is _Struct) Out($"<><c 0xff0000>{name}    {value}</c>");
-						//else Out($"<><c 0x8000>{name}    {value}</c>");
+						//if(x is _Struct) Print($"<><c 0xff0000>{name}    {value}</c>");
+						//else Print($"<><c 0x8000>{name}    {value}</c>");
 						int v = (t == null) ? 2 : (t.isInterface ? 1 : 0);
 						if(suffixLen == 2) v |= 0x10000;
 						_defineW[name] = v; //later will replace all STRUCTW to STRUCT in the final string of struct/func/delegate/interface
 						return true;
 					}
 					//else if(x is _Typedef) {
-					//	Out($"<><c 0x80>{name}    {value}</c>");
+					//	Print($"<><c 0x80>{name}    {value}</c>");
 					//} else {
-					//	Out($"<><c 0xFF>{name}    {value}</c>"); //0
+					//	Print($"<><c 0xFF>{name}    {value}</c>"); //0
 					//}
 
 				} else {
-					//Out($"<><c 0xff>{name}    {value}</c>");
+					//Print($"<><c 0xff>{name}    {value}</c>");
 
 				}
 			}
@@ -166,19 +164,19 @@ namespace SdkConverter
 				//if string constant name ends with "W", remove this if non-W version exists, and remove A version
 				string s = v.Value;
 				if(s.EndsWith_("\";") && v.Key.EndsWith_("W")) {
-					//Out($"{v.Key} = {s}");
+					//Print($"{v.Key} = {s}");
 					string k = v.Key.Remove(v.Key.Length - 1); //name without "W"
 					
 					//remove A version from _defineOther
 					if(_defineOther.Remove(k + "A")) {
-						//Out($"removed A version: {v.Key} = {s}");
+						//Print($"removed A version: {v.Key} = {s}");
 					}
 					//remove this W version if non-W version exists
 					string s2;
 					if(_defineConst.TryGetValue(k, out s2) && s2.Length == s.Length - 1) {
 						int i = s.IndexOf("W = ");
 						if(s2 == s.Remove(i, 1)) {
-							//Out($"removed W version because non-W exists: {v.Key} = {s}");
+							//Print($"removed W version because non-W exists: {v.Key} = {s}");
 							continue;
 						}
 					}
@@ -192,9 +190,9 @@ namespace SdkConverter
 			//'#define' function-style macros and other macros that cannot convert to C#
 			writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
 			foreach(var v in _defineOther) {
-				//if(v.Value.StartsWith_(" \"")) Out($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
+				//if(v.Value.StartsWith_(" \"")) Print($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
 
-				writer.Write("public const string {0} = null; //#define {0}{1};\r\n\r\n", v.Key, v.Value);
+				writer.Write("internal const string {0} = null; //#define {0}{1};\r\n\r\n", v.Key, v.Value);
 			}
 		}
 	}

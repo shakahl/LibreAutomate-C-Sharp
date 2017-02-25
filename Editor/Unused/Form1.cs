@@ -355,7 +355,7 @@ namespace Editor
 			{
 				if(!_w.Is0) {
 					var z = _wPane.ClientSize;
-					_w.ResizeRaw(z.cx, z.cy);
+					_w.ResizeLL(z.cx, z.cy);
 				}
 				base.OnClientSizeChanged(e);
 			}

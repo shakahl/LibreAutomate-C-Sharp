@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -76,6 +77,20 @@ static partial class Test
 		//Perf.Write();
 
 		TestMain();
+
+		//var d = AppDomain.CreateDomain("nname");
+
+		//new Thread(() =>
+		//{
+		//	Wait(1);
+		//	Print("unload");
+		//	AppDomain.Unload(d);
+		//}).Start();
+
+		//d.DoCallBack(TestMain);
+		//Print("DoCallBack ended");
+		////AppDomain.Unload(d);
+		//Print("main domain exit");
 	}
 
 	#region old_test_functions
@@ -404,7 +419,7 @@ bbb"", b3
 
 		d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClick event.");
 
-		d.SetButtons(TDButtons.OKCancel | TDButtons.Retry);
+		//d.SetButtons(TDButtons.OKCancel | TDButtons.Retry);
 
 		//d.SetIcon(TDIcon.Warning);
 		//d.SetIcon(new System.Drawing.Icon(@"Q:\app\copy.ico", 32, 32)); //OK
@@ -426,9 +441,9 @@ bbb"", b3
 
 		d.SetCheckbox("Checkbox", false);
 
-		TaskDialog.Options.TopmostIfNoOwner = true;
+		TaskDialog.Options.TopmostIfNoOwnerWindow = true;
 		//d.FlagTopmost=true;
-		d.FlagAllowCancel = true;
+		d.FlagXCancel = true;
 		d.FlagCanBeMinimized = true;
 		//d.FlagRtlLayout=true;
 		//d.FlagPositionRelativeToWindow=true;
@@ -450,11 +465,11 @@ bbb"", b3
 
 		//d.Width=700;
 
-		//d.SetCustomButtons(new string[] { "101 one", "102 two" });
-		d.SetCustomButtons("1 one|2 two\nzzz", true);
+		//d.SetButtons(new string[] { "101 one", "102 two" });
+		d.SetButtons("1 one|2 two\nzzz", true);
 		//d.SetCustomButtons(new string[] { "5", "102 two" }, true);
 		//d.SetCustomButtons("101|102 two\nzzz", true);
-		d.DefaultButton = TDResult.No;
+		d.DefaultButton = 2;
 		//d.SetDefaultButton(2);
 		//d.SetDefaultButton(TDResult.Cancel);
 		//d.SetDefaultButton(TDResult.Retry);
@@ -466,13 +481,13 @@ bbb"", b3
 		//d.SetTimeout(10, null, true);
 
 		//d.Created += ed => { Print($"{ed.message} {ed.wParam} {ed.linkHref}"); };
-		d.Created += ed => { ed.dialog.Send.EnableButton(TDResult.Yes, false); };
+		d.Created += ed => { ed.dialog.Send.EnableButton(1, false); };
 		//d.Created += ed => { ed.OwnerWindow.Enabled=true; };
 		//d.Created += ed => { ed.hwnd.Owner.Enabled=true; };
 		//d.Created += ed => { Wnd.Get.Owner(ed.hwnd).Enabled=true; };
 		//d.Created += ed => { w.Enabled=true; };
 		//d.Destroyed += ed => { Print($"{ed.message} {ed.wParam} {ed.linkHref}"); };
-		d.ButtonClicked += ed => { Print($"{ed.message} {ed.wParam} {ed.LinkHref}"); if(ed.wParam == TDResult.No) ed.returnValue = 1; };
+		d.ButtonClicked += ed => { Print($"{ed.message} {ed.wParam} {ed.LinkHref}"); if(ed.wParam == 2) ed.returnValue = 1; };
 		d.HyperlinkClicked += ed => { Print($"{ed.message} {ed.wParam} {ed.LinkHref}"); };
 		//d.OtherEvents += ed => { Print($"{ed.message} {ed.wParam} {ed.linkHref}"); };
 		//d.Timer += ed => { Print($"{ed.message} {ed.wParam} {ed.linkHref}"); };
@@ -633,7 +648,7 @@ bbb"", b3
 
 	static void TestWndAll()
 	{
-		foreach(Wnd w in Wnd.AllWindows()) {
+		foreach(Wnd w in Wnd.Misc.AllWindows()) {
 			Print(w);
 		}
 		Print("ok");
@@ -654,12 +669,12 @@ bbb"", b3
 
 		////var a1 = new Action(() => { a = Wnd.AllWindows(); });
 		////var a1 = new Action(() => { a = Wnd.AllWindows(null, true); });
-		////var a1 = new Action(() => { a = wy.ChildAllRaw(); });
-		////var a2 = new Action(() => { wy.ChildAllRaw((c, e) => { }); });
+		////var a1 = new Action(() => { a = wy.AllChildren(); });
+		////var a2 = new Action(() => { wy.AllChildren((c, e) => { }); });
 		//var a1 = new Action(() => { a = Wnd.AllWindows(); });
 		//var a2 = new Action(() => { Wnd.AllWindows((w3, e) => { }); });
 
-		////wy.ChildAllRaw((c, e)=> { Print(c); }, null, true); return;
+		////wy.AllChildren((c, e)=> { Print(c); }, null, true); return;
 		////Wnd.AllWindows((c, e)=> { Print(c); }, "QM_*"); return;
 		////Wnd.AllWindows((c, e)=> { Print(c); }, null, true); return;
 		////foreach(Wnd w3 in Wnd.AllWindows(onlyVisible:true)) { Print(w3); }; return;
@@ -698,8 +713,8 @@ bbb"", b3
 
 		//	List<Wnd> a = null;
 
-		//	var a1 = new Action(() => { a=hform.ChildAllRaw(); });
-		//	//var a1 = new Action(() => { a=wq.ChildAllRaw(); });
+		//	var a1 = new Action(() => { a=hform.AllChildren(); });
+		//	//var a1 = new Action(() => { a=wq.AllChildren(); });
 		//	//a1();
 
 		//	for(int k=0; k<5; k++) {
@@ -749,7 +764,7 @@ bbb"", b3
 		////return;
 
 		////Wnd w=(Wnd)1245464;
-		////List<Wnd> e1 = w.ChildAllRaw();
+		////List<Wnd> e1 = w.AllChildren();
 		////Print(e1.Count);
 		//////IEnumerable<Wnd> e= w.DirectChildControlsEnum();
 		////List<Wnd> e2 = w.DirectChildControlsFastUnsafe();
@@ -759,9 +774,9 @@ bbb"", b3
 		////for(int uu=0; uu<5; uu++) {
 		////	Perf.First();
 		////	Perf.Execute(1000, () => { e2 =w.DirectChildControlsFastUnsafe(); });
-		////	Perf.Execute(1000, () => { e1 =w.ChildAllRaw(); });
-		////	Perf.Execute(1000, () => { e1 = w.ChildAllRaw("Button", true); });
-		////	Perf.Execute(1000, () => { w.ChildAllRaw(c=> { /*Print(c);*/ return false; }; });
+		////	Perf.Execute(1000, () => { e1 =w.AllChildren(); });
+		////	Perf.Execute(1000, () => { e1 = w.AllChildren("Button", true); });
+		////	Perf.Execute(1000, () => { w.AllChildren(c=> { /*Print(c);*/ return false; }; });
 		////	Perf.Write();
 		////}
 
@@ -770,7 +785,7 @@ bbb"", b3
 	static void TestProcesses()
 	{
 		Wnd w = Wnd0;
-		Wnd.WinFlag hiddenToo = Wnd.WinFlag.HiddenToo;
+		WFFlags hiddenToo = WFFlags.HiddenToo;
 
 		//Process_.EnumProcesses(p =>
 		//{
@@ -964,8 +979,8 @@ bbb"", b3
 
 	static void TestProcessMemory()
 	{
-		//var w = Wnd.FindRaw("QM_Editor");
-		var w = Wnd.FindRaw("Notepad");
+		//var w = Wnd.FindFast("QM_Editor");
+		var w = Wnd.FindFast(null, "Notepad");
 		Print(w);
 		Process_.Memory x = null;
 		try {
@@ -1006,16 +1021,16 @@ bbb"", b3
 		Print(w);
 		if(w.Is0) return;
 		//Print(c);
-		var x = new Wnd.Misc.WindowsFormsControlNames(w);
+		var x = new Wnd.Misc.WinFormsControlNames(w);
 
-		////Print(x.GetControlName(c));
-		//Print(x.GetControlName(w));
+		////Print(x.GetControlNameOrText(c));
+		//Print(x.GetControlNameOrText(w));
 
-		var a = w.ChildAllRaw();
+		var a = w.AllChildren();
 		foreach(Wnd k in a) {
 			Print("---");
 			Print(k);
-			Print(Wnd.Misc.WindowsFormsControlNames.IsWindowsForms(k));
+			Print(Wnd.Misc.WinFormsControlNames.IsWinFormsControl(k));
 			Print(x.GetControlName(k));
 		}
 	}
@@ -1027,17 +1042,17 @@ bbb"", b3
 		//Wnd w = Wnd.Find("Quick*");
 		Wnd w = Wnd.Find("Free YouTube*").Child("My*");
 		Print(w);
-		//Print(WindowsFormsControlNames.CachedGetControlName(w));
+		//Print(WinFormsControlNames.GetSingleControlName(w));
 
 		string s1 = null, s2 = null;
 		var a1 = new Action(() =>
 		{
 			try {
-				using(var x = new Wnd.Misc.WindowsFormsControlNames(w)) { s1 = x.GetControlName(w); }
+				using(var x = new Wnd.Misc.WinFormsControlNames(w)) { s1 = x.GetControlName(w); }
 			}
 			catch { s1 = null; }
 		});
-		var a2 = new Action(() => { s2 = Wnd.Misc.WindowsFormsControlNames.CachedGetControlName(w); });
+		var a2 = new Action(() => { s2 = Wnd.Misc.WinFormsControlNames.GetSingleControlName(w); });
 
 		Perf.ExecuteMulti(5, 10, a1, a2);
 		PrintList(s1, s2);
@@ -1064,12 +1079,12 @@ bbb"", b3
 		//w = Wnd.Find("", "[-i]qm_Editor");
 		//w = Wnd.Find(null, "QM_Editor"); //test when hidden
 		//w = Wnd.Find(null, "QM_Editor", "", true); //test when hidden
-		//w = Wnd.Find(Wnd.WinFlag.HiddenToo, null, "QM_Editor"); //test when hidden
+		//w = Wnd.Find(WFFlags.HiddenToo, null, "QM_Editor"); //test when hidden
 		//w = Wnd.Find(null, "QM_*");
 		//w = Wnd.Find(null, null, "*env");
 		//w = Wnd.Find(null, null, "Q:\\*");
-		//w = Wnd.Find(Wnd.WinFlag.ProgramPath, null, null, "Q:\\*");
-		//w = Wnd.Find(Wnd.WinFlag.ProgramPath, null, null, "c:\\*");
+		//w = Wnd.Find(WFFlags.ProgramPath, null, null, "Q:\\*");
+		//w = Wnd.Find(WFFlags.ProgramPath, null, null, "c:\\*");
 		//w = Wnd.Find(null, "QM_*", matchIndex:2);
 		//w = Wnd.Find(null, "QM_*", prop:new Wnd.WinProp() {childClass="QM_Code" } );
 		//w = Wnd.Find(null, "QM_*", prop:new Wnd.WinProp() {owner=Wnd.Find("Quick Macros*") } );
@@ -1077,21 +1092,21 @@ bbb"", b3
 		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {threadId=Wnd.Find("*Notepad").ThreadId } );
 		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {propName= "qmshex" } );
 		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {propName= "qmshex", propValue=1 } );
-		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {style=Api.WS_CAPTION, styleMask=Api.WS_CAPTION } );
-		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { styleHas = Api.WS_CAPTION });
-		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { styleNot = Api.WS_CAPTION });
-		//w = Wnd.Find("* Notepad", null, prop: new Wnd.WinProp() { styleNot = Api.WS_DISABLED, styleHas = Api.WS_CAPTION });
-		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { exStyleHas = Api.WS_EX_NOREDIRECTIONBITMAP });
-		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { exStyleNot = Api.WS_EX_TOPMOST });
+		//w = Wnd.Find(null, null, prop:new Wnd.WinProp() {style=Native.WS_CAPTION, styleMask=Native.WS_CAPTION } );
+		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { styleHas = Native.WS_CAPTION });
+		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { styleNot = Native.WS_CAPTION });
+		//w = Wnd.Find("* Notepad", null, prop: new Wnd.WinProp() { styleNot = Native.WS_DISABLED, styleHas = Native.WS_CAPTION });
+		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { exStyleHas = Native.WS_EX_NOREDIRECTIONBITMAP });
+		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() { exStyleNot = Native.WS_EX_TOPMOST });
 		//w = Wnd.Find(null, null, prop: new Wnd.WinProp() {  });
-		//w = Wnd.Find(null, "QM_*", f:e=> { Print(e.w); if(e.w.Name == "TB MSDEV") e.Stop(); });
-		//w = Wnd.Find(null, "QM_*", f:e=> { Print(e.w); e.w = Wnd0; e.Stop(); });
+		//w = Wnd.Find(null, "QM_*", also:e=> { Print(e.w); if(e.w.Name == "TB MSDEV") e.Stop(); });
+		//w = Wnd.Find(null, "QM_*", also:e=> { Print(e.w); e.w = Wnd0; e.Stop(); });
 		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass="QM_Code" });
 		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childName="Te&xt" });
-		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childId = 2202 });
-		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "Button", childName = "Te&xt" });
-		w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "*Edit", childName = "sea" });
-		w = Wnd.Find("Free YouTube Downloader", "*.Window.*");
+		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childId = 2202 });
+		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "Button", childName = "Te&xt" });
+		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "*Edit", childName = "sea" });
+		//w = Wnd.Find("Free YouTube Downloader", "*.Window.*");
 		//w = Wnd.Find("Keyboard Layout*", "*.Window.*");
 		//w = Wnd.Find("Catkeys -*");
 		//w = Wnd.Find("", prop: new Wnd.WinProp() { x=Screen_.Width-1, y=Screen_.Height-10 });
@@ -1099,9 +1114,9 @@ bbb"", b3
 		//w = Wnd.FromXY(1532, 1224, null);
 		//w = Wnd.FromXY(0.1, 0.1, null, true, true);
 
-		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindRaw("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
+		//Perf.ExecuteMulti(5, 100, () => { Wnd.FindFast("QM_Editor"); }, () => { Wnd.Find(null, "QM_Editor"); });
 
-		//w = Wnd.FindRaw("QM_Editor");
+		//w = Wnd.FindFast("QM_Editor");
 		Print(w);
 		//return;
 
@@ -1113,46 +1128,59 @@ bbb"", b3
 		//c = w.Child(null, "SysListView32", 0, true);
 		//c = w.Child(null, "SysListView32", 0, true, matchIndex:2);
 		//c = w.Child(null, "SysListView32", matchIndex:2);
-		//c = w.Child(Wnd.ChildFlag.HiddenToo, null, "SysListView32", 0);
+		//c = w.Child(WCFlags.HiddenToo, null, "SysListView32", 0);
 		//c = w.Child("sea");
 		//c = w.Child("Regex*");
-		//c = w.Child(Wnd.ChildFlag.ControlText, "sea");
-		//c = w.Child(Wnd.ChildFlag.DirectChild, "", matchIndex:4);
-		//c = w.Child(null, "Button", f: e => { Print(e.w); });
-		//c = w.Child(null, "Button", f: e => { Print(e.w); if(e.w.Name == "Te&xt") e.Stop(); });
-		//c = w.Child(null, "", prop:new Wnd.ChildProp() { exStyleHas=Api.WS_EX_CLIENTEDGE});
-		//c = w.Child(null, "", prop:new Wnd.ChildProp() { styleHas=Api.WS_BORDER});
-		//c = w.Child(null, "Button", prop:new Wnd.ChildProp() { x=344, y=448});
-		//c = w.Child(null, "", prop:new Wnd.ChildProp() { x=0.5, y=0.03});
-		//c = w.Child(null, "", prop:new Wnd.ChildProp() { childId=1028 });
-		//c = w.Child(null, "", prop: new Wnd.ChildProp() { child = new Wnd.ChildDefinition(Wnd.ChildFlag.DirectChild, "Reg*") });
+		//c = w.Child(WCFlags.ControlText, "sea");
+		//c = w.Child(WCFlags.DirectChild, "", matchIndex:4);
+		//c = w.Child(null, "Button", also: e => { Print(e.w); });
+		//c = w.Child(null, "Button", also: e => { Print(e.w); if(e.w.Name == "Te&xt") e.Stop(); });
+		//c = w.Child(null, "", prop:new Wnd.ChildEtc() { exStyleHas=Native.WS_EX_CLIENTEDGE});
+		//c = w.Child(null, "", prop:new Wnd.ChildEtc() { styleHas=Native.WS_BORDER});
+		//c = w.Child(null, "Button", prop:new Wnd.ChildEtc() { x=344, y=448});
+		//c = w.Child(null, "", prop:new Wnd.ChildEtc() { x=0.5, y=0.03});
+		//c = w.Child(null, "", prop:new Wnd.ChildEtc() { childId=1028 });
+		//c = w.Child(null, "", prop: new Wnd.ChildEtc() { child = new Wnd.ChildParams(WCFlags.DirectChild, "Reg*") });
 		//c = w.Child("Regex*", "Button");
-		//c = w.Child(null, "", prop: new Wnd.ChildProp() { wfName = "textBoxUrl" });
+		//c = w.Child(null, "", prop: new Wnd.ChildEtc() { wfName = "textBoxUrl" });
 		//try {
 		//	Wnd w = Wnd.Find("Keyboard*");
-		//	Wnd c = w.Child("", prop: new Wnd.ChildProp() { wfName = "ckControl" });
+		//	Wnd c = w.Child("", prop: new Wnd.ChildEtc() { wfName = "ckControl" });
 		//	Print(c);
 		//} catch(CatException e) {
 		//	Print(e);
 		//}
-		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1 });
-		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=1276});
-		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildProp() { x=w.ClientWidth-1 });
-		//c = w.Child(null, "QM_*", prop:new Wnd.ChildProp() { y=0.99 });
+		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildEtc() { x=1 });
+		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildEtc() { x=1276});
+		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildEtc() { x=w.ClientWidth-1 });
+		//c = w.Child(null, "QM_*", prop:new Wnd.ChildEtc() { y=0.99 });
 		//c = w.Child("Find &Previous");
 		//c = w.Child("Find Previous");
 
 		Print(c);
 		return;
 
+		//Wnd c1 = Wnd0, c2 = Wnd0, c3 = Wnd0, c4 = Wnd0, c5 = Wnd0, c6 = Wnd0, c7 = Wnd0;
+		//var a1 = new Action(() => { c1 = w.Child("sea"); });
+		//var a2 = new Action(() => { c2 = w.Child("sea", flags: WCFlags.NameIsValue); });
+		//var a3 = new Action(() => { c3 = w.Child("sea", "*Edit"); });
+		//var a4 = new Action(() => { c4 = w.Child("sea", "*Edit", WCFlags.NameIsValue); });
+		//var a5 = new Action(() => { c5 = w.Child("Regex*"); });
+		//var a6 = new Action(() => { c6 = w.Child("Regex*", "Button"); });
+		////var a7 = new Action(() => { c7 = w.Child("1028", flags: WCFlags.NameIsId); });
+		//var a7 = new Action(() => { c7 = w.Child(1028); });
+		//Perf.ExecuteMulti(5, 100, a1, a2, a3, a4, a5, a6, a7);
+		//Output.WriteListSep("\n", c1, c2, c3, c4, c5, c6, c7);
+
 		Wnd c1 = Wnd0, c2 = Wnd0, c3 = Wnd0, c4 = Wnd0, c5 = Wnd0, c6 = Wnd0, c7 = Wnd0;
 		var a1 = new Action(() => { c1 = w.Child("sea"); });
-		var a2 = new Action(() => { c2 = w.Child("sea", flags: Wnd.ChildFlag.ControlText); });
+		var a2 = new Action(() => { c2 = w.Child("**text:sea"); });
 		var a3 = new Action(() => { c3 = w.Child("sea", "*Edit"); });
-		var a4 = new Action(() => { c4 = w.Child("sea", "*Edit", 0, Wnd.ChildFlag.ControlText); });
+		var a4 = new Action(() => { c4 = w.Child("**text:sea", "*Edit"); });
 		var a5 = new Action(() => { c5 = w.Child("Regex*"); });
 		var a6 = new Action(() => { c6 = w.Child("Regex*", "Button"); });
-		var a7 = new Action(() => { c7 = w.Child("Regex*", id: 1028); });
+		//var a7 = new Action(() => { c7 = w.Child("1028", flags: WCFlags.NameIsId); });
+		var a7 = new Action(() => { c7 = w.Child("**id:1028"); });
 		Perf.ExecuteMulti(5, 100, a1, a2, a3, a4, a5, a6, a7);
 		Output.WriteListSep("\n", c1, c2, c3, c4, c5, c6, c7);
 
@@ -1198,7 +1226,7 @@ bbb"", b3
 	{
 		Wnd w1 = Wnd0, w2 = Wnd0, w3 = Wnd0, w4 = Wnd0, w5 = Wnd0, w6 = Wnd0;
 
-		var a1 = new Action(() => { w1 = Wnd.FromXYRaw(Mouse.XY); });
+		var a1 = new Action(() => { var p = Mouse.XY; w1 = Api.WindowFromPoint(p); });
 		var a2 = new Action(() => { w2 = Wnd.FromMouse(); });
 		//var a3 = new Action(() => { w3 = Wnd.FromXY2(Mouse.XY); });
 		//var a4 = new Action(() => { w4 = Wnd.FromXY3(Mouse.XY); });
@@ -1261,18 +1289,18 @@ bbb"", b3
 
 	static void TestMemory()
 	{
-		Wnd w = Wnd.Find("", "QM_Editor");
-		Print(w);
-		//Print(w.Name);
-		//Print(w.GetControlText());
-		//return;
+		//Wnd w = Wnd.Find("", "QM_Editor");
+		//Print(w);
+		////Print(w.Name);
+		////Print(w.ControlText);
+		////return;
 
-		while(TaskDialog.Show("test", "", TDButtons.OKCancel) == TDResult.OK) {
-			for(int i = 0; i < 1; i++) {
-				TestMemory3(w);
-			}
-			TaskDialog.Show("allocated 2 MB");
-		}
+		//while(TaskDialog.Show("test", "", TDButtons.OKCancel) == TDResult.OK) {
+		//	for(int i = 0; i < 1; i++) {
+		//		TestMemory3(w);
+		//	}
+		//	TaskDialog.Show("allocated 2 MB");
+		//}
 	}
 
 	static void TestStringPlusConcatInterpolation()
@@ -1315,21 +1343,21 @@ bbb"", b3
 	static bool _Activate(Wnd w)
 	{
 		if(!Wnd.Misc.AllowActivate()) return false;
-		Api.SetForegroundWindow(Wnd.ActiveWindow);
-		Api.SetForegroundWindow(Wnd.ActiveWindow);
-		Api.SetForegroundWindow(Wnd.ActiveWindow);
+		Api.SetForegroundWindow(Wnd.WndActive);
+		Api.SetForegroundWindow(Wnd.WndActive);
+		Api.SetForegroundWindow(Wnd.WndActive);
 		Perf.First();
 		if(!Api.SetForegroundWindow(w)) return false;
 		Perf.Next();
-		for(int i = 0; i < 10; i++) { Print(Wnd.ActiveWindow); WaitMS(1); }
+		for(int i = 0; i < 10; i++) { Print(Wnd.WndActive); Time.WaitMS(1); }
 		//WaitMS(100);
 		Perf.Write();
 		if(w.IsActive) return true;
 
 		uint tid = w.ThreadId;
-		if(tid != 0 && tid == Wnd.ActiveWindow.ThreadId && Api.SetForegroundWindow(Wnd.Get.DesktopWindow)) {
+		if(tid != 0 && tid == Wnd.WndActive.ThreadId && Api.SetForegroundWindow(Wnd.Misc.WndRoot)) {
 			Api.SetForegroundWindow(w);
-			Wnd t = Wnd.ActiveWindow;
+			Wnd t = Wnd.WndActive;
 			Print(t);
 			if(t.ThreadId == tid) return true;
 		}
@@ -1362,26 +1390,26 @@ bbb"", b3
 		Wnd w = Wnd.Find("Options");
 		//Wnd w=Wnd.Find(Wnd.Find("Microsoft Excel*").Name.EndsWith_("dictionary.xls") ? "Book1.xls" : "dictionary.xls");
 		Print(w);
-		//Print(w.ActivateRaw());
+		//Print(w.ActivateLL());
 		w.Activate();
-		//Print(Api.SetForegroundWindow(Wnd.Get.DesktopWindow));
+		//Print(Api.SetForegroundWindow(Wnd.Get.WndRoot));
 		//WaitMS(100);
 		//Print(Api.SetForegroundWindow(w));
 		//Print(_Activate(w));
 		//WaitMS(100);
-		Print(Wnd.ActiveWindow);
+		Print(Wnd.WndActive);
 
 		Wnd c = w.Child("Show*");
-		c.FocusControl();
-		Print(Wnd.FocusedControl);
-		Print(Wnd.FocusedControlOfThisThread);
+		c.Focus();
+		Print(Wnd.WndFocused);
+		Print(Wnd.WndFocusedLL);
 
 		//TaskDialog.Show("a");
 		return;
 		Wait(2);
 		w = Wnd.Find("[p]Notepad");
-		Print(w.ActivateRaw());
-		Print(Wnd.ActiveWindow);
+		Print(w.ActivateLL());
+		Print(Wnd.WndActive);
 	}
 
 	static void TestWndMinMaxRes()
@@ -1391,100 +1419,65 @@ bbb"", b3
 		//Wnd w = Wnd.Find("[p]Dreamweaver");
 		//Wnd w = Wnd.Find("app -*", "wndclass_desked_gsk");
 		//Wnd w = Wnd.Find("* Notepad");
+		Wnd w = Wnd.Find("Registry*");
 		//Print(w);
+
+		//w.Show(false);
+		//WaitMS(1000);
+
+		//w.ActivateLL(); return;
 
 		//w.Activate(); Wait(1); //return;
 
-		Wnd w = Wnd.Find("Registry*");
-		//if(!w.ShowMinimized(Wnd.MinMaxHow.Auto)) Print(ThreadError.ErrorText);
-		//if(!w.ShowMinimized(Wnd.MinMaxHow.LikeProgrammer)) Print(ThreadError.ErrorText);
-		//if(!w.ShowMinimized(Wnd.MinMaxHow.NoAnimation)) Print(ThreadError.ErrorText);
-		//return;
+		//Wnd w = Wnd.Find("Dialog MM");
+		//w.ShowMinimized();
+		//w.ShowMinimized(true);
+		//w.ShowMaximized(); //Registry does not work. Access denied.
+		//w.ShowNotMinMax();
+		w.ShowNotMinimized();
+		//Wnd.Misc.Arrange.MinimizeWindows();
 
-		if(false) {
-			w.ShowNotMinMax();
-			Wait(1);
-			w.ShowMaximized();
-			return;
-
-			w.ShowMinimized();
-			//Print(w.IsMinimized);
-			Print(Wnd.ActiveWindow);
-			Wait(1);
-			w.ShowNotMinimized();
-			//Print(w.IsMinimized);
-			Print(Wnd.ActiveWindow);
-
-			//w.ShowMaximized();
-			//w.ShowNotMinMax();
-		} else {
-			//var m =Wnd.MinMaxHow.NoAnimation;
-			var m = Wnd.MinMaxHow.LikeProgrammer;
-
-			//Print(w.ShowNotMinMax(m));
-			//Wait(1);
-			//Print(w.ShowMaximized(m));
-			//return;
-
-			Print(w.ShowMinimized(m));
-			//Print(w.IsMinimized);
-			Print(Wnd.ActiveWindow);
-			Wait(1);
-			Print(w.ShowNotMinimized(m));
-			//Print(w.IsMinimized);
-			Print(Wnd.ActiveWindow);
-
-			//Print(w.ShowMaximized(m));
-			//Print(w.ShowNotMinMax(m));
-		}
-
-		Print("ok");
-	}
-
-	static bool IsVisible(Wnd w)
-	{
-		ThreadError.Clear();
-		return Api.IsWindowVisible(w) || ThreadError.SetWinError();
-	}
-
-	static void TestThreadError()
-	{
-		//Script.Option.speed = 10;
-		var w = Wnd.FindRaw("QM_Editor");
-		//Perf.ExecuteMulti(5, 1, ()=> { Time.AutoDelay(w); });
-		Print(w);
-
-		w = Wnd.Misc.SpecHwnd.Bottom;
-
-		var a1 = new Action(() => { Api.GetCurrentThreadId(); });
-		bool yes = false;
-		var a2 = new Action(() => { yes = Api.IsWindow(w); });
-		var a3 = new Action(() => { yes = Api.IsWindowVisible(w); });
-		var a4 = new Action(() => { yes = w.IsVisible; });
-		var a5 = new Action(() => { yes = IsVisible(w); });
-
-		Perf.ExecuteMulti(5, 1, a1, a2, a3, a4, a5);
+		Print(Wnd.WndActive);
+		return;
 
 
-		//ThreadError.Set("Failed to activate window.");
-		ThreadError.Set(5, "Failed to activate window.");
-		//ThreadError.Set(5, "");
-		//ThreadError.Set(5555, "Failed to activate window.");
+		//if(false) {
+		//	w.ShowNotMinMax();
+		//	Wait(1);
+		//	w.ShowMaximized();
+		//	return;
 
-		Exception e = ThreadError.Exception;
-		//System.ComponentModel.Win32Exception e = ThreadError.Get() as System.ComponentModel.Win32Exception;
-		if(e == null) Print("null");
-		else {
-			Print(e);
-			Print(e.Message);
-			Print(ThreadError.WinErrorCode);
+		//	w.ShowMinimized();
+		//	//Print(w.IsMinimized);
+		//	Print(Wnd.ActiveWindow);
+		//	Wait(1);
+		//	w.ShowNotMinimized();
+		//	//Print(w.IsMinimized);
+		//	Print(Wnd.ActiveWindow);
 
-			//try { throw e; } catch(Exception ee) { Print(ee); }
-			//try { ThreadError.ThrowIfError(); } catch(Exception ee) { Print(ee); }
-			//try { IsVisible(w) || ThreadError.ThrowIfError(); } catch(Exception ee) { Print(ee); } //cannot do it
-			try { if(!IsVisible(w)) ThreadError.ThrowIfError(); } catch(Exception ee) { Print(ee); }
+		//	//w.ShowMaximized();
+		//	//w.ShowNotMinMax();
+		//} else {
+		//	var m = true;
 
-		}
+		//	//Print(w.ShowNotMinMax(m));
+		//	//Wait(1);
+		//	//Print(w.ShowMaximized(m));
+		//	//return;
+
+		//	w.ShowMinimized(m);
+		//	//Print(w.IsMinimized);
+		//	Print(Wnd.ActiveWindow);
+		//	Wait(1);
+		//	w.ShowNotMinimized(m);
+		//	//Print(w.IsMinimized);
+		//	Print(Wnd.ActiveWindow);
+
+		//	//Print(w.ShowMaximized(m));
+		//	//Print(w.ShowNotMinMax(m));
+		//}
+
+		//Print("ok");
 	}
 
 	static void TestWindowDimensions()
@@ -1492,31 +1485,31 @@ bbb"", b3
 		//Wnd w=Wnd.Find("Quick*", "QM_*");
 		Wnd w = Wnd.Find("* Notepad");
 		//Wnd w=Wnd.Find("Registry*");
-		//Wnd w=Wnd.Find(null, "Dwm", flags:Wnd.WinFlag.HiddenToo);
+		//Wnd w=Wnd.Find(null, "Dwm", flags:WFFlags.HiddenToo);
 		Print(w);
 
 		//Print(w.MoveInScreen(0, 0));
 		//Print(w.MoveToScreenCenter(2));
 
-		//Print(w.Child("", "*Tree*", prop: new Wnd.ChildProp() { y=0.5 }));
+		//Print(w.Child("", "*Tree*", prop: new Wnd.ChildEtc() { y=0.5 }));
 		//Print(Wnd.Find("", "QM_*", prop: new Wnd.WinProp() { x=0.5 }));
 
 		w.Activate();
-		//w.MoveRaw(300, 100, 600, 200);
+		//w.MoveLL(300, 100, 600, 200);
 		//w.Width = 500;
-		//w.MoveRaw(100, 30, 500, 300);
-		//w.MoveRaw(100, 30, null, null);
-		//w.MoveRaw(null, null, 500, 300);
-		//w.MoveRaw(null, null, 500, null);
-		//w.MoveRaw(null, null, null, 500);
-		//w.MoveRaw(100, null, null, null);
-		//w.MoveRaw(null, 100, null, null);
-		//w.MoveRaw(null, 100, null, 300);
-		//w.MoveRaw(300, 100);
-		//w.MoveRaw(null, 100);
-		//w.ResizeRaw(300, 100);
-		//w.ResizeRaw(null, 100);
-		//w.ResizeRaw(300, null);
+		//w.MoveLL(100, 30, 500, 300);
+		//w.MoveLL(100, 30, null, null);
+		//w.MoveLL(null, null, 500, 300);
+		//w.MoveLL(null, null, 500, null);
+		//w.MoveLL(null, null, null, 500);
+		//w.MoveLL(100, null, null, null);
+		//w.MoveLL(null, 100, null, null);
+		//w.MoveLL(null, 100, null, 300);
+		//w.MoveLL(300, 100);
+		//w.MoveLL(null, 100);
+		//w.ResizeLL(300, 100);
+		//w.ResizeLL(null, 100);
+		//w.ResizeLL(300, null);
 
 		//w.Move(300, 100, 600, 200);
 		//w.Move(100, 30, 500, 300);
@@ -1570,7 +1563,7 @@ bbb"", b3
 		//Wnd w=Wnd.Find("Quick*", "QM_*");
 		Wnd w = Wnd.Find("* Notepad");
 		//Wnd w=Wnd.Find("Registry*");
-		//Wnd w=Wnd.Find(null, "Dwm", flags:Wnd.WinFlag.HiddenToo);
+		//Wnd w=Wnd.Find(null, "Dwm", flags:WFFlags.HiddenToo);
 		Print(w);
 
 		//Wnd.Misc.TaskbarButton.Flash(w, 0);
@@ -1605,10 +1598,10 @@ bbb"", b3
 	{
 		Wnd w = Wnd.Find("*Notepad");
 		//Print(w);
-		Wnd.Misc.Arrange.ShowDesktop();
+		Wnd.Misc.Desktop.ToggleShowDesktop();
 		Print("ok");
 		Wait(1);
-		Wnd.Misc.Arrange.ShowDesktop();
+		Wnd.Misc.Desktop.ToggleShowDesktop();
 		//Wait(1);
 		//Wnd.Misc.Arrange.MinimizeWindows(true);
 		//Wait(1);
@@ -1623,13 +1616,13 @@ bbb"", b3
 	static void TestWndShowHide()
 	{
 		bool vis = false;
-		Wnd w = Wnd.FindH("*Notepad");
+		Wnd w = Wnd.Find("*Notepad", flags: WFFlags.HiddenToo);
 
 		var a1 = new Action(() => { vis = w.IsVisible; });
 		var a2 = new Action(() => { Api.ShowWindow(w, vis ? 0 : Api.SW_SHOWNA); });
 		//var a2 = new Action(() => { Api.ShowWindow(w, vis?0:Api.SW_SHOW); });
-		var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW : Api.SWP_SHOWWINDOW) | Api.SWP_NOMOVE | Api.SWP_NOSIZE | Api.SWP_NOZORDER | Api.SWP_NOOWNERZORDER | Api.SWP_NOACTIVATE); });
-		//var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (uint)(vis ? Api.SWP_HIDEWINDOW: Api.SWP_SHOWWINDOW)|Api.SWP_NOMOVE|Api.SWP_NOSIZE|Api.SWP_NOZORDER|Api.SWP_NOOWNERZORDER|Api.SWP_NOACTIVATE|Api.SWP_NOSENDCHANGING); });
+		var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (vis ? Native.SWP_HIDEWINDOW : Native.SWP_SHOWWINDOW) | Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOZORDER | Native.SWP_NOOWNERZORDER | Native.SWP_NOACTIVATE); });
+		//var a3 = new Action(() => { Api.SetWindowPos(w, Wnd0, 0, 0, 0, 0, (vis ? Native.SWP_HIDEWINDOW: Native.SWP_SHOWWINDOW)|Native.SWP_NOMOVE|Native.SWP_NOSIZE|Native.SWP_NOZORDER|Native.SWP_NOOWNERZORDER|Native.SWP_NOACTIVATE|Native.SWP_NOSENDCHANGING); });
 
 		//Perf.ExecuteMulti(5, 1000, a1, a2);
 
@@ -1661,106 +1654,79 @@ bbb"", b3
 
 		//Print(Registry_.CatkeysKey);
 
-		//Print(Registry_.KeyExists(@"SOFTWARE\Microsoft"));
-		//Print(Registry_.KeyExists(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft"));
-		//Print(Registry_.KeyExists(@"SOFTWARE\GinDi", Registry.CurrentUser));
-		//Print(Registry_.KeyExists(@"GinDi", Registry.CurrentUser.OpenSubKey("SOFTWARE")));
-		//Print(Registry_.KeyExists(null, Registry.CurrentUser.OpenSubKey("SOFTWARE")));
+		//Print(Registry_.CanOpen(@"SOFTWARE\Microsoft"));
+		//Print(Registry_.CanOpen(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft"));
+		//Print(Registry_.CanOpen(@"SOFTWARE\GinDi", Registry.CurrentUser));
+		//Print(Registry_.CanOpen(@"GinDi", Registry.CurrentUser.OpenSubKey("SOFTWARE")));
+		//Print(Registry_.CanOpen(null, Registry.CurrentUser.OpenSubKey("SOFTWARE")));
 		//return;
 
 		Print("---- int ----");
 
-		ok = Registry_.SetInt(5, "ii", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		Registry_.SetInt(5, "ii", "Test");
 
-		int i;
-		ok = Registry_.GetInt(out i, "ii", "Test");
+		ok = Registry_.GetInt(out int i, "ii", "Test");
 		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		if(!ok) { Print("no"); return; }
 		Print(i);
 
 		Print("---- long ----");
 
-		ok = Registry_.SetLong(5, "LLL", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		Registry_.SetLong(5, "LLL", "Test");
 
-		long L;
-		ok = Registry_.GetLong(out L, "LLL", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		ok = Registry_.GetLong(out long L, "LLL", "Test");
+		if(!ok) { Print("no"); return; }
 		Print(L);
 
 		Print("---- string ----");
 
-		ok = Registry_.SetString("stttttttttttrrrrrr", "SSS", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		Registry_.SetString("stttttttttttrrrrrr", "SSS", "Test");
 
-		string s;
-		ok = Registry_.GetString(out s, "SSS", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		ok = Registry_.GetString(out string s, "SSS", "Test");
+		if(!ok) { Print("no"); return; }
 		Print(s);
 
 		Print("---- multi string ----");
 
-		ok = Registry_.SetStringArray(new string[] { "one", "two", "three" }, "AAA", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		Registry_.SetStringArray(new string[] { "one", "two", "three" }, "AAA", "Test");
 
-		string[] a;
-		ok = Registry_.GetStringArray(out a, "AAA", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
+		ok = Registry_.GetStringArray(out string[] a, "AAA", "Test");
+		if(!ok) { Print("no"); return; }
 		Print(a);
 
 		Print("---- binary ----");
 
 		var r = new RECT(1, 2, 3, 4, false);
 		int n = Marshal.SizeOf(r);
-		ok = Registry_.SetBinary(&r, n, "BB", "Test");
-		Print(ok);
-		if(!ok) { Print(ThreadError.ErrorText); return; }
-		//ok=Registry_.SetBinary(&r, n, "rect2", @"HKEY_CURRENT_USER\Test");
-		//Print(ok);
-		//if(!ok) { Print(ThreadError.ErrorText); return; }
-		//ok = Registry_.SetBinary(&r, n, "rect2", @"HKEY_LOCAL_MACHINE\Software\Test");
-		//Print(ok);
-		//if(!ok) { Print(ThreadError.ErrorText); return; }
+		Registry_.SetBinary(&r, n, "BB", "Test");
+		//Registry_.SetBinary(&r, n, "rect2", @"HKEY_CURRENT_USER\Test");
+		//Registry_.SetBinary(&r, n, "rect2", @"HKEY_LOCAL_MACHINE\Software\Test");
 
 		RECT r2;
 		n = Registry_.GetBinary(&r2, n, "BB", "Test");
 		Print(n);
-		if(n <= 0) { Print(ThreadError.ErrorText); return; }
+		if(n == 0) { Print("no"); return; }
 		Print(r2);
-	}
-
-	static void TestWndRegistrySaveRestore()
-	{
-		Wnd w = Wnd.FindH("*Notepad", "Notepad");
-		Print(w);
-		Print(w.RegistrySave("WndSR", "Test", true));
-		TaskDialog.Show("move etc Notepad");
-		w.Show(false);
-		Wnd.FindRaw("QM_Editor").Activate();
-		Wait(0.2);
-		Print(w.RegistryRestore("WndSR", "Test", true, true));
-		Wait(1);
-		w.Show(true);
 	}
 
 	static void TestWndTransparency()
 	{
-		Wnd w = Wnd.FindH("*Notepad", "Notepad");
-		//w = w.Child(15);
-		Print(w);
-		//Print(w.Transparency(true, null, 0));
-		//Print(w.Transparency(true, 0.3));
-		//Print(w.Transparency(true, 0.3, 0));
-		//Print(w.Transparency(true));
-		Print(w.Transparency(false));
+		Wnd w = Wnd.Find("FileZilla");
+		Wnd c = w.ChildById(-31781);
+		Print(c);
+		c.SetTransparency(true, 0.5);
+
+
+		//Wnd.Find("Dialog").SetTransparency(true, 0.5, 0xFF);
+
+		//Wnd w = Wnd.Find("*Notepad", "Notepad");
+		////w = w.Child(15);
+		//Print(w);
+		////w.SetTransparency(true, null, 0);
+		////w.SetTransparency(true, 0.3);
+		////w.SetTransparency(true, 0.3, 0);
+		////w.SetTransparency(true);
+		//w.SetTransparency(false);
 	}
 
 	[ComImport, Guid("ea1afb91-9e28-4b86-90e9-9e9f8a5eefaf"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -2054,11 +2020,11 @@ bbb"", b3
 		if(w.Is0) { //on Win8 cannot find window, probably must be uiAccess. Find in QM and copy-paste.
 			string s;
 			if(!TaskDialog.ShowInput(out s, "hwnd")) return;
-			w = (Wnd)s.ToInt32_();
+			w = (Wnd)(LPARAM)s.ToInt32_();
 		}
 		Print(w);
-		IntPtr hi16 = w.GetIconHandle();
-		IntPtr hi32 = w.GetIconHandle(true);
+		IntPtr hi16 = Wnd.Misc.GetIconHandle(w);
+		IntPtr hi32 = Wnd.Misc.GetIconHandle(w, true);
 		PrintList(hi16, hi32);
 		if(hi32 == Zero) return;
 		var d = new TaskDialog("big icon");
@@ -2068,7 +2034,7 @@ bbb"", b3
 		Api.DestroyIcon(hi16);
 		Api.DestroyIcon(hi32);
 
-		var a2 = new Action(() => { hi32 = w.GetIconHandle(true); Api.DestroyIcon(hi32); });
+		var a2 = new Action(() => { hi32 = Wnd.Misc.GetIconHandle(w, true); Api.DestroyIcon(hi32); });
 		Perf.ExecuteMulti(5, 10, a2);
 	}
 
@@ -2123,9 +2089,25 @@ bbb"", b3
 
 	static void TestCoord()
 	{
-		var w = Wnd.Find("*Notepad");
-		w.Activate();
-		w.Move(0.5f, 1f);
+		//var w = Wnd.Find("*Notepad");
+		//w.Activate();
+		////w.Move(0.5f, 1f);
+		////w.Resize(500, 200);
+		//w.Resize(0.5f, 1f, true);
+
+		//var w = Wnd.Find("Quick Macros *");
+		//w.Activate();
+		//w.Move(0.02f, 0.02f, 0.96f, 0.96f, true);
+		////Print(w.ChildFromXY(0.97f, 100));
+		////Print(w.ChildFromXY(0.3f, 1.05f, screenXY:true));
+		//var c = w.ChildById(2212);
+		//c.ZorderTop();
+		//c.Move(0.1f, 0.1f, 0.8f, 0.8f);
+
+		//var w = Wnd.Find(prop:new Wnd.WinProp() { x=100, y=0.5f});
+		//Print(w);
+
+		Print(Wnd.FromXY(0.5f, 0.99f, workArea: true));
 	}
 
 	//static IEnumerable<int> TestYield()
@@ -2214,7 +2196,7 @@ bbb"", b3
 	{
 		Wnd w;
 		Wnd w2 = Wnd.Find("Quick*");
-		//w = Wnd.Get.DesktopWindow;
+		//w = Wnd.Get.WndRoot;
 		//Print(w);
 		//w = Wnd.Get.Desktop;
 		//Print(w);
@@ -2222,9 +2204,9 @@ bbb"", b3
 		//Print(w);
 		Print(w2.IsTopmost);
 
-		Action a1 = new Action(() => { w = Wnd.Get.DesktopWindow; });
-		Action a2 = new Action(() => { w = Wnd.Get.Desktop; });
-		Action a3 = new Action(() => { w = Wnd.Get.DesktopListview; });
+		Action a1 = new Action(() => { w = Wnd.Misc.WndRoot; });
+		Action a2 = new Action(() => { w = Wnd.Misc.WndDesktop; });
+		Action a3 = new Action(() => { w = Wnd.Misc.WndDesktopControl; });
 		Action a4 = new Action(() => { bool fs = w2.IsFullScreen; });
 		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
 
@@ -2233,8 +2215,8 @@ bbb"", b3
 		//w = Wnd.Get.Desktop;
 		//w = Wnd.Get.DesktopListview;
 		//w = Wnd.Find("* Firefox");
-		//w = Wnd.Get.DesktopWindow;
-		////w = Wnd.Get.ShellWindow;
+		//w = Wnd.Get.WndRoot;
+		////w = Wnd.Get.WndShell;
 		//w = Wnd.Find("*- Google Chrome");
 		//Print(w);
 		////PrintList(w.IsOfShellThread, w.IsOfShellProcess);
@@ -2250,18 +2232,18 @@ bbb"", b3
 	}
 
 	#region TestWndRegisterClass
-	static Wnd.Misc.WndClass _wndRC, _wndRCSuper;
+	static Wnd.Misc.WindowClass _wndRC, _wndRCSuper;
 	static void TestWndRegisterClass()
 	{
-		_wndRC = Wnd.Misc.WndClass.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size/*, Api.CS_GLOBALCLASS*/);
-		Wnd w = Api.CreateWindowEx(0, _wndRC.Name, _wndRC.Name, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 100, 300, 200, Wnd0, 0, Zero, 0);
+		_wndRC = Wnd.Misc.WindowClass.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size/*, Api.CS_GLOBALCLASS*/);
+		Wnd w = Api.CreateWindowEx(0, _wndRC.Name, _wndRC.Name, Native.WS_OVERLAPPEDWINDOW | Native.WS_VISIBLE, 300, 100, 300, 200, Wnd0, 0, Zero, 0);
 		if(w.Is0) return;
 
-		_wndRCSuper = Wnd.Misc.WndClass.Superclass("Edit", "Edit_Super", Cat_Test_WndProcSuper, IntPtr.Size);
-		Wnd w2 = Api.CreateWindowEx(0, _wndRCSuper.Name, _wndRCSuper.Name, Api.WS_CHILD | Api.WS_VISIBLE, 0, 0, 200, 30, w, 3, Zero, 0);
+		_wndRCSuper = Wnd.Misc.WindowClass.Superclass("Edit", "Edit_Super", Cat_Test_WndProcSuper, IntPtr.Size);
+		Wnd w2 = Api.CreateWindowEx(0, _wndRCSuper.Name, _wndRCSuper.Name, Native.WS_CHILD | Native.WS_VISIBLE, 0, 0, 200, 30, w, 3, Zero, 0);
 		if(w2.Is0) return;
 
-		//Print(Wnd.WndClass.GetClassAtom("Cat_Test", Api.GetModuleHandle(null)));
+		//Print(Wnd.WindowClass.GetClassAtom("Cat_Test", Api.GetModuleHandle(null)));
 
 		//Api.SetTimer(w, 1, 1000, null);
 
@@ -2339,9 +2321,9 @@ bbb"", b3
 
 	static void TestWndGetPropList()
 	{
-		foreach(Wnd w in Wnd.AllWindows(true)) {
+		foreach(Wnd w in Wnd.Misc.AllWindows(true)) {
 			Print(w);
-			foreach(var k in w.GetPropList()) {
+			foreach(var k in w.PropList()) {
 				Print(k);
 			}
 			Print("---------");
@@ -2392,7 +2374,7 @@ bbb"", b3
 	{
 		Wnd w1 = Wnd.Find("", "QM_Editor");
 		Wnd w2 = Wnd.Find("", "CabinetWClass");
-		PrintList(w1.IsZorderedBefore(w2), w2.IsZorderedBefore(w1));
+		PrintList(w1.ZorderIsBefore(w2), w2.ZorderIsBefore(w1));
 	}
 
 	static void TestWndSetParent()
@@ -2401,7 +2383,7 @@ bbb"", b3
 
 		//Wnd w1 = Wnd.Find("", "QM_Editor");
 		//Wnd w2 = w1.Child("Running items");
-		//Wnd w3 = w2.DirectParentOrOwner;
+		//Wnd w3 = w2.WndDirectParentOrOwner;
 		//Print(w3);
 
 		//PrintList("SetParent", w2.SetParent(Wnd0));
@@ -2451,7 +2433,7 @@ bbb"", b3
 
 	static void TestWndStoreApp()
 	{
-		foreach(Wnd w in Wnd.AllWindows()) {
+		foreach(Wnd w in Wnd.Misc.AllWindows()) {
 			bool isWin8Metro = w.IsWin8MetroStyle;
 			int isWin10StoreApp = w.IsWin10StoreApp;
 			string prefix = null, suffix = null;
@@ -2473,7 +2455,7 @@ bbb"", b3
 				var c = (Control)t;
 				Print(c == null); //False
 			} else {
-				Wnd t = Api.CreateWindowEx(0, "Edit", "Edit", Api.WS_CHILD | Api.WS_VISIBLE, 0, 0, 200, 30, (Wnd)f, 3, Zero, 0);
+				Wnd t = Api.CreateWindowEx(0, "Edit", "Edit", Native.WS_CHILD | Native.WS_VISIBLE, 0, 0, 200, 30, (Wnd)f, 3, Zero, 0);
 				if(t.Is0) return;
 				var c = (Control)t;
 				Print(c == null); //True
@@ -2521,7 +2503,7 @@ bbb"", b3
 
 		//w.MoveToScreenCenter(2);
 		w.MoveInScreen(-100, -20, 2);
-		w.ActivateRaw();
+		w.ActivateLL();
 	}
 
 	static void _TestWndZorder(Wnd w, Wnd w2)
@@ -2535,9 +2517,9 @@ bbb"", b3
 		//Print(w.ZorderNotopmost(true));
 		////Print(w.ZorderBottom());
 
-		Print(w.ZorderAfter(w2));
-		w2.ActivateRaw(); WaitMS(500);
-		Print(w.ZorderBefore(w2));
+		Print(w.ZorderBelow(w2));
+		w2.ActivateLL(); Time.WaitMS(500);
+		Print(w.ZorderAbove(w2));
 
 	}
 
@@ -2570,7 +2552,7 @@ bbb"", b3
 		if(w.Is0) {
 			int i;
 			if(!TaskDialog.ShowInput(out i, "Handle")) return;
-			w = (Wnd)i;
+			w = (Wnd)(LPARAM)i;
 		}
 
 		Print(w);
@@ -2590,59 +2572,31 @@ bbb"", b3
 	static void TestTaskDialogActivationEtc()
 	{
 		Wait(3);
-		//Script.Option.TopmostIfNoOwner = true;
+		//Script.Option.TopmostIfNoOwnerWindow = true;
 		//Script.Option.dialogAlwaysActivate = true;
 		//Print(Wnd.AllowActivate());
-		//Print(Wnd.Find("*Notepad").ActivateRaw());
+		//Print(Wnd.Find("*Notepad").ActivateLL());
 		//Wait(1);
 		//Print(Wnd.ActiveWindow);
 		TaskDialog.Show("test");
 		//Wait(3);
 	}
 
-	static void TestWndNextMainWindow()
-	{
-		int f = TaskDialog.ShowList("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
-		if(f == 0) return;
-		Wnd w = Wnd.Get.FirstToplevel();
-		int n = 0;
-		while(!w.Is0) {
-			Print(w);
-			switch(f) {
-			case 1:
-				w = Wnd.Get.NextMainWindow(w);
-				break;
-			case 2:
-				w = Wnd.Get.NextMainWindow(w, allDesktops: true);
-				break;
-			case 3:
-				w = Wnd.Get.NextMainWindow(w, likeAltTab: true);
-				break;
-			case 4:
-				w = Wnd.Get.NextMainWindow(w, retryFromTop: true); if(++n > 20) return;
-				break;
-			case 5:
-				w = Wnd.Get.NextMainWindow(w, skipMinimized: true);
-				break;
-			}
-		}
-	}
-
-	static void TestWndFindRaw()
+	static void TestWndFindFast()
 	{
 		Wnd w = Wnd0;
 		for(;;) {
-			w = Wnd.FindRaw("QM_Toolbar", null, w);
+			w = Wnd.FindFast(null, "QM_Toolbar", w);
 			if(w.Is0) break;
 			Print(w);
 		}
-		Print(Wnd.FindRaw("QM_Editor").ChildRaw("QM_Scc"));
+		Print(Wnd.FindFast(null, "QM_Editor").ChildFast(null, "QM_Scc"));
 	}
 
 	static void TestWndGetGUIThreadInfo()
 	{
 		Wait(3);
-		Print(Wnd.FocusedControl);
+		Print(Wnd.WndFocused);
 		RECT r;
 		Print(Input.GetTextCursorRect(out r));
 		Print(r);
@@ -2846,7 +2800,7 @@ bbb"", b3
 		//u.Stop(); //test assert
 		T.Join();
 		Print("thread ended");
-		WaitMS(1000);
+		Time.WaitMS(1000);
 		//u = null;
 		GC.Collect();
 		TaskDialog.Show("main thread");
@@ -2859,7 +2813,7 @@ bbb"", b3
 
 	static Task<int> SomeOperationAsync2()
 	{
-		return Task.Run(() => { WaitMS(800); return 5; });
+		return Task.Run(() => { Time.WaitMS(800); return 5; });
 	}
 
 	static async Task<int> SomeOperationAsync()
@@ -3032,7 +2986,7 @@ bbb"", b3
 		//Print(SynchronizationContext.Current);
 		//SynchronizationContext.Current.Post(state => { PrintList("posted", SynchronizationContext.Current); }, null);
 		Time.SetTimer(1, true, t => { PrintList("posted", SynchronizationContext.Current); });
-		WaitMS(100);
+		Time.WaitMS(100);
 		//WindowsFormsSynchronizationContext.AutoInstall = false;
 		Print(1);
 		Application.DoEvents();
@@ -3172,7 +3126,7 @@ bbb"", b3
 
 		//Wnd x;
 		//if(InterDomain.GetVariable("nm", out x)) Print(x);
-		//else { Print("no"); InterDomain.SetVariable("nm", Wnd.FindRaw("QM_Editor")); }
+		//else { Print("no"); InterDomain.SetVariable("nm", Wnd.FindFast("QM_Editor")); }
 
 		//InterDomainData x;
 		//if(InterDomain.GetVariable("nm", out x)) Print(x._s);
@@ -3304,7 +3258,7 @@ bbb"", b3
 			perf.Next();
 			//perf.Write();
 
-			WaitMS(50);
+			Time.WaitMS(50);
 		}
 		perf.Write();
 		perf.Incremental = false;
@@ -3394,7 +3348,7 @@ bbb"", b3
 	{
 		Print("BEGIN");
 		//Print(Api.GetCurrentThreadId());
-		Task.Run(() => { for(;;) { WaitMS(100); GC.Collect(); } });
+		Task.Run(() => { for(;;) { Time.WaitMS(100); GC.Collect(); } });
 		Perf.Next();
 		//using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
 		_nTasks = 30;
@@ -3412,7 +3366,7 @@ bbb"", b3
 		{
 			PrintList("worker", Api.GetCurrentThreadId());
 			//WaitMS(_random.Next(1, 10));
-			WaitMS(_random.Next(10, 100));
+			Time.WaitMS(_random.Next(10, 100));
 			//WaitMS(2000);
 			//WaitMS(16000);
 			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
@@ -3429,7 +3383,7 @@ bbb"", b3
 		{
 			PrintList("worker", Api.GetCurrentThreadId());
 			//WaitMS(_random.Next(1, 10));
-			WaitMS(_random.Next(10, 100));
+			Time.WaitMS(_random.Next(10, 100));
 			//WaitMS(2000);
 			//WaitMS(16000);
 			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
@@ -3478,7 +3432,7 @@ bbb"", b3
 
 	static unsafe LPARAM _WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
-		//Catkeys.Util.Debug_.PrintMsg(w, msg, wParam, lParam);
+		//Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
 
 		var R = Api.DefWindowProc(w, msg, wParam, lParam);
 
@@ -3495,9 +3449,9 @@ bbb"", b3
 
 	static void TestWindowClassInterDomain()
 	{
-		var atom = Wnd.Misc.WndClass.InterDomainRegister("InterDomain", _WndProc);
+		var atom = Wnd.Misc.WindowClass.InterDomainRegister("InterDomain", _WndProc);
 		Print(atom);
-		Wnd w = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "InterDomain", "InterDomain", Api.WS_OVERLAPPEDWINDOW, 100, 100, 300, 100);
+		Wnd w = Wnd.Misc.WindowClass.InterDomainCreateWindow(0, "InterDomain", "InterDomain", Native.WS_OVERLAPPEDWINDOW, 100, 100, 300, 100);
 		Print(w);
 		w.Show(true);
 		Application.Run();
@@ -4422,190 +4376,6 @@ A,""B """"Q"""" Z"",C
 		catch(Exception e) { Print(e); }
 	}
 
-	static void TestTaskDialog2()
-	{
-
-		//TaskDialog.Show("text", icon: TDIcon.App);
-		//switch(TaskDialog.Show("text", TDButtons.OKCancel)) {
-		//case TDResult.OK: Print("ok"); break;
-		//default: Print("cancel"); break;
-		//}
-
-		//switch(TaskDialog.Show("Save changes?",	"info", customButtons:"1 Save|2 Don't Save|Cancel")) {
-		//case 1: Print("save"); break;
-		//case 2: Print("don't"); break;
-		//default: Print("cancel"); break;
-		//}
-
-		//TaskDialog.Show("test", null, TDButtons.OKCancel | TDButtons.YesNo | TDButtons.Retry | TDButtons.Close);
-		////TaskDialog.Show("test", customButtons:"1 Gerai|2 Kartoti");
-
-		//switch(TaskDialog.Show("test", null, TDButtons.OKCancel)) {
-		//case TDResult.OK: break;
-		//}
-
-		//switch(TaskDialog.Show("test", null, "1 OK|2 Cancel")) {
-		//case 1: break;
-		//}
-
-		//DebugDialog("aaa");
-
-		//switch(TaskDialog.Show("Header|Comment", "1 OK|2 Cancel")) {
-		//switch(TaskDialog.Show("Header|Comment", "1 O|2 C|3 X")) {
-		////switch(TaskDialog.Show("Header|Comment", "-1 OK|-2 Cancel")) {
-		//case 1: Print(1); break;
-		//case 2: Print(2); break;
-		//}
-		//TDButtons.
-
-		//if(!TaskDialog.Debug("text", TDButtons.OKCancel)) return;
-		//Print("OK");
-
-		//TaskDialog.ShowInputEx("Big text.", "Small text bbbbhhhh gggg ccc.");
-		//TaskDialog.ShowInputEx("Big text.");
-		//TaskDialog.ShowInputEx("Big text.", editType:TDEdit.Multiline);
-		//TaskDialog.ShowInputEx("Big text.", "Small jjj.", editType:TDEdit.Multiline);
-
-		//string s;
-		//if(!TaskDialog.ShowInput(out s, "Example")) return;
-		//Print(s);
-
-		//int i;
-		//if(!TaskDialog.ShowInput(out i, "Example.")) return;
-		//Print(i);
-
-		//var r = TaskDialog.ShowInputEx("Header.", "Comments.", checkBox: "Check");
-		//if(r.Button != TDResult.OK) return;
-		//PrintList(r.EditText, r.IsChecked);
-
-
-		//var d = new OpenFileDialog();
-		//if(d.ShowDialog() != DialogResult.OK) return;
-		//Print(d.FileName);
-
-		//var d = new FolderBrowserDialog();
-		//if(d.ShowDialog() != DialogResult.OK) return;
-		//Print(d.SelectedPath);
-
-		//var d = new TaskDialog();
-		//d.ShowDialog();
-
-		//var ad = AppDomain.CreateDomain("test");
-		//ad.ExecuteAssembly(@"Q:\app\Catkeys\Test Projects\Test\Test.exe");
-
-		//TaskDialog.Options.DefaultTitle = "DEFAULT";
-		//TaskDialog.Options.RtlLayout = true;
-		//TaskDialog.Options.ScreenIfNoOwner = 2;
-		//TaskDialog.Options.TopmostIfNoOwner = true;
-		//TaskDialog.Options.UseAppIcon = true;
-		//TaskDialog.Show("text");
-
-		//TaskDialog.Show("", "TODO: start to drag panel only when mouse moved outside its caption. Move tab button without undocking.", 0, TDIcon.Info, TDFlags.Wider);
-		//TaskDialog.Show("", "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW123456789 EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
-
-		//TaskDialog.ShowNoWaitEx(null, "Text.", backgroundThread:true);
-		//TaskDialog.ShowNoWaitEx(null, "Text.");
-
-		//TaskDialog.Show("one");
-		//Print(TaskDialog.Show("Text1", "Text2", TDButtons.OKCancel, TDIcon.Info, TDFlags.CommandLinks|TDFlags.OwnerCenter, TDResult.Cancel, "1 one|2 two", Wnd.FindRaw("Notepad")));
-		//Print(TaskDialog.ShowEx("Text1", "Text2", TDButtons.OKCancel, TDIcon.Info, TDFlags.CommandLinks, 0,
-		//	"1 one|2 two", "11 rone|12 rtwo", "check|checked", "expanded", "x|footer", "TITLE", null, 100, -10, 10));
-		//TaskDialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: ed => { Print(ed.LinkHref); });
-
-		//string s; int i;
-
-		//var d = new TaskDialog("", "Aby", TDButtons.OKCancel, TDIcon.Info, flags: TDFlags.CommandLinks, radioButtons: "One", customButtons: "One", expandedText: "Exp");
-		//d.SetExpandedText()
-		//d.FlagShowProgressBar = true;
-		//d.ShowDialog();
-
-		//if(Util.Debug_.IsScrollLock) Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Combo, expandedText: "one\ntwo"));
-		//else Print(TaskDialog.ShowInputEx("test", "Aby"));
-
-		//TaskDialog.Options.RtlLayout = true;
-		//Print(TaskDialog.ShowInputEx("test", "Aby"));
-		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, TDFlags.Wider));
-		//Print(TaskDialog.ShowInputEx("test", "Aby", style:TDFlags.CommandLinks, customButtons:"One\r\ntwo"));
-		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Combo, expandedText:"one\ntwo", radioButtons:"10One|11Two"));
-		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, expandedText: "one\ntwo"));
-		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, radioButtons:"10One|11Two"));
-		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, customButtons:"One\r\ntwo", style:TDFlags.CommandLinks, expandedText:"one\ntwo"));
-		//TaskDialog.ShowInputEx("test", "Aby", TDEdit.Combo, expandedText:"exp", footerText:"foo", onButtonClick: e =>
-		// {
-		//	 if(e.Button == TDResult.OK) {
-		//		 e.DoNotCloseDialog = true;
-		//		 //e.dialog.Send.ChangeText1("Header", true);
-		//		  e.dialog.Send.ChangeText2("new\ntext\netc\netc", true);
-		//		 //e.dialog.Send.ChangeExpandedText("AAA\nBBB", true);
-		//		 //e.dialog.Send.ChangeFooterText("new\ntext", true);
-
-		//		 //e.dialog.SetText("Header", "text");
-		//		 //e.dialog.SetEditControl(TDEdit.None);
-		//		 //e.dialog.SetEditControl(TDEdit.Text);
-		//		 //e.dialog.Send.Reconstruct();
-		//	 }
-		// });
-		//Print(s);
-		//Print(TaskDialog.ShowInputEx("test", "one\nzero\none\ntwo", TDEdit.Combo, checkBox:"check", expandedText:"expanded", footerText:"footer",
-		//	x:-1,y:-100, timeoutS: 15, customButtons:"1one|2two"));
-		//Print(TaskDialog.ShowInputEx("test", customButtons:"1one|2two", onButtonClick: e => { if(e.Button == 1) { e.DoNotCloseDialog = true; Print(e.EditText); e.EditText="nnnnnnnnnnnnnnn"; } }));
-
-		//Print(TaskDialog.ShowList("1one|2two|3three|Cancel", "Infooooo"));
-		//Print(TaskDialog.ShowListEx("1one|2two|3three|Cancel", "Infooooo", checkBox:"Check", x:-10, timeoutS:10));
-
-
-		//Print(Api.GetCurrentThreadId());
-		////TaskDialog.ShowNoWait(e => { Print(Api.GetCurrentThreadId()); }, "Tesxt");
-
-		//var f = new Form();
-		//var c = new Button(); c.Text = "test";
-		//f.Controls.Add(c);
-		//f.Click += (unu, sed) =>
-		//  {
-		//	  //TaskDialog.Show("one", ownerWindow:f);
-		//	  TaskDialog.ShowNoWait(e => { Print(Api.GetCurrentThreadId()); }, true, "Tesxt", ownerWindow: c);
-		//	  //TaskDialog.ShowNoWait(e => { Print(Api.GetCurrentThreadId()); }, false, "Tesxt", ownerWindow: f);
-		//	  //TaskDialog.ShowNoWait(null, true, "Tesxt", ownerWindow: f);
-		//	  //TaskDialog.ShowNoWait(null, true, "Tesxt");
-
-		//	  //var t = new Thread(() =>
-		//	  //{
-		//	  //  var ff = new Form();
-		//	  //	ff.ShowDialog(f);
-		//	  //});
-		//	  //t.SetApartmentState(ApartmentState.STA);
-		//	  //t.Start();
-		//  };
-		//f.ShowDialog();
-
-
-
-		//try {
-		////Print(TaskDialog.Show("Text1", "Text2", TDButtons.OKCancel, TDIcon.Info, TDFlags.CommandLinks));
-
-		//}catch(Exception e) { Print(e); }
-
-		//TaskDialog.Show("one");
-
-		//int i;
-		//if(!TaskDialog.ShowInput(out i, "Text1", 5, TDEdit.Text)) return;
-		//Print(i);
-
-		//string s;
-		//if(!TaskDialog.ShowInput(out s, "Text2")) return;
-		//PrintList(s, s!=null);
-
-		//string s;
-		//if(!TaskDialog.ShowInput(out s, "Text2", editType: TDEdit.Multiline)) return;
-		////TODO: need resizable
-		//PrintList(s, s != null);
-
-		//Print(Application.StartupPath);
-		//Print(Application.UserAppDataPath);
-
-	}
-
-
 
 	//[DllImport("kernel32.dll")]
 	//public static unsafe extern int CompareStringOrdinal(char* lpString1, int cchCount1, char* lpString2, int cchCount2, bool bIgnoreCase);
@@ -4639,7 +4409,6 @@ A,""B """"Q"""" Z"",C
 
 	static void TestWildcard()
 	{
-		bool b1 = false, b2 = false, b3 = false, b4 = false, b5 = false, b6 = false;
 		string s = null, p = null;
 		//s = "Microsoft Help Ąč Viewer 2.2 - Visual Studio Documentation Ąč";
 		//s = "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD Documentation Ąč";
@@ -4671,15 +4440,16 @@ A,""B """"Q"""" Z"",C
 		//Print(s.Like_(p, ignoreCase)); return;
 
 #if !DEBUG
-		var a1 = new Action(() => { b1 = s.LikeEx_(p, ignoreCase); });
+		bool b1 = false, b2 = false, b3 = false, b4 = false, b5 = false, b6 = false;
+		//var a1 = new Action(() => { b1 = s.LikeEx_(p, ignoreCase); });
 		var a2 = new Action(() => { b2 = s.Like_(p, ignoreCase); });
 		//var a6 = new Action(() => { b6 = s.Like2_(p, ignoreCase); });
 		var p2 = p.Replace("*", "");
 		var a3 = new Action(() => { b3 = s.Equals_(p2, ignoreCase); });
 		var a4 = new Action(() => { b4 = s.StartsWith_(p2, ignoreCase); });
 		var a5 = new Action(() => { b5 = s.IndexOf_(p2, ignoreCase) >= 0; });
-		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5);
-		PrintList(b1, b2, b3, b4, b5);
+		Perf.ExecuteMulti(5, 1000, a2, a3, a4, a5);
+		PrintList(b2, b3, b4, b5);
 #else
 		//_LikeAssert("A*?", "AB", false);
 
@@ -4856,12 +4626,12 @@ A,""B """"Q"""" Z"",C
 	{
 
 		//Wnd w = Wnd.Find("[E]Notepad", "NotepaD", "notepaD");
-		//Wnd w = Wnd.Find("[E]Notepad", "NotepaD", Folders.SystemX86+"notepaD.exe", Wnd.WinFlag.ProgramPath);
+		//Wnd w = Wnd.Find("[E]Notepad", "NotepaD", Folders.SystemX86+"notepaD.exe", WFFlags.ProgramPath);
 		//Print(w);
 		//Wnd w = Wnd.Find("qm message", prop: new Wnd.WinProp() { childName = "one" });
-		//Wnd w = Wnd.Find("qm message", f: e => e.Child("two") != Wnd0);
-		//Wnd w = Wnd.Find("qm message", f: e => e.HasChild("two"));
-		//Wnd w = Wnd.AllWindows
+		//Wnd w = Wnd.Find("qm message", also: e => e.Child("two") != Wnd0);
+		//Wnd w = Wnd.Find("qm message", also: e => e.HasChild("two"));
+		//Wnd w = Wnd.Misc.AllWindows
 
 		var s = "Help - Sandcastle Help File Builder";
 		//Wildex x = "**c|*sandcastle*";
@@ -4874,8 +4644,9 @@ A,""B """"Q"""" Z"",C
 		var w = Wnd.Find(@"**r|\bsandcastle\b.+$", null, "SAND*");
 		Print(w);
 		if(w.Is0) return;
-		var c = w.ChildByClass("*COMBO*");
-		Print(c);
+		Wnd c;
+		//c = w.ChildByClass("*COMBO*");
+		//Print(c);
 		c = w.ChildById(67022);
 		Print(c);
 		c = w.Child("*chm*", "*static*");
@@ -4883,11 +4654,11 @@ A,""B """"Q"""" Z"",C
 		Print(c);
 
 		//w = Wnd.Find(prop: new Wnd.WinProp() { childName = "Open *" });
-		w = Wnd.Find(prop: new Wnd.WinProp() { childClass = "QM_Code" });
+		//w = Wnd.Find(prop: new Wnd.WinProp() { childClass = "QM_Code" });
 		Print(w);
 		Print("----");
 		//Print(Wnd.ThreadWindows(w.ThreadId, "**m|**n|tooltips_class32[]**nc|*IME*"));
-		Print(Wnd.ThreadWindows(w.ThreadId, "**mn|tooltips_class32[]**c|*IME*"));
+		//Print(Wnd.ThreadWindows(w.ThreadId, "**mn|tooltips_class32[]**c|*IME*"));
 
 		//Print(Process_.GetProcessesByName("explorer"));
 		//Print(Process_.GetProcessesByName(new Wildex("[m]notepad[]explorer[]qm")));
@@ -4904,22 +4675,1806 @@ A,""B """"Q"""" Z"",C
 		Print("fin");
 	}
 
-	static void TestMain()
+	static void Nooook()
 	{
-		Output.Clear();
-		WaitMS(100);
-		try {
-			TestTaskDialog2();
+		if(true) {
+			Print(1);
+		}
+	}
 
+#if tuples
+	//static (int, int) TestReturnTuple()
+	static (int a, int b) TestReturnTuple()
+	{
+		//var r = (3, 4);
+		//var r = (c: 3, d: 4);
+		(int a, int b) r = (3, 4);
+		r = (5, 6);
+		return r;
+		return (1, 2);
+	}
+#endif
+
+	static void TestCSharpSeven()
+	{
+
+
+#if pattern_matching
+		object o = "text";
+		if(o is string s) Print(s);
+
+		switch(o) {
+		case string k:
+			Print(k);
+			break;
+		}
+#endif
+
+#if nested_functions
+		int i = 5;
+		Print(NestedFunc(5));
+
+		int NestedFunc(int c) { return c * c + i; }
+#endif
+
+#if tuples
+		//var t = TestReturnTuple();
+		////PrintList(t.Item1, t.Item2);
+		//PrintList(t.a, t.b);
+
+		var (a, b) = TestReturnTuple();
+		PrintList(a, b);
+
+		//var v = Catkeys.Util.AppDomain_.GetDefaultDomain();
+#endif
+
+#if binary_literals_and_digit_separators
+		int i = 0b10_1;
+		Print(i);
+#endif
+
+	}
+
+	static void TestTaskDialog2()
+	{
+		//if(TaskDialog.Show("Text", null, TDButtons.OKCancel, TDIcon.Info) != TDResult.OK) return;
+		Print("ok");
+
+		//Wnd w = Wnd.Find("");
+		//int i = 123;
+		//Print(i);
+		//Regex rx;
+
+		//switch(TaskDialog.Show("Save changes?", "More info.", customButtons: "1 Save|2 Don't Save|Cancel")) {
+		//case 1: Print("save"); break;
+		//case 2: Print("don't"); break;
+		//default: Print("cancel"); break;
+		//}
+
+
+		//switch(BaskDialog.Show("Save changes?|More info.", "1 Save|2 Don't Save|3 Cancel")) {
+		//switch(BaskDialog.Show("Save changes?|More info.", "Yes|No|Cancel")) {
+		////switch(BaskDialog.Show("Save changes?|More info.", BaskDialog.YesNoCancel)) {
+		//case 1: Print("save"); break;
+		//case 2: Print("don't"); break;
+		//default: Print("cancel"); break;
+		//}
+		//switch(BaskDialog.Show("Save changes?", "info", 0, "1 Save|2 Don't Save|Cancel")) {
+		//case 1: Print("save"); break;
+		//case 2: Print("don't"); break;
+		//default: Print("cancel"); break;
+		//}
+
+		//TaskDialog.Show("text", icon: TDIcon.App);
+
+		//switch(TaskDialog.Show("Save changes?",	"info", customButtons:"1 Save|2 Don't Save|Cancel")) {
+		//case 1: Print("save"); break;
+		//case 2: Print("don't"); break;
+		//default: Print("cancel"); break;
+		//}
+
+		//TaskDialog.Show("test", null, TDButtons.OKCancel | TDButtons.YesNo | TDButtons.Retry | TDButtons.Close);
+		////TaskDialog.Show("test", customButtons:"1 Gerai|2 Kartoti");
+
+		//switch(TaskDialog.Show("test", null, TDButtons.OKCancel)) {
+		//case TDResult.OK: break;
+		//}
+
+		//switch(TaskDialog.Show("test", null, "1 OK|2 Cancel")) {
+		//case 1: break;
+		//}
+
+		//DebugDialog("aaa");
+
+		//switch(TaskDialog.Show("Header|Comment", "1 OK|2 Cancel")) {
+		//switch(TaskDialog.Show("Header|Comment", "1 O|2 C|3 X")) {
+		////switch(TaskDialog.Show("Header|Comment", "-1 OK|-2 Cancel")) {
+		//case 1: Print(1); break;
+		//case 2: Print(2); break;
+		//}
+		//TDButtons.
+
+		//if(!TaskDialog.Debug("text", TDButtons.OKCancel)) return;
+		//Print("OK");
+
+		//TaskDialog.ShowInputEx("Big text.", "Small text bbbbhhhh gggg ccc.");
+		//TaskDialog.ShowInputEx("Big text.");
+		//TaskDialog.ShowInputEx("Big text.", editType:TDEdit.Multiline);
+		//TaskDialog.ShowInputEx("Big text.", "Small jjj.", editType:TDEdit.Multiline);
+
+		//string s;
+		//if(!TaskDialog.ShowInput(out s, "Example")) return;
+		//Print(s);
+
+		//int i;
+		//if(!TaskDialog.ShowInput(out i, "Example.")) return;
+		//Print(i);
+
+		//var r = TaskDialog.ShowInputEx("Header.", "Comments.", checkBox: "Check");
+		//if(r.Button != TDResult.OK) return;
+		//PrintList(r.EditText, r.IsChecked);
+
+
+		//var d = new OpenFileDialog();
+		//if(d.ShowDialog() != DialogResult.OK) return;
+		//Print(d.FileName);
+
+		//var d = new FolderBrowserDialog();
+		//if(d.ShowDialog() != DialogResult.OK) return;
+		//Print(d.SelectedPath);
+
+		//var d = new TaskDialog();
+		//d.ShowDialog();
+
+		//var ad = AppDomain.CreateDomain("test");
+		//ad.ExecuteAssembly(@"Q:\app\Catkeys\Test Projects\Test\Test.exe");
+
+		//TaskDialog.Options.DefaultTitle = "DEFAULT";
+		//TaskDialog.Options.RtlLayout = true;
+		//TaskDialog.Options.ScreenIfNoOwner = 2;
+		//TaskDialog.Options.TopmostIfNoOwnerWindow = true;
+		//TaskDialog.Options.UseAppIcon = true;
+		//TaskDialog.Show("text");
+
+		//TaskDialog.Show("", "TODO: start to drag panel only when mouse moved outside its caption. Move tab button without undocking.", 0, TDIcon.Info, TDFlags.Wider);
+		//TaskDialog.Show("", "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW123456789 EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
+
+		//TaskDialog.ShowNoWaitEx(null, "Text.", backgroundThread:true);
+		//TaskDialog.ShowNoWaitEx(null, "Text.");
+
+		//TaskDialog.Show("one");
+		//Print(TaskDialog.Show("Text1", "Text2", TDButtons.OKCancel, TDIcon.Info, TDFlags.CommandLinks|TDFlags.OwnerCenter, TDResult.Cancel, "1 one|2 two", Wnd.FindFast("Notepad")));
+		//Print(TaskDialog.ShowEx("Text1", "Text2", TDButtons.OKCancel, TDIcon.Info, TDFlags.CommandLinks, 0,
+		//	"1 one|2 two", "11 rone|12 rtwo", "check|checked", "expanded", "x|footer", "TITLE", null, 100, -10, 10));
+		//TaskDialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: ed => { Print(ed.LinkHref); });
+
+		//string s; int i;
+
+		//var d = new TaskDialog("", "Aby", TDButtons.OKCancel, TDIcon.Info, flags: TDFlags.CommandLinks, radioButtons: "One", customButtons: "One", expandedText: "Exp");
+		//d.SetExpandedText()
+		//d.FlagShowProgressBar = true;
+		//d.ShowDialog();
+
+		//if(Util.LibDebug_.IsScrollLock) Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Combo, expandedText: "one\ntwo"));
+		//else Print(TaskDialog.ShowInputEx("test", "Aby"));
+
+		//TaskDialog.Options.RtlLayout = true;
+		//Print(TaskDialog.ShowInputEx("test", "Aby"));
+		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, TDFlags.Wider));
+		//Print(TaskDialog.ShowInputEx("test", "Aby", style:TDFlags.CommandLinks, customButtons:"One\r\ntwo"));
+		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Combo, expandedText:"one\ntwo", radioButtons:"10One|11Two"));
+		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, expandedText: "one\ntwo"));
+		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, radioButtons:"10One|11Two"));
+		//Print(TaskDialog.ShowInputEx("test", "Aby", TDEdit.Multiline, customButtons:"One\r\ntwo", style:TDFlags.CommandLinks, expandedText:"one\ntwo"));
+		//TaskDialog.ShowInputEx("test", "Aby", TDEdit.Combo, expandedText:"exp", footerText:"foo", onButtonClick: e =>
+		// {
+		//	 if(e.Button == TDResult.OK) {
+		//		 e.DoNotCloseDialog = true;
+		//		 //e.dialog.Send.ChangeText1("Header", true);
+		//		  e.dialog.Send.ChangeText2("new\ntext\netc\netc", true);
+		//		 //e.dialog.Send.ChangeExpandedText("AAA\nBBB", true);
+		//		 //e.dialog.Send.ChangeFooterText("new\ntext", true);
+
+		//		 //e.dialog.SetText("Header", "text");
+		//		 //e.dialog.SetEditControl(TDEdit.None);
+		//		 //e.dialog.SetEditControl(TDEdit.Text);
+		//		 //e.dialog.Send.Reconstruct();
+		//	 }
+		// });
+		//Print(s);
+		//Print(TaskDialog.ShowInputEx("test", "one\nzero\none\ntwo", TDEdit.Combo, checkBox:"check", expandedText:"expanded", footerText:"footer",
+		//	x:-1,y:-100, timeoutS: 15, customButtons:"1one|2two"));
+		//Print(TaskDialog.ShowInputEx("test", customButtons:"1one|2two", onButtonClick: e => { if(e.Button == 1) { e.DoNotCloseDialog = true; Print(e.EditText); e.EditText="nnnnnnnnnnnnnnn"; } }));
+
+		//Print(TaskDialog.ShowList("1one|2two|3three|Cancel", "Infooooo"));
+		//Print(TaskDialog.ShowListEx("1one|2two|3three|Cancel", "Infooooo", checkBox:"Check", x:-10, timeoutS:10));
+
+
+		//Print(Api.GetCurrentThreadId());
+		////TaskDialog.ShowNoWait(e => { Print(Api.GetCurrentThreadId()); }, "Tesxt");
+
+		//var f = new Form();
+		//var c = new Button(); c.Text = "test";
+		//f.Controls.Add(c);
+		//f.Click += (unu, sed) =>
+		//  {
+		//	  //TaskDialog.Show("one", ownerWindow:f);
+		//	  TaskDialog.ShowNoWait(e => { Print(Api.GetCurrentThreadId()); }, true, "Tesxt", ownerWindow: c);
+		//	  //TaskDialog.ShowNoWait(e => { Print(Api.GetCurrentThreadId()); }, false, "Tesxt", ownerWindow: f);
+		//	  //TaskDialog.ShowNoWait(null, true, "Tesxt", ownerWindow: f);
+		//	  //TaskDialog.ShowNoWait(null, true, "Tesxt");
+
+		//	  //var t = new Thread(() =>
+		//	  //{
+		//	  //  var ff = new Form();
+		//	  //	ff.ShowDialog(f);
+		//	  //});
+		//	  //t.SetApartmentState(ApartmentState.STA);
+		//	  //t.Start();
+		//  };
+		//f.ShowDialog();
+
+
+
+		//try {
+		////Print(TaskDialog.Show("Text1", "Text2", TDButtons.OKCancel, TDIcon.Info, TDFlags.CommandLinks));
+
+		//}catch(Exception e) { Print(e); }
+
+		//TaskDialog.Show("one");
+
+		//int i;
+		//if(!TaskDialog.ShowInput(out i, "Text1", 5, TDEdit.Text)) return;
+		//Print(i);
+
+		//string s;
+		//if(!TaskDialog.ShowInput(out s, "Text2")) return;
+		//PrintList(s, s!=null);
+
+		//string s;
+		//if(!TaskDialog.ShowInput(out s, "Text2", editType: TDEdit.Multiline)) return;
+		////TODO: need resizable
+		//PrintList(s, s != null);
+
+		//Print(Application.StartupPath);
+		//Print(Application.UserAppDataPath);
+
+	}
+
+
+#if true
+
+#endif
+
+	[DllImport("user32.dll")]
+	public static extern int MessageBoxW(Wnd hWnd, string lpText, string lpCaption, uint uType);
+
+	static void TestTaskDialog3()
+	{
+
+
+		//var d = new TaskDialog("dddd");
+		////d.SetIcon(TDIcon.Info);
+		////var ic =Icons.GetFileIconHandle(@"q:\app\macro.ico", 16);
+		//var ic = Icon.ExtractAssociatedIcon(@"q:\app\macro.ico");
+		//Print(ic);
+		//d.SetIcon(ic);
+		//d.ShowDialog();
+		////Icons.DestroyIconHandle(ic);
+
+
+		//TaskDialog.Show("Owned", owner:Wnd.Find(null, "Notepad"));
+
+		//var f = new Form();
+		//f.Click += (unu, sed) => TaskDialog.Show("Owned", owner: f);
+		//f.ShowDialog();
+
+		//Time.SetTimer(2000, true, t => MessageBox.Show("kkkk"));
+		//TaskDialog.Options.AutoOwnerWindow = true;
+		//Time.SetTimer(2000, true, t => TaskDialog.Show("kkkk"));
+		//var f = new Form();
+		//f.ShowDialog();
+
+		//TaskDialog d = new TaskDialog("aa", "bb", "1 One|4 Four");
+
+		//d.Created += e => { e.dialog.Send.EnableButton(4, false); };
+
+		//d.ShowDialog();
+
+		//Print("fin");
+		//TaskDialog.Show("Simple");
+
+		//Time.SetTimer(50, false, t => GC.Collect());
+
+		//Print(TaskDialog.Show("Simple"));
+		//Print(TaskDialog.Show("Simple", "", "Yes|No"));
+		//Print(TaskDialog.Show("Simple", "", "-1 One|-2 Two"));
+		//TaskDialog.Options.UseAppIcon = true;
+		//Print(TaskDialog.Show("Simple", "", "A123456789123456789|BBBBBBBBBBB|CCCCCCCCCCCCC|DDDDDDDDDDDD|EEEEEEEEEEEEE|FFFFFFFFFFFFFFF"));
+
+		//Print(TaskDialog.ShowList("One|Two|Three|100 Four\r\naa\rbb\ncc"));
+		//Print(TaskDialog.ShowList(5));
+		//Print(TaskDialog.ShowList("One|Two|Three|100 Four", "Simple"));
+		//var a = new string[100]; for(int i = 0; i < a.Length; i++) a[i] = (i+1).ToString();
+		//Print(TaskDialog.ShowList(a, "Simple"));
+
+		//Print(TaskDialog.ShowOKCancel("Text1"));
+		//Print(TaskDialog.ShowOKCancel("Text1", "Text2.", TDIcon.Info, TDFlags.Wider));
+		//Print(TaskDialog.ShowYesNo("Text1", "Text2.", TDIcon.Info, TDFlags.Wider));
+		//TaskDialog.ShowInfo("Text1", "Text2.", TDFlags.Wider);
+		//TaskDialog.ShowWarning("Text1", "Text2.", TDFlags.Wider);
+		//TaskDialog.ShowError("Text1", "Text2.", TDFlags.Wider);
+
+		//Print(TaskDialog.ShowInputEx("Text1", "Text2."));
+		//Print(TaskDialog.ShowInput(out string s, "Simple", "aaaa", TDEdit.Combo, new string[] { "text", "A", "B", "C" }));
+		//Print(s);
+
+
+#if false
+mes "downloaded"
+mes "Display settings will be changed after you restart computer." "Display Settings" "i"
+mes F"Func1 result={r}" "QM function" "i"
+mes var
+mes F"Failed to install {localfile}." title "x"
+mes F"{localfile} successfully downloaded{ai}." title "i"
+mes F"Failed to download {localfile}." title "x"
+mes- "failed to create file"
+err+ mes _error.description "Error" "x"
+mes _error.description "Error" "x"
+mes "Too many controls for this page" "Error" "x"
+mes "QM cannot create controls of this class." "Error" "x"
+mes "Failed to set styles." "Dialog Editor" "!"
+mes "This control class is not supported." "" "!"
+mes "Macro changed." "" "x"
+mes "Need a window." "" "i"
+mes "Failed to register hotkey Shift+F11."
+mes "failed to update the grid, please retry"
+mes _s "" "i" (_s is looong info text")
+mes F"{sWarn}[][]You see this warning because 'Use acc' is checked in Options of this dialog." "" "!"
+mes "Need a window." "" "i"
+mes "Window not selected."
+mes "Text empty."
+mes _error.description
+mes "Not found."
+mes F"This 'background' option will not be applied for this window on this computer.{k}" "" "i"
+mes "Failed"
+mes "Failed"
+mes "This dialog creates basic code to call function ListDialog. The function also allows you to set dialog position, size, owner window and item images. Read ListBox help and edit the inserted code." "" "i"
+mes F"Error: {_error.description}"
+mes "To add or remove a dialog (or an action from a dialog) to the Favorites toolbar, at first open the dialog and select the action." "" "i"
+mes "Already exists. Use different name."
+mes F"Failed. {_error.description}" "" "!"
+mes F"Failed. {_error.description}" "" "!"
+mes F"Failed. {_error.description}" "" "!"
+mes "The icon already exists in the imagelist." "" "!"
+mes "Failed.[][]The bitmap must contain 1 or more images horizontally, each of equal width and height. Image size must be 8-256, divisible by 8. Colors must be 4, 8, 24 or 32 bit." "" "!"
+mes F"Failed. {_error.description}" "" "!"
+mes F"Failed. {_error.description}" "" "!"
+mes F"Failed. {_error.description}" "" "!"
+mes "Please select 1 image." "" "!"
+mes _error.description
+mes _error.description "Error" "x"
+mes _error.description "Error" "x"
+mes "QM must run as administrator." "" "x"
+mes "Failed" "" "x"
+mes "QM must run as administrator." "" "!"
+mes "Failed" "" "!"
+mes sErr
+mes "The event procedure must have sel wParam."
+mes s "" "i"
+mes "Portable QM warning: This will make changes in registry or file system." "" "!"
+mes "Invalid class name."
+mes F"A QM item '{_s}' already exists."
+mes "Invalid base class name."
+mes F"Invalid function name {vn}"
+sub_sys.MsgBox t_hDlg _error.description "Regular expression error" "i"
+sub_sys.MsgBox hEdit _error.description "" "i"
+sub_sys.MsgBox hDlg F"Action '{s}' will be selected whenever you open this dialog." "" "i"
+sub_sys.MsgBox hDlg F"{statement}[][]{st}" "Object not found" "!"
+sub_sys.MsgBox hDlg statement "Element not found" "!"
+sub_sys.MsgBox _hwndqm "Failed to save."
+sub_sys.MsgBox hDlg iif(s.len s "Not found.") "" "i"
+sub_sys.MsgBox hDlg statement "Not found" "!"
+sub_sys.MsgBox hDlg "This macro is read-only." "" "!"
+MsgBoxAsync "Used variables or incorrect expressions." "Cannot test" "x"
+
+
+OKCancel
+if(mes(F"Component not found. Download now?[][]Description: {description}[]Required file: {localfile}[]Download from: {url}[]File size: {filesizeKB} KB." title "OC?")!='O') ret
+if(mes("Save the dialog in current macro?" "Dialog Editor" "OC?")!='O')
+sel mes(F"{_error.description}[][]Failed to update dialog in current macro. Possibly it is read-only. Create new macro for it?" "Error" "OCx")
+if(mes("This will search for controls reference.[]In the list of results:[]click 'Control Library (Windows)',[]click a control link,[]scroll to Styles." "" "OCi")!='O')
+if(mes("This will search for controls reference.[]In the list of results:[]click 'Control Library (Windows)',[]click a control link,[]scroll to Notifications." "" "OCi")!='O')
+if('O'=mes("Select an icon in the Icons dialog. OK will open the dialog.[][]Other ways to add icons:[]Drag and drop files.[]Copy/paste files.[]Copy/paste list of file paths.[][]Icons are added to the end, except when pasting. Use Cut/Paste to reorder." "" "OCi"))
+if('O'!=mes("Are you sure?" "" "!OC"))
+if('O'!=mes("Are you sure?" "" "!OC"))
+if(mes("Open the topic, then click OK." "" "OCn")!='O')
+if(mes("Save the menu in current macro?" "Menu Editor" "OC?")!='O')
+sel mes(F"{_error.description}[][]Failed to update menu in current macro. Possibly it is read-only. Create new macro for it?" "Error" "OCx")
+if(mes("Save the menu in current macro?" "Menu Editor" "OC?")!='O')
+mes(F"{_error.description}[][]Failed to update menu in current macro. Possibly it is read-only. Create new macro for it?" "Error" "OCx")
+if('O'!mes(F"Restores default key actions for {s}." "" "OCi"))
+
+YesNo
+if(mes("You can find more functions in the forum. You can request to create a function for you.[][]Go to the forum?" "" "YNi")='Y')
+if(sub_sys.MsgBox(hDlg "Are you sure?[][]Note: These email account settings are shared with Outlook Express (Windows XP)." "" "YN!")!='Y')
+
+YesNoCancel
+sel mes("Do you want to save changes?" "Dialog Editor" "YNC!")
+sel mes("Save changes?" "" "YNC?")
+sel(sub_sys.MsgBox(_hwndqm F"{s}[][]This file already exists. Delete?[][]Click No to make unique filename." "" "YNC!"))
+
+Hyperlink
+i=mes(F"<>Image not found.{_s}" "Test - not found" "!")
+i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
+
+
+
+
+
+
+#endif
+	}
+
+	//TODO: maybe .NET has such types. Look in System namespace, eg where is Tuple<T>, Func<T> etc.
+
+
+	//static void Example1(Types<string, IEnumerable<string>> param)
+	//{
+	//	switch(param.obj) {
+	//	case string s: PrintList("string", s); break;
+	//	case IEnumerable<string> a: PrintList("IEnumerable<string>", a); break;
+	//	case null: Print("null"); break;
+	//		//default: throw new ArgumentException(); break; //don't need this, it's impossible
+	//	}
+	//}
+
+	//static void Example2(string requiredParam, Types<int, double>? optionalParam = null)
+	//{
+	//	switch(optionalParam?.obj) {
+	//	case null: Print("null"); break;
+	//	case int i: PrintList("int", i); break;
+	//	case double d: PrintList("double", d); break;
+	//		//default: throw new ArgumentException(); break; //don't need this, it's impossible
+	//	}
+	//}
+
+	//static void TestTypes(Types<string, IEnumerable<string>> x)
+	//{
+	//	switch(x.obj) {
+	//	case string s: PrintList("string", s); break;
+	//	case IEnumerable<string> a: PrintList("IEnumerable<string>", a); break;
+	//	case null: Print("null"); break;
+	//	default: throw new ArgumentException(); break; //don't need this, it's impossible
+	//	}
+	//}
+
+	//static void TestTypes2(Types<int, double>? x = null)
+	//{
+	//	switch(x?.obj) {
+	//	case null: Print("null"); break;
+	//	case int i: PrintList("int", i); break;
+	//	case double d: PrintList("double", d); break;
+	//	default: throw new ArgumentException(); break; //don't need this, it's impossible
+	//	}
+	//}
+
+	static void TestValueTypes(Types<int, double> x)
+	{
+		switch(x.type) {
+		case 0: Print("none"); break;
+		case 1: PrintList("int", x.v1); break;
+		case 2: PrintList("double", x.v2); break;
+		default: throw new ArgumentException(); break; //don't need this, it's impossible
+		}
+	}
+
+	static void TestValueTypesRef(Types<string, IEnumerable<string>> x)
+	{
+		switch(x.type) {
+		case 0: Print("none"); break;
+		case 1: PrintList("string", x.v1); break;
+		case 2: PrintList("IEnumerable<string>", x.v2); break;
+		default: throw new ArgumentException(); break; //don't need this, it's impossible
+		}
+	}
+
+	static void TestValueTypesNullable(Types<int, double>? x)
+	{
+		switch(x?.type) {
+		case null: Print("null"); break;
+		case 0: Print("none"); break;
+		case 1: PrintList("int", x?.v1); break;
+		case 2: PrintList("double", x?.v2); break;
+		default: throw new ArgumentException(); break; //don't need this, it's impossible
+		}
+	}
+
+	static void TestValueTypesRefNullable(Types<string, IEnumerable<string>>? x)
+	{
+		switch(x?.type) {
+		case null: Print("null"); break;
+		case 0: Print("none"); break;
+		case 1: PrintList("string", x?.v1); break;
+		case 2: PrintList("IEnumerable<string>", x?.v2); break;
+		default: throw new ArgumentException(); break; //don't need this, it's impossible
+		}
+	}
+
+
+
+
+	#region speed
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//static bool Speed1(Types<string, IEnumerable<string>> x)
+	//{
+	//	switch(x.obj) {
+	//	case string s: return s is null;
+	//	case IEnumerable<string> a: return a is null;
+	//	default: return false;
+	//	}
+	//}
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//static bool Speed2(Types<int, double> x)
+	//{
+	//	switch(x.obj) {
+	//	case int s: return s == 0;
+	//	case double a: return a == 0.0;
+	//	default: return false;
+	//	}
+	//}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static bool Speed3(Types<int, double> x)
+	{
+		switch(x.type) {
+		case 1: return x.v1 == 0;
+		case 2: return x.v2 == 0.0;
+		default: return false;
+		}
+	}
+
+	static void TestMultiTypeParamSpeed()
+	{
+		int r = 0;
+		string s = "kkkk";
+		var a = new string[] { "A", "B" };
+		int m = 7;
+		double d = 3.4;
+
+		for(int i = 0; i < 5; i++) {
+			Perf.First();
+			//for(int j = 0; j < 1000; j++) {
+			//	if(Speed1(s)) r++;
+			//	if(Speed1(a)) r++;
+			//}
+			//Perf.Next();
+			//for(int j = 0; j < 1000; j++) {
+			//	if(Speed2(m)) r++;
+			//	if(Speed2(d)) r++;
+			//}
+			//Perf.Next();
+			for(int j = 0; j < 1000; j++) {
+				if(Speed3(m)) r++;
+				if(Speed3(d)) r++;
+			}
+			Perf.NW();
+		}
+
+		Print(r);
+	}
+
+	#endregion
+
+	static void TestMultiTypeParam()
+	{
+		//TestExamples();
+		return;
+
+		//TestTypes("S");
+		//TestTypes(new string[] { "S0", "S1" });
+		//TestTypes(new List<string>() { "L0", "L1" });
+		////TestTypes(null);
+		////TestMultiTypeParam(5);
+		//TestTypes((string)null);
+		//TestTypes(default(Types<string, IEnumerable<string>>));
+		//Print("----");
+
+		//TestTypes2(3);
+		//TestTypes2(3.5);
+		//TestTypes2(null);
+		//TestTypes2();
+		////int? n = 7;
+		////TestTypes2(n);
+		//Print("----");
+
+		TestValueTypes(7);
+		TestValueTypes(7.5);
+		TestValueTypes(default(Types<int, double>));
+		Print("----");
+
+		TestValueTypesRef("S");
+		TestValueTypesRef(new string[] { "S0", "S1" });
+		TestValueTypesRef(new List<string>() { "L0", "L1" });
+		//TestValueTypesRef(null);
+		//TestValueTypesRef(5);
+		TestValueTypesRef((string)null);
+		TestValueTypesRef(default(Types<string, IEnumerable<string>>));
+		Print("----");
+
+		TestValueTypesNullable(7);
+		TestValueTypesNullable(7.5);
+		TestValueTypesNullable(default(Types<int, double>));
+		TestValueTypesNullable(null);
+		Print("----");
+
+		TestValueTypesRefNullable("S");
+		TestValueTypesRefNullable(new string[] { "S0", "S1" });
+		TestValueTypesRefNullable(new List<string>() { "L0", "L1" });
+		TestValueTypesRefNullable(null);
+		//TestValueTypesRefNullable(5);
+		TestValueTypesRefNullable((string)null);
+		TestValueTypesRefNullable(default(Types<string, IEnumerable<string>>));
+	}
+
+	static void TypesFunc(Types<int, double> a1, Types<int, double>? a2, Types<string, int> a3, Types<string, int>? a4)
+	{
+		PrintList(a1.type, a1.v1, a1.v2);
+		var t2 = a2.GetValueOrDefault();
+		PrintList(t2.type, t2.v1, t2.v2);
+		PrintList(a3.type, a3.v1, a3.v2);
+		var t4 = a4.GetValueOrDefault();
+		PrintList(t4.type, t4.v1, t4.v2);
+	}
+
+	static void TestTypesAgain()
+	{
+		//TypesFunc(1, null, "S", null);
+		//TypesFunc(1, 2.5, "S", 4);
+		//TypesFunc(1, 2.5, "S", "K");
+		//TypesFunc(null, 2.5, "S", "K"); //error
+		//TypesFunc(1, 2.5, null, "K"); //error
+	}
+
+	static void TestPrintIEnumerable()
+	{
+		var a = new string[] { "a", "b" };
+		IEnumerable<string> e = a;
+		Print(a);
+		Print(e);
+	}
+
+	static void TestSystemTimePeriod()
+	{
+		_Test("before");
+		using(new Time.SystemWaitPrecision(2)) {
+			_Test("in");
+		}
+		_Test("after");
+
+		void _Test(string name)
+		{
+			Print(name);
+			Perf.First();
+			for(int i = 0; i < 10; i++) { Thread.Sleep(1); Perf.Next(); }
+			Perf.Write();
+			//DebugDialog(Perf.Times);
+		}
+
+		//using(new Time.SystemWaitPrecision(5)) {
+		//	int i = 0;
+		//	Time.SetTimer(10, false, t => { Perf.Next(); if(++i > 10) { Perf.Write(); t.Stop(); } });
+		//	TaskDialog.Show("");
+		//}
+	}
+
+	static bool TestExc2()
+	{
+		//return true || throw new Win32Exception(5);
+
+		return false ? true : throw new Win32Exception(5);
+
+		//if(!true) throw new Win32Exception(5); return true;
+	}
+
+	static void TestNewExceptions()
+	{
+		//Print(Native.GetErrorMessage(2));
+
+		//if(!TestExc()) Print(ThreadError.ErrorText);
+
+		//TestExc2();
+
+	}
+
+	static void TestNewRegistry()
+	{
+		using(var k = Registry_.Open("invalid/key")) {
+			Print(k);
 
 		}
-		catch(Exception e) { Print(e.Message); }
+	}
 
-		//TestWndWithWildex();
-		//TestWildex();
-		//TestWildcard();
+	static void TestWndException()
+	{
+		//throw new NullReferenceException();
+		//throw new WndException();
+		//throw new WndException(3);
+		//throw new WndException("Custom string");
+		//throw new WndException(3, "Custom string");
+		//throw new WndException(0, "Custom string");
+	}
+
+	public static void Move(Types<int, float>? x, Types<int, float>? y, Types<int, float>? width, Types<int, float>? height, bool workArea = false)
+	{
+		Print("Move Types<int, float>?");
+	}
+
+	public static void Move(int? x, int? y, int? width, int? height, uint swpFlagsToAdd = 0)
+	{
+		Print("Move int?");
+	}
+
+	public static void Move(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
+	{
+		Print("Move int");
+	}
+
+	static void TestMoveOverloads()
+	{
+		Move(1, 2, 3, 4);
+		Move(1, null, 3, 4);
+		Move(1, 2.5f, 3, 4);
+
+		Move(null, null, 3, null);
+		Move(null, 2.5f, null, null);
+	}
+
+	static void TestWndPropErrors()
+	{
+		//var w = Wnd.Find("Quick*");
+		var w = Wnd.Find("* Notepad");
+		Native.ClearError();
+		//var a = w.PropList();
+		//var p = w.GetProp("asd");
+		//var p = w.GetProp("qmshex");
+		//w.SetProp("sett", 5);
+		w.PropRemove("sett");
+		PrintList(Native.GetError(), Native.GetErrorMessage());
+		//Print(p);
+		Print(w.PropGet("sett"));
+		//Print(a.Count);
+		//Print(a);
+	}
+
+	static void TestWinErrorMessageAndExceptions()
+	{
+		//for(int i = 1; i < 10000; i++) {
+		//	var s = Native.GetErrorMessage(i);
+		//	if(s.StartsWith_("Unknown error (0x") || s.Length >500) continue;
+		//	Print(i);
+		//	Print(s);
+		//}
+
+		Wnd w = Wnd0;
+		Native.ClearError();
+		//if(!w.IsChildOf(Wnd0)) Print(Native.GetError());
+		//var a = w.PropList();
+		//if(a.Count==0) Print(Native.GetError());
+
+		try {
+			bool b = w.IsEnabled;
+			if(Native.GetError() != 0) {
+				//throw new CatException();
+				//throw new CatException("Messssage");
+				//throw new CatException(5);
+				//throw new CatException(5, "Messssage");
+				throw new CatException("Messsssage", new FileNotFoundException());
+			}
+		}
+		catch(CatException e) {
+			PrintList(e.NativeErrorCode, e.Message);
+		}
+	}
+
+	static void TestWndAccessDenied()
+	{
+		Wnd w = Wnd.Find("Registry *");
+		//Wnd c = w.Child("", "Edit");
+		//Print(c);
+		//c.FocusControl();
+		w.SetTransparency(true, 50);
+
+		//Wnd w = Wnd.Find("Quick*");
+		//Print(w);
+		//Wnd c = w.ChildById(2216);
+		//Print(c);
+		//Native.ClearError();
+		//string s = c.ControlText;
+		//if(s == null) Print(Native.GetErrorMessage());
+		//else Print(s);
+
+		//Wnd w = Wnd.Find("*YouTube Downl*");
+		//Print(w);
+		//Wnd c = w.ChildByClass("*SysListview32*");
+		//Print(c);
+		//Native.ClearError();
+		//string s = c.ControlNameWinForms;
+		//if(s == null) Print(Native.GetErrorMessage());
+		//else Print(s);
+
+		//Wnd w = Wnd.Find("*YouTube Downl*");
+		//Print(w);
+		//Wnd c = w.Child("**wfName:olvDownloads");
+		//Print(c);
+
+	}
 
 
+	//int thisLen = t.Length, endof = index + length;
+	//if(index < 0 || endof < index || endof > thisLen) throw new ArgumentException();
+	//if(Empty(value)) return t;
+	//var s = new StringBuilder(t);
+	//s.
+
+	static void TestStringReplaceAt()
+	{
+		var s = "/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>";
+		//var s = "/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>/// <remarks>Supports <see cref='Native.GetError'/>.</remarks>";
+		string s2 = null;
+
+		Print(s.ReplaceAt_(27, 4, "HREF_ETC"));
+
+		//int i = s.Length / 2;
+		//var a1 = new Action(() => { s2 = s.ReplaceAt_(i, 4, "HREF_ETC"); });
+		//var a2 = new Action(() => { s2 = s.ReplaceAt_2(i, 4, "HREF_ETC"); });
+		//var a3 = new Action(() => { s2 = s.ReplaceAt_3(i, 4, "HREF_ETC"); });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(8, 1000, a1, a2, a3, a4);
+
+	}
+
+	static LPARAM WndProc33(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	{
+		Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
+		return Api.DefWindowProc(w, msg, wParam, lParam);
+	}
+
+	static void TestCreateWindow()
+	{
+		//var wc = Wnd.Misc.WindowClass.Register("TTTTest", WndProc33);
+		//Wnd w = Wnd.Misc.CreateWindow(0, wc.Name, "Name", Native.WS_POPUPWINDOW | Native.WS_VISIBLE|Native.WS_CAPTION, 500, 100, 300, 200);
+
+		Wnd.Misc.WindowClass.InterDomainRegister("TTTTest", WndProc33);
+		Wnd w = Wnd.Misc.WindowClass.InterDomainCreateWindow(0, "TTTTest", "Name", Native.WS_POPUPWINDOW | Native.WS_VISIBLE | Native.WS_CAPTION, 500, 100, 300, 200);
+
+		var ic = Icons.GetFileIconHandle(@"q:\app\paste.ico", 16);
+		Wnd.Misc.SetIconHandle(w, ic);
+		Wnd c = Wnd.Misc.CreateWindowAndSetFont(0, "Edit", "Text", Native.WS_CHILD | Native.WS_VISIBLE, 10, 10, 100, 20, w, 3);
+		TaskDialog.ShowInput(out string s, "td", editText: "TaskDialog");
+		Wnd.Misc.DestroyWindow(w);
+		Icons.DestroyIconHandle(ic);
+	}
+
+	static void MinimizeAll()
+	{
+		var a = Wnd.Misc.MainWindows();
+		for(int i = 0; i < a.Count; i++) {
+			//for(int i=a.Count-1; i>=0; i--) {
+			a[i].ShowMinimized(true);
+		}
+	}
+
+	static void SendAltTab()
+	{
+		var k = new Api.INPUTKEY(Api.VK_MENU, 0);
+		Api.SendInputKey(ref k);
+		k.wVk = Api.VK_TAB;
+		Api.SendInputKey(ref k);
+		k.dwFlags = Api.IKFlag.Up;
+		Api.SendInputKey(ref k);
+		k.wVk = Api.VK_MENU;
+		Api.SendInputKey(ref k);
+	}
+
+	static void TestSwitchActiveWindow()
+	{
+		Print(Wnd.Misc.SwitchActiveWindow());
+		return;
+
+		//Wnd w = Wnd.Find("Microsoft Excel - Book1");
+		//Wnd w = Wnd.Find("id.xls");
+		//Wnd w = Wnd.Find("Quick M*");
+		//Wnd w = Wnd.Find("Registry*");
+		//Wnd w = Wnd.Find("* Notepad");
+		//Wnd w = Wnd.Find("*Dream*");
+		//Wnd w = Wnd.Find("*Help Viewer*");
+		//Wnd w = Wnd.Find("*Visual Studio");
+		//Wnd w = Wnd.Find("*Firefox*", "MozillaWindowClass");
+		//Wnd w = Wnd.Find("* Microsoft Document Explorer");
+		//Print(w);
+		//if(w.Is0) { Print("not found"); return; }
+		////w.ShowNotMinimized(true); return;
+		//Print("-----");
+		//w.Activate(); WaitMS(500);
+		////return;
+
+		////Wnd.Misc.AllowActivate();
+
+		////Print(Wnd.MainWindows());
+		////return;
+
+		//Wnd.ShowDesktop();
+		////Wnd.ShowDesktop(true);
+		//////WaitMS(2000);
+		//////Wnd.ShowDesktop(false);
+		////MinimizeAll();
+		//w.ShowMinimized();
+
+		Time.WaitMS(500);
+		Print(Wnd.Misc.MainWindows());
+		//return;
+
+		//Print(Wnd.ActiveWindow);
+		//WaitMS(500);
+		//Print(Wnd.ActiveWindow);
+		////return;
+		//WaitMS(1000);
+
+		//Print("-----");
+		//Print(Wnd.MainWindows());
+		//Print("-----");
+		////return;
+
+		Print(Wnd.Misc.SwitchActiveWindow());
+		//SendAltTab();
+		Time.WaitMS(500);
+		Print(Wnd.WndActive);
+	}
+
+	static void TestStringEqualsPart()
+	{
+		string s = "**id:text";
+		Print(s.EqualsPart_(2, "id:"));
+		Print(s.EqualsPart_(2, "ID:", true));
+		Print(s.EqualsPart_(2, false, "id:", "text:", "wfName:"));
+	}
+
+	static void TestChildAcc()
+	{
+		Wnd w = Wnd.Find("FileZilla");
+		Wnd c = w.Child("Quickconnect");
+		Print(c);
+		Print(c.NameAcc);
+	}
+
+	static void TestWndNextMainWindow()
+	{
+		int f = TaskDialog.ShowList("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
+		if(f == 0) return;
+		Wnd w = Wnd.Misc.WndTop;
+		int n = 0;
+		while(!w.Is0) {
+			Print(w);
+			switch(f) {
+			case 1:
+				w = w.WndNextMain();
+				break;
+			case 2:
+				w = w.WndNextMain(allDesktops: true);
+				break;
+			case 3:
+				w = w.WndNextMain(likeAltTab: true);
+				break;
+			case 4:
+				w = w.WndNextMain(retryFromTop: true); if(++n > 20) return;
+				break;
+			case 5:
+				w = w.WndNextMain(skipMinimized: true);
+				break;
+			}
+		}
+	}
+
+	static unsafe void TestBytesToHexString()
+	{
+		byte[] a = new byte[4] { 65, 66, 67, 68 };
+		var s = Calc.BytesToHexString(a, true);
+		Print(s);
+		Print(Calc.BytesFromHexString(s));
+		fixed (byte* p = a) {
+			var s2 = Calc.BytesToHexString(p, 4, true);
+			Print(s2);
+			int a2;
+			Print(Calc.BytesFromHexString(s2, &a2, 4));
+			PrintHex(a2);
+		}
+	}
+
+	class FormB :Form
+	{
+		protected override void WndProc(ref Message m)
+		{
+			if((uint)m.Msg == Api.WM_APP) {
+				PrintList("WM_APP", m.WParam);
+			}
+			base.WndProc(ref m);
+		}
+	}
+
+	[DllImport("winmm.dll")]
+	internal static extern uint timeBeginPeriod(uint uPeriod);
+	[DllImport("winmm.dll")]
+	internal static extern uint timeEndPeriod(uint uPeriod);
+
+	static void WaitEx(int timeMS)
+	{
+		int sysTimer = 0;
+		if(timeMS > 0) {
+			if(timeMS < 15) sysTimer = timeMS;
+			else if(timeMS > 16 && timeMS < 30) sysTimer = (timeMS + 1) / 2;
+			else if(timeMS == 16) timeMS = 15;
+		}
+
+		PrintList(timeMS, sysTimer);
+	}
+
+	static void TestWndAgain()
+	{
+
+
+		//var w = Wnd.Find("FileZilla");
+		//var w = Wnd.Find("Find");
+		//w.AllChildren(false, true).ForEach(c => { Print(c); /*c.Show(false);*/ c.Focus(); Wait(0.5); });
+		//w.Child(null, "SysTreeView32", skip: 1).Focus();
+		//w.Child("Find Next").Focus();
+
+		//Wnd.Misc.WaitForAnActiveWindow();
+		//Wnd w = Wnd.Find("* Notepad");
+		//w.Activate(); Wait(0.5);
+		////w.Close(true);
+		//w.Send(Api.WM_CLOSE);
+		////Wnd.Misc.WndRoot.Activate();
+		//Perf.First();
+		//var yes=Wnd.Misc.WaitForAnActiveWindow();
+		//Perf.NW();
+		//Print(yes);
+
+
+
+		//Wnd.FindAll("* Notepad", "Notepad").ForEach(t => { t.Activate(); Print(t.Close()); Print(Wnd.WndActive); });
+		//Wnd.FindAll("* Visual Studio*", "wndclass_desked_gsk").ForEach(t => { t.Activate(); Print(t.Close()); Print(Wnd.WndActive); });
+		//Wnd.FindAll("* Visual Studio*", "wndclass_desked_gsk").ForEach(t => { t.Activate(); Print(t.Close(useXButton: true)); Print(Wnd.WndActive); });
+		//Wnd.FindAll("* Firefox").ForEach(t => { Print(t); t.Activate(); Print(t.Close()); Print(Wnd.WndActive); });
+		//Wnd.FindAll("* Thunderbird").ForEach(t => { t.Activate(); Print(t.Close()); Print(Wnd.WndActive); });
+		//Wnd.FindAll(className:"QM_toolbar").ForEach(t => { Print(t.Close()); });
+		//Wnd.Misc.MainWindows(likeAltTab:true).ForEach(t => {
+		//	if(0!=t.Name.Like_(false, "Catkeys -*", "Quick Macros -*", "Process Expl*")) return;
+		//	Print(t);
+		//	t.Activate();
+		//	long t1 = Time.Milliseconds;
+		//	Print(t.Close());
+		//	//Print(t.Close(useXButton: true));
+		//	long t2 = Time.Milliseconds-t1;
+		//	if(t2 > 300) Print(t2);
+		//	Print(Wnd.WndActive);
+		//	Print("---");
+		//});
+		//Wnd.Misc.MainWindows().ForEach(t => { Print(t); t.Activate(); Wait(0.5); });
+
+		//Wnd.Find("*something");
+		//Wnd.Find("*something", flags: WFFlags.HiddenToo);
+		//Wnd.Find("*something");
+
+		//Perf.First();
+		//Wnd w;
+		//////w=(Wnd)328956;
+		//////w=(Wnd)263214;
+		//////w=Wnd.Find("id.xls");
+		////w=Wnd.Find("*Excel*");
+		//////w = Wnd.Find("* Notepad");
+		//////w = Wnd.Find("Quick Ma*");
+		//////w = Wnd.Find("*Inno *");
+		//w = Wnd.Find("PicPick");
+		////Perf.Next();
+		////w.Activate();
+		//bool ok=w.Close();
+		//Perf.NW();
+		//Print(ok);
+
+
+
+		//Wnd w = Wnd.Find("SQLite E*");
+		//Wnd w = Wnd.Find("* Inno Setup*");
+		//Print(w);
+		//w.Activate();
+
+		//var c = Wnd.Misc.WindowClass.InterDomainRegister("ffoo", null);
+		////Wnd w = Wnd.Misc.CreateMessageWindow("#32770");
+		//Wnd w = Wnd.Misc.CreateMessageWindow("ffoo");
+		//Print(w);
+		//w.Close();
+		////Wnd.Misc.DestroyWindow(w);
+		////w.Close(true);MessageBox.Show("fff");
+		//Print(w);
+
+		//for(int i = 1; i < 50; i++) WaitEx(i);
+		//return;
+
+		//using(new Time.SystemWaitPrecision(2)) {
+		//	Perf.First();
+		//	for(int i = 1; i < 17; i++) {
+		//		//timeBeginPeriod(5);
+		//		////WaitMS(1);
+		//		//timeEndPeriod(5);
+		//		//Perf.Next();
+		//		//timeBeginPeriod(2);
+		//		////WaitMS(1);
+		//		//timeEndPeriod(2);
+		//		//Perf.Next();
+
+		//		//WaitMS(i);
+		//		Sleep(2);
+		//		Perf.Next((char)('0' + i % 10));
+		//	}
+		//	Perf.Write();
+
+		//}
+
+		//var f = new FormB();
+		//f.Text = "FindMe";
+		//f.Deactivate += (unu, sed) => Print("deact");
+		////f.ShowDialog();return;
+		//f.Show();
+
+		////WaitMS(5000);
+		//Thread.CurrentThread.Join(5000);
+
+
+		//TaskDialog.Show("");
+		//return;
+
+		//Wnd.Misc.WndRoot.ActivateLL();
+		//Print(Wnd.WndActive);
+
+		//var w1 = Wnd.Find("*- Notepad");
+		//var w2 = Wnd.Find("*Excel*");
+
+		//Perf.First();
+		//for(int i = 0; i < 3; i++) {
+		//	//w1.Activate();
+		//	Perf.Next();
+		//	WaitMS(10);
+		//	//w2.Activate();
+		//	Perf.Next();
+		//}
+		////Perf.Write();
+		//Trace.WriteLine(Perf.Times);
+
+		//var w = Wnd.Find("* Notepad");
+		//var s = w.SavePlacement();
+		//Print(s);
+		//MessageBox.Show("");
+		//w.RestorePlacement(s);
+
+
+		//Wnd w = Wnd.Find("Dialog");
+		//w.Send(Api.WM_APP);
+
+		//Time.SetTimer(500, true, t => { Thread.CurrentThread.Abort(); });
+		//Time.SetTimer(500, true, t => { throw new IndexOutOfRangeException(); });
+		//Time.SetTimer(500, true, t => { Api.PostQuitMessage(1); });
+		//Time.SetTimer(500, false, t => {  });
+		//Thread.Sleep(3000);
+		//Application.Run();
+		//while(Time.DoEvents()) {  }
+		//Api.WaitMessage();
+		//MessageBox.Show("text", "Tests.exe");
+		//new FolderBrowserDialog().ShowDialog();
+		//new OpenFileDialog().ShowDialog();
+		//new Form().ShowDialog();
+		//TaskDialog.Show("1");
+		//TaskDialog.Show("2");
+		//TaskDialog.ShowEx("2", timeoutS:30);
+		//TaskDialog.ShowEx("2", buttons:"OK|Cancel", timeoutS:30);
+		//TaskDialogAPI(Wnd0, Zero, "t", "m", null, 0, null, out int b);
+
+		//var d = new TaskDialog("aa", null, "1 Test", timeoutS: 15);
+		//d.ButtonClicked += e =>
+		//{
+		//	e.DoNotCloseDialog = true;
+		//	//throw new IndexOutOfRangeException();
+		//	Thread.CurrentThread.Abort();
+		//};
+		//d.ShowDialog();
+
+		//var f = new Form();
+		//f.Click += (unu, sed) =>
+		//  {
+		//	  //throw new IndexOutOfRangeException();
+		//	  Thread.CurrentThread.Abort();
+		//  };
+		//f.ShowDialog();
+
+		//Print("fin");
+
+		//Wnd w = Wnd.Find("*Notepad", flags:WFFlags.HiddenToo);
+		////Print(w.IsEnabled);
+		////w.Close();
+		////Wait(5);
+		//w.Show(true);
+
+		//Wnd w = Wnd.Find("*Notepad");
+		//w.ZorderTopmost();
+		//w.MoveToScreenCenter();
+		//w.MoveToScreenCenter(2);
+		//w.MoveToScreenCenter(Screen_.Primary);
+		//w.MoveToScreenCenter(Screen_.OfMouse);
+		//w.MoveToScreenCenter(Screen.PrimaryScreen);
+		//w.MoveToScreenCenter(new POINT(1, 10000));
+		//w.MoveToScreenCenter(new Rectangle(300, 1000, 100, 10000));
+		//w.MoveToScreenCenter(Wnd.WndActive);
+		//w.MoveToScreenCenter(Wnd.FindFast(null, "QM_Editor"));
+
+		//var r = new RECT(1000, 2000, 500, 500, true);
+		//Print(r);
+		//r.EnsureInScreen();
+		//Print(r);
+		//r.EnsureInScreen(1);
+		//Print(r);
+
+
+		//if(TaskDialog.ShowInput(out string s)) Print(s);
+		//var d = new TaskDialog(text2: "small");
+		//Print(d.ShowDialog());
+
+		//Wnd w = Wnd.FindFast("Options", "#32770");
+		//Print(w);
+		//Wnd w1 = Wnd0, w2 = Wnd0, w3 = Wnd0, w4 = Wnd0;
+
+		//var a1 = new Action(() => { w1 = Wnd.Find(null, "WordPadClass"); });
+		//var a2 = new Action(() => { w2 = Wnd.FindFast(null, "WordPadClass"); });
+		//var a3 = new Action(() => { w3 = w.Child("Apply", "Button"); });
+		//var a4 = new Action(() => { w4 = w.ChildFast("&Apply", "Button"); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//Print(w1);
+		//Print(w2);
+		//Print(w3);
+		//Print(w4);
+
+		//Wnd.CloseAll("* Notepad", "Notepad");
+		//foreach(var v in Wnd.FindAll("* Notepad", "Notepad")) v.Close();
+		//close all Notepad windows
+		//Wnd.FindAll("* Notepad", "Notepad").ForEach(t => t.Close());
+
+
+		//var f = new Form();
+		//f.Click += (unu, sed) =>
+		//{
+		//	//((Wnd)f).ShowMinimized();
+		//	f.Wnd_().ShowMinimized();
+		//};
+		//f.ShowDialog();
+
+		//return;
+
+		////Wnd w = Wnd.Find("Dialog");
+		////w = w.ChildById(1);
+		////Print(c.ClassName);
+		////Print(c.Name);
+		////Print(c.ControlText);
+		//////return;
+		////Wait(0.2);
+
+		//Wnd w = Wnd.Find("Options");
+		//w = w.Child("Unicode");
+
+		//PrintList("self", w);
+		//PrintList("parent", w.WndDirectParent);
+		//PrintList("par or own", w.WndDirectParentOrOwner);
+		//PrintList("owner", w.WndOwner);
+		//PrintList("first child", w.WndFirstChild);
+		//PrintList("last child", w.WndLastChild);
+		//PrintList("child 2", w.WndChild(2));
+		//PrintList("first sib", w.WndFirstSibling);
+		//PrintList("last sib", w.WndLastSibling);
+		//PrintList("next", w.WndNext);
+		//PrintList("prev", w.WndPrev);
+		//PrintList("window", w.WndWindow);
+
+		//Print("----");
+		////Print(Wnd.Find("Options").Child("Layout*").WndNext);
+		//Print(Wnd.Find("Options").WndFirstChild.WndChild(3));
+
+		//return;
+
+		//var a = Wnd.Misc.AllWindows(true);
+		//int i, n = a.Count;
+		//for(i = 0; i < n; i++) {
+		//	var b = a[i].AllChildren();
+		//	a.AddRange(b);
+		//}
+		//Print(a.Count); //1924
+
+		//string s = null;
+		//Perf.First();
+		//for(i = 0; i < 5; i++) {
+		//	foreach(var v in a) {
+		//		//s = v.ClassName;
+		//		//s = v.Name;
+		//		s = v.ControlText;
+		//	}
+		//	Perf.Next();
+		//}
+		//Perf.Write();
+
+		//Print(s);
+
+		//foreach(var v in a) {
+		//	var name = v.Name;
+		//	var text = v.ControlText;
+		//	Wnd.Misc.StringRemoveUnderlineAmpersand(ref text);
+
+		//	//if(name == null) Print($"name null: {v}"); //0
+		//	//if(text == null) Print($"text null: {v}"); //1: Windows.UI.Core.CoreWindow "Settings"
+
+		//	//if(Empty(name) && Empty(text)) continue;
+
+		//	//if(Empty(name)) Print($"----\n{v}\n{text}"); //almost all: Edit, Combo, StatusBar
+
+		//	//if(Empty(name) && 0==v.ClassNameIs("*Edit*", "*ComboBox*", "*StatusBar*", "*Memo*")) Print($"----\n{v}\n{text}"); //1: VMwareStaticLink
+
+		//	//if(Empty(text)) Print($"----\n{v}\n{name}"); //6 (3 classes)
+
+		//	//if(text == name) PrintList(v, name);
+
+		//	//if(text != name && !(Empty(name) || Empty(text))) Print($"----\n{v}\n{name}\n{text}"); //5 (3 classes)
+
+		//	//if(Empty(name)) {
+		//	//	var v2 = v.WndPrev;
+		//	//	if(v2.Is0) {
+		//	//		v2 = v.WndDirectParent;
+		//	//		if(v2)
+		//	//	}
+		//	//}
+		//}
+
+
+
+		//Wnd w = Wnd.Find("FileZilla");
+		//Wnd c = w.ChildById(-31804);
+		//Wnd w = Wnd.Find("Dialog");
+		//Wnd c = w.ChildById(3);
+		//Print(c.ControlText);
+		//Wait(0.2);
+		//string s = "";
+
+		//var a1 = new Action(() => { s = c.ControlText; });
+		//var a2 = new Action(() => { });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 100, a1, a2, a3, a4);
+
+		//Print(s);
+
+		//Wnd w=Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);
+
+		//var p = new Wnd.FindParams(a, b, c, d, e); if(p.Find()) Print(p.Result);
+
+		//WFFlags
+
+		//Wnd w = Wnd.Find("FileZilla");
+		//Wnd c;
+		//c = w.Child("Port:");
+		//Print(c);
+		//c = w.Child(null, "Button");
+		//Print(c);
+		//c = w.Child("**id:-31782");
+		//Print(c);
+		//c = w.Child("777");
+		//Print(c);
+		//c = w.Child("**text:777");
+		//Print(c);
+		//c = w.Child("**text:Port:");
+		//Print(c);
+		//c = w.Child("**accName:Port:");
+		//Print(c);
+
+		//w = Wnd.Find("Free YouTube*");
+		//c = w.Child("**wfName:olvDownloads");
+		//Print(c);
+
+		//w = Wnd.Find("Options");
+		//c = w.Child("On error");
+		//Print(c);
+		//c = w.Child("**text:On error");
+		//Print(c);
+		//c = w.Child("Administrator");
+		//Print(c);
+		//c = w.Child("**text:Administrator");
+		//Print(c);
+
+		//c = w.Child("**id:15");
+		//c = w.Child("**text:control text");
+		//c = w.Child("**wfName:myControl");
+		//c = w.Child("**accName:acc name");
+
+		//c = w.ChildByClass("Button");
+		//Print(c);
+		//c = w.ChildById(-31930);
+		//Print(c);
+		//c = w.Child("-31930", flags: WCFlags.NameIsId);
+		//Print(c);
+		//WaitMS(200);
+
+		//var a1 = new Action(() => { c = w.Child(null, "Button"); });
+		//var a2 = new Action(() => { c = w.ChildByClass("Button"); });
+		//var a3 = new Action(() => { c = w.ChildById(-31930); });
+		//var a4 = new Action(() => { c = w.Child("-31930", flags: WCFlags.NameIsId); });
+		//Perf.ExecuteMulti(5, 100, a1, a2, a3, a4);
+
+
+		//Wnd w = Wnd.Find("* Notepad");
+		//Print(w);
+		//w.SetProp("test", 1);
+		//w = Wnd.Find(also: t => t.GetProp("test") != 0);
+		//Print(w);
+
+
+		//Wnd w = Wnd.Find(also: t => t.ContainsScreenXY(0.3f, 1.2f));
+		//Print(w);
+
+		//Wnd w = Wnd.Find("Options");
+		//Print(w);
+		//Wnd c = w.Child(null, "Button", also: t => t.ContainsWindowXY(257, 216));
+		////Wnd c = w.Child(null, "Button", also: t => t.ContainsParentXY(0.7f, 0.3f));
+		//Print(c);
+
+		//Wait(0.2);
+
+		//var a1 = new Action(() => { c = w.Child(null, "Button", also: t => t.ContainsWindowXY(w, 257, 216)); });
+		//var a2 = new Action(() => { c = w.Child(null, "Button", also: t => t.ContainsWindowXY(257, 216)); });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+
+		//PrintList(Process_.CurrentProcessHandle, Process_.CurrentThreadHandle, Process_.CurrentProcessId, Process_.CurrentThreadId);
+
+		//Wnd w = Wnd0;
+		//Perf.First();
+		//for(int i = 0; i < 5; i++) {
+		//	//w = Wnd.Find("* notepad", "notepad");
+		//	w = Wnd.Find(programEtc: "notepad");
+		//	//w = Wnd.Find(programEtc: "*\\notepad.exe", flags: WFFlags.ProgramPath);
+		//	//w = Wnd.Find(programEtc: "notepag");
+		//	//w = Wnd.Find(programEtc: "*\\notepag.exe", flags: WFFlags.ProgramPath);
+		//	Perf.Next();
+		//}
+		//Perf.Write();
+		//Print(w);
+
+		//return;
+
+		//Wnd w = Wnd.Find(prop: new Wnd.WinProp() { childName = "Open items" });
+
+		//var c = new Wnd.ChildParams("Open items");
+		//Wnd w = Wnd.Find(also: t => c.Find(t));
+
+
+		////Wnd w = Wnd.Find(prop: new Wnd.WinProp() { styleHas = Native.WS_CAPTION });
+
+		////Wnd w = Wnd.Find(also: t => t.HasStyle(Native.WS_CAPTION));
+
+
+		//Print(w);
+		//Print(c.Result);
+
+
+	}
+
+	static void TestLnkShortcutExceptions()
+	{
+		//var x = Files.LnkShortcut.Open(@"q:\test\test.lnk");
+		var x = Files.LnkShortcut.Create(@"q:\test\test.lnk");
+		//x.TargetPath = @"c:\windows";
+		x.TargetPath = "|?:*gg";
+		//x.TargetURL = "|?:*gg";
+		//x.TargetURL = "http://www.quickmacros.com";
+		//x.TargetIDList = Marshal.AllocCoTaskMem(100);
+		//x.TargetAnyType = "|?:*gg";
+		x.Save();
+	}
+
+	[DllImport("kernel32.dll")]
+	internal static extern void Sleep(int dwMilliseconds);
+	[DllImport("kernel32.dll")]
+	internal static extern uint SleepEx(int dwMilliseconds, bool bAlertable);
+	[DllImport("kernel32.dll")]
+	internal static extern uint WaitForMultipleObjectsEx(uint nCount, [In] IntPtr[] lpHandles, bool bWaitAll, uint dwMilliseconds, bool bAlertable);
+	[DllImport("kernel32.dll")]
+	internal static extern uint WaitForMultipleObjectsEx(uint nCount, ref IntPtr lpHandle, bool bWaitAll, uint dwMilliseconds, bool bAlertable);
+
+	static void SpinMCS(int timeMCS)
+	{
+		var t = Time.Microseconds;
+		while(Time.Microseconds - t < timeMCS) { }
+	}
+
+	static void TestAbortThreadAndWaitFunctions()
+	{
+		//var h = Api.CreateEvent(Zero, false, false, null);
+		//using(new Time.SystemWaitPrecision(1)) {
+		//	Perf.First();
+		//	for(int i = 0; i < 5; i++) {
+		//		//SpinMCS(15000);
+		//		//Perf.Next();
+		//		Time.WaitMS(1);
+		//		//Thread.CurrentThread.Join(1);
+		//		//Time.WaitNoBlockMS(1);
+		//		//Api.MsgWaitForMultipleObjectsEx(0, null, 15, 0);
+		//		//Api.WaitForSingleObject(h, 15);
+		//		//WaitForMultipleObjectsEx(1, ref h, false, 15, false);
+		//		//Sleep(1);
+		//		Perf.Next();
+		//	}
+		//	Perf.Write();
+		//}
+		//Api.CloseHandle(h);
+		//return;
+
+		Catkeys.Util.AppDomain_.Exit += (unu, ded) => { Print("exit"); };
+
+		new Thread(o =>
+		{
+			Time.WaitMS(1002);
+			Print("abort");
+			var t = o as Thread;
+			Perf.First();
+			//t.Abort();
+			//t.Interrupt();
+			//t.Suspend();
+			//Wait(10);
+			//t.Resume();
+			//TODO: test whether .NET wait functions support APC
+			//Environment.Exit(1);
+			//var a=Wnd.Misc.ThreadWindows(t.)
+			//var w = Wnd.Find("Tests.exe");
+			//Print(w);
+			//w.CloseLL();
+			//w.Close(false);
+		}).Start(Thread.CurrentThread);
+
+		//Time.SetTimer(1000, true, t => { Print("timer"); });
+
+		try {
+			//Print(Api.MsgWaitForMultipleObjectsEx())
+			Time.WaitMS(5000);
+			//Print(Time.WaitNoBlockMS(5000));
+			//Sleep(5000);
+			//SleepEx(5000, true);
+			//for(int i = 0; i < 50; i++) Sleep(100);
+			//Thread.CurrentThread.Join(5000);
+
+			//using(var e = new EventWaitHandle(false, EventResetMode.AutoReset)) {
+			//	e.WaitOne(5000);
+			//}
+
+			//Task.Delay(5000);
+
+			//var m=new Catkeys.Util.MessageLoop();
+			//Time.SetTimer(1000, true, t => { Print("timer"); m.Stop(); });
+			//m.Loop();
+
+			Print("after sleep");
+		}
+		catch(ThreadInterruptedException e) { Print("interrupted"); }
+		finally {
+			Perf.NW();
+			Print("finally");
+		}
+
+		Print("return");
+	}
+
+	static LPARAM TestHookProc(int code, LPARAM wParam, LPARAM lParam)
+	{
+		Print(wParam);
+		return Api.CallNextHookEx(Zero, code, wParam, lParam);
+	}
+	static Api.HOOKPROC s_testHookProc = TestHookProc;
+
+	static void TestHooks()
+	{
+		var hh = Api.SetWindowsHookEx(Api.WH_KEYBOARD_LL, s_testHookProc, Zero, 0);
+		//TaskDialog.Show();
+		//Thread.Sleep(10000);
+		Thread.CurrentThread.Join(10000); //OK
+		Api.UnhookWindowsHookEx(hh);
+	}
+
+	[DllImport("kernel32.dll")]
+	internal static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+	internal const uint THREAD_ALL_ACCESS = 0x1FFFFF;
+	[DllImport("kernel32.dll")]
+	internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, LPARAM dwData);
+	internal delegate void PAPCFUNC(LPARAM Parameter);
+	internal const uint WAIT_IO_COMPLETION = 0xC0;
+
+	static void TestApcProc(LPARAM Parameter)
+	{
+		Print(Parameter);
+	}
+	static PAPCFUNC _testApcProc = TestApcProc;
+
+	static void TestWait()
+	{
+		//var f = new Form();
+		//f.Click += async (unu, sed) =>
+		//  {
+		//	  //Print(WaitFor.Window(0, "* Notepad"));
+		//	  Print(await WaitFor.WindowAsync(0, "* Notepad"));
+		//  };
+		////f.Click += F_Click;
+		//f.ShowDialog();
+
+		//async void F_Click(object sender, EventArgs e)
+		//{
+		//	Print(await WaitFor.WindowAsync(0, "* Notepad"));
+		//}
+
+		//Time.SetTimer(1000, true, t =>
+		//{
+		//	Print("begin");
+		//	for(int i = 0; i < 1000; i++) {
+		//		//Application.DoEvents();
+		//		Time.DoEvents();
+		//		Thread.Sleep(10);
+		//	}
+		//	Print("end");
+		//}
+		//);
+		//var f = new Form();
+		////var b = new Button();
+		////b.KeyUp
+		////b.MouseUp
+		//f.Click
+		//	+= (unu, sed) =>
+		//  {
+		//	  Print("begin");
+		//	  //for(int i = 0; i < 1000; i++) {
+		//	  // //Application.DoEvents();
+		//	  // if(!Time.DoEvents()) break;
+		//	  // Thread.Sleep(10);
+		//	  //}
+		//	  //Time.WaitDoEventsMS(10000);
+		//	  Application.Exit();
+
+		//	  //await Task.Delay(3000);
+		//	  //await Task.WhenAll
+
+		//	  Print("end");
+		//  };
+		//f.KeyUp += (unu, sed) => Print("key");
+		////f.Controls.Add(b);
+		//f.ShowDialog();
+		////f.Show();
+		////var m = new Native.MSG();
+		////while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) {
+		////	Wnd.Misc.PrintMsg(ref m);
+		////	Api.TranslateMessage(ref m);
+		////	Api.DispatchMessage(ref m);
+		////}
+		////Wnd.Misc.PrintMsg(ref m);
+
+		//Print("exit");
+		//return;
+
+		//var mt = Thread.CurrentThread;
+		//var th = OpenThread(THREAD_ALL_ACCESS, false, Api.GetCurrentThreadId());
+		////Print(th);
+		//new Thread(o =>
+		//{
+		//	for(int i = 0; i < 3; i++) {
+		//		Sleep(1000);
+		//		QueueUserAPC(_testApcProc, th, i);
+		//	}
+
+		//	//Sleep(1000);
+		//	//mt.Suspend();
+		//	//Sleep(7000);
+		//	//mt.Resume();
+
+		//}).Start();
+		//Perf.First();
+		////while(SleepEx(7000, true) == WAIT_IO_COMPLETION) { Print("WAIT_IO_COMPLETION"); }
+		////Time.WaitMS(5000);
+		//Time.WaitDoEventsMS(5000);
+
+		////Thread.CurrentThread.Join(7000);
+		//Api.CloseHandle(th);
+		//Perf.NW();
+
+		//Print("end");
+
+		//var t1 = Time.Milliseconds;
+		//Thread.Sleep(1000 * 30);
+		//Print(Time.Milliseconds - t1);
+
+		//var a = new List<int>(100);
+		//using(new Time.SystemWaitPrecision(1)) {
+		//	for(int i = 1; i < 50; i++) {
+		//		var t1 = Time.Milliseconds;
+		//		Sleep(i);
+		//		var t2 = Time.Milliseconds;
+		//		a.Add((int)(t2 - t1));
+		//	}
+		//}
+		//Print(a);
+	}
+
+	static void TestWaitFor()
+	{
+
+		//Wnd w = WaitFor.WindowExists(10, "* Notepad");
+		//Print(w);
+
+		var f = new Form();
+		f.Click += async (unu, sed) =>
+		  {
+			  Print("waiting for Notepad...");
+			  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
+			  if(w.Is0) Print("timeout"); else Print(w);
+		  };
+		f.ShowDialog();
+	}
+
+	//private static async void F_Click(object sender, EventArgs e)
+	//{
+	//	Print(await WaitFor.WindowAsync(0, "* Notepad"));
+	//}
+
+	static void TestTaskDialogAsyncAwait()
+	{
+		var f = new Form();
+		//f.Click += (unu, sed) =>
+		//{
+		//	var r = TaskDialog.Show("sync");
+		//	var r = TaskDialog.Show("sync", owner:f);
+		//	Print(r);
+		//};
+		f.Click += async (unu, sed) =>
+		{
+			//var r = await Task.Run(() => TaskDialog.Show("async"));
+			var r = await Task.Run(() => TaskDialog.Show("async", owner:f));
+			Print(r);
+		};
+		f.ShowDialog();
+
+	}
+
+	[HandleProcessCorruptedStateExceptions]
+	static unsafe void TestMain()
+	{
+		Output.Clear();
+		Time.WaitMS(100);
+
+
+		try {
+			TestTaskDialogAsyncAwait();
+			//TestWaitFor();
+			//TestHooks();
+			//TestAbortThreadAndWaitFunctions();
+			//TestLnkShortcutExceptions();
+			//TestWndAgain();
+			//TestWndNextMainWindow();
+		}
+		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(Win32Exception ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(Exception ex) { PrintList(ex.GetType(), ex); }
 
 
 		/*
@@ -4962,7 +6517,7 @@ A,""B """"Q"""" Z"",C
 
 		//l.Perf.First();
 		//l.TaskDialog.Show("f");
-		//l.Util.Debug_.PrintLoadedAssemblies();
+		//l.Util.LibDebug_.PrintLoadedAssemblies();
 		//Print(l.TDIcon.Info);
 
 	}

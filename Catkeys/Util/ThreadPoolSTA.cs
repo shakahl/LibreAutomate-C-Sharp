@@ -55,13 +55,14 @@ namespace Catkeys.Util
 		/// <param name="state">Something to pass to the callback functions.</param>
 		/// <param name="workCallback">Callback function to call in a thread pool thread.</param>
 		/// <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
+		/// <exception cref="Win32Exception"/>
 		public static void SubmitCallback(object state, WorkCallback workCallback, SendOrPostCallback completionCallback = null)
 		{
 			new Work(state, workCallback, completionCallback, false);
 		}
 
 		/// <summary>
-		/// Creates a Work object that can be used when need more options than SubmitCallback() has.
+		/// Creates a <see cref="Work"/> object that can be used when need more options than <see cref="SubmitCallback">SubmitCallback</see> has.
 		/// </summary>
 		/// <param name="state">Something to pass to the callback functions.</param>
 		/// <param name="workCallback">Callback function to call in a thread pool thread.</param>
@@ -69,6 +70,7 @@ namespace Catkeys.Util
 		/// <remarks>
 		/// Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
 		/// </remarks>
+		/// <exception cref="Win32Exception"/>
 		public static Work CreateWork(object state, WorkCallback workCallback, SendOrPostCallback completionCallback = null)
 		{
 			return new Work(state, workCallback, completionCallback, true);
@@ -76,7 +78,7 @@ namespace Catkeys.Util
 
 		/// <summary>
 		/// Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
-		/// Can be used when need more options than SubmitCallback() has.
+		/// Can be used when need more options than <see cref="SubmitCallback">SubmitCallback</see> has.
 		/// </summary>
 		/// <example><code>
 		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { WaitMS(100); })) {
@@ -96,6 +98,7 @@ namespace Catkeys.Util
 			[ThreadStatic]
 			static WindowsFormsSynchronizationContext _wfContext;
 
+			/// <exception cref="Win32Exception"/>
 			internal Work(object state, WorkCallback workCallback, SendOrPostCallback completionCallback, bool createWork)
 			{
 				_state = state;
@@ -157,7 +160,7 @@ namespace Catkeys.Util
 			}
 
 			/// <summary>
-			/// Calls Cancel(), releases all resources used by this object and allows this object to be garbage-collected.
+			/// Calls <see cref="Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
 			/// Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
 			/// </summary>
 			public void Dispose()
@@ -191,8 +194,7 @@ namespace Catkeys.Util
 				var apState = Application.OleRequired();
 				Debug.Assert(apState == ApartmentState.STA);
 #else
-				APTTYPE apt; int aptq;
-				int hr = CoGetApartmentType(out apt, out aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
+				int hr = CoGetApartmentType(out var apt, out var aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
 				if(hr == 0 && apt != APTTYPE.APTTYPE_STA) {
 					hr = OleInitialize(Zero);
 					//Thread.CurrentThread.Priority = ThreadPriority.BelowNormal; //does not make getting/displaying icons better
@@ -225,7 +227,7 @@ namespace Catkeys.Util
 		{
 			var p = _ProcVar;
 			if(p->_pool == Zero) {
-				lock ("d3+gzRQ2mkiiOHFKsRGCXw") {
+				lock("d3+gzRQ2mkiiOHFKsRGCXw") {
 					if(p->_pool == Zero) {
 						var pool = CreateThreadpool(Zero);
 						//SetThreadpoolThreadMinimum(pool, 2); //don't need this
@@ -235,7 +237,7 @@ namespace Catkeys.Util
 				}
 			}
 
-			_env.Size = (uint)Marshal.SizeOf(typeof(TP_CALLBACK_ENVIRON_V3));
+			_env.Size = Api.SizeOf<TP_CALLBACK_ENVIRON_V3>();
 			_env.Version = 3;
 			_env.CallbackPriority = (int)TP_CALLBACK_PRIORITY.TP_CALLBACK_PRIORITY_NORMAL; //tested: low etc does not change speeds
 			_env.Pool = p->_pool;
@@ -269,7 +271,7 @@ namespace Catkeys.Util
 		{
 			public IntPtr _pool;
 		}
-		static ProcessVariables* _ProcVar { get { return &LibProcessMemory.Ptr->threadPool; } }
+		static ProcessVariables* _ProcVar { get => &LibProcessMemory.Ptr->threadPool; }
 
 		//Each appdomain has its own TP_CALLBACK_ENVIRON_V3 with its own cleanup group and shared thread pool.
 		static TP_CALLBACK_ENVIRON_V3 _env;

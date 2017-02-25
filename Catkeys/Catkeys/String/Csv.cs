@@ -26,9 +26,9 @@ namespace Catkeys
 	/// CSV is a text format used to store a single table of data in human-readable/editable way.
 	/// It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
 	/// There is no strictly defined CSV standard. CsvTable uses these rules:
-	///		Fields containg Separator characters (default ','), Quote characters (default '"') and multiple lines must be enclosed in Quote characters. Example: "ab, cd".
-	///		Each Quote character in such fields must be escaped (replaced) with two Quote characters. Example: "ab ""cd"" ef".
-	///		Fields that start or end with ASCII space or tab characters must be enclosed in Quote characters, unless TrimSpaces is false. Example: " ab ".
+	///		Fields containg <see cref="Separator"/> characters (default ','), <see cref="Quote"/> characters (default '"') and multiple lines must be enclosed in <see cref="Quote"/> characters. Example: "ab, cd".
+	///		Each Quote character in such fields must be escaped (replaced) with two <see cref="Quote"/> characters. Example: "ab ""cd"" ef".
+	///		Fields that start or end with ASCII space or tab characters must be enclosed in <see cref="Quote"/> characters, unless <see cref="TrimSpaces"/> is false. Example: " ab ".
 	///		Rows in CSV text can have different field count.
 	/// </summary>
 	[DebuggerStepThrough]
@@ -44,8 +44,7 @@ namespace Catkeys
 		/// Uses default <see cref="Separator"/>, <see cref="Quote"/> and <see cref="TrimSpaces"/> values (',', '"', true).
 		/// </summary>
 		/// <param name="csv">CSV text.</param>
-		/// <remarks>
-		/// </remarks>
+		/// <exception cref="CatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		public CsvTable(string csv)
 		{
 			_Parse(csv);
@@ -55,10 +54,10 @@ namespace Catkeys
 		/// Gets the internal List containing rows as string arrays.
 		/// It's not a copy; changing it will change the data of this CsvTable variable.
 		/// You can do anything with the List. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
-		/// All row arrays have Length equal to ColumnCount, and it must remain so; you can change Length, but then need to call ColumnCount=newLength.
+		/// All row arrays have Length equal to <see cref="ColumnCount"/>, and it must remain so; you can change Length, but then need to call <c>ColumnCount=newLength</c>.
 		/// </summary>
 		/// <example><code>x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));</code></example>
-		public List<string[]> Data { get { return _a; } }
+		public List<string[]> Data { get => _a; }
 
 		/// <summary>
 		/// Sets or gets the field separator character used when parsing and composing CSV text.
@@ -80,13 +79,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Parses CSV text and stores all data in internal List of string arrays.
-		/// Depends on these properties: Separator (initially ','), Quote (initially '"'), TrimSpaces (initially true).
+		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"'), <see cref="TrimSpaces"/> (initially true).
 		/// </summary>
 		/// <param name="csv">
 		/// CSV text.
-		///	If rows in CSV text have different field count, the longest row sets the ColumnCount property and all row array lenghts; array elements of missing CSV fields will be null.
+		///	If rows in CSV text have different field count, the longest row sets the <see cref="ColumnCount"/> property and all row array lenghts; array elements of missing CSV fields will be null.
 		/// </param>
-		/// <exception cref="CatException">When the CSV is invalid, eg contains incorrectly enclosed fields.</exception>
+		/// <exception cref="CatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		public void FromString(string csv)
 		{
 			_Parse(csv);
@@ -170,7 +169,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Composes CSV text from the internal List of string arrays.
-		/// Depends on these properties: Separator (initially ','), Quote (initially '"').
+		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"').
 		/// </summary>
 		public override string ToString()
 		{
@@ -209,7 +208,7 @@ namespace Catkeys
 		/// </summary>
 		public int RowCount
 		{
-			get { return _a.Count; }
+			get => _a.Count;
 			set
 			{
 				if(value > _a.Count) {
@@ -229,7 +228,7 @@ namespace Catkeys
 		/// </summary>
 		public int ColumnCount
 		{
-			get { return _columnCount; }
+			get => _columnCount;
 			set
 			{
 				if(value <= 0) throw new ArgumentOutOfRangeException();
@@ -255,8 +254,8 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets a field.
 		/// </summary>
-		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to RowCount; then adds new row.</param>
-		/// <param name="column">0-based column index. With the 'set' function it can be &gt;= ColumnCount and &lt; 1000; then makes ColumnCount = column + 1.</param>
+		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
+		/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then makes ColumnCount = column + 1.</param>
 		public string this[int row, int column]
 		{
 			get
@@ -288,9 +287,9 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets fields in a row.
 		/// The 'get' function gets the row array. It's not a copy; changing its elements will change the data of this CsvTable variable.
-		/// The 'set' function sets the row array. Does not copy the array, unless its Length is less than ColumnCount.
+		/// The 'set' function sets the row array. Does not copy the array, unless its Length is less than <see cref="ColumnCount"/>.
 		/// </summary>
-		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to RowCount; then adds new row.</param>
+		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
 		public string[] this[int row]
 		{
 			get
@@ -325,8 +324,8 @@ namespace Catkeys
 		/// <summary>
 		/// Inserts new row and sets its fields.
 		/// </summary>
-		/// <param name="index">0-based row index. If negative or equal to RowCount, adds to the end.</param>
-		/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its Length is less than ColumnCount. Adds new columns if array Length (or the number of string arguments) is greater than ColumnCount.</param>
+		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
+		/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its Length is less than <see cref="ColumnCount"/>. Adds new columns if array Length (or the number of string arguments) is greater than ColumnCount.</param>
 		public void InsertRow(int index, params string[] fields)
 		{
 			if(index < 0) index = RowCount;
@@ -337,7 +336,7 @@ namespace Catkeys
 		/// <summary>
 		/// Inserts new empty row.
 		/// </summary>
-		/// <param name="index">0-based row index. If negative or equal to RowCount, adds to the end.</param>
+		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
 		public void InsertRow(int index)
 		{
 			InsertRow(index, null);
@@ -387,7 +386,7 @@ namespace Catkeys
 		public void ToFile(string file)
 		{
 			File.WriteAllText(file, ToString());
-			//TODO: flags: 1 append, 0x100 safe, 0x200 safe+backup
+			//FUTURE: flags: append, safe, safe+backup
 		}
 
 		/// <summary>
@@ -430,9 +429,7 @@ namespace Catkeys
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		public double GetDouble(int row, int column)
 		{
-			double r;
-			if(!double.TryParse(this[row, column], out r)) return 0.0;
-			return r;
+			return double.TryParse(this[row, column], out double R) ? R : 0.0;
 		}
 	}
 }

@@ -19,8 +19,6 @@ using System.ComponentModel; //Win32Exception
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 #pragma warning disable 169
 
@@ -168,10 +166,10 @@ namespace SdkConverter
 
 			//string[] a = { "one", "two" };
 			//TestArrayStr(a);
-			//Out(a[0]);
+			//Print(a[0]);
 			//int[] a = { 1, 2 };
 			//TestArray(a);
-			//Out(a[0]);
+			//Print(a[0]);
 
 			//string s = "instr";
 			//var p = new STSTR();
@@ -180,14 +178,14 @@ namespace SdkConverter
 			//p.s = s;
 			//TestStructString(ref p);
 			////TestStructString2(p);
-			//Out("returned");
+			//Print("returned");
 			//OutList(p.k, p.s);
-			//Out(p.s == s);
+			//Print(p.s == s);
 
 			//var p = new POINT();
 			//p.x = 2;
 			//TestStructBlit(ref p);
-			//Out(p.y);
+			//Print(p.y);
 
 
 			//var v = new SRKH();
@@ -202,7 +200,7 @@ namespace SdkConverter
 
 			//var sb = new StringBuilder("test");
 			//CharUpper(sb);
-			//Out(sb);
+			//Print(sb);
 
 			//int k = 1;
 			//int R=TestUnmanaged(ref k);
@@ -213,15 +211,15 @@ namespace SdkConverter
 			//OutList(R, k);
 
 
-			//Out(1);
+			//Print(1);
 			//string s;
 			//s = new string(GetCommandLine());
-			//Out(s);
+			//Print(s);
 			//s = new string(GetCommandLine());
-			//Out(s);
+			//Print(s);
 			//s = new string(GetCommandLine());
-			//Out(s);
-			//Out(2);
+			//Print(s);
+			//Print(2);
 
 
 			//var v = new ARRHOLDER();
@@ -233,7 +231,7 @@ namespace SdkConverter
 			////var x = new ARR();
 			////for(int i=0; i<4; i++) {
 			////	x[i] = i + 100;
-			////	Out(x[i]);
+			////	Print(x[i]);
 			////}
 
 			//int n1 = 0, n2 = 0;
@@ -243,9 +241,9 @@ namespace SdkConverter
 			////x.b = new int[100];
 			////for(int i = 0; i < 100; i++) {
 			////	x.a[i] = i + 100;
-			////	Out(x.a[i]);
+			////	Print(x.a[i]);
 			////}
-			////Out("DONE");
+			////Print("DONE");
 
 			//var a1 = new Action(() =>
 			//{

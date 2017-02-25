@@ -26,9 +26,9 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public static class Mouse
 	{
-		public static POINT XY { get { POINT p; Api.GetCursorPos(out p); return p; } }
-		public static int X { get { POINT p = XY; return p.x; } }
-		public static int Y { get { POINT p = XY; return p.y; } }
+		public static POINT XY { get { Api.GetCursorPos(out var p); return p; } }
+		public static int X { get => XY.x; }
+		public static int Y { get => XY.y; }
 	}
 
 	//TODO: create file Input.cs
@@ -41,15 +41,14 @@ namespace Catkeys
 		/// </summary>
 		public static Wnd GetTextCursorRect(out RECT r)
 		{
-			Native.GUITHREADINFO g;
-			if(Wnd.Misc.GetGUIThreadInfo(out g) && !g.hwndCaret.Is0) {
+			if(Wnd.Misc.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
 				if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
 				r = g.rcCaret;
 				g.hwndCaret.MapClientToScreen(ref r);
 				return g.hwndCaret;
 			}
 
-			POINT p; Api.GetCursorPos(out p);
+			Api.GetCursorPos(out var p);
 			r = new RECT(p.x, p.y, 0, 16, true);
 			return Wnd0;
 

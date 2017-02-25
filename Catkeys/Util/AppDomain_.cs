@@ -26,6 +26,45 @@ namespace Catkeys.Util
 	/// </summary>
 	public static class AppDomain_
 	{
+		//Don't use tuples, at least with public functions. Problems:
+		//	This and caller project need to install System.ValueTuple from NuGet.
+		//	This dll and caller must be accompanied with System.ValueTuple.dll.
+		//	SHFB cannot resolve it.
+#if USE_TUPLE
+		/// <summary>
+		/// Gets default app domain.
+		/// Returns tuple containing AppDomain domain and bool isCurrentDomain which is true if the domain is current (caller's) domain.
+		/// </summary>
+		public static (AppDomain domain, bool isCurrentDomain) GetDefaultDomain()
+		{
+			if(_defaultAppDomain == null) {
+				var d = AppDomain.CurrentDomain;
+				if(d.IsDefaultAppDomain()) {
+					_defaultAppDomain = d;
+					_defaultAppDomainIsCurrent = true;
+				} else {
+					d = AppDomain.CurrentDomain.GetData("Catkeys_DefaultDomain") as AppDomain;
+					if(d != null) {
+						_defaultAppDomain = d;
+					} else { //current domain created not by Catkeys
+						ICorRuntimeHost host = new CorRuntimeHost() as ICorRuntimeHost;
+						//Perf.Next(); //speed:  289  3251  (3542) ngened, else 4ms. Why GetDefaultDomain so slow?
+						object o = null; host.GetDefaultDomain(out o);
+						_defaultAppDomain = o as AppDomain;
+
+						//this is slower
+						//IntPtr hEnum;
+						//if(0 != host.EnumDomains(out hEnum)) return null;
+						//if(0 != host.NextDomain(hEnum, out defaultAppDomain)) return null;
+						//host.CloseEnum(hEnum);
+						//_defaultAppDomain = defaultAppDomain as AppDomain;
+					}
+				}
+			}
+			return (_defaultAppDomain, _defaultAppDomainIsCurrent);
+		}
+		static AppDomain _defaultAppDomain; static bool _defaultAppDomainIsCurrent;
+#else
 		/// <summary>
 		/// Gets default app domain.
 		/// </summary>
@@ -66,52 +105,32 @@ namespace Catkeys.Util
 		/// </summary>
 		public static AppDomain GetDefaultDomain()
 		{
-			bool isThisDef;
-			return GetDefaultDomain(out isThisDef);
+			return GetDefaultDomain(out bool isThisDef);
 		}
-
+#endif
 		[ComImport, Guid("CB2F6722-AB3A-11d2-9C40-00C04FA30A3E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		unsafe interface ICorRuntimeHost
 		{
-			[PreserveSig]
-			int CreateLogicalThreadState();
-			[PreserveSig]
-			int DeleteLogicalThreadState();
-			[PreserveSig]
-			int SwitchInLogicalThreadState(ref uint pFiberCookie);
-			[PreserveSig]
-			int SwitchOutLogicalThreadState(out uint* pFiberCookie);
-			[PreserveSig]
-			int LocksHeldByLogicalThread(out uint pCount);
-			[PreserveSig]
-			int MapFile(IntPtr hFile, out IntPtr hMapAddress);
-			[PreserveSig]
-			//int GetConfiguration(out ICorConfiguration pConfiguration);
+			[PreserveSig] int CreateLogicalThreadState();
+			[PreserveSig] int DeleteLogicalThreadState();
+			[PreserveSig] int SwitchInLogicalThreadState(ref uint pFiberCookie);
+			[PreserveSig] int SwitchOutLogicalThreadState(out uint* pFiberCookie);
+			[PreserveSig] int LocksHeldByLogicalThread(out uint pCount);
+			[PreserveSig] int MapFile(IntPtr hFile, out IntPtr hMapAddress);
+			[PreserveSig] //int GetConfiguration(out ICorConfiguration pConfiguration);
 			int GetConfiguration(IntPtr pConfiguration);
-			[PreserveSig]
-			int Start();
-			[PreserveSig]
-			int Stop();
-			[PreserveSig]
-			int CreateDomain([MarshalAs(UnmanagedType.LPWStr)] string pwzFriendlyName, [MarshalAs(UnmanagedType.IUnknown)] Object pIdentityArray, [MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
-			[PreserveSig]
-			int GetDefaultDomain([MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
-			[PreserveSig]
-			int EnumDomains(out IntPtr hEnum);
-			[PreserveSig]
-			int NextDomain(IntPtr hEnum, [MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
-			[PreserveSig]
-			int CloseEnum(IntPtr hEnum);
-			[PreserveSig]
-			int CreateDomainEx([MarshalAs(UnmanagedType.LPWStr)] string pwzFriendlyName, [MarshalAs(UnmanagedType.IUnknown)] Object pSetup, [MarshalAs(UnmanagedType.IUnknown)] Object pEvidence, [MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
-			[PreserveSig]
-			int CreateDomainSetup([MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomainSetup);
-			[PreserveSig]
-			int CreateEvidence([MarshalAs(UnmanagedType.IUnknown)] out Object pEvidence);
-			[PreserveSig]
-			int UnloadDomain([MarshalAs(UnmanagedType.IUnknown)] Object pAppDomain);
-			[PreserveSig]
-			int CurrentDomain([MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
+			[PreserveSig] int Start();
+			[PreserveSig] int Stop();
+			[PreserveSig] int CreateDomain([MarshalAs(UnmanagedType.LPWStr)] string pwzFriendlyName, [MarshalAs(UnmanagedType.IUnknown)] Object pIdentityArray, [MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
+			[PreserveSig] int GetDefaultDomain([MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
+			[PreserveSig] int EnumDomains(out IntPtr hEnum);
+			[PreserveSig] int NextDomain(IntPtr hEnum, [MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
+			[PreserveSig] int CloseEnum(IntPtr hEnum);
+			[PreserveSig] int CreateDomainEx([MarshalAs(UnmanagedType.LPWStr)] string pwzFriendlyName, [MarshalAs(UnmanagedType.IUnknown)] Object pSetup, [MarshalAs(UnmanagedType.IUnknown)] Object pEvidence, [MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
+			[PreserveSig] int CreateDomainSetup([MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomainSetup);
+			[PreserveSig] int CreateEvidence([MarshalAs(UnmanagedType.IUnknown)] out Object pEvidence);
+			[PreserveSig] int UnloadDomain([MarshalAs(UnmanagedType.IUnknown)] Object pAppDomain);
+			[PreserveSig] int CurrentDomain([MarshalAs(UnmanagedType.IUnknown)] out Object pAppDomain);
 		}
 
 		[ComImport, Guid("CB2F6723-AB3A-11d2-9C40-00C04FA30A3E"), ClassInterface(ClassInterfaceType.None)]
@@ -163,7 +182,7 @@ namespace Catkeys.Util
 
 		/// <summary>
 		/// Gets the entry assembly of current appdomain.
-		/// Normally instead can be used Assembly.GetEntryAssembly(), but it fails if appdomain launched through DoCallBack.
+		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it fails if appdomain launched through <see cref="AppDomain.DoCallBack">AppDomain.DoCallBack</see>.
 		/// </summary>
 		public static Assembly EntryAssembly
 		{

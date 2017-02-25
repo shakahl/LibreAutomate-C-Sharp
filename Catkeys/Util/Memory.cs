@@ -32,12 +32,12 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Creates named shared memory of specified size. If already exists, just gets its address.
 		/// Returns shared memory address in this process.
-		/// Calls Api.CreateFileMapping() and Api.MapViewOfFile().
+		/// Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
 		/// </summary>
 		/// <param name="name">Shared memory name. Case-insensitive.</param>
 		/// <param name="size">Shared memory size. The function uses it only when creating the memory; it does not check whether the size argument matches the size of existing memory.</param>
 		/// <param name="allowLIL">Allow UAC low-integrity-level processes to access the shared memory.</param>
-		/// <exception cref="Win32Exception">When fails.</exception>
+		/// <exception cref="Win32Exception">The API failed.</exception>
 		/// <remarks>
 		/// Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
 		/// There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
@@ -45,13 +45,12 @@ namespace Catkeys.Util
 		public static void* CreateOrGet(string name, uint size, bool allowLIL = false)
 		{
 			lock("AF2liKVWtEej+lRYCx0scQ") {
-				IntPtr t;
 				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
-				if(!InterDomain.GetVariable(name, out t)) {
+				if(!InterDomain.GetVariable(name, out IntPtr t)) {
 					var sa = new _SecurityAttributes();
 					var hm = Api.CreateFileMapping((IntPtr)(~0), (allowLIL && sa.Create()) ? &sa.sa : null, Api.PAGE_READWRITE, 0, size, name);
 					if(hm == Zero) throw new Win32Exception();
-					//bool opened = Marshal.GetLastWin32Error() == Api.ERROR_ALREADY_EXISTS;
+					//bool opened = Native.GetError() == Api.ERROR_ALREADY_EXISTS;
 					sa.Dispose();
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
 					if(t == Zero) { var e = new Win32Exception(); Api.CloseHandle(hm); throw e; }
@@ -105,7 +104,7 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Gets pointer to the shared memory.
 		/// </summary>
-		public static LibSharedMemory* Ptr { get { return _sm; } }
+		public static LibSharedMemory* Ptr { get => _sm; }
 	}
 
 	/// <summary>
@@ -113,7 +112,7 @@ namespace Catkeys.Util
 	/// Size 0x10000 (64 KB). Initially zero.
 	/// </summary>
 	/// <remarks>
-	/// When need to prevent simultaneous access of the memory by multiple threads, use <c>lock("uniqueString"){...}</c>.
+	/// When need to prevent simultaneous access of the memory by multiple threads, use <c>lock("uniqueString"){...}</c> .
 	/// It locks in all appdomains, because literal strings are interned, ie shared by all appdomains.
 	/// Using some other object with 'lock' would lock only in that appdomain.
 	/// However use this only in single module, because ngened modules have own interned strings.

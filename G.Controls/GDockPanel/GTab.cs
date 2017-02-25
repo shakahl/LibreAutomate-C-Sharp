@@ -77,11 +77,11 @@ namespace G.Controls
 				this.SetActiveItem(item1.IsDocked ? item1 : item2);
 			}
 
-			internal override string Text { get { return this.ActiveItem?.Text; } }
+			internal override string Text { get => this.ActiveItem?.Text; }
 
-			internal int DockedItemCount { get { return _dockedItemCount; } }
+			internal int DockedItemCount { get => _dockedItemCount; }
 
-			internal bool ShowsTabButtons { get { return _dockedItemCount >= 2; } }
+			internal bool ShowsTabButtons { get => _dockedItemCount >= 2; }
 
 			internal Rectangle CaptionBoundsExceptButtons
 			{
@@ -273,7 +273,7 @@ namespace G.Controls
 				this.InvalidateCaption();
 			}
 
-			internal void OnItemDocked(GPanel gp, bool setActive=true)
+			internal void OnItemDocked(GPanel gp, bool setActive = true)
 			{
 				_AssertIsChild(gp);
 				if(this.IsHidden) SetDockState(GDockState.Docked);

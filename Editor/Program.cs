@@ -102,7 +102,7 @@ namespace Editor
 				//Task.Run(() => { while(true) { WaitMS(100); GC.Collect(); } });
 
 				Output.Clear();
-				Test(); return;
+				//Test(); return;
 				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
 				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
 				Perf.First();

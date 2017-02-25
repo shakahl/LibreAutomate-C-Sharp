@@ -51,7 +51,7 @@ namespace Catkeys.Tasks
 			var mutex = new Mutex(true, "{8AE35071-A3F5-423A-8F67-7C3AC0FFC8E3}", out isOwner);
 			if(!isOwner) {
 				if(args.Length > 0) {
-					var w = Wnd.FindRaw("CatkeysTasks");
+					var w = Wnd.FindFast(null, "CatkeysTasks");
 					w.SendS(Api.WM_SETTEXT, 0x8000, string.Join("\x19", args));
 				}
 				return;
@@ -116,23 +116,23 @@ namespace Catkeys.Tasks
 				_trayIcon.MouseClick += _trayIcon_MouseClick;
 				_trayIcon.Visible = true;
 				//Perf.NW();
-			} else if(_trayIcon!= null) {
+			} else if(_trayIcon != null) {
 				_trayIcon.Visible = false;
 				_trayIcon.Dispose();
 				_trayIcon = null;
-            }
+			}
 		}
 
 		private static void _trayIcon_MouseClick(object sender, MouseEventArgs e)
 		{
 			switch(e.Button) {
 			case MouseButtons.Left:
-				_wMain.CloseRawAsync();
-                break;
+				_wMain.Close(true);
+				break;
 			case MouseButtons.Right:
 				_TrayIcon_Menu();
-                break;
-            }
+				break;
+			}
 		}
 #else //12-14 ms
 		static void _TrayIcon(bool add)
@@ -292,11 +292,11 @@ namespace Catkeys.Tasks
 			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
 			//PrintList(csFile, dllFile);
 
-			if(!_compilerWindow.IsValid) {
+			if(!_compilerWindow.IsAlive) {
 				IntPtr ev = Api.CreateEvent(Zero, false, false, null);
 				var thr = new Thread(_CompilerAppDomainThread);
 				thr.Start(ev);
-				Api.WaitForSingleObject(ev, ~0U);
+				Api.WaitForSingleObject(ev, Api.INFINITE);
 				Api.CloseHandle(ev);
 				_compilerWindow = (Wnd)(IntPtr)_compilerDomain.GetData("hwndCompiler");
 			}

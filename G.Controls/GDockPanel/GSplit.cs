@@ -251,12 +251,12 @@ namespace G.Controls
 				Debug.Assert(_dockedChildCount == 2);
 				_manager.Cursor = this.IsVerticalSplit ? Cursors.VSplit : Cursors.HSplit;
 				bool vert = this.IsVerticalSplit;
-				var p = _manager.MouseClientXY();
+				var p = _manager.MouseClientXY_();
 				var offset = vert ? (p.X - this.SplitterBounds.X) : (p.Y - this.SplitterBounds.Y);
 				Catkeys.Util.DragDrop.SimpleDragDrop(_manager, MouseButtons.Left, d =>
 				{
 					if(d.Msg.message != Api.WM_MOUSEMOVE) return;
-					p = _manager.MouseClientXY();
+					p = _manager.MouseClientXY_();
 					var b = this.Bounds;
 					int xy, loBound, hiBound, widHei;
 					if(vert) {
@@ -306,7 +306,7 @@ namespace G.Controls
 				return SplitterBounds.Contains(x, y);
 			}
 
-			internal bool IsSplitterVisible { get { return _dockedChildCount == 2; } }
+			internal bool IsSplitterVisible { get => _dockedChildCount == 2; }
 
 			internal void OnChildUndocked(GNode gn)
 			{

@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.ComponentModel;
 
-using Catkeys;
 using static Catkeys.NoClass;
 
 #pragma warning disable 1591 //missing XML documentation
@@ -12,16 +12,100 @@ using static Catkeys.NoClass;
 namespace Catkeys
 {
 	/// <summary>
-	/// Windows API used with public functions (parameters etc) of this library.
+	/// Windows API types and constants used with public functions (parameters etc) of this library.
+	/// Also several helper functions.
 	/// </summary>
-	/// <tocexclude />
 	[DebuggerStepThrough]
 	[CLSCompliant(false)]
 	public static unsafe partial class Native
 	{
-		/// <tocexclude />
-		public struct MSG { public Wnd hwnd; public uint message; public LPARAM wParam; public LPARAM lParam; public uint time; public POINT pt; }
+		/// <summary>
+		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API error code of this thread.
+		/// Need it before calling some functions if you want to use <see cref="GetError"/> or <see cref="GetErrorMessage()">GetErrorMessage</see>.
+		/// </summary>
+		public static void ClearError()
+		{
+			Api.SetLastError(0);
+		}
 
+		/// <summary>
+		/// Gets the Windows API error code of this thread.
+		/// Calls <see cref="Marshal.GetLastWin32Error"/>.
+		/// </summary>
+		/// <remarks>
+		/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable.
+		/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most Wnd propery-get functions.
+		/// When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> if you want to know whether the function failed or/and what is the error code. Also you can use <see cref="GetErrorMessage()">GetErrorMessage</see>.
+		/// 
+		/// Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="ClearError"/> before.
+		///
+		/// Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// Wnd w = Wnd.Find("Notepag");
+		/// //if(w.Is0) return; //assume you don't use this
+		/// Native.ClearError();
+		/// bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
+		/// int e = Native.GetError();
+		/// if(e != 0) { PrintList(e, Native.GetErrorMessage(e)); return; } //1400, Invalid window handle
+		/// Print(enabled);
+		/// ]]></code>
+		/// </example>
+		public static int GetError()
+		{
+			return Marshal.GetLastWin32Error();
+		}
+
+		/// <summary>
+		/// Gets the text message of the Windows API error code of this thread.
+		/// Returns null if the code is 0.
+		/// The string always ends with ".".
+		/// </summary>
+		public static string GetErrorMessage()
+		{
+			return GetErrorMessage(GetError());
+		}
+
+		/// <summary>
+		/// Gets the text message of a Windows API error code.
+		/// Returns null if errorCode is 0.
+		/// The string always ends with ".".
+		/// </summary>
+		public static string GetErrorMessage(int errorCode)
+		{
+			if(errorCode == 0) return null;
+			char* p = null;
+			const uint fl = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS;
+			int r = FormatMessage(fl, Zero, errorCode, 0, &p, 0, Zero);
+			while(r > 0 && p[r - 1] <= ' ') r--;
+			if(r == 0) return $"Unknown error (0x{errorCode:X}).";
+			if(p[r - 1] != '.') p[r++] = '.';
+			var s = new string(p, 0, r);
+			Api.LocalFree(p);
+			return s;
+		}
+
+		const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
+		const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x100;
+		const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
+
+		[DllImport("kernel32.dll", EntryPoint = "FormatMessageW")]
+		static extern int FormatMessage(uint dwFlags, IntPtr lpSource, int code, uint dwLanguageId, char** lpBuffer, int nSize, IntPtr Arguments);
+
+		/// <summary><msdn>MSG</msdn></summary>
+		/// <tocexclude />
+		public struct MSG
+		{
+			public Wnd hwnd;
+			public uint message;
+			public LPARAM wParam;
+			public LPARAM lParam;
+			public uint time;
+			public POINT pt;
+		}
+
+		/// <summary><msdn>SHSTOCKICONID</msdn></summary>
 		/// <tocexclude />
 		public enum SHSTOCKICONID
 		{
@@ -121,32 +205,7 @@ namespace Catkeys
 			SIID_MAX_ICONS = 181
 		}
 
-		/// <tocexclude />
-		public struct WINDOWPLACEMENT
-		{
-			public uint length;
-			public uint flags; //WPF_
-			public int showCmd; //SW_
-			public POINT ptMinPosition;
-			public POINT ptMaxPosition;
-			public RECT rcNormalPosition;
-		}
-
-		/// <tocexclude />
-		public struct WINDOWINFO
-		{
-			public uint cbSize;
-			public RECT rcWindow;
-			public RECT rcClient;
-			public uint dwStyle;
-			public uint dwExStyle;
-			public uint dwWindowStatus;
-			public uint cxWindowBorders;
-			public uint cyWindowBorders;
-			public ushort atomWindowType;
-			public ushort wCreatorVersion;
-		}
-
+		/// <summary><msdn>GUITHREADINFO</msdn></summary>
 		/// <tocexclude />
 		public struct GUITHREADINFO
 		{
@@ -161,8 +220,8 @@ namespace Catkeys
 			public RECT rcCaret;
 		}
 
+		/// <summary><msdn>SIGDN</msdn></summary>
 		/// <tocexclude />
-		[Flags]
 		public enum SIGDN :uint
 		{
 			SIGDN_NORMALDISPLAY,
@@ -177,8 +236,211 @@ namespace Catkeys
 			SIGDN_PARENTRELATIVEFORUI = 0x80094001
 		}
 
+		/// <summary><msdn>WNDPROC</msdn></summary>
 		/// <tocexclude />
 		public delegate LPARAM WNDPROC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam);
+
+		//SWP_
+
+		/// <exclude />
+		public const uint SWP_NOSIZE = 0x1;
+		/// <exclude />
+		public const uint SWP_NOMOVE = 0x2;
+		/// <exclude />
+		public const uint SWP_NOZORDER = 0x4;
+		/// <exclude />
+		public const uint SWP_NOREDRAW = 0x8;
+		/// <exclude />
+		public const uint SWP_NOACTIVATE = 0x10;
+		/// <exclude />
+		public const uint SWP_FRAMECHANGED = 0x20;
+		/// <exclude />
+		public const uint SWP_SHOWWINDOW = 0x40;
+		/// <exclude />
+		public const uint SWP_HIDEWINDOW = 0x80;
+		/// <exclude />
+		public const uint SWP_NOCOPYBITS = 0x100;
+		/// <exclude />
+		public const uint SWP_NOOWNERZORDER = 0x200;
+		/// <exclude />
+		public const uint SWP_NOSENDCHANGING = 0x400;
+		/// <exclude />
+		public const uint SWP_DEFERERASE = 0x2000;
+		/// <exclude />
+		public const uint SWP_ASYNCWINDOWPOS = 0x4000;
+
+		//GWL_, DWL_, DWLP_
+
+		/// <exclude />
+		public const int GWL_WNDPROC = -4;
+		/// <exclude />
+		public const int GWL_USERDATA = -21;
+		/// <exclude />
+		public const int GWL_STYLE = -16;
+		/// <exclude />
+		public const int GWL_ID = -12;
+		/// <exclude />
+		public const int GWL_HWNDPARENT = -8;
+		/// <exclude />
+		public const int GWL_HINSTANCE = -6;
+		/// <exclude />
+		public const int GWL_EXSTYLE = -20;
+		//info: also there are GWLP_, but their values are the same.
+
+		//#define DWLP_MSGRESULT  0
+		//#define DWLP_DLGPROC    DWLP_MSGRESULT + sizeof(LRESULT)
+		//#define DWLP_USER       DWLP_DLGPROC + sizeof(DLGPROC)
+
+		/// <exclude />
+		public const int DWL_MSGRESULT = 0;
+		/// <exclude />
+		public const int DWL_DLGPROC_32 = 4;
+		/// <exclude />
+		public const int DWL_DLGPROC_64 = 8;
+		/// <exclude />
+		public const int DWL_USER_32 = 8;
+		/// <exclude />
+		public const int DWL_USER_64 = 16;
+
+		/// <exclude />
+		public static int DWLP_DLGPROC { get => IntPtr.Size; }
+		/// <exclude />
+		public static int DWLP_USER { get => IntPtr.Size * 2; }
+
+		//GCW_
+
+		/// <exclude />
+		public static int GCW_ATOM = -32;
+		/// <exclude />
+		public static int GCL_WNDPROC = -24;
+		/// <exclude />
+		public static int GCL_STYLE = -26;
+		/// <exclude />
+		public static int GCL_MENUNAME = -8;
+		/// <exclude />
+		public static int GCL_HMODULE = -16;
+		/// <exclude />
+		public static int GCL_HICONSM = -34;
+		/// <exclude />
+		public static int GCL_HICON = -14;
+		/// <exclude />
+		public static int GCL_HCURSOR = -12;
+		/// <exclude />
+		public static int GCL_HBRBACKGROUND = -10;
+		/// <exclude />
+		public static int GCL_CBWNDEXTRA = -18;
+		/// <exclude />
+		public static int GCL_CBCLSEXTRA = -20;
+		//info: also there are GCLP_, but their values are the same.
+
+		//WS_
+
+		/// <exclude />
+		public const uint WS_POPUP = 0x80000000;
+		/// <exclude />
+		public const uint WS_CHILD = 0x40000000;
+		/// <exclude />
+		public const uint WS_MINIMIZE = 0x20000000;
+		/// <exclude />
+		public const uint WS_VISIBLE = 0x10000000;
+		/// <exclude />
+		public const uint WS_DISABLED = 0x08000000;
+		/// <exclude />
+		public const uint WS_CLIPSIBLINGS = 0x04000000;
+		/// <exclude />
+		public const uint WS_CLIPCHILDREN = 0x02000000;
+		/// <exclude />
+		public const uint WS_MAXIMIZE = 0x01000000;
+		/// <exclude />
+		public const uint WS_BORDER = 0x00800000;
+		/// <exclude />
+		public const uint WS_DLGFRAME = 0x00400000;
+		/// <exclude />
+		public const uint WS_VSCROLL = 0x00200000;
+		/// <exclude />
+		public const uint WS_HSCROLL = 0x00100000;
+		/// <exclude />
+		public const uint WS_SYSMENU = 0x00080000;
+		/// <exclude />
+		public const uint WS_THICKFRAME = 0x00040000;
+		/// <exclude />
+		public const uint WS_GROUP = 0x00020000;
+		/// <exclude />
+		public const uint WS_TABSTOP = 0x00010000;
+		/// <exclude />
+		public const uint WS_MINIMIZEBOX = 0x00020000;
+		/// <exclude />
+		public const uint WS_MAXIMIZEBOX = 0x00010000;
+		/// <exclude />
+		public const uint WS_CAPTION = WS_BORDER | WS_DLGFRAME;
+		/// <exclude />
+		public const uint WS_OVERLAPPEDWINDOW = WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+		/// <exclude />
+		public const uint WS_POPUPWINDOW = WS_POPUP | WS_BORDER | WS_SYSMENU;
+
+		//WS_EX_
+
+		/// <exclude />
+		public const uint WS_EX_DLGMODALFRAME = 0x00000001;
+		/// <exclude />
+		public const uint WS_EX_NOPARENTNOTIFY = 0x00000004;
+		/// <exclude />
+		public const uint WS_EX_TOPMOST = 0x00000008;
+		/// <exclude />
+		public const uint WS_EX_ACCEPTFILES = 0x00000010;
+		/// <exclude />
+		public const uint WS_EX_TRANSPARENT = 0x00000020;
+		/// <exclude />
+		public const uint WS_EX_MDICHILD = 0x00000040;
+		/// <exclude />
+		public const uint WS_EX_TOOLWINDOW = 0x00000080;
+		/// <exclude />
+		public const uint WS_EX_WINDOWEDGE = 0x00000100;
+		/// <exclude />
+		public const uint WS_EX_CLIENTEDGE = 0x00000200;
+		/// <exclude />
+		public const uint WS_EX_CONTEXTHELP = 0x00000400;
+		/// <exclude />
+		public const uint WS_EX_RIGHT = 0x00001000;
+		/// <exclude />
+		public const uint WS_EX_LEFT = 0x00000000;
+		/// <exclude />
+		public const uint WS_EX_RTLREADING = 0x00002000;
+		/// <exclude />
+		public const uint WS_EX_LTRREADING = 0x00000000;
+		/// <exclude />
+		public const uint WS_EX_LEFTSCROLLBAR = 0x00004000;
+		/// <exclude />
+		public const uint WS_EX_RIGHTSCROLLBAR = 0x00000000;
+		/// <exclude />
+		public const uint WS_EX_CONTROLPARENT = 0x00010000;
+		/// <exclude />
+		public const uint WS_EX_STATICEDGE = 0x00020000;
+		/// <exclude />
+		public const uint WS_EX_APPWINDOW = 0x00040000;
+		/// <exclude />
+		public const uint WS_EX_LAYERED = 0x00080000;
+		/// <exclude />
+		public const uint WS_EX_NOINHERITLAYOUT = 0x00100000;
+		/// <exclude />
+		public const uint WS_EX_LAYOUTRTL = 0x00400000;
+		/// <exclude />
+		public const uint WS_EX_COMPOSITED = 0x02000000;
+		/// <exclude />
+		public const uint WS_EX_NOACTIVATE = 0x08000000;
+		/// <exclude />
+		public const uint WS_EX_NOREDIRECTIONBITMAP = 0x00200000;
+
+		//SMTO_
+
+		/// <exclude />
+		public const uint SMTO_BLOCK = 0x0001;
+		/// <exclude />
+		public const uint SMTO_ABORTIFHUNG = 0x0002;
+		/// <exclude />
+		public const uint SMTO_NOTIMEOUTIFNOTHUNG = 0x0008;
+		/// <exclude />
+		public const uint SMTO_ERRORONEXIT = 0x0020;
 
 	}
 }

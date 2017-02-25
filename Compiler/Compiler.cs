@@ -36,7 +36,7 @@ namespace Compiler
 {
 	public class Compiler
 	{
-		static Wnd.Misc.WndClass _wndClassCompiler = Wnd.Misc.WndClass.Register("Catkeys_Compiler", _WndProcCompiler);
+		static Wnd.Misc.WindowClass _wndClassCompiler = Wnd.Misc.WindowClass.Register("Catkeys_Compiler", _WndProcCompiler);
 
 		public static void Main()
 		{

@@ -16,8 +16,6 @@ using System.ComponentModel; //Win32Exception
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace SdkConverter
 {
@@ -91,9 +89,9 @@ namespace SdkConverter
 				if(i > 0) {
 					nameInDll = dll.Substring(i + 1);
 					dll = dll.Substring(0, i);
-					//Out(nameInDll);
+					//Print(nameInDll);
 				} else if(name.StartsWith_("K32")) {
-					//Out(name);
+					//Print(name);
 					nameInDll = name;
 					name = name.Substring(3);
 					if(name.EndsWith("W")) name = name.Remove(name.Length - 1);
@@ -108,7 +106,7 @@ namespace SdkConverter
 				else if(name.StartsWith_("Dll")) skip = true; //DllInstall, DllRegisterServer etc
 				else if(name.StartsWith_("Ndr") || name.StartsWith_("Rpc")) skip = true; //undocumented
 				else {
-					//Out(name);
+					//Print(name);
 					skip = true; //all these in SDK others are undocumented, or documented as deprecated/removed
 					_funcUnknownDll.Add(name);
 				}
@@ -130,7 +128,7 @@ namespace SdkConverter
 			if(isHRESULT) sb.Append(", PreserveSig=true"); //default, but makes clear that it returns HRESULT and easier to change to 'false'
 			sb.AppendLine(")]");
 			if(returnAttr != null) sb.AppendLine(returnAttr);
-			sb.Append("public static extern ");
+			sb.Append("internal static extern ");
 			sb.Append(returnType);
 			sb.Append(' ');
 			sb.Append(name);
@@ -141,10 +139,10 @@ namespace SdkConverter
 			_func[name] = decl;
 			//try { _func.Add(name, decl); }
 			//catch { //about 10 in SDK. The second declarations are identical or better (without tagSTRUCT).
-			//	Out("----");
-			//	Out(name);
-			//	Out(_func[name]);
-			//	Out(decl);
+			//	Print("----");
+			//	Print(name);
+			//	Print(_func[name]);
+			//	Print(decl);
 			//}
 
 			if(!_TokIsChar(_i, ';')) _Err(_i, "unexpected");
@@ -156,8 +154,8 @@ namespace SdkConverter
 		void _FunctionsFinally()
 		{
 			if(_funcUnknownDll.Count > 50) {
-				Out("Warning: too many unknown dll:");
-				Out(_funcUnknownDll);
+				Print("Warning: too many unknown dll:");
+				Print(_funcUnknownDll);
 			}
 		}
 	}

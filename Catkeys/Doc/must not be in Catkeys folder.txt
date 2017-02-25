@@ -1,3 +1,0 @@
-A bug in some SHFB extension:
-Locks the dll if it is in SHFB project folder.
-That is why we use Doc subfolder.

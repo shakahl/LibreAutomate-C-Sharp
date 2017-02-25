@@ -119,8 +119,8 @@ namespace G.Controls
 			}
 
 			int _minWidth, _minHeight;
-			internal override int MinimalWidth { get { return _minWidth; } }
-			internal override int MinimalHeight { get { return _minHeight; } }
+			internal override int MinimalWidth { get => _minWidth; }
+			internal override int MinimalHeight { get => _minHeight; }
 
 			/// <summary>
 			/// Returns 1 if caption should be horizontal, 2 if vertical, 0 if any.
@@ -141,12 +141,12 @@ namespace G.Controls
 			}
 
 			string _text;
-			internal override string Text { get { return _text; } set { _text = value; this.InvalidateCaption(); } }
+			internal override string Text { get => _text; set { _text = value; this.InvalidateCaption(); } }
 
 			string _tooltipText;
-			internal string ToolTipText { get { return _tooltipText ?? Text; } set { _tooltipText = value; } }
+			internal string ToolTipText { get => _tooltipText ?? Text; set { _tooltipText = value; } }
 
-			internal override bool IsTabbedPanel { get { return this.ParentTab != null; } }
+			internal override bool IsTabbedPanel { get => this.ParentTab != null; }
 
 			/// <summary>
 			/// Returns true if this isn't hidden and isn't in a hidden tab group.

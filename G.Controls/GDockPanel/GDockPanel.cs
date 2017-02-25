@@ -91,7 +91,7 @@ namespace G.Controls
 			//Also loads file1 when file2 XML does not match panels of new app version (eg more panels added or some removed).
 			bool usesDefaultXML = false;
 			string xmlVersion = null, outInfo = null;
-			string defFile =Folders.ThisApp + Path.GetFileName(xmlFile);
+			string defFile = Folders.ThisApp + Path.GetFileName(xmlFile);
 			for(int i = 0; i < 2; i++) {
 				if(i == 1) {
 					usesDefaultXML = true;
@@ -123,7 +123,7 @@ namespace G.Controls
 				catch(Exception e) {
 					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\tError: {e.Message} ({e.GetType()})";
 					if(usesDefaultXML) {
-						TaskDialog.Show("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.", icon:TDIcon.Error, ownerWindow:this.ParentForm);
+						TaskDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.", owner: this.ParentForm);
 						Environment.Exit(1);
 					} else {
 						//probably in this version there are less panels, most likely when downgraded. Or the file is corrupt.
@@ -146,11 +146,12 @@ namespace G.Controls
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;
 				var x = xml.SelectSingleNode($"//panel[@name=\"{c.Name}\"]") as XmlElement;
-				var gp = new GPanel(this, null, x);
-				gp.DockState = GDockState.Hidden;
-				gp.SavedVisibleDockState = GDockState.Floating;
+				var gp = new GPanel(this, null, x) {
+					DockState = GDockState.Hidden,
+					SavedVisibleDockState = GDockState.Floating
+				};
 				c.Visible = false;
-				Print($"Info: new {(gp.HasToolbar?"toolbar":"panel")} '{gp.Text}' added in this aplication version. Right click a panel title bar to show it.");
+				Print($"Info: new {(gp.HasToolbar ? "toolbar" : "panel")} '{gp.Text}' added in this aplication version. Right click a panel title bar to show it.");
 			}
 		}
 
@@ -248,9 +249,8 @@ namespace G.Controls
 		{
 			bool R = false, hilite = false, isTooltip = false;
 			if((((uint)lParam) & 0xFFFF) == Api.HTCLIENT && !c.Capture) {
-				var p = c.MouseClientXY();
-				_HitTestData ht;
-				switch(_HitTest(c, p.X, p.Y, out ht)) {
+				var p = c.MouseClientXY_();
+				switch(_HitTest(c, p.X, p.Y, out var ht)) {
 				case _HitTestResult.Splitter:
 					//info: works better than Cursor=x in OnMouseMove.
 					var cursor = ht.gs.IsVerticalSplit ? Cursors.VSplit : Cursors.HSplit;
@@ -279,7 +279,7 @@ namespace G.Controls
 							Time.SetTimer(delay, true, t =>
 							{
 								var gp = _toolTipTabButton; if(gp == null) return;
-								var p2 = gp.ParentControl.MouseClientXY();
+								var p2 = gp.ParentControl.MouseClientXY_();
 								_toolTip.Show(gp.ToolTipText, gp.ParentControl, p2.X, p2.Y + 20, _toolTip.AutoPopDelay);
 							});
 						}
@@ -336,8 +336,7 @@ namespace G.Controls
 
 		void _OnMouseDown_Common(Control c, MouseEventArgs e)
 		{
-			_HitTestData ht;
-			switch(_HitTest(c, e.X, e.Y, out ht)) {
+			switch(_HitTest(c, e.X, e.Y, out var ht)) {
 			case _HitTestResult.Splitter:
 				if(e.Clicks == 1 && e.Button == MouseButtons.Left) ht.gs.DragSplitter();
 				break;
@@ -367,8 +366,7 @@ namespace G.Controls
 		{
 			if(e.Clicks != 1) return;
 			if(e.Button == MouseButtons.Right) {
-				_HitTestData ht;
-				switch(_HitTest(c, e.X, e.Y, out ht)) {
+				switch(_HitTest(c, e.X, e.Y, out var ht)) {
 				case _HitTestResult.Caption: ht.ContentNode.ShowContextMenu(e.Location); break;
 				case _HitTestResult.Splitter: ht.gs.ShowContextMenu(e.Location); break;
 				}
@@ -390,12 +388,12 @@ namespace G.Controls
 			/// <summary>
 			/// If hit test on a tabbed GPanel, returns its parent GTab, else null.
 			/// </summary>
-			internal GTab ParentTab { get { return gp?.ParentTab; } }
+			internal GTab ParentTab { get => gp?.ParentTab; }
 
 			/// <summary>
 			/// If hit test on a GContentNode, returns it, else null.
 			/// </summary>
-			internal GContentNode ContentNode { get { return gt ?? gp as GContentNode; } }
+			internal GContentNode ContentNode { get => gt ?? gp as GContentNode; }
 		}
 
 		/// <summary>
@@ -588,7 +586,7 @@ namespace G.Controls
 		/// </summary>
 		public event GDockPanelEventHandler<GDockPanelContextMenuEventArgs> PanelContextMenu;
 
-#endregion public
+		#endregion public
 
 		public void Test()
 		{

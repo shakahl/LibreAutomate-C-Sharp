@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Topics>
+  <Topic id="3d4fd35d-4b48-4167-b34f-44e9afc13fc3" visible="True" isDefault="true" title="Welcome">
+    <HelpKeywords>
+      <HelpKeyword index="K" term="Welcome" />
+    </HelpKeywords>
+  </Topic>
+  <Topic id="9403ab08-1cbe-4cf7-bed5-0c761f0623e8" visible="True" title="Version History">
+    <HelpKeywords>
+      <HelpKeyword index="K" term="version, history" />
+    </HelpKeywords>
+    <Topic id="475458a6-7ce5-4ce7-af2f-49e60d911b3b" visible="True" title="Version 1.0.0.0">
+      <HelpKeywords>
+        <HelpKeyword index="K" term="version, 1.0.0.0" />
+      </HelpKeywords>
+    </Topic>
+  </Topic>
+  <Topic id="23b6ef8f-5e67-4221-accd-5ab84d4fab8b" visible="True" noFile="true" isExpanded="true" apiParentMode="InsertBefore" title="Other info">
+    <Topic id="036bb846-3cba-4710-bd7d-daeff3f75392" visible="True" />
+    <Topic id="0248143b-a0dd-4fa1-84f9-76831db6714a" visible="True" />
+  </Topic>
+  <Topic id="505d663b-04af-4fdf-84b1-e618a6bd84a6" visible="True" />
+</Topics>

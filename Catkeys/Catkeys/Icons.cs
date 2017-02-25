@@ -16,7 +16,6 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -39,7 +38,7 @@ namespace Catkeys
 			LiteralPath = 1,
 
 			/// <summary>
-			/// If file is not full path, call Files.SearchPath(). Without this flag searches only in Folders.ThisApp.
+			/// If file is not full path, call <see cref="Files.SearchPath">Files.SearchPath</see>. Without this flag searches only in <see cref="Folders.ThisApp"/>.
 			/// </summary>
 			SearchPath = 2,
 
@@ -119,7 +118,7 @@ namespace Catkeys
 		/// Gets file icon.
 		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
 		/// Returns icon handle. Returns Zero if failed, for example if the file does not exist.
-		/// Later call Api.DestroyIcon().
+		/// Later call <see cref="DestroyIconHandle"/>.
 		/// </summary>
 		/// <param name="file">
 		/// Any file, folder, URL like "http://..." or "shell:..." etc, shell item like "::{CLSID}" or "::{CLSID1}\::{CLSID2}". Also can be a file type like ".txt" or a protocol like "http:".
@@ -128,6 +127,7 @@ namespace Catkeys
 		/// </param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		/// <param name="flags"><see cref="IconFlags"/></param>
+		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, IconFlags flags = 0)
 		{
 			if(Empty(file)) return Zero;
@@ -152,7 +152,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets icon of a file or other shell object specified by its ITEMIDLIST pointer.
 		/// Returns icon handle. Returns Zero if failed.
-		/// Later call Api.DestroyIcon().
+		/// Later call <see cref="DestroyIconHandle"/>.
 		/// </summary>
 		/// <param name="pidl">ITEMIDLIST pointer.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
@@ -169,11 +169,11 @@ namespace Catkeys
 			IntPtr R = Zero, pidl = Zero;
 			int index = 0;
 			bool extractFromFile = false, isFileType = false, isURL = false, isCLSID = false, isPath = true;
-			//bool getDefaultIfFails = flags.HasFlag(IconFlags.DefaultIfFails);
+			//bool getDefaultIfFails = 0!=(flags&IconFlags.DefaultIfFails);
 
-			bool searchPath = flags.HasFlag(IconFlags.SearchPath);
+			bool searchPath = 0 != (flags & IconFlags.SearchPath);
 
-			if(!flags.HasFlag(IconFlags.LiteralPath)) {
+			if(0 == (flags & IconFlags.LiteralPath)) {
 				//is ".ext" or "protocol:"?
 				isFileType = Path_.Internal.IsExtension(file) || (isURL = Path_.Internal.IsProtocol(file));
 				if(!isFileType) isURL = Path_.IsURL(file);
@@ -191,7 +191,7 @@ namespace Catkeys
 				if(file == null) return Zero; //ignore getDefaultIfFails
 			}
 
-			if(isPath /*&& (extractFromFile || !flags.HasFlag(IconFlags.Shell))*/) {
+			if(isPath /*&& (extractFromFile || 0==(flags&IconFlags.Shell))*/) {
 				int ext = 0;
 				if(!extractFromFile && file.Length > 4) ext = file.EndsWith_(true, ".exe", ".scr", ".ico", ".cur", ".ani");
 				if(extractFromFile || ext > 0) {
@@ -226,7 +226,7 @@ namespace Catkeys
 			//In some test cases can make ~2 times faster (with thread pool), especially in MTA thread.
 			//But now, after other optimizations applied, in real life makes faster just 10-20%.
 #if false
-			//if(!flags.HasFlag(IconFlags.Shell)){
+			//if(0==(flags&IconFlags.Shell)){
 			string progId = isCLSID ? null : Files.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : Registry_.Open(progId, Registry.ClassesRoot);
@@ -364,7 +364,7 @@ namespace Catkeys
 
 			try {
 				if(ilIndex == Api.SHIL_SMALL || ilIndex == Api.SHIL_LARGE || _GetShellImageList(ilIndex, out il)) {
-					//PrintList(il, Util.Debug_.GetComObjRefCount(il));
+					//PrintList(il, Util.LibDebug_.GetComObjRefCount(il));
 					R = Api.ImageList_GetIcon(il, index, 0);
 					if(size != realSize && R != Zero) {
 						//PrintList(size, realSize, index, file);
@@ -386,7 +386,7 @@ namespace Catkeys
 		{
 			try {
 				using(var x = Files.LnkShortcut.Open(file)) {
-					int ii; var s = x.GetIconLocation(out ii); if(s != null) return GetFileIconHandleRaw(s, ii, size);
+					var s = x.GetIconLocation(out int ii); if(s != null) return GetFileIconHandleRaw(s, ii, size);
 					s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
 					//PrintList("need IDList", file);
 					return GetPidlIconHandle(x.TargetIDList, size, true);
@@ -461,8 +461,7 @@ namespace Catkeys
 
 		static int _GetShellIconSize(int ilIndex, int def)
 		{
-			IntPtr il; int R;
-			if(_GetShellImageList(ilIndex, out il) && Api.ImageList_GetIconSize(il, out R, out R)) return R;
+			if(_GetShellImageList(ilIndex, out IntPtr il) && Api.ImageList_GetIconSize(il, out int R, out R)) return R;
 			Debug.Assert(false);
 			return def;
 		}
@@ -479,12 +478,12 @@ namespace Catkeys
 		/// <summary>
 		/// Extracts icon directly from file that contains it.
 		/// Returns icon handle. Returns Zero if failed.
-		/// Later call Api.DestroyIcon().
+		/// Later call <see cref="DestroyIconHandle"/>.
 		/// </summary>
 		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables.</param>
 		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		public static unsafe IntPtr GetFileIconHandleRaw(string file, int index=0, int size=16)
+		public static unsafe IntPtr GetFileIconHandleRaw(string file, int index = 0, int size = 16)
 		{
 			if(Empty(file)) return Zero;
 			size = _NormalizeIconSizeParameter(size);
@@ -518,7 +517,7 @@ namespace Catkeys
 		/// Gets the first native icon handle of the entry assembly of current appdomain.
 		/// Returns Zero if there are no icons.
 		/// It is not an icon from managed resources.
-		/// The icon is cached and protected from destroying, therefore don't need to call Api.DestroyIcon() and not error to call it.
+		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
 		/// </summary>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static IntPtr GetAppIconHandle(int size)
@@ -537,7 +536,7 @@ namespace Catkeys
 		/// Gets the first native icon handle of the program file of this process.
 		/// Returns Zero if there are no icons.
 		/// It is not an icon from managed resources.
-		/// The icon is cached and protected from destroying, therefore don't need to call Api.DestroyIcon() and not error to call it.
+		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
 		/// </summary>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static IntPtr GetProcessExeIconHandle(int size)
@@ -550,7 +549,7 @@ namespace Catkeys
 		/// <summary>
 		/// Creates completely transparent monochrome icon.
 		/// Returns icon handle.
-		/// Later call Api.DestroyIcon().
+		/// Later call <see cref="DestroyIconHandle"/>.
 		/// </summary>
 		public static IntPtr CreateBlankIcon(int width, int height)
 		{
@@ -562,16 +561,25 @@ namespace Catkeys
 			//speed: 5-10 mcs. Faster than CopyImage etc.
 		}
 
+		/// <summary>
+		/// Destroys native icon.
+		/// Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is Zero.
+		/// </summary>
+		public static void DestroyIconHandle(IntPtr iconHandle)
+		{
+			if(iconHandle != Zero) Api.DestroyIcon(iconHandle);
+		}
+
 		//Rarely used. Better call Api.LoadImage directly.
 		///// <summary>
 		///// Loads cursor from file.
 		///// Returns cursor handle. Returns Zero if failed.
-		///// Later call Api.DestroyCursor().
+		///// Later call API DestroyCursor.
 		///// </summary>
 		///// <param name="file">.cur or .ani file.</param>
 		///// <param name="size">Width and height. If 0, uses system default size.</param>
 		///// <remarks>
-		///// When need a standard system cursor, instead use the Cursors class or Api.LoadCursor.
+		///// When need a standard system cursor, instead use the Cursors class or API LoadCursor.
 		///// When need a cursor from resources, instead use .NET class Cursor; also it can load some cursor files.
 		///// </remarks>
 		//public static IntPtr GetCursorHandle(string file, int size = 0)
@@ -620,11 +628,11 @@ namespace Catkeys
 		/// </summary>
 		public class AsyncResult
 		{
-			/// <summary>file passed to Add().</summary>
+			/// <summary>file passed to AsyncIcons.Add().</summary>
 			public string file;
-			/// <summary>obj passed to Add().</summary>
+			/// <summary>obj passed to AsyncIcons.Add().</summary>
 			public object obj;
-			/// <summary>Icon handle. You can use <see cref="HandleToImage"/> if need Image; else finally call Api.DestroyIcon(). Can be Zero.</summary>
+			/// <summary>Icon handle. You can use <see cref="HandleToImage"/> if need Image; else finally call <see cref="DestroyIconHandle"/>. Can be Zero.</summary>
 			public IntPtr hIcon;
 			/// <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
 			//public Image image;
@@ -636,7 +644,7 @@ namespace Catkeys
 		/// For <see cref="AsyncIcons.GetAllAsync"/>. 
 		/// </summary>
 		/// <param name="result">Contains icon Image or handle, as well as the input parameters. <see cref="AsyncResult"/></param>
-		/// <param name="objCommon">objCommon passed to GetAllAsync().</param>
+		/// <param name="objCommon">objCommon passed to <see cref="AsyncIcons.GetAllAsync">GetAllAsync</see>.</param>
 		/// <param name="nLeft">How many icons is still to get. Eg 0 if this is the last icon.</param>
 		public delegate void AsyncCallback(AsyncResult result, object objCommon, int nLeft);
 
@@ -644,8 +652,8 @@ namespace Catkeys
 		/// Gets file icons asynchronously.
 		/// Use to avoid waiting until all icons are extracted before displaying them in a UI (menu etc).
 		/// Instead you show the UI without icons, and then asynchronously receive icons when they are extracted.
-		/// At first call Add() for each file. Then call GetAllAsync().
-		/// Create a callback function of type AsyncCallback and pass its delegate to GetAllAsync().
+		/// At first call <see cref="Add(string, object)"/> for each file. Then call <see cref="GetAllAsync">GetAllAsync</see>.
+		/// Create a callback function of type <see cref="AsyncCallback"/> and pass its delegate to GetAllAsync.
 		/// </summary>
 		public class AsyncIcons :IDisposable
 		{
@@ -682,13 +690,13 @@ namespace Catkeys
 			/// Gets the number of items added with Add().
 			/// GetAllAsync() sets it = 0.
 			/// </summary>
-			public int Count { get { return _files.Count; } }
+			public int Count { get => _files.Count; }
 
 			/// <summary>
 			/// Starts getting icons of files added with Add().
 			/// After this function returns, icons are asynchronously extracted with <see cref="GetFileIconHandle"/>, and callback called with icon handle (or Zero if failed).
 			/// The callback is called in this thread. This thread must have a message loop (eg Application.Run()).
-			/// If you'll need more icons, you can call Add() and GetAllAsync() again with the same _AsyncIcons instance, even if getting old icons if still not finished.
+			/// If you'll need more icons, you can call Add() and GetAllAsync() again with the same AsyncIcons instance, even if getting old icons if still not finished.
 			/// </summary>
 			/// <param name="callback">A callback function delegate.</param>
 			/// <param name="iconSize">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
@@ -706,9 +714,9 @@ namespace Catkeys
 			//We use List<_AsyncWork> to support getting additional icons after GetAllAsync() was already called and possibly still executing.
 			//Example:
 			//	Client adds icons with Add() and calls GetAllAsync().
-			//	But then client wants to get more icons with the same _AsyncIcons instance. Again calls Add() and GetAllAsync().
+			//	But then client wants to get more icons with the same AsyncIcons instance. Again calls Add() and GetAllAsync().
 			//	For each GetAllAsync() we add new _AsyncWork to the list and let it get the new icons.
-			//	Using the same _AsyncIcons would be difficult because everything is executing async in multiple threads.
+			//	Using the same AsyncIcons would be difficult because everything is executing async in multiple threads.
 			class _AsyncWork
 			{
 				AsyncIcons _host;
@@ -752,7 +760,7 @@ namespace Catkeys
 						k.hIcon = GetFileIconHandle(k.file, _iconSize, _iconFlags);
 
 						//var hi = GetFileIconHandle(k.file, _iconSize, _iconFlags);
-						//if(_iconFlags.HasFlag(IconFlags.NeedImage) && _nPending>20) { /*Print(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
+						//if(0!=(_iconFlags&IconFlags.NeedImage) && _nPending>20) { /*Print(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
 
 						//Print("1");
 
@@ -762,7 +770,7 @@ namespace Catkeys
 						if(Interlocked.Increment(ref _nPending) >= 900) {
 							//Print(_nPending);
 							//var perf = new Perf.Inst(true);
-							WaitMS(10);
+							Time.WaitMS(10);
 							//while(_nPending >= 900) WaitMS(10);
 							//perf.NW();
 						}
@@ -865,7 +873,7 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// Calls Cancel().
+			/// Calls <see cref="Cancel"/>.
 			/// </summary>
 			public void Dispose()
 			{
