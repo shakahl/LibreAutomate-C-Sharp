@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-#pragma warning disable 1591 //missing XML documentation
-
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
 
 //[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
@@ -1592,20 +1590,6 @@ namespace Catkeys
 
 
 		//COMCTL32
-
-		internal delegate LPARAM SUBCLASSPROC(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
-
-		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		internal static extern bool SetWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
-
-		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		internal static extern bool GetWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
-
-		[DllImport("comctl32.dll", EntryPoint = "#412")]
-		internal static extern bool RemoveWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
-
-		[DllImport("comctl32.dll", EntryPoint = "#413")]
-		internal static extern LPARAM DefSubclassProc(Wnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("comctl32.dll")]
 		internal static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, uint flags);

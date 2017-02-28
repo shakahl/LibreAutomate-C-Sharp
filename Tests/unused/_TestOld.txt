@@ -924,7 +924,7 @@
 	static void TestIcons()
 	{
 		//Print("start");
-		//WaitMS(1000);
+		//Sleep(1000);
 
 		var a = new List<string>();
 		int n = 0;
@@ -1143,8 +1143,8 @@
 			//PrintList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
 			var R = Files.GetIconHandle(s, 16, 0);
-			//var R = Zero; WaitMS(s.Length * s.Length / 100);
-			//var R = Zero; WaitMS(_random.Next(1, 10));
+			//var R = Zero; Sleep(s.Length * s.Length / 100);
+			//var R = Zero; Sleep(_random.Next(1, 10));
 			//perf.Next(); PrintList(perf.Times, s);
 			return R;
 		});
@@ -1154,7 +1154,7 @@
 			//PrintList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
 			var R = Files.GetIconHandle(s, 16, 0);
-			//var R = Zero; WaitMS(_random.Next(1, 10));
+			//var R = Zero; Sleep(_random.Next(1, 10));
 			//perf.Next(); PrintList(perf.Times, s);
 			return R;
 		}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
@@ -1206,7 +1206,7 @@
 	//				var perf = new Perf.Inst(true);
 	//				//var R = Files.GetIconHandle(s, 16, 0);
 	//				var R = Zero;
-	//				WaitMS(s.Length * s.Length / 5);
+	//				Sleep(s.Length * s.Length / 5);
 	//				perf.Next(); PrintList(perf.Times, s);
 	//				return R;
 	//			});
@@ -1260,14 +1260,14 @@
 		//Util.ThreadPoolSTA.AddWork(_WorkCallback, 100);
 		new Util.TaskSTA(_WorkCallback, 100).Run();
 
-		//WaitMS(1000);
+		//Sleep(1000);
 		var f = new Form();
 
 		for(int i = 0; i < 10; i++) {
 			//Util.ThreadPoolSTA.AddWork(_WorkCallback, _CompletionCallback, f, i, true);
 			new Util.TaskSTA(_WorkCallback, i, _CompletionCallback, f).Run();
 		}
-		//WaitMS(500);
+		//Sleep(500);
 
 		//f.Load += (unu, sed) =>
 		//{
@@ -1368,7 +1368,7 @@
 					try {
 						for(int i = 1; i < 70; i++) { //~2.5 s
 							if(c.IsHandleCreated || c.IsDisposed) break;
-							WaitMS(i);
+							Sleep(i);
 						}
 						c.Invoke(_completionCallback, _state);
 					}
@@ -1825,7 +1825,7 @@
 		}
 		Perf.Next();
 		speed.NextWrite();
-		WaitMS(1000);
+		Sleep(1000);
 		Perf.Next();
 		if(c != null) {
 			m.Show(c, 100, 100);
@@ -2309,7 +2309,7 @@
 //		int hr = _TaskDialog(Wnd0, Zero, "Test", s, null, TDButtons.Cancel, 0, out r);
 //		//PrintList(hr, r, asy);
 //		if(hr == 0 || hr == Api.E_INVALIDARG) break;
-//		Time.WaitMS(20);
+//		Thread.Sleep(20);
 //	}
 //	return r;
 //}

@@ -196,6 +196,7 @@ namespace Catkeys.Util
 		/// <summary>
 		/// <see cref="SimpleDragDrop(Control, MouseButtons, Action{SimpleDragDropCallbackArgs})"/> callback function arguments.
 		/// </summary>
+		/// <tocexclude />
 		public class SimpleDragDropCallbackArgs
 		{
 			/// <summary>

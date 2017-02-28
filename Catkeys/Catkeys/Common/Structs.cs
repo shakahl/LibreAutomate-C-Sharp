@@ -111,6 +111,12 @@ namespace Catkeys
 #pragma warning disable 3008 //not CLS-compliant
 	namespace _Private
 	{
+		/// <tocexclude />
+		internal class NamespaceDoc
+		{
+			//SHFB uses this for namespace documentation.
+		}
+
 		/// <summary>Infrastructure.</summary>
 		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
 		public class TypesNull1 { }

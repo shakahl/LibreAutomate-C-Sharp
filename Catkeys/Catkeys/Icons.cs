@@ -29,6 +29,7 @@ namespace Catkeys
 		/// <summary>
 		/// Used with get-icon functions.
 		/// </summary>
+		/// <tocexclude />
 		[Flags]
 		public enum IconFlags
 		{
@@ -406,6 +407,7 @@ namespace Catkeys
 		/// <summary>
 		/// Standard icon sizes.
 		/// </summary>
+		/// <tocexclude />
 		public enum ShellSize
 		{
 			/// <summary>
@@ -613,6 +615,7 @@ namespace Catkeys
 		/// <summary>
 		/// For <see cref="AsyncIcons.Add(IEnumerable{AsyncIn})"/>. 
 		/// </summary>
+		/// <tocexclude />
 		public struct AsyncIn
 		{
 #pragma warning disable 1591 //XML doc
@@ -626,6 +629,7 @@ namespace Catkeys
 		/// <summary>
 		/// For <see cref="AsyncCallback"/>. 
 		/// </summary>
+		/// <tocexclude />
 		public class AsyncResult
 		{
 			/// <summary>file passed to AsyncIcons.Add().</summary>
@@ -646,6 +650,7 @@ namespace Catkeys
 		/// <param name="result">Contains icon Image or handle, as well as the input parameters. <see cref="AsyncResult"/></param>
 		/// <param name="objCommon">objCommon passed to <see cref="AsyncIcons.GetAllAsync">GetAllAsync</see>.</param>
 		/// <param name="nLeft">How many icons is still to get. Eg 0 if this is the last icon.</param>
+		/// <tocexclude />
 		public delegate void AsyncCallback(AsyncResult result, object objCommon, int nLeft);
 
 		/// <summary>
@@ -755,7 +760,7 @@ namespace Catkeys
 							d.completionCallback = null;
 							return;
 						}
-						//WaitMS(10);
+						//Thread.Sleep(10);
 						var k = d.state as AsyncResult;
 						k.hIcon = GetFileIconHandle(k.file, _iconSize, _iconFlags);
 
@@ -770,8 +775,8 @@ namespace Catkeys
 						if(Interlocked.Increment(ref _nPending) >= 900) {
 							//Print(_nPending);
 							//var perf = new Perf.Inst(true);
-							Time.WaitMS(10);
-							//while(_nPending >= 900) WaitMS(10);
+							Thread.Sleep(10);
+							//while(_nPending >= 900) Thread.Sleep(10);
 							//perf.NW();
 						}
 					}, o =>
@@ -799,7 +804,7 @@ namespace Catkeys
 					var task = Task.Factory.StartNew(() =>
 					{
 						if(_canceled) return;
-						//WaitMS(500);
+						//Thread.Sleep(500);
 						var k = state;
 						k.hIcon = GetFileIconHandle(k.file, _iconSize, _iconFlags);
 					}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
@@ -826,7 +831,7 @@ namespace Catkeys
 					var task = Task.Run(() =>
 					{
 						if(_canceled) return;
-						//WaitMS(500);
+						//Thread.Sleep(500);
 						var k = state;
 						k.hIcon = GetFileIconHandle(k.file, _iconSize, _iconFlags);
 					});

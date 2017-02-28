@@ -24,7 +24,7 @@ namespace Catkeys
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// if(!IsOfThisThread) { WaitMS(15); SendTimeout(1000, 0); }
+		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
 		/// </summary>
 		void _MinimalWaitIfOtherThread()
 		{
@@ -32,13 +32,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// WaitMS(15); SendTimeout(1000, 0);
+		/// Thread.Sleep(15); SendTimeout(1000, 0);
 		/// </summary>
 		void _MinimalWaitNoCheckThread()
 		{
 			Debug.Assert(!IsOfThisThread);
 			//Perf.First();
-			Time.WaitMS(15);
+			Thread.Sleep(15);
 			SendTimeout(1000, 0);
 			//Perf.NW();
 		}

@@ -262,7 +262,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//To hide the 'wait' cursor when the primary thread of a new process is going to wait:
 		//Wnd0.Post(0); Native.MSG k; Api.PeekMessage(out k, Wnd0, 0, 0, 1);
 
-		//WaitMS(1000); return;
+		//Wait(1); return;
 
 		//TestCatBar();
 
@@ -274,10 +274,10 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//var m = new ContextMenu(); m.MenuItems.Add("test"); m.Show();
 		//MessageBox(Wnd0, "txt", "cap", 0);
 		//Wnd.Misc.AllowActivate();
-		//WaitMS(100);
+		//Thread.Sleep(100);
 		//var f = new Form();
 		//f.ShowDialog();
-		//WaitMS(3000);
+		//Thread.Sleep(3000);
 		//f.ShowDialog();
 
 		//var w = Api.CreateWindowEx(0, "#32770", null, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 300, 300, 300, Wnd0, 0, Zero, 0);

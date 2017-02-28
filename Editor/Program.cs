@@ -99,7 +99,7 @@ namespace Editor
 		static void Main()
 		{
 			try {
-				//Task.Run(() => { while(true) { WaitMS(100); GC.Collect(); } });
+				//Task.Run(() => { while(true) { Thread.Sleep(100); GC.Collect(); } });
 
 				Output.Clear();
 				//Test(); return;
@@ -135,7 +135,7 @@ namespace Editor
 					//t.SetApartmentState(ApartmentState.STA);
 					t.Start();
 
-					//WaitMS(50);
+					//Thread.Sleep(50);
 				} else {
 					EImageList.LoadImageLists();
 					//p.NW();

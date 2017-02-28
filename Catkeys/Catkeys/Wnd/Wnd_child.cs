@@ -27,6 +27,7 @@ namespace Catkeys
 	/// <note>
 	/// </note>
 	/// </summary>
+	/// <tocexclude />
 	[Flags]
 	public enum WCFlags
 	{

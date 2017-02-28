@@ -71,26 +71,57 @@ static partial class Test
 	[STAThread]
 	static void Main()
 	{
-		Application.EnableVisualStyles();
-		Application.SetCompatibleTextRenderingDefault(false);
+		//Application.EnableVisualStyles();
+		//Application.SetCompatibleTextRenderingDefault(false);
 		//Perf.Next();
 		//Perf.Write();
 
-		TestMain();
+		//#if true
+		//		TestMain();
+		//#elif true
+		var d = AppDomain.CreateDomain("AppDomain");
+		TestAppDomainDoCallback(d);
+		TestAppDomainUnload(d);
+		//#else
+		//		var d = AppDomain.CreateDomain("AppDomain");
 
-		//var d = AppDomain.CreateDomain("nname");
+		//		new Thread(() =>
+		//		{
+		//			Wait(1);
+		//			Print("unload");
+		//			TestAppDomainUnload(d);
+		//		}).Start();
 
-		//new Thread(() =>
-		//{
-		//	Wait(1);
-		//	Print("unload");
-		//	AppDomain.Unload(d);
-		//}).Start();
+		//		TestAppDomainDoCallback(d);
+		//#endif
 
-		//d.DoCallBack(TestMain);
-		//Print("DoCallBack ended");
-		////AppDomain.Unload(d);
-		//Print("main domain exit");
+		//for(int i = 0; i < 1; i++) {
+		//	var t = new Thread(() =>
+		//	  {
+		//		  var d = AppDomain.CreateDomain("AppDomain" + i);
+		//		  TestAppDomainDoCallback(d);
+		//		  TestAppDomainUnload(d);
+		//	  });
+		//	t.SetApartmentState(ApartmentState.STA);
+		//	t.Start();
+		//}
+		//Wait(10);
+	}
+
+	static void TestAppDomainDoCallback(AppDomain d)
+	{
+		try {
+			d.DoCallBack(TestMain);
+		}
+		catch(ThreadAbortException e) { Thread.ResetAbort(); }
+		catch(Exception e) { PrintList("exception executing AppDomain", e); }
+		Print("DoCallBack ended");
+	}
+
+	static void TestAppDomainUnload(AppDomain d)
+	{
+		try { AppDomain.Unload(d); } catch(Exception e) { PrintList("exception unloading AppDomain", e); }
+		Print("Unload ended");
 	}
 
 	#region old_test_functions
@@ -268,7 +299,7 @@ bbb"", b3
 		//for(int i = 1; i <= 100; i++) {
 		//	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
 		//	if(!marquee) pd.Send.Progress(i);
-		//	WaitMS(50); //do something in the loop
+		//	Thread.Sleep(50); //do something in the loop
 		//}
 		//pd.Send.Close();
 
@@ -1349,8 +1380,8 @@ bbb"", b3
 		Perf.First();
 		if(!Api.SetForegroundWindow(w)) return false;
 		Perf.Next();
-		for(int i = 0; i < 10; i++) { Print(Wnd.WndActive); Time.WaitMS(1); }
-		//WaitMS(100);
+		for(int i = 0; i < 10; i++) { Print(Wnd.WndActive); Thread.Sleep(1); }
+		//Thread.Sleep(100);
 		Perf.Write();
 		if(w.IsActive) return true;
 
@@ -1393,10 +1424,10 @@ bbb"", b3
 		//Print(w.ActivateLL());
 		w.Activate();
 		//Print(Api.SetForegroundWindow(Wnd.Get.WndRoot));
-		//WaitMS(100);
+		//Thread.Sleep(100);
 		//Print(Api.SetForegroundWindow(w));
 		//Print(_Activate(w));
-		//WaitMS(100);
+		//Thread.Sleep(100);
 		Print(Wnd.WndActive);
 
 		Wnd c = w.Child("Show*");
@@ -1423,7 +1454,7 @@ bbb"", b3
 		//Print(w);
 
 		//w.Show(false);
-		//WaitMS(1000);
+		//Thread.Sleep(1000);
 
 		//w.ActivateLL(); return;
 
@@ -1573,7 +1604,7 @@ bbb"", b3
 		//Wnd.Misc.TaskbarButton.SetProgressState(w, Wnd.Misc.TaskbarButton.ProgressState.Error);
 		//for(int i = 0; i < 100; i++) {
 		//	Wnd.Misc.TaskbarButton.SetProgressValue(w, i + 1);
-		//	WaitMS(100);
+		//	Thread.Sleep(100);
 		//}
 		//Wnd.Misc.TaskbarButton.SetProgressState(w, Wnd.Misc.TaskbarButton.ProgressState.NoProgress);
 
@@ -1666,7 +1697,6 @@ bbb"", b3
 		Registry_.SetInt(5, "ii", "Test");
 
 		ok = Registry_.GetInt(out int i, "ii", "Test");
-		Print(ok);
 		if(!ok) { Print("no"); return; }
 		Print(i);
 
@@ -2518,7 +2548,7 @@ bbb"", b3
 		////Print(w.ZorderBottom());
 
 		Print(w.ZorderBelow(w2));
-		w2.ActivateLL(); Time.WaitMS(500);
+		w2.ActivateLL(); Thread.Sleep(500);
 		Print(w.ZorderAbove(w2));
 
 	}
@@ -2702,9 +2732,9 @@ bbb"", b3
 		Perf.SpinCPU(100);
 
 		//Perf.First();
-		//WaitMS(1);
+		//Thread.Sleep(1);
 		//Perf.Next();
-		//WaitMS(10);
+		//Thread.Sleep(10);
 		//Perf.NW();
 
 		var t = new Perf.Inst();
@@ -2800,7 +2830,7 @@ bbb"", b3
 		//u.Stop(); //test assert
 		T.Join();
 		Print("thread ended");
-		Time.WaitMS(1000);
+		Thread.Sleep(1000);
 		//u = null;
 		GC.Collect();
 		TaskDialog.Show("main thread");
@@ -2813,7 +2843,7 @@ bbb"", b3
 
 	static Task<int> SomeOperationAsync2()
 	{
-		return Task.Run(() => { Time.WaitMS(800); return 5; });
+		return Task.Run(() => { Thread.Sleep(800); return 5; });
 	}
 
 	static async Task<int> SomeOperationAsync()
@@ -2881,7 +2911,7 @@ bbb"", b3
 		//Print(_iconThread.ThreadState);
 
 		TaskDialog.Show("thread");
-		//WaitMS(30000);
+		//Wait(30);
 
 		return 0;
 	}
@@ -2986,7 +3016,7 @@ bbb"", b3
 		//Print(SynchronizationContext.Current);
 		//SynchronizationContext.Current.Post(state => { PrintList("posted", SynchronizationContext.Current); }, null);
 		Time.SetTimer(1, true, t => { PrintList("posted", SynchronizationContext.Current); });
-		Time.WaitMS(100);
+		Thread.Sleep(100);
 		//WindowsFormsSynchronizationContext.AutoInstall = false;
 		Print(1);
 		Application.DoEvents();
@@ -3233,9 +3263,9 @@ bbb"", b3
 	{
 		//var perf = new Perf.Inst();
 		//perf.First();
-		//WaitMS(1);
+		//Thread.Sleep(1);
 		//perf.Next();
-		//WaitMS(5);
+		//Thread.Sleep(5);
 		//perf.Next();
 		//perf.Write();
 
@@ -3258,7 +3288,7 @@ bbb"", b3
 			perf.Next();
 			//perf.Write();
 
-			Time.WaitMS(50);
+			Thread.Sleep(50);
 		}
 		perf.Write();
 		perf.Incremental = false;
@@ -3266,26 +3296,26 @@ bbb"", b3
 		//var perf = new Perf.Inst();
 		//perf.Incremental = true;
 		//for(int i = 0; i < 5; i++) {
-		//	WaitMS(100); //not included in the measurement
+		//	Thread.Sleep(100); //not included in the measurement
 		//	perf.First();
-		//	WaitMS(30); //will make sum ~150000
+		//	Thread.Sleep(30); //will make sum ~150000
 		//	perf.Next();
-		//	WaitMS(10); //will make sum ~50000
+		//	Thread.Sleep(10); //will make sum ~50000
 		//	perf.Next();
-		//	WaitMS(100); //not included in the measurement
+		//	Thread.Sleep(100); //not included in the measurement
 		//}
 		//perf.Write(); //speed:  154317  51060  (205377)
 		//perf.Incremental = false;
 
 		//Perf.Incremental = true;
 		//for(int i = 0; i < 5; i++) {
-		//	WaitMS(100); //not included in the measurement
+		//	Thread.Sleep(100); //not included in the measurement
 		//	Perf.First();
-		//	WaitMS(30); //will make sum ~150000
+		//	Thread.Sleep(30); //will make sum ~150000
 		//	Perf.Next();
-		//	WaitMS(10); //will make sum ~50000
+		//	Thread.Sleep(10); //will make sum ~50000
 		//	Perf.Next();
-		//	WaitMS(100); //not included in the measurement
+		//	Thread.Sleep(100); //not included in the measurement
 		//}
 		//Perf.Write(); //speed:  154317  51060  (205377)
 		//Perf.Incremental = false;
@@ -3310,7 +3340,7 @@ bbb"", b3
 	//{
 	//	var task = Task.Run(() =>
 	//	{
-	//		WaitMS(_random.Next(1, 10));
+	//		Thread.Sleep(_random.Next(1, 10));
 	//		return 0;
 	//	});
 	//	await task;
@@ -3336,7 +3366,7 @@ bbb"", b3
 	//{
 	//	var task = Task.Factory.StartNew(() =>
 	//	{
-	//		WaitMS(_random.Next(1, 10));
+	//		Thread.Sleep(_random.Next(1, 10));
 	//		return 0;
 	//	}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
 	//	await task;
@@ -3348,7 +3378,7 @@ bbb"", b3
 	{
 		Print("BEGIN");
 		//Print(Api.GetCurrentThreadId());
-		Task.Run(() => { for(;;) { Time.WaitMS(100); GC.Collect(); } });
+		Task.Run(() => { for(;;) { Thread.Sleep(100); GC.Collect(); } });
 		Perf.Next();
 		//using(new Util.LibEnsureWindowsFormsSynchronizationContext()) {
 		_nTasks = 30;
@@ -3365,10 +3395,10 @@ bbb"", b3
 		Catkeys.Util.ThreadPoolSTA.SubmitCallback(null, o =>
 		{
 			PrintList("worker", Api.GetCurrentThreadId());
-			//WaitMS(_random.Next(1, 10));
-			Time.WaitMS(_random.Next(10, 100));
-			//WaitMS(2000);
-			//WaitMS(16000);
+			//Thread.Sleep(_random.Next(1, 10));
+			Thread.Sleep(_random.Next(10, 100));
+			//Thread.Sleep(2000);
+			//Thread.Sleep(16000);
 			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
 		}, o =>
 		{
@@ -3382,10 +3412,10 @@ bbb"", b3
 		var work = Catkeys.Util.ThreadPoolSTA.CreateWork(null, o =>
 		{
 			PrintList("worker", Api.GetCurrentThreadId());
-			//WaitMS(_random.Next(1, 10));
-			Time.WaitMS(_random.Next(10, 100));
-			//WaitMS(2000);
-			//WaitMS(16000);
+			//Thread.Sleep(_random.Next(1, 10));
+			Thread.Sleep(_random.Next(10, 100));
+			//Thread.Sleep(2000);
+			//Thread.Sleep(16000);
 			//if(0==Interlocked.Decrement(ref _n)) Perf.NW();
 		}, o =>
 		{
@@ -3395,7 +3425,7 @@ bbb"", b3
 
 		work.Submit();
 		//for(int i=0; i<10; i++) work.Submit();
-		//WaitMS(10); work.Cancel();
+		//Thread.Sleep(10); work.Cancel();
 		//work.Submit();
 		//work.Wait();
 		//work.Submit();
@@ -3688,7 +3718,7 @@ A,""B """"Q"""" Z"",C
 			Application.Run();
 			//Application.Run(new Form());
 			//_loop.Loop();
-			//WaitMS(1000000);
+			//Wait(1000);
 			//Native.MSG m; while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) Api.DispatchMessage(ref m);
 		}
 		catch(ThreadAbortException) { Print("abort exception"); }
@@ -3764,7 +3794,7 @@ A,""B """"Q"""" Z"",C
 	static void TestIcons2()
 	{
 		//Print("start");
-		//WaitMS(1000);
+		//Thread.Sleep(1000);
 
 		var a = new List<string>();
 		int n = 0;
@@ -3847,8 +3877,8 @@ A,""B """"Q"""" Z"",C
 			//PrintList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
 			var R = Icons.GetFileIconHandle(s, 16, 0);
-			//var R = Zero; WaitMS(s.Length * s.Length / 100);
-			//var R = Zero; WaitMS(_random.Next(1, 10));
+			//var R = Zero; Thread.Sleep(s.Length * s.Length / 100);
+			//var R = Zero; Thread.Sleep(_random.Next(1, 10));
 			//perf.Next(); PrintList(perf.Times, s);
 			return R;
 		});
@@ -3858,7 +3888,7 @@ A,""B """"Q"""" Z"",C
 			//PrintList(Api.GetCurrentThreadId(), s);
 			//var perf = new Perf.Inst(true);
 			var R = Icons.GetIconHandle(s, 16, 0);
-			//var R = Zero; WaitMS(_random.Next(1, 10));
+			//var R = Zero; Thread.Sleep(_random.Next(1, 10));
 			//perf.Next(); PrintList(perf.Times, s);
 			return R;
 		}, CancellationToken.None, TaskCreationOptions.None, _staTaskScheduler);
@@ -5598,7 +5628,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//if(w.Is0) { Print("not found"); return; }
 		////w.ShowNotMinimized(true); return;
 		//Print("-----");
-		//w.Activate(); WaitMS(500);
+		//w.Activate(); Thread.Sleep(500);
 		////return;
 
 		////Wnd.Misc.AllowActivate();
@@ -5608,20 +5638,20 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		//Wnd.ShowDesktop();
 		////Wnd.ShowDesktop(true);
-		//////WaitMS(2000);
+		//////Thread.Sleep(2000);
 		//////Wnd.ShowDesktop(false);
 		////MinimizeAll();
 		//w.ShowMinimized();
 
-		Time.WaitMS(500);
+		Thread.Sleep(500);
 		Print(Wnd.Misc.MainWindows());
 		//return;
 
 		//Print(Wnd.ActiveWindow);
-		//WaitMS(500);
+		//Thread.Sleep(500);
 		//Print(Wnd.ActiveWindow);
 		////return;
-		//WaitMS(1000);
+		//Thread.Sleep(1000);
 
 		//Print("-----");
 		//Print(Wnd.MainWindows());
@@ -5630,7 +5660,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		Print(Wnd.Misc.SwitchActiveWindow());
 		//SendAltTab();
-		Time.WaitMS(500);
+		Thread.Sleep(500);
 		Print(Wnd.WndActive);
 	}
 
@@ -5807,16 +5837,16 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	Perf.First();
 		//	for(int i = 1; i < 17; i++) {
 		//		//timeBeginPeriod(5);
-		//		////WaitMS(1);
+		//		////Thread.Sleep(1);
 		//		//timeEndPeriod(5);
 		//		//Perf.Next();
 		//		//timeBeginPeriod(2);
-		//		////WaitMS(1);
+		//		////Thread.Sleep(1);
 		//		//timeEndPeriod(2);
 		//		//Perf.Next();
 
-		//		//WaitMS(i);
-		//		Sleep(2);
+		//		//Thread.Sleep(i);
+		//		Thread.Sleep(2);
 		//		Perf.Next((char)('0' + i % 10));
 		//	}
 		//	Perf.Write();
@@ -5829,7 +5859,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		////f.ShowDialog();return;
 		//f.Show();
 
-		////WaitMS(5000);
+		////Thread.Sleep(5000);
 		//Thread.CurrentThread.Join(5000);
 
 
@@ -5846,7 +5876,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//for(int i = 0; i < 3; i++) {
 		//	//w1.Activate();
 		//	Perf.Next();
-		//	WaitMS(10);
+		//	Thread.Sleep(10);
 		//	//w2.Activate();
 		//	Perf.Next();
 		//}
@@ -6108,7 +6138,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(c);
 		//c = w.Child("-31930", flags: WCFlags.NameIsId);
 		//Print(c);
-		//WaitMS(200);
+		//Thread.Sleep(200);
 
 		//var a1 = new Action(() => { c = w.Child(null, "Button"); });
 		//var a2 = new Action(() => { c = w.ChildByClass("Button"); });
@@ -6212,9 +6242,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	for(int i = 0; i < 5; i++) {
 		//		//SpinMCS(15000);
 		//		//Perf.Next();
-		//		Time.WaitMS(1);
+		//		Thread.Sleep(1);
 		//		//Thread.CurrentThread.Join(1);
-		//		//Time.WaitNoBlockMS(1);
+		//		//Time.SleepDoEvents(1);
 		//		//Api.MsgWaitForMultipleObjectsEx(0, null, 15, 0);
 		//		//Api.WaitForSingleObject(h, 15);
 		//		//WaitForMultipleObjectsEx(1, ref h, false, 15, false);
@@ -6230,7 +6260,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		new Thread(o =>
 		{
-			Time.WaitMS(1002);
+			Thread.Sleep(1002);
 			Print("abort");
 			var t = o as Thread;
 			Perf.First();
@@ -6252,7 +6282,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		try {
 			//Print(Api.MsgWaitForMultipleObjectsEx())
-			Time.WaitMS(5000);
+			Wait(5);
 			//Print(Time.WaitNoBlockMS(5000));
 			//Sleep(5000);
 			//SleepEx(5000, true);
@@ -6350,7 +6380,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	  // if(!Time.DoEvents()) break;
 		//	  // Thread.Sleep(10);
 		//	  //}
-		//	  //Time.WaitDoEventsMS(10000);
+		//	  //Time.SleepDoEvents(10000);
 		//	  Application.Exit();
 
 		//	  //await Task.Delay(3000);
@@ -6379,20 +6409,20 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//new Thread(o =>
 		//{
 		//	for(int i = 0; i < 3; i++) {
-		//		Sleep(1000);
+		//		Wait(1);
 		//		QueueUserAPC(_testApcProc, th, i);
 		//	}
 
-		//	//Sleep(1000);
+		//	//Wait(1);
 		//	//mt.Suspend();
-		//	//Sleep(7000);
+		//	//Wait(7);
 		//	//mt.Resume();
 
 		//}).Start();
 		//Perf.First();
 		////while(SleepEx(7000, true) == WAIT_IO_COMPLETION) { Print("WAIT_IO_COMPLETION"); }
-		////Time.WaitMS(5000);
-		//Time.WaitDoEventsMS(5000);
+		////Thread.Sleep(5000);
+		//Time.SleepDoEvents(5000);
 
 		////Thread.CurrentThread.Join(7000);
 		//Api.CloseHandle(th);
@@ -6408,7 +6438,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//using(new Time.SystemWaitPrecision(1)) {
 		//	for(int i = 1; i < 50; i++) {
 		//		var t1 = Time.Milliseconds;
-		//		Sleep(i);
+		//		Thread.Sleep(i);
 		//		var t2 = Time.Milliseconds;
 		//		a.Add((int)(t2 - t1));
 		//	}
@@ -6418,18 +6448,21 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestWaitFor()
 	{
+		//Print(WaitFor.WindowClosed(-5, Wnd.Find("* Notepad")));
+		Print(WaitFor.WindowNotExists(0, "* Notepad"));
+		Print("ok");
 
 		//Wnd w = WaitFor.WindowExists(10, "* Notepad");
 		//Print(w);
 
-		var f = new Form();
-		f.Click += async (unu, sed) =>
-		  {
-			  Print("waiting for Notepad...");
-			  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
-			  if(w.Is0) Print("timeout"); else Print(w);
-		  };
-		f.ShowDialog();
+		//var f = new Form();
+		//f.Click += async (unu, sed) =>
+		//  {
+		//	  Print("waiting for Notepad...");
+		//	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
+		//	  if(w.Is0) Print("timeout"); else Print(w);
+		//  };
+		//f.ShowDialog();
 	}
 
 	//private static async void F_Click(object sender, EventArgs e)
@@ -6437,22 +6470,146 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//	Print(await WaitFor.WindowAsync(0, "* Notepad"));
 	//}
 
+	[DllImport("comctl32.dll", EntryPoint = "#344", PreserveSig = true)]
+	internal static extern int TaskDialogAPI(Wnd hwndOwner, IntPtr hInstance, string pszWindowTitle, string pszMainInstruction, string pszContent, int dwCommonButtons, string pszIcon, out int pnButton);
+
+	public static async Task<TDResult> ShowAsync(string text1)
+	{
+		var td = new TaskDialog(text1);
+		return await Task.Run(() => td.ShowDialog());
+	}
+
 	static void TestTaskDialogAsyncAwait()
 	{
-		var f = new Form();
-		//f.Click += (unu, sed) =>
+		//var pd = TaskDialog.ShowProgress(false, "Working");
+		//for(int i = 1; i <= 100; i++) {
+		//	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
+		//	pd.Send.Progress(i); //don't need this if marquee
+		//	Thread.Sleep(50); //do something in the loop
+		//}
+		//pd.Send.Close();
+
+		var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
+		Print(td.DialogWindow);
+		Wait(2); //do something while the dialog is open
+		td.Send.ChangeText2("new text", false);
+		td.Send.Close();
+		Wait(2); //do something while the dialog is open
+		td.ThreadWaitClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
+
+		//Print(Api.GetCurrentThreadId());
+		//var r=await ShowAsync("fff");
+		//Print(Api.GetCurrentThreadId());
+
+		//var f = new Form();
+		//f.Click
+
+
+		//Time.SetTimer(1000, false, tt => { });
+		//Thread.CurrentThread.Abort();
+		//TaskDialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e =>
 		//{
-		//	var r = TaskDialog.Show("sync");
-		//	var r = TaskDialog.Show("sync", owner:f);
+		//	Print(e.LinkHref);
+		//	Thread.CurrentThread.Abort();
+		//}
+		////,timeoutS:30
+		//);
+		//Print("after dialog");
+
+		//var pd = TaskDialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
+		//for(int i = 1; i <= 100; i++) {
+		//	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
+		//	pd.Send.Progress(i); //don't need this if marquee
+		//	Thread.Sleep(50); //do something in the loop
+		//}
+		////pd.Send.Close();
+		//return;
+
+		//TaskDialog.Show("Simple example");
+		//var td=TaskDialog.ShowNoWait(null, "Simple example");
+		//var td = TaskDialog.ShowNoWaitEx(null, "Simple example", timeoutS: 3);
+		//var td=TaskDialog.ShowNoWait(null, "Simple example");
+		//Print(1);
+		//td.ThreadWaitClosed();
+		//Print(2);
+		//Task.Run(() => { Thread.Sleep(10000); });
+		//Thread th = null;
+		//Task.Run(() =>
+		//{
+		//	//try {
+		//	//th = Thread.CurrentThread;
+		//	//Time.SetTimer(300, false, tt => { Print("timer"); });
+		//	//MessageBox.Show("dd");
+		//	//TaskDialog.Show("dd");
+		//	TaskDialog.ShowEx("dd", timeoutS: 15);
+		//	//Thread.CurrentThread.Abort();
+		//	//Wait(0.1);
+		//	//throw new Exception("dd");
+		//	//}
+		//	//catch(Exception e) { Print(e); }
+		//});
+
+		//throw new Exception("dd");
+		//new Thread(() =>
+		//{
+		//	Wait(0.1);
+		//	throw new Exception("dd");
+		//}
+		//).Start();
+
+		//var th = new Thread(() =>
+		//  {
+		//	  //MessageBox.Show("ff");
+		//	  //TaskDialog.Show("ff");
+		//	  TaskDialog.ShowEx("dd", timeoutS: 15);
+		//  });
+		//th.IsBackground = true;
+		//th.Start();
+
+		//Print(1);
+		//Wait(1);
+		//Print(2);
+		//th.Abort();
+		//Wait(1);
+		//Print(3);
+
+		//var td = TaskDialog.ShowNoWaitEx(e => { Print(e); }, "Another example", buttons: "1 OK|2 Cancel", y: -1, timeoutS: 30);
+		//Wait(2); //do something while the dialog is open in other thread
+		//td.ThreadWaitClosed(); //wait until dialog closed (optional, just an example)
+
+		//return;
+
+		//Task.Run(() => TaskDialog.Show("example"));
+		//Task.Run(() => TaskDialog.ShowEx("example", timeoutS: 15));
+		//Print(1);
+		//Wait(3); //do something in this thread
+		//Print(2);
+
+		//var t = Task.Run(() => TaskDialog.ShowEx("example", "<a href=\"example\">link</a>", buttons: "Yes|No|CL\nnn", icon: TDIcon.App, flags: TDFlags.CommandLinks, timeoutS: 15, onLinkClick: e => Print(e.LinkHref)));
+		//var t = Task.Run(() => TaskDialogAPI(Wnd0, Zero, "ti", "s1", "s2", 0, null, out int b));
+		//Print(1);
+		//Wait(3);
+		//Print(2);
+		//t.Wait();
+		//Print(t.Result);
+
+
+		//var f = new Form();
+		////f.Click += (unu, sed) =>
+		////{
+		////	var r = TaskDialog.Show("sync");
+		////	var r = TaskDialog.Show("sync", owner:f);
+		////	Print(r);
+		////};
+		//f.Click += async (unu, sed) =>
+		//{
+		//	Print(Api.GetCurrentThreadId());
+		//	//var r = await Task.Run(() => TaskDialog.Show("async"));
+		//	var r = await Task.Run(() => TaskDialog.Show("async", owner: f));
 		//	Print(r);
+		//	Print(Api.GetCurrentThreadId());
 		//};
-		f.Click += async (unu, sed) =>
-		{
-			//var r = await Task.Run(() => TaskDialog.Show("async"));
-			var r = await Task.Run(() => TaskDialog.Show("async", owner:f));
-			Print(r);
-		};
-		f.ShowDialog();
+		//f.ShowDialog();
 
 	}
 
@@ -6460,11 +6617,13 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static unsafe void TestMain()
 	{
 		Output.Clear();
-		Time.WaitMS(100);
+		Thread.Sleep(100);
 
 
 		try {
-			TestTaskDialogAsyncAwait();
+			//TestRegistry();
+			//MessageBox.Show("ff");
+			//TestTaskDialogAsyncAwait();
 			//TestWaitFor();
 			//TestHooks();
 			//TestAbortThreadAndWaitFunctions();
@@ -6473,8 +6632,11 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 			//TestWndNextMainWindow();
 		}
 		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(ArgumentException ex) { PrintList(ex); }
 		catch(Win32Exception ex) { PrintList(ex.NativeErrorCode, ex); }
-		catch(Exception ex) { PrintList(ex.GetType(), ex); }
+		catch(Exception ex) when(!(ex is ThreadAbortException)) { PrintList(ex.GetType(), ex); }
+		//catch(Exception ex) { }
+		//Why try/catch creates 3 more threads? Does not do it if there is only catch(Exception ex). Only if STA thread.
 
 
 		/*

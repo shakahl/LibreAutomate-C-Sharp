@@ -2,8 +2,6 @@
 
 using System;
 
-#pragma warning disable 1591 //missing XML documentation
-
 namespace Catkeys
 {
 	static unsafe partial class Api

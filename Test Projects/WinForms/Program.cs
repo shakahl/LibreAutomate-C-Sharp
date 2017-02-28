@@ -6,8 +6,6 @@ using System.Windows.Forms;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace WinForms
 {
@@ -19,10 +17,13 @@ namespace WinForms
 		[STAThread]
 		static void Main()
 		{
-			Perf.First();
+			//MessageBox.Show("ff");
+			//return;
+
+			//Perf.First();
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			var f =new Form1();
+			var f = new Form1();
 			//f.FormBorderStyle = FormBorderStyle.FixedDialog;
 			//f.UseWaitCursor = false;
 			Application.Run(f);

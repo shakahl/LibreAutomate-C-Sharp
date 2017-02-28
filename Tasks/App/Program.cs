@@ -314,7 +314,7 @@ namespace Catkeys.Tasks
 			Thread[] at = new Thread[n];
 			for(i = 0; i < n; i++) {
 				//ShowRen.Show("domain", i);
-				//WaitMS(5);
+				//Thread.Sleep(5);
 				at[i] = new Thread(() =>
 				  {
 					  var ad = AppDomain.CreateDomain("ad" + i);

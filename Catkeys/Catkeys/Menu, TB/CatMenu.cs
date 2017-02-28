@@ -969,6 +969,7 @@ namespace Catkeys
 	/// <summary>
 	/// Base class of CatMenu and CatBar.
 	/// </summary>
+	/// <tocexclude />
 	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
 	public abstract class CatMenu_CatBar_Base
 	{
@@ -995,6 +996,7 @@ namespace Catkeys
 		/// <summary>
 		/// Data passed to Click event handler functions.
 		/// </summary>
+		/// <tocexclude />
 		public class ClickEventData
 		{
 			/// <summary>

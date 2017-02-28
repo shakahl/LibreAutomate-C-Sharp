@@ -103,7 +103,7 @@ public static class Test
 		public static void Main()
 		{
 			Print(Folders.ThisApp);
-//WaitMS(5000);
+//Thread.Sleep(5000);
 			//Print(""end"");
 		}
 	}

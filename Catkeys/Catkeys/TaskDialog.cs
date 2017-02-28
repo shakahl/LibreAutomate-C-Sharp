@@ -825,6 +825,7 @@ namespace Catkeys
 
 			_result = null;
 			_isClosed = false;
+			_isAppDomainEnding = false;
 
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
@@ -893,7 +894,7 @@ namespace Catkeys
 					//Workaround: retry. Also retry for other errors, eg E_OUTOFMEMORY and all other unexpected errors.
 					//In all my tests with 2 threads, was enough 1 retry, but in real life may be more threads.
 					if(hr == 0 || hr == Api.E_INVALIDARG || !_dlg.Is0) break; //about _dlg.Is0: _dlg is set if our callback function was called; then don't retry, because the dialog was possibly shown, and only then error.
-					Time.WaitMS(30); //100*30=3000
+					Thread.Sleep(30); //100*30=3000
 				}
 
 				if(hr == 0) {
@@ -907,7 +908,7 @@ namespace Catkeys
 				//But on Thread.Abort or other exception it is not called and the dialog is still alive and visible.
 				//Therefore Windows shows its annoying "stopped working" UI.
 				//To avoid it, destroy the dialog now. Also to avoid possible memory leaks etc.
-				//However still bad if we use a timer (of TaskDialog API or own).
+				//However still bad if we use a timer (of TaskDialog API or own). We also use AppDomain_.Exit event for this.
 				if(!_dlg.Is0) Api.DestroyWindow(_dlg);
 
 				_SetClosed();
@@ -923,6 +924,12 @@ namespace Catkeys
 			}
 
 			if(hr != 0) throw new Win32Exception(hr);
+			if(_isAppDomainEnding) {
+				//Print("closed");
+				_isAppDomainEnding = false;
+				//Thread.CurrentThread.Abort();
+				Thread.Sleep(Timeout.Infinite); //CLR will throw ThreadAbortException
+			}
 
 			if(FlagEndThread) {
 				bool endThread = false;
@@ -967,6 +974,8 @@ namespace Catkeys
 			case TDApi.TDN.DIALOG_CONSTRUCTED:
 				Send = new TDMessageSender(w, this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
+
+				Util.AppDomain_.Exit += _AppDomain__Exit; //closes dialog, to avoid the annoying "stopped working" UI
 				break;
 			case TDApi.TDN.DESTROYED:
 				//Print(w.IsAlive); //valid
@@ -1035,6 +1044,19 @@ namespace Catkeys
 			return R;
 		}
 
+		private void _AppDomain__Exit(object sender, EventArgs e)
+		{
+			if(IsOpen) {
+				//Print("closing");
+				_isAppDomainEnding = true; //let ShowDialog not return. It will set this = false.
+				Send.Close();
+				if(!_dlg.IsOfThisThread) {
+					while(_isAppDomainEnding) Thread.Sleep(15); //to avoid terminating this process, wait until the API modal loop ends, only then let CLR abort the dialog thread
+				}
+			}
+		}
+		bool _isAppDomainEnding;
+
 		/// <summary>
 		/// TaskDialog events.
 		/// Raised when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
@@ -1047,6 +1069,7 @@ namespace Catkeys
 		/// More info: <msdn>TaskDialogCallbackProc</msdn>.
 		/// To return a non-zero value from the callback function, assign the value to the returnValue field.
 		/// </summary>
+		/// <tocexclude />
 		public class TDEventArgs :EventArgs
 		{
 			internal TDEventArgs(TaskDialog obj_, Wnd hwnd_, TDApi.TDN message_, LPARAM wParam_, LPARAM lParam_)
@@ -1099,36 +1122,15 @@ namespace Catkeys
 		/// <summary>
 		/// Shows the dialog in new thread and returns without waiting until it is closed.
 		/// </summary>
-		/// <param name="whenClosed">
-		/// A callback function (lambda etc) to call when the dialog closed. It receives TDResult.
-		/// In what thread it is called: if owner window is specified and it is a Form or Control of this AppDomain and it still exists at that time, calls in its thread; else calls in dialog's thread, which is not this thread.
-		/// </param>
-		/// <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
-		/// <remarks>Calls <see cref="ThreadWaitOpen"/>, therefore the dialog is already open when this function returns.</remarks>
-		/// <exception cref="CatException">Failed to show dialog.</exception>
-		public void ShowNoWait(Action<TDResult> whenClosed = null, bool closeOnExit = false)
+		/// <remarks>
+		/// Calls <see cref="ThreadWaitOpen"/>, therefore the dialog is already open when this function returns.
+		/// More info: <see cref="ShowNoWaitEx"/>
+		/// </remarks>
+		/// <exception cref="AggregateException">Failed to show dialog.</exception>
+		public void ShowDialogNoWait()
 		{
-			//note: not Task.Run, because we need STA, etc.
-			var t = new Thread(() =>
-			  {
-				  ShowDialog(); //TODO: try/catch
-				  if(whenClosed != null) {
-					  Control c = null;
-					  try {
-						  var w = _c.hwndParent;
-						  if(w.IsAlive && (c = (Control)w) != null) c.BeginInvoke(whenClosed, Result);
-					  }
-					  catch { c = null; }
-					  if(c == null) whenClosed.Invoke(Result);
-				  }
-				  //note: currently onClose not called if main thread is already returned at that time.
-				  //	Because then called AppDomain.Unload, which aborts thread, which aborts executing managed code.
-				  //	In the future before calling AppDomain.Unload should close all thread windows, or wait for windows marked 'wait for it on script exit'.
-			  });
-			t.SetApartmentState(ApartmentState.STA);
-			t.IsBackground = closeOnExit;
-			t.Start();
-			if(!ThreadWaitOpen()) throw new CatException();
+			var t = Task.Run(() => ShowDialog());
+			if(!ThreadWaitOpen()) throw t.Exception ?? new AggregateException();
 		}
 
 		/// <summary>
@@ -1137,7 +1139,7 @@ namespace Catkeys
 		/// If the result is still unavailable (eg the dialog still not closed):
 		///		If called from the same thread that called ShowDialog, returns null.
 		///		If called from another thread, waits until the dialog is closed and the return value is available.
-		///		Note that ShowNoWait calls ShowDialog in another thread.
+		///		Note that ShowDialogNoWait calls ShowDialog in another thread.
 		/// </summary>
 		public TDResult Result
 		{
@@ -1153,7 +1155,7 @@ namespace Catkeys
 		{
 			if(_threadIdInShow != 0) {
 				if(_threadIdInShow == Thread.CurrentThread.ManagedThreadId) return false;
-				while(_threadIdInShow != 0) Time.WaitMS(15);
+				while(_threadIdInShow != 0) Thread.Sleep(15);
 			}
 			return true;
 		}
@@ -1168,7 +1170,7 @@ namespace Catkeys
 			_AssertIsOtherThread();
 			while(!IsOpen) {
 				if(_isClosed) return false;
-				Time.WaitMS(15); //need ~3 loops if 15
+				Thread.Sleep(15); //need ~3 loops if 15
 				Time.DoEvents(); //without it this func hangs if a form is the dialog owner
 			}
 			return true;
@@ -1181,7 +1183,7 @@ namespace Catkeys
 		{
 			_AssertIsOtherThread();
 			while(!_isClosed) {
-				Time.WaitMS(30);
+				Thread.Sleep(30);
 			}
 			_WaitWhileInShow();
 		}
@@ -1203,6 +1205,7 @@ namespace Catkeys
 			if(_dlg.Is0) return;
 			_dlg = Wnd0;
 			Send.Clear();
+			Util.AppDomain_.Exit -= _AppDomain__Exit;
 		}
 		bool _isClosed;
 
@@ -1217,9 +1220,15 @@ namespace Catkeys
 		public Wnd DialogWindow { get => _dlg; }
 
 		/// <summary>
-		/// Used to send task dialog API messages, like <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
-		/// Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
+		/// Allows to modify dialog controls while it is open, and close the dialog.
+		/// Example: <c>td.Send.Close();</c> .
+		/// Example: <c>td.Send.ChangeText2("new text", false);</c> .
+		/// Example: <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// </summary>
+		/// <remarks>
+		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
+		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWaitEx">ShowNoWaitEx</see> and <see cref="ShowProgressEx">ShowProgressEx</see>.
+		/// </remarks>
 		public TDMessageSender Send { get; private set; }
 
 		/// <summary>
@@ -1559,6 +1568,7 @@ namespace Catkeys
 	/// <summary>
 	/// TaskDialog icon. Used with <see cref="TaskDialog.Show"/> and similar functions.
 	/// </summary>
+	/// <tocexclude />
 	public enum TDIcon
 	{
 		Warning = 0xffff,
@@ -1576,6 +1586,7 @@ namespace Catkeys
 	/// <summary>
 	/// Text edit field type for <see cref="TaskDialog.ShowInputEx"/> and <see cref="TaskDialog.SetEditControl"/>.
 	/// </summary>
+	/// <tocexclude />
 	public enum TDEdit
 	{
 		None, Text, Multiline, Password, Number, Combo
@@ -1585,6 +1596,7 @@ namespace Catkeys
 	/// <summary>
 	/// TaskDialog flags. Used with <see cref="TaskDialog.Show"/> and similar functions.
 	/// </summary>
+	/// <tocexclude />
 	[Flags]
 	public enum TDFlags
 	{
@@ -2103,20 +2115,20 @@ namespace Catkeys
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in new thread and returns without waiting until it is closed.
-		/// Returns TaskDialog variable that can be used to control the dialog: set progress bar position, update text, close etc.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
 		/// Most parameters are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
 		/// <remarks>
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowNoWait.
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var pd = TaskDialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
-		/// for(int i = 1; i != 100; i++) {
+		/// for(int i = 1; i <= 100; i++) {
 		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
 		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	WaitMS(50); //do something in the loop
+		/// 	Thread.Sleep(50); //do something in the loop
 		/// }
 		/// pd.Send.Close();
 		/// ]]></code>
@@ -2136,7 +2148,7 @@ namespace Catkeys
 
 			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
 
-			d.ShowNoWait();
+			d.ShowDialogNoWait();
 
 			if(marquee) d.Send.Message(TDApi.TDM.SET_PROGRESS_BAR_MARQUEE, true);
 
@@ -2146,7 +2158,7 @@ namespace Catkeys
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns TaskDialog variable that can be used to control the dialog: set progress bar position, close etc.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
 		/// All parameters except marquee are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
@@ -2156,10 +2168,10 @@ namespace Catkeys
 		/// <example>
 		/// <code><![CDATA[
 		/// var pd = TaskDialog.ShowProgress(false, "Working");
-		/// for(int i = 1; i != 100; i++) {
+		/// for(int i = 1; i <= 100; i++) {
 		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
 		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	WaitMS(50); //do something in the loop
+		/// 	Thread.Sleep(50); //do something in the loop
 		/// }
 		/// pd.Send.Close();
 		/// ]]></code>
@@ -2181,26 +2193,25 @@ namespace Catkeys
 		/// <summary>
 		/// Shows task dialog like <see cref="ShowEx"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns TaskDialog variable that can be used to control the dialog, eg close.
-		/// Most parameters are the same as with <see cref="ShowEx"/>.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
+		/// Parameters are the same as with <see cref="ShowEx"/>.
 		/// </summary>
-		/// <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
-		/// <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
 		/// <remarks>
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowNoWait.
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// TaskDialog.ShowNoWait(null, false, "Simplest example");
+		/// TaskDialog.ShowNoWait("Simple example");
 		/// 
-		/// var td = TaskDialog.ShowNoWaitEx(e => { Print(e); }, true, "Another example", buttons: "1 OK|2 Cancel", y: -1, timeoutS: 30);
-		/// Wait(2); //do something while the dialog is open in other thread
-		/// td.ThreadWaitClosed(); //wait until dialog closed (optional, just an example)
+		/// var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
+		/// Wait(2); //do something while the dialog is open
+		/// td.Send.ChangeText2("new text", false);
+		/// Wait(2); //do something while the dialog is open
+		/// td.ThreadWaitClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
 		/// ]]></code>
 		/// </example>
-		/// <exception cref="CatException">Failed to show dialog.</exception>
+		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static TaskDialog ShowNoWaitEx(
-			Action<TDResult> whenClosed, bool closeOnExit,
 			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
@@ -2209,30 +2220,27 @@ namespace Catkeys
 			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
 				defaultButton, x, y, timeoutS, onLinkClick);
-			d.ShowNoWait(whenClosed, closeOnExit);
+			d.ShowDialogNoWait();
 			return d;
 		}
 
 		/// <summary>
 		/// Shows task dialog like <see cref="Show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns TaskDialog variable that can be used to control the dialog, eg close.
-		/// Most parameters are the same as with <see cref="Show"/>.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="ShowNoWaitEx">example</see>).
+		/// Parameters are the same as with <see cref="Show"/>.
 		/// </summary>
-		/// <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
-		/// <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
 		/// <remarks>
-		/// Calls <see cref="ShowNoWaitEx"/>. Examples are there.
+		/// Calls <see cref="ShowNoWaitEx"/>.
 		/// </remarks>
-		/// <exception cref="CatException">Failed to show dialog.</exception>
+		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static TaskDialog ShowNoWait(
-			Action<TDResult> whenClosed, bool closeOnExit,
 			string text1 = null, string text2 = null,
 			string buttons = null, TDIcon icon = 0, TDFlags flags = 0,
 			Types<Control, Wnd>? owner = null
 			)
 		{
-			return ShowNoWaitEx(whenClosed, closeOnExit, text1, text2, buttons, icon, flags, owner);
+			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);
 		}
 
 #pragma warning restore 1573 //missing XML documentation for parameters

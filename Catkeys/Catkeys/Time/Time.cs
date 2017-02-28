@@ -75,7 +75,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Suspends this thread for the specified amount of time.
-		/// The same as <see cref="WaitMS"/>, but uses seconds, not milliseconds.
+		/// The same as <see cref="Sleep"/>, but uses seconds, not milliseconds.
 		/// </summary>
 		/// <param name="timeS">
 		/// The number of seconds to wait.
@@ -92,12 +92,12 @@ namespace Catkeys
 		{
 			timeS *= 1000.0;
 			if(timeS > int.MaxValue || timeS < 0) throw new ArgumentOutOfRangeException();
-			WaitMS((int)timeS);
+			Sleep((int)timeS);
 		}
 
 		/// <summary>
 		/// Suspends this thread for the specified amount of time.
-		/// The same as <see cref="Wait"/>, but uses milliseconds, not seconds.
+		/// The same as <see cref="Wait"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
 		/// </summary>
 		/// <param name="timeMS">
 		/// The number of milliseconds to wait.
@@ -111,7 +111,7 @@ namespace Catkeys
 		/// If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
-		public static void WaitMS(int timeMS)
+		public static void Sleep(int timeMS)
 		{
 			if(timeMS < 2000) {
 				Thread.Sleep(timeMS);
@@ -133,7 +133,7 @@ namespace Catkeys
 		/// Also can be <see cref="Timeout.Infinite"/>.
 		/// </param>
 		/// <remarks>
-		/// Unlike <see cref="WaitMS"/>, this function retrieves and dispatches all Windows messages, including posted (key/mouse input, window paint, timer and other). Also calls event handlers, hook procedures, etc. Supports asynchronous procedure calls.
+		/// Unlike <see cref="Sleep"/>, this function retrieves and dispatches all Windows messages, including posted (key/mouse input, window paint, timer and other). Also calls event handlers, hook procedures, etc. Supports asynchronous procedure calls.
 		/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>. In some places does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
 		/// In threads without windows and timers usually don't need to process posted messages, but in some cases need to process sent messages, some events, hooks etc. Then you can instead use <see cref="Thread.Join(int)"/>, like <c>Thread.CurrentThread.Join(1000);</c>.
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
@@ -141,7 +141,7 @@ namespace Catkeys
 		/// <exception cref="ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
 		/// <exception cref="Exception">Any exceptions thrown by functions that are executed while waiting (event handlers etc).</exception>
 		/// <seealso cref="Util.MessageLoop"/>
-		public static void WaitDoEventsMS(int timeMS)
+		public static void SleepDoEvents(int timeMS)
 		{
 			if(timeMS == 0) { DoEvents(); return; }
 			if(timeMS < 0 && timeMS != Timeout.Infinite) throw new ArgumentOutOfRangeException();
@@ -155,7 +155,7 @@ namespace Catkeys
 
 				uint k = Api.MsgWaitForMultipleObjectsEx(0, null, (uint)timeSlice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE);
 				//info: k can be 0 (message etc), WAIT_TIMEOUT, WAIT_IO_COMPLETION, WAIT_FAILED.
-				if(k == Api.WAIT_FAILED) throw new InvalidOperationException(); //unlikely, because not using handles
+				if(k == Api.WAIT_FAILED) throw new Win32Exception(); //unlikely, because not using handles
 				if(k == 0) DoEvents();
 
 				if(timeMS > 0) {
@@ -203,8 +203,8 @@ namespace Catkeys
 		/// Uses class Time.Timer_, which calls API <msdn>SetTimer</msdn>.
 		/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
 		/// The callback function will be called in this thread.
-		/// This thread must have a message loop, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread is not retrieving Windows messages from the thread's message queue.
-		/// The timer interval precision is 10-16 ms.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
+		/// The timer interval precision is 15 ms.
 		/// </remarks>
 		public static Timer_ SetTimer(int intervalMS, bool singlePeriod, Action<Timer_> callback, object tag = null)
 		{
@@ -383,7 +383,7 @@ namespace Catkeys
 			for(int i = 0, t = 0; t < ms;) {
 				i += 2; t += i; if(t > ms) i -= t - ms;
 				//Print(i);
-				WaitMS(i);
+				Sleep(i);
 				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = Wnd0;
 			}
 		}
@@ -445,11 +445,11 @@ namespace Catkeys
 			/// <summary>
 			/// Calls API <msdn>timeBeginPeriod</msdn>.
 			/// </summary>
-			/// <param name="periodMS">Requested period. Should be 2 - 16.</param>
-			/// <exception cref="InvalidOperationException">timeBeginPeriod failed.</exception>
+			/// <param name="periodMS">Period, in milliseconds. Should be 1 - 16.</param>
+			/// <exception cref="ArgumentOutOfRangeException"/>
 			public SystemWaitPrecision(int periodMS)
 			{
-				if(timeBeginPeriod((uint)periodMS) != 0) throw new ArgumentException(); //eg when periodMS is 0
+				if(timeBeginPeriod((uint)periodMS) != 0) throw new ArgumentOutOfRangeException(); //eg when periodMS is 0
 				_period = periodMS;
 			}
 

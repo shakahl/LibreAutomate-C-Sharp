@@ -193,9 +193,8 @@ namespace Catkeys.Util
 	/// Functions useful when testing and debugging.
 	/// </summary>
 	[DebuggerStepThrough]
-	public static class LibDebug_
+	internal static class LibDebug
 	{
-#pragma warning disable 1591 //XML doc
 
 		internal static void PrintLoadedAssemblies()
 		{
@@ -213,7 +212,6 @@ namespace Catkeys.Util
 		}
 
 		internal static bool IsScrollLock { get => (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; }
-#pragma warning restore 1591 //XML doc
 	}
 #endif
 

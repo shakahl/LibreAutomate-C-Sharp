@@ -90,7 +90,7 @@ namespace Editor
 			get
 			{
 				Debug.Assert(__ilFile != null);
-				while(__ilFile == null) Time.WaitMS(5);
+				while(__ilFile == null) Thread.Sleep(5);
 				return __ilFile;
 			}
 		}
@@ -100,7 +100,7 @@ namespace Editor
 			get
 			{
 				Debug.Assert(__ilStrip != null);
-				while(__ilStrip == null) Time.WaitMS(5);
+				while(__ilStrip == null) Thread.Sleep(5);
 				return __ilStrip;
 			}
 		}

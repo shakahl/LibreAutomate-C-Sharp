@@ -746,7 +746,7 @@ namespace Catkeys
 			if(IsMinimized) {
 				ShowNotMinimized(true);
 				isMinimized = IsMinimized;
-				if(forScreenCapture && !isMinimized && !ofThisThread) Time.WaitMS(200); //although we use noAnimation, in some cases still restores with animation
+				if(forScreenCapture && !isMinimized && !ofThisThread) Thread.Sleep(200); //although we use noAnimation, in some cases still restores with animation
 			}
 			if(!IsVisible) Show(true);
 
@@ -799,6 +799,7 @@ namespace Catkeys
 					}
 
 					if(noAct) break;
+					Thread.Sleep(30);
 				}
 			}
 
@@ -807,9 +808,9 @@ namespace Catkeys
 				//Windows on inactive desktops are cloaked. They are uncloaked after ~15 ms.
 				if(IsCloaked) {
 					R = false;
-					for(int i = 0; i < 50; i++) { Time.WaitMS(30); if(R = !IsCloaked) break; }
+					for(int i = 0; i < 50; i++) { Thread.Sleep(30); if(R = !IsCloaked) break; }
 					if(R) {
-						if(forScreenCapture) Time.WaitMS(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
+						if(forScreenCapture) Thread.Sleep(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
 						_MinimalWaitNoCheckThread();
 						R = IsActive;
 						if(!R && ActivateLL()) {
@@ -872,7 +873,7 @@ namespace Catkeys
 				for(int i = 0; i < 32; i++) {
 					Time.DoEvents();
 					if(!WndActive.Is0) return true;
-					Time.WaitMS(15);
+					Thread.Sleep(15);
 				}
 				return false;
 				//Call this after showing a dialog API.
@@ -1021,13 +1022,13 @@ namespace Catkeys
 			bool ok = false;
 			if(Api.AttachThreadInput(th1, th2, true))
 				try {
-					for(int i = 0; i < 20; i++) {
+					for(int i = 0; i < 5; i++) {
 						Native.ClearError();
 						Api.SetFocus(this);
 						Wnd f = WndFocused;
 						if(f == this || f.IsChildOf(this)) { ok = true; break; }
 						//Print(i);
-						Time.WaitMS(15);
+						Thread.Sleep(30);
 					}
 				}
 				finally { Api.AttachThreadInput(th1, th2, false); }
@@ -2492,12 +2493,12 @@ namespace Catkeys
 		/// Gets window or control name.
 		/// Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="Native.GetError"/>.
 		/// </summary>
+		/// <remarks>
 		/// <note>It is not the .NET Control.Name property. To get it you can use <see cref="NameWinForms"/>.</note>
 		/// Top-level window name usually its title bar text.
 		/// Control name usually is its text that does not change, for example button or static (label) control text.
 		/// Unlike <see cref="ControlText"/>, this function usually does not get variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
 		/// Calls <see cref="GetText"/>(false, true).
-		/// <remarks>
 		/// </remarks>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="ControlText"/>
@@ -2756,7 +2757,7 @@ namespace Catkeys
 
 			if(ok) {
 				for(int i = 0; i < 100; i++) {
-					Time.WaitMS(15);
+					Thread.Sleep(15);
 					if(!IsEnabled) break; //destroyed or has an owned modal dialog box, eg "Save?"
 
 					//Wait less if hidden, eg has a tray icon.

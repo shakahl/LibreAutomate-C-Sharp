@@ -81,7 +81,7 @@ namespace Catkeys.Util
 		/// Can be used when need more options than <see cref="SubmitCallback">SubmitCallback</see> has.
 		/// </summary>
 		/// <example><code>
-		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { WaitMS(100); })) {
+		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
 		/// 	work.Submit();
 		/// 	work.Wait();
 		/// }

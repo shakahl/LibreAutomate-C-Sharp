@@ -88,16 +88,16 @@ namespace G.Controls
 			//file1 contains default XML. Its path is Folders.ThisApp + Path.GetFileName(xmlFile).
 			//file2 contains previously saved XML (user-modified layout). Its path is xmlFile.
 			//At first try to load file2. If it does not exist or is invalid, load file1 (default); or get missing data from file1, if possible.
-			//Also loads file1 when file2 XML does not match panels of new app version (eg more panels added or some removed).
+			//Also loads file1 when file2 XML does not match panels of new app version and cannot resolve it (eg some panels removed).
 			bool usesDefaultXML = false;
 			string xmlVersion = null, outInfo = null;
 			string defFile = Folders.ThisApp + Path.GetFileName(xmlFile);
 			for(int i = 0; i < 2; i++) {
-				if(i == 1) {
+				if(i == 0) {
+					if(!Files.FileExists(xmlFile)) continue;
+				} else {
 					usesDefaultXML = true;
 					xmlFile = defFile;
-				} else {
-					if(!Files.FileExists(xmlFile)) continue;
 				}
 
 				try {

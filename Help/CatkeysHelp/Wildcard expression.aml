@@ -4,7 +4,7 @@
 
   <introduction>
    <para>
-    A Catkeys <newTerm>wildcard expression</newTerm> is a very simple text format that allows you to use wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Typically used for arguments of 'find' functions, for example <codeEntityReference qualifyHint="true" autoUpgrade="true">M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.Wnd.WinFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)</codeEntityReference> (name, className, program).
+    A Catkeys <newTerm>wildcard expression</newTerm> is a very simple text format that allows you to use wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Typically used for arguments of 'find' functions, for example <codeEntityReference qualifyHint="true" autoUpgrade="true">M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})</codeEntityReference>.
    </para>
   </introduction>
 
@@ -123,9 +123,8 @@
     </para>
     <alert class="tip">
      <para>
-      To avoid many nulls in code, you can omit optional parameters,
-      for example instaed of <codeInline>Wnd.Find(null, null, "notepad")</codeInline>
-      use <codeInline>Wnd.Find(program:"notepad")</codeInline> .
+      To avoid many nulls in code, you can omit optional parameters, for example instaed of
+      <codeInline>Wnd.Find(null, null, "notepad")</codeInline> use <codeInline>Wnd.Find(programEtc: "notepad")</codeInline> .
      </para>
     </alert>
    </content>

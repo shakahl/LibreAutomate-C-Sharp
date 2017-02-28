@@ -292,6 +292,7 @@ namespace Catkeys
 		/// <summary>
 		/// The type of text (wildcard expression) used when creating the Wildex variable.
 		/// </summary>
+		/// <tocexclude />
 		public enum WildType :byte
 		{
 			/// <summary>

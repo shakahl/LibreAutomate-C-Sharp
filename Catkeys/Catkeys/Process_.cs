@@ -153,6 +153,7 @@ namespace Catkeys
 		/// <summary>
 		/// Contains process id, name, user session id.
 		/// </summary>
+		/// <tocexclude />
 		public struct ProcessInfo
 		{
 			///
@@ -590,13 +591,15 @@ namespace Catkeys
 
 #pragma warning disable 1591 //XML doc
 			/// <summary>
-			/// UacInfo.IntegrityLevel.
+			/// <see cref="UacInfo.IntegrityLevel"/>.
 			/// </summary>
+			/// <tocexclude />
 			public enum IL { Untrusted, Low, Medium, UIAccess, High, System, Protected, Unknown = 100 }
 
 			/// <summary>
-			/// UacInfo.Elevation.
+			/// <see cref="UacInfo.Elevation"/>.
 			/// </summary>
+			/// <tocexclude />
 			public enum ElevationType { Unknown, Default, Full, Limited }
 #pragma warning restore 1591
 

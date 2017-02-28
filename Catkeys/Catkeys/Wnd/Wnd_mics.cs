@@ -32,6 +32,7 @@ namespace Catkeys
 			/// <summary>
 			/// Can be used with some functions as a special window handle value. It is implicitly converted to Wnd.
 			/// </summary>
+			/// <tocexclude />
 			public enum SpecHwnd
 			{
 				/// <summary>API HWND_TOP. Used with SetWindowPos.</summary>
@@ -115,8 +116,8 @@ namespace Catkeys
 			//}
 
 			/// <summary>
-			/// Creates unmanaged window.
-			/// Calls <msdn>CreateWindowEx</msdn> with unchanged parameters.
+			/// Creates native/unmanaged window.
+			/// Calls <msdn>CreateWindowEx</msdn>.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// For style and exStyle you can use Native.WS_ constants.
 			/// Usually don't need to specify hInstance.
@@ -127,7 +128,7 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// Creates unmanaged window like <see cref="CreateWindow"/> and sets font.
+			/// Creates native/unmanaged window like <see cref="CreateWindow"/> and sets font.
 			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
 			/// </summary>
 			public static Wnd CreateWindowAndSetFont(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default(Wnd), LPARAM controlId = default(LPARAM), IntPtr hInstance = default(IntPtr), LPARAM param = default(LPARAM), IntPtr customFontHandle = default(IntPtr))
@@ -139,7 +140,7 @@ namespace Catkeys
 			static Util.LibNativeFont _msgBoxFont = new Util.LibNativeFont(SystemFonts.MessageBoxFont.ToHfont());
 
 			/// <summary>
-			/// Creates unmanaged <msdn>message-only window</msdn>.
+			/// Creates native/unmanaged <msdn>message-only window</msdn>.
 			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
@@ -152,18 +153,13 @@ namespace Catkeys
 
 			/// <summary>
 			/// Destroys a native window of this thread.
-			/// Calls API <msdn>DestroyWindow</msdn> and returns its return value. Supports <see cref="Native.GetError"/>.
+			/// Calls API <msdn>DestroyWindow</msdn>.
+			/// Returns false if failed. Supports <see cref="Native.GetError"/>.
 			/// </summary>
-			/// <exception cref="WndException">Window of other thread.</exception>
 			/// <seealso cref="Close"/>
 			public static bool DestroyWindow(Wnd w)
 			{
-				bool ok = Api.DestroyWindow(w);
-				if(!ok) {
-					uint tid = w.ThreadId;
-					if(tid != 0 && tid != Api.GetCurrentThreadId()) w.ThrowNoNative("Window of other thread. Use Close.");
-				}
-				return ok;
+				return Api.DestroyWindow(w);
 			}
 
 			/// <summary>
@@ -296,6 +292,30 @@ namespace Catkeys
 			{
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 			}
+
+			/// <summary><msdn>SUBCLASSPROC</msdn></summary>
+			/// <tocexclude />
+			public delegate LPARAM SUBCLASSPROC(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
+
+			/// <summary><msdn>SetWindowSubclass</msdn></summary>
+			[DllImport("comctl32.dll", EntryPoint = "#410")]
+			public static extern bool SetWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
+
+			/// <summary><msdn>GetWindowSubclass</msdn></summary>
+			[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
+			public static extern bool GetWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
+
+			/// <summary><msdn>RemoveWindowSubclass</msdn></summary>
+			[DllImport("comctl32.dll", EntryPoint = "#412")]
+			public static extern bool RemoveWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+
+			/// <summary><msdn>DefSubclassProc</msdn></summary>
+			[DllImport("comctl32.dll", EntryPoint = "#413")]
+			public static extern LPARAM DefSubclassProc(Wnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
+
+			/// <summary><msdn>DefWindowProc</msdn></summary>
+			[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
+			public static extern LPARAM DefWindowProc(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
 		}
 
 	}

@@ -28,14 +28,14 @@ namespace Catkeys.Automation
 		public static void SendKeys(params string[] keys_text_keys_text_andSoOn) { Input.Keys(keys_text_keys_text_andSoOn); }
 
 		/// <summary>
-		/// Waits the specified number of seconds.
+		/// Suspends this thread for the specified amount of time.
+		/// Alias of <see cref="Time.Wait"/>.
 		/// </summary>
 		/// <param name="timeS">
 		/// The number of seconds to wait.
 		/// The smallest value is 0.001 (1 ms).
-		/// The actual wait time usually is longer by 1-15 milliseconds, but not shorter. It depends on the system wait precision (see <see cref="Time.SystemWaitPrecision"/>) etc.
 		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		public static void Wait(double timeS) { Time.Wait(timeS); }
 	}
 }

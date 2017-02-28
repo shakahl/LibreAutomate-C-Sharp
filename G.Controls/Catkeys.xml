@@ -4,6 +4,17 @@
         <name>Catkeys</name>
     </assembly>
     <members>
+        <member name="M:Catkeys.Automation.NoClass.Wait(System.Double)">
+            <summary>
+            Suspends this thread for the specified amount of time.
+            Alias of <see cref="M:Catkeys.Time.Wait(System.Double)"/>.
+            </summary>
+            <param name="timeS">
+            The number of seconds to wait.
+            The smallest value is 0.001 (1 ms).
+            </param>
+            <exception cref="T:System.ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+        </member>
         <member name="M:Catkeys.Api.SizeOf``1(``0)">
             <summary>
             Gets the native size of a struct variable.
@@ -772,6 +783,7 @@
             <summary>
             Specifies whether to set, add or remove flags.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.SetAddRemove.Set">
             <summary>Set flags = the specified value.</summary>
@@ -787,8 +799,8 @@
         </member>
         <member name="T:Catkeys.CatException">
             <summary>
-            Exception with default Message = "Failed.".
-            Some constructors support Windows API error code. Then Message will contain error description.
+            The base exception used in this library.
+            Some constructors support Windows API error code. Then Message will contain its error description.
             If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
             </summary>
         </member>
@@ -842,6 +854,13 @@
             If then appendMessage is not empty, appends " " and appendMessage.
             </summary>
         </member>
+        <member name="M:Catkeys.CatException.ThrowIfFailed(System.Int32,System.String)">
+            <summary>
+            If errorCode is not 0, throws CatException that includes the code and its message.
+            </summary>
+            <param name="errorCode">Windows API error code or HRESULT.</param>
+            <param name="message">Main message. The message of the error code will be appended to it.</param>
+        </member>
         <member name="T:Catkeys.WndException">
             <summary>
             Exception thrown mostly by <see cref="T:Catkeys.Wnd"/> functions, when invalid window handle or fails for other reasons.
@@ -856,25 +875,25 @@
         <member name="M:Catkeys.WndException.#ctor(Catkeys.Wnd)">
             <summary>
             Sets Message = "Failed.".
-            Sets NativeErrorCode = w.IsValid ? 0 : ERROR_INVALID_WINDOW_HANDLE.
+            Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
             </summary>
         </member>
         <member name="M:Catkeys.WndException.#ctor(Catkeys.Wnd,System.String)">
             <summary>
             Sets Message = message.
-            Sets NativeErrorCode = w.IsValid ? 0 : ERROR_INVALID_WINDOW_HANDLE.
+            Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
             </summary>
         </member>
         <member name="M:Catkeys.WndException.#ctor(Catkeys.Wnd,System.Int32)">
             <summary>
             Sets Message = "Failed. " + Native.GetErrorMessage(winApiErrorCode).
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsValid ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
             </summary>
         </member>
         <member name="M:Catkeys.WndException.#ctor(Catkeys.Wnd,System.Int32,System.String)">
             <summary>
             Sets Message = message + " " + Native.GetErrorMessage(winApiErrorCode).
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsValid ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
             </summary>
         </member>
         <member name="M:Catkeys.WndException.#ctor(Catkeys.Wnd,System.String,System.Exception)">
@@ -967,6 +986,9 @@
         </member>
         <member name="M:Catkeys.Types`2.op_Implicit(Catkeys._Private.TypesNull2)~Catkeys.Types{`0,`1}">
             <summary>Infrastructure.</summary>
+        </member>
+        <member name="T:Catkeys._Private.NamespaceDoc">
+            <tocexclude />
         </member>
         <member name="T:Catkeys._Private.TypesNull1">
             <summary>Infrastructure.</summary>
@@ -1655,11 +1677,13 @@
             <summary>
             Base class of CatMenu and CatBar.
             </summary>
+            <tocexclude />
         </member>
         <member name="T:Catkeys.CatMenu_CatBar_Base.ClickEventData">
             <summary>
             Data passed to Click event handler functions.
             </summary>
+            <tocexclude />
         </member>
         <member name="P:Catkeys.CatMenu_CatBar_Base.ClickEventData.Item">
             <summary>
@@ -1878,17 +1902,23 @@
         </member>
         <member name="F:Catkeys.NoClass.Zero">
             <summary>
-            Default (0) value for IntPtr, LPARAM and some other types. The same as IntPtr.Zero or default(IntPtr).
-            These types are struct, therefore you cannot assign 0 or null.
-            However this is error: <c>void Func(IntPtr x=Zero){}</c>; use <c>void Func(IntPtr x=default(IntPtr)){}</c> .
+            Default value for <see cref="T:System.IntPtr"/> (0).
+            The same value as <see cref="F:System.IntPtr.Zero"/> or <c>default(IntPtr)</c>.
             </summary>
+            <remarks>
+            Can be used like <c>IntPtr p = Zero;</c> or <c>if(p == Zero)</c> or FunctionX(Zero). Cannot use 0 or null for it because the IntPtr type is struct.
+            However this is error: <c>void FunctionX(IntPtr p = Zero){}</c>; use <c>void FunctionX(IntPtr p = default(IntPtr)){}</c> .
+            </remarks>
         </member>
         <member name="F:Catkeys.NoClass.Wnd0">
             <summary>
-            Default (0) value for Wnd.
-            The Wnd type is struct, therefore you cannot assign 0 or null.
-            However this is error: <c>void Func(Wnd x=Wnd0){}</c>; use <c>void Func(Wnd x=default(Wnd)){}</c> .
+            Default value for <see cref="T:Catkeys.Wnd"/> (0 handle).
+            The same value as <c>default(Wnd)</c>.
             </summary>
+            <remarks>
+            Can be used like <c>Wnd w = Wnd0;</c> or <c>if(w == Wnd0)</c> (the same as <c>if(w.Is0)</c>) or FunctionX(Wnd0). Cannot use 0 or null for it because the Wnd type is struct.
+            However this is error: <c>void FunctionX(Wnd w = Wnd0){}</c>; use <c>void FunctionX(Wnd w = default(Wnd)){}</c> .
+            </remarks>
         </member>
         <member name="M:Catkeys.NoClass.Print(System.String)">
             <summary>
@@ -1988,12 +2018,6 @@
             Classic Windows version major+minor values.
             Example: <c>if(WinVer>=Win8) ...</c>
             </summary>
-        </member>
-        <member name="M:Catkeys.NoClass.WaitMS(System.Int32)">
-            <summary>
-            Alias for <see cref="M:Catkeys.Time.WaitMS(System.Int32)"/>.
-            </summary>
-            <param name="timeMS"></param>
         </member>
         <member name="T:Catkeys.Output">
             <summary>
@@ -2117,6 +2141,7 @@
             <summary>
             Contains process id, name, user session id.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Process_.ProcessInfo.SessionID">
             
@@ -2333,13 +2358,15 @@
         </member>
         <member name="T:Catkeys.Process_.UacInfo.IL">
             <summary>
-            UacInfo.IntegrityLevel.
+            <see cref="P:Catkeys.Process_.UacInfo.IntegrityLevel"/>.
             </summary>
+            <tocexclude />
         </member>
         <member name="T:Catkeys.Process_.UacInfo.ElevationType">
             <summary>
-            UacInfo.Elevation.
+            <see cref="P:Catkeys.Process_.UacInfo.Elevation"/>.
             </summary>
+            <tocexclude />
         </member>
         <member name="P:Catkeys.Process_.UacInfo.Elevation">
             <summary>
@@ -2851,6 +2878,7 @@
             <summary>
             The type of text (wildcard expression) used when creating the Wildex variable.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Wildex.WildType.Text">
             <summary>
@@ -3286,6 +3314,7 @@
             More info: <msdn>TaskDialogCallbackProc</msdn>.
             To return a non-zero value from the callback function, assign the value to the returnValue field.
             </summary>
+            <tocexclude />
         </member>
         <member name="P:Catkeys.TaskDialog.TDEventArgs.LinkHref">
             <summary>
@@ -3313,17 +3342,15 @@
             Gets or sets edit field text.
             </summary>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowNoWait(System.Action{Catkeys.TDResult},System.Boolean)">
+        <member name="M:Catkeys.TaskDialog.ShowDialogNoWait">
             <summary>
             Shows the dialog in new thread and returns without waiting until it is closed.
             </summary>
-            <param name="whenClosed">
-            A callback function (lambda etc) to call when the dialog closed. It receives TDResult.
-            In what thread it is called: if owner window is specified and it is a Form or Control of this AppDomain and it still exists at that time, calls in its thread; else calls in dialog's thread, which is not this thread.
-            </param>
-            <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
-            <remarks>Calls <see cref="M:Catkeys.TaskDialog.ThreadWaitOpen"/>, therefore the dialog is already open when this function returns.</remarks>
-            <exception cref="T:Catkeys.CatException">Failed to show dialog.</exception>
+            <remarks>
+            Calls <see cref="M:Catkeys.TaskDialog.ThreadWaitOpen"/>, therefore the dialog is already open when this function returns.
+            More info: <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>
+            </remarks>
+            <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
         <member name="P:Catkeys.TaskDialog.Result">
             <summary>
@@ -3332,7 +3359,7 @@
             If the result is still unavailable (eg the dialog still not closed):
             	If called from the same thread that called ShowDialog, returns null.
             	If called from another thread, waits until the dialog is closed and the return value is available.
-            	Note that ShowNoWait calls ShowDialog in another thread.
+            	Note that ShowDialogNoWait calls ShowDialog in another thread.
             </summary>
         </member>
         <member name="M:Catkeys.TaskDialog.ThreadWaitOpen">
@@ -3360,9 +3387,15 @@
         </member>
         <member name="P:Catkeys.TaskDialog.Send">
             <summary>
-            Used to send task dialog API messages, like <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
-            Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
+            Allows to modify dialog controls while it is open, and close the dialog.
+            Example: <c>td.Send.Close();</c> .
+            Example: <c>td.Send.ChangeText2("new text", false);</c> .
+            Example: <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
             </summary>
+            <remarks>
+            Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
+            Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})">ShowNoWaitEx</see> and <see cref="M:Catkeys.TaskDialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})">ShowProgressEx</see>.
+            </remarks>
         </member>
         <member name="T:Catkeys.TaskDialog.TDMessageSender">
             <summary>
@@ -3729,20 +3762,20 @@
             <summary>
             Shows dialog with progress bar.
             Creates dialog in new thread and returns without waiting until it is closed.
-            Returns TaskDialog variable that can be used to control the dialog: set progress bar position, update text, close etc.
+            Returns <see cref="T:Catkeys.TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Catkeys.TaskDialog.IsOpen"/>, <see cref="M:Catkeys.TaskDialog.ThreadWaitClosed"/>, <see cref="P:Catkeys.TaskDialog.Result"/> (when closed), <see cref="P:Catkeys.TaskDialog.DialogWindow"/>, <see cref="P:Catkeys.TaskDialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
             Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
             <remarks>
-            This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowNoWait.
+            This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="M:Catkeys.TaskDialog.ShowDialogNoWait"/>.
             </remarks>
             <example>
             <code><![CDATA[
             var pd = TaskDialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
-            for(int i = 1; i != 100; i++) {
+            for(int i = 1; i <= 100; i++) {
             	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
             	pd.Send.Progress(i); //don't need this if marquee
-            	WaitMS(50); //do something in the loop
+            	Thread.Sleep(50); //do something in the loop
             }
             pd.Send.Close();
             ]]></code>
@@ -3753,7 +3786,7 @@
             <summary>
             Shows dialog with progress bar.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns TaskDialog variable that can be used to control the dialog: set progress bar position, close etc.
+            Returns <see cref="T:Catkeys.TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Catkeys.TaskDialog.IsOpen"/>, <see cref="M:Catkeys.TaskDialog.ThreadWaitClosed"/>, <see cref="P:Catkeys.TaskDialog.Result"/> (when closed), <see cref="P:Catkeys.TaskDialog.DialogWindow"/>, <see cref="P:Catkeys.TaskDialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
             All parameters except marquee are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
@@ -3763,57 +3796,56 @@
             <example>
             <code><![CDATA[
             var pd = TaskDialog.ShowProgress(false, "Working");
-            for(int i = 1; i != 100; i++) {
+            for(int i = 1; i <= 100; i++) {
             	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
             	pd.Send.Progress(i); //don't need this if marquee
-            	WaitMS(50); //do something in the loop
+            	Thread.Sleep(50); //do something in the loop
             }
             pd.Send.Close();
             ]]></code>
             </example>
             <exception cref="T:Catkeys.CatException">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})">
+        <member name="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})">
             <summary>
             Shows task dialog like <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns TaskDialog variable that can be used to control the dialog, eg close.
-            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
+            Returns <see cref="T:Catkeys.TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Catkeys.TaskDialog.IsOpen"/>, <see cref="M:Catkeys.TaskDialog.ThreadWaitClosed"/>, <see cref="P:Catkeys.TaskDialog.Result"/> (when closed), <see cref="P:Catkeys.TaskDialog.DialogWindow"/>, <see cref="P:Catkeys.TaskDialog.Send"/>; through the Send property you can modify controls and close the dialog (see example).
+            Parameters are the same as with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </summary>
-            <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
-            <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
             <remarks>
-            This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowNoWait.
+            This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="M:Catkeys.TaskDialog.ShowDialogNoWait"/>.
             </remarks>
             <example>
             <code><![CDATA[
-            TaskDialog.ShowNoWait(null, false, "Simplest example");
+            TaskDialog.ShowNoWait("Simple example");
             
-            var td = TaskDialog.ShowNoWaitEx(e => { Print(e); }, true, "Another example", buttons: "1 OK|2 Cancel", y: -1, timeoutS: 30);
-            Wait(2); //do something while the dialog is open in other thread
-            td.ThreadWaitClosed(); //wait until dialog closed (optional, just an example)
+            var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
+            Wait(2); //do something while the dialog is open
+            td.Send.ChangeText2("new text", false);
+            Wait(2); //do something while the dialog is open
+            td.ThreadWaitClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
             ]]></code>
             </example>
-            <exception cref="T:Catkeys.CatException">Failed to show dialog.</exception>
+            <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowNoWait(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})">
+        <member name="M:Catkeys.TaskDialog.ShowNoWait(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})">
             <summary>
             Shows task dialog like <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns TaskDialog variable that can be used to control the dialog, eg close.
-            Most parameters are the same as with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})"/>.
+            Returns <see cref="T:Catkeys.TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Catkeys.TaskDialog.IsOpen"/>, <see cref="M:Catkeys.TaskDialog.ThreadWaitClosed"/>, <see cref="P:Catkeys.TaskDialog.Result"/> (when closed), <see cref="P:Catkeys.TaskDialog.DialogWindow"/>, <see cref="P:Catkeys.TaskDialog.Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})">example</see>).
+            Parameters are the same as with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})"/>.
             </summary>
-            <param name="whenClosed">null or an event handler function (lambda etc) to call when the dialog closed.</param>
-            <param name="closeOnExit">If true, the dialog disappears when all other threads of this app domain end.</param>
             <remarks>
-            Calls <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.Action{Catkeys.TDResult},System.Boolean,System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>. Examples are there.
+            Calls <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             </remarks>
-            <exception cref="T:Catkeys.CatException">Failed to show dialog.</exception>
+            <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
         <member name="T:Catkeys.TDIcon">
             <summary>
             TaskDialog icon. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})"/> and similar functions.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.TDIcon.App">
             <summary>
@@ -3825,11 +3857,13 @@
             <summary>
             Text edit field type for <see cref="M:Catkeys.TaskDialog.ShowInputEx(System.String,System.String,Catkeys.TDEdit,System.Object,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}},System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs},System.String,System.Action{Catkeys.TaskDialog.TDEventArgs})"/> and <see cref="M:Catkeys.TaskDialog.SetEditControl(Catkeys.TDEdit,System.Object)"/>.
             </summary>
+            <tocexclude />
         </member>
         <member name="T:Catkeys.TDFlags">
             <summary>
             TaskDialog flags. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,System.Nullable{Catkeys.Types{System.Windows.Forms.Control,Catkeys.Wnd}})"/> and similar functions.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.TDFlags.CommandLinks">
             <summary>
@@ -4082,12 +4116,220 @@
             <param name="row"><see cref="P:Catkeys.CsvTable.Item(System.Int32,System.Int32)"/></param>
             <param name="column"><see cref="P:Catkeys.CsvTable.Item(System.Int32,System.Int32)"/></param>
         </member>
+        <member name="T:Catkeys.Time">
+            <summary>
+            Time functions. Get, wait, doevents, timer, precision.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Time.Microseconds">
+            <summary>
+            Gets the number of microseconds elapsed since Windows startup.
+            The precision is 1 microsecond.
+            </summary>
+            <remarks>
+            Uses API <msdn>QueryPerformanceCounter</msdn>.
+            Includes the computer sleep/hibernate time (see also <see cref="P:Catkeys.Time.MillisecondsWithoutSleepTime"/>). Independent of computer clock time changes.
+            MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Time.Milliseconds">
+            <summary>
+            Gets the number of milliseconds elapsed since Windows startup.
+            The precision is 1 millisecond.
+            See also <see cref="P:Catkeys.Time.Microseconds"/>.
+            </summary>
+            <remarks>
+            Uses API <msdn>QueryPerformanceCounter</msdn>.
+            Includes the computer sleep/hibernate time (see also <see cref="P:Catkeys.Time.MillisecondsWithoutSleepTime"/>). Independent of computer clock time changes.
+            Unlike Environment.TickCount, this function is more precise and returns a 64-bit value that will not roll over in 100 years from the most recent system boot.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Time.MillisecondsWithoutSleepTime">
+            <summary>
+            Gets the number of milliseconds elapsed since Windows startup, not including time the system spends in sleep or hibernation.
+            The precision is 1-16 milliseconds, depending on the system wait precision (see <see cref="T:Catkeys.Time.SystemWaitPrecision"/>).
+            </summary>
+            <remarks>
+            Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
+            Independent of computer clock time changes.
+            This function can be used to implement a timeout in 'wait for something' functions, when repeatedly checking a condition.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Time.Wait(System.Double)">
+            <summary>
+            Suspends this thread for the specified amount of time.
+            The same as <see cref="M:Catkeys.Time.Sleep(System.Int32)"/>, but uses seconds, not milliseconds.
+            </summary>
+            <param name="timeS">
+            The number of seconds to wait.
+            The smallest value is 0.001 (1 ms).
+            </param>
+            <exception cref="T:System.ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+            <remarks>
+            Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
+            Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
+            Usually waits longer by 1-15 milliseconds, but not shorter. It depends on the system wait precision (see <see cref="T:Catkeys.Time.SystemWaitPrecision"/>).
+            If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Time.Sleep(System.Int32)">
+            <summary>
+            Suspends this thread for the specified amount of time.
+            The same as <see cref="M:Catkeys.Time.Wait(System.Double)"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
+            </summary>
+            <param name="timeMS">
+            The number of milliseconds to wait.
+            The smallest value is 1.
+            Also can be <see cref="F:System.Threading.Timeout.Infinite"/>.
+            </param>
+            <remarks>
+            Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
+            Does not process events and messages, therefore should not be used with big timeMS in threads with windows, timers or COM events. Supports asynchronous procedure calls.
+            Usually waits longer by 1-15 milliseconds, but not shorter. It depends on the system wait precision (see <see cref="T:Catkeys.Time.SystemWaitPrecision"/>).
+            If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
+            </remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
+        </member>
+        <member name="M:Catkeys.Time.SleepDoEvents(System.Int32)">
+            <summary>
+            Partially suspends this thread for the specified amount of time, during which processes events and messages.
+            </summary>
+            <param name="timeMS">
+            The number of milliseconds to wait.
+            The smallest value is 1.
+            Also can be <see cref="F:System.Threading.Timeout.Infinite"/>.
+            </param>
+            <remarks>
+            Unlike <see cref="M:Catkeys.Time.Sleep(System.Int32)"/>, this function retrieves and dispatches all Windows messages, including posted (key/mouse input, window paint, timer and other). Also calls event handlers, hook procedures, etc. Supports asynchronous procedure calls.
+            This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>. In some places does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
+            In threads without windows and timers usually don't need to process posted messages, but in some cases need to process sent messages, some events, hooks etc. Then you can instead use <see cref="M:System.Threading.Thread.Join(System.Int32)"/>, like <c>Thread.CurrentThread.Join(1000);</c>.
+            Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="M:Catkeys.Time.DoEvents"/>.
+            </remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
+            <exception cref="T:System.Exception">Any exceptions thrown by functions that are executed while waiting (event handlers etc).</exception>
+            <seealso cref="T:Catkeys.Util.MessageLoop"/>
+        </member>
+        <member name="M:Catkeys.Time.DoEvents">
+            <summary>
+            Retrieves and dispatches messages from the message queue of current thread.
+            </summary>
+            <remarks>
+            If this thread has a .NET message loop (<see cref="P:System.Windows.Forms.Application.MessageLoop"/>), calls <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
+            Else uses more lightweight API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
+            Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
+            </remarks>
+            <exception cref="T:System.Exception">Any exceptions thrown by functions that are executed while dispatching messages (event handlers etc).</exception>
+        </member>
+        <member name="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">
+            <summary>
+            Sets new timer for this thread.
+            Returns new Timer_ object that can be used to change or stop the timer if you want to do it not in the callback function; usually don't need it.
+            </summary>
+            <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds. Min interval is 10; if this parameter is 0-9, uses 10. Max interval is int.MaxValue.</param>
+            <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
+            <param name="callback">A callback function (delegate), for example lambda.</param>
+            <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+            <remarks>
+            Uses class Time.Timer_, which calls API <msdn>SetTimer</msdn>.
+            Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
+            The callback function will be called in this thread.
+            This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
+            The timer interval precision is 15 ms.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Time.Timer_">
+            <summary>
+            Manages a timer for this thread.
+            Calls API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
+            Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
+            Used by <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">Time.SetTimer</see>, more info there.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Time.Timer_.Tag">
+            <summary>
+            Some object or value attached to this Timer_ variable.
+            Can be set with this property or with <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">Time.SetTimer</see>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Time.Timer_.#ctor(System.Action{Catkeys.Time.Timer_},System.Object)">
+            <summary>
+            Initializes a new <see cref="T:Catkeys.Time.Timer_"/> instance.
+            Used by <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Time.Timer_.Start(System.Int32,System.Boolean)">
+            <summary>
+            Starts timer. If already started, resets and changes its period.
+            </summary>
+            <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds.</param>
+            <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
+            <remarks>
+            If already started, this function must be called in same thread.
+            </remarks>
+            <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+        </member>
+        <member name="M:Catkeys.Time.Timer_.Stop">
+            <summary>
+            Stops the timer.
+            </summary>
+            <remarks>
+            Your callback function will never be called after this, even if a timer period is elapsed.
+            Later you can call Start() again.
+            Calling Stop() is optional.
+            Must be called in same thread.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Time.SystemWaitPrecision">
+            <summary>
+            Changes the precision of wait functions.
+            Calls API <msdn>timeBeginPeriod</msdn>, which requests a minimum resolution (period) for various system timers and wait functions.
+            Normal period on Windows 7-10 is 15.625 ms, minimal 1 ms. This class can temporarily make it smaller. It is applied to all threads and processes.
+            The new period is revoked when disposing the variable or when this process ends. See example.
+            Other applications can change it too. For example, Firefox and other web browsers temporarily set period 1 ms when opening a web page.
+            The system uses the smallest period (highest precision) that currently is set by any application. You cannot make it bigger than current value.
+            <note>It is not recommended to keep small period for a long time. It can be bad for power saving.</note>
+            <note>This does not change the minimal period of <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">SetTimer</see>.</note>
+            </summary>
+            <example>
+            <code><![CDATA[
+            _Test("before");
+            using(new Time.SystemWaitPrecision(2)) {
+            	_Test("in");
+            }
+            _Test("after");
+            
+            void _Test(string name)
+            {
+            	Print(name);
+            	Perf.First();
+            	for(int i = 0; i < 10; i++) { Thread.Sleep(1); Perf.Next(); }
+            	Perf.Write();
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.Time.SystemWaitPrecision.#ctor(System.Int32)">
+            <summary>
+            Calls API <msdn>timeBeginPeriod</msdn>.
+            </summary>
+            <param name="periodMS">Period, in milliseconds. Should be 1 - 16.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:Catkeys.Time.SystemWaitPrecision.Dispose">
+            <summary>
+            Calls API <msdn>timeEndPeriod</msdn>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Time.SystemWaitPrecision.Finalize">
+            
+        </member>
         <member name="T:Catkeys.WCFlags">
             <summary>
             'flags' parameter of <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
             <note>
             </note>
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.WCFlags.HiddenToo">
             <summary>Can find hidden controls.</summary>
@@ -4211,7 +4453,7 @@
             It can evaluate more properties of the control and return true when they match.
             Example: <c>also: t =&gt; t.IsEnabled</c>
             </param>
-            <param name="skipCount">0-based index of matching control. For example, if skipCount is 1, the function skips the first matching control and returns the second.</param>
+            <param name="skip">0-based index of matching control. For example, if it is 1, the function skips the first matching control and returns the second.</param>
             <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
             <exception cref="T:System.ArgumentException">
             className is "". To match any, use null.
@@ -4492,6 +4734,7 @@
             <summary>
             Rarely used API <msdn>WNDCLASSEX</msdn> fields. Used with some WindowClass functions.
             </summary>
+            <tocexclude />
         </member>
         <member name="T:Catkeys.Wnd.Misc.TaskbarButton">
             <summary>
@@ -4504,6 +4747,9 @@
             </summary>
             <param name="w">Window.</param>
             <param name="count">The number of times to flash. If 0, stops flashing.</param>
+        </member>
+        <member name="T:Catkeys.Wnd.Misc.TaskbarButton.ProgressState">
+            <tocexclude />
         </member>
         <member name="M:Catkeys.Wnd.Misc.TaskbarButton.SetProgressState(Catkeys.Wnd,Catkeys.Wnd.Misc.TaskbarButton.ProgressState)">
             <summary>
@@ -4628,10 +4874,10 @@
         <member name="M:Catkeys.Wnd.Misc.WaitForAnActiveWindow">
             <summary>
             Waits while there is no active window.
-            It sometimes happens after closing or switching the active window (and the new active window is not of this thread), very briefly until Windows makes the new window active after making the old window inactive (or after closing the old window).
-            Don't need to call this after Activate() and other functions of this library that activate windows.
-            Waits max about 200 ms, then returns false if there is no active window.
+            It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
+            Waits max 500 ms, then returns false if there is no active window.
             Processes Windows messages that are in the message queue of this thread.
+            Don't need to call this after calling functions of this library.
             </summary>
         </member>
         <member name="M:Catkeys.Wnd.Misc.AllowActivate">
@@ -4756,10 +5002,19 @@
             </remarks>
             <seealso cref="M:Catkeys.Wnd.WndNextMain(System.Boolean,System.Boolean,System.Boolean,System.Boolean)"/>
         </member>
+        <member name="M:Catkeys.Wnd.Misc.SwitchActiveWindow">
+            <summary>
+            Activates next non-minimized main window, like with Alt+Tab.
+            Returns true if activated, false if there is no such window or failed to activate.
+            Calls <see cref="M:Catkeys.Wnd.WndNextMain(System.Boolean,System.Boolean,System.Boolean,System.Boolean)">WndNextMain</see> and <see cref="M:Catkeys.Wnd.Activate"/>.
+            An alternative way - send Alt+Tab keys, but it works not everywhere; it can activate a minimized window too.
+            </summary>
+        </member>
         <member name="T:Catkeys.Wnd.Misc.SpecHwnd">
             <summary>
             Can be used with some functions as a special window handle value. It is implicitly converted to Wnd.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Wnd.Misc.SpecHwnd.Top">
             <summary>API HWND_TOP. Used with SetWindowPos.</summary>
@@ -4819,8 +5074,8 @@
         </member>
         <member name="M:Catkeys.Wnd.Misc.CreateWindow(System.UInt32,System.String,System.String,System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd,Catkeys.LPARAM,System.IntPtr,Catkeys.LPARAM)">
             <summary>
-            Creates unmanaged window.
-            Calls <msdn>CreateWindowEx</msdn> with unchanged parameters.
+            Creates native/unmanaged window.
+            Calls <msdn>CreateWindowEx</msdn>.
             Later call <see cref="M:Catkeys.Wnd.Misc.DestroyWindow(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)"/>.
             For style and exStyle you can use Native.WS_ constants.
             Usually don't need to specify hInstance.
@@ -4828,13 +5083,13 @@
         </member>
         <member name="M:Catkeys.Wnd.Misc.CreateWindowAndSetFont(System.UInt32,System.String,System.String,System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd,Catkeys.LPARAM,System.IntPtr,Catkeys.LPARAM,System.IntPtr)">
             <summary>
-            Creates unmanaged window like <see cref="M:Catkeys.Wnd.Misc.CreateWindow(System.UInt32,System.String,System.String,System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd,Catkeys.LPARAM,System.IntPtr,Catkeys.LPARAM)"/> and sets font.
+            Creates native/unmanaged window like <see cref="M:Catkeys.Wnd.Misc.CreateWindow(System.UInt32,System.String,System.String,System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd,Catkeys.LPARAM,System.IntPtr,Catkeys.LPARAM)"/> and sets font.
             If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
             </summary>
         </member>
         <member name="M:Catkeys.Wnd.Misc.CreateMessageWindow(System.String)">
             <summary>
-            Creates unmanaged <msdn>message-only window</msdn>.
+            Creates native/unmanaged <msdn>message-only window</msdn>.
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
             Later call <see cref="M:Catkeys.Wnd.Misc.DestroyWindow(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)"/>.
             </summary>
@@ -4843,9 +5098,9 @@
         <member name="M:Catkeys.Wnd.Misc.DestroyWindow(Catkeys.Wnd)">
             <summary>
             Destroys a native window of this thread.
-            Calls API <msdn>DestroyWindow</msdn> and returns its return value. Supports <see cref="M:Catkeys.Native.GetError"/>.
+            Calls API <msdn>DestroyWindow</msdn>.
+            Returns false if failed. Supports <see cref="M:Catkeys.Native.GetError"/>.
             </summary>
-            <exception cref="T:Catkeys.WndException">Window of other thread.</exception>
             <seealso cref="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)"/>
         </member>
         <member name="M:Catkeys.Wnd.Misc.GetIconHandle(Catkeys.Wnd,System.Boolean)">
@@ -4921,6 +5176,25 @@
             <param name="m"></param>
             <param name="ignore">Messages to not show.</param>
         </member>
+        <member name="T:Catkeys.Wnd.Misc.SUBCLASSPROC">
+            <summary><msdn>SUBCLASSPROC</msdn></summary>
+            <tocexclude />
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.SetWindowSubclass(Catkeys.Wnd,Catkeys.Wnd.Misc.SUBCLASSPROC,Catkeys.LPARAM,System.IntPtr)">
+            <summary><msdn>SetWindowSubclass</msdn></summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.GetWindowSubclass(Catkeys.Wnd,Catkeys.Wnd.Misc.SUBCLASSPROC,Catkeys.LPARAM,System.IntPtr@)">
+            <summary><msdn>GetWindowSubclass</msdn></summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.RemoveWindowSubclass(Catkeys.Wnd,Catkeys.Wnd.Misc.SUBCLASSPROC,Catkeys.LPARAM)">
+            <summary><msdn>RemoveWindowSubclass</msdn></summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.DefSubclassProc(Catkeys.Wnd,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary><msdn>DefSubclassProc</msdn></summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.DefWindowProc(Catkeys.Wnd,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary><msdn>DefWindowProc</msdn></summary>
+        </member>
         <member name="M:Catkeys.Wnd.SetTransparency(System.Boolean,System.Nullable{System.Double},System.Nullable{System.Int32})">
             <summary>
             Sets transparency.
@@ -4977,14 +5251,14 @@
             <param name="showActivate">Call <see cref="M:Catkeys.Wnd.Show(System.Boolean)">Show</see>(true) and <see cref="M:Catkeys.Wnd.ActivateLL"/>. Even when s is null/"".</param>
             <exception cref="T:Catkeys.WndException"/>
         </member>
-        <member name="M:Catkeys.Wnd._MinimalAutoDelayIfOtherThread">
+        <member name="M:Catkeys.Wnd._MinimalWaitIfOtherThread">
             <summary>
-            if(!IsOfThisThread) { WaitMS(15); SendTimeout(1000, 0); }
+            if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd._MinimalAutoDelayNoCheckThread">
+        <member name="M:Catkeys.Wnd._MinimalWaitNoCheckThread">
             <summary>
-            WaitMS(15); SendTimeout(1000, 0);
+            Thread.Sleep(15); SendTimeout(1000, 0);
             </summary>
         </member>
         <member name="M:Catkeys.Wnd._WindowsStoreAppId(Catkeys.Wnd,System.String@,System.Boolean,System.Boolean)">
@@ -5144,23 +5418,30 @@
         </member>
         <member name="M:Catkeys.Wnd.ThrowIfInvalid">
             <summary>
-            If <see cref="P:Catkeys.Wnd.Is0"/> or !<see cref="P:Catkeys.Wnd.IsValid"/>, throws <see cref="T:Catkeys.WndException"/>.
+            If <see cref="P:Catkeys.Wnd.Is0"/> or !<see cref="P:Catkeys.Wnd.IsAlive"/>, throws <see cref="T:Catkeys.WndException"/>.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ThrowNative">
+        <member name="M:Catkeys.Wnd.ThrowUseNative">
             <summary>
-            Throws <see cref="T:Catkeys.WndException"/> that uses the last Windows API error code and also depends on whether the window handle is 0/invalid.
+            Throws <see cref="T:Catkeys.WndException"/> that uses the last Windows API error (code and message).
+            Also the message depends on whether the window handle is 0/invalid.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ThrowNative(System.String)">
+        <member name="M:Catkeys.Wnd.ThrowUseNative(System.String)">
             <summary>
-            Throws <see cref="T:Catkeys.WndException"/> that uses the last Windows API error code and also depends on whether the window handle is 0/invalid.
-            Its Message will also contain mainMessage.
+            Throws <see cref="T:Catkeys.WndException"/> that uses mainMessage and the last Windows API error (code and message).
+            Also the message depends on whether the window handle is 0/invalid.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.ThrowNoNative(System.String)">
+            <summary>
+            Throws <see cref="T:Catkeys.WndException"/> that uses mainMessage and does not use the last Windows API error.
+            Also the message depends on whether the window handle is 0/invalid.
             </summary>
         </member>
         <member name="P:Catkeys.Wnd.Is0">
             <summary>
-            Returns true if the handle is 0.
+            Returns true if the <see cref="T:Catkeys.Wnd">handle</see> is 0 (<see cref="F:Catkeys.NoClass.Wnd0"/>).
             </summary>
             <example>
             <code><![CDATA[
@@ -5168,15 +5449,19 @@
             if(w.Is0) { Print("window not found"); return; }
             ]]></code>
             </example>
-            <seealso cref="P:Catkeys.Wnd.IsValid"/>
+            <seealso cref="P:Catkeys.Wnd.IsAlive"/>
         </member>
-        <member name="P:Catkeys.Wnd.IsValid">
+        <member name="P:Catkeys.Wnd.IsAlive">
             <summary>
-            Returns true if the window exists.
+            Returns true if the <see cref="T:Catkeys.Wnd">handle</see> identifies an existing window.
             Returns false if the handle is 0 or invalid.
             Invalid non-0 handle usually means that the window is closed/destroyed.
-            Calls <see cref="P:Catkeys.Wnd.Is0"/> and API <msdn>IsWindow</msdn>.
             </summary>
+            <remarks>
+            Calls <see cref="P:Catkeys.Wnd.Is0"/> and API <msdn>IsWindow</msdn>.
+            Although a Wnd variable holds a window handle, which is like a reference to a window, it does not prevent closing that window and making the handle invalid. After closing the window, the OS can even assign the same handle value to a new window, although normally it can happen only after long time.
+            <note>Use this carefully with windows of other applications or threads. The window can be closed at any moment, even when your thread is still in this function.</note>
+            </remarks>
         </member>
         <member name="P:Catkeys.Wnd.IsVisible">
             <summary>
@@ -5277,7 +5562,7 @@
             Also unhides.
             </summary>
             <param name="noAnimation">Visually fast, without animation.</param>
-            <exception cref="T:Catkeys.WndException"/>
+            <exception cref="T:Catkeys.WndException">The API call failed. No exception if the window did not obey.</exception>
         </member>
         <member name="M:Catkeys.Wnd.ShowMaximized(System.Boolean)">
             <summary>
@@ -5285,7 +5570,7 @@
             Also unhides.
             </summary>
             <param name="noAnimation">Visually fast, without animation.</param>
-            <exception cref="T:Catkeys.WndException"/>
+            <exception cref="T:Catkeys.WndException">The API call failed. No exception if the window did not obey.</exception>
         </member>
         <member name="M:Catkeys.Wnd.ShowNotMinMax(System.Boolean)">
             <summary>
@@ -5293,7 +5578,7 @@
             Also unhides.
             </summary>
             <param name="noAnimation">Visually fast, without animation.</param>
-            <exception cref="T:Catkeys.WndException"/>
+            <exception cref="T:Catkeys.WndException">The API call failed. No exception if the window did not obey.</exception>
         </member>
         <member name="M:Catkeys.Wnd.ShowNotMinimized(System.Boolean)">
             <summary>
@@ -5301,7 +5586,7 @@
             Also unhides.
             </summary>
             <param name="noAnimation">Visually fast, without animation.</param>
-            <exception cref="T:Catkeys.WndException"/>
+            <exception cref="T:Catkeys.WndException">The API call failed. No exception if the window did not obey.</exception>
         </member>
         <member name="M:Catkeys.Wnd._MinMaxRes(System.Int32,System.Boolean)">
             <summary>
@@ -5343,7 +5628,7 @@
             <seealso cref="M:Catkeys.Wnd.ActivateLL"/>
             <seealso cref="P:Catkeys.Wnd.IsActive"/>
             <seealso cref="P:Catkeys.Wnd.WndActive"/>
-            <seealso cref="M:Catkeys.Wnd.SwitchActiveWindow"/>
+            <seealso cref="M:Catkeys.Wnd.Misc.SwitchActiveWindow"/>
         </member>
         <member name="M:Catkeys.Wnd.LibActivate(System.Boolean,System.Boolean)">
             <summary>
@@ -5392,7 +5677,13 @@
             Also activetes its top-level parent window (see <see cref="M:Catkeys.Wnd.Activate"/>).
             Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="M:Catkeys.Wnd.FocusLL"/>.
             </summary>
-            <exception cref="T:Catkeys.WndException">Invalid handle, or failed to set focus, or failed to activate parent window. Fails to set focus when the target process is admin and this process is normal.</exception>
+            <remarks>
+            Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then does not throw exception.
+            </remarks>
+            <exception cref="T:Catkeys.WndException">
+            Invalid handle; disabled; failed to set focus; failed to activate parent window.
+            Fails to set focus when the target process is admin and this process is normal.
+            </exception>
             <seealso cref="P:Catkeys.Wnd.WndFocused"/>
             <seealso cref="P:Catkeys.Wnd.IsFocused"/>
         </member>
@@ -5989,6 +6280,12 @@
             <exception cref="T:Catkeys.WndException"/>
             <seealso cref="P:Catkeys.Wnd.ExStyle"/>
         </member>
+        <member name="P:Catkeys.Wnd.IsPopupWindow">
+            <summary>
+            Returns true if has Native.WS_POPUP style.
+            </summary>
+            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
+        </member>
         <member name="M:Catkeys.Wnd.GetWindowLong(System.Int32)">
             <summary>
             Calls API GetWindowLong if this process is 32-bit, GetWindowLongPtr if 64-bit.
@@ -6164,12 +6461,12 @@
             Gets window or control name.
             Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="M:Catkeys.Native.GetError"/>.
             </summary>
+            <remarks>
             <note>It is not the .NET Control.Name property. To get it you can use <see cref="P:Catkeys.Wnd.NameWinForms"/>.</note>
             Top-level window name usually its title bar text.
             Control name usually is its text that does not change, for example button or static (label) control text.
             Unlike <see cref="P:Catkeys.Wnd.ControlText"/>, this function usually does not get variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
             Calls <see cref="M:Catkeys.Wnd.GetText(System.Nullable{System.Boolean},System.Boolean)"/>(false, true).
-            <remarks>
             </remarks>
             <seealso cref="M:Catkeys.Wnd.SetText(System.String)"/>
             <seealso cref="P:Catkeys.Wnd.ControlText"/>
@@ -6274,10 +6571,10 @@
         <member name="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)">
             <summary>
             Closes the window.
-            Returns true if successfuly closed or if it was already closed or if noWait==true.
+            Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if noWait==true.
             </summary>
             <param name="noWait">
-            If false (default), waits a while until the window is destroyed, hidden or disabled. But does not wait indefinitely.
+            If false (default), waits a while until the window is destroyed or disabled. But does not wait indefinitely.
             If true, does not wait.
             </param>
             <param name="useXButton">
@@ -6286,8 +6583,8 @@
             Most windows can be closed with any of these messages, but some respond properly only to one of them. For example, some applications on WM_CLOSE don't exit, although the main window is closed. Some applications don't respond to WM_SYSCOMMAND if it is posted soon after opening the window, for example Internet Explorer.
             </param>
             <remarks>
-            The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or just need more time to close it.
-            If the window is of this thread, just calls <see cref="M:Catkeys.Wnd.Send(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">Send</see> (if noWait==false) or <see cref="M:Catkeys.Wnd.Post(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">Post</see> (if noWait==true).
+            The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
+            If the window is of this thread, just calls <see cref="M:Catkeys.Wnd.Send(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">Send</see> (if noWait==false) or <see cref="M:Catkeys.Wnd.Post(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">Post</see> (if noWait==true) and returns true.
             </remarks>
             <example>
             <code><![CDATA[
@@ -6567,14 +6864,6 @@
             This function is quite slow and does not exactly match the behavior of the Windows taskbar and Alt+Tab.
             </remarks>
             <seealso cref="M:Catkeys.Wnd.Misc.MainWindows(System.Boolean,System.Boolean)"/>
-        </member>
-        <member name="M:Catkeys.Wnd.SwitchActiveWindow">
-            <summary>
-            Activates next non-minimized main window, like with Alt+Tab.
-            Returns true if activated, false if there is no such window or failed to activate.
-            Calls <see cref="M:Catkeys.Wnd.WndNextMain(System.Boolean,System.Boolean,System.Boolean,System.Boolean)">WndNextMain</see> and <see cref="M:Catkeys.Wnd.Activate"/>.
-            An alternative way - send Alt+Tab keys, but it works not everywhere; it can activate a minimized window too.
-            </summary>
         </member>
         <member name="T:Catkeys.Registry_">
             <summary>
@@ -6911,6 +7200,7 @@
             <summary>
             <see cref="M:Catkeys.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})"/> callback function arguments.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Msg">
             <summary>
@@ -6981,7 +7271,7 @@
             Can be used when need more options than <see cref="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">SubmitCallback</see> has.
             </summary>
             <example><code>
-            using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { WaitMS(100); })) {
+            using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
             	work.Submit();
             	work.Wait();
             }
@@ -7104,7 +7394,7 @@
             <param name="p">Unmanaged string.</param>
             <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
         </member>
-        <member name="T:Catkeys.Util.LibDebug_">
+        <member name="T:Catkeys.Util.LibDebug">
             <summary>
             Functions useful when testing and debugging.
             </summary>
@@ -7138,185 +7428,143 @@
             This code is from .NET MessageBox.Show.
             </summary>
         </member>
-        <member name="T:Catkeys.Time">
+        <member name="T:Catkeys.WaitFor">
             <summary>
-            Time functions.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Time.Microseconds">
-            <summary>
-            Gets the number of microseconds elapsed since Windows startup.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Time.Milliseconds">
-            <summary>
-            Gets the number of milliseconds elapsed since Windows startup.
-            Unlike Environment.TickCount, this function returns a 64-bit value. Calls Windows API GetTickCount64, not GetTickCount.
-            The resolution is 10 to 16 milliseconds; use Microseconds if need better resolution.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Time.Wait(System.Double)">
-            <summary>
-            Waits the specified number of seconds.
-            Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
-            </summary>
-            <param name="timeS">The wait time, seconds. Precision - normally 0.01 s (10 ms), but can be changed.</param>
-        </member>
-        <member name="M:Catkeys.Time.WaitMS(System.Int32)">
-            <summary>
-            Waits the specified number of milliseconds.
-            Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
-            </summary>
-            <param name="timeMS">The number of milliseconds to wait. Precision - normally 10, but can be changed.</param>
-        </member>
-        <member name="M:Catkeys.Time.DoEvents">
-            <summary>
-            Retrieves and dispatches messages from the message queue of current thread.
-            Similar to Application.DoEvents, but more lightweight.
-            Just calls API <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
-            Returns false if received WM_QUIT message (reposts it), else returns true.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">
-            <summary>
-            Sets new timer for this thread.
-            Returns new Timer_ object that can be used to change or stop the timer if you want to do it not in the callback function; usually don't need it.
-            </summary>
-            <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds. Min interval is 10; if this parameter is 0-9, uses 10. Max interval is int.MaxValue.</param>
-            <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
-            <param name="callback">A callback function (delegate), for example lambda.</param>
-            <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
-            <remarks>
-            Uses class Time.Timer_, which calls API <msdn>SetTimer</msdn>.
-            Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
-            The callback function will be called in this thread.
-            This thread must have a message loop, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread is not retrieving Windows messages from the thread's message queue.
-            The timer interval precision is 10-16 ms.
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Time.Timer_">
-            <summary>
-            Manages a timer for this thread.
-            Calls API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
-            Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
-            Used by <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">Time.SetTimer</see>, more info there.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Time.Timer_.Tag">
-            <summary>
-            Some object or value attached to this Timer_ variable.
-            Can be set with this property or with <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">Time.SetTimer</see>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Time.Timer_.#ctor(System.Action{Catkeys.Time.Timer_},System.Object)">
-            <summary>
-            Initializes a new <see cref="T:Catkeys.Time.Timer_"/> instance.
-            Used by <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)"/>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Time.Timer_.Start(System.Int32,System.Boolean)">
-            <summary>
-            Starts timer. If already started, resets and changes its period.
-            </summary>
-            <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds.</param>
-            <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
-            <remarks>
-            If already started, this function must be called in same thread.
-            </remarks>
-            <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
-        </member>
-        <member name="M:Catkeys.Time.Timer_.Stop">
-            <summary>
-            Stops the timer.
+            Provides functions to wait for a condition, such as 'window exists'.
             </summary>
             <remarks>
-            Your callback function will never be called after this, even if a timer period is elapsed.
-            Later you can call Start() again.
-            Calling Stop() is optional.
-            Must be called in same thread.
+            All functions have a timeoutS parameter. It is the maximal time to wait, in seconds. If it is 0, waits indefinitely. If &gt;0, after timeoutS time throws <see cref="T:System.TimeoutException"/>. If &lt;0, after -timeoutS time just stops waiting and returns default value (false, Wnd0, etc).
+            
+            While waiting, messages and events are not processed. For example, if used in a Form/Control event handler, the form would stop responding. Then need to use another thread, for example async/await/Task, like in the example.
             </remarks>
-        </member>
-        <member name="M:Catkeys.Time.AutoDelay(Catkeys.Wnd,System.Int32,System.Int32)">
-            <summary>
-            Waits Script.Speed milliseconds, or longer if window w is busy.
-            Does not wait if window w is of this thread.
-            </summary>
-            <param name="w">A window.</param>
-            <param name="minMS">Minimal time to wait, ms.</param>
-            <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
-        </member>
-        <member name="M:Catkeys.Time.AutoDelay(Catkeys.Wnd)">
-            <summary>
-            Waits Script.Speed milliseconds, or longer if window w is busy.
-            Does not wait if window w is of this thread.
-            </summary>
-            <param name="w">A window.</param>
-        </member>
-        <member name="M:Catkeys.Time.AutoDelay(System.Int32,System.Int32)">
-            <summary>
-            Waits Script.Speed milliseconds.
-            </summary>
-            <param name="minMS">Minimal time to wait, ms.</param>
-            <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
-        </member>
-        <member name="M:Catkeys.Time.AutoDelay">
-            <summary>
-            Waits Script.Speed milliseconds.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Time.SystemWaitPrecision">
-            <summary>
-            Changes the precision of wait functions.
-            Calls API <msdn>timeBeginPeriod</msdn>, which requests a minimum resolution (period) for various system timers and wait functions.
-            Normal period on Windows 7-10 is 15.625 ms, minimal 1 ms. This class can temporarily make it smaller. It is applied to all threads and processes.
-            The new period is revoked when disposing the variable or when this process ends. See example.
-            Other applications can change it too. For example, Firefox and other web browsers temporarily set period 1 ms when opening a web page.
-            The system uses the smallest period (highest precision) that currently is set by any application. You cannot make it bigger than current value.
-            <note>It is not recommended to keep small period for a long time. It can be bad for power saving.</note>
-            <note>This does not change the minimal period of <see cref="M:Catkeys.Time.SetTimer(System.Int32,System.Boolean,System.Action{Catkeys.Time.Timer_},System.Object)">SetTimer</see>.</note>
-            </summary>
             <example>
             <code><![CDATA[
-            _Test("before");
-            using(new Time.SystemWaitPrecision(2)) {
-            	_Test("in");
-            }
-            _Test("after");
-            
-            void _Test(string name)
-            {
-            	Print(name);
-            	Perf.First();
-            	for(int i = 0; i < 10; i++) { Thread.Sleep(1); Perf.Next(); }
-            	Perf.Write();
-            }
+            Wnd w = WaitFor.WindowExists(10, "* Notepad");
+            Print(w);
+            ]]></code>
+            Using in a Form/Control event handler.
+            <code><![CDATA[
+            var f = new Form();
+            f.Click += async (unu, sed) =>
+              {
+            	  Print("waiting for Notepad...");
+            	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
+            	  if(w.Is0) Print("timeout"); else Print(w);
+              };
+            f.ShowDialog();
             ]]></code>
             </example>
         </member>
-        <member name="M:Catkeys.Time.SystemWaitPrecision.#ctor(System.Int32)">
+        <member name="T:Catkeys.WaitFor._Timeout">
             <summary>
-            Calls API <msdn>timeBeginPeriod</msdn>.
-            </summary>
-            <param name="periodMS">Requested period. Should be 2 - 16.</param>
-            <exception cref="T:System.InvalidOperationException">timeBeginPeriod failed.</exception>
-        </member>
-        <member name="M:Catkeys.Time.SystemWaitPrecision.Dispose">
-            <summary>
-            Calls API <msdn>timeEndPeriod</msdn>.
+            Can be used to easily implement timeout in wait-for functions.
+            See how it is used eg in WindowExists.
             </summary>
         </member>
-        <member name="M:Catkeys.Time.SystemWaitPrecision.Finalize">
-            
-        </member>
-        <member name="T:Catkeys.WaitFor">
+        <member name="F:Catkeys.WaitFor._Timeout.Period">
             <summary>
-            Functions to wait for a condition.
+            Current period. Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
             </summary>
+        </member>
+        <member name="F:Catkeys.WaitFor._Timeout.MaxPeriod">
+            <summary>
+            Maximal period. It is constructor->maxPeriod (default 200).
+            </summary>
+        </member>
+        <member name="M:Catkeys.WaitFor._Timeout.IsTimeout">
+            <summary>
+            If the timeout is not expired, returns false.
+            Else if constructor->timeoutS was negative, returns true.
+            Else throws TimeoutException.
+            Also gets current time and updates private fields, if need.
+            </summary>
+        </member>
+        <member name="M:Catkeys.WaitFor._Timeout.Sleep">
+            <summary>
+            If IsTimeout(), returns false.
+            Else sleeps for Period milliseconds, increments Period if it is less than MaxPeriod, and returns true.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowExists(System.Double,System.String)">
+            <summary>
+            Waits until exists a window that matches the specified parameters.
+            Returns window handle.
+            Uses <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>. All parameters etc are the same.
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns Wnd0.
+            </param>
+            <param name="name"></param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
+            <example>
+            <code><![CDATA[
+            Wnd w = WaitFor.WindowExists(10, "* Notepad");
+            Print(w);
+            ]]></code>
+            Using in a Form/Control event handler.
+            <code><![CDATA[
+            var f = new Form();
+            f.Click += async (unu, sed) =>
+              {
+            	  Print("waiting for Notepad...");
+            	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
+            	  if(w.Is0) Print("timeout"); else Print(w);
+              };
+            f.ShowDialog();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowNotExists(System.Double,System.String)">
+            <summary>
+            Waits until does not exist a window that matches the specified parameters.
+            Returns true.
+            Uses <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>. All parameters etc are the same.
+            Examples: see <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String)"/>.
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="name"></param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowClosed(System.Double,Catkeys.Wnd)">
+            <summary>
+            Waits until the window handle is invalid.
+            Returns true.
+            Uses <see cref="P:Catkeys.Wnd.IsAlive"/>.
+            More info: <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String)"/>
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="w"></param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)">
+            <summary>
+            Waits for an user-defined condition.
+            Returns true.
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
+            <param name="param">Something to pass to the callback function.</param>
+            <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
+            <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:System.ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
+            <exception cref="T:System.Exception">Exceptions thrown by the condition callback function.</exception>
+            <seealso cref="T:Catkeys.Time.SystemWaitPrecision"/>
         </member>
         <member name="T:Catkeys.WFFlags">
             <summary>
             'flags' parameter of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.WFFlags.HiddenToo">
             <summary>Can find hidden windows. Use this carefully, always use className, not just name, because there are many hidden tooltip windows etc that could match the name.</summary>
@@ -7464,6 +7712,7 @@
             Exception if shortcut file does not exist or cannot open it for read access.
             </summary>
             <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+            <exception cref="T:Catkeys.CatException">Failed to open .lnk file.</exception>
         </member>
         <member name="M:Catkeys.Files.LnkShortcut.Create(System.String)">
             <summary>
@@ -7481,11 +7730,13 @@
             If the shortcut file already exists, Save updates it.
             </summary>
             <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+            <exception cref="T:Catkeys.CatException">Failed to open existing .lnk file.</exception>
         </member>
         <member name="M:Catkeys.Files.LnkShortcut.Save">
             <summary>
             Saves the LnkShortcut variable properties to the shortcut file.
             </summary>
+            <exception cref="T:Catkeys.CatException">Failed to save .lnk file.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.TargetPath">
             <summary>
@@ -7493,6 +7744,7 @@
             This property is null if target isn't a file system object, eg Control Panel or URL; use TargetIDList or TargetURL.
             </summary>
             <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.TargetPathRawMSI">
             <summary>
@@ -7506,8 +7758,9 @@
             </summary>
             <remarks>
             Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
-            Most but not all shortcuts have this property; returns Zero if the shortcut does not have it.
+            Most but not all shortcuts have this property; the 'get' function returns Zero if the shortcut does not have it.
             </remarks>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.TargetURL">
             <summary>
@@ -7515,6 +7768,7 @@
             Note: it is a .lnk shortcut, not a .url shortcut.
             The 'get' function returns string "file:///..." if target is a file.
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.TargetAnyType">
             <summary>
@@ -7522,6 +7776,7 @@
             The string can be used with the shell execute function.
             Virtual object string can be like "::{CLSID}".
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="M:Catkeys.Files.LnkShortcut.GetIconLocation(System.Int32@)">
             <summary>
@@ -7536,27 +7791,32 @@
             </summary>
             <param name="path"></param>
             <param name="iconIndex">0 or icon index or negative icon resource id.</param>
+            <exception cref="T:Catkeys.CatException"/>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.WorkingDirectory">
             <summary>
             Gets or sets the working directory path (Start in).
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.Arguments">
             <summary>
             Gets or sets the command-line arguments.
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.Description">
             <summary>
             Gets or sets the description text (Comment).
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.Hotkey">
             <summary>
             Gets or sets hotkey.
             Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="P:Catkeys.Files.LnkShortcut.ShowState">
             <summary>
@@ -7564,35 +7824,46 @@
             The value can be 1 (normal, default), 2 (minimized) or 3 (maximized).
             Most programs ignore it.
             </summary>
+            <exception cref="T:Catkeys.CatException">The 'set' function failed.</exception>
         </member>
         <member name="M:Catkeys.Files.LnkShortcut.GetTarget(System.String)">
             <summary>
             Gets shortcut target path or URL or virtual shell object parsing name.
-            Uses <see cref="P:Catkeys.Files.LnkShortcut.TargetAnyType"/>.
+            Uses <see cref="M:Catkeys.Files.LnkShortcut.Open(System.String)"/> and <see cref="P:Catkeys.Files.LnkShortcut.TargetAnyType"/>.
             </summary>
             <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+            <exception cref="T:Catkeys.CatException">Failed to open.</exception>
         </member>
         <member name="M:Catkeys.Files.LnkShortcut.Delete(System.String)">
             <summary>
             If shortcut file exists, unregisters its hotkey and deletes it.
             </summary>
             <param name="lnkPath">.lnk file path.</param>
+            <exception cref="T:Catkeys.CatException">Failed to unregister hotkey.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.Delete(System.String)"/>.</exception>
+        </member>
+        <member name="M:Catkeys.Files.LnkShortcut._UnregisterHotkey(System.String)">
+            <exception cref="T:Catkeys.CatException">Failed to open or save.</exception>
         </member>
         <member name="T:Catkeys.Files.Misc">
             <summary>
             Miscellaneous functions.
             </summary>
         </member>
-        <member name="M:Catkeys.Files.Misc.PidlFromString(System.String)">
+        <member name="M:Catkeys.Files.Misc.PidlFromString(System.String,System.Boolean)">
             <summary>
             Converts file path or URL or shell object parsing name to PIDL.
+            Returns Zero if s is empty. If failed, returns Zero or throws exception.
             Later call Marshal.FreeCoTaskMem();
             </summary>
+            <param name="s"></param>
+            <param name="canThrow">If fails, throw CatException.</param>
+            <exception cref="T:Catkeys.CatException">Failed, and canThrow is true. Probably invalid s.</exception>
         </member>
-        <member name="M:Catkeys.Files.Misc.PidlToString(System.IntPtr,Catkeys.Native.SIGDN)">
+        <member name="M:Catkeys.Files.Misc.PidlToString(System.IntPtr,Catkeys.Native.SIGDN,System.Boolean)">
             <summary>
             Converts PIDL to file path or URL or shell object parsing name.
-            Returns null if pidl is Zero or failed.
+            Returns null if pidl is Zero. If failed, returns null or throws exception.
             </summary>
             <param name="pidl"></param>
             <param name="stringType">
@@ -7603,6 +7874,8 @@
             Native.SIGDN.SIGDN_URL - returns null if pidl is not of a URL or path. If path, returns its URL form, like "file:///C:/a/b.txt".
             Native.SIGDN.SIGDN_NORMALDISPLAY - returns string that is best to display in UI but cannot be passed to PidlFromString.
             </param>
+            <param name="canThrow">If fails, throw CatException.</param>
+            <exception cref="T:Catkeys.CatException">Failed, and canThrow is true.</exception>
         </member>
         <member name="T:Catkeys.Icons">
             <summary>
@@ -7613,6 +7886,7 @@
             <summary>
             Used with get-icon functions.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Icons.IconFlags.LiteralPath">
             <summary>
@@ -7686,6 +7960,7 @@
             <summary>
             Standard icon sizes.
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Icons.ShellSize.SysSmall">
             <summary>
@@ -7780,11 +8055,13 @@
             <summary>
             For <see cref="M:Catkeys.Icons.AsyncIcons.Add(System.Collections.Generic.IEnumerable{Catkeys.Icons.AsyncIn})"/>. 
             </summary>
+            <tocexclude />
         </member>
         <member name="T:Catkeys.Icons.AsyncResult">
             <summary>
             For <see cref="T:Catkeys.Icons.AsyncCallback"/>. 
             </summary>
+            <tocexclude />
         </member>
         <member name="F:Catkeys.Icons.AsyncResult.file">
             <summary>file passed to AsyncIcons.Add().</summary>
@@ -7805,6 +8082,7 @@
             <param name="result">Contains icon Image or handle, as well as the input parameters. <see cref="T:Catkeys.Icons.AsyncResult"/></param>
             <param name="objCommon">objCommon passed to <see cref="M:Catkeys.Icons.AsyncIcons.GetAllAsync(Catkeys.Icons.AsyncCallback,System.Int32,Catkeys.Icons.IconFlags,System.Object)">GetAllAsync</see>.</param>
             <param name="nLeft">How many icons is still to get. Eg 0 if this is the last icon.</param>
+            <tocexclude />
         </member>
         <member name="T:Catkeys.Icons.AsyncIcons">
             <summary>
@@ -7995,13 +8273,13 @@
             var perf = new Perf.Inst();
             perf.Incremental = true;
             for(int i = 0; i &lt; 5; i++) {
-            	WaitMS(100); //not included in the measurement
+            	Thread.Sleep(100); //not included in the measurement
             	perf.First();
-            	WaitMS(30); //will make sum ~150000
+            	Thread.Sleep(30); //will make sum ~150000
             	perf.Next();
-            	WaitMS(10); //will make sum ~50000
+            	Thread.Sleep(10); //will make sum ~50000
             	perf.Next();
-            	WaitMS(100); //not included in the measurement
+            	Thread.Sleep(100); //not included in the measurement
             }
             perf.Write(); //speed:  154317  51060  (205377)
             perf.Incremental = false;
@@ -8076,13 +8354,13 @@
             <example><code>
             Perf.Incremental = true;
             for(int i = 0; i &lt; 5; i++) {
-            	WaitMS(100); //not included in the measurement
+            	Thread.Sleep(100); //not included in the measurement
             	Perf.First();
-            	WaitMS(30); //will make sum ~150000
+            	Thread.Sleep(30); //will make sum ~150000
             	Perf.Next();
-            	WaitMS(10); //will make sum ~50000
+            	Thread.Sleep(10); //will make sum ~50000
             	Perf.Next();
-            	WaitMS(100); //not included in the measurement
+            	Thread.Sleep(100); //not included in the measurement
             }
             Perf.Write(); //speed:  154317  51060  (205377)
             Perf.Incremental = false;

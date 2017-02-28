@@ -317,6 +317,7 @@ namespace Catkeys
 				/// <summary>
 				/// Rarely used API <msdn>WNDCLASSEX</msdn> fields. Used with some WindowClass functions.
 				/// </summary>
+				/// <tocexclude />
 				public class WndClassEx
 				{
 #pragma warning disable 1591 //XML doc
@@ -360,16 +361,17 @@ namespace Catkeys
 					//tested. FlashWindow is easier but does not work for taskbar button, only for caption when no taskbar button.
 				}
 
-#pragma warning disable 1591 //XML doc
+				/// <tocexclude />
 				public enum ProgressState
 				{
+#pragma warning disable 1591 //XML doc
 					NoProgress = 0,
 					Indeterminate = 0x1,
 					Normal = 0x2,
 					Error = 0x4,
 					Paused = 0x8
-				}
 #pragma warning restore 1591 //XML doc
+				}
 
 				/// <summary>
 				/// Sets the state of the progress indicator displayed on the taskbar button.

@@ -287,7 +287,7 @@ public partial class Test
 			//m.Show();
 			m.Show(Mouse.X + 10, Mouse.Y + 10);
 			//Print(2);
-			//WaitMS(200); Perf.First(); m.Show(); Print(3);
+			//Thread.Sleep(200); Perf.First(); m.Show(); Print(3);
 		}
 	}
 
@@ -415,7 +415,7 @@ public partial class Test
 
 		//m.MultiShow = true;
 		m.Show();
-		//WaitMS(500);
+		//Thread.Sleep(500);
 		//m.Separator();
 		//m["plus", @"q:\app\cut.ico"] = null;
 		//m["plus", @"q:\app\copy.ico"] = null;
@@ -749,7 +749,7 @@ public partial class Test
 		m.Show();
 		//Print(1);
 		//GC.Collect();
-		//WaitMS(500);
+		//Thread.Sleep(500);
 		//Print(2);
 		m.Show();
 
@@ -830,7 +830,7 @@ public partial class Test
 
 	static void TestCatMenu(Control c = null)
 	{
-		//if(c == null) WaitMS(200);
+		//if(c == null) Thread.Sleep(200);
 		//c = null;
 		for(int i = 0; i < 1; i++) {
 			//TestCatMenuBig(c);
@@ -843,9 +843,9 @@ public partial class Test
 
 			if(c != null) break;
 			//Application.DoEvents();
-			Time.WaitMS(100);
+			Thread.Sleep(100);
 			//Application.DoEvents();
-			//WaitMS(1000);
+			//Thread.Sleep(1000);
 		}
 
 		//for(int i = 0; i < 1; i++) {
@@ -1266,7 +1266,7 @@ public partial class Test
 	static void TestToolbar()
 	{
 		//PrintFunc();
-		for(int i = 0; i < 1; i++) { TestCatBar(); /*WaitMS(500);*/ }
+		for(int i = 0; i < 1; i++) { TestCatBar(); /*Thread.Sleep(500);*/ }
 
 		//for(int i=0; i<1; i++) TestOldToolbar();
 		//for(int i=0; i<1; i++) TestOldToolbarInNativeWindow();
@@ -1289,13 +1289,13 @@ public partial class Test
 		//MessageBox.Show("");
 		//TaskDialog.Show("");
 
-		//WaitMS(500);
+		//Thread.Sleep(500);
 		TestToolbar();
 		//TestCatMenu();
 		//TestCatMenuWithForm();
-		//WaitMS(500);
+		//Thread.Sleep(500);
 		//TestWpfContextMenu();
-		//WaitMS(500);
+		//Thread.Sleep(500);
 		//TestWpfContextMenu();
 
 		//var t = new Thread(() => { TestWpfContextMenu(); });

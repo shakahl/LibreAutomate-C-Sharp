@@ -24,6 +24,7 @@ namespace Catkeys
 	/// <summary>
 	/// Specifies whether to set, add or remove flags.
 	/// </summary>
+	/// <tocexclude />
 	public enum SetAddRemove
 	{
 		/// <summary>Set flags = the specified value.</summary>

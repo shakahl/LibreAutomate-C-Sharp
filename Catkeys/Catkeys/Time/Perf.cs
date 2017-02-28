@@ -88,13 +88,13 @@ namespace Catkeys
 			/// var perf = new Perf.Inst();
 			/// perf.Incremental = true;
 			/// for(int i = 0; i &lt; 5; i++) {
-			/// 	WaitMS(100); //not included in the measurement
+			/// 	Thread.Sleep(100); //not included in the measurement
 			/// 	perf.First();
-			/// 	WaitMS(30); //will make sum ~150000
+			/// 	Thread.Sleep(30); //will make sum ~150000
 			/// 	perf.Next();
-			/// 	WaitMS(10); //will make sum ~50000
+			/// 	Thread.Sleep(10); //will make sum ~50000
 			/// 	perf.Next();
-			/// 	WaitMS(100); //not included in the measurement
+			/// 	Thread.Sleep(100); //not included in the measurement
 			/// }
 			/// perf.Write(); //speed:  154317  51060  (205377)
 			/// perf.Incremental = false;
@@ -279,13 +279,13 @@ namespace Catkeys
 		/// <example><code>
 		/// Perf.Incremental = true;
 		/// for(int i = 0; i &lt; 5; i++) {
-		/// 	WaitMS(100); //not included in the measurement
+		/// 	Thread.Sleep(100); //not included in the measurement
 		/// 	Perf.First();
-		/// 	WaitMS(30); //will make sum ~150000
+		/// 	Thread.Sleep(30); //will make sum ~150000
 		/// 	Perf.Next();
-		/// 	WaitMS(10); //will make sum ~50000
+		/// 	Thread.Sleep(10); //will make sum ~50000
 		/// 	Perf.Next();
-		/// 	WaitMS(100); //not included in the measurement
+		/// 	Thread.Sleep(100); //not included in the measurement
 		/// }
 		/// Perf.Write(); //speed:  154317  51060  (205377)
 		/// Perf.Incremental = false;

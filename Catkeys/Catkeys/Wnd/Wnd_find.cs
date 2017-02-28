@@ -23,6 +23,7 @@ namespace Catkeys
 	/// <summary>
 	/// 'flags' parameter of <see cref="Wnd.Find"/>.
 	/// </summary>
+	/// <tocexclude />
 	[Flags]
 	public enum WFFlags
 	{

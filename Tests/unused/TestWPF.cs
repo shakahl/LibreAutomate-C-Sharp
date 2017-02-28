@@ -91,7 +91,7 @@ public partial class Test
 		Perf.Next();
 		test_mLoop.Loop();
 
-		//WaitMS(500);
+		//Sleep(500);
 		//Perf.First();
 		//m.IsOpen = true;
 		//Perf.Next();

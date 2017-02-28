@@ -10,8 +10,6 @@ using System.Windows.Forms;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
 
 namespace WinForms
 {
@@ -19,9 +17,9 @@ namespace WinForms
 	{
 		public Form1()
 		{
-			Perf.Next();
+			//Perf.Next();
 			InitializeComponent();
-			Perf.Next();
+			//Perf.Next();
 
 			//edit.LoadFile(@"C:\Users\G\Desktop\Program.cs");
 		}
@@ -38,11 +36,11 @@ namespace WinForms
 		//	OutFunc();
 		//}
 
-		protected override void OnPaint(PaintEventArgs e)
-		{
-			base.OnPaint(e);
-			//OutFunc();
-			Time.SetTimer(1, true, t => Perf.NW());
-		}
+		//protected override void OnPaint(PaintEventArgs e)
+		//{
+		//	base.OnPaint(e);
+		//	//OutFunc();
+		//	Time.SetTimer(1, true, t => Perf.NW());
+		//}
 	}
 }
