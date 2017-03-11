@@ -212,8 +212,7 @@ namespace G.Controls
 				get
 				{
 					if(!_gn.IsHidden) {
-						var gs = _gn as GSplit;
-						if(gs == null || gs.IsSplitterVisible) return AccessibleStates.None;
+						if(!(_gn is GSplit gs) || gs.IsSplitterVisible) return AccessibleStates.None;
 					}
 					return AccessibleStates.Invisible;
 				}
@@ -224,10 +223,10 @@ namespace G.Controls
 				get
 				{
 					Rectangle r;
-					GSplit gs; GPanel gp;
-					if((gs = _gn as GSplit) != null) r = gs.SplitterBounds;
-					else if((gp = _gn as GPanel) != null) r = gp.CaptionBounds;
+					if(_gn is GSplit gs) r = gs.SplitterBounds;
+					else if(_gn is GPanel gp) r = gp.CaptionBounds;
 					else r = (_gn as GTab).CaptionBoundsExceptButtons;
+
 					return _gn.ParentControl.RectangleToScreen(r);
 				}
 			}
@@ -246,8 +245,7 @@ namespace G.Controls
 				get
 				{
 					var c = _gn.ParentControl;
-					var gf = c as GFloat;
-					if(gf != null) return gf.AccObj;
+					if(c is GFloat gf) return gf.AccObj;
 					return (c as GDockPanel).AccObj;
 				}
 			}
@@ -258,8 +256,7 @@ namespace G.Controls
 			{
 				get
 				{
-					var gp = _gn as GPanel;
-					if(gp != null && gp.IsTabbedPanel) return "Show panel";
+					if(_gn is GPanel gp && gp.IsTabbedPanel) return "Show panel";
 					return null;
 				}
 			}
@@ -273,8 +270,7 @@ namespace G.Controls
 
 			public override AccessibleObject GetSelected()
 			{
-				var gt = _gn as GTab;
-				if(gt != null) return (GAccNode)gt.ActiveItem;
+				if(_gn is GTab gt) return (GAccNode)gt.ActiveItem;
 				return null;
 			}
 		}

@@ -23,86 +23,125 @@ using static Catkeys.NoClass;
 namespace Editor
 {
 	//[DebuggerStepThrough]
-	public static class EImageList
+	public static class EResources
 	{
 		/// <summary>
-		/// Loads imagelist from Image, eg png resource.
-		/// Appends if the ImageList is not empty.
-		/// Calls <see cref="ImageList.ImageCollection.AddStrip"/> and returns its return value (index of the first new image).
+		/// Call this from other thread (than the UI thread that will use resources) at the very startup of the app.
+		/// It makes the UI thread start faster by ~30 ms.
 		/// </summary>
-		/// <param name="pngImage">Png image as horizontal strip of images, eg Properties.Resources.il_tv. Don't dispose, because ImageList will use it later on demand (lazy).</param>
-		public static int LoadFromImage_(this ImageList t, Image pngImage)
+		public static void Init()
 		{
-			t.ColorDepth = ColorDepth.Depth32Bit;
-			return t.Images.AddStrip(pngImage);
+			if(_initializingResources == 0) _initializingResources = 1;
+			//var p = new Perf.Inst(true);
+			Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture;
+			//p.Next();
+			var b = Properties.Resources.il_tv;
+			//p.Next();
+			_initializingResources = 2;
+			ImageList il = new ImageList();
+			il.LoadFromImage(b);
+			//p.NW();
+			_ilFile = il;
+
+			//Setting InvariantCulture makes 2 times faster (40 -> 20 ms). Default culture is en-US.
+		}
+		static int _initializingResources;
+		static ImageList _ilFile;
+
+		/// <summary>
+		/// Gets ImageList used for the files/scripts list pane.
+		/// </summary>
+		public static ImageList ImageList_Files
+		{
+			get
+			{
+				if(_ilFile == null) DebugPrint("need to wait for __ilFile");
+				while(_ilFile == null) Thread.Sleep(5);
+				return _ilFile;
+			}
 		}
 
 		/// <summary>
-		/// Loads imagelist from a png file.
+		/// Loads imagelist from Image.
 		/// Appends if the ImageList is not empty.
-		/// Calls <see cref="Image.FromFile"/>, then <see cref="ImageList.ImageCollection.AddStrip"/> and returns its return value (index of the first new image).
+		/// Calls <see cref="ImageList.ImageCollection.AddStrip"/>.
+		/// </summary>
+		/// <param name="image">Horizontal strip of images, eg Properties.Resources.il_tv.</param>
+		public static void LoadFromImage(this ImageList t, Image image)
+		{
+			t.ColorDepth = ColorDepth.Depth32Bit;
+			int k = image.Height; t.ImageSize = new Size(k, k); //AddStrip throws exception if does not match
+			t.Images.AddStrip(image);
+			var h = t.Handle; //workaround for the lazy ImageList behavior that causes exception later because the Image is disposed when actually used
+
+			//note: could add imageSize parameter and resize the image if need.
+			//	But it is slow, and also need to create a Resize method.
+			//	Better use several image files with different icon sizes.
+		}
+
+		/// <summary>
+		/// Loads imagelist from a file, eg .png.
+		/// Appends if the ImageList is not empty.
+		/// Calls <see cref="Image.FromFile"/>, then <see cref="ImageList.ImageCollection.AddStrip"/>.
 		/// Exception if fails, eg file not found or bad format.
 		/// </summary>
-		/// <param name="pngFile">.png file as horizontal strip of images. Actually also can be .bmp etc, but then possible problems with transparency.</param>
+		/// <param name="file">File containing horizontal strip of images, eg .png.</param>
 		/// <remarks>
-		/// This is faster than LoadFromImageResource_ if managed resources are not used altogether in the project. Else it is by 1 ms slower.
+		/// This is faster than loading from managed resources if managed resources are not used altogether in the project. Else it is by 1 ms slower.
 		/// </remarks>
-		public static int LoadFromImageFile_(this ImageList t, string pngFile)
+		public static void LoadFromImageFile(this ImageList t, string file)
 		{
-			int R = 0;
-			t.ColorDepth = ColorDepth.Depth32Bit;
-			using(Image img = Image.FromFile(pngFile)) {
-				R = t.Images.AddStrip(img);
-				//PrintList(il.ImageSize, il.Images.Count);
-				var h = t.Handle; //workaround for the lazy ImageList behavior that causes exception later because the Image is disposed when actually used
+			using(Image img = Image.FromFile(file)) {
+				t.LoadFromImage(img);
 			}
-			return R;
 
 			//This is the fastest found way to load an imagelist when the project does not use managed resources. 3ms, tested non-ngened, with SSD.
-			//The .png file can be created with QM2 macro "Create png imagelist strip from icons".
+			//The .png file can be created with a function in DevTools.cs.
 			//With .bmp also works, but need to use a transparent color, eg il.TransparentColor=Color.Black;
 			//With multiple ico files ~24 ms, tested non-ngened.
-			//With managed resources slow, ~40 ms first time, tested non-ngened. But slightly faster if managed resources were already used.
+			//With managed resources slow, ~40 ms first time, tested non-ngened. But slightly faster (than file) if managed resources were already used.
 			//The same (~40 ms) with a designer-added ImageList with designer-added images. Also then noticed an anomaly when closing the form.
 		}
 
 		/// <summary>
-		/// Probably called from other thread at the very startup, to make the main thread start faster.
+		/// Gets a non-string resource (eg Bitmap) from project resources.
+		/// Uses caching. Gets the same object when called multiple times for the same name.
+		/// Calling ResourceManager.GetObject would create object copies.
+		/// Thread-safe.
+		/// If not found (bad name), asserts and returns null.
 		/// </summary>
-		public static void LoadImageLists()
+		/// <param name="name">Resource name.</param>
+		public static object GetObject(string name)
 		{
-			ImageList il = new ImageList();
-			il.LoadFromImageFile_(Folders.ThisApp + @"Resources\il_tv.png"); //TODO: maybe later use resources. Now resources too slow.
-																			 //il.LoadFromImage_(Properties.Resources.il_tv);
-			__ilFile = il;
-
-			il = new ImageList();
-			il.LoadFromImageFile_(Folders.ThisApp + @"Resources\il_tb.png");
-			//il.LoadFromImage_(Properties.Resources.il_tb);
-			__ilStrip = il;
-
-			//function speed first time: file 30 ms, resource 55 ms.
-		}
-		static ImageList __ilFile, __ilStrip;
-
-		public static ImageList Files
-		{
-			get
-			{
-				Debug.Assert(__ilFile != null);
-				while(__ilFile == null) Thread.Sleep(5);
-				return __ilFile;
+			lock("3moj2pOaoUGgRILqYfBGPw") {
+				object R;
+				if(_cache == null) {
+					_cache = new System.Collections.Hashtable();
+				} else {
+					R = _cache[name];
+					if(R != null) return R;
+				}
+#if DEBUG
+				if(_initializingResources == 1) DebugPrint($"warning: the resource initialization thread still not finished. The first get-resource then is slow.");
+#endif
+				//var p = new Perf.Inst(true);
+				R = Properties.Resources.ResourceManager.GetObject(name, Properties.Resources.Culture);
+				//p.NW();
+				Debug.Assert(R != null);
+				if(R != null) _cache[name] = R;
+				return R;
 			}
 		}
+		static System.Collections.Hashtable _cache;
 
-		public static ImageList Strips
+		/// <summary>
+		/// Gets a Bitmap resource from project resources.
+		/// Calls <see cref="GetObject"/> and casts to Bitmap.
+		/// </summary>
+		/// <param name="name">Image resource name.</param>
+		public static Bitmap GetImage(string name)
 		{
-			get
-			{
-				Debug.Assert(__ilStrip != null);
-				while(__ilStrip == null) Thread.Sleep(5);
-				return __ilStrip;
-			}
+			return GetObject(name) as Bitmap;
 		}
 	}
 }

@@ -30,7 +30,7 @@ namespace Editor
 
 			public void File_NewScript()
 			{
-
+				PrintFunc();
 			}
 
 			public void File_NewLibrary()
@@ -65,6 +65,7 @@ namespace Editor
 
 			public void File_Properties()
 			{
+				PrintFunc();
 
 			}
 
@@ -85,6 +86,7 @@ namespace Editor
 
 			public void File_PreviousDocument()
 			{
+				PrintFunc();
 
 			}
 
@@ -175,6 +177,7 @@ namespace Editor
 
 			public void File_SaveAllNow()
 			{
+				PrintFunc();
 
 			}
 
@@ -378,91 +381,6 @@ namespace Editor
 
 			}
 
-			public void View_ToolbarFile()
-			{
-
-			}
-
-			public void View_ToolbarEdit()
-			{
-
-			}
-
-			public void View_ToolbarRun()
-			{
-
-			}
-
-			public void View_ToolbarDebug()
-			{
-
-			}
-
-			public void View_ToolbarView()
-			{
-
-			}
-
-			public void View_ToolbarTools()
-			{
-
-			}
-
-			public void View_ToolbarHelp()
-			{
-
-			}
-
-			public void View_ToolbarCustom1()
-			{
-
-			}
-
-			public void View_ToolbarCustom2()
-			{
-
-			}
-
-			public void View_ToolbarCustom3()
-			{
-
-			}
-
-			public void View_ToolbarCustom4()
-			{
-
-			}
-
-			public void View_Output()
-			{
-				_form._dock.ShowPanel(_form._outputPane);
-			}
-
-			public void View_Find()
-			{
-
-			}
-
-			public void View_Tips()
-			{
-
-			}
-
-			public void View_Running()
-			{
-
-			}
-
-			public void View_Recent()
-			{
-
-			}
-
-			public void View_Tags()
-			{
-
-			}
-
 			public void Tools_Record()
 			{
 
@@ -474,6 +392,11 @@ namespace Editor
 			}
 
 			public void Tools_RecordSingleAction()
+			{
+
+			}
+
+			public void Tools_FilesAndTriggers()
 			{
 
 			}

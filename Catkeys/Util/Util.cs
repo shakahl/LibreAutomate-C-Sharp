@@ -238,5 +238,11 @@ namespace Catkeys.Util
 			}
 		}
 		static int _baseDPI;
+
+		/// <summary>
+		/// Gets small icon size that depends on DPI of the primary screen.
+		/// Width and Height are <see cref="BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
+		/// </summary>
+		public static Size SmallIconSize { get { var t = BaseDPI / 6; return new Size(t, t); } }
 	}
 }

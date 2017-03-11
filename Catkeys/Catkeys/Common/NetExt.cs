@@ -20,8 +20,9 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using System.Security; //for XML comments
 
 using Catkeys;
@@ -204,17 +205,68 @@ namespace Catkeys
 		#endregion
 
 		#region Xml
+		//These are finished, tested, stable. But better use XElement.
+		///// <summary>
+		///// Gets nicely formatted (unlike OuterXml) XML text.
+		///// </summary>
+		//public static string ToString_(this XmlDocument t)
+		//{
+		//	var sb = new StringBuilder();
+		//	var settings = new XmlWriterSettings {
+		//		OmitXmlDeclaration = true,
+		//		Indent = true,
+		//		IndentChars = "\t"
+		//	};
+		//	using(var writer = XmlWriter.Create(sb, settings)) {
+		//		t.Save(writer);
+		//	}
+		//	return sb.ToString();
+		//}
+
+		///// <summary>
+		///// Gets XML attribute value.
+		///// If the attribute does not exist, returns defaultValue (default null).
+		///// If the attribute value is empty, returns "".
+		///// </summary>
+		//public static string Attribute_(this XmlElement t, string name, string defaultValue = null)
+		//{
+		//	var x = t.GetAttributeNode(name);
+		//	return x != null ? x.Value : defaultValue;
+
+		//	//speed: same as GetAttribute().
+		//}
+
+		///// <summary>
+		///// Gets attribute value converted to int (<see cref="String_.ToInt32_(string)"/>).
+		///// If the attribute does not exist, returns defaultValue.
+		///// If the attribute value is empty or does not begin with a valid number, returns 0.
+		///// </summary>
+		//public static int Attribute_(this XmlElement t, string name, int defaultValue)
+		//{
+		//	var x = t.GetAttributeNode(name);
+		//	return x != null ? x.Value.ToInt32_() : defaultValue;
+		//}
+
+		///// <summary>
+		///// Gets attribute value converted to float (<see cref="String_.ToFloat_"/>).
+		///// If the attribute does not exist, returns defaultValue.
+		///// If the attribute value is empty or is not a valid float number, returns 0F.
+		///// </summary>
+		//public static float Attribute_(this XmlElement t, string name, float defaultValue)
+		//{
+		//	var x = t.GetAttributeNode(name);
+		//	return x != null ? x.Value.ToFloat_() : defaultValue;
+		//}
+
 		/// <summary>
 		/// Gets XML attribute value.
-		/// If the attribute does not exist, returns defaultValue.
+		/// If the attribute does not exist, returns defaultValue (default null).
 		/// If the attribute value is empty, returns "".
 		/// </summary>
-		public static string Attribute_(this XmlElement t, string name, string defaultValue = null)
+		public static string Attribute_(this XElement t, XName name, string defaultValue = null)
 		{
-			var xn = t.GetAttributeNode(name);
-			return xn != null ? xn.Value : defaultValue;
-
-			//speed: same as GetAttribute().
+			var x = t.Attribute(name);
+			return x != null ? x.Value : defaultValue;
 		}
 
 		/// <summary>
@@ -222,10 +274,10 @@ namespace Catkeys
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
-		public static int Attribute_(this XmlElement t, string name, int defaultValue)
+		public static int Attribute_(this XElement t, XName name, int defaultValue)
 		{
-			var xn = t.GetAttributeNode(name);
-			return xn != null ? xn.Value.ToInt32_() : defaultValue;
+			var x = t.Attribute(name);
+			return x != null ? x.Value.ToInt32_() : defaultValue;
 		}
 
 		/// <summary>
@@ -233,10 +285,43 @@ namespace Catkeys
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or is not a valid float number, returns 0F.
 		/// </summary>
-		public static float Attribute_(this XmlElement t, string name, float defaultValue)
+		public static float Attribute_(this XElement t, XName name, float defaultValue)
 		{
-			var xn = t.GetAttributeNode(name);
-			return xn != null ? xn.Value.ToFloat_() : defaultValue;
+			var x = t.Attribute(name);
+			return x != null ? x.Value.ToFloat_() : defaultValue;
+		}
+
+		/// <summary>
+		/// Returns true if this element has the specified attribute.
+		/// </summary>
+		public static bool HasAttribute_(this XElement t, XName name)
+		{
+			return t.Attribute(name) != null;
+		}
+
+		/// <summary>
+		/// Gets the first found descendant element.
+		/// Returns null if not found.
+		/// </summary>
+		public static XElement Descendant_(this XElement t, XName name)
+		{
+			return t.Descendants(name).FirstOrDefault();
+		}
+
+		/// <summary>
+		/// Gets the first found descendant element that has the specified attribute.
+		/// Returns null if not found.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="name">Element name.</param>
+		/// <param name="attributeName">Attribute name.</param>
+		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
+		public static XElement Descendant_(this XElement t, XName name, XName attributeName, string attributeValue = null)
+		{
+			if(attributeValue == null) return t.Descendants(name).FirstOrDefault(el => el.HasAttribute_(attributeName));
+			return t.Descendants(name).FirstOrDefault(el => { var a = el.Attribute(attributeName); return a != null && a.Value == attributeValue; });
+
+			//speed: several times faster than XPathSelectElement
 		}
 		#endregion
 

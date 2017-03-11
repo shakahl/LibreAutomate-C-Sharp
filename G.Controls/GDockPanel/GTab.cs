@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
@@ -39,27 +40,48 @@ namespace G.Controls
 			/// <summary>
 			/// This ctor is used at startup, when adding from XML.
 			/// </summary>
-			internal GTab(GDockPanel manager, GSplit parentSplit, XmlElement x) : base(manager, parentSplit)
+			internal GTab(GDockPanel manager, GSplit parentSplit, XElement x) : base(manager, parentSplit)
 			{
 				manager._aTab.Add(this);
 
 				int iAct = x.Attribute_("active", 0);
-				var xnodes = x.SelectNodes("panel"); int n = xnodes.Count;
-				this.Items = new List<GPanel>(n);
+				var xPanels = x.Elements("panel");
+				this.Items = new List<GPanel>();
 
-				for(int i = 0; i < n; i++) {
-					var gp = new GPanel(manager, parentSplit, xnodes[i] as XmlElement);
-					gp.ParentTab = this;
+				int i = 0;
+				foreach(var xx in xPanels) {
+					var gp = new GPanel(manager, parentSplit, xx, this);
 					this.Items.Add(gp);
 					if(gp.IsDocked) {
 						_dockedItemCount++;
 						if(i == iAct || this.ActiveItem == null) this.ActiveItem = gp; //if iAct invalid, let the first docked panel be active
 					}
+					i++;
 				}
 
 				foreach(var gp in this.Items) {
 					if(gp.IsDocked && gp != this.ActiveItem) gp.Content.Visible = false;
 				}
+
+				this.InitDockStateFromXML(x);
+			}
+
+			internal override void Save(XmlWriter x)
+			{
+				x.WriteStartElement("tab");
+
+				SaveDockStateToXml(x);
+
+				if(this.ActiveItem != null) {
+					int i = this.IndexOf(this.ActiveItem);
+					if(i > 0) x.WriteAttributeString("active", i.ToString());
+				}
+
+				foreach(var gp in this.Items) {
+					gp.Save(x);
+				}
+
+				x.WriteEndElement();
 			}
 
 			/// <summary>
@@ -77,7 +99,12 @@ namespace G.Controls
 				this.SetActiveItem(item1.IsDocked ? item1 : item2);
 			}
 
-			internal override string Text { get => this.ActiveItem?.Text; }
+			//internal string Text { get => this.ActiveItem?.Text; }
+
+			public override string ToString()
+			{
+				return this.AccName;
+			}
 
 			internal int DockedItemCount { get => _dockedItemCount; }
 
@@ -126,8 +153,13 @@ namespace G.Controls
 						int tabWid = vert ? r.Height : r.Width;
 						if(isActive) {
 							brushBack = t.brushActiveTabBack;
-							r.X++; r.Y++;
-							if(vert) r.Height -= 2; else r.Width -= 2;
+							//shift button rect 1 pixel towards content, and add 1-pixel border at other edges
+							switch(this.CaptionAt) {
+							case GCaptionEdge.Left: r.X++; r.Y++; r.Height -= 2; break;
+							case GCaptionEdge.Top: r.Y++; r.X++; r.Width -= 2; break;
+							case GCaptionEdge.Right: r.X--; r.Y++; r.Height -= 2; break;
+							case GCaptionEdge.Bottom: r.Y--; r.X++; r.Width -= 2; break;
+							}
 						} else {
 							brushBack = (gp == _manager._hilitedTabButton) ? t.brushActiveTabBack : t.brushInactiveTabBack;
 
@@ -137,13 +169,14 @@ namespace G.Controls
 						}
 						g.FillRectangle(brushBack, r);
 
-						if(_onlyIcons && gp.ImageIndex >= 0) {
-							var img = _manager._imageList.ImageSize;
-							var x = (r.Left + r.Right - img.Width) / 2;
-							var y = (r.Top + r.Bottom - img.Height) / 2;
-							//g.DrawImageUnscaled(, x, y);
-							_manager._imageList.Draw(g, x, y, gp.ImageIndex);
-							//never mind: should clip
+						if(_onlyIcons && gp.Image != null) {
+							//var z = gp.Image.Size;
+							var z = Catkeys.Util.Dpi.SmallIconSize;
+							if(z.Width > r.Width) z.Width = r.Width;
+							if(z.Height > r.Height) z.Height = r.Height;
+							var x = (r.Left + r.Right - z.Width) / 2;
+							var y = (r.Top + r.Bottom - z.Height) / 2;
+							g.DrawImage(gp.Image, x, y, z.Width, z.Height);
 						} else {
 							string s = gp.Text;
 							var tf = vert ? t.txtFormatVert : t.txtFormatHorz;
@@ -178,7 +211,7 @@ namespace G.Controls
 						var gp = tabs[i];
 						if(_tooSmall) {
 							buttonWidth = 0;
-						} else if(_onlyIcons && gp.ImageIndex >= 0) {
+						} else if(_onlyIcons && gp.Image != null) {
 							buttonWidth = maxButtonWidth;
 						} else {
 							string s = gp.Text;
@@ -212,9 +245,9 @@ namespace G.Controls
 			{
 				foreach(var v in this.Items) {
 					if(!v.IsDocked) continue;
-					v.IsVerticalCaption = this.IsVerticalCaption;
 					v.Bounds = this.Bounds;
 					v.CaptionBounds = this.CaptionBounds; //will calc tab button bounds later on Paint, because then Graphics is available, need it to measure strings
+					v.CaptionAt = this.CaptionAt;
 					v.Content.Bounds = rContent;
 				}
 			}
@@ -278,7 +311,7 @@ namespace G.Controls
 				_AssertIsChild(gp);
 				if(this.IsHidden) SetDockState(GDockState.Docked);
 				_dockedItemCount++;
-				UpdateLayout(this.Bounds);
+				UpdateLayout();
 				if(setActive || _dockedItemCount == 1) SetActiveItem(gp);
 			}
 

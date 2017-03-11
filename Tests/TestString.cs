@@ -20,10 +20,6 @@ using static Catkeys.NoClass;
 //using static Catkeys.Winapi.api; //ok
 //using static W = Catkeys.Winapi.api;
 
-//using Catkeys.Automation;
-//using l = Catkeys.Automation;
-//using static Catkeys.Automation.Input;
-
 using System.Windows.Input;
 
 //public static partial class aaString
@@ -122,7 +118,7 @@ partial class Test
 
 
 /*
-		//Catkeys.Automation.Input.Keys("Ctrl+K");
+		//Input.Key("Ctrl+K");
 		////Input.Keys("Ctrl+K");
 		//l.Input.Keys("Ctrl+K");
 		////l.Input.

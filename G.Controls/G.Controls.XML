@@ -37,7 +37,7 @@
             Hides, does not close.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GContentNode.DockBy(G.Controls.GDockPanel.GContentNode,G.Controls.GDockPanel.DockSide)">
+        <member name="M:G.Controls.GDockPanel.GContentNode.DockBy(G.Controls.GDockPanel.GContentNode,G.Controls.GDockPanel.GDockHow)">
             <summary>
             Docks this GPanel or GTab in an existing or new GTab or GSplit.
             If need, creates new GTab or GSplit in gcTarget place and adds gcTarget and this to it. Else reorders if need.
@@ -97,29 +97,75 @@
             Contains single Control.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GPanel.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.XmlElement)">
+        <member name="M:G.Controls.GDockPanel.GPanel.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement,G.Controls.GDockPanel.GTab)">
             <summary>
             This ctor is used at startup, when adding from XML.
             </summary>
         </member>
-        <member name="P:G.Controls.GDockPanel.GPanel.PreferredCaptionHorzVert">
+        <member name="P:G.Controls.GDockPanel.GPanel.Visible">
             <summary>
-            Returns 1 if caption should be horizontal, 2 if vertical, 0 if any.
+            note: this is not just !IsHidden. Returns false if in a hidden tab group even if IsHidden is false.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GPanel.IsReallyVisible(System.Boolean)">
+        <member name="M:G.Controls.GDockPanel.GPanel._IsVisible(System.Boolean)">
             <summary>
             Returns true if this isn't hidden and isn't in a hidden tab group.
             </summary>
             <param name="andContentVisible">And isn't an inactive tab.</param>
         </member>
-        <member name="M:G.Controls.GDockPanel.Create(System.String,System.Windows.Forms.ImageList,System.Windows.Forms.Control[])">
+        <member name="P:G.Controls.GDockPanel.IPanel.Content">
+            <summary>
+            The child Control.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.IPanel.Text">
+            <summary>
+            Panel caption text. Also tab button text.
+            If null or not set, uses control's Name property.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.IPanel.ToolTipText">
+            <summary>
+            Tooltip text.
+            If null or not set, uses Text (default - control's Name property).
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.IPanel.Image">
+            <summary>
+            Image to display on tab button if it is too small for text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.IPanel.Init(System.String,System.Drawing.Image)">
+            <summary>
+            Sets commonly used properties. Can be used to avoid several function calls (Image, ToolTipText).
+            </summary>
+            <param name="toolTip">Tooltip text.</param>
+            <param name="image">Image to display on tab button if it is too small for text.</param>
+        </member>
+        <member name="P:G.Controls.GDockPanel.IPanel.Visible">
+            <summary>
+            The 'get' function returns true if the panel or its tab button is visible. Returns false if it is hidden or its parent tab group is hidden.
+            The 'set' function makes the panel visible, in the most recent state (docked or floating). Activates its tab button if need.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.IPanel.ReallyVisible">
+            <summary>
+            Returns true if the panel is visible.
+            Returns false if it is hidden or its parent tab group is hidden or it is an inactive tab.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.IPanel.Floating">
+            <summary>
+            The 'get' function returns true if the panel is floating and not hidden.
+            The 'set' function: if true, makes this panel floating and visible if it is currently docked or hidden; if false, makes it docked if it is currently floating and visible.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.Create(System.String,System.Windows.Forms.Control[])">
             <summary>
             Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
             Adjusts control properties and positions everything according to the XML.
             </summary>
             <param name="xmlFile">XML file containing panel/toolbar layout. Used to load and save. If missing, will load Folders.ThisApp + Path.GetFileName(xmlFile) and save to xmlFile.</param>
-            <param name="imageList">ImageList containing panel icons that are displayed when tabbed panel button is too small to display text.</param>
             <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
         </member>
         <member name="P:G.Controls.GDockPanel._HitTestData.ParentTab">
@@ -139,70 +185,28 @@
             Else (if on a GTab caption but not a  GPanel tab button) sets gt and returns _HitTestResult.Caption.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.FindPanel(System.String)">
+        <member name="M:G.Controls.GDockPanel.GetPanel(System.Windows.Forms.Control)">
             <summary>
-            Gets control by name.
+            Gets control's host panel interface.
             Returns null if not found.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.HidePanel(System.Windows.Forms.Control)">
+        <member name="M:G.Controls.GDockPanel.GetPanel(System.String)">
             <summary>
-            Hides the panel, but does not close.
+            Gets panel interface by name.
+            Returns null if not found.
             </summary>
+            <param name="name">Panel name, which is its control's Name property.</param>
         </member>
-        <member name="M:G.Controls.GDockPanel.HidePanel(System.String)">
-            <summary>
-            Hides the panel, but does not close.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.ShowPanel(System.Windows.Forms.Control)">
-            <summary>
-            Shows the panel in the most recent state (docked or floating) and activates tabbed panel if need.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.ShowPanel(System.String)">
-            <summary>
-            Shows the panel in the most recent state (docked or floating) and activates tabbed panel if need.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.IsPanelVisible(System.Windows.Forms.Control,System.Boolean)">
-            <summary>
-            Returns true if the panel is visible (docked or floating).
-            </summary>
-            <param name="control"></param>
-            <param name="andContentVisible">And isn't an inactive tab.</param>
-        </member>
-        <member name="M:G.Controls.GDockPanel.IsPanelVisible(System.String,System.Boolean)">
-            <summary>
-            Returns true if the panel is visible (docked or floating).
-            </summary>
-            <param name="name"></param>
-            <param name="andContentVisible">And isn't an inactive tab.</param>
-        </member>
-        <member name="M:G.Controls.GDockPanel.SetPanelText(System.Windows.Forms.Control,System.String)">
-            <summary>
-            Changes panel caption (or tab button) text.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.SetPanelText(System.String,System.String)">
-            <summary>
-            Changes panel caption (or tab button) text.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.SetPanelToolTipText(System.Windows.Forms.Control,System.String)">
-            <summary>
-            Changes panel tooltip text.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.SetPanelToolTipText(System.String,System.String)">
-            <summary>
-            Changes panel tooltip text.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GDockPanel.AddShowPanelsToMenu(System.Windows.Forms.ToolStripDropDown,System.Boolean)">
+        <member name="M:G.Controls.GDockPanel.AddShowPanelsToMenu(System.Windows.Forms.ToolStripDropDown,System.Boolean,System.Boolean)">
             <summary>
             Adds menu items for all panels or toolbars, except the doc panel, to a menu.
             On menu item click will show that panel.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GDockPanel.ResetLayoutAfterRestart">
+            <summary>
+            When disposing this, delete the user's saved layout file. Then next time will use the default file.
             </summary>
         </member>
         <member name="M:G.Controls.GDockPanel.EnableDisableAllFloatingWindows(System.Boolean)">
@@ -236,7 +240,7 @@
             Contains 2 GNode (GPanel, GTab, GSplit or GDummyNode) and a splitter.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GSplit.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.XmlElement)">
+        <member name="M:G.Controls.GDockPanel.GSplit.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement)">
             <summary>
             This ctor is used at startup, when adding from XML.
             </summary>
@@ -296,7 +300,7 @@
             Contains multiple GPanel.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GTab.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.XmlElement)">
+        <member name="M:G.Controls.GDockPanel.GTab.#ctor(G.Controls.GDockPanel,G.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement)">
             <summary>
             This ctor is used at startup, when adding from XML.
             </summary>
@@ -342,6 +346,123 @@
             AccessibleObject of GNode.
             We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
             </summary>
+        </member>
+        <member name="F:G.Controls.GStripManager.GSMProp.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager.GSMProp.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:G.Controls.GStripManager.GSMProp.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GStripManager.MenuBar">
+            <summary>
+            Menu bar.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GStripManager.Toolbars">
+            <summary>
+            Toolbars.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GStripManager.Submenus">
+            <summary>
+            Submenus.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager.#ctor(System.Windows.Forms.Form,System.String,System.String,G.Controls.IGStripManagerCallbacks)">
+            <param name="form">Form used as owner of dialog boxes.</param>
+            <param name="xmlFileDefault">File containing default XML.</param>
+            <param name="xmlFileCustomized">File containing customized XML. Don't have to exist; it will be created when saving customizations.</param>
+            <param name="callbacks"></param>
+        </member>
+        <member name="M:G.Controls.GStripManager.BuildAll">
+            <summary>
+            Opens XML file and creates toolbars/menus/submenus.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager._AddChildItems(System.Xml.Linq.XElement,System.Windows.Forms.ToolStrip,System.Boolean)">
+            <summary>
+            Adds toolbar buttons or menu bar items.
+            Call this for each top-level toolstrip (toolbar or menu bar).
+            </summary>
+            <param name="xParent">XML element of the toolbar or menu bar.</param>
+            <param name="owner">The toolbar or menu bar.</param>
+            <param name="isMenu">true if menu, false if toolbar.</param>
+        </member>
+        <member name="M:G.Controls.GStripManager._AddChildItem(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Int32)">
+            <summary>
+            Adds item to owner.
+            Before it calls <see cref="M:G.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)"/>.
+            </summary>
+            <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator.</param>
+            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which to add this item.</param>
+            <param name="insertAt">If not negative, inserts at this index. If negative, adds to the end.</param>
+        </member>
+        <member name="M:G.Controls.GStripManager._CreateChildItem(System.Xml.Linq.XElement,System.Boolean)">
+            <summary>
+            Creates a menu or toolbar item.
+            </summary>
+            <param name="x">XML element containing item properties.</param>
+            <param name="isMenu">false if toolbar item, true if menu item (also if menu bar item).</param>
+        </member>
+        <member name="M:G.Controls.GStripManager._OnMouseUp(System.Object,System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Toolbar button MouseUp handler. Implements context menu that allows to customize.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager._Strips_Customize(System.UInt32,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Object)">
+            <summary>
+            Implements toolbar button customization.
+            </summary>
+            <param name="action">1 copy, 2 move, 3 remove, 4 separator, 5 hide/unhide, 6 properties.</param>
+            <param name="item">Button.</param>
+            <param name="tsTo">Destination toolbar, or null if don't need.</param>
+            <param name="etc">
+            With action 2 (move) can be the target button as ToolStripItem; if null, moves to the end.
+            With action 6 (properties) - GSMProp.
+            </param>
+        </member>
+        <member name="M:G.Controls.GStripManager._OnMouseDown(System.Object,System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Toolbar button MouseDown handler. Implements toolbar button reordering with Alt+drag.
+            </summary>
+        </member>
+        <member name="T:G.Controls.IGStripManagerCallbacks">
+            <summary>
+            <see cref="T:G.Controls.GStripManager"/> uses this interface to get properties of menu/toolbar items that it cannot get from XML (Click event handlers, images etc).
+            Also used to notify about some events.
+            </summary>
+        </member>
+        <member name="M:G.Controls.IGStripManagerCallbacks.GetImage(System.String)">
+            <summary>
+            Gets menu/toolbar item image.
+            </summary>
+            <param name="imageName">XML i attribute.</param>
+        </member>
+        <member name="M:G.Controls.IGStripManagerCallbacks.GetClickHandler(System.String)">
+            <summary>
+            Gets menu/toolbar item Click event handler.
+            Returns null if the item is not a command, for example if it is a submenu-item or control-item.
+            Called before creating the ToolStripItem.
+            </summary>
+            <param name="itemName">Menu/toolbar item name (XML tag).</param>
+        </member>
+        <member name="M:G.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)">
+            <summary>
+            Called before adding an item to a toolbar or menu/submenu.
+            </summary>
+            <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator.</param>
+            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which will be added this item.</param>
         </member>
     </members>
 </doc>

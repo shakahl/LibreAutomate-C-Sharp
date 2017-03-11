@@ -21,8 +21,6 @@ using System.Linq;
 using Catkeys;
 using static Catkeys.NoClass;
 
-using static Catkeys.Automation.NoClass;
-
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 #pragma warning disable 1591 //XML doc
 

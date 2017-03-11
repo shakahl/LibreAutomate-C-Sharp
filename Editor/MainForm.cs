@@ -41,7 +41,7 @@ namespace Editor
 		Scintilla _code;
 		ToolStripSpringTextBox _helpFind;
 
-		static MainForm _form;
+		//static MainForm _form;
 		static List<CatItem> _items;
 		static string _collectionCsvFile = @"q:\test\ok\List.csv";
 		//static string _collectionCsvFile = @"q:\test\Main\Main.csv";
@@ -50,19 +50,16 @@ namespace Editor
 		public MainForm()
 		{
 			//InitializeComponent();
-			_form = this;
+			//_form = this;
 
 			this.SuspendLayout();
 			this.ClientSize = new Size(1100, 700);
 			this.AutoScaleMode = AutoScaleMode.Dpi;
 			this.Font = new Font("Segoe UI", 9F);
-			this.Name = "Form1";
+			this.Text = "Catkeys";
 			//this.StartPosition = FormStartPosition.CenterScreen;
 			this.StartPosition = FormStartPosition.Manual;
 			this.Location = new Point(0, 100);
-			this.Text = "Catkeys";
-
-			var contentPanel = this;
 
 			//code
 			_code = new Scintilla();
@@ -77,15 +74,15 @@ namespace Editor
 			_findPane = new CatFindPane();
 
 			//status bar
-			_statusBar = new Scintilla();
-			_statusBar.BorderStyle = BorderStyle.None;
-			_statusBar.Size = new Size(0, 40);
-			_statusBar.Dock = DockStyle.Bottom;
-			_statusBar.AccessibleRole = AccessibleRole.StatusBar;
-			_statusBar.AccessibleName = "Status bar";
-
+			_statusBar = new Scintilla() {
+				BorderStyle = BorderStyle.None,
+				Size = new Size(0, 40),
+				Dock = DockStyle.Bottom,
+				AccessibleRole = AccessibleRole.StatusBar,
+				AccessibleName = "Status bar"
+			};
 			Perf.Next();
-			InitStrips();
+			_Strips_Init();
 			_helpFind = _tsHelp.Items["Help_Find"] as ToolStripSpringTextBox;
 			//_tsHelp.Padding = new Padding(); //removes 1-pixel right margin that causes a visual artefact because of gradient, but then not good when no margin when the edit is at the very right edge of the form
 
@@ -98,20 +95,36 @@ namespace Editor
 
 			Perf.Next();
 
+#if true
 			var c = new RichTextBox();
-			c.Name = c.Text = "Results";
+			c.Name = "Results";
 
 			_dock = new GDockPanel();
-			_dock.Create(Folders.ThisAppData + "Panels.xml", EImageList.Strips,
+			_dock.Create(Folders.ThisAppData + "Panels.xml",
 				_code, _tvPane, _outputPane, _findPane, _openPane, _runningPane, _recentPane, c,
 				_tsMenu, _tsFile, _tsEdit, _tsRun, _tsTools, _tsHelp, _tsCustom1, _tsCustom2
 				);
+			//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
+			_dock.GetPanel(_openPane).Init("Currently open files", EResources.GetImage("open"));
+			_dock.GetPanel(_outputPane).Init("Errors and other information", EResources.GetImage("output"));
+			_dock.GetPanel(_findPane).Init("Find files, text, triggers", EResources.GetImage("find"));
+			_dock.GetPanel(_tvPane).Init("All scripts and other files of current collection");
+			_dock.GetPanel(_runningPane).Init("Running scripts");
+			_dock.GetPanel(_recentPane).Init("Recent running scripts");
+			_dock.GetPanel(c).Init("New panel", EResources.GetImage("paste"));
+#else //test with few panels
+			_dock = new GDockPanel();
+			_dock.Create(Folders.ThisAppData + "Panels.xml", EImageList.Strips,
+				_tvPane, _openPane
+				);
+			//_dock.Create(Folders.ThisAppData + "Panels.xml", EImageList.Strips,
+			//	_code, _tvPane, _outputPane, _findPane, _openPane, _runningPane, _recentPane
+			//	);
 
-			//_dock.AddPanel(c, _outputPane, GDockPanel.DockSide.TabAfter, "<panel text='Results' tooltip='Find results' image='15' />");
-			//_dock.AddPanel(c, _tvPane, GDockPanel.DockSide.SplitBelow, "<panel text='Results' tooltip='Find results' image='15' hide='' />");
+#endif
 
-			contentPanel.Controls.Add(_dock);
-			contentPanel.Controls.Add(_statusBar);
+			this.Controls.Add(_dock);
+			this.Controls.Add(_statusBar);
 
 			this.ResumeLayout(false);
 			Perf.Next();
@@ -195,7 +208,7 @@ namespace Editor
 			}
 			//Perf.Next();
 			p1.Next();
-			_tvPane.TvSend(_Api.TVM_SETIMAGELIST, _Api.TVSIL_NORMAL, EImageList.Files.Handle);
+			_tvPane.TvSend(_Api.TVM_SETIMAGELIST, _Api.TVSIL_NORMAL, EResources.ImageList_Files.Handle);
 			//_tv.Send(_Api.TVM_SELECTITEM, _Api.TVGN_CARET, _items[selectId].Htvi);
 
 			//Speed for ~13000 items in ~30 root folders: 40 ms.
@@ -312,7 +325,7 @@ namespace Editor
 				var c = new ListView();
 				c.BorderStyle = BorderStyle.None;
 				c.Dock = DockStyle.Fill;
-				c.AccessibleName = this.Text = this.Name = "Open";
+				c.AccessibleName = this.Name = "Open";
 				this.Controls.Add(c);
 			}
 
@@ -325,7 +338,7 @@ namespace Editor
 				var c = new ListView();
 				c.BorderStyle = BorderStyle.None;
 				c.Dock = DockStyle.Fill;
-				c.AccessibleName = this.Text = this.Name = "Running";
+				c.AccessibleName = this.Name = "Running";
 				this.Controls.Add(c);
 
 			}
@@ -338,7 +351,7 @@ namespace Editor
 				var c = new ListView();
 				c.BorderStyle = BorderStyle.None;
 				c.Dock = DockStyle.Fill;
-				c.AccessibleName = this.Text = this.Name = "Recent";
+				c.AccessibleName = this.Name = "Recent";
 				this.Controls.Add(c);
 
 			}
@@ -353,7 +366,7 @@ namespace Editor
 				_c = new Scintilla();
 				_c.BorderStyle = BorderStyle.None;
 				_c.Dock = DockStyle.Fill;
-				_c.AccessibleName = this.Text = this.Name = "Output";
+				_c.AccessibleName = this.Name = "Output";
 
 				//c.BackColor = Calc.ColorFromNative(0xFFF8F8F8); //does not work
 
@@ -374,7 +387,7 @@ namespace Editor
 				var c = new ListView();
 				c.BorderStyle = BorderStyle.None;
 				c.Dock = DockStyle.Fill;
-				c.AccessibleName = this.Text = this.Name = "Find";
+				c.AccessibleName = this.Name = "Find";
 				this.Controls.Add(c);
 
 			}
@@ -422,9 +435,10 @@ namespace Editor
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
-			if(keyData == (Keys.Control | Keys.T)) {
-				//_Test();
-				_dock.Test();
+			//if(keyData == (Keys.Control | Keys.T)) {
+			if(keyData == (Keys.F5)) {
+				_Test();
+				//_dock.Test();
 				return true;
 			}
 			return base.ProcessCmdKey(ref msg, keyData);
@@ -432,6 +446,17 @@ namespace Editor
 
 		void _Test()
 		{
+			var p = _dock.GetPanel(_outputPane);
+			//p.Visible = false;
+			//p.Floating = true;
+			//Time.SleepDoEvents(1000);
+			//p.Visible = true;
+			//p.Floating = false;
+			//p.Text = "NewT"; p.ToolTipText = "New ttttttt";
+			//p.Image=
+
+			//PrintList(p.Visible, p.ReallyVisible, p.Floating, p.Image, p.Text, p.ToolTipText, p.Content);
+
 			//foreach(var p in Controls.OfType<GPanel>()) {
 			//	PrintList(p, p.Dock, p.DPSplitter.IsVisible);
 			//}
@@ -440,14 +465,5 @@ namespace Editor
 			//TaskDialog.Show("");
 			//_dock.ShowPanel(_openPane);
 		}
-
-#if DEBUG
-		private void _strips_Click(object sender, EventArgs e)
-		{
-			_dock.SetPanelText(_recentPane, "new text");
-			_dock.SetPanelText(_findPane, "new text");
-			_dock.SetPanelToolTipText(_findPane, "new tooltip");
-		}
-#endif
 	}
 }

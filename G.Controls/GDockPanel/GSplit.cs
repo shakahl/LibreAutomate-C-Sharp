@@ -15,6 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
@@ -41,22 +42,22 @@ namespace G.Controls
 			/// <summary>
 			/// This ctor is used at startup, when adding from XML.
 			/// </summary>
-			internal GSplit(GDockPanel manager, GSplit parentSplit, XmlElement x) : base(manager, parentSplit)
+			internal GSplit(GDockPanel manager, GSplit parentSplit, XElement x) : base(manager, parentSplit)
 			{
 				manager._aSplit.Add(this);
 
-				if(x.HasAttribute("vert")) IsVerticalSplit = true;
-				int k = x.Attribute_("splitter", -1); if(k < 0 || k > 20) k = _splitterWidth; this.SplitterWidth = k;
+				if(!x.HasAttribute_("hor")) IsVerticalSplit = true;
+				int k = x.Attribute_("splitter", -1); if(k < 0 || k > 20) k = _splitterWidth;
+				this.SplitterWidth = k;
 
 				//TODO: should use DPI-dependent units, not pixels. Especially if form size depends on DPI.
-				if(_isFraction = x.HasAttribute("f")) _fraction = x.Attribute_("f", 0F);
-				else if(_isWidth1 = x.HasAttribute("w1")) _width = x.Attribute_("w1", 0);
+				if(_isFraction = x.HasAttribute_("f")) _fraction = x.Attribute_("f", 0F);
+				else if(_isWidth1 = x.HasAttribute_("w1")) _width = x.Attribute_("w1", 0);
 				else _width = x.Attribute_("w2", 1);
 
-				foreach(XmlNode xn in x) {
-					var xe = xn as XmlElement; if(xe == null) continue;
+				foreach(var xe in x.Elements()) {
 					GNode gn = null;
-					switch(xe.Name) {
+					switch(xe.Name.LocalName) {
 					case "panel":
 						gn = new GPanel(manager, this, xe);
 						break;
@@ -77,6 +78,27 @@ namespace G.Controls
 					if(Child1 == null) Child1 = gn; else { Child2 = gn; break; }
 				}
 				if(Child2 == null) throw new Exception();
+
+				if(_dockedChildCount == 0) this.DockState = GDockState.Hidden;
+			}
+
+			internal override void Save(XmlWriter x)
+			{
+				x.WriteStartElement("split");
+				if(!IsVerticalSplit) x.WriteAttributeString("hor", "");
+
+				if(_isFraction) x.WriteAttributeString("f", _fraction.ToString());
+				else if(_isWidth1) x.WriteAttributeString("w1", _width.ToString());
+				else x.WriteAttributeString("w2", _width.ToString());
+
+				if(this.SplitterWidth != _splitterWidth) x.WriteAttributeString("splitter", this.SplitterWidth.ToString());
+
+				for(int i = 0; i < 2; i++) {
+					var gn = i == 0 ? Child1 : Child2;
+					gn.Save(x);
+				}
+
+				x.WriteEndElement();
 			}
 
 			/// <summary>
@@ -115,7 +137,7 @@ namespace G.Controls
 						//gnOther is GTab, because the user moved all panels to a single GTab. We cannot delete this (root) GSplit.
 						var gd = new GDummyNode(_manager, this);
 						if(gn == Child1) Child1 = gd; else Child2 = gd;
-						//SHOULDDO: when saving layout to XML, remove this dummy node if can. Not necessary, because it's impossible to create multiple dummy nodes.
+						//never mind: when saving layout to XML, should remove this dummy node if can. Not necessary, because impossible to create multiple dummy nodes.
 						return;
 					}
 					gs.ParentSplit = null;
@@ -201,11 +223,6 @@ namespace G.Controls
 				} else if(Child2.IsDocked) {
 					Child2.UpdateLayout(r);
 				}
-			}
-
-			internal void UpdateLayout()
-			{
-				UpdateLayout(this.Bounds);
 			}
 
 			internal override int MinimalWidth
@@ -395,12 +412,6 @@ namespace G.Controls
 
 				m.Show(_manager, p.X, p.Y);
 			}
-
-			//GNode _GetChildNotTabbedPanel(GNode gn)
-			//{
-			//	if(gn == Child1 || gn == Child2) return gn;
-			//	return (gn as GPanel).ParentTab;
-			//}
 
 			[Conditional("DEBUG")]
 			void _AssertIsChild(GNode gn)

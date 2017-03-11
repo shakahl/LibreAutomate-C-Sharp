@@ -23,11 +23,10 @@ using K = System.Windows.Forms.Keys;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 
 
-//using Cat = Catkeys.Automation.Input;
+//using Cat = Catkeys.Input;
 //using Meow = Catkeys.Show;
 
 //using static Catkeys.Show;
@@ -141,69 +140,6 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//TaskDialog.Show("after all");
 		//Print("exit default domain");
 	}
-
-	//[DllImport("user32.dll")]
-	//public static extern int ShowCursor(bool bShow);
-	//[DllImport("user32.dll")]
-	//public static extern IntPtr SetCursor(IntPtr hCursor);
-	//[DllImport("kernel32.dll")]
-	//public static extern void Sleep(uint dwMilliseconds);
-	[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
-	public static extern int MessageBox(Wnd hWnd, string lpText, string lpCaption, uint uType);
-
-	class Form1 :Form
-	{
-		public Form1()
-		{
-			var m = new ContextMenuStrip();
-			m.Items.Add("Close");
-			var dd1 = new ToolStripDropDownMenu(); (m.Items.Add("Sub 1") as ToolStripMenuItem).DropDown = dd1;
-			{
-				dd1.Items.Add("Aaaaaaaaaaaaaa");
-				var dd2 = new ToolStripDropDownMenu();
-				var k = new ToolStripMenuItem_(); k.Text = "Sub 2";
-				k.DropDown = dd2;
-				dd1.Items.Add(k);
-				{
-					dd2.Items.Add("Zzzzzzzzzzzz");
-				}
-			}
-			m.Items.Add("Last");
-
-			ContextMenuStrip = m;
-		}
-
-		class ToolStripMenuItem_ :ToolStripMenuItem
-		{
-			protected override void OnMouseHover(EventArgs e)
-			{
-				Print("hover 1");
-				base.OnMouseHover(e);
-				Print("hover 2, dd visible=" + this.DropDown.Visible);
-				Perf.First();
-				bool y = this.HasDropDownItems && !this.DropDown.Visible;
-				Perf.NW();
-				Print(y);
-				if(this.HasDropDownItems && !this.DropDown.Visible) this.ShowDropDown();
-				//Perf.First();
-			}
-
-			protected override void OnDropDownShow(EventArgs e)
-			{
-				//Perf.NW();
-				Print("show");
-				base.OnDropDownShow(e);
-			}
-
-			//protected override void OnDropDownOpened(EventArgs e)
-			//{
-			//	Print("opened 1");
-			//	base.OnDropDownShow(e);
-			//	Print("opened 2");
-			//}
-		}
-	}
-
 
 	private static void Get45or451FromRegistry()
 	{

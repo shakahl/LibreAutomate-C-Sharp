@@ -230,6 +230,10 @@ namespace Catkeys
 
 			dd = new ToolStripDropDownMenu_(this);
 			item.DropDown = dd;
+			//SHOULDDO: should be 'dd=item.DropDown' (auto-created).
+			//	Because now eg hotkeys don't work.
+			//	But then cannot be ToolStripDropDownMenu_.
+			//	It is important only if using in menu bar.
 
 			//var t = new Perf.Inst(); t.First();
 			dd.SuspendLayout();
@@ -404,7 +408,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Shows the menu in a form or control.
+		/// Shows the menu on a form or control.
 		/// </summary>
 		/// <param name="owner">A control or form that will own the menu.</param>
 		/// <param name="x">Mouse X position in control's client area.</param>
@@ -416,6 +420,20 @@ namespace Catkeys
 		public void Show(Control owner, int x, int y, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
 		{
 			_Show(3, x, y, direction, owner);
+		}
+
+		/// <summary>
+		/// Shows the menu at the mouse cursor position.
+		/// </summary>
+		/// <param name="owner">A control or form that will own the menu.</param>
+		/// <param name="direction">Menu drop direction.</param>
+		/// <remarks>
+		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call Show(). Use the <see cref="CMS"/> property, which gets <see cref="ContextMenuStrip"/>.
+		/// </remarks>
+		public void Show(Control owner, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
+		{
+			var p = owner.MouseClientXY_();
+			_Show(3, p.X, p.Y, direction, owner);
 		}
 
 		void _Show(int overload, int x = 0, int y = 0, ToolStripDropDownDirection direction = 0, Control control = null)
@@ -986,8 +1004,8 @@ namespace Catkeys
 		//Calls true item's onClick delegate if need.
 		void _OnClick(object sender, EventArgs args)
 		{
-			//Print(_inRightClick);
-			if(m_inRightClick) return;
+			//Print(m_inRightClick);
+			if(m_inRightClick) return; //disable this item while showing a context menu for this item
 			var d = _clickDelegates[sender] as Action<ClickEventData>;
 			Debug.Assert(d != null); if(d == null) return;
 			d(new ClickEventData(sender as ToolStripItem));

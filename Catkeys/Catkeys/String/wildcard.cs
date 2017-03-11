@@ -63,7 +63,7 @@ namespace Catkeys
 			if(t.Length == 0) return false;
 
 			fixed (char* str = t, pat = pattern) {
-				return __WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.LibProcessMemory.Ptr->str.GetCaseTable() : null);
+				return __WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? LibLowerCaseTable : null);
 			}
 
 			//info:
@@ -143,7 +143,7 @@ namespace Catkeys
 
 		internal unsafe struct ProcessVariables
 		{
-			char* _caseTable; //char[0x10000] containing upper-case versions of the first 0x10000 characters
+			char* _caseTable; //char[0x10000] containing lower-case versions of the first 0x10000 characters
 
 			internal char* GetCaseTable()
 			{
@@ -157,6 +157,12 @@ namespace Catkeys
 				return _caseTable;
 			}
 		}
+
+		/// <summary>
+		/// Gets unmanaged char[0x10000] containing lower-case versions of the first 0x10000 characters.
+		/// Auto-creates when called first time. The memory is shared by appdomains.
+		/// </summary>
+		internal static unsafe char* LibLowerCaseTable { get => Util.LibProcessMemory.Ptr->str.GetCaseTable(); }
 
 		#endregion Like_
 	}

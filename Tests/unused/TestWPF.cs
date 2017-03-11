@@ -17,7 +17,6 @@ using System.ComponentModel;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 
 using System.Windows;
@@ -76,7 +75,7 @@ public partial class Test
 			case 12: icon = @"q:\app\Tip.ico"; break;
 			case 13: icon = @"q:\app\Cut.ico"; break;
 			case 14: icon = @"q:\app\Copy.ico"; break;
-			//case 15: icon = @"q:\app\qm.exe,1"; break; //exception
+				//case 15: icon = @"q:\app\qm.exe,1"; break; //exception
 			}
 			MenuItem k = WpfMenuAddItem(m.Items, icon);
 			if(i == 3 || i == 4 || i == 14) {
@@ -142,12 +141,12 @@ public partial class Test
 		var t = new ToolBar();
 		Perf.Next();
 
-		for(int i=0; i<30; i++) {
+		for(int i = 0; i < 30; i++) {
 			var b = new Button();
 			b.Content = "Text";
 			b.Click += B_Click;
 			t.Items.Add(b);
-			if(i==0) Perf.Next();
+			if(i == 0) Perf.Next();
 		}
 		Perf.Next();
 
@@ -163,13 +162,13 @@ public partial class Test
 		_mlTbWpf.Loop();
 		p.IsOpen = false;
 		Print("end");
-    }
+	}
 
-	static Util.MessageLoop _mlTbWpf=new Util.MessageLoop();
+	static Util.MessageLoop _mlTbWpf = new Util.MessageLoop();
 
 	private static void B_Click(object sender, RoutedEventArgs e)
 	{
 		PrintFunc();
 		_mlTbWpf.Stop();
-    }
+	}
 }

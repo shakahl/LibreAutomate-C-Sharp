@@ -47,7 +47,9 @@ namespace G.Controls
 				this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
 				this.AutoScaleMode = _manager.ParentForm.AutoScaleMode;
 				this.Font = _manager.Font;
-				this.Text = gc.Text;
+				this.Text = gc.ToString();
+				this.MinimumSize = new Size(34, 30);
+				this.SetStyle(ControlStyles.ResizeRedraw | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer, true);
 				this.ResumeLayout();
 
 				var f = _manager.ParentForm;
@@ -85,7 +87,7 @@ namespace G.Controls
 			/// <summary>
 			/// 1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
 			/// </summary>
-			protected override bool ShowWithoutActivation { get => _hasToolbar; }
+			protected override bool ShowWithoutActivation { get => true; }
 
 			internal void OnReplacedChild(GContentNode newChild)
 			{
@@ -247,7 +249,7 @@ namespace G.Controls
 							var gt = gp.ParentTab;
 							//r = gp.Content.Bounds; //better don't display the big blue rect
 							rb = gp.CaptionBounds;
-							if(gt != null && gt.ShowsTabButtons) _target.side = DockSide.TabBefore;
+							if(gt != null && gt.ShowsTabButtons) _target.side = GDockHow.TabBefore;
 							else rb = _CalcNewTabButtonRectInFullCaption(gp, rb, p); //sets _target.side
 							_target.gc = gp;
 							return true;
@@ -269,11 +271,11 @@ namespace G.Controls
 							if(gt.DockedItemCount > 0) {
 								//r = gt.ActiveItem.Content.Bounds; //better don't display the big blue rect
 								rb = gt.CaptionBoundsExceptButtons;
-								_target.side = DockSide.TabAfter;
+								_target.side = GDockHow.TabAfter;
 								_target.gc = gt.Items.Last();
 							} else {
 								rb = gt.CaptionBounds;
-								_target.side = DockSide.TabBefore;
+								_target.side = GDockHow.TabBefore;
 								_target.gc = gt;
 							}
 							return true;
@@ -296,16 +298,16 @@ namespace G.Controls
 				/// </summary>
 				RECT _CalcDockRectPart(RECT r, POINT p)
 				{
-					DockSide side;
+					GDockHow side;
 					int wid = r.Width, hei = r.Height, wid2 = wid / 2, hei2 = hei / 2, dx = p.x - r.left, dy = p.y - r.top;
 					double k = wid / (double)hei;
-					if(dx < wid2) side = DockSide.SplitLeft; else { side = DockSide.SplitRight; dx = wid - dx; }
-					if(dy < hei2) { if(dy * k < dx) side = DockSide.SplitAbove; } else { if((hei - dy) * k < dx) side = DockSide.SplitBelow; }
+					if(dx < wid2) side = GDockHow.SplitLeft; else { side = GDockHow.SplitRight; dx = wid - dx; }
+					if(dy < hei2) { if(dy * k < dx) side = GDockHow.SplitAbove; } else { if((hei - dy) * k < dx) side = GDockHow.SplitBelow; }
 					switch(_target.side = side) {
-					case DockSide.SplitLeft: r.right -= wid2; break;
-					case DockSide.SplitAbove: r.bottom -= hei2; break;
-					case DockSide.SplitRight: r.left += wid2; break;
-					case DockSide.SplitBelow: r.top += hei2; break;
+					case GDockHow.SplitLeft: r.right -= wid2; break;
+					case GDockHow.SplitAbove: r.bottom -= hei2; break;
+					case GDockHow.SplitRight: r.left += wid2; break;
+					case GDockHow.SplitBelow: r.top += hei2; break;
 					}
 					return r;
 				}
@@ -324,7 +326,7 @@ namespace G.Controls
 						int mid = (r.left + r.right) / 2;
 						if(after = (p.x >= mid)) r.left = mid; else r.right = mid;
 					}
-					_target.side = after ? DockSide.TabAfter : DockSide.TabBefore;
+					_target.side = after ? GDockHow.TabAfter : GDockHow.TabBefore;
 					return r;
 				}
 
@@ -347,7 +349,7 @@ namespace G.Controls
 				/// </summary>
 				internal GContentNode gc;
 				/// <summary>Specifies whether to add on a GTab or GSplit, and at which side of gc.</summary>
-				internal DockSide side;
+				internal GDockHow side;
 			}
 
 			internal DockTarget Drag(POINT p)

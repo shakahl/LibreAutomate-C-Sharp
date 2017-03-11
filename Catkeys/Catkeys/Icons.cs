@@ -67,7 +67,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets file icon.
 		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
-		/// Calls <see cref="GetFileIconHandle"/> and converts to Image. Returns null if failed, for example if the file does not exist.
+		/// Calls <see cref="GetFileIconHandle"/> and converts to Bitmap. Returns null if failed, for example if the file does not exist.
 		/// Later call Dispose().
 		/// </summary>
 		/// <param name="file">
@@ -77,37 +77,37 @@ namespace Catkeys
 		/// </param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		/// <param name="flags"><see cref="IconFlags"/></param>
-		public static Image GetFileIconImage(string file, int size, IconFlags flags = 0)
+		public static Bitmap GetFileIconImage(string file, int size, IconFlags flags = 0)
 		{
 			return HandleToImage(GetFileIconHandle(file, size, flags));
 		}
 
 		/// <summary>
 		/// Gets icon of a file or other shell object specified by its ITEMIDLIST pointer.
-		/// Calls <see cref="GetPidlIconHandle"/> and converts to Image. Returns null if failed.
+		/// Calls <see cref="GetPidlIconHandle"/> and converts to Bitmap. Returns null if failed.
 		/// Later call Dispose().
 		/// </summary>
 		/// <param name="pidl">ITEMIDLIST pointer.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		/// <param name="freePidl">Call Marshal.FreeCoTaskMem(pidl).</param>
-		public static Image GetPidlIconImage(IntPtr pidl, int size, bool freePidl = false)
+		public static Bitmap GetPidlIconImage(IntPtr pidl, int size, bool freePidl = false)
 		{
 			return HandleToImage(GetPidlIconHandle(pidl, size, freePidl));
 		}
 
 		/// <summary>
-		/// Converts unmanaged icon to Image object and destroys the unmanaged icon.
+		/// Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
 		/// Returns null if hi is Zero or fails to convert.
 		/// </summary>
 		/// <param name="hi">Icon handle.</param>
-		public static Image HandleToImage(IntPtr hi)
+		public static Bitmap HandleToImage(IntPtr hi)
 		{
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc. Icon.ToBitmap works around it.
 
 			if(hi == Zero) return null;
 			//var perf = new Perf.Inst(true);
 			Icon ic = Icon.FromHandle(hi);
-			Image im = null;
+			Bitmap im = null;
 			try { im = ic.ToBitmap(); } catch(Exception e) { DebugPrint(e.Message); }
 			ic.Dispose();
 			Api.DestroyIcon(hi);

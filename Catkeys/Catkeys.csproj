@@ -61,7 +61,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Properties\CatkeysSN.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -84,10 +84,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Automation\Input.cs" />
-    <Compile Include="Automation\NoClass.cs" />
+    <Compile Include="Catkeys\Automation\Input.cs" />
     <Compile Include="Catkeys\Api\Api COM.cs" />
     <Compile Include="Catkeys\Api\Api public.cs" />
+    <Compile Include="Catkeys\Automation\Input.Misc.cs" />
     <Compile Include="Catkeys\Calc.cs" />
     <Compile Include="Catkeys\Common\Classes.cs" />
     <Compile Include="Catkeys\Common\common.cs" />
@@ -99,7 +99,7 @@
     <Compile Include="Catkeys\Menu, TB\CatToolStrip.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Catkeys\Mouse.cs" />
+    <Compile Include="Catkeys\Automation\Mouse.cs" />
     <Compile Include="Catkeys\Common\NetExt.cs" />
     <Compile Include="Catkeys\Common\NoClass.cs" />
     <Compile Include="Catkeys\Output.cs" />
@@ -141,7 +141,7 @@
     <None Include="Test, rejected\_Rejected.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CatkeysSN.pfx" />
+    <None Include="Properties\CatkeysSN.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

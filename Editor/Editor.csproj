@@ -67,7 +67,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Properties\CatkeysSN.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScintillaNET, Version=3.5.10.0, Culture=neutral, processorArchitecture=x86">
@@ -93,7 +93,7 @@
     </Compile>
     <Compile Include="EditorApi.cs" />
     <Compile Include="EditorUtil.cs" />
-    <None Include="CatkeysSN.pfx" />
+    <None Include="Properties\CatkeysSN.pfx" />
     <None Include="Unused\Form1.cs">
       <SubType>Form</SubType>
     </None>
@@ -153,6 +153,44 @@
     <Content Include="CmdStrips.xml">
       <SubType>Designer</SubType>
     </Content>
+    <None Include="Resources\png icons\active_items.png" />
+    <None Include="Resources\png icons\annotations.png" />
+    <None Include="Resources\png icons\back.png" />
+    <None Include="Resources\png icons\back2.png" />
+    <None Include="Resources\png icons\clone dialog.png" />
+    <None Include="Resources\png icons\compile.png" />
+    <None Include="Resources\png icons\copy.png" />
+    <None Include="Resources\png icons\cut.png" />
+    <None Include="Resources\png icons\deb cursor.png" />
+    <None Include="Resources\png icons\deb end.png" />
+    <None Include="Resources\png icons\deb into.png" />
+    <None Include="Resources\png icons\deb next.png" />
+    <None Include="Resources\png icons\deb out.png" />
+    <None Include="Resources\png icons\deb run.png" />
+    <None Include="Resources\png icons\delete.png" />
+    <None Include="Resources\png icons\dialog.png" />
+    <None Include="Resources\png icons\droparrow.png" />
+    <None Include="Resources\png icons\find.png" />
+    <None Include="Resources\png icons\floating.png" />
+    <None Include="Resources\png icons\help.png" />
+    <None Include="Resources\png icons\icons.png" />
+    <None Include="Resources\png icons\images.png" />
+    <None Include="Resources\png icons\mm.png" />
+    <None Include="Resources\png icons\new.png" />
+    <None Include="Resources\png icons\open.png" />
+    <None Include="Resources\png icons\options.png" />
+    <None Include="Resources\png icons\output.png" />
+    <None Include="Resources\png icons\paste.png" />
+    <None Include="Resources\png icons\properties.png" />
+    <None Include="Resources\png icons\record.png" />
+    <None Include="Resources\png icons\redo.png" />
+    <None Include="Resources\png icons\resources.png" />
+    <None Include="Resources\png icons\run.png" />
+    <None Include="Resources\png icons\save.png" />
+    <None Include="Resources\png icons\tags.png" />
+    <None Include="Resources\png icons\tip.png" />
+    <None Include="Resources\png icons\tip_book.png" />
+    <None Include="Resources\png icons\undo.png" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

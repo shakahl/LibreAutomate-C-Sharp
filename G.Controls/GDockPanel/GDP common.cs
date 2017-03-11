@@ -15,6 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
@@ -56,7 +57,7 @@ namespace G.Controls
 			}
 		}
 
-		enum GDockState
+		internal enum GDockState
 		{
 			//note: don't reorder. Default must be Docked; also saved in XML.
 
@@ -69,8 +70,8 @@ namespace G.Controls
 			//GSplit can be only Docked or Hidden (when both children non-docked), and only in main window (cannot float etc).
 		};
 
-
-		public enum DockSide
+		//used only when docking, not as a state
+		internal enum GDockHow
 		{
 			TabBefore, TabAfter, SplitLeft, SplitRight, SplitAbove, SplitBelow
 		}
@@ -104,9 +105,11 @@ namespace G.Controls
 			internal virtual Control ParentControl { get => _manager; }
 			internal virtual void Paint(Graphics g) { }
 			internal virtual void UpdateLayout(Rectangle r) { }
+			internal void UpdateLayout() { UpdateLayout(this.Bounds); }
 			internal virtual Rectangle RectangleInScreen { get => _manager.RectangleToScreen(this.Bounds); }
 			internal virtual int MinimalWidth { get => 0; }
 			internal virtual int MinimalHeight { get => 0; }
+			internal virtual void Save(XmlWriter x) { }
 		}
 
 		class GDummyNode :GNode
@@ -114,6 +117,12 @@ namespace G.Controls
 			internal GDummyNode(GDockPanel manager, GSplit parentSplit) : base(manager, parentSplit)
 			{
 				this.DockState = GDockState.Hidden;
+			}
+
+			internal override void Save(XmlWriter x)
+			{
+				x.WriteStartElement("dummy");
+				x.WriteEndElement();
 			}
 		}
 
@@ -124,19 +133,15 @@ namespace G.Controls
 		abstract class GContentNode :GNode
 		{
 			internal Rectangle CaptionBounds; //in current parent client area. If GTab, it is whole caption area (includes child panel buttons); else if GTab child panel and there are more visible siblings, only its button; else whole caption area.
-			internal Rectangle SavedDockedBounds; //when floating etc, contains bounds when was docked, to restore when docking again
 			internal Rectangle SavedFloatingBounds; //when docked etc, contains bounds when was floating, to restore when floating again
 			protected Control _parentControl;
 			internal override Control ParentControl { get => _parentControl; } //_manager or a GFloat
 			internal GDockState SavedVisibleDockState; //when hidden, in what state to show
-			internal bool IsVerticalCaption; //whether caption currently is vertical (depends on width/height ratio)
 
 			internal GContentNode(GDockPanel manager, GSplit parentSplit) : base(manager, parentSplit)
 			{
 				_parentControl = manager;
 			}
-
-			internal virtual string Text { get; set; }
 
 			internal bool IsDockedOn(Control parent) { return this.IsDocked && this.ParentControl == parent; }
 
@@ -153,33 +158,36 @@ namespace G.Controls
 				Debug.Assert(!this.IsHidden);
 				this.Bounds = r;
 
+				RECT rCont = r, rCap = rCont;
 				var gt = this as GTab;
 				var gp = this as GPanel;
-				bool noCaption = gp != null && gp.HasDocument;
 				bool isTB = gp != null && gp.HasToolbar;
+				int capThick = isTB ? _splitterWidth * 2 : _manager._CaptionHeight;
+				bool noCaption = gp != null && gp.HasDocument;
 
-				int capWid = 0, capHei = 0, capThick = isTB ? _splitterWidth * 2 : _manager._CaptionHeight;
-				bool vertCap = false;
-				if(!noCaption) {
-					int k = (gp != null) ? gp.PreferredCaptionHorzVert : 0;
-					if(k == 0) vertCap = this.IsVerticalCaption ? (r.Height < r.Width) : (r.Width > r.Height * 2);
-					else if(k == 2) vertCap = true;
-					if(vertCap) capWid = capThick; else capHei = capThick;
+				if(noCaption) {
+					this.CaptionBounds = new Rectangle(r.Left, r.Top, 0, 0);
+				} else {
+					switch(this.CaptionAt) {
+					case GCaptionEdge.Left: rCap.right = (rCont.left += capThick); break;
+					case GCaptionEdge.Top: rCap.bottom = (rCont.top += capThick); break;
+					case GCaptionEdge.Right: rCap.left = (rCont.right -= capThick); break;
+					case GCaptionEdge.Bottom: rCap.top = (rCont.bottom -= capThick); break;
+					}
+					this.CaptionBounds = rCap;
 				}
-				this.IsVerticalCaption = vertCap;
-				var cb = new Rectangle(r.Left + capWid, r.Top + capHei, r.Width - capWid, r.Height - capHei);
 				if(!isTB) {
-					cb.Inflate(-1, -1); //border
-					if(cb.Width < 0) cb.Width = 0;
-					if(cb.Height < 0) cb.Height = 0;
+					//add border around content
+					rCont.Inflate(-1, -1);
+					if(rCont.right < rCont.left) rCont.right = rCont.left;
+					if(rCont.bottom < rCont.top) rCont.bottom = rCont.top;
 				}
-				this.CaptionBounds = new Rectangle(r.Left, r.Top, vertCap ? capWid : r.Width, vertCap ? r.Height : capHei);
 
 				if(gt != null) {
-					gt.UpdateItemsLayout(cb);
+					gt.UpdateItemsLayout(rCont);
 				} else {
-					gp.Content.Bounds = cb;
-					gp.OnSizeChanged(cb.Width, cb.Height);
+					gp.Content.Bounds = rCont;
+					gp.OnSizeChanged(rCont.Width, rCont.Height);
 				}
 
 				this.InvalidateCaption();
@@ -194,7 +202,17 @@ namespace G.Controls
 			internal virtual void InvalidateCaption()
 			{
 				if(this.IsHidden) return;
-				var u = this.CaptionBounds; if(IsVerticalCaption) u.Width++; else u.Height++; //border
+				RECT u = this.CaptionBounds;
+				if(u.IsEmpty) return;
+
+				//include content border
+				switch(this.CaptionAt) {
+				case GCaptionEdge.Left: u.right++; break;
+				case GCaptionEdge.Top: u.bottom++; break;
+				case GCaptionEdge.Right: u.left--; break;
+				case GCaptionEdge.Bottom: u.top--; break;
+				}
+
 				this.ParentControl.Invalidate(u, false);
 			}
 
@@ -222,24 +240,36 @@ namespace G.Controls
 				bool isTab = gt != null;
 				var state = this.DockState;
 				var m = new CatMenu();
+				m.CMS.Text = "Menu";
 
 				//dock state
 				m.Add("Float\tD-click, drag", o => this.SetDockState(GDockState.Floating)).Enabled = state != GDockState.Floating;
 				m.Add("Dock    \tD-click, Alt+drag", o => this.SetDockState(GDockState.Docked)).Enabled = state != GDockState.Docked;
 				//menu.Add("Auto Hide", o => this.SetDockState(GDockState.AutoHide)).Enabled = state != GDockState.AutoHide && !isTab; //not implemented
 				m["Hide\tM-click"] = o => this.SetDockState(GDockState.Hidden);
+
 				m.Separator();
 				using(m.Submenu("Show Panel")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, false);
 				using(m.Submenu("Show Toolbar")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, true);
 
-				//fixed size
-				if(this.IsDockedOn(_manager) && !this.IsTabbedPanel) {
-					m.Separator();
-					var gs = this.ParentSplit;
-					bool fixedWidth = gs.IsChildFixedSize(this, true);
-					m.Add("Fixed Width", o => gs.SetChildFixedSize(this, true, !fixedWidth)).Checked = fixedWidth;
-					bool fixedHeight = gs.IsChildFixedSize(this, false);
-					m.Add("Fixed Height", o => gs.SetChildFixedSize(this, false, !fixedHeight)).Checked = fixedHeight;
+				m.Separator();
+				var k = (!this.IsTabbedPanel || this.IsFloating) ? this : gp.ParentTab;
+				if(this.IsDockedOn(_manager)) {
+					//fixed width/height
+					var gs = k.ParentSplit;
+					//using(m.Submenu("Fixed Size")) {
+					bool fixedWidth = gs.IsChildFixedSize(k, true);
+					m.Add("Fixed Width", o => gs.SetChildFixedSize(k, true, !fixedWidth)).Checked = fixedWidth;
+					bool fixedHeight = gs.IsChildFixedSize(k, false);
+					m.Add("Fixed Height", o => gs.SetChildFixedSize(k, false, !fixedHeight)).Checked = fixedHeight;
+					//}
+				}
+				//caption edge
+				using(m.Submenu("Caption At")) {
+					m["Top"] = o => k._SetCaptionEdge(GCaptionEdge.Top); if(k.CaptionAt == GCaptionEdge.Top) m.LastMenuItem.Checked = true;
+					m["Bottom"] = o => k._SetCaptionEdge(GCaptionEdge.Bottom); if(k.CaptionAt == GCaptionEdge.Bottom) m.LastMenuItem.Checked = true;
+					m["Left"] = o => k._SetCaptionEdge(GCaptionEdge.Left); if(k.CaptionAt == GCaptionEdge.Left) m.LastMenuItem.Checked = true;
+					m["Right"] = o => k._SetCaptionEdge(GCaptionEdge.Right); if(k.CaptionAt == GCaptionEdge.Right) m.LastMenuItem.Checked = true;
 				}
 
 				//test
@@ -325,10 +355,10 @@ namespace G.Controls
 
 				switch(prevState) {
 				case GDockState.Docked:
-					this.SavedDockedBounds = this.Bounds;
-
 					if(gtParent != null) gtParent.OnItemUndocked(gp, out postAction);
 					else this.ParentSplit.OnChildUndocked(this);
+
+					_manager.Invalidate(this.Bounds, true); //some controls don't redraw properly, eg ToolStripTextBox
 					break;
 				case GDockState.Floating:
 					//case GDockState.AutoHide:
@@ -346,8 +376,6 @@ namespace G.Controls
 
 				switch(state) {
 				case GDockState.Docked:
-					this.Bounds = this.SavedDockedBounds;
-
 					if(gtParent != null) gtParent.OnItemDocked(gp);
 					else this.ParentSplit.OnChildDocked(this);
 					break;
@@ -375,7 +403,6 @@ namespace G.Controls
 				//_manager.Invalidate(true);
 
 				if(prevState != GDockState.Hidden) _manager._OnMouseLeave_Common(this.ParentControl); //calls _UnhiliteTabButton and _HideTooltip
-				if(prevState == GDockState.Docked) _manager.Invalidate(this.SavedDockedBounds, true); //some controls don't redraw properly
 			}
 
 			/// <summary>
@@ -385,17 +412,17 @@ namespace G.Controls
 			/// </summary>
 			/// <param name="gcTarget">New sibling GPanel (side can be any) or sibling GTab (when side is SplitX) or parent GTab (when side is TabX).</param>
 			/// <param name="side">Specifies whether to add on a GTab or GSplit, and at which side of gcTarget.</param>
-			internal void DockBy(GContentNode gcTarget, DockSide side)
+			internal void DockBy(GContentNode gcTarget, GDockHow side)
 			{
 				var gpThis = this as GPanel;
 				var gtThisParent = gpThis?.ParentTab;
 				var gsThisParent = this.ParentSplit;
 				var gsTargetParent = gcTarget.ParentSplit;
 
-				if(side == DockSide.TabBefore || side == DockSide.TabAfter) {
+				if(side == GDockHow.TabBefore || side == GDockHow.TabAfter) {
 					var gpTarget = gcTarget as GPanel;
 					GTab gtTargetParent = (gpTarget != null) ? gpTarget.ParentTab : gcTarget as GTab;
-					bool after = side == DockSide.TabAfter;
+					bool after = side == GDockHow.TabAfter;
 					bool sameTargetTab = false;
 
 					if(gtTargetParent != null) {
@@ -405,6 +432,7 @@ namespace G.Controls
 						var gtNew = new GTab(_manager, gsTargetParent, after ? gpTarget : gpThis, after ? gpThis : gpTarget);
 						gsTargetParent.ReplaceChild(gpTarget, gtNew);
 						gtNew.Bounds = gpTarget.Bounds;
+						gtNew.CaptionAt = gpTarget.CaptionAt;
 					}
 
 					if(!sameTargetTab) {
@@ -417,8 +445,8 @@ namespace G.Controls
 					}
 				} else {
 					if(gcTarget.IsTabbedPanel) gcTarget = (gcTarget as GPanel).ParentTab;
-					bool after = side == DockSide.SplitRight || side == DockSide.SplitBelow;
-					bool verticalSplit = side == DockSide.SplitLeft || side == DockSide.SplitRight;
+					bool after = side == GDockHow.SplitRight || side == GDockHow.SplitBelow;
+					bool verticalSplit = side == GDockHow.SplitLeft || side == GDockHow.SplitRight;
 
 					if(gsTargetParent == gsThisParent && gtThisParent == null) {
 						//just change vertical/horizontal or/and swap with sibling
@@ -450,23 +478,86 @@ namespace G.Controls
 				}
 			}
 
-			internal void InitDockStateFromXML(XmlElement x)
+			internal void InitDockStateFromXML(XElement x)
 			{
-				this.DockState = (GDockState)x.Attribute_("state", 0);
-				bool hide = x.HasAttribute("hide"), floating = this.DockState == GDockState.Floating;
+				Enum.TryParse(x.Attribute_("state"), out this.DockState);
+				bool hide = x.HasAttribute_("hide"), floating = this.DockState == GDockState.Floating;
 				if(hide || floating) {
 					this.SavedVisibleDockState = this.DockState;
 					this.DockState = GDockState.Hidden;
-					//if(!hide) {
-					//	EventHandler eh = null;
-					//	eh=(object sender, EventArgs e) =>
-					//	  {
-					//		  _manager.VisibleChanged -= eh;
-					//		  Print(1);
-					//	  };
-					//	_manager.VisibleChanged += eh; 
-					//}
+					switch(this) {
+					case GPanel gp:
+						gp.Content.Visible = false;
+						break;
+					case GTab gt:
+						foreach(var v in gt.Items) v.Content.Visible = false;
+						break;
+					}
+					if(!hide) {
+						PaintEventHandler eh = null;
+						eh = (object sender, PaintEventArgs e) =>
+							{
+								_manager.Paint -= eh;
+								//Print(1);
+								//SetDockState(GDockState.Floating);
+								Time.SetTimer(200, true, tt => SetDockState(GDockState.Floating));
+							};
+						_manager.Paint += eh;
+					}
 				}
+				this.SavedFloatingBounds = _RectFromString(x.Attribute_("rectFloating"));
+				if(!this.IsTabbedPanel || floating) Enum.TryParse(x.Attribute_("captionAt"), out this.CaptionAt);
+			}
+
+			internal void SaveDockStateToXml(XmlWriter x)
+			{
+				switch(this.DockState) {
+				case GDockState.Hidden:
+					x.WriteAttributeString("hide", "");
+					x.WriteAttributeString("state", this.SavedVisibleDockState.ToString());
+					break;
+				case GDockState.Docked:
+					break;
+				default:
+					x.WriteAttributeString("state", this.DockState.ToString());
+					break;
+				}
+
+				var r = (this.DockState == GDockState.Floating) ? this.ParentControl.Bounds : this.SavedFloatingBounds;
+				if(!r.IsEmpty) x.WriteAttributeString("rectFloating", _RectToString(r));
+
+				if(this.CaptionAt != default(GCaptionEdge) && (!this.IsTabbedPanel || this.IsFloating))
+					x.WriteAttributeString("captionAt", this.CaptionAt.ToString());
+			}
+
+			static string _RectToString(Rectangle r)
+			{
+				return $"{r.X} {r.Y} {r.Width} {r.Height}";
+			}
+
+			static Rectangle _RectFromString(string s)
+			{
+				var r = default(Rectangle);
+				if(s != null) {
+					r.X = s.ToInt32_(0, out int i);
+					r.Y = s.ToInt32_(i, out i);
+					r.Width = s.ToInt32_(i, out i);
+					r.Height = s.ToInt32_(i, out i);
+				}
+				return r;
+			}
+
+			internal enum GCaptionEdge { Left, Right, Top, Bottom }
+			internal GCaptionEdge CaptionAt;
+			internal bool IsVerticalCaption { get { return CaptionAt <= GCaptionEdge.Right; } }
+
+			void _SetCaptionEdge(GCaptionEdge edge)
+			{
+				CaptionAt = edge;
+				this.UpdateLayout();
+				this.Invalidate();
+				//make sure that floating panel caption is in screen, else cannot move it until restarting this app
+				if(this.ParentControl is GFloat gf) ((Wnd)gf).EnsureInScreen();
 			}
 		}
 	}

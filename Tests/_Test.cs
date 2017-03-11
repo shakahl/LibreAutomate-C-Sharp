@@ -14,6 +14,9 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 
@@ -25,18 +28,15 @@ using static Catkeys.NoClass;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
 
-using static Catkeys.Automation.NoClass;
 using Catkeys.Triggers;
 
 
-//using Cat = Catkeys.Automation.Input;
+//using Cat = Catkeys.Input;
 //using Meow = Catkeys.Show;
 
 //using static Catkeys.Show;
 
 using System.Xml.Serialization;
-
-using System.Xml;
 using System.Xml.Schema;
 
 using Microsoft.VisualBasic.FileIO;
@@ -71,14 +71,14 @@ static partial class Test
 	[STAThread]
 	static void Main()
 	{
-		//Application.EnableVisualStyles();
-		//Application.SetCompatibleTextRenderingDefault(false);
+		Application.EnableVisualStyles();
+		Application.SetCompatibleTextRenderingDefault(false);
 		//Perf.Next();
 		//Perf.Write();
 
-		//#if true
-		//		TestMain();
-		//#elif true
+#if true
+		TestMain();
+#elif true
 		var d = AppDomain.CreateDomain("AppDomain");
 		TestAppDomainDoCallback(d);
 		TestAppDomainUnload(d);
@@ -93,7 +93,7 @@ static partial class Test
 		//		}).Start();
 
 		//		TestAppDomainDoCallback(d);
-		//#endif
+#endif
 
 		//for(int i = 0; i < 1; i++) {
 		//	var t = new Thread(() =>
@@ -6613,6 +6613,441 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	}
 
+	public static int LoadFromImage_(this ImageList t, Image pngImage)
+	{
+		t.ColorDepth = ColorDepth.Depth32Bit;
+		int k = pngImage.Height; t.ImageSize = new Size(k, k); //AddStrip throws exception if does not match
+		int R = t.Images.AddStrip(pngImage);
+		var h = t.Handle; //workaround for the lazy ImageList behavior that causes exception later because the Image is disposed when actually used
+		return R;
+	}
+
+	//class ImageFromStrip
+	//{
+	//	Graphics _g, _g2;
+
+	//	public ImageFromStrip(Bitmap b)
+	//	{
+	//		_g = Graphics.FromImage(b);
+	//		int h = b.Height;
+	//		var b2 = new Bitmap(h, h);
+	//		_g2 = Graphics.FromImage(b2);
+	//		b2.LockBits
+	//	}
+
+	//	Image GetImage(int i)
+	//	{
+	//		_g2.DrawImageUnscaled()
+	//	}
+	//}
+
+	static void TestImagelistSpeed()
+	{
+		var f = new Form();
+		f.Width = 1000;
+		f.Click += (unu, sed) =>
+		  {
+			  var file = @"Q:\app\Catkeys\Editor\Resources\il_tb_24.png";
+			  Perf.First();
+			  var img = (Bitmap)Image.FromFile(file);
+			  int size = img.Height;
+			  Perf.Next();
+			  var a = new Image[40];
+#if true
+			  ImageList il = new ImageList();
+			  il.LoadFromImage_(img);
+			  Perf.Next();
+#endif
+			  for(int i = 0; i < 40; i++) {
+				  int x = i * size;
+				  //a[i] = il.Images[i];
+				  //a[i] = Icons.HandleToImage(Api.ImageList_GetIcon(il.Handle, i, 0));
+				  a[i] = img.Clone(new Rectangle(x, 0, size, size), System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			  }
+			  Perf.Next();
+			  using(var g = f.CreateGraphics()) {
+				  g.Clear(Color.White);
+				  Perf.Next();
+				  for(int i = 0; i < 40; i++) {
+					  int x = i * size;
+					  //il.Draw(g, x, 0, i);
+					  g.DrawImage(a[i], x, 0);
+				  }
+				  Perf.NW();
+			  }
+		  };
+		f.ShowDialog();
+	}
+
+	static void TestImagelistSpeed2()
+	{
+		var f = new Form();
+		f.Width = 1000;
+		f.Click += (unu, sed) =>
+		  {
+			  var files = new string[]
+			  {
+@"Q:\app\Catkeys\Editor\Resources\TB\WriteBackPartition.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XMLDocumentTypeDefinitionFile.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XMLFile.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XMLSchema.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XMLTransformation.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XnaLogo.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XPath.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XSLTTemplate.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\XSLTTransformFile.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\ZoomIn.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\VSDatasetInternalInfoFile.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\VSShell.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\VSTAAbout.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\VSThemeEditor.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\Watch.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WCF.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WCFDataService.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WeakHierarchy.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\Web.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebAdmin.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebConfiguration.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebConsole.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebCustomControl.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebCustomControlASCX.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebMethodAction.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebPart.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebPhone.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebService.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebSetupProject.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebTest.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WebUserControl.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WeightMember.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WeightMemberFormula.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WF.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WFC.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WFService.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WindowsForm.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WindowsLogo_Cyan.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WindowsService.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WindowsServiceStop.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WindowsServiceWarning.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WinformToolboxControl.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WMIConnection.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WorkAsSomeoneElse.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WorkflowAssociationForm.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WorkflowInitiationForm.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WorkItemQuery.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFApplication.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFCustomControl.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFDesigner.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFFlowDocument.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFLibrary.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFPage.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFPage_gray.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFPageFunction.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFResourceDictionary.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFToolboxControl.png",
+@"Q:\app\Catkeys\Editor\Resources\TB\WPFUserControl.png"
+			  };
+
+			  Perf.First();
+			  int size = 24;
+			  var a = new Image[40];
+			  for(int i = 0; i < 40; i++) {
+				  a[i] = Image.FromFile(files[i]);
+			  }
+			  Perf.Next();
+			  using(var g = f.CreateGraphics()) {
+				  g.Clear(Color.White);
+				  Perf.Next();
+				  for(int i = 0; i < 40; i++) {
+					  int x = i * size;
+					  g.DrawImage(a[i], x, 0);
+				  }
+				  Perf.NW();
+			  }
+		  };
+		f.ShowDialog();
+	}
+
+	static void TestImagelistSpeed3()
+	{
+		var f = new Form();
+		f.Width = 1000;
+		f.Click += (unu, sed) =>
+		  {
+			  var files = new string[]
+			  {
+@"WriteBackPartition",
+@"XMLDocumentTypeDefinitionFile",
+@"XMLFile",
+@"XMLSchema",
+@"XMLTransformation",
+@"XnaLogo",
+@"XPath",
+@"XSLTTemplate",
+@"XSLTTransformFile",
+@"ZoomIn",
+@"VSDatasetInternalInfoFile",
+@"VSShell",
+@"VSTAAbout",
+@"VSThemeEditor",
+@"Watch",
+@"WCF",
+@"WCFDataService",
+@"WeakHierarchy",
+@"Web",
+@"WebAdmin",
+@"WebConfiguration",
+@"WebConsole",
+@"WebCustomControl",
+@"WebCustomControlASCX",
+@"WebMethodAction",
+@"WebPart",
+@"WebPhone",
+@"WebService",
+@"WebSetupProject",
+@"WebTest",
+@"WebUserControl",
+@"WeightMember",
+@"WeightMemberFormula",
+@"WF",
+@"WFC",
+@"WFService",
+@"WindowsForm",
+@"WindowsLogo_Cyan",
+@"WindowsService",
+@"WindowsServiceStop",
+@"WindowsServiceWarning",
+@"WinformToolboxControl",
+@"WMIConnection",
+@"WorkAsSomeoneElse",
+@"WorkflowAssociationForm",
+@"WorkflowInitiationForm",
+@"WorkItemQuery",
+@"WPFApplication",
+@"WPFCustomControl",
+@"WPFDesigner",
+@"WPFFlowDocument",
+@"WPFLibrary",
+@"WPFPage",
+@"WPFPage_gray",
+@"WPFPageFunction",
+@"WPFResourceDictionary",
+@"WPFToolboxControl",
+@"WPFUserControl"
+			  };
+
+			  Perf.First();
+			  //var resMan = new System.Resources.ResourceManager("Resources.Images", Assembly.GetExecutingAssembly());
+			  var resMan = Tests.Properties.Resources.ResourceManager;
+			  Perf.Next();
+			  int size = 24;
+			  var a = new Image[40];
+			  for(int i = 0; i < 40; i++) {
+				  a[i] = (Image)resMan.GetObject(files[i]);
+				  if(i < 2) Perf.Next();
+			  }
+			  Perf.Next();
+			  using(var g = f.CreateGraphics()) {
+				  g.Clear(Color.White);
+				  Perf.Next();
+				  for(int i = 0; i < 40; i++) {
+					  int x = i * size;
+					  g.DrawImage(a[i], x, 0);
+				  }
+				  Perf.NW();
+			  }
+		  };
+		f.ShowDialog();
+	}
+
+	static void TestCreateManyPngFromIcons()
+	{
+		var a = new string[]
+			{
+@"Q:\app\new.ico",
+@"Q:\app\properties.ico",
+@"Q:\app\save.ico",
+@"Q:\app\icons\run.ico",
+@"Q:\app\icons\compile.ico",
+@"Q:\app\deb next.ico",
+@"Q:\app\icons\deb into.ico",
+@"Q:\app\icons\deb out.ico",
+@"Q:\app\deb cursor.ico",
+@"Q:\app\deb run.ico",
+@"Q:\app\deb end.ico",
+@"Q:\app\undo.ico",
+@"Q:\app\redo.ico",
+@"Q:\app\cut.ico",
+@"Q:\app\copy.ico",
+@"Q:\app\paste.ico",
+@"Q:\app\icons\back.ico",
+@"Q:\app\icons\active_items.ico",
+@"Q:\app\icons\images.ico",
+@"Q:\app\icons\annotations.ico",
+@"Q:\app\help.ico",
+@"Q:\app\droparrow.ico",
+@"Q:\app\icons\record.ico",
+@"Q:\app\find.ico",
+@"Q:\app\icons\mm.ico",
+@"Q:\app\icons\tags.ico",
+@"Q:\app\icons\resources.ico",
+@"Q:\app\icons\icons.ico",
+@"Q:\app\options.ico",
+@"Q:\app\icons\output.ico",
+@"Q:\app\tip.ico",
+@"Q:\app\icons\tip_book.ico",
+@"Q:\app\delete.ico",
+@"Q:\app\icons\back2.ico",
+@"Q:\app\open.ico",
+@"Q:\app\icons\floating.ico",
+@"Q:\app\icons\clone dialog.ico",
+@"Q:\app\dialog.ico",
+		   };
+
+		var destDir = @"Q:\app\Catkeys\Editor\Resources\png icons";
+		Directory.CreateDirectory(destDir);
+		foreach(var s in a) {
+			using(var im = Icons.GetFileIconImage(s, 16)) {
+				var dest = destDir + "\\" + Path.GetFileNameWithoutExtension(s) + ".png";
+				//Print(dest);
+				File.Delete(dest);
+				im.Save(dest);
+			}
+		}
+	}
+
+	static void TestResizePngIconBigger()
+	{
+		var f = new Form();
+		f.BackColor = Color.White;
+
+		var img = Image.FromFile(@"Q:\Downloads\famfamfam_silk_icons_v013\icons\application_edit.png");
+		var t = new ToolStrip();
+		t.Items.Add(img);
+		t.ImageScalingSize = new Size(32, 32);
+
+		f.Controls.Add(t);
+
+		f.ShowDialog();
+	}
+
+	static string g_name = "Output";
+	static void TestXDocument()
+	{
+		Perf.First();
+		var x = XElement.Load(@"Q:\app\catkeys\editor\Panels.xml");
+		Perf.Next();
+		//var n =x.Elements().Count();
+		var v1 = x.Descendants("panel").FirstOrDefault(el => el.Attribute("name")?.Value == "Output");
+		var v2 = x.XPathSelectElement("//panel[@name=\"" + g_name + "\"]");
+		Perf.NW();
+		//Print(v2);
+		Print(x.Descendant_("panel", "name"));
+		Print(x.Descendant_("panel", "name", "Find"));
+
+		var a1 = new Action(() => { v1 = x.Descendants("panel").FirstOrDefault(el => el.Attribute("name")?.Value == "Output"); });
+		var a2 = new Action(() => { v2 = x.XPathSelectElement("//panel[@name=\"" + g_name + "\"]"); });
+		var a3 = new Action(() => { });
+		var a4 = new Action(() => { });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+	}
+
+	static void TestMenuStripShortcuts()
+	{
+		var f = new FormMenu();
+		//var ms = new MenuStrip();
+		//var dd = new ToolStripDropDownMenu();
+		//var k=dd.Items.Add("Test", null, (unu, sed) => Print("test")) as ToolStripMenuItem;
+		//var ddi = new ToolStripMenuItem("File");
+		//ddi.DropDown = dd;
+		//ms.Items.Add(ddi);
+
+		//k.ShortcutKeys = Keys.Control | Keys.Z;
+
+		//f.Controls.Add(ms);
+		//f.MainMenuStrip = ms;
+
+
+
+
+		Application.Run(f);
+	}
+
+	static void TestKeysFromString()
+	{
+		Keys k;
+		string s;
+		s = " Ctrl + Shift + Left ";
+		//s = "ctrl+shift+left";
+		s = "Ctrl+Shift+Left";
+		s = "A";
+		s = "F12";
+		s = ",";
+		s = "5";
+		s = "z";
+		s = "Sleep";
+		s = "Ctrl+Alt+Shift+Space";
+		s = "  Ctrl  +  D  ";
+		s = "Ctrl+Alt+Left";
+		s = "End";
+		s = "Win+R";
+		s = "Ctrl+D";
+		s = "5";
+
+		//s = "K+D";
+		//s = " C trl + F 2 ";
+		//s = "Ctrl+Alt";
+		//s = "Ctrl";
+		//s = "Ctrl+A+K";
+		//s = "A+Ctrl";
+		//s = "+A";
+		//s = "A+";
+		//s = "Ctrl++D";
+
+		Perf.First();
+		if(!Input.Misc.ReadHotkeyString(s, out k)) { Print("failed"); return; }
+		Perf.NW();
+		PrintHex(k);
+		Print(k);
+		//return;
+		Sleep(100);
+
+		var a1 = new Action(() => { Input.Misc.ReadHotkeyString(s, out k); });
+		var a2 = new Action(() => { Input.Misc.ReadHotkeyString(" Ctrl+F ", out k); });
+		var a3 = new Action(() => { Input.Misc.ReadHotkeyString(" Ctrl + F ", out k); });
+		var a4 = new Action(() => { Input.Misc.ReadHotkeyString("", out k); });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+
+		//var w = Wnd.Find("* Notepad");
+		//w.Activate();
+		//w = w.ChildById(15);
+
+		//w.Post(Api.WM_KEYDOWN, (int)Keys.OemCloseBrackets);
+
+		//PrintHex(Keys.Alt);
+
+		//Perf.First();
+		//var a =Input.Misc._CreateKeyMap();
+		////Perf.NW();
+
+		//////Print(a);
+		////Print(a.Count);
+
+		//Perf.First();
+		//var k = a["Tab"];
+		//Perf.NW();
+
+		//var a1 = new Action(() => { k = a["Ctrl"]; });
+		//var a2 = new Action(() => { k = a["Tab"]; });
+		//var a3 = new Action(() => { k = a["VolumeUp"]; });
+		//var a4 = new Action(() => { k = a[";"]; });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+
+		//Print(k);
+	}
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -6621,6 +7056,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 
 		try {
+			TestKeysFromString();
+			//TestMenuStripShortcuts();
+			//TestXDocument();
+			//TestResizePngIconBigger();
+			//TestCreateManyPngFromIcons();
+			//TestImagelistSpeed3();
 			//TestRegistry();
 			//MessageBox.Show("ff");
 			//TestTaskDialogAsyncAwait();

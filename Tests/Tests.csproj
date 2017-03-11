@@ -96,6 +96,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormMenu.Designer.cs">
+      <DependentUpon>FormMenu.cs</DependentUpon>
+    </Compile>
     <Compile Include="_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Test menu, TB.cs" />
@@ -103,6 +109,9 @@
     <Compile Include="TestString.cs" />
     <None Include="packages.config" />
     <None Include="unused\TestWPF.cs" />
+    <EmbeddedResource Include="FormMenu.resx">
+      <DependentUpon>FormMenu.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -140,6 +149,64 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\qm.ico" />
+    <None Include="Resources\VSDatasetInternalInfoFile.png" />
+    <None Include="Resources\VSShell.png" />
+    <None Include="Resources\VSTAAbout.png" />
+    <None Include="Resources\VSThemeEditor.png" />
+    <None Include="Resources\Watch.png" />
+    <None Include="Resources\WCF.png" />
+    <None Include="Resources\WCFDataService.png" />
+    <None Include="Resources\WeakHierarchy.png" />
+    <None Include="Resources\Web.png" />
+    <None Include="Resources\WebAdmin.png" />
+    <None Include="Resources\WebConfiguration.png" />
+    <None Include="Resources\WebConsole.png" />
+    <None Include="Resources\WebCustomControl.png" />
+    <None Include="Resources\WebCustomControlASCX.png" />
+    <None Include="Resources\WebMethodAction.png" />
+    <None Include="Resources\WebPart.png" />
+    <None Include="Resources\WebPhone.png" />
+    <None Include="Resources\WebService.png" />
+    <None Include="Resources\WebSetupProject.png" />
+    <None Include="Resources\WebTest.png" />
+    <None Include="Resources\WebUserControl.png" />
+    <None Include="Resources\WeightMember.png" />
+    <None Include="Resources\WeightMemberFormula.png" />
+    <None Include="Resources\WF.png" />
+    <None Include="Resources\WFC.png" />
+    <None Include="Resources\WFService.png" />
+    <None Include="Resources\WindowsForm.png" />
+    <None Include="Resources\WindowsLogo_Cyan.png" />
+    <None Include="Resources\WindowsService.png" />
+    <None Include="Resources\WindowsServiceStop.png" />
+    <None Include="Resources\WindowsServiceWarning.png" />
+    <None Include="Resources\WinformToolboxControl.png" />
+    <None Include="Resources\WMIConnection.png" />
+    <None Include="Resources\WorkAsSomeoneElse.png" />
+    <None Include="Resources\WorkflowAssociationForm.png" />
+    <None Include="Resources\WorkflowInitiationForm.png" />
+    <None Include="Resources\WorkItemQuery.png" />
+    <None Include="Resources\WPFApplication.png" />
+    <None Include="Resources\WPFCustomControl.png" />
+    <None Include="Resources\WPFDesigner.png" />
+    <None Include="Resources\WPFFlowDocument.png" />
+    <None Include="Resources\WPFLibrary.png" />
+    <None Include="Resources\WPFPage.png" />
+    <None Include="Resources\WPFPage_gray.png" />
+    <None Include="Resources\WPFPageFunction.png" />
+    <None Include="Resources\WPFResourceDictionary.png" />
+    <None Include="Resources\WPFToolboxControl.png" />
+    <None Include="Resources\WPFUserControl.png" />
+    <None Include="Resources\WriteBackPartition.png" />
+    <None Include="Resources\XMLDocumentTypeDefinitionFile.png" />
+    <None Include="Resources\XMLFile.png" />
+    <None Include="Resources\XMLSchema.png" />
+    <None Include="Resources\XMLTransformation.png" />
+    <None Include="Resources\XnaLogo.png" />
+    <None Include="Resources\XPath.png" />
+    <None Include="Resources\XSLTTemplate.png" />
+    <None Include="Resources\XSLTTransformFile.png" />
+    <None Include="Resources\ZoomIn.png" />
     <Content Include="unused\_TestOld.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

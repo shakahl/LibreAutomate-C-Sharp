@@ -21,12 +21,11 @@ using static Catkeys.NoClass;
 
 #pragma warning disable 1591 //XML doc. //TODO
 
-namespace Catkeys.Automation
+namespace Catkeys
 {
-	public static class Input
+	public static partial class Input
 	{
-		//VS 2015 bug: EditorBrowsableAttribute does not work. I tried to hide Equals and ReferenceEquals in intellisense lists. Note: in Options is checked 'Hide advanced members'.
-
+		//EditorBrowsableAttribute does not work for Equals and ReferenceEquals in intellisense lists, although correct Options are used.
 		//[EditorBrowsable(EditorBrowsableState.Never)]
 		////[EditorBrowsable(EditorBrowsableState.Advanced)]
 		//static new bool Equals(object a, object b) { return false; }
@@ -39,9 +38,30 @@ namespace Catkeys.Automation
 		//////[EditorBrowsable(EditorBrowsableState.Advanced)]
 		////public override bool Equals(object a) { return false; }
 
+		/// <summary>
+		/// Gets current text cursor (caret) rectangle in screen coordinates.
+		/// Returns the control that contains it.
+		/// If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns Wnd0.
+		/// </summary>
+		public static Wnd GetTextCursorRect(out RECT r)
+		{
+			if(Wnd.Misc.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
+				if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
+				r = g.rcCaret;
+				g.hwndCaret.MapClientToScreen(ref r);
+				return g.hwndCaret;
+			}
+
+			Api.GetCursorPos(out var p);
+			r = new RECT(p.x, p.y, 0, 16, true);
+			return Wnd0;
+
+			//note: in Word, after changing caret pos, gets pos 0 0. After 0.5 s gets correct. After typing always correct.
+			//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.
+		}
 
 
-		public static void Keys(params string[] keys_text_keys_text_andSoOn)
+		public static void Key(params string[] keys_text_keys_text_andSoOn)
 		{
 			var keys = keys_text_keys_text_andSoOn;
 			if(keys == null) return;

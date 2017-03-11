@@ -1,49 +1,48 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<panels>
-	<split w1='20' splitter='1'>
+﻿<panels>
+	<split hor="" w1="20" splitter="1">
 		<!--toolbars-->
-		<split w1='10' splitter='1'>
+		<split hor="" w1="10" splitter="1">
 			<!--row1-->
-			<split vert='' f='0.4'>
-				<panel name='Menu'/>
-				<split vert='' f='0.5'>
-					<panel name='Help'/>
-					<split vert='' f='0.99'>
-						<panel name='Tools'/>
-						<panel name='Custom1'/>
+			<split f="0.4">
+				<panel name="Menu" />
+				<split f="0.5">
+					<panel name="Help" />
+					<split f="0.99">
+						<panel name="Tools" />
+						<panel name="Custom1" />
 					</split>
 				</split>
 			</split>
 			<!--row2-->
-			<split vert='' w1='200'>
-				<panel name='File'/>
-				<split vert='' w1='120'>
-					<panel name='Run'/>
-					<split vert='' w1='300'>
-						<panel name='Edit'/>
-						<panel name='Custom2'/>
+			<split w1="200">
+				<panel name="File" />
+				<split w1="120">
+					<panel name="Run" />
+					<split w1="300">
+						<panel name="Edit" />
+						<panel name="Custom2" />
 					</split>
 				</split>
 			</split>
 		</split>
 		<!--panels-->
-		<split vert='' w1='200'>
-			<panel name='Files' tooltip='All scripts and other files of current collection'/>
-			<split w2='150'>
-				<split vert='' w2='130'>
-					<panel name='Code' doc=''/>
-					<split f='0.5'>
-						<panel name='Open' image='34' tooltip='Currently open files'/>
-						<tab>
-							<panel name='Running' tooltip='Running scripts'/>
-							<panel name='Recent' tooltip='Recently started scripts'/>
+		<split w1="200">
+			<panel name="Files" captionAt="Top" />
+			<split hor="" w2="150">
+				<split w2="130">
+					<panel name="Code" doc="" />
+					<split hor="" f="0.5">
+						<panel name="Open" captionAt="Top" />
+						<tab captionAt="Top">
+							<panel name="Running" />
+							<panel name="Recent" />
 						</tab>
 					</split>
 				</split>
 				<tab>
-					<panel name='Output' image='29' tooltip='Errors and other information'/>
-					<panel name='Find' image='23' tooltip='Find files, text, triggers'/>
-					<panel name='Results' image='15' tooltip='New panel'/>
+					<panel name="Output" />
+					<panel name="Find" />
+					<panel name="Results" />
 				</tab>
 			</split>
 		</split>

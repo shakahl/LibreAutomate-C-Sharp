@@ -281,7 +281,7 @@ namespace Catkeys
 			FlagEndThread = 0 != (flags & TDFlags.EndThread);
 			if(0 != (flags & TDFlags.Topmost)) FlagTopmost = true; //else use Options.TopmostIfNoOwnerWindow if no owner
 			FlagXCancel = 0 != (flags & TDFlags.XCancel);
-			if(0 != (flags & TDFlags.Wider)) Width = 500;
+			if(0 != (flags & TDFlags.Wider)) Width = 600;
 			//FlagKeyboardShortcutsVisible=0 != (flags&TDFlags.KeyboardShortcutsVisible);
 
 			SetText(text1, text2);
@@ -700,8 +700,9 @@ namespace Catkeys
 		/// The actual width will depend on DPI (the Windows "text size" setting).
 		/// If less than default width, will be used default width.
 		/// </summary>
+		/// <seealso cref="TDFlags.Wider"/>
 		public int Width { set { _c.cxWidth = value / 2; } }
-		//tested: TDIF_SIZE_TO_CONTENT can make wider, but not much. The flag is obsolete.
+		//tested: the obsolete flag TDIF_SIZE_TO_CONTENT can make wider, but not much.
 
 		/// <summary>
 		/// Sets owner window.
@@ -716,7 +717,7 @@ namespace Catkeys
 		{
 			Wnd w = Wnd0;
 			switch(owner.type) {
-			case 1: w = (Wnd)owner.v1?.Handle; break;
+			case 1: if(owner.v1 != null) w = (Wnd)owner.v1.Handle; break;
 			case 2: w = owner.v2; break;
 			}
 
@@ -1636,7 +1637,7 @@ namespace Catkeys
 		Topmost = 32,
 
 		/// <summary>
-		/// Set <see cref="TaskDialog.Width"/> = 500.
+		/// Set <see cref="TaskDialog.Width"/> = 600.
 		/// </summary>
 		Wider = 64,
 
@@ -1846,9 +1847,9 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowWarning(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static void ShowWarning(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null, string expandedText = null)
 		{
-			Show(text1, text2, null, TDIcon.Warning, flags, owner);
+			ShowEx(text1, text2, null, TDIcon.Warning, flags, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1856,9 +1857,9 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowError(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static void ShowError(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null, string expandedText = null)
 		{
-			Show(text1, text2, null, TDIcon.Error, flags, owner);
+			ShowEx(text1, text2, null, TDIcon.Error, flags, owner, expandedText);
 		}
 
 		/// <summary>

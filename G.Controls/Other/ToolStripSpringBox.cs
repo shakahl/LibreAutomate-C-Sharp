@@ -86,7 +86,7 @@ namespace G.Controls
 		internal static void SetDefaultProperties(ToolStripControlHost c)
 		{
 			c.ControlAlign = ContentAlignment.TopLeft; //prevents jumping TextBox up-down when resizing
-			c.Margin = new Padding(0, 1, 0, 0);
+			c.Margin = new Padding(0, 2, 0, 0);
 
 			//The default heigth is too big. When high DPI, makes toolstrip higher.
 			//Easiest is to change font, because the default Segoe UI 9 font has too many space above.

@@ -14,7 +14,8 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
+using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
@@ -33,11 +34,15 @@ namespace G.Controls
 		ToolTip _toolTip; //tooltip for panel captions and tab buttons
 		string _xmlFile; //used to save panel layout later
 		Dictionary<string, Control> _initControls; //used to find controls specified in XML. Temporary, just for GPanel ctors called by Create().
-		ImageList _imageList; //for panel icons, to display in small tab buttons, menus, etc. Caller-passed, we don't dispose it.
 		const int _splitterWidth = 4; //default splitter width. Also used for toolbar caption width.
 
 		protected override void Dispose(bool disposing)
 		{
+			if(_xmlFile != null) {
+				_SaveLayout();
+				_xmlFile = null;
+			}
+
 			//PrintList(disposing, IsHandleCreated);
 			base.Dispose(disposing);
 			_paintTools?.Dispose(); _paintTools = null;
@@ -51,9 +56,8 @@ namespace G.Controls
 		/// Adjusts control properties and positions everything according to the XML.
 		/// </summary>
 		/// <param name="xmlFile">XML file containing panel/toolbar layout. Used to load and save. If missing, will load Folders.ThisApp + Path.GetFileName(xmlFile) and save to xmlFile.</param>
-		/// <param name="imageList">ImageList containing panel icons that are displayed when tabbed panel button is too small to display text.</param>
 		/// <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
-		public void Create(string xmlFile, ImageList imageList, params Control[] controls)
+		public void Create(string xmlFile, params Control[] controls)
 		{
 			_initControls = new Dictionary<string, Control>();
 			foreach(var c in controls) {
@@ -61,7 +65,6 @@ namespace G.Controls
 				c.Anchor = AnchorStyles.Top | AnchorStyles.Left;
 				_initControls.Add(c.Name, c);
 			}
-			_imageList = imageList;
 
 			_aSplit = new List<GSplit>();
 			_aTab = new List<GTab>();
@@ -101,11 +104,9 @@ namespace G.Controls
 				}
 
 				try {
-					var xml = new XmlDocument();
-					xml.Load(xmlFile);
-					var x = xml.DocumentElement;
+					var x = XElement.Load(xmlFile);
 					if(!usesDefaultXML) xmlVersion = x.Attribute_("version");
-					x = x.SelectSingleNode("split") as XmlElement;
+					x = x.Element("split");
 
 					//THIS DOES THE MAIN JOB
 					_firstSplit = new GSplit(this, null, x);
@@ -123,6 +124,7 @@ namespace G.Controls
 				catch(Exception e) {
 					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\tError: {e.Message} ({e.GetType()})";
 					if(usesDefaultXML) {
+						_xmlFile = null;
 						TaskDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.", owner: this.ParentForm);
 						Environment.Exit(1);
 					} else {
@@ -140,24 +142,52 @@ namespace G.Controls
 
 		void _GetPanelXmlFromDefaultFile(string defFile)
 		{
-			var xml = new XmlDocument();
-			xml.Load(defFile);
+			var xml = XElement.Load(defFile);
 
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;
-				var x = xml.SelectSingleNode($"//panel[@name=\"{c.Name}\"]") as XmlElement;
+				var x = xml.Descendant_("panel", "name", c.Name);
 				var gp = new GPanel(this, null, x) {
 					DockState = GDockState.Hidden,
 					SavedVisibleDockState = GDockState.Floating
 				};
 				c.Visible = false;
-				Print($"Info: new {(gp.HasToolbar ? "toolbar" : "panel")} '{gp.Text}' added in this aplication version. Right click a panel title bar to show it.");
+				Print($"Info: new {(gp.HasToolbar ? "toolbar" : "panel")} '{gp.Text}' added in this aplication version. Currently it is hidden.");
 			}
 		}
 
 		void _SaveLayout()
 		{
-
+			try {
+				if(ResetLayoutAfterRestart) {
+					File.Delete(_xmlFile);
+					return;
+				}
+				var sett = new XmlWriterSettings() {
+					OmitXmlDeclaration = true,
+					Indent = true,
+					IndentChars = "\t"
+				};
+				using(var x = XmlWriter.Create(_xmlFile, sett)) {
+					x.WriteStartDocument();
+					x.WriteStartElement("panels");
+					_firstSplit.Save(x);
+					x.WriteEndDocument();
+					x.Close();
+				}
+				//#if DEBUG
+				//			Print(File.ReadAllText(_xmlFile));
+				//			//File.Delete(_xmlFile);
+				//			File.Delete(_xmlFile + ".xml");
+				//			File.Move(_xmlFile, _xmlFile + ".xml");
+				//#endif
+			}
+			catch {
+				//Print(e);
+				//these don't work, maybe because now is closing app. Never mind, unlikely to fail, and not very important.
+				//TaskDialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, TDFlags.Wider, expandedText: e.ToString());
+				//MessageBox.Show("aaaa");
+			}
 		}
 
 		int _CaptionHeight
@@ -427,78 +457,55 @@ namespace G.Controls
 		#region public
 
 		/// <summary>
-		/// Gets control by name.
+		/// Gets control's host panel interface.
 		/// Returns null if not found.
 		/// </summary>
-		public Control FindPanel(string name)
+		public IPanel GetPanel(Control c)
 		{
-			return _FindPanel(name)?.Content;
+			return _FindPanel(c);
 		}
 
 		/// <summary>
-		/// Hides the panel, but does not close.
+		/// Gets panel interface by name.
+		/// Returns null if not found.
 		/// </summary>
-		public void HidePanel(Control control) { _FindPanel(control).Hide(); }
-		/// <summary>
-		/// Hides the panel, but does not close.
-		/// </summary>
-		public void HidePanel(string name) { _FindPanel(name).Hide(); }
-
-		/// <summary>
-		/// Shows the panel in the most recent state (docked or floating) and activates tabbed panel if need.
-		/// </summary>
-		public void ShowPanel(Control control) { _FindPanel(control).Show(); }
-		/// <summary>
-		/// Shows the panel in the most recent state (docked or floating) and activates tabbed panel if need.
-		/// </summary>
-		public void ShowPanel(string name) { _FindPanel(name).Show(); }
-
-		/// <summary>
-		/// Returns true if the panel is visible (docked or floating).
-		/// </summary>
-		/// <param name="control"></param>
-		/// <param name="andContentVisible">And isn't an inactive tab.</param>
-		public bool IsPanelVisible(Control control, bool andContentVisible) { return _FindPanel(control).IsReallyVisible(andContentVisible); }
-		/// <summary>
-		/// Returns true if the panel is visible (docked or floating).
-		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="andContentVisible">And isn't an inactive tab.</param>
-		public bool IsPanelVisible(string name, bool andContentVisible) { return _FindPanel(name).IsReallyVisible(andContentVisible); }
-
-		/// <summary>
-		/// Changes panel caption (or tab button) text.
-		/// </summary>
-		public void SetPanelText(Control control, string text) { _FindPanel(control).Text = text; }
-		/// <summary>
-		/// Changes panel caption (or tab button) text.
-		/// </summary>
-		public void SetPanelText(string name, string text) { _FindPanel(name).Text = text; }
-
-		/// <summary>
-		/// Changes panel tooltip text.
-		/// </summary>
-		public void SetPanelToolTipText(Control control, string text) { _FindPanel(control).ToolTipText = text; }
-		/// <summary>
-		/// Changes panel tooltip text.
-		/// </summary>
-		public void SetPanelToolTipText(string name, string text) { _FindPanel(name).ToolTipText = text; }
+		/// <param name="name">Panel name, which is its control's Name property.</param>
+		public IPanel GetPanel(string name)
+		{
+			return _FindPanel(name);
+		}
 
 		/// <summary>
 		/// Adds menu items for all panels or toolbars, except the doc panel, to a menu.
 		/// On menu item click will show that panel.
 		/// </summary>
-		public void AddShowPanelsToMenu(ToolStripDropDown m, bool toolbars)
+		public void AddShowPanelsToMenu(ToolStripDropDown m, bool toolbars, bool clear = false)
 		{
+			m.SuspendLayout();
+			if(clear) m.Items.Clear();
+
 			var a = _aPanel.FindAll(v => !v.HasDocument && (toolbars == v.HasToolbar));
 			a.Sort((v1, v2) => v1.Name.CompareTo(v2.Name));
 			foreach(var v in a) {
 				var s = v.Text;
-				if(v.IsHidden) s += "  (hidden)";
-				Image img = (v.ImageIndex < 0) ? null : _imageList.Images[v.ImageIndex];
-				m.Items.Add(s, img, (unu, sed) => v.SetDockState(GDockState.LastVisible));
+				if(!v.Visible) s += "  (hidden)";
+				m.Items.Add(s, v.Image, (unu, sed) => v.SetDockState(GDockState.LastVisible));
 			}
+			//add Reset...
+			m.Items.Add(new ToolStripSeparator());
+			(m.Items.Add("Reset...", null, (unu, sed) =>
+			{
+				if(ResetLayoutAfterRestart) ResetLayoutAfterRestart = false;
+				else ResetLayoutAfterRestart = TaskDialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
+			}) as ToolStripMenuItem).Checked = ResetLayoutAfterRestart;
+
+			m.ResumeLayout();
 		}
+
+		/// <summary>
+		/// When disposing this, delete the user's saved layout file. Then next time will use the default file.
+		/// </summary>
+		public bool ResetLayoutAfterRestart { get; set; }
 
 #if false
 		//This worked, but better don't use.
@@ -521,15 +528,14 @@ namespace G.Controls
 
 			this.Controls.Add(c);
 
-			var xdoc = new XmlDocument();
-			xdoc.LoadXml(xml);
-			var gp = new GPanel(c, this, null, xdoc.DocumentElement);
+			var xdoc = XElement.Load(xml);
+			var gp = new GPanel(c, this, null, xdoc);
 			bool hide = gp.IsHidden; gp.DockState = GDockState.Hidden;
 			var gpBy = _FindPanel(cBy);
 			gp.DockBy(gpBy, side, true);
 			if(hide) gp.Hide();
 
-			//TODO: test when CBy panel is hidden or floating
+			//not tested when cBy panel is hidden or floating
 		}
 #endif
 
@@ -588,9 +594,9 @@ namespace G.Controls
 
 		#endregion public
 
-		public void Test()
-		{
+		//public void Test()
+		//{
 
-		}
+		//}
 	}
 }

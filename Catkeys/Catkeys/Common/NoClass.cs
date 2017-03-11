@@ -102,6 +102,17 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Calls <see cref="DebugPrint">Print</see> if condition is true.
+		/// Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
+		/// The 3 optional parameters are not used.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void DebugPrintIf(bool condition, object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		{
+			if(condition) DebugPrint(value, cp, cln, cmn);
+		}
+
+		/// <summary>
 		/// Shows simplest task dialog that works only in Debug configuration, ie if DEBUG is defined.
 		/// In Release configuration the function call statement is removed, and arguments not evalueted.
 		/// The 3 optional parameters are not used.
@@ -184,5 +195,20 @@ namespace Catkeys
 
 		//	Input.Keys(keys);
 		//}
+
+		///
+		public static void Key(params string[] keys_text_keys_text_andSoOn) { Input.Key(keys_text_keys_text_andSoOn); }
+		//note: don't use name SendKeys. It conflicts with System.Windows.Forms.SendKeys.
+
+		/// <summary>
+		/// Suspends this thread for the specified amount of time.
+		/// Alias of <see cref="Time.Wait"/>.
+		/// </summary>
+		/// <param name="timeS">
+		/// The number of seconds to wait.
+		/// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.Wait"/>.
+		/// </param>
+		/// <exception cref="ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		public static void Wait(double timeS) { Time.Wait(timeS); }
 	}
 }

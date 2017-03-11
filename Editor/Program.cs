@@ -29,8 +29,8 @@ namespace Editor
 	{
 		static void Test()
 		{
+
 			//TODO: why Output.Write causes Xml assembly to load?
-			//TODO: in TaskDialog edit field use correct font.
 
 
 			//TaskDialog.Show("test");
@@ -103,11 +103,13 @@ namespace Editor
 
 				Output.Clear();
 				//Test(); return;
-				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
 				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
+				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
+				//Editor.Test.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
 				Perf.First();
 				var p = new Perf.Inst(true);
 
+#if true
 				//Run some code in other thread, to make it faster later in main thread.
 				if(Environment.ProcessorCount > 1) {
 				//if(false) { //TODO: currently the init code is too fast...
@@ -119,7 +121,7 @@ namespace Editor
 							//p.Next(); //15
 
 							//Accessing .NET resources and creating imagelist first time takes 50-70 ms...
-							EImageList.LoadImageLists();
+							EResources.Init();
 							p.Next(); //60 with resources (now 45 *), 30 with imagelist png file (now 13 *), 14 if c.BackColor used above
 							//* after updating Windows 10 to 14986 and ngening all used .NET assemblies everything starts much faster, and program starts almost 2 times faster!
 
@@ -137,10 +139,10 @@ namespace Editor
 
 					//Thread.Sleep(50);
 				} else {
-					EImageList.LoadImageLists();
+					EResources.Init();
 					//p.NW();
 				}
-
+#endif
 				Application.EnableVisualStyles();
 				Application.SetCompatibleTextRenderingDefault(false);
 
