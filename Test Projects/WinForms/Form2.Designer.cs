@@ -27,87 +27,58 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.objectListView1 = new BrightIdeasSoftware.ObjectListView();
-			this.olvColumn1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn2 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn3 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			this.olvColumn4 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
-			((System.ComponentModel.ISupportInitialize)(this.objectListView1)).BeginInit();
+			this.button1 = new System.Windows.Forms.Button();
+			this.checkBox1 = new System.Windows.Forms.CheckBox();
+			this.label1 = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
-			// objectListView1
+			// button1
 			// 
-			this.objectListView1.AllColumns.Add(this.olvColumn1);
-			this.objectListView1.AllColumns.Add(this.olvColumn2);
-			this.objectListView1.AllColumns.Add(this.olvColumn3);
-			this.objectListView1.AllColumns.Add(this.olvColumn4);
-			this.objectListView1.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.SingleClick;
-			this.objectListView1.CellEditUseWholeCell = false;
-			this.objectListView1.CheckedAspectName = "Three";
-			this.objectListView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.olvColumn1,
-            this.olvColumn2,
-            this.olvColumn3,
-            this.olvColumn4});
-			this.objectListView1.Cursor = System.Windows.Forms.Cursors.Default;
-			this.objectListView1.FullRowSelect = true;
-			this.objectListView1.HeaderWordWrap = true;
-			this.objectListView1.Location = new System.Drawing.Point(0, 72);
-			this.objectListView1.Name = "objectListView1";
-			this.objectListView1.ShowGroups = false;
-			this.objectListView1.ShowImagesOnSubItems = true;
-			this.objectListView1.ShowItemToolTips = true;
-			this.objectListView1.Size = new System.Drawing.Size(344, 120);
-			this.objectListView1.TabIndex = 1;
-			this.objectListView1.UseCompatibleStateImageBehavior = false;
-			this.objectListView1.UseExplorerTheme = true;
-			this.objectListView1.UseHotItem = true;
-			this.objectListView1.UseSubItemCheckBoxes = true;
-			this.objectListView1.View = System.Windows.Forms.View.Details;
+			this.button1.Location = new System.Drawing.Point(24, 48);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(65, 28);
+			this.button1.TabIndex = 2;
+			this.button1.Text = "button1";
+			this.button1.UseVisualStyleBackColor = true;
 			// 
-			// olvColumn1
+			// checkBox1
 			// 
-			this.olvColumn1.AspectName = "One";
-			this.olvColumn1.Text = "One";
-			this.olvColumn1.Width = 200;
-			this.olvColumn1.WordWrap = true;
+			this.checkBox1.AutoSize = true;
+			this.checkBox1.Location = new System.Drawing.Point(128, 48);
+			this.checkBox1.Name = "checkBox1";
+			this.checkBox1.Size = new System.Drawing.Size(82, 19);
+			this.checkBox1.TabIndex = 3;
+			this.checkBox1.Text = "checkBox1";
+			this.checkBox1.UseVisualStyleBackColor = true;
 			// 
-			// olvColumn2
+			// label1
 			// 
-			this.olvColumn2.AspectName = "Two";
-			this.olvColumn2.Text = "Two test wrap";
-			// 
-			// olvColumn3
-			// 
-			this.olvColumn3.AspectName = "Three";
-			this.olvColumn3.CheckBoxes = true;
-			this.olvColumn3.IsHeaderVertical = true;
-			this.olvColumn3.Text = "Three";
-			// 
-			// olvColumn4
-			// 
-			this.olvColumn4.AspectName = "Four";
-			this.olvColumn4.Text = "Four";
+			this.label1.AutoSize = true;
+			this.label1.Location = new System.Drawing.Point(88, 48);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(38, 15);
+			this.label1.TabIndex = 4;
+			this.label1.Text = "label1";
 			// 
 			// Form2
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(383, 261);
-			this.Controls.Add(this.objectListView1);
+			this.ClientSize = new System.Drawing.Size(447, 301);
+			this.Controls.Add(this.label1);
+			this.Controls.Add(this.checkBox1);
+			this.Controls.Add(this.button1);
+			this.Font = new System.Drawing.Font("Segoe UI", 9F);
 			this.Name = "Form2";
 			this.Text = "Form2";
-			((System.ComponentModel.ISupportInitialize)(this.objectListView1)).EndInit();
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
 		#endregion
-
-		private BrightIdeasSoftware.ObjectListView objectListView1;
-		private BrightIdeasSoftware.OLVColumn olvColumn1;
-		private BrightIdeasSoftware.OLVColumn olvColumn2;
-		private BrightIdeasSoftware.OLVColumn olvColumn3;
-		private BrightIdeasSoftware.OLVColumn olvColumn4;
+		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.CheckBox checkBox1;
+		private System.Windows.Forms.Label label1;
 	}
 }

@@ -1,0 +1,7 @@
+ /Dialog_Editor
+
+ BEGIN DIALOG
+ 0 "" 0x10CF0A44 0x100 0 0 223 39 "Form"
+ 1 Button 0x54030001 0x4 116 16 48 14 "OK"
+ 2 Button 0x54030000 0x4 170 16 48 14 "Cancel"
+ END DIALOG

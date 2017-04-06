@@ -1,0 +1,18 @@
+ test with and without '...use SendInput' checked
+BlockInput 1
+act "untitled - Paint"
+lef 75 685 "untitled - Paint"
+lef+ 110 116 "untitled - Paint"
+mou "A@A@BBC@C@DAC@C@E@C@C@C@C@C@C@A@C@B@C@C@A@C@C@B@C@A@B@A@BaA@B@A@B@A@BaA@B@A@B@A@B@AbB@A@@Aa@@BaA@BbAaBbAaCbBaA@BbAaB@CbAaB@CcAbC@BaCbA@C@BaA@CbC@C@C@C@C@B@CaA@B@C@A@Bb@@aacbcacbcacccbccecacbcaa@bbc@a@c@c@b@c@c@a@cAc@cBcAeBaAcBb@aAb@@Ba@@A@aAaAcBcCeAcBcAdBcAc@c@b@aBb@a@b@a@b@a@b@a@b@a@ba@@abba@"
+lef- 113 118 "untitled - Paint"
+lef+ 182 84 "untitled - Paint"
+mou "bba@cab@abb@c@aac@c@c@e@c@d@e@d@e@c@cAc@dAcCeCcBfDdEfDeFfFfHdFcGcHcG@FbF@F@F@HAFCIEGFHGJHFGHIFKDJFLEKCLDJBIAI@I@K@IbFfFhDiElCjCkAiCiBgAkBg@i@i@hafbfcdacbcdcbbcacbcacbcadbcacbeaccdbcab@abb@@aa@@bb@a@@ab@abb@aab@a@@b"
+lef- 182 82 "untitled - Paint"
+lef 188 688 "untitled - Paint"
+lef+ 237 76 "untitled - Paint"
+mou "@ACCABECDAECDBHCGAICLBNCMAKCMCLCNCMCOBQAM@O@N@MBL@K@I@G@I@HaFbGaEbD@CaB@CbA@B@a@e@f@iAlClCmCoEqDpFrFrIrIrKtIoGoHjFfCeCcAaBcAb@aBb@A@F@H@JaOcQbScWcXaX@VATCPCOCLDKCFEFACCAB@A@B@A@B@A@CaCcEfDgCkFmFqCpCtCu@vBu@w@vaubr@q@lAiCcCaBb@@AA@FCFCICNFPHUIUGTIMHFDBB@AdBiAn@o@s@t@p@o@kBdAb@@BAAIELDQFPITFPIKFDE@AaBiAl@oBm@k@f@c@a@A@CAFCIEODOHMGNFFEAA@Ba@d@e@d@b@a@@AE@ICOCQ@SBUATBR@RAM@HbDcBb@a"
+lef- 549 462 "untitled - Paint"
+lef 200 670 "untitled - Paint"
+lef+ 302 120 "untitled - Paint"
+mou "fbi@i@i@i@kAgEkDgFiHiIhJgKfIeJcLaLbO@QAMFOIONNSLXJUKUGXFZFYCU@WgUmOtLsFwDx@satgphnjlnjohocpaqboCoIpJlNiMfObO@QGPKQOMRNUM+27+8SATbPlLtHuAo@mblhnimjknjpirfwfu@s@qDmGiIeK@LCLGLLMQKUGOFPCO@LdIiFiBg@f@hfigflfndpco@o@oDiDeFaE@DDHJGLIOHQFPCK@G@B@cag@h@i@fBdEeC@D@EFDJENGPFZEVDO@I@C@@ab@f@eAdCeHcF@ICIGJLINKUGRHODL@C@a@eBdCeFaDbH@CACCCH@I@IaJhKjIoFoDlBn@l@l@lalci@j@l@k@f@cAcCcDcFcFcEdCeCgAf@eadcedaecdbcab@@bCdDfEfCfCf@fAe@d@cac@b@a@cAcBcCcCeCdAeBd@e@cacbcacba@b@a@b@a@bAa"
+lef- 640 84 "untitled - Paint"

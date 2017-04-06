@@ -1,0 +1,3 @@
+function Old&source
+
+ Operator =

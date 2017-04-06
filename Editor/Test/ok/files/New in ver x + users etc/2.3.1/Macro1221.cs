@@ -1,0 +1,1 @@
+if(!strftime(_s 10 "%#c"

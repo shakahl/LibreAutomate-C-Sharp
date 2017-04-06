@@ -1,0 +1,1 @@
+run _command "com"

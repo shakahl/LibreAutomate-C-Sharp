@@ -264,21 +264,24 @@ namespace G.Controls
 				_AssertIsChild(gp);
 				if(!gp.IsDocked) return;
 				//if(mb == MouseButtons.Left)
-				SetActiveItem(gp);
+				SetActiveItem(gp, true);
 			}
 
 			/// <summary>
 			/// Sets ActiveItem, shows its contents, hides previous ActiveItem contents, invalidate caption, calls DockedDocumentPanelActivated event.
 			/// </summary>
 			/// <param name="gp">Can be null to deactivate all.</param>
-			internal void SetActiveItem(GPanel gp)
+			/// <param name="focusControl"></param>
+			internal void SetActiveItem(GPanel gp, bool focusControl = false)
 			{
 				_AssertIsDockedChildOrNull(gp);
-				if(gp == this.ActiveItem) return;
-				this.ActiveItem?.Content.Hide();
-				this.ActiveItem = gp;
-				this.ActiveItem?.Content.Show();
-				this.InvalidateCaption();
+				if(gp != this.ActiveItem) {
+					this.ActiveItem?.Content.Hide();
+					this.ActiveItem = gp;
+					this.ActiveItem?.Content.Show();
+					this.InvalidateCaption();
+				}
+				if(focusControl) gp.Content?.Focus();
 			}
 
 			internal void OnItemUndocked(GPanel gp, out Action postAction)

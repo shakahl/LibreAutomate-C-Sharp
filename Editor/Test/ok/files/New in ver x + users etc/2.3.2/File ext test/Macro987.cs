@@ -1,0 +1,1 @@
+FileExtSetDefaultVerb "vig" "Word"

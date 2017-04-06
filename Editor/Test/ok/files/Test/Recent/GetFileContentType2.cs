@@ -1,0 +1,11 @@
+ChDir "$desktop$"
+str s
+ GetFileContentType("$desktop$\test.txt" s)
+ GetFileContentType("$desktop$\test.pump" s)
+ GetFileContentType("test.pump" s)
+ GetFileContentType("$desktop$\test.pdf" s)
+ GetFileContentType("test.pdf" s)
+ GetFileContentType("$desktop$\Macro295.qml" s)
+GetFileContentType("Macro295.qml" s)
+ GetFileContentType("$desktop$\notepad.exe" s)
+out s

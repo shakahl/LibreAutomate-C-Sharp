@@ -50,10 +50,8 @@ namespace G.Controls
 				int k = x.Attribute_("splitter", -1); if(k < 0 || k > 20) k = _splitterWidth;
 				this.SplitterWidth = k;
 
-				//TODO: should use DPI-dependent units, not pixels. Especially if form size depends on DPI.
-				if(_isFraction = x.HasAttribute_("f")) _fraction = x.Attribute_("f", 0F);
-				else if(_isWidth1 = x.HasAttribute_("w1")) _width = x.Attribute_("w1", 0);
-				else _width = x.Attribute_("w2", 1);
+				//SHOULDDO: should use DPI-dependent units, not pixels. Especially if form size depends on DPI.
+				if(!(_isFraction = x.Attribute_(out _fraction, "f")) && !(_isWidth1 = x.Attribute_(out _width, "w1"))) _width = x.Attribute_("w2", 1);
 
 				foreach(var xe in x.Elements()) {
 					GNode gn = null;
@@ -314,7 +312,7 @@ namespace G.Controls
 			internal void Invalidate()
 			{
 				Debug.Assert(!this.IsHidden);
-				_manager.Invalidate(this.Bounds, false);
+				_manager.Invalidate(this.Bounds);
 			}
 
 			internal bool HitTestSplitter(int x, int y)
@@ -333,7 +331,7 @@ namespace G.Controls
 				if(--_dockedChildCount == 0) {
 					this.DockState = GDockState.Hidden;
 					if(this.ParentSplit != null) this.ParentSplit.OnChildUndocked(this);
-					else _manager.Invalidate(this.Bounds, false); //not this.Invalidate(); because now already Hidden
+					else _manager.Invalidate(this.Bounds); //not this.Invalidate(); because now already Hidden
 				} else {
 					_manager._UpdateLayout(true); //not this.UpdateLayout() because may need to apply minimal layouts
 				}

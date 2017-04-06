@@ -1,0 +1,3 @@
+VARIANT v=10.45E50
+BSTR b=v
+out b

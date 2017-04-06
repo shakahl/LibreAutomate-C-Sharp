@@ -1,0 +1,11 @@
+out _hwndqm
+out _hinst
+out _winver
+out _winnt
+out _iever
+out _qmver_str
+out _qmdir
+out _dialogicon
+out _hfont
+out _logfile
+out _logfilesize

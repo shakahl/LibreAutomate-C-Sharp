@@ -1,0 +1,1 @@
+CloseWindowsOf "Notepad" "Notepad"

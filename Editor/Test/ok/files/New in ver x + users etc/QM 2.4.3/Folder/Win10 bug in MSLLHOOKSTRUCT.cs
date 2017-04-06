@@ -1,0 +1,2 @@
+Please fix this bug in low-level mouse hooks:
+On Windows 10, when text size is >100% (high DPI), if my per-monitor-high-DPI-aware application installs a SetWindowsHookEx(WH_MOUSE_LL) hook, my hook procedure receives MSLLHOOKSTRUCT structure with incorrect mouse coordinates if the mouse then is in a DPI-scaled window (its process is not DPI-aware). On mouse move messages it is physical (correct), but on button messages it is logical (incorrect). On Windows Vista/7/8/8.1 mouse coordinates in MSLLHOOKSTRUCT were always physical.

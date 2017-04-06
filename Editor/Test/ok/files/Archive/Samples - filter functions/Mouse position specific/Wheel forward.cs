@@ -1,0 +1,1 @@
+mes "This macro runs when you rotate mouse wheel forward, Shift is pressed, and mouse pointer is by the top edge of the screen."

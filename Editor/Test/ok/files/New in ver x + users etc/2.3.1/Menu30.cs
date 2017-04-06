@@ -1,0 +1,2 @@
+ /expandfolders
+c "\\gintaras\"

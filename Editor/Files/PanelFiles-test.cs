@@ -1,0 +1,157 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Linq;
+using System.Xml.Linq;
+//using System.Xml.XPath;
+
+using Catkeys;
+using static Catkeys.NoClass;
+
+#if TEST
+partial class ThisIsNotAFormFile { }
+
+partial class PanelFiles
+{
+	public void Test()
+	{
+		//Print(_c.SelectedNode);
+
+		//var name = "MSVCRT";
+		//var name = "msvcrt";
+		//var name = "Declarations";
+		var name = "Backup";
+
+		//var n = _c.AllNodes.ElementAt(2);
+		var f = _model.FindFileOrFolder(name);
+		//Print(f);
+		if(f == null) { Print("not found"); return; }
+		//var n = _c.FindNodeByTag(f);
+		var n = f?.TreeNodeAdv;
+		//Print(n?.Tag);
+
+		var m = new CatMenu();
+		m["SelectedNode"] = o => _c.SelectedNode = n;
+		m["IsSelected=true"] = o => n.IsSelected = true; //adds to selection
+		m["ClearSelection"] = o => _c.ClearSelection();
+		m["EnsureVisible"] = o => _c.EnsureVisible(n);
+		m["ScrollTo"] = o => _c.ScrollTo(n);
+		m["FullUpdate"] = o => _c.FullUpdate();
+		m["HideEditor"] = o => _c.HideEditor();
+		m["Remove"] = o => f.Remove();
+		//m["Clear"] = o => _model.Clear();
+		m["StructureChanged"] = o => _model.OnStructureChanged();
+		m["Add"] = o =>
+		{
+#if false
+					var x = new XElement("f", new XAttribute("n", "NEW"));
+#else
+			var x = new XElement("d", new XAttribute("n", "NEW DIR"));
+			x.Add(new XElement("f", new XAttribute("n", "NEW FILE")));
+#endif
+			var k = new FileNode(_model, x);
+			//f.AddChild(k);
+			f.AddBefore(k);
+		};
+		m["GetNodeBounds"] = o =>
+		{
+			Print(_c.GetNodeBounds(n));
+			Print(_c.GetNodeBoundsInClient(n));
+		};
+		m["GetNodeControls"] = o =>
+		{
+			int dx = _c.OffsetX, dy = _c.OffsetY;
+			foreach(var v in _c.GetNodeControls(n)) {
+				var r = v.Bounds; r.X -= dx; r.Y -= dy;
+				PrintList(r);
+			}
+		};
+		m["GetNodeControlInfoAt"] = o =>
+		{
+			var k = _c.GetNodeControlInfoAt(new Point(60, 40));
+			PrintList(k.Node?.Tag, k.Bounds);
+		};
+#if TEST_MANY_COLUMNS
+				m["column IsVisible"] = o =>
+				{
+					_columnGUID.IsVisible = !_columnGUID.IsVisible;
+				};
+#endif
+		m["speed"] = o =>
+		{
+			Perf.First();
+			//n.IsSelected = true;
+			_c.Invalidate(false);
+			Perf.Next();
+			_c.Update();
+			Perf.NW();
+		};
+		m["change cell"] = o =>
+		{
+			f.Rename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
+			//f.GUID = "one two";
+			//f.GUID = "one\ntwo";
+			Perf.First();
+			_c.Invalidate(false); //now fast, but Update slow
+								  //_model.OnNodeChanged(f); //now quite slow, and Update slow
+			Perf.Next();
+			_c.Update();
+			Perf.NW();
+
+			Time.SetTimer(1000, true, t => f.Rename(name, true));
+		};
+		m["udate row"] = o =>
+		{
+			f.Rename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
+			//f.GUID = "one two";
+			Perf.First();
+			_c.UpdateNode(n);
+			Perf.Next();
+			_c.Update();
+			Perf.NW();
+
+			Time.SetTimer(1000, true, t => f.Rename(name, true));
+		};
+		m["GC.Collect"] = o => GC.Collect();
+		m["disable control"] = o =>
+		{
+			_c.Enabled = false;
+			TaskDialog.Show();
+			_c.Enabled = true;
+		};
+		m["ItemPath"] = o =>
+		{
+			f = _model.FindFileOrFolder("obsolete");
+			Print(f?.ItemPath);
+			f = _model.FindFileOrFolder("Zip_to_WEB");
+			Print(f?.ItemPath);
+			f = _model.FindFileOrFolder("tips.txt");
+			Print(f?.ItemPath);
+		};
+		m["FilePath"] = o =>
+		{
+			f = _model.FindFileOrFolder("obsolete");
+			Print(f?.FilePath);
+			f = _model.FindFileOrFolder("Zip_to_WEB");
+			Print(f?.FilePath);
+			f = _model.FindFileOrFolder("tips.txt");
+			Print(f?.FilePath);
+		};
+		m["delete icon cache"] = o => { FilesModel.IconCache.ClearCache(); _c.Invalidate(); };
+		m.Show();
+	}
+}
+#endif

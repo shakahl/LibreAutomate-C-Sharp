@@ -1,0 +1,1 @@
+class ErrDecl g

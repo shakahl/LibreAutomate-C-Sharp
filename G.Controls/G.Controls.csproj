@@ -76,8 +76,16 @@
     <Compile Include="GDockPanel\GAcc.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Other\GSMProp.cs" />
-    <Compile Include="Other\GStripManager.cs" />
+    <Compile Include="GStripManager\GSMProp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GStripManager\GStripManager.cs" />
+    <Compile Include="Other\Form_.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Other\ScrollableControl_.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Other\ToolStripSpringBox.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -94,7 +102,7 @@
     <None Include="CatkeysSN.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Other\GSMProp.resx">
+    <None Include="GStripManager\GSMProp.resx">
       <DependentUpon>GSMProp.cs</DependentUpon>
     </None>
   </ItemGroup>

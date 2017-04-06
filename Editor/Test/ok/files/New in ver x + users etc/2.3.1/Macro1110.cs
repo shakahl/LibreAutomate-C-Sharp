@@ -1,0 +1,11 @@
+TESTTYPE25
+PBM_SETRANGE32
+Pop3Mail
+WINAPI2
+
+g_v2
+MENUDEF
+
+__lock_lock_CFunctionCounter
+
+REMTYPE

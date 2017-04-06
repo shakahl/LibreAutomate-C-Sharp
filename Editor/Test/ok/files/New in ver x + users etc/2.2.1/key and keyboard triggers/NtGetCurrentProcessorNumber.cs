@@ -1,0 +1,3 @@
+dll ntdll #NtGetCurrentProcessorNumber
+ SetThreadIdealProcessor GetCurrentThread 1
+out NtGetCurrentProcessorNumber

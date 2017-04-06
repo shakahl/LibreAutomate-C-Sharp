@@ -84,64 +84,73 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Catkeys\Automation\Input.cs" />
-    <Compile Include="Catkeys\Api\Api COM.cs" />
-    <Compile Include="Catkeys\Api\Api public.cs" />
-    <Compile Include="Catkeys\Automation\Input.Misc.cs" />
-    <Compile Include="Catkeys\Calc.cs" />
-    <Compile Include="Catkeys\Common\Classes.cs" />
-    <Compile Include="Catkeys\Common\common.cs" />
-    <Compile Include="Catkeys\Common\Exceptions.cs" />
-    <Compile Include="Catkeys\Common\Structs.cs" />
-    <Compile Include="Catkeys\Folders.cs" />
-    <Compile Include="Catkeys\Menu, TB\CatBar.cs" />
-    <Compile Include="Catkeys\Menu, TB\CatMenu.cs" />
-    <Compile Include="Catkeys\Menu, TB\CatToolStrip.cs">
+    <Compile Include="Automation\Input.cs" />
+    <Compile Include="Api\Api COM.cs" />
+    <Compile Include="Api\Api public.cs" />
+    <Compile Include="Automation\Input.Misc.cs" />
+    <Compile Include="Files, system\Files.Misc.cs" />
+    <Compile Include="Files, system\LnkShortcut.cs" />
+    <Compile Include="Files, system\Path_.cs" />
+    <Compile Include="Other\Calc.cs" />
+    <Compile Include="Common\Classes.cs" />
+    <Compile Include="Common\common.cs" />
+    <Compile Include="Common\Exceptions.cs" />
+    <Compile Include="Common\Structs.cs" />
+    <Compile Include="Files, system\Folders.cs" />
+    <Compile Include="Menus, dialogs\CatBar.cs" />
+    <Compile Include="Menus, dialogs\CatMenu.cs" />
+    <Compile Include="Menus, dialogs\CatToolStrip.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Catkeys\Automation\Mouse.cs" />
-    <Compile Include="Catkeys\Common\NetExt.cs" />
-    <Compile Include="Catkeys\Common\NoClass.cs" />
-    <Compile Include="Catkeys\Output.cs" />
-    <Compile Include="Catkeys\Process_.cs" />
-    <Compile Include="Catkeys\String\wildcard.cs" />
-    <Compile Include="Catkeys\TaskDialog.cs" />
-    <Compile Include="Catkeys\String\Csv.cs" />
-    <Compile Include="Catkeys\String\string classes.cs" />
-    <Compile Include="Catkeys\String\String_ex.cs" />
-    <Compile Include="Catkeys\Time\Time.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_child.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_fromxy.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_misc_classes.cs" />
-    <Compile Include="Catkeys\Registry_.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_other.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_private.cs" />
+    <Compile Include="Automation\Mouse.cs" />
+    <Compile Include="Common\NetExt.cs" />
+    <Compile Include="Common\NoClass.cs" />
+    <Compile Include="Other\Output.cs" />
+    <Compile Include="Files, system\Process_.cs" />
+    <Compile Include="String\wildcard.cs" />
+    <Compile Include="Menus, dialogs\TaskDialog.cs" />
+    <Compile Include="String\Csv.cs" />
+    <Compile Include="String\string classes.cs" />
+    <Compile Include="String\String_ex.cs" />
+    <Compile Include="Time\Time.cs" />
+    <Compile Include="Wnd\Wnd.cs" />
+    <Compile Include="Wnd\Wnd_child.cs" />
+    <Compile Include="Wnd\Wnd_fromxy.cs" />
+    <Compile Include="Wnd\Wnd_misc_classes.cs" />
+    <Compile Include="Files, system\Registry_.cs" />
+    <Compile Include="Wnd\Wnd_other.cs" />
+    <Compile Include="Wnd\Wnd_private.cs" />
     <Compile Include="Util\AppDomain_.cs" />
     <Compile Include="Util\Memory.cs" />
     <Compile Include="Util\MessageLoops.cs" />
     <Compile Include="Util\ThreadPoolSTA.cs" />
-    <Compile Include="Catkeys\Time\WaitFor.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_find.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_get.cs" />
-    <Compile Include="Catkeys\Wnd\Wnd_mics.cs" />
-    <Compile Include="Catkeys\Files.cs" />
-    <Compile Include="Catkeys\Icons.cs" />
+    <Compile Include="Time\WaitFor.cs" />
+    <Compile Include="Wnd\Wnd_find.cs" />
+    <Compile Include="Wnd\Wnd_get.cs" />
+    <Compile Include="Wnd\Wnd_mics.cs" />
+    <Compile Include="Files, system\Files.cs" />
+    <Compile Include="Files, system\Icons.cs" />
     <Compile Include="Test, rejected\_LibTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Catkeys\Script.cs" />
-    <Compile Include="Catkeys\String\String_.cs" />
-    <Compile Include="Catkeys\Time\Perf.cs" />
-    <Compile Include="Catkeys\Api\Api const.cs" />
+    <Compile Include="Other\Script.cs" />
+    <Compile Include="String\String_.cs" />
+    <Compile Include="Time\Perf.cs" />
+    <Compile Include="Api\Api const.cs" />
     <EmbeddedResource Include="Properties\dll.manifest" />
     <None Include="packages.config" />
     <Compile Include="Util\Util.cs" />
-    <Compile Include="Catkeys\Api\Api.cs" />
+    <Compile Include="Api\Api.cs" />
     <Compile Include="Util\Workarounds.cs" />
     <None Include="Test, rejected\_Rejected.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\CatkeysSN.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Downloads\AlphaFS-develop\AlphaFS\Z.AlphaFS.csproj">
+      <Project>{f0f9af1e-d5b5-4d72-804a-5380622fbdea}</Project>
+      <Name>Z.AlphaFS</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

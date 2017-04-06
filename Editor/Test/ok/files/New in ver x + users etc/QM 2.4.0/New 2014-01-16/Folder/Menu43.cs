@@ -1,0 +1,2 @@
+ /expandfolders
+desk "$desktop$"

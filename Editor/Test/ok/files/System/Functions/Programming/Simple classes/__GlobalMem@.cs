@@ -1,0 +1,1 @@
+if(handle) GlobalFree handle

@@ -1,0 +1,1 @@
+out "destructor, %i" &this

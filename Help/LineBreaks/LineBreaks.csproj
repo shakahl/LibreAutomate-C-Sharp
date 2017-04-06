@@ -34,12 +34,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Sandcastle.Core">
-      <HintPath>$(SHFBROOT)\Sandcastle.Core.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\Sandcastle.Core.dll</HintPath>
     </Reference>
     <Reference Include="SandcastleBuilder.Utils">
-      <HintPath>$(SHFBROOT)\SandcastleBuilder.Utils.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>C:\Program Files (x86)\EWSoftware\Sandcastle Help File Builder\SandcastleBuilder.Utils.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />

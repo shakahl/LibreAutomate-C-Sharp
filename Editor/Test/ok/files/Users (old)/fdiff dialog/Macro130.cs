@@ -1,0 +1,1 @@
+ShowDialog("DlgComparar" &DlgComparar)

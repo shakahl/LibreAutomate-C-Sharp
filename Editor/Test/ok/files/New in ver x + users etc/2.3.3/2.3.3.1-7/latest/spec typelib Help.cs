@@ -1,0 +1,3 @@
+Services.clsServices se.Refresh
+Excel.Application a.ActivateMicrosoftApp
+MailBee.SMTP f.GetLastDataFromServer

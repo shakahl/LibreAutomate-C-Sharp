@@ -1,0 +1,1 @@
+RevokeDragDrop(m_hwnd)

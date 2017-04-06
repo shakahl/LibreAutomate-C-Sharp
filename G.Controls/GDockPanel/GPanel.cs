@@ -167,6 +167,11 @@ namespace G.Controls
 			/// The 'set' function: if true, makes this panel floating and visible if it is currently docked or hidden; if false, makes it docked if it is currently floating and visible.
 			/// </summary>
 			bool Floating { get; set; }
+
+			/// <summary>
+			/// Make the panel visible (like <see cref="Visible"/>) and focus its control.
+			/// </summary>
+			void Focus();
 		}
 
 		partial class GPanel
@@ -235,6 +240,7 @@ namespace G.Controls
 				set { if(value != this.IsFloating) this.SetDockState(this.IsFloating ? GDockState.Docked : GDockState.Floating); }
 			}
 
+			public void Focus() { Show(true); }
 			#endregion
 
 			internal override bool IsTabbedPanel { get => this.ParentTab != null; }

@@ -1,0 +1,1 @@
+MMT_WinTaskbarAddRemoveButton 1 hwnd

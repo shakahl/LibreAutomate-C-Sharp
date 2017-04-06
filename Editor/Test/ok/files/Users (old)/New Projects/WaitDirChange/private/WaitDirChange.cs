@@ -1,0 +1,9 @@
+def FILE_NOTIFY_CHANGE_FILE_NAME  0x1
+def FILE_NOTIFY_CHANGE_DIR_NAME  0x2
+def FILE_NOTIFY_CHANGE_ATTRIBUTES  0x4
+def FILE_NOTIFY_CHANGE_SIZE  0x8
+def FILE_NOTIFY_CHANGE_LAST_WRITE  0x10
+def FILE_NOTIFY_CHANGE_SECURITY  0x100
+dll kernel32 #FindFirstChangeNotification $lpPathName bWatchSubtree dwNotifyFilter
+dll kernel32 #FindNextChangeNotification hChangeHandle
+dll kernel32 #FindCloseChangeNotification hChangeHandle

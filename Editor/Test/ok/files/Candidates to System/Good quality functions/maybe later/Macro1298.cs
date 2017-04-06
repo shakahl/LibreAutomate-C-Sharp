@@ -1,0 +1,4 @@
+outw control.FocusedControl
+outw control.ControlFromMouse
+outw control.ControlOrWindowFromMouse
+outw window.WindowFromMouse

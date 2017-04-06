@@ -19,7 +19,7 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 
-namespace Editor.Test
+namespace ETest
 {
 	//[DebuggerStepThrough]
 	public static class DevTools

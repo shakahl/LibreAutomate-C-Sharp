@@ -1,0 +1,58 @@
+ \Dialog_Editor
+
+str dd=
+ BEGIN DIALOG
+ 0 "" 0x90C80AC8 0x0 0 0 440 286 "Dialog"
+ 3 Button 0x54032000 0x0 8 36 48 14 "Button"
+ 4 Button 0x54012003 0x0 8 56 48 10 "Check"
+ 5 Edit 0x54030080 0x200 8 72 96 12 ""
+ 6 Static 0x54000000 0x0 12 88 48 12 "Text"
+ 8 Button 0x54032009 0x0 64 36 58 10 "Option first"
+ 9 Button 0x54002009 0x0 64 48 58 10 "Option next"
+ 10 Edit 0x54231044 0x200 124 16 96 48 ""
+ 11 Edit 0x54030020 0x200 128 64 96 12 ""
+ 12 Edit 0x54032000 0x200 128 80 32 12 ""
+ 13 Edit 0x54200844 0x20000 124 92 96 48 ""
+ 14 RichEdit20A 0x54233044 0x200 124 140 96 48 ""
+ 15 QM_Edit 0x54030080 0x200 128 196 96 13 ""
+ 16 ComboBox 0x54230243 0x0 128 212 96 213 ""
+ 17 ComboBox 0x54230242 0x0 128 228 96 213 ""
+ 18 ComboBox 0x54230641 0x0 224 200 96 48 ""
+ 19 ListBox 0x54230101 0x200 224 0 96 48 ""
+ 20 ListBox 0x54230109 0x200 224 52 96 48 ""
+ 21 QM_ComboBox 0x54030243 0x0 224 104 96 13 ""
+ 22 QM_ComboBox 0x54030242 0x0 224 120 96 13 ""
+ 23 Static 0x54000003 0x0 332 4 16 16 ""
+ 24 Static 0x5400000E 0x0 332 24 16 16 ""
+ 27 SysLink 0x54030000 0x0 328 56 96 12 "<a>Link1</a>, <a>link2</a>"
+ 28 QM_DlgInfo 0x54000000 0x20000 228 140 96 48 ""
+ 29 SysTreeView32 0x54030000 0x0 332 72 96 48 ""
+ 39 ActiveX 0x54030000 0x0 332 128 96 13 "MSDataListLib.DataCombo {F0D2F21C-CCB0-11D0-A316-00AA00688B10} data:F822915ABC6829D3BED0DC96B231561A79D32EF7C2AE5D6EADA54B8A236FBEAD53106463C252301304"
+ 31 ActiveX 0x54030000 0x0 12 116 96 48 "SHDocVw.WebBrowser {8856F961-340A-11D0-A96B-00C04FD705A2}"
+ 32 QM_Grid 0x56031041 0x200 4 216 122 48 "0x0,0,0,0x0,0x0[]A,,,[]B,,,[]c,,3,"
+ 1 Button 0x54030001 0x4 28 272 48 14 "OK"
+ 2 Button 0x54030000 0x4 80 272 48 14 "Cancel"
+ 7 Button 0x54020007 0x0 8 104 108 100 ""
+ 25 Static 0x54000010 0x20000 332 48 96 1 ""
+ 26 Static 0x54000011 0x20000 364 32 1 16 ""
+ END DIALOG
+ DIALOG EDITOR: "" 0x2040301 "*" "" "" ""
+
+str controls = "4 5 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 31 32"
+str c4Che e5 o8Opt o9Opt e10 e11 e12 e13 re14 qme15 cb16 cb17 cb18 lb19 lb20 qmcb21 qmcb22 si23 sb24 ax31SHD qmg32x
+if(!ShowDialog(dd &sub.DlgProc &controls)) ret
+
+
+#sub DlgProc
+function# hDlg message wParam lParam
+
+sel message
+	case WM_INITDIALOG
+	case WM_DESTROY
+	case WM_COMMAND goto messages2
+ret
+ messages2
+sel wParam
+	case IDOK
+	case IDCANCEL
+ret 1

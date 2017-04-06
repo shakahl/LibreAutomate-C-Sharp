@@ -14,7 +14,10 @@ namespace WinForms
 	{
 		public Form2()
 		{
+			var f = new System.Drawing.Font("Segoe UI", 9F);
+			this.Font = f;
 			InitializeComponent();
+			f.Dispose();
 		}
 	}
 }

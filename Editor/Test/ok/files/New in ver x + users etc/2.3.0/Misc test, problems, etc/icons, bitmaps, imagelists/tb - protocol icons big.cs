@@ -1,0 +1,27 @@
+ /isiz 16
+exe :run "C:\Program Files\Mozilla Firefox\firefox.exe" * C:\Program Files\Mozilla Firefox\firefox.exe * 1
+-
+http :run "http://www.quickmacros.com/forum/"
+https :run "https://www.quickmacros.com/forum/"
+ftp :run "ftp://ftp.quickmacros.com"
+telnet :run "telnet://support@quickmacros.com"
+mailto :run "mailto:support@quickmacros.com"
+news :run "news:support.quickmacros.com"
+javascript :run "javascript:support@quickmacros.com"
+file :run "file:///c:/program%20files"
+file :run "file:///q:/app/qm.exe"
+unknown :run "unknown://support.quickmacros.com"
+ gopher :run "gopher://support.quickmacros.com"
+ res :run "res:support.quickmacros.com"
+ view-source :run "view-source://http://www.quickmacros.com"
+-
+http :web "http://www.quickmacros.com/forum/"
+https :web "https://www.quickmacros.com/forum/"
+ftp :web "ftp://ftp.quickmacros.com"
+telnet :web "telnet://support@quickmacros.com"
+mailto :web "mailto:support@quickmacros.com"
+news :web "news:support.quickmacros.com"
+javascript :web "javascript:support@quickmacros.com"
+file :web "file:///c:/program%20files"
+file :web "file:///q:/app/qm.exe"
+unknown :web "unknown://support.quickmacros.com"

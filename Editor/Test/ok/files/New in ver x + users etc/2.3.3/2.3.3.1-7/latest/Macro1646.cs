@@ -1,0 +1,13 @@
+ act
+ opt keychar 1; opt keysync 1; key "text"
+
+opt keychar 1
+opt keysync 1
+key "textfffffffffffffffffffffffffffffffffffffffffffffffffff      ddddddddddddddddddddddd textfffffffffffffffffffffffffffffffffffffffffffffffffff" Y
+
+#ret
+textfffffffffffffffffffffffffffffffffffffffffffffffffff      ddddddddddddddddddddddd textfffffffffffffffffffffffffffffffffffffffffffffffffff
+textfffffffffffffffffffffffffffffffffffffffffffffffffff      ddddddddddddddddddddddd textfffffffffffffffffffffffffffffffffffffffffffffffffff
+textfffffffffffffffffffffffffffffffffffffffffffffffffff      ddddddddddddddddddddddd textfffffffffffffffffffffffffffffffffffffffffffffffffff
+textfffffffffffffffffffffffffffffffffffffffffffffffffff      ddddddddddddddddddddddd textfffffffffffffffffffffffffffffffffffffffffffffffffff
+textfffffffffffffffffffffffffffffffffffffffffffffffffff      ddddddddddddddddddddddd textfffffffffffffffffffffffffffffffffffffffffffffffffff

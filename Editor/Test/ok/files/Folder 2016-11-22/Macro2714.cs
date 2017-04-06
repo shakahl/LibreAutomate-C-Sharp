@@ -1,0 +1,10 @@
+PF
+WINAPI2.SHSTOCKICONINFO x.cbSize=sizeof(x)
+int img=WINAPI2.SIID_APPLICATION
+ int img=WINAPI2.SIID_DOCNOASSOC
+int hr=WINAPI2.SHGetStockIconInfo(img, WINAPI2.SHGSI_ICON|WINAPI2.SHGSI_SMALLICON|WINAPI2.SHGSI_SHELLICONSIZE &x)
+if(hr) end "failed" 16 hr
+PN;PO
+out x.hIcon
+DestroyIcon x.hIcon
+

@@ -1,0 +1,2 @@
+function wt
+wait wt

@@ -40,26 +40,29 @@ namespace G.Controls
 				_gc = gc;
 
 				var gp = _gc as GPanel;
-				_hasToolbar = (gp != null && gp.HasToolbar && gp.Content is CatToolStrip); //never mind: does not support MenuStrip like toolbars
+
+				//we'll use this to prevent window activation on click, for toolbar and menubar classes that support it
+				_hasToolbar = (gp != null && gp.HasToolbar && (gp.Content is CatToolStrip || gp.Content is CatMenuStrip));
 
 				this.SuspendLayout();
+				this.Font = _manager.Font;
+				this.AutoScaleMode = AutoScaleMode.None;
 				this.StartPosition = FormStartPosition.Manual;
 				this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
-				this.AutoScaleMode = _manager.ParentForm.AutoScaleMode;
-				this.Font = _manager.Font;
-				this.Text = gc.ToString();
-				this.MinimumSize = new Size(34, 30);
 				this.SetStyle(ControlStyles.ResizeRedraw | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer, true);
+				this.MinimumSize = new Size(34, 30);
+				this.Text = gc.ToString();
 				this.ResumeLayout();
 
-				var f = _manager.ParentForm;
+				var f = _manager.TopLevelControl;
 				f.VisibleChanged += ManagerForm_VisibleChanged;
 				//f.EnabledChanged += ManagerForm_EnabledChanged; //in most cases does not work. Instead the main form on WM_ENABLE calls EnableDisableAllFloatingWindows.
 			}
 
 			protected override void Dispose(bool disposing)
 			{
-				_manager.ParentForm.VisibleChanged -= ManagerForm_VisibleChanged;
+				var f = _manager.TopLevelControl;
+				if(f != null) f.VisibleChanged -= ManagerForm_VisibleChanged;
 				base.Dispose(disposing);
 			}
 
@@ -88,6 +91,13 @@ namespace G.Controls
 			/// 1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
 			/// </summary>
 			protected override bool ShowWithoutActivation { get => true; }
+
+			protected override void OnGotFocus(EventArgs e)
+			{
+				(_gc as GPanel)?.Content?.Focus();
+				//Normally the control is automatically focused, and this func not called.
+				//But not if the control contains a native child control.
+			}
 
 			internal void OnReplacedChild(GContentNode newChild)
 			{
@@ -173,9 +183,9 @@ namespace G.Controls
 					_target = new DockTarget();
 
 					this.SuspendLayout();
+					this.AutoScaleMode = AutoScaleMode.None;
 					this.FormBorderStyle = FormBorderStyle.None;
 					this.StartPosition = FormStartPosition.Manual;
-					this.AutoScaleMode = AutoScaleMode.None;
 					this.Bounds = _manager._firstSplit.RectangleInScreen;
 					this.Opacity = 0.3;
 					this.TransparencyKey = Color.Yellow;

@@ -31,6 +31,7 @@
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.treeListView1 = new BrightIdeasSoftware.TreeListView();
 			this.treeListView2 = new BrightIdeasSoftware.TreeListView();
+			this.olvColumn1 = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -57,7 +58,10 @@
 			// 
 			// treeListView1
 			// 
+			this.treeListView1.AllColumns.Add(this.olvColumn1);
 			this.treeListView1.CellEditUseWholeCell = false;
+			this.treeListView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.olvColumn1});
 			this.treeListView1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.treeListView1.Location = new System.Drawing.Point(0, 0);
 			this.treeListView1.Name = "treeListView1";
@@ -80,6 +84,10 @@
 			this.treeListView2.UseCompatibleStateImageBehavior = false;
 			this.treeListView2.View = System.Windows.Forms.View.Details;
 			this.treeListView2.VirtualMode = true;
+			// 
+			// olvColumn1
+			// 
+			this.olvColumn1.AspectName = "ASPECT";
 			// 
 			// Form1
 			// 
@@ -104,6 +112,7 @@
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private BrightIdeasSoftware.TreeListView treeListView1;
 		private BrightIdeasSoftware.TreeListView treeListView2;
+		private BrightIdeasSoftware.OLVColumn olvColumn1;
 	}
 }
 

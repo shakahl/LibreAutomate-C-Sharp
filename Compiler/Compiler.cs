@@ -146,7 +146,7 @@ public static class Test
 				var s2 = outDir + "\\" + Path.GetFileName(s1);
 				//PrintList(s1, s2);
 
-				if(Files.FileExists(s2)) {
+				if(Files.ExistsAsFile(s2)) {
 					FileInfo f1 = new FileInfo(s1), f2 = new FileInfo(s2);
 					if(f1.LastWriteTimeUtc == f2.LastWriteTimeUtc && f1.Length == f2.Length) continue;
 				}

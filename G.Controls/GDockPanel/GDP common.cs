@@ -41,7 +41,9 @@ namespace G.Controls
 					brushActiveTabBack = Brushes.WhiteSmoke;
 					txtFormatHorz = new StringFormat(StringFormatFlags.NoWrap);
 					txtFormatVert = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.DirectionVertical);
-					//txtFormatHorz.Trimming = txtFormatVert.Trimming = StringTrimming.EllipsisCharacter; //.NET bug with vertical: displays a rectangle or nothing, instead of ...
+					txtFormatHorz.LineAlignment = txtFormatVert.LineAlignment= StringAlignment.Center;
+					txtFormatHorz.Trimming = StringTrimming.EllipsisCharacter;
+					//txtFormatVert.Trimming = StringTrimming.EllipsisCharacter; //.NET bug with vertical: displays a rectangle or nothing, instead of ...
 					_inited = true;
 				}
 			}
@@ -196,7 +198,7 @@ namespace G.Controls
 			internal void Invalidate()
 			{
 				if(this.IsHidden) return;
-				this.ParentControl.Invalidate(this.Bounds, false);
+				this.ParentControl.Invalidate(this.Bounds);
 			}
 
 			internal virtual void InvalidateCaption()
@@ -213,7 +215,7 @@ namespace G.Controls
 				case GCaptionEdge.Bottom: u.top--; break;
 				}
 
-				this.ParentControl.Invalidate(u, false);
+				this.ParentControl.Invalidate(u);
 			}
 
 			/// <summary>
@@ -287,9 +289,14 @@ namespace G.Controls
 			/// <summary>
 			/// Shows in the most recent visible state. Activates tab group panel.
 			/// </summary>
-			internal void Show()
+			internal void Show(bool focus = false)
 			{
 				this.SetDockState(GDockState.LastVisible);
+				if(focus) {
+					var gt = this as GTab;
+					var gp = (gt != null) ? gt.ActiveItem : (this as GPanel);
+					gp?.Content?.Focus();
+				}
 			}
 
 			/// <summary>
@@ -321,7 +328,7 @@ namespace G.Controls
 				if(state == prevState) return;
 
 				if(this.ParentSplit == null && state == GDockState.Docked) { //new panel
-					TaskDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager.ParentForm);
+					TaskDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager);
 					return;
 				}
 
@@ -388,7 +395,7 @@ namespace G.Controls
 					}
 
 					f.Bounds = rect;
-					f.Show(_manager.ParentForm);
+					f.Show(_manager.TopLevelControl);
 					break;
 				//case GDockState.AutoHide:
 				//	break;

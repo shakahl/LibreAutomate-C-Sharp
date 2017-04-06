@@ -47,8 +47,7 @@ namespace Catkeys.Tasks
 			if(measureStartupTime) Perf.Next(); //Perf.Write(); //startup time: 20 ms when ngen-compiled, else >26 ms. After PC restart ~150 ms (Win10, SSD).
 
 			//single process instance
-			bool isOwner;
-			var mutex = new Mutex(true, "{8AE35071-A3F5-423A-8F67-7C3AC0FFC8E3}", out isOwner);
+			var mutex = new Mutex(true, "{8AE35071-A3F5-423A-8F67-7C3AC0FFC8E3}", out bool isOwner);
 			if(!isOwner) {
 				if(args.Length > 0) {
 					var w = Wnd.FindFast(null, "CatkeysTasks");
@@ -59,7 +58,7 @@ namespace Catkeys.Tasks
 
 			//Application.EnableVisualStyles(); //730 mcs
 			//Application.SetCompatibleTextRenderingDefault(false); //70 mcs
-			Api.SetErrorMode(Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
+			Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 			Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
 			Api.ChangeWindowMessageFilter(Api.WM_SETTEXT, 1);
@@ -288,7 +287,7 @@ namespace Catkeys.Tasks
 		{
 			Perf.First();
 			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
-			if(!Files.DirectoryExists(outDir)) Directory.CreateDirectory(outDir);
+			if(!Files.ExistsAsDirectory(outDir)) Directory.CreateDirectory(outDir);
 			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
 			//PrintList(csFile, dllFile);
 

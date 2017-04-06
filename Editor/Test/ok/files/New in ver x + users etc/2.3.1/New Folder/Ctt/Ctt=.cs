@@ -1,0 +1,3 @@
+function Ctt&source
+
+ Operator =

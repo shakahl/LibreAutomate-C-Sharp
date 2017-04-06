@@ -1,0 +1,1 @@
+class DragCursor -_hwnd

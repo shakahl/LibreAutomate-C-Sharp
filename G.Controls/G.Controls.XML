@@ -27,7 +27,7 @@
             For GTab returns true even if on a tab button.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GContentNode.Show">
+        <member name="M:G.Controls.GDockPanel.GContentNode.Show(System.Boolean)">
             <summary>
             Shows in the most recent visible state. Activates tab group panel.
             </summary>
@@ -160,12 +160,18 @@
             The 'set' function: if true, makes this panel floating and visible if it is currently docked or hidden; if false, makes it docked if it is currently floating and visible.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.Create(System.String,System.Windows.Forms.Control[])">
+        <member name="M:G.Controls.GDockPanel.IPanel.Focus">
+            <summary>
+            Make the panel visible (like <see cref="P:G.Controls.GDockPanel.IPanel.Visible"/>) and focus its control.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GDockPanel.Create(System.String,System.String,System.Windows.Forms.Control[])">
             <summary>
             Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
             Adjusts control properties and positions everything according to the XML.
             </summary>
-            <param name="xmlFile">XML file containing panel/toolbar layout. Used to load and save. If missing, will load Folders.ThisApp + Path.GetFileName(xmlFile) and save to xmlFile.</param>
+            <param name="xmlFileDefault">XML file containing default panel/toolbar layout.</param>
+            <param name="xmlFileCustomized">XML file containing customized panel/toolbar layout. It will be created or updated when saving customizations.</param>
             <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
         </member>
         <member name="P:G.Controls.GDockPanel._HitTestData.ParentTab">
@@ -233,6 +239,11 @@
             <summary>
             Before showing the context menu when the user right-clicks a panel tab button or caption.
             The event handler can add/remove/etc menu items.
+            </summary>
+        </member>
+        <member name="T:G.Controls.GDockPanel.DockedToolStripRenderer">
+            <summary>
+            Removes rounded edges of the ToolStrip to which is assigned.
             </summary>
         </member>
         <member name="T:G.Controls.GDockPanel.GSplit">
@@ -316,11 +327,12 @@
             Returns buttons width.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GTab.SetActiveItem(G.Controls.GDockPanel.GPanel)">
+        <member name="M:G.Controls.GDockPanel.GTab.SetActiveItem(G.Controls.GDockPanel.GPanel,System.Boolean)">
             <summary>
             Sets ActiveItem, shows its contents, hides previous ActiveItem contents, invalidate caption, calls DockedDocumentPanelActivated event.
             </summary>
             <param name="gp">Can be null to deactivate all.</param>
+            <param name="focusControl"></param>
         </member>
         <member name="M:G.Controls.GDockPanel.GTab.OnItemRemoved(G.Controls.GDockPanel.GPanel)">
             <summary>
@@ -347,94 +359,21 @@
             We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
             </summary>
         </member>
-        <member name="F:G.Controls.GStripManager.GSMProp.components">
+        <member name="F:G.Controls.GStripManagerPropertiesDialog.components">
             <summary>
             Required designer variable.
             </summary>
         </member>
-        <member name="M:G.Controls.GStripManager.GSMProp.Dispose(System.Boolean)">
+        <member name="M:G.Controls.GStripManagerPropertiesDialog.Dispose(System.Boolean)">
             <summary>
             Clean up any resources being used.
             </summary>
             <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         </member>
-        <member name="M:G.Controls.GStripManager.GSMProp.InitializeComponent">
+        <member name="M:G.Controls.GStripManagerPropertiesDialog.InitializeComponent">
             <summary>
             Required method for Designer support - do not modify
             the contents of this method with the code editor.
-            </summary>
-        </member>
-        <member name="P:G.Controls.GStripManager.MenuBar">
-            <summary>
-            Menu bar.
-            </summary>
-        </member>
-        <member name="P:G.Controls.GStripManager.Toolbars">
-            <summary>
-            Toolbars.
-            </summary>
-        </member>
-        <member name="P:G.Controls.GStripManager.Submenus">
-            <summary>
-            Submenus.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GStripManager.#ctor(System.Windows.Forms.Form,System.String,System.String,G.Controls.IGStripManagerCallbacks)">
-            <param name="form">Form used as owner of dialog boxes.</param>
-            <param name="xmlFileDefault">File containing default XML.</param>
-            <param name="xmlFileCustomized">File containing customized XML. Don't have to exist; it will be created when saving customizations.</param>
-            <param name="callbacks"></param>
-        </member>
-        <member name="M:G.Controls.GStripManager.BuildAll">
-            <summary>
-            Opens XML file and creates toolbars/menus/submenus.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GStripManager._AddChildItems(System.Xml.Linq.XElement,System.Windows.Forms.ToolStrip,System.Boolean)">
-            <summary>
-            Adds toolbar buttons or menu bar items.
-            Call this for each top-level toolstrip (toolbar or menu bar).
-            </summary>
-            <param name="xParent">XML element of the toolbar or menu bar.</param>
-            <param name="owner">The toolbar or menu bar.</param>
-            <param name="isMenu">true if menu, false if toolbar.</param>
-        </member>
-        <member name="M:G.Controls.GStripManager._AddChildItem(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Int32)">
-            <summary>
-            Adds item to owner.
-            Before it calls <see cref="M:G.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)"/>.
-            </summary>
-            <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator.</param>
-            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which to add this item.</param>
-            <param name="insertAt">If not negative, inserts at this index. If negative, adds to the end.</param>
-        </member>
-        <member name="M:G.Controls.GStripManager._CreateChildItem(System.Xml.Linq.XElement,System.Boolean)">
-            <summary>
-            Creates a menu or toolbar item.
-            </summary>
-            <param name="x">XML element containing item properties.</param>
-            <param name="isMenu">false if toolbar item, true if menu item (also if menu bar item).</param>
-        </member>
-        <member name="M:G.Controls.GStripManager._OnMouseUp(System.Object,System.Windows.Forms.MouseEventArgs)">
-            <summary>
-            Toolbar button MouseUp handler. Implements context menu that allows to customize.
-            </summary>
-        </member>
-        <member name="M:G.Controls.GStripManager._Strips_Customize(System.UInt32,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Object)">
-            <summary>
-            Implements toolbar button customization.
-            </summary>
-            <param name="action">1 copy, 2 move, 3 remove, 4 separator, 5 hide/unhide, 6 properties.</param>
-            <param name="item">Button.</param>
-            <param name="tsTo">Destination toolbar, or null if don't need.</param>
-            <param name="etc">
-            With action 2 (move) can be the target button as ToolStripItem; if null, moves to the end.
-            With action 6 (properties) - GSMProp.
-            </param>
-        </member>
-        <member name="M:G.Controls.GStripManager._OnMouseDown(System.Object,System.Windows.Forms.MouseEventArgs)">
-            <summary>
-            Toolbar button MouseDown handler. Implements toolbar button reordering with Alt+drag.
             </summary>
         </member>
         <member name="T:G.Controls.IGStripManagerCallbacks">
@@ -461,8 +400,132 @@
             <summary>
             Called before adding an item to a toolbar or menu/submenu.
             </summary>
+            <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator. Its Tag property is XElement.</param>
+            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which will be added this item. Its Tag property is XElement.</param>
+        </member>
+        <member name="P:G.Controls.GStripManager.MenuBar">
+            <summary>
+            Menu bar.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GStripManager.Toolbars">
+            <summary>
+            Toolbars.
+            </summary>
+        </member>
+        <member name="P:G.Controls.GStripManager.Submenus">
+            <summary>
+            Submenus.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager.#ctor(System.Windows.Forms.Form,G.Controls.IGStripManagerCallbacks)">
+            <param name="form">Form used as owner of dialog boxes.</param>
+            <param name="callbacks"></param>
+        </member>
+        <member name="M:G.Controls.GStripManager.BuildAll(System.String,System.String,System.Windows.Forms.ToolStripRenderer)">
+            <summary>
+            Opens XML file and creates toolbars/menus/submenus from XML tags.
+            </summary>
+            <param name="xmlFile">XML file containing menus/toolbars without user customizations.</param>
+            <param name="xmlFileCustom">XML file containing user customizations. It will be created or updated when saving customizations.</param>
+            <param name="tsRenderer"></param>
+        </member>
+        <member name="M:G.Controls.GStripManager._AddChildItems(System.Xml.Linq.XElement,System.Windows.Forms.ToolStrip,System.Boolean)">
+            <summary>
+            Adds toolbar buttons or menu bar items.
+            Call this for each top-level toolstrip (toolbar or menu bar).
+            </summary>
+            <param name="xParent">XML element of the toolbar or menu bar.</param>
+            <param name="owner">The toolbar or menu bar.</param>
+            <param name="isMenu">true if menu, false if toolbar.</param>
+        </member>
+        <member name="M:G.Controls.GStripManager._AddChildItem(System.Xml.Linq.XElement,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Int32)">
+            <summary>
+            Adds item to owner.
+            Before it calls <see cref="M:G.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)"/>.
+            </summary>
+            <param name="x">item's element. This function assigns item to its annotation. Caller must assign x to item.Tag before calling this function.</param>
             <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator.</param>
-            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which will be added this item.</param>
+            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which to add this item.</param>
+            <param name="insertAt">If not negative, inserts at this index. If negative, adds to the end.</param>
+        </member>
+        <member name="M:G.Controls.GStripManager._CreateChildItem(System.Xml.Linq.XElement,System.Boolean)">
+            <summary>
+            Creates a menu or toolbar item.
+            </summary>
+            <param name="x">XML element containing item properties.</param>
+            <param name="isMenu">false if toolbar item, true if menu item (also if menu bar item).</param>
+        </member>
+        <member name="M:G.Controls.GStripManager._GetDefaultItemText(System.Xml.Linq.XElement)">
+            <summary>
+            If x has attribute t, gets its value.
+            Else gets its name and converts to text, eg "File_OneTwo" to "One Two".
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager._MergeCustom(System.Xml.Linq.XElement,System.Xml.Linq.XElement@,System.String,System.Boolean)">
+            <summary>
+            Merges custom attributes into default menubar or toolbar XML.
+            Reorders toolbar buttons if need.
+            </summary>
+            <param name="xCustom">Root element of customizations file.</param>
+            <param name="xtsDef">Default menustrip or toolstrip. For custom toolbars the function can replace it.</param>
+            <param name="name">xtsDef name, just to avoid getting it again.</param>
+            <param name="isMenu"></param>
+        </member>
+        <member name="M:G.Controls.GStripManager._DiffCustom">
+            <summary>
+            Extracts differences between _xmlFileDefault and _xStrips and saves to _xmlFileCustom.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager._OnMouseUp(System.Object,System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Toolbar button MouseUp handler. Implements context menu that allows to customize.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager._Strips_Customize(System.UInt32,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Object)">
+            <summary>
+            Implements toolbar button customization.
+            </summary>
+            <param name="action">1 copy, 2 move, 3 remove, 4 separator, 5 hide/unhide, 6 properties.</param>
+            <param name="item">Button.</param>
+            <param name="tsTo">Destination toolbar, or null if don't need.</param>
+            <param name="etc">
+            With action 2 (move) can be the target button as ToolStripItem; if null, moves to the end.
+            With action 6 (properties) - GSMProp.
+            </param>
+        </member>
+        <member name="M:G.Controls.GStripManager._OnMouseDown(System.Object,System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Toolbar button MouseDown handler. Implements toolbar button reordering with Alt+drag.
+            </summary>
+        </member>
+        <member name="M:G.Controls.GStripManager.Find(System.String)">
+            <summary>
+            Gets menu items and toolbar buttons that have the specified name (XML tag).
+            If not found, returns empty List.
+            </summary>
+            <param name="name">XML tag.</param>
+        </member>
+        <member name="T:G.Controls.Form_">
+            <summary>
+            Can be used as base class for forms when you want to use correct dialog font and correct auto-scaling when high DPI.
+            </summary>
+            <remarks>
+            Sets these properties:
+            Font = SystemFonts.MessageBoxFont; //usually Segoe UI, 9pt //default font of Form is MS Sans Serif, 8.25pt
+            AutoScaleMode = AutoScaleMode.Font;
+            
+            Form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', its OK.
+            note:
+            	Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font).
+            	Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form.
+            </remarks>
+        </member>
+        <member name="T:G.Controls.ScrollableControl_">
+            <summary>
+            Allows to set/get scroll info and receive scroll notifications.
+            This class exists because .NET ScrollableControl does not work when AutoScroll is false.
+            </summary>
         </member>
     </members>
 </doc>

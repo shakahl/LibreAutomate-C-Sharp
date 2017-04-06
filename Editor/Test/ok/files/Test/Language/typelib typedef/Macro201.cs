@@ -1,0 +1,12 @@
+INTSTR is
+long2 a
+long3 b
+INTSTR2 c
+INTSTR3 d
+IDispatch2 e
+IDispatch3 f
+sa g
+sa2 h
+sa3 i
+sa4 j
+sa5 k

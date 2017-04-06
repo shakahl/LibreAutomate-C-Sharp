@@ -1,0 +1,4 @@
+type __SubclassAQmControl m_hwnd m_oldproc
+
+__SubclassAQmControl+ __subclass_qmcode_parent
+__subclass_qmcode_parent.Subclass(GetParent(GetQmCodeEditor) &QCP_WndProc)

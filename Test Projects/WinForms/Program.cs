@@ -23,7 +23,7 @@ namespace WinForms
 			//Perf.First();
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			var f = new Form1();
+			var f = new Form2();
 			//f.FormBorderStyle = FormBorderStyle.FixedDialog;
 			//f.UseWaitCursor = false;
 			Application.Run(f);

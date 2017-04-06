@@ -1,0 +1,6 @@
+int h=win("Calculator")
+ Zorder(h win("Notepad"))
+Zorder(h 0)
+ Zorder(h HWND_BOTTOM)
+ Zorder(h HWND_TOPMOST)
+ Zorder(h HWND_NOTOPMOST)

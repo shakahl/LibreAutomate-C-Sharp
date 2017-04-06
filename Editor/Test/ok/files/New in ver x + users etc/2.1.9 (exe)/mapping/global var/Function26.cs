@@ -1,0 +1,2 @@
+CTest- c
+out c

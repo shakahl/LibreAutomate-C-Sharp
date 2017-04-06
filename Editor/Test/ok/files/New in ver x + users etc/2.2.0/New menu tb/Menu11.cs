@@ -1,0 +1,5 @@
+ /expandfolders
+Control Panel ":: 14001F702020EC21EA3A6910A2DD08002B30309D"
+G ":: 14001F44471A0359723FA74489C55595FE6B30EE"
+System "$system$"
+Windows "$windows$"

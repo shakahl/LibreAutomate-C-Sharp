@@ -1,0 +1,2 @@
+run "cmd"
+run "edit"

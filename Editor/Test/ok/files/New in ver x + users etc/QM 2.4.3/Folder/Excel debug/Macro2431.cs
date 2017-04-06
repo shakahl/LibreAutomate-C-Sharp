@@ -1,0 +1,6 @@
+ __err_Excel
+ Excel.
+ typelib Excel {00020813-0000-0000-C000-000000000046} 1.2 0 1
+ typelib Excel {00020813-0000-0000-C000-000000000046} 1.5
+ typelib Excel {00020813-0000-0000-C000-000000000046} 1.7
+ExcelSheet k.Init

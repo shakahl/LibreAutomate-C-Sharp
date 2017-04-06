@@ -1,0 +1,2 @@
+act "+ConsoleWindowClass"
+"test paste"

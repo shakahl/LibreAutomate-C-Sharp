@@ -1,0 +1,2 @@
+str s="hhh"
+spe

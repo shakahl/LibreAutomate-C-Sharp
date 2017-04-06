@@ -1,0 +1,42 @@
+int bcol(0x000000) tcol(0x00FF00)
+
+
+def CFM_BOLD 0x00000001
+def CFM_ITALIC 0x00000002
+def CFM_UNDERLINE	0x00000004
+def CFM_STRIKEOUT	0x00000008
+def CFM_PROTECTED	0x00000010
+def CFM_LINK 0x00000020
+def CFM_SIZE 0x80000000
+def CFM_COLOR 0x40000000
+def CFM_FACE 0x20000000
+def CFM_OFFSET 0x10000000
+def CFM_CHARSET 0x08000000
+
+def CFE_BOLD 0x0001
+def CFE_ITALIC 0x0002
+def CFE_UNDERLINE	0x0004
+def CFE_STRIKEOUT	0x0008
+def CFE_PROTECTED	0x0010
+def CFE_LINK 0x0020
+def CFE_AUTOCOLOR	0x40000000
+
+def SCF_SELECTION 0x0001
+def SCF_WORD 0x0002
+def SCF_DEFAULT 0x0000
+def SCF_ALL 0x0004
+type CHARFORMAT cbSize dwMask dwEffects yHeight yOffset crTextColor !bCharSet !bPitchAndFamily !szFaceName[LF_FACESIZE]
+
+int hwndnote=ShowNote("QM Note" "black background, green text")
+int h=id(1 hwndnote)
+
+SendMessage h EM_SETBKGNDCOLOR 0 bcol
+
+CHARFORMAT cf.cbSize=sizeof(CHARFORMAT)
+cf.dwMask=CFM_COLOR|CFM_BOLD|CFM_FACE|CFM_SIZE
+cf.crTextColor=tcol
+cf.dwEffects=CFE_BOLD
+strncpy(&cf.szFaceName "Comic Sans MS" 31)
+cf.yHeight=400 ;;twips
+
+SendMessage h EM_SETCHARFORMAT SCF_ALL &cf

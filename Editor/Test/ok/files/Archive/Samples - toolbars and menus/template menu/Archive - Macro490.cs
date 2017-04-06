@@ -1,0 +1,2 @@
+out
+TemplateMenu "tm main"

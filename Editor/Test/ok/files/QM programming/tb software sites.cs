@@ -1,0 +1,8 @@
+Quick Macros :"Quick Macros"
+2.2.1 :"2.2.1"
+support@quickmacros.com :"support@quickmacros.com"
+Gintaras Didzgalvis :"Gintaras Didzgalvis"
+password (slapta1) :"slapta1"
+website :"http://www.quickmacros.com"
+download :"http://www.quickmacros.com/quickmac.exe"
+pad :"http://www.quickmacros.com/quickm21.xml"

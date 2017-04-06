@@ -1,0 +1,2 @@
+ NetSendMacro
+mes 7

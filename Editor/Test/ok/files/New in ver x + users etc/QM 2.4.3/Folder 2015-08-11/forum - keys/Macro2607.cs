@@ -1,0 +1,2 @@
+WaitForTriggerKeyReleased
+out 1

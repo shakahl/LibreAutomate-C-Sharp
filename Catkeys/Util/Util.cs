@@ -244,5 +244,50 @@ namespace Catkeys.Util
 		/// Width and Height are <see cref="BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
 		/// </summary>
 		public static Size SmallIconSize { get { var t = BaseDPI / 6; return new Size(t, t); } }
+
+		/// <summary>
+		/// If <see cref="BaseDPI"/> is more than 96, returns stretched i.
+		/// Else returns i.
+		/// </summary>
+		/// <param name="i"></param>
+		public static int ScaleInt(int i)
+		{
+			long dpi = BaseDPI;
+			if(dpi > 96) i = (int)(i * dpi / 96);
+			return i;
+		}
+
+		/// <summary>
+		/// If <see cref="BaseDPI"/> is more than 96, returns scaled (stretched) z.
+		/// Else returns z.
+		/// Note: for images use <see cref="ImageSize"/>.
+		/// </summary>
+		/// <param name="z"></param>
+		public static Size ScaleSize(Size z)
+		{
+			int dpi = BaseDPI;
+			if(dpi > 96) {
+				z.Width = (int)((long)z.Width * dpi / 96);
+				z.Height = (int)((long)z.Height * dpi / 96);
+			}
+			return z;
+		}
+
+		/// <summary>
+		/// If <see cref="BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
+		/// Else returns image.Size.
+		/// </summary>
+		/// <param name="image"></param>
+		public static Size ImageSize(Image image)
+		{
+			if(image == null) return Size.Empty;
+			var r = image.Size;
+			int dpi = BaseDPI;
+			if(dpi > 96) {
+				r.Width = (int)((long)r.Width * dpi / (int)Math.Round(image.HorizontalResolution));
+				r.Height = (int)((long)r.Height * dpi / (int)Math.Round(image.VerticalResolution));
+			}
+			return r;
+		}
 	}
 }

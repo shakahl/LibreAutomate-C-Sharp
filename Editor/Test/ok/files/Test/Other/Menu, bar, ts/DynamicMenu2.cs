@@ -1,0 +1,2 @@
+DynamicMenu "Sample Menu[]NextWindow"
+

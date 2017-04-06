@@ -1,0 +1,5 @@
+&aaa :out "a"
+&ąąą :out "ą"
+ššš :out "š"
+bbb :out "b"
+r&ūd :out "ū"

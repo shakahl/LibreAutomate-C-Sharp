@@ -1,0 +1,2 @@
+ /expandfolders
+a "$0$"

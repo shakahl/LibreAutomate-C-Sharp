@@ -1,0 +1,41 @@
+ \Dialog_Editor
+
+str controls = "4 5 6 8 9 10 11 12 13 15 16 20 21 22 23 29 30"
+str c4Che o5Opt o6Opt e8Var e9Var e10Var e11 e12Txt rea13Var si15Var sb16Var cb20Var cb21Var cb22Var lb23Var ax29SHD qmg30
+if(!ShowDialog("" 0 &controls)) ret
+
+ BEGIN DIALOG
+ 0 "" 0x90C80AC8 0x0 0 0 372 490 "Dialog"
+ 3 Button 0x54032000 0x0 104 0 48 14 "Button"
+ 4 Button 0x54012003 0x0 156 0 48 10 "Check"
+ 5 Button 0x54032009 0x0 208 0 58 10 "Option first"
+ 6 Button 0x54002009 0x0 272 0 58 10 "Option next"
+ 8 Edit 0x54030080 0x200 0 20 96 13 "Var" "tooltipppp"
+ 9 Edit 0x54231044 0x200 100 20 58 45 "Var"
+ 10 Edit 0x54030020 0x200 0 36 96 13 "Var"
+ 11 Edit 0x54032000 0x200 0 52 32 13 ""
+ 12 Edit 0x54200844 0x20000 164 20 54 45 "Txt"
+ 13 RichEdit20A 0x54233044 0x200 224 20 78 45 "Var"
+ 14 Static 0x54000200 0x0 0 72 48 12 "Text"
+ 15 Static 0x54000003 0x0 56 72 16 16 "Var"
+ 16 Static 0x5400000E 0x0 80 72 16 16 "Var"
+ 19 Static 0x54000000 0x0 212 72 96 28 "Text"
+ 20 ComboBox 0x54230243 0x0 0 104 96 213 "Var"
+ 21 ComboBox 0x54230242 0x0 0 120 96 213 "Var"
+ 22 ComboBox 0x54230641 0x0 104 104 96 48 "Var"
+ 23 ListBox 0x54230101 0x200 208 104 96 48 "Var"
+ 24 msctls_updown32 0x54030000 0x0 4 156 11 18 "Var"
+ 25 SysDateTimePick32 0x56030000 0x0 24 156 92 14 "Var"
+ 26 SysLink 0x54020000 0x0 120 156 50 14 "Link"
+ 27 #32770 0x54030000 0x0 180 156 124 29 "Var"
+ 28 ActiveX 0x54030000 0x0 4 188 96 48 "MSACAL.Calendar {8E27C92B-1264-101C-8A2F-040224009C02}"
+ 29 ActiveX 0x54030000 0x0 104 188 96 48 "SHDocVw.WebBrowser"
+ 30 QM_Grid 0x56031041 0x200 208 188 96 48 "0[]A[]B"
+ 31 QM_DlgInfo 0x54000000 0x20000 308 188 60 48 "Info"
+ 1 Button 0x54030001 0x4 0 0 48 14 "OK"
+ 2 Button 0x54030000 0x4 52 0 48 14 "Cancel"
+ 7 Button 0x54020007 0x0 336 0 30 96 "Txt"
+ 17 Static 0x54000010 0x20000 4 244 436 2 ""
+ 18 Static 0x54000011 0x20000 104 76 1 16 ""
+ END DIALOG
+ DIALOG EDITOR: "" 0x2040108 "*" "" "" ""

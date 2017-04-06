@@ -1,0 +1,2 @@
+AddTrayIcon
+100

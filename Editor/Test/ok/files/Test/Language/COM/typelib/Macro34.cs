@@ -1,0 +1,5 @@
+typelib TLI {8B217740-717D-11CE-AB5B-D41203C10000} 1.0 ;;TypeLib Information, ver 1.0
+
+out LOWORD(0x00010002)
+out HIWORD(0x00010002)
+out "%x" MAKELONG(1 2)

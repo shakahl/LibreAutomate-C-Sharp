@@ -1,0 +1,1 @@
+class CFileInterlocked handle

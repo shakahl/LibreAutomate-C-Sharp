@@ -1,0 +1,5 @@
+ hid- _hwndqm
+ act _hwndqm
+ ShowWindow _hwndqm SW_SHOW
+ SetWindowPos _hwndqm 0 0 0 0 0 SWP_NOSIZE|SWP_NOMOVE|SWP_NOZORDER|SWP_SHOWWINDOW
+SetWindowPos _hwndqm 0 0 0 0 0 SWP_NOSIZE|SWP_NOMOVE|SWP_NOZORDER|SWP_SHOWWINDOW|SWP_NOSENDCHANGING

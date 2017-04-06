@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -13,6 +14,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -45,6 +47,8 @@ using System.Globalization;
 //for LikeEx_
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.CompilerServices;
+
+using VB = Microsoft.VisualBasic.FileIO;
 
 //using ImapX;
 //using System.Data.SQLite;
@@ -4254,7 +4258,7 @@ A,""B """"Q"""" Z"",C
 
 		Perf.First();
 		var file = Folders.Temp + "test2.db3";
-		bool isNew = !Files.FileExists(file);
+		bool isNew = !Files.ExistsAsFile(file);
 		Perf.Next();
 
 		using(var db = new SQLiteConnection(file)) {
@@ -6934,7 +6938,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static void TestXDocument()
 	{
 		Perf.First();
-		var x = XElement.Load(@"Q:\app\catkeys\editor\Panels.xml");
+		var x = XElement.Load(@"Q:\app\catkeys\editor\default\Panels.xml");
 		Perf.Next();
 		//var n =x.Elements().Count();
 		var v1 = x.Descendants("panel").FirstOrDefault(el => el.Attribute("name")?.Value == "Output");
@@ -7048,15 +7052,501 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(k);
 	}
 
+	static void TestImageSerialize()
+	{
+		var x = new XElement("test");
+		for(int i = 0; i < 5; i++) {
+			Perf.First();
+			Bitmap b = Icons.GetFileIconImage(@"q:\app\qm.exe", 16);
+			Perf.Next();
+			//Print(b != null);
+			using(var ms = new MemoryStream()) {
+				b.Save(ms, ImageFormat.Png);
+				Perf.Next();
+				var s = Convert.ToBase64String(ms.ToArray());
+				Perf.Next();
+				//Print(s);
+				var d = new XElement("i", s);
+				x.Add(d);
+			}
+			Perf.NW();
+		}
+		Print(x);
+
+		var f = @"q:\test\image2.png";
+		Bitmap bb = null;
+		Perf.First();
+		foreach(var k in x.Elements("i")) {
+			//Print(k.Value);
+			using(var ms = new MemoryStream(Convert.FromBase64String(k.Value))) {
+				bb = new Bitmap(ms);
+			}
+			Perf.Next();
+		}
+		Perf.Write();
+
+		bb.Save(f);
+		Process.Start(f);
+
+		//Bitmap bb = new Bitmap(ms);
+		//Print(bb != null);
+		//var f = @"q:\test\image.png";
+		//bb.Save(f);
+		//Process.Start(f);
+	}
+
+	static void TestCatExceptioNewOverload()
+	{
+		Wnd w = Wnd.Find("ILSpy");
+		Api.SetLastError(10);
+		try {
+			try {
+				throw new CatException(1, "Inner");
+			}
+			catch(Exception e) {
+				//throw new CatException("Outer", e);
+				//throw new CatException(5, "Outer", e);
+				//throw new WndException(w, "Outer", e);
+				throw new WndException(w, 5, "Outer", e);
+			}
+		}
+		catch(CatException e) {
+			PrintList(e.NativeErrorCode, e.Message);
+		}
+	}
+
+	static void TestPathNormalize()
+	{
+		string s;
+		s = @"c:\a\..\..\b.txt";
+		s = @"c:\a\b";
+		s = @"c:\";
+		s = @"c:\a\b..";
+		s = @"c:\progrm files\some folder\..\some file.txt";
+		s = @"c:\progrm files\some folder\some file.txt";
+		s = @"\\?\c:";
+		s = @"c:\a\.\b.txt";
+		s = @"c:\a\b\.";
+		s = @"file.name";
+		s = @"c:\a\..";
+		s = @"\\?\\\\c:////kk";
+		s = @"c:";
+		s = @"c:\progra~1";
+		s = @"c:\a\b. ";
+		s = @"%programfiles%\etc\";
+		s = @"c:/progrm files/some folder/some file.txt";
+		s = @"\\server\share\a\b";
+		s = @"c:\oo~nooo1";
+		s = @"c:\a\..\b.txt";
+		s = @"\\?\c:\progra~1";
+		s = @"\\.\etc";
+		s = @"\\?\etc";
+		s = @"c:etc";
+		s = @"\\?\c:etc";
+
+		//Print(Path.GetFullPath(s));
+		var u = Path_.Normalize(s);
+		//var u=Path_.Normalize(s, @"c:\def dir/");
+		Print(u);
+		//Print(Path_.PrefixLongPath(u));
+		return;
+
+		Wait(0.2);
+		Perf.SpinCPU(100);
+		var a1 = new Action(() => { Path_.Normalize(s); });
+		var a2 = new Action(() => { Path.GetFullPath(s); });
+		var a3 = new Action(() => { });
+		var a4 = new Action(() => { });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+	}
+
+	[DllImport("kernel32.dll", EntryPoint = "MoveFileExW", SetLastError = true)]
+	internal static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, uint dwFlags);
+
+	static void TestFileOp()
+	{
+		//Print(Path_.ExpandEnvVar("%appdata%\\more"));
+		//Print(Path_.IsFullPath("%appdata%\\more"));
+		//Print(Files.SearchPath("%appdata%\\Microsoft\\"));
+		//Print(Path_.LibGetEnvVar("appdata"));
+		//Print(Folders.EnvVar("appdata")+"sub");
+
+		//Environment.SetEnvironmentVariable("test", "%appdata%");
+		//Print(Environment.GetEnvironmentVariable("test"));
+		//Print(Environment.ExpandEnvironmentVariables("%test%"));
+		//Print(Path_.ExpandEnvVar("%test%\\more"));
+
+		//var a1 = new Action(() => { Path_.ExpandEnvVar("%appdata%\\more"); });
+		//var a2 = new Action(() => { Path_.ExpandEnvVar("%no%\\more"); });
+		//var a3 = new Action(() => { Path_.IsFullPath("%appdata%\\more"); });
+		//var a4 = new Action(() => { Path_.IsFullPath("c:\\more"); });
+		//var a5 = new Action(() => { Environment.ExpandEnvironmentVariables("%appdata%\\more"); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5);
+
+		//Directory.SetCurrentDirectory(@"q:\test");
+		//Print(Files.FileOrDirectory(@"q:\test\test.cs"));
+		//Print(Files.FileOrDirectory(@"test.cs"));
+		//Print(Files.FileOrDirectory(@"test.cs", true));
+		//Print(Files.SearchPath(@"test.cs"));
+
+		//return;
+
+		//if(!Files.GetFileId(@"q:\test", out var k)) throw new CatException(0, "failed");
+		////if(!Files.GetFileId(@"q:\test\test.cs", out var k)) throw new CatException(0, "failed");
+		////if(!Files.GetFileId(@"q:\test\no.cs", out var k)) throw new CatException(0, "failed");
+		//PrintList(k.VolumeSerialNumber, k.FileIndex);
+
+		//if(!Files.GetFileId(@"//Q7c/q/test", out var k2)) throw new CatException(0, "failed");
+		//PrintList(k2.VolumeSerialNumber, k2.FileIndex);
+		//Print(k2 == k);
+		//Print(k.Equals(k2));
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Files.GetFileId(@"q:\test", out var kk); });
+		//var a2 = new Action(() => { });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+		//33 mcs
+
+		//return;
+
+		//Print(Files._IsDestInSrc(@"c:\A\b", @"c:\a"));
+
+		//s = "name.txt.";
+		//s = null;
+		//s = "name.txt";
+		//s = "na\\me.txt";
+		//s = " ";
+		//s = "CON.txt";
+		//Print(Path_.IsInvalidFileName(s));
+
+		//Files.Move(@"Q:\Test", @"Q:\Test\Find", true);
+		//Files.Move(@"Q:\Test\test.cs", @"Q:\Test\test2.cs", true);
+
+		Perf.First();
+		//Directory.Move(@"q:\test\a", @"q:\test\c");
+		//Directory.Move(@"q:\test\a", @"d:\test\a");
+		//VB.FileSystem.MoveDirectory(@"q:\test\a", @"d:\test\a", true);
+		//VB.FileSystem.MoveDirectory(@"q:\test\a", @"q:\test\a2", true);
+		//VB.FileSystem.MoveDirectory(@"q:\test\a", @"q:\test\c", true);
+		//VB.FileSystem.CopyDirectory(@"q:\test\a", @"q:\test\c", true);
+		//VB.FileSystem.CopyDirectory(@"q:\test\a", @"d:\test\a", true);
+		//VB.FileSystem.CopyDirectory(@"d:\test\x", @"d:\test\z", true);
+
+		//Files.Copy2(@"d:\test\x", @"d:\test\z");
+		//Files.Copy2(@"\\?\d:\x\", @"c:/test/~");
+
+		//Files.Move(@"d:\test\x", @"d:\test\z", true);
+		//Files.Move(@"d:\test\z\sub\z", @"d:\test\z", true);
+		//Files.Move(@"q:\test\test2.cs", @"d:\test\test2.cs", true);
+		//Files.Move(@"q:\test\z", @"d:\test\zz", true);
+
+		//if(MoveFileEx(@"d:\test\z", @"d:\test\Z", 3)) return; //OK
+		//if(MoveFileEx(@"d:\test\x", @"d:\test\z", 3)) return; //Access is denied (if exists)
+		//if(MoveFileEx(@"d:\test", @"d:\test\z", 3)) return; //The process cannot access the file because it is being used by another process.
+		//if(MoveFileEx(@"d:\test\z", @"d:\test", 3)) return; //Access is denied
+		//if(MoveFileEx(@"d:\test\z\sub", @"d:\test", 3)) return; //Access is denied
+		//if(MoveFileEx(@"q:\test\z", @"d:\test\z", 2)) return; //Access is denied
+		//var ec = Native.GetError();
+		//throw new CatException(ec, "*move");
+
+		//Files.Test();
+		//Files.Delete(@"d:\no file", true);
+
+		var ifExist = Files.IfExists.Fail;
+		ifExist = Files.IfExists.Delete;
+		//ifExist = Files.IfExists.RenameExisting;
+		ifExist = Files.IfExists.MergeDirectory;
+
+		//Files.Copy(@"q:\test\copy.txt", @"d:\test\copy.txt", ifExist);
+		//Files.Copy(@"d:\test\z\copy.txt", @"d:\test\copy.txt", ifExist);
+		//Files.Copy(@"q:\test\copy dir", @"d:\test\copy dir", ifExist);
+		//Files.Copy(@"d:\test\copy.txt", @"d:\test\COPY.txt", ifExist);
+		//Files.Copy(@"d:\test\copy dir", @"d:\test\COPY dir", ifExist);
+		//Files.Move(@"d:\test\copy.txt", @"d:\test\COPY.txt", ifExist);
+		//Files.Move(@"d:\test\copy dir", @"d:\test\COPY dir", ifExist);
+		//Files.Rename(@"d:\test\copy.txt", @"COPY.txt", ifExist);
+		//Files.Rename(@"d:\test\copy dir", @"COPY dir", ifExist);
+		//Files.Move(@"q:\test\copy.txt", @"d:\test\copy.txt", ifExist);
+		//Files.Move(@"q:\test\copy dir", @"d:\test\copy dir", ifExist);
+		//Files.Move(@"d:\test\z\copy.txt", @"d:\test\copy.txt", ifExist);
+		//Files.Move(@"d:\test\z\copy dir", @"d:\test\copy dir", ifExist);
+		//Files.Move(@"d:\test\z\copy dir", @"d:\test\copy dir", ifExist);
+
+		//copying drives
+		//Files.CopyTo(@"E:\", @"d:\test\E", ifExist); //fails, it's OK
+		//Files.Copy(@"E:\", @"d:\test\E", ifExist);
+		//Files.Copy(@"E:\", @"G:\", ifExist);
+		//Files.Move(@"E:\", @"G:\", ifExist);
+
+		//if(Files.GetAttributes(@"E:\", out var att)) Print(att);
+
+		Perf.NW();
+		//return;
+
+
+		//string s1, s2;
+		//s1 = @"Q:\Test\test.cs";
+		//s2 = @"Q:\Test\test2.cs";
+		//s1 = @"Q:\Test\Find";
+		//s2 = @"Q:\Test\Find2";
+		////s1 = @"Q:\Test\test.cs";
+		//////s2 = @"Q:\Test\Find\test.cs";
+		////s2 = @"Q:\Test\new dir\subdir\test.cs";
+
+		////File.SetAttributes(s1, FileAttributes.ReadOnly);
+		//Perf.First();
+		//for(int i = 0; i < 2; i++) {
+		//	var t1 = ((i & 1) == 0) ? s1 : s2;
+		//	var t2 = ((i & 1) == 0) ? s2 : s1;
+		//	//File.Move(t1, t2);
+
+		//	//Files.Rename(t1, Path.GetFileName(t2), true);
+		//	//Files.Move(t1, t2);
+		//	//Files.MoveTo(t1, Path.GetDirectoryName(t2));
+		//	Files.Copy(t1, t2, true);
+
+
+		//	Perf.Next();
+
+		//	break;
+		//	if(i == 0) DebugDialog(i);
+		//}
+		//Perf.Write();
+	}
+
+	static void TestFilesDelete()
+	{
+		//string s1, s2;
+		//s1 = @"Q:\Test\test.cs";
+		//s2 = @"Q:\Test\test2.cs";
+		//for(int i = 0; i < 4; i++) {
+		//	File.Copy(s1, s2);
+		//	Perf.First();
+		//	Files.Delete(s2, false);
+		//	Perf.NW();
+		//}
+
+		//for(int i = 0; i < 3; i++) {
+		//	string s = @"Q:\Test\New Folder";
+		//	string s2 = s + "\\sub";
+		//	string s3 = s2 + "\\file.txt";
+		//	if(true) {
+		//		Directory.CreateDirectory(s2);
+		//		if(!Files.FileExists(s3)) File.WriteAllText(s3, "aaa");
+		//		//File.SetAttributes(s3, FileAttributes.ReadOnly);
+		//		//File.SetAttributes(s3, FileAttributes.Hidden);
+		//		File.SetAttributes(s2, FileAttributes.Directory | FileAttributes.ReadOnly);
+		//		Process.Start(s2);
+		//	} else {
+		//		Directory.CreateDirectory(s);
+		//	}
+		//	Wait(2);
+		//	//TaskDialog.Show();
+
+		//	Perf.First(100);
+		//	Files.Delete(s, false);
+		//	Perf.NW();
+		//}
+
+		Files.Delete(@"D:\test\mount", false);
+
+		Print("ok");
+	}
+
+	static void TestEnumDirectory()
+	{
+		int n = 0;
+		string dir = @"D:\Test";
+		//dir = @"C:\Program Files";
+		//dir = @"C:\Program Files (x86)";
+		dir = @"C:\Windows\System32";
+		//dir = @"C:\Windows";
+		//dir = @"C:\Windows.old";
+		//dir = @"C:\";
+		//dir = @"F:\";
+		//dir = @"Q:\";
+		//dir = @"Q:\app";
+		//dir = @"\\?\D:\Test";
+		//dir= @"D:\Test\..";
+		//dir = @"D:\";
+		//dir= @"D:\Test\mount";
+		//dir= @"D:\Test\test2.cs";
+		//dir = @"\\.\";
+		//dir = @"U:\";
+		//dir = @"\\WIN-BJHQMCDNJJR\Users\Public\Recorded TV";
+		//dir = @"\\WIN-BJHQMCDNJJR\Users";
+		//dir = @"\\WIN-BJHQMCDNJJR";
+		//dir = @"\\hhhhhh";
+		//dir = @"\\WIN-BJHQMCDNJJR\Moooo";
+		//dir = @"Q:\<>";
+		//dir = @"\\.\Device";
+		//dir = @"//Q7c/q/test";
+		//dir = @"//Q7c/d$/test";
+		//dir = Folders.SystemX86;
+
+		Files.EDFlags fl = 0;
+		fl = Files.EDFlags.AndSubdirectories;
+		//fl = Files.EDFlags.AndSubdirectories | Files.EDFlags.AndSymbolicLinkSubdirectories;
+		//fl |= Files.EDFlags.SkipHidden;
+		//fl |= Files.EDFlags.SkipHiddenSystem;
+		//fl |= Files.EDFlags.RawPath;
+		//fl |= Files.EDFlags.DisableRedirection;
+
+		Perf.SpinCPU(200);
+		Perf.First();
+		//Files.EnumDirectory(@"D:\Test", fl);
+#if false
+		//DirectoryInfo.EnumerateFileSystemInfos and other .NET directory enumeration methods are useless.
+		//They cannot be used to enumerate subdirectories because:
+		//	Throw UnauthorizedAccessException etc if subfolder access denied.
+		//	Don't have option 'don't get symlink directory content'.
+		//	Not tested, but probably fail if path length > 257.
+		//	When testing, failed for most directories in C:\ (Windows, Program Files etc).
+		//Also >2 times slower. Most of its code consists of security checks.
+		var d = new DirectoryInfo(dir);
+		foreach(var v in d.EnumerateFileSystemInfos("*", System.IO.SearchOption.AllDirectories)) {
+			Print(v.FullName);
+			n++;
+		}
+#elif true
+		int n1 = 0, n2 = 0;
+		//Files.EnumDirectory2(dir, fl);
+		foreach(var f in Files.EnumDirectory(dir, fl)) {
+			//n1 += f.FullPath.Length + 8; n2 += f.Name.Length + 8;
+			//if(f.Name.StartsWith_('$')) Print(f.FullPath);
+			PrintList(f.FullPath, f.Attributes.ToString("X"), f.Size, f.LastWriteTimeUtc.ToLocalTime(), f.Level);
+			//if(f.FullPath.StartsWith_(@"C:\Windows")) f.SkipThisDirectory();
+			////else if(f.FullPath.StartsWith_(@"C:\Program Files")) f.SkipThisDirectory();
+			n++;
+		}
+#else
+		foreach(var f in Files.EnumDirectory_old(dir, fl)) {
+			//Print(f.FullPath);
+			//if(f.FullPath.StartsWith_(@"C:\Windows") || f.FullPath.StartsWith_(@"C:\Program Files")) f.SkipThisDirectory();
+			//if(!f.FullPath.StartsWith_(@"C:\$Recycle.Bin", true)) f.SkipThisDirectory();
+			n++;
+		}
+#endif
+		Perf.NW();
+		Print(n);
+		//PrintList(n1 / 1024, n2 / 1024);
+	}
+
+	[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
+	internal static extern bool PathIsDirectoryEmpty(string pszPath);
+
+	public static bool IsEmptyDirectory(string path)
+	{
+		return !Files.EnumDirectory(path, Files.EDFlags.FailIfAccessDenied).Any();
+
+		//PathIsDirectoryEmpty faster by several %. But then we don't know whether is not empty or it does not exist or is file.
+	}
+
+	static void TestDirectoryIsEmpty()
+	{
+		var s = @"D:\Test\empty";
+		s = @"D:\Test\mount"; //False, True when target missing; False, False when target exists
+		s = @"D:\Test\x\sym-link-to-y"; //False, False when target not empty; True, True when target empty
+		var s2 = @"D:\Test\x";
+		s2 = @"\\?\D:\Test\x";
+		s2 = @"D:\Test\protected";
+		PrintList(PathIsDirectoryEmpty(s), PathIsDirectoryEmpty(s2));
+		PrintList(IsEmptyDirectory(s), IsEmptyDirectory(s2));
+		Perf.SpinCPU(100);
+		var a1 = new Action(() => { PathIsDirectoryEmpty(s); });
+		var a2 = new Action(() => { IsEmptyDirectory(s); });
+		var a3 = new Action(() => { PathIsDirectoryEmpty(s2); });
+		var a4 = new Action(() => { IsEmptyDirectory(s2); });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+	}
+
+	static void TestFileProperties()
+	{
+		//Files.ExistsAsResult u = 0;
+		//if(u > 0) Print(1);
+		//if(u < 0) Print(-1);
+
+		//var s = @"E:\setup.exe";
+		////var s =@"D:\Test\protected";
+		////var s =@"D:\Test\protected\no.txt";
+		////var s =@"D:\Test\protected\f.txt";
+
+		////Native.SetError(5);
+		////if(Files.FileExists(s)) { Print("exists"); return; }
+		////Print(Native.GetErrorMessage());
+		//////if(Files.GetAttributes(s, out var attr)) PrintHex(attr); else Print("failed") ;
+		////if(Files.GetAttributes(s, out var attr, Files.GAFlags.DoNotThrow)) PrintHex(attr); else Print("failed") ;
+
+		////Print(File.Exists(s));
+		////Print(File.GetAttributes(s));
+
+		////Print(Path_.Normalize(@"C:/aaaaaaaaa/bbbbb/../aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+		//return;
+
+		//string s;
+		//s = @"D:\Test\protected";
+		//s = @"D:\Test\protected\no.txt"; //false
+		//s = @"D:\Test\protected\f.txt"; //exception 'access denied'
+		//s = @"D:\";
+		//s = @"K:\"; //false
+		//s = @"D:\<>\mm";
+		//Print(Files.GetProperties(s, out var x));
+		//PrintList(x.Attributes.ToString("X"), x.Size, x.LastWriteTimeUtc, x.CreationTimeUtc, x.LastAccessTimeUtc);
+
+		foreach(var f in Files.EnumDirectory(@"C:", Files.EDFlags.AndSubdirectories)) {
+			string k = f;
+
+			var ea = Files.ExistsAs2(k);
+			switch(ea) {
+			case Files.ItIs2.File: case Files.ItIs2.Directory: break;
+			default:
+				PrintList(ea, k);
+				break;
+			}
+
+			//Print(k); continue;
+			//if(Files.GetProperties(k, out var x, Files.GAFlags.DoNotThrow)) {
+			//	PrintList(x.Attributes.ToString("X"), x.Size, x.LastWriteTimeUtc, x.CreationTimeUtc, x.LastAccessTimeUtc, k);
+			//} else {
+			//	var es = Native.GetErrorMessage();
+			//	PrintList("FAILED", k, Files.ExistsAsAny(k), f.FullPath.Length, es);
+			//}
+		}
+
+		Print("end");
+	}
+
+	static void TestCalculateDriveSize()
+	{
+		foreach(var f in Files.EnumDirectory(@"Q:\")) {
+			if(!f.IsDirectory) continue;
+			PrintList(Files.CalculateDirectorySize(f)/1024/1024, f);
+		}
+		Print("END");
+	}
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
 		Output.Clear();
 		Thread.Sleep(100);
 
+		//TODO: InitLibrary. Optional but recommended. Would set error mode, default domain data, etc.
 
 		try {
-			TestKeysFromString();
+			TestCalculateDriveSize();
+			//TestFileProperties();
+			//TestDirectoryIsEmpty();
+			//TestEnumDirectory();
+			//TestFilesDelete();
+			//TestFileOp();
+			//TestPathNormalize();
+			//TestCatExceptioNewOverload();
+			//TestImageSerialize();
+			//TestKeysFromString();
 			//TestMenuStripShortcuts();
 			//TestXDocument();
 			//TestResizePngIconBigger();

@@ -4,16 +4,113 @@
         <name>Catkeys</name>
     </assembly>
     <members>
-        <member name="M:Catkeys.Automation.NoClass.Wait(System.Double)">
+        <member name="M:Catkeys.Input.GetTextCursorRect(Catkeys.RECT@)">
             <summary>
-            Suspends this thread for the specified amount of time.
-            Alias of <see cref="M:Catkeys.Time.Wait(System.Double)"/>.
+            Gets current text cursor (caret) rectangle in screen coordinates.
+            Returns the control that contains it.
+            If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns Wnd0.
             </summary>
-            <param name="timeS">
-            The number of seconds to wait.
-            The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="M:Catkeys.Time.Wait(System.Double)"/>.
-            </param>
-            <exception cref="T:System.ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+        </member>
+        <member name="T:Catkeys.Input.Keys_">
+            <summary>
+            Keys and modifiers that are missing in <see cref="T:System.Windows.Forms.Keys"/> enumeration.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.Keys_.Windows">
+            <summary> Modifier key Windows (flag). Can be used like Keys.Shift etc. </summary>
+        </member>
+        <member name="P:Catkeys.Input.Keys_.NumEnter">
+            <summary> Numpad Enter key. </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.Plus">
+            <summary>
+            + operator.
+            Presses the key and does not release. These keys are auto-released after next key or (keys) that is not followed by +. Also after next mouse click.
+            Example: "Ctrl+Shift+A ...".
+            Example: "Alt+(F O) ...".
+            Example: "Ctrl+" ... Mouse.Click() //Ctrl auto-released here.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.Star">
+            <summary>
+            * operator.
+            1. Repeats the preceding key.
+            Example: "Tab*10" //press Tab 10 times.
+            2. Just presses (without releasing) or just releases.
+            Example: "Ctrl*down" ... "Ctrl*up".
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.ParenStart">
+            <summary>
+            ( operator.
+            1. Encloses function arguments.
+            Example: WAIT(0.5).
+            2. Turns off auto-releasing keys pressed with operator +, until ")".
+            Example: "Alt+(F O) ...".
+            Example: "Ctrl+(" ... Mouse.Click(); Mouse.Click(); ... ")" //Ctrl released here.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.ParenEnd">
+            <summary>
+            ) operator.
+            Releases keys pressed with operator +, when auto-releasing was turned off with operator (. See <see cref="P:Catkeys.Input._KeyFunc.ParenStart"/>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.VK">
+            <summary>
+            VK(vk, sc=0, ext=0)
+            Sends key specified as virtual-key code and/or scan code.
+            vk - virtual-key code.
+            sc - optional scan code.
+            ext - optional flags: 1 extended key. </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.CHAR">
+            <summary>
+            CHAR(c)
+            Sends a character using VK_PACKET.
+            c - Unicode character code.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input._KeyFunc.SLEEP">
+            <summary>
+            SLEEP(t)
+            Waits.
+            t - number of milliseconds, eg 100. </summary>
+        </member>
+        <member name="T:Catkeys.Input.Misc">
+            <summary>
+            Less-often used functions related to keyboard input.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Input.Misc.ReadKeyString(System.String)">
+            <summary>
+            Converts keys string to List.
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:Catkeys.Input.Misc.ReadHotkeyString(System.String,System.Windows.Forms.Keys@)">
+            <summary>
+            Converts hotkey string to Keys.
+            For example, if s is "Ctrl+Left", hotkey will be Keys.Left with modifier flag Keys.Control.
+            Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
+            Named keys must match case. Keys A-Z don't have to match case.
+            Valid hotkey examples: "A", "a", "7", "F12", ".", "End", "Ctrl+D", "Ctrl+Alt+Shift+Win+Left", " Ctrl + U ".
+            Invalid hotkey examples: null, "", "A+B", "Ctrl+A+K", "A+Ctrl", "Ctrl+Shift", "Ctrl+", "NoSuchKey", "end".
+            Returns false if the string is invalid.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Input.Misc._KeyToModifier(System.Windows.Forms.Keys)">
+            <summary>
+            If k is Shift, Control, Alt or Win (including left and right), returns it as modifier flag, eg Keys.Shift from Keys.ShiftKey.
+            Else returns 0.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Input.Misc._KeynameToKey(System.String,System.Int32,System.Int32)">
+            <summary>
+            Converts part of string to Keys.
+            The string should contain single key name, eg "Esc", "A", "=".
+            Returns 0 if invalid key name.
+            </summary>
         </member>
         <member name="M:Catkeys.Api.SizeOf``1(``0)">
             <summary>
@@ -596,6 +693,13 @@
             <summary>
             Converts from RGB uint (0x00RRGGBB) to opaque System.Drawing.Color.
             Same as <see cref="M:System.Drawing.Color.FromArgb(System.Int32)"/> but don't need to specify alpha. You can replace <c>Color.FromArgb(unchecked((int)0xFF123456))</c> with <c>Calc.ColorFromRGB(0x123456)</c>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Calc.ColorFromNameOrRGB(System.String,System.Drawing.Color@)">
+            <summary>
+            Converts string to opaque System.Drawing.Color.
+            The string can be a color name (<see cref="M:System.Drawing.Color.FromName(System.String)"/>) or 0xRRGGBB.
+            Returns false if invalid name.
             </summary>
         </member>
         <member name="M:Catkeys.Calc.IsDigit(System.Char)">
@@ -1232,7 +1336,7 @@
         <member name="P:Catkeys.Folders.ThisAppTemp">
             <summary>
             Gets or sets path of the temporary files folder of this application.
-            Default is Folders.Temp + Application.CompanyName + "\\" + Application.ProductName.
+            Default is Folders.Temp + Application.ProductName.
             The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
             The 'get' function creates the folder if does not exist.
             </summary>
@@ -1240,7 +1344,7 @@
         <member name="P:Catkeys.Folders.ThisAppDocuments">
             <summary>
             Gets or sets path of user document files folder of this application.
-            Default is Folders.Documents + Application.CompanyName + "\\" + Application.ProductName.
+            Default is Folders.Documents + Application.ProductName.
             The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
             The 'get' function creates the folder if does not exist.
             </summary>
@@ -1248,7 +1352,7 @@
         <member name="P:Catkeys.Folders.ThisAppData">
             <summary>
             Gets or sets path of private files folder of this application on this user account.
-            Default is Folders.RoamingAppData + Application.CompanyName + "\\" + Application.ProductName.
+            Default is Folders.RoamingAppData + Application.ProductName.
             The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
             The 'get' function creates the folder if does not exist.
             </summary>
@@ -1256,7 +1360,7 @@
         <member name="P:Catkeys.Folders.ThisAppDataLocal">
             <summary>
             Gets or sets path of local (non-roaming) private files folder of this application on this user account.
-            Default is Folders.LocalAppData + Application.CompanyName + "\\" + Application.ProductName.
+            Default is Folders.LocalAppData + Application.ProductName.
             The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
             The 'get' function creates the folder if does not exist.
             </summary>
@@ -1264,7 +1368,7 @@
         <member name="P:Catkeys.Folders.ThisAppDataCommon">
             <summary>
             Gets or sets path of common (all users) private files folder of this application.
-            Default is Folders.ProgramData + Application.CompanyName + "\\" + Application.ProductName.
+            Default is Folders.ProgramData + Application.ProductName.
             The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
             Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
             This function does not auto-create the folder; usually it is created when installing the application.
@@ -1760,11 +1864,12 @@
             3. Can show tooltips when parent form is not the active window. To enable it, the form's ShowWithoutActivation override must return true (it is called when need to show a tooltip).
             </summary>
         </member>
-        <member name="M:Catkeys.Input.GetTextCursorRect(Catkeys.RECT@)">
+        <member name="T:Catkeys.CatMenuStrip">
             <summary>
-            Gets current text cursor (caret) rectangle in screen coordinates.
-            Returns the control that contains it.
-            If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns Wnd0.
+            Adds to MenuStrip:
+            1. User can click an item when the parent form is not the active window.
+            2. A click does not activate the parent form if it has WS_EX_NOACTIVATE style.
+            3. Fixes some MenuStrip bugs.
             </summary>
         </member>
         <member name="T:Catkeys.Screen_">
@@ -1872,11 +1977,24 @@
             Sends API <msdn>CB_SETCUEBANNER</msdn>.
             </summary>
         </member>
+        <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
+            <summary>
+            Gets XML attribute value.
+            If the attribute does not exist, returns null.
+            If the attribute value is empty, returns "".
+            </summary>
+        </member>
         <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.String)">
             <summary>
             Gets XML attribute value.
-            If the attribute does not exist, returns defaultValue (default null).
+            If the attribute does not exist, returns defaultValue.
             If the attribute value is empty, returns "".
+            </summary>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.String@,System.Xml.Linq.XName)">
+            <summary>
+            Gets XML attribute value.
+            If the attribute does not exist, sets value=null and returns false.
             </summary>
         </member>
         <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Int32)">
@@ -1886,11 +2004,25 @@
             If the attribute value is empty or does not begin with a valid number, returns 0.
             </summary>
         </member>
+        <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.Int32@,System.Xml.Linq.XName)">
+            <summary>
+            Gets attribute value converted to int (<see cref="M:Catkeys.String_.ToInt32_(System.String)"/>).
+            If the attribute does not exist, sets value=0 and returns false.
+            If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
+            </summary>
+        </member>
         <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Single)">
             <summary>
             Gets attribute value converted to float (<see cref="M:Catkeys.String_.ToFloat_(System.String,System.Boolean)"/>).
             If the attribute does not exist, returns defaultValue.
             If the attribute value is empty or is not a valid float number, returns 0F.
+            </summary>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.Attribute_(System.Xml.Linq.XElement,System.Single@,System.Xml.Linq.XName)">
+            <summary>
+            Gets attribute value converted to float (<see cref="M:Catkeys.String_.ToFloat_(System.String,System.Boolean)"/>).
+            If the attribute does not exist, sets value=0F and returns false.
+            If the attribute value is empty or is not a valid number, sets value=0F and returns true.
             </summary>
         </member>
         <member name="M:Catkeys.DotNetExtensions.HasAttribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
@@ -1904,7 +2036,7 @@
             Returns null if not found.
             </summary>
         </member>
-        <member name="M:Catkeys.DotNetExtensions.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String)">
+        <member name="M:Catkeys.DotNetExtensions.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
             <summary>
             Gets the first found descendant element that has the specified attribute.
             Returns null if not found.
@@ -1913,6 +2045,30 @@
             <param name="name">Element name.</param>
             <param name="attributeName">Attribute name.</param>
             <param name="attributeValue">Attribute value. If null, can be any value.</param>
+            <param name="ignoreCase">Case-insensitive attributeValue.</param>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.Element_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
+            <summary>
+            Gets the first found direct child element that has the specified attribute.
+            Returns null if not found.
+            </summary>
+            <param name="t"></param>
+            <param name="name">Element name.</param>
+            <param name="attributeName">Attribute name.</param>
+            <param name="attributeValue">Attribute value. If null, can be any value.</param>
+            <param name="ignoreCase">Case-insensitive attributeValue.</param>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.PreviousElement_(System.Xml.Linq.XElement)">
+            <summary>
+            Gets previous sibling element.
+            Returns null if no element.
+            </summary>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.NextElement_(System.Xml.Linq.XElement)">
+            <summary>
+            Gets next sibling element.
+            Returns null if no element.
+            </summary>
         </member>
         <member name="M:Catkeys.DotNetExtensions.IsEmpty_(System.Drawing.Rectangle)">
             <summary>
@@ -2056,6 +2212,20 @@
             Classic Windows version major+minor values.
             Example: <c>if(WinVer>=Win8) ...</c>
             </summary>
+        </member>
+        <member name="M:Catkeys.NoClass.Key(System.String[])">
+            
+        </member>
+        <member name="M:Catkeys.NoClass.Wait(System.Double)">
+            <summary>
+            Suspends this thread for the specified amount of time.
+            Alias of <see cref="M:Catkeys.Time.Wait(System.Double)"/>.
+            </summary>
+            <param name="timeS">
+            The number of seconds to wait.
+            The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="M:Catkeys.Time.Wait(System.Double)"/>.
+            </param>
+            <exception cref="T:System.ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
         </member>
         <member name="T:Catkeys.Output">
             <summary>
@@ -2547,6 +2717,12 @@
             Returns 1-based index of matching pattern, or 0 if none.
             </summary>
         </member>
+        <member name="P:Catkeys.String_.LibLowerCaseTable">
+            <summary>
+            Gets unmanaged char[0x10000] containing lower-case versions of the first 0x10000 characters.
+            Auto-creates when called first time. The memory is shared by appdomains.
+            </summary>
+        </member>
         <member name="M:Catkeys.String_.Equals_(System.String,System.String,System.Boolean)">
             <summary>
             Returns Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
@@ -2676,6 +2852,13 @@
             <summary>
             Returns array of lines. Line separators can be \r\n or \n or \r.
             </summary>
+        </member>
+        <member name="M:Catkeys.String_.LineCount_(System.String,System.Boolean)">
+            <summary>
+            Returns the number of lines.
+            </summary>
+            <param name="t"></param>
+            <param name="preferMore">If the number of lines is ambiguous, return the bigger. It is ambiguous in these cases: 1. Length is 0. 2. Ends with '\n'.</param>
         </member>
         <member name="M:Catkeys.String_.ToLower_(System.String)">
             <summary>
@@ -4362,20 +4545,6 @@
         <member name="M:Catkeys.Time.SystemWaitPrecision.Finalize">
             
         </member>
-        <member name="T:Catkeys.WCFlags">
-            <summary>
-            'flags' parameter of <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
-            <note>
-            </note>
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="F:Catkeys.WCFlags.HiddenToo">
-            <summary>Can find hidden controls.</summary>
-        </member>
-        <member name="F:Catkeys.WCFlags.DirectChild">
-            <summary>Skip indirect descendant controls (children of children and so on).</summary>
-        </member>
         <member name="T:Catkeys.Wnd">
             <summary>
             A variable of Wnd type represents a native window or control. It contains native window handle, also known as HWND.
@@ -4412,220 +4581,142 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Catkeys.Wnd.ChildParams">
+        <member name="M:Catkeys.Wnd.op_Explicit(System.Windows.Forms.Control)~Catkeys.Wnd">
             <summary>
-            Contains the same fields as <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> parameters, and can be used instead of it.
-            See also: <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
+            Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
+            The same as the extension method Wnd_().
+            If the handle is still not created, the Control auto-creates it (hidden window).
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.#ctor(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+        <member name="M:Catkeys.Wnd.op_Explicit(Catkeys.Wnd)~System.Windows.Forms.Control">
             <summary>
-            See <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Wnd.Child</see>.
-            </summary>
-            <exception cref="T:System.ArgumentException">
-            className is "". To match any, use null.
-            Invalid wildcard expression ("**options|" or regular expression).
-            </exception>
-        </member>
-        <member name="P:Catkeys.Wnd.ChildParams.Result">
-            <summary>
-            The found control.
+            If this Wnd variable contains the window handle from a System.Windows.Forms.Control (or Form etc) variable, gets the Control variable, else returns null.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.Find(Catkeys.Wnd)">
-            <summary>
-            Finds the specified control, like <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Wnd.Child</see>.
-            Returns true if found.
-            The <see cref="P:Catkeys.Wnd.ChildParams.Result"/> property will be the control.
-            </summary>
-            <param name="wParent">Direct or indirect parent window.</param>
+        <member name="M:Catkeys.Wnd.op_Equality(Catkeys.Wnd,Catkeys.Wnd)">
+            <summary>Compares window handles.</summary>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.FindInList(Catkeys.Wnd,System.Collections.Generic.List{Catkeys.Wnd})">
-            <summary>
-            Finds the specified control in a list of controls.
-            Returns 0-based index, or -1 if not found.
-            The <see cref="P:Catkeys.Wnd.ChildParams.Result"/> property will be the control.
-            </summary>
-            <param name="wParent">Direct or indirect parent window.</param>
-            <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
+        <member name="M:Catkeys.Wnd.op_Inequality(Catkeys.Wnd,Catkeys.Wnd)">
+            <summary>Compares window handles.</summary>
         </member>
-        <member name="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+        <member name="M:Catkeys.Wnd.Equals(System.Nullable{Catkeys.Wnd})">
             <summary>
-            Finds child control.
-            Returns its handle as Wnd. Returns Wnd0 if not found.
+            Returns true if w!=null and w.Value == this.
             </summary>
-            <param name="name">
-            Control name.
-            By default the function gets control names with <see cref="P:Catkeys.Wnd.Name"/>.
-            Can start with these prefix strings:
-            <list type="bullet">
-            <item>
-            "**text:" - use control text, which can be editable.
-            To get it this function uses <see cref="P:Catkeys.Wnd.ControlText"/>. It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-            </item>
-            <item>
-            "**accName:" - use MSAA IAccessible.Name property.
-            To get it this function uses <see cref="P:Catkeys.Wnd.NameAcc"/>. It is slower.
-            </item>
-            <item>
-            "**wfName:" - use .NET Windows Forms Control Name property.
-            To get it this function uses <see cref="T:Catkeys.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of UAC.
-            </item>
-            <item>
-            "**id:" (like "**id:15") - use control id.
-            To get it this function uses <see cref="P:Catkeys.Wnd.ControlId"/>.
-            Cannot be wildcard expression.
-            You can instead use <see cref="M:Catkeys.Wnd.ChildById(System.Int32,System.Boolean)"/>, it is faster than <b>Child</b>.</item>
-            </list>
-            String format (not including the prefix): <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-            null means 'any'.
-            "" means 'no name'.
-            </param>
-            <param name="className">
-            Control class name.
-            String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-            null means 'any'.
-            </param>
-            <param name="flags"></param>
-            <param name="also">
-            Lambda etc callback function to call for each matching control.
-            It can evaluate more properties of the control and return true when they match.
-            Example: <c>also: t =&gt; t.IsEnabled</c>
-            </param>
-            <param name="skip">0-based index of matching control. For example, if it is 1, the function skips the first matching control and returns the second.</param>
-            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
-            <exception cref="T:System.ArgumentException">
-            className is "". To match any, use null.
-            Invalid wildcard expression ("**options|" or regular expression).
-            </exception>
         </member>
-        <member name="M:Catkeys.Wnd.HasChild(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+        <member name="M:Catkeys.Wnd.Equals(System.Object)">
             <summary>
-            Calls <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
-            Returns true if it finds the child control.
+            Returns true if obj is this Wnd.
             </summary>
-            <exception cref="T:Catkeys.WndException"/>
-            <exception cref="T:System.ArgumentException"/>
         </member>
-        <member name="M:Catkeys.Wnd.ChildById(System.Int32,System.Boolean)">
-            <summary>
-            Finds child control by its id.
-            Finds hidden controls too. Does not prefer visible controls.
-            </summary>
-            <param name="id">Control id.</param>
-            <param name="directChild">Must be direct child, not a child of a child and so on.</param>
-            <remarks>
-            Faster and more lightweight than <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Child</see>.
-            At first calls API <msdn>GetDlgItem</msdn>. It is fast and searches only direct children. If it does not find, and directChild is false, calls API <msdn>EnumChildWindows</msdn>.
-            <note>Not all controls have a useful id. If control id is 0 or different in each window instance, this function cannot be used.</note>
-            </remarks>
-            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+        <member name="M:Catkeys.Wnd.GetHashCode">
+            <exclude/>
         </member>
-        <member name="M:Catkeys.Wnd.ChildAll(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean})">
+        <member name="M:Catkeys.Wnd.ToString">
             <summary>
-            Finds all matching child controls.
-            Returns List containing 0 or more control handles as Wnd.
-            Everything except the return type is the same as with <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Child</see>.
+            Formats string $"{handle} {ClassName} \"{Name}\"".
             </summary>
-            <exception cref="T:Catkeys.WndException"/>
-            <exception cref="T:System.ArgumentException"/>
         </member>
-        <member name="M:Catkeys.Wnd.ChildFast(System.String,System.String,Catkeys.Wnd)">
+        <member name="P:Catkeys.Wnd.Handle">
             <summary>
-            Finds direct child control.
-            Returns its handle as Wnd. Returns Wnd0 if not found.
-            Calls API <msdn>FindWindowEx</msdn>.
-            Faster than <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Child</see>, which uses API <msdn>EnumChildWindows</msdn>.
-            Can be used only when you know full name and/or class name.
-            Finds hidden controls too.
+            Gets window handle as IntPtr.
+            Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c> .
             </summary>
-            <param name="name">
-            Name. Can be null to match any.
-            Full, case-insensitive. Wildcard etc not supported.
-            Must include the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-            </param>
-            <param name="className">
-            Class name. Can be null to match any. Cannot be "".
-            Full, case-insensitive. Wildcard etc not supported.
-            </param>
-            <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
-            <remarks>
-            If this window is Wnd.Misc.SpecHwnd.Message, finds a message-only window.
-            Supports <see cref="M:Catkeys.Native.GetError"/>.
-            </remarks>
         </member>
-        <member name="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Wnd.Send(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
             <summary>
-            Gets list of child controls.
-            Returns List containing 0 or more control handles as Wnd.
-            Calls API <msdn>EnumChildWindows</msdn>.
+            Calls API <msdn>SendMessage</msdn>.
             </summary>
-            <param name="directChild">Need only direct children, not grandchildren.</param>
-            <param name="onlyVisible">Need only visible controls.</param>
-            <param name="sortFirstVisible">Place all list elements of hidden controls at the end of the returned list.</param>
-            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Catkeys.Wnd.LibAllChildren(System.Func{Catkeys.Wnd,System.Boolean},System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Wnd.SendS(System.UInt32,Catkeys.LPARAM,System.String)">
             <summary>
-            Calls callback function for each child control.
-            Calls API <msdn>EnumChildWindows</msdn>.
+            Calls API <msdn>SendMessage</msdn> where lParam is string.
             </summary>
-            <param name="f">Lambda etc callback function to call for each matching control. Can return true to stop.</param>
-            <param name="directChild">Need only direct children, not grandchildren.</param>
-            <param name="onlyVisible">Need only visible controls.</param>
-            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Catkeys.Wnd.FromXY(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Nullable{System.Boolean},System.Boolean)">
+        <member name="M:Catkeys.Wnd.SendSB(System.UInt32,Catkeys.LPARAM,System.Text.StringBuilder)">
             <summary>
-            Gets visible top-level window or control from point.
-            By default the coordinates are relative to the primary screen.
+            Calls API <msdn>SendMessage</msdn> where lParam is StringBuilder.
             </summary>
-            <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen or its work area).</param>
-            <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen or its work area).</param>
-            <param name="control">
-            true if you need a control (child window); returns Wnd0 if there is no control at that point.
-            false if you need top-level window; if at that point is a control, gets its top-level parent.
-            If omitted or null, gets exactly what is at that point (control or top-level window).
-            </param>
-            <param name="workArea">The coordinates are relative to the work area.</param>
-            <remarks>
-            Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
-            For example, this function:
-            <list type="bullet">
-            <item>Gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc). Supports more control types than <b>RealChildWindowFromPoint</b>.</item>
-            <item>Does not skip disabled controls.</item>
-            <item>Can get only top-level window or only control or any.</item>
-            <item>Supports fractional coordinates.</item>
-            <item>Supports work area coordinates.</item>
-            </list>
-            </remarks>
+            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Catkeys.Wnd.FromMouse(System.Nullable{System.Boolean})">
+        <member name="M:Catkeys.Wnd.SendTimeout(System.Int32,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32)">
             <summary>
-            Gets visible top-level window or control from mouse cursor position.
-            Calls FromXY(Mouse.XY, control).
+            Calls API <msdn>SendMessageTimeout</msdn>.
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            flags can be Native.SMTO_.
             </summary>
-            <param name="control">
-            true if you need a control (child window); returns Wnd0 if there is no control at that point.
-            false if you need top-level window; if at that point is a control, gets its top-level parent.
-            If omitted or null, gets exactly what is at that point (control or top-level window).
-            </param>
         </member>
-        <member name="M:Catkeys.Wnd.ChildFromXY(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Wnd.SendTimeout(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32)">
             <summary>
-            Gets child control from point.
-            Returns Wnd0 if the point is not within a child or is outside this window.
-            By default, x y must be relative to the client area of this window.
+            Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            flags can be Native.SMTO_.
             </summary>
-            <param name="x">X coordinate. Can be int (pixels) or float (fraction of the client area or primary screen).</param>
-            <param name="y">Y coordinate. Can be int (pixels) or float (fraction of the client area or primary screen).</param>
-            <param name="directChild">Get direct child, not a child of a child and so on.</param>
-            <param name="screenXY">x y are relative to the pimary screen.</param>
-            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+        </member>
+        <member name="M:Catkeys.Wnd.SendTimeoutS(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,System.String,System.UInt32)">
+            <summary>
+            Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            flags can be Native.SMTO_.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.SendTimeoutSB(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,System.Text.StringBuilder,System.UInt32)">
+            <summary>
+            Calls API <msdn>SendMessageTimeout</msdn> where lParam is StringBuilder.
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            flags can be Native.SMTO_.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.SendNotify(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary>
+            Calls API <msdn>SendNotifyMessage</msdn>.
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Post(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary>
+            Calls API <msdn>PostMessage</msdn>.
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+            <seealso cref="M:Catkeys.Wnd.Misc.PostThreadMessage(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)"/>
         </member>
         <member name="T:Catkeys.Wnd.Misc">
             <summary>
             Contains miscellaneous static window-related functions and classes, mostly rarely used or useful only for programmers.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.PostThreadMessage(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary>
+            Posts a message to the message queue of this thread.
+            Calls API <msdn>PostMessage</msdn> with Wnd0. 
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.PostThreadMessage(System.UInt32,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary>
+            Posts a message to the message queue of the specified thread.
+            Calls API <msdn>PostThreadMessage</msdn>. 
+            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.WaitForAnActiveWindow">
+            <summary>
+            Waits while there is no active window.
+            It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
+            Waits max 500 ms, then returns false if there is no active window.
+            Processes Windows messages that are in the message queue of this thread.
+            Don't need to call this after calling functions of this library.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.AllowActivate">
+            <summary>
+            Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
+            Returns false if fails (unlikely).
+            In some cases you may need this function because Windows often disables SetForegroundWindow to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow just makes the window's taskbar button flash which indicates that the windows wants attention. More info: <msdn>SetForegroundWindow</msdn>.
+            Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
+            Don't need to call this function before calling functions of this library that activate windows.
             </summary>
         </member>
         <member name="T:Catkeys.Wnd.Misc.WindowClass">
@@ -4895,38 +4986,6 @@
             </summary>
             <param name="c">The control. Can be top-level window too.</param>
             <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
-        </member>
-        <member name="M:Catkeys.Wnd.Misc.PostThreadMessage(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
-            <summary>
-            Posts a message to the message queue of this thread.
-            Calls API <msdn>PostMessage</msdn> with Wnd0. 
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Misc.PostThreadMessage(System.UInt32,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
-            <summary>
-            Posts a message to the message queue of the specified thread.
-            Calls API <msdn>PostThreadMessage</msdn>. 
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Misc.WaitForAnActiveWindow">
-            <summary>
-            Waits while there is no active window.
-            It sometimes happens after closing, minimizing or switching the active window, briefly until another window becomes active.
-            Waits max 500 ms, then returns false if there is no active window.
-            Processes Windows messages that are in the message queue of this thread.
-            Don't need to call this after calling functions of this library.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Misc.AllowActivate">
-            <summary>
-            Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
-            Returns false if fails (unlikely).
-            In some cases you may need this function because Windows often disables SetForegroundWindow to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow just makes the window's taskbar button flash which indicates that the windows wants attention. More info: <msdn>SetForegroundWindow</msdn>.
-            Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
-            Don't need to call this function before calling functions of this library that activate windows.
-            </summary>
         </member>
         <member name="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)">
             <summary>
@@ -5233,222 +5292,6 @@
         </member>
         <member name="M:Catkeys.Wnd.Misc.DefWindowProc(Catkeys.Wnd,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
             <summary><msdn>DefWindowProc</msdn></summary>
-        </member>
-        <member name="M:Catkeys.Wnd.SetTransparency(System.Boolean,System.Nullable{System.Double},System.Nullable{System.Int32})">
-            <summary>
-            Sets transparency.
-            On Windows 7 works only with top-level windows, on newer OS also with controls.
-            </summary>
-            <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
-            <param name="opacity">Opacity from 0.0 (completely transparent) to 1.0 (opaque). If null, sets default value (opaque).</param>
-            <param name="colorRGB">Make pixels painted with this color completely transparent. If null, sets default value (no transparent color). The format is 0xRRGGBB, like Color.ToArgb returns. The alpha byte is not used.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">opacity is less than 0.0 or greater than 1.0.</exception>
-            <exception cref="T:Catkeys.WndException"/>
-        </member>
-        <member name="P:Catkeys.Wnd.IsFullScreen">
-            <summary>
-            Returns true if this is a full-screen window and not desktop.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Wnd.LibIsOfShellThread">
-            <summary>
-            Returns true if this belongs to GetShellWindow's thread (usually it is the desktop window).
-            </summary>
-        </member>
-        <member name="P:Catkeys.Wnd.LibIsOfShellProcess">
-            <summary>
-            Returns true if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
-            </summary>
-        </member>
-        <member name="P:Catkeys.Wnd.IsWin8MetroStyle">
-            <summary>
-            Returns true if this window has Metro style, ie is not a classic desktop window.
-            On Windows 8/8.1 most Windows Store app windows and many shell windows have Metro style.
-            On Windows 10 few windows have Metro style.
-            On Windows 7 there are no Metro style windows.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Wnd.IsWin10StoreApp">
-            <summary>
-            Returns non-zero if this window is a Windows 10 Store app window.
-            Returns 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.SavePlacement(System.Boolean)">
-            <summary>
-            Gets window position, size and state stored in a string that can be used with <see cref="M:Catkeys.Wnd.RestorePlacement(System.String,System.Boolean,System.Boolean)">RestorePlacement</see>.
-            Returns null if failed. Supports <see cref="M:Catkeys.Native.GetError"/>.
-            </summary>
-            <param name="canBeMinimized">If now the window is minimized, let RestorePlacement make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
-        </member>
-        <member name="M:Catkeys.Wnd.RestorePlacement(System.String,System.Boolean,System.Boolean)">
-            <summary>
-            Restores window position, size and state that is stored in a string created by <see cref="M:Catkeys.Wnd.SavePlacement(System.Boolean)">SavePlacement</see>.
-            </summary>
-            <param name="s">The string. Can be null/"".</param>
-            <param name="ensureInScreen">Call <see cref="M:Catkeys.Wnd.EnsureInScreen(System.Object,System.Boolean,System.Boolean)"/>. Even when s is null/"".</param>
-            <param name="showActivate">Call <see cref="M:Catkeys.Wnd.Show(System.Boolean)">Show</see>(true) and <see cref="M:Catkeys.Wnd.ActivateLL"/>. Even when s is null/"".</param>
-            <exception cref="T:Catkeys.WndException"/>
-        </member>
-        <member name="M:Catkeys.Wnd._MinimalWaitIfOtherThread">
-            <summary>
-            if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd._MinimalWaitNoCheckThread">
-            <summary>
-            Thread.Sleep(15); SendTimeout(1000, 0);
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd._WindowsStoreAppId(Catkeys.Wnd,System.String@,System.Boolean,System.Boolean)">
-            <summary>
-            Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-            Returns 1 if gets user model id, 2 if gets path, 0 if fails.
-            </summary>
-            <param name="w">Window.</param>
-            <param name="appId">Receives app ID.</param>
-            <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
-            <param name="getExePathIfNotWinStoreApp">Get exe full path if hwnd is not a Windows Store app.</param>
-        </member>
-        <member name="M:Catkeys.Wnd._WindowsStoreAppFrameChild(Catkeys.Wnd)">
-            <summary>
-            On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
-            If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window with the same name as of w. It is unreliable, but MS does not provide API for this.
-            Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd._WindowsStoreAppHost(Catkeys.Wnd)">
-            <summary>
-            The reverse of _WindowsStoreAppFrameChild.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Wnd._Coord">
-            <summary>
-            Normalizes coordinates or width/height (converts fraction to pixels, adds offsets, etc).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd._Coord._Normalize(Catkeys.Types{System.Int32,System.Single},System.Int32,System.Int32)">
-            <summary>
-            If c.type == 1, returns c.v1 + min.
-            Else calculates and returns non-fraction coordinate.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd._Coord.GetNormalizedInScreen(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Boolean,System.Boolean)">
-            <summary>
-            Returns new POINT(x, y), relative to the primary screen, where fractional x and/or y are converted to pixels.
-            x or/and y .type can be 0, then the returned x or y value will be 0.
-            </summary>
-            <param name="x"></param>
-            <param name="y"></param>
-            <param name="workArea">If false, coordinates are in primary screen, else in its work area.</param>
-            <param name="widthHeight">Don't add work area offset. Use when x and y are width and height.</param>
-        </member>
-        <member name="M:Catkeys.Wnd._Coord.GetNormalizedInWindowClientArea(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},Catkeys.Wnd)">
-            <summary>
-            Returns new POINT(x, y), relative to the window w client area, where fractional x and/or y are converted to pixels.
-            x or/and y .type can be 0, then the returned x or y value will be 0.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.op_Explicit(System.Windows.Forms.Control)~Catkeys.Wnd">
-            <summary>
-            Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
-            The same as the extension method Wnd_().
-            If the handle is still not created, the Control auto-creates it (hidden window).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.op_Explicit(Catkeys.Wnd)~System.Windows.Forms.Control">
-            <summary>
-            If this Wnd variable contains the window handle from a System.Windows.Forms.Control (or Form etc) variable, gets the Control variable, else returns null.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.op_Equality(Catkeys.Wnd,Catkeys.Wnd)">
-            <summary>Compares window handles.</summary>
-        </member>
-        <member name="M:Catkeys.Wnd.op_Inequality(Catkeys.Wnd,Catkeys.Wnd)">
-            <summary>Compares window handles.</summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Equals(System.Nullable{Catkeys.Wnd})">
-            <summary>
-            Returns true if w!=null and w.Value == this.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Equals(System.Object)">
-            <summary>
-            Returns true if obj is this Wnd.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.GetHashCode">
-            <exclude/>
-        </member>
-        <member name="M:Catkeys.Wnd.ToString">
-            <summary>
-            Formats string $"{handle} {ClassName} \"{Name}\"".
-            </summary>
-        </member>
-        <member name="P:Catkeys.Wnd.Handle">
-            <summary>
-            Gets window handle as IntPtr.
-            Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c> .
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Send(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
-            <summary>
-            Calls API <msdn>SendMessage</msdn>.
-            </summary>
-            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
-        </member>
-        <member name="M:Catkeys.Wnd.SendS(System.UInt32,Catkeys.LPARAM,System.String)">
-            <summary>
-            Calls API <msdn>SendMessage</msdn> where lParam is string.
-            </summary>
-            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
-        </member>
-        <member name="M:Catkeys.Wnd.SendSB(System.UInt32,Catkeys.LPARAM,System.Text.StringBuilder)">
-            <summary>
-            Calls API <msdn>SendMessage</msdn> where lParam is StringBuilder.
-            </summary>
-            <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
-        </member>
-        <member name="M:Catkeys.Wnd.SendTimeout(System.Int32,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32)">
-            <summary>
-            Calls API <msdn>SendMessageTimeout</msdn>.
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            flags can be Native.SMTO_.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.SendTimeout(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM,System.UInt32)">
-            <summary>
-            Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            flags can be Native.SMTO_.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.SendTimeoutS(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,System.String,System.UInt32)">
-            <summary>
-            Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            flags can be Native.SMTO_.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.SendTimeoutSB(System.Int32,Catkeys.LPARAM@,System.UInt32,Catkeys.LPARAM,System.Text.StringBuilder,System.UInt32)">
-            <summary>
-            Calls API <msdn>SendMessageTimeout</msdn> where lParam is StringBuilder.
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            flags can be Native.SMTO_.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.SendNotify(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
-            <summary>
-            Calls API <msdn>SendNotifyMessage</msdn>.
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Wnd.Post(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)">
-            <summary>
-            Calls API <msdn>PostMessage</msdn>.
-            Returns its return value (false if failed). Supports <see cref="M:Catkeys.Native.GetError"/>.
-            </summary>
-            <seealso cref="M:Catkeys.Wnd.Misc.PostThreadMessage(System.UInt32,Catkeys.LPARAM,Catkeys.LPARAM)"/>
         </member>
         <member name="M:Catkeys.Wnd.ThrowIf0">
             <summary>
@@ -6632,6 +6475,332 @@
             ]]></code>
             </example>
         </member>
+        <member name="T:Catkeys.Wnd.ChildParams">
+            <summary>
+            Contains the same fields as <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> parameters, and can be used instead of it.
+            See also: <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildParams.#ctor(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+            <summary>
+            See <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Wnd.Child</see>.
+            </summary>
+            <exception cref="T:System.ArgumentException">
+            className is "". To match any, use null.
+            Invalid wildcard expression ("**options|" or regular expression).
+            </exception>
+        </member>
+        <member name="P:Catkeys.Wnd.ChildParams.Result">
+            <summary>
+            The found control.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildParams.Find(Catkeys.Wnd)">
+            <summary>
+            Finds the specified control, like <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Wnd.Child</see>.
+            Returns true if found.
+            The <see cref="P:Catkeys.Wnd.ChildParams.Result"/> property will be the control.
+            </summary>
+            <param name="wParent">Direct or indirect parent window.</param>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildParams.FindInList(Catkeys.Wnd,System.Collections.Generic.List{Catkeys.Wnd})">
+            <summary>
+            Finds the specified control in a list of controls.
+            Returns 0-based index, or -1 if not found.
+            The <see cref="P:Catkeys.Wnd.ChildParams.Result"/> property will be the control.
+            </summary>
+            <param name="wParent">Direct or indirect parent window.</param>
+            <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
+        </member>
+        <member name="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+            <summary>
+            Finds child control.
+            Returns its handle as Wnd. Returns Wnd0 if not found.
+            </summary>
+            <param name="name">
+            Control name.
+            By default the function gets control names with <see cref="P:Catkeys.Wnd.Name"/>.
+            Can start with these prefix strings:
+            <list type="bullet">
+            <item>
+            "**text:" - use control text, which can be editable.
+            To get it this function uses <see cref="P:Catkeys.Wnd.ControlText"/>. It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
+            </item>
+            <item>
+            "**accName:" - use MSAA IAccessible.Name property.
+            To get it this function uses <see cref="P:Catkeys.Wnd.NameAcc"/>. It is slower.
+            </item>
+            <item>
+            "**wfName:" - use .NET Windows Forms Control Name property.
+            To get it this function uses <see cref="T:Catkeys.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of UAC.
+            </item>
+            <item>
+            "**id:" (like "**id:15") - use control id.
+            To get it this function uses <see cref="P:Catkeys.Wnd.ControlId"/>.
+            Cannot be wildcard expression.
+            You can instead use <see cref="M:Catkeys.Wnd.ChildById(System.Int32,System.Boolean)"/>, it is faster than <b>Child</b>.</item>
+            </list>
+            String format (not including the prefix): <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+            null means 'any'.
+            "" means 'no name'.
+            </param>
+            <param name="className">
+            Control class name.
+            String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+            null means 'any'.
+            </param>
+            <param name="flags"></param>
+            <param name="also">
+            Lambda etc callback function to call for each matching control.
+            It can evaluate more properties of the control and return true when they match.
+            Example: <c>also: t =&gt; t.IsEnabled</c>
+            </param>
+            <param name="skip">0-based index of matching control. For example, if it is 1, the function skips the first matching control and returns the second.</param>
+            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <exception cref="T:System.ArgumentException">
+            className is "". To match any, use null.
+            Invalid wildcard expression ("**options|" or regular expression).
+            </exception>
+        </member>
+        <member name="M:Catkeys.Wnd.HasChild(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+            <summary>
+            Calls <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
+            Returns true if it finds the child control.
+            </summary>
+            <exception cref="T:Catkeys.WndException"/>
+            <exception cref="T:System.ArgumentException"/>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildById(System.Int32,System.Boolean)">
+            <summary>
+            Finds child control by its id.
+            Finds hidden controls too. Does not prefer visible controls.
+            </summary>
+            <param name="id">Control id.</param>
+            <param name="directChild">Must be direct child, not a child of a child and so on.</param>
+            <remarks>
+            Faster and more lightweight than <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Child</see>.
+            At first calls API <msdn>GetDlgItem</msdn>. It is fast and searches only direct children. If it does not find, and directChild is false, calls API <msdn>EnumChildWindows</msdn>.
+            <note>Not all controls have a useful id. If control id is 0 or different in each window instance, this function cannot be used.</note>
+            </remarks>
+            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildAll(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean})">
+            <summary>
+            Finds all matching child controls.
+            Returns List containing 0 or more control handles as Wnd.
+            Everything except the return type is the same as with <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Child</see>.
+            </summary>
+            <exception cref="T:Catkeys.WndException"/>
+            <exception cref="T:System.ArgumentException"/>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildFast(System.String,System.String,Catkeys.Wnd)">
+            <summary>
+            Finds direct child control.
+            Returns its handle as Wnd. Returns Wnd0 if not found.
+            Calls API <msdn>FindWindowEx</msdn>.
+            Faster than <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Child</see>, which uses API <msdn>EnumChildWindows</msdn>.
+            Can be used only when you know full name and/or class name.
+            Finds hidden controls too.
+            </summary>
+            <param name="name">
+            Name. Can be null to match any.
+            Full, case-insensitive. Wildcard etc not supported.
+            Must include the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
+            </param>
+            <param name="className">
+            Class name. Can be null to match any. Cannot be "".
+            Full, case-insensitive. Wildcard etc not supported.
+            </param>
+            <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
+            <remarks>
+            If this window is Wnd.Misc.SpecHwnd.Message, finds a message-only window.
+            Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets list of child controls.
+            Returns List containing 0 or more control handles as Wnd.
+            Calls API <msdn>EnumChildWindows</msdn>.
+            </summary>
+            <param name="directChild">Need only direct children, not grandchildren.</param>
+            <param name="onlyVisible">Need only visible controls.</param>
+            <param name="sortFirstVisible">Place all list elements of hidden controls at the end of the returned list.</param>
+            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+        </member>
+        <member name="M:Catkeys.Wnd.LibAllChildren(System.Func{Catkeys.Wnd,System.Boolean},System.Boolean,System.Boolean)">
+            <summary>
+            Calls callback function for each child control.
+            Calls API <msdn>EnumChildWindows</msdn>.
+            </summary>
+            <param name="f">Lambda etc callback function to call for each matching control. Can return true to stop.</param>
+            <param name="directChild">Need only direct children, not grandchildren.</param>
+            <param name="onlyVisible">Need only visible controls.</param>
+            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+        </member>
+        <member name="M:Catkeys.Wnd.FromXY(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Nullable{System.Boolean},System.Boolean)">
+            <summary>
+            Gets visible top-level window or control from point.
+            By default the coordinates are relative to the primary screen.
+            </summary>
+            <param name="x">X coordinate. Can be int (pixels) or float (fraction of primary screen or its work area).</param>
+            <param name="y">Y coordinate. Can be int (pixels) or float (fraction of primary screen or its work area).</param>
+            <param name="control">
+            true if you need a control (child window); returns Wnd0 if there is no control at that point.
+            false if you need top-level window; if at that point is a control, gets its top-level parent.
+            If omitted or null, gets exactly what is at that point (control or top-level window).
+            </param>
+            <param name="workArea">The coordinates are relative to the work area.</param>
+            <remarks>
+            Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
+            For example, this function:
+            <list type="bullet">
+            <item>Gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc). Supports more control types than <b>RealChildWindowFromPoint</b>.</item>
+            <item>Does not skip disabled controls.</item>
+            <item>Can get only top-level window or only control or any.</item>
+            <item>Supports fractional coordinates.</item>
+            <item>Supports work area coordinates.</item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Wnd.FromMouse(System.Nullable{System.Boolean})">
+            <summary>
+            Gets visible top-level window or control from mouse cursor position.
+            Calls FromXY(Mouse.XY, control).
+            </summary>
+            <param name="control">
+            true if you need a control (child window); returns Wnd0 if there is no control at that point.
+            false if you need top-level window; if at that point is a control, gets its top-level parent.
+            If omitted or null, gets exactly what is at that point (control or top-level window).
+            </param>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildFromXY(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Boolean,System.Boolean)">
+            <summary>
+            Gets child control from point.
+            Returns Wnd0 if the point is not within a child or is outside this window.
+            By default, x y must be relative to the client area of this window.
+            </summary>
+            <param name="x">X coordinate. Can be int (pixels) or float (fraction of the client area or primary screen).</param>
+            <param name="y">Y coordinate. Can be int (pixels) or float (fraction of the client area or primary screen).</param>
+            <param name="directChild">Get direct child, not a child of a child and so on.</param>
+            <param name="screenXY">x y are relative to the pimary screen.</param>
+            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+        </member>
+        <member name="M:Catkeys.Wnd.SetTransparency(System.Boolean,System.Nullable{System.Double},System.Nullable{System.Int32})">
+            <summary>
+            Sets transparency.
+            On Windows 7 works only with top-level windows, on newer OS also with controls.
+            </summary>
+            <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
+            <param name="opacity">Opacity from 0.0 (completely transparent) to 1.0 (opaque). If null, sets default value (opaque).</param>
+            <param name="colorRGB">Make pixels painted with this color completely transparent. If null, sets default value (no transparent color). The format is 0xRRGGBB, like Color.ToArgb returns. The alpha byte is not used.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">opacity is less than 0.0 or greater than 1.0.</exception>
+            <exception cref="T:Catkeys.WndException"/>
+        </member>
+        <member name="P:Catkeys.Wnd.IsFullScreen">
+            <summary>
+            Returns true if this is a full-screen window and not desktop.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Wnd.LibIsOfShellThread">
+            <summary>
+            Returns true if this belongs to GetShellWindow's thread (usually it is the desktop window).
+            </summary>
+        </member>
+        <member name="P:Catkeys.Wnd.LibIsOfShellProcess">
+            <summary>
+            Returns true if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
+            </summary>
+        </member>
+        <member name="P:Catkeys.Wnd.IsWin8MetroStyle">
+            <summary>
+            Returns true if this window has Metro style, ie is not a classic desktop window.
+            On Windows 8/8.1 most Windows Store app windows and many shell windows have Metro style.
+            On Windows 10 few windows have Metro style.
+            On Windows 7 there are no Metro style windows.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Wnd.IsWin10StoreApp">
+            <summary>
+            Returns non-zero if this window is a Windows 10 Store app window.
+            Returns 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.SavePlacement(System.Boolean)">
+            <summary>
+            Gets window position, size and state stored in a string that can be used with <see cref="M:Catkeys.Wnd.RestorePlacement(System.String,System.Boolean,System.Boolean)">RestorePlacement</see>.
+            Returns null if failed. Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+            <param name="canBeMinimized">If now the window is minimized, let RestorePlacement make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
+        </member>
+        <member name="M:Catkeys.Wnd.RestorePlacement(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Restores window position, size and state that is stored in a string created by <see cref="M:Catkeys.Wnd.SavePlacement(System.Boolean)">SavePlacement</see>.
+            </summary>
+            <param name="s">The string. Can be null/"".</param>
+            <param name="ensureInScreen">Call <see cref="M:Catkeys.Wnd.EnsureInScreen(System.Object,System.Boolean,System.Boolean)"/>. Even when s is null/"".</param>
+            <param name="showActivate">Call <see cref="M:Catkeys.Wnd.Show(System.Boolean)">Show</see>(true) and <see cref="M:Catkeys.Wnd.ActivateLL"/>. Even when s is null/"".</param>
+            <exception cref="T:Catkeys.WndException"/>
+        </member>
+        <member name="M:Catkeys.Wnd._MinimalWaitIfOtherThread">
+            <summary>
+            if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd._MinimalWaitNoCheckThread">
+            <summary>
+            Thread.Sleep(15); SendTimeout(1000, 0);
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd._WindowsStoreAppId(Catkeys.Wnd,System.String@,System.Boolean,System.Boolean)">
+            <summary>
+            Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+            Returns 1 if gets user model id, 2 if gets path, 0 if fails.
+            </summary>
+            <param name="w">Window.</param>
+            <param name="appId">Receives app ID.</param>
+            <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
+            <param name="getExePathIfNotWinStoreApp">Get exe full path if hwnd is not a Windows Store app.</param>
+        </member>
+        <member name="M:Catkeys.Wnd._WindowsStoreAppFrameChild(Catkeys.Wnd)">
+            <summary>
+            On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
+            If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window with the same name as of w. It is unreliable, but MS does not provide API for this.
+            Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd._WindowsStoreAppHost(Catkeys.Wnd)">
+            <summary>
+            The reverse of _WindowsStoreAppFrameChild.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Wnd._Coord">
+            <summary>
+            Normalizes coordinates or width/height (converts fraction to pixels, adds offsets, etc).
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd._Coord._Normalize(Catkeys.Types{System.Int32,System.Single},System.Int32,System.Int32)">
+            <summary>
+            If c.type == 1, returns c.v1 + min.
+            Else calculates and returns non-fraction coordinate.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd._Coord.GetNormalizedInScreen(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Boolean,System.Boolean)">
+            <summary>
+            Returns new POINT(x, y), relative to the primary screen, where fractional x and/or y are converted to pixels.
+            x or/and y .type can be 0, then the returned x or y value will be 0.
+            </summary>
+            <param name="x"></param>
+            <param name="y"></param>
+            <param name="workArea">If false, coordinates are in primary screen, else in its work area.</param>
+            <param name="widthHeight">Don't add work area offset. Use when x and y are width and height.</param>
+        </member>
+        <member name="M:Catkeys.Wnd._Coord.GetNormalizedInWindowClientArea(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},Catkeys.Wnd)">
+            <summary>
+            Returns new POINT(x, y), relative to the window w client area, where fractional x and/or y are converted to pixels.
+            x or/and y .type can be 0, then the returned x or y value will be 0.
+            </summary>
+        </member>
         <member name="T:Catkeys.Wnd.FindParams">
             <summary>
             Contains the same fields as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/> parameters, and can be used instead of it.
@@ -6903,6 +7072,20 @@
             This function is quite slow and does not exactly match the behavior of the Windows taskbar and Alt+Tab.
             </remarks>
             <seealso cref="M:Catkeys.Wnd.Misc.MainWindows(System.Boolean,System.Boolean)"/>
+        </member>
+        <member name="T:Catkeys.WCFlags">
+            <summary>
+            'flags' parameter of <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
+            <note>
+            </note>
+            </summary>
+            <tocexclude />
+        </member>
+        <member name="F:Catkeys.WCFlags.HiddenToo">
+            <summary>Can find hidden controls.</summary>
+        </member>
+        <member name="F:Catkeys.WCFlags.DirectChild">
+            <summary>Skip indirect descendant controls (children of children and so on).</summary>
         </member>
         <member name="T:Catkeys.Registry_">
             <summary>
@@ -7456,6 +7639,28 @@
             Width and Height are <see cref="P:Catkeys.Util.Dpi.BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
             </summary>
         </member>
+        <member name="M:Catkeys.Util.Dpi.ScaleInt(System.Int32)">
+            <summary>
+            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96, returns stretched i.
+            Else returns i.
+            </summary>
+            <param name="i"></param>
+        </member>
+        <member name="M:Catkeys.Util.Dpi.ScaleSize(System.Drawing.Size)">
+            <summary>
+            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
+            Else returns z.
+            Note: for images use <see cref="M:Catkeys.Util.Dpi.ImageSize(System.Drawing.Image)"/>.
+            </summary>
+            <param name="z"></param>
+        </member>
+        <member name="M:Catkeys.Util.Dpi.ImageSize(System.Drawing.Image)">
+            <summary>
+            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
+            Else returns image.Size.
+            </summary>
+            <param name="image"></param>
+        </member>
         <member name="M:Catkeys.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>
             A workaround for:
@@ -7947,7 +8152,7 @@
             <summary>
             Gets file icon.
             Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
-            Calls <see cref="M:Catkeys.Icons.GetFileIconHandle(System.String,System.Int32,Catkeys.Icons.IconFlags)"/> and converts to Image. Returns null if failed, for example if the file does not exist.
+            Calls <see cref="M:Catkeys.Icons.GetFileIconHandle(System.String,System.Int32,Catkeys.Icons.IconFlags)"/> and converts to Bitmap. Returns null if failed, for example if the file does not exist.
             Later call Dispose().
             </summary>
             <param name="file">
@@ -7961,7 +8166,7 @@
         <member name="M:Catkeys.Icons.GetPidlIconImage(System.IntPtr,System.Int32,System.Boolean)">
             <summary>
             Gets icon of a file or other shell object specified by its ITEMIDLIST pointer.
-            Calls <see cref="M:Catkeys.Icons.GetPidlIconHandle(System.IntPtr,System.Int32,System.Boolean)"/> and converts to Image. Returns null if failed.
+            Calls <see cref="M:Catkeys.Icons.GetPidlIconHandle(System.IntPtr,System.Int32,System.Boolean)"/> and converts to Bitmap. Returns null if failed.
             Later call Dispose().
             </summary>
             <param name="pidl">ITEMIDLIST pointer.</param>
@@ -7970,7 +8175,7 @@
         </member>
         <member name="M:Catkeys.Icons.HandleToImage(System.IntPtr)">
             <summary>
-            Converts unmanaged icon to Image object and destroys the unmanaged icon.
+            Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
             Returns null if hi is Zero or fails to convert.
             </summary>
             <param name="hi">Icon handle.</param>
@@ -8009,22 +8214,22 @@
         </member>
         <member name="F:Catkeys.Icons.ShellSize.SysSmall">
             <summary>
-            Icons displayed in window title bar and system notification area (tray). Usually the same as Small. Default 16x16.
+            Icons displayed in window title bar and system notification area (tray). Usually 16x16 when normal DPI, the same as Small.
             </summary>
         </member>
         <member name="F:Catkeys.Icons.ShellSize.Small">
             <summary>
-            Small icons displayed in Explorer folders. Default 16x16.
+            Small icons displayed in Explorer folders. Usually 16x16 when normal DPI.
             </summary>
         </member>
         <member name="F:Catkeys.Icons.ShellSize.Large">
             <summary>
-            Large icons displayed in Explorer folders. Default 32x32.
+            Large icons displayed in Explorer folders. Usually 32x32 when normal DPI.
             </summary>
         </member>
         <member name="F:Catkeys.Icons.ShellSize.ExtraLarge">
             <summary>
-            Extra large icons displayed in Explorer folders. Default 48x48.
+            Extra large icons displayed in Explorer folders. Usually 48x48 when normal DPI.
             </summary>
         </member>
         <member name="F:Catkeys.Icons.ShellSize.Jumbo">
@@ -8189,6 +8394,58 @@
             <summary>
             
             </summary>
+        </member>
+        <member name="T:Catkeys.Icons.FileIconCache">
+            <summary>
+            Gets file icons.
+            Uses 2-level cache - memory and file.
+            </summary>
+            <remarks>
+            Can be used as static variables.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Icons.FileIconCache.#ctor(System.String,System.Int32)">
+            <summary>
+            Remembers cacheFile and iconSize.
+            </summary>
+            <param name="cacheFile"></param>
+            <param name="iconSize"></param>
+        </member>
+        <member name="M:Catkeys.Icons.FileIconCache.Finalize">
+            
+        </member>
+        <member name="M:Catkeys.Icons.FileIconCache.Dispose">
+            <summary>
+            Calls <see cref="M:Catkeys.Icons.FileIconCache.SaveCacheFileNow"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Icons.FileIconCache.SaveCacheFileNow">
+            <summary>
+            Saves to the cache file now, if need.
+            Don't need to call this explicitly. It is called by Dispose.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Icons.FileIconCache.ClearCache">
+            <summary>
+            Clears the memory cache and deletes the cache file.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Icons.FileIconCache.GetImage(System.String,System.Boolean)">
+            <summary>
+            Gets file icon as Bitmap.
+            If it is in the memory cache, gets it from there.
+            Else if it is in the file cache, gets it from there and adds to the memory cache.
+            Else gets from file (uses <see cref="M:Catkeys.Icons.GetFileIconImage(System.String,System.Int32,Catkeys.Icons.IconFlags)"/> and adds to the file cache and to the memory cache.
+            Returns null if GetFileIconImage failed, eg file does not exist.
+            </summary>
+            <param name="file">Any file or folder.</param>
+            <param name="useExt">
+            Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
+            This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
+            </param>
+            <remarks>
+            Thread-safe. The variable can be static, and this function can be called from any thread without locking.
+            </remarks>
         </member>
         <member name="M:Catkeys.LibTest._EnumerateDirectories(System.String)">
             <summary>

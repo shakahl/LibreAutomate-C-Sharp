@@ -1,0 +1,10 @@
+CreateWindow
+CreateWindowEx
+LOGFONT
+WM_TIMER
+LVITEM
+WINAPI.TVM_GETCOUNT
+WM_ACTIVATE
+strcpy
+CreateMutex
+REGSTR_KEY_LOGON

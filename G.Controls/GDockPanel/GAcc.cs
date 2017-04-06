@@ -92,7 +92,6 @@ namespace G.Controls
 				_manager = manager;
 				_control = ownerControl;
 				_gf = ownerControl as GFloat;
-
 			}
 
 			//public override AccessibleRole Role { get => AccessibleRole.Client; }
@@ -171,13 +170,7 @@ namespace G.Controls
 
 			//public override AccessibleObject Parent { get => base.Parent; }
 
-			public override string DefaultAction
-			{
-				get
-				{
-					return base.DefaultAction;
-				}
-			}
+			//public override string DefaultAction { get => base.DefaultAction; }
 		}
 
 		/// <summary>
@@ -256,7 +249,7 @@ namespace G.Controls
 			{
 				get
 				{
-					if(_gn is GPanel gp && gp.IsTabbedPanel) return "Show panel";
+					if(_gn is GPanel gp && gp.IsTabbedPanel) return "Click";
 					return null;
 				}
 			}
@@ -265,7 +258,7 @@ namespace G.Controls
 			{
 				var gp = _gn as GPanel;
 				var gt = gp?.ParentTab;
-				if(gt != null) gt.SetActiveItem(gp);
+				gt?.SetActiveItem(gp, true);
 			}
 
 			public override AccessibleObject GetSelected()

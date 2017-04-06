@@ -1,0 +1,6 @@
+ /expandfolders 0x0 0 /filter "*.exe" ""
+ Accessories "$programs$\Accessories" "$common programs$\Accessories"
+ Programs "$programs$" "$common programs$"
+Programs "$common programs$\Microsoft Office"
+ PF "$program files$"
+ Microsoft Office Access 2003 :run "$windows$\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe"

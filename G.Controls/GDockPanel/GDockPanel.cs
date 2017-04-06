@@ -24,7 +24,9 @@ using static Catkeys.NoClass;
 namespace G.Controls
 {
 	//[DebuggerStepThrough]
-	public sealed partial class GDockPanel :ContainerControl
+	//public sealed partial class GDockPanel :ContainerControl
+	//public sealed partial class GDockPanel :Panel
+	public sealed partial class GDockPanel :Control
 	{
 		List<GSplit> _aSplit;
 		List<GTab> _aTab;
@@ -55,9 +57,10 @@ namespace G.Controls
 		/// Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
 		/// Adjusts control properties and positions everything according to the XML.
 		/// </summary>
-		/// <param name="xmlFile">XML file containing panel/toolbar layout. Used to load and save. If missing, will load Folders.ThisApp + Path.GetFileName(xmlFile) and save to xmlFile.</param>
+		/// <param name="xmlFileDefault">XML file containing default panel/toolbar layout.</param>
+		/// <param name="xmlFileCustomized">XML file containing customized panel/toolbar layout. It will be created or updated when saving customizations.</param>
 		/// <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
-		public void Create(string xmlFile, params Control[] controls)
+		public void Create(string xmlFileDefault, string xmlFileCustomized, params Control[] controls)
 		{
 			_initControls = new Dictionary<string, Control>();
 			foreach(var c in controls) {
@@ -72,8 +75,8 @@ namespace G.Controls
 			_paintTools = new _PainTools(this);
 			_toolTip = new ToolTip();
 
-			_xmlFile = xmlFile;
-			_LoadXmlAndCreateLayout(xmlFile, Assembly.GetCallingAssembly().GetName().Version.ToString());
+			_xmlFile = xmlFileCustomized;
+			_LoadXmlAndCreateLayout(xmlFileDefault, xmlFileCustomized, Assembly.GetCallingAssembly().GetName().Version.ToString());
 
 			SuspendLayout();
 			this.SetStyle(ControlStyles.ContainerControl | ControlStyles.ResizeRedraw | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer, true); //default: UserPaint, AllPaintingInWmPaint; not OptimizedDoubleBuffer, DoubleBuffer, Opaque. Opaque prevents erasing background, which prevents flickering when moving a splitter.
@@ -85,22 +88,21 @@ namespace G.Controls
 		}
 
 		//Loads and parses XML. Creates the _aX lists, _firstSplit and the tree structure.
-		void _LoadXmlAndCreateLayout(string xmlFile, string asmVersion)
+		void _LoadXmlAndCreateLayout(string xmlFileDefault, string xmlFileCustomized, string asmVersion)
 		{
 			//We have 1 or 2 XML files containing panel/toolbar layout.
-			//file1 contains default XML. Its path is Folders.ThisApp + Path.GetFileName(xmlFile).
-			//file2 contains previously saved XML (user-modified layout). Its path is xmlFile.
-			//At first try to load file2. If it does not exist or is invalid, load file1 (default); or get missing data from file1, if possible.
-			//Also loads file1 when file2 XML does not match panels of new app version and cannot resolve it (eg some panels removed).
+			//xmlFileDefault contains default XML. It eg can be in Folders.ThisApp.
+			//xmlFileCustomized contains previously saved XML (user-modified layout).
+			//At first try to load xmlFileCustomized. If it does not exist or is invalid, load xmlFileDefault; or get missing data from xmlFileDefault, if possible.
+			//Also loads xmlFileDefault when xmlFileCustomized XML does not match panels of new app version and cannot resolve it (eg some panels removed).
 			bool usesDefaultXML = false;
-			string xmlVersion = null, outInfo = null;
-			string defFile = Folders.ThisApp + Path.GetFileName(xmlFile);
+			string xmlFile = xmlFileCustomized, xmlVersion = null, outInfo = null;
 			for(int i = 0; i < 2; i++) {
 				if(i == 0) {
-					if(!Files.FileExists(xmlFile)) continue;
+					if(!Files.ExistsAsFile(xmlFile)) continue;
 				} else {
 					usesDefaultXML = true;
-					xmlFile = defFile;
+					xmlFile = xmlFileDefault;
 				}
 
 				try {
@@ -113,7 +115,7 @@ namespace G.Controls
 
 					if(_aPanel.Count < _initControls.Count) { //more panels added in this app version
 						if(usesDefaultXML) throw new Exception("debug1");
-						_GetPanelXmlFromDefaultFile(defFile);
+						_GetPanelXmlFromDefaultFile(xmlFileDefault);
 					}
 
 					break;
@@ -125,7 +127,7 @@ namespace G.Controls
 					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\tError: {e.Message} ({e.GetType()})";
 					if(usesDefaultXML) {
 						_xmlFile = null;
-						TaskDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.", owner: this.ParentForm);
+						TaskDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");
 						Environment.Exit(1);
 					} else {
 						//probably in this version there are less panels, most likely when downgraded. Or the file is corrupt.
@@ -163,6 +165,8 @@ namespace G.Controls
 					File.Delete(_xmlFile);
 					return;
 				}
+				var f = Path.GetDirectoryName(_xmlFile);
+				if(!Files.ExistsAsDirectory(f)) Directory.CreateDirectory(f);
 				var sett = new XmlWriterSettings() {
 					OmitXmlDeclaration = true,
 					Indent = true,
@@ -196,7 +200,7 @@ namespace G.Controls
 			{
 				if(__captionHeight == 0) {
 					var fh = this.Font.Height; //not FontHeight, it caches the value and it is not auto updated on font change
-					__captionHeight = Math.Max(fh, 16) + 2; //16 for icon, 2 for padding
+					__captionHeight = Math.Max(fh, Catkeys.Util.Dpi.ScaleInt(16)) + 2; //16 for icon, 2 for padding
 				}
 				return __captionHeight;
 			}
@@ -268,7 +272,7 @@ namespace G.Controls
 		{
 			//foreach(var gp in _aPanel) e.Graphics.ExcludeClip(gp.Content.Bounds); //makes erasing 2 times faster when window maximized (2 -> 1 ms)
 
-			e.Graphics.Clear(Calc.ColorFromBGR(0xAAAAAA)); //draw borders
+			e.Graphics.Clear(Color_.ColorFromBGR(0xAAAAAA)); //draw borders
 
 			//speed: this is the slowest part of painting this control. Using API does not help.
 		}
@@ -489,7 +493,7 @@ namespace G.Controls
 			foreach(var v in a) {
 				var s = v.Text;
 				if(!v.Visible) s += "  (hidden)";
-				m.Items.Add(s, v.Image, (unu, sed) => v.SetDockState(GDockState.LastVisible));
+				m.Items.Add(s, v.Image, (unu, sed) => { v.Show(true); });
 			}
 			//add Reset...
 			m.Items.Add(new ToolStripSeparator());
@@ -591,6 +595,17 @@ namespace G.Controls
 		/// The event handler can add/remove/etc menu items.
 		/// </summary>
 		public event GDockPanelEventHandler<GDockPanelContextMenuEventArgs> PanelContextMenu;
+
+		/// <summary>
+		/// Removes rounded edges of the ToolStrip to which is assigned.
+		/// </summary>
+		public class DockedToolStripRenderer :ToolStripProfessionalRenderer
+		{
+			public DockedToolStripRenderer()
+			{
+				this.RoundedEdges = false;
+			}
+		}
 
 		#endregion public
 

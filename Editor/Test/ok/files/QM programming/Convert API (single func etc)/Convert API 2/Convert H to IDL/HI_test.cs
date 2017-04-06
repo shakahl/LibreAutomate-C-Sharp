@@ -1,0 +1,5 @@
+typelib inet {26A59BDB-3BB4-4094-8CB2-4DA4783DE907} 1.0
+out inet.HTTP_QUERY_ACCEPT
+inet.INTERNET_CACHE_ENTRY_INFO i
+i.__MIDL_0014.dwReserved=5
+out i.__MIDL_0014.dwExemptDelta

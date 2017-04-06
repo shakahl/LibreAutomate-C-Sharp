@@ -1,0 +1,2 @@
+function VOK&source
+out "="

@@ -1,0 +1,2 @@
+RECT r
+mes "asdf"

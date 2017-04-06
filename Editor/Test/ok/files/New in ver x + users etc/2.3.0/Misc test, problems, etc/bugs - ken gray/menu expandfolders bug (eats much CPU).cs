@@ -1,0 +1,2 @@
+ /expandfolders
+k "$windows$"

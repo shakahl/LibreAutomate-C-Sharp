@@ -1,0 +1,53 @@
+ /Dialog_Editor
+
+str dd=
+ BEGIN DIALOG
+ 1 "" 0x50000048 0x10000 144 0 264 198 "Trigger"
+ 3 Static 0x56000200 0x0 8 8 46 12 "&Schedule:"
+ 4 ComboBox 0x56230643 0x0 56 8 132 213 "Sch"
+ 11 Static 0x56000200 0x0 8 28 46 13 "Start:"
+ 12 SysDateTimePick32 0x56010000 0x0 56 28 64 14 "StD" "For 'One time' schedule - the task starts at this date.[]For other schedule types - the schedule is activated at this date."
+ 13 SysDateTimePick32 0x56010009 0x0 124 28 64 14 "StT" "The task starts at this time of day."
+ 14 Button 0x54032000 0x0 196 28 36 14 "After..."
+ 1001 Static 0x56000200 0x0 8 48 46 12 "Every:"
+ 1002 Edit 0x560120C0 0x200 56 48 24 12 "Day"
+ 1003 Static 0x56000200 0x0 84 48 24 12 "days"
+ 1101 Static 0x56000200 0x0 8 48 46 12 "Every:"
+ 1102 Edit 0x560120C0 0x200 56 48 24 12 "Wee"
+ 1103 Static 0x56000200 0x0 84 48 40 12 "weeks on:"
+ 100 ListBox 0x40230109 0x200 256 8 16 16 "WD"
+ 1104 ComboBox 0x54230403 0x0 8 64 248 0 "WD" "Day(s) of week"
+ 101 ListBox 0x40230109 0x200 192 8 16 16 "Mon"
+ 1401 Static 0x56000200 0x0 8 48 46 12 "Months:"
+ 1402 ComboBox 0x54230403 0x0 56 48 200 0 "Mon"
+ 102 ListBox 0x40130309 0x200 208 8 16 16 "MD"
+ 1201 Static 0x54000200 0x0 8 64 46 12 "Days:"
+ 1206 ComboBox 0x54230403 0x0 56 64 200 0 "MD"
+ 103 ListBox 0x40230109 0x200 224 8 16 16 "MW"
+ 1305 Static 0x54000200 0x0 8 64 34 13 "On:"
+ 1301 ComboBox 0x54230403 0x0 56 64 62 0 "MW" "Week(s) of month"
+ 104 ListBox 0x40230109 0x204 240 8 16 16 "MWD"
+ 1303 ComboBox 0x54230403 0x0 120 64 136 0 "MWD" "Day(s) of week"
+ 16 Button 0x56010003 0x0 8 92 142 13 "Delay task for up to (random delay):"
+ 17 ComboBox 0x5E210242 0x0 152 92 64 213 "Del"
+ 18 Button 0x56012003 0x0 8 107 46 18 "Repeat every:"
+ 19 ComboBox 0x5E210242 0x0 56 108 64 213 "Rep" "1m - 31d"
+ 20 Static 0x5E000200 0x0 128 108 62 13 "for a duration of:"
+ 21 ComboBox 0x5E210242 0x0 192 108 64 213 "Dur" "Indefinitely or >= 1m"
+ 22 Button 0x5E010003 0x0 56 124 200 10 "Stop all running tasks at end of repetition duration"
+ 23 Button 0x56010003 0x0 8 136 142 12 "Stop task if it runs longer than:"
+ 24 ComboBox 0x5E210242 0x0 152 136 64 213 "Sto"
+ 25 Button 0x56010003 0x0 8 152 46 12 "Expire:"
+ 26 SysDateTimePick32 0x5E010000 0x0 56 152 64 14 "ExD"
+ 27 SysDateTimePick32 0x5E010009 0x0 124 152 64 14 "ExT"
+ 30 Button 0x5C032000 0x0 196 152 36 14 "After..."
+ 28 Button 0x56010003 0x0 8 168 144 12 "Synchronize times across time zones" "For Start and Expire times internally use UTC time, although displayed is local time"
+ 29 Button 0x56010003 0x0 8 184 48 12 "&Enabled"
+ 6 Static 0x54000010 0x20000 8 84 250 2 ""
+ END DIALOG
+ DIALOG EDITOR: "" 0x2040200 "*" "" "0 1 (2 4) (3 4)" ""
+
+
+str controls = "4 1002 1102 100 1104 101 1402 102 1206 103 1301 104 1303 16 17 18 19 21 22 23 24 25 28 29"
+str cb4Sch e1002Day e1102Wee lb100WD cb1104WD lb101Mon cb1402Mon lb102MD cb1206MD lb103MW cb1301MW lb104MWD cb1303MWD c16Del cb17Del c18Rep cb19Rep cb21Dur c22Sto c23Sto cb24Sto c25Exp c28Syn c29Ena
+if(!ShowDialog(dd 0 &controls)) ret

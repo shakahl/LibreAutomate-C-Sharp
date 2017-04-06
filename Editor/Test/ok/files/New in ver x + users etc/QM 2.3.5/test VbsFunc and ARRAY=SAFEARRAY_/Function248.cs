@@ -1,0 +1,1 @@
+function ARRAY(BSTR)*a
