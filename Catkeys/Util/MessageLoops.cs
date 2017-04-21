@@ -78,8 +78,7 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	class LibEnsureWindowsFormsSynchronizationContext :IDisposable
 	{
-		[ThreadStatic]
-		static WindowsFormsSynchronizationContext _wfContext;
+		[ThreadStatic] static WindowsFormsSynchronizationContext _wfContext;
 		SynchronizationContext _prevContext;
 		bool _restoreContext, _prevAutoInstall;
 

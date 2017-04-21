@@ -162,11 +162,10 @@ namespace G.Controls
 		{
 			try {
 				if(ResetLayoutAfterRestart) {
-					File.Delete(_xmlFile);
+					Files.Delete(_xmlFile);
 					return;
 				}
-				var f = Path.GetDirectoryName(_xmlFile);
-				if(!Files.ExistsAsDirectory(f)) Directory.CreateDirectory(f);
+				Files.CreateDirectoryFor(_xmlFile);
 				var sett = new XmlWriterSettings() {
 					OmitXmlDeclaration = true,
 					Indent = true,

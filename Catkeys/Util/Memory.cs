@@ -18,7 +18,6 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
-using Util = Catkeys.Util;
 
 namespace Catkeys.Util
 {
@@ -176,5 +175,212 @@ namespace Catkeys.Util
 			Ptr = (LibProcessMemory*)x.lpfnWndProc;
 		}
 #endif
+	}
+
+	/// <summary>
+	/// Allocates a native memory buffer as char*.
+	/// The property <see cref="Common"/> can be used when calling API functions that require a char buffer. It returns a ThreadStatic variable.
+	/// Using this is much faster than StringBuilder, and does not collect .NET garbage. Almost as fast as stackalloc.
+	/// </summary>
+	internal unsafe class LibCharBuffer
+	{
+		char* _p;
+		int _n;
+
+		/// <summary>
+		/// Gets buffer pointer.
+		/// </summary>
+		public char* Ptr { get => _p; }
+
+		/// <summary>
+		/// Gets current buffer length (n characters).
+		/// </summary>
+		public int Capacity { get => _n; }
+
+		/// <summary>
+		/// Returns Math.Max(n, Capacity).
+		/// </summary>
+		public int Max(int n)
+		{
+			return Math.Max(n, _n);
+		}
+
+		/// <summary>
+		/// Gets memory buffer of at least Math.Max(n, 300) characters.
+		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+		/// By default always returns true. If noThrow, returns false if fails to allocate meory (unlikely).
+		/// </summary>
+		/// <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
+		/// <param name="ptr">Receives buffer pointer.</param>
+		/// <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
+		/// <exception cref="OutOfMemoryException"></exception>
+		public bool Alloc(ref int n, out char* ptr, bool noThrow = false)
+		{
+			if(_p == null || n > _n) {
+				if(n < 300) n = 300;
+				var p = (char*)Api.LocalAlloc(0, (n + 2) * 2);
+				if(p == null) {
+					ptr = null;
+					if(noThrow) return false;
+					throw new OutOfMemoryException();
+				}
+				_Free();
+				_p = p;
+				_n = n;
+			}
+			n = _n;
+			ptr = _p;
+			return true;
+		}
+
+		/// <summary>
+		/// Gets memory buffer of at least Math.Max(n, 300) characters.
+		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+		/// </summary>
+		/// <exception cref="OutOfMemoryException"></exception>
+		public char* Alloc(int n)
+		{
+			Alloc(ref n, out var p);
+			return _p;
+		}
+
+		/// <summary>
+		/// Converts the buffer, which contains native '\0'-terminated UTF-16 string, to String.
+		/// </summary>
+		public override string ToString()
+		{
+			if(_p == null) return null;
+			int n = Misc.CharPtrLength(_p, _n);
+			return new string(_p, 0, n);
+		}
+
+		/// <summary>
+		/// Converts the buffer, which contains native UTF-16 string of n length, to String.
+		/// </summary>
+		public string ToString(int n)
+		{
+			Debug.Assert(n <= _n && _p != null);
+			return new string(_p, 0, Math.Min(n, _n));
+		}
+
+		/// <summary>
+		/// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+		/// </summary>
+		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+		public string ToStringFromAnsi(Encoding enc = null)
+		{
+			if(_p == null) return null;
+			var s = (sbyte*)_p;
+			int n = Misc.CharPtrLength(s, _n * 2);
+			return new String(s, 0, n, enc);
+		}
+
+		/// <summary>
+		/// Frees the buffer if more than 5000 characters.
+		/// </summary>
+		public void Compact()
+		{
+			if(_n > 5000) _Free();
+		}
+
+		void _Free()
+		{
+			if(_p != null) {
+				var p = _p;
+				_p = null;
+				_n = 0;
+				Api.LocalFree(p);
+			}
+		}
+
+		~LibCharBuffer()
+		{
+			_Free();
+		}
+
+		/// <summary>
+		/// A ThreadStatic LibCharBuffer instance.
+		/// </summary>
+		public static LibCharBuffer Common { get => _common ?? (_common = new LibCharBuffer()); }
+		[ThreadStatic] static LibCharBuffer _common;
+		//this works only in the first thread. In other threads it will be null. It's documented.
+		//[ThreadStatic] public static readonly LibCharBuffer Common = new LibCharBuffer();
+	}
+
+	/// <summary>
+	/// Allocates memory from native heap of this process using heap API.
+	/// Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
+	/// About 20% faster than Marshal class functions, but it depends on allocation size etc.
+	/// </summary>
+	public static unsafe class NativeHeap
+	{
+		static IntPtr _processHeap = Api.GetProcessHeap();
+
+		/// <summary>
+		/// Allocates size bytes of memory.
+		/// The memory is uninitialized, ie random byte values.
+		/// Calls API <msdn>HeapAlloc</msdn>.
+		/// </summary>
+		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		public static void* Alloc(LPARAM size)
+		{
+			void* r = Api.HeapAlloc(_processHeap, 0, size);
+			if(r == null) throw new OutOfMemoryException();
+			return r;
+		}
+
+		/// <summary>
+		/// Allocates size bytes of memory and sets all bytes to 0.
+		/// Calls API <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
+		/// </summary>
+		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		public static void* AllocZero(LPARAM size)
+		{
+			void* r = Api.HeapAlloc(_processHeap, 8, size);
+			if(r == null) throw new OutOfMemoryException();
+			return r;
+		}
+
+		/// <summary>
+		/// Reallocates size bytes of memory.
+		/// When size is growing, the added memory is uninitialized, ie random byte values.
+		/// If mem is null, allocates new memory like Alloc.
+		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
+		/// </summary>
+		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		public static void* ReAlloc(void* mem, LPARAM size)
+		{
+			void* r;
+			if(mem == null) r = Api.HeapAlloc(_processHeap, 0, size);
+			else r = Api.HeapReAlloc(_processHeap, 0, mem, size);
+			if(r == null) throw new OutOfMemoryException();
+			return r;
+		}
+
+		/// <summary>
+		/// Reallocates size bytes of memory and sets added bytes to 0.
+		/// If mem is null, allocates new memory like AllocZero.
+		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
+		/// </summary>
+		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		public static void* ReAllocZero(void* mem, LPARAM size)
+		{
+			void* r;
+			if(mem == null) r = Api.HeapAlloc(_processHeap, 8, size);
+			else r = Api.HeapReAlloc(_processHeap, 8, mem, size);
+			if(r == null) throw new OutOfMemoryException();
+			return r;
+		}
+
+		/// <summary>
+		/// Frees memory.
+		/// Does nothing if mem is null.
+		/// Calls API <msdn>HeapFree</msdn>.
+		/// </summary>
+		public static void Free(void* mem)
+		{
+			if(mem == null) return;
+			Api.HeapFree(_processHeap, 0, mem);
+		}
 	}
 }

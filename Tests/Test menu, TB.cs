@@ -336,7 +336,8 @@ public partial class Test
 		var m = new CatMenu();
 		m.MouseClosingDistance = 50;
 		//m.ActivateMenuWindow = true;
-		m.IconDirectory = @"q:\app";
+		//m.IconDirectory = @"q:\app";
+		Folders.ThisAppImages=@"q:\app";
 		//m.CMS.ImageScalingSize = new Size(32, 32);
 		//m.CMS.ImageScalingSize = new Size(48,48);
 		//m.CMS.ImageScalingSize = new Size(64,64);

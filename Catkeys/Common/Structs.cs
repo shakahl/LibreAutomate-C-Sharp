@@ -196,6 +196,39 @@ namespace Catkeys
 		public static implicit operator Types<T1, T2, T3, T4>(_Private.TypesNull2 n) { return default(Types<T1, T2, T3, T4>); }
 	}
 
+	/// <summary>
+	/// Contains a value of one of two types - Wnd or Control.
+	/// Has implicit conversion operators: from Wnd and from Control.
+	/// Often used for function parameters that support both these types. You can pass Control or Wnd variables to such functions directly.
+	/// </summary>
+	public class WndOrControl
+	{
+		/// <summary>
+		/// Native window or control.
+		/// </summary>
+		public Wnd Wnd;
+
+		/// <summary>
+		/// .NET control or form.
+		/// </summary>
+		public Control Control;
+
+		WndOrControl(Wnd w) { Wnd = w; }
+		WndOrControl(Control c) { Control = c; }
+
+		/// <summary> Assignment of a value of type Wnd. </summary>
+		public static implicit operator WndOrControl(Wnd w) { return new WndOrControl(w); }
+		/// <summary> Assignment of a value of type Control. </summary>
+		public static implicit operator WndOrControl(Control c) { return new WndOrControl(c); }
+
+		/// <summary>
+		/// If the Control property is set, returns its handle as Wnd. Else returns the Wnd property.
+		/// </summary>
+		public Wnd GetWnd()
+		{
+			return (Control != null) ? Control.Wnd_() : Wnd;
+		}
+	}
 
 #pragma warning disable 660, 661 //no Equals()
 

@@ -283,58 +283,6 @@ namespace Catkeys
 		#endregion
 
 		#region Xml
-		//These are finished, tested, stable. But better use XElement.
-		///// <summary>
-		///// Gets nicely formatted (unlike OuterXml) XML text.
-		///// </summary>
-		//public static string ToString_(this XmlDocument t)
-		//{
-		//	var sb = new StringBuilder();
-		//	var settings = new XmlWriterSettings {
-		//		OmitXmlDeclaration = true,
-		//		Indent = true,
-		//		IndentChars = "\t"
-		//	};
-		//	using(var writer = XmlWriter.Create(sb, settings)) {
-		//		t.Save(writer);
-		//	}
-		//	return sb.ToString();
-		//}
-
-		///// <summary>
-		///// Gets XML attribute value.
-		///// If the attribute does not exist, returns defaultValue (default null).
-		///// If the attribute value is empty, returns "".
-		///// </summary>
-		//public static string Attribute_(this XmlElement t, string name, string defaultValue = null)
-		//{
-		//	var x = t.GetAttributeNode(name);
-		//	return x != null ? x.Value : defaultValue;
-
-		//	//speed: same as GetAttribute().
-		//}
-
-		///// <summary>
-		///// Gets attribute value converted to int (<see cref="String_.ToInt32_(string)"/>).
-		///// If the attribute does not exist, returns defaultValue.
-		///// If the attribute value is empty or does not begin with a valid number, returns 0.
-		///// </summary>
-		//public static int Attribute_(this XmlElement t, string name, int defaultValue)
-		//{
-		//	var x = t.GetAttributeNode(name);
-		//	return x != null ? x.Value.ToInt32_() : defaultValue;
-		//}
-
-		///// <summary>
-		///// Gets attribute value converted to float (<see cref="String_.ToFloat_"/>).
-		///// If the attribute does not exist, returns defaultValue.
-		///// If the attribute value is empty or is not a valid float number, returns 0F.
-		///// </summary>
-		//public static float Attribute_(this XmlElement t, string name, float defaultValue)
-		//{
-		//	var x = t.GetAttributeNode(name);
-		//	return x != null ? x.Value.ToFloat_() : defaultValue;
-		//}
 
 		/// <summary>
 		/// Gets XML attribute value.

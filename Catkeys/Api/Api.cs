@@ -209,7 +209,7 @@ namespace Catkeys
 		internal const int WH_MOUSE_LL = 14;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr SetWindowsHookEx(int WH_X, HOOKPROC lpfn, IntPtr hMod, uint dwThreadId);
+		internal static extern IntPtr SetWindowsHookEx(int WH_X, HOOKPROC lpfn, IntPtr hMod, int dwThreadId);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
@@ -245,8 +245,10 @@ namespace Catkeys
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SetForegroundWindow(Wnd hWnd);
 
+		internal const int ASFW_ANY = -1;
+
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AllowSetForegroundWindow(uint dwProcessId);
+		internal static extern bool AllowSetForegroundWindow(int dwProcessId);
 
 		internal const uint LSFW_LOCK = 1;
 		internal const uint LSFW_UNLOCK = 2;
@@ -392,13 +394,13 @@ namespace Catkeys
 		internal static extern bool IsIconic(Wnd hWnd);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint GetWindowThreadProcessId(Wnd hWnd, out uint lpdwProcessId);
+		internal static extern int GetWindowThreadProcessId(Wnd hWnd, out int lpdwProcessId);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsWindowUnicode(Wnd hWnd);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool IsWow64Process(IntPtr hProcess, out int Wow64Process);
+		internal static extern bool IsWow64Process(IntPtr hProcess, out bool Wow64Process);
 
 
 		[DllImport("user32.dll", EntryPoint = "GetPropW", SetLastError = true)]
@@ -431,7 +433,7 @@ namespace Catkeys
 		internal static extern bool EnumWindows(WNDENUMPROC lpEnumFunc, LPARAM lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool EnumThreadWindows(uint dwThreadId, WNDENUMPROC lpfn, LPARAM lParam);
+		internal static extern bool EnumThreadWindows(int dwThreadId, WNDENUMPROC lpfn, LPARAM lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool EnumChildWindows(Wnd hWndParent, WNDENUMPROC lpEnumFunc, LPARAM lParam);
@@ -744,19 +746,19 @@ namespace Catkeys
 		internal static extern bool ClientToScreen(Wnd hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref POINT lpPoints, uint cPoints = 1);
+		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref POINT lpPoints, int cPoints = 1);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref RECT lpPoints, uint cPoints = 2);
+		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref RECT lpPoints, int cPoints = 2);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, void* lpPoints, uint cPoints);
+		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, void* lpPoints, int cPoints);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool GetGUIThreadInfo(uint idThread, ref Native.GUITHREADINFO pgui);
+		internal static extern bool GetGUIThreadInfo(int idThread, ref Native.GUITHREADINFO pgui);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+		internal static extern bool AttachThreadInput(int idAttach, int idAttachTo, bool fAttach);
 
 		[Flags]
 		internal enum IKFlag :uint
@@ -832,16 +834,16 @@ namespace Catkeys
 		}
 
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern uint SendInput(uint cInputs, ref INPUTKEY pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, ref INPUTKEY pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern uint SendInput(uint cInputs, [In] INPUTKEY[] pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, [In] INPUTKEY[] pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern uint SendInput(uint cInputs, ref INPUTMOUSE pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, ref INPUTMOUSE pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern uint SendInput(uint cInputs, [In] INPUTMOUSE[] pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, [In] INPUTMOUSE[] pInputs, int cbSize);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint SendInput(int cInputs, void* pInputs, int cbSize);
+		internal static extern int SendInput(int cInputs, void* pInputs, int cbSize);
 
 		internal static bool SendInputKey(ref INPUTKEY ik)
 		{
@@ -883,9 +885,9 @@ namespace Catkeys
 		internal static extern IntPtr CreateIcon(IntPtr hInstance, int nWidth, int nHeight, byte cPlanes, byte cBitsPixel, byte[] lpbANDbits, byte[] lpbXORbits);
 
 		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW", SetLastError = true)]
-		internal static extern uint PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, [Out] IntPtr[] phicon, IntPtr piconid, uint nIcons, uint flags);
+		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, [Out] IntPtr[] phicon, IntPtr piconid, int nIcons, uint flags);
 		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW", SetLastError = true)]
-		internal static extern uint PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, out IntPtr phicon, IntPtr piconid, uint nIcons, uint flags);
+		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, out IntPtr phicon, IntPtr piconid, int nIcons, uint flags);
 
 		[DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
 		internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
@@ -972,7 +974,7 @@ namespace Catkeys
 		internal static extern bool ReleaseCapture();
 
 		[DllImport("user32.dll", EntryPoint = "CharLowerBuffW")]
-		internal static unsafe extern uint CharLowerBuff(char* lpsz, uint cchLength);
+		internal static unsafe extern int CharLowerBuff(char* lpsz, int cchLength);
 
 
 
@@ -1022,10 +1024,10 @@ namespace Catkeys
 		internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out SIZE psizl);
 
 		[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
-		internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, uint bItalic = 0, uint bUnderline = 0, uint bStrikeOut = 0, uint iCharSet = 0, uint iOutPrecision = 0, uint iClipPrecision = 0, uint iQuality = 0, uint iPitchAndFamily = 0, string pszFaceName = null);
+		internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, int bItalic = 0, int bUnderline = 0, int bStrikeOut = 0, int iCharSet = 0, int iOutPrecision = 0, int iClipPrecision = 0, int iQuality = 0, int iPitchAndFamily = 0, string pszFaceName = null);
 
 		//[DllImport("user32.dll", EntryPoint = "CharUpperBuffW")]
-		//internal static unsafe extern uint CharUpperBuff(char* lpsz, uint cchLength);
+		//internal static unsafe extern int CharUpperBuff(char* lpsz, int cchLength);
 
 
 
@@ -1065,13 +1067,13 @@ namespace Catkeys
 		internal static extern IntPtr GetCurrentThread();
 
 		[DllImport("kernel32.dll")]
-		internal static extern uint GetCurrentThreadId();
+		internal static extern int GetCurrentThreadId();
 
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetCurrentProcess();
 
 		[DllImport("kernel32.dll")]
-		internal static extern uint GetCurrentProcessId();
+		internal static extern int GetCurrentProcessId();
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES* lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
@@ -1138,13 +1140,13 @@ namespace Catkeys
 		internal const uint STANDARD_RIGHTS_ALL = 0x001F0000;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
+		internal static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetLongPathNameW", SetLastError = true)]
-		internal static extern uint GetLongPathName(string lpszShortPath, [Out] StringBuilder lpszLongPath, uint cchBuffer);
+		internal static extern int GetLongPathName(string lpszShortPath, char* lpszLongPath, int cchBuffer);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
-		internal static extern uint GetFullPathName(string lpFileName, uint nBufferLength, [Out] StringBuilder lpBuffer, char** lpFilePart);
+		internal static extern int GetFullPathName(string lpFileName, int nBufferLength, char* lpBuffer, char** lpFilePart);
 
 		internal const uint TH32CS_SNAPHEAPLIST = 0x00000001;
 		internal const uint TH32CS_SNAPPROCESS = 0x00000002;
@@ -1153,7 +1155,7 @@ namespace Catkeys
 		internal const uint TH32CS_SNAPMODULE32 = 0x00000010;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
+		internal static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, int th32ProcessID);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
@@ -1165,7 +1167,7 @@ namespace Catkeys
 		//{
 		//	public uint dwSize;
 		//	public uint cntUsage;
-		//	public uint th32ProcessID;
+		//	public int th32ProcessID;
 		//	public IntPtr th32DefaultHeapID;
 		//	public uint th32ModuleID;
 		//	public uint cntThreads;
@@ -1177,7 +1179,7 @@ namespace Catkeys
 		//};
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ProcessIdToSessionId(uint dwProcessId, out uint pSessionId);
+		internal static extern bool ProcessIdToSessionId(int dwProcessId, out int pSessionId);
 
 		internal const uint PAGE_NOACCESS = 0x1;
 		internal const uint PAGE_READONLY = 0x2;
@@ -1214,36 +1216,16 @@ namespace Catkeys
 		[DllImport("kernel32.dll")]
 		internal static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, LPARAM dwSize = default(LPARAM), uint dwFreeType = MEM_RELEASE);
 
-		internal const uint FILE_ATTRIBUTE_READONLY = 0x1;
-		internal const uint FILE_ATTRIBUTE_HIDDEN = 0x2;
-		internal const uint FILE_ATTRIBUTE_SYSTEM = 0x4;
-		internal const uint FILE_ATTRIBUTE_DIRECTORY = 0x10;
-		internal const uint FILE_ATTRIBUTE_ARCHIVE = 0x20;
-		//internal const uint FILE_ATTRIBUTE_DEVICE = 0x40; //reserved for system
-		internal const uint FILE_ATTRIBUTE_NORMAL = 0x80;
-		internal const uint FILE_ATTRIBUTE_TEMPORARY = 0x100;
-		internal const uint FILE_ATTRIBUTE_SPARSE_FILE = 0x200;
-		internal const uint FILE_ATTRIBUTE_REPARSE_POINT = 0x400;
-		internal const uint FILE_ATTRIBUTE_COMPRESSED = 0x800;
-		internal const uint FILE_ATTRIBUTE_OFFLINE = 0x1000;
-		internal const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000;
-		internal const uint FILE_ATTRIBUTE_ENCRYPTED = 0x4000;
-		internal const uint FILE_ATTRIBUTE_INTEGRITY_STREAM = 0x8000;
-		//internal const uint FILE_ATTRIBUTE_VIRTUAL = 0x10000; //reserved for system
-		internal const uint FILE_ATTRIBUTE_NO_SCRUB_DATA = 0x20000;
-		//internal const uint FILE_ATTRIBUTE_EA = 0x40000; //undocumented
-		internal const uint INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF;
-
 		[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
-		internal static extern uint GetFileAttributes(string lpFileName);
+		internal static extern System.IO.FileAttributes GetFileAttributes(string lpFileName);
 
 		[DllImport("kernel32.dll", EntryPoint = "SetFileAttributesW", SetLastError = true)]
-		internal static extern bool SetFileAttributes(string lpFileName, uint dwFileAttributes);
+		internal static extern bool SetFileAttributes(string lpFileName, System.IO.FileAttributes dwFileAttributes);
 
 		[StructLayout(LayoutKind.Sequential, Pack = 4)]
 		internal struct WIN32_FILE_ATTRIBUTE_DATA
 		{
-			public uint dwFileAttributes;
+			public System.IO.FileAttributes dwFileAttributes;
 			public long ftCreationTime;
 			public long ftLastAccessTime;
 			public long ftLastWriteTime;
@@ -1255,7 +1237,7 @@ namespace Catkeys
 		internal static extern bool GetFileAttributesEx(string lpFileName, int zero, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
 
 		[DllImport("kernel32.dll", EntryPoint = "SearchPathW", SetLastError = true)]
-		internal static extern uint SearchPath(string lpPath, string lpFileName, string lpExtension, uint nBufferLength, [Out] StringBuilder lpBuffer, IntPtr lpFilePart);
+		internal static extern int SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, char* lpBuffer, char** lpFilePart);
 
 		internal const uint BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE = 0x1;
 		internal const uint BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE = 0x10000;
@@ -1291,9 +1273,27 @@ namespace Catkeys
 		{
 			public uint dwLowDateTime;
 			public uint dwHighDateTime;
+
+			public static implicit operator long(FILETIME ft) { return (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); } //in Release faster than *(long*)&ft
 		}
 
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
 
+		[DllImport("kernel32.dll")]
+		internal static extern bool Wow64RevertWow64FsRedirection(IntPtr OlValue);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetExitCodeProcess(IntPtr hProcess, out int lpExitCode);
+
+		[DllImport("kernel32.dll")]
+		internal static extern IntPtr GetProcessHeap();
+		[DllImport("kernel32.dll")]
+		internal static extern void* HeapAlloc(IntPtr hHeap, uint dwFlags, LPARAM dwBytes);
+		[DllImport("kernel32.dll")]
+		internal static extern void* HeapReAlloc(IntPtr hHeap, uint dwFlags, void* lpMem, LPARAM dwBytes);
+		[DllImport("kernel32.dll")]
+		internal static extern bool HeapFree(IntPtr hHeap, uint dwFlags, void* lpMem);
 
 
 
@@ -1479,7 +1479,15 @@ namespace Catkeys
 		internal static extern int SHGetNameFromIDList(IntPtr pidl, Native.SIGDN sigdnName, out string ppszName);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
+		internal static extern int SHCreateShellItem(IntPtr pidlParent, IShellFolder psfParent, IntPtr pidl, out IShellItem ppsi);
+		//This classic API supports absolute PIDL and parent+relative PIDL.
+		//There are 2 newer API - SHCreateItemFromIDList (absoulte) and SHCreateItemWithParent (parent+relative). They can get IShellItem2 too, which is currently not useful here. Same speed.
+
+		//[DllImport("shell32.dll", PreserveSig = true)]
+		//internal static extern int SHCreateItemFromIDList(IntPtr pidl, [In] ref Guid riid, out IShellItem ppv); //or IShellItem2
+
+		//[DllImport("shell32.dll", PreserveSig = true)]
+		//internal static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int SHGetPropertyStoreForWindow(Wnd hwnd, ref Guid riid, out IPropertyStore ppv);
@@ -1582,7 +1590,7 @@ namespace Catkeys
 		internal static extern int SHGetStockIconInfo(Native.SHSTOCKICONID siid, uint uFlags, ref SHSTOCKICONINFO psii);
 
 		[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
-		internal static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, uint nIconSize);
+		internal static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
 
 		internal const int SHIL_LARGE = 0;
 		internal const int SHIL_SMALL = 1;
@@ -1638,9 +1646,6 @@ namespace Catkeys
 
 		//SHLWAPI
 
-		[DllImport("shlwapi.dll", EntryPoint = "PathIsURLW")]
-		internal static extern bool PathIsURL(string pszPath);
-
 		//internal enum ASSOCSTR
 		//{
 		//	ASSOCSTR_COMMAND = 1,
@@ -1670,7 +1675,7 @@ namespace Catkeys
 		//}
 
 		//[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
-		//internal static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
+		//internal static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, char* pszOut, ref int pcchOut);
 
 
 
@@ -1859,6 +1864,11 @@ namespace Catkeys
 			char* endPtr;
 			return strtoi64(s, out endPtr, numberBase);
 		}
+
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* memcpy(void* to, void* from, LPARAM n);
+
+
 
 
 

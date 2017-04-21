@@ -41,9 +41,9 @@ namespace Catkeys
 		/// Calls <see cref="Marshal.GetLastWin32Error"/>.
 		/// </summary>
 		/// <remarks>
-		/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable.
+		/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
 		/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most Wnd propery-get functions.
-		/// When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> if you want to know whether the function failed or/and what is the error code. Also you can use <see cref="GetErrorMessage()">GetErrorMessage</see>.
+		/// When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> to get the error code. Also you can use <see cref="GetErrorMessage()">GetErrorMessage</see>.
 		/// 
 		/// Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="ClearError"/> before.
 		///

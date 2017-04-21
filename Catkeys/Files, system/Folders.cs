@@ -24,16 +24,57 @@ using static Catkeys.NoClass;
 namespace Catkeys
 {
 	/// <summary>
-	/// Gets special folder paths (Desktop, Temp, etc).
-	/// Most functions return special folder paths. Actually the return value is of type Folders.FolderPath, but it is implicitly convertible to string.
-	/// The Folders.FolderPath type has operator + that appends a filename or relative path string; it also appends @"\" if need, processes @"..\" etc and returns fully-qualified path string.
-	/// Example: <c>string s=Folders.Desktop+"file.txt";</c>
-	/// If a function cannot get special folder path, the return value contains null string. Then the above-mentioned + operator throws CatException.
-	/// Some special folders exist only on newer Windows versions or not on all computers.
-	/// The property-get functions have names of special folders (or similar), some with a suffix like "_Win8" which means that the folder is unavailable in older Windows versions. Note: some known folders, although supported and registerd, may be still not created.
-	/// Some special folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array of bytes called "ITEMIDLIST" or "PIDL". Functions of the nested class 'VirtualIDLIST' return the PIDL as IntPtr; you must free it with Marshal.FreeCoTaskMem(). Functions of the nested class 'Virtual' return the ITEMIDLIST as string "&lt;idlist:Base64_encoded_ITEMIDLIST&gt;" that can be used with some functions of this library but not with .NET or native functions.
-	/// Most functions use Windows "Known Folders" API, such as SHGetKnownFolderPath.
+	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
+	/// <remarks>
+	/// For return values is used type <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with @"\" separator if need. Example: <c>string s = Folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
+	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw CatException.
+	///
+	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like "_Win8" which means that the folder is unavailable on older Windows.
+	/// Some known folders, although supported and registerd, may be still not created.
+	/// 
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icons) but not with .NET or native functions.
+	///
+	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
+	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
+	/// Names of folders specific to this application have "This" prefix, like ThisApp.
+	/// 
+	/// Some paths depend on the bitness (32 or 64 bit) of the OS and this process.
+	/// The example paths below are for English versions of Windows on most computers.
+	/// <list type="definition">
+	/// <item>
+	/// <term>32-bit Windows</term>
+	/// <description>
+	/// System, SystemX86, SystemX64: <c>@"C:\WINDOWS\system32"</c>
+	/// ProgramFiles, ProgramFilesX86, ProgramFilesX64: <c>@"C:\Program Files"</c>
+	/// ProgramFilesCommon, ProgramFilesCommonX86, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <term>64-bit Windows, 64-bit process</term>
+	/// <description>
+	/// System, SystemX64: <c>@"C:\WINDOWS\system32"</c>
+	/// SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// ProgramFiles, ProgramFilesX64: <c>@"C:\Program Files"</c>
+	/// ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
+	/// ProgramFilesCommon, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <term>64-bit Windows, 32-bit process</term>
+	/// <description>
+	/// System: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
+	/// SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path that you don't see in Explorer.
+	/// ProgramFiles, ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
+	/// ProgramFilesX64: <c>@"C:\Program Files"</c>
+	/// ProgramFilesCommon, ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// </description>
+	/// </item>
+	/// </list>
+	/// </remarks>
 	[DebuggerStepThrough]
 	public static class Folders
 	{
@@ -79,11 +120,19 @@ namespace Catkeys
 		public static FolderPath PrintHood { get => _Get(0x9274BD8D, 0xCFD141C3, 0xB35EB13F, 0x55A758F4); }
 		public static FolderPath Profile { get => _Get(0x5E6C858F, 0x0E224760, 0x9AFEEA33, 0x17B67173); }
 		public static FolderPath ProgramData { get => _Get(0x62AB5D82, 0xFDC14DC3, 0xA9DD070D, 0x1D495D97); }
-		public static FolderPath ProgramFiles { get => _Get(0x905e63b6, 0xc1bf494e, 0xb29c65b7, 0x32d3d21a); }
-		public static FolderPath ProgramFilesX64 { get => _Get(0x6D809377, 0x6AF0444b, 0x8957A377, 0x3F02200E); }
-		public static FolderPath ProgramFilesX86 { get => _Get(0x7C5A40EF, 0xA0FB4BFC, 0x874AC0F2, 0xE0B9FA8E); }
+		/// <summary>More info in class help.</summary>
+		public static FolderPath ProgramFiles { get => __ProgramFiles ?? (__ProgramFiles = _ProgramFiles); }
+		static string __ProgramFiles;
+		static FolderPath _ProgramFiles { get => _Get(0x905e63b6, 0xc1bf494e, 0xb29c65b7, 0x32d3d21a); }
+		//broken static FolderPath ProgramFilesX64 { get => _Get(0x6D809377, 0x6AF0444b, 0x8957A377, 0x3F02200E); }
+		/// <summary>More info in class help.</summary>
+		public static FolderPath ProgramFilesX86 { get => __ProgramFilesX86 ?? (__ProgramFilesX86 = _ProgramFilesX86); }
+		static string __ProgramFilesX86;
+		static FolderPath _ProgramFilesX86 { get => _Get(0x7C5A40EF, 0xA0FB4BFC, 0x874AC0F2, 0xE0B9FA8E); }
+		/// <summary>More info in class help.</summary>
 		public static FolderPath ProgramFilesCommon { get => _Get(0xF7F1ED05, 0x9F6D47A2, 0xAAAE29D3, 0x17C6F066); }
-		public static FolderPath ProgramFilesCommonX64 { get => _Get(0x6365D5A7, 0x0F0D45E5, 0x87F60DA5, 0x6B6A4F7D); }
+		//broken static FolderPath ProgramFilesCommonX64 { get => _Get(0x6365D5A7, 0x0F0D45E5, 0x87F60DA5, 0x6B6A4F7D); }
+		/// <summary>More info in class help.</summary>
 		public static FolderPath ProgramFilesCommonX86 { get => _Get(0xDE974D24, 0xD9C64D3E, 0xBF91F445, 0x5120B917); }
 		public static FolderPath Programs { get => _Get(0xA77F5D77, 0x2E2B44C3, 0xA6A2ABA6, 0x01054A51); }
 		public static FolderPath Public { get => _Get(0xDFDF76A2, 0xC82A4D63, 0x906A5644, 0xAC457385); }
@@ -125,7 +174,11 @@ namespace Catkeys
 		public static FolderPath SkyDrivePictures_Win81 { get => _Get(0x339719B5, 0x8C474894, 0x94C2D8F7, 0x7ADD44A6); }
 		public static FolderPath StartMenu { get => _Get(0x625B53C3, 0xAB484EC1, 0xBA1FA1EF, 0x4146FC19); }
 		public static FolderPath Startup { get => _Get(0xB97D20BB, 0xF46A4C97, 0xBA105E36, 0x08430854); }
-		public static FolderPath System { get => _Get(0x1AC14E77, 0x02E74E5D, 0xB7442EB1, 0xAE5198B7); }
+		/// <summary>More info in class help.</summary>
+		public static FolderPath System { get => __System ?? (__System = _System); }
+		static string __System;
+		static FolderPath _System { get => _Get(0x1AC14E77, 0x02E74E5D, 0xB7442EB1, 0xAE5198B7); }
+		/// <summary>More info in class help.</summary>
 		public static FolderPath SystemX86 { get => _Get(0xD65231B0, 0xB2F14857, 0xA4CEA8E7, 0xC6EA7D27); }
 		public static FolderPath Templates { get => _Get(0xA63293E8, 0x664E48DB, 0xA079DF75, 0x9E0509F7); }
 		public static FolderPath TreeProperties { get => _Get(0x9E3995AB, 0x1F9C4F13, 0xB82748B2, 0x4B6C7174); }
@@ -134,62 +187,64 @@ namespace Catkeys
 		public static FolderPath UserProgramFilesCommon { get => _Get(0xBCBD3057, 0xCA5C4622, 0xB42DBC56, 0xDB0AE516); }
 		public static FolderPath Videos { get => _Get(0x18989B1D, 0x99B5455B, 0x841CAB7C, 0x74E4DDFC); }
 		public static FolderPath VideosLibrary { get => _Get(0x491E922F, 0x56434AF4, 0xA7EB4E7A, 0x138D8174); }
-		public static FolderPath Windows { get => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23); }
+		public static FolderPath Windows { get => __Windows ?? (__Windows = _Windows); }
+		static string __Windows;
+		static FolderPath _Windows { get => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23); }
 
 		[DebuggerStepThrough]
 		public static class Virtual
 		{
-			public static FolderPath AddNewPrograms { get => _GetV(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); }
-			public static FolderPath AppsFolder_Win8 { get => _GetV(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); }
-			public static FolderPath AppUpdates { get => _GetV(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4); }
-			public static FolderPath ChangeRemovePrograms { get => _GetV(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d); }
-			public static FolderPath ComputerFolder { get => _GetV(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7); }
-			public static FolderPath ConflictFolder { get => _GetV(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192); }
-			public static FolderPath ConnectionsFolder { get => _GetV(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD); }
-			public static FolderPath ControlPanelFolder { get => _GetV(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63); }
-			public static FolderPath Games { get => _GetV(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434); }
-			public static FolderPath HomeGroup { get => _GetV(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D); }
-			public static FolderPath HomeGroupCurrentUser_Win8 { get => _GetV(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772); }
-			public static FolderPath InternetFolder { get => _GetV(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B); }
-			public static FolderPath NetworkFolder { get => _GetV(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53); }
-			public static FolderPath PrintersFolder { get => _GetV(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185); }
-			public static FolderPath RecycleBinFolder { get => _GetV(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC); }
-			public static FolderPath SEARCH_CSC { get => _GetV(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e); }
-			public static FolderPath SearchHome { get => _GetV(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a); }
-			public static FolderPath SEARCH_MAPI { get => _GetV(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281); }
-			public static FolderPath SyncManagerFolder { get => _GetV(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7); }
-			public static FolderPath SyncResultsFolder { get => _GetV(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9); }
-			public static FolderPath SyncSetupFolder { get => _GetV(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A); }
-			public static FolderPath UsersFiles { get => _GetV(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f); }
-			public static FolderPath UsersLibraries { get => _GetV(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); }
+			public static FolderPath AddNewPrograms { get { return _GetV(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); } }
+			public static FolderPath Apps_Win8 { get { return _GetV(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); } }
+			public static FolderPath AppUpdates { get { return _GetV(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4); } }
+			public static FolderPath ChangeRemovePrograms { get { return _GetV(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d); } }
+			public static FolderPath Computer { get { return _GetV(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7); } }
+			public static FolderPath Conflict { get { return _GetV(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192); } }
+			public static FolderPath Connections { get { return _GetV(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD); } }
+			public static FolderPath ControlPanel { get { return _GetV(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63); } }
+			public static FolderPath Games { get { return _GetV(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434); } }
+			public static FolderPath HomeGroup { get { return _GetV(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D); } }
+			public static FolderPath HomeGroupCurrentUser_Win8 { get { return _GetV(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772); } }
+			public static FolderPath Internet { get { return _GetV(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B); } }
+			public static FolderPath Network { get { return _GetV(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53); } }
+			public static FolderPath Printers { get { return _GetV(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185); } }
+			public static FolderPath RecycleBin { get { return _GetV(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC); } }
+			public static FolderPath SEARCH_CSC { get { return _GetV(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e); } }
+			public static FolderPath SearchHome { get { return _GetV(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a); } }
+			public static FolderPath SEARCH_MAPI { get { return _GetV(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281); } }
+			public static FolderPath SyncManager { get { return _GetV(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7); } }
+			public static FolderPath SyncResults { get { return _GetV(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9); } }
+			public static FolderPath SyncSetup { get { return _GetV(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A); } }
+			public static FolderPath UsersFiles { get { return _GetV(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f); } }
+			public static FolderPath UsersLibraries { get { return _GetV(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); } }
 		}
 
 		[DebuggerStepThrough]
-		public static partial class VirtualITEMIDLIST
+		public static class VirtualPidl
 		{
-			public static IntPtr AddNewPrograms { get => _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); }
-			public static IntPtr AppsFolder_Win8 { get => _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); }
-			public static IntPtr AppUpdates { get => _GetVI(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4); }
-			public static IntPtr ChangeRemovePrograms { get => _GetVI(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d); }
-			public static IntPtr ComputerFolder { get => _GetVI(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7); }
-			public static IntPtr ConflictFolder { get => _GetVI(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192); }
-			public static IntPtr ConnectionsFolder { get => _GetVI(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD); }
-			public static IntPtr ControlPanelFolder { get => _GetVI(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63); }
-			public static IntPtr Games { get => _GetVI(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434); }
-			public static IntPtr HomeGroup { get => _GetVI(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D); }
-			public static IntPtr HomeGroupCurrentUser_Win8 { get => _GetVI(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772); }
-			public static IntPtr InternetFolder { get => _GetVI(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B); }
-			public static IntPtr NetworkFolder { get => _GetVI(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53); }
-			public static IntPtr PrintersFolder { get => _GetVI(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185); }
-			public static IntPtr RecycleBinFolder { get => _GetVI(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC); }
-			public static IntPtr SEARCH_CSC { get => _GetVI(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e); }
-			public static IntPtr SearchHome { get => _GetVI(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a); }
-			public static IntPtr SEARCH_MAPI { get => _GetVI(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281); }
-			public static IntPtr SyncManagerFolder { get => _GetVI(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7); }
-			public static IntPtr SyncResultsFolder { get => _GetVI(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9); }
-			public static IntPtr SyncSetupFolder { get => _GetVI(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A); }
-			public static IntPtr UsersFiles { get => _GetVI(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f); }
-			public static IntPtr UsersLibraries { get => _GetVI(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); }
+			public static Shell.Pidl AddNewPrograms { get { return _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); } }
+			public static Shell.Pidl Apps_Win8 { get { return _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); } }
+			public static Shell.Pidl AppUpdates { get { return _GetVI(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4); } }
+			public static Shell.Pidl ChangeRemovePrograms { get { return _GetVI(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d); } }
+			public static Shell.Pidl Computer { get { return _GetVI(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7); } }
+			public static Shell.Pidl Conflict { get { return _GetVI(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192); } }
+			public static Shell.Pidl Connections { get { return _GetVI(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD); } }
+			public static Shell.Pidl ControlPanel { get { return _GetVI(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63); } }
+			public static Shell.Pidl Games { get { return _GetVI(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434); } }
+			public static Shell.Pidl HomeGroup { get { return _GetVI(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D); } }
+			public static Shell.Pidl HomeGroupCurrentUser_Win8 { get { return _GetVI(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772); } }
+			public static Shell.Pidl Internet { get { return _GetVI(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B); } }
+			public static Shell.Pidl Network { get { return _GetVI(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53); } }
+			public static Shell.Pidl Printers { get { return _GetVI(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185); } }
+			public static Shell.Pidl RecycleBin { get { return _GetVI(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC); } }
+			public static Shell.Pidl SEARCH_CSC { get { return _GetVI(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e); } }
+			public static Shell.Pidl SearchHome { get { return _GetVI(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a); } }
+			public static Shell.Pidl SEARCH_MAPI { get { return _GetVI(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281); } }
+			public static Shell.Pidl SyncManager { get { return _GetVI(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7); } }
+			public static Shell.Pidl SyncResults { get { return _GetVI(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9); } }
+			public static Shell.Pidl SyncSetup { get { return _GetVI(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A); } }
+			public static Shell.Pidl UsersFiles { get { return _GetVI(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f); } }
+			public static Shell.Pidl UsersLibraries { get { return _GetVI(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); } }
 		}
 
 		#endregion
@@ -197,7 +252,7 @@ namespace Catkeys
 		#region other paths
 
 		/// <summary>
-		/// Temp (temporary files) folder of current user account.
+		/// Temp folder (temporary files) of this user account.
 		/// </summary>
 		public static FolderPath Temp { get => __Temp ?? (__Temp = Path.GetTempPath().TrimEnd('\\')); }
 		static string __Temp;
@@ -220,15 +275,15 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets path of the temporary files folder of this application.
 		/// Default is Folders.Temp + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
+		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// The 'get' function creates the folder if does not exist.
 		/// </summary>
 		public static FolderPath ThisAppTemp
 		{
 			get
 			{
-				if(__appTemp == null) __appTemp = Path.GetTempPath() + _DefaultAppSubDir; //speed: much faster than DirectoryExists
-				if(!Files.ExistsAsDirectory(__appTemp)) Directory.CreateDirectory(__appTemp);
+				if(__appTemp == null) __appTemp = Path.GetTempPath() + _DefaultAppSubDir;
+				Files.CreateDirectory(__appTemp);
 				return __appTemp;
 			}
 			set
@@ -241,7 +296,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets path of user document files folder of this application.
 		/// Default is Folders.Documents + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
+		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// The 'get' function creates the folder if does not exist.
 		/// </summary>
 		public static FolderPath ThisAppDocuments
@@ -249,7 +304,7 @@ namespace Catkeys
 			get
 			{
 				if(__appDocuments == null) __appDocuments = Documents + _DefaultAppSubDir;
-				if(!Files.ExistsAsDirectory(__appDocuments)) Directory.CreateDirectory(__appDocuments);
+				Files.CreateDirectory(__appDocuments);
 				return __appDocuments;
 			}
 			set
@@ -262,7 +317,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets path of private files folder of this application on this user account.
 		/// Default is Folders.RoamingAppData + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
+		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// The 'get' function creates the folder if does not exist.
 		/// </summary>
 		public static FolderPath ThisAppData
@@ -270,7 +325,7 @@ namespace Catkeys
 			get
 			{
 				if(__appData == null) __appData = RoamingAppData + _DefaultAppSubDir;
-				if(!Files.ExistsAsDirectory(__appData)) Directory.CreateDirectory(__appData);
+				Files.CreateDirectory(__appData);
 				return __appData;
 			}
 			set
@@ -283,7 +338,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets path of local (non-roaming) private files folder of this application on this user account.
 		/// Default is Folders.LocalAppData + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
+		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// The 'get' function creates the folder if does not exist.
 		/// </summary>
 		public static FolderPath ThisAppDataLocal
@@ -291,7 +346,7 @@ namespace Catkeys
 			get
 			{
 				if(__appDataLocal == null) __appDataLocal = LocalAppData + _DefaultAppSubDir;
-				if(!Files.ExistsAsDirectory(__appDataLocal)) Directory.CreateDirectory(__appDataLocal);
+				Files.CreateDirectory(__appDataLocal);
 				return __appDataLocal;
 			}
 			set
@@ -304,7 +359,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets or sets path of common (all users) private files folder of this application.
 		/// Default is Folders.ProgramData + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function.
+		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </summary>
@@ -316,52 +371,118 @@ namespace Catkeys
 		static string __appDataCommon;
 
 		/// <summary>
-		/// Folder containing current process program file.
+		/// Folder containing the program file of this process.
 		/// Calls <see cref="Application.StartupPath"/>.
-		/// Unlike <see cref="ThisApp"/>, this path is the same for all app domains running in this process.
+		/// Unlike <see cref="ThisApp"/>, this path is the same for all app domains of this process.
 		/// </summary>
 		public static FolderPath ThisProcess { get => Application.StartupPath; }
 
-		////does not work. SHGetPathFromIDList too. Can get only PIDL, not path, although it is folder "C:\Program Files\WindowsApps".
-		//public static FolderPath WindowsStoreApps
-		//{
-		//	get
-		//	{
-		//		return _Get(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58);
-		//	}
-		//}
+		/// <summary>
+		/// Gets or sets path of images (icons etc) folder of this application.
+		/// Default is ThisApp + "Images".
+		/// Functions of these classes will look for image there: Icons, CatMenu, CatBar, possibly some other.
+		/// </summary>
+		public static FolderPath ThisAppImages
+		{
+			get
+			{
+				if(__appImages == null) __appImages = ThisApp + "Images";
+				return __appImages;
+			}
+			set
+			{
+				__appImages = value;
+			}
+		}
+		static string __appImages;
 
-		//consider:
-		///// <summary>
-		///// Gets or sets path of images (icons etc) folder of this application.
-		///// Default is ThisApp + "Images".
-		///// </summary>
-		//public static FolderPath ThisAppImages
-		//{
-		//	get
-		//	{
-		//		if(__appImages == null) __appImages = ThisApp + "Images";
-		//		return __appImages;
-		//	}
-		//	set
-		//	{
-		//		__appImages = value;
-		//	}
-		//}
-		//static string __appImages;
+		/// <summary>
+		/// Gets non-redirected path of the System32 folder.
+		/// </summary>
+		/// <remarks>
+		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (@"C:\WINDOWS\system32"), the OS in most cases redirects it to @"C:\Windows\SysWOW64", which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
+		/// More info in class help.
+		/// </remarks>
+		/// <seealso cref="Files.Misc.DisableRedirection"/>
+		/// <seealso cref="Ver.Is32BitProcessOn64BitOS"/>
+		public static FolderPath SystemX64 { get => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessOn64BitOS ? (FolderPath)(Windows + "Sysnative") : System); }
+		static string __SystemX64;
+
+		/// <summary>More info in class help.</summary>
+		public static FolderPath ProgramFilesX64 { get => __ProgramFilesX64 ?? (__ProgramFilesX64 = Ver.Is32BitProcessOn64BitOS ? EnvVar("ProgramW6432") : ProgramFiles); }
+		static string __ProgramFilesX64;
+		/// <summary>More info in class help.</summary>
+		public static FolderPath ProgramFilesCommonX64 { get => __ProgramFilesCommonX64 ?? (__ProgramFilesCommonX64 = Ver.Is32BitProcessOn64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon); }
+		static string __ProgramFilesCommonX64;
+		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
+
+		/// <summary>
+		/// Gets CD/DVD drive path, like @"D:\".
+		/// Returns null if unavailable.
+		/// </summary>
+		public static FolderPath CdDvdDrive
+		{
+			get
+			{
+				foreach(DriveInfo di in DriveInfo.GetDrives()) {
+					if(di.DriveType == DriveType.CDRom) return di.Name;
+				}
+				return null;
+			}
+		}
+
+		/// <summary>Calls <see cref="RemovableDrive(int)"/>(0).</summary>
+		public static FolderPath RemovableDrive0 { get => RemovableDrive(0); }
+		/// <summary>Calls <see cref="RemovableDrive(int)"/>(1).</summary>
+		public static FolderPath RemovableDrive1 { get => RemovableDrive(1); }
+		/// <summary>Calls <see cref="RemovableDrive(int)"/>(2).</summary>
+		public static FolderPath RemovableDrive2 { get => RemovableDrive(2); }
+		/// <summary>Calls <see cref="RemovableDrive(int)"/>(3).</summary>
+		public static FolderPath RemovableDrive3 { get => RemovableDrive(3); }
+
+		/// <summary>
+		/// Gets removable/external/USB drive path, like @"F:\".
+		/// Returns null if unavailable.
+		/// </summary>
+		/// <param name="driveIndex">0-based removable drive index.</param>
+		/// <remarks>Uses <see cref="DriveInfo.GetDrives"/> and counts only drives of type DriveType.Removable.</remarks>
+		public static FolderPath RemovableDrive(int driveIndex = 0)
+		{
+			foreach(DriveInfo di in DriveInfo.GetDrives()) {
+				if(di.DriveType == DriveType.Removable && driveIndex-- == 0) return di.Name;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Gets removable/external/USB drive name (like @"F:\") by its volume label.
+		/// Returns null if unavailable.
+		/// </summary>
+		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
+		public static FolderPath RemovableDrive(string volumeLabel)
+		{
+			foreach(DriveInfo di in DriveInfo.GetDrives()) {
+				if(di.DriveType == DriveType.Removable) {
+					string v = null; try { v = di.VolumeLabel; } catch { continue; }
+					if(!v.Equals_(volumeLabel, true)) continue;
+					return di.Name;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Gets the value of an environment variable.
+		/// Returns null if unavailable.
+		/// </summary>
+		public static FolderPath EnvVar(string envVar)
+		{
+			return Path_.LibGetEnvVar(envVar);
+		}
 
 		#endregion
 
 		#region private functions
-
-		//Creates KNOWNFOLDERID from 4 uints.
-		static Guid _MakeGuid(uint a, uint b, uint c, uint d)
-		{
-			return new Guid( //fast. If using string, total time is almost * 2.
-				a, (ushort)(b >> 16), (ushort)(b & 0xffff),
-				(byte)(c >> 24 & 0xff), (byte)(c >> 16 & 0xff), (byte)(c >> 8 & 0xff), (byte)(c & 0xff),
-				(byte)(d >> 24 & 0xff), (byte)(d >> 16 & 0xff), (byte)(d >> 8 & 0xff), (byte)(d & 0xff));
-		}
 
 		//Gets non-virtual known folder path from KNOWNFOLDERID specified with 4 uints.
 		static FolderPath _Get(uint a, uint b, uint c, uint d)
@@ -370,50 +491,58 @@ namespace Catkeys
 			//Speed first time (ngened, shell32.dll loaded (almost 1 ms)) - 200, then 90. It is for each folder first time; next time 1.
 			//tested: with IKnownFolder much slower.
 
-			var guid = _MakeGuid(a, b, c, d);
+			var guid = new KNOWNFOLDERID(a, b, c, d);
 			return (0 == SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out string R)) ? R : null;
 		}
 
-		//Retrieves virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
-		//Returns PIDL. Will need Marshal.FreeCoTaskMem().
-		static IntPtr _GetVI(uint a, uint b, uint c, uint d)
+		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
+		static Shell.Pidl _GetVI(uint a, uint b, uint c, uint d)
 		{
-			var guid = _MakeGuid(a, b, c, d);
-			return (0 == SHGetKnownFolderIDList(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out IntPtr R)) ? R : Zero;
+			var guid = new KNOWNFOLDERID(a, b, c, d);
+			if(0 != SHGetKnownFolderIDList(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out IntPtr pidl)) return null;
+			return new Shell.Pidl(pidl);
 		}
 
-		//Retrieves virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
-		//Returns string "<idlist:Base64-encoded-ITEMIDLIST>".
+		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
+		//Returns string ":: HexEncodedITEMIDLIST".
 		static FolderPath _GetV(uint a, uint b, uint c, uint d)
 		{
-			IntPtr pidl = _GetVI(a, b, c, d);
-			if(pidl == Zero) return null;
-
-			uint n = ILGetSize(pidl);
-			var ba = new byte[n];
-			Marshal.Copy(pidl, ba, 0, (int)n);
-			Marshal.FreeCoTaskMem(pidl);
-
-			//var x = new StringBuilder("<idlist:");
-			//x.Append(Convert.ToBase64String(ba).TrimEnd('='));
-			//x.Append('>');
-			//return x.ToString();
-
-			return "<idlist:" + Convert.ToBase64String(ba).TrimEnd('=') + ">";
+			using(var pidl = _GetVI(a, b, c, d)) {
+				if(pidl == null) return null;
+				return pidl.ToHexString();
+			}
 		}
 
 		#endregion
 
 		#region API
 
-		[DllImport("Shell32.dll")]
-		static extern uint ILGetSize(IntPtr pidl);
+		//GUID that can be inited with 4 uints.
+		struct KNOWNFOLDERID
+		{
+			uint _a; ushort _b, _c; byte _d, _e, _f, _g, _h, _i, _j, _k;
+
+			public KNOWNFOLDERID(uint a, uint b, uint c, uint d)
+			{
+				_a = a;
+				_b = (ushort)(b >> 16);
+				_c = (ushort)b;
+				_d = (byte)(c >> 24);
+				_e = (byte)(c >> 16);
+				_f = (byte)(c >> 8);
+				_g = (byte)c;
+				_h = (byte)(d >> 24);
+				_i = (byte)(d >> 16);
+				_j = (byte)(d >> 8);
+				_k = (byte)d;
+			}
+		}
 
 		[DllImport("Shell32.dll")]
-		static extern int SHGetKnownFolderPath(ref Guid rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out string ppszPath);
+		static extern int SHGetKnownFolderPath(ref KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out string ppszPath);
 
 		[DllImport("Shell32.dll")]
-		static extern int SHGetKnownFolderIDList(ref Guid rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
+		static extern int SHGetKnownFolderIDList(ref KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
 
 		[Flags]
 		enum KNOWN_FOLDER_FLAG :uint
@@ -540,7 +669,7 @@ namespace Catkeys
 			int GetCategory(out KF_CATEGORY category);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			//int GetShellItem([In] uint dwFlags, ref Guid riid, out IShellItem si);
+			//int GetShellItem([In] uint dwFlags, ref Guid riid, out Api.IShellItem si);
 			int GetShellItem([In] uint dwFlags, ref Guid riid, out IntPtr si);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
@@ -567,8 +696,9 @@ namespace Catkeys
 		#region public methods
 
 		/// <summary>
-		/// Gets names and paths of all known folders, including custom known folders registerd by applications.
+		/// Gets canonical names and paths of all known folders, including custom known folders registerd by applications.
 		/// Can be useful for information. These names then can be used with <see cref="GetFolder"/>.
+		/// Example: <c>Print(Folders.GetKnownFolders());</c>
 		/// </summary>
 		public static Dictionary<string, string> GetKnownFolders()
 		{
@@ -610,98 +740,57 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets a special folder path by its name.
+		/// Gets path of a known folder by its name as string.
 		/// Returns null if unavailable.
-		/// Can be used to get paths of custom known folders for which there are no functions in this class.
-		/// To see all names of known folders: <c>Output.Write(Folders.GetKnownFolders());</c> .
 		/// </summary>
-		/// <param name="folderName">A known folder name, or "Temp", "ThisApp", "ThisAppTemp", "ThisAppDocuments", "ThisAppData", "ThisAppDataLocal", "ThisAppDataCommon", "ThisProcess". Case-insensitive.</param>
+		/// <param name="folderName">
+		/// A property name of this class. Examples: "Documents", "Temp", "ThisApp".
+		/// Or a property name of the nested class Virtual, like "Virtual.ControlPanel". Gets ":: HexEncodedITEMIDLIST".
+		/// Or known folder canonical name. See <see cref="GetKnownFolders"/>. If has prefix "Virtual.", gets ":: HexEncodedITEMIDLIST". Much slower, but allows to get paths of folders registered by applications.
+		/// </param>
 		public static FolderPath GetFolder(string folderName)
 		{
-			switch(folderName.Equals_(true, "Temp", "ThisApp", "ThisAppTemp", "ThisAppDocuments", "ThisAppData", "ThisAppDataLocal", "ThisAppDataCommon", "ThisProcess")) {
-			case 1: return Temp;
-			case 2: return ThisApp;
-			case 3: return ThisAppTemp;
-			case 4: return ThisAppDocuments;
-			case 5: return ThisAppData;
-			case 6: return ThisAppDataLocal;
-			case 7: return ThisAppDataCommon;
-			case 8: return ThisProcess;
-			}
+			if(Empty(folderName)) return null;
+			bool isVirtual = folderName.StartsWith_("Virtual.");
+			if(isVirtual) folderName = folderName.Substring(8);
 
+			//properties of this class
+			Type ty = isVirtual ? typeof(Virtual) : typeof(Folders);
+			var pi = ty.GetProperty(folderName, BindingFlags.GetProperty | BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Static);
+			if(pi != null) {
+				var o = pi.GetValue(null);
+				if(o is FolderPath fp) return fp;
+				return null;
+			}
+			//Using reflection is not the fastest way, but simplest, cannot make bugs, and don't need maitenance. Fast enough.
+
+			//default and custom registered known folders by canonical name
 			string R = null;
-			IKnownFolderManager man = null;
+			IKnownFolderManager man = null; IKnownFolder kf = null;
 			try {
 				man = (IKnownFolderManager)new KnownFolderManager();
-				if(man.GetFolderByName(folderName, out var kf) != 0) return null;
-				if(kf.GetPath(0, out R) != 0) return null;
-				//TODO: get "<idlist>..." for virtual folders?
+				if(man.GetFolderByName(folderName, out kf) != 0) return null;
+				if(isVirtual) {
+					if(0 != kf.GetIDList(0, out IntPtr pidl)) return null;
+					R = Shell.Pidl.LibToHexString(pidl);
+					Marshal.FreeCoTaskMem(pidl);
+				} else {
+					if(0 != kf.GetPath(0, out R)) return null;
+					R = Path_.ExpandEnvVar(R);
+				}
+				//tested: works in MTA apartment too. And all props.
 			}
 			catch { }
-			finally { Api.ReleaseComObject(man); }
+			finally {
+				Api.ReleaseComObject(kf);
+				Api.ReleaseComObject(man);
+			}
 
 			return R;
-		}
 
-		//public static partial class VirtualITEMIDLIST
-		//{
-		//	public static IntPtr FromString(ref string s)
-		//	{
-
-		//		return Zero;
-		//	}
-		//}
-
-		/// <summary>
-		/// Gets CD/DVD drive name, like @"D:\".
-		/// Returns null if unavailable.
-		/// </summary>
-		public static FolderPath CDDrive()
-		{
-			foreach(DriveInfo di in DriveInfo.GetDrives()) {
-				if(di.DriveType == DriveType.CDRom) return di.Name;
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Gets removable/external/USB drive name, like @"F:\".
-		/// Returns null if unavailable.
-		/// </summary>
-		/// <param name="driveIndex">0-based removable drive index.</param>
-		/// <remarks>Uses <see cref="DriveInfo.GetDrives"/> and counts only drives of type DriveType.Removable.</remarks>
-		public static FolderPath RemovableDrive(int driveIndex = 0)
-		{
-			foreach(DriveInfo di in DriveInfo.GetDrives()) {
-				if(di.DriveType == DriveType.Removable && driveIndex-- == 0) return di.Name;
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Gets removable/external/USB drive name (like @"F:\") by its volume label.
-		/// Returns null if unavailable.
-		/// </summary>
-		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
-		public static FolderPath RemovableDrive(string volumeLabel)
-		{
-			foreach(DriveInfo di in DriveInfo.GetDrives()) {
-				if(di.DriveType == DriveType.Removable) {
-					string v = null; try { v = di.VolumeLabel; } catch { continue; }
-					if(!v.Equals_(volumeLabel, true)) continue;
-					return di.Name;
-				}
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Gets the value of an environment variable.
-		/// Returns null if unavailable.
-		/// </summary>
-		public static FolderPath EnvVar(string envVar)
-		{
-			return Path_.LibGetEnvVar(envVar);
+			//speed:
+			//	The get-property code is 2 times slower than calling properties directly.
+			//	The IKnownFolderManager code is 90 times slower than the get-property code.
 		}
 
 		#endregion
@@ -717,7 +806,7 @@ namespace Catkeys
 
 			/// <summary>
 			/// Calls <see cref="Path_.Combine"/>(fp, append).
-			/// Example: <c>string s=Folders.Desktop+"file.txt";</c>
+			/// Example: <c>string s = Folders.Desktop + "file.txt";</c>
 			/// </summary>
 			/// <exception cref="CatException">f is empty. Most likely, used code <c>Folders.X + "append"</c> and failed to get X.</exception>
 			public static string operator +(FolderPath fp, string append)
@@ -727,14 +816,12 @@ namespace Catkeys
 			}
 		}
 
-		//TODO_LATER:
-		//	Unexpand(). Would create string like @"Windows + ""...""".
+		//FUTURE:
+		//	Unexpand(). Would create string like @"Documents + ""...""" or like @"%Folders.Documents%\...".
 
-		//CONSIDER: public static class VirtualNAME.
-		//	It would return eg "::{26EE0668-A00A-44D7-9371-BEB064C98683}\0" for Control Panel.
-		//	Then to run eg Internet Options, pass this to shellexecute: "::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}"
+		//DON'T: public static class VirtualNAME that returns parsing name, eg "::{CLSID}\...".
 		//	What is good: native/.NET shellexecute supports it.
-		//	What is bad: does not work in a 32-bit process on 64-bit OS. Then cannot convert the string to ITEMIDLIST.
+		//	What is bad: native/.NET shellexecute supports only some. Almost nothing works in a 32-bit process on 64-bit OS; then even cannot convert the string to ITEMIDLIST. Some parsing names have other formats and the API gets wrong parsing names.
 
 		//DON'T: The + operator returns FolderPath. Then Folders.Desktop + subfolder + file would return "desktop\subfolder\file". Probably not good.
 	}

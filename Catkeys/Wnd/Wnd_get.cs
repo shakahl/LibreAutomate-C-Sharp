@@ -325,7 +325,7 @@ namespace Catkeys
 
 				if(skipMinimized && w.IsMinimized) continue;
 
-				if(WinVer >= Win10) {
+				if(Ver.MinWin10) {
 					if(w.IsCloaked) {
 						if(!allDesktops) continue;
 						if((exStyle & Native.WS_EX_NOREDIRECTIONBITMAP) != 0) { //probably a store app
@@ -335,7 +335,7 @@ namespace Catkeys
 							}
 						}
 					}
-				} else if(WinVer >= Win8) {
+				} else if(Ver.MinWin8) {
 					if((exStyle & Native.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Native.WS_CAPTION)) {
 						if(!allDesktops && (exStyle & Native.WS_EX_TOPMOST) != 0) continue; //skip store apps
 						if(Misc.WndShell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) continue; //skip captionless shell windows

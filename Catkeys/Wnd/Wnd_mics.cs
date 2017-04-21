@@ -101,7 +101,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="g">Variable that receives the info.</param>
 			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>.</param>
-			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, uint idThread = 0)
+			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0)
 			{
 				g = new Native.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
 				return Api.GetGUIThreadInfo(idThread, ref g);
@@ -163,8 +163,24 @@ namespace Catkeys
 			}
 
 			/// <summary>
+			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+			/// Returns null if fails or if called on Windows 7.
+			/// </summary>
+			/// <param name="w"></param>
+			/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
+			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
+			/// <remarks>
+			/// Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
+			/// </remarks>
+			public static string GetWindowsStoreAppId(Wnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+			{
+				if(0 != _GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
+				return null;
+			}
+
+			/// <summary>
 			/// Gets icon that is displayed in window title bar and in its taskbar button.
-			/// Returns icon handle if successful, else Zero. Later call <see cref="Icons.DestroyIconHandle"/>.
+			/// Returns icon handle if successful, else Zero. Later call <see cref="Icons.DestroyIconHandle"/> or <see cref="Icons.HandleToImage"/>.
 			/// </summary>
 			/// <param name="w"></param>
 			/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
@@ -178,7 +194,7 @@ namespace Catkeys
 				int size = Api.GetSystemMetrics(size32 ? Api.SM_CXICON : Api.SM_CXSMICON);
 
 				//support Windows Store apps
-				if(1 == _WindowsStoreAppId(w, out var appId, true)) {
+				if(1 == _GetWindowsStoreAppId(w, out var appId, true)) {
 					IntPtr hi = Icons.GetFileIconHandle(appId, size);
 					if(hi != Zero) return hi;
 				}

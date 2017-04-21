@@ -150,7 +150,7 @@ public static class Test
 					FileInfo f1 = new FileInfo(s1), f2 = new FileInfo(s2);
 					if(f1.LastWriteTimeUtc == f2.LastWriteTimeUtc && f1.Length == f2.Length) continue;
 				}
-				File.Copy(s1, s2, true);
+				Files.Copy(s1, s2, Files.IfExists.Delete);
 				//TODO: exception handling
 			}
 

@@ -31,7 +31,10 @@ namespace Catkeys
 		HiddenToo = 1,
 		/// <summary>Skip cloaked windows. These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows Store apps on Windows 8.</summary>
 		SkipCloaked = 2,
-		/// <summary>The 'programEtc' argument is thread id, not process id.</summary>
+		/// <summary>
+		/// The 'programEtc' argument is thread id, not process id.
+		/// Alternatively use <see cref="Wnd.Misc.FindThreadWindow"/>, it's faster.
+		/// </summary>
 		ThreadId = 4,
 
 		//Don't need this. Not very useful, 3 times slower, and not always can get full path.
@@ -43,22 +46,25 @@ namespace Catkeys
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// Contains the same fields as <see cref="Wnd.Find"/> parameters, and can be used instead of it.
+		/// Contains top-level window properties and can be used to find the window.
+		/// Can be used instead of <see cref="Wnd.Find"/> or <see cref="Wnd.FindAll"/>.
 		/// These codes are equivalent:
 		/// <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
-		/// <code>var p = new Wnd.FindParams(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
+		/// <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
 		/// Also can find in a custom list of windows.
 		/// </summary>
-		public class FindParams
+		public class Finder
 		{
-			readonly Wildex _name;
-			readonly Wildex _className;
-			readonly Wildex _program;
-			readonly Func<Wnd, bool> _also;
-			readonly WFFlags _flags;
-			readonly uint _processId;
-			readonly uint _threadId;
-			readonly Wnd _owner;
+			Wildex _name;
+			Wildex _className;
+			Wildex _program;
+			Func<Wnd, bool> _also;
+			WFFlags _flags;
+			int _processId;
+			int _threadId;
+			Wnd _owner;
+
+			Wnd[] _aIsMatch;
 
 			/// <summary>
 			/// See <see cref="Wnd.Find">Wnd.Find</see>.
@@ -69,25 +75,25 @@ namespace Catkeys
 			/// programEtc argument type is not string/Wnd/int/uint/null.
 			/// Invalid wildcard expression ("**options|" or regular expression).
 			/// </exception>
-			public FindParams(
+			public Finder(
 				string name = null, string className = null, object programEtc = null,
 				WFFlags flags = 0, Func<Wnd, bool> also = null)
 			{
 				_ThrowIfStringEmptyNotNull(className, nameof(className));
 
 				if(programEtc != null) {
-					uint pidTid = 0; bool isPidTid = false;
+					int pidTid = 0; bool isPidTid = false;
 					switch(programEtc) {
 					case string program:
 						_ThrowIfStringEmptyNotNull(program, nameof(programEtc));
 						_program = program;
 						break;
-					case uint i:
+					case int i:
 						pidTid = i;
 						isPidTid = true;
 						break;
-					case int i:
-						pidTid = (uint)i;
+					case uint i:
+						pidTid = (int)i;
 						isPidTid = true;
 						break;
 					case Wnd owner:
@@ -109,7 +115,7 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// The found window.
+			/// The found window (after calling <see cref="Find"/> or <see cref="FindInList"/>).
 			/// </summary>
 			public Wnd Result { get; private set; }
 
@@ -129,130 +135,197 @@ namespace Catkeys
 			/// Returns 0-based index, or -1 if not found.
 			/// The <see cref="Result"/> property will be the window.
 			/// </summary>
-			/// <param name="a">List of windows, for example returned by <see cref="Misc.AllWindows"/>.</param>
-			public int FindInList(List<Wnd> a)
+			/// <param name="a">Array or list of windows, for example returned by <see cref="Misc.AllWindows"/>.</param>
+			public int FindInList(IEnumerable<Wnd> a)
 			{
 				return _FindInList(a, true);
 			}
 
-			int _FindInList(List<Wnd> a, bool inList)
+			/// <summary>
+			/// Finds all matching windows, like <see cref="Wnd.FindAll">Wnd.FindAll</see>.
+			/// Returns list containing 0 or more window handles as Wnd.
+			/// </summary>
+			public List<Wnd> FindAll()
 			{
-				Result = Wnd0;
-				if(a == null || a.Count == 0) return -1;
+				var a = Misc.AllWindows(0 == (_flags & WFFlags.HiddenToo), true);
+				var R = new List<Wnd>();
+				_FindInList(a, false, R);
+				return R;
+			}
 
+			/// <summary>
+			/// Finds all matching windows in a list of windows.
+			/// Returns list containing 0 or more window handles as Wnd.
+			/// </summary>
+			/// <param name="a">Array or list of windows, for example returned by <see cref="Misc.AllWindows"/>.</param>
+			public List<Wnd> FindAllInList(IEnumerable<Wnd> a)
+			{
+				var R = new List<Wnd>();
+				_FindInList(a, true, R);
+				return R;
+			}
+
+			/// <summary>
+			/// If a is not null, returns index of matching element or -1.
+			/// Else returns -2 if wSingle matches, else -1.
+			/// Returns -1 if using aFindAll.
+			/// </summary>
+			/// <param name="a">Array etc of Wnd.</param>
+			/// <param name="inList">Called by FindInList or FindAllInList.</param>
+			/// <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
+			/// <param name="wSingle">Can be used instead of a. Then a must be null.</param>
+			int _FindInList(IEnumerable<Wnd> a, bool inList, [Out] List<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
+			{
+				Result = default(Wnd);
 				bool mustBeVisible = inList && (_flags & WFFlags.HiddenToo) == 0;
-				List<uint> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
+				List<int> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
 
-				for(int index = 0; index < a.Count; index++) {
-					Wnd w = a[index];
-
-					//speed of 1000 times getting:
-					//name 400, class 400, foreign pid/tid 400,
-					//owner 55, rect 55, style 50, exstyle 50, cloaked 280,
-					//GetProp(string) 1700, GetProp(atom) 300, GlobalFindAtom 650,
-					//program >=2500
-
-					if(mustBeVisible) {
-						if(!w.IsVisible) continue;
-					}
-
-					if(!_owner.Is0) {
-						if(_owner != w.WndOwner) continue;
-					}
-
-					if(_name != null) {
-						if(!_name.Match(w.GetText(false, false))) continue;
-					}
-
-					if(_className != null) {
-						if(!_className.Match(w.ClassName)) continue;
-					}
-
-					uint pid = 0, tid = 0;
-					if(_program != null || _processId != 0 || _threadId != 0) {
-						tid = w.GetThreadProcessId(out pid);
-						if(tid == 0) continue;
-						//speed: with foreign processes the same speed as getting name or class name. Much faster if same process.
-					}
-
-					if(_threadId != 0) {
-						if(_threadId != tid) continue;
-					}
-
-					if(_processId != 0) {
-						if(_processId != pid) continue;
-					}
-
-					if(_program != null) {
-						//Getting program name is one of slowest parts.
-						//Usually it does not slow down much because need to do it only 1 or several times, only when window name, class etc match.
-						//The worst case is when only program is specified, and the very worst case is when also using flag HiddenToo.
-						//We are prepared for the worst case.
-						//Normally we call Process_.GetProcessName. In most cases it is quite fast.
-						//Anyway, we use this optimization:
-						//	Add pid of processes that don't match the specified name in the pids list (bad pids).
-						//	Next time, if pid is in the bad pids list, just continue, don't need to get program name again.
-						//However in the worst case we would encounter some processes that Process_.GetProcessName cannot get name using the fast API.
-						//For each such process it would then use the much slower 'get all processes' API, which is almost as slow as Process.GetProcessById(pid).ProcessName.
-						//To solve this:
-						//We tell Process_.GetProcessName to not use the slow API, but just return null when the fast API fails.
-						//When it happens (Process_.GetProcessName returns null):
-						//	If need full path: continue, we cannot do anything more.
-						//	Switch to plan B and no longer use all the above. Plan B:
-						//	Get list of pids of all processes that match _program. For it we call Process_.GetProcessesByName, which uses the same slow API, but we call it just one time.
-						//	If it returns null (it means there are no matching processes), break (window not found).
-						//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
-
-						g1:
-						if(programNamePlanB) {
-							if(!pids.Contains(pid)) continue;
+				//this thing is a foreach that supports either IEnumerable (a) or single Wnd (wSingle)
+				using(var en = a?.GetEnumerator()) {
+					for(int index = 0; index >= 0; index++) {
+						Wnd w;
+						if(en != null) {
+							if(!en.MoveNext()) break;
+							w = en.Current;
 						} else {
-							if(pids != null && pids.Contains(pid)) continue; //is known bad pid?
+							w = wSingle;
+							index = -2; //if matches, returns -2, else breaks at -1
+						}
+						if(w.Is0) continue;
 
-							//string pname = Process_.GetProcessName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
-							string pname = Process_.GetProcessName(pid, false, true);
+						//speed of 1000 times getting:
+						//name 400, class 400, foreign pid/tid 400,
+						//owner 55, rect 55, style 50, exstyle 50, cloaked 280,
+						//GetProp(string) 1700, GetProp(atom) 300, GlobalFindAtom 650,
+						//program >=2500
 
-							if(pname == null) {
-								//if(0!=(_flags&WFFlags.ProgramPath)) continue;
+						if(mustBeVisible) {
+							if(!w.IsVisible) continue;
+						}
 
-								//switch to plan B
-								pids = Process_.GetProcessesByName(_program);
-								if(pids.Count == 0) break;
-								programNamePlanB = true;
-								goto g1;
-							}
+						if(!_owner.Is0) {
+							if(_owner != w.WndOwner) continue;
+						}
 
-							if(!_program.Match(pname)) {
-								if(pids == null) pids = new List<uint>();
-								pids.Add(pid); //add bad pid
-								continue;
+						if(_name != null) {
+							if(!_name.Match(w.GetText(false, false))) continue;
+						}
+
+						if(_className != null) {
+							if(!_className.Match(w.ClassName)) continue;
+						}
+
+						int pid = 0, tid = 0;
+						if(_program != null || _processId != 0 || _threadId != 0) {
+							tid = w.GetThreadProcessId(out pid);
+							if(tid == 0) continue;
+							//speed: with foreign processes the same speed as getting name or class name. Much faster if same process.
+						}
+
+						if(_threadId != 0) {
+							if(_threadId != tid) continue;
+						}
+
+						if(_processId != 0) {
+							if(_processId != pid) continue;
+						}
+
+						if(_program != null) {
+							//Getting program name is one of slowest parts.
+							//Usually it does not slow down much because need to do it only 1 or several times, only when window name, class etc match.
+							//The worst case is when only program is specified, and the very worst case is when also using flag HiddenToo.
+							//We are prepared for the worst case.
+							//Normally we call Process_.GetProcessName. In most cases it is quite fast.
+							//Anyway, we use this optimization:
+							//	Add pid of processes that don't match the specified name in the pids list (bad pids).
+							//	Next time, if pid is in the bad pids list, just continue, don't need to get program name again.
+							//However in the worst case we would encounter some processes that Process_.GetProcessName cannot get name using the fast API.
+							//For each such process it would then use the much slower 'get all processes' API, which is almost as slow as Process.GetProcessById(pid).ProcessName.
+							//To solve this:
+							//We tell Process_.GetProcessName to not use the slow API, but just return null when the fast API fails.
+							//When it happens (Process_.GetProcessName returns null):
+							//	If need full path: continue, we cannot do anything more.
+							//	Switch to plan B and no longer use all the above. Plan B:
+							//	Get list of pids of all processes that match _program. For it we call Process_.GetProcessesByName, which uses the same slow API, but we call it just one time.
+							//	If it returns null (it means there are no matching processes), break (window not found).
+							//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
+
+							g1:
+							if(programNamePlanB) {
+								if(!pids.Contains(pid)) continue;
+							} else {
+								if(pids != null && pids.Contains(pid)) continue; //is known bad pid?
+
+								//string pname = Process_.GetProcessName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
+								string pname = Process_.GetProcessName(pid, false, true);
+
+								if(pname == null) {
+									//if(0!=(_flags&WFFlags.ProgramPath)) continue;
+
+									//switch to plan B
+									pids = Process_.GetProcessesByName(_program);
+									if(pids.Count == 0) break;
+									programNamePlanB = true;
+									goto g1;
+								}
+
+								if(!_program.Match(pname)) {
+									if(a == null) break;
+									if(pids == null) pids = new List<int>();
+									pids.Add(pid); //add bad pid
+									continue;
+								}
 							}
 						}
+
+						if(0 != (_flags & WFFlags.SkipCloaked)) {
+							if(w.IsCloaked) continue;
+						}
+
+						if(_also != null && !_also(w)) continue;
+
+						if(aFindAll != null) {
+							aFindAll.Add(w);
+							continue;
+						}
+
+						Result = w;
+						return index;
 					}
-
-					if(0 != (_flags & WFFlags.SkipCloaked)) {
-						if(w.IsCloaked) continue;
-					}
-
-					if(_also != null && !_also(w)) continue;
-
-					Result = w;
-					return index;
 				}
 
 				return -1;
 			}
 
-			//This function can be useful, but then we cannot apply optimizations for program etc.
-			//public bool Match(Wnd w)
-			//{
-			//	return _Match(w, 0==(_flags&WCFlags.HiddenToo));
-			//}
+			/// <summary>
+			/// Returns true if window w properties match the specified properties.
+			/// </summary>
+			/// <param name="w">A top-level window. Can be 0/invalid, then returns false.</param>
+			public bool IsMatch(Wnd w)
+			{
+				return -2 == _FindInList(null, true, null, w);
+			}
 
-			//bool _Match(Wnd w, bool mustBeVisible)
-			//{
-
-			//}
+			/// <summary>
+			/// Sets process id.
+			/// If programEtc was used, clears it. If value is 0, does not clear program name.
+			/// </summary>
+			/// <example>
+			/// <code><![CDATA[
+			/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
+			/// if(w.Is0) { Wnd.LastFind.ProcessId = Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+			/// ]]></code>
+			/// </example>
+			public int ProcessId
+			{
+				set
+				{
+					_processId = value;
+					_threadId = 0;
+					_owner = Wnd0;
+					if(value != 0) _program = null;
+				}
+			}
 		}
 
 		/// <summary>
@@ -278,10 +351,9 @@ namespace Catkeys
 		/// </item>
 		/// <item>Wnd - owner window. See <see cref="WndOwner"/>.</item>
 		/// <item>
-		/// int - process id. If using flag ThreadId - native thread id (not Thread.ManagedThreadId).
+		/// int, uint - process id. If using flag ThreadId - native thread id (not Thread.ManagedThreadId).
 		/// See <see cref="ProcessId"/>, <see cref="ThreadId"/>, <see cref="GetThreadProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="Process_.CurrentThreadId"/>, <msdn>GetProcessId</msdn> or <msdn>GetThreadId</msdn>.
 		/// </item>
-		/// <item>uint - the same as int.</item>
 		/// </list>
 		/// </param>
 		/// <param name="flags"></param>
@@ -308,26 +380,41 @@ namespace Catkeys
 		/// </example>
 		public static Wnd Find(string name = null, string className = null, object programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
 		{
-			var d = new FindParams(name, className, programEtc, flags, also);
-			d.Find();
-			return d.Result;
+			var f = new Finder(name, className, programEtc, flags, also);
+			f.Find();
+			_lastFindParams = f;
+			return f.Result;
 		}
+
+		/// <summary>
+		/// Gets arguments of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>, which set it before returning, regardless of results.
+		/// </summary>
+		/// <remarks>
+		/// <b>WaitFor.WindowActive</b> and similar functions don't change this property. But this property is often used with them, like in the example.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		/// if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+		/// ]]></code>
+		/// </example>
+		public static Finder LastFind { get => _lastFindParams; set { _lastFindParams = value; } }
+		[ThreadStatic] static Finder _lastFindParams;
 
 		/// <summary>
 		/// Finds all matching windows.
 		/// Returns list containing 0 or more window handles as Wnd.
 		/// Everything except the return type is the same as with <see cref="Find"/>.
-		/// The list is sorted to match the Z order, however hidden windows (when using WFFlags.HiddenToo) are always placed after visible windows.
 		/// </summary>
 		/// <exception cref="ArgumentException"/>
+		/// <remarks>
+		/// The list is sorted to match the Z order, however hidden windows (when using WFFlags.HiddenToo) are always after visible windows.
+		/// </remarks>
 		public static List<Wnd> FindAll(string name = null, string className = null, object programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
 		{
-			var a = new List<Wnd>();
-			Find(name, className, programEtc, flags, e =>
-			{
-				if(also == null || also(e)) a.Add(e);
-				return false;
-			});
+			var f = new Finder(name, className, programEtc, flags, also);
+			var a = f.FindAll();
+			_lastFindParams = f;
 			return a;
 		}
 
@@ -357,12 +444,12 @@ namespace Catkeys
 			return Api.FindWindowEx(Wnd0, wAfter, className, name);
 		}
 
-		//public static List<Wnd> FindAll(params FindParams[] a)
+		//public static List<Wnd> FindAll(params Finder[] a)
 		//{
 		//	return null;
 		//}
 
-		//public static Wnd FindAny(params FindParams[] a)
+		//public static Wnd FindAny(params Finder[] a)
 		//{
 		//	return Wnd0;
 		//}
@@ -370,55 +457,70 @@ namespace Catkeys
 		public static partial class Misc
 		{
 			/// <summary>
-			/// Gets list of top-level windows.
-			/// Returns list containing 0 or more window handles as Wnd.
-			/// Calls API <msdn>EnumWindows</msdn>.
-			/// <note>The list can be bigger than you expect. See also <see cref="MainWindows">MainWindows</see>.</note>
+			/// Gets top-level windows.
+			/// Returns array containing 0 or more window handles as Wnd.
 			/// </summary>
 			/// <param name="onlyVisible">Need only visible windows.</param>
-			/// <param name="sortFirstVisible">Place all list elements of hidden windows at the end of the returned list, even if the hidden windows are before some visible windows in the Z order.</param>
+			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
+			/// <param name="also">
+			/// Lambda etc callback function to call for each matching window.
+			/// It can evaluate more properties of the window and return true when they match.
+			/// Example: <c>also: t =&gt; t.ClassNameIs("#32770")</c>.
+			/// </param>
 			/// <remarks>
-			/// By default the list elements are sorted to match the Z order.
+			/// Calls API <msdn>EnumWindows</msdn>.
+			/// <note>The list can be bigger than you expect. See also <see cref="MainWindows">MainWindows</see>.</note>
+			/// By default array elements are sorted to match the Z order.
 			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has UAC integrity level uiAccess; to get such windows you can use <see cref="FindFast">FindFast</see>.
 			/// </remarks>
-			public static List<Wnd> AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
+			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false, Func<Wnd, bool> also = null)
 			{
-				List<Wnd> a = new List<Wnd>(), aHidden = null;
-				if(onlyVisible) sortFirstVisible = false;
-
-				LibAllWindows(e =>
-				{
-					if(sortFirstVisible && !e.IsVisible) {
-						if(aHidden == null) aHidden = new List<Wnd>(256);
-						aHidden.Add(e);
-					} else {
-						a.Add(e);
-					}
-					return false;
-				}, onlyVisible);
-
-				if(aHidden != null) a.AddRange(aHidden);
-				return a;
+				return LibEnumWindows(LibEnumWindowsAPI.EnumWindows, onlyVisible, sortFirstVisible, also);
 
 				//info: tried to add a flag to skip tooltips, IME, MSCTFIME UI. But for it need to get class. It is slow. Other ways are unreliable and also make slower. Only the onlyVisible flag is really effective.
 			}
 
-			/// <summary>
-			/// Calls callback function for each window.
-			/// Calls API <msdn>EnumWindows</msdn>.
-			/// </summary>
-			/// <param name="f">Lambda etc callback function to call for each matching window. Can return true to stop.</param>
-			/// <param name="onlyVisible">Need only visible windows.</param>
-			/// <remarks>
-			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to get such windows you can use <see cref="FindFast">FindFast</see>.
-			/// </remarks>
-			internal static void LibAllWindows(Func<Wnd, bool> f, bool onlyVisible = false)
+			internal enum LibEnumWindowsAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
+
+			internal static Wnd[] LibEnumWindows(LibEnumWindowsAPI api,
+				bool onlyVisible, bool sortFirstVisible, Func<Wnd, bool> also = null,
+				Wnd wParent = default(Wnd), bool directChild = false, int threadId = 0)
 			{
-				Api.EnumWindows((w, param) =>
-				{
-					if(onlyVisible && !w.IsVisible) return 1;
-					return f(w) ? 0 : 1;
-				}, Zero);
+				if(onlyVisible) sortFirstVisible = false;
+				Util.LibArrayBuilder.Specialized._Wnd a, aHidden;
+				a = new Util.LibArrayBuilder.Specialized._Wnd((onlyVisible || sortFirstVisible) ? 256 : 1024);
+				aHidden = sortFirstVisible ? new Util.LibArrayBuilder.Specialized._Wnd(800) : new Util.LibArrayBuilder.Specialized._Wnd();
+				try {
+					Api.WNDENUMPROC proc = (w, param) =>
+					  {
+						  if(onlyVisible && !Api.IsWindowVisible(w)) return 1;
+						  if(directChild && Api.GetParent(w) != wParent) return 1;
+						  if(also != null && !also(w)) return 1;
+						  if(sortFirstVisible && !Api.IsWindowVisible(w)) aHidden.Add(w); else a.Add(w);
+						  return 1;
+					  };
+
+					switch(api) {
+					case LibEnumWindowsAPI.EnumWindows:
+						Api.EnumWindows(proc, Zero);
+						break;
+					case LibEnumWindowsAPI.EnumThreadWindows:
+						Api.EnumThreadWindows(threadId, proc, Zero);
+						break;
+					case LibEnumWindowsAPI.EnumChildWindows:
+						Api.EnumChildWindows(wParent, proc, Zero);
+						break;
+					}
+
+					if(sortFirstVisible) return a.ToArray(aHidden);
+					return a.ToArray();
+				}
+				finally {
+					a.Dispose();
+					if(sortFirstVisible) aHidden.Dispose();
+				}
+
+				//tested: using a non-anonymous callback function does not make faster.
 			}
 
 			//Better don't use this.
@@ -434,33 +536,53 @@ namespace Catkeys
 			//}
 
 			/// <summary>
-			/// Gets list of top-level windows of current thread or another thread.
-			/// Returns list containing 0 or more window handles as Wnd.
-			/// Calls API <msdn>EnumThreadWindows</msdn>.
+			/// Gets top-level windows of a thread.
+			/// Returns array containing 0 or more window handles as Wnd.
 			/// </summary>
-			/// <param name="threadId">Unmanaged thread id. If 0, gets windows of current thread.</param>
+			/// <param name="threadId">
+			/// Unmanaged thread id.
+			/// See <see cref="Process_.CurrentThreadId"/>, <see cref="ThreadId"/>.
+			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="Native.GetError"/>.
+			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
+			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
 			/// <param name="also">
 			/// Lambda etc callback function to call for each matching window.
 			/// It can evaluate more properties of the window and return true when they match.
 			/// Example: <c>also: t =&gt; t.ClassNameIs("#32770")</c>.
 			/// </param>
-			public static List<Wnd> ThreadWindows(uint threadId = 0, bool onlyVisible = false, Func<Wnd, bool> also = null)
+			/// <exception cref="ArgumentException">0 threadId.</exception>
+			/// <remarks>
+			/// Calls API <msdn>EnumThreadWindows</msdn>.
+			/// </remarks>
+			public static Wnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false, Func<Wnd, bool> also = null)
 			{
-				if(threadId == 0) threadId = Api.GetCurrentThreadId();
-				var a = new List<Wnd>();
+				if(threadId == 0) throw new ArgumentException("0 threadId");
+				return LibEnumWindows(LibEnumWindowsAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, also, threadId: threadId);
 
-				Api.EnumThreadWindows(threadId, (w, param) =>
-				{
-					if(onlyVisible && !w.IsVisible) return 1;
-					if(also != null && !also(w)) return 1;
-					a.Add(w);
-					return 1;
-				}, 0);
+				//speed: 2.5 times faster than EnumWindows. Tested with a foreign thread with 30 windows.
+			}
 
-				return a;
-
-				//speed: ~40% of EnumWindows time, tested with a foreign thread with 30 windows.
+			/// <summary>
+			/// Finds window of the specified thread.
+			/// Returns its handle as Wnd. Returns Wnd0 if not found.
+			/// Parameters are the same as of <see cref="Find"/>.
+			/// </summary>
+			/// <param name="threadId">
+			/// Unmanaged thread id.
+			/// See <see cref="Process_.CurrentThreadId"/>, <see cref="ThreadId"/>.
+			/// If 0, throws exception. If other invalid value (ended thread?), returns Wnd0.
+			/// </param>
+			/// <param name="name"></param>
+			/// <param name="className"></param>
+			/// <param name="flags"></param>
+			/// <param name="also"></param>
+			public static Wnd FindThreadWindow(int threadId,
+				string name = null, string className = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
+			{
+				var a = ThreadWindows(threadId, 0 == (flags & WFFlags.HiddenToo), true);
+				var f = new Finder(name, className, null, flags | WFFlags.HiddenToo, also);
+				return f.FindInList(a) >= 0 ? f.Result : Wnd0;
 			}
 		}
 	}

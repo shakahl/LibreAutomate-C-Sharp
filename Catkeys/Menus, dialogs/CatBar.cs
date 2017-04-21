@@ -216,10 +216,11 @@ namespace Catkeys
 		}
 #pragma warning restore 649
 
-		[ThreadStatic]
-		//static Dictionary<Wnd, CatBar> _objects=new Dictionary<Wnd, CatBar>(); //adds 3.3 ms at startup
-		//static SortedList<Wnd, CatBar> _objects = new SortedList<Wnd, CatBar>(); //adds 3.6 ms at startup
-		static System.Collections.Hashtable _objects = new System.Collections.Hashtable(); //adds 0.35 ms at startup
+		//[ThreadStatic] static Dictionary<Wnd, CatBar> _objects; //adds 3.3 ms at startup
+		//[ThreadStatic] static SortedList<Wnd, CatBar> _objects; //adds 3.6 ms at startup
+		[ThreadStatic] static System.Collections.Hashtable _objects; //adds 0.35 ms at startup
+
+		//TODO: test Hashtable retrieving speed. Maybe even does not work because need boxing.
 
 		static unsafe LPARAM _WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 		{
@@ -232,10 +233,11 @@ namespace Catkeys
 				g.Free();
 				x._w = w;
 				//Perf.Next();
+				if(_objects == null) _objects = new System.Collections.Hashtable();
 				_objects.Add(w, x);
 			} else {
 				//if(!_objects.TryGetValue(w, out x)) return Api.DefWindowProc(w, msg, wParam, lParam);
-				x = _objects[w] as CatBar; if(x == null) return Api.DefWindowProc(w, msg, wParam, lParam);
+				x = _objects?[w] as CatBar; if(x == null) return Api.DefWindowProc(w, msg, wParam, lParam);
 			}
 			//Perf.NW();
 			//Print(x.MainWnd);
@@ -243,7 +245,7 @@ namespace Catkeys
 			LPARAM R = x._WndProc(msg, wParam, lParam);
 
 			if(msg == Api.WM_NCDESTROY) {
-				_objects.Remove(w);
+				_objects?.Remove(w);
 			}
 			return R;
 		}

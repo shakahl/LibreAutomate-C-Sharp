@@ -185,7 +185,7 @@ namespace Catkeys
 
 		#region send/post message
 
-		static partial class _Api
+		static unsafe partial class _Api
 		{
 			[DllImport("user32.dll", SetLastError = true)]
 			public static extern LPARAM SendMessage(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
@@ -194,7 +194,7 @@ namespace Catkeys
 			public static extern LPARAM SendMessageS(Wnd hWnd, uint msg, LPARAM wParam, string lParam);
 
 			[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
-			public static extern LPARAM SendMessageSB(Wnd hWnd, uint msg, LPARAM wParam, [Out] StringBuilder lParam);
+			public static extern LPARAM SendMessageCA(Wnd hWnd, uint msg, LPARAM wParam, char[] lParam);
 
 			[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
 			public static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
@@ -203,7 +203,7 @@ namespace Catkeys
 			public static extern LPARAM SendMessageTimeoutS(Wnd hWnd, uint Msg, LPARAM wParam, string lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
 
 			[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-			public static extern LPARAM SendMessageTimeoutSB(Wnd hWnd, uint Msg, LPARAM wParam, [Out] StringBuilder lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
+			public static extern LPARAM SendMessageTimeoutCA(Wnd hWnd, uint Msg, LPARAM wParam, char[] lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
 
 			[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
 			public static extern bool SendNotifyMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
@@ -235,12 +235,12 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls API <msdn>SendMessage</msdn> where lParam is StringBuilder.
+		/// Calls API <msdn>SendMessage</msdn> where lParam is char[].
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM SendSB(uint message, LPARAM wParam, StringBuilder lParam)
+		public LPARAM SendS(uint message, LPARAM wParam, char[] lParam)
 		{
-			return _Api.SendMessageSB(this, message, wParam, lParam);
+			return _Api.SendMessageCA(this, message, wParam, lParam);
 		}
 
 		/// <summary>
@@ -277,14 +277,14 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is StringBuilder.
+		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeoutSB(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, StringBuilder lParam, uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, char[] lParam, uint flags = Native.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			return 0 != _Api.SendMessageTimeoutSB(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
+			return 0 != _Api.SendMessageTimeoutCA(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
 		}
 
 		/// <summary>
@@ -336,6 +336,7 @@ namespace Catkeys
 		/// <summary>
 		/// If <see cref="Is0"/>, throws <see cref="WndException"/>.
 		/// </summary>
+		/// <exception cref="WndException"></exception>
 		public void ThrowIf0()
 		{
 			if(_h == default(IntPtr)) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
@@ -344,6 +345,7 @@ namespace Catkeys
 		/// <summary>
 		/// If <see cref="Is0"/> or !<see cref="IsAlive"/>, throws <see cref="WndException"/>.
 		/// </summary>
+		/// <exception cref="WndException"></exception>
 		public void ThrowIfInvalid()
 		{
 			if(_h == default(IntPtr) || !Api.IsWindow(this)) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
@@ -353,6 +355,7 @@ namespace Catkeys
 		/// Throws <see cref="WndException"/> that uses the last Windows API error (code and message).
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
+		/// <exception cref="WndException"></exception>
 		public void ThrowUseNative()
 		{
 			throw new WndException(this, 0);
@@ -362,6 +365,7 @@ namespace Catkeys
 		/// Throws <see cref="WndException"/> that uses mainMessage and the last Windows API error (code and message).
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
+		/// <exception cref="WndException"></exception>
 		public void ThrowUseNative(string mainMessage)
 		{
 			throw new WndException(this, 0, mainMessage);
@@ -371,6 +375,7 @@ namespace Catkeys
 		/// Throws <see cref="WndException"/> that uses mainMessage and does not use the last Windows API error.
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
+		/// <exception cref="WndException"></exception>
 		public void ThrowNoNative(string mainMessage)
 		{
 			throw new WndException(this, mainMessage);
@@ -406,13 +411,14 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the visible state.
-		/// Calls API <msdn>IsWindowVisible</msdn>.
-		/// Returns true if the window is visible. Returns false if is invisible or is a child of invisible parent.
-		/// <note>This function is unaware about <see cref="IsCloaked">cloaked</see> windows. If need, use code <c>if(w.IsVisible &amp;&amp; !w.IsCloaked)</c>.</note>
-		/// <note>This function is unaware about transparent windows, zero-size windows, zero-window-region windows, off-screen windows and windows that are completely covered by other windows.</note>
+		/// Returns true if the window is visible.
+		/// Returns false if is invisible or is a child of invisible parent.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <remarks>
-		/// Also returns false when fails (eg window closed or 0 handle). Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>IsWindowVisible</msdn>.
+		/// <note>This function is unaware about <see cref="IsCloaked">cloaked</see> windows. If need, use code <c>if(w.IsVisible &amp;&amp; !w.IsCloaked)</c>.</note>
+		/// <note>This function is unaware about transparent windows, zero-size windows, zero-window-region windows, off-screen windows and windows that are completely covered by other windows.</note>
 		/// </remarks>
 		/// <seealso cref="IsCloaked"/>
 		/// <seealso cref="Show"/>
@@ -470,12 +476,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the enabled state.
-		/// Returns true if the window is enabled. Returns false if is disabled or is a child of disabled parent.
+		/// Returns true if the window is enabled.
+		/// Returns false if is disabled or is a child of disabled parent.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsWindowEnabled</msdn>.
 		/// </summary>
-		/// <remarks>
-		/// Also returns false when fails (eg window closed or 0 handle). Supports <see cref="Native.GetError"/>.
-		/// </remarks>
 		public bool IsEnabled
 		{
 			get => Api.IsWindowEnabled(this);
@@ -505,7 +510,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(WinVer < Win8) return 0;
+				if(!Ver.MinWin8) return 0;
 				int cloaked = 0, hr = Api.DwmGetWindowAttribute(this, 14, out cloaked, 4); //DWMWA_CLOAKED
 				return cloaked;
 			}
@@ -528,11 +533,9 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if minimized, false if not.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsIconic</msdn>.
 		/// </summary>
-		/// <remarks>
-		/// Also returns false when fails (eg window closed or 0 handle). Supports <see cref="Native.GetError"/>.
-		/// </remarks>
 		public bool IsMinimized
 		{
 			get => Api.IsIconic(this);
@@ -540,11 +543,9 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if maximized, false if not.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsZoomed</msdn>.
 		/// </summary>
-		/// <remarks>
-		/// Also returns false when fails (eg window closed or 0 handle). Supports <see cref="Native.GetError"/>.
-		/// </remarks>
 		public bool IsMaximized
 		{
 			get => Api.IsZoomed(this);
@@ -774,7 +775,7 @@ namespace Catkeys
 						if(f == this) R = true;
 						else if(this == Misc.WndRoot) R = f.Is0; //activating GetDesktopWindow makes "no active window"
 						else { //forgive if the target app instead activated another window of same thread
-							uint tid = ThreadId; if(tid == 0) break;
+							int tid = ThreadId; if(tid == 0) break;
 							if(f.ThreadId == tid) {
 								//at first try to recognize such known windows, to avoid the hard way
 								if(isMinimized || (f.WndOwner == this && Rect.IsEmpty)) {
@@ -829,7 +830,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Low-level version of <see cref="Activate()"/>.
-		/// Just calls <see cref="Misc.AllowActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
+		/// Just calls <see cref="Misc.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
 		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
 		/// Returns false if fails.
 		/// </summary>
@@ -838,17 +839,17 @@ namespace Catkeys
 			if(LibIsActiveOrNoActiveAndThisIsWndRoot) return true;
 
 			try {
-				bool canAct = LibAllowActivate(true);
+				bool canAct = LibEnableActivate(true);
 
 				if(!Api.SetForegroundWindow(this)) {
 					if(!canAct || !IsAlive) return false;
 					//It happens when foreground process called LockSetForegroundWindow.
 					//Although AllowSetForegroundWindow returns true, SetForegroundWindow fails.
-					//It happens only before this process sends keys. Eg after first _AllowActivate_SendKey this never happens again.
-					//If it has higher IL (and this process is User), also need _AllowActivate_MinRes.
-					_AllowActivate_SendKey(true);
+					//It happens only before this process sends keys. Eg after first _EnableActivate_SendKey this never happens again.
+					//If it has higher IL (and this process is User), also need _EnableActivate_MinRes.
+					_EnableActivate_SendKey(true);
 					if(!Api.SetForegroundWindow(this)) {
-						_AllowActivate_MinRes();
+						_EnableActivate_MinRes();
 						if(!Api.SetForegroundWindow(this)) return false;
 					}
 				}
@@ -888,37 +889,37 @@ namespace Catkeys
 			/// Returns false if fails (unlikely).
 			/// In some cases you may need this function because Windows often disables SetForegroundWindow to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow just makes the window's taskbar button flash which indicates that the windows wants attention. More info: <msdn>SetForegroundWindow</msdn>.
 			/// Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
-			/// Don't need to call this function before calling functions of this library that activate windows.
+			/// Don't need to call this function before calling Wnd.Activate and other functions of this library that activate windows.
 			/// </summary>
-			public static bool AllowActivate()
+			public static bool EnableActivate()
 			{
-				return Wnd.LibAllowActivate(false);
+				return Wnd.LibEnableActivate(false);
 			}
 		}
 
 		/// <summary>
 		/// No exceptions.
 		/// </summary>
-		internal static bool LibAllowActivate(bool goingToActivateAWindow)
+		internal static bool LibEnableActivate(bool goingToActivateAWindow)
 		{
-			if(_AllowActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
+			if(_EnableActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
 
-			_AllowActivate_SendKey(true);
-			if(_AllowActivate_AllowSetFore()) return true;
+			_EnableActivate_SendKey(true);
+			if(_EnableActivate_AllowSetFore()) return true;
 			//First time fails if the foreground window is of higher IL. Then sending keys does not work.
 
-			//_AllowActivate_MinRes() makes no active window...
+			//_EnableActivate_MinRes() makes no active window...
 			if(goingToActivateAWindow) {
-				_AllowActivate_MinRes();
-				return _AllowActivate_AllowSetFore();
+				_EnableActivate_MinRes();
+				return _EnableActivate_AllowSetFore();
 			}
 
 			var wFore = WndActive; bool retry = false;
-			g1: _AllowActivate_MinRes();
-			if(!_AllowActivate_AllowSetFore()) return false;
+			g1: _EnableActivate_MinRes();
+			if(!_EnableActivate_AllowSetFore()) return false;
 			if(!wFore.Is0 && !retry) {
 				Api.SetForegroundWindow(wFore);
-				if(!_AllowActivate_AllowSetFore()) { retry = true; goto g1; } //didn't notice this but let's be safer
+				if(!_EnableActivate_AllowSetFore()) { retry = true; goto g1; } //didn't notice this but let's be safer
 			}
 			return true;
 
@@ -935,9 +936,9 @@ namespace Catkeys
 		/// Don't know why is this behavior. Tested on all OS from XP to 10.
 		/// Does not work if the foreground process has higher UAC IL.
 		/// </summary>
-		static void _AllowActivate_SendKey(bool debugOut)
+		static void _EnableActivate_SendKey(bool debugOut)
 		{
-			if(debugOut) DebugPrint("AllowActivate: need key");
+			if(debugOut) DebugPrint("EnableActivate: need key");
 
 			var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
 			Api.SendInputKey(ref x);
@@ -948,17 +949,17 @@ namespace Catkeys
 		/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
 		/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
 		/// </summary>
-		static void _AllowActivate_MinRes()
+		static void _EnableActivate_MinRes()
 		{
-			DebugPrint("AllowActivate: need min/res");
+			DebugPrint("EnableActivate: need min/res");
 
 			Wnd t = Misc.CreateWindow(Native.WS_EX_TOOLWINDOW, "#32770", null, Native.WS_POPUP | Native.WS_MINIMIZE | Native.WS_VISIBLE);
 			//info: When restoring, the window must be visible, or may not work.
 			try {
 				var wp = new Api.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
 				t.LibSetWindowPlacement(ref wp); //activates t; fast (no animation)
-				_AllowActivate_SendKey(false); //makes so that later our process can always activate
-				_AllowActivate_AllowSetFore();
+				_EnableActivate_SendKey(false); //makes so that later our process can always activate
+				_EnableActivate_AllowSetFore();
 				Api.SetForegroundWindow(Misc.WndRoot); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
 			}
 			finally { Api.DestroyWindow(t); }
@@ -973,19 +974,19 @@ namespace Catkeys
 		/// <summary>
 		/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
 		/// </summary>
-		static bool _AllowActivate_AllowSetFore() { return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()); }
+		static bool _EnableActivate_AllowSetFore() { return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()); }
 
 		//Too unreliable.
 		///// <summary>
 		///// Calls API LockSetForegroundWindow, which temporarily prevents other applications from activating windows easily with SetForegroundWindow().
-		///// If LockSetForegroundWindow() fails, calls AllowActivate() and retries.
+		///// If LockSetForegroundWindow() fails, calls EnableActivate() and retries.
 		///// </summary>
 		///// <param name="on">Lock or unlock.</param>
 		//public static bool LockActiveWindow(bool on)
 		//{
 		//	uint f = on ? Api.LSFW_LOCK : Api.LSFW_UNLOCK;
 		//	if(Api.LockSetForegroundWindow(f)) return true;
-		//	return AllowActivate() && Api.LockSetForegroundWindow(f);
+		//	return EnableActivate() && Api.LockSetForegroundWindow(f);
 		//}
 
 		/// <summary>
@@ -1008,7 +1009,7 @@ namespace Catkeys
 			Wnd wTL = WndWindow;
 			if(wTL != Api.GetForegroundWindow()) wTL.Activate();
 
-			uint th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
+			int th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
 				Api.SetFocus(this);
 				if(this != WndFocusedLL) ThrowUseNative("*set focus");
@@ -1383,7 +1384,7 @@ namespace Catkeys
 			return Api.ScreenToClient(this, ref p);
 		}
 
-		static unsafe bool _MapWindowPoints(Wnd wFrom, Wnd wTo, void* t, uint cPoints)
+		static unsafe bool _MapWindowPoints(Wnd wFrom, Wnd wTo, void* t, int cPoints)
 		{
 			Native.ClearError();
 			if(Api.MapWindowPoints(wFrom, wTo, t, cPoints) != 0) return true;
@@ -2138,7 +2139,7 @@ namespace Catkeys
 
 		#region window/class long, control id, prop
 
-		static partial class _Api
+		static unsafe partial class _Api
 		{
 			[DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
 			internal static extern int GetWindowLong32(Wnd hWnd, int nIndex);
@@ -2293,7 +2294,7 @@ namespace Catkeys
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
-		public uint GetThreadProcessId(out uint processId)
+		public int GetThreadProcessId(out int processId)
 		{
 			processId = 0;
 			return Api.GetWindowThreadProcessId(this, out processId);
@@ -2303,28 +2304,28 @@ namespace Catkeys
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
-		public uint ThreadId { get => GetThreadProcessId(out var pid); }
+		public int ThreadId { get => GetThreadProcessId(out var pid); }
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns process id.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public uint ProcessId { get { GetThreadProcessId(out var pid); return pid; } }
+		public int ProcessId { get { GetThreadProcessId(out var pid); return pid; } }
 		/// <summary>
 		/// Returns true if this window belongs to the current thread, false if to another thread.
-		/// Also returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
 		public bool IsOfThisThread { get => Api.GetCurrentThreadId() == ThreadId; }
 		/// <summary>
 		/// Returns true if this window belongs to the current process, false if to another process.
-		/// Also returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
 		public bool IsOfThisProcess { get => Api.GetCurrentProcessId() == ProcessId; }
 
 		/// <summary>
 		/// Returns true if the window is a Unicode window, false if ANSI.
-		/// Also returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsWindowUnicode</msdn>.
 		/// </summary>
 		public bool IsUnicode { get => Api.IsWindowUnicode(this); }
@@ -2332,20 +2333,20 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if the window is of a 64-bit process, false if of a 32-bit process.
 		/// Also returns false if fails. Supports <see cref="Native.GetError"/>.
-		/// If <see cref="Environment.Is64BitOperatingSystem"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
+		/// If <see cref="Ver.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
 		/// <note>If you know that the window belongs to current process, instead use <see cref="Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
 		/// </summary>
 		public bool Is64Bit
 		{
 			get
 			{
-				if(Environment.Is64BitOperatingSystem) {
-					uint pid = ProcessId; if(pid == 0) return false;
+				if(Ver.Is64BitOS) {
+					int pid = ProcessId; if(pid == 0) return false;
 					IntPtr ph = Zero;
 					try {
 						ph = Api.OpenProcess(Api.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
 						if(ph == Zero || !Api.IsWow64Process(ph, out var is32bit)) return false;
-						if(is32bit == 0) return true;
+						if(!is32bit) return true;
 					}
 					finally {
 						if(ph != Zero) Api.CloseHandle(ph);
@@ -2440,16 +2441,13 @@ namespace Catkeys
 
 		#region text, class, program
 
-		static partial class _Api
+		static unsafe partial class _Api
 		{
 			[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
-			public static extern unsafe int GetClassName(Wnd hWnd, [Out] char* lpClassName, int nMaxCount);
+			public static extern int GetClassName(Wnd hWnd, [Out] char* lpClassName, int nMaxCount);
 
 			[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
-			public static extern unsafe int InternalGetWindowText(Wnd hWnd, [Out] char* pString, int cchMaxCount);
-
-			[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
-			public static extern int InternalGetWindowTextSB(Wnd hWnd, [Out] StringBuilder pString, int cchMaxCount);
+			public static extern int InternalGetWindowText(Wnd hWnd, [Out] char* pString, int cchMaxCount);
 		}
 
 		/// <summary>
@@ -2465,14 +2463,12 @@ namespace Catkeys
 				int n = _Api.GetClassName(this, b, stackSize);
 				if(n > 0) return new string(b, 0, n);
 				return null;
-				//speed: 320. It is 50% slower than QM2 str.getwinclass (with conversion to UTF8 and free()); slightly faster than with char[260] or fixed char[260]; with StringBuilder 70% slower; with Marshal.AllocHGlobal 30% slower.
-				//Calling through delegate (Marshal.GetDelegateForFunctionPointer) does not make faster.
 			}
 		}
 
 		/// <summary>
 		/// Returns true if the class name of this window matches className. Else returns false.
-		/// Also returns false if 0 handle or fails to get class name. Supports <see cref="Native.GetError"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
 		public bool ClassNameIs(string className)
@@ -2482,7 +2478,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
-		/// Also returns 0 if 0 handle or fails to get class name. Supports <see cref="Native.GetError"/>.
+		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <param name="classNames">Class names. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
 		public int ClassNameIs(params string[] classNames)
@@ -2570,31 +2566,18 @@ namespace Catkeys
 		unsafe string _GetTextFast(bool useSlowIfEmpty)
 		{
 			if(Is0) return null;
-
-			const int stackSize = 1024;
-
-			var b = stackalloc char[stackSize];
-			Native.ClearError();
-			int nt = _Api.InternalGetWindowText(this, b, stackSize);
-			if(nt < 1) {
-				if(Native.GetError() != 0) return null;
-				if(useSlowIfEmpty && (Style & Native.WS_CHILD) != 0) return _GetTextSlow();
-				return "";
-			}
-			if(nt < stackSize - 1) return new string(b, 0, nt);
-
-			var sb = new StringBuilder();
-			for(int na = stackSize; na <= int.MaxValue / 4;) {
-				na *= 2;
-				sb.Capacity = na;
+			var b = Util.LibCharBuffer.Common;
+			for(int na = 300; b.Alloc(ref na, out var p, true); na *= 2) {
 				Native.ClearError();
-				nt = _Api.InternalGetWindowTextSB(this, sb, na);
-				if(nt < na - 1) {
-					if(nt > 0) return sb.ToString();
-					return (Native.GetError() != 0) ? null : "";
+				int nr = _Api.InternalGetWindowText(this, p, na);
+				if(nr < na - 1) {
+					if(nr > 0) return b.ToString(nr);
+					if(Native.GetError() != 0) return null;
+					if(useSlowIfEmpty && (Style & Native.WS_CHILD) != 0) return _GetTextSlow();
+					return "";
 				}
 			}
-
+			b.Compact();
 			return null;
 		}
 

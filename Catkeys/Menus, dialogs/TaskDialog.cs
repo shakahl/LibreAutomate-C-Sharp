@@ -273,7 +273,7 @@ namespace Catkeys
 		/// All parameters are the same as of <see cref="ShowEx"/>.
 		/// </summary>
 		public TaskDialog(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			) : this()
@@ -290,7 +290,7 @@ namespace Catkeys
 			if(defaultButton != 0) DefaultButton = defaultButton;
 			SetRadioButtons(radioButtons);
 			_SetCheckboxFromText(checkBox);
-			if(owner != null) SetOwnerWindow(owner.GetValueOrDefault(), 0 != (flags & TDFlags.OwnerCenter));
+			SetOwnerWindow(owner, 0 != (flags & TDFlags.OwnerCenter));
 			SetXY(x, y, 0 != (flags & TDFlags.RawXY));
 			SetTimeout(timeoutS);
 			SetExpandedText(expandedText, 0 != (flags & TDFlags.ExpandDown));
@@ -709,19 +709,13 @@ namespace Catkeys
 		/// The owner window will be disabled, and this dialog will be on top of it.
 		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="TaskDialog.Options.DefaultScreen"/> is ignored.
 		/// </summary>
-		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or Wnd (window handle).</param>
+		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or Wnd (window handle). Can be null.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY">SetXY</see> and <see cref="Screen">Screen</see> are ignored.</param>
 		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
-		public void SetOwnerWindow(Types<Control, Wnd> owner, bool ownerCenter = false, bool doNotDisable = false)
+		public void SetOwnerWindow(WndOrControl owner, bool ownerCenter = false, bool doNotDisable = false)
 		{
-			Wnd w = Wnd0;
-			switch(owner.type) {
-			case 1: if(owner.v1 != null) w = (Wnd)owner.v1.Handle; break;
-			case 2: w = owner.v2; break;
-			}
-
-			_c.hwndParent = w.WndWindow;
+			_c.hwndParent = (owner == null) ? Wnd0 : owner.GetWnd().WndWindow;
 			_SetFlag(TDF_.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
 		}
@@ -883,7 +877,7 @@ namespace Catkeys
 					hhook = Api.SetWindowsHookEx(Api.WH_GETMESSAGE, hpHolder = _HookProc, Zero, Api.GetCurrentThreadId());
 				}
 
-				Wnd.LibAllowActivate(true);
+				Wnd.LibEnableActivate(true);
 
 				//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
 				//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
@@ -1764,7 +1758,7 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static TDResult ShowEx(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			)
@@ -1827,7 +1821,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null)
 		{
 			return ShowEx(text1, text2, buttons, icon, flags, owner).Button;
 		}
@@ -1837,7 +1831,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowInfo(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static void ShowInfo(string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null)
 		{
 			Show(text1, text2, null, TDIcon.Info, flags, owner);
 		}
@@ -1847,7 +1841,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowWarning(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null, string expandedText = null)
+		public static void ShowWarning(string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
 			ShowEx(text1, text2, null, TDIcon.Warning, flags, owner, expandedText);
 		}
@@ -1857,7 +1851,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowError(string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null, string expandedText = null)
+		public static void ShowError(string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
 			ShowEx(text1, text2, null, TDIcon.Error, flags, owner, expandedText);
 		}
@@ -1868,7 +1862,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null)
 		{
 			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner);
 		}
@@ -1879,7 +1873,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null)
 		{
 			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner);
 		}
@@ -1940,7 +1934,7 @@ namespace Catkeys
 		public static TDResult ShowInputEx(
 			string text1 = null, string text2 = null,
 			TDEdit editType = TDEdit.Text, object editText = null,
-			TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			TDFlags flags = 0, WndOrControl owner = null,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
 			int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null,
 			string buttons = "1 OK|2 Cancel", Action<TDEventArgs> onButtonClick = null
@@ -1988,7 +1982,7 @@ namespace Catkeys
 			out string s,
 			string text1 = null, string text2 = null,
 			TDEdit editType = TDEdit.Text, object editText = null,
-			TDFlags flags = 0, Types<Control, Wnd>? owner = null
+			TDFlags flags = 0, WndOrControl owner = null
 			)
 		{
 			s = null;
@@ -2023,7 +2017,7 @@ namespace Catkeys
 		public static bool ShowInput(
 			out int i,
 			string text1 = null, string text2 = null, TDEdit editType = TDEdit.Number, object editText = null,
-			TDFlags flags = 0, Types<Control, Wnd>? owner = null
+			TDFlags flags = 0, WndOrControl owner = null
 			)
 		{
 			i = 0;
@@ -2067,7 +2061,7 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static TDResult ShowListEx(
-			Types<string, IEnumerable<string>> list, string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			Types<string, IEnumerable<string>> list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
 			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0,
 			Action<TDEventArgs> onLinkClick = null
@@ -2103,7 +2097,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(Types<string, IEnumerable<string>> list, string text1 = null, string text2 = null, TDFlags flags = 0, Types<Control, Wnd>? owner = null)
+		public static int ShowList(Types<string, IEnumerable<string>> list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null)
 		{
 			return ShowListEx(list, text1, text2, flags, owner);
 		}
@@ -2136,7 +2130,7 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="CatException">Failed to show dialog.</exception>
 		public static TaskDialog ShowProgressEx(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = null,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 		)
@@ -2179,7 +2173,7 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="CatException">Failed to show dialog.</exception>
 		public static TaskDialog ShowProgress(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = null,
 			int x = 0, int y = 0)
 		{
 			return ShowProgressEx(marquee, text1, text2, buttons, flags, owner, x: x, y: y);
@@ -2213,7 +2207,7 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static TaskDialog ShowNoWaitEx(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, Types<Control, Wnd>? owner = null,
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			)
@@ -2238,7 +2232,7 @@ namespace Catkeys
 		public static TaskDialog ShowNoWait(
 			string text1 = null, string text2 = null,
 			string buttons = null, TDIcon icon = 0, TDFlags flags = 0,
-			Types<Control, Wnd>? owner = null
+			WndOrControl owner = null
 			)
 		{
 			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);

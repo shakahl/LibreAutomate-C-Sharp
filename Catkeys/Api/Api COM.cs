@@ -42,55 +42,67 @@ namespace Catkeys
 			[PreserveSig] int SetNameOf(Wnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
 		}
 
+		internal static Guid IID_IShellItem = new Guid(0x43826D1E, 0xE718, 0x42EE, 0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE);
+
+		[ComImport, Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface IShellItem
+		{
+			[PreserveSig] int BindToHandler(IntPtr pbc, [In] ref Guid bhid, [In] ref Guid riid, out IntPtr ppv); //IBindCtx
+			[PreserveSig] int GetParent(out IShellItem ppsi);
+			[PreserveSig] int GetDisplayName(Native.SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
+			[PreserveSig] int GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
+			[PreserveSig] int Compare(IShellItem psi, uint hint, out int piOrder);
+		}
+
 		[ComImport, Guid("000214F2-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IEnumIDList
 		{
-			[PreserveSig] int Next(uint celt, [MarshalAs(UnmanagedType.LPArray)] [Out] IntPtr[] rgelt, out uint pceltFetched);
-			[PreserveSig] int Skip(uint celt);
+			[PreserveSig] int Next(int celt, [MarshalAs(UnmanagedType.LPArray)] [Out] IntPtr[] rgelt, out int pceltFetched);
+			[PreserveSig] int Skip(int celt);
 			[PreserveSig] int Reset();
 			[PreserveSig] int Clone(out IEnumIDList ppenum);
 		}
 
-		internal const uint GIL_OPENICON = 0x1;
-		internal const uint GIL_FORSHELL = 0x2;
-		internal const uint GIL_ASYNC = 0x20;
-		internal const uint GIL_DEFAULTICON = 0x40;
-		internal const uint GIL_FORSHORTCUT = 0x80;
-		internal const uint GIL_CHECKSHIELD = 0x200;
-		internal const uint GIL_SIMULATEDOC = 0x1;
-		internal const uint GIL_PERINSTANCE = 0x2;
-		internal const uint GIL_PERCLASS = 0x4;
-		internal const uint GIL_NOTFILENAME = 0x8;
-		internal const uint GIL_DONTCACHE = 0x10;
-		internal const uint GIL_SHIELD = 0x200;
-		internal const uint GIL_FORCENOSHIELD = 0x400;
+		//internal const uint GIL_OPENICON = 0x1;
+		//internal const uint GIL_FORSHELL = 0x2;
+		//internal const uint GIL_ASYNC = 0x20;
+		//internal const uint GIL_DEFAULTICON = 0x40;
+		//internal const uint GIL_FORSHORTCUT = 0x80;
+		//internal const uint GIL_CHECKSHIELD = 0x200;
+		//internal const uint GIL_SIMULATEDOC = 0x1;
+		//internal const uint GIL_PERINSTANCE = 0x2;
+		//internal const uint GIL_PERCLASS = 0x4;
+		//internal const uint GIL_NOTFILENAME = 0x8;
+		//internal const uint GIL_DONTCACHE = 0x10;
+		//internal const uint GIL_SHIELD = 0x200;
+		//internal const uint GIL_FORCENOSHIELD = 0x400;
 
-		internal static Guid IID_IExtractIcon = new Guid(0x000214FA, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+		//internal static Guid IID_IExtractIcon = new Guid(0x000214FA, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
 
-		[ComImport, Guid("000214fa-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IExtractIcon
-		{
-			[PreserveSig] int GetIconLocation(uint uFlags, [Out] StringBuilder pszIconFile, uint cchMax, out int piIndex, out uint pwFlags);
-			[PreserveSig] int Extract([MarshalAs(UnmanagedType.LPWStr)] string pszFile, uint nIconIndex, IntPtr* phiconLarge, IntPtr* phiconSmall, uint nIconSize);
-		}
+		//[ComImport, Guid("000214fa-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		//internal interface IExtractIcon
+		//{
+		//	[PreserveSig] int GetIconLocation(uint uFlags, char* pszIconFile, int cchMax, out int piIndex, out uint pwFlags);
+		//	[PreserveSig] int Extract([MarshalAs(UnmanagedType.LPWStr)] string pszFile, int nIconIndex, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
+		//}
 
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellLink
 		{
-			[PreserveSig] int GetPath([Out] StringBuilder pszFile, int cch, IntPtr pfd = default(IntPtr), uint fFlags = 0);
+			[PreserveSig] int GetPath(char* pszFile, int cch, IntPtr pfd = default(IntPtr), uint fFlags = 0);
 			[PreserveSig] int GetIDList(out IntPtr ppidl);
 			[PreserveSig] int SetIDList(IntPtr pidl);
-			[PreserveSig] int GetDescription([Out] StringBuilder pszName, int cch);
+			[PreserveSig] int GetDescription(char* pszName, int cch);
 			[PreserveSig] int SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-			[PreserveSig] int GetWorkingDirectory([Out] StringBuilder pszDir, int cch);
+			[PreserveSig] int GetWorkingDirectory(char* pszDir, int cch);
 			[PreserveSig] int SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-			[PreserveSig] int GetArguments([Out] StringBuilder pszArgs, int cch);
+			[PreserveSig] int GetArguments(char* pszArgs, int cch);
 			[PreserveSig] int SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
 			[PreserveSig] int GetHotkey(out ushort pwHotkey);
 			[PreserveSig] int SetHotkey(ushort wHotkey);
 			[PreserveSig] int GetShowCmd(out int piShowCmd);
 			[PreserveSig] int SetShowCmd(int iShowCmd);
-			[PreserveSig] int GetIconLocation([Out] StringBuilder pszIconPath, int cch, out int piIcon);
+			[PreserveSig] int GetIconLocation(char* pszIconPath, int cch, out int piIcon);
 			[PreserveSig] int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
 			[PreserveSig] int SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved = 0);
 			[PreserveSig] int Resolve(Wnd hwnd, uint fFlags);
@@ -134,8 +146,8 @@ namespace Catkeys
 		[ComImport, Guid("886d8eeb-8cf2-4446-8d02-cdba1dbdcf99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IPropertyStore
 		{
-			[PreserveSig] int GetCount(out uint cProps);
-			[PreserveSig] int GetAt(uint iProp, out PROPERTYKEY pkey);
+			[PreserveSig] int GetCount(out int cProps);
+			[PreserveSig] int GetAt(int iProp, out PROPERTYKEY pkey);
 			[PreserveSig] int GetValue([In] ref PROPERTYKEY key, out PROPVARIANT_LPARAM pv);
 			[PreserveSig] int SetValue([In] ref PROPERTYKEY key, [In] ref PROPVARIANT_LPARAM propvar);
 			[PreserveSig] int Commit();
@@ -171,7 +183,7 @@ namespace Catkeys
 			[PreserveSig] int GetIconSize(out int cx, out int cy);
 			[PreserveSig] int SetIconSize(int cx, int cy);
 			[PreserveSig] int GetImageCount(out int pi);
-			[PreserveSig] int SetImageCount(uint uNewCount);
+			[PreserveSig] int SetImageCount(int uNewCount);
 			[PreserveSig] int SetBkColor(uint clrBk, out uint pclr);
 			[PreserveSig] int GetBkColor(out uint pclr);
 			[PreserveSig] int BeginDrag(int iTrack, int dxHotspot, int dyHotspot);

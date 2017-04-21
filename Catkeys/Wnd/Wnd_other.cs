@@ -114,7 +114,7 @@ namespace Catkeys
 
 		struct __ISSHELLWINDOW
 		{
-			uint _tidW, _tidD, _pidW, _pidD;
+			int _tidW, _tidD, _pidW, _pidD;
 			IntPtr _w, _wDesk; //not Wnd because then TypeLoadException
 
 			public int IsShellWindow(Wnd w)
@@ -139,14 +139,15 @@ namespace Catkeys
 		/// On Windows 10 few windows have Metro style.
 		/// On Windows 7 there are no Metro style windows.
 		/// </summary>
-		public bool IsWin8MetroStyle
+		/// <seealso cref="Misc.GetWindowsStoreAppId"/>
+		public bool IsWindows8MetroStyle
 		{
 			get
 			{
-				if(WinVer < Win8) return false;
+				if(!Ver.MinWin8) return false;
 				if(!HasExStyle(Native.WS_EX_TOPMOST | Native.WS_EX_NOREDIRECTIONBITMAP) || (Style & Native.WS_CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
-				if(WinVer < Win10 && LibIsOfShellProcess) return true;
+				if(!Ver.MinWin10 && LibIsOfShellProcess) return true;
 				return false;
 				//could use IsImmersiveProcess, but this is better
 			}
@@ -156,11 +157,12 @@ namespace Catkeys
 		/// Returns non-zero if this window is a Windows 10 Store app window.
 		/// Returns 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
-		public int IsWin10StoreApp
+		/// <seealso cref="Misc.GetWindowsStoreAppId"/>
+		public int IsWindows10StoreApp
 		{
 			get
 			{
-				if(WinVer < Win10) return 0;
+				if(!Ver.MinWin10) return 0;
 				if(!HasExStyle(Native.WS_EX_NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better

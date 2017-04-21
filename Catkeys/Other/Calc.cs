@@ -165,6 +165,11 @@ namespace Catkeys
 		public static bool IsDigit(char c) { return c <= '9' && c >= '0'; }
 
 		/// <summary>
+		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
+		/// </summary>
+		public static bool IsAlpha(char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
+
+		/// <summary>
 		/// Calculates angle degrees from coordinates x and y.
 		/// </summary>
 		public static double AngleFromXY(int x, int y)
@@ -399,28 +404,22 @@ namespace Catkeys
 			return (char)(b < 10 ? '0' + b : 'a' - 10 + b);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static int _HexCharToHalfByte(char c)
-		{
-			if(c >= '0' && c <= '9') return c - '0';
-			if(c >= 'A' && c <= 'F') return c - ('A' - 10);
-			if(c >= 'a' && c <= 'f') return c - ('a' - 10);
-			//throw new ArgumentException(); //makes slower
-			return 0;
-		}
-
 		/// <summary>
 		/// Converts hex-encoded string to byte array (binary data).
 		/// </summary>
 		/// <param name="s">Hex-encoded string. Can be null.</param>
-		public static byte[] BytesFromHexString(string s)
+		/// <remarks>
+		/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
+		/// </remarks>
+		public static unsafe byte[] BytesFromHexString(string s)
 		{
 			if(s == null) return null;
-			int i, n = s.Length / 2;
+			int n = s.Length / 2;
+			var p = Util.LibCharBuffer.Common.Alloc(n);
+			n = BytesFromHexString(s, p, n, 0);
 			var r = new byte[n];
-			for(i = 0; i < n; i++) {
-				r[i] = (byte)((_HexCharToHalfByte(s[i * 2]) << 4) | _HexCharToHalfByte(s[i * 2 + 1]));
-			}
+			Marshal.Copy((IntPtr)p, r, 0, n);
+			//var b1 = (byte*)p; for(int i = 0; i < n; i++) r[i] = b1[i]; //faster when array small, slower when big
 			return r;
 
 			//speed: fast enough without a lookup table. Faster than BytesToHexString.
@@ -429,28 +428,79 @@ namespace Catkeys
 
 		/// <summary>
 		/// Converts hex-encoded string to binary data.
-		/// Returns the number of bytes stored in data memory. It is Math.Min(s.Length/2, size).
+		/// Returns the number of bytes stored in data memory. It is equal or less than Math.Min(size, (s.Length - startFrom) / 2).
 		/// </summary>
 		/// <param name="s">Hex-encoded string. Can be null.</param>
 		/// <param name="data">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
 		/// <param name="size">data memory size.</param>
+		/// <param name="startIndex">0 or index of first character of hex-encoded substring in s.</param>
 		/// <remarks>
+		/// Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
 		/// <note>This function is unsafe, it will damage process memory if using bad data or size.</note>
 		/// </remarks>
-		public static unsafe int BytesFromHexString(string s, void* data, int size)
+		public static unsafe int BytesFromHexString(string s, void* data, int size, int startIndex = 0)
 		{
-			if(s == null) return 0;
-			int i, n = s.Length / 2;
-			if(n > size) n = size;
-			var r = (byte*)data;
-			for(i = 0; i < n; i++) {
-				r[i] = (byte)((_HexCharToHalfByte(s[i * 2]) << 4) | _HexCharToHalfByte(s[i * 2 + 1]));
+			var t = _aHex;
+			if(t == null) {
+				t = new byte[55];
+				for(int u = 0; u < 55; u++) {
+					char c = (char)(u + '0');
+					if(c >= '0' && c <= '9') t[u] = (byte)u;
+					else if(c >= 'A' && c <= 'F') t[u] = (byte)(c - ('A' - 10));
+					else if(c >= 'a' && c <= 'f') t[u] = (byte)(c - ('a' - 10));
+					else t[u] = 0xFF;
+				}
+				_aHex = t;
 			}
-			return n;
+
+			if(s == null) return 0;
+			var r = (byte*)data;
+			int i = 0, j = startIndex, n = s.Length - 1;
+			while(j < n && i < size) {
+				int k1 = _HexCharToHalfByte(s[j++]); if(k1 == 0xFF) continue;
+				int k2 = _HexCharToHalfByte(s[j++]); if(k2 == 0xFF) continue;
+				r[i++] = (byte)((k1 << 4) | k2);
+			}
+			return i;
+
+			//tested: inlined. Slightly faster than using this code not in func.
+			int _HexCharToHalfByte(char c)
+			{
+				uint k = (uint)(c - '0');
+				return (k < 55) ? t[k] : 0xFF;
+			}
 
 			//info: this is very unsafe.
 			//	Cannot use generic because C# does not allow to get generic parameter address.
 			//	Cannot use GCHandle.AddrOfPinnedObject because it gets address of own copy of the variable.
 		}
+		static byte[] _aHex;
+
+		//Old version. Same speed. Does not support non-hex-digits.
+		//public static unsafe int BytesFromHexString_old(string s, void* data, int size, int startIndex = 0)
+		//{
+		//	if(s == null) return 0;
+		//	int i, j, n = (s.Length - startIndex) / 2;
+		//	if(n > size) n = size;
+		//	var r = (byte*)data;
+		//	for(i = 0, j = startIndex; i < n; i++, j += 2) {
+		//		r[i] = (byte)((_HexCharToHalfByte(s[j]) << 4) | _HexCharToHalfByte(s[j + 1]));
+		//	}
+		//	return n;
+
+		//	//info: this is very unsafe.
+		//	//	Cannot use generic because C# does not allow to get generic parameter address.
+		//	//	Cannot use GCHandle.AddrOfPinnedObject because it gets address of own copy of the variable.
+		//}
+
+		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		//static int _HexCharToHalfByte(char c)
+		//{
+		//	if(c >= '0' && c <= '9') return c - '0';
+		//	if(c >= 'A' && c <= 'F') return c - ('A' - 10);
+		//	if(c >= 'a' && c <= 'f') return c - ('a' - 10);
+		//	//throw new ArgumentException(); //makes slower
+		//	return int.MinValue;
+		//}
 	}
 }

@@ -30,7 +30,7 @@ using static Catkeys.NoClass;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
 
-using Catkeys.Triggers;
+//using Catkeys.Triggers;
 
 
 //using Cat = Catkeys.Input;
@@ -58,6 +58,9 @@ using SQLite;
 
 //using Newtonsoft.Json;
 //using Newtonsoft.Json.Linq;
+
+using Microsoft.Win32.SafeHandles;
+
 
 using static Test.CatAlias;
 
@@ -964,7 +967,7 @@ bbb"", b3
 			else {
 				x = a[i];
 				Print($"<><Z 0x80c080>{x.ProcessName}</Z>");
-				p = Process_.UacInfo.GetOfProcess((uint)x.Id);
+				p = Process_.UacInfo.GetOfProcess(x.Id);
 			}
 			if(p == null) { Print("failed"); continue; }
 			Perf.Next();
@@ -1175,7 +1178,7 @@ bbb"", b3
 		//c = w.Child(null, "Button", prop:new Wnd.ChildEtc() { x=344, y=448});
 		//c = w.Child(null, "", prop:new Wnd.ChildEtc() { x=0.5, y=0.03});
 		//c = w.Child(null, "", prop:new Wnd.ChildEtc() { childId=1028 });
-		//c = w.Child(null, "", prop: new Wnd.ChildEtc() { child = new Wnd.ChildParams(WCFlags.DirectChild, "Reg*") });
+		//c = w.Child(null, "", prop: new Wnd.ChildEtc() { child = new Wnd.ChildFinder(WCFlags.DirectChild, "Reg*") });
 		//c = w.Child("Regex*", "Button");
 		//c = w.Child(null, "", prop: new Wnd.ChildEtc() { wfName = "textBoxUrl" });
 		//try {
@@ -1377,7 +1380,7 @@ bbb"", b3
 
 	static bool _Activate(Wnd w)
 	{
-		if(!Wnd.Misc.AllowActivate()) return false;
+		if(!Wnd.Misc.EnableActivate()) return false;
 		Api.SetForegroundWindow(Wnd.WndActive);
 		Api.SetForegroundWindow(Wnd.WndActive);
 		Api.SetForegroundWindow(Wnd.WndActive);
@@ -1389,7 +1392,7 @@ bbb"", b3
 		Perf.Write();
 		if(w.IsActive) return true;
 
-		uint tid = w.ThreadId;
+		int tid = w.ThreadId;
 		if(tid != 0 && tid == Wnd.WndActive.ThreadId && Api.SetForegroundWindow(Wnd.Misc.WndRoot)) {
 			Api.SetForegroundWindow(w);
 			Wnd t = Wnd.WndActive;
@@ -2468,8 +2471,8 @@ bbb"", b3
 	static void TestWndStoreApp()
 	{
 		foreach(Wnd w in Wnd.Misc.AllWindows()) {
-			bool isWin8Metro = w.IsWin8MetroStyle;
-			int isWin10StoreApp = w.IsWin10StoreApp;
+			bool isWin8Metro = w.IsWindows8MetroStyle;
+			int isWin10StoreApp = w.IsWindows10StoreApp;
 			string prefix = null, suffix = null;
 			if(isWin8Metro || isWin10StoreApp != 0) { prefix = isWin8Metro ? "<><c 0xff>" : "<><c 0xff0000>"; suffix = "</c>"; }
 			Print($"{prefix}metro={isWin8Metro}, win10={isWin10StoreApp}, cloaked={w.IsCloaked},    {w.ProcessName}  {w}  {w.Rect}{suffix}");
@@ -3208,12 +3211,12 @@ bbb"", b3
 
 		Perf.First();
 		for(int i = 0; i < a.Length; i++) {
-			ai[i] = Files.Misc.PidlFromString(a[i]);
+			ai[i] = Shell.Pidl.LibFromString(a[i]);
 			if(ai[i] == Zero) PrintList("PidlFromString", a[i]);
 		}
 		Perf.Next();
 		for(int i = 0; i < a.Length; i++) {
-			af[i] = Files.Misc.PidlToString(ai[i], Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING);
+			af[i] = Shell.Pidl.LibToShellString(ai[i], Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING);
 			if(af[i] == null) PrintList("PidlToString", a[i]);
 		}
 		Perf.NW();
@@ -3523,20 +3526,20 @@ bbb"", b3
 		s = Folders.CommonPrograms + @"Accessories\Math Input Panel.lnk"; //test the PF (x86) problem in icon path (env var)
 
 		try {
-			//Print(Files.LnkShortcut.GetTarget(s));
+			//Print(Files.Shortcut.GetTarget(s));
 
-			//Files.LnkShortcut.Delete(s);
+			//Files.Shortcut.Delete(s);
 			//return;
 
-			Files.LnkShortcut x;
+			Shell.Shortcut x;
 
 #if true
-			x = Files.LnkShortcut.Open(s);
+			x = Shell.Shortcut.Open(s);
 			Print("TargetPath: " + x.TargetPath);
 			Print("TargetPathMSI: " + x.TargetPathRawMSI);
 			Print("URL: " + x.TargetURL);
 			Print("Shell name: " + x.TargetAnyType);
-			var pidl = x.TargetIDList; Print("Name from IDList: " + Files.Misc.PidlToString(pidl, Native.SIGDN.SIGDN_NORMALDISPLAY)); Marshal.FreeCoTaskMem(pidl);
+			var pidl = x.TargetPidl; Print("Name from IDList: " + pidl.ToShellString(Native.SIGDN.SIGDN_NORMALDISPLAY)); Marshal.FreeCoTaskMem(pidl);
 			Print("Hotkey: " + x.Hotkey);
 			int ii; var iloc = x.GetIconLocation(out ii); Print($"Icon: {iloc}          ii={ii}");
 			Print("Arguments: " + x.Arguments);
@@ -3587,12 +3590,12 @@ bbb"", b3
 	{
 		string folder = Folders.CommonPrograms;
 		foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
-			var x = Files.LnkShortcut.Open(f);
+			var x = Shell.Shortcut.Open(f);
 			string s = x.TargetAnyType;
 			//s = x.TargetPath;
 			//s = x.TargetPathRawMSI;
 			//s = x.TargetURL;
-			//var pidl = x.TargetIDList; s=Files.Misc.PidlToString(pidl, Native.SIGDN.SIGDN_NORMALDISPLAY); Marshal.FreeCoTaskMem(pidl);
+			//var pidl = x.TargetPidl; s=Files.Misc.PidlToString(pidl, Native.SIGDN.SIGDN_NORMALDISPLAY); Marshal.FreeCoTaskMem(pidl);
 			//s = x.Arguments;
 			//s = x.Description;
 			//s = x.WorkingDirectory;
@@ -3874,7 +3877,7 @@ A,""B """"Q"""" Z"",C
 
 	static async void _TestIconsAsync(string s)
 	{
-		uint tid = Api.GetCurrentThreadId();
+		int tid = Api.GetCurrentThreadId();
 #if true
 		var task = Task.Run(() =>
 		{
@@ -3973,17 +3976,18 @@ A,""B """"Q"""" Z"",C
 			var oneExt = new HashSet<string>();
 			//foreach(var f in Directory.EnumerateFiles(folder)) {
 			//foreach(var f in Directory.EnumerateFileSystemEntries(folder, pattern, System.IO.SearchOption.AllDirectories)) {
-			foreach(var f in LibTest.EnumerateFiles(folder, pattern, recurse)) {
+			foreach(var f in Files.EnumDirectory(folder, Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+				var s = f.Name;
+				if(!s.Like_(pattern, true)) continue;
 				//Print(f);
 				//if(pattern == "*") {
-				//	var ext = Path.GetExtension(f).ToLower();
+				//	var ext = Path.GetExtension(s).ToLower();
 				//	if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
 				//}
-				var s = Path.GetFileName(f);
 				//if(0 != s.Like_(true, "*.aps", "*.tss", "*.bin", "*.wal", "*.???_?*", "*.????_?*")) continue;
 				if(0 != s.RegexIs_(RegexOptions.IgnoreCase, @"\.\w+?[_\-][^\.]+$", @", PublicKeyToken", @"^(LanguageService|TextEditor|WindowManagement)", @"\bVisualStudio\b")) continue;
 				//if(n>=3000)
-				a.Add(f);
+				a.Add(f.FullPath);
 				//var k = f.RegexReplace_(@"(?i)^C:\\windows\\system32", @"C:\Users\G\Desktop\system64");
 				//Print($"{s} : * {k}");
 				n++;
@@ -6096,7 +6100,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		//Wnd w=Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);
 
-		//var p = new Wnd.FindParams(a, b, c, d, e); if(p.Find()) Print(p.Result);
+		//var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);
 
 		//WFFlags
 
@@ -6195,8 +6199,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		//Wnd w = Wnd.Find(prop: new Wnd.WinProp() { childName = "Open items" });
 
-		//var c = new Wnd.ChildParams("Open items");
-		//Wnd w = Wnd.Find(also: t => c.Find(t));
+		//var c = new Wnd.ChildFinder("Open items");
+		//Wnd w = Wnd.Find(also: t => c.FindIn(t));
 
 
 		////Wnd w = Wnd.Find(prop: new Wnd.WinProp() { styleHas = Native.WS_CAPTION });
@@ -6212,13 +6216,13 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestLnkShortcutExceptions()
 	{
-		//var x = Files.LnkShortcut.Open(@"q:\test\test.lnk");
-		var x = Files.LnkShortcut.Create(@"q:\test\test.lnk");
+		//var x = Files.Shortcut.Open(@"q:\test\test.lnk");
+		var x = Shell.Shortcut.Create(@"q:\test\test.lnk");
 		//x.TargetPath = @"c:\windows";
 		x.TargetPath = "|?:*gg";
 		//x.TargetURL = "|?:*gg";
 		//x.TargetURL = "http://www.quickmacros.com";
-		//x.TargetIDList = Marshal.AllocCoTaskMem(100);
+		//x.TargetPidl = Marshal.AllocCoTaskMem(100);
 		//x.TargetAnyType = "|?:*gg";
 		x.Save();
 	}
@@ -6453,8 +6457,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static void TestWaitFor()
 	{
 		//Print(WaitFor.WindowClosed(-5, Wnd.Find("* Notepad")));
-		Print(WaitFor.WindowNotExists(0, "* Notepad"));
-		Print("ok");
+		//Print(WaitFor.WindowNotExists(0, "* Notepad"));
+		//Print("ok");
 
 		//Wnd w = WaitFor.WindowExists(10, "* Notepad");
 		//Print(w);
@@ -6908,7 +6912,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		   };
 
 		var destDir = @"Q:\app\Catkeys\Editor\Resources\png icons";
-		Directory.CreateDirectory(destDir);
+		Files.CreateDirectory(destDir);
 		foreach(var s in a) {
 			using(var im = Icons.GetFileIconImage(s, 16)) {
 				var dest = destDir + "\\" + Path.GetFileNameWithoutExtension(s) + ".png";
@@ -7115,6 +7119,76 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		}
 	}
 
+	static void TestApiStringBuffer()
+	{
+		//string s = @"D:\simple\file.txt";
+		//s = @"D:\simple\.\file.txt";
+		////s = @"C:\Progra~1";
+		//s = @"C:\Progra~2\Quickm~1\./qm.exe";
+
+		//Print(Path_.Normalize(s));
+
+
+		//var w = Wnd.Find("Quick*");
+		////var w = Wnd.Find("MozBackup*", null, "MozBackup");
+		//Print(w.ProcessName);
+		//Print(w.ProcessPath);
+
+		//Print(Files.SearchPath("notepad.exe"));
+		//Print(Files.SearchPath("qm.exe"));
+
+		////string lnk = @"D:\Test\notepad.lnk";
+		//string lnk = @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Microsoft Office\Microsoft Office Excel 2003.lnk";
+		////var x = Files.Shortcut.Create(lnk);
+		////x.TargetPath = Folders.System + "notepad.exe";
+		////x.Arguments = @"D:\Test\test2.cs";
+		////x.SetIconLocation(Folders.System + "shell32.dll", 10);
+		////x.WorkingDirectory = @"D:\Test\x";
+		////x.Description = "Descr";
+		////x.Save();
+		//var x = Files.Shortcut.Open(lnk);
+		//Print(x.TargetPath);
+		//Print(x.Arguments);
+		//Print(x.GetIconLocation(out var ii)); Print(ii);
+		//Print(x.WorkingDirectory);
+		//Print(x.Description);
+
+		//Print(Path_.LibGetEnvVar2("TEMP"));
+		//Print(Path_.LibGetEnvVar("TEMP"));
+		//Print(Path_.ExpandEnvVar2("%TEMP%\\etc"));
+		//Print(Path_.ExpandEnvVar("%TEMP%\\etc"));
+
+		//var a1 = new Action(() => { Path_.LibGetEnvVar2("TEMP"); });
+		//var a2 = new Action(() => { Path_.LibGetEnvVar("TEMP"); });
+		//var a3 = new Action(() => { Path_.ExpandEnvVar2("%TEMP%\\etc"); });
+		//var a4 = new Action(() => { Path_.ExpandEnvVar("%TEMP%\\etc"); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//var w = Wnd.Find("Quick*");
+		//var x = new Process_.Memory(w, 1000);
+		//string s;
+		//x.WriteUnicodeString("UNICODE");
+		//s = x.ReadUnicodeString(7);
+		//PrintList(s.Length, s);
+		//x.WriteAnsiString("ANSI");
+		//s = x.ReadAnsiString(7);
+		//PrintList(s.Length, s);
+		//x.WriteAnsiString("Ačę", 0, Encoding.UTF8);
+		//s = x.ReadAnsiString(5, 0, Encoding.UTF8);
+		//PrintList(s.Length, s);
+
+		//var w = Wnd.Find(null, "Windows.UI.Core.CoreWindow");
+		//Print(w);
+		//var h = Wnd.Misc.GetIconHandle(w);
+		//Print(h);
+		//var m = new CatMenu();
+		//m["test", Icons.HandleToImage(h)] = null;
+		//m.Show();
+
+		//var w = Wnd.Find("Quick*", flags: WFFlags.HiddenToo);
+		//Print(w);
+	}
+
 	static void TestPathNormalize()
 	{
 		string s;
@@ -7257,7 +7331,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		var ifExist = Files.IfExists.Fail;
 		ifExist = Files.IfExists.Delete;
 		//ifExist = Files.IfExists.RenameExisting;
-		ifExist = Files.IfExists.MergeDirectory;
+		//ifExist = Files.IfExists.MergeDirectory;
 
 		//Files.Copy(@"q:\test\copy.txt", @"d:\test\copy.txt", ifExist);
 		//Files.Copy(@"d:\test\z\copy.txt", @"d:\test\copy.txt", ifExist);
@@ -7281,6 +7355,16 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Files.Move(@"E:\", @"G:\", ifExist);
 
 		//if(Files.GetAttributes(@"E:\", out var att)) Print(att);
+
+		//string sto = @"D:\Test\drive";
+		//Files.Delete(sto, false);
+		//Files.Copy(@"C:\", sto, ifExist);
+
+		string sto = @"D:\Test\to";
+		Files.Delete(sto);
+		//Files.Copy(@"D:\Test\x", sto, ifExist, Files.CopyFlags.IgnoreAccessDeniedErrors);
+		//Files.Copy(@"D:\Test\x", sto, ifExist, Files.CopyFlags.IgnoreAccessDeniedErrors);
+		//Files.Copy(@"Q:\programs", sto, ifExist, filter: t => t.IsDirectory || t.Size < 100 * 1024);
 
 		Perf.NW();
 		//return;
@@ -7350,7 +7434,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	Perf.NW();
 		//}
 
-		Files.Delete(@"D:\test\mount", false);
+		Files.Delete(@"D:\test\mount");
 
 		Print("ok");
 	}
@@ -7387,8 +7471,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//dir = Folders.SystemX86;
 
 		Files.EDFlags fl = 0;
-		fl = Files.EDFlags.AndSubdirectories;
-		//fl = Files.EDFlags.AndSubdirectories | Files.EDFlags.AndSymbolicLinkSubdirectories;
+		fl |= Files.EDFlags.IgnoreAccessDeniedErrors;
+		fl |= Files.EDFlags.AndSubdirectories;
+		//fl |= Files.EDFlags.AndSymbolicLinkSubdirectories;
 		//fl |= Files.EDFlags.SkipHidden;
 		//fl |= Files.EDFlags.SkipHiddenSystem;
 		//fl |= Files.EDFlags.RawPath;
@@ -7439,7 +7524,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	public static bool IsEmptyDirectory(string path)
 	{
-		return !Files.EnumDirectory(path, Files.EDFlags.FailIfAccessDenied).Any();
+		return !Files.EnumDirectory(path).Any();
 
 		//PathIsDirectoryEmpty faster by several %. But then we don't know whether is not empty or it does not exist or is file.
 	}
@@ -7496,8 +7581,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Files.GetProperties(s, out var x));
 		//PrintList(x.Attributes.ToString("X"), x.Size, x.LastWriteTimeUtc, x.CreationTimeUtc, x.LastAccessTimeUtc);
 
-		foreach(var f in Files.EnumDirectory(@"C:", Files.EDFlags.AndSubdirectories)) {
-			string k = f;
+		foreach(var f in Files.EnumDirectory(@"C:", Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+			string k = f.FullPath;
 
 			var ea = Files.ExistsAs2(k);
 			switch(ea) {
@@ -7521,11 +7606,1098 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestCalculateDriveSize()
 	{
-		foreach(var f in Files.EnumDirectory(@"Q:\")) {
-			if(!f.IsDirectory) continue;
-			PrintList(Files.CalculateDirectorySize(f)/1024/1024, f);
+		//foreach(var f in Files.EnumDirectory(@"C:\")) {
+		//	if(!f.IsDirectory) continue;
+		//	PrintList(Files.CalculateDirectorySize(f.FullPath) / 1024 / 1024, f);
+		//}
+
+		foreach(var f in Files.EnumDirectory(@"C:\", filter: t => t.IsDirectory && 0 == (t.Attributes & FileAttributes.Hidden))) {
+			PrintList(Files.CalculateDirectorySize(f.FullPath) / 1024 / 1024, f);
 		}
+
+		//foreach(var f in Files.EnumDirectory(@"D:\")) {
+		//foreach(var f in Files.EnumDirectory(@"\\.\D\")) { //no
+		//foreach(var f in Files.EnumDirectory(@"\\localhost\D$")) { //yes
+		//	if(!f.IsDirectory) continue;
+		//	Print(f);
+		//}
+
+		//Files.Copy("D:", @"Q:\Test\D", Files.IfExists.Delete);
+
 		Print("END");
+	}
+
+	[DllImport("kernel32.dll", EntryPoint = "RemoveDirectoryW")]
+	internal static extern bool RemoveDirectory(string lpPathName);
+
+	static void TestCreateDirectory()
+	{
+		//var s = @"D:\Test\x\new\new2\new3";
+		//var s = @"D:\Test\x\new";
+		//Files.Delete(@"D:\Test\x\new", false);
+		//RemoveDirectory(s);
+		//Wait(2);
+
+		//Print(Files.CreateDirectory(s));
+
+		//string path = @"D:\Test\new\test.txt";
+		//Files.CreateDirectoryFor(path);
+		//File.WriteAllText(path, "text");
+
+		//Files.CopyTo(@"D:\Test\copy.txt", @"D:\Test\new\mew");
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Api.GetFileAttributes(s); });
+		//var a2 = new Action(() => { Files.ExistsAsDirectory(s); });
+		//var a3 = new Action(() => { Api.GetFileAttributes(Path_.Normalize(s)); });
+		//var a4 = new Action(() => { Files.ExistsAsDirectory(Path_.Normalize(s)); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+	}
+
+	//static unsafe string GetFullPath1(string s)
+	//{
+	//	int na = s.Length + 10;
+	//	var b = new StringBuilder(na);
+	//	int nr = (int)GetFullPathName(s, (uint)na, b, null);
+	//	if(nr > 0 && nr < na) s = b.ToString();
+	//	return s;
+	//}
+	//[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
+	//internal static extern unsafe uint GetFullPathName(string lpFileName, uint nBufferLength, [Out] StringBuilder lpBuffer, char** lpFilePart);
+
+	//static unsafe string GetFullPath2(string s)
+	//{
+	//	int na = s.Length + 10;
+	//	_sb.EnsureCapacity(na);
+	//	int nr = (int)GetFullPathName(s, (uint)na, _sb, null);
+	//	if(nr > 0 && nr < na) s = _sb.ToString();
+	//	return s;
+	//}
+	//[ThreadStatic] static StringBuilder _sb = new StringBuilder();
+
+	//static unsafe string GetFullPath3(string s)
+	//{
+	//	int na = s.Length + 10;
+	//	var p = stackalloc char[na];
+	//	int nr = GetFullPathName(s, na, p, null);
+	//	if(nr > 0 && nr < na) s = new string(p, 0, nr);
+	//	return s;
+	//}
+	//[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
+	//internal static extern unsafe int GetFullPathName(string lpFileName, int nBufferLength, char* lpBuffer, char** lpFilePart);
+
+	//static unsafe string GetFullPath4(string s)
+	//{
+	//	int na = s.Length + 10;
+	//	var p = new char[na];
+	//	int nr = GetFullPathName(s, na, p, null);
+	//	if(nr > 0 && nr < na) s = new string(p, 0, nr);
+	//	return s;
+	//}
+	//[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
+	//internal static extern unsafe int GetFullPathName(string lpFileName, int nBufferLength, char[] lpBuffer, char** lpFilePart);
+
+	//static unsafe string GetFullPath5(string s)
+	//{
+	//	int na = s.Length + 10;
+	//	var ca = new char[na];
+	//	fixed (char* p = ca) {
+	//		int nr = GetFullPathName(s, na, p, null);
+	//		if(nr > 0 && nr < na) s = new string(p, 0, nr);
+	//	}
+	//	return s;
+	//}
+
+	//static unsafe string GetFullPath6(string s)
+	//{
+	//	int na = s.Length + 10;
+	//	if(_charBuffer == null || _charBuffer.Length < na) _charBuffer = new char[na];
+	//	int nr = GetFullPathName(s, na, _charBuffer, null);
+	//	if(nr > 0 && nr < na) s = new string(_charBuffer, 0, nr);
+	//	if(_charBuffer.Length > 5000) _charBuffer = null; //let GC collect the memory
+	//	return s;
+	//}
+	//[ThreadStatic] static char[] _charBuffer;
+
+	//static unsafe string GetFullPath7(string s)
+	//{
+	//	var b = Catkeys.Util.LibCharBuffer.Common;
+	//	int na = s.Length + 10;
+	//	int nr = GetFullPathName(s, na, b.Alloc(na), null);
+	//	if(nr > 0 && nr < na) s = b.ToString(nr);
+	//	b.Compact();
+	//	return s;
+	//}
+
+	//static void TestApiStringBuilder()
+	//{
+	//	string s = @"D:\simple\file.txt";
+	//	s = @"D:\simple\.\file.txt";
+
+	//	Print(GetFullPath1(s));
+	//	Print(GetFullPath2(s));
+	//	Print(GetFullPath3(s));
+	//	Print(GetFullPath4(s));
+	//	Print(GetFullPath5(s));
+	//	Print(GetFullPath6(s));
+	//	Print(GetFullPath7(s));
+
+	//	Perf.SpinCPU(100);
+	//	var a1 = new Action(() => { GetFullPath1(s); });
+	//	var a2 = new Action(() => { GetFullPath2(s); });
+	//	var a3 = new Action(() => { GetFullPath3(s); });
+	//	var a4 = new Action(() => { GetFullPath4(s); });
+	//	var a5 = new Action(() => { GetFullPath5(s); });
+	//	var a6 = new Action(() => { GetFullPath6(s); });
+	//	var a7 = new Action(() => { GetFullPath7(s); });
+	//	Perf.ExecuteMulti(7, 1000, a1, a2, a3, a4, a5, a6, a7);
+
+	//}
+
+	static void TestDrivePath()
+	{
+		//string s;
+		//s = @"C:\";
+		//s = @"C:";
+		////s = @"C:\etc\";
+		////s = @"\";
+
+		////Print(Path.GetFullPath(s));
+		//Print(Path_.Normalize(s));
+		//Print(Path_.Normalize(s, Path_.NormalizeFlags.DoNotRemoveEndSeparator));
+
+		////Files.GAFlags flags = 0;
+		//////flags|=Files.GAFlags.RawPath;
+		////if(Files.GetAttributes(s, out var a, flags)) PrintHex(a); else Print("not found");
+
+		//Print(Files.SearchPath(s));
+
+		//return;
+
+		//var m = new CatMenu();
+		//m[@"C:\", @"C:\"] = null;
+		//m[@"C:", @"C:"] = null;
+		//m[@"\\?\C:\", @"\\?\C:\"] = null;
+		//m[@"\\?\C:", @"\\?\C:"] = null;
+		//m[@"\\?\UNC\localhost\C$\", @"\\?\UNC\localhost\C$\"] = null;
+		//m.Show();
+
+		//Perf.SpinCPU(100);
+		//var s = @"D:\Test\x";
+		//var a1 = new Action(() => { Files.ExistsAsDirectory(s); });
+		//var a2 = new Action(() => { Files.CreateDirectory(s); });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+	}
+
+	//tested some Path_ functions. This func was in Path_ class.
+	//public static void Test()
+	//{
+	//	//Print(_GetPrefixLength(@""));
+	//	//Print(_GetPrefixLength(@"\\?\"));
+	//	//Print(_GetPrefixLength(@"\\?\more"));
+	//	//Print(_GetPrefixLength(@"\\?more"));
+	//	//Print(_GetPrefixLength(@"//?/ddd"));
+	//	//Print(_GetPrefixLength(@"\\?\UNC\"));
+	//	//Print(_GetPrefixLength(@"\\?\unc\"));
+	//	//Print(_GetPrefixLength(@"\\?\UNC\more"));
+	//	//Print(_GetPrefixLength(@"//?/unc/more"));
+	//	//Print(_GetPrefixLength(@"\\?\UKC\more"));
+	//	//Print("---");
+	//	//Print(GetRootLength(@""));
+	//	//Print(GetRootLength(@"\\?\"));
+	//	//Print(GetRootLength(@"\\?\more"));
+	//	//Print(GetRootLength(@"\\?more"));
+	//	//Print(GetRootLength(@"//?/ddd"));
+	//	//Print(GetRootLength(@"\\?\UNC\"));
+	//	//Print(GetRootLength(@"\\?\unc\"));
+	//	//Print(GetRootLength(@"\\?\UNC\more"));
+	//	//Print(GetRootLength(@"//?/unc/more"));
+	//	//Print(GetRootLength(@"\\?\UKC\more"));
+	//	//Print("---");
+	//	//Print(GetRootLength(@"C"));
+	//	//Print(GetRootLength(@"C:"));
+	//	//Print(GetRootLength(@"C:\"));
+	//	//Print(GetRootLength(@"C:etc"));
+	//	//Print("---");
+	//	//Print(GetRootLength(@"\\A"));
+	//	//Print(GetRootLength(@"\\A\"));
+	//	//Print(GetRootLength(@"\\A\B"));
+	//	//Print(GetRootLength(@"\\A\B\"));
+	//	//Print(GetRootLength(@"\\A\B\CDE"));
+	//	//Print("---");
+	//	//Print(GetRootLength(@"\\?\UNC\A"));
+	//	//Print(GetRootLength(@"\\?\UNC\A\"));
+	//	//Print(GetRootLength(@"\\?\UNC\A\B"));
+	//	//Print(GetRootLength(@"\\?\UNC\A\B\"));
+	//	//Print(GetRootLength(@"\\?\UNC\A\B\CDE"));
+	//	//Print("---");
+	//	//Print(GetRootLength(@"\\?\C"));
+	//	//Print(GetRootLength(@"\\?\C:"));
+	//	//Print(GetRootLength(@"\\?\C:\"));
+	//	//Print(GetRootLength(@"\\?\C:\more"));
+
+	//	string s;
+	//	s = @"C:\etc";
+	//	//s = @"\\server\share\etc";
+	//	//s = @"//server/share/etc";
+	//	s = @"\\?\C:\etc";
+	//	s = @"//?/C:\etc";
+	//	//s = @"\\?\server/share/etc";
+	//	s = @"\\?\UNC\server/share/etc";
+	//	s = @"//?/UNC/server/share/etc";
+
+	//	//Print(s = PrefixLongPath(s));
+	//	Print(UnprefixLongPath(s));
+	//}
+
+	static void TestPathGetFilenameEtc()
+	{
+		var a = new string[]
+			{
+				@"C:\aa\bb\file.txt",
+				@"\\PC\SF\aa\bb\etc.moo",
+				@"\\?\C:\aa\bb\file.txt",
+				@"\\?\UNC\PC\SF\aa\bb\etc.moo",
+				@"C",
+				@"C:",
+				@"C:\",
+				@"\\?\UNC\PC\SF\",
+				@"C:\aa\bb\file",
+				@"C:\aa\bb\.txt",
+				@"file.txt",
+				@"file",
+				@".txt",
+				@"file.",
+				@"\\",
+				@"\",
+				@"C:\aa\bb\..",
+				@"C:\aa\bb\/",
+				@"C:\A\/B\/",
+				@"C:\aa\bb\/\/file.txt",
+				@"C:\aa\file.txt:alt.stream",
+				@"file:///aaa",
+				@"\file.txt",
+				@"\\file.txt",
+				@"\\?\",
+				@"::{A}\::{B}",
+				@"::{A}",
+				@"::",
+				null,
+				@"http://www.quickmacros.com",
+				@"http:",
+				@"http://",
+				@"http://www.quickmacros.com:55",
+				@"http://www.quickmacros.com:",
+			};
+
+		foreach(string v in a) {
+			var dir = Path_.GetDirectoryPath(v); if(dir == null) dir = "<null>";
+			var dir2 = Path_.GetDirectoryPath(v, true); if(dir2 == null) dir2 = "<null>";
+			var name = Path_.GetFileName(v); if(name == null) name = "<null>";
+			var name2 = Path_.GetFileNameWithoutExtension(v); if(name2 == null) name2 = "<null>";
+			var ext = Path_.GetExtension(v); if(ext == null) ext = "<null>";
+			var root = v?.Substring(0, Path_.GetRootLength(v)); if(root == null) root = "<null>";
+			Print("<><Z 0x80E080>" + v + "</Z>");
+			Print($"{dir,-25} {dir2,-25} {name,-20} {name2,-20} {ext,-20} {root,-20}");
+		}
+	}
+
+	static void TestExistsAsProtected()
+	{
+		string s = @"C:\pagefile.sys";
+		//s = @"D:\Test\protected\f.txt";
+		Print(File.Exists(s));
+		Print(Files.ExistsAs(s));
+		Print(Files.ExistsAs2(s));
+
+		//if(Files.GetAttributes(s, out var v)) Print(v);
+		if(Files.GetAttributes(s, out var v, Files.GAFlags.DoNotThrow)) Print(v);
+		if(Files.GetProperties(s, out var p)) {
+			PrintList(p.Size, p.Attributes);
+			PrintList(p.CreationTimeUtc, p.LastWriteTimeUtc, p.LastAccessTimeUtc);
+		}
+
+		//foreach(var f in Files.EnumDirectory(@"C:\", Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+		//	//if(!Files.ExistsAsAny(f.FullPath)) Print(f);
+		//	if(Files.ExistsAs2(f.FullPath) == Files.ItIs2.AccessDenied) Print(f);
+		//}
+		//Print("end");
+	}
+
+	static void TestFilesSearchPath()
+	{
+		Print(Files.SearchPath(@"notepad.exe"));
+		Print(Files.SearchPath(@"tests.exe"));
+		Print(Files.SearchPath(@"copy.txt", @"D:\Test"));
+		Directory.SetCurrentDirectory(@"D:\Test");
+		Print(Files.SearchPath(@"copy.txt"));
+
+		//var rk = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths";
+		//foreach(var k in Registry.LocalMachine.OpenSubKey(rk).GetSubKeyNames()) {
+		//	var s = Files.SearchPath(k);
+		//	//Print(k);
+		//	PrintList(k, s);
+		//}
+	}
+
+	static void TestKnownFoldersAsEnvVar()
+	{
+		//Task.Run(() =>
+		//{
+		//	Print(Folders.GetFolder("Local Documents"));
+		//	Print(Folders.GetFolder("Documents"));
+		//	Print(Folders.GetFolder("ThisApp"));
+		//});
+		//Wait(1);
+		//return;
+
+		Print(Folders.GetFolder("ThisApp"));
+		Print(Folders.GetFolder("Documents"));
+		Print(Folders.GetFolder("LocalAppData"));
+		Print(Folders.GetFolder("Local Documents"));
+		Print(Folders.GetFolder("Local AppData"));
+
+		return;
+
+		var s = @"%temp%\etc";
+		var s2 = @"%Folders.Documents%";
+		Print(Environment.ExpandEnvironmentVariables(s));
+		Print(Path_.ExpandEnvVar(s));
+		Print(Path_.ExpandEnvVar(s2));
+
+		Perf.SpinCPU(100);
+		var a1 = new Action(() => { Environment.ExpandEnvironmentVariables(s); });
+		var a2 = new Action(() => { Path_.ExpandEnvVar(s); });
+		var a3 = new Action(() => { Path_.ExpandEnvVar(s2); });
+		var a4 = new Action(() => { var u = Folders.Documents; });
+		var a5 = new Action(() => { var u = Folders.GetFolder("Local Documents"); });
+		var a6 = new Action(() => { var u = Folders.GetFolder("Documents"); });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6);
+
+	}
+
+	static unsafe void TestPidl()
+	{
+		//Process.Start(@"::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}");
+
+		string s = ":: 14001F706806EE260AA0D7449371BEB064C98683";
+		//		string s2 = null;
+		//#if false
+		//		s = "14001F706806EE260AA0D7449371BEB064C98683";
+		//		var a = Calc.BytesFromHexString(s);
+		//		s2 = Calc.BytesToHexString(a);
+		//#else
+		//		var a = new byte[(s.Length - 3)/2];
+		//		fixed(byte* p = a){
+		//			Calc.BytesFromHexString(s, p, a.Length, 3);
+		//			s2 = Calc.BytesToHexString(p, a.Length, false);
+		//		}
+		//#endif
+		//		Print(a);
+		//		Print(s2);
+
+		//using(var pidl = Shell.Pidl.FromString(s)) {
+
+		//}
+
+		//s =Folders.System+"notepad.exe";
+		//s ="notepad.exe";
+		s = @"%Folders.Virtual.ControlPanel%";
+		s = "%Folders.Virtual.ControlPanelFolder%";
+		//s = ":: ";
+		//s = ":: 14001F706806EE260AA0D7449371BEB064C98683";
+		Shell.Run(s);
+		//Shell.Run(@"Q:\app\qm.exe", flags:Shell.RunFlags.SupportExtVerbs, verb:"properties"); Wait(0.1);
+		//TaskDialog.Show();
+
+		s = @"%windir%\etc";
+		s = @"%Folders.System%\etc";
+		//s = "%Folders.Quick Launch%";
+		//s = @"%Folders.Virtual.ControlPanel%\etc";
+		//s = "%Folders.Virtual.ControlPanelFolder%";
+		//Print(Path_.ExpandEnvVar(s));
+
+		//s =":: ";
+		//s = ":: 14001F706806EE260AA0D7449371BEB064C98683";
+		//var pidl = Shell.Pidl.FromString(s);
+		//Print(pidl.ToHexString());
+		//Print(pidl.ToShellString());
+		//Print(Shell.Pidl.FromString(pidl.ToHexString()).ToHexString());
+
+		//s =@"C:\Windows\/System32\notepad.exe";
+		//s =@"C:\Windows\System32\..\notepad.exe";
+		//s =@"%windir%\System32\notepad.exe";
+		//if(!Files.Misc.GetFileId(s, out var k)) Print("failed");
+		//else Print(k.FileIndex);
+	}
+
+	static void TestLnkShortcut3()
+	{
+		var lnk = @"Q:\Test\lnk\favorites.lnk";
+		lnk = @"Q:\Test\lnk\virtual.lnk";
+#if true
+		var x = Shell.Shortcut.Create(lnk);
+		//x.TargetPidl = Folders.VirtualPidl.Connections;
+		//x.TargetPidl = Folders.VirtualPidl.Internet; //invalid
+		//x.TargetPidl = Folders.VirtualPidl.AddNewPrograms;
+		//x.TargetPidl = Folders.VirtualPidl.AppUpdates;
+		//x.TargetPidl = Folders.VirtualPidl.Apps_Win8;
+		//x.TargetPidl = Folders.VirtualPidl.ChangeRemovePrograms;
+		//x.TargetPidl = Folders.VirtualPidl.Computer;
+		//x.TargetPidl = Folders.VirtualPidl.Conflict;
+		//x.TargetPidl = Folders.VirtualPidl.ControlPanel;
+		//x.TargetPidl = Folders.VirtualPidl.RecycleBin;
+		x.TargetAnyType = ":: 14001F706806EE260AA0D7449371BEB064C98683";
+		x.Save();
+		x.Dispose();
+		Wait(1);
+#endif
+		//#else
+		var xx = Shell.Shortcut.Open(lnk);
+		var s = xx.TargetAnyType;
+		Print(s);
+		Shell.Run(s);
+		//#endif
+	}
+
+	static void TestPidlToString2()
+	{
+		string s1, s2, s3, s4, s5;
+		s1 = @"Q:\app\qm.exe";
+		s2 = @"http://www.quickmacros.com";
+		s3 = @"::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}";
+		s4 = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
+		s5 = @"mailto:support@quickmacros.com";
+		//s4= @"Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
+		var p1 = Shell.Pidl.FromString(s1);
+		var p2 = Shell.Pidl.FromString(s2);
+		var p3 = Shell.Pidl.FromString(s3);
+		var p4 = Shell.Pidl.FromString(s4);
+		var p5 = Shell.Pidl.FromString(s5);
+
+		Print(p1.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING));
+		Print(p2.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING));
+		Print(p3.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING));
+		Print(p4.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING));
+		Print(p5.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING));
+		Print(p1.ToString());
+		Print(p2.ToString());
+		Print(p3.ToString());
+		Print(p4.ToString());
+		Print(p5.ToString());
+
+		Perf.SpinCPU(100);
+		var a1 = new Action(() => { p1.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING); });
+		var a2 = new Action(() => { p2.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING); });
+		var a3 = new Action(() => { p3.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING); });
+		var a4 = new Action(() => { p4.ToShellString(Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING); });
+		var a5 = new Action(() => { p1.ToString(); });
+		var a6 = new Action(() => { p2.ToString(); });
+		var a7 = new Action(() => { p3.ToString(); });
+		var a8 = new Action(() => { p4.ToString(); });
+		var a9 = new Action(() => { p3.ToHexString(); });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+	}
+
+	static void TestIconWithPidl()
+	{
+		string s1, s2, s3, s4, s5, s6;
+		s1 = @"Q:\app\qm.exe";
+		s2 = @"https://www.google.com";
+		s3 = @"::{26EE0668-A00A-44D7-9371-BEB064C98683}\0\::{A3DD4F92-658A-410F-84FD-6FBBBEF2FFFE}";
+		s4 = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
+		s5 = @"mailto:support@quickmacros.com";
+		s6 = ":: 14001F706806EE260AA0D7449371BEB064C98683";
+
+		var m = new CatMenu();
+		m[s1, s1] = o => Shell.Run(o.ToString());
+		m[s2, s2] = o => Shell.Run(o.ToString());
+		m[s3, s3] = o => Shell.Run(o.ToString());
+		m[s4, s4] = o => Shell.Run(o.ToString());
+		m[s5, s5] = o => Shell.Run(o.ToString());
+		m[s6, s6] = o => Shell.Run(o.ToString());
+		m.Show();
+	}
+
+	static void TestVersion()
+	{
+		//Print($"Is64BitOS={Ver.Is64BitOS}, Is64BitProcess={Ver.Is64BitProcess}, Is32BitProcessOn64BitOS={Ver.Is32BitProcessOn64BitOS}");
+		//PrintHex(Ver.WinVer);
+		//PrintList(Ver.MinWin8, Ver.MinWin8_1, Ver.MinWin10);
+
+		//Print(Folders.System);
+		//Print(Folders.SystemX86);
+		//Print(Folders.SystemX64);
+		//Print(Files.ExistsAsAny(Folders.SystemX64));
+		////Print(Files.Misc.DisableRedirection.GetNonRedirectedSystemPath(@"c:\windows\system32\mm"));
+		//Print(Folders.ProgramFiles);
+		//Print(Folders.ProgramFilesX86);
+		//Print(Folders.ProgramFilesX64);
+		//Print(Folders.ProgramFilesCommon);
+		//Print(Folders.ProgramFilesCommonX86);
+		//Print(Folders.ProgramFilesCommonX64);
+		//Print(Folders.UserProgramFiles);
+
+		//Print("---");
+		//Print(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+
+		//int n = 0;
+		//foreach(var v in Files.EnumDirectory(Folders.System, Files.EDFlags.DisableRedirection)) {
+		//	n++;
+		//}
+		//Print(n);
+
+		//Environment.SetEnvironmentVariable("TMP", @"Q:/Test/Temp/x/../");
+		//Print(Folders.Temp);
+
+		//var s = Folders.System + "gfxuiex.exe";
+		////Process.Start(s);
+		//Shell.Run(s);
+	}
+
+	//static unsafe void TestBytesFromHexStringNew()
+	//{
+	//	//string s = ":: 1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
+	//	//int offs = 3;
+	//	//string s = "1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
+	//	//string s = "1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
+	//	string s = "1E 00 715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
+	//	int offs = 0;
+	//	int n = (s.Length - offs) / 2;
+
+	//	var b1 = stackalloc byte[n];
+	//	int n1 = Calc.BytesFromHexString_old(s, b1, n, offs);
+	//	Print(Calc.BytesToHexString(b1, n1, true));
+
+	//	var b2 = stackalloc byte[n];
+	//	int n2 = Calc.BytesFromHexString(s, b2, n, offs);
+	//	Print(Calc.BytesToHexString(b2, n2, true));
+
+	//	var b3=Calc.BytesFromHexString(s);
+	//	Print(Calc.BytesToHexString(b3, true));
+
+	//	PrintList(n, n1, n2, b3.Length);
+
+	//	Perf.SpinCPU(100);
+	//	var a1 = new Action(() => { Calc.BytesFromHexString_old(s, b1, n, 3); });
+	//	var a2 = new Action(() => { Calc.BytesFromHexString(s, b2, n, 3); });
+	//	var a3 = new Action(() => { Calc.BytesFromHexString(s); });
+	//	var a4 = new Action(() => { });
+	//	Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+	//}
+
+	static void TestTemp()
+	{
+		//var m = new CatMenu();
+		//m.IconFlags = Icons.IconFlags.SearchPath;
+		//m["one", @"Q:\app\copy.ico"] = null;
+		//m["one", @"CatkeysTasks.csproj"] = null;
+		//Folders.ThisAppImages = @"q:\app";
+		//m["one", @"paste.ico"] = null;
+		//m["one", @"notepad.exe"] = null;
+		//m.Show();
+
+		//Print(Files.SearchPath(@"Q:\app\.\catkeys"));
+		//Print(Files.SearchPath(@"notepad.exe"));
+		//Print(Files.SearchPath(@"qm.exe"));
+		//Print(Files.SearchPath(@"catkeys\.\", @"q:\app\.\"));
+		//Print(Files.SearchPath(@"catkeys.dll"));
+
+		//Environment.SetEnvironmentVariable("temp", "not full path");
+		//string s = @"%temp%\mm";
+		//Print(Path_.IsFullPathEEV(ref s));
+		//Print(s);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestNativeMemoryList()
+	{
+		//using(var a = new Catkeys.Util.LibArrayBuilder(8, 0)) { }
+		//using(var a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024)) { }
+		//var a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024);
+
+		//using(var a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024)) {
+		//	a.Add(Wnd.Find("Quick*"));
+		//	a.Add(Wnd.Find("app*"));
+
+		//	Print(a.ToArray());
+		//}
+
+		using(Catkeys.Util.LibArrayBuilder.Specialized._Wnd a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024), aa = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024)) {
+			a.Add(Wnd.Find("Quick*"));
+			a.Add(Wnd.Find("app*"));
+
+			aa.Add(Wnd.Find("Moz*"));
+			aa.Add(Wnd.Find("Q*"));
+
+			Print(a.ToArray(aa));
+		}
+
+		//using(var a = new Catkeys.Util.LibArrayBuilder<int>()) {
+		//using(var a = new Catkeys.Util.LibArrayBuilder(4, 0)) {
+
+		//	var p0 = a.Alloc(4);
+		//	//Print((LPARAM)p0);
+		//	for(int i = 0; i < a.Count; i++) {
+		//		//Print((LPARAM)a[i]);
+		//		*(int*)a[i] = i;
+		//	}
+
+		//	//a.ReAlloc(10);
+
+		//	for(int i = a.Count; i < 25; i++) {
+		//		//*(int*)a.Add() = i;
+		//		*(int*)a.AddFast() = i;
+		//	}
+
+		//	for(int i = 0; i < a.Count; i++) {
+		//		//Print((LPARAM)a[i]);
+		//		Print(*(int*)a[i]);
+		//	}
+
+		//	Print(a.Capacity);
+
+		//	Output.Clear();
+		//	var b = new int[a.Count];
+		//	//var b = new List<int>(); //cannot get address of its array
+		//	//for(int i = 0; i < b.Length; i++) b[i] = *(int*)a[i];
+		//	fixed (int* p = b) a.CopyTo(p);
+		//	//Print(b);
+		//	Print(b.ToList());
+		//}
+
+		//using(var a = new Catkeys.Util.LibArrayBuilder(8, 0)) {
+
+		//	var p0 = a.Alloc(4);
+		//	//Print((LPARAM)p0);
+		//	for(int i = 0; i < a.Count; i++) {
+		//		//Print((LPARAM)a[i]);
+		//		*(POINT*)a[i] = new POINT(i, i * 10);
+		//	}
+
+		//	//a.ReAlloc(10);
+
+		//	for(int i = a.Count; i < 25; i++) {
+		//		//*(int*)a.Add() = i;
+		//		*(POINT*)a.AddFast() = new POINT(i, i * 10);
+		//	}
+
+		//	for(int i = 0; i < a.Count; i++) {
+		//		//Print((LPARAM)a[i]);
+		//		Print(*(POINT*)a[i]);
+		//	}
+
+		//	Print(a.Capacity);
+		//}
+
+
+		//Perf.Next();
+		//var a1 = new Catkeys.Util.LibArrayBuilder<int>();
+		//Perf.Next();
+		//var a2 = new Catkeys.Util.LibArrayBuilder<POINT>();
+		//Perf.Next();
+		//var a3 = new Catkeys.Util.LibArrayBuilder<RECT>();
+		//Perf.Next();
+		//var a4 = new Catkeys.Util.LibArrayBuilder<Wnd>();
+		//Perf.Next();
+		//var a5 = new Catkeys.Util.LibArrayBuilder<byte>();
+		//Perf.Next();
+		//var a6 = new Catkeys.Util.LibArrayBuilder<double>();
+		//Perf.Next();
+		//var a7 = new Catkeys.Util.LibArrayBuilder<Rectangle>();
+		//Perf.Next();
+		//var a8 = new Catkeys.Util.LibArrayBuilder<Point>();
+		//Perf.Next();
+		//var a9 = new Catkeys.Util.LibArrayBuilder<char>();
+		//Perf.Next();
+		//Perf.NW();
+
+		//Perf.First();
+		//a1.Add();
+		//Perf.Next();
+		//a2.Add();
+		//Perf.Next();
+		//a3.Add();
+		//Perf.Next();
+		//a4.Add();
+		//Perf.Next();
+		//a5.Add();
+		//Perf.Next();
+		//a6.Add();
+		//Perf.Next();
+		//a7.Add();
+		//Perf.Next();
+		//a8.Add();
+		//Perf.Next();
+		//a9.Add();
+		//Perf.NW();
+
+		//var b = new LibNativeMemoryList<RECT>();
+		//var a2 = new LibNativeMemoryList2<Wnd>();
+		//var b2 = new LibNativeMemoryList2<RECT>();
+
+
+		//int n1 = 16384, n2 = 20480;
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { var a = Marshal.AllocHGlobal(n1); Marshal.FreeHGlobal(a); });
+		//var a2 = new Action(() => { var a = Marshal.AllocCoTaskMem(n1); Marshal.FreeCoTaskMem(a); });
+		//var a3 = new Action(() => { var a = Catkeys.Util.NativeHeap.Alloc(n1); Catkeys.Util.NativeHeap.Free(a); });
+		////var a1 = new Action(() => { var a = Marshal.AllocHGlobal(n1); a = Marshal.ReAllocHGlobal(a, (IntPtr)n2); Marshal.FreeHGlobal(a); });
+		////var a2 = new Action(() => { var a = Marshal.AllocCoTaskMem(n1); a = Marshal.ReAllocCoTaskMem(a, n2); Marshal.FreeCoTaskMem(a); });
+		////var a3 = new Action(() => { var a = Catkeys.Util.NativeHeap.Alloc(n1); a = Catkeys.Util.NativeHeap.ReAlloc(a, n2); Catkeys.Util.NativeHeap.Free(a); });
+		//var a4 = new Action(() => { var a = Api.VirtualAlloc(Zero, n1, 0x3000, 4); Api.VirtualFree(a); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//Perf.Next();
+		//int v1 = TypeSize<int>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<byte>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<IntPtr>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<RECT>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<int>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<Wnd>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<double>.Size;
+		//Perf.Next();
+		//v1 = TypeSize<long>.Size;
+		//Perf.NW();
+
+		//Print(TypeSize<IntPtr>.Size);
+	}
+
+	static void TestShellRun()
+	{
+		//Perf.First();
+		Thread.CurrentThread.Join(0); //fixes it (removes the wait cursor)
+
+		//Time.DoEvents(); //does not fix
+		//Time.SleepDoEvents(1); //fixes. Need min 1. But Thread.Join much faster.
+		//Perf.NW();
+
+		//Wait(10);
+		//Thread.CurrentThread.Join(10000);
+		//return;
+		//TODO: Thread.Sleep causes 'wait' cursor when mouse is on 'Close' button of any window. But WaitOne and Thread.Join don't.
+
+		//Shell.Run("notepad.exe", @"""%Folders.Documents%\Test.py""");
+		//Shell.Run("notepad.exe", "Test.py", directory: "%Folders.Documents%");
+		//Shell.Run(@"Q:\Test\x\..\am.txt");
+		//Print(Path_.Normalize("C:"));
+		//Shell.Run(@"C:");
+		//Shell.Run(@"\\?\C:\Windows\notepad.exe");
+		//Shell.Run(@"\\?\Q:\Test\x\..\am.txt");
+
+#if false
+		//Shell.Run("notepad.exe", flags: Shell.RunFlags.ReturnProcessHandle, more: new Shell.RunMoreParams() { Verb = "properties" });
+		var f = new Form();
+		f.Click += (unu, sed) =>
+		  {
+			  Shell.Run("notepad.exe", flags: Shell.RunFlags.ReturnProcessHandle, more: new Shell.RunMoreParams() { Verb = "properties", OwnerWindow=f });
+			  //try { Shell.Run("no.exe", flags: Shell.RunFlags.ShowErrorUI, more: new Shell.RunMoreParams() { OwnerWindow = f }); } catch(CatException) { }
+
+		  };
+		f.ShowDialog();
+#elif true
+		//Shell.Run(@"Q:\my qm\test_run_dir.exe");
+		//Shell.Run(@"Q:\my qm\test_run_dir.exe", more: new Shell.RunMoreParams() { CurrentDirectory=@"C:\Windows" });
+		//Shell.Run(@"Q:\");
+		//Shell.Run(@"notepad.exe", more: new Shell.RunMoreParams() { WindowState = ProcessWindowStyle.Minimized });
+
+		//var p = new Shell.RunMoreParams() { NeedProcessHandle = true };
+		//Shell.Run(@"notepad.exe", more: p);
+		//using(var h = p.ProcessHandle) h?.WaitOne();
+
+		//Print(Shell.Run(@"notepad.exe", flags: Shell.RunFlags.WaitForExit));
+		//Shell.Run(@"mailto:qmgindi@gmail.com");
+
+		//Wnd w = Wnd.Find("Settings");
+		////Wnd w = Wnd.Find("Quick*");
+		//Print(Wnd.Misc.GetWindowsStoreAppId(w, true, true));
+		//Wnd w = Wnd.Find("- Notepad", "Notepad", Shell.Run("notepad.exe"));
+
+		//Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		//if(!w.Is0) w.Activate();
+		//else w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", Shell.Run("notepad.exe"));
+		//Print(w);
+
+		//var f = new Wnd.Finder("*- Notepad", "Notepad");
+		//if(f.Find()) f.Result.Activate();
+		//else { f.ProcessId = Shell.Run("notepad.exe"); WaitFor.WindowActive(f, 5); }
+		//else WaitFor.WindowActive(f, 5, Shell.Run("notepad.exe"));
+		//else f.RunWaitActive(5, "notepad.exe");
+
+		//for(int i = 0; i < 3; i++) {
+		//	Wnd w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", Shell.Run("notepad.exe"));
+		//	Print(w);
+		//	Wait(1);
+		//}
+
+		//Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		//if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind, 10); }
+		//w.Activate();
+		//this code does the same without LastFind
+		//var f = new Wnd.Finder("*- Notepad", "Notepad");
+		//if(!f.Find()) { Shell.Run("notepad.exe"); WaitFor.WindowActive(f, 5); }
+		//f.Result.Activate();
+
+		//Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		//if(w.Is0) { Process.Start("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind, 5); }
+		//w.Activate();
+
+		//if(w.Is0) { var f = Wnd.LastFind; f.ProcessId = Shell.Run("notepad.exe"); w = WaitFor.WindowActive(f); }
+		//if(w.Is0) { Wnd.LastFind.ProcessId = Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+		//if(w.Is0) w = WaitFor.WindowActive(5, Shell.Run("notepad.exe"));
+
+		//Print(w);
+		//Print(f.Result);
+#else
+		//var thread = new Thread(() =>
+		//  {
+		//Print(Thread.CurrentThread.GetApartmentState());
+		string s;
+		s = @"notepad.exe";
+		//s =@"Q:\Test\am.txt";
+		//s = @"Q:\Test\CatkeysHelp.chm";
+		//s = @"Q:\Test\CatkeysHelp.chm - Shortcut";
+		//s = Folders.Virtual.ControlPanel + "1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
+		Print(s);
+		Shell.RunMoreParams more = null;
+		//more = new Shell.RunMoreParams() { Verb = "properties" };
+		more = new Shell.RunMoreParams() { NeedProcessHandle = true };
+		int pid = Shell.Run(s, more: more);
+		Print(pid);
+		using(var h = more?.ProcessHandle) {
+			if(h == null) return;
+			//Print(h.SafeWaitHandle.DangerousGetHandle());
+			var nh = h.SafeWaitHandle.DangerousGetHandle();
+
+			//var w = WaitFor.WindowExists(5, "* Notepad", programEtc: pid);
+			//Print(w);
+
+			h.WaitOne();
+			//WaitFor.WindowNotExists(0, "* Notepad", programEtc: pid);
+			//WaitFor.WindowClosed(0, w);
+		}
+#endif
+		Print("end");
+		//  });
+		////thread.SetApartmentState(ApartmentState.STA);
+		//thread.Start();
+		//thread.Join();
+
+		//var p = new Process();
+		//Print(p.Responding);
+	}
+
+	static void TestWaitWindow()
+	{
+		Thread.CurrentThread.Join(0); //removes the wait cursor
+
+		//Wnd w = Wnd.Find("* Notepad");
+
+		////wait max 30 s until window w is active. Exception on timeout or if closed.
+		//WaitFor.WindowCondition(w, t => t.IsActive); //the same as WaitFor.WindowActive(w, 30);
+		//Print("active");
+
+		////wait indefinitely until window w is minimized or closed
+		//WaitFor.WindowCondition(w, t => t.IsMinimized || !t.IsAlive, 0, true);
+		//if(!w.IsAlive) { Print("closed"); return; }
+		//Print("minimized");
+
+		//Print(Wnd.FindAll("Q*"));
+		//var f=new Wnd.Finder("Q*");
+		////Print(f.FindAll());
+		//Print(f.FindAllInList(Wnd.Misc.AllWindows()));
+
+		//Wnd w = Wnd.Find("Quick*");
+		////Print(w.ChildAll("*i*"));
+		//Print(new Wnd.ChildFinder("*i*").FindAll(w));
+
+
+
+		//Wnd w = Wnd.Find("Quick*");
+		//int tid = w.ThreadId;
+
+		//Print(Wnd.Find("*int*", null, tid, WFFlags.ThreadId));
+
+		////Print(Wnd.Misc.FindThreadWindow(tid));
+		//Print(Wnd.Misc.FindThreadWindow(tid, "*int*"));
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Wnd.Find("*int*", null, tid, WFFlags.ThreadId); });
+		//var a2 = new Action(() => { Wnd.Misc.FindThreadWindow(tid, "*int*"); });
+		//var a3 = new Action(() => { Wnd.Find(null, null, tid, WFFlags.ThreadId); });
+		//var a4 = new Action(() => { Wnd.Misc.FindThreadWindow(tid); });
+		//var a5 = new Action(() => { Wnd.Find("*int*", null, tid, WFFlags.ThreadId | WFFlags.HiddenToo); });
+		//var a6 = new Action(() => { Wnd.Misc.FindThreadWindow(tid, "*int*", flags: WFFlags.HiddenToo); });
+		//Perf.ExecuteMulti(5, 10, a1, a2, a3, a4, a5, a6);
+
+
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Wnd.Misc.AllWindows(true); });
+		//var a2 = new Action(() => { Wnd.Misc.ThreadWindows(tid); });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 10, a1, a2, a3, a4);
+
+
+		//Print(Wnd.Misc.AllWindows(false, true));
+		//Print(Wnd.Misc.ThreadWindows(Wnd.Find("Quick*").ThreadId, false, true));
+		//Print(Wnd.Misc.WndDesktop);
+
+		//Print(Wnd.Find("Quick*"));
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Wnd.Find("Quick*"); });
+		//var a2 = new Action(() => { });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 100, a1, a2, a3, a4);
+
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Wnd.Misc.AllWindows(false, true); });
+		//var a2 = new Action(() => { Wnd.Misc.AllWindows2(false, true); });
+		//var a3 = new Action(() => { Wnd.Misc.AllWindows3(false, true); });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 10, a1, a2, a3, a4);
+
+		//Wnd w = Wnd.Find("Options");
+		////Print(w.ChildById(1103));
+		//Print(w.Child("Unicode"));
+
+		//Print(w.AllChildren());
+		//Print(w.AllChildren(false, true));
+		//Print(w.AllChildren(false, false, true));
+		//Print(w.AllChildren(false, false, true, also: c => c.ClassNameIs("Combo*")));
+
+		//Wait(5);
+		//try {
+		//	WaitFor.WindowExists(30, "no", "mo", null, WFFlags.HiddenToo);
+		//}
+		//catch(TimeoutException) {
+		//	Print("timeout");
+		//}
+		//GC.Collect();
+		//Wait(5);
+
+		//Wnd w = WaitFor.WindowActive(60, "*- Notepad", also: t => !t.IsMinimized);
+		//Print(w);
+
+		//Wnd w = WaitFor.WindowActive(3, programEtc:"notepad");
+		//Print(w);
+
+		//Print(Wnd.Find("*Notepad"));
+
+		//WaitFor.WindowExists(30, "*Notepad", not: true);
+		//WaitFor.WindowActive(30, "*Notepad");
+		//Wnd.Find("*Notepad").Activate();
+		//WaitFor.WindowActive(30, "*Notepad", not: true);
+
+		//var w = Wnd.Find("Quick*");
+		//var w = Wnd.Find("*Notepad");
+		//WaitFor.WindowClosed(w);
+		//WaitFor.WindowActive(w);
+		////WaitFor.WindowVisible(w, not: true);
+		////WaitFor.WindowEnabled(w, not: true);
+		//Print("yes");
+		//WaitFor.WindowActive(w, not: true);
+		////WaitFor.WindowVisible(w);
+		////WaitFor.WindowEnabled(w);
+
+		////find window containing specified control, and get the control too
+		//var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+		//Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(f));
+		//Print(w);
+		//Print(f.Result);
+
+		Wnd w = Wnd.Find("Options");
+		var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+		Wnd c = WaitFor.WindowChildExists(w, f);
+		Print(c);
+		//Print(WaitFor.WindowChildExists(w, f, -5, true));
+
+		//Wnd w = Wnd.Find(className: "#32770", also: t => f.FindIn(t));
+
+
+		Print("end");
+
+		//Print(Wnd.Find("Quick*"));
+	}
+
+	static void TestMyIEnumerable()
+	{
+		var a = Wnd.Misc.AllWindows(true);
+		//Print(a);
+		IEnumerable<Wnd> ew = a;
+
+		Wnd r = Wnd0;
+		Perf.SpinCPU(100);
+		var a1 = new Action(() => { foreach(var w in a) { r = w; } });
+		var a2 = new Action(() => { foreach(var w in ew) { r = w; } });
+		var a3 = new Action(() =>
+		{
+			using(var en = ew.GetEnumerator()) {
+				while(en.MoveNext()) {
+					r = en.Current;
+					//Print(en.Current);
+				}
+			}
+		});
+		var a4 = new Action(() => { });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		Print(r);
+
+		//var en = ew.GetEnumerator();
+		//while(en.MoveNext()) {
+		//	var w = en.Current;
+		//	//Print(en.Current);
+		//}
+		//en.Dispose();
+		//Print("end");
+	}
+
+	static void TestSwitchTypeSpeed()
+	{
+		//object o = new Point(1, 2);
+		object o = new int[2];
+		int n = 0;
+
+		Perf.SpinCPU(100);
+		for(int j = 0; j < 5; j++) {
+			Perf.First();
+			for(int i = 0; i < 1000; i++) {
+				if(o is string s) n = s.Length;
+				//else if(o is int ii) n = 4;
+				else if(o is List<Wnd> a2) n = a2.Count;
+				else if(o is Wnd[] a1) n = a1.Length;
+				//else if(o is uint u) Print(u);
+				//else if(o is Wnd w) Print(w);
+			}
+			Perf.Next();
+			for(int i = 0; i < 1000; i++) {
+				switch(o) {
+				case string s: n = s.Length; break;
+				//case int ii: n=4; break;
+				case List<Wnd> a2: n = a2.Count; break;
+				case Wnd[] a1: n = a1.Length; break;
+					//case uint u: Print(u); break;
+					//case Wnd w: Print(w); break;
+				}
+			}
+			Perf.NW();
+		}
+		Print(n);
 	}
 
 	[HandleProcessCorruptedStateExceptions]
@@ -7537,13 +8709,33 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//TODO: InitLibrary. Optional but recommended. Would set error mode, default domain data, etc.
 
 		try {
-			TestCalculateDriveSize();
+			//TestSwitchTypeSpeed();
+			//TestMyIEnumerable();
+			//TestWaitWindow();
+			//TestShellRun();
+			//TestNativeMemoryList();
+			//TestTemp();
+			//TestBytesFromHexStringNew();
+			//TestVersion();
+			//TestIconWithPidl();
+			//TestPidlToString2();
+			//TestLnkShortcut3();
+			//TestPidl();
+			//TestKnownFoldersAsEnvVar();
+			//TestFilesSearchPath();
+			//TestExistsAsProtected();
+			//TestPathGetFilenameEtc();
+			//TestDrivePath();
+			//TestPathGetFilenameEtc();
+			//TestCreateDirectory();
+			//TestFileOp();
+			//TestCalculateDriveSize();
 			//TestFileProperties();
 			//TestDirectoryIsEmpty();
 			//TestEnumDirectory();
 			//TestFilesDelete();
-			//TestFileOp();
 			//TestPathNormalize();
+			//TestApiStringBuffer();
 			//TestCatExceptioNewOverload();
 			//TestImageSerialize();
 			//TestKeysFromString();

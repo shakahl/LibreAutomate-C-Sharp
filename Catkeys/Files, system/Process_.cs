@@ -29,10 +29,22 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public static class Process_
 	{
-		[DllImport("kernel32.dll")]
-		static extern bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, [Out] StringBuilder lpExeName, ref int lpdwSize);
+		[DllImport("kernel32.dll", SetLastError = true)]
+		static extern unsafe bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, char* lpExeName, ref int lpdwSize);
 
-		static string _GetProcessName(uint processId, bool fullPath, bool dontEnumerate = false, bool unDOS = false)
+		static unsafe bool _QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, out string s)
+		{
+			s = null;
+			var b = Util.LibCharBuffer.Common; int size = b.Max(300);
+			g1: if(!QueryFullProcessImageNameW(hProcess, nativeFormat, b.Alloc(size), ref size)) {
+				if(Native.GetError() == Api.ERROR_INSUFFICIENT_BUFFER) { size *= 2; goto g1; }
+				return false;
+			}
+			s = b.ToString(size);
+			return true;
+		}
+
+		static unsafe string _GetProcessName(int processId, bool fullPath, bool dontEnumerate = false, bool unDOS = false)
 		{
 			if(processId == 0) return null;
 			string R = null;
@@ -44,22 +56,16 @@ namespace Catkeys
 					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
 
 					bool getNormal = fullPath || unDOS; //getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\SysWOW64\notepad.exe" and there is no API to convert to normal
-					int size = 300; var sb = new StringBuilder(size);
-					if(QueryFullProcessImageNameW(ph, !getNormal, sb, ref size)) {
-						bool retry = false;
-						g1:
-						R = sb.ToString();
+					if(_QueryFullProcessImageName(ph, !getNormal, out var s)) {
+						R = s;
 						if(!fullPath) R = GetFileNameWithoutExe(R);
 
-						if(!retry && R.IndexOf('~') >= 0) { //DOS path?
-							size = sb.EnsureCapacity(300);
-							if(QueryFullProcessImageNameW(ph, false, sb, ref size)) {
-								string s = sb.ToString();
-								if(0 != Api.GetLongPathName(s, sb, (uint)sb.EnsureCapacity(300))) { retry = true; goto g1; }
+						if(R.IndexOf('~') >= 0) { //DOS path?
+							if(getNormal || _QueryFullProcessImageName(ph, false, out s)) {
+								R = Path_.LibExpandDosPath(s);
+								if(!fullPath) R = GetFileNameWithoutExe(R);
 							}
 						}
-
-						return R;
 					}
 				} else if(!dontEnumerate && !fullPath) {
 					EnumProcesses(p =>
@@ -79,8 +85,8 @@ namespace Catkeys
 		internal struct ProcessInfoInternal
 		{
 #pragma warning disable 649 //says never used
-			public uint SessionID;
-			public uint ProcessID;
+			public int SessionID;
+			public int ProcessID;
 			IntPtr _ProcessName;
 			public IntPtr UserSid;
 #pragma warning restore
@@ -103,7 +109,7 @@ namespace Catkeys
 		}
 
 		[DllImport("wtsapi32.dll", SetLastError = true)]
-		static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out IntPtr ppProcessInfo, out uint pCount);
+		static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out IntPtr ppProcessInfo, out int pCount);
 
 		[DllImport("wtsapi32.dll", SetLastError = false)]
 		static extern void WTSFreeMemory(IntPtr memory);
@@ -115,12 +121,12 @@ namespace Catkeys
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		internal static unsafe bool EnumProcesses(Func<ProcessInfoInternal, bool> f, bool ofThisSession = false)
 		{
-			uint sessionId = 0;
+			int sessionId = 0;
 			if(ofThisSession) {
 				if(!Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out sessionId)) return false;
 			}
 
-			if(!WTSEnumerateProcessesW(Zero, 0, 1, out IntPtr pp, out uint n)) return false;
+			if(!WTSEnumerateProcessesW(Zero, 0, 1, out IntPtr pp, out int n)) return false;
 			try {
 				ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
 				for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
@@ -157,9 +163,9 @@ namespace Catkeys
 		public struct ProcessInfo
 		{
 			///
-			public uint SessionID;
+			public int SessionID;
 			///
-			public uint ProcessID;
+			public int ProcessID;
 			/// <summary>
 			/// Process executable file name without ".exe". Not full path.
 			/// </summary>
@@ -173,13 +179,12 @@ namespace Catkeys
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		public static unsafe ProcessInfo[] GetProcesses(bool ofThisSession = false)
 		{
-			uint sessionId = 0;
+			int sessionId = 0;
 			if(ofThisSession) {
 				if(!Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out sessionId)) return null;
 			}
 
-			IntPtr pp; uint n;
-			if(!WTSEnumerateProcessesW(Zero, 0, 1, out pp, out n)) return null;
+			if(!WTSEnumerateProcessesW(Zero, 0, 1, out IntPtr pp, out int n)) return null;
 
 			var t = new List<ProcessInfo>((int)n);
 			ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
@@ -199,7 +204,7 @@ namespace Catkeys
 		/// <param name="processId">Process id. If you have a window, use its <see cref="Wnd.ProcessId">ProcessId</see> property.</param>
 		/// <param name="fullPath">Get full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
 		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if fullPath is true.</param>
-		public static string GetProcessName(uint processId, bool fullPath = false, bool noSlowAPI = false)
+		public static string GetProcessName(int processId, bool fullPath = false, bool noSlowAPI = false)
 		{
 			return _GetProcessName(processId, fullPath, noSlowAPI);
 		}
@@ -217,15 +222,15 @@ namespace Catkeys
 		/// processName is "" or null.
 		/// Invalid wildcard expression ("**options|" or regular expression).
 		/// </exception>
-		public static List<uint> GetProcessesByName(string processName, bool fullPath = false)
+		public static List<int> GetProcessesByName(string processName, bool fullPath = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			return GetProcessesByName((Wildex)processName, fullPath);
 		}
 
-		internal static List<uint> GetProcessesByName(Wildex processName, bool fullPath = false)
+		internal static List<int> GetProcessesByName(Wildex processName, bool fullPath = false)
 		{
-			List<uint> a = new List<uint>();
+			List<int> a = new List<int>();
 			EnumProcesses(p =>
 			{
 				string s;
@@ -251,8 +256,8 @@ namespace Catkeys
 		public static string GetFileNameWithoutExe(string fileName)
 		{
 			if(fileName == null) return null;
-			if(fileName.EndsWith_(".exe")) return Path.GetFileNameWithoutExtension(fileName);
-			return Path.GetFileName(fileName);
+			if(fileName.EndsWith_(".exe")) return Path_.GetFileNameWithoutExtension(fileName);
+			return Path_.GetFileName(fileName);
 		}
 
 		/// <summary>
@@ -295,7 +300,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="desiredAccess">Desired access, as documented in MSDN -> OpenProcess.</param>
-			public LibProcessHandle(uint processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) { _Open(processId, desiredAccess); }
+			public LibProcessHandle(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) { _Open(processId, desiredAccess); }
 
 			/// <summary>
 			/// Opens window's process handle.
@@ -306,7 +311,7 @@ namespace Catkeys
 			/// <param name="desiredAccess">Api.PROCESS_</param>
 			public LibProcessHandle(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) { _Open(w.ProcessId, desiredAccess, w); }
 
-			void _Open(uint processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default(Wnd))
+			void _Open(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default(Wnd))
 			{
 				int e = 0;
 				if(processId != 0) {
@@ -326,7 +331,7 @@ namespace Catkeys
 			[DllImport("oleacc.dll")]
 			static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
-			//void _Open(uint processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+			//void _Open(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 			//{
 			//	if(processId != 0) _h = Api.OpenProcess(desiredAccess, false, processId);
 			//	if(Is0) GC.SuppressFinalize(this);
@@ -340,9 +345,21 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Process handle that is inherited from WaitHandle.
+		/// When don't need to wait, use LibProcessHandle, it's more lightweight and has more creation methods. Or use .NET Process class.
+		/// </summary>
+		internal class LibProcessWaitHandle :WaitHandle
+		{
+			public LibProcessWaitHandle(IntPtr nativeHandle, bool owndHandle = true)
+			{
+				base.SafeWaitHandle = new Microsoft.Win32.SafeHandles.SafeWaitHandle(nativeHandle, owndHandle);
+			}
+		}
+
+		/// <summary>
 		/// Allocates, writes and reads memory in other process.
 		/// </summary>
-		public sealed class Memory :IDisposable
+		public sealed unsafe class Memory :IDisposable
 		{
 			LibProcessHandle _hproc;
 
@@ -379,7 +396,7 @@ namespace Catkeys
 			/// </summary>
 			public IntPtr Mem { get; private set; }
 
-			void _Alloc(uint pid, Wnd w, int nBytes)
+			void _Alloc(int pid, Wnd w, int nBytes)
 			{
 				const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
 				_hproc = w.Is0 ? new LibProcessHandle(pid, fl) : new LibProcessHandle(w, fl);
@@ -411,14 +428,14 @@ namespace Catkeys
 			/// <param name="processId">Process id.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
 			/// <exception cref="CatException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
-			public Memory(uint processId, int nBytes)
+			public Memory(int processId, int nBytes)
 			{
 				_Alloc(processId, Wnd0, nBytes);
 			}
 
 			/// <summary>
 			/// Copies a string from this process to the memory allocated in that process by the constructor.
-			/// In that process the string is writted as '\0'-terminated UTF-16 string. For it is used (s.Length+1)*2 bytes of memory in that process (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
+			/// In that process the string is written as '\0'-terminated UTF-16 string. For it is used (s.Length+1)*2 bytes of memory in that process (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
 			/// Returns false if fails.
 			/// </summary>
 			/// <param name="s">A string in this process.</param>
@@ -426,30 +443,39 @@ namespace Catkeys
 			public bool WriteUnicodeString(string s, int offsetBytes = 0)
 			{
 				if(Mem == Zero) return false;
-				return WriteProcessMemoryW(_hproc, Mem + offsetBytes, s, (s.Length + 1) * 2, Zero);
+				if(Empty(s)) return true;
+				fixed (char* p = s) {
+					return WriteProcessMemory(_hproc, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
+				}
 			}
 
 			/// <summary>
 			/// Copies a string from this process to the memory allocated in that process by the constructor.
-			/// In that process the string is writted as '\0'-terminated ANSI string. For it is used s.Length+1 bytes of memory in that process (+1 for the '\0').
+			/// In that process the string is written as '\0'-terminated ANSI string, in default or specified encoding.
 			/// Returns false if fails.
 			/// </summary>
-			/// <param name="s">A string in this process. This function writes string converted to ANSI, not exact C# string which is Unicode UTF-16.</param>
+			/// <param name="s">A string in this process. Normal C# string (UTF-16), not ANSI.</param>
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public bool WriteAnsiString(string s, int offsetBytes = 0)
+			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+			public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null)
 			{
 				if(Mem == Zero) return false;
-				return WriteProcessMemoryA(_hproc, Mem + offsetBytes, s, s.Length + 1, Zero);
+				if(Empty(s)) return true;
+				if(enc == null) enc = Encoding.Default;
+				var a = enc.GetBytes(s + "\0");
+				fixed (byte* p = a) {
+					return WriteProcessMemory(_hproc, Mem + offsetBytes, p, a.Length, null);
+				}
 			}
 
-			string _ReadString(bool ansiString, int nChars, int offsetBytes)
+			string _ReadString(bool ansiString, int nChars, int offsetBytes, Encoding enc = null)
 			{
 				if(Mem == Zero) return null;
-				var sb = new StringBuilder(nChars);
-				bool ok = ansiString
-					? ReadProcessMemoryA(_hproc, Mem + offsetBytes, sb, nChars, Zero)
-					: ReadProcessMemoryW(_hproc, Mem + offsetBytes, sb, nChars * 2, Zero);
-				return ok ? sb.ToString() : null;
+				var b = Util.LibCharBuffer.Common;
+				int na = nChars; if(!ansiString) na *= 2;
+				if(!ReadProcessMemory(_hproc, Mem + offsetBytes, b.Alloc((na + 1) / 2), na, null)) return null;
+				if(!ansiString) return b.ToString();
+				return b.ToStringFromAnsi(enc);
 			}
 
 			/// <summary>
@@ -469,11 +495,12 @@ namespace Catkeys
 			/// Returns the copies string, or null if fails.
 			/// In that process the string must be in ANSI format (ie not Unicode UTF-16).
 			/// </summary>
-			/// <param name="nChars">Number of characters to copy. In that process a character is 1 byte, in this process will be 2 bytes (normal C# string).</param>
+			/// <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding), in this process will be 2 bytes (normal C# string).</param>
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public string ReadAnsiString(int nChars, int offsetBytes = 0)
+			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+			public string ReadAnsiString(int nBytes, int offsetBytes = 0, Encoding enc = null)
 			{
-				return _ReadString(true, nChars, offsetBytes);
+				return _ReadString(true, nBytes, offsetBytes, enc);
 			}
 
 			/// <summary>
@@ -483,10 +510,10 @@ namespace Catkeys
 			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 			/// <param name="nBytes">Number of bytes to copy.</param>
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public unsafe bool Write(void* ptr, int nBytes, int offsetBytes = 0)
+			public bool Write(void* ptr, int nBytes, int offsetBytes = 0)
 			{
 				if(Mem == Zero) return false;
-				return WriteProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, Zero);
+				return WriteProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -496,9 +523,9 @@ namespace Catkeys
 			/// <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
 			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 			/// <param name="nBytes">Number of bytes to copy.</param>
-			public unsafe bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
+			public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
 			{
-				return WriteProcessMemory(_hproc, ptrDestinationInThatProcess, ptr, nBytes, Zero);
+				return WriteProcessMemory(_hproc, ptrDestinationInThatProcess, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -508,10 +535,10 @@ namespace Catkeys
 			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 			/// <param name="nBytes">Number of bytes to copy.</param>
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public unsafe bool Read(void* ptr, int nBytes, int offsetBytes = 0)
+			public bool Read(void* ptr, int nBytes, int offsetBytes = 0)
 			{
 				if(Mem == Zero) return false;
-				return ReadProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, Zero);
+				return ReadProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -521,13 +548,13 @@ namespace Catkeys
 			/// <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
 			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 			/// <param name="nBytes">Number of bytes to copy.</param>
-			public unsafe bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
+			public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
 			{
-				return ReadProcessMemory(_hproc, ptrSourceInThatProcess, ptr, nBytes, Zero);
+				return ReadProcessMemory(_hproc, ptrSourceInThatProcess, ptr, nBytes, null);
 			}
 
 			//Cannot get pointer if generic type. Could try Marshal.StructureToPtr etc but I don't like it.
-			//public unsafe bool Write<T>(ref T v, int offsetBytes = 0) where T : struct
+			//public bool Write<T>(ref T v, int offsetBytes = 0) where T : struct
 			//{
 			//	int n = Marshal.SizeOf(v.GetType());
 			//	return Write(&v, n, offsetBytes);
@@ -535,22 +562,10 @@ namespace Catkeys
 			//}
 
 			[DllImport("kernel32.dll")]
-			static extern unsafe bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, IntPtr lpNumberOfBytesRead);
+			static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesRead);
 
 			[DllImport("kernel32.dll")]
-			static extern unsafe bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, IntPtr lpNumberOfBytesWritten);
-
-			[DllImport("kernel32.dll", EntryPoint = "ReadProcessMemory")]
-			static extern bool ReadProcessMemoryW(IntPtr hProcess, IntPtr lpBaseAddress, [Out] StringBuilder lpBuffer, LPARAM nSize, IntPtr lpNumberOfBytesRead);
-
-			[DllImport("kernel32.dll", EntryPoint = "WriteProcessMemory")]
-			static extern bool WriteProcessMemoryW(IntPtr hProcess, IntPtr lpBaseAddress, string lpBuffer, LPARAM nSize, IntPtr lpNumberOfBytesWritten);
-
-			[DllImport("kernel32.dll", EntryPoint = "ReadProcessMemory")]
-			static extern bool ReadProcessMemoryA(IntPtr hProcess, IntPtr lpBaseAddress, [Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder lpBuffer, LPARAM nSize, IntPtr lpNumberOfBytesRead);
-
-			[DllImport("kernel32.dll", EntryPoint = "WriteProcessMemory")]
-			static extern bool WriteProcessMemoryA(IntPtr hProcess, IntPtr lpBaseAddress, [MarshalAs(UnmanagedType.LPStr)] string lpBuffer, LPARAM nSize, IntPtr lpNumberOfBytesWritten);
+			static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
 		}
 
 		/// <summary>
@@ -668,7 +683,7 @@ namespace Catkeys
 			{
 				get
 				{
-					if(WinVer < Win8) return false;
+					if(!Ver.MinWin8) return false;
 					unsafe
 					{
 						uint isac;
@@ -767,7 +782,7 @@ namespace Catkeys
 			/// To get UacInfo of this process, instead use UacInfo.ThisProcess.
 			/// </summary>
 			/// <param name="processId">Process id. If you have a window, use its <see cref="Wnd.ProcessId">ProcessId</see> property.</param>
-			public static UacInfo GetOfProcess(uint processId)
+			public static UacInfo GetOfProcess(int processId)
 			{
 				if(processId == 0) return null;
 				using(var hp = new LibProcessHandle(processId)) {
@@ -887,7 +902,7 @@ namespace Catkeys
 			static bool _isUacDisabled, _haveIsUacDisabled;
 			static bool _IsUacDisabled()
 			{
-				if(WinVer >= Win8) return false; //UAC cannot be disabled
+				if(Ver.MinWin8) return false; //UAC cannot be disabled
 				UacInfo x = ThisProcess;
 				switch(x.Elevation) {
 				case ElevationType.Full:
@@ -906,28 +921,53 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls <msdn>GetCurrentThreadId</msdn>.
+		/// Calls API <msdn>GetCurrentThreadId</msdn>.
 		/// </summary>
-		public static uint CurrentThreadId { get => Api.GetCurrentThreadId(); }
+		public static int CurrentThreadId { get => Api.GetCurrentThreadId(); }
 
 		/// <summary>
-		/// Calls <msdn>GetCurrentProcessId</msdn>.
+		/// Calls API <msdn>GetCurrentProcessId</msdn>.
 		/// </summary>
-		public static uint CurrentProcessId { get => Api.GetCurrentProcessId(); }
+		public static int CurrentProcessId { get => Api.GetCurrentProcessId(); }
 
 		/// <summary>
 		/// Returns current thread handle.
-		/// Calls <msdn>GetCurrentThread</msdn>.
+		/// Calls API <msdn>GetCurrentThread</msdn>.
 		/// Don't need to close the handle.
 		/// </summary>
 		public static IntPtr CurrentThreadHandle { get => Api.GetCurrentThread(); }
 
 		/// <summary>
 		/// Returns current process handle.
-		/// Calls <msdn>GetCurrentProcess</msdn>.
+		/// Calls API <msdn>GetCurrentProcess</msdn>.
 		/// Don't need to close the handle.
 		/// </summary>
 		public static IntPtr CurrentProcessHandle { get => Api.GetCurrentProcess(); }
+
+		/// <summary>
+		/// Gets process id from handle.
+		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
+		/// </summary>
+		/// <param name="processHandle">Native process handle.</param>
+		public static int GetProcessId(IntPtr processHandle)
+		{
+			return _Api.GetProcessId(processHandle);
+			//speed: 250 ns
+		}
+
+		//public static Process GetProcessObject(IntPtr processHandle)
+		//{
+		//	int pid = GetProcessId(processHandle);
+		//	if(pid == 0) return null;
+		//	return Process.GetProcessById(pid); //slow, makes tons of garbage, at first gets all processes just to throw exception if pid not found...
+		//}
+
+		static partial class _Api
+		{
+			[DllImport("kernel32.dll", SetLastError = true)]
+			internal static extern int GetProcessId(IntPtr Process);
+
+		}
 	} //Process_
 
 }

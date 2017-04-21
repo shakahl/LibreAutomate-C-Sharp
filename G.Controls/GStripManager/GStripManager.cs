@@ -472,8 +472,7 @@ namespace G.Controls
 #if true
 			//save
 			try {
-				var f = Path.GetDirectoryName(_xmlFileCustom);
-				if(!Files.ExistsAsDirectory(f)) Directory.CreateDirectory(f);
+				Files.CreateDirectoryFor(_xmlFileCustom);
 				xStripsCustom.Save(_xmlFileCustom);
 			}
 			catch(Exception e) {

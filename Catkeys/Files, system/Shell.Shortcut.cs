@@ -23,12 +23,12 @@ using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	partial class Files
+	partial class Shell
 	{
 		/// <summary>
 		/// Creates shell shortcuts (.lnk files) and gets shortcut properties.
 		/// </summary>
-		public class LnkShortcut :IDisposable
+		public unsafe class Shortcut :IDisposable
 		{
 			//info: name Shortcut used in .NET.
 
@@ -48,7 +48,7 @@ namespace Catkeys
 					Api.ReleaseComObject(_isl); _isl = null;
 				}
 			}
-			//~LnkShortcut() { Dispose(); } //don't need, we have only COM objects, GC will release them anyway
+			//~Shortcut() { Dispose(); } //don't need, we have only COM objects, GC will release them anyway
 
 			/// <summary>
 			/// Returns the internally used IShellLink COM interface.
@@ -56,81 +56,77 @@ namespace Catkeys
 			internal Api.IShellLink IShellLink { get => _isl; }
 			//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
 
-			LnkShortcut(string lnkPath, uint mode)
+			Shortcut(string lnkPath, uint mode)
 			{
 				_isl = new Api.ShellLink() as Api.IShellLink;
 				_ipf = _isl as Api.IPersistFile;
 				_lnkPath = lnkPath;
-				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || ExistsAsFile(_lnkPath))) {
+				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || Files.ExistsAsFile(_lnkPath))) {
 					CatException.ThrowIfFailed(_ipf.Load(_lnkPath, mode), "*open");
 					_isOpen = true;
 				}
 			}
 
 			/// <summary>
-			/// Creates a new instance of the LnkShortcut class that can be used to get shortcut properties.
+			/// Creates a new instance of the Shortcut class that can be used to get shortcut properties.
 			/// Exception if shortcut file does not exist or cannot open it for read access.
 			/// </summary>
-			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 			/// <exception cref="CatException">Failed to open .lnk file.</exception>
-			public static LnkShortcut Open(string lnkPath)
+			public static Shortcut Open(string lnkPath)
 			{
-				return new LnkShortcut(lnkPath, Api.STGM_READ);
+				return new Shortcut(lnkPath, Api.STGM_READ);
 			}
 
 			/// <summary>
-			/// Creates a new instance of the LnkShortcut class that can be used to create or replace a shortcut file.
+			/// Creates a new instance of the Shortcut class that can be used to create or replace a shortcut file.
 			/// You can set properties and finally call <see cref="Save"/>.
 			/// If the shortcut file already exists, Save replaces it.
 			/// </summary>
-			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
-			public static LnkShortcut Create(string lnkPath)
+			/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
+			public static Shortcut Create(string lnkPath)
 			{
-				return new LnkShortcut(lnkPath, Api.STGM_WRITE);
+				return new Shortcut(lnkPath, Api.STGM_WRITE);
 			}
 
 			/// <summary>
-			/// Creates a new instance of the LnkShortcut class that can be used to create or modify a shortcut file.
+			/// Creates a new instance of the Shortcut class that can be used to create or modify a shortcut file.
 			/// Exception if file exists but cannot open it for read-write access.
 			/// You can get and set properties and finally call <see cref="Save"/>.
 			/// If the shortcut file already exists, Save updates it.
 			/// </summary>
-			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 			/// <exception cref="CatException">Failed to open existing .lnk file.</exception>
-			public static LnkShortcut OpenOrCreate(string lnkPath)
+			public static Shortcut OpenOrCreate(string lnkPath)
 			{
-				return new LnkShortcut(lnkPath, Api.STGM_READWRITE);
+				return new Shortcut(lnkPath, Api.STGM_READWRITE);
 			}
 
 			/// <summary>
-			/// Saves the LnkShortcut variable properties to the shortcut file.
+			/// Saves the Shortcut variable properties to the shortcut file.
 			/// </summary>
 			/// <exception cref="CatException">Failed to save .lnk file.</exception>
+			/// <remarks>
+			/// Creates parent folder if need.
+			/// </remarks>
 			public void Save()
 			{
-				if(_changedHotkey && !_isOpen && ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
+				if(_changedHotkey && !_isOpen && Files.ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
 
+				Files.CreateDirectoryFor(_lnkPath);
 				CatException.ThrowIfFailed(_ipf.Save(_lnkPath, true), "*save");
 			}
 
 			/// <summary>
 			/// Gets or sets shortcut target path.
-			/// This property is null if target isn't a file system object, eg Control Panel or URL; use TargetIDList or TargetURL.
+			/// This property is null if target isn't a file system object, eg Control Panel or URL.
 			/// </summary>
 			/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
 			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string TargetPath
 			{
-				get
-				{
-					var sb = new StringBuilder(300);
-					if(0 != _isl.GetPath(sb, 300)) return null;
-					return _CorrectPath(sb, true);
-				}
-				set
-				{
-					CatException.ThrowIfFailed(_isl.SetPath(value));
-				}
+				get => _CorrectPath(_GetString(_WhatString.Path, 300), true);
+				set { CatException.ThrowIfFailed(_isl.SetPath(value)); }
 			}
 
 			/// <summary>
@@ -138,26 +134,20 @@ namespace Catkeys
 			/// </summary>
 			public string TargetPathRawMSI
 			{
-				get
-				{
-					var sb = new StringBuilder(300);
-					if(0 != _isl.GetPath(sb, 300)) return null;
-					return _CorrectPath(sb);
-				}
+				get => _CorrectPath(_GetString(_WhatString.Path, 300));
 			}
 
 			/// <summary>
 			/// Gets or sets a non-file-system target (eg Control Panel) through its ITEMIDLIST.
-			/// Use Marshal.FreeCoTaskMem() to free the return value of the 'get' function.
 			/// </summary>
 			/// <remarks>
 			/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
 			/// Most but not all shortcuts have this property; the 'get' function returns Zero if the shortcut does not have it.
 			/// </remarks>
 			/// <exception cref="CatException">The 'set' function failed.</exception>
-			public IntPtr TargetIDList
+			public Shell.Pidl TargetPidl
 			{
-				get => (0 == _isl.GetIDList(out var pidl)) ? pidl : Zero;
+				get => (0 == _isl.GetIDList(out var pidl)) ? new Shell.Pidl(pidl) : null;
 				set { CatException.ThrowIfFailed(_isl.SetIDList(value)); }
 			}
 
@@ -172,7 +162,7 @@ namespace Catkeys
 				get
 				{
 					if(0 != _isl.GetIDList(out var pidl)) return null;
-					try { return Misc.PidlToString(pidl, Native.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
+					try { return Shell.Pidl.LibToShellString(pidl, Native.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
@@ -181,9 +171,8 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// Gets or sets target of any type - file/folder path, virtual shell object parsing name, URL.
-			/// The string can be used with the shell execute function.
-			/// Virtual object string can be like "::{CLSID}".
+			/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="Shell.Pidl"/>).
+			/// The string can be used with <see cref="Shell.Run"/>.
 			/// </summary>
 			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string TargetAnyType
@@ -192,11 +181,11 @@ namespace Catkeys
 				{
 					var R = TargetPath; if(R != null) return R; //support MSI etc
 					if(0 != _isl.GetIDList(out var pidl)) return null;
-					try { return Misc.PidlToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+					try { return Shell.Pidl.LibToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
-					var pidl = Misc.PidlFromString(value, true);
+					var pidl = Shell.Pidl.LibFromString(value, true);
 					try { CatException.ThrowIfFailed(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 			}
@@ -208,9 +197,9 @@ namespace Catkeys
 			/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
 			public string GetIconLocation(out int iconIndex)
 			{
-				var sb = new StringBuilder(300);
-				if(0 != _isl.GetIconLocation(sb, 300, out iconIndex)) return null;
-				return _CorrectPath(sb);
+				var b = Util.LibCharBuffer.Common; int na = 300;
+				if(0 != _isl.GetIconLocation(b.Alloc(na), na, out iconIndex)) return null;
+				return _CorrectPath(b.ToString());
 			}
 
 			/// <summary>
@@ -230,16 +219,8 @@ namespace Catkeys
 			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string WorkingDirectory
 			{
-				get
-				{
-					var sb = new StringBuilder(300);
-					if(0 != _isl.GetWorkingDirectory(sb, 300)) return null;
-					return _CorrectPath(sb);
-				}
-				set
-				{
-					CatException.ThrowIfFailed(_isl.SetWorkingDirectory(value));
-				}
+				get => _CorrectPath(_GetString(_WhatString.WorkingDirectory, 300));
+				set { CatException.ThrowIfFailed(_isl.SetWorkingDirectory(value)); }
 			}
 
 			/// <summary>
@@ -248,16 +229,8 @@ namespace Catkeys
 			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string Arguments
 			{
-				get
-				{
-					var sb = new StringBuilder(1024);
-					if(0 != _isl.GetArguments(sb, 1024) || 0 == sb.Length) return null;
-					return sb.ToString();
-				}
-				set
-				{
-					CatException.ThrowIfFailed(_isl.SetArguments(value));
-				}
+				get => _GetString(_WhatString.Arguments, 1024);
+				set { CatException.ThrowIfFailed(_isl.SetArguments(value)); }
 			}
 
 			/// <summary>
@@ -266,16 +239,8 @@ namespace Catkeys
 			/// <exception cref="CatException">The 'set' function failed.</exception>
 			public string Description
 			{
-				get
-				{
-					var sb = new StringBuilder(1024);
-					if(0 != _isl.GetDescription(sb, 1024) || 0 == sb.Length) return null; //info: in my tests was E_FAIL for 1 shortcut (Miracast)
-					return sb.ToString();
-				}
-				set
-				{
-					CatException.ThrowIfFailed(_isl.SetDescription(value));
-				}
+				get => _GetString(_WhatString.Description, 1024);
+				set { CatException.ThrowIfFailed(_isl.SetDescription(value)); }
 			}
 
 			/// <summary>
@@ -318,10 +283,10 @@ namespace Catkeys
 			#region public static
 
 			/// <summary>
-			/// Gets shortcut target path or URL or virtual shell object parsing name.
+			/// Gets shortcut target path or URL or virtual shell object ITEMIDLIST.
 			/// Uses <see cref="Open"/> and <see cref="TargetAnyType"/>.
 			/// </summary>
-			/// <param name="lnkPath">LnkShortcut (.lnk) file path.</param>
+			/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 			/// <exception cref="CatException">Failed to open.</exception>
 			public static string GetTarget(string lnkPath)
 			{
@@ -333,12 +298,12 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="lnkPath">.lnk file path.</param>
 			/// <exception cref="CatException">Failed to unregister hotkey.</exception>
-			/// <exception cref="Exception">Exceptions of <see cref="File.Delete"/>.</exception>
+			/// <exception cref="Exception">Exceptions of <see cref="Files.Delete"/>.</exception>
 			public static void Delete(string lnkPath)
 			{
-				if(!ExistsAsFile(lnkPath)) return;
+				if(!Files.ExistsAsFile(lnkPath)) return;
 				_UnregisterHotkey(lnkPath);
-				File.Delete(lnkPath);
+				Files.Delete(lnkPath);
 			}
 
 			#endregion
@@ -347,7 +312,7 @@ namespace Catkeys
 			/// <exception cref="CatException">Failed to open or save.</exception>
 			static void _UnregisterHotkey(string lnkPath)
 			{
-				Debug.Assert(ExistsAsFile(lnkPath));
+				Debug.Assert(Files.ExistsAsFile(lnkPath));
 				using(var x = OpenOrCreate(lnkPath)) {
 					var k = x.Hotkey;
 					if(k != 0) {
@@ -357,38 +322,54 @@ namespace Catkeys
 				}
 			}
 
-			string _CorrectPath(StringBuilder sb, bool fixMSI = false)
+			enum _WhatString { Path, Arguments, WorkingDirectory, Description }
+
+			string _GetString(_WhatString what, int bufferSize)
 			{
-				if(sb.Length == 0) return null;
-				string R = sb.ToString();
+				int na = bufferSize, hr = 1;
+				var b = Util.LibCharBuffer.Common; var a = b.Alloc(na);
+				switch(what) {
+				case _WhatString.Path: hr = _isl.GetPath(a, na); break;
+				case _WhatString.Arguments: hr = _isl.GetArguments(a, na); break;
+				case _WhatString.WorkingDirectory: hr = _isl.GetWorkingDirectory(a, na); break;
+				case _WhatString.Description: hr = _isl.GetDescription(a, na); break;
+				}
+				if(hr != 0) return null;
+				var R = b.ToString();
+				return (R.Length > 0) ? R : null;
+			}
+
+			string _CorrectPath(string R, bool fixMSI = false)
+			{
+				if(Empty(R)) return null;
 
 				if(!fixMSI) {
 					R = Path_.ExpandEnvVar(R);
 				} else if(R.IndexOf_(@"\Installer\{") > 0) {
 					//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
-					var product = new StringBuilder(40);
-					var component = new StringBuilder(40);
+					var product = stackalloc char[40];
+					var component = stackalloc char[40];
 					if(0 != _Api.MsiGetShortcutTarget(_lnkPath, product, null, component)) return null;
 					//note: for some shortcuts MsiGetShortcutTarget gets empty component. Then MsiGetComponentPath fails.
 					//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
 					//	Could not find a workaround.
 
-					int n = 300; sb.EnsureCapacity(n);
-					int hr = _Api.MsiGetComponentPath(product.ToString(), component.ToString(), sb, ref n);
-					if(hr < 0 || sb.Length == 0) return null; //eg not installed, just advertised
-
-					R = sb.ToString();
+					var b = Util.LibCharBuffer.Common; int na = 300;
+					int hr = _Api.MsiGetComponentPath(product, component, b.Alloc(na), ref na);
+					if(hr < 0) return null; //eg not installed, just advertised
+					R = b.ToString();
+					if(R.Length == 0) return null;
 					//note: can be a registry key instead of file path. No such shortcuts on my PC.
 				}
 
 				//GetPath problem: replaces "c:\program files" to "c:\program files (x86)".
 				//These don't help: SLGP_RAWPATH, GetIDList, disabled redirection.
 				//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
-				if(!Environment.Is64BitProcess && Environment.Is64BitOperatingSystem) {
+				if(Ver.Is32BitProcessOn64BitOS) {
 					if(_pf == null) { string s = Folders.ProgramFilesX86; _pf = s + "\\"; }
-					if(R.StartsWith_(_pf, true) && !ExistsAsAny(R)) {
+					if(R.StartsWith_(_pf, true) && !Files.ExistsAsAny(R)) {
 						var s2 = R.Remove(_pf.Length - 7, 6);
-						if(ExistsAsAny(s2)) R = s2;
+						if(Files.ExistsAsAny(s2)) R = s2;
 						//info: "C:\\Program Files (x86)\\" in English, "C:\\Programme (x86)\\" in German etc.
 						//never mind: System32 folder also has similar problem, because of redirection.
 						//note: ShellExecuteEx also has this problem.
@@ -399,30 +380,13 @@ namespace Catkeys
 			}
 			static string _pf;
 
-			string _GetMsiShortcutTarget()
-			{
-				var product = new StringBuilder(40);
-				var component = new StringBuilder(40);
-				if(0 != _Api.MsiGetShortcutTarget(_lnkPath, product, null, component)) return null;
-				//note: for some shortcuts MsiGetShortcutTarget gets empty component. Then MsiGetComponentPath fails.
-				//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
-				//	Could not find a workaround.
-
-				int n = 300; var sb = new StringBuilder(n);
-				int hr = _Api.MsiGetComponentPath(product.ToString(), component.ToString(), sb, ref n);
-				if(hr < 0 || sb.Length == 0) return null; //eg not installed, just advertised
-
-				return sb.ToString();
-				//note: can be a registry key instead of file path. No such shortcuts on my PC.
-			}
-
 			static partial class _Api
 			{
 				[DllImport("msi.dll", EntryPoint = "#217")]
-				public static extern int MsiGetShortcutTarget(string szShortcutPath, [Out] StringBuilder szProductCode, [Out] StringBuilder szFeatureId, [Out] StringBuilder szComponentCode);
+				public static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
 
 				[DllImport("msi.dll", EntryPoint = "#173")]
-				public static extern int MsiGetComponentPath(string szProduct, string szComponent, [Out] StringBuilder lpPathBuf, ref int pcchBuf);
+				public static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
 
 				//MsiGetComponentPath returns:
 				//public enum INSTALLSTATE

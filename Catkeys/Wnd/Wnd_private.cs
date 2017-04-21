@@ -48,10 +48,10 @@ namespace Catkeys
 			if(s != null && s.Length == 0) throw new ArgumentException("Cannot be \"\". Can be null.", paramName);
 		}
 
-		static partial class _Api
+		static unsafe partial class _Api
 		{
 			[DllImport("kernel32.dll")]
-			internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref uint AppModelIDLength, [Out] StringBuilder sbAppUserModelID);
+			internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, [Out] char* sbAppUserModelID);
 		}
 
 		/// <summary>
@@ -61,23 +61,23 @@ namespace Catkeys
 		/// <param name="w">Window.</param>
 		/// <param name="appId">Receives app ID.</param>
 		/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
-		/// <param name="getExePathIfNotWinStoreApp">Get exe full path if hwnd is not a Windows Store app.</param>
-		static int _WindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
+		static unsafe int _GetWindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		{
 			appId = null;
 
-			if(WinVer >= Win8) {
+			if(Ver.MinWin8) {
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
 					using(var p = new Process_.LibProcessHandle(w)) {
 						if(!p.Is0) {
-							uint u = 1000; var sb = new StringBuilder((int)u);
-							if(0 == _Api.GetApplicationUserModelId(p, ref u, sb)) appId = sb.ToString();
+							var b = Util.LibCharBuffer.Common; int na = 1000;
+							if(0 == _Api.GetApplicationUserModelId(p, ref na, b.Alloc(na))) appId = b.ToString();
 						}
 					}
 					break;
 				case 2:
-					if(WinVer >= Win10) {
+					if(Ver.MinWin10) {
 						Api.IPropertyStore ps; Api.PROPVARIANT_LPARAM v;
 						if(0 == Api.SHGetPropertyStoreForWindow(w, ref Api.IID_IPropertyStore, out ps)) {
 							if(0 == ps.GetValue(ref Api.PKEY_AppUserModel_ID, out v)) {
@@ -104,42 +104,6 @@ namespace Catkeys
 			return 0;
 		}
 
-		//static int _WindowsStoreAppId2(Wnd w, out string appID, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
-		//{
-		//	appID = null;
-
-		//	if(getExePathIfNotWinStoreApp) {
-		//		if(WinVer >= Win8) {
-		//			bool isApp = false;
-		//			switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
-		//			case 1:
-		//				isApp = true;
-		//				break;
-		//			case 2:
-		//				if(WinVer >= Win10) {
-		//					Wnd t = _WindowsStoreAppFrameChild(w);
-		//					if(!t.Is0) { w = t; isApp = true; }
-		//				}
-		//				break;
-		//			}
-		//			if(!isApp) {
-		//				appID = w.ProcessPath;
-		//				return (appID == null) ? 0 : 2;
-		//			}
-		//		}
-
-		//	}
-
-		//	using(var p = new Process_.LibProcessHandle(w)) {
-		//		if(p.Is0) return 0;
-		//		uint u = 1000;
-		//		var sb = new StringBuilder((int)u);
-		//		if(0 != _Api.GetApplicationUserModelId(p, ref u, sb)) return 0;
-		//		if(prependShellAppsFolder) appID = @"shell:AppsFolder\" + sb.ToString(); else appID = sb.ToString();
-		//		return 1;
-		//	}
-		//}
-
 		/// <summary>
 		/// On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
 		/// If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window with the same name as of w. It is unreliable, but MS does not provide API for this.
@@ -150,7 +114,7 @@ namespace Catkeys
 			bool retry = false;
 			string name = null;
 			g1:
-			if(WinVer < Win10 || !w.ClassNameIs("ApplicationFrameWindow")) return Wnd0;
+			if(!Ver.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return Wnd0;
 			Wnd c = Api.FindWindowEx(w, Wnd0, "Windows.UI.Core.CoreWindow", null);
 			if(!c.Is0) return c;
 			if(retry) return Wnd0;
@@ -172,28 +136,11 @@ namespace Catkeys
 		/// </summary>
 		static Wnd _WindowsStoreAppHost(Wnd w)
 		{
-			if(WinVer < Win10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return Wnd0;
+			if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return Wnd0;
 			Wnd wo = w.WndDirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
 			string s = w.GetText(false, false); if(Empty(s)) return Wnd0;
 			return Api.FindWindow("ApplicationFrameWindow", s);
 		}
-
-
-		//This can be used, but not much simpler than calling ATI directly and using try/finally.
-		//internal struct LibAttachThreadInput :IDisposable
-		//{
-		//	uint _tid;
-
-		//	internal bool Attach(uint tid)
-		//	{
-		//		if(!Api.AttachThreadInput(Api.GetCurrentThreadId(), _tid, true)) return false;
-		//		_tid = tid; return true;
-		//	}
-
-		//	internal bool Attach(Wnd w) { return Attach(w.ThreadId); }
-
-		//	internal void Dispose() { if(_tid != 0) Api.AttachThreadInput(Api.GetCurrentThreadId(), _tid, false); }
-		//}
 
 		/// <summary>
 		/// Normalizes coordinates or width/height (converts fraction to pixels, adds offsets, etc).

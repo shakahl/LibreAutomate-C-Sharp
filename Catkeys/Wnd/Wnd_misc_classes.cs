@@ -19,8 +19,9 @@ using System.Drawing;
 //using System.Linq;
 using System.Collections.Concurrent;
 
-using Catkeys;
 using static Catkeys.NoClass;
+
+#pragma warning disable 282 //C#7 intellisense bug: it thinks that Wnd has multiple fields.
 
 namespace Catkeys
 {

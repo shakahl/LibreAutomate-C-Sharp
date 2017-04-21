@@ -477,6 +477,7 @@ namespace Catkeys
 		internal const int ERROR_DIR_NOT_EMPTY = 145;
 		internal const int ERROR_ALREADY_EXISTS = 183;
 		internal const int ERROR_DIRECTORY = 267;
+		internal const int ERROR_PRIVILEGE_NOT_HELD = 1314;
 		internal const int ERROR_INVALID_WINDOW_HANDLE = 1400;
 		internal const int ERROR_TIMEOUT = 1460;
 		internal const int E_INVALIDARG = unchecked((int)0x80070057);

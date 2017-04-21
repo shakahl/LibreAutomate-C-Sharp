@@ -42,7 +42,8 @@ namespace Catkeys
 			LiteralPath = 1,
 
 			/// <summary>
-			/// If file is not full path, call <see cref="Files.SearchPath">Files.SearchPath</see>. Without this flag searches only in <see cref="Folders.ThisApp"/>.
+			/// If file is not full path, call <see cref="Files.SearchPath">Files.SearchPath</see>.
+			/// Without this flag searches only in <see cref="Folders.ThisAppImages"/>; with this flag also searches there first.
 			/// </summary>
 			SearchPath = 2,
 
@@ -74,28 +75,33 @@ namespace Catkeys
 		/// Later call Dispose().
 		/// </summary>
 		/// <param name="file">
-		/// Any file, folder, URL like "http://..." or "shell:..." etc, shell item like "::{CLSID}" or "::{CLSID1}\::{CLSID2}". Also can be a file type like ".txt" or a protocol like "http:".
+		/// Can be:
+		/// Path of any file or folder.
+		/// URL, like "http://..." or "mailto:a@b.c" or "file:///path".
+		/// ITEMIDLIST like ":: HexEncodedITEMIDLIST". It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
+		/// Shell object parsing name, like @"::{CLSID-1}\::{CLSID-2}" or "shell:AppsFolder\WinStoreAppId".
+		/// File type like ".txt" or URL protocol like "http:".
 		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like "path,index" or native icon resource id like "path,-id".
-		/// If not full path, the file must be in program's folder.
+		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>.
+		/// Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).
 		/// </param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		/// <param name="flags"><see cref="IconFlags"/></param>
+		/// <param name="flags"></param>
 		public static Bitmap GetFileIconImage(string file, int size, IconFlags flags = 0)
 		{
 			return HandleToImage(GetFileIconHandle(file, size, flags));
 		}
 
 		/// <summary>
-		/// Gets icon of a file or other shell object specified by its ITEMIDLIST pointer.
+		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
 		/// Calls <see cref="GetPidlIconHandle"/> and converts to Bitmap. Returns null if failed.
-		/// Later call Dispose().
+		/// Later call Dispose.
 		/// </summary>
-		/// <param name="pidl">ITEMIDLIST pointer.</param>
+		/// <param name="pidl">Native ITEMIDLIST pointer or <see cref="Shell.Pidl"/>.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		/// <param name="freePidl">Call Marshal.FreeCoTaskMem(pidl).</param>
-		public static Bitmap GetPidlIconImage(IntPtr pidl, int size, bool freePidl = false)
+		public static Bitmap GetPidlIconImage(IntPtr pidl, int size)
 		{
-			return HandleToImage(GetPidlIconHandle(pidl, size, freePidl));
+			return HandleToImage(GetPidlIconHandle(pidl, size));
 		}
 
 		/// <summary>
@@ -121,30 +127,28 @@ namespace Catkeys
 		/// <summary>
 		/// Gets file icon.
 		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
-		/// Returns icon handle. Returns Zero if failed, for example if the file does not exist.
-		/// Later call <see cref="DestroyIconHandle"/>.
+		/// Returns native icon handle. Returns Zero if failed, for example if the file does not exist.
+		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>. Or instead use <see cref="GetFileIconImage"/>.
 		/// </summary>
 		/// <param name="file">
-		/// Any file, folder, URL like "http://..." or "shell:..." etc, shell item like "::{CLSID}" or "::{CLSID1}\::{CLSID2}". Also can be a file type like ".txt" or a protocol like "http:".
+		/// Can be:
+		/// Path of any file or folder.
+		/// URL, like "http://..." or "mailto:a@b.c" or "file:///path".
+		/// ITEMIDLIST like ":: HexEncodedITEMIDLIST". It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
+		/// Shell object parsing name, like @"::{CLSID-1}\::{CLSID-2}" or "shell:AppsFolder\WinStoreAppId".
+		/// File type like ".txt" or URL protocol like "http:".
 		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like "path,index" or native icon resource id like "path,-id".
-		/// If not full path, the file must be in program's folder.
+		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>.
+		/// Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).
 		/// </param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		/// <param name="flags"><see cref="IconFlags"/></param>
+		/// <param name="flags"></param>
 		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, IconFlags flags = 0)
 		{
 			if(Empty(file)) return Zero;
 			size = _NormalizeIconSizeParameter(size);
 			file = Path_.ExpandEnvVar(file);
-
-			//if(file[0] == '<') {
-			//	//TODO: either use or remove this code
-			//	if(!file.StartsWith_("<idlist:")) return Zero;
-			//	int i = file.IndexOf('>'); if(i < 9) return Zero;
-			//	IntPtr pidl=Folders.VirtualITEMIDLIST...
-			//	return _GetShellIcon(pidl, size, true);
-			//}
 
 			//var perf = new Perf.Inst(true);
 			IntPtr R = _GetFileIcon(file, size, flags);
@@ -154,45 +158,50 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets icon of a file or other shell object specified by its ITEMIDLIST pointer.
-		/// Returns icon handle. Returns Zero if failed.
-		/// Later call <see cref="DestroyIconHandle"/>.
+		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
+		/// Returns native icon handle. Returns Zero if failed.
+		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>. Or instead use <see cref="GetPidlIconImage"/>.
 		/// </summary>
-		/// <param name="pidl">ITEMIDLIST pointer.</param>
+		/// <param name="pidl">Native ITEMIDLIST pointer or <see cref="Shell.Pidl"/>.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		/// <param name="freePidl">Call Marshal.FreeCoTaskMem(pidl).</param>
-		public static IntPtr GetPidlIconHandle(IntPtr pidl, int size, bool freePidl = false)
+		public static IntPtr GetPidlIconHandle(IntPtr pidl, int size)
 		{
 			if(pidl == Zero) return Zero;
 			size = _NormalizeIconSizeParameter(size);
-			return _GetShellIcon(true, null, pidl, size, freePidl);
+			return _GetShellIcon(true, null, pidl, size);
 		}
 
 		internal static IntPtr _GetFileIcon(string file, int size, IconFlags flags)
 		{
 			IntPtr R = Zero, pidl = Zero;
 			int index = 0;
-			bool extractFromFile = false, isFileType = false, isURL = false, isCLSID = false, isPath = true;
+			bool extractFromFile = false, isFileType = false, isURL = false, isShellPath = false, isPath = true;
 			//bool getDefaultIfFails = 0!=(flags&IconFlags.DefaultIfFails);
 
 			bool searchPath = 0 != (flags & IconFlags.SearchPath);
 
 			if(0 == (flags & IconFlags.LiteralPath)) {
 				//is ".ext" or "protocol:"?
-				isFileType = Path_.Internal.IsExtension(file) || (isURL = Path_.Internal.IsProtocol(file));
-				if(!isFileType) isURL = Path_.IsURL(file);
-				if(isFileType || isURL || (isCLSID = (file[0] == ':'))) isPath = false;
+				isFileType = Path_.LibIsExtension(file) || (isURL = Path_.LibIsProtocol(file));
+				if(!isFileType) isURL = Path_.IsUrl(file);
+				if(isFileType || isURL || (isShellPath = (file[0] == ':'))) isPath = false;
 				if(isPath) {
 					//get icon index from "path,index" and remove ",index"
 					extractFromFile = ParseIconLocation(ref file, out index);
 
-					if(!searchPath) file = Path_.MakeFullPath(file);
+					if(!searchPath) {
+						if(!Path_.IsFullPath(file)) file = Folders.ThisAppImages + file;
+						file = Path_.LibNormalize(file, Path_.NormalizeFlags.DoNotPrefixLongPath, noExpandEV: true);
+					}
 				}
 			}
 
-			if(searchPath && isPath) {
-				file = Files.SearchPath(file);
-				if(file == null) return Zero; //ignore getDefaultIfFails
+			if(isPath) {
+				if(searchPath) {
+					file = Files.SearchPath(file, Folders.ThisAppImages);
+					if(file == null) return Zero; //ignore getDefaultIfFails
+				}
+				file = Path_.UnprefixLongPath(file);
 			}
 
 			if(isPath /*&& (extractFromFile || 0==(flags&IconFlags.Shell))*/) {
@@ -201,7 +210,7 @@ namespace Catkeys
 				if(extractFromFile || ext > 0) {
 					R = GetFileIconHandleRaw(file, index, size);
 					if(R != Zero || extractFromFile) return R;
-					switch(Files.ExistsAs(file)) {
+					switch(Files.ExistsAs(file, true)) {
 					case Files.ItIs.NotFound:
 						return Zero;
 					case Files.ItIs.File:
@@ -229,13 +238,13 @@ namespace Catkeys
 			//But now, after other optimizations applied, in real life makes faster just 10-20%.
 #if false
 			//if(0==(flags&IconFlags.Shell)){
-			string progId = isCLSID ? null : Files.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
+			string progId = isShellPath ? null : Files.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : Registry_.Open(progId, Registry.ClassesRoot);
 			//PrintList(file, progId, isFileType, isURL, rk != null);
 
 			if(rk == null) {
-				//Unregistered file type/protocol, no extension, folder, ::{CLSID}, shell:WinStoreApp, or no progId key in HKCR
+				//Unregistered file type/protocol, no extension, folder, ::{CLSID}, shell:AppsFolder\WinStoreAppId, or no progId key in HKCR
 				//PrintList(@"unregistered", file, progId);
 				if(progId != null) goto gr; //the file type is known, but no progid key in HKCR. Let shell API figure out. Rare.
 				if(isExt || (isPath && Files.FileExists(file))) return GetShellStockIconHandle(Native.SHSTOCKICONID.SIID_DOCNOASSOC, size);
@@ -292,7 +301,7 @@ namespace Catkeys
 		static IntPtr _GetShellIcon(bool usePidl, string file, IntPtr pidl, int size, bool freePidl = false)
 		{
 			//info:
-			//	We support everything that can have icon - path, URL (including "shell:WinStoreApp"), protocol (eg "http:"), file extension (eg ".txt"), shell item parsing name (eg "::{CLSID}").
+			//	We support everything that can have icon - path, URL, protocol (eg "http:"), file extension (eg ".txt"), shell item parsing name (eg "::{CLSID}"), "shell:AppsFolder\WinStoreAppId".
 			//	We call PidlFromString here and pass it to SHGetFileInfo. It makes faster when using thread pool, because multiple threads can call PidlFromString (slow) simultaneously.
 			//	PidlFromString does not support file extension. SHGetFileInfo does not support URL and protocol, unless used PIDL.
 			//	SHGetFileInfo gets the most correct icons, but only of standard sizes, which also depends on DPI and don't know what.
@@ -301,7 +310,7 @@ namespace Catkeys
 
 			if(usePidl) {
 				if(pidl == Zero) {
-					pidl = Files.Misc.PidlFromString(file);
+					pidl = Shell.Pidl.LibFromString(file);
 					if(pidl == Zero) usePidl = false; else freePidl = true;
 				}
 			}
@@ -387,11 +396,11 @@ namespace Catkeys
 		static IntPtr _GetLnkIcon(string file, int size)
 		{
 			try {
-				using(var x = Files.LnkShortcut.Open(file)) {
+				using(var x = Shell.Shortcut.Open(file)) {
 					var s = x.GetIconLocation(out int ii); if(s != null) return GetFileIconHandleRaw(s, ii, size);
 					s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
 					//PrintList("need IDList", file);
-					return GetPidlIconHandle(x.TargetIDList, size, true);
+					using(var pidl = x.TargetPidl) return GetPidlIconHandle(pidl, size);
 				}
 			}
 			catch { return Zero; }
@@ -481,9 +490,9 @@ namespace Catkeys
 		/// <summary>
 		/// Extracts icon directly from file that contains it.
 		/// Returns icon handle. Returns Zero if failed.
-		/// Later call <see cref="DestroyIconHandle"/>.
+		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>.
 		/// </summary>
-		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables.</param>
+		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static unsafe IntPtr GetFileIconHandleRaw(string file, int index = 0, int size = 16)
@@ -495,7 +504,7 @@ namespace Catkeys
 			//With .ico it matches LoadImage speed (without resizing). PrivateExtractIcons is slightly slower.
 
 			IntPtr R = Zero;
-			int hr = Api.SHDefExtractIcon(file, index, 0, &R, null, (uint)size);
+			int hr = Api.SHDefExtractIcon(file, index, 0, &R, null, size);
 			if(hr != 0) return Zero;
 			return R;
 
@@ -504,6 +513,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets a shell stock icon handle.
+		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>.
 		/// </summary>
 		/// <param name="icon">Shell stock icon id. For example Native.SHSTOCKICONID.SIID_APPLICATION.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
@@ -552,7 +562,7 @@ namespace Catkeys
 		/// <summary>
 		/// Creates completely transparent monochrome icon.
 		/// Returns icon handle.
-		/// Later call <see cref="DestroyIconHandle"/>.
+		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>.
 		/// </summary>
 		public static IntPtr CreateBlankIcon(int width, int height)
 		{
@@ -588,7 +598,7 @@ namespace Catkeys
 		//public static IntPtr GetCursorHandle(string file, int size = 0)
 		//{
 		//	uint fl = Api.LR_LOADFROMFILE; if(size == 0) fl |= Api.LR_DEFAULTSIZE;
-		//	return Api.LoadImage(Zero, Path_.MakeFullPath(file), Api.IMAGE_CURSOR, size, size, fl);
+		//	return Api.LoadImage(Zero, normalizesomehow(file), Api.IMAGE_CURSOR, size, size, fl);
 		//}
 
 		/// <summary>
@@ -953,7 +963,7 @@ namespace Catkeys
 			{
 				lock(_lockString) {
 					_dirty = false;
-					File.Delete(_cacheFile);
+					Files.Delete(_cacheFile);
 					_x = null;
 					_table = null;
 				}
@@ -978,7 +988,7 @@ namespace Catkeys
 			public Bitmap GetImage(string file, bool useExt)
 			{
 				if(useExt) {
-					var ext = Path.GetExtension(file);
+					var ext = Path_.GetExtension(file);
 					if(ext.Length == 0) {
 						if(Files.ExistsAsDirectory(file)) ext = file;
 						else ext = ".no-ext";
@@ -987,6 +997,8 @@ namespace Catkeys
 						if(ext.Equals_(".ico", true) || ext.Equals_(".exe", true) || ext.StartsWith_(".exe,", true) || ext.StartsWith_(".dll,", true)) ext = file;
 					}
 					file = ext;
+				} else if(Path_.IsFullPathEEV(ref file)) {
+					file = Path_.LibNormalize(file, noExpandEV: true);
 				}
 
 				lock(_lockString) {

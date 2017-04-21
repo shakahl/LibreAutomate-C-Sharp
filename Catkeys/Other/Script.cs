@@ -108,8 +108,7 @@ namespace Catkeys
 	[DebuggerStepThrough]
 	public class Script
 	{
-		[ThreadStatic]
-		static ScriptOptions _opt;
+		[ThreadStatic]		static ScriptOptions _opt;
 
 		/// <summary>
 		/// Gets ScriptOptions object of this thread.

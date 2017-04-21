@@ -232,8 +232,7 @@ namespace Catkeys
 			//To control object lifetime we use a thread-static array (actually Hashtable).
 			//Tried GCHandle, but could not find a way to delete object when thread ends.
 			//Calling KillTimer when thread ends is optional. Need just to re-enable garbage collection for this object.
-			[ThreadStatic]
-			static System.Collections.Hashtable _timers;
+			[ThreadStatic]			static System.Collections.Hashtable _timers;
 
 			/// <summary>
 			/// Some object or value attached to this Timer_ variable.

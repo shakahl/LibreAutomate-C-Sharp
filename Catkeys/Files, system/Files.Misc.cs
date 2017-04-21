@@ -30,57 +30,6 @@ namespace Catkeys
 		/// </summary>
 		public static class Misc
 		{
-			//TODO: Use class Files.Shell.
-
-			#region pidl
-
-			/// <summary>
-			/// Converts file path or URL or shell object parsing name to PIDL.
-			/// Returns Zero if s is empty. If failed, returns Zero or throws exception.
-			/// Later call Marshal.FreeCoTaskMem();
-			/// </summary>
-			/// <param name="s"></param>
-			/// <param name="canThrow">If fails, throw CatException.</param>
-			/// <exception cref="CatException">Failed, and canThrow is true. Probably invalid s.</exception>
-			public static unsafe IntPtr PidlFromString(string s, bool canThrow = false)
-			{
-				if(!Empty(s)) {
-					var hr = Api.SHParseDisplayName(s, Zero, out IntPtr R, 0, null);
-					if(hr == 0) return R;
-					if(canThrow) throw new CatException(hr);
-				}
-				return Zero;
-				//the same as
-				//Api.IShellFolder isf; if(0 != Api.SHGetDesktopFolder(out isf)) return Zero;
-				//try { if(0 != isf.ParseDisplayName(Wnd0, Zero, s, null, out R, null)) return Zero; } finally { Marshal.ReleaseComObject(isf); }
-			}
-
-			/// <summary>
-			/// Converts PIDL to file path or URL or shell object parsing name.
-			/// Returns null if pidl is Zero. If failed, returns null or throws exception.
-			/// </summary>
-			/// <param name="pidl"></param>
-			/// <param name="stringType">
-			/// A value from the <see cref="Native.SIGDN"/> enumeration that specifies the type of string to retrieve.
-			/// With the default value returns string that can be passed to PidlFromString. It can be a path, URL, "::{CLSID}", etc.
-			/// Other often used values:
-			/// Native.SIGDN.SIGDN_FILESYSPATH - returns null if pidl is not of a file system object.
-			/// Native.SIGDN.SIGDN_URL - returns null if pidl is not of a URL or path. If path, returns its URL form, like "file:///C:/a/b.txt".
-			/// Native.SIGDN.SIGDN_NORMALDISPLAY - returns string that is best to display in UI but cannot be passed to PidlFromString.
-			/// </param>
-			/// <param name="canThrow">If fails, throw CatException.</param>
-			/// <exception cref="CatException">Failed, and canThrow is true.</exception>
-			public static string PidlToString(IntPtr pidl, Native.SIGDN stringType = Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING, bool canThrow = false)
-			{
-				if(pidl != Zero) {
-					var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
-					if(hr == 0) return R;
-					if(canThrow) throw new CatException(hr);
-				}
-				return null;
-			}
-
-			#endregion
 
 #if false //currently not used
 			/// <summary>
@@ -130,7 +79,7 @@ namespace Catkeys
 						if(path == "shell") return null; //eg "shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"
 						isProtocol = true;
 					} else {
-						try { path = Path.GetExtension(path); } catch { return null; }
+						path = Path_.GetExtension(path);
 						if(Empty(path)) return null;
 					}
 				}
@@ -169,10 +118,11 @@ namespace Catkeys
 			/// Gets <see cref="FileId"/> of a file or directory.
 			/// Returns false if fails. Supports <see cref="Native.GetError"/>.
 			/// </summary>
-			/// <param name="path">Full path. This function does not expand environment variables etc; it passes unmodified path to the API.</param>
+			/// <param name="path">Full path. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 			/// <param name="fileId"></param>
 			public static bool GetFileId(string path, out FileId fileId)
 			{
+				path = Path_.LibNormalizeMinimally(path, false);
 				fileId = new FileId();
 				IntPtr h = (IntPtr)(-1);
 				try {
@@ -213,7 +163,7 @@ namespace Catkeys
 
 			//static char[] _sep3 = new char[] { '\\', '/', '~' };
 #if false
-		//this is ~300 times slower than File.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished.
+		//this is ~300 times slower than Files.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished. Move to Shell class.
 		public static void RenameFileOrDirectory(string path, string newName)
 		{
 			Perf.First();
@@ -239,11 +189,11 @@ namespace Catkeys
 			Perf.NW();
 		}
 
-		static _Api.IShellItem _ShellItem(string path, string errMsg)
+		static Api.IShellItem _ShellItem(string path, string errMsg)
 		{
 			var pidl = Misc.PidlFromString(path, true);
 			try {
-				var guid = typeof(_Api.IShellItem).GUID;
+				var guid = typeof(Api.IShellItem).GUID;
 				CatException.ThrowIfFailed(_Api.SHCreateItemFromIDList(pidl, ref guid, out var R), errMsg);
 				return R;
 			}
@@ -347,19 +297,82 @@ namespace Catkeys
 				PDOPS_ERRORS
 			}
 
-			[ComImport, Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-			internal interface IShellItem
-			{
-				[PreserveSig] int BindToHandler(IntPtr pbc, [In] ref Guid bhid, [In] ref Guid riid, out IntPtr ppv); //IBindCtx
-				[PreserveSig] int GetParent(out IShellItem ppsi);
-				[PreserveSig] int GetDisplayName(Native.SIGDN sigdnName, out IntPtr ppszName);
-				[PreserveSig] int GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
-				[PreserveSig] int Compare(IShellItem psi, uint hint, out int piOrder);
-			}
-
 
 		}
 #endif
+
+			/// <summary>
+			/// Temporarily disables file system redirection, to allow this 32-bit process access the 64-bit System32 directory.
+			/// </summary>
+			public struct DisableRedirection :IDisposable
+			{
+				bool _redirected;
+				IntPtr _redirValue;
+
+				/// <summary>
+				/// If Ver.Is32BitProcessOn64BitOS, calls API <msdn>Wow64DisableWow64FsRedirection</msdn>, which disables file system redirection.
+				/// The caller can call this without checking OS and process bitness. This function checks it and it is fast.
+				/// Always call <see cref="Revert"/> or Dispose, for example in finally{}, or use using (this struct implements IDisposable). Not calling it is more dangerous than a memory leak. It is not called by GC.
+				/// </summary>
+				public void Disable()
+				{
+					if(Ver.Is32BitProcessOn64BitOS)
+						_redirected = Api.Wow64DisableWow64FsRedirection(out _redirValue);
+				}
+
+				/// <summary>
+				/// If redirected, calls API <msdn>Wow64RevertWow64FsRedirection</msdn>.
+				/// </summary>
+				public void Revert()
+				{
+					if(_redirected)
+						_redirected = !Api.Wow64RevertWow64FsRedirection(_redirValue);
+				}
+
+				/// <summary>
+				/// Returns true if Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System.
+				/// Most such paths are redirected, therefore you may want to disable redirection with this class.
+				/// </summary>
+				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of @"\\?\".</param>
+				public static bool IsSystem64PathIn32BitProcess(string path)
+				{
+					return 0 != _IsSystem64PathIn32BitProcess(path);
+				}
+
+				static int _IsSystem64PathIn32BitProcess(string path)
+				{
+					if(!Ver.Is32BitProcessOn64BitOS) return 0;
+					string sysDir = Folders.System;
+					if(!path.StartsWith_(sysDir, true)) return 0;
+					int len = sysDir.Length;
+					if(path.Length > len && !Path_.LibIsSepChar(path[len])) return 0;
+					return len;
+				}
+
+				/// <summary>
+				/// If Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System, replaces that path part with <see cref="Folders.SystemX64"/>.
+				/// It disables redirection to Folders.SystemX32 for that path.
+				/// </summary>
+				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of @"\\?\".</param>
+				/// <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>
+				public static string GetNonRedirectedSystemPath(string path, bool ifExistsOnlyThere = false)
+				{
+					int i = _IsSystem64PathIn32BitProcess(path);
+					if(i == 0) return path;
+					if(ifExistsOnlyThere && Files.ExistsAsAny(path)) return path;
+					var s = path.ReplaceAt_(0, i, Folders.SystemX64);
+					if(ifExistsOnlyThere && !Files.ExistsAsAny(s)) return path;
+					return s;
+				}
+
+				/// <summary>
+				/// Calls <see cref="Revert"/>.
+				/// </summary>
+				public void Dispose()
+				{
+					Revert();
+				}
+			}
 		}
 	}
 }

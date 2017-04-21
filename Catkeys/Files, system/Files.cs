@@ -30,8 +30,8 @@ namespace Catkeys
 	/// Works with files and directories. Disk drives like @"C:\" or "C:" are directories too.
 	/// Extends .NET file system classes such as File and Directory.
 	/// Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
-	/// Most functions support only full path, and throw ArgumentException if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
-	/// Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="Path_.PrefixLongPath(string)"/>. Most functions support long paths even without prefix.
+	/// Most functions support only full path. Most of them throw ArgumentException if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
+	/// Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="Path_.PrefixLongPath"/>, <see cref="Path_.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 	/// </summary>
 	public static partial class Files
 	{
@@ -74,7 +74,7 @@ namespace Catkeys
 		public enum GAFlags
 		{
 			///<summary>Pass path to the API as it is, without any normalizing and validating.</summary>
-			RawPath = 1,
+			UseRawPath = 1,
 			///<summary>
 			///If failed, return false and don't throw exception.
 			///Then, if you need error info, you can use <see cref="Native.GetError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
@@ -88,24 +88,23 @@ namespace Catkeys
 		/// Returns false if the file/directory does not exist.
 		/// Calls API <msdn>GetFileAttributesEx</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If flag RawPath not used, supports environment variables and non-pefixed extended-lenght path.</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If flag UseRawPath not used, supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 		/// <param name="properties">Receives properties.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="ArgumentException">Not full path. Not thrown if used flag RawPath.</exception>
+		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
 		/// <exception cref="CatException">The file/directory exist but failed to get its properties. Not thrown if used flag DoNotThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
 		/// You can also get most of these properties with <see cref="EnumDirectory"/>.
 		/// </remarks>
-		public static bool GetProperties(string path, out FileProperties properties, GAFlags flags = 0)
+		public static unsafe bool GetProperties(string path, out FileProperties properties, GAFlags flags = 0)
 		{
 			properties = new FileProperties();
-			if(0 == (flags & GAFlags.RawPath)) path = Path_.LibExpandEV_CheckFullPath_PrefixLong(path); //don't need LibNormalizeExpandEV, the API itself supports .. etc
+			if(0 == (flags & GAFlags.UseRawPath)) path = Path_.LibNormalizeMinimally(path, true); //don't need LibNormalizeExpandEV, the API itself supports .. etc
 			_DisableDeviceNotReadyMessageBox();
 			Api.WIN32_FILE_ATTRIBUTE_DATA d;
 			if(!Api.GetFileAttributesEx(path, 0, out d)) {
-				properties.Attributes = _GetAttributesOnError(path, flags);
-				return false;
+				if(!_GetAttributesOnError(path, flags, out var unused, &d)) return false;
 			}
 			properties.Attributes = (FileAttributes)d.dwFileAttributes;
 			properties.Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
@@ -120,40 +119,76 @@ namespace Catkeys
 		/// Returns false if the file/directory does not exist.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If flag RawPath not used, supports environment variables and non-pefixed extended-lenght path.</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If flag UseRawPath not used, supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 		/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="ArgumentException">Not full path. Not thrown if used flag RawPath.</exception>
+		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
 		/// <exception cref="CatException">Failed. Not thrown if used flag DoNotThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
 		/// </remarks>
-		public static bool GetAttributes(string path, out FileAttributes attributes, GAFlags flags = 0)
+		public static unsafe bool GetAttributes(string path, out FileAttributes attributes, GAFlags flags = 0)
 		{
 			attributes = 0;
-			if(0 == (flags & GAFlags.RawPath)) path = Path_.LibExpandEV_CheckFullPath_PrefixLong(path); //don't need LibNormalizeExpandEV, the API itself supports .. etc
+			if(0 == (flags & GAFlags.UseRawPath)) path = Path_.LibNormalizeMinimally(path, true); //don't need LibNormalizeExpandEV, the API itself supports .. etc
 			_DisableDeviceNotReadyMessageBox();
-			uint a = Api.GetFileAttributes(path);
-			if(a == Api.INVALID_FILE_ATTRIBUTES) {
-				attributes = _GetAttributesOnError(path, flags);
-				return false;
-			}
-			attributes = (FileAttributes)a;
+			var a = Api.GetFileAttributes(path);
+			if(a == (FileAttributes)(-1)) return _GetAttributesOnError(path, flags, out attributes);
+			attributes = a;
 			return true;
 		}
 
-		static FileAttributes _GetAttributesOnError(string path, GAFlags flags)
+		static unsafe bool _GetAttributesOnError(string path, GAFlags flags, out FileAttributes attr, Api.WIN32_FILE_ATTRIBUTE_DATA* p = null)
 		{
+			attr = 0;
 			var ec = Native.GetError();
-			if(!(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND || ec == Api.ERROR_NOT_READY)) {
-				if(0 == (flags & GAFlags.DoNotThrow)) throw new CatException(ec, $"*get file attributes: '{path}'");
-				if(ec == Api.ERROR_ACCESS_DENIED || ec == Api.ERROR_SHARING_VIOLATION) return (FileAttributes)(-1);
-				//tested:
-				//	If the file is in a protected directory, ERROR_ACCESS_DENIED.
-				//	If the path is to a non-existing file in a protected directory, ERROR_FILE_NOT_FOUND.
-				//	ERROR_SHARING_VIOLATION for C:\pagefile.sys etc.
+			switch(ec) {
+			case Api.ERROR_FILE_NOT_FOUND:
+			case Api.ERROR_PATH_NOT_FOUND:
+			case Api.ERROR_NOT_READY:
+				return false;
+			case Api.ERROR_SHARING_VIOLATION: //eg c:\pagefile.sys. GetFileAttributes fails, but FindFirstFile succeeds.
+			case Api.ERROR_ACCESS_DENIED: //probably in a protected directory. Then FindFirstFile fails, but try anyway.
+				var d = new _Api.WIN32_FIND_DATA();
+				var hfind = _Api.FindFirstFile(path, out d);
+				if(hfind != (IntPtr)(-1)) {
+					_Api.FindClose(hfind);
+					attr = (FileAttributes)d.dwFileAttributes;
+					if(p != null) {
+						p->dwFileAttributes = d.dwFileAttributes;
+						p->nFileSizeHigh = d.nFileSizeHigh;
+						p->nFileSizeLow = d.nFileSizeLow;
+						p->ftCreationTime = d.ftCreationTime;
+						p->ftLastAccessTime = d.ftLastAccessTime;
+						p->ftLastWriteTime = d.ftLastWriteTime;
+					}
+					return true;
+				}
+				Native.SetError(ec);
+				attr = (FileAttributes)(-1);
+				break;
 			}
-			return 0;
+			if(0 != (flags & GAFlags.DoNotThrow)) return false;
+			throw new CatException(ec, $"*get file attributes: '{path}'");
+
+			//tested:
+			//	If the file is in a protected directory, ERROR_ACCESS_DENIED.
+			//	If the path is to a non-existing file in a protected directory, ERROR_FILE_NOT_FOUND.
+			//	ERROR_SHARING_VIOLATION for C:\pagefile.sys etc.
+		}
+
+		/// <summary>
+		/// Gets attributes.
+		/// Returns false if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
+		/// </summary>
+		static unsafe bool _GetAttributes(string path, out FileAttributes attr, bool useRawPath)
+		{
+			if(!useRawPath) path = Path_.LibNormalizeMinimally(path, false);
+			_DisableDeviceNotReadyMessageBox();
+			attr = (FileAttributes)Api.GetFileAttributes(path);
+			if(attr == (FileAttributes)(-1) && !_GetAttributesOnError(path, GAFlags.DoNotThrow, out attr)) return false;
+			if(!useRawPath && !Path_.IsFullPath(path)) { Native.SetError(Api.ERROR_FILE_NOT_FOUND); return false; }
+			return true;
 		}
 
 		/// <summary>
@@ -175,16 +210,15 @@ namespace Catkeys
 		/// Returns NotFound (0) if does not exist or if fails to get attributes.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If rawPath is false (default), supports environment variables and non-pefixed extended-lenght path.</param>
-		/// <param name="rawPath">Pass path to the API as it is, without any normalizing and validating.</param>
-		/// <exception cref="ArgumentException">Not full path. Not thrown if rawPath is true.</exception>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails to get attributes, instead use <see cref="GetAttributes"/>; it returns false if the file/directory does not exist, and throws exception if fails to get attributes; directories have Directory attribute.
+		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
-		public static ItIs ExistsAs(string path, bool rawPath = false)
+		public static ItIs ExistsAs(string path, bool useRawPath = false)
 		{
-			var flags = GAFlags.DoNotThrow; if(rawPath) flags |= GAFlags.RawPath;
-			if(!GetAttributes(path, out var a, flags)) return ItIs.NotFound;
+			if(!_GetAttributes(path, out var a, useRawPath)) return ItIs.NotFound;
 			var R = (0 != (a & FileAttributes.Directory)) ? ItIs.Directory : ItIs.File;
 			return R;
 		}
@@ -216,17 +250,17 @@ namespace Catkeys
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// The same as <see cref="ExistsAs"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If rawPath is false (default), supports environment variables and non-pefixed extended-lenght path.</param>
-		/// <param name="rawPath">Pass path to the API as it is, without any normalizing and validating.</param>
-		/// <exception cref="ArgumentException">Not full path. Not thrown if rawPath is true.</exception>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails to get attributes, instead use <see cref="GetAttributes"/>; it returns false if the file/directory does not exist, and throws exception if fails to get attributes; directories have Directory attribute, symbolic links and mounted folders have ReparsePoint attribute.
+		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
+		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
-		public static ItIs2 ExistsAs2(string path, bool rawPath = false)
+		public static unsafe ItIs2 ExistsAs2(string path, bool useRawPath = false)
 		{
-			var flags = GAFlags.DoNotThrow; if(rawPath) flags |= GAFlags.RawPath;
-			if(!GetAttributes(path, out var a, flags))
+			if(!_GetAttributes(path, out var a, useRawPath)) {
 				return (a == (FileAttributes)(-1)) ? ItIs2.AccessDenied : ItIs2.NotFound;
+			}
 			var R = (0 != (a & FileAttributes.Directory)) ? ItIs2.Directory : ItIs2.File;
 			if(0 != (a & FileAttributes.ReparsePoint)) R |= (ItIs2)4;
 			return R;
@@ -234,34 +268,36 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if file or directory exists.
-		/// Returns false if does not exist or if fails to get its attributes. Supports <see cref="Native.GetError"/>.
+		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc, environment variables and non-pefixed extended-lenght path.</param>
-		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Does not throw exception when the file/directory exists but this process cannot access it. If you need exception, instead use <see cref="GetAttributes"/>; it returns false if the file/directory does not exist, and throws exception if exists but cannot be accessed; directories have Directory attribute.
+		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
+		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
 		/// </remarks>
-		public static bool ExistsAsAny(string path)
+		public static bool ExistsAsAny(string path, bool useRawPath = false)
 		{
-			return ExistsAs(path) != ItIs.NotFound;
+			return ExistsAs(path, useRawPath) != ItIs.NotFound;
 		}
 
 		/// <summary>
 		/// Returns true if file exists and is not a directory.
-		/// Returns false if does not exist or if fails to get its attributes. Supports <see cref="Native.GetError"/>.
+		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc, environment variables and non-pefixed extended-lenght path.</param>
-		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Does not throw exception when the file/directory exists but this process cannot access it. If you need exception, instead use <see cref="GetAttributes"/>; it returns false if the file/directory does not exist, and throws exception if exists but cannot be accessed; directories have Directory attribute.
+		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
 		/// </remarks>
-		public static bool ExistsAsFile(string path)
+		public static bool ExistsAsFile(string path, bool useRawPath = false)
 		{
-			var R = ExistsAs(path);
+			var R = ExistsAs(path, useRawPath);
 			if(R == ItIs.File) return true;
 			if(R != ItIs.NotFound) Native.ClearError();
 			return false;
@@ -269,67 +305,72 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if directory (folder or drive) exists.
-		/// Returns false if does not exist or if fails to get its attributes. Supports <see cref="Native.GetError"/>.
+		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc, environment variables and non-pefixed extended-lenght path.</param>
-		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Does not throw exception when the file/directory exists but this process cannot access it. If you need exception, instead use <see cref="GetAttributes"/>; it returns false if the file/directory does not exist, and throws exception if exists but cannot be accessed; directories have Directory attribute.
+		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
 		/// </remarks>
-		public static bool ExistsAsDirectory(string path)
+		public static bool ExistsAsDirectory(string path, bool useRawPath = false)
 		{
-			var R = ExistsAs(path);
+			var R = ExistsAs(path, useRawPath);
 			if(R == ItIs.Directory) return true;
 			if(R != ItIs.NotFound) Native.ClearError();
 			return false;
 		}
 
 		/// <summary>
-		/// Finds file or directory and returns fully-qualified path.
+		/// Finds file or directory and returns full path.
 		/// Returns null if cannot be found.
 		/// If the path argument is full path, calls <see cref="ExistsAsAny"/> and returns normalized path if exists, null if not.
 		/// Else searches in these places:
 		///	1. dirs, if used.
 		/// 2. <see cref="Folders.ThisApp"/>.
-		/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable.
+		/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
 		/// 4. If path ends with ".exe", tries to get path from registry "App Paths" keys.
 		/// </summary>
 		/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
 		/// <param name="dirs">0 or more directories where to search.</param>
-		public static string SearchPath(string path, params string[] dirs)
+		public static unsafe string SearchPath(string path, params string[] dirs)
 		{
 			if(Empty(path)) return null;
 
-			if(Path_.IsFullPath(path)) {
-				path = Path_.LibNormalizeExpandEV(path, Path_.NormalizeFlags.TrimEndSeparator);
-				if(ExistsAsAny(path)) return path;
+			string s = path;
+			if(Path_.IsFullPathEEV(ref s)) {
+				if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 				return null;
 			}
 
 			if(dirs != null) {
 				foreach(var d in dirs) {
-					if(Empty(d)) continue;
-					var s = Path_.Combine(d, path);
-					if(ExistsAsAny(s)) return s;
+					s = d;
+					if(!Path_.IsFullPathEEV(ref s)) continue;
+					s = Path_.Combine(s, path);
+					if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 				}
 			}
 
-			{
-				var s = Folders.ThisApp + path;
-				if(ExistsAsAny(s)) return s;
-			}
+			s = Folders.ThisApp + path;
+			if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 
-			var sb = new StringBuilder(300);
-			if(0 != Api.SearchPath(null, path, null, 300, sb, Zero)) return sb.ToString();
+			var b = Util.LibCharBuffer.Common; int na = b.Max(300);
+			g1: int nr = Api.SearchPath(null, path, null, na, b.Alloc(na), null);
+			if(nr > na) { na = nr; goto g1; }
+			if(nr > 0) return b.ToString(nr);
 
-			if(path.EndsWith_(".exe", true)) {
-				string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
-				if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
-					path = Path_.LibNormalizeExpandEV(path.Trim('\"'));
-					if(ExistsAsAny(path)) return path;
+			if(path.EndsWith_(".exe", true) && path.IndexOfAny(_sep) < 0) {
+				try {
+					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
+					if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
+						path = Path_.Normalize(path.Trim('\"'));
+						if(ExistsAsAny(path, true)) return path;
+					}
 				}
+				catch(Exception ex) { DebugPrint(path + "    " + ex.Message); }
 			}
 
 			return null;
@@ -355,27 +396,52 @@ namespace Catkeys
 			SkipHidden = 4,
 			/// <summary>
 			/// Skip files and subdirectories that have Hidden and System attributes (both).
+			/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
+			/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: "$Recycle.Bin", "System Volume Information", "Recovery". If you want to include them too, use network path of the drive, for example @"\\localhost\D$\" for D drive.
 			/// </summary>
 			SkipHiddenSystem = 8,
 			/// <summary>
-			/// If fails to enumerate a directory because of its security settings, throw exception or call errorHandler.
+			/// If fails to get contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
+			/// Without this flag then throws exception or calls errorHandler.
 			/// </summary>
-			FailIfAccessDenied = 0x10,
-			/// <summary>
-			/// Don't call <see cref="Path_.Normalize"/>(directoryPath) and don't throw exception for non-full path.
-			/// </summary>
-			RawPath = 0x20,
+			IgnoreAccessDeniedErrors = 0x10,
 			/// <summary>
 			/// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
 			/// Then you can enumerate the 64-bit System32 folder in your 32-bit process.
 			/// Uses API <msdn>Wow64DisableWow64FsRedirection</msdn>.
 			/// For vice versa (in 64-bit process enumerate the 32-bit System folder), instead use path Folders.SystemX86.
 			/// </summary>
-			DisableRedirection = 0x40,
+			DisableRedirection = 0x20,
 			/// <summary>
-			/// Let <see cref="EDFile.Name"/> be path relative to the specified directory path. Like @"\name.txt", @"\subdirectory\name.txt".
+			/// Don't call <see cref="Path_.Normalize"/>(directoryPath) and don't throw exception for non-full path.
+			/// </summary>
+			UseRawPath = 0x40,
+			/// <summary>
+			/// Let <see cref="EDFile.Name"/> be path relative to the specified directory path. Like @"\name.txt" or @"\subdirectory\name.txt" instead of "name.txt".
 			/// </summary>
 			NeedRelativePaths = 0x80,
+		}
+
+		/// <summary>
+		/// flags for <see cref="Copy"/> and some other similar functions.
+		/// Used only when copying directory.
+		/// </summary>
+		[Flags]
+		public enum CopyFlags
+		{
+			//note: these values must match the corresponding EDFlags values.
+
+			/// <summary>
+			/// Skip descendant files and directories that have Hidden and System attributes (both).
+			/// They usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
+			/// They often are protected and would fail to copy, ruining whole copy operation.
+			/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: "$Recycle.Bin", "System Volume Information", "Recovery".
+			/// </summary>
+			SkipHiddenSystem = 8,
+			/// <summary>
+			/// If fails to get contents of the directory or a subdirectory because of its security settings, don't throw exception but assume that the [sub]directory is empty.
+			/// </summary>
+			IgnoreAccessDeniedErrors = 0x10,
 		}
 
 		/// <summary>
@@ -390,8 +456,8 @@ namespace Catkeys
 				Name = name; FullPath = fullPath;
 				Attributes = (FileAttributes)d.dwFileAttributes;
 				Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
-				LastWriteTimeUtc = _DateTimeFromFILETIME(d.ftLastWriteTime); //fast, sizeof 8
-				CreationTimeUtc = _DateTimeFromFILETIME(d.ftCreationTime);
+				LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime); //fast, sizeof 8
+				CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
 				_level = (short)level;
 			}
 
@@ -400,11 +466,6 @@ namespace Catkeys
 
 			///
 			public string FullPath { get; }
-
-			/// <summary>
-			/// Returns FullPath.
-			/// </summary>
-			public static implicit operator string(EDFile f) { return f?.FullPath; }
 
 			/// <summary>
 			/// Returns file size. For directories it is usually 0.
@@ -438,13 +499,22 @@ namespace Catkeys
 			public void SkipThisDirectory() { _skip = true; }
 			internal bool _skip;
 
-			DateTime _DateTimeFromFILETIME(Api.FILETIME ft) { return DateTime.FromFileTimeUtc((long)ft.dwHighDateTime << 32 | ft.dwLowDateTime); }
+			/// <summary>
+			/// Returns FullPath.
+			/// </summary>
+			public override string ToString() { return FullPath; }
 
-			public override string ToString()
-			{
-				return FullPath;
-			}
+			//This could be more dangerous than useful.
+			///// <summary>
+			///// Returns FullPath.
+			///// </summary>
+			//public static implicit operator string(EDFile f) { return f?.FullPath; }
 		}
+
+		//public class FileOperationCallback
+		//{
+
+		//}
 
 		/// <summary>
 		/// Gets names and other info of files and subdirectories in the specified directory.
@@ -453,6 +523,11 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="directoryPath">Full path of the directory.</param>
 		/// <param name="flags"></param>
+		/// <param name="filter">
+		/// A callback function to call for each file and subdirectory.
+		/// If it returns false, the file/subdirectory is not included in results.
+		/// This can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
+		/// </param>
 		/// <param name="errorHandler">
 		/// A callback function to call when fails to get children of a subdirectory, when using flag EDFlags.AndSubdirectories.
 		/// It receives the subdirectory path. It can call <see cref="Native.GetError"/> and throw an exception.
@@ -466,23 +541,22 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses API <msdn>FindFirstFile</msdn>.
 		/// 
-		/// The paths that this function gets are normalized, ie may not start with directoryPath string. Expanded environment variables, "..", DOS path etc.
-		/// Supports paths longer than 259 characters length (max path length). The retrieved paths in this case have @"\\?\" prefix (see <see cref="Path_.PrefixLongPath(string)"/>).
+		/// The paths that this function gets are normalized, ie may not start with exact directoryPath string. Expanded environment variables (see <see cref="Path_.ExpandEnvVar"/>), "..", DOS path etc.
+		/// Paths longer than <see cref="Path_.MaxDirectoryPathLength"/> have @"\\?\" prefix (see <see cref="Path_.PrefixLongPathIfNeed"/>).
 		/// For symbolic links and mounted folders, gets info of the link/folder and not of its target.
 		/// 
 		/// These errors are ignored:
 		/// 1. Access denied (usually because of security permissions), unless used flag FailIfAccessDenied.
 		/// 2. Missing target directory of a symbolic link or mounted folder.
-		/// When an error is ignored, the function works as if the directory is empty; does not throw exception and does not call errorHandler.
+		/// When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call errorHandler.
 		/// 
 		/// Enumeration of a subdirectory starts immediately after the subdirectory itself is retrieved.
 		/// </remarks>
-		public static IEnumerable<EDFile> EnumDirectory(string directoryPath, EDFlags flags = 0, Action<string> errorHandler = null)
+		public static IEnumerable<EDFile> EnumDirectory(string directoryPath, EDFlags flags = 0, Func<EDFile, bool> filter = null, Action<string> errorHandler = null)
 		{
-			bool rawPath = 0 != (flags & EDFlags.RawPath);
 			string path = directoryPath;
-			if(!rawPath) path = Path_.Normalize(path, Path_.NormalizeFlags.TrimEndSeparator);
-			else if(path.EndsWith_('\\')) path = path.Remove(path.Length - 1);
+			if(0 == (flags & EDFlags.UseRawPath)) path = Path_.Normalize(path);
+			if(path.EndsWith_('\\')) path = path.Remove(path.Length - 1);
 
 			_DisableDeviceNotReadyMessageBox();
 
@@ -490,18 +564,17 @@ namespace Catkeys
 			IntPtr hfind = Zero;
 			var stack = new Stack<_EDStackEntry>();
 			bool isFirst = true;
-			uint attr = 0;
+			FileAttributes attr = 0;
 			int basePathLength = path.Length;
-			bool redirected = false; IntPtr redirValue = Zero;
+			var redir = new Misc.DisableRedirection();
 
 			try {
-				if((flags & EDFlags.DisableRedirection) != 0 && !Environment.Is64BitProcess && Environment.Is64BitOperatingSystem)
-					redirected = _Api.Wow64DisableWow64FsRedirection(out redirValue);
+				if(0 != (flags & EDFlags.DisableRedirection)) redir.Disable();
 
 				for(;;) {
 					if(isFirst) {
 						isFirst = false;
-						var path2 = ((path.Length <= 257) ? path : Path_.PrefixLongPath(path)) + @"\*";
+						var path2 = ((path.Length <= Path_.MaxDirectoryPathLength - 2) ? path : Path_.PrefixLongPath(path)) + @"\*";
 #if TEST_FINDFIRSTFILEEX
 						hfind = _Api.FindFirstFileEx(path2, _Api.FINDEX_INFO_LEVELS.FindExInfoBasic, out d, 0, Zero, 0);
 						//speed: FindFirstFileEx 0-2 % slower. FindExInfoBasic makes 0-2% faster. FIND_FIRST_EX_LARGE_FETCH makes 1-50% slower.
@@ -524,12 +597,12 @@ namespace Catkeys
 								itsOK = true;
 								break;
 							case Api.ERROR_ACCESS_DENIED:
-								itsOK = (flags & EDFlags.FailIfAccessDenied) == 0;
+								itsOK = 0 != (flags & EDFlags.IgnoreAccessDeniedErrors);
 								break;
 							case Api.ERROR_PATH_NOT_FOUND: //the directory not found, or symlink target directory is missing
-							case Api.ERROR_DIRECTORY: //it is file, not directory. Also noticed for some entries in Recycle Bin (we skip it now). Error text is "The directory name is invalid".
+							case Api.ERROR_DIRECTORY: //it is file, not directory. Error text is "The directory name is invalid".
 							case Api.ERROR_BAD_NETPATH: //eg \\COMPUTER\MissingFolder
-								if(stack.Count == 0 && !ExistsAsDirectory(path))
+								if(stack.Count == 0 && !ExistsAsDirectory(path, true))
 									throw new DirectoryNotFoundException($"Directory not found: '{path}'. {Native.GetErrorMessage(ec)}");
 								//itsOK = (attr & Api.FILE_ATTRIBUTE_REPARSE_POINT) != 0;
 								itsOK = true; //or maybe the subdirectory was deleted after we retrieved it
@@ -565,14 +638,18 @@ namespace Catkeys
 					var name = d.Name;
 					if(name == null) continue; //".", ".."
 					attr = d.dwFileAttributes;
-					bool isDir = (attr & Api.FILE_ATTRIBUTE_DIRECTORY) != 0;
+					bool isDir = (attr & FileAttributes.Directory) != 0;
 
-					if((flags & EDFlags.SkipHidden) != 0 && (attr & Api.FILE_ATTRIBUTE_HIDDEN) != 0) continue;
-					const uint hidSys = Api.FILE_ATTRIBUTE_HIDDEN | Api.FILE_ATTRIBUTE_SYSTEM;
+					if((flags & EDFlags.SkipHidden) != 0 && (attr & FileAttributes.Hidden) != 0) continue;
+					const FileAttributes hidSys = FileAttributes.Hidden | FileAttributes.System;
 					if((attr & hidSys) == hidSys) {
 						if((flags & EDFlags.SkipHiddenSystem) != 0) continue;
-						//skip Recycle Bin. It is useless, also may fail to enum some subdirs.
-						if(isDir && name[0] == '$' && name.Equals_("$Recycle.Bin", true) && path.EndsWith_(':')) continue;
+						//skip Recycle Bin etc. It is useless, prevents copying drives, etc.
+						if(isDir && path.EndsWith_(':')) {
+							if(name.Equals_("$Recycle.Bin", true)) continue;
+							if(name.Equals_("System Volume Information", true)) continue;
+							if(name.Equals_("Recovery", true)) continue;
+						}
 					}
 
 					var fullPath = path + @"\" + name;
@@ -582,10 +659,13 @@ namespace Catkeys
 					var fp2 = Path_.PrefixLongPathIfNeed(fullPath);
 
 					var r = new EDFile(name, fp2, ref d, stack.Count);
+
+					if(filter != null && !filter(r)) continue;
+
 					yield return r;
 
 					if(!isDir || (flags & EDFlags.AndSubdirectories) == 0 || r._skip) continue;
-					if((attr & Api.FILE_ATTRIBUTE_REPARSE_POINT) != 0 && (flags & EDFlags.AndSymbolicLinkSubdirectories) == 0) continue;
+					if((attr & FileAttributes.ReparsePoint) != 0 && (flags & EDFlags.AndSymbolicLinkSubdirectories) == 0) continue;
 					stack.Push(new _EDStackEntry() { hfind = hfind, path = path });
 					hfind = Zero; path = fullPath;
 					isFirst = true;
@@ -595,7 +675,7 @@ namespace Catkeys
 				if(hfind != Zero) _Api.FindClose(hfind);
 				while(stack.Count > 0) _Api.FindClose(stack.Pop().hfind);
 
-				if(redirected) _Api.Wow64RevertWow64FsRedirection(redirValue);
+				redir.Revert();
 			}
 		}
 
@@ -605,7 +685,7 @@ namespace Catkeys
 		{
 			internal struct WIN32_FIND_DATA
 			{
-				public uint dwFileAttributes;
+				public FileAttributes dwFileAttributes;
 				public Api.FILETIME ftCreationTime;
 				public Api.FILETIME ftLastAccessTime;
 				public Api.FILETIME ftLastWriteTime;
@@ -653,12 +733,6 @@ namespace Catkeys
 			[DllImport("kernel32.dll", EntryPoint = "FindFirstFileExW")]
 			internal static extern IntPtr FindFirstFileEx(string lpFileName, FINDEX_INFO_LEVELS fInfoLevelId, out WIN32_FIND_DATA lpFindFileData, int fSearchOp, IntPtr lpSearchFilter, uint dwAdditionalFlags);
 #endif
-
-			[DllImport("kernel32.dll", SetLastError = true)]
-			internal static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
-
-			[DllImport("kernel32.dll")]
-			internal static extern bool Wow64RevertWow64FsRedirection(IntPtr OlValue);
 		}
 
 		#endregion
@@ -694,7 +768,7 @@ namespace Catkeys
 #endif
 		}
 
-		static unsafe void _FileOp(_FileOpType opType, bool into, string path1, string path2, IfExists ifExists)
+		static unsafe void _FileOp(_FileOpType opType, bool into, string path1, string path2, IfExists ifExists, CopyFlags copyFlags, Func<EDFile, bool> filter)
 		{
 			string opName = (opType == _FileOpType.Rename) ? "rename" : ((opType == _FileOpType.Move) ? "move" : "copy");
 			path1 = _PreparePath(path1);
@@ -704,18 +778,18 @@ namespace Catkeys
 			if(opType == _FileOpType.Rename) {
 				opType = _FileOpType.Move;
 				if(Path_.IsInvalidFileName(path2)) throw new ArgumentException("Invalid filename");
-				path2 = _RemoveFilename(path1) + "\\" + path2;
+				path2 = Path_.LibCombine(_RemoveFilename(path1), path2);
 			} else {
 				string path2Parent;
 				if(into) {
 					path2Parent = _PreparePath(path2);
-					path2 = path2Parent + "\\" + _GetFilename(path1);
+					path2 = Path_.LibCombine(path2Parent, _GetFilename(path1));
 				} else {
 					path2 = _PreparePath(path2);
 					path2Parent = _RemoveFilename(path2, true);
 				}
-				if(path2Parent != null && !ExistsAsDirectory(path2Parent)) {
-					try { Directory.CreateDirectory(path2Parent); }
+				if(path2Parent != null) {
+					try { _CreateDirectory(path2Parent, pathIsPrepared: true); }
 					catch(Exception ex) { throw new CatException("*create directory", ex); }
 				}
 			}
@@ -775,7 +849,7 @@ namespace Catkeys
 				if(copy) {
 					if(type1 == ItIs2.Directory) {
 						try {
-							_CopyDirectory(path1, path2, mergeDirectory);
+							_CopyDirectory(path1, path2, mergeDirectory, copyFlags, filter);
 							ok = true;
 						}
 						catch(Exception ex) when(opType != _FileOpType.Copy) {
@@ -810,39 +884,60 @@ namespace Catkeys
 		}
 
 		//note: if merge, the destination directory must exist
-		static unsafe void _CopyDirectory(string path1, string path2, bool merge)
+		static unsafe void _CopyDirectory(string path1, string path2, bool merge, CopyFlags copyFlags, Func<EDFile, bool> filter)
 		{
+			//FUTURE: add progressInterface parameter. Create a default interface implementation class that supports progress dialog and/or progress in taskbar button. Or instead create a ShellCopy function.
+			//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to EnumDirectory which calls it when fails to enum.
+
+			bool ok = false;
 			string s1 = null, s2 = null;
-			if(!merge && !_Api.CreateDirectoryEx(path1, path2, Zero)) goto ge;
-			var edFlags = EDFlags.AndSubdirectories | EDFlags.NeedRelativePaths | EDFlags.FailIfAccessDenied | EDFlags.RawPath;
-			var a = EnumDirectory(path1, edFlags).ToArray();
-			foreach(var f in a) {
-				bool ok;
-				s1 = f.FullPath; s2 = path2 + f.Name;
+			if(!merge) {
+				if(!path1.EndsWith_(@":\")) ok = _Api.CreateDirectoryEx(path1, path2, Zero);
+				if(!ok) ok = _Api.CreateDirectory(path2, Zero);
+				if(!ok) goto ge;
+			}
+			var edFlags = EDFlags.AndSubdirectories | EDFlags.NeedRelativePaths | EDFlags.UseRawPath | (EDFlags)copyFlags;
+			foreach(var f in EnumDirectory(path1, edFlags, filter)) {
+				s1 = f.FullPath; s2 = Path_.PrefixLongPathIfNeed(path2 + f.Name);
 				//PrintList(s1, s2);
 				//continue;
 				if(f.IsDirectory) {
-					if(merge) switch(ExistsAs(s2)) {
+					if(merge) switch(ExistsAs(s2, true)) {
 						case ItIs.Directory: continue; //never mind: check symbolic link mismatch
 						case ItIs.File: _DeleteLL(s2, false); break;
 						}
 
 					ok = _Api.CreateDirectoryEx(s1, s2, Zero);
+					if(!ok && 0 == (f.Attributes & FileAttributes.ReparsePoint)) ok = _Api.CreateDirectory(s2, Zero);
 				} else {
-					if(merge && GetAttributes(s2, out var attr, GAFlags.DoNotThrow | GAFlags.RawPath)) {
-						var badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
+					if(merge && GetAttributes(s2, out var attr, GAFlags.DoNotThrow | GAFlags.UseRawPath)) {
+						const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
 						if(0 != (attr & FileAttributes.Directory)) _Delete(s2, false);
-						else if(0 != (attr & badAttr)) Api.SetFileAttributes(s2, (uint)(attr & ~badAttr));
+						else if(0 != (attr & badAttr)) Api.SetFileAttributes(s2, attr & ~badAttr);
 					}
 
 					uint fl = _Api.COPY_FILE_COPY_SYMLINK; if(!merge) fl |= _Api.COPY_FILE_FAIL_IF_EXISTS;
 					ok = _Api.CopyFileEx(s1, s2, null, Zero, null, fl);
 				}
-				if(!ok) goto ge;
+				if(!ok) {
+					if(0 != (f.Attributes & FileAttributes.ReparsePoint)) {
+						//To create or copy symbolic links, need SeCreateSymbolicLinkPrivilege privilege.
+						//Admins have it, else this process cannot get it.
+						//More info: MS technet -> "Create symbolic links".
+						//DebugPrint($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {Native.GetErrorMessage()}");
+						continue;
+					}
+					if(0 != (copyFlags & CopyFlags.IgnoreAccessDeniedErrors)) {
+						if(Native.GetError() == Api.ERROR_ACCESS_DENIED) continue;
+					}
+					goto ge;
+				}
 			}
 			return;
 			ge:
-			throw new CatException(0, $"*copy directory '{path1}'. Current item: '{(s1 != null ? s1 : path1)}'");
+			string se = $"*copy directory '{path1}' to '{path2}'";
+			if(s1 != null) se += $" ('{s1}' to '{s2}')";
+			throw new CatException(0, se);
 			//never mind: wrong API error code if path1 and path2 is the same directory.
 		}
 
@@ -851,9 +946,12 @@ namespace Catkeys
 			string _oldPath, _tempPath;
 			bool _doNotDelete;
 
+			/// <summary>
+			/// note: path must be normalized.
+			/// </summary>
 			internal bool Rename(string path, bool doNotDelete = false)
 			{
-				if(path.Length >= 250) path = Path_.PrefixLongPath(path);
+				if(path.Length > Path_.MaxDirectoryPathLength - 10) path = Path_.PrefixLongPath(path);
 				string tempPath = null;
 				int iFN = _FindFilename(path);
 				string s1 = path.Remove(iFN) + "old", s2 = " " + path.Substring(iFN);
@@ -894,9 +992,9 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses API <msdn>MoveFileEx</msdn>.
 		/// </remarks>
-		public static void Rename(string path, string newName, IfExists ifExists = IfExists.Delete)
+		public static void Rename(string path, string newName, IfExists ifExists = IfExists.Fail)
 		{
-			_FileOp(_FileOpType.Rename, false, path, newName, ifExists);
+			_FileOp(_FileOpType.Rename, false, path, newName, ifExists, 0, null);
 		}
 
 		/// <summary>
@@ -916,12 +1014,12 @@ namespace Catkeys
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
 		/// When need to copy, does not copy the security properties; sets default security properties.
 		/// 
-		/// Creates the destination directory if does not exist (see <see cref="Directory.CreateDirectory(String)"/>).
+		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// If path and newPath share the same parent directory, just renames the file.
 		/// </remarks>
-		public static void Move(string path, string newPath, IfExists ifExists = IfExists.Delete)
+		public static void Move(string path, string newPath, IfExists ifExists = IfExists.Fail)
 		{
-			_FileOp(_FileOpType.Move, false, path, newPath, ifExists);
+			_FileOp(_FileOpType.Move, false, path, newPath, ifExists, 0, null);
 		}
 
 		/// <summary>
@@ -941,11 +1039,11 @@ namespace Catkeys
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
 		/// When need to copy, does not copy the security properties; sets default security properties.
 		/// 
-		/// Creates the destination directory if does not exist (see <see cref="Directory.CreateDirectory(String)"/>).
+		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
-		public static void MoveTo(string path, string newDirectory, IfExists ifExists = IfExists.Delete)
+		public static void MoveTo(string path, string newDirectory, IfExists ifExists = IfExists.Fail)
 		{
-			_FileOp(_FileOpType.Move, true, path, newDirectory, ifExists);
+			_FileOp(_FileOpType.Move, true, path, newDirectory, ifExists, 0, null);
 		}
 
 		/// <summary>
@@ -957,17 +1055,23 @@ namespace Catkeys
 		/// <note type="note">It is not the new parent directory. Use <see cref="CopyTo"/> for it.</note>
 		/// </param>
 		/// <param name="ifExists"></param>
+		/// <param name="copyFlags">Options used when copying directory.</param>
+		/// <param name="filter">
+		/// This can be used when copying directory. A callback function to call for each descendant file and subdirectory.
+		/// If it returns false, the file/subdirectory is not copied.
+		/// </param>
 		/// <exception cref="ArgumentException">path or newPath is not full path (see <see cref="Path_.IsFullPath"/>).</exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="CatException">Failed.</exception>
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
 		/// On Windows 7 does not copy the security properties; sets default security properties.
-		/// Creates the destination directory if does not exist (see <see cref="Directory.CreateDirectory(String)"/>).
+		/// Does not copy symbolic links (silently skips, no exception) if this process is not admin.
+		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
-		public static void Copy(string path, string newPath, IfExists ifExists = IfExists.Delete)
+		public static void Copy(string path, string newPath, IfExists ifExists = IfExists.Fail, CopyFlags copyFlags = 0, Func<EDFile, bool> filter = null)
 		{
-			_FileOp(_FileOpType.Copy, false, path, newPath, ifExists);
+			_FileOp(_FileOpType.Copy, false, path, newPath, ifExists, copyFlags, filter);
 		}
 
 		/// <summary>
@@ -976,6 +1080,11 @@ namespace Catkeys
 		/// <param name="path">Full path.</param>
 		/// <param name="newDirectory">New parent directory.</param>
 		/// <param name="ifExists"></param>
+		/// <param name="copyFlags">Options used when copying directory.</param>
+		/// <param name="filter">
+		/// This can be used when copying directory. A callback function to call for each descendant file and subdirectory.
+		/// If it returns false, the file/subdirectory is not copied.
+		/// </param>
 		/// <exception cref="ArgumentException">
 		/// path or newDirectory is not full path (see <see cref="Path_.IsFullPath"/>).
 		/// path is drive. To copy drive content, use <see cref="Copy"/>.
@@ -985,11 +1094,12 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
 		/// On Windows 7 does not copy the security properties; sets default security properties.
-		/// Creates the destination directory if does not exist (see <see cref="Directory.CreateDirectory(String)"/>).
+		/// Does not copy symbolic links (silently skips, no exception) if this process is not admin.
+		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
-		public static void CopyTo(string path, string newDirectory, IfExists ifExists = IfExists.Delete)
+		public static void CopyTo(string path, string newDirectory, IfExists ifExists = IfExists.Fail, CopyFlags copyFlags = 0, Func<EDFile, bool> filter = null)
 		{
-			_FileOp(_FileOpType.Copy, true, path, newDirectory, ifExists);
+			_FileOp(_FileOpType.Copy, true, path, newDirectory, ifExists, copyFlags, filter);
 		}
 
 		/// <summary>
@@ -1009,12 +1119,15 @@ namespace Catkeys
 		/// 2. This process does not have security permissions to access or delete the file or directory or some of its descendants.
 		/// 3. The directory is (or contains) the "current directory" (in any process).
 		/// </remarks>
-		public static void Delete(string path, bool useRecycleBin)
+		public static void Delete(string path, bool useRecycleBin = false)
 		{
 			path = _PreparePath(path);
 			_Delete(path, useRecycleBin);
 		}
 
+		/// <summary>
+		/// note: path must be normalized.
+		/// </summary>
 		static ItIs2 _Delete(string path, bool useRecycleBin)
 		{
 			var type = ExistsAs2(path, true);
@@ -1027,7 +1140,7 @@ namespace Catkeys
 				int ec = 0;
 				if(type == ItIs2.Directory) {
 					var dirs = new List<string>();
-					foreach(var f in EnumDirectory(path, EDFlags.AndSubdirectories | EDFlags.RawPath)) {
+					foreach(var f in EnumDirectory(path, EDFlags.AndSubdirectories | EDFlags.UseRawPath | EDFlags.IgnoreAccessDeniedErrors)) {
 						if(f.IsDirectory) dirs.Add(f.FullPath);
 						else _DeleteLL(f.FullPath, false); //delete as many as possible
 					}
@@ -1066,8 +1179,8 @@ namespace Catkeys
 			var ec = Native.GetError();
 			if(ec == Api.ERROR_ACCESS_DENIED) {
 				var a = Api.GetFileAttributes(path);
-				if(a != Api.INVALID_FILE_ATTRIBUTES && 0 != (a & Api.FILE_ATTRIBUTE_READONLY)) {
-					Api.SetFileAttributes(path, a & ~Api.FILE_ATTRIBUTE_READONLY);
+				if(a != (FileAttributes)(-1) && 0 != (a & FileAttributes.ReadOnly)) {
+					Api.SetFileAttributes(path, a & ~FileAttributes.ReadOnly);
 					if(dir ? _Api.RemoveDirectory(path) : _Api.DeleteFile(path)) return 0;
 					ec = Native.GetError();
 				}
@@ -1076,7 +1189,7 @@ namespace Catkeys
 				//see comments above about Explorer
 				DebugPrint("ERROR_DIR_NOT_EMPTY when empty");
 				for(int i = 0; i < 5; i++) {
-					Time.Sleep(10);
+					Thread.Sleep(15);
 					if(_Api.RemoveDirectory(path)) return 0;
 				}
 				ec = Native.GetError();
@@ -1108,19 +1221,89 @@ namespace Catkeys
 
 		/// <summary>
 		/// Calls <see cref="EnumDirectory"/> and returns sum of all file sizes.
-		/// If using default flags, it includes sizes of all descendant files (in all subdirectories).
+		/// With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
 		/// </summary>
 		/// <param name="path">Full path.</param>
 		/// <param name="flags">EnumDirectory flags.</param>
 		/// <exception cref="Exception"><see cref="EnumDirectory"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
 		/// <remarks>
 		/// This function is slow if the directory is large.
-		/// Don't use this function for files (throws exception) and drives (instead use <see cref="DriveInfo"/>, it's fast and includes Recycle Bin size).
-		/// If this process cannot access some subdirectories (security), their sizes are not included. There is a flag to throw excption instead.
+		/// Don't use this function for files (throws exception) and drives (instead use <see cref="DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
 		/// </remarks>
-		public static long CalculateDirectorySize(string path, EDFlags flags = EDFlags.AndSubdirectories)
+		public static long CalculateDirectorySize(string path, EDFlags flags = EDFlags.AndSubdirectories | EDFlags.IgnoreAccessDeniedErrors)
 		{
 			return EnumDirectory(path, flags).Sum(f => f.Size);
+		}
+
+		/// <summary>
+		/// Creates new directory if does not exists.
+		/// If need, creates missing parent/ancestor directories.
+		/// Returns true if created new directory, false if the directory already exists. Throws exception if fails.
+		/// </summary>
+		/// <param name="path">Path of new directory.</param>
+		/// <param name="templateDirectory">Optional path of a template directory from which to copy some properties. See API <msdn>CreateDirectoryEx</msdn>.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="CatException">Failed.</exception>
+		/// <remarks>
+		/// If the directory already exists, this function does nothing, and returns false.
+		/// Else, at first it creates missing parent/ancestor directories, then creates the specified (path) directory.
+		/// To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if templateDirectory is not null).
+		/// </remarks>
+		public static bool CreateDirectory(string path, string templateDirectory = null)
+		{
+			return _CreateDirectory(path, templateDirectory: templateDirectory);
+		}
+
+		/// <summary>
+		/// Creates parent directory for a new file, if does not exist.
+		/// The same as <see cref="CreateDirectory"/>, just removes filename from filePath.
+		/// </summary>
+		/// <param name="filePath">Path of new file.</param>
+		/// <exception cref="ArgumentException">Not full path. No filename.</exception>
+		/// <exception cref="CatException">Failed.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// string path = @"D:\Test\new\test.txt";
+		/// Files.CreateDirectoryFor(path);
+		/// File.WriteAllText(path, "text"); //would fail if directory @"D:\Test\new" does not exist
+		/// ]]></code>
+		/// </example>
+		public static void CreateDirectoryFor(string filePath)
+		{
+			filePath = _PreparePath(filePath);
+			var path = _RemoveFilename(filePath);
+			_CreateDirectory(path, pathIsPrepared: true);
+		}
+
+		static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null)
+		{
+			if(ExistsAsDirectory(path, pathIsPrepared)) return false;
+			if(!pathIsPrepared) path = _PreparePath(path);
+			if(templateDirectory != null) templateDirectory = _PreparePath(templateDirectory);
+
+			var stack = new Stack<string>();
+			var s = path;
+			do {
+				stack.Push(s);
+				s = _RemoveFilename(s, true);
+				if(s == null) throw new CatException($@"*create directory '{path}'. Drive not found.");
+			} while(!ExistsAsDirectory(s, true));
+
+			while(stack.Count > 0) {
+				s = stack.Pop();
+				int retry = 0;
+				g1:
+				bool ok = (templateDirectory == null || stack.Count > 0)
+					? _Api.CreateDirectory(s, Zero)
+					: _Api.CreateDirectoryEx(templateDirectory, s, Zero);
+				if(!ok) {
+					int ec = Native.GetError();
+					if(ec == Api.ERROR_ALREADY_EXISTS) continue;
+					if(ec == Api.ERROR_ACCESS_DENIED && ++retry < 5) { Thread.Sleep(15); goto g1; } //sometimes access denied briefly, eg immediately after deleting the folder while its parent is open in Explorer. Now could not reproduce on Win10.
+					throw new CatException(0, $@"*create directory '{path}'");
+				}
+			}
+			return true;
 		}
 
 		static void _ShellNotify(uint @event, string path, string path2 = null)
@@ -1129,13 +1312,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Expands environment variables. Throws ArgumentException if not full path. Normalizes. Trims ending '\\'.
+		/// Expands environment variables (see <see cref="Path_.ExpandEnvVar"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds '\\' at the end.
 		/// </summary>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		static string _PreparePath(string path)
 		{
-			path = Path_.ExpandEnvVar(path);
-			if(!Path_.IsFullPath(path)) throw new ArgumentException($"Not full path: '{path}'.");
-			return Path_.LibNormalizeNoExpandEV(path, Path_.NormalizeFlags.TrimEndSeparator);
+			if(!Path_.IsFullPathEEV(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
+			return Path_.LibNormalize(path, noExpandEV: true);
 		}
 
 		static char[] _sep = new char[] { '\\', '/' };
@@ -1143,11 +1326,11 @@ namespace Catkeys
 		/// <summary>
 		/// Finds filename, eg @"b.txt" in @"c:\a\b.txt".
 		/// </summary>
-		/// <exception cref="ArgumentException">'\\' not found. If noException, instead returns -1.</exception>
+		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns -1.</exception>
 		static int _FindFilename(string path, bool noException = false)
 		{
 			int R = path.LastIndexOfAny(_sep);
-			if(R < 0) {
+			if(R < 0 || R == path.Length - 1) {
 				if(noException) return -1;
 				throw new ArgumentException("No filename in path.");
 			}
@@ -1157,7 +1340,7 @@ namespace Catkeys
 		/// <summary>
 		/// Removes filename, eg @"c:\a\b.txt" -> @"c:\a".
 		/// </summary>
-		/// <exception cref="ArgumentException">'\\' not found. If noException, instead returns null.</exception>
+		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns null.</exception>
 		static string _RemoveFilename(string path, bool noException = false)
 		{
 			int i = _FindFilename(path, noException); if(i < 0) return null;
@@ -1167,12 +1350,17 @@ namespace Catkeys
 		/// <summary>
 		/// Gets filename, eg @"c:\a\b.txt" -> @"b.txt".
 		/// </summary>
-		/// <exception cref="ArgumentException">'\\' not found. If noException, instead returns null.</exception>
+		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns null.</exception>
 		static string _GetFilename(string path, bool noException = false)
 		{
 			int i = _FindFilename(path, noException); if(i < 0) return null;
 			return path.Substring(i);
 		}
+
+		/// <summary>
+		/// Returns true if character c == '\\' || c == '/'.
+		/// </summary>
+		static bool _IsSepChar(char c) { return c == '\\' || c == '/'; }
 
 		static unsafe partial class _Api
 		{
@@ -1258,6 +1446,9 @@ namespace Catkeys
 
 			[DllImport("kernel32.dll", EntryPoint = "RemoveDirectoryW", SetLastError = true)]
 			internal static extern bool RemoveDirectory(string lpPathName);
+
+			[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryW", SetLastError = true)]
+			internal static extern bool CreateDirectory(string lpPathName, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
 
 			[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryExW", SetLastError = true)]
 			internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES

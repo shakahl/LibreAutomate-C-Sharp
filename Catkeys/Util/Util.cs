@@ -15,6 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Reflection.Emit;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -168,6 +169,7 @@ namespace Catkeys.Util
 		/// Finds unmanaged '\0'-terminated string length.
 		/// Scans the string until '\0' character found.
 		/// </summary>
+		/// <param name="p">Unmanaged string. Can be null.</param>
 		public static unsafe int CharPtrLength(char* p)
 		{
 			if(p == null) return 0;
@@ -178,7 +180,7 @@ namespace Catkeys.Util
 		/// Finds unmanaged '\0'-terminated string length.
 		/// Scans the string until '\0' character found, but not exceeding the specified length.
 		/// </summary>
-		/// <param name="p">Unmanaged string.</param>
+		/// <param name="p">Unmanaged string. Can be null.</param>
 		/// <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
 		public static unsafe int CharPtrLength(char* p, int nMax)
 		{
@@ -186,6 +188,65 @@ namespace Catkeys.Util
 			for(int i = 0; i < nMax; i++) if(p[i] == '\0') return i;
 			return nMax;
 		}
+
+		/// <summary>
+		/// Finds unmanaged '\0'-terminated ANSI string length.
+		/// Scans the string until '\0' character found.
+		/// </summary>
+		/// <param name="p">Unmanaged ANSI string. Can be null.</param>
+		public static unsafe int CharPtrLength(sbyte* p)
+		{
+			if(p == null) return 0;
+			for(int i = 0; ; i++) if(p[i] == 0) return i;
+		}
+
+		/// <summary>
+		/// Finds unmanaged '\0'-terminated ANSI string length.
+		/// Scans the string until '\0' character found, but not exceeding the specified length.
+		/// </summary>
+		/// <param name="p">Unmanaged ANSI string. Can be null.</param>
+		/// <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+		public static unsafe int CharPtrLength(sbyte* p, int nMax)
+		{
+			if(p == null) return 0;
+			for(int i = 0; i < nMax; i++) if(p[i] == 0) return i;
+			return nMax;
+		}
+
+		/// <summary>
+		/// Do not call. Use class TypeSize, which caches the type size.
+		/// This is used by TypeSize, not in it, because it is a generic type...
+		/// </summary>
+		/// <param name="t"></param>
+		/// <returns></returns>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		internal static int LibGetTypeSize(Type t)
+		{
+			var dm = new DynamicMethod("SizeOfType", typeof(int), Type.EmptyTypes);
+			ILGenerator il = dm.GetILGenerator();
+			il.Emit(OpCodes.Sizeof, t);
+			il.Emit(OpCodes.Ret);
+			return (int)dm.Invoke(null, null);
+			//Print(dm.MethodImplementationFlags);
+		}
+	}
+
+	/// <summary>
+	/// Gets managed run-time size of type T. Works with any type. Works in generic classes too.
+	/// Unlike sizeof, gets run-time size. Eg for IntPtr and reference types gets 4 or 8.
+	/// Unlike Marshal.SizeOf, gets managed type size (eg 1 for bool), not native type size (eg 4 for bool).
+	/// Example: <c>Print(Catkeys.Util.TypeSize&lt;T&gt;.Size);</c>.
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	public static class TypeSize<T>
+	{
+		/// <summary>
+		/// Gets T type size.
+		/// </summary>
+		public readonly static int Size;
+		static TypeSize() { Size = Misc.LibGetTypeSize(typeof(T)); }
+
+		//speed: quite fast, especially when ngened. When using this generic class, LibGetTypeSize is called once for each type.
 	}
 
 #if DEBUG

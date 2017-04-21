@@ -78,7 +78,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="icon">Can be:
-		/// string - icon file, as with <see cref="Icons.GetFileIconHandle"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="CatMenu_CatBar_Base.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -106,7 +106,7 @@ namespace Catkeys
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - icon file, as with <see cref="Icons.GetFileIconHandle"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="CatMenu_CatBar_Base.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -1068,12 +1068,7 @@ namespace Catkeys
 		//}
 
 		/// <summary>
-		/// Folder path to prepend to icon filenames specified when adding items.
-		/// </summary>
-		public string IconDirectory { get; set; }
-
-		/// <summary>
-		/// Flags to pass to <see cref="Icons.GetPidlIconHandle"/>. See <see cref="Icons.IconFlags"/>.
+		/// Flags to pass to <see cref="Icons.GetFileIconHandle"/>. See <see cref="Icons.IconFlags"/>.
 		/// </summary>
 		public Icons.IconFlags IconFlags { get; set; }
 
@@ -1110,10 +1105,7 @@ namespace Catkeys
 					case Image img: item.Image = img; break;
 					case Icon ico: item.Image = ico.ToBitmap(); break;
 					case IntPtr hi: item.Image = hi == Zero ? null : Icon.FromHandle(hi).ToBitmap(); break;
-					default:
-						var s = icon.ToString();
-						if(Files.ExistsAsAny(s)) _SetItemFileIcon(isBar, item, s);
-						break;
+					case Folders.FolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
 					}
 				}
 				catch(Exception e) { DebugPrint(e.Message); } //ToBitmap() may throw
@@ -1134,8 +1126,6 @@ namespace Catkeys
 			} else {
 				//var perf = new Perf.Inst(true);
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
-
-				if(IconDirectory != null && !Path_.IsFullPath(s, true)) s = Path_.Combine(IconDirectory, s);
 
 				if(_AsyncIcons == null) _AsyncIcons = new Icons.AsyncIcons(); //used by submenus too
 				var submenu = !isBar ? (owner as CatMenu.ToolStripDropDownMenu_) : null;

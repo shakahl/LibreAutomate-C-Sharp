@@ -95,8 +95,7 @@ namespace Catkeys.Util
 			SynchronizationContext _context; //for '_context.Post(_completionCallback, _state)'
 			IntPtr _work; //CreateThreadpoolWork. Not used with simple callbacks.
 
-			[ThreadStatic]
-			static WindowsFormsSynchronizationContext _wfContext;
+			[ThreadStatic]			static WindowsFormsSynchronizationContext _wfContext;
 
 			/// <exception cref="Win32Exception"/>
 			internal Work(object state, WorkCallback workCallback, SendOrPostCallback completionCallback, bool createWork)

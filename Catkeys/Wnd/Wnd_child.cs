@@ -40,10 +40,20 @@ namespace Catkeys
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// Contains the same fields as <see cref="Wnd.Child"/> parameters, and can be used instead of it.
-		/// See also: <see cref="Wnd.Find"/>.
+		/// Contains control (child window) properties and can be used to find the control.
+		/// Can be used instead of <see cref="Wnd.Child"/> or <see cref="Wnd.ChildAll"/>.
+		/// Also can be used to find window that contains certain control, like in the example.
 		/// </summary>
-		public class ChildParams
+		/// <example>
+		/// <code><![CDATA[
+		/// //find window that contains certain control, and get the control too
+		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+		/// Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
+		/// Print(w);
+		/// Print(f.Result);
+		/// ]]></code>
+		/// </example>
+		public class ChildFinder
 		{
 			enum _NameIs { name, text, id, accName, wfName }
 
@@ -63,7 +73,7 @@ namespace Catkeys
 			/// className is "". To match any, use null.
 			/// Invalid wildcard expression ("**options|" or regular expression).
 			/// </exception>
-			public ChildParams(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+			public ChildFinder(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 			{
 				_ThrowIfStringEmptyNotNull(className, nameof(className));
 
@@ -93,12 +103,13 @@ namespace Catkeys
 			public Wnd Result { get; private set; }
 
 			/// <summary>
-			/// Finds the specified control, like <see cref="Wnd.Child">Wnd.Child</see>.
+			/// Finds the specified child control, like <see cref="Wnd.Child"/>.
 			/// Returns true if found.
 			/// The <see cref="Result"/> property will be the control.
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window.</param>
-			public bool Find(Wnd wParent)
+			/// <exception cref="WndException">Invalid wParent.</exception>
+			public bool FindIn(Wnd wParent)
 			{
 				var a = wParent.AllChildren(0 != (_flags & WCFlags.DirectChild), 0 == (_flags & WCFlags.HiddenToo), true);
 				return _FindInList(wParent, a, false) >= 0;
@@ -109,82 +120,135 @@ namespace Catkeys
 			/// Returns 0-based index, or -1 if not found.
 			/// The <see cref="Result"/> property will be the control.
 			/// </summary>
-			/// <param name="wParent">Direct or indirect parent window.</param>
 			/// <param name="a">List of controls, for example returned by <see cref="AllChildren"/>.</param>
-			public int FindInList(Wnd wParent, List<Wnd> a)
+			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
+			public int FindInList(IEnumerable<Wnd> a, Wnd wParent = default(Wnd))
 			{
 				return _FindInList(wParent, a, true);
 			}
 
-			int _FindInList(Wnd wParent, List<Wnd> a, bool inList)
+			/// <summary>
+			/// Finds all matching child controls, like <see cref="ChildAll"/>.
+			/// Returns List containing 0 or more control handles as Wnd.
+			/// </summary>
+			/// <param name="wParent">Direct or indirect parent window.</param>
+			/// <exception cref="WndException">Invalid wParent.</exception>
+			public List<Wnd> FindAllIn(Wnd wParent)
+			{
+				var a = wParent.AllChildren(0 != (_flags & WCFlags.DirectChild), 0 == (_flags & WCFlags.HiddenToo), true);
+				var R = new List<Wnd>();
+				_FindInList(wParent, a, false, R);
+				return R;
+			}
+
+			/// <summary>
+			/// Finds all matching controls in a list of controls.
+			/// Returns List containing 0 or more control handles as Wnd.
+			/// </summary>
+			/// <param name="a">List of controls, for example returned by <see cref="AllChildren"/>.</param>
+			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
+			public List<Wnd> FindAllInList(IEnumerable<Wnd> a, Wnd wParent = default(Wnd))
+			{
+				var R = new List<Wnd>();
+				_FindInList(wParent, a, true, R);
+				return R;
+			}
+
+			/// <summary>
+			/// If a is not null, returns index of matching element or -1.
+			/// Else returns -2 if wSingle matches, else -1.
+			/// Returns -1 if using aFindAll.
+			/// </summary>
+			/// <param name="wParent">Parent window. Can be Wnd0 if inList is true and no DirectChild flag and not using winforms name.</param>
+			/// <param name="a">Array etc of Wnd.</param>
+			/// <param name="inList">Called by FindInList or FindAllInList.</param>
+			/// <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
+			/// <param name="wSingle">Can be used instead of a. Then a must be null.</param>
+			int _FindInList(Wnd wParent, IEnumerable<Wnd> a, bool inList, [Out] List<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
 			{
 				Result = Wnd0;
-				if(a == null || a.Count == 0) return -1;
+				if(a == null) return -1;
+
+				int skipCount = _skipCount;
+				bool mustBeVisible = inList && (_flags & WCFlags.HiddenToo) == 0;
+				bool mustBeDirectChild = inList && (_flags & WCFlags.DirectChild) != 0 && !wParent.Is0;
 
 				try { //will need to dispose something
 
-					int skipCount = _skipCount;
-					bool mustBeVisible = inList && (_flags & WCFlags.HiddenToo) == 0;
-					bool mustBeDirectChild = inList && (_flags & WCFlags.DirectChild) != 0;
+					//this thing is a foreach that supports either IEnumerable (a) or single Wnd (wSingle)
+					using(var en = a?.GetEnumerator()) {
+						for(int index = 0; index >= 0; index++) {
+							Wnd w;
+							if(en != null) {
+								if(!en.MoveNext()) break;
+								w = en.Current;
+							} else {
+								w = wSingle;
+								index = -2; //if matches, returns -2, else breaks at -1
+							}
+							if(w.Is0) continue;
 
-					for(int index = 0; index < a.Count; index++) {
-						Wnd c = a[index];
-
-						if(mustBeVisible) {
-							if(!c.IsVisible) continue;
-						}
-
-						if(mustBeDirectChild) {
-							if(c.WndDirectParentOrOwner != wParent) continue;
-						}
-
-						if(_nameIs == _NameIs.id) {
-							if(c.ControlId != _id) continue;
-						}
-
-						if(_className != null) {
-							if(!_className.Match(c.ClassName)) continue;
-						}
-
-						if(_name != null) {
-							string s;
-							switch(_nameIs) {
-							case _NameIs.text:
-								s = c.ControlText;
-								break;
-							case _NameIs.accName:
-								s = c.NameAcc;
-								break;
-							case _NameIs.wfName:
-								if(_wfControls == null) {
-									try {
-										_wfControls = new Misc.WinFormsControlNames(wParent);
-									}
-									catch(WndException) { //invalid parent window
-										return -1;
-									}
-									catch(CatException e) { //probably process of higher UAC integrity level
-										Output.Warning($"Failed to get .NET control names. {e.Message}");
-										return -1;
-									}
-								}
-								s = _wfControls.GetControlName(c);
-								break;
-							default:
-								Debug.Assert(_nameIs == _NameIs.name);
-								s = c.Name;
-								break;
+							if(mustBeVisible) {
+								if(!w.IsVisible) continue;
 							}
 
-							if(!_name.Match(s)) continue;
+							if(mustBeDirectChild) {
+								if(w.WndDirectParentOrOwner != wParent) continue;
+							}
+
+							if(_nameIs == _NameIs.id) {
+								if(w.ControlId != _id) continue;
+							}
+
+							if(_className != null) {
+								if(!_className.Match(w.ClassName)) continue;
+							}
+
+							if(_name != null) {
+								string s;
+								switch(_nameIs) {
+								case _NameIs.text:
+									s = w.ControlText;
+									break;
+								case _NameIs.accName:
+									s = w.NameAcc;
+									break;
+								case _NameIs.wfName:
+									if(_wfControls == null) {
+										try {
+											_wfControls = new Misc.WinFormsControlNames(wParent.Is0 ? w : wParent);
+										}
+										catch(WndException) { //invalid parent window
+											return -1;
+										}
+										catch(CatException e) { //probably process of higher UAC integrity level
+											Output.Warning($"Failed to get .NET control names. {e.Message}");
+											return -1;
+										}
+									}
+									s = _wfControls.GetControlName(w);
+									break;
+								default:
+									Debug.Assert(_nameIs == _NameIs.name);
+									s = w.Name;
+									break;
+								}
+
+								if(!_name.Match(s)) continue;
+							}
+
+							if(_also != null && !_also(w)) continue;
+
+							if(aFindAll != null) {
+								aFindAll.Add(w);
+								continue;
+							}
+
+							if(skipCount-- > 0) continue;
+
+							Result = w;
+							return index;
 						}
-
-						if(_also != null && !_also(c)) continue;
-
-						if(skipCount-- > 0) continue;
-
-						Result = c;
-						return index;
 					}
 				}
 				finally {
@@ -192,6 +256,20 @@ namespace Catkeys
 				}
 
 				return -1;
+			}
+
+			/// <summary>
+			/// Returns true if control c properties match the specified properties.
+			/// </summary>
+			/// <param name="c">A control. Can be 0/invalid, then returns false.</param>
+			/// <param name="wParent">Direct or indirect parent window. If used, returns false if it isn't parent (also depends on flag DirectChild).</param>
+			public bool IsMatch(Wnd c, Wnd wParent = default(Wnd))
+			{
+				if(!wParent.Is0 && !c.IsChildOf(wParent)) {
+					Result = default(Wnd);
+					return false;
+				}
+				return -2 == _FindInList(wParent, null, true, null, c);
 			}
 		}
 
@@ -245,21 +323,52 @@ namespace Catkeys
 		/// </exception>
 		public Wnd Child(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
-			ThrowIfInvalid();
-			var d = new ChildParams(name, className, flags, also, skip);
-			d.Find(this);
-			return d.Result;
+			//ThrowIfInvalid(); //will be called later
+			var f = new ChildFinder(name, className, flags, also, skip);
+			f.FindIn(this);
+			return f.Result;
 		}
 
 		/// <summary>
+		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="Child"/>.
-		/// Returns true if it finds the child control.
+		/// <note type="note">
+		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="ChildFinder"/> and call <see cref="ChildFinder.FindIn"/> or <see cref="HasChild(ChildFinder)"/>. See example.
+		/// </note>
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <exception cref="ArgumentException"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// //find window that contains certain control, and get the control too
+		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+		/// Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(f));
+		/// Print(w);
+		/// Print(f.Result);
+		/// ]]></code>
+		/// </example>
 		public bool HasChild(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
 			return Wnd0 != Child(name, className, flags, also, skip);
+		}
+
+		/// <summary>
+		/// Returns true if this window contains the specified control.
+		/// Calls <see cref="ChildFinder.FindIn"/>.
+		/// </summary>
+		/// <exception cref="WndException"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// //find window that contains certain control, and get the control too
+		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+		/// Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(f));
+		/// Print(w);
+		/// Print(f.Result);
+		/// ]]></code>
+		/// </example>
+		public bool HasChild(ChildFinder f)
+		{
+			return f.FindIn(this);
 		}
 
 		/// <summary>
@@ -280,11 +389,11 @@ namespace Catkeys
 			if(R.Is0) {
 				ThrowIfInvalid();
 				if(directChild == false) {
-					LibAllChildren(e =>
+					Api.EnumChildWindows(this, (c, param) =>
 					{
-						if(e.ControlId != id) return false;
-						R = e; return true;
-					});
+						if(c.ControlId != id) return 1;
+						R = c; return 0;
+					}, Zero);
 				}
 			}
 			return R;
@@ -321,15 +430,15 @@ namespace Catkeys
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <exception cref="ArgumentException"/>
+		/// <remarks>
+		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
+		/// </remarks>
 		public List<Wnd> ChildAll(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
 		{
-			ThrowIfInvalid();
-			var a = new List<Wnd>();
-			Child(name, className, flags, e =>
-			{
-				if(also == null || also(e)) a.Add(e);
-				return false;
-			});
+			//ThrowIfInvalid(); //will be called later
+			var f = new ChildFinder(name, className, flags, also);
+			var a = f.FindAllIn(this);
+			//CONSIDER: add property LastChildParams, like LastFind.
 			return a;
 		}
 
@@ -366,55 +475,25 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets list of child controls.
-		/// Returns List containing 0 or more control handles as Wnd.
-		/// Calls API <msdn>EnumChildWindows</msdn>.
+		/// Gets child controls.
+		/// Returns array containing 0 or more control handles as Wnd.
 		/// </summary>
 		/// <param name="directChild">Need only direct children, not grandchildren.</param>
 		/// <param name="onlyVisible">Need only visible controls.</param>
-		/// <param name="sortFirstVisible">Place all list elements of hidden controls at the end of the returned list.</param>
+		/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+		/// <param name="also">
+		/// Lambda etc callback function to call for each matching control.
+		/// It can evaluate more properties of the control and return true when they match.
+		/// Example: <c>also: t =&gt; t.ClassNameIs("Edit")</c>.
+		/// </param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public List<Wnd> AllChildren(bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
-		{
-			List<Wnd> a = new List<Wnd>(), aHidden = null;
-			if(onlyVisible) sortFirstVisible = false;
-
-			LibAllChildren(e =>
-			{
-				if(sortFirstVisible && !e.IsVisible) {
-					if(aHidden == null) aHidden = new List<Wnd>();
-					aHidden.Add(e);
-				} else {
-					a.Add(e);
-				}
-				return false;
-			}, directChild, onlyVisible);
-
-			if(aHidden != null) a.AddRange(aHidden);
-			return a;
-
-			//tested: using a non-anonymous callback function does not make faster.
-		}
-
-		/// <summary>
-		/// Calls callback function for each child control.
+		/// <remarks>
 		/// Calls API <msdn>EnumChildWindows</msdn>.
-		/// </summary>
-		/// <param name="f">Lambda etc callback function to call for each matching control. Can return true to stop.</param>
-		/// <param name="directChild">Need only direct children, not grandchildren.</param>
-		/// <param name="onlyVisible">Need only visible controls.</param>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		internal void LibAllChildren(Func<Wnd, bool> f, bool directChild = false, bool onlyVisible = false)
+		/// </remarks>
+		public Wnd[] AllChildren(bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false, Func<Wnd, bool> also = null)
 		{
 			ThrowIfInvalid();
-			Wnd w = this;
-
-			Api.EnumChildWindows(this, (c, param) =>
-			{
-				if(onlyVisible && !c.IsVisible) return 1;
-				if(directChild && c.WndDirectParentOrOwner != w) return 1;
-				return f(c) ? 0 : 1;
-			}, Zero);
+			return Misc.LibEnumWindows(Misc.LibEnumWindowsAPI.EnumChildWindows, onlyVisible, sortFirstVisible, also, this, directChild);
 		}
 
 		//Better don't use this.

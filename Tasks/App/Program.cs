@@ -287,7 +287,7 @@ namespace Catkeys.Tasks
 		{
 			Perf.First();
 			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
-			if(!Files.ExistsAsDirectory(outDir)) Directory.CreateDirectory(outDir);
+			Files.CreateDirectory(outDir);
 			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
 			//PrintList(csFile, dllFile);
 

@@ -98,7 +98,7 @@ namespace Catkeys
 		[Conditional("DEBUG")]
 		public static void DebugPrint(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
-			Output.Write($"Debug: {cmn} ({Path.GetFileName(cp)}:{cln}):  {value}");
+			Output.Write($"Debug: {cmn} ({Path_.GetFileName(cp)}:{cln}):  {value}");
 		}
 
 		/// <summary>
@@ -121,7 +121,7 @@ namespace Catkeys
 		[Conditional("DEBUG")]
 		public static void DebugDialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
-			TaskDialog.ShowEx("Debug", text?.ToString(), flags: TDFlags.ExpandDown, expandedText: $"{cmn} ({Path.GetFileName(cp)}:{cln})");
+			TaskDialog.ShowEx("Debug", text?.ToString(), flags: TDFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
 		}
 
 		/// <summary>
@@ -141,50 +141,6 @@ namespace Catkeys
 		/// </summary>
 		public static bool Empty(string s) { return s == null || s.Length == 0; }
 
-		static readonly uint _winver = _GetWinVersion();
-		static uint _GetWinVersion()
-		{
-			var x = new RTL_OSVERSIONINFOW(); x.dwOSVersionInfoSize = Api.SizeOf(x);
-			try {
-				if(0 == RtlGetVersion(ref x)) return Calc.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
-				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
-			}
-			catch { }
-			Debug.Fail("RtlGetVersion");
-
-			var v = Environment.OSVersion.Version;
-			return Calc.MakeUshort(v.Minor, v.Major);
-		}
-
-		struct RTL_OSVERSIONINFOW
-		{
-			public uint dwOSVersionInfoSize;
-			public uint dwMajorVersion;
-			public uint dwMinorVersion;
-			public uint dwBuildNumber;
-			public uint dwPlatformId;
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-			public string szCSDVersion;
-		}
-
-		[DllImport("ntdll.dll", ExactSpelling = true)]
-		static extern int RtlGetVersion(ref RTL_OSVERSIONINFOW lpVersionInformation);
-
-		/// <summary>
-		/// Gets classic Windows major+minor version value:
-		/// Win7 (0x601), Win8 (0x602), Win8_1 (0x603), Win10 (0xA00).
-		/// Example: <c>if(WinVer>=Win8) ...</c>
-		/// </summary>
-		public static uint WinVer
-		{
-			get => _winver;
-		}
-
-		/// <summary>
-		/// Classic Windows version major+minor values.
-		/// Example: <c>if(WinVer>=Win8) ...</c>
-		/// </summary>
-		public const uint Win7 = 0x601, Win8 = 0x602, Win8_1 = 0x603, Win10 = 0xA00;
 
 		//public static void Key(params string[] keys)
 		//{

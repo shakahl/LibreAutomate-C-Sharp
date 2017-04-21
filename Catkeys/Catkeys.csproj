@@ -89,8 +89,11 @@
     <Compile Include="Api\Api public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
     <Compile Include="Files, system\Files.Misc.cs" />
-    <Compile Include="Files, system\LnkShortcut.cs" />
+    <Compile Include="Files, system\Shell.Pidl.cs" />
+    <Compile Include="Files, system\Shell.Shortcut.cs" />
     <Compile Include="Files, system\Path_.cs" />
+    <Compile Include="Files, system\Shell.cs" />
+    <Compile Include="Files, system\Ver.cs" />
     <Compile Include="Other\Calc.cs" />
     <Compile Include="Common\Classes.cs" />
     <Compile Include="Common\common.cs" />
@@ -113,6 +116,8 @@
     <Compile Include="String\string classes.cs" />
     <Compile Include="String\String_ex.cs" />
     <Compile Include="Time\Time.cs" />
+    <Compile Include="Time\WaitFor_other.cs" />
+    <Compile Include="Util\ArrayBuilder.cs" />
     <Compile Include="Wnd\Wnd.cs" />
     <Compile Include="Wnd\Wnd_child.cs" />
     <Compile Include="Wnd\Wnd_fromxy.cs" />
@@ -124,7 +129,7 @@
     <Compile Include="Util\Memory.cs" />
     <Compile Include="Util\MessageLoops.cs" />
     <Compile Include="Util\ThreadPoolSTA.cs" />
-    <Compile Include="Time\WaitFor.cs" />
+    <Compile Include="Time\WaitFor_Wnd.cs" />
     <Compile Include="Wnd\Wnd_find.cs" />
     <Compile Include="Wnd\Wnd_get.cs" />
     <Compile Include="Wnd\Wnd_mics.cs" />
@@ -145,12 +150,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\CatkeysSN.pfx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Downloads\AlphaFS-develop\AlphaFS\Z.AlphaFS.csproj">
-      <Project>{f0f9af1e-d5b5-4d72-804a-5380622fbdea}</Project>
-      <Name>Z.AlphaFS</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
