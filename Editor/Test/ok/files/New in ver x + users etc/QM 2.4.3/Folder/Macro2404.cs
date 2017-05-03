@@ -1,1 +1,0 @@
-CsScript x.Init

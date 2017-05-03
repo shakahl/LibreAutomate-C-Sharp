@@ -106,7 +106,7 @@ namespace Catkeys
 			if(!Api.GetFileAttributesEx(path, 0, out d)) {
 				if(!_GetAttributesOnError(path, flags, out var unused, &d)) return false;
 			}
-			properties.Attributes = (FileAttributes)d.dwFileAttributes;
+			properties.Attributes = d.dwFileAttributes;
 			properties.Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
 			properties.LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime);
 			properties.CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
@@ -153,7 +153,7 @@ namespace Catkeys
 				var hfind = _Api.FindFirstFile(path, out d);
 				if(hfind != (IntPtr)(-1)) {
 					_Api.FindClose(hfind);
-					attr = (FileAttributes)d.dwFileAttributes;
+					attr = d.dwFileAttributes;
 					if(p != null) {
 						p->dwFileAttributes = d.dwFileAttributes;
 						p->nFileSizeHigh = d.nFileSizeHigh;
@@ -185,7 +185,7 @@ namespace Catkeys
 		{
 			if(!useRawPath) path = Path_.LibNormalizeMinimally(path, false);
 			_DisableDeviceNotReadyMessageBox();
-			attr = (FileAttributes)Api.GetFileAttributes(path);
+			attr = Api.GetFileAttributes(path);
 			if(attr == (FileAttributes)(-1) && !_GetAttributesOnError(path, GAFlags.DoNotThrow, out attr)) return false;
 			if(!useRawPath && !Path_.IsFullPath(path)) { Native.SetError(Api.ERROR_FILE_NOT_FOUND); return false; }
 			return true;
@@ -210,7 +210,7 @@ namespace Catkeys
 		/// Returns NotFound (0) if does not exist or if fails to get attributes.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
@@ -250,7 +250,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// The same as <see cref="ExistsAs"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
@@ -268,19 +268,19 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if file or directory exists.
-		/// Returns false if does not exist or if fails to get its attributes.
-		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
+		/// Calls <see cref="ExistsAs2"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
+		/// Unlike <see cref="ExistsAsFile"/> and <see cref="ExistsAsDirectory"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
 		/// </remarks>
 		public static bool ExistsAsAny(string path, bool useRawPath = false)
 		{
-			return ExistsAs(path, useRawPath) != ItIs.NotFound;
+			return ExistsAs2(path, useRawPath) != ItIs2.NotFound;
 		}
 
 		/// <summary>
@@ -288,7 +288,7 @@ namespace Catkeys
 		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
@@ -308,7 +308,7 @@ namespace Catkeys
 		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
@@ -454,7 +454,7 @@ namespace Catkeys
 			internal EDFile(string name, string fullPath, ref _Api.WIN32_FIND_DATA d, int level)
 			{
 				Name = name; FullPath = fullPath;
-				Attributes = (FileAttributes)d.dwFileAttributes;
+				Attributes = d.dwFileAttributes;
 				Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
 				LastWriteTimeUtc = DateTime.FromFileTimeUtc(d.ftLastWriteTime); //fast, sizeof 8
 				CreationTimeUtc = DateTime.FromFileTimeUtc(d.ftCreationTime);
@@ -777,7 +777,7 @@ namespace Catkeys
 
 			if(opType == _FileOpType.Rename) {
 				opType = _FileOpType.Move;
-				if(Path_.IsInvalidFileName(path2)) throw new ArgumentException("Invalid filename");
+				if(Path_.IsInvalidFileName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
 				path2 = Path_.LibCombine(_RemoveFilename(path1), path2);
 			} else {
 				string path2Parent;
@@ -790,7 +790,7 @@ namespace Catkeys
 				}
 				if(path2Parent != null) {
 					try { _CreateDirectory(path2Parent, pathIsPrepared: true); }
-					catch(Exception ex) { throw new CatException("*create directory", ex); }
+					catch(Exception ex) { throw new CatException($"*create directory: '{path2Parent}'", ex); }
 				}
 			}
 
@@ -853,7 +853,7 @@ namespace Catkeys
 							ok = true;
 						}
 						catch(Exception ex) when(opType != _FileOpType.Copy) {
-							throw new CatException($"*{opName}", ex);
+							throw new CatException($"*{opName} '{path1}' to '{path2}'", ex);
 							//FUTURE: test when it is ThreadAbortException
 						}
 					} else {
@@ -864,11 +864,11 @@ namespace Catkeys
 					}
 				}
 
-				if(!ok) throw new CatException(0, $"*{opName}");
+				if(!ok) throw new CatException(0, $"*{opName} '{path1}' to '{path2}'");
 
 				if(deleteSource) {
 					try {
-						_Delete(path1, false);
+						_Delete(path1);
 					}
 					catch(Exception ex) {
 						if(!path1.EndsWith_(':')) //moving drive contents. Deleted contents but cannot delete drive.
@@ -889,6 +889,10 @@ namespace Catkeys
 			//FUTURE: add progressInterface parameter. Create a default interface implementation class that supports progress dialog and/or progress in taskbar button. Or instead create a ShellCopy function.
 			//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to EnumDirectory which calls it when fails to enum.
 
+			//use intermediate array, and get it before creating path2 directory. It requires more memory, but is safer. Without it, eg bad things happen when copying a directory into itself.
+			var edFlags = EDFlags.AndSubdirectories | EDFlags.NeedRelativePaths | EDFlags.UseRawPath | (EDFlags)copyFlags;
+			var a = EnumDirectory(path1, edFlags, filter).ToArray();
+
 			bool ok = false;
 			string s1 = null, s2 = null;
 			if(!merge) {
@@ -896,8 +900,9 @@ namespace Catkeys
 				if(!ok) ok = _Api.CreateDirectory(path2, Zero);
 				if(!ok) goto ge;
 			}
-			var edFlags = EDFlags.AndSubdirectories | EDFlags.NeedRelativePaths | EDFlags.UseRawPath | (EDFlags)copyFlags;
-			foreach(var f in EnumDirectory(path1, edFlags, filter)) {
+
+			//foreach(var f in EnumDirectory(path1, edFlags, filter)) { //no, see comments above
+			foreach(var f in a) {
 				s1 = f.FullPath; s2 = Path_.PrefixLongPathIfNeed(path2 + f.Name);
 				//PrintList(s1, s2);
 				//continue;
@@ -912,7 +917,7 @@ namespace Catkeys
 				} else {
 					if(merge && GetAttributes(s2, out var attr, GAFlags.DoNotThrow | GAFlags.UseRawPath)) {
 						const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
-						if(0 != (attr & FileAttributes.Directory)) _Delete(s2, false);
+						if(0 != (attr & FileAttributes.Directory)) _Delete(s2);
 						else if(0 != (attr & badAttr)) Api.SetFileAttributes(s2, attr & ~badAttr);
 					}
 
@@ -957,7 +962,7 @@ namespace Catkeys
 				string s1 = path.Remove(iFN) + "old", s2 = " " + path.Substring(iFN);
 				for(int i = 1; ; i++) {
 					tempPath = s1 + i + s2;
-					if(ExistsAs2(tempPath, true) == ItIs2.NotFound) break;
+					if(!ExistsAsAny(tempPath, true)) break;
 				}
 				if(!_Api.MoveFileEx(path, tempPath, 0)) return false;
 				_oldPath = path; _tempPath = tempPath; _doNotDelete = doNotDelete;
@@ -970,7 +975,7 @@ namespace Catkeys
 				if(!succeeded) {
 					if(!_Api.MoveFileEx(_tempPath, _oldPath, 0)) return false;
 				} else if(!_doNotDelete) {
-					try { _Delete(_tempPath, false); } catch { return false; }
+					try { _Delete(_tempPath); } catch { return false; }
 				}
 				_oldPath = _tempPath = null;
 				return true;
@@ -1104,71 +1109,99 @@ namespace Catkeys
 
 		/// <summary>
 		/// Deletes file or directory.
-		/// Does nothing (no exception) if it does not exist or cannot be found.
+		/// Does nothing if it does not exist (no exception).
 		/// </summary>
 		/// <param name="path">Full path.</param>
-		/// <param name="useRecycleBin">Send to Recycle Bin. Note: it is much slower.</param>
+		/// <param name="tryRecycleBin">
+		/// Send to the Recycle Bin. If not possible, delete anyway.
+		/// Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
+		/// Note: it is much slower. To delete multiple, use <see cref="Delete(IEnumerable{string}, bool)"/>.
+		/// </param>
 		/// <exception cref="ArgumentException">path is not full path (see <see cref="Path_.IsFullPath"/>).</exception>
 		/// <exception cref="CatException">Failed.</exception>
 		/// <remarks>
 		/// If directory, also deletes all its files and subdirectories. If fails to delete some, tries to delete as many as possible.
-		/// Does not fail if is read-only or contains read-only files.
+		/// Deletes read-only files too.
+		/// Does not show any message boxes etc (confirmation, error, UAC consent, progress).
 		/// 
 		/// Some reasons why this function can fail:
 		/// 1. The file is open (in any process). Or a file in the directory is open.
 		/// 2. This process does not have security permissions to access or delete the file or directory or some of its descendants.
 		/// 3. The directory is (or contains) the "current directory" (in any process).
 		/// </remarks>
-		public static void Delete(string path, bool useRecycleBin = false)
+		public static void Delete(string path, bool tryRecycleBin = false)
 		{
 			path = _PreparePath(path);
-			_Delete(path, useRecycleBin);
+			_Delete(path, tryRecycleBin);
+		}
+
+		/// <summary>
+		/// Deletes multiple files or/and directories.
+		/// The same as <see cref="Delete(string, bool)"/>, but faster when using Recycle Bin.
+		/// </summary>
+		/// <param name="paths">string array, List or other collection. Full paths.</param>
+		/// <param name="tryRecycleBin"></param>
+		public static void Delete(IEnumerable<string> paths, bool tryRecycleBin = false)
+		{
+			if(tryRecycleBin) {
+				var a = new List<string>();
+				foreach(var v in paths) {
+					var s = _PreparePath(v);
+					if(ExistsAsAny(s, true)) a.Add(s);
+				}
+				if(a.Count == 0) return;
+				if(_DeleteShell(null, true, a)) return;
+				DebugPrint("_DeleteShell failed");
+			}
+			foreach(var v in paths) Delete(v);
 		}
 
 		/// <summary>
 		/// note: path must be normalized.
 		/// </summary>
-		static ItIs2 _Delete(string path, bool useRecycleBin)
+		static ItIs2 _Delete(string path, bool tryRecycleBin = false)
 		{
 			var type = ExistsAs2(path, true);
 			if(type == ItIs2.NotFound) return type;
-			if(type == ItIs2.AccessDenied) throw new CatException(0, "*delete");
+			if(type == ItIs2.AccessDenied) throw new CatException(0, $"*delete '{path}'");
 
-			if(useRecycleBin) {
-				if(!_DeleteShell(path, true)) throw new CatException("*delete");
-			} else {
-				int ec = 0;
-				if(type == ItIs2.Directory) {
-					var dirs = new List<string>();
-					foreach(var f in EnumDirectory(path, EDFlags.AndSubdirectories | EDFlags.UseRawPath | EDFlags.IgnoreAccessDeniedErrors)) {
-						if(f.IsDirectory) dirs.Add(f.FullPath);
-						else _DeleteLL(f.FullPath, false); //delete as many as possible
-					}
-					for(int i = dirs.Count - 1; i >= 0; i--) {
-						_DeleteLL(dirs[i], true); //delete as many as possible
-					}
-					ec = _DeleteLL(path, true);
-					if(ec == 0) {
-						//notify shell. Else, if it was open in Explorer, it shows an error message box.
-						//Info: .NET does not notify; SHFileOperation does.
-						_ShellNotify(Api.SHCNE_RMDIR, path);
-						return type;
-					}
-					DebugPrint("Using _DeleteShell.");
-					if(_DeleteShell(path, false)) return type;
-				} else {
-					ec = _DeleteLL(path, type == ItIs2.SymLinkDirectory);
-					if(ec == 0) return type;
-				}
-				if(ExistsAs2(path, true) != ItIs2.NotFound) throw new CatException(ec, "*delete");
-
-				//info:
-				//RemoveDirectory fails if not empty.
-				//Directory.Delete fails if a descendant is read-only, etc.
-				//Also both fail if a [now deleted] subfolder containing files was open in Explorer. Workaround: sleep(10) and retry.
-				//_DeleteShell does not have these problems. But it is very slow.
-				//But all fail if it is current directory in any process. If in current process, _DeleteShell succeeds; it makes current directory = its parent.
+			if(tryRecycleBin) {
+				if(_DeleteShell(path, true)) return type;
+				DebugPrint("_DeleteShell failed");
 			}
+
+			int ec = 0;
+			if(type == ItIs2.Directory) {
+				var dirs = new List<string>();
+				foreach(var f in EnumDirectory(path, EDFlags.AndSubdirectories | EDFlags.UseRawPath | EDFlags.IgnoreAccessDeniedErrors)) {
+					if(f.IsDirectory) dirs.Add(f.FullPath);
+					else _DeleteLL(f.FullPath, false); //delete as many as possible
+				}
+				for(int i = dirs.Count - 1; i >= 0; i--) {
+					_DeleteLL(dirs[i], true); //delete as many as possible
+				}
+				ec = _DeleteLL(path, true);
+				if(ec == 0) {
+					//notify shell. Else, if it was open in Explorer, it shows an error message box.
+					//Info: .NET does not notify; SHFileOperation does.
+					_ShellNotify(Api.SHCNE_RMDIR, path);
+					return type;
+				}
+				DebugPrint("Using _DeleteShell.");
+				//if(_DeleteShell(path, Recycle.No)) return type;
+				if(_DeleteShell(path, false)) return type;
+			} else {
+				ec = _DeleteLL(path, type == ItIs2.SymLinkDirectory);
+				if(ec == 0) return type;
+			}
+			if(ExistsAsAny(path, true)) throw new CatException(ec, $"*delete '{path}'");
+
+			//info:
+			//RemoveDirectory fails if not empty.
+			//Directory.Delete fails if a descendant is read-only, etc.
+			//Also both fail if a [now deleted] subfolder containing files was open in Explorer. Workaround: sleep(10) and retry.
+			//_DeleteShell does not have these problems. But it is very slow.
+			//But all fail if it is current directory in any process. If in current process, _DeleteShell succeeds; it makes current directory = its parent.
 			return type;
 		}
 
@@ -1204,19 +1237,31 @@ namespace Catkeys
 			//	Tested on Win10, works without unmounting explicitly. Even Explorer updates its current folder without notification.
 		}
 
-		static bool _DeleteShell(string path, bool recycle)
+		static bool _DeleteShell(string path, bool recycle, List<string> a = null)
 		{
+			if(a != null) path = string.Join("\0", a);
 			if(path.IndexOfAny_("*?") >= 0) throw new ArgumentException("*? not supported.");
-			var x = new _Api.SHFILEOPSTRUCT();
-			x.wFunc = _Api.FO_DELETE;
-			var f = _Api.FOF_NO_UI | _Api.FOF_NO_CONNECTED_ELEMENTS; if(recycle) f |= _Api.FOF_ALLOWUNDO;
+			var x = new _Api.SHFILEOPSTRUCT() { wFunc = _Api.FO_DELETE };
+			uint f = _Api.FOF_NO_UI; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
+			if(recycle) f |= _Api.FOF_ALLOWUNDO; else f |= _Api.FOF_NO_CONNECTED_ELEMENTS;
 			x.fFlags = (ushort)f;
 			x.pFrom = path + "\0";
 			x.hwnd = Wnd.Misc.WndRoot;
 			var r = _Api.SHFileOperation(ref x);
-			return r == 0 && !x.fAnyOperationsAborted;
+			if(r != 0 || x.fAnyOperationsAborted) return false;
+			//in some cases API returns 0 but does not delete. For example when path too long.
+			if(a == null) {
+				if(ExistsAsAny(path, true)) return false;
+			} else {
+				foreach(var v in a) if(ExistsAsAny(v, true)) return false;
+			}
+			return true;
 
 			//Also tested IFileOperation, but it is even slower. Also it requires STA, which is not a big problem.
+
+			//Unsuccessfully tried to add flag 'if cannot use Recycle Bin, show a Yes|No message box and delete or fail'.
+			//	FOF_WANTNUKEWARNING does not work as it should, eg is ignored when the file is in a flash drive.
+			//	It works only without FOF_NOCONFIRMATION, but then always shows confirmation if not disabled in RB Properties.
 		}
 
 		/// <summary>
@@ -1332,7 +1377,7 @@ namespace Catkeys
 			int R = path.LastIndexOfAny(_sep);
 			if(R < 0 || R == path.Length - 1) {
 				if(noException) return -1;
-				throw new ArgumentException("No filename in path.");
+				throw new ArgumentException($"No filename in path: '{path}'.");
 			}
 			return R + 1;
 		}

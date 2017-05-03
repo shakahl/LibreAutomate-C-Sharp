@@ -1,1 +1,0 @@
-qm.RunTextAsFunction "mes"

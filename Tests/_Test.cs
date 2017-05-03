@@ -61,6 +61,7 @@ using SQLite;
 
 using Microsoft.Win32.SafeHandles;
 
+using System.IO.Compression;
 
 using static Test.CatAlias;
 
@@ -2709,28 +2710,28 @@ bbb"", b3
 		string s = @"Q:\app\catkeys\tasks\CatkeysTasks.exe";
 		string hash;
 		Perf.First();
-		hash = Calc.HashMD5Hex(s);
+		hash = Convert_.HashMD5Hex(s);
 		Perf.NW(); //1700 (.NET 3700)
 		Print(hash);
-		hash = Calc.HashHex(s, "MD5");
+		hash = Convert_.HashHex(s, "MD5");
 		Print(hash);
-		hash = Calc.HashHex(s, "SHA256");
+		hash = Convert_.HashHex(s, "SHA256");
 		Print(hash);
-		int hashInt = Calc.HashFnv1(s);
+		int hashInt = Convert_.HashFnv1(s);
 		Print(hashInt);
-		unsafe { fixed (char* p = s) { hashInt = Calc.HashFnv1(p, s.Length); } }
+		unsafe { fixed (char* p = s) { hashInt = Convert_.HashFnv1(p, s.Length); } }
 		Print(hashInt);
-		unsafe { fixed (char* p = s) { hashInt = Calc.HashFnv1((byte*)p, s.Length * 2); } }
+		unsafe { fixed (char* p = s) { hashInt = Convert_.HashFnv1((byte*)p, s.Length * 2); } }
 		Print(hashInt);
 
 		byte[] a = Encoding.UTF8.GetBytes(s);
 
-		var a1 = new Action(() => { hash = Calc.HashMD5Hex(s); }); //440 (QM2 350, .NET 2000 with static var, 4000 with local var)
-		var a2 = new Action(() => { hash = Calc.HashHex(s, "MD5"); }); //4200
-		var a3 = new Action(() => { hash = Calc.HashHex(s, "SHA256"); }); //2500
-		var a4 = new Action(() => { hash = Calc.HashMD5Hex(a); }); //320
-		var a5 = new Action(() => { hashInt = Calc.HashFnv1(s); }); //40
-		var a6 = new Action(() => { unsafe { fixed (char* p = s) { hashInt = Calc.HashFnv1((byte*)p, s.Length * 2); } } }); //84 (40 if no *2)
+		var a1 = new Action(() => { hash = Convert_.HashMD5Hex(s); }); //440 (QM2 350, .NET 2000 with static var, 4000 with local var)
+		var a2 = new Action(() => { hash = Convert_.HashHex(s, "MD5"); }); //4200
+		var a3 = new Action(() => { hash = Convert_.HashHex(s, "SHA256"); }); //2500
+		var a4 = new Action(() => { hash = Convert_.HashMD5Hex(a); }); //320
+		var a5 = new Action(() => { hashInt = Convert_.HashFnv1(s); }); //40
+		var a6 = new Action(() => { unsafe { fixed (char* p = s) { hashInt = Convert_.HashFnv1((byte*)p, s.Length * 2); } } }); //84 (40 if no *2)
 		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6);
 	}
 
@@ -5719,14 +5720,14 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static unsafe void TestBytesToHexString()
 	{
 		byte[] a = new byte[4] { 65, 66, 67, 68 };
-		var s = Calc.BytesToHexString(a, true);
+		var s = Convert_.BytesToHexString(a, true);
 		Print(s);
-		Print(Calc.BytesFromHexString(s));
+		Print(Convert_.BytesFromHexString(s));
 		fixed (byte* p = a) {
-			var s2 = Calc.BytesToHexString(p, 4, true);
+			var s2 = Convert_.BytesToHexString(p, 4, true);
 			Print(s2);
 			int a2;
-			Print(Calc.BytesFromHexString(s2, &a2, 4));
+			Print(Convert_.BytesFromHexString(s2, &a2, 4));
 			PrintHex(a2);
 		}
 	}
@@ -8700,6 +8701,175 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		Print(n);
 	}
 
+	static void TestColorLuma()
+	{
+		//Print(Color_.Brightness0to255(0x000000));
+		//Print(Color_.Brightness0to255(0x808080));
+		//Print(Color_.Brightness0to255(0xffffff));
+		//Print(Color_.Brightness0to255(0xFF0000));
+		//Print(Color_.Brightness0to255(0x00FF00));
+		//Print(Color_.Brightness0to255(0x0000FF));
+
+		uint c = 0x808080;
+		c = 0xff0000;
+		c = 0xff00;
+		c = 0xff;
+		c = 0x8000;
+		int n = -250;
+		PrintHex(Color_.AdjustLuminance(c, n, false));
+		//PrintHex(Color_.AdjustLuminance2(c, n, false));
+		//PrintHex(Color_.AdjustLuminance(0xE0E0E0, -800, false));
+
+		//int color =0x808080;
+		//color = 0x0000FF;
+		//color = 0x00FF00;
+		//color = 0xFF0000;
+		//color = 0;
+		//color = 0xFFFFFF;
+
+		//var c = Color.FromArgb(color);
+
+		//Print(Color_.Brightness0to255((uint)color));
+		//Print(Color_.Brightness0to255(c));
+
+		//Print(c.GetBrightness());
+	}
+
+	//static void TestDeleteRB()
+	//{
+	//	Files.Delete(@"G:\New Bitmap Image.bmp", Files.Recycle.YesOrAskUser);
+	//}
+
+	static void TestRegexIndexOf()
+	{
+		string s = "name_38";
+		//s = "name_a";
+		{
+			Print(s.RegexIndexOf_(@"_\d+"));
+			Print(s.RegexIndexOf_(@"_\d+", out int len));
+			Print(len);
+			Print(s.RegexIndexOf_(@"_\d+", out string match));
+			Print(match);
+		}
+		{
+			Print(s.RegexIndexOf_(@"_(\d+)", 1));
+			Print(s.RegexIndexOf_(@"_(\d+)", out int len, 1));
+			Print(len);
+			Print(s.RegexIndexOf_(@"_(\d+)", out string match, 1));
+			Print(match);
+		}
+	}
+
+	static void TestMultiDelete()
+	{
+		//Files.CreateDirectory(@"Q:\Test\delete");
+		//var a = new string[30];
+		//for(int i = 0; i < a.Length; i++) {
+		//	a[i] = @"Q:\Test/delete\a" + i;
+		//	File.WriteAllText(a[i], "a");
+		//}
+		//Wait(2);
+		//Perf.First();
+		////for(int i = 0; i < a.Length; i++) {
+		////	Files.Delete(a[i], true);
+		////}
+		//Files.Delete(a, true);
+		//Perf.NW();
+
+
+		///var s = @"Q:\app\catkeys\Editor\Test\ok\files\iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
+		//var s = @"Q:\app\catkeys\Editor\Test\ok\files\short";
+		//Files.CreateDirectory(s);
+
+		//Files.CopyTo(s, s);
+		//Files.Delete(s, true);
+		//Files.Delete(s, false);
+
+		//Print(Path_.Combine(Folders.AdminTools, "dsjdjhsjdhjshdjhsj.ggg"));
+		//Print(Path_.Combine(Folders.AdminTools, null));
+		//Print(Path_.Combine(null, Folders.AdminTools));
+		//Print(Path_.Combine(null, null));
+		//Print(Path_.Combine("ignore", "%windir%", Path_.CombineFlags.s2CanBeFullPath));
+		//Print(Path_.Combine(s, "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"));
+		//Print(Path_.Combine(s, "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", Path_.CombineFlags.DoNotPrefixLongPath));
+
+		var s = @"q:\test\delete\file.txt";
+		var s2 = @"q:\test\delete\file2.txt";
+		//File.WriteAllText(s, "a");
+		File.WriteAllText(s2, "a");
+		Wait(2);
+		//Files.Delete(s, true);
+		Files.Delete(new string[] { s, s2 }, true);
+
+		Print("end");
+	}
+
+	static void TestFileUniqueName()
+	{
+		Print(Path_.MakeUnique(Folders.ThisApp + "file.txt", false));
+		Print(Path_.MakeUnique(Folders.ThisApp + "tests.exe", false));
+		Print(Path_.MakeUnique(Folders.ThisApp + "tests.exe", true));
+	}
+
+	static void TestDictionary()
+	{
+		var d = new Dictionary<string, int>();
+		d.Add("zero", 0);
+		d.Add("one", 1);
+		d.Add("two", 2);
+		d.Add("three", 3);
+		d.Add("four", 4);
+
+		Print(d.ElementAt(2));
+	}
+
+	static void TestPngSize()
+	{
+		//var path = @"Q:\My QM\C8375087.bmp";
+		//var b = Image.FromFile(path);
+		//b.Save(@"Q:\My QM\C8375087-NET.png", ImageFormat.Png);
+		//b.Save(@"Q:\My QM\C8375087-NET.jpg", ImageFormat.Jpeg);
+
+		//var f = new Form();
+		//f.Paint += F_Paint;
+		//f.ShowDialog();
+
+		var path = @"Q:\My QM\C8375087.bmp";
+		byte[] data = File.ReadAllBytes(path);
+		Print(data.Length); //1638
+		using(var m=new MemoryStream(data)) {
+			byte[] compressed = Compress(m);
+			Print(compressed.Length); //DeflateStream 422, GZipStream 440
+			Print(Convert.ToBase64String(compressed));
+		}
+	}
+
+	private static byte[] Compress(Stream input)
+	{
+		using(var compressStream = new MemoryStream())
+		using(var compressor = new DeflateStream(compressStream, CompressionLevel.Optimal)) {
+			input.CopyTo(compressor);
+			compressor.Close();
+			return compressStream.ToArray();
+		}
+	}
+
+	private static void F_Paint(object sender, PaintEventArgs e)
+	{
+		string png = "iVBORw0KGgoAAAANSUhEUgAAAEwAAAAmBAMAAACc1mAkAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAwUExURRAXDvrTazB+svNbIf3wlHFcL5miwJDI5tnw+5CLfy6V+96bELPW5/X4/GN7ZOuFUiaTKXYAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFVSURBVDjLY3hHFBhByu4SBShWpoQAuujKqlbBQK0uQhRD2VoEC5+yFWlAADSro2OtRkdHR0QHGGAqyykvAypcBFGWHxoaj10ZxDCIss4ABobQH6jK5kKU5YKpPrCy/18DjI2NUZVNgCqbljnz7g2wsv7/X78Clf1AUTaHF6JsiovjzJlzIMr+/wcqs4AruzkTKHMAomyii6CgIA5lZ0CAF2Ia0DAgACmz/2yMYunNk0DTTkKVSYq4uLj8BHkBpMry3Qm4sgsMDAycE6Bu+wm0VDoCpKwfZNjHFyhe4AR7YU3uxIlAZVvnnFmrc+bMeWPjP2fenDmDpAzCWJM7/wvQsK1nwMqA4N27MyjKeCHK8mb+3r17dyROZRCw5sy8p6EMDDwwZefOPcCmbHk5DKxVh9AMQExYWUE5UcrKsSpDSuT4lCEBfFkGF2BIIwrQK9fTTNnduwAf6ikb0c9NvgAAAABJRU5ErkJggg==";
+		Perf.First();
+		var bytes = Convert.FromBase64String(png);
+		Perf.Next();
+		using(var m = new MemoryStream(bytes, false)) {
+		Perf.Next();
+			using(var b = Image.FromStream(m)) {
+		Perf.Next();
+				e.Graphics.DrawImageUnscaled(b, 0, 0);
+		Perf.NW();
+			}
+		}
+	}
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -8709,50 +8879,10 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//TODO: InitLibrary. Optional but recommended. Would set error mode, default domain data, etc.
 
 		try {
-			//TestSwitchTypeSpeed();
-			//TestMyIEnumerable();
-			//TestWaitWindow();
-			//TestShellRun();
-			//TestNativeMemoryList();
-			//TestTemp();
-			//TestBytesFromHexStringNew();
-			//TestVersion();
-			//TestIconWithPidl();
-			//TestPidlToString2();
-			//TestLnkShortcut3();
-			//TestPidl();
-			//TestKnownFoldersAsEnvVar();
-			//TestFilesSearchPath();
-			//TestExistsAsProtected();
-			//TestPathGetFilenameEtc();
-			//TestDrivePath();
-			//TestPathGetFilenameEtc();
-			//TestCreateDirectory();
-			//TestFileOp();
-			//TestCalculateDriveSize();
-			//TestFileProperties();
-			//TestDirectoryIsEmpty();
-			//TestEnumDirectory();
-			//TestFilesDelete();
-			//TestPathNormalize();
-			//TestApiStringBuffer();
-			//TestCatExceptioNewOverload();
-			//TestImageSerialize();
-			//TestKeysFromString();
-			//TestMenuStripShortcuts();
-			//TestXDocument();
-			//TestResizePngIconBigger();
-			//TestCreateManyPngFromIcons();
-			//TestImagelistSpeed3();
-			//TestRegistry();
-			//MessageBox.Show("ff");
-			//TestTaskDialogAsyncAwait();
-			//TestWaitFor();
-			//TestHooks();
-			//TestAbortThreadAndWaitFunctions();
-			//TestLnkShortcutExceptions();
-			//TestWndAgain();
-			//TestWndNextMainWindow();
+			TestPngSize();
+			//Print(_big.Length);
+			//Print(Convert.FromBase64String(_big).Length);
+			//TestDictionary();
 		}
 		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
 		catch(ArgumentException ex) { PrintList(ex); }

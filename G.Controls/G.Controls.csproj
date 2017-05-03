@@ -76,6 +76,7 @@
     <Compile Include="GDockPanel\GAcc.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="GSci\GOutput.cs" />
     <Compile Include="GStripManager\GSMProp.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,6 +94,10 @@
     <ProjectReference Include="..\Catkeys\Catkeys.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Catkeys</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ScintillaNET\ScintillaNET.csproj">
+      <Project>{22ae2386-60f1-476e-9303-61cdb0aac4cf}</Project>
+      <Name>ScintillaNET</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

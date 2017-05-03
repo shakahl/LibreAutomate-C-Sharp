@@ -1,1 +1,0 @@
-if(handle) DeleteObject(handle)

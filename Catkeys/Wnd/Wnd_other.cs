@@ -170,29 +170,29 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets window position, size and state stored in a string that can be used with <see cref="RestorePlacement">RestorePlacement</see>.
+		/// Gets window position, size and state stored in a string that can be used with <see cref="RestorePositionSizeState"/>.
 		/// Returns null if failed. Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		/// <param name="canBeMinimized">If now the window is minimized, let RestorePlacement make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
-		public unsafe string SavePlacement(bool canBeMinimized = false)
+		/// <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
+		public unsafe string SavePositionSizeState(bool canBeMinimized = false)
 		{
 			if(!LibGetWindowPlacement(out var p)) return null;
 			//PrintList(p.showCmd, p.flags);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
-			return Calc.BytesToHexString(&p, Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT)), true);
+			return Convert_.BytesToHexString(&p, Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT)), true);
 		}
 
 		/// <summary>
-		/// Restores window position, size and state that is stored in a string created by <see cref="SavePlacement">SavePlacement</see>.
+		/// Restores window position, size and state that is stored in a string created by <see cref="SavePositionSizeState"/>.
 		/// </summary>
 		/// <param name="s">The string. Can be null/"".</param>
 		/// <param name="ensureInScreen">Call <see cref="EnsureInScreen"/>. Even when s is null/"".</param>
 		/// <param name="showActivate">Call <see cref="Show">Show</see>(true) and <see cref="ActivateLL"/>. Even when s is null/"".</param>
 		/// <exception cref="WndException"/>
-		public unsafe void RestorePlacement(string s, bool ensureInScreen = false, bool showActivate = false)
+		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
 			Api.WINDOWPLACEMENT p; int siz = Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT));
-			if(siz == Calc.BytesFromHexString(s, &p, siz)) {
+			if(siz == Convert_.BytesFromHexString(s, &p, siz)) {
 				//PrintList(p.showCmd, p.flags);
 				if(!showActivate && !this.IsVisible) {
 					uint style = this.Style;

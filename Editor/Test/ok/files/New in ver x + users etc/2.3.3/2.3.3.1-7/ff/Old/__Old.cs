@@ -1,1 +1,0 @@
-class Old a b

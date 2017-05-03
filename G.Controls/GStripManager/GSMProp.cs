@@ -195,7 +195,7 @@ namespace G.Controls
 
 		void _SetError(Control c, string s)
 		{
-			if(_errorProvider == null) _errorProvider = new ErrorProvider();
+			if(_errorProvider == null) _errorProvider = new ErrorProvider(components);
 			_errorProvider.SetIconAlignment(c, ErrorIconAlignment.BottomLeft);
 			_errorProvider.SetError(c, s);
 		}

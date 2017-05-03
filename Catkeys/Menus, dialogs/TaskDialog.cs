@@ -1798,6 +1798,7 @@ namespace Catkeys
 		/// <param name="icon"><see cref="TDIcon"/>.</param>
 		/// <param name="flags"><see cref="TDFlags"/>.</param>
 		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <remarks>
 		/// Calls <see cref="ShowEx"/>.
 		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.Show("Text.", icon: TDIcon.Info)</c> .
@@ -1821,39 +1822,39 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null)
+		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
-			return ShowEx(text1, text2, buttons, icon, flags, owner).Button;
+			return ShowEx(text1, text2, buttons, icon, flags, owner, expandedText).Button;
 		}
 
 		/// <summary>
-		/// Shows task dialog with OK button and TDIcon.Info icon.
+		/// Shows task dialog with TDIcon.Info icon.
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowInfo(string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null)
+		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
-			Show(text1, text2, null, TDIcon.Info, flags, owner);
+			return Show(text1, text2, buttons, TDIcon.Info, flags, owner, expandedText);
 		}
 
 		/// <summary>
-		/// Shows task dialog with OK button and TDIcon.Warning icon.
+		/// Shows task dialog with TDIcon.Warning icon.
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowWarning(string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
-			ShowEx(text1, text2, null, TDIcon.Warning, flags, owner, expandedText);
+			return Show(text1, text2, buttons, TDIcon.Warning, flags, owner, expandedText);
 		}
 
 		/// <summary>
-		/// Shows task dialog with OK button and TDIcon.Error icon.
+		/// Shows task dialog with TDIcon.Error icon.
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static void ShowError(string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
-			ShowEx(text1, text2, null, TDIcon.Error, flags, owner, expandedText);
+			return Show(text1, text2, buttons, TDIcon.Error, flags, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1862,9 +1863,9 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null)
+		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
-			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner);
+			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1873,9 +1874,9 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null)
+		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
 		{
-			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner);
+			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner, expandedText);
 		}
 
 		#endregion Show

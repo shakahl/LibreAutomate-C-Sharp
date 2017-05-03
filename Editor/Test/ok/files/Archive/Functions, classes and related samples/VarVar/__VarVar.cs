@@ -1,1 +1,0 @@
-class VarVar -IStringMap'm

@@ -750,7 +750,7 @@
             Returns NotFound (0) if does not exist or if fails to get attributes.
             Calls API <msdn>GetFileAttributes</msdn>.
             </summary>
-            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="M:Catkeys.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Catkeys.Files.GetAttributes(System.String,System.IO.FileAttributes@,Catkeys.Files.GAFlags)"/> and check attribute Directory.
@@ -789,7 +789,7 @@
             Calls API <msdn>GetFileAttributes</msdn>.
             The same as <see cref="M:Catkeys.Files.ExistsAs(System.String,System.Boolean)"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
             </summary>
-            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="M:Catkeys.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Catkeys.Files.GetAttributes(System.String,System.IO.FileAttributes@,Catkeys.Files.GAFlags)"/> and check attributes Directory and ReparsePoint.
@@ -799,15 +799,15 @@
         <member name="M:Catkeys.Files.ExistsAsAny(System.String,System.Boolean)">
             <summary>
             Returns true if file or directory exists.
-            Returns false if does not exist or if fails to get its attributes.
-            Calls <see cref="M:Catkeys.Files.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
+            Calls <see cref="M:Catkeys.Files.ExistsAs2(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
             </summary>
-            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="M:Catkeys.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Catkeys.Files.GetAttributes(System.String,System.IO.FileAttributes@,Catkeys.Files.GAFlags)"/>.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
+            Unlike <see cref="M:Catkeys.Files.ExistsAsFile(System.String,System.Boolean)"/> and <see cref="M:Catkeys.Files.ExistsAsDirectory(System.String,System.Boolean)"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
             </remarks>
         </member>
         <member name="M:Catkeys.Files.ExistsAsFile(System.String,System.Boolean)">
@@ -816,7 +816,7 @@
             Returns false if does not exist or if fails to get its attributes.
             Calls <see cref="M:Catkeys.Files.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
             </summary>
-            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="M:Catkeys.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Catkeys.Files.GetAttributes(System.String,System.IO.FileAttributes@,Catkeys.Files.GAFlags)"/> and check attribute Directory.
@@ -830,7 +830,7 @@
             Returns false if does not exist or if fails to get its attributes.
             Calls <see cref="M:Catkeys.Files.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
             </summary>
-            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>).</param>
+            <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
             Supports <see cref="M:Catkeys.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Catkeys.Files.GetAttributes(System.String,System.IO.FileAttributes@,Catkeys.Files.GAFlags)"/> and check attribute Directory.
@@ -1151,21 +1151,34 @@
         <member name="M:Catkeys.Files.Delete(System.String,System.Boolean)">
             <summary>
             Deletes file or directory.
-            Does nothing (no exception) if it does not exist or cannot be found.
+            Does nothing if it does not exist (no exception).
             </summary>
             <param name="path">Full path.</param>
-            <param name="useRecycleBin">Send to Recycle Bin. Note: it is much slower.</param>
+            <param name="tryRecycleBin">
+            Send to the Recycle Bin. If not possible, delete anyway.
+            Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
+            Note: it is much slower. To delete multiple, use <see cref="M:Catkeys.Files.Delete(System.Collections.Generic.IEnumerable{System.String},System.Boolean)"/>.
+            </param>
             <exception cref="T:System.ArgumentException">path is not full path (see <see cref="M:Catkeys.Path_.IsFullPath(System.String)"/>).</exception>
             <exception cref="T:Catkeys.CatException">Failed.</exception>
             <remarks>
             If directory, also deletes all its files and subdirectories. If fails to delete some, tries to delete as many as possible.
-            Does not fail if is read-only or contains read-only files.
+            Deletes read-only files too.
+            Does not show any message boxes etc (confirmation, error, UAC consent, progress).
             
             Some reasons why this function can fail:
             1. The file is open (in any process). Or a file in the directory is open.
             2. This process does not have security permissions to access or delete the file or directory or some of its descendants.
             3. The directory is (or contains) the "current directory" (in any process).
             </remarks>
+        </member>
+        <member name="M:Catkeys.Files.Delete(System.Collections.Generic.IEnumerable{System.String},System.Boolean)">
+            <summary>
+            Deletes multiple files or/and directories.
+            The same as <see cref="M:Catkeys.Files.Delete(System.String,System.Boolean)"/>, but faster when using Recycle Bin.
+            </summary>
+            <param name="paths">string array, List or other collection. Full paths.</param>
+            <param name="tryRecycleBin"></param>
         </member>
         <member name="M:Catkeys.Files._Delete(System.String,System.Boolean)">
             <summary>
@@ -1546,11 +1559,10 @@
             Returns 0 if did not start new process or did not get process handle, usually because opened the document in an existing process.
             </summary>
             <param name="s">
-            Program, document or other item to run.
-            Can be:
+            What to run. Can be:
             Full path of a file or folder. Examples: <c>@"C:\folder\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
             Filename of a file or folder, like <c>"notepad.exe"</c>. The function calls <see cref="M:Catkeys.Files.SearchPath(System.String,System.String[])"/>.
-            URL, like <c>"http://a.b.c/d"</c>. Supported are all registered protocols, not only http. For example "file:///path".
+            URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
             Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
             Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="M:Catkeys.Shell.Pidl.ToHexString"/>, <see cref="T:Catkeys.Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
             Shell object's parsing name, like <c>"::{CLSID}"</c>. See <see cref="M:Catkeys.Shell.Pidl.ToShellString(Catkeys.Native.SIGDN,System.Boolean)"/>, <see cref="T:Catkeys.Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
@@ -1571,11 +1583,16 @@
             
             The returned process id can be used to find a window of the new process. Example:
             <code><![CDATA[
-            Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(!w.Is0) w.Activate(); else w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", Shell.Run("notepad.exe"));
+            Wnd w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", Shell.Run("notepad.exe"));
             ]]></code>
-            
             </remarks>
+            <example>
+            <code><![CDATA[
+            Wnd w = Wnd.Find("*- Notepad", "Notepad");
+            if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+            w.Activate();
+            ]]></code>
+            </example>
         </member>
         <member name="M:Catkeys.Shell.RunSafe(System.String,System.String,Catkeys.Shell.RunFlags,Catkeys.Shell.RunMoreParams)">
             <summary>
@@ -1637,6 +1654,16 @@
             using(var h = p.ProcessHandle) h?.WaitOne();
             ]]></code>
             </example>
+        </member>
+        <member name="M:Catkeys.Shell.SelectFileInExplorer(System.String)">
+            <summary>
+            Opens parent folder in Explorer and selects the file.
+            Returns null if fails, for example if the file does not exist.
+            </summary>
+            <param name="path">
+            Full path of a file or directory or other shell object.
+            Supports @"%environmentVariable%\..." (see <see cref="M:Catkeys.Path_.ExpandEnvVar(System.String)"/>) and "::..." (see <see cref="M:Catkeys.Shell.Pidl.ToHexString"/>).
+            </param>
         </member>
         <member name="T:Catkeys.Path_">
             <summary>
@@ -1736,17 +1763,30 @@
             </summary>
             <param name="s">A URL or path or any string. Can be null.</param>
         </member>
-        <member name="M:Catkeys.Path_.Combine(System.String,System.String,System.Boolean)">
+        <member name="T:Catkeys.Path_.CombineFlags">
+            <summary>
+            flags for <see cref="M:Catkeys.Path_.Combine(System.String,System.String,Catkeys.Path_.CombineFlags)"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Path_.CombineFlags.s2CanBeFullPath">
+            <summary>
+            s2 can be full path. If it is, ignore s1 and return s2 with expanded environment variables.
+            If this flag not used, simply combines s1 and s2, creating invalid path if s2 is full path.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Path_.CombineFlags.DoNotPrefixLongPath">
+            <summary>
+            Don't call <see cref="M:Catkeys.Path_.PrefixLongPathIfNeed(System.String)"/> which may prepend @"\\?\" if the result path is very long.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Path_.Combine(System.String,System.String,Catkeys.Path_.CombineFlags)">
             <summary>
             Combines two path parts, for example directory path and file name.
             Joins them using character '\\' so that there will not be two '\\' or '/'.
             </summary>
             <param name="s1">First path. Usually a directory.</param>
-            <param name="s2">Second path. Usually a filename or relative path. If s2CanBeFullPath is true, can be full path.</param>
-            <param name="s2CanBeFullPath">
-            Call <see cref="M:Catkeys.Path_.IsFullPathEEV(System.String@)"/>(ref s2). If it returns true, return s2 (ignore s1). Then also expands environment variables.
-            If false, simply combines s1 and s2, creating invalid path if s2 is full path.
-            </param>
+            <param name="s2">Second path. Usually a filename or relative path. Use flag s2CanBeFullPath if it can be full path.</param>
+            <param name="flags"></param>
             <remarks>
             If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
             Similar to Path.Combine (.NET function). Main differences: does not throw exceptions; does not ignore s1 if s2 is a relative path starting with @"\" or "/".
@@ -1845,7 +1885,7 @@
         </member>
         <member name="M:Catkeys.Path_.PrefixLongPath(System.String)">
             <summary>
-            If path is full path and does not start with @"\\?\", prepends @"\\?\".
+            If path is full path (see <see cref="M:Catkeys.Path_.IsFullPath(System.String)"/>) and does not start with @"\\?\", prepends @"\\?\".
             If path is network path (like @"\\computer\folder\..."), makes like @"\\?\UNC\computer\folder\...".
             </summary>
             <param name="path">
@@ -1983,6 +2023,14 @@
             Like <see cref="M:System.IO.Path.GetExtension(System.String)"/>, but does not throw exceptions.
             </remarks>
         </member>
+        <member name="M:Catkeys.Path_.GetExtension(System.String,System.String@)">
+            <summary>
+            Gets filename extension and path part without the extension.
+            More info: <see cref="M:Catkeys.Path_.GetExtension(System.String)"/>.
+            </summary>
+            <param name="path">Path or filename.</param>
+            <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as path.</param>
+        </member>
         <member name="M:Catkeys.Path_.GetDirectoryPath(System.String,System.Boolean)">
             <summary>
             Removes filename part from path. By default also removes separator ('\\' or '/') if it is not after drive name (eg "C:").
@@ -2027,6 +2075,14 @@
             Returns true if s is like "protocol:" and not like "c:" or "protocol:more".
             </summary>
             <param name="s">Can be null.</param>
+        </member>
+        <member name="M:Catkeys.Path_.MakeUnique(System.String,System.Boolean)">
+            <summary>
+            Gets path with unique filename for a new file or directory. 
+            If the specified path is of an existing file or directory, returns path where the filename part is modified like "file 2.txt", "file 3.txt" etc. Else returns unchanged path.
+            </summary>
+            <param name="path">Suggested full path.</param>
+            <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
         </member>
         <member name="T:Catkeys.Ver">
             <summary>
@@ -2099,7 +2155,7 @@
         </member>
         <member name="T:Catkeys.Calc">
             <summary>
-            Simple calculation functions, similar to Math.
+            Simple calculation functions.
             </summary>
         </member>
         <member name="M:Catkeys.Calc.MakeUint(System.UInt32,System.UInt32)">
@@ -2216,126 +2272,6 @@
             <summary>
             Calculates angle degrees from coordinates x and y.
             </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashFnv1(System.String)">
-            <summary>
-            FNV-1 hash.
-            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashFnv1(System.Char*,System.Int32)">
-            <summary>
-            FNV-1 hash.
-            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashFnv1(System.Byte[])">
-            <summary>
-            FNV-1 hash.
-            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashFnv1(System.Byte*,System.Int32)">
-            <summary>
-            FNV-1 hash.
-            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashMD5(System.Byte[])">
-            <summary>
-            Computes MD5 hash of binary data.
-            The same as Hash(..., "MD5") but much faster.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashMD5(System.String)">
-            <summary>
-            Computes MD5 hash of string.
-            The same as Hash(..., "MD5") but much faster.
-            </summary>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-        </member>
-        <member name="M:Catkeys.Calc.HashMD5Hex(System.Byte[],System.Boolean)">
-            <summary>
-            Computes MD5 hash of binary data and converts to hex string.
-            The same as Hash(..., "MD5") but much faster.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.HashMD5Hex(System.String,System.Boolean)">
-            <summary>
-            Computes MD5 hash of string and converts to hex string.
-            The same as Hash(..., "MD5") but much faster.
-            </summary>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-        </member>
-        <member name="M:Catkeys.Calc.Hash(System.Byte[],System.String)">
-            <summary>
-            Computes binary data hash using a specified cryptographic algorithm.
-            </summary>
-            <param name="a"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-        </member>
-        <member name="M:Catkeys.Calc.Hash(System.String,System.String)">
-            <summary>
-            Computes string hash using a specified cryptographic algorithm.
-            </summary>
-            <param name="s"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-        </member>
-        <member name="M:Catkeys.Calc.HashHex(System.Byte[],System.String,System.Boolean)">
-            <summary>
-            Computes binary data hash using a specified cryptographic algorithm and converts to hex string.
-            </summary>
-            <param name="a"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-        </member>
-        <member name="M:Catkeys.Calc.HashHex(System.String,System.String,System.Boolean)">
-            <summary>
-            Computes string hash using a specified cryptographic algorithm and converts to hex string.
-            </summary>
-            <param name="s"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-        </member>
-        <member name="M:Catkeys.Calc.BytesToHexString(System.Byte[],System.Boolean)">
-            <summary>
-            Converts byte array (binary data) to hex-encoded string.
-            </summary>
-            <param name="a">The data. Can be null.</param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-        </member>
-        <member name="M:Catkeys.Calc.BytesToHexString(System.Void*,System.Int32,System.Boolean)">
-            <summary>
-            Converts binary data to hex-encoded string.
-            </summary>
-            <param name="data">The data. Can be any valid memory of specified size, for example a struct address. Can be null.</param>
-            <param name="size">data memory size.</param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-        </member>
-        <member name="M:Catkeys.Calc.BytesFromHexString(System.String)">
-            <summary>
-            Converts hex-encoded string to byte array (binary data).
-            </summary>
-            <param name="s">Hex-encoded string. Can be null.</param>
-            <remarks>
-            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Calc.BytesFromHexString(System.String,System.Void*,System.Int32,System.Int32)">
-            <summary>
-            Converts hex-encoded string to binary data.
-            Returns the number of bytes stored in data memory. It is equal or less than Math.Min(size, (s.Length - startFrom) / 2).
-            </summary>
-            <param name="s">Hex-encoded string. Can be null.</param>
-            <param name="data">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
-            <param name="size">data memory size.</param>
-            <param name="startIndex">0 or index of first character of hex-encoded substring in s.</param>
-            <remarks>
-            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
-            <note>This function is unsafe, it will damage process memory if using bad data or size.</note>
-            </remarks>
         </member>
         <member name="T:Catkeys.InterDomain">
             <summary>
@@ -3071,7 +3007,7 @@
         </member>
         <member name="M:Catkeys.Folders.FolderPath.op_Addition(Catkeys.Folders.FolderPath,System.String)">
             <summary>
-            Calls <see cref="M:Catkeys.Path_.Combine(System.String,System.String,System.Boolean)"/>(fp, append).
+            Calls <see cref="M:Catkeys.Path_.Combine(System.String,System.String,Catkeys.Path_.CombineFlags)"/>(fp, append).
             Example: <c>string s = Folders.Desktop + "file.txt";</c>
             </summary>
             <exception cref="T:Catkeys.CatException">f is empty. Most likely, used code <c>Folders.X + "append"</c> and failed to get X.</exception>
@@ -3630,6 +3566,35 @@
             Returns false if invalid name.
             </summary>
         </member>
+        <member name="M:Catkeys.Color_.Brightness0to255(System.UInt32)">
+            <summary>
+            Calculates color's perceived brightness.
+            Returns a value in range 0 (brightness of black color) to 1 (brightness of white color).
+            </summary>
+            <param name="colorRGB">Color in 0xRRGGBB format. Alpha is ignored.</param>
+            <remarks>
+            Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Color_.Brightness0to255(System.Drawing.Color)">
+            <summary>
+            Calculates color's perceived brightness.
+            Returns a value in range 0 (brightness of black color) to 1 (brightness of white color).
+            </summary>
+            <param name="c">Color. Alpha is ignored.</param>
+            <remarks>
+            Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Color_.AdjustLuminance(System.UInt32,System.Int32,System.Boolean)">
+            <summary>
+            Changes color's luminance (makes darker or brighter). Hue and saturation are not affected.
+            Calls API <msdn>ColorAdjustLuma</msdn>.
+            </summary>
+            <param name="colorRGB">Color in 0xRRGGBB or 0xBBGGRR format. Alpha is not used and not changed.</param>
+            <param name="n">The luminance in units of 0.1 percent of the range (which depends on totalRange). Can be from -1000 to 1000.</param>
+            <param name="totalRange">If true, n is in the whole luminance range (from minimal to maximal possible). If false, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
+        </member>
         <member name="T:Catkeys.DotNetExtensions">
             <summary>
             Add extension methods to some .NET classes.
@@ -3729,7 +3694,7 @@
             Returns null if not found.
             </summary>
             <param name="t"></param>
-            <param name="name">Element name.</param>
+            <param name="name">Element name. If null, can be any name.</param>
             <param name="attributeName">Attribute name.</param>
             <param name="attributeValue">Attribute value. If null, can be any value.</param>
             <param name="ignoreCase">Case-insensitive attributeValue.</param>
@@ -3740,7 +3705,7 @@
             Returns null if not found.
             </summary>
             <param name="t"></param>
-            <param name="name">Element name.</param>
+            <param name="name">Element name. If null, can be any name.</param>
             <param name="attributeName">Attribute name.</param>
             <param name="attributeValue">Attribute value. If null, can be any value.</param>
             <param name="ignoreCase">Case-insensitive attributeValue.</param>
@@ -3848,7 +3813,7 @@
             Shows simplest task dialog that works only in Debug configuration, ie if DEBUG is defined.
             In Release configuration the function call statement is removed, and arguments not evalueted.
             The 3 optional parameters are not used.
-            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.NoClass.FunctionName(System.String)">
@@ -3882,6 +3847,153 @@
             The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="M:Catkeys.Time.Wait(System.Double)"/>.
             </param>
             <exception cref="T:System.ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+        </member>
+        <member name="T:Catkeys.Convert_">
+            <summary>
+            Data conversion functions - hash, encode, compress.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1(System.String)">
+            <summary>
+            FNV-1 hash.
+            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1(System.String,System.Int32,System.Int32)">
+            <summary>
+            FNV-1 hash.
+            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1(System.Char*,System.Int32)">
+            <summary>
+            FNV-1 hash.
+            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1(System.Byte[])">
+            <summary>
+            FNV-1 hash.
+            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1(System.Byte*,System.Int32)">
+            <summary>
+            FNV-1 hash.
+            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashMD5(System.Byte[])">
+            <summary>
+            Computes MD5 hash of binary data.
+            The same as Hash(..., "MD5") but much faster.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashMD5(System.String)">
+            <summary>
+            Computes MD5 hash of string.
+            The same as Hash(..., "MD5") but much faster.
+            </summary>
+            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.HashMD5Hex(System.Byte[],System.Boolean)">
+            <summary>
+            Computes MD5 hash of binary data and converts to hex string.
+            The same as Hash(..., "MD5") but much faster.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashMD5Hex(System.String,System.Boolean)">
+            <summary>
+            Computes MD5 hash of string and converts to hex string.
+            The same as Hash(..., "MD5") but much faster.
+            </summary>
+            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.Hash(System.Byte[],System.String)">
+            <summary>
+            Computes binary data hash using a specified cryptographic algorithm.
+            </summary>
+            <param name="a"></param>
+            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
+        </member>
+        <member name="M:Catkeys.Convert_.Hash(System.String,System.String)">
+            <summary>
+            Computes string hash using a specified cryptographic algorithm.
+            </summary>
+            <param name="s"></param>
+            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
+            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.HashHex(System.Byte[],System.String,System.Boolean)">
+            <summary>
+            Computes binary data hash using a specified cryptographic algorithm and converts to hex string.
+            </summary>
+            <param name="a"></param>
+            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+        </member>
+        <member name="M:Catkeys.Convert_.HashHex(System.String,System.String,System.Boolean)">
+            <summary>
+            Computes string hash using a specified cryptographic algorithm and converts to hex string.
+            </summary>
+            <param name="s"></param>
+            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.BytesToHexString(System.Byte[],System.Boolean)">
+            <summary>
+            Converts byte array (binary data) to hex-encoded string.
+            </summary>
+            <param name="a">The data. Can be null.</param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+            <seealso cref="M:System.Convert.ToBase64String(System.Byte[])"/>
+        </member>
+        <member name="M:Catkeys.Convert_.BytesToHexString(System.Void*,System.Int32,System.Boolean)">
+            <summary>
+            Converts binary data to hex-encoded string.
+            </summary>
+            <param name="data">The data. Can be any valid memory of specified size, for example a struct address. Can be null.</param>
+            <param name="size">data memory size.</param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+        </member>
+        <member name="M:Catkeys.Convert_.BytesFromHexString(System.String)">
+            <summary>
+            Converts hex-encoded string to byte array (binary data).
+            </summary>
+            <param name="s">Hex-encoded string. Can be null.</param>
+            <remarks>
+            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
+            </remarks>
+            <seealso cref="M:System.Convert.FromBase64String(System.String)"/>
+        </member>
+        <member name="M:Catkeys.Convert_.BytesFromHexString(System.String,System.Void*,System.Int32,System.Int32)">
+            <summary>
+            Converts hex-encoded string to binary data.
+            Returns the number of bytes stored in data memory. It is equal or less than Math.Min(size, (s.Length - startFrom) / 2).
+            </summary>
+            <param name="s">Hex-encoded string. Can be null.</param>
+            <param name="data">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
+            <param name="size">data memory size.</param>
+            <param name="startIndex">0 or index of first character of hex-encoded substring in s.</param>
+            <remarks>
+            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
+            <note>This function is unsafe, it will damage process memory if using bad data or size.</note>
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.Compress(System.Byte[])">
+            <summary>
+            Compresses data using <see cref="T:System.IO.Compression.DeflateStream"/>.
+            </summary>
+            <param name="data"></param>
+            <exception cref="T:System.Exception">Exceptions thrown by DeflateStream.</exception>
+        </member>
+        <member name="M:Catkeys.Convert_.Decompress(System.Byte[])">
+            <summary>
+            Decompresses data using <see cref="T:System.IO.Compression.DeflateStream"/>.
+            </summary>
+            <param name="data"></param>
+            <exception cref="T:System.Exception">Exceptions thrown by DeflateStream.</exception>
         </member>
         <member name="T:Catkeys.Output">
             <summary>
@@ -4696,6 +4808,38 @@
             Returns its return value.
             </summary>
         </member>
+        <member name="M:Catkeys.String_.RegexIndexOf_(System.String,System.String,System.Int32,System.Text.RegularExpressions.RegexOptions)">
+            <summary>
+            Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+            Returns Match.Index, or -1 if does not match.
+            </summary>
+            <param name="t"></param>
+            <param name="pattern"></param>
+            <param name="group">Group number. If 0, gets whole match.</param>
+            <param name="options"></param>
+        </member>
+        <member name="M:Catkeys.String_.RegexIndexOf_(System.String,System.String,System.Int32@,System.Int32,System.Text.RegularExpressions.RegexOptions)">
+            <summary>
+            Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+            Returns 0-based position of the matched substring, or -1 if does not match. Also gets match length.
+            </summary>
+            <param name="t"></param>
+            <param name="pattern"></param>
+            <param name="length">Receives match length.</param>
+            <param name="group">Group number. If 0, gets whole match.</param>
+            <param name="options"></param>
+        </member>
+        <member name="M:Catkeys.String_.RegexIndexOf_(System.String,System.String,System.String@,System.Int32,System.Text.RegularExpressions.RegexOptions)">
+            <summary>
+            Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+            Returns 0-based position of the matched substring, or -1 if does not match. Also gets the substring.
+            </summary>
+            <param name="t"></param>
+            <param name="pattern"></param>
+            <param name="match">Receives match length.</param>
+            <param name="group">Group number. If 0, gets whole match.</param>
+            <param name="options"></param>
+        </member>
         <member name="M:Catkeys.String_.RegexReplace_(System.String,System.String,System.String,System.Text.RegularExpressions.RegexOptions)">
             <summary>
             Calls Regex.Replace(t, pattern, replacement, options|RegexOptions.CultureInvariant).
@@ -5003,7 +5147,7 @@
             Sets common and/or custom buttons and custom buttons style.
             </summary>
             <param name="buttons">
-            Common and/or custom buttons, like with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Common and/or custom buttons, like with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             These ids should be negative if you use customButtons too, because ids of customButtons are 1, 2, ... .
             </param>
             <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
@@ -5376,7 +5520,7 @@
             </summary>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
-            <param name="buttons">See <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.</param>
+            <param name="buttons">See <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.</param>
             <param name="icon"></param>
             <param name="flags"></param>
             <param name="owner">Owner window or null. See <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(Catkeys.WndOrControl,System.Boolean,System.Boolean)"/>.</param>
@@ -5415,7 +5559,7 @@
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)">
+        <member name="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
             <summary>
             Shows task dialog.
             Returns selected button id.
@@ -5445,15 +5589,16 @@
             <param name="icon"><see cref="T:Catkeys.TDIcon"/>.</param>
             <param name="flags"><see cref="T:Catkeys.TDFlags"/>.</param>
             <param name="owner">Owner window or null. See <see cref="M:Catkeys.TaskDialog.SetOwnerWindow(Catkeys.WndOrControl,System.Boolean,System.Boolean)"/>.</param>
+            <param name="expandedText">Text that the user can show and hide.</param>
             <remarks>
             Calls <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
             Tip: For optional parameters use named arguments. Example: <c>TaskDialog.Show("Text.", icon: TDIcon.Info)</c> .
             </remarks>
-            <seealso cref="M:Catkeys.TaskDialog.ShowInfo(System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl)"/>
-            <seealso cref="M:Catkeys.TaskDialog.ShowWarning(System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
-            <seealso cref="M:Catkeys.TaskDialog.ShowError(System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
-            <seealso cref="M:Catkeys.TaskDialog.ShowOKCancel(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>
-            <seealso cref="M:Catkeys.TaskDialog.ShowYesNo(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>
+            <seealso cref="M:Catkeys.TaskDialog.ShowInfo(System.String,System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
+            <seealso cref="M:Catkeys.TaskDialog.ShowWarning(System.String,System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
+            <seealso cref="M:Catkeys.TaskDialog.ShowError(System.String,System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
+            <seealso cref="M:Catkeys.TaskDialog.ShowOKCancel(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
+            <seealso cref="M:Catkeys.TaskDialog.ShowYesNo(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>
             <seealso cref="M:Catkeys.NoClass.DebugDialog(System.Object,System.String,System.Int32,System.String)">DebugDialog</seealso>
             <example>
             <code><![CDATA[
@@ -5469,40 +5614,40 @@
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowInfo(System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl)">
+        <member name="M:Catkeys.TaskDialog.ShowInfo(System.String,System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
             <summary>
-            Shows task dialog with OK button and TDIcon.Info icon.
-            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Shows task dialog with TDIcon.Info icon.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowWarning(System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
+        <member name="M:Catkeys.TaskDialog.ShowWarning(System.String,System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
             <summary>
-            Shows task dialog with OK button and TDIcon.Warning icon.
-            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Shows task dialog with TDIcon.Warning icon.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowError(System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
+        <member name="M:Catkeys.TaskDialog.ShowError(System.String,System.String,System.String,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
             <summary>
-            Shows task dialog with OK button and TDIcon.Error icon.
-            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Shows task dialog with TDIcon.Error icon.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowOKCancel(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)">
+        <member name="M:Catkeys.TaskDialog.ShowOKCancel(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
             <summary>
             Shows task dialog with OK and Cancel buttons.
             Returns true if selected OK.
-            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Catkeys.TaskDialog.ShowYesNo(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)">
+        <member name="M:Catkeys.TaskDialog.ShowYesNo(System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)">
             <summary>
             Shows task dialog with Yes and No buttons.
             Returns true if selected Yes.
-            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
@@ -5526,7 +5671,7 @@
             <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
             <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
             <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Catkeys.TaskDialog.ShowEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.</param>
-            <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.</param>
+            <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.</param>
             <param name="onButtonClick">
             A button-clicked event handler function, eg lambda.
             Examples:
@@ -5736,10 +5881,10 @@
         </member>
         <member name="M:Catkeys.TaskDialog.ShowNoWait(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)">
             <summary>
-            Shows task dialog like <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/> but does not wait.
+            Shows task dialog like <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
             Returns <see cref="T:Catkeys.TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Catkeys.TaskDialog.IsOpen"/>, <see cref="M:Catkeys.TaskDialog.ThreadWaitClosed"/>, <see cref="P:Catkeys.TaskDialog.Result"/> (when closed), <see cref="P:Catkeys.TaskDialog.DialogWindow"/>, <see cref="P:Catkeys.TaskDialog.Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})">example</see>).
-            Parameters are the same as with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            Parameters are the same as with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
             <remarks>
             Calls <see cref="M:Catkeys.TaskDialog.ShowNoWaitEx(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String,System.String,System.String,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Int32,System.Action{Catkeys.TaskDialog.TDEventArgs})"/>.
@@ -5748,7 +5893,7 @@
         </member>
         <member name="T:Catkeys.TDIcon">
             <summary>
-            TaskDialog icon. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/> and similar functions.
+            TaskDialog icon. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/> and similar functions.
             </summary>
             <tocexclude />
         </member>
@@ -5766,7 +5911,7 @@
         </member>
         <member name="T:Catkeys.TDFlags">
             <summary>
-            TaskDialog flags. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/> and similar functions.
+            TaskDialog flags. Used with <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/> and similar functions.
             </summary>
             <tocexclude />
         </member>
@@ -5774,7 +5919,7 @@
             <summary>
             Display custom buttons as a column of commandl-links, not as a row of classic buttons.
             Command links can have multi-line text. The first line has bigger font.
-            More info about custom buttons: <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl)"/>.
+            More info about custom buttons: <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
             </summary>
         </member>
         <member name="F:Catkeys.TDFlags.EndThread">
@@ -6228,6 +6373,1000 @@
         <member name="M:Catkeys.Time.SystemWaitPrecision.Finalize">
             
         </member>
+        <member name="T:Catkeys.WaitFor">
+            <summary>
+            Contains functions to wait for a condition, such as 'window exists'.
+            </summary>
+            <remarks>
+            All functions have a timeoutS parameter. It is the maximal time to wait, in seconds. If it is 0, waits indefinitely. If &gt;0, after timeoutS time throws <see cref="T:System.TimeoutException"/>. If &lt;0, after -timeoutS time just stops waiting and returns default value (false, Wnd0, etc).
+            
+            While waiting, messages and events are not processed. For example, if used in a Form/Control event handler, the form would stop responding. Then need to use another thread, for example async/await/Task, like in the example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            Wnd w = WaitFor.WindowExists(10, "* Notepad");
+            Print(w);
+            ]]></code>
+            Using in a Form/Control event handler.
+            <code><![CDATA[
+            var f = new Form();
+            f.Click += async (unu, sed) =>
+              {
+            	  Print("waiting for Notepad...");
+            	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
+            	  if(w.Is0) Print("timeout"); else Print(w);
+              };
+            f.ShowDialog();
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Catkeys.WaitFor._Timeout">
+            <summary>
+            Can be used to easily implement timeout in wait-for functions.
+            See how it is used eg in WindowExists or Condition.
+            </summary>
+        </member>
+        <member name="F:Catkeys.WaitFor._Timeout.Period">
+            <summary>
+            Current period. Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
+            </summary>
+        </member>
+        <member name="F:Catkeys.WaitFor._Timeout.MaxPeriod">
+            <summary>
+            Maximal period. It is constructor->maxPeriod (default 200).
+            </summary>
+        </member>
+        <member name="M:Catkeys.WaitFor._Timeout.IsTimeout">
+            <summary>
+            If the timeout is not expired, returns false.
+            Else if constructor->timeoutS was negative, returns true.
+            Else throws TimeoutException.
+            Also gets current time and updates private fields, if need.
+            </summary>
+        </member>
+        <member name="M:Catkeys.WaitFor._Timeout.Sleep">
+            <summary>
+            If IsTimeout(), returns false.
+            Else sleeps for Period milliseconds, increments Period if it is less than MaxPeriod, and returns true.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Catkeys.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)">
+            <summary>
+            Waits for an user-defined condition.
+            Returns true. If timeoutS is negative, on timeout returns false (else exception).
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
+            <param name="param">Something to pass to the callback function.</param>
+            <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
+            <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:System.ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
+            <exception cref="T:System.Exception">Exceptions thrown by the condition callback function.</exception>
+            <seealso cref="T:Catkeys.Time.SystemWaitPrecision"/>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)">
+            <summary>
+            Waits until the specified window exists and (optionally) is visible. Or the opposite, if <b>not</b> is true.
+            Returns window handle. If timeoutS is negative, on timeout returns Wnd0 (else exception).
+            All undocumented parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns Wnd0.
+            </param>
+            <param name="name"></param>
+            <param name="className"></param>
+            <param name="programEtc"></param>
+            <param name="flags"></param>
+            <param name="also"></param>
+            <param name="not">
+            Do the opposite - wait until no such windows exist.
+            The return value is opposite too. If succeeded - Wnd0. If timeout - a matching window (if no exception).
+            If you have a window's Wnd variable, use <see cref="M:Catkeys.WaitFor.WindowClosed(Catkeys.Wnd,System.Double)"/> or <see cref="M:Catkeys.WaitFor.WindowVisible(Catkeys.Wnd,System.Double,System.Boolean)"/> instead.
+            </param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
+            <remarks>
+            With default flags, the window also must be visible. Use flag HiddenToo to check hidden windows too.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            Wnd w = WaitFor.WindowExists(10, "* Notepad");
+            Print(w);
+            ]]></code>
+            Using in a Form/Control event handler.
+            <code><![CDATA[
+            var f = new Form();
+            f.Click += async (unu, sed) =>
+              {
+            	  Print("waiting for Notepad...");
+            	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
+            	  if(w.Is0) Print("timeout"); else Print(w);
+              };
+            f.ShowDialog();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowExists(Catkeys.Wnd.Finder,System.Double,System.Boolean)">
+            <summary>
+            The same as <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)"/>, just arguments are passed differently.
+            </summary>
+            <param name="f">Window properties etc.</param>
+            <param name="timeoutS"></param>
+            <param name="not"></param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowActive(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)">
+             <summary>
+             Waits until the specified window exists and is the active window. Or the opposite, if <b>not</b> is true.
+             Returns window handle. If timeoutS is negative, on timeout returns Wnd0 (else exception).
+             All undocumented parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
+             If you have a window's Wnd, use <see cref="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd,System.Double,System.Boolean)"/> instead.
+             </summary>
+             <param name="timeoutS"></param>
+             <param name="name"></param>
+             <param name="className"></param>
+             <param name="programEtc"></param>
+             <param name="flags"></param>
+             <param name="also"></param>
+             <param name="not">
+             Do the opposite - wait until the window is not the active window or does not exist.
+             The return value is always Wnd0.
+             </param>
+             <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+             <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
+             <remarks>
+             Hidden and minimized windows also can be active. This function by default waits until the window is active and visible. To ignore visibility, use flag <see cref="F:Catkeys.WFFlags.HiddenToo"/>. To wait until the window also is not minimized, use the 'also' parameter, like in the example.
+            
+             More examples: see <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)"/>.
+             </remarks>
+             <example>
+             <code><![CDATA[
+             Wnd w = WaitFor.WindowActive(60, "*- Notepad", also: t => !t.IsMinimized);
+             Print(w);
+             ]]></code>
+             </example>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd.Finder,System.Double,System.Boolean)">
+            <summary>
+            The same as <see cref="M:Catkeys.WaitFor.WindowActive(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)"/>, just arguments are passed differently.
+            </summary>
+            <param name="f">Window properties etc.</param>
+            <param name="timeoutS"></param>
+            <param name="not"></param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd,System.Double,System.Boolean)">
+            <summary>
+            Waits until the window is the active window. Or the opposite, if <b>not</b> is true.
+            Returns true. If timeoutS is negative, on timeout returns false (else exception).
+            Uses <see cref="P:Catkeys.Wnd.IsActive"/>.
+            </summary>
+            <param name="w">A window or control.</param>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="not">Do the opposite - wait until the window is inactive or closed (no exception if closed/Wnd0/invalid).</param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:Catkeys.WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowVisible(Catkeys.Wnd,System.Double,System.Boolean)">
+            <summary>
+            Waits until the window is visible. Or the opposite, if <b>not</b> is true.
+            Returns true. If timeoutS is negative, on timeout returns false (else exception).
+            Uses <see cref="P:Catkeys.Wnd.IsVisible"/>.
+            For 'exists and is visible' use <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)"/>.
+            </summary>
+            <param name="w">A window or control.</param>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="not">Do the opposite - wait until the window is invisible or closed (no exception if closed/Wnd0/invalid).</param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:Catkeys.WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowEnabled(Catkeys.Wnd,System.Double,System.Boolean)">
+            <summary>
+            Waits until the window is enabled (not disabled). Or the opposite, if <b>not</b> is true.
+            Returns true. If timeoutS is negative, on timeout returns false (else exception).
+            Uses <see cref="P:Catkeys.Wnd.IsEnabled"/>.
+            </summary>
+            <param name="w">A window or control.</param>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="not">Do the opposite - wait until the window is disabled or closed (no exception if closed/Wnd0/invalid).</param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:Catkeys.WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowClosed(Catkeys.Wnd,System.Double)">
+            <summary>
+            Waits until the window handle is invalid.
+            Returns true. If timeoutS is negative, on timeout returns false (else exception).
+            Uses <see cref="P:Catkeys.Wnd.IsAlive"/>.
+            </summary>
+            <param name="w">A window or control. Can be Wnd0/invalid.</param>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowChildExists(Catkeys.Wnd,Catkeys.Wnd.ChildFinder,System.Double,System.Boolean)">
+            <summary>
+            Waits until the specified control (child window) is found in the window. Or the opposite, if <b>not</b> is true.
+            Returns the control. If timeoutS is negative, on timeout returns Wnd0 (else exception).
+            Uses <see cref="P:Catkeys.Wnd.IsEnabled"/>.
+            </summary>
+            <param name="w">Direct or indirect parent window.</param>
+            <param name="control">Control properties.</param>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="not">
+            Do the opposite - wait until the control not found, or until the window closed (no exception if closed/Wnd0/invalid).
+            The return value is opposite too. If succeeded - Wnd0. If timeout - a matching control (if no exception).
+            If you have a control's Wnd variable, use <see cref="M:Catkeys.WaitFor.WindowClosed(Catkeys.Wnd,System.Double)"/> or <see cref="M:Catkeys.WaitFor.WindowVisible(Catkeys.Wnd,System.Double,System.Boolean)"/> instead.
+            </param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:Catkeys.WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+            <example>
+            <code><![CDATA[
+            Wnd w = Wnd.Find("Options");
+            var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+            Wnd c = WaitFor.WindowChildExists(w, f);
+            Print(c);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.WaitFor.WindowCondition(Catkeys.Wnd,System.Func{Catkeys.Wnd,System.Boolean},System.Double,System.Boolean)">
+            <summary>
+            Waits for an user-defined condition of an existing window.
+            Returns true. If timeoutS is negative, on timeout returns false (else exception).
+            </summary>
+            <param name="timeoutS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="w">An existing window. It is passed to the callback function.</param>
+            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
+            <param name="doNotThrowIfClosed">
+            Do not throw exception if w is invalid or the window was closed while waiting.
+            In such case the callback function must return false. If need, it can use <see cref="P:Catkeys.Wnd.IsAlive"/>, like in the example. Else the exception is thrown (with a small delay) to prevent infinite waiting.
+            </param>
+            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
+            <exception cref="T:Catkeys.WndException">w is invalid or the window was closed while waiting.</exception>
+            <example>
+            <code><![CDATA[
+            Wnd w = Wnd.Find("* Notepad");
+            
+            //wait max 30 s until window w is active. Exception on timeout or if closed.
+            WaitFor.WindowCondition(w, t => t.IsActive); //the same as WaitFor.WindowActive(w, 30);
+            Print("active");
+            
+            //wait indefinitely until window w is minimized or closed
+            WaitFor.WindowCondition(w, t => t.IsMinimized || !t.IsAlive, 0, true);
+            if(!w.IsAlive) { Print("closed"); return; }
+            Print("minimized");
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Catkeys.Util.LibArrayBuilder">
+            <summary>
+            Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
+            To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="T:Catkeys.Util.NativeHeap"/>.
+            Is not generic, and functions return void*, because C# does not allow to get T* in generic class. The caller can cast void* to the array type pointer.
+            The nested static class Specialized contains safe and easy-to-use wrapper classes for some types. Add more wrapper classes there when need.
+            Does not support reference types.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.#ctor(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="typeSize">Element type size. If don't know, use <see cref="T:Catkeys.Util.TypeSize`1"/>.</param>
+            <param name="capacity">Initial Capacity. If 0 (or set to 0 later), on first allocation will be used default capacity; it is 512 elements for types not bigger than 32 bytes; it is smaller for bigger types, trying to not exceed 16384 bytes.</param>
+        </member>
+        <member name="P:Catkeys.Util.LibArrayBuilder.Ptr">
+            <summary>
+            Gets array memory address (address of element 0).
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibArrayBuilder.ElementSize">
+            <summary>
+            Gets the size of the type of elements.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibArrayBuilder.Count">
+            <summary>
+            Gets the number of elements.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibArrayBuilder.Capacity">
+            <summary>
+            Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">value less than Count. Instead use ReAlloc or Free.</exception>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.Alloc(System.Int32)">
+            <summary>
+            Allocates count zero-inited elements. Sets Count=count.
+            Frees previously allocated memory.
+            Returns memory address (address of element 0).
+            </summary>
+            <param name="count"></param>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.ReAlloc(System.Int32)">
+            <summary>
+            Allocates count elements. Sets Count=count.
+            Preserves Math.Min(Count, count) existing elements. Added elements are zero-inited.
+            Returns memory address (address of element 0).
+            The new memory usually is at a new location. The preserved elements are copied there.
+            If want to allocate more memory without changing Count, use Capacity instead.
+            </summary>
+            <param name="count"></param>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.Free">
+            <summary>
+            Frees memory. Sets Count and Capacity to 0.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.Dispose">
+            <summary>
+            Calls Free and GC.SuppressFinalize.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.AddZero">
+            <summary>
+            Adds one zero-inited element and returns its address.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.AddFast">
+            <summary>
+            Adds one non-zero-inited element and returns its address.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder._EnsureCapacity">
+            <summary>
+            Doubles Capacity. Sets 16 or more.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibArrayBuilder.Item(System.Int32)">
+            <summary>
+            Gets element address.
+            </summary>
+            <param name="i"></param>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Catkeys.Util.LibArrayBuilder.CopyTo(System.Void*)">
+            <summary>
+            Copies whole array (Count*ElementSize bytes) to another memory location, for example to fixed(TYPE* p=managedArray).
+            Tip: If you need List, copy to an intermediate array and call its ToList. Cannot get fixed pointer of List array.
+            </summary>
+            <param name="mem"></param>
+        </member>
+        <member name="T:Catkeys.Util.LibArrayBuilder.Specialized">
+            <summary>
+            Classes that wrap LibArrayBuilder for types used in this library.
+            Because LibArrayBuilder is quite difficult and unsafe to use, and we cannot create a generic class.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.AppDomain_">
+            <summary>
+            Extends the .NET AppDomain class.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.AppDomain_.GetDefaultDomain(System.Boolean@)">
+            <summary>
+            Gets default app domain.
+            </summary>
+            <param name="isCurrentDomain">Receives true if called from default app domain.</param>
+        </member>
+        <member name="M:Catkeys.Util.AppDomain_.GetDefaultDomain">
+            <summary>
+            Gets default app domain.
+            </summary>
+        </member>
+        <member name="E:Catkeys.Util.AppDomain_.Exit">
+            <summary>
+            Occurs when current app domain exits.
+            </summary>
+            <remarks>
+            The event handler is called when one of these AppDomain events occur, with their parameters:
+            <see cref="E:System.AppDomain.ProcessExit"/> (in default domain);
+            <see cref="E:System.AppDomain.DomainUnload"/> (in non-default domain);
+            <see cref="E:System.AppDomain.UnhandledException"/>.
+            The event handler is called before static object finalizers.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Util.AppDomain_.EntryAssembly">
+            <summary>
+            Gets the entry assembly of current appdomain.
+            Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it fails if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)">AppDomain.DoCallBack</see>.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.SharedMemory">
+            <summary>
+            Memory that can be used by multiple processes and app domains.
+            Faster and more raw/unsafe than System.IO.MemoryMappedFiles.MemoryMappedFile.
+            </summary>
+            <seealso cref="M:Catkeys.Wnd.Misc.InterProcessSendData(Catkeys.Wnd,System.Int32,System.String,Catkeys.Wnd)"/>
+        </member>
+        <member name="M:Catkeys.Util.SharedMemory.CreateOrGet(System.String,System.UInt32,System.Boolean)">
+            <summary>
+            Creates named shared memory of specified size. If already exists, just gets its address.
+            Returns shared memory address in this process.
+            Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
+            </summary>
+            <param name="name">Shared memory name. Case-insensitive.</param>
+            <param name="size">Shared memory size. The function uses it only when creating the memory; it does not check whether the size argument matches the size of existing memory.</param>
+            <param name="allowLIL">Allow UAC low-integrity-level processes to access the shared memory.</param>
+            <exception cref="T:System.ComponentModel.Win32Exception">The API failed.</exception>
+            <remarks>
+            Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
+            There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Util.LibSharedMemory">
+            <summary>
+            Memory shared by all appdomains and by other related processes.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Util.LibSharedMemory.Size">
+            <summary>
+            Shared memory size.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Util.LibSharedMemory._sm">
+            <summary>
+            Creates or opens shared memory on demand in a thread-safe and process-safe way.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibSharedMemory.Ptr">
+            <summary>
+            Gets pointer to the shared memory.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibProcessMemory">
+            <summary>
+            Memory shared by all appdomains of current process.
+            Size 0x10000 (64 KB). Initially zero.
+            </summary>
+            <remarks>
+            When need to prevent simultaneous access of the memory by multiple threads, use <c>lock("uniqueString"){...}</c> .
+            It locks in all appdomains, because literal strings are interned, ie shared by all appdomains.
+            Using some other object with 'lock' would lock only in that appdomain.
+            However use this only in single module, because ngened modules have own interned strings.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Util.LibProcessMemory.Ptr">
+            <summary>
+            Gets pointer to the memory.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Util.LibProcessMemory.Size">
+            <summary>
+            Memory size.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibCharBuffer">
+            <summary>
+            Allocates a native memory buffer as char*.
+            The property <see cref="P:Catkeys.Util.LibCharBuffer.Common"/> can be used when calling API functions that require a char buffer. It returns a ThreadStatic variable.
+            Using this is much faster than StringBuilder, and does not collect .NET garbage. Almost as fast as stackalloc.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibCharBuffer.Ptr">
+            <summary>
+            Gets buffer pointer.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibCharBuffer.Capacity">
+            <summary>
+            Gets current buffer length (n characters).
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.Max(System.Int32)">
+            <summary>
+            Returns Math.Max(n, Capacity).
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32@,System.Char*@,System.Boolean)">
+            <summary>
+            Gets memory buffer of at least Math.Max(n, 300) characters.
+            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+            By default always returns true. If noThrow, returns false if fails to allocate meory (unlikely).
+            </summary>
+            <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
+            <param name="ptr">Receives buffer pointer.</param>
+            <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
+            <exception cref="T:System.OutOfMemoryException"></exception>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32)">
+            <summary>
+            Gets memory buffer of at least Math.Max(n, 300) characters.
+            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+            </summary>
+            <exception cref="T:System.OutOfMemoryException"></exception>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.ToString">
+            <summary>
+            Converts the buffer, which contains native '\0'-terminated UTF-16 string, to String.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.ToString(System.Int32)">
+            <summary>
+            Converts the buffer, which contains native UTF-16 string of n length, to String.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.ToStringFromAnsi(System.Text.Encoding)">
+            <summary>
+            Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+            </summary>
+            <param name="enc">If null, uses system's default ANSI encoding.</param>
+        </member>
+        <member name="M:Catkeys.Util.LibCharBuffer.Compact">
+            <summary>
+            Frees the buffer if more than 5000 characters.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibCharBuffer.Common">
+            <summary>
+            A ThreadStatic LibCharBuffer instance.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.NativeHeap">
+            <summary>
+            Allocates memory from native heap of this process using heap API.
+            Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
+            About 20% faster than Marshal class functions, but it depends on allocation size etc.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.NativeHeap.Alloc(Catkeys.LPARAM)">
+            <summary>
+            Allocates size bytes of memory.
+            The memory is uninitialized, ie random byte values.
+            Calls API <msdn>HeapAlloc</msdn>.
+            </summary>
+            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
+        </member>
+        <member name="M:Catkeys.Util.NativeHeap.AllocZero(Catkeys.LPARAM)">
+            <summary>
+            Allocates size bytes of memory and sets all bytes to 0.
+            Calls API <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
+            </summary>
+            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
+        </member>
+        <member name="M:Catkeys.Util.NativeHeap.ReAlloc(System.Void*,Catkeys.LPARAM)">
+            <summary>
+            Reallocates size bytes of memory.
+            When size is growing, the added memory is uninitialized, ie random byte values.
+            If mem is null, allocates new memory like Alloc.
+            Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
+            </summary>
+            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
+        </member>
+        <member name="M:Catkeys.Util.NativeHeap.ReAllocZero(System.Void*,Catkeys.LPARAM)">
+            <summary>
+            Reallocates size bytes of memory and sets added bytes to 0.
+            If mem is null, allocates new memory like AllocZero.
+            Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
+            </summary>
+            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
+        </member>
+        <member name="M:Catkeys.Util.NativeHeap.Free(System.Void*)">
+            <summary>
+            Frees memory.
+            Does nothing if mem is null.
+            Calls API <msdn>HeapFree</msdn>.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.MessageLoop">
+            <summary>
+            A message loop, alternative to Application.Run which does not support nested loops.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MessageLoop.Loop">
+            <summary>
+            Runs a message loop.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MessageLoop.Stop">
+            <summary>
+            Ends the message loop, causing Loop() to return.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibEnsureWindowsFormsSynchronizationContext">
+            <summary>
+            Constructor ensures that current SynchronizationContext of this thread is WindowsFormsSynchronizationContext.
+            Also sets WindowsFormsSynchronizationContext.AutoInstall=false to prevent Application.DoEvents etc setting wrong context.
+            Dispose() restores both if need. Does not restore context if was null.
+            Example: using(new Util.LibEnsureWindowsFormsSynchronizationContext()) { ... }
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.LibEnsureWindowsFormsSynchronizationContext.#ctor(System.Boolean)">
+            <summary>
+            See class help.
+            </summary>
+            <param name="onlyIfAutoInstall">Do nothing if WindowsFormsSynchronizationContext.AutoInstall==false. Normally WindowsFormsSynchronizationContext.AutoInstall is true (default).</param>
+        </member>
+        <member name="T:Catkeys.Util.DragDrop">
+            <summary>
+            Drag-drop functions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.DragDrop.SimpleDragDrop(Catkeys.Wnd,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})">
+            <summary>
+            Simple non-OLE drag operation.
+            Returns true if dropped, false if cancelled.
+            </summary>
+            <param name="w">Window or control that owns the drag operation.</param>
+            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
+            <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
+        </member>
+        <member name="M:Catkeys.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})">
+            <summary>
+            Simple non-OLE drag operation.
+            Returns true if dropped, false if cancelled.
+            </summary>
+            <param name="c">Window or control that owns the drag operation.</param>
+            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
+            <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
+        </member>
+        <member name="T:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs">
+            <summary>
+            <see cref="M:Catkeys.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})"/> callback function arguments.
+            </summary>
+            <tocexclude />
+        </member>
+        <member name="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Msg">
+            <summary>
+            Current message retrieved by API <msdn>GetMessage</msdn>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Cursor">
+            <summary>
+            The callback function can set this to temporarily set cursor.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Stop">
+            <summary>
+            The callback function can call this to end the operation.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.ThreadPoolSTA">
+            <summary>
+            Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.ThreadPoolSTA.WorkCallbackData">
+            <summary>
+            Work callback function parameter type.
+            More info: <see cref="T:Catkeys.Util.ThreadPoolSTA.WorkCallback"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Util.ThreadPoolSTA.WorkCallbackData.state">
+            
+        </member>
+        <member name="F:Catkeys.Util.ThreadPoolSTA.WorkCallbackData.completionCallback">
+            
+        </member>
+        <member name="T:Catkeys.Util.ThreadPoolSTA.WorkCallback">
+            <summary>
+            Work callback function type.
+            </summary>
+            <param name="d">
+            Contains state and completionCallback that were passed to the submit function.
+            Your work callback function can change completionCallback and/or state. For example it can set completionCallback = null to prevent calling it (the call is expensive); or change state, if want to pass another object to the completion function.
+            Note that the completion function is never called if initially it was null.
+            </param>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
+            <summary>
+            Requests that a thread pool thread call the callback function.
+            </summary>
+            <param name="state">Something to pass to the callback functions.</param>
+            <param name="workCallback">Callback function to call in a thread pool thread.</param>
+            <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
+            <exception cref="T:System.ComponentModel.Win32Exception"/>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.CreateWork(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
+            <summary>
+            Creates a <see cref="T:Catkeys.Util.ThreadPoolSTA.Work"/> object that can be used when need more options than <see cref="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">SubmitCallback</see> has.
+            </summary>
+            <param name="state">Something to pass to the callback functions.</param>
+            <param name="workCallback">Callback function to call in a thread pool thread.</param>
+            <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
+            <remarks>
+            Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
+            </remarks>
+            <exception cref="T:System.ComponentModel.Win32Exception"/>
+        </member>
+        <member name="T:Catkeys.Util.ThreadPoolSTA.Work">
+            <summary>
+            Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
+            Can be used when need more options than <see cref="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">SubmitCallback</see> has.
+            </summary>
+            <example><code>
+            using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
+            	work.Submit();
+            	work.Wait();
+            }
+            </code></example>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.#ctor(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback,System.Boolean)">
+            <exception cref="T:System.ComponentModel.Win32Exception"/>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Submit">
+            <summary>
+            Requests that a thread pool thread call the callback function.
+            This function can be called multiple times.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Wait">
+            <summary>
+            Waits until all submitted instances of the callback function finish their work.
+            While waiting, this thread cannot dispatch events and Windows messages.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Cancel">
+            <summary>
+            Waits until all running instances of the callback function finish their work, and cancels pending (still not running) instances.
+            While waiting, this thread cannot dispatch events and Windows messages.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Dispose">
+            <summary>
+            Calls <see cref="M:Catkeys.Util.ThreadPoolSTA.Work.Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
+            Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.NamespaceDoc">
+            <summary>
+            Miscellaneous classes and functions used in this library. Can be used outside it too.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.MemoryBitmap">
+            <summary>
+            Creates and manages native bitmap handle and memory DC.
+            The bitmap is selected in the DC.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Calls <see cref="M:Catkeys.Util.MemoryBitmap.Create(System.Int32,System.Int32)"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.Dispose">
+            <summary>
+            Deletes the bitmap and DC and calls GC.SuppressFinalize.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.Finalize">
+            
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.Delete">
+            <summary>
+            Deletes the bitmap and DC.
+            Unlike Dispose, does not call GC.SuppressFinalize.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.Create(System.Int32,System.Int32)">
+            <summary>
+            Creates new memory DC and bitmap of specified size and selects it into the DC.
+            Returns false if failed.
+            In any case deletes previous bitmap and DC.
+            </summary>
+            <param name="width">Width, pixels.</param>
+            <param name="height">Height, pixels.</param>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.Attach(System.IntPtr)">
+            <summary>
+            Sets this variable to manage an existing bitmap.
+            Selects the bitmap into a memory DC.
+            Deletes previous bitmap and DC.
+            </summary>
+            <param name="hBitmap">Native bitmap handle.</param>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.Detach">
+            <summary>
+            Deletes memory DC, clears this variable and returns its bitmap (native bitmap handle).
+            The returned bitmap is not selected into a DC. Will need to delete it with API DeleteObject.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibNativeFont">
+            <summary>
+            Creates and manages native font handle.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.ModuleHandle">
+            <summary>
+            Gets native module handle.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ModuleHandle.OfType(System.Type)">
+            <summary>
+            Gets native module handle of type's assembly.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ModuleHandle.OfAssembly(System.Reflection.Assembly)">
+            <summary>
+            Gets native module handle of an assembly.
+            If the assembly consists of multiple modules, gets its first loaded module.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ModuleHandle.OfAppDomainEntryAssembly">
+            <summary>
+            Gets native module handle of current app domain entry assembly.
+            If the assembly consists of multiple modules, gets its first loaded module.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ModuleHandle.OfCatkeysDll">
+            <summary>
+            Gets native module handle of Catkeys.dll.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ModuleHandle.OfProcessExe">
+            <summary>
+            Gets native module handle of the program file of this process.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.Misc">
+            <summary>
+            Miscellaneous functions.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.Misc.IsCatkeysInGAC">
+            <summary>
+            Returns true if Catkeys.dll is installed in the global assembly cache.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.Misc.IsCatkeysNgened">
+            <summary>
+            Returns true if Catkeys.dll is compiled to native code using ngen.exe.
+            It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Reflection.Assembly)">
+            <summary>
+            Returns true if assembly asm is compiled to native code using ngen.exe.
+            It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Type)">
+            <summary>
+            Returns true if assembly of type is compiled to native code using ngen.exe.
+            It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.Misc.MinimizeMemory">
+            <summary>
+            Frees as much as possible physical memory used by this process.
+            Calls <see cref="M:System.GC.Collect"/> and API <msdn>SetProcessWorkingSetSize</msdn>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.Char*)">
+            <summary>
+            Finds unmanaged '\0'-terminated string length.
+            Scans the string until '\0' character found.
+            </summary>
+            <param name="p">Unmanaged string. Can be null.</param>
+        </member>
+        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.Char*,System.Int32)">
+            <summary>
+            Finds unmanaged '\0'-terminated string length.
+            Scans the string until '\0' character found, but not exceeding the specified length.
+            </summary>
+            <param name="p">Unmanaged string. Can be null.</param>
+            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+        </member>
+        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.SByte*)">
+            <summary>
+            Finds unmanaged '\0'-terminated ANSI string length.
+            Scans the string until '\0' character found.
+            </summary>
+            <param name="p">Unmanaged ANSI string. Can be null.</param>
+        </member>
+        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.SByte*,System.Int32)">
+            <summary>
+            Finds unmanaged '\0'-terminated ANSI string length.
+            Scans the string until '\0' character found, but not exceeding the specified length.
+            </summary>
+            <param name="p">Unmanaged ANSI string. Can be null.</param>
+            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+        </member>
+        <member name="M:Catkeys.Util.Misc.CharPtrStartsWith(System.Char*,System.String)">
+            <summary>
+            Returns true if p starts with s.
+            </summary>
+            <param name="p">Unmanaged string. Can be null.</param>
+            <param name="s"></param>
+        </member>
+        <member name="M:Catkeys.Util.Misc.LibGetTypeSize(System.Type)">
+            <summary>
+            Do not call. Use class TypeSize, which caches the type size.
+            This is used by TypeSize, not in it, because it is a generic type...
+            </summary>
+            <param name="t"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Catkeys.Util.TypeSize`1">
+            <summary>
+            Gets managed run-time size of type T. Works with any type.
+            Unlike sizeof, can be used in generic classes too.
+            Unlike Marshal.SizeOf, gets managed type size (eg 1 for bool), not native type size (eg 4 for bool).
+            Example: <c>Print(Catkeys.Util.TypeSize&lt;T&gt;.Size);</c>.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="F:Catkeys.Util.TypeSize`1.Size">
+            <summary>
+            Gets T type size.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibDebug">
+            <summary>
+            Functions useful when testing and debugging.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.Dpi">
+            <summary>
+            Functions for high-DPI screen support.
+            High DPI means when in Control Panel is set screen text size other than 100%.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.Dpi.BaseDPI">
+            <summary>
+            Gets DPI of the primary screen.
+            On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.Dpi.SmallIconSize">
+            <summary>
+            Gets small icon size that depends on DPI of the primary screen.
+            Width and Height are <see cref="P:Catkeys.Util.Dpi.BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.Dpi.ScaleInt(System.Int32)">
+            <summary>
+            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96, returns stretched i.
+            Else returns i.
+            </summary>
+            <param name="i"></param>
+        </member>
+        <member name="M:Catkeys.Util.Dpi.ScaleSize(System.Drawing.Size)">
+            <summary>
+            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
+            Else returns z.
+            Note: for images use <see cref="M:Catkeys.Util.Dpi.ImageSize(System.Drawing.Image)"/>.
+            </summary>
+            <param name="z"></param>
+        </member>
+        <member name="M:Catkeys.Util.Dpi.ImageSize(System.Drawing.Image)">
+            <summary>
+            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
+            Else returns image.Size.
+            </summary>
+            <param name="image"></param>
+        </member>
+        <member name="M:Catkeys.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
+            <summary>
+            A workaround for:
+            	When showing a ContextMenuStrip menu or a submenu, something briefly sets the AppStarting cursor.
+            	Only if this process does/did not have active windows.
+            	Only if current cursor is arrow. Works well if eg I or hand.
+            	Starts before first WM_NCPAINT (after WM_SHOWWINDOW+WM_WINDOWPOSCHANGING) and stops before WM_PAINT.
+            Call this before showing a menu. Possibly also will need for some other windows.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibActCtx">
+            <summary>
+            Activates our manifest which tells to use comctl32.dll version 6.
+            The manifest is embedded in this dll, resource id 2.
+            This code is from .NET MessageBox.Show.
+            </summary>
+        </member>
         <member name="T:Catkeys.Wnd">
             <summary>
             A variable of Wnd type represents a native window or control. It contains native window handle, also known as HWND.
@@ -6393,13 +7532,13 @@
             Don't need to call this after calling functions of this library.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.Misc.AllowActivate">
+        <member name="M:Catkeys.Wnd.Misc.EnableActivate">
             <summary>
             Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
             Returns false if fails (unlikely).
             In some cases you may need this function because Windows often disables SetForegroundWindow to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow just makes the window's taskbar button flash which indicates that the windows wants attention. More info: <msdn>SetForegroundWindow</msdn>.
             Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
-            Don't need to call this function before calling functions of this library that activate windows.
+            Don't need to call this function before calling Wnd.Activate and other functions of this library that activate windows.
             </summary>
         </member>
         <member name="T:Catkeys.Wnd.Misc.WindowClass">
@@ -6538,10 +7677,18 @@
             <summary>
             Creates new window of a class registered with <see cref="M:Catkeys.Wnd.Misc.WindowClass.InterDomainRegister(System.String,Catkeys.Native.WNDPROC,System.Int32,System.UInt32,Catkeys.Wnd.Misc.WindowClass.WndClassEx)"/>.
             All parameters are the same as with API <msdn>CreateWindowEx</msdn>.
+            Later call <see cref="M:Catkeys.Wnd.Misc.DestroyWindow(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)"/>.
             </summary>
             <remarks>
             The window procedure does not receive messages until this function returns. It never receives creation messages, eg WM_CREATE.
             </remarks>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.WindowClass.InterDomainCreateMessageWindow(System.String)">
+            <summary>
+            Creates native/unmanaged <msdn>message-only window</msdn> of a class registered with <see cref="M:Catkeys.Wnd.Misc.WindowClass.InterDomainRegister(System.String,Catkeys.Native.WNDPROC,System.Int32,System.UInt32,Catkeys.Wnd.Misc.WindowClass.WndClassEx)"/>.
+            Styles: WS_POPUP, WS_EX_NOACTIVATE.
+            Later call <see cref="M:Catkeys.Wnd.Misc.DestroyWindow(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)"/>.
+            </summary>
         </member>
         <member name="T:Catkeys.Wnd.Misc.WindowClass.WndClassEx">
             <summary>
@@ -6670,25 +7817,29 @@
             <param name="c">The control. Can be top-level window too.</param>
             <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a WinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
         </member>
-        <member name="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})">
             <summary>
-            Gets list of top-level windows.
-            Returns list containing 0 or more window handles as Wnd.
-            Calls API <msdn>EnumWindows</msdn>.
-            <note>The list can be bigger than you expect. See also <see cref="M:Catkeys.Wnd.Misc.MainWindows(System.Boolean,System.Boolean)">MainWindows</see>.</note>
+            Gets top-level windows.
+            Returns array containing 0 or more window handles as Wnd.
             </summary>
             <param name="onlyVisible">Need only visible windows.</param>
-            <param name="sortFirstVisible">Place all list elements of hidden windows at the end of the returned list, even if the hidden windows are before some visible windows in the Z order.</param>
+            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
+            <param name="also">
+            Lambda etc callback function to call for each matching window.
+            It can evaluate more properties of the window and return true when they match.
+            Example: <c>also: t =&gt; t.ClassNameIs("#32770")</c>.
+            </param>
             <remarks>
-            By default the list elements are sorted to match the Z order.
+            Calls API <msdn>EnumWindows</msdn>.
+            <note>The list can be bigger than you expect. See also <see cref="M:Catkeys.Wnd.Misc.MainWindows(System.Boolean,System.Boolean)">MainWindows</see>.</note>
+            By default array elements are sorted to match the Z order.
             On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has UAC integrity level uiAccess; to get such windows you can use <see cref="M:Catkeys.Wnd.FindFast(System.String,System.String,Catkeys.Wnd)">FindFast</see>.
             </remarks>
         </member>
-        <member name="M:Catkeys.Wnd.Misc.ThreadWindows(System.Int32,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})">
+        <member name="M:Catkeys.Wnd.Misc.ThreadWindows(System.Int32,System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})">
             <summary>
-            Gets list of top-level windows of a thread.
-            Returns list containing 0 or more window handles as Wnd.
-            Calls API <msdn>EnumThreadWindows</msdn>.
+            Gets top-level windows of a thread.
+            Returns array containing 0 or more window handles as Wnd.
             </summary>
             <param name="threadId">
             Unmanaged thread id.
@@ -6696,12 +7847,16 @@
             If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="M:Catkeys.Native.GetError"/>.
             </param>
             <param name="onlyVisible">Need only visible windows.</param>
+            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
             <param name="also">
             Lambda etc callback function to call for each matching window.
             It can evaluate more properties of the window and return true when they match.
             Example: <c>also: t =&gt; t.ClassNameIs("#32770")</c>.
             </param>
             <exception cref="T:System.ArgumentException">0 threadId.</exception>
+            <remarks>
+            Calls API <msdn>EnumThreadWindows</msdn>.
+            </remarks>
         </member>
         <member name="M:Catkeys.Wnd.Misc.FindThreadWindow(System.Int32,System.String,System.String,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
             <summary>
@@ -6718,6 +7873,28 @@
             <param name="className"></param>
             <param name="flags"></param>
             <param name="also"></param>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.FindMessageWindow(System.String,System.String,Catkeys.Wnd)">
+            <summary>
+            Finds a message-only window.
+            Returns its handle as Wnd. Returns Wnd0 if not found.
+            Calls API <msdn>FindWindowEx</msdn>.
+            Faster than <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">Find</see>, which does not find message-only windows.
+            Can be used only when you know full name and/or class name.
+            Finds hidden windows too.
+            </summary>
+            <param name="name">
+            Name. Can be null to match any.
+            Full, case-insensitive. Wildcard etc not supported.
+            </param>
+            <param name="className">
+            Class name. Can be null to match any. Cannot be "".
+            Full, case-insensitive. Wildcard etc not supported.
+            </param>
+            <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
+            <remarks>
+            Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </remarks>
         </member>
         <member name="P:Catkeys.Wnd.Misc.WndActiveOfThisThread">
             <summary>
@@ -6876,6 +8053,7 @@
             <summary>
             Creates native/unmanaged window like <see cref="M:Catkeys.Wnd.Misc.CreateWindow(System.UInt32,System.String,System.String,System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd,Catkeys.LPARAM,System.IntPtr,Catkeys.LPARAM)"/> and sets font.
             If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
+            Later call <see cref="M:Catkeys.Wnd.Misc.DestroyWindow(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.Close(System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Wnd.Misc.CreateMessageWindow(System.String)">
@@ -6943,6 +8121,41 @@
             Does not copy the font; don't dispose it while the window is alive.
             Use this function only with windows of current process.
             </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.UacEnableMessages(System.UInt32[])">
+            <summary>
+            Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
+            It allows processes of lower UAC integrity level to send these messages to this process.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA">
+            <summary>
+            Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower UAC integrity level processes, for example if you'll use <see cref="M:Catkeys.Wnd.Misc.InterProcessGetData(Catkeys.LPARAM,System.Int32@)"/>.
+            Call this once in process.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.InterProcessSendData(Catkeys.Wnd,System.Int32,System.String,Catkeys.Wnd)">
+            <summary>
+            Sends data to a window of another process using message <msdn>WM_COPYDATA</msdn>.
+            Returns true if the window received the message and returned true from its window procedure.
+            See also: <see cref="M:Catkeys.Wnd.Misc.InterProcessGetData(Catkeys.LPARAM,System.Int32@)"/>.
+            </summary>
+            <param name="w">The window of that process that will receive the message.</param>
+            <param name="stringId">An integer identifier of the string, to store in COPYDATASTRUCT.dwData.</param>
+            <param name="s">String containing data of any format. Can have '\0' characters.</param>
+            <param name="wSender">Optional. A window of this process that sends the message. The receiving window procedure receives it in wParam.</param>
+            <seealso cref="T:Catkeys.Util.SharedMemory"/>
+        </member>
+        <member name="M:Catkeys.Wnd.Misc.InterProcessGetData(Catkeys.LPARAM,System.Int32@)">
+            <summary>
+            Gets data stored in <msdn>COPYDATASTRUCT</msdn> structure received by a window procedure with <msdn>WM_COPYDATA</msdn> message.
+            See also: <see cref="M:Catkeys.Wnd.Misc.InterProcessSendData(Catkeys.Wnd,System.Int32,System.String,Catkeys.Wnd)"/>, <see cref="M:Catkeys.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/>.
+            </summary>
+            <param name="lParam">lParam of the window procedure when it received WM_COPYDATA message. It is COPYDATASTRUCT pointer.</param>
+            <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
+            <remarks>
+            <note type="note">UAC blocks messages sent from processes of lower integrity level. Call <see cref="M:Catkeys.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
+            </remarks>
         </member>
         <member name="M:Catkeys.Wnd.Misc.StringRemoveUnderlineAmpersand(System.String@)">
             <summary>
@@ -7230,17 +8443,17 @@
         <member name="M:Catkeys.Wnd.ActivateLL">
             <summary>
             Low-level version of <see cref="M:Catkeys.Wnd.Activate"/>.
-            Just calls <see cref="M:Catkeys.Wnd.Misc.AllowActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
+            Just calls <see cref="M:Catkeys.Wnd.Misc.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
             No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
             Returns false if fails.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.LibAllowActivate(System.Boolean)">
+        <member name="M:Catkeys.Wnd.LibEnableActivate(System.Boolean)">
             <summary>
             No exceptions.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd._AllowActivate_SendKey(System.Boolean)">
+        <member name="M:Catkeys.Wnd._EnableActivate_SendKey(System.Boolean)">
             <summary>
             Sends a key (VK_0 up). It allows to activate now.
             Later this process can always activate easily (without key etc). It works even with higher IL windows.
@@ -7248,13 +8461,13 @@
             Does not work if the foreground process has higher UAC IL.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd._AllowActivate_MinRes">
+        <member name="M:Catkeys.Wnd._EnableActivate_MinRes">
             <summary>
             Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
             Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd._AllowActivate_AllowSetFore">
+        <member name="M:Catkeys.Wnd._EnableActivate_AllowSetFore">
             <summary>
             Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
             </summary>
@@ -8181,13 +9394,23 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Catkeys.Wnd.ChildParams">
+        <member name="T:Catkeys.Wnd.ChildFinder">
             <summary>
-            Contains the same fields as <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> parameters, and can be used instead of it.
-            See also: <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
+            Contains control (child window) properties and can be used to find the control.
+            Can be used instead of <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> or <see cref="M:Catkeys.Wnd.ChildAll(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
+            Also can be used to find window that contains certain control, like in the example.
             </summary>
+            <example>
+            <code><![CDATA[
+            //find window that contains certain control, and get the control too
+            var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+            Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
+            Print(w);
+            Print(f.Result);
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.#ctor(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
+        <member name="M:Catkeys.Wnd.ChildFinder.#ctor(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
             <summary>
             See <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">Wnd.Child</see>.
             </summary>
@@ -8196,42 +9419,63 @@
             Invalid wildcard expression ("**options|" or regular expression).
             </exception>
         </member>
-        <member name="P:Catkeys.Wnd.ChildParams.Result">
+        <member name="P:Catkeys.Wnd.ChildFinder.Result">
             <summary>
             The found control.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.Find(Catkeys.Wnd)">
+        <member name="M:Catkeys.Wnd.ChildFinder.FindIn(Catkeys.Wnd)">
             <summary>
-            Finds the specified control, like <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
+            Finds the specified child control, like <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
             Returns true if found.
-            The <see cref="P:Catkeys.Wnd.ChildParams.Result"/> property will be the control.
+            The <see cref="P:Catkeys.Wnd.ChildFinder.Result"/> property will be the control.
             </summary>
             <param name="wParent">Direct or indirect parent window.</param>
+            <exception cref="T:Catkeys.WndException">Invalid wParent.</exception>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.FindInList(Catkeys.Wnd,System.Collections.Generic.List{Catkeys.Wnd})">
+        <member name="M:Catkeys.Wnd.ChildFinder.FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd},Catkeys.Wnd)">
             <summary>
             Finds the specified control in a list of controls.
             Returns 0-based index, or -1 if not found.
-            The <see cref="P:Catkeys.Wnd.ChildParams.Result"/> property will be the control.
+            The <see cref="P:Catkeys.Wnd.ChildFinder.Result"/> property will be the control.
             </summary>
-            <param name="wParent">Direct or indirect parent window.</param>
-            <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})"/>.</param>
+            <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.FindAll(Catkeys.Wnd)">
+        <member name="M:Catkeys.Wnd.ChildFinder.FindAllIn(Catkeys.Wnd)">
             <summary>
             Finds all matching child controls, like <see cref="M:Catkeys.Wnd.ChildAll(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
             Returns List containing 0 or more control handles as Wnd.
             </summary>
             <param name="wParent">Direct or indirect parent window.</param>
+            <exception cref="T:Catkeys.WndException">Invalid wParent.</exception>
         </member>
-        <member name="M:Catkeys.Wnd.ChildParams.FindAllInList(Catkeys.Wnd,System.Collections.Generic.List{Catkeys.Wnd})">
+        <member name="M:Catkeys.Wnd.ChildFinder.FindAllInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd},Catkeys.Wnd)">
             <summary>
-            Finds all matching child controls in a list of windows.
+            Finds all matching controls in a list of controls.
             Returns List containing 0 or more control handles as Wnd.
             </summary>
-            <param name="wParent">Direct or indirect parent window.</param>
-            <param name="a">List of child controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})"/>.</param>
+            <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildFinder._FindInList(Catkeys.Wnd,System.Collections.Generic.IEnumerable{Catkeys.Wnd},System.Boolean,System.Collections.Generic.List{Catkeys.Wnd},Catkeys.Wnd)">
+            <summary>
+            If a is not null, returns index of matching element or -1.
+            Else returns -2 if wSingle matches, else -1.
+            Returns -1 if using aFindAll.
+            </summary>
+            <param name="wParent">Parent window. Can be Wnd0 if inList is true and no DirectChild flag and not using winforms name.</param>
+            <param name="a">Array etc of Wnd.</param>
+            <param name="inList">Called by FindInList or FindAllInList.</param>
+            <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
+            <param name="wSingle">Can be used instead of a. Then a must be null.</param>
+        </member>
+        <member name="M:Catkeys.Wnd.ChildFinder.IsMatch(Catkeys.Wnd,Catkeys.Wnd)">
+            <summary>
+            Returns true if control c properties match the specified properties.
+            </summary>
+            <param name="c">A control. Can be 0/invalid, then returns false.</param>
+            <param name="wParent">Direct or indirect parent window. If used, returns false if it isn't parent (also depends on flag DirectChild).</param>
         </member>
         <member name="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
             <summary>
@@ -8285,11 +9529,39 @@
         </member>
         <member name="M:Catkeys.Wnd.HasChild(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)">
             <summary>
+            Returns true if this window contains the specified control.
             Calls <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
-            Returns true if it finds the child control.
+            <note type="note">
+            Using this function many times with same parameters is inefficient. Instead create new <see cref="T:Catkeys.Wnd.ChildFinder"/> and call <see cref="M:Catkeys.Wnd.ChildFinder.FindIn(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.HasChild(Catkeys.Wnd.ChildFinder)"/>. See example.
+            </note>
             </summary>
             <exception cref="T:Catkeys.WndException"/>
             <exception cref="T:System.ArgumentException"/>
+            <example>
+            <code><![CDATA[
+            //find window that contains certain control, and get the control too
+            var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+            Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(f));
+            Print(w);
+            Print(f.Result);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.Wnd.HasChild(Catkeys.Wnd.ChildFinder)">
+            <summary>
+            Returns true if this window contains the specified control.
+            Calls <see cref="M:Catkeys.Wnd.ChildFinder.FindIn(Catkeys.Wnd)"/>.
+            </summary>
+            <exception cref="T:Catkeys.WndException"/>
+            <example>
+            <code><![CDATA[
+            //find window that contains certain control, and get the control too
+            var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
+            Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(f));
+            Print(w);
+            Print(f.Result);
+            ]]></code>
+            </example>
         </member>
         <member name="M:Catkeys.Wnd.ChildById(System.Int32,System.Boolean)">
             <summary>
@@ -8337,30 +9609,26 @@
             </param>
             <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
             <remarks>
-            If this window is Wnd.Misc.SpecHwnd.Message, finds a message-only window.
             Supports <see cref="M:Catkeys.Native.GetError"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})">
             <summary>
-            Gets list of child controls.
-            Returns List containing 0 or more control handles as Wnd.
-            Calls API <msdn>EnumChildWindows</msdn>.
+            Gets child controls.
+            Returns array containing 0 or more control handles as Wnd.
             </summary>
             <param name="directChild">Need only direct children, not grandchildren.</param>
             <param name="onlyVisible">Need only visible controls.</param>
-            <param name="sortFirstVisible">Place all list elements of hidden controls at the end of the returned list.</param>
+            <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+            <param name="also">
+            Lambda etc callback function to call for each matching control.
+            It can evaluate more properties of the control and return true when they match.
+            Example: <c>also: t =&gt; t.ClassNameIs("Edit")</c>.
+            </param>
             <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
-        </member>
-        <member name="M:Catkeys.Wnd.LibAllChildren(System.Func{Catkeys.Wnd,System.Boolean},System.Boolean,System.Boolean)">
-            <summary>
-            Calls callback function for each child control.
+            <remarks>
             Calls API <msdn>EnumChildWindows</msdn>.
-            </summary>
-            <param name="f">Lambda etc callback function to call for each matching control. Can return true to stop.</param>
-            <param name="directChild">Need only direct children, not grandchildren.</param>
-            <param name="onlyVisible">Need only visible controls.</param>
-            <exception cref="T:Catkeys.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            </remarks>
         </member>
         <member name="M:Catkeys.Wnd.FromXY(Catkeys.Types{System.Int32,System.Single},Catkeys.Types{System.Int32,System.Single},System.Nullable{System.Boolean},System.Boolean)">
             <summary>
@@ -8452,16 +9720,16 @@
             </summary>
             <seealso cref="M:Catkeys.Wnd.Misc.GetWindowsStoreAppId(Catkeys.Wnd,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Catkeys.Wnd.SavePlacement(System.Boolean)">
+        <member name="M:Catkeys.Wnd.SavePositionSizeState(System.Boolean)">
             <summary>
-            Gets window position, size and state stored in a string that can be used with <see cref="M:Catkeys.Wnd.RestorePlacement(System.String,System.Boolean,System.Boolean)">RestorePlacement</see>.
+            Gets window position, size and state stored in a string that can be used with <see cref="M:Catkeys.Wnd.RestorePositionSizeState(System.String,System.Boolean,System.Boolean)"/>.
             Returns null if failed. Supports <see cref="M:Catkeys.Native.GetError"/>.
             </summary>
-            <param name="canBeMinimized">If now the window is minimized, let RestorePlacement make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
+            <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
         </member>
-        <member name="M:Catkeys.Wnd.RestorePlacement(System.String,System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Wnd.RestorePositionSizeState(System.String,System.Boolean,System.Boolean)">
             <summary>
-            Restores window position, size and state that is stored in a string created by <see cref="M:Catkeys.Wnd.SavePlacement(System.Boolean)">SavePlacement</see>.
+            Restores window position, size and state that is stored in a string created by <see cref="M:Catkeys.Wnd.SavePositionSizeState(System.Boolean)"/>.
             </summary>
             <param name="s">The string. Can be null/"".</param>
             <param name="ensureInScreen">Call <see cref="M:Catkeys.Wnd.EnsureInScreen(System.Object,System.Boolean,System.Boolean)"/>. Even when s is null/"".</param>
@@ -8527,16 +9795,17 @@
             x or/and y .type can be 0, then the returned x or y value will be 0.
             </summary>
         </member>
-        <member name="T:Catkeys.Wnd.FindParams">
+        <member name="T:Catkeys.Wnd.Finder">
             <summary>
-            Contains the same fields as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/> parameters, and can be used instead of it.
+            Contains top-level window properties and can be used to find the window.
+            Can be used instead of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/> or <see cref="M:Catkeys.Wnd.FindAll(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
             These codes are equivalent:
             <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
-            <code>var p = new Wnd.FindParams(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
+            <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
             Also can find in a custom list of windows.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.FindParams.#ctor(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
+        <member name="M:Catkeys.Wnd.Finder.#ctor(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
             <summary>
             See <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">Wnd.Find</see>.
             </summary>
@@ -8547,40 +9816,57 @@
             Invalid wildcard expression ("**options|" or regular expression).
             </exception>
         </member>
-        <member name="P:Catkeys.Wnd.FindParams.Result">
+        <member name="P:Catkeys.Wnd.Finder.Result">
             <summary>
-            The found window (after calling <see cref="M:Catkeys.Wnd.FindParams.Find"/> or <see cref="M:Catkeys.Wnd.FindParams.FindInList(System.Collections.Generic.List{Catkeys.Wnd})"/>).
+            The found window (after calling <see cref="M:Catkeys.Wnd.Finder.Find"/> or <see cref="M:Catkeys.Wnd.Finder.FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd})"/>).
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.FindParams.Find">
+        <member name="M:Catkeys.Wnd.Finder.Find">
             <summary>
             Finds the specified window, like <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">Wnd.Find</see>.
             Returns true if found.
-            The <see cref="P:Catkeys.Wnd.FindParams.Result"/> property will be the window.
+            The <see cref="P:Catkeys.Wnd.Finder.Result"/> property will be the window.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.FindParams.FindInList(System.Collections.Generic.List{Catkeys.Wnd})">
+        <member name="M:Catkeys.Wnd.Finder.FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd})">
             <summary>
             Finds the specified window in a list of windows.
             Returns 0-based index, or -1 if not found.
-            The <see cref="P:Catkeys.Wnd.FindParams.Result"/> property will be the window.
+            The <see cref="P:Catkeys.Wnd.Finder.Result"/> property will be the window.
             </summary>
-            <param name="a">List of windows, for example returned by <see cref="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">Array or list of windows, for example returned by <see cref="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})"/>.</param>
         </member>
-        <member name="M:Catkeys.Wnd.FindParams.FindAll">
+        <member name="M:Catkeys.Wnd.Finder.FindAll">
             <summary>
             Finds all matching windows, like <see cref="M:Catkeys.Wnd.FindAll(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">Wnd.FindAll</see>.
             Returns list containing 0 or more window handles as Wnd.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.FindParams.FindAllInList(System.Collections.Generic.List{Catkeys.Wnd})">
+        <member name="M:Catkeys.Wnd.Finder.FindAllInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd})">
             <summary>
             Finds all matching windows in a list of windows.
             Returns list containing 0 or more window handles as Wnd.
             </summary>
-            <param name="a">List of windows, for example returned by <see cref="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">Array or list of windows, for example returned by <see cref="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})"/>.</param>
         </member>
-        <member name="P:Catkeys.Wnd.FindParams.ProcessId">
+        <member name="M:Catkeys.Wnd.Finder._FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd},System.Boolean,System.Collections.Generic.List{Catkeys.Wnd},Catkeys.Wnd)">
+            <summary>
+            If a is not null, returns index of matching element or -1.
+            Else returns -2 if wSingle matches, else -1.
+            Returns -1 if using aFindAll.
+            </summary>
+            <param name="a">Array etc of Wnd.</param>
+            <param name="inList">Called by FindInList or FindAllInList.</param>
+            <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
+            <param name="wSingle">Can be used instead of a. Then a must be null.</param>
+        </member>
+        <member name="M:Catkeys.Wnd.Finder.IsMatch(Catkeys.Wnd)">
+            <summary>
+            Returns true if window w properties match the specified properties.
+            </summary>
+            <param name="w">A top-level window. Can be 0/invalid, then returns false.</param>
+        </member>
+        <member name="P:Catkeys.Wnd.Finder.ProcessId">
             <summary>
             Sets process id.
             If programEtc was used, clears it. If value is 0, does not clear program name.
@@ -8588,7 +9874,7 @@
             <example>
             <code><![CDATA[
             Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(w.Is0) { Wnd.LastFindParams.ProcessId = Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFindParams); }
+            if(w.Is0) { Wnd.LastFind.ProcessId = Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
             ]]></code>
             </example>
         </member>
@@ -8630,6 +9916,7 @@
             <remarks>
             If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
             On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="M:Catkeys.Wnd.FindFast(System.String,System.String,Catkeys.Wnd)">FindFast</see>.
+            To find message-only windows use <see cref="M:Catkeys.Wnd.Misc.FindMessageWindow(System.String,System.String,Catkeys.Wnd)"/> instead.
             </remarks>
             <exception cref="T:System.ArgumentException">
             className is "". To match any, use null.
@@ -8644,7 +9931,7 @@
             </code>
             </example>
         </member>
-        <member name="P:Catkeys.Wnd.LastFindParams">
+        <member name="P:Catkeys.Wnd.LastFind">
             <summary>
             Gets arguments of this thread's last call to <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/> or <see cref="M:Catkeys.Wnd.FindAll(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>, which set it before returning, regardless of results.
             </summary>
@@ -8654,7 +9941,7 @@
             <example>
             <code><![CDATA[
             Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFindParams); }
+            if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
             ]]></code>
             </example>
         </member>
@@ -8688,8 +9975,9 @@
             </param>
             <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
             <remarks>
-            It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
+            To find message-only windows use <see cref="M:Catkeys.Wnd.Misc.FindMessageWindow(System.String,System.String,Catkeys.Wnd)"/> instead.
             Supports <see cref="M:Catkeys.Native.GetError"/>.
+            It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
             </remarks>
         </member>
         <member name="P:Catkeys.Wnd.WndOwner">
@@ -9034,778 +10322,6 @@
             <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
             <exception cref="T:System.Exception">Exceptions thrown by <see cref="M:Catkeys.Registry_.Open(System.String,Microsoft.Win32.RegistryKey)">Open</see>.</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">The value exists but failed to get it, for example the specified size is smaller than registry data size.</exception>
-        </member>
-        <member name="T:Catkeys.Util.AppDomain_">
-            <summary>
-            Extends the .NET AppDomain class.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.AppDomain_.GetDefaultDomain(System.Boolean@)">
-            <summary>
-            Gets default app domain.
-            </summary>
-            <param name="isCurrentDomain">Receives true if called from default app domain.</param>
-        </member>
-        <member name="M:Catkeys.Util.AppDomain_.GetDefaultDomain">
-            <summary>
-            Gets default app domain.
-            </summary>
-        </member>
-        <member name="E:Catkeys.Util.AppDomain_.Exit">
-            <summary>
-            Occurs when current app domain exits.
-            </summary>
-            <remarks>
-            The event handler is called when one of these AppDomain events occur, with their parameters:
-            <see cref="E:System.AppDomain.ProcessExit"/> (in default domain);
-            <see cref="E:System.AppDomain.DomainUnload"/> (in non-default domain);
-            <see cref="E:System.AppDomain.UnhandledException"/>.
-            The event handler is called before static object finalizers.
-            </remarks>
-        </member>
-        <member name="P:Catkeys.Util.AppDomain_.EntryAssembly">
-            <summary>
-            Gets the entry assembly of current appdomain.
-            Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it fails if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)">AppDomain.DoCallBack</see>.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.SharedMemory">
-            <summary>
-            Memory that can be used by multiple processes and app domains.
-            Faster and more raw/unsafe than System.IO.MemoryMappedFiles.MemoryMappedFile.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.SharedMemory.CreateOrGet(System.String,System.UInt32,System.Boolean)">
-            <summary>
-            Creates named shared memory of specified size. If already exists, just gets its address.
-            Returns shared memory address in this process.
-            Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
-            </summary>
-            <param name="name">Shared memory name. Case-insensitive.</param>
-            <param name="size">Shared memory size. The function uses it only when creating the memory; it does not check whether the size argument matches the size of existing memory.</param>
-            <param name="allowLIL">Allow UAC low-integrity-level processes to access the shared memory.</param>
-            <exception cref="T:System.ComponentModel.Win32Exception">The API failed.</exception>
-            <remarks>
-            Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
-            There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Util.LibSharedMemory">
-            <summary>
-            Memory shared by all appdomains and by other related processes.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Util.LibSharedMemory.Size">
-            <summary>
-            Shared memory size.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Util.LibSharedMemory._sm">
-            <summary>
-            Creates or opens shared memory on demand in a thread-safe and process-safe way.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.LibSharedMemory.Ptr">
-            <summary>
-            Gets pointer to the shared memory.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibProcessMemory">
-            <summary>
-            Memory shared by all appdomains of current process.
-            Size 0x10000 (64 KB). Initially zero.
-            </summary>
-            <remarks>
-            When need to prevent simultaneous access of the memory by multiple threads, use <c>lock("uniqueString"){...}</c> .
-            It locks in all appdomains, because literal strings are interned, ie shared by all appdomains.
-            Using some other object with 'lock' would lock only in that appdomain.
-            However use this only in single module, because ngened modules have own interned strings.
-            </remarks>
-        </member>
-        <member name="P:Catkeys.Util.LibProcessMemory.Ptr">
-            <summary>
-            Gets pointer to the memory.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Util.LibProcessMemory.Size">
-            <summary>
-            Memory size.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibCharBuffer">
-            <summary>
-            Allocates a native memory buffer as char*.
-            The property <see cref="P:Catkeys.Util.LibCharBuffer.Common"/> can be used when calling API functions that require a char buffer. It returns a ThreadStatic variable.
-            Using this is much faster than StringBuilder, and does not collect .NET garbage. Almost as fast as stackalloc.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Ptr">
-            <summary>
-            Gets buffer pointer.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Capacity">
-            <summary>
-            Gets current buffer length (n characters).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Max(System.Int32)">
-            <summary>
-            Returns Math.Max(n, Capacity).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32@,System.Char*@,System.Boolean)">
-            <summary>
-            Gets memory buffer of at least Math.Max(n, 300) characters.
-            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            By default always returns true. If noThrow, returns false if fails to allocate meory (unlikely).
-            </summary>
-            <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
-            <param name="ptr">Receives buffer pointer.</param>
-            <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
-            <exception cref="T:System.OutOfMemoryException"></exception>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32)">
-            <summary>
-            Gets memory buffer of at least Math.Max(n, 300) characters.
-            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            </summary>
-            <exception cref="T:System.OutOfMemoryException"></exception>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToString">
-            <summary>
-            Converts the buffer, which contains native '\0'-terminated UTF-16 string, to String.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToString(System.Int32)">
-            <summary>
-            Converts the buffer, which contains native UTF-16 string of n length, to String.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToStringFromAnsi(System.Text.Encoding)">
-            <summary>
-            Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
-            </summary>
-            <param name="enc">If null, uses system's default ANSI encoding.</param>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Compact">
-            <summary>
-            Frees the buffer if more than 5000 characters.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Common">
-            <summary>
-            A ThreadStatic LibCharBuffer instance.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.NativeHeap">
-            <summary>
-            Allocates memory from native heap of this process using heap API.
-            Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
-            About 30% faster than Marshal class functions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.NativeHeap.Alloc(Catkeys.LPARAM)">
-            <summary>
-            Allocates size bytes of memory.
-            The memory is uninitialized, ie random byte values.
-            Calls API <msdn>HeapAlloc</msdn>.
-            </summary>
-            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
-        </member>
-        <member name="M:Catkeys.Util.NativeHeap.AllocZero(Catkeys.LPARAM)">
-            <summary>
-            Allocates size bytes of memory and sets all bytes to 0.
-            Calls API <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
-            </summary>
-            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
-        </member>
-        <member name="M:Catkeys.Util.NativeHeap.ReAlloc(System.Void*,Catkeys.LPARAM)">
-            <summary>
-            Reallocates size bytes of memory.
-            When size is growing, the added memory is uninitialized, ie random byte values.
-            If mem is null, allocates new memory like Alloc.
-            Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
-            </summary>
-            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
-        </member>
-        <member name="M:Catkeys.Util.NativeHeap.ReAllocZero(System.Void*,Catkeys.LPARAM)">
-            <summary>
-            Reallocates size bytes of memory and sets added bytes to 0.
-            If mem is null, allocates new memory like AllocZero.
-            Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
-            </summary>
-            <exception cref="T:System.OutOfMemoryException">Failed. Probably size is too big.</exception>
-        </member>
-        <member name="M:Catkeys.Util.NativeHeap.Free(System.Void*)">
-            <summary>
-            Frees memory.
-            Does nothing if mem is null.
-            Calls API <msdn>HeapFree</msdn>.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.MessageLoop">
-            <summary>
-            A message loop, alternative to Application.Run which does not support nested loops.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.MessageLoop.Loop">
-            <summary>
-            Runs a message loop.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.MessageLoop.Stop">
-            <summary>
-            Ends the message loop, causing Loop() to return.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibEnsureWindowsFormsSynchronizationContext">
-            <summary>
-            Constructor ensures that current SynchronizationContext of this thread is WindowsFormsSynchronizationContext.
-            Also sets WindowsFormsSynchronizationContext.AutoInstall=false to prevent Application.DoEvents etc setting wrong context.
-            Dispose() restores both if need. Does not restore context if was null.
-            Example: using(new Util.LibEnsureWindowsFormsSynchronizationContext()) { ... }
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibEnsureWindowsFormsSynchronizationContext.#ctor(System.Boolean)">
-            <summary>
-            See class help.
-            </summary>
-            <param name="onlyIfAutoInstall">Do nothing if WindowsFormsSynchronizationContext.AutoInstall==false. Normally WindowsFormsSynchronizationContext.AutoInstall is true (default).</param>
-        </member>
-        <member name="T:Catkeys.Util.DragDrop">
-            <summary>
-            Drag-drop functions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.DragDrop.SimpleDragDrop(Catkeys.Wnd,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})">
-            <summary>
-            Simple non-OLE drag operation.
-            Returns true if dropped, false if cancelled.
-            </summary>
-            <param name="w">Window or control that owns the drag operation.</param>
-            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
-            <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-        </member>
-        <member name="M:Catkeys.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})">
-            <summary>
-            Simple non-OLE drag operation.
-            Returns true if dropped, false if cancelled.
-            </summary>
-            <param name="c">Window or control that owns the drag operation.</param>
-            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
-            <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-        </member>
-        <member name="T:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs">
-            <summary>
-            <see cref="M:Catkeys.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs})"/> callback function arguments.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Msg">
-            <summary>
-            Current message retrieved by API <msdn>GetMessage</msdn>.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Cursor">
-            <summary>
-            The callback function can set this to temporarily set cursor.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.DragDrop.SimpleDragDropCallbackArgs.Stop">
-            <summary>
-            The callback function can call this to end the operation.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.ThreadPoolSTA">
-            <summary>
-            Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.ThreadPoolSTA.WorkCallbackData">
-            <summary>
-            Work callback function parameter type.
-            More info: <see cref="T:Catkeys.Util.ThreadPoolSTA.WorkCallback"/>.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Util.ThreadPoolSTA.WorkCallbackData.state">
-            
-        </member>
-        <member name="F:Catkeys.Util.ThreadPoolSTA.WorkCallbackData.completionCallback">
-            
-        </member>
-        <member name="T:Catkeys.Util.ThreadPoolSTA.WorkCallback">
-            <summary>
-            Work callback function type.
-            </summary>
-            <param name="d">
-            Contains state and completionCallback that were passed to the submit function.
-            Your work callback function can change completionCallback and/or state. For example it can set completionCallback = null to prevent calling it (the call is expensive); or change state, if want to pass another object to the completion function.
-            Note that the completion function is never called if initially it was null.
-            </param>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
-            <summary>
-            Requests that a thread pool thread call the callback function.
-            </summary>
-            <param name="state">Something to pass to the callback functions.</param>
-            <param name="workCallback">Callback function to call in a thread pool thread.</param>
-            <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
-            <exception cref="T:System.ComponentModel.Win32Exception"/>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.CreateWork(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
-            <summary>
-            Creates a <see cref="T:Catkeys.Util.ThreadPoolSTA.Work"/> object that can be used when need more options than <see cref="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">SubmitCallback</see> has.
-            </summary>
-            <param name="state">Something to pass to the callback functions.</param>
-            <param name="workCallback">Callback function to call in a thread pool thread.</param>
-            <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
-            <remarks>
-            Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
-            </remarks>
-            <exception cref="T:System.ComponentModel.Win32Exception"/>
-        </member>
-        <member name="T:Catkeys.Util.ThreadPoolSTA.Work">
-            <summary>
-            Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
-            Can be used when need more options than <see cref="M:Catkeys.Util.ThreadPoolSTA.SubmitCallback(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">SubmitCallback</see> has.
-            </summary>
-            <example><code>
-            using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
-            	work.Submit();
-            	work.Wait();
-            }
-            </code></example>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.#ctor(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback,System.Boolean)">
-            <exception cref="T:System.ComponentModel.Win32Exception"/>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Submit">
-            <summary>
-            Requests that a thread pool thread call the callback function.
-            This function can be called multiple times.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Wait">
-            <summary>
-            Waits until all submitted instances of the callback function finish their work.
-            While waiting, this thread cannot dispatch events and Windows messages.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Cancel">
-            <summary>
-            Waits until all running instances of the callback function finish their work, and cancels pending (still not running) instances.
-            While waiting, this thread cannot dispatch events and Windows messages.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Dispose">
-            <summary>
-            Calls <see cref="M:Catkeys.Util.ThreadPoolSTA.Work.Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
-            Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.NamespaceDoc">
-            <summary>
-            Miscellaneous classes and functions used in this library. Can be used outside it too.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibNativeFont">
-            <summary>
-            Creates and manages native font handle.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.ModuleHandle">
-            <summary>
-            Gets native module handle.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ModuleHandle.OfType(System.Type)">
-            <summary>
-            Gets native module handle of type's assembly.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ModuleHandle.OfAssembly(System.Reflection.Assembly)">
-            <summary>
-            Gets native module handle of an assembly.
-            If the assembly consists of multiple modules, gets its first loaded module.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ModuleHandle.OfAppDomainEntryAssembly">
-            <summary>
-            Gets native module handle of current app domain entry assembly.
-            If the assembly consists of multiple modules, gets its first loaded module.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ModuleHandle.OfCatkeysDll">
-            <summary>
-            Gets native module handle of Catkeys.dll.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.ModuleHandle.OfProcessExe">
-            <summary>
-            Gets native module handle of the program file of this process.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.Misc">
-            <summary>
-            Miscellaneous functions.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.Misc.IsCatkeysInGAC">
-            <summary>
-            Returns true if Catkeys.dll is installed in the global assembly cache.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.Misc.IsCatkeysNgened">
-            <summary>
-            Returns true if Catkeys.dll is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process or app domain.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Reflection.Assembly)">
-            <summary>
-            Returns true if assembly asm is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process or app domain.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Type)">
-            <summary>
-            Returns true if assembly of type is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process or app domain.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.Misc.MinimizeMemory">
-            <summary>
-            Frees as much as possible physical memory used by this process.
-            Calls <see cref="M:System.GC.Collect"/> and API <msdn>SetProcessWorkingSetSize</msdn>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.Char*)">
-            <summary>
-            Finds unmanaged '\0'-terminated string length.
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">Unmanaged string. Can be null.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.Char*,System.Int32)">
-            <summary>
-            Finds unmanaged '\0'-terminated string length.
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">Unmanaged string. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.SByte*)">
-            <summary>
-            Finds unmanaged '\0'-terminated ANSI string length.
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">Unmanaged ANSI string. Can be null.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.SByte*,System.Int32)">
-            <summary>
-            Finds unmanaged '\0'-terminated ANSI string length.
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">Unmanaged ANSI string. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.LibGetTypeSize(System.Type)">
-            <summary>
-            Do not call. Use class TypeSize, which caches the type size.
-            This is used by TypeSize, not in it, because it is a generic type...
-            </summary>
-            <param name="t"></param>
-            <returns></returns>
-        </member>
-        <member name="T:Catkeys.Util.TypeSize`1">
-            <summary>
-            Gets managed run-time size of type T. Works with any type. Works in generic classes too.
-            Unlike sizeof, gets run-time size. Eg for IntPtr and reference types gets 4 or 8.
-            Unlike Marshal.SizeOf, gets managed type size (eg 1 for bool), not native type size (eg 4 for bool).
-            Example: <c>Print(Catkeys.Util.TypeSize&lt;T&gt;.Size);</c>.
-            </summary>
-            <typeparam name="T"></typeparam>
-        </member>
-        <member name="T:Catkeys.Util.Dpi">
-            <summary>
-            Functions for high-DPI screen support.
-            High DPI means when in Control Panel is set screen text size other than 100%.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.Dpi.BaseDPI">
-            <summary>
-            Gets DPI of the primary screen.
-            On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.Dpi.SmallIconSize">
-            <summary>
-            Gets small icon size that depends on DPI of the primary screen.
-            Width and Height are <see cref="P:Catkeys.Util.Dpi.BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.Dpi.ScaleInt(System.Int32)">
-            <summary>
-            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96, returns stretched i.
-            Else returns i.
-            </summary>
-            <param name="i"></param>
-        </member>
-        <member name="M:Catkeys.Util.Dpi.ScaleSize(System.Drawing.Size)">
-            <summary>
-            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
-            Else returns z.
-            Note: for images use <see cref="M:Catkeys.Util.Dpi.ImageSize(System.Drawing.Image)"/>.
-            </summary>
-            <param name="z"></param>
-        </member>
-        <member name="M:Catkeys.Util.Dpi.ImageSize(System.Drawing.Image)">
-            <summary>
-            If <see cref="P:Catkeys.Util.Dpi.BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
-            Else returns image.Size.
-            </summary>
-            <param name="image"></param>
-        </member>
-        <member name="M:Catkeys.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
-            <summary>
-            A workaround for:
-            	When showing a ContextMenuStrip menu or a submenu, something briefly sets the AppStarting cursor.
-            	Only if this process does/did not have active windows.
-            	Only if current cursor is arrow. Works well if eg I or hand.
-            	Starts before first WM_NCPAINT (after WM_SHOWWINDOW+WM_WINDOWPOSCHANGING) and stops before WM_PAINT.
-            Call this before showing a menu. Possibly also will need for some other windows.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibActCtx">
-            <summary>
-            Activates our manifest which tells to use comctl32.dll version 6.
-            The manifest is embedded in this dll, resource id 2.
-            This code is from .NET MessageBox.Show.
-            </summary>
-        </member>
-        <member name="T:Catkeys.WaitFor">
-            <summary>
-            Provides functions to wait for a condition, such as 'window exists'.
-            </summary>
-            <remarks>
-            All functions have a timeoutS parameter. It is the maximal time to wait, in seconds. If it is 0, waits indefinitely. If &gt;0, after timeoutS time throws <see cref="T:System.TimeoutException"/>. If &lt;0, after -timeoutS time just stops waiting and returns default value (false, Wnd0, etc).
-            
-            While waiting, messages and events are not processed. For example, if used in a Form/Control event handler, the form would stop responding. Then need to use another thread, for example async/await/Task, like in the example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            Wnd w = WaitFor.WindowExists(10, "* Notepad");
-            Print(w);
-            ]]></code>
-            Using in a Form/Control event handler.
-            <code><![CDATA[
-            var f = new Form();
-            f.Click += async (unu, sed) =>
-              {
-            	  Print("waiting for Notepad...");
-            	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
-            	  if(w.Is0) Print("timeout"); else Print(w);
-              };
-            f.ShowDialog();
-            ]]></code>
-            </example>
-        </member>
-        <member name="T:Catkeys.WaitFor._Timeout">
-            <summary>
-            Can be used to easily implement timeout in wait-for functions.
-            See how it is used eg in WindowExists.
-            </summary>
-        </member>
-        <member name="F:Catkeys.WaitFor._Timeout.Period">
-            <summary>
-            Current period. Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
-            </summary>
-        </member>
-        <member name="F:Catkeys.WaitFor._Timeout.MaxPeriod">
-            <summary>
-            Maximal period. It is constructor->maxPeriod (default 200).
-            </summary>
-        </member>
-        <member name="M:Catkeys.WaitFor._Timeout.IsTimeout">
-            <summary>
-            If the timeout is not expired, returns false.
-            Else if constructor->timeoutS was negative, returns true.
-            Else throws TimeoutException.
-            Also gets current time and updates private fields, if need.
-            </summary>
-        </member>
-        <member name="M:Catkeys.WaitFor._Timeout.Sleep">
-            <summary>
-            If IsTimeout(), returns false.
-            Else sleeps for Period milliseconds, increments Period if it is less than MaxPeriod, and returns true.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
-            <summary>
-            Waits until the specified window exists (possibly invisible or inactive).
-            Returns window handle. If timeoutS is negative, on timeout returns Wnd0 (else exception).
-            All parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
-            </summary>
-            <param name="timeoutS">
-            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns Wnd0.
-            </param>
-            <param name="name"></param>
-            <param name="className"></param>
-            <param name="programEtc"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
-            <example>
-            <code><![CDATA[
-            Wnd w = WaitFor.WindowExists(10, "* Notepad");
-            Print(w);
-            ]]></code>
-            Using in a Form/Control event handler.
-            <code><![CDATA[
-            var f = new Form();
-            f.Click += async (unu, sed) =>
-              {
-            	  Print("waiting for Notepad...");
-            	  Wnd w = await Task.Run(() => WaitFor.WindowExists(-10, "* Notepad"));
-            	  if(w.Is0) Print("timeout"); else Print(w);
-              };
-            f.ShowDialog();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowExists(Catkeys.Wnd.FindParams,System.Double)">
-            <summary>
-            The same as overload <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>, just arguments are passed differently.
-            </summary>
-            <param name="f">Window properties etc.</param>
-            <param name="timeoutS"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowNotExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
-            <summary>
-            Waits until there are no windows (visible or invisible) that match the specified parameters.
-            Returns true. If timeoutS is negative, on timeout returns false (else exception).
-            All parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
-            Examples: see <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
-            </summary>
-            <param name="timeoutS">
-            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
-            </param>
-            <param name="name"></param>
-            <param name="className"></param>
-            <param name="programEtc"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowNotExists(Catkeys.Wnd.FindParams,System.Double)">
-            <summary>
-            The same as overload <see cref="M:Catkeys.WaitFor.WindowNotExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>, just arguments are passed differently.
-            </summary>
-            <param name="f">Window properties etc.</param>
-            <param name="timeoutS"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowClosed(System.Double,Catkeys.Wnd)">
-            <summary>
-            Waits until the window handle is invalid.
-            Returns true. If timeoutS is negative, on timeout returns false (else exception).
-            Uses <see cref="P:Catkeys.Wnd.IsAlive"/>.
-            More info: <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>
-            </summary>
-            <param name="timeoutS">
-            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
-            </param>
-            <param name="w"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowActive(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
-            <summary>
-            Waits until the specified window exists and is active.
-            Returns window handle. If timeoutS is negative, on timeout returns Wnd0 (else exception).
-            All parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
-            Examples: see <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
-            </summary>
-            <param name="timeoutS"></param>
-            <param name="name"></param>
-            <param name="className"></param>
-            <param name="programEtc"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd.FindParams,System.Double)">
-            <summary>
-            The same as overload <see cref="M:Catkeys.WaitFor.WindowActive(System.Double,System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>, just arguments are passed differently.
-            </summary>
-            <param name="f">Window properties etc.</param>
-            <param name="timeoutS"></param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd,System.Double)">
-            <summary>
-            Waits until the window is active.
-            Returns true. If timeoutS is negative, on timeout returns false (else exception).
-            </summary>
-            <param name="w">An existing window.</param>
-            <param name="timeoutS">
-            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
-            </param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-            <exception cref="T:Catkeys.WndException">w is invalid or the window was closed while waiting.</exception>
-        </member>
-        <member name="M:Catkeys.WaitFor.WindowCondition(Catkeys.Wnd,System.Func{Catkeys.Wnd,System.Boolean},System.Double,System.Boolean)">
-            <summary>
-            Waits for an user-defined condition of an existing window.
-            Returns true. If timeoutS is negative, on timeout returns false (else exception).
-            </summary>
-            <param name="timeoutS">
-            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
-            </param>
-            <param name="w">An existing window. It is passed to the callback function.</param>
-            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
-            <param name="doNotThrowIfClosed">
-            Do not throw exception if w is invalid or the window was closed while waiting.
-            Also then the callback function must return true when <see cref="P:Catkeys.Wnd.IsAlive"/> is false. Else the exception is thrown (with a small delay) to prevent infinite waiting.
-            </param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-            <exception cref="T:Catkeys.WndException">w is invalid or the window was closed while waiting.</exception>
-            <example>
-            <code><![CDATA[
-            Wnd w = Wnd.Find("* Notepad");
-            
-            //wait max 30 s until window w is active. Exception on timeout or if closed.
-            WaitFor.WindowCondition(w, t => t.IsActive); //the same as WaitFor.WindowActive(w, 30);
-            Print("active");
-            
-            //wait indefinitely until window w is minimized or closed
-            WaitFor.WindowCondition(w, t => t.IsMinimized || !t.IsAlive, 0, true);
-            if(!w.IsAlive) { Print("closed"); return; }
-            Print("minimized");
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Catkeys.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)">
-            <summary>
-            Waits for an user-defined condition.
-            Returns true. If timeoutS is negative, on timeout returns false (else exception).
-            </summary>
-            <param name="timeoutS">
-            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
-            </param>
-            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
-            <param name="param">Something to pass to the callback function.</param>
-            <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
-            <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
-            <exception cref="T:System.TimeoutException">timeoutS time has expired.</exception>
-            <exception cref="T:System.ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
-            <exception cref="T:System.Exception">Exceptions thrown by the condition callback function.</exception>
-            <seealso cref="T:Catkeys.Time.SystemWaitPrecision"/>
         </member>
         <member name="T:Catkeys.WFFlags">
             <summary>

@@ -303,6 +303,7 @@ namespace Catkeys
 				/// <summary>
 				/// Creates new window of a class registered with <see cref="InterDomainRegister"/>.
 				/// All parameters are the same as with API <msdn>CreateWindowEx</msdn>.
+				/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 				/// </summary>
 				/// <remarks>
 				/// The window procedure does not receive messages until this function returns. It never receives creation messages, eg WM_CREATE.
@@ -313,6 +314,17 @@ namespace Catkeys
 					Wnd w = Misc.CreateWindow(exStyle, className, name, style, x, y, width, height, parent, controlId);
 					if(!w.Is0 && wndProc != null) w.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					return w;
+				}
+
+				/// <summary>
+				/// Creates native/unmanaged <msdn>message-only window</msdn> of a class registered with <see cref="InterDomainRegister"/>.
+				/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
+				/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+				/// </summary>
+				public static Wnd InterDomainCreateMessageWindow(string className)
+				{
+					return InterDomainCreateWindow(Native.WS_EX_NOACTIVATE, className, null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message);
+					//note: WS_EX_NOACTIVATE is important.
 				}
 
 				/// <summary>

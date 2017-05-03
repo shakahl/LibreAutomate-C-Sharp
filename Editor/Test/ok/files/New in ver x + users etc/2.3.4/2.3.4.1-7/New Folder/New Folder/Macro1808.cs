@@ -1,2 +1,0 @@
-out &AlphaBlend
-out &GdiAlphaBlend

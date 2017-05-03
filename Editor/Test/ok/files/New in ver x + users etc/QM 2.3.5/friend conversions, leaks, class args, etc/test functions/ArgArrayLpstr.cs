@@ -1,1 +1,0 @@
-function ARRAY(lpstr)&a

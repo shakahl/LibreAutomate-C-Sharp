@@ -1,3 +1,0 @@
-paste "something"
-#ret
-somethingpastesomethingpaste

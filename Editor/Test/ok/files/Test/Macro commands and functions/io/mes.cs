@@ -1,1 +1,0 @@
-out mes("text" "cap" "YN?")

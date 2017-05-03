@@ -1,2 +1,0 @@
-/b
-pw :key "mypwd"

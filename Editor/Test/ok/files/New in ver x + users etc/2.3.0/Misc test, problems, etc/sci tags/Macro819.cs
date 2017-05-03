@@ -1,6 +1,0 @@
-Function63
-Function66
-AcquireSRWLockExclusive
-WM_LBUTTONDOWN
-GetAttr
-

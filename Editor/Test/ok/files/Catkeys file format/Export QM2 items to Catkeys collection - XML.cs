@@ -2,6 +2,7 @@ out
 
 int updateData=1 ;;delete the folder and recreate all subfolders and script files. Slow.
  str folder="q:\test\ok"
+ str folder="e:\test\ok"
 str folder="%catkeys%\Editor\test\ok"
 if(updateData) del- folder; err
 mkdir F"{folder}\files"
@@ -11,6 +12,7 @@ IXmlNode x=xml.Add("files")
 str onlyFolder
  onlyFolder="\System"
  onlyFolder="\QM programming"
+onlyFolder="\Catkeys"
 if onlyFolder
 	int iFolder=qmitem(onlyFolder); if(iFolder=0) end "not found"
 sub.AddFolderItems(iFolder x)
@@ -32,16 +34,17 @@ for i 0 a.len
 	name=q.name
 	
 	GUID g; _qmfile.SqliteItemProp(+iid 0 g)
-	guid.fromn(&g sizeof(GUID)); guid.encrypt(4 guid "" 3)
+	guid.fromn(&g sizeof(GUID)); guid.encrypt(4 guid "" 3); guid.findreplace("/" "-")
 	
 	int f=0
 	if(q.flags&8) f|8 ;;disabled
 	flags=iif(f>9 F"0x{f}" iif(f F"{f}" ""))
 	
 	 XML
-	lpstr tag="f"; sel(q.itype) case 5 tag="d"
+	lpstr tag="f"; sel(q.itype) case 5 tag="d" ;;file or directory
 	IXmlNode n=xFolder.Add(tag)
-	n.SetAttribute("n" name)
+	str filename=name; sel(q.itype) case [5,7] case else filename+".cs"
+	n.SetAttribute("n" filename)
 	n.SetAttribute("g" guid)
 	if(flags.len) n.SetAttribute("f" flags)
 	if(q.itype=7) n.SetAttribute("path" q.linktarget.expandpath)

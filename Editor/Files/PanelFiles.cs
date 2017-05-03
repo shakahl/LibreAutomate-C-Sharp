@@ -20,6 +20,7 @@ using System.Xml.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using static Program;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -36,16 +37,16 @@ partial class PanelFiles :Control
 
 	public PanelFiles()
 	{
-		var p = new Perf.Inst(true);
+		//var p = new Perf.Inst(true);
 		_c = new TreeViewAdv();
 		//_c.SuspendLayout();
-		p.Next();
+		//p.Next();
 		_c.BorderStyle = BorderStyle.None;
 		_c.Dock = DockStyle.Fill;
 		_c.AccessibleName = this.Name = "Files";
 		//_c.Font = MainForm.Font;
 
-		p.Next();
+		//p.Next();
 		//_c.AutoRowHeight = false; _c.RowHeight = 25; //RowHeight ignored if AutoRowHeight true
 		//p.Next();
 		_c.BackgroundImageLayout = ImageLayout.Center;
@@ -54,8 +55,8 @@ partial class PanelFiles :Control
 		//_c.LineColor = SystemColors.ControlDark; //default
 		//_c.LoadOnDemand = false;
 		_c.LoadOnDemand = true; //saves 2 ms for 1000 items
-		_c.SelectionMode = TreeSelectionMode.Multi;
-		//_c.SelectionMode = TreeSelectionMode.MultiSameParent;
+								//_c.SelectionMode = TreeSelectionMode.Multi; //creates problems
+		_c.SelectionMode = TreeSelectionMode.MultiSameParent;
 		//_c.SelectionMode = TreeSelectionMode.Single;
 		_c.ShowNodeToolTips = true;
 		_c.FullRowSelect = true;
@@ -70,13 +71,13 @@ partial class PanelFiles :Control
 		_c.AllowDrop = true;
 		_c.DisplayDraggingNodes = true;
 
-		p.Next();
+		//p.Next();
 #if TEST_MANY_COLUMNS
 		_c.GridLineStyle = GridLineStyle.HorizontalAndVertical;
 		_c.AllowColumnReorder = true;
 #endif
 		_AddColumns();
-		p.Next();
+		//p.Next();
 
 		//_c.ResumeLayout(false);
 		this.Controls.Add(_c);
@@ -244,19 +245,127 @@ partial class PanelFiles :Control
 
 	#endregion
 
-	public void LoadCollection(string file)
+	/// <summary>
+	/// Loads existing or new collection.
+	/// If fails, shows a task dialog with several choices - retry, load another, create new, cancel.
+	/// Sets Model and Text properties of the main form. Updates recent files.
+	/// </summary>
+	/// <param name="file">
+	/// Collection's XML file.
+	/// If null, loads the last used file from settings.
+	/// If the file or the setting does not exist, copies from Folders.ThisAppDocuments + @"Main\Main.xml".
+	/// </param>
+	public FilesModel LoadCollection(string file = null)
 	{
+		if(file == null) file = Settings.Get("collection");
+		if(Empty(file)) file = Folders.ThisAppDocuments + @"Main\Main.xml";
+		g1:
 		try {
+			var collDir = Path_.GetDirectoryPath(file);
+			if(!Files.ExistsAsFile(file)) {
+				Files.Copy(Folders.ThisApp + @"Default\Main.xml", file);
+				Files.CopyTo(Folders.ThisApp + @"Default\files", collDir);
+			}
+
+			if(_model != null) {
+				_model.SaveCollectionNowIfDirty();
+				_model.SetCurrentFile(null);
+			}
+
 			var oldModel = _model;
-			_model?.SaveCollectionNowIfDirty();
-			_model = new FilesModel(_c, file);
-			_model.InitNodeControls(_ccIcon, _ccName);
-			_c.Model = _model;
+			var m = new FilesModel(_c, file);
+			m.InitNodeControls(_ccIcon, _ccName);
+			_c.Model = _model = m;
 			//_c.SelectedNode = null;
 			oldModel?.Dispose();
+
+			//CONSIDER: unexpand path
+			if(Settings.Set("collection", file)) {
+				//add to recent
+				var x1 = Settings.XmlOf("recent", true);
+				var x2 = x1.Element_("f", "n", file, true);
+				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
+				if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", file)));
+			}
+
+			MainForm.Model = _model;
+			MainForm.Text = "Catkeys - " + collDir;
 		}
 		catch(Exception ex) {
-			Print($"Failed to load '{file}'. {ex.Message}");
+			FilesModel m = null;
+			//Print($"Failed to load '{file}'. {ex.Message}");
+			switch(TaskDialog.ShowError("Failed to load collection", file,
+				"1 Retry|2 Load another|3 Create new|0 Cancel",
+				owner: this, expandedText: ex.Message)) {
+			case 1: goto g1;
+			case 2: m = LoadAnotherCollection(); break;
+			case 3: m = LoadNewCollection(); break;
+			}
+			if(m != null) return m;
+			if(_model == null) Environment.Exit(1);
+		}
+		return _model;
+	}
+
+	/// <summary>
+	/// Shows "Open" dialog to select an existing collection.
+	/// On OK loads the selected collection and returns FilesModel. On Cancel return null.
+	/// </summary>
+	public FilesModel LoadAnotherCollection()
+	{
+		var d = new OpenFileDialog() { Title = "Open collection" };
+		d.DefaultExt = ".xml";
+		d.Filter = "Collection files (*.xml)|*.xml";
+		if(d.ShowDialog(this) != DialogResult.OK) return null;
+		return LoadCollection(d.FileName);
+	}
+
+	/// <summary>
+	/// Shows dialog to create new collection.
+	/// On OK creates new collection and returns FilesModel. On Cancel return null.
+	/// </summary>
+	public FilesModel LoadNewCollection()
+	{
+		var file = _model.GetFilePathForNewCollection();
+		if(file == null) return null;
+		return LoadCollection(file);
+	}
+
+	void _AddToRecentCollections(string file)
+	{
+		var x1 = Settings.XmlOf("recent", true);
+		var x2 = x1.Element_("f", "n", file, true);
+		if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
+		if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", file)));
+	}
+
+	/// <summary>
+	/// Fills submenu File -> Collection -> Recent.
+	/// </summary>
+	public void FillMenuRecentCollections(ToolStripDropDownMenu dd)
+	{
+		var x1 = Settings.XmlOf("recent");
+		if(x1 == null) return;
+		var current = Settings.Get("collection");
+		dd.SuspendLayout();
+		dd.Items.Clear();
+		bool currentOK = false;
+		var aRem = new List<XElement>();
+		foreach(var x2 in x1.Elements("f")) {
+			var path = x2.Attribute_("n");
+			if(dd.Items.Count == 20 || !Files.ExistsAsFile(path)) {
+				aRem.Add(x2);
+				continue;
+			}
+			var mi = dd.Items.Add(path, null, (o, u) => LoadCollection(o.ToString()));
+			if(!currentOK && (path == current)) {
+				currentOK = true;
+				mi.Font = Stock.FontBold;
+			}
+		}
+		dd.ResumeLayout();
+		if(aRem.Count > 0) {
+			foreach(var v in aRem) v.Remove();
 		}
 	}
 }

@@ -1,2 +1,0 @@
-str s="hhh"
-spe

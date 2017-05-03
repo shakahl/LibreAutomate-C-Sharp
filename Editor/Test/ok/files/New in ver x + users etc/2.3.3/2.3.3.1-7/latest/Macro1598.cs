@@ -1,5 +1,0 @@
-12345678901234567890123456789012345678901234567890 ,abcd, bb
-
- 106 MakeTableOfDelimiters 106
- 173 MakeTableOfDelimiters no cache
-  

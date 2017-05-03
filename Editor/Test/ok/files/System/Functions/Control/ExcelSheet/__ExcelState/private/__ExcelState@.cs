@@ -1,2 +1,0 @@
-AlertsRestore
-UpdatingRestore

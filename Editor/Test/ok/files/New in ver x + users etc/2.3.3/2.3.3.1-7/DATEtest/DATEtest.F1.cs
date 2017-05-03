@@ -1,2 +1,0 @@
-out d
-out date

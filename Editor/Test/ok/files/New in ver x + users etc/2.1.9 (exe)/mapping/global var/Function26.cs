@@ -1,2 +1,0 @@
-CTest- c
-out c

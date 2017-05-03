@@ -1,2 +1,0 @@
-function wt
-wait wt

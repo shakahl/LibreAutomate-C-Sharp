@@ -1,1 +1,0 @@
-class __ImpersonateStandardUser -m_imp

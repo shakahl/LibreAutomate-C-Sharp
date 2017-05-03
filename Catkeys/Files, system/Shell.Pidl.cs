@@ -112,7 +112,7 @@ namespace Catkeys
 					int n = (s.Length - 3) / 2;
 					R = Marshal.AllocCoTaskMem(n + 2);
 					byte* b = (byte*)R;
-					n = Calc.BytesFromHexString(s, b, n, 3);
+					n = Convert_.BytesFromHexString(s, b, n, 3);
 					b[n] = b[n + 1] = 0;
 				} else { //file-system path or URL or shell object parsing name
 					var hr = Api.SHParseDisplayName(s, Zero, out R, 0, null);
@@ -243,7 +243,7 @@ namespace Catkeys
 				int n = _Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)
 				if(n < 0) return null;
 				if(n == 0) return ":: "; //shell root - Desktop
-				return ":: " + Calc.BytesToHexString((void*)pidl, n, true);
+				return ":: " + Convert_.BytesToHexString((void*)pidl, n, true);
 			}
 		}
 

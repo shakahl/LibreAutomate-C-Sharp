@@ -1,6 +1,0 @@
-SendMail "support@quickmacros.com" "" "" 0 0 0 0 0 0 "acccc"
- SendMail "support@quickmacros.com" "" "" 0 0 0 0 0 0 "qmgindi@gmail.com"
- SendMail "support@quickmacros.com" "" "" 0 0 0 0 0 0 "ᶚᶚᶚᶚᶚ"
- SendMail "support@quickmacros.com" "" ""
- SendMail "support@quickmacros.com" "" "" 0 0 0 0 0 0 ""
- SendMail "support@quickmacros.com" "" "" 0 0 0 0 0 0 "<default>"

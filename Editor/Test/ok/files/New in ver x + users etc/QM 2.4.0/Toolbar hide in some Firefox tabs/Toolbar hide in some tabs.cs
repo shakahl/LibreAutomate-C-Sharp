@@ -1,1 +1,0 @@
- /hook WndProc_ToolbarHook_hide_in_some_tabs

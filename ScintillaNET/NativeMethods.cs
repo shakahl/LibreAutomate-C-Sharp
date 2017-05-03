@@ -69,6 +69,7 @@ namespace ScintillaNET
         public const int EDGE_NONE = 0;
         public const int EDGE_LINE = 1;
         public const int EDGE_BACKGROUND = 2;
+        public const int EDGE_MULTILINE = 3;
 
         // Message-only window
         public const int HWND_MESSAGE = (-3);
@@ -92,6 +93,8 @@ namespace ScintillaNET
         public const int INDIC_COMPOSITIONTHIN = 15;
         public const int INDIC_FULLBOX = 16;
         public const int INDIC_TEXTFORE = 17;
+        public const int INDIC_POINT = 18;
+        public const int INDIC_POINTCHARACTER = 19;
         public const int INDIC_MAX = 31;
         public const int INDIC_CONTAINER = 8;
 
@@ -166,6 +169,11 @@ namespace ScintillaNET
         public const int SC_FOLDFLAG_LEVELNUMBERS = 0x0040;
         public const int SC_FOLDFLAG_LINESTATE = 0x0080;
 
+        // Fold display text
+        public const int SC_FOLDDISPLAYTEXT_HIDDEN = 0;
+        public const int SC_FOLDDISPLAYTEXT_STANDARD = 1;
+        public const int SC_FOLDDISPLAYTEXT_BOXED = 2;
+
         // Line end type
         public const int SC_LINE_END_TYPE_DEFAULT = 0;
         public const int SC_LINE_END_TYPE_UNICODE = 1;
@@ -179,6 +187,7 @@ namespace ScintillaNET
         public const int SC_MARGIN_FORE = 3;
         public const int SC_MARGIN_TEXT = 4;
         public const int SC_MARGIN_RTEXT = 5;
+        public const int SC_MARGIN_COLOUR = 6;
 
         public const int SC_MARGINOPTION_NONE = 0;
         public const int SC_MARGINOPTION_SUBLINESELECT = 1;
@@ -347,6 +356,10 @@ namespace ScintillaNET
         public const int SCI_GETMARGINSENSITIVEN = 2247;
         public const int SCI_SETMARGINCURSORN = 2248;
         public const int SCI_GETMARGINCURSORN = 2249;
+        public const int SCI_SETMARGINBACKN = 2250;
+        public const int SCI_GETMARGINBACKN = 2251;
+        public const int SCI_SETMARGINS = 2252;
+        public const int SCI_GETMARGINS = 2253;
         public const int SCI_STYLECLEARALL = 2050;
         public const int SCI_STYLESETFORE = 2051;
         public const int SCI_STYLESETBACK = 2052;
@@ -853,6 +866,8 @@ namespace ScintillaNET
         public const int SCI_GETADDITIONALCARETSBLINK = 2568;
         public const int SCI_SETADDITIONALCARETSVISIBLE = 2608;
         public const int SCI_GETADDITIONALCARETSVISIBLE = 2609;
+        public const int SCI_GETTABDRAWMODE = 2698;
+        public const int SCI_SETTABDRAWMODE = 2699;
         public const int SCI_GETSELECTIONS = 2570;
         public const int SCI_GETSELECTIONEMPTY = 2650;
         public const int SCI_CLEARSELECTIONS = 2571;
@@ -929,6 +944,12 @@ namespace ScintillaNET
         public const int SCI_GETTARGETTEXT = 2687;
         public const int SCI_SETIDLESTYLING = 2692;
         public const int SCI_GETIDLESTYLING = 2693;
+        public const int SCI_MULTIEDGEADDLINE = 2694;
+        public const int SCI_MULTIEDGECLEARALL = 2695;
+        public const int SCI_SETMOUSEWHEELCAPTURES = 2696;
+        public const int SCI_GETMOUSEWHEELCAPTURES = 2697;
+        public const int SCI_TOGGLEFOLDSHOWTEXT = 2700;
+        public const int SCI_FOLDDISPLAYTEXTSETSTYLE = 2701;
         public const int SCI_STARTRECORD = 3001;
         public const int SCI_STOPRECORD = 3002;
         public const int SCI_SETLEXER = 4001;
@@ -1014,6 +1035,12 @@ namespace ScintillaNET
         public const int SCN_FOCUSIN = 2028;
         public const int SCN_FOCUSOUT = 2029;
         public const int SCN_AUTOCCOMPLETED = 2030;
+        public const int SCN_MARGINRIGHTCLICK = 2031;
+
+        // Popup
+        public const int SC_POPUP_NEVER = 0;
+        public const int SC_POPUP_ALL = 1;
+        public const int SC_POPUP_TEXT = 2;
 
         // Line wrapping
         public const int SC_WRAP_NONE = 0;
@@ -1038,6 +1065,7 @@ namespace ScintillaNET
         public const int SCVS_NONE = 0;
         public const int SCVS_RECTANGULARSELECTION = 1;
         public const int SCVS_USERACCESSIBLE = 2;
+        public const int SCVS_NOWRAPLINESTART = 4;
 
         // Styles constants
         public const int STYLE_DEFAULT = 32;
@@ -1047,6 +1075,7 @@ namespace ScintillaNET
         public const int STYLE_CONTROLCHAR = 36;
         public const int STYLE_INDENTGUIDE = 37;
         public const int STYLE_CALLTIP = 38;
+        public const int STYLE_FOLDDISPLAYTEXT = 39;
         public const int STYLE_LASTPREDEFINED = 39;
         public const int STYLE_MAX = 255;
 
@@ -1061,6 +1090,10 @@ namespace ScintillaNET
         public const int SC_TECHNOLOGY_DIRECTWRITE = 1;
         public const int SC_TECHNOLOGY_DIRECTWRITERETAIN = 2;
         public const int SC_TECHNOLOGY_DIRECTWRITEDC = 3;
+
+        // Tab draw
+        public const int SCTD_LONGARROW = 0;
+        public const int SCTD_STRIKEOUT = 1;
 
         // Undo
         public const int UNDO_MAY_COALESCE = 1;

@@ -249,34 +249,53 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// flags for <see cref="Combine"/>.
+		/// </summary>
+		[Flags]
+		public enum CombineFlags
+		{
+			/// <summary>
+			/// s2 can be full path. If it is, ignore s1 and return s2 with expanded environment variables.
+			/// If this flag not used, simply combines s1 and s2, creating invalid path if s2 is full path.
+			/// </summary>
+			s2CanBeFullPath = 1,
+
+			/// <summary>
+			/// Don't call <see cref="PrefixLongPathIfNeed"/> which may prepend @"\\?\" if the result path is very long.
+			/// </summary>
+			DoNotPrefixLongPath = 2,
+		}
+
+		/// <summary>
 		/// Combines two path parts, for example directory path and file name.
 		/// Joins them using character '\\' so that there will not be two '\\' or '/'.
 		/// </summary>
 		/// <param name="s1">First path. Usually a directory.</param>
-		/// <param name="s2">Second path. Usually a filename or relative path. If s2CanBeFullPath is true, can be full path.</param>
-		/// <param name="s2CanBeFullPath">
-		/// Call <see cref="IsFullPathEEV"/>(ref s2). If it returns true, return s2 (ignore s1). Then also expands environment variables.
-		/// If false, simply combines s1 and s2, creating invalid path if s2 is full path.
-		/// </param>
+		/// <param name="s2">Second path. Usually a filename or relative path. Use flag s2CanBeFullPath if it can be full path.</param>
+		/// <param name="flags"></param>
 		/// <remarks>
 		/// If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
 		/// Similar to Path.Combine (.NET function). Main differences: does not throw exceptions; does not ignore s1 if s2 is a relative path starting with @"\" or "/".
 		/// See also <see cref="Normalize"/>.
 		/// </remarks>
-		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false)
+		public static string Combine(string s1, string s2, CombineFlags flags = 0)
 		{
-			if(Empty(s1)) return s2 ?? "";
-			if(Empty(s2)) return s1 ?? "";
-			if(s2CanBeFullPath && IsFullPathEEV(ref s2)) return s2;
-
-			int k = 0;
-			if(LibIsSepChar(s1[s1.Length - 1])) k |= 1;
-			if(LibIsSepChar(s2[0])) k |= 2;
-			switch(k) {
-			case 0: return s1 + @"\" + s2;
-			case 3: return s1 + s2.Substring(1);
-			default: return s1 + s2;
+			string r;
+			if(Empty(s1)) r = s2 ?? "";
+			else if(Empty(s2)) r = s1 ?? "";
+			else if(0 != (flags & CombineFlags.s2CanBeFullPath) && IsFullPathEEV(ref s2)) r = s2;
+			else {
+				int k = 0;
+				if(LibIsSepChar(s1[s1.Length - 1])) k |= 1;
+				if(LibIsSepChar(s2[0])) k |= 2;
+				switch(k) {
+				case 0: r = s1 + @"\" + s2; break;
+				case 3: r = s1 + s2.Substring(1); break;
+				default: r = s1 + s2; break;
+				}
 			}
+			if(0 == (flags & CombineFlags.DoNotPrefixLongPath)) r = PrefixLongPathIfNeed(r);
+			return r;
 		}
 
 		/// <summary>
@@ -296,11 +315,13 @@ namespace Catkeys
 					if(s2.Length == 1 || LibIsSepChar(s2[1])) goto ge;
 					k |= 2;
 				}
+				string r;
 				switch(k) {
-				case 0: return s1 + @"\" + s2;
-				case 3: return s1 + s2.Substring(1);
-				default: return s1 + s2;
+				case 0: r = s1 + @"\" + s2; break;
+				case 3: r = s1 + s2.Substring(1); break;
+				default: r = s1 + s2; break;
 				}
+				return PrefixLongPathIfNeed(r);
 			}
 			ge:
 			if(noException) return null;
@@ -475,7 +496,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// If path is full path and does not start with @"\\?\", prepends @"\\?\".
+		/// If path is full path (see <see cref="IsFullPath"/>) and does not start with @"\\?\", prepends @"\\?\".
 		/// If path is network path (like @"\\computer\folder\..."), makes like @"\\?\UNC\computer\folder\...".
 		/// </summary>
 		/// <param name="path">
@@ -668,6 +689,20 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Gets filename extension and path part without the extension.
+		/// More info: <see cref="GetExtension(string)"/>.
+		/// </summary>
+		/// <param name="path">Path or filename.</param>
+		/// <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as path.</param>
+		public static string GetExtension(string path, out string pathWithoutExtension)
+		{
+			var ext = GetExtension(path);
+			if(ext != null && ext.Length > 0) pathWithoutExtension = path.Remove(path.Length - ext.Length);
+			else pathWithoutExtension = path;
+			return ext;
+		}
+
+		/// <summary>
 		/// Removes filename part from path. By default also removes separator ('\\' or '/') if it is not after drive name (eg "C:").
 		/// Returns "" if the string is a filename.
 		/// Returns null if the string is a root (like @"C:\" or "C:" or @"\\server\share" or "http:").
@@ -784,6 +819,22 @@ namespace Catkeys
 		internal static bool LibIsProtocol(string s)
 		{
 			return s != null && s.EndsWith_(':') && GetUrlProtocolLength(s) == s.Length;
+		}
+
+		/// <summary>
+		/// Gets path with unique filename for a new file or directory. 
+		/// If the specified path is of an existing file or directory, returns path where the filename part is modified like "file 2.txt", "file 3.txt" etc. Else returns unchanged path.
+		/// </summary>
+		/// <param name="path">Suggested full path.</param>
+		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
+		public static string MakeUnique(string path, bool isDirectory)
+		{
+			if(!Files.ExistsAsAny(path)) return path;
+			string ext = isDirectory ? null : GetExtension(path, out path);
+			for(int i = 2; ; i++) {
+				var s = path + " " + i + ext;
+				if(!Files.ExistsAsAny(s)) return s;
+			}
 		}
 	}
 }

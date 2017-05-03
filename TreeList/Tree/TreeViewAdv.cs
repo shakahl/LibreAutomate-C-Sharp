@@ -353,6 +353,7 @@ namespace Aga.Controls.Tree
 			BeginUpdate();
 			try {
 				ClearSelectionInternal();
+				SelectionStart = null; //not in Internal
 			}
 			finally {
 				EndUpdate();

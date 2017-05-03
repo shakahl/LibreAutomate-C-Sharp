@@ -1,3 +1,0 @@
-RECT r
-Deb
-spe

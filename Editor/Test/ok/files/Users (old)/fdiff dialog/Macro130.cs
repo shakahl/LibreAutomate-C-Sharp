@@ -1,1 +1,0 @@
-ShowDialog("DlgComparar" &DlgComparar)

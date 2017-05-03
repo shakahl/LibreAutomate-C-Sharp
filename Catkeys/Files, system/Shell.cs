@@ -27,7 +27,7 @@ namespace Catkeys
 	/// Windows shell functions.
 	/// Windows shell manages files, folders (directories), shortcuts and virtual objects such as Control Panel.
 	/// </summary>
-	public partial class Shell
+	public static partial class Shell
 	{
 		/// <summary>
 		/// The same as <see cref="Path_.Normalize"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
@@ -314,6 +314,25 @@ namespace Catkeys
 			[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
 			internal static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO pExecInfo);
 
+			[DllImport("shell32.dll", PreserveSig = true)]
+			internal static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, [In] IntPtr[] apidl, uint dwFlags);
+
+		}
+
+		/// <summary>
+		/// Opens parent folder in Explorer and selects the file.
+		/// Returns null if fails, for example if the file does not exist.
+		/// </summary>
+		/// <param name="path">
+		/// Full path of a file or directory or other shell object.
+		/// Supports @"%environmentVariable%\..." (see <see cref="Path_.ExpandEnvVar"/>) and "::..." (see <see cref="Pidl.ToHexString"/>).
+		/// </param>
+		public static bool SelectFileInExplorer(string path)
+		{
+			using(var pidl = Pidl.FromString(path)) {
+				if(pidl == null) return false;
+				return 0 == _Api.SHOpenFolderAndSelectItems(pidl, 0, null, 0);
+			}
 		}
 	}
 }

@@ -1,2 +1,0 @@
-CHI_CreateIndex
-___HelpIndexer+ ___chi_indexer.Clear

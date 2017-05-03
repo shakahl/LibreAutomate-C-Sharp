@@ -1,2 +1,0 @@
- /expandfolders
-c "\\gintaras\"

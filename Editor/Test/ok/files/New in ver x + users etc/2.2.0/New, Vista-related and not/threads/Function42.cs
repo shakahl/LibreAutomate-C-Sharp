@@ -1,2 +1,0 @@
-AddTrayIcon
-100

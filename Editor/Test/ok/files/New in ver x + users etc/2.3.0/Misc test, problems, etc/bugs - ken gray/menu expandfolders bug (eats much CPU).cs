@@ -1,2 +1,0 @@
- /expandfolders
-k "$windows$"

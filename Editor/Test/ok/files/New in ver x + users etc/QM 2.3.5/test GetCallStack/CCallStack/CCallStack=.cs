@@ -1,5 +1,0 @@
-function CCallStack&source
-
-
-
-GetCallStack

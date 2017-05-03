@@ -1,5 +1,0 @@
-ShutDownProcess "vmount2"
-ShutDownProcess "vmnat"
-ShutDownProcess "vmnetdhcp"
-ShutDownProcess "vmware-authd"
-ShutDownProcess "hqtray"

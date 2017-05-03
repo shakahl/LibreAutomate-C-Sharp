@@ -1,2 +1,0 @@
- Destructor
-out "dtor"

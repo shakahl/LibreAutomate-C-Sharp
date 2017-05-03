@@ -1,2 +1,0 @@
- /expandfolders
-a "$0$"

@@ -1,2 +1,0 @@
-TextSelectSentence
-#ret

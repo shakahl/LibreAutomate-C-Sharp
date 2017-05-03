@@ -108,6 +108,7 @@
     <Compile Include="Automation\Mouse.cs" />
     <Compile Include="Common\NetExt.cs" />
     <Compile Include="Common\NoClass.cs" />
+    <Compile Include="Other\Convert_.cs" />
     <Compile Include="Other\Output.cs" />
     <Compile Include="Files, system\Process_.cs" />
     <Compile Include="String\wildcard.cs" />

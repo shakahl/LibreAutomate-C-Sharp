@@ -48,6 +48,7 @@ namespace ScintillaNET
 		private static readonly object savePointLeftEventKey = new object();
 		private static readonly object changeAnnotationEventKey = new object();
 		private static readonly object marginClickEventKey = new object();
+		private static readonly object marginRightClickEventKey = new object();
 		private static readonly object charAddedEventKey = new object();
 		private static readonly object autoCSelectionEventKey = new object();
 		private static readonly object autoCCompletedEventKey = new object();
@@ -872,6 +873,17 @@ namespace ScintillaNET
 		}
 
 		/// <summary>
+		/// Changes the appearance of fold text tags.
+		/// </summary>
+		/// <param name="style">One of the <see cref="FoldDisplayText" /> enumeration values.</param>
+		/// <remarks>The text tag to display on a folded line can be set using <see cref="Line.ToggleFoldShowText" />.</remarks>
+		/// <seealso cref="Line.ToggleFoldShowText" />.
+		public void FoldDisplayTextSetStyle(FoldDisplayText style)
+		{
+			DirectMessage(NativeMethods.SCI_FOLDDISPLAYTEXTSETSTYLE, new IntPtr((int)style));
+		}
+
+		/// <summary>
 		/// Returns the character as the specified document position.
 		/// </summary>
 		/// <param name="position">The zero-based document position of the character to get.</param>
@@ -926,8 +938,58 @@ namespace ScintillaNET
 
 		private static string GetModulePath()
 		{
+			// UI thread...
 			if(modulePath == null) {
-				modulePath = AppDomain.CurrentDomain.BaseDirectory + "SciLexer" + IntPtr.Size * 8 + ".dll";
+				// Extract the embedded SciLexer DLL
+				// http://stackoverflow.com/a/768429/2073621
+				var version = typeof(Scintilla).Assembly.GetName().Version.ToString(3);
+				modulePath = Path.Combine(Path.Combine(Path.Combine(Path.Combine(Path.GetTempPath(), "ScintillaNET"), version), (IntPtr.Size == 4 ? "x86" : "x64")), "SciLexer.dll");
+
+				if(!File.Exists(modulePath)) {
+					// http://stackoverflow.com/a/229567/2073621
+					// Synchronize access to the file across processes
+					var guid = ((GuidAttribute)typeof(Scintilla).Assembly.GetCustomAttributes(typeof(GuidAttribute), false).GetValue(0)).Value.ToString();
+					var name = string.Format(CultureInfo.InvariantCulture, "Global\\{{{0}}}", guid);
+					using(var mutex = new Mutex(false, name)) {
+						var access = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), MutexRights.FullControl, AccessControlType.Allow);
+						var security = new MutexSecurity();
+						security.AddAccessRule(access);
+						mutex.SetAccessControl(security);
+
+						var ownsHandle = false;
+						try {
+							try {
+								ownsHandle = mutex.WaitOne(5000, false); // 5 sec
+								if(ownsHandle == false) {
+									var timeoutMessage = string.Format(CultureInfo.InvariantCulture, "Timeout waiting for exclusive access to '{0}'.", modulePath);
+									throw new TimeoutException(timeoutMessage);
+								}
+							}
+							catch(AbandonedMutexException) {
+								// Previous process terminated abnormally
+								ownsHandle = true;
+							}
+
+							// Double-checked (process) lock
+							if(!File.Exists(modulePath)) {
+								// Write the embedded file to disk
+								var directory = Path.GetDirectoryName(modulePath);
+								if(!Directory.Exists(directory))
+									Directory.CreateDirectory(directory);
+
+								var resource = string.Format(CultureInfo.InvariantCulture, "ScintillaNET.{0}.SciLexer.dll.gz", (IntPtr.Size == 4 ? "x86" : "x64"));
+								using(var resourceStream = typeof(Scintilla).Assembly.GetManifestResourceStream(resource))
+								using(var gzipStream = new GZipStream(resourceStream, CompressionMode.Decompress))
+								using(var fileStream = File.Create(modulePath))
+									gzipStream.CopyTo(fileStream);
+							}
+						}
+						finally {
+							if(ownsHandle)
+								mutex.ReleaseMutex();
+						}
+					}
+				}
 			}
 
 			return modulePath;
@@ -1332,6 +1394,30 @@ namespace ScintillaNET
 		}
 
 		/// <summary>
+		/// Specifies the long line indicator column number and color when <see cref="EdgeMode" /> is <see cref="EdgeMode.MultiLine" />.
+		/// </summary>
+		/// <param name="column">The zero-based column number to indicate.</param>
+		/// <param name="edgeColor">The color of the vertical long line indicator.</param>
+		/// <remarks>A column is defined as the width of a space character in the <see cref="Style.Default" /> style.</remarks>
+		/// <seealso cref="MultiEdgeClearAll" />
+		public void MultiEdgeAddLine(int column, Color edgeColor)
+		{
+			column = Helpers.ClampMin(column, 0);
+			var colour = ColorTranslator.ToWin32(edgeColor);
+
+			DirectMessage(NativeMethods.SCI_MULTIEDGEADDLINE, new IntPtr(column), new IntPtr(colour));
+		}
+
+		/// <summary>
+		/// Removes all the long line column indicators specified using <seealso cref="MultiEdgeAddLine" />.
+		/// </summary>
+		/// <seealso cref="MultiEdgeAddLine" />
+		public void MultiEdgeClearAll()
+		{
+			DirectMessage(NativeMethods.SCI_MULTIEDGECLEARALL);
+		}
+
+		/// <summary>
 		/// Searches for all instances of the main selection within the <see cref="TargetStart" /> and <see cref="TargetEnd" />
 		/// range and adds any matches to the selection.
 		/// </summary>
@@ -1616,6 +1702,17 @@ namespace ScintillaNET
 		protected virtual void OnMarginClick(MarginClickEventArgs e)
 		{
 			var handler = Events[marginClickEventKey] as EventHandler<MarginClickEventArgs>;
+			if(handler != null)
+				handler(this, e);
+		}
+
+		/// <summary>
+		/// Raises the <see cref="MarginRightClick" /> event.
+		/// </summary>
+		/// <param name="e">A <see cref="MarginClickEventArgs" /> that contains the event data.</param>
+		protected virtual void OnMarginRightClick(MarginClickEventArgs e)
+		{
+			var handler = Events[marginRightClickEventKey] as EventHandler<MarginClickEventArgs>;
 			if(handler != null)
 				handler(this, e);
 		}
@@ -1951,7 +2048,11 @@ namespace ScintillaNET
 		{
 			var keys = Keys.Modifiers & (Keys)(scn.modifiers << 16);
 			var eventArgs = new MarginClickEventArgs(this, keys, scn.position, scn.margin);
-			OnMarginClick(eventArgs);
+
+			if(scn.nmhdr.code == NativeMethods.SCN_MARGINCLICK)
+				OnMarginClick(eventArgs);
+			else
+				OnMarginRightClick(eventArgs);
 		}
 
 		private void ScnModified(ref NativeMethods.SCNotification scn)
@@ -2509,10 +2610,21 @@ namespace ScintillaNET
 		/// Determines whether to show the right-click context menu.
 		/// </summary>
 		/// <param name="enablePopup">true to enable the popup window; otherwise, false.</param>
+		/// <seealso cref="UsePopup(PopupMode)" />
 		public void UsePopup(bool enablePopup)
 		{
+			// NOTE: The behavior of UsePopup has changed in v3.7.1, however, this approach is still valid
 			var bEnablePopup = (enablePopup ? new IntPtr(1) : IntPtr.Zero);
 			DirectMessage(NativeMethods.SCI_USEPOPUP, bEnablePopup);
+		}
+
+		/// <summary>
+		/// Determines the conditions for displaying the standard right-click context menu.
+		/// </summary>
+		/// <param name="popupMode">One of the <seealso cref="PopupMode" /> enumeration values.</param>
+		public void UsePopup(PopupMode popupMode)
+		{
+			DirectMessage(NativeMethods.SCI_USEPOPUP, new IntPtr((int)popupMode));
 		}
 
 		private void WmDestroy(ref Message m)
@@ -2573,6 +2685,7 @@ namespace ScintillaNET
 					break;
 
 				case NativeMethods.SCN_MARGINCLICK:
+				case NativeMethods.SCN_MARGINRIGHTCLICK:
 					ScnMarginClick(ref scn);
 					break;
 
@@ -4307,6 +4420,35 @@ namespace ScintillaNET
 			}
 		}
 
+		// The MouseWheelCaptures property doesn't seem to work correctly in Windows Forms so hiding for now...
+		// P.S. I'm avoiding the MouseDownCaptures property (SCI_SETMOUSEDOWNCAPTURES & SCI_GETMOUSEDOWNCAPTURES) for the same reason... I don't expect it to work in Windows Forms.
+
+		/* 
+        /// <summary>
+        /// Gets or sets whether to respond to mouse wheel messages if the control has focus but the mouse is not currently over the control.
+        /// </summary>
+        /// <returns>
+        /// true to respond to mouse wheel messages even when the mouse is not currently over the control; otherwise, false.
+        /// The default is true.
+        /// </returns>
+        /// <remarks>Scintilla will still react to the mouse wheel if the mouse pointer is over the editor window.</remarks>
+        [DefaultValue(true)]
+        [Category("Mouse")]
+        [Description("Enable or disable mouse wheel support when the mouse is outside the control bounds, but the control still has focus.")]
+        public bool MouseWheelCaptures
+        {
+            get
+            {
+                return DirectMessage(NativeMethods.SCI_GETMOUSEWHEELCAPTURES) != IntPtr.Zero;
+            }
+            set
+            {
+                var mouseWheelCaptures = (value ? new IntPtr(1) : IntPtr.Zero);
+                DirectMessage(NativeMethods.SCI_SETMOUSEWHEELCAPTURES, mouseWheelCaptures);
+            }
+        }
+        */
+
 		/// <summary>
 		/// Gets or sets whether multiple selection is enabled.
 		/// </summary>
@@ -4752,6 +4894,30 @@ namespace ScintillaNET
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public StyleCollection Styles { get; private set; }
+
+		/// <summary>
+		/// Gets or sets how tab characters are represented when whitespace is visible.
+		/// </summary>
+		/// <returns>
+		/// One of the <see cref="ScintillaNET.TabDrawMode" /> enumeration values.
+		/// The default is <see cref="TabDrawMode.LongArrow" />.
+		/// </returns>
+		/// <seealso cref="ViewWhitespace" />
+		[DefaultValue(TabDrawMode.LongArrow)]
+		[Category("Whitespace")]
+		[Description("Style of visible tab characters.")]
+		public TabDrawMode TabDrawMode
+		{
+			get
+			{
+				return (TabDrawMode)DirectMessage(NativeMethods.SCI_GETTABDRAWMODE);
+			}
+			set
+			{
+				var tabDrawMode = (int)value;
+				DirectMessage(NativeMethods.SCI_SETTABDRAWMODE, new IntPtr(tabDrawMode));
+			}
+		}
 
 		/// <summary>
 		/// Gets or sets the width of a tab as a multiple of a space character.
@@ -5711,6 +5877,27 @@ namespace ScintillaNET
 			remove
 			{
 				Events.RemoveHandler(marginClickEventKey, value);
+			}
+		}
+
+
+		// TODO This isn't working in my tests. Could be Windows Forms interfering.
+		/// <summary>
+		/// Occurs when the mouse was right-clicked inside a margin that was marked as sensitive.
+		/// </summary>
+		/// <remarks>The <see cref="Margin.Sensitive" /> property and <see cref="PopupMode.Text" /> must be set for a margin to raise this event.</remarks>
+		/// <seealso cref="UsePopup(PopupMode)" />
+		[Category("Notifications")]
+		[Description("Occurs when the mouse is right-clicked in a sensitive margin.")]
+		public event EventHandler<MarginClickEventArgs> MarginRightClick
+		{
+			add
+			{
+				Events.AddHandler(marginRightClickEventKey, value);
+			}
+			remove
+			{
+				Events.RemoveHandler(marginRightClickEventKey, value);
 			}
 		}
 

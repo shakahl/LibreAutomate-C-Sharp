@@ -61,8 +61,7 @@ namespace Catkeys.Tasks
 			Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 			Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-			Api.ChangeWindowMessageFilter(Api.WM_SETTEXT, 1);
-			Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
+			Wnd.Misc.UacEnableMessages(Api.WM_COPYDATA, Api.WM_SETTEXT);
 
 #if true
 			Test.TestInNewAppDomain();
@@ -288,7 +287,7 @@ namespace Catkeys.Tasks
 			Perf.First();
 			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
 			Files.CreateDirectory(outDir);
-			string outFile = outDir + Path.GetFileNameWithoutExtension(csFile) + ".exe";
+			string outFile = outDir + Path_.GetFileNameWithoutExtension(csFile) + ".exe";
 			//PrintList(csFile, dllFile);
 
 			if(!_compilerWindow.IsAlive) {

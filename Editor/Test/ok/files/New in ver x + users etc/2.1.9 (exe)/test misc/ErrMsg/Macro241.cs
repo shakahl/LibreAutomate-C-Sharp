@@ -1,2 +1,0 @@
-act "aaaaaaaaaaaaaaaa"
-err ErrMsg

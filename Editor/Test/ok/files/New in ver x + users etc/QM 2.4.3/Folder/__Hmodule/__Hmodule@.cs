@@ -1,1 +1,0 @@
-if(hMod) FreeLibrary hMod

@@ -1,2 +1,0 @@
-RECT r
-mes "asdf"

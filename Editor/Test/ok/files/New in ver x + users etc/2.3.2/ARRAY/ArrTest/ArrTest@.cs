@@ -1,1 +1,0 @@
-out "dtor, %i" b

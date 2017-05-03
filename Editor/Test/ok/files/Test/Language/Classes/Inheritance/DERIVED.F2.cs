@@ -1,2 +1,0 @@
-out c
-out a

@@ -78,6 +78,11 @@ namespace Aga.Controls.Tree.NodeControls
 			}
 		}
 
+		public override void MouseUp(TreeNodeAdvMouseEventArgs args)
+		{
+			args.Handled = true;
+		}
+
 		public override void MouseDoubleClick(TreeNodeAdvMouseEventArgs args)
 		{
 			args.Handled = true; // Supress expand/collapse when double click on plus/minus

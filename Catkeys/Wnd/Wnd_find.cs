@@ -365,6 +365,7 @@ namespace Catkeys
 		/// <remarks>
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="FindFast">FindFast</see>.
+		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// className is "". To match any, use null.
@@ -436,8 +437,9 @@ namespace Catkeys
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
 		/// <remarks>
-		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
+		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
 		/// Supports <see cref="Native.GetError"/>.
+		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
 		public static Wnd FindFast(string name, string className, Wnd wAfter = default(Wnd))
 		{
@@ -583,6 +585,31 @@ namespace Catkeys
 				var a = ThreadWindows(threadId, 0 == (flags & WFFlags.HiddenToo), true);
 				var f = new Finder(name, className, null, flags | WFFlags.HiddenToo, also);
 				return f.FindInList(a) >= 0 ? f.Result : Wnd0;
+			}
+
+			/// <summary>
+			/// Finds a message-only window.
+			/// Returns its handle as Wnd. Returns Wnd0 if not found.
+			/// Calls API <msdn>FindWindowEx</msdn>.
+			/// Faster than <see cref="Find">Find</see>, which does not find message-only windows.
+			/// Can be used only when you know full name and/or class name.
+			/// Finds hidden windows too.
+			/// </summary>
+			/// <param name="name">
+			/// Name. Can be null to match any.
+			/// Full, case-insensitive. Wildcard etc not supported.
+			/// </param>
+			/// <param name="className">
+			/// Class name. Can be null to match any. Cannot be "".
+			/// Full, case-insensitive. Wildcard etc not supported.
+			/// </param>
+			/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
+			/// <remarks>
+			/// Supports <see cref="Native.GetError"/>.
+			/// </remarks>
+			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default(Wnd))
+			{
+				return Api.FindWindowEx(SpecHwnd.Message, wAfter, className, name);
 			}
 		}
 	}

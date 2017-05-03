@@ -1,3 +1,0 @@
- gggggggg
-#warning "ffffffff"
- gggggggg

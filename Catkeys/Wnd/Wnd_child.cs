@@ -461,7 +461,6 @@ namespace Catkeys
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
-		/// If this window is Wnd.Misc.SpecHwnd.Message, finds a message-only window.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		public Wnd ChildFast(string name, string className, Wnd wAfter = default(Wnd))

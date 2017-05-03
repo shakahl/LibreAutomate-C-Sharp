@@ -130,6 +130,7 @@ namespace Catkeys
 			/// <summary>
 			/// Creates native/unmanaged window like <see cref="CreateWindow"/> and sets font.
 			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
+			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
 			public static Wnd CreateWindowAndSetFont(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default(Wnd), LPARAM controlId = default(LPARAM), IntPtr hInstance = default(IntPtr), LPARAM param = default(LPARAM), IntPtr customFontHandle = default(IntPtr))
 			{
@@ -243,6 +244,59 @@ namespace Catkeys
 			public static void SetFontHandle(Wnd w, IntPtr fontHandle)
 			{
 				w.Send(Api.WM_SETFONT, fontHandle, 1);
+			}
+
+			/// <summary>
+			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
+			/// It allows processes of lower UAC integrity level to send these messages to this process.
+			/// </summary>
+			public static void UacEnableMessages(params uint[] messages)
+			{
+				foreach(var m in messages) Api.ChangeWindowMessageFilter(m, 1);
+			}
+
+			/// <summary>
+			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower UAC integrity level processes, for example if you'll use <see cref="InterProcessGetData"/>.
+			/// Call this once in process.
+			/// </summary>
+			public static void InterProcessEnableReceivingWM_COPYDATA()
+			{
+				Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
+			}
+
+			/// <summary>
+			/// Sends data to a window of another process using message <msdn>WM_COPYDATA</msdn>.
+			/// Returns true if the window received the message and returned true from its window procedure.
+			/// See also: <see cref="InterProcessGetData"/>.
+			/// </summary>
+			/// <param name="w">The window of that process that will receive the message.</param>
+			/// <param name="stringId">An integer identifier of the string, to store in COPYDATASTRUCT.dwData.</param>
+			/// <param name="s">String containing data of any format. Can have '\0' characters.</param>
+			/// <param name="wSender">Optional. A window of this process that sends the message. The receiving window procedure receives it in wParam.</param>
+			/// <seealso cref="Util.SharedMemory"/>
+			public static unsafe bool InterProcessSendData(Wnd w, int stringId, string s, Wnd wSender = default(Wnd))
+			{
+				var c = new Api.COPYDATASTRUCT() { dwData = stringId, cbData = s.Length * 2 };
+				fixed (char* p = s) {
+					c.lpData = (IntPtr)p;
+					return w.Send(Api.WM_COPYDATA, wSender.Handle, &c);
+				}
+			}
+
+			/// <summary>
+			/// Gets data stored in <msdn>COPYDATASTRUCT</msdn> structure received by a window procedure with <msdn>WM_COPYDATA</msdn> message.
+			/// See also: <see cref="InterProcessSendData"/>, <see cref="InterProcessEnableReceivingWM_COPYDATA"/>.
+			/// </summary>
+			/// <param name="lParam">lParam of the window procedure when it received WM_COPYDATA message. It is COPYDATASTRUCT pointer.</param>
+			/// <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
+			/// <remarks>
+			/// <note type="note">UAC blocks messages sent from processes of lower integrity level. Call <see cref="InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
+			/// </remarks>
+			public static unsafe string InterProcessGetData(LPARAM lParam, out int stringId)
+			{
+				var c = (Api.COPYDATASTRUCT*)lParam;
+				stringId = c->dwData;
+				return Marshal.PtrToStringUni(c->lpData, c->cbData / 2);
 			}
 
 			/// <summary>

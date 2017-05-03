@@ -1,1 +1,0 @@
-yacas_init

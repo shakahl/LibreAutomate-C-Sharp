@@ -568,6 +568,56 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+		/// Returns Match.Index, or -1 if does not match.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="pattern"></param>
+		/// <param name="group">Group number. If 0, gets whole match.</param>
+		/// <param name="options"></param>
+		public static int RegexIndexOf_(this string t, string pattern, int group = 0, RegexOptions options = 0)
+		{
+			return RegexIndexOf_(t, pattern, out int unused, group, options);
+		}
+
+		/// <summary>
+		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+		/// Returns 0-based position of the matched substring, or -1 if does not match. Also gets match length.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="pattern"></param>
+		/// <param name="length">Receives match length.</param>
+		/// <param name="group">Group number. If 0, gets whole match.</param>
+		/// <param name="options"></param>
+		public static int RegexIndexOf_(this string t, string pattern, out int length, int group = 0, RegexOptions options = 0)
+		{
+			length = 0;
+			var m = Regex.Match(t, pattern, options | RegexOptions.CultureInvariant);
+			if(!m.Success) return -1;
+			if(group == 0) { length = m.Length; return m.Index; }
+			var g = m.Groups[group];
+			length = g.Length;
+			return g.Index;
+		}
+
+		/// <summary>
+		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
+		/// Returns 0-based position of the matched substring, or -1 if does not match. Also gets the substring.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="pattern"></param>
+		/// <param name="match">Receives match length.</param>
+		/// <param name="group">Group number. If 0, gets whole match.</param>
+		/// <param name="options"></param>
+		public static int RegexIndexOf_(this string t, string pattern, out string match, int group = 0, RegexOptions options = 0)
+		{
+			match = null;
+			int i = RegexIndexOf_(t, pattern, out int len, group, options);
+			if(i >= 0) match = t.Substring(i, len);
+			return i;
+		}
+
+		/// <summary>
 		/// Calls Regex.Replace(t, pattern, replacement, options|RegexOptions.CultureInvariant).
 		/// Returns its return value.
 		/// </summary>

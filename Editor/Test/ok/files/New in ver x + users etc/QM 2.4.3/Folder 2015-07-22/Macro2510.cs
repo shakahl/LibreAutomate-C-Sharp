@@ -1,4 +1,0 @@
-
-int i=
- mmmmmmmm
- sssssss

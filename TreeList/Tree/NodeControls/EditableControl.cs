@@ -115,6 +115,7 @@ namespace Aga.Controls.Tree.NodeControls
 		{
 			_editFlag = (!EditOnClick && args.Button == MouseButtons.Left
 				&& args.ModifierKeys == Keys.None && args.Node.IsSelected
+				&& Parent.SelectedNodes.Count == 1
 				&& Parent.ShowPlusMinus);
 		}
 

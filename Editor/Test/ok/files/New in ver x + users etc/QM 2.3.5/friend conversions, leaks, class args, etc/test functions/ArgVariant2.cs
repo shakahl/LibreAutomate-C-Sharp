@@ -1,3 +1,0 @@
-function `a
-
-out a

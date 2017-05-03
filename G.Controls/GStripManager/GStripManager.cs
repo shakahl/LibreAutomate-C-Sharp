@@ -141,7 +141,6 @@ namespace G.Controls
 				} else {
 				}
 				if(imageScalingSize.Height != 16) t.ImageScalingSize = imageScalingSize; //info: all submenus will inherit it from menubar
-																						 //GDockPanel will set other styles
 
 				_AddChildItems(x, t, isMenu);
 
@@ -526,8 +525,8 @@ namespace G.Controls
 				m["How to customize..."] = o => TaskDialog.ShowInfo("Customizing toolbars and menus",
 					"There are several standard toolbars and two custom toolbars (initially empty). Standard toolbar buttons cannot be added and removed, but can be hidden and reordered. Menu items cannot be added, removed, hidden and reordered." +
 					"\n\nYou can find most customization options in two context menus. Right-clicking a button or menu item shows its context menu. Right-clicking before the first button shows toolbar's context menu. You can Alt+drag toolbar buttons to reorder them on the same toolbar. You can Alt+drag toolbars to dock them somewhere else. Use splitters to resize. Right click a splitter to change its thickness."
-					, TDFlags.Wider);
-				string folder = Path.GetDirectoryName(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
+					, flags: TDFlags.Wider);
+				string folder = Path_.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
 				m["How to backup, restore, reset..."] = o =>
 				{
 					TaskDialog.ShowEx("How to backup, restore or reset customizations",

@@ -40,18 +40,19 @@
 			<File_New>
 				<File_NewScript i="_new" hk="Ctrl+N"/>
 				<File_NewLibrary/>
-				<File_NewFolder/>
+				<File_NewFolder i="NewFolder_16x"/>
 				<File_Templates dd=""/>
 				<File_Import t="Import..." i="open"/>
 			</File_New>
 			<sep/>
 			<File_Disable/>
-			<File_Rename/>
+			<File_Rename hkText="F2"/>
 			<File_Delete i="delete" hkText="Delete"/>
 			<File_Properties t="Properties..." i="properties" hk="Ctrl+P"/>
 			<File_OpenClose>
 				<File_Open/>
 				<File_OpenInNewWindow/>
+				<File_OpenInDefaultApp/>
 				<File_SelectInExplorer/>
 				<sep/>
 				<File_Close/>
@@ -61,32 +62,30 @@
 				<File_PreviousDocument i="back"/>
 			</File_OpenClose>
 			<File_More>
-				<File_CopyName/>
-				<File_CopyPath/>
+				<File_Cut hkText="Ctrl+X"/>
+				<File_Copy hkText="Ctrl+C"/>
+				<File_Paste hkText="Ctrl+V"/>
 				<sep/>
-				<File_SelectMultiple/>
-				<File_Cut/>
-				<File_Copy/>
-				<File_Paste/>
-				<File_Clone/>
+				<File_CopyRelativePath/>
+				<File_CopyFullPath/>
 				<sep/>
 				<File_PrintSetup t="Print Page Setup..."/>
 				<File_Print t="Print..."/>
 			</File_More>
 			<sep/>
 			<File_Collection>
-				<File_OpenCollection t="Open or New Collection..."/>
 				<File_RecentCollections dd=""/>
+				<File_OpenCollection t="Open Collection..."/>
+				<File_NewCollection t="New Collection..."/>
+				<File_ExportCollection t="Export Selected as Collection..."/>
 				<File_ImportCollection t="Import Collection..."/>
-				<File_ExportCollection t="Export Selected to New Collection..."/>
 				<sep/>
 				<File_FindInCollections t="Find in Other Collections..."/>
 				<File_CollectionProperties t="Collection Properties..."/>
 				<File_SaveAllNow i="save"/>
 			</File_Collection>
 			<sep/>
-			<File_CloseWindow/>
-			<File_ExitProgram/>
+			<File_Exit hkText="Alt+F4"/>
 		</Menu_File>
 		<Menu_Edit>
 			<Edit_Undo i="undo"/>
@@ -214,6 +213,7 @@
 	Users can change some button properties.
 	-->
 	<File>
+		<File_NewFolder i="NewFolder_16x"/>
 		<File_NewScript i="_new" dd="File_New"/>
 		<File_Properties i="properties"/>
 		<File_PreviousDocument i="back"/>

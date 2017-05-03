@@ -1,1 +1,0 @@
-if(hhook) UnhookWindowsHookEx(hhook)

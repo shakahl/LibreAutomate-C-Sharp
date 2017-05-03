@@ -1,2 +1,0 @@
- /expandfolders
-C:\ "C:\"

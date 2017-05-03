@@ -1,5 +1,0 @@
-int w=win("Calculator" "CalcFrame")
-WindowText wt.Init(w)
-WTI* t=wt.Find("5" 0x1001)
-t=wt.GetNextWti(t 1)
-wt.Mouse(0 t)

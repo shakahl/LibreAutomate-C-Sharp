@@ -1,1 +1,0 @@
-Brokerio paprašyti atstovavimo sutarties.

@@ -24,11 +24,12 @@ using static Catkeys.NoClass;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-class FileNode
+partial class FileNode
 {
 	FilesModel _model;
 	XElement _x;
 
+	public FilesModel Model { get => _model; }
 	public XElement Xml { get => _x; }
 
 	public FileNode(FilesModel model, XElement x, bool isRoot = false)
@@ -38,17 +39,21 @@ class FileNode
 		x.AddAnnotation(this);
 
 		if(!isRoot) {
-			var guid = _x.Attribute_("g");
+			var guid = this.GUID;
+			g1:
 			if(guid == null || guid.Length != 22) {
-				Output.Warning("Invalid GUID of " + this.ItemPath + ". Creating new.");
-				guid = SetNewGUID();
+				var g = Guid.NewGuid();
+				guid = Convert.ToBase64String(g.ToByteArray()).TrimEnd('=').Replace("/", "-");
+				_x.SetAttributeValue("g", guid);
+				_model.SaveCollectionLater();
 			}
 			try {
 				_model.GuidMap.Add(guid, this);
 			}
 			catch(ArgumentException) {
-				Output.Warning("Duplicate GUID of " + this.ItemPath + ". Creating new.");
-				guid = SetNewGUID();
+				Output.Warning("Duplicate GUID of '" + this.ItemPath + "'. Creating new.");
+				guid = null;
+				goto g1;
 			}
 		}
 
@@ -60,47 +65,25 @@ class FileNode
 	public bool HasChildren { get => _x.HasElements; }
 	public IEnumerable<FileNode> Children { get => _x.Elements().Select(x => FromX(x)); }
 
-	public bool IsFolder { get => _x.Name == "d"; }
+	//public bool IsFolder { get => _x.Name == "d"; }
+	public bool IsFolder { get => _x.Name != "f"; } //"d" or "files" (Root)
+
+	/// <summary>
+	/// Returns true if f is not null and this is its ancestor.
+	/// </summary>
+	public bool ContainsDescendant(FileNode f)
+	{
+		return f != null && f._x.Ancestors().Contains(_x);
+	}
 
 	public string Name
 	{
 		get => _x.Attribute_("n");
 	}
 
-	/// <summary>
-	/// Changes Name of this object and renames its file.
-	/// Returns false if name is empty or fails to rename its file.
-	/// </summary>
-	/// <param name="name"></param>
-	/// <param name="notifyControl">true if called not from the control edit notification.</param>
-	public bool Rename(string name, bool notifyControl)
-	{
-		name = Path_.CorrectFileName(name);
-		if(name == Name) return true;
-
-		_x.SetAttributeValue("n", name);
-		if(notifyControl) UpdateControl(true);
-		//_model.SaveCollectionLater();
-		_model.SaveCollectionNow();
-		return true;
-	}
-
 	public string GUID
 	{
 		get => _x.Attribute_("g");
-	}
-
-	string SetNewGUID()
-	{
-		var s = _CreateGUID();
-		_x.SetAttributeValue("g", s);
-		return s;
-	}
-
-	static string _CreateGUID()
-	{
-		var g = Guid.NewGuid();
-		return Convert.ToBase64String(g.ToByteArray()).TrimEnd('=');
 	}
 
 #if TEST_MANY_COLUMNS
@@ -147,8 +130,7 @@ class FileNode
 #endif
 
 	/// <summary>
-	/// Returns item path, like @"\Folder\Name" or @"\Name".
-	/// It is without extension.
+	/// Returns item path in XML, like @"\Folder\Name.cs" or @"\Name.cs".
 	/// </summary>
 	public string ItemPath
 	{
@@ -156,24 +138,31 @@ class FileNode
 		{
 			XElement x = _x, xRoot = Root.Xml;
 			var a = new Stack<string>();
-			do {
+			while(x != xRoot) {
 				a.Push(x.Attribute_("n"));
 				a.Push("\\");
 				x = x.Parent;
-			} while(x != xRoot);
+			}
 			return string.Concat(a);
 		}
 	}
 
+	/// <summary>
+	/// Gets file path.
+	/// </summary>
 	public string FilePath
 	{
 		get
 		{
-			if(IsFolder) return _model.FilesDirectory + ItemPath;
-			if(_x.Attribute_(out string path, "path")) return path;
-			return _model.FilesDirectory + ItemPath + ".cs";
+			if(this == Root) return _model.FilesDirectory;
+			if(IsLink(out string path)) return path;
+			return _model.FilesDirectory + ItemPath;
 		}
 	}
+
+	public bool IsLink() { return _x.HasAttribute_("path"); }
+
+	public bool IsLink(out string targetPath) { return _x.Attribute_(out targetPath, "path"); }
 
 	public TreeViewAdv Control
 	{
@@ -200,127 +189,88 @@ class FileNode
 		get => FromX(_x.PreviousElement_());
 	}
 
-	public FileNode FindDescendantFile(string name)
+	//fileFolder: 0 any, 1 file, 2 folder
+	FileNode _FindDescendant(string name, int fileFolder)
 	{
-		return FromX(_x.Descendant_("f", "n", name, true));
+		if(Empty(name)) return null;
+		XElement x;
+		if(name[0] == '\\') {
+			var a = name.Split_("\\", StringSplitOptions.RemoveEmptyEntries);
+			if(a.Length == 0) return null;
+			x = _x;
+			for(int i = 0; i < a.Length; i++) {
+				var s = a[i];
+				if(i == a.Length - 1) {
+					var xx = x;
+					x = x.Element_((fileFolder == 2) ? "d" : "f", "n", s, true);
+					if(x == null && fileFolder == 0) x = xx.Element_("d", "n", s, true);
+				} else {
+					x = x.Element_("d", "n", s, true);
+				}
+				if(x == null) break;
+			}
+		} else {
+			g2: x = _x.Descendant_((fileFolder == 2) ? "d" : "f", "n", name, true);
+			if(x == null && fileFolder == 0) { fileFolder = 2; goto g2; }
+		}
+		return FromX(x);
+
+		//FUTURE: support XPath: x = _x.XPathSelectElement(name);
 	}
 
-	public FileNode FindDescendantFolder(string name)
-	{
-		return FromX(_x.Descendant_("d", "n", name, true));
-	}
-
+	/// <summary>
+	/// Finds descendant by name or @"\relative path".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
 	public FileNode FindDescendantFileOrFolder(string name)
 	{
-		return FindDescendantFile(name) ?? FindDescendantFolder(name);
+		return _FindDescendant(name, 0);
+	}
+
+	/// <summary>
+	/// Finds descendant file by name or @"\relative path".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
+	public FileNode FindDescendantFile(string name)
+	{
+		return _FindDescendant(name, 1);
+	}
+
+	/// <summary>
+	/// Finds descendant folder by name or @"\relative path".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
+	public FileNode FindDescendantFolder(string name)
+	{
+		return _FindDescendant(name, 2);
 	}
 
 	/// <summary>
 	/// Returns FileNode from x annotation.
 	/// </summary>
 	/// <param name="x">Can be null.</param>
-	/// <returns></returns>
 	internal static FileNode FromX(XElement x)
 	{
 		return x?.Annotation<FileNode>();
 	}
 
-	public bool CanMove(FileNode target, NodePosition pos)
-	{
-		//cannot move into/before/after self or into descendants
-		for(XElement p = target._x, r = Root.Xml; p != r; p = p.Parent)
-			if(p == _x) return false;
-
-		switch(pos) {
-		case NodePosition.Inside:
-			if(!target.IsFolder) return false;
-			break;
-		case NodePosition.Before:
-			if(Next == target) return false;
-			break;
-		case NodePosition.After:
-			if(Previous == target) return false;
-			break;
-		}
-		return true;
-	}
-
 	/// <summary>
-	/// Moves this into, before or after target.
+	/// Unselects all and selects this.
+	/// If this is root, just unselects all.
 	/// </summary>
-	/// <param name="target"></param>
-	/// <param name="pos"></param>
-	internal void Move(FileNode target, NodePosition pos)
-	{
-		if(!CanMove(target, pos)) return;
-
-		//move file
-		var oldParent = Parent;
-		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
-		if(newParent != oldParent) {
-			//Print("move file");
-			//TODO
-		}
-
-		//move XML element and notify control
-		_model.OnNodeRemoved(this);
-		_x.Remove();
-		switch(pos) {
-		case NodePosition.Inside:
-			target._x.Add(_x);
-			break;
-		case NodePosition.Before:
-			target._x.AddBeforeSelf(_x);
-			break;
-		case NodePosition.After:
-			target._x.AddAfterSelf(_x);
-			break;
-		}
-		_model.OnNodeInserted(this);
-	}
-
-	public void Select()
+	public void SelectSingle()
 	{
 		var c = Control;
 		if(this == Root) c.ClearSelection();
 		else c.SelectedNode = TreeNodeAdv;
 	}
 
-	public void Remove()
-	{
-		var c = Control;
-		if(this == Root) {
-			_x.RemoveNodes();
-			_model.GuidMap.Clear();
-			_model.OnStructureChanged();
-		} else {
-			_model.OnNodeRemoved(this);
-			_model.GuidMap.Remove(this.GUID);
-			_x.Remove();
-		}
-	}
-
-	public void AddChild(FileNode f)
-	{
-		_AddChild(f, 0);
-	}
-
-	public void AddBefore(FileNode f)
-	{
-		_AddChild(f, 1);
-	}
-
-	public void AddAfter(FileNode f)
-	{
-		_AddChild(f, 2);
-	}
-
-	void _AddChild(FileNode f, int inBeforeAfter)
+	public void AddChildOrSibling(FileNode f, NodePosition inBeforeAfter)
 	{
 		Debug.Assert(f.Parent == null);
 		switch(inBeforeAfter) {
-		case 1: _x.AddBeforeSelf(f._x); break;
-		case 2: _x.AddAfterSelf(f._x); break;
+		case NodePosition.Before: _x.AddBeforeSelf(f._x); break;
+		case NodePosition.After: _x.AddAfterSelf(f._x); break;
 		default: _x.Add(f._x); break;
 		}
 		_model.OnNodeInserted(f);
@@ -336,6 +286,9 @@ class FileNode
 		_model.OnNodeChanged(this, justInvalidateRow);
 	}
 
+	/// <summary>
+	/// Gets control's object of this item.
+	/// </summary>
 	public TreeNodeAdv TreeNodeAdv
 	{
 		get
@@ -348,6 +301,9 @@ class FileNode
 		}
 	}
 
+	/// <summary>
+	/// Creates TreePath used to communicate with the control.
+	/// </summary>
 	internal TreePath TreePath
 	{
 		get
@@ -363,12 +319,18 @@ class FileNode
 		}
 	}
 
+	/// <summary>
+	/// Returns index of this XML element in parent.
+	/// Returns -1 if this is Root.
+	/// </summary>
 	internal int Index
 	{
 		get
 		{
+			var p = _x.Parent;
+			if(p == null) { Debug.Assert(this == Root); return -1; }
 			int i = 0;
-			foreach(var t in _x.Parent.Elements()) {
+			foreach(var t in p.Elements()) {
 				if(t == _x) return i;
 				i++;
 			}
@@ -377,6 +339,9 @@ class FileNode
 		}
 	}
 
+	/// <summary>
+	/// Returns Name.
+	/// </summary>
 	public override string ToString()
 	{
 		return Name;

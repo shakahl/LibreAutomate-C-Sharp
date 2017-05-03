@@ -1,2 +1,0 @@
-class crty A B
-

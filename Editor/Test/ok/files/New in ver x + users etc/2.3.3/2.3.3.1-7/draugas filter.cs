@@ -1,1 +1,0 @@
-/html/body/table/tbody/tr/td/div/div[6]/table[1]/tbody/tr/td[3]/table/tbody/tr/td[1]/div[2]/div[2]/div[*]

@@ -25,6 +25,7 @@ namespace Catkeys.Util
 	/// Memory that can be used by multiple processes and app domains.
 	/// Faster and more raw/unsafe than System.IO.MemoryMappedFiles.MemoryMappedFile.
 	/// </summary>
+	/// <seealso cref="Wnd.Misc.InterProcessSendData"/>
 	//[DebuggerStepThrough]
 	public unsafe static class SharedMemory
 	{

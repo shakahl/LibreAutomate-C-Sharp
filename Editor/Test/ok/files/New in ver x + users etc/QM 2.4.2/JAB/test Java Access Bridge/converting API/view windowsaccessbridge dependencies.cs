@@ -1,1 +1,0 @@
-run "$system$\windowsaccessbridge.dll"

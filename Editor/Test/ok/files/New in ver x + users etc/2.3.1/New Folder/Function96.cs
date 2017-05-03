@@ -1,1 +1,0 @@
-ShutDownProcess "qmcl" 2

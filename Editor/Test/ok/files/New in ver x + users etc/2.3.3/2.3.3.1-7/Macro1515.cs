@@ -1,1 +1,0 @@
-ShowText "" _s.getmacro("str.TestTypeInfo") 0 2

@@ -137,13 +137,13 @@ public static class Test
 			}
 
 			//copy non-.NET references to the output directory
-			var outDir = Path.GetDirectoryName(outFile);
+			var outDir = Path_.GetDirectoryPath(outFile);
 			var netDir = Folders.Windows + "Microsoft.NET\\";
 			for(int i = 1; i < references.Count; i++) {
 				var r = references[i];
 				var s1 = r.FilePath;
 				if(s1.StartsWith_(netDir, true)) continue;
-				var s2 = outDir + "\\" + Path.GetFileName(s1);
+				var s2 = outDir + "\\" + Path_.GetFileName(s1);
 				//PrintList(s1, s2);
 
 				if(Files.ExistsAsFile(s2)) {

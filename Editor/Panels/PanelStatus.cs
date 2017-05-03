@@ -20,6 +20,7 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using static Program;
 
 using ScintillaNET;
 
@@ -34,7 +35,7 @@ class PanelStatus :Control
 
 	public PanelStatus()
 	{
-		var z = TextRenderer.MeasureText("A\nj", EForm.MainForm.Font);
+		var z = TextRenderer.MeasureText("A\nj", MainForm.Font);
 		this.Size = new Size(0, z.Height + 3);
 		this.Dock = DockStyle.Bottom;
 
@@ -55,7 +56,7 @@ class PanelStatus :Control
 
 	private void _c_HandleCreated(object sender, EventArgs e)
 	{
-		var font = EForm.MainForm.Font; //Print(font);
+		var font = MainForm.Font; //Print(font);
 		_c.Margins[1].Width = 2;
 		_c.Styles[Style.Default].BackColor = _c.Styles[0].BackColor = Color_.ColorFromRGB(0xF0F0F0);
 		_c.Styles[0].Font = font.Name; _c.Styles[0].SizeF = font.Size;

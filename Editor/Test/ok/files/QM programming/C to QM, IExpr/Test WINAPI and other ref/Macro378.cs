@@ -1,9 +1,0 @@
-SendMessage
-GetParent
-inet.CreateUrlCacheEntry
-GetShortcutInfoEx
-WINAPI.ATOM_HTMLHELP_API_UNICODE
-ATOM_HTMLHELP_API_ANSI
-CreatePipe
-Bio
-memmove

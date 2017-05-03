@@ -298,7 +298,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="lnkPath">.lnk file path.</param>
 			/// <exception cref="CatException">Failed to unregister hotkey.</exception>
-			/// <exception cref="Exception">Exceptions of <see cref="Files.Delete"/>.</exception>
+			/// <exception cref="Exception">Exceptions of <see cref="Files.Delete(string, bool)"/>.</exception>
 			public static void Delete(string lnkPath)
 			{
 				if(!Files.ExistsAsFile(lnkPath)) return;

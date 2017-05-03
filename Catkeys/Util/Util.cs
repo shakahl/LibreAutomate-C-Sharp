@@ -31,6 +31,101 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
+	/// Creates and manages native bitmap handle and memory DC.
+	/// The bitmap is selected in the DC.
+	/// </summary>
+	class MemoryBitmap :IDisposable
+	{
+		IntPtr _dc, _bm, _oldbm;
+
+		public IntPtr Hdc { get => _dc; }
+		public IntPtr Hbitmap { get => _bm; }
+
+		public MemoryBitmap() { }
+
+		/// <summary>
+		/// Calls <see cref="Create(int, int)"/>.
+		/// </summary>
+		public MemoryBitmap(int width, int height)
+		{
+			Create(width, height);
+		}
+
+		/// <summary>
+		/// Deletes the bitmap and DC and calls GC.SuppressFinalize.
+		/// </summary>
+		public void Dispose()
+		{
+			Delete();
+			GC.SuppressFinalize(this);
+		}
+
+		///
+		~MemoryBitmap() { Delete(); }
+
+		/// <summary>
+		/// Deletes the bitmap and DC.
+		/// Unlike Dispose, does not call GC.SuppressFinalize.
+		/// </summary>
+		public void Delete()
+		{
+			if(_dc == Zero) return;
+			if(_bm != Zero) {
+				Api.SelectObject(_dc, _oldbm);
+				Api.DeleteObject(_bm);
+				_bm = Zero;
+			}
+			Api.DeleteDC(_dc);
+			_dc = Zero;
+		}
+
+		/// <summary>
+		/// Creates new memory DC and bitmap of specified size and selects it into the DC.
+		/// Returns false if failed.
+		/// In any case deletes previous bitmap and DC.
+		/// </summary>
+		/// <param name="width">Width, pixels.</param>
+		/// <param name="height">Height, pixels.</param>
+		bool Create(int width, int height)
+		{
+			IntPtr dcs = Api.GetDC(Wnd0);
+			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
+			Api.ReleaseDC(Wnd0, dcs);
+			return _bm != Zero;
+		}
+
+		/// <summary>
+		/// Sets this variable to manage an existing bitmap.
+		/// Selects the bitmap into a memory DC.
+		/// Deletes previous bitmap and DC.
+		/// </summary>
+		/// <param name="hBitmap">Native bitmap handle.</param>
+		void Attach(IntPtr hBitmap)
+		{
+			Delete();
+			if(hBitmap != Zero) {
+				_dc = Api.CreateCompatibleDC(Zero);
+				_oldbm = Api.SelectObject(_dc, _bm = hBitmap);
+			}
+		}
+
+		/// <summary>
+		/// Deletes memory DC, clears this variable and returns its bitmap (native bitmap handle).
+		/// The returned bitmap is not selected into a DC. Will need to delete it with API DeleteObject.
+		/// </summary>
+		IntPtr Detach()
+		{
+			IntPtr bret = _bm;
+			if(_bm != Zero) {
+				Api.SelectObject(_dc, _oldbm);
+				Api.DeleteDC(_dc);
+				_dc = Zero; _bm = Zero;
+			}
+			return bret;
+		}
+	}
+
+	/// <summary>
 	/// Creates and manages native font handle.
 	/// </summary>
 	internal class LibNativeFont :IDisposable
@@ -214,6 +309,22 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
+		/// Returns true if p starts with s.
+		/// </summary>
+		/// <param name="p">Unmanaged string. Can be null.</param>
+		/// <param name="s"></param>
+		public static unsafe bool CharPtrStartsWith(char* p, string s)
+		{
+			if(p == null || s == null) return false;
+			int i, n = s.Length;
+			for(i = 0; i < n; i++, p++) {
+				if(*p != s[i]) return false;
+				if(*p == '\0') return false;
+			}
+			return true;
+		}
+
+		/// <summary>
 		/// Do not call. Use class TypeSize, which caches the type size.
 		/// This is used by TypeSize, not in it, because it is a generic type...
 		/// </summary>
@@ -232,8 +343,8 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
-	/// Gets managed run-time size of type T. Works with any type. Works in generic classes too.
-	/// Unlike sizeof, gets run-time size. Eg for IntPtr and reference types gets 4 or 8.
+	/// Gets managed run-time size of type T. Works with any type.
+	/// Unlike sizeof, can be used in generic classes too.
 	/// Unlike Marshal.SizeOf, gets managed type size (eg 1 for bool), not native type size (eg 4 for bool).
 	/// Example: <c>Print(Catkeys.Util.TypeSize&lt;T&gt;.Size);</c>.
 	/// </summary>

@@ -1,9 +1,0 @@
-
-
- ERRORS
- ERR_DLL
- ERR_DLL_FUNCTION
- <Err4>
-
-end ERR_ARR_PTR
-

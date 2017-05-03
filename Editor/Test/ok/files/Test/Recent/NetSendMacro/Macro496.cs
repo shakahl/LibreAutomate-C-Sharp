@@ -1,2 +1,0 @@
- NetSendMacro
-mes 7

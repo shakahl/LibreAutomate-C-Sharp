@@ -21,11 +21,12 @@ using System.Collections;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using static Program;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-class FilesModel :ITreeModel
+partial class FilesModel :ITreeModel
 {
 	public readonly TreeViewAdv TV;
 	public readonly FileNode Root;
@@ -34,43 +35,71 @@ class FilesModel :ITreeModel
 	public readonly string FilesDirectory;
 	public readonly Dictionary<string, FileNode> GuidMap;
 
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="c">Tree control. Can be null, for example when importing collection.</param>
+	/// <param name="file">Collection file (XML).</param>
+	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
+	/// <exception cref="Exception">XElement.Load exceptions. And possibly more.</exception>
 	public FilesModel(TreeViewAdv c, string file)
 	{
 		TV = c;
-		CollectionFile = file;
-		this.FilesDirectory = Path.GetDirectoryName(CollectionFile) + @"\files";
+		CollectionFile = Path_.Normalize(file);
+		this.FilesDirectory = Path_.GetDirectoryPath(CollectionFile, true) + "files";
+		Files.CreateDirectory(this.FilesDirectory);
 
 		Xml = XElement.Load(CollectionFile);
 
 		GuidMap = new Dictionary<string, FileNode>();
 		Root = new FileNode(this, Xml, true); //recursively creates whole model tree
 
-		_InitOpenSave();
-		_InitClickSelect();
-		_InitDragDrop();
+		if(TV != null) {
+			_InitOpenSave();
+			_InitClickSelect();
+			_InitDragDrop();
+			_InitWatcher();
+		}
+
+		//var r = Root;
+		//PrintList(r.Name, r.Name == null);
+		//PrintList(r.Parent, r.Parent == null);
+		//Print(r.Index);
+		//PrintList(r.ItemPath, r.ItemPath== null);
+		//Print(r.FilePath);
 	}
 
 	public void Dispose()
 	{
-		//SaveCollectionNowIfDirty(); //owner FilesPanel calls this implicitly. It also calls Dispose.
-		_UninitOpenSave();
-		_UninitClickSelect();
-		_UninitDragDrop();
-		_UninitNodeControls();
+		if(TV != null) {
+			//SaveCollectionNowIfDirty(); //owner FilesPanel calls this implicitly. It also calls Dispose.
+			_UninitWatcher();
+			_UninitOpenSave();
+			_UninitClickSelect();
+			_UninitDragDrop();
+			_UninitNodeControls();
+		}
 	}
+
+	//void _Clear()
+	//{
+	//	Root.Xml.RemoveNodes();
+	//	GuidMap.Clear();
+	//	OnStructureChanged();
+	//}
 
 	#region open save collection
 
 	void _InitOpenSave()
 	{
-		Program.Timer1s += _program_Timer1s;
-		EForm.MainForm.VisibleChanged += _mainForm_VisibleChanged;
+		Timer1s += _program_Timer1s;
+		MainForm.VisibleChanged += _mainForm_VisibleChanged;
 	}
 
 	void _UninitOpenSave()
 	{
-		Program.Timer1s -= _program_Timer1s;
-		EForm.MainForm.VisibleChanged -= _mainForm_VisibleChanged;
+		Timer1s -= _program_Timer1s;
+		MainForm.VisibleChanged -= _mainForm_VisibleChanged;
 	}
 
 	public bool SaveCollectionNow()
@@ -78,9 +107,9 @@ class FilesModel :ITreeModel
 		_saveAfterS = 0;
 		try {
 			//Print("saving");
-			Perf.First();
+			//Perf.First();
 			Xml.Save(CollectionFile);
-			Perf.NW();
+			//Perf.NW();
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
@@ -109,7 +138,7 @@ class FilesModel :ITreeModel
 
 	private void _mainForm_VisibleChanged(object sender, EventArgs e)
 	{
-		if(!EForm.MainForm.Visible) SaveCollectionNowIfDirty();
+		if(!MainForm.Visible) SaveCollectionNowIfDirty();
 	}
 
 	//info: this is before Dispose
@@ -126,7 +155,6 @@ class FilesModel :ITreeModel
 	NodeTextBox _ncName;
 
 	public static Icons.FileIconCache IconCache = new Icons.FileIconCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)Icons.ShellSize.SysSmall);
-	static Font _fontBold;
 
 	//Called by FilesPanel
 	public void InitNodeControls(NodeIcon icon, NodeTextBox name)
@@ -135,7 +163,7 @@ class FilesModel :ITreeModel
 		_ncName = name;
 		_ncIcon.ValueNeeded = _ncIcon_ValueNeeded;
 		_ncName.ValueNeeded = node => (node.Tag as FileNode).Name;
-		_ncName.ValuePushed = (node, value) => { (node.Tag as FileNode).Rename(value as string, false); };
+		_ncName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, false); };
 		_ncName.DrawText += _ncName_DrawText;
 	}
 
@@ -148,27 +176,33 @@ class FilesModel :ITreeModel
 	{
 		var f = node.Tag as FileNode;
 		//Print(f);
+
+		if(_myClipboard.Contains(f)) return EResources.GetImageUseCache("cut");
+
 		bool leaf = node.IsLeaf;
 #if true
 		//var p = new Catkeys.Perf.Inst(true);
-		if(leaf && f.Xml.Attribute_(out string s, "path") && !s.EndsWith_(".cs", true)) {
-			//p.Next();
-			var r = IconCache.GetImage(s, true);
-			//r.SetResolution(96f, 96f);
-			//PrintList(r.Size, r.PhysicalDimension, r.HorizontalResolution, r.VerticalResolution);
-			//p.NW();
-			return r;
+		if(leaf) {
+			bool isPath = f.IsLink(out string s);
+			if(!(isPath ? s : f.Name).EndsWith_(".cs", true)) {
+				//p.Next();
+				if(!isPath) s = f.FilePath;
+				var r = IconCache.GetImage(s, true);
+				//r.SetResolution(96f, 96f);
+				//PrintList(r.Size, r.PhysicalDimension, r.HorizontalResolution, r.VerticalResolution);
+				//p.NW();
+				return r;
+			}
 		}
 #endif
-		return EResources.GetImage(leaf ? "CS_16x" : (node.IsExpanded ? "FolderOpen_16x" : "Folder_16x"));
+		return EResources.GetImageUseCache(leaf ? "CS_16x" : (node.IsExpanded ? "FolderOpen_16x" : "Folder_16x"));
 	}
 
 	private void _ncName_DrawText(object sender, DrawEventArgs e)
 	{
 		var f = e.Node.Tag as FileNode;
-		if(f == _selectedFile) {
-			if(_fontBold == null) _fontBold = new Font(TV.Font, FontStyle.Bold);
-			e.Font = _fontBold;
+		if(f == _currentFile) {
+			e.Font = Stock.FontBold;
 			//e.TextColor = Color.DarkBlue;
 		}
 	}
@@ -176,7 +210,7 @@ class FilesModel :ITreeModel
 	//private void _controlName_DrawText(object sender, DrawEventArgs e)
 	//{
 	//	var f = e.Node.Tag as FileNode;
-	//	if(f == _selectedFile) {
+	//	if(f == _currentFile) {
 	//		if(_brushOpen == null) _brushOpen = new SolidBrush(Color.Beige);
 	//		e.BackgroundBrush = _brushOpen;
 	//		e.TextColor = Color.DarkBlue;
@@ -199,7 +233,7 @@ class FilesModel :ITreeModel
 	{
 		var f = nodeTag as FileNode;
 		//PrintList("IsLeaf", f);
-		return !f.HasChildren;
+		return !f.IsFolder;
 	}
 
 	public event EventHandler<TreeModelEventArgs> NodesChanged;
@@ -242,6 +276,11 @@ class FilesModel :ITreeModel
 
 	#region find
 
+	public FileNode FindFileOrFolder(string name)
+	{
+		return Root.FindDescendantFileOrFolder(name);
+	}
+
 	public FileNode FindFile(string name)
 	{
 		return Root.FindDescendantFile(name);
@@ -250,11 +289,6 @@ class FilesModel :ITreeModel
 	public FileNode FindFolder(string name)
 	{
 		return Root.FindDescendantFolder(name);
-	}
-
-	public FileNode FindFileOrFolder(string name)
-	{
-		return Root.FindDescendantFileOrFolder(name);
 	}
 
 	public FileNode FindByGUID(string guid)
@@ -266,109 +300,496 @@ class FilesModel :ITreeModel
 
 	#endregion
 
-	#region click node
-
-	FileNode _selectedFile;
+	#region click, select, current, selected
 
 	void _InitClickSelect()
 	{
 		TV.NodeMouseClick += _TV_NodeMouseClick;
 		TV.SelectionChanged += _TV_SelectionChanged;
+		TV.KeyDown += _TV_KeyDown;
 	}
 
 	void _UninitClickSelect()
 	{
 		TV.NodeMouseClick -= _TV_NodeMouseClick;
 		TV.SelectionChanged -= _TV_SelectionChanged;
+		TV.KeyDown -= _TV_KeyDown;
 	}
 
 	private void _TV_SelectionChanged(object sender, SelectionReason reason)
 	{
-		//return;
-		//Print(reason); return;
-		//PrintList(TV.SelectedNode, TV.CurrentNode);
-		_selectOnClick_MouseButton = 0;
+		_selectOnClick_FileNode = null;
 		switch(reason) {
-		case SelectionReason.NoSelection: case SelectionReason.Multi: return;
+		case SelectionReason.NoSelection: return;
+		case SelectionReason.Multi:
+			_selectOnClick_multi = !_disableSetCurrentFile && TV.SelectedNodes.Count > 1 && Control.MouseButtons == MouseButtons.Left;
+			return;
 		case SelectionReason.Other: break;
-		default: if((Control.ModifierKeys & Keys.Alt) != 0) return; break; //mouse, key
+		default: //mouse, key
+			if((Control.ModifierKeys & Keys.Alt) != 0) return;
+			break;
 		}
 		Debug.Assert(TV.SelectedNodes.Count == 1);
 
 		var f = TV.SelectedNode.Tag as FileNode;
 		switch(reason) {
 		case SelectionReason.LeftClick:
-			_selectOnClick_MouseButton = MouseButtons.Left;
-			_selectOnClick_FileNode = f;
+			if(Control.MouseButtons != MouseButtons.None) _selectOnClick_FileNode = f;
+			//else _SetCurrentFile(f); //in some cases this is called on button up, after the click event, eg when clicked a selected item in multi-selection (unselected others)
 			break;
 		case SelectionReason.RightClick:
-			_selectOnClick_MouseButton = MouseButtons.Right;
-			_selectOnClick_FileNode = f;
 			break;
-		default:
-			_SelectItem(f);
+		default: //key, other
+			_SetCurrentFile(f);
 			break;
 		}
 	}
 
-	//Variables to save selected node and mouse button that are received in SelectionChanged event.
+	//Variable to save selected node received in SelectionChanged event.
 	//The event usually is on mouse button down, but we want to defer our action until NodeMouseClick event (on mouse button up).
-	MouseButtons _selectOnClick_MouseButton;
 	FileNode _selectOnClick_FileNode;
+
+	//to prevent Ctrl+drag multiple unintended
+	bool _selectOnClick_multi;
 
 	private void _TV_NodeMouseClick(object sender, TreeNodeAdvMouseEventArgs e)
 	{
-		//Print(e.ControlBounds);
-		//Print(_selectOnClick_MouseButton);
-		if(_selectOnClick_MouseButton != 0) {
-			var mb = _selectOnClick_MouseButton; _selectOnClick_MouseButton = 0;
-			var f = _selectOnClick_FileNode; _selectOnClick_FileNode = null;
-			//var fNow = TV.SelectedNode?.Tag;
-			var fNow = e.Node.Tag;
-			if(fNow == f) { //if still the same as was in _TV_SelectionChanged event, usually on mouse button down
-				switch(mb) {
-				case MouseButtons.Left:
-					_SelectItem(f);
-					break;
-				case MouseButtons.Right:
-					_ItemRightClicked(f);
-					break;
+		_selectOnClick_multi = false;
+		var f = e.Node.Tag as FileNode;
+		switch(e.Button) {
+		case MouseButtons.Left:
+			if(_selectOnClick_FileNode != null) {
+				var fSel = _selectOnClick_FileNode; _selectOnClick_FileNode = null;
+				if(f == fSel) { //if the same as was in _TV_SelectionChanged event, usually on mouse button down
+					_SetCurrentFile(f);
 				}
 			}
+			break;
+		case MouseButtons.Right:
+			//_ItemRightClicked(f);
+			TV.BeginInvoke(new Action(() => _ItemRightClicked(f)));
+			break;
 		}
 	}
 
-	void _SelectItem(FileNode f)
+	FileNode _currentFile;
+	bool _disableSetCurrentFile;
+
+	void _SetCurrentFile(FileNode f)
 	{
-		if(f == _selectedFile) return;
+		if(_disableSetCurrentFile && _currentFile != null) return;
+		if(f == _currentFile) return;
 		//Print(f);
-		if(f.IsFolder) {
+		if(f != null && f.IsFolder) {
 		} else {
-			try {
-				var s = File.ReadAllText(f.FilePath);
-				EForm.MainForm.Code.Text = s;
-			}
-			catch(Exception ex) {
-				Print(ex);
-				return;
-			}
-			var sfPrev = _selectedFile;
-			_selectedFile = f;
+			MainForm.Code.Open(f);
+
+			var sfPrev = _currentFile;
+			_currentFile = f;
 			if(sfPrev != null) TV.UpdateNode(sfPrev.TreeNodeAdv);
-			TV.UpdateNode(f.TreeNodeAdv);
+			if(f != null) TV.UpdateNode(f.TreeNodeAdv);
 		}
 	}
+
+	/// <summary>
+	/// Gets the current file (which is open in the currently ative code editor).
+	/// </summary>
+	public FileNode CurrentFile
+	{
+		get => _currentFile;
+	}
+
+	/// <summary>
+	/// Selects the node and opens its file in the code editor.
+	/// </summary>
+	/// <param name="f">Can be null to set 'no current file, empty editor'.</param>
+	/// <param name="doNotChangeSelection"></param>
+	public void SetCurrentFile(FileNode f, bool doNotChangeSelection = false)
+	{
+		if(!doNotChangeSelection && f != null) TV.SelectedNode = f.TreeNodeAdv;
+		if(_currentFile != f) _SetCurrentFile(f);
+	}
+
+	public FileNode[] SelectedItems { get => TV.SelectedNodes.Select(tn => tn.Tag as FileNode).ToArray(); }
 
 	void _ItemRightClicked(FileNode f)
 	{
-		if(f != _selectedFile) {
-			var m = new CatMenu();
-			m["One"] = o => Print(1);
-			m["Two"] = o => Print(2);
-			//m.ModalAlways = true; //does not work
-			m.CMS.Closed += (unu, sed) => { if(_selectedFile == null) TV.ClearSelection(); else _selectedFile.Select(); };
-			m.Show();
-			//if(_selectedFile == null) TV.ClearSelection(); else _selectedFile.Select();
+		var m = MainForm.Strips.ddFile;
+
+		ToolStripDropDownClosedEventHandler onClosed = null;
+		onClosed = (sender, e) =>
+		  {
+			  (sender as ToolStripDropDownMenu).Closed -= onClosed;
+			  _msgLoop.Stop();
+		  };
+		m.Closed += onClosed;
+
+		var oi = m.OwnerItem; m.OwnerItem = null; //to set position
+		m.Show(Mouse.XY);
+		m.OwnerItem = oi;
+		_msgLoop.Loop();
+		if(TV.SelectedNodes.Count < 2) {
+			if(_currentFile == null) TV.ClearSelection(); else _currentFile.SelectSingle();
+		}
+	}
+	Catkeys.Util.MessageLoop _msgLoop = new Catkeys.Util.MessageLoop();
+
+	#endregion
+
+	#region hotkeys, new, delete, cut, copy, paste
+
+	private void _TV_KeyDown(object sender, KeyEventArgs e)
+	{
+		switch(e.KeyData) {
+		case Keys.Delete: DeleteSelected(); break;
+		case Keys.Control | Keys.X: CutCopySelected(true); break;
+		case Keys.Control | Keys.C: CutCopySelected(false); break;
+		case Keys.Control | Keys.V: Paste(); break;
+		}
+	}
+
+	/// <summary>
+	/// Gets the place where item should be added in operations such as new, paste, import.
+	/// </summary>
+	FileNode _GetInsertPos(out NodePosition pos, bool askIntoFolder = false)
+	{
+		FileNode r;
+		var c = TV.CurrentNode;
+		if(c == null) { //probably empty treeview
+			r = Root;
+			pos = NodePosition.Inside;
+		} else {
+			r = c.Tag as FileNode;
+			if(askIntoFolder && r.IsFolder && c.IsSelected && TV.SelectedNodes.Count == 1 && TaskDialog.ShowYesNo("Into the folder?", owner: TV)) pos = NodePosition.Inside;
+			else if(r.Next == null) pos = NodePosition.After; //usually we want to add after the last, not before
+			else pos = NodePosition.Before;
+		}
+		return r;
+	}
+
+	public void NewItem(FileNode.NewItemTemplate template)
+	{
+		var target = _GetInsertPos(out var pos);
+		var f = FileNode.NewItem(this, target, pos, template);
+		if(f == null) return;
+		if(template != FileNode.NewItemTemplate.Folder) SetCurrentFile(f);
+	}
+
+	public void RenameSelected()
+	{
+		//if(TV.SelectedNodes.Count != 1) return; //let edit current node, like F2 does
+		(TV.NodeControls[1] as NodeTextBox).BeginEdit();
+	}
+
+	public void DeleteSelected()
+	{
+		var a = SelectedItems; if(a.Length < 1) return;
+
+		//confirmation
+		bool isLink = false; foreach(var f in a) if(f.IsLink()) isLink = true;
+		var r = TaskDialog.ShowEx("Deleting",
+			string.Join("\n", a.Select(f => f.IsLink(out var target) ? $"{f.Name} ({target})" : f.Name))
+			+ "\n\nThe file will be moved to the Recycle Bin, if possible.",
+			"1 OK|0 Cancel", owner: TV, checkBox: "Don't delete file" + (isLink ? "|check" : null));
+		if(r.Button == 0) return;
+
+		//get paths of files to delete
+		string[] paths = null;
+		if(!r.IsChecked) paths = a.Select(f => f.FilePath).ToArray();
+
+		//delete XML
+		foreach(var f in a) {
+			f.FileDelete(true, true); //and calls SaveCollectionLater
+		}
+
+		//delete files
+		if(paths != null) {
+			//Delete in another thread, because deleting to the Recycle Bin is very slow, it's annoying.
+			//	Using single call for multiple files is faster, but still too slow.
+			//	If fails, it's not so important, therefore this can be after deleting XML.
+			Task.Run(() =>
+			{
+				try { Files.Delete(paths, true); }
+				catch(Exception ex) { Print(ex.Message); return; }
+			});
+		}
+	}
+
+	public void CutCopySelected(bool cut)
+	{
+		if(!_myClipboard.Set(SelectedItems, cut)) return;
+		//var d = new DataObject(string.Join("\r\n", _cutCopyNodes.Select(f => f.Name)));
+		//Clipboard.SetDataObject(d);
+		Clipboard.SetText(string.Join("\r\n", _myClipboard.nodes.Select(f => f.Name)));
+	}
+
+	struct _MyClipboard
+	{
+		public FileNode[] nodes;
+		public bool cut;
+
+		public bool Set(FileNode[] nodes, bool cut)
+		{
+			if(nodes == null || nodes.Length == 0) { Clear(); return false; }
+			this.nodes = nodes;
+			this.cut = cut;
+			nodes[0].Control.Invalidate(); //draw "cut" icon
+			return true;
+		}
+
+		public void Clear()
+		{
+			if(nodes == null) return;
+			if(nodes.Length > 0) nodes[0].Control.Invalidate(); //was "cut" icon
+			nodes = null;
+		}
+
+		public bool IsEmpty { get => nodes == null; }
+
+		public bool Contains(FileNode f) { return !IsEmpty && nodes.Contains(f); }
+	}
+	_MyClipboard _myClipboard;
+
+	public void Paste()
+	{
+		if(_myClipboard.IsEmpty) return;
+		var target = _GetInsertPos(out var pos, true);
+		_MultiCopyMove(!_myClipboard.cut, _myClipboard.nodes, target, pos);
+		_myClipboard.Clear();
+	}
+
+	public void SelectedCopyPath(bool full)
+	{
+		var a = SelectedItems; if(a.Length < 1) return;
+		Clipboard.SetText(string.Join("\r\n", a.Select(f => full ? f.FilePath : f.ItemPath)));
+	}
+
+	/// <summary>
+	/// Opens the selected item (only if 1 item is selected) in our editor or in default app or selects in Explorer.
+	/// </summary>
+	/// <param name="how">1 open, 2 open in new window (not impl), 3 open in default app, 4 select in Explorer.</param>
+	public void OpenSelected(int how)
+	{
+		var a = TV.SelectedNodes; if(a.Count != 1) return;
+		var f = a[0].Tag as FileNode;
+		switch(how) {
+		case 1:
+			this.SetCurrentFile(f);
+			break;
+		case 2:
+			//FUTURE
+			break;
+		case 3:
+			Shell.Run(f.FilePath);
+			break;
+		case 4:
+			Shell.SelectFileInExplorer(f.FilePath);
+			break;
+		}
+	}
+
+	/// <summary>
+	/// Closes some or all items, or collapses folders.
+	/// partially impl, because now only single item can be open.
+	/// </summary>
+	/// <param name="how">1 close all selected or the current, 2 close all, 3 collapse folders.</param>
+	public void Close(int how)
+	{
+		//FUTURE
+		switch(how) {
+		case 1:
+			SetCurrentFile(null);
+			break;
+		case 2:
+			SetCurrentFile(null);
+			TV.CollapseAll();
+			break;
+		case 3:
+			TV.CollapseAll();
+			break;
+		}
+	}
+
+	#endregion
+
+	#region import, move, copy
+
+	/// <summary>
+	/// Imports one or more files into the collection.
+	/// </summary>
+	/// <param name="a">Files. If null, shows dialog to select files.</param>
+	public void ImportFiles(string[] a = null)
+	{
+		if(a == null) {
+			Print("Info: To import files, you can also drag and drop from a folder window.");
+			var d = new OpenFileDialog();
+			d.Multiselect = true;
+			d.Title = "Import files to the collection";
+			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
+			a = d.FileNames;
+		}
+
+		var target = _GetInsertPos(out var pos);
+		_ImportFiles(false, a, target, pos);
+	}
+
+	/// <summary>
+	/// Imports another collection into this collection.
+	/// </summary>
+	/// <param name="collectionFile">If null, shows dialog to select files.</param>
+	/// <param name="target">If null, calls _GetInsertPos.</param>
+	/// <param name="pos">Used when target is not null.</param>
+	public void ImportCollection(string collectionFile = null, FileNode target = null, NodePosition pos = 0)
+	{
+		if(collectionFile == null) {
+			var d = new OpenFileDialog() { Title = "Import collection" };
+			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
+			collectionFile = d.FileName;
+		}
+
+		try {
+			//create new folder for collection's items
+			if(target == null) target = _GetInsertPos(out pos);
+			var folderName = Path_.GetFileNameWithoutExtension(collectionFile);
+			target = FileNode.NewItem(this, target, pos, FileNode.NewItemTemplate.Folder, folderName);
+			if(target == null) return;
+
+			var m = new FilesModel(null, collectionFile);
+			var a = m.Xml.Elements().Select(t => FileNode.FromX(t)).ToArray();
+			_MultiCopyMove(true, a, target, NodePosition.Inside, true);
+			m.Dispose();
+
+			target.SelectSingle();
+
+			Print($"Info: Imported collection '{collectionFile}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
+		}
+		catch(Exception ex) { Print(ex.Message); }
+	}
+
+	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, NodePosition pos, bool importingCollection = false)
+	{
+		_disableSetCurrentFile = true;
+		TV.ClearSelection();
+		TV.BeginUpdate();
+		try {
+			bool movedCurrentFile = false;
+			var a2 = new List<FileNode>(a.Length);
+			foreach(var f in (pos == NodePosition.After) ? a.Reverse() : a) {
+				if(!importingCollection && !this.IsMyFileNode(f)) continue; //deleted?
+				if(copy) {
+					var fCopied = f.FileCopy(target, pos, this);
+					if(fCopied != null) a2.Add(fCopied);
+				} else {
+					if(!f.FileMove(target, pos)) continue;
+					a2.Add(f);
+					if(!movedCurrentFile && _currentFile != null) {
+						if(f == _currentFile || (f.IsFolder && f.ContainsDescendant(_currentFile))) movedCurrentFile = true;
+					}
+				}
+			}
+			if(movedCurrentFile) TV.EnsureVisible(_currentFile.TreeNodeAdv);
+			if(pos != NodePosition.Inside || target.TreeNodeAdv.IsExpanded) {
+				foreach(var f in a2) f.TreeNodeAdv.IsSelected = true;
+			}
+		}
+		catch(Exception ex) { Print(ex.Message); }
+		finally { TV.EndUpdate(); _disableSetCurrentFile = false; }
+
+		//info: don't need to schedule saving here. FileCopy and FileMove did it.
+	}
+
+	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)
+	{
+		bool fromCollectionDir = false, dirsDropped = false;
+		for(int i = 0; i < a.Length; i++) {
+			var s = a[i] = Path_.Normalize(a[i]);
+			if(s.IndexOf_(@"\$RECYCLE.BIN\", true) > 0) {
+				TaskDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{this.FilesDirectory}\">collection folder</a> or other normal folder.",
+					icon: TDIcon.Info, owner: TV, onLinkClick: e => Shell.RunSafe(e.LinkHref));
+				return;
+			}
+			var fd = this.FilesDirectory;
+			if(!fromCollectionDir) {
+				if(s.StartsWith_(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromCollectionDir = true;
+				else if(!dirsDropped) dirsDropped = Files.ExistsAsDirectory(s);
+			}
+		}
+		int r;
+		if(copy) {
+			if(fromCollectionDir) {
+				TaskDialog.ShowInfo("Files from collection folder", "Ctrl not supported."); //not implemented
+				return;
+			}
+			r = 2; //copy
+		} else if(fromCollectionDir) {
+			r = 3; //move
+		} else {
+			string ins1 = dirsDropped ? "\nFolders not supported." : null;
+			r = TaskDialog.ShowEx("Import files", string.Join("\n", a),
+			$"1 Add as a link to the external file{ins1}|2 Copy to the collection folder|3 Move to the collection folder|0 Cancel",
+			flags: TDFlags.CommandLinks | TDFlags.Wider, owner: TV, footerText: GetSecurityInfo(true));
+			if(r == 0) return;
+		}
+
+		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
+		bool select = pos != NodePosition.Inside || target.TreeNodeAdv.IsExpanded;
+		_disableSetCurrentFile = true;
+		if(select) TV.ClearSelection();
+		TV.BeginUpdate();
+		try {
+			var newParentPath = newParent.FilePath;
+			int nf1 = Xml.Descendants("f").Count(), nd1 = Xml.Descendants("d").Count();
+
+			foreach(var s in a) {
+				bool isDir;
+				var itIs = Files.ExistsAs2(s, true);
+				if(itIs == Files.ItIs2.File) isDir = false;
+				else if(itIs == Files.ItIs2.Directory && r != 1) isDir = true;
+				else continue; //skip symlinks or if does not exist
+
+				var name = Path_.GetFileName(s);
+				var x = new XElement(isDir ? "d" : "f", new XAttribute("n", name));
+				if(r == 1) {
+					x.SetAttributeValue("path", s); //CONSIDER: unexpand
+				} else {
+					//var newPath = newParentPath + "\\" + name;
+					if(fromCollectionDir) { //already exists?
+						var relPath = s.Substring(this.FilesDirectory.Length);
+						var fExists = this.FindFileOrFolder(relPath);
+						if(fExists != null) {
+							fExists.FileMove(target, pos);
+							continue;
+						}
+					}
+					if(isDir) _AddDirToXml(s, x);
+					try {
+						if(r == 2) Files.CopyTo(s, newParentPath, Files.IfExists.Fail);
+						else Files.MoveTo(s, newParentPath, Files.IfExists.Fail);
+					}
+					catch(Exception ex) { Print(ex.Message); continue; }
+				}
+				var k = new FileNode(this, x);
+				target.AddChildOrSibling(k, pos);
+				if(select) k.TreeNodeAdv.IsSelected = true;
+			}
+
+			int nf2 = Xml.Descendants("f").Count(), nd2 = Xml.Descendants("d").Count();
+			int nf = nf2 - nf1, nd = nd2 - nd1;
+			if(nf + nd > 0) Print($"Info: Imported {nf} files and {nd} folders.\r\n\t{GetSecurityInfo()}");
+		}
+		catch(Exception ex) { Print(ex.Message); }
+		finally { TV.EndUpdate(); _disableSetCurrentFile = false; }
+		SaveCollectionLater();
+
+		void _AddDirToXml(string path, XElement x)
+		{
+			foreach(var u in Files.EnumDirectory(path, Files.EDFlags.UseRawPath | Files.EDFlags.SkipHiddenSystem)) {
+				bool isDir = u.IsDirectory;
+				var x2 = new XElement(isDir ? "d" : "f", new XAttribute("n", u.Name));
+				x.Add(x2);
+				if(isDir) _AddDirToXml(u.FullPath, x2);
+			}
+
 		}
 	}
 
@@ -392,73 +813,218 @@ class FilesModel :ITreeModel
 
 	private void _TV_ItemDrag(object sender, ItemDragEventArgs e)
 	{
-		TV.DoDragDropSelectedNodes(DragDropEffects.Move);
+		if(e.Button != MouseButtons.Left) return;
+		if(_selectOnClick_multi) return; //prevent Ctrl+drag multiple unintended
+		TV.DoDragDropSelectedNodes(DragDropEffects.Move | DragDropEffects.Copy);
 	}
 
 	private void _TV_DragOver(object sender, DragEventArgs e)
 	{
-		_selectOnClick_MouseButton = 0;
+		_selectOnClick_FileNode = null;
+
 		e.Effect = DragDropEffects.None;
-		if(!e.Data.GetDataPresent(typeof(TreeNodeAdv[]))) return;
-		TreeNodeAdv[] nodes = e.Data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[];
-		if(nodes[0].Tree != TV) return;
-		var nTarget = TV.DropPosition.Node;
-		if(nTarget == null) {
-			//if(!TV.Wnd_().ClientRectInScreen.Contains(e.X, e.Y)) return;
-			return;
-		} else {
-			var fTarget = nTarget.Tag as FileNode;
-			bool isFolder = fTarget.IsFolder;
-			bool isInside = TV.DropPosition.Position == NodePosition.Inside;
+		var effect = e.AllowedEffect;
+		bool copy = (e.KeyState & 8) != 0;
+		if(copy) effect &= ~(DragDropEffects.Link | DragDropEffects.Move);
+		if(0 == (effect & (DragDropEffects.Link | DragDropEffects.Move | DragDropEffects.Copy))) return;
 
-			if(isFolder) TV.DragDropBottomEdgeSensivity = TV.DragDropTopEdgeSensivity = 0.3f;
-			else TV.DragDropBottomEdgeSensivity = TV.DragDropTopEdgeSensivity = 0.51f;
+		var nTarget = TV.DropPosition.Node; if(nTarget == null) return;
 
+		//can drop TreeNodeAdv and files
+		TreeNodeAdv[] nodes = null;
+		if(e.Data.GetDataPresent(typeof(TreeNodeAdv[]))) {
+			nodes = e.Data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[];
+			if(nodes?[0].Tree != TV) return;
+			if(!copy) effect &= ~DragDropEffects.Copy;
+		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
+		} else return;
+
+		var fTarget = nTarget.Tag as FileNode;
+		bool isFolder = fTarget.IsFolder;
+		bool isInside = TV.DropPosition.Position == NodePosition.Inside;
+
+		//prevent selecting whole non-folder item. Make either above or below.
+		if(isFolder) TV.DragDropBottomEdgeSensivity = TV.DragDropTopEdgeSensivity = 0.3f; //default
+		else TV.DragDropBottomEdgeSensivity = TV.DragDropTopEdgeSensivity = 0.51f;
+
+		//can drop here?
+		if(!copy && nodes != null) {
 			foreach(TreeNodeAdv n in nodes) {
 				var f = n.Tag as FileNode;
 				if(!f.CanMove(fTarget, TV.DropPosition.Position)) return;
 			}
-
-			if(isFolder && isInside) {
-				var ks = e.KeyState & 3;
-				if(ks == 3 && _dragKeyStateForFolderExpand != 3) {
-					if(nTarget.IsExpanded) nTarget.Collapse(); else nTarget.Expand();
-				}
-				_dragKeyStateForFolderExpand = ks;
-			}
 		}
 
-		e.Effect = e.AllowedEffect;
+		//expand-collapse folder on right-click. However this does not work when dragging files, because Explorer then ends the drag-drop.
+		if(isFolder && isInside) {
+			var ks = e.KeyState & 3;
+			if(ks == 3 && _dragKeyStateForFolderExpand != 3) {
+				if(nTarget.IsExpanded) nTarget.Collapse(); else nTarget.Expand();
+			}
+			_dragKeyStateForFolderExpand = ks;
+		}
+
+		e.Effect = effect;
 	}
 
 	int _dragKeyStateForFolderExpand;
 
 	private void _TV_DragDrop(object sender, DragEventArgs e)
 	{
-		TV.BeginUpdate();
-		try {
-			TreeNodeAdv[] nodes = (TreeNodeAdv[])e.Data.GetData(typeof(TreeNodeAdv[]));
-			var nTarget = TV.DropPosition.Node;
-			var fTarget = nTarget.Tag as FileNode;
-			bool droppedTheSelectedFile = false;
-			foreach(TreeNodeAdv n in nodes) {
-				var f = n.Tag as FileNode;
-				f.Move(fTarget, TV.DropPosition.Position);
-				if(f == _selectedFile) droppedTheSelectedFile = true;
+		bool copy = (e.KeyState & 8) != 0;
+		var pos = TV.DropPosition.Position;
+		var target = TV.DropPosition.Node.Tag as FileNode;
+		if(e.Data.GetDataPresent(typeof(TreeNodeAdv[]))) {
+			var a = (e.Data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[]).Select(tn => tn.Tag as FileNode).ToArray();
+			_MultiCopyMove(copy, a, target, pos);
+		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
+			var a = (string[])e.Data.GetData(DataFormats.FileDrop);
+			if(a.Length == 1 && IsCollectionFile(a[0])) {
+				switch(TaskDialog.ShowEx("Collection", a[0],
+					"1 Open collection|2 Import collection|3 Import as file|0 Cancel",
+					flags: TDFlags.Wider, footerText: GetSecurityInfo(true))) {
+				case 0: return;
+				case 1: Time.SetTimer(1, true, t => MainForm.Panels.Files.LoadCollection(a[0])); return;
+				case 2: ImportCollection(a[0], target, pos); return;
+				}
 			}
-			if(droppedTheSelectedFile) {
-				if(TV.DropPosition.Position == NodePosition.Inside) nTarget.IsExpanded = true;
-				_selectedFile.Select();
-			}
+			_ImportFiles(copy, a, target, pos);
 		}
-		catch(Exception ex) { DebugPrint(ex); }
-		finally { TV.EndUpdate(); }
 	}
 
 	#endregion
 
-	//public void Clear()
-	//{
-	//	Root.Remove();
-	//}
+	#region export
+
+	/// <summary>
+	/// Shows dialog(s) to get name and location for new or exporting collection.
+	/// Returns collection's XML file path.
+	/// Does not create the file and folders.
+	/// </summary>
+	/// <param name="name">Default name of the collection.</param>
+	/// <param name="location">Default parent folder of the main folder of the collection.</param>
+	public string GetFilePathForNewCollection(string name = null, string location = null)
+	{
+		var f = new _FormNewCollection();
+		f.textName.Text = name;
+		f.textLocation.Text = location ?? Folders.ThisAppDocuments;
+		if(f.ShowDialog(TV) != DialogResult.OK) return null;
+		return f.textFile.Text;
+	}
+
+	public bool ExportSelected(string location = null)
+	{
+		var a = SelectedItems; if(a.Length < 1) return false;
+
+		string name = a[0].Name; if(!a[0].IsFolder) name = Path_.GetFileNameWithoutExtension(name);
+
+		if(a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children.ToArray();
+
+		var file = GetFilePathForNewCollection(name, location);
+		if(file == null) return false;
+
+		var x = new XElement("files");
+		foreach(var f in a) {
+			var xx = new XElement(f.Xml);
+			foreach(var v in xx.DescendantsAndSelf()) v.SetAttributeValue("g", null);
+			x.Add(xx);
+		}
+		//Print(x);
+
+		string collDir = Path_.GetDirectoryPath(file), filesDir = collDir + @"\files";
+		try {
+			Files.CreateDirectory(filesDir);
+			foreach(var f in a) {
+				if(!f.IsLink()) Files.CopyTo(f.FilePath, filesDir);
+			}
+			x.Save(file);
+		}
+		catch(Exception ex) {
+			Print(ex.Message);
+			return false;
+		}
+
+		Shell.SelectFileInExplorer(collDir);
+		return true;
+	}
+
+	#endregion
+
+	#region watch folder
+
+	FileSystemWatcher _watcher;
+
+	void _InitWatcher()
+	{
+		_watcher = new FileSystemWatcher(this.FilesDirectory);
+		_watcher.IncludeSubdirectories = true;
+		_watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
+		//_watcher.EnableRaisingEvents = true;
+		_watcher.Changed += _watcher_Changed;
+		_watcher.Created += _watcher_Created;
+		_watcher.Deleted += _watcher_Deleted;
+		_watcher.Renamed += _watcher_Renamed;
+	}
+
+	void _UninitWatcher()
+	{
+		_watcher.Changed -= _watcher_Changed;
+		_watcher.Created -= _watcher_Created;
+		_watcher.Deleted -= _watcher_Deleted;
+		_watcher.Renamed -= _watcher_Renamed;
+		_watcher.Dispose();
+	}
+
+	private void _watcher_Renamed(object sender, RenamedEventArgs e)
+	{
+		PrintList(e.ChangeType, e.OldName, e.Name, e.OldFullPath, e.FullPath);
+	}
+
+	private void _watcher_Deleted(object sender, FileSystemEventArgs e)
+	{
+		PrintList(e.ChangeType, e.Name, e.FullPath);
+	}
+
+	private void _watcher_Created(object sender, FileSystemEventArgs e)
+	{
+		PrintList(e.ChangeType, e.Name, e.FullPath);
+	}
+
+	private void _watcher_Changed(object sender, FileSystemEventArgs e)
+	{
+		PrintList(e.ChangeType, e.Name, e.FullPath);
+	}
+
+	#endregion
+
+	#region util
+	/// <summary>
+	/// Returns true if FileNode f is not null and belongs to this FilesModel and is not deleted.
+	/// </summary>
+	public bool IsMyFileNode(FileNode f) { return Root.ContainsDescendant(f); }
+
+	/// <summary>
+	/// Returns true if s is path of a collection file (XML file containing item names, folder structure etc).
+	/// </summary>
+	public static bool IsCollectionFile(string s)
+	{
+		if(!s.EndsWith_(".xml", true)) return false;
+		if(!Files.ExistsAsDirectory(s + @"\..\files")) return false;
+		try {
+			var x = XElement.Load(s);
+			return x.Name == "files";
+		}
+		catch { return false; }
+	}
+
+	/// <summary>
+	/// Security info string.
+	/// </summary>
+	public static string GetSecurityInfo(bool withShieldIcon = false)
+	{
+		var s = "Security info: Unknown files can contain malicious code - virus, spyware, etc. It is safe to import, open and edit files if you don't run and don't compile them. Triggers are inactive until run/compile.";
+		return withShieldIcon ? ("v|" + s) : s;
+	}
+
+	#endregion
 }

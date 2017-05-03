@@ -1,5 +1,0 @@
- out "0x%X" pixel(10 10)
- out "0x%X" pixel(10 10 "Macros")
- out "0x%X" pixel(10 10 "QM Help" 1)
- out "0x%X" pixel(10 10 "QM Help" 2)
-out "0x%X" pixel(-10 10 "QM Help" 2)

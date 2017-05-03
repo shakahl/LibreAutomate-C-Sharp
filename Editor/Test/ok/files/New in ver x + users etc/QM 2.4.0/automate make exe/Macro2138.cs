@@ -1,6 +1,0 @@
- /exe
- BEGIN PROJECT
-;
- END PROJECT
-
-out 1

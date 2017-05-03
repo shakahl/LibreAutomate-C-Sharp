@@ -1,1 +1,0 @@
-LogEncrypted "test" 1

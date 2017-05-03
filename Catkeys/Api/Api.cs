@@ -209,6 +209,9 @@ namespace Catkeys
 		internal const int WH_MOUSE_LL = 14;
 
 		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool ReplyMessage(LPARAM lResult);
+
+		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr SetWindowsHookEx(int WH_X, HOOKPROC lpfn, IntPtr hMod, int dwThreadId);
 
 		[DllImport("user32.dll", SetLastError = true)]
@@ -1017,6 +1020,12 @@ namespace Catkeys
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr SelectObject(IntPtr hdc, IntPtr h);
 
+		[DllImport("gdi32.dll", EntryPoint = "GetObjectW")]
+		internal static extern int GetObject(IntPtr h, int c, void* pv);
+
+		[DllImport("gdi32.dll")]
+		internal static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int cx, int cy);
+
 		[DllImport("gdi32.dll")]
 		internal static extern int GetDeviceCaps(IntPtr hdc, int index);
 
@@ -1028,6 +1037,10 @@ namespace Catkeys
 
 		//[DllImport("user32.dll", EntryPoint = "CharUpperBuffW")]
 		//internal static unsafe extern int CharUpperBuff(char* lpsz, int cchLength);
+
+		[DllImport("user32.dll")]
+		internal static extern int FillRect(IntPtr hDC, ref RECT lprc, IntPtr hbr);
+
 
 
 

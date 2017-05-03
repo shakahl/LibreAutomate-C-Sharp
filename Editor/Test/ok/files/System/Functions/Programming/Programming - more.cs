@@ -1,1 +1,0 @@
-QmHelp "IDP_QMDLL"

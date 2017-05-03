@@ -1,1 +1,0 @@
-QmItemMoveToFolder "\New\Users new"

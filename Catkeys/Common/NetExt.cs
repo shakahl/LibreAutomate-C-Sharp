@@ -224,6 +224,49 @@ namespace Catkeys
 			c = default(Color);
 			return false;
 		}
+
+		/// <summary>
+		/// Calculates color's perceived brightness.
+		/// Returns a value in range 0 (brightness of black color) to 1 (brightness of white color).
+		/// </summary>
+		/// <param name="colorRGB">Color in 0xRRGGBB format. Alpha is ignored.</param>
+		/// <remarks>
+		/// Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
+		/// </remarks>
+		public static float Brightness0to255(uint colorRGB)
+		{
+			uint R = colorRGB >> 16 & 0xff, G = colorRGB >> 8 & 0xff, B = colorRGB & 0xff;
+			return (float)(Math.Sqrt(R * R * .299 + G * G * .587 + B * B * .114) / 255);
+		}
+
+		/// <summary>
+		/// Calculates color's perceived brightness.
+		/// Returns a value in range 0 (brightness of black color) to 1 (brightness of white color).
+		/// </summary>
+		/// <param name="c">Color. Alpha is ignored.</param>
+		/// <remarks>
+		/// Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
+		/// </remarks>
+		public static float Brightness0to255(Color c)
+		{
+			return (float)(Math.Sqrt(c.R * c.R * .299 + c.G * c.G * .587 + c.B * c.B * .114) / 255);
+		}
+
+		/// <summary>
+		/// Changes color's luminance (makes darker or brighter). Hue and saturation are not affected.
+		/// Calls API <msdn>ColorAdjustLuma</msdn>.
+		/// </summary>
+		/// <param name="colorRGB">Color in 0xRRGGBB or 0xBBGGRR format. Alpha is not used and not changed.</param>
+		/// <param name="n">The luminance in units of 0.1 percent of the range (which depends on totalRange). Can be from -1000 to 1000.</param>
+		/// <param name="totalRange">If true, n is in the whole luminance range (from minimal to maximal possible). If false, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
+		public static uint AdjustLuminance(uint colorRGB, int n, bool totalRange = false)
+		{
+			return ColorAdjustLuma(colorRGB & 0xffffff, n, !totalRange) | (colorRGB & 0xFF000000);
+			//return SwapRedBlue(ColorAdjustLuma(SwapRedBlue(colorRGB & 0xffffff), n, !totalRange)) | (colorRGB & 0xFF000000); //the same
+		}
+
+		[DllImport("shlwapi.dll")]
+		static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
 	}
 
 	/// <summary>
@@ -385,13 +428,13 @@ namespace Catkeys
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="name">Element name.</param>
+		/// <param name="name">Element name. If null, can be any name.</param>
 		/// <param name="attributeName">Attribute name.</param>
 		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
 		public static XElement Descendant_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
-			foreach(var el in t.Descendants(name)) {
+			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
 				var a = el.Attribute(attributeName); if(a == null) continue;
 				if(attributeValue != null && !a.Value.Equals_(attributeValue, ignoreCase)) continue;
 				return el;
@@ -406,13 +449,13 @@ namespace Catkeys
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="name">Element name.</param>
+		/// <param name="name">Element name. If null, can be any name.</param>
 		/// <param name="attributeName">Attribute name.</param>
 		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
 		public static XElement Element_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
-			foreach(var el in t.Elements(name)) {
+			foreach(var el in (name != null) ? t.Elements(name) : t.Elements()) {
 				var a = el.Attribute(attributeName); if(a == null) continue;
 				if(attributeValue != null && !a.Value.Equals_(attributeValue, ignoreCase)) continue;
 				return el;

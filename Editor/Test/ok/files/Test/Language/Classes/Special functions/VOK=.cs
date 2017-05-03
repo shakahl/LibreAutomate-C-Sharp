@@ -1,2 +1,0 @@
-function VOK&source
-out "="

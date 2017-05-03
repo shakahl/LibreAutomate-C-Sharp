@@ -1,2 +1,0 @@
- /expandfolders
-desk "$desktop$"

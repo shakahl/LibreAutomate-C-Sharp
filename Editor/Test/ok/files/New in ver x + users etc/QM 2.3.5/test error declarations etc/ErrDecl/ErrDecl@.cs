@@ -1,2 +1,0 @@
- Destructor
-end ERR_COM_UNKNOWNCLASS

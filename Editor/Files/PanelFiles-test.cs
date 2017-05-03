@@ -21,6 +21,9 @@ using System.Xml.Linq;
 using Catkeys;
 using static Catkeys.NoClass;
 
+using Aga.Controls.Tree;
+using Aga.Controls.Tree.NodeControls;
+
 #if TEST
 partial class ThisIsNotAFormFile { }
 
@@ -33,7 +36,8 @@ partial class PanelFiles
 		//var name = "MSVCRT";
 		//var name = "msvcrt";
 		//var name = "Declarations";
-		var name = "Backup";
+		//var name = "Backup";
+		var name = "Catkeys fileS.cs";
 
 		//var n = _c.AllNodes.ElementAt(2);
 		var f = _model.FindFileOrFolder(name);
@@ -47,11 +51,30 @@ partial class PanelFiles
 		m["SelectedNode"] = o => _c.SelectedNode = n;
 		m["IsSelected=true"] = o => n.IsSelected = true; //adds to selection
 		m["ClearSelection"] = o => _c.ClearSelection();
+		m["ClearSelection; IsSelected=true"] = o => { _c.ClearSelection(); n.IsSelected = true; };
+		//m["ClearSelection; IsSelected=true"] = o => { _c.ClearSelection(); _c.SelectedNode=n; };
 		m["EnsureVisible"] = o => _c.EnsureVisible(n);
 		m["ScrollTo"] = o => _c.ScrollTo(n);
+		m["Find"] = o =>
+		{
+			Print(_model.FindFileOrFolder("QM3 function flags.cs"));
+			Print(_model.FindFileOrFolder(@"\Function ideAs\Acc.path.cs"));
+			Print(_model.FindFileOrFolder("mono compiler"));
+			Print(_model.FindFileOrFolder(@"\oLd\mono compiler"));
+			Print("-----");
+			Print(_model.FindFile("QM3 function flags.cs"));
+			Print(_model.FindFile(@"\Function ideAs\Acc.path.cs"));
+			Print(_model.FindFile("mono compiler"));
+			Print(_model.FindFile(@"\oLd\mono compiler"));
+			Print("-----");
+			Print(_model.FindFolder("QM3 function flags.cs"));
+			Print(_model.FindFolder(@"\Function ideAs\Acc.path.cs"));
+			Print(_model.FindFolder("mono compiler"));
+			Print(_model.FindFolder(@"\oLd\mono compiler"));
+		};
 		m["FullUpdate"] = o => _c.FullUpdate();
 		m["HideEditor"] = o => _c.HideEditor();
-		m["Remove"] = o => f.Remove();
+		m["Delete"] = o => f.FileDelete();
 		//m["Clear"] = o => _model.Clear();
 		m["StructureChanged"] = o => _model.OnStructureChanged();
 		m["Add"] = o =>
@@ -63,8 +86,8 @@ partial class PanelFiles
 			x.Add(new XElement("f", new XAttribute("n", "NEW FILE")));
 #endif
 			var k = new FileNode(_model, x);
-			//f.AddChild(k);
-			f.AddBefore(k);
+			//f.AddChildOrSibling(k);
+			f.AddChildOrSibling(k, NodePosition.After);
 		};
 		m["GetNodeBounds"] = o =>
 		{
@@ -101,7 +124,7 @@ partial class PanelFiles
 		};
 		m["change cell"] = o =>
 		{
-			f.Rename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
+			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
 			//f.GUID = "one two";
 			//f.GUID = "one\ntwo";
 			Perf.First();
@@ -111,11 +134,11 @@ partial class PanelFiles
 			_c.Update();
 			Perf.NW();
 
-			Time.SetTimer(1000, true, t => f.Rename(name, true));
+			Time.SetTimer(1000, true, t => f.FileRename(name, true));
 		};
 		m["udate row"] = o =>
 		{
-			f.Rename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
+			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
 			//f.GUID = "one two";
 			Perf.First();
 			_c.UpdateNode(n);
@@ -123,7 +146,7 @@ partial class PanelFiles
 			_c.Update();
 			Perf.NW();
 
-			Time.SetTimer(1000, true, t => f.Rename(name, true));
+			Time.SetTimer(1000, true, t => f.FileRename(name, true));
 		};
 		m["GC.Collect"] = o => GC.Collect();
 		m["disable control"] = o =>
@@ -151,6 +174,8 @@ partial class PanelFiles
 			Print(f?.FilePath);
 		};
 		m["delete icon cache"] = o => { FilesModel.IconCache.ClearCache(); _c.Invalidate(); };
+		m.Separator();
+
 		m.Show();
 	}
 }

@@ -1,2 +1,0 @@
-WaitForTriggerKeyReleased
-out 1

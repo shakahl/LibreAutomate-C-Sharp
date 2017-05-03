@@ -1,2 +1,0 @@
-WINAPIV.Button_GetNoteLength
-WINAPI.ListView_ApproximateViewRect

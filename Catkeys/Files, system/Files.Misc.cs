@@ -128,6 +128,7 @@ namespace Catkeys
 				try {
 					h = _Api.CreateFile(path, 0x80, 7, Zero, 3, 0x02000000, Zero);
 					//FILE_READ_ATTRIBUTES, all sharing, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS
+					//TODO: test access 0, it should allow to query attributes.
 					if(h == (IntPtr)(-1)) return false;
 					if(!_Api.GetFileInformationByHandle(h, out var k)) return false;
 					fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;

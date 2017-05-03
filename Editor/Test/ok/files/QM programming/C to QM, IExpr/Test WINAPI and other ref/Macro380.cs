@@ -1,6 +1,0 @@
-DEF1
-DEF2
-TYPE1
-TYPE2
-TYPE3
-MSDataGridLib

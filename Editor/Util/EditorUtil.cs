@@ -22,7 +22,7 @@ using Catkeys;
 using static Catkeys.NoClass;
 
 //[DebuggerStepThrough]
-public static class EResources
+static class EResources
 {
 	/// <summary>
 	/// Call this from other thread (than the UI thread that will use resources) at the very startup of the app.
@@ -34,7 +34,7 @@ public static class EResources
 		//var p = new Perf.Inst(true);
 		Project.Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture; //makes 3 times faster. Default culture is en-US.
 																						  //p.Next();
-		GetImage("_new"); //5-8 ms. Without InvariantCulture 15-20 ms.
+		GetImageUseCache("_new"); //5-8 ms. Without InvariantCulture 15-20 ms.
 
 		//var b = Properties.Resources.il_tv;
 		//p.Next();
@@ -104,13 +104,13 @@ public static class EResources
 
 	/// <summary>
 	/// Gets a non-string resource (eg Bitmap) from project resources.
-	/// Uses memory cache. Gets the same object when called multiple times for the same name.
+	/// Uses memory cache. Gets the same object when called multiple times for the same name. Don't dispose it.
 	/// Calling ResourceManager.GetObject would create object copies.
 	/// Thread-safe.
 	/// If not found (bad name), asserts and returns null.
 	/// </summary>
 	/// <param name="name">Resource name. If fileIcon - file path.</param>
-	public static object GetObject(string name)
+	public static object GetObjectUseCache(string name)
 	{
 		lock("3moj2pOaoUGgRILqYfBGPw") {
 			object R;
@@ -134,12 +134,23 @@ public static class EResources
 	static Hashtable _cache;
 
 	/// <summary>
-	/// Gets a Bitmap resource from project resources.
-	/// Calls <see cref="GetObject"/> and casts to Bitmap.
+	/// Gets a Bitmap resource from project resources or cache.
+	/// Uses memory cache. Gets the same object when called multiple times for the same name. Don't dispose it.
+	/// Calls <see cref="GetObjectUseCache"/> and casts to Bitmap.
 	/// </summary>
 	/// <param name="name">Image resource name.</param>
-	public static Bitmap GetImage(string name)
+	public static Bitmap GetImageUseCache(string name)
 	{
-		return GetObject(name) as Bitmap;
+		return GetObjectUseCache(name) as Bitmap;
+	}
+
+	/// <summary>
+	/// Gets a Bitmap resource from project resources.
+	/// If called multiple times, creates new object each time.
+	/// </summary>
+	/// <param name="name">Image resource name.</param>
+	public static Bitmap GetImageNoCache(string name)
+	{
+		return Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture) as Bitmap;
 	}
 }

@@ -1,9 +1,0 @@
-int h=GetQmCodeEditor
-
- SendMessage h SCI.SCI_SETWRAPINDENTMODE SCI.SC_WRAPINDENT_SAME 0
-SendMessage h SCI.SCI_SETWRAPINDENTMODE SCI.SC_WRAPINDENT_INDENT 0
-
-#ret
-if 1
-	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccc ddddddddddddddddd
-	

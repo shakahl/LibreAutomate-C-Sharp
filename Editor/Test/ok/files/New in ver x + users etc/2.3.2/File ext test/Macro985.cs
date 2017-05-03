@@ -1,1 +1,0 @@
-FileExtUnregister "vig"

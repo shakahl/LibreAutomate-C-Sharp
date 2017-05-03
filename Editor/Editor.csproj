@@ -72,13 +72,6 @@
     <ApplicationManifest>Resources\Catkeys.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ObjectListView, Version=2.9.1.1072, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
-      <HintPath>..\packages\ObjectListView.Official.2.9.1\lib\net20\ObjectListView.dll</HintPath>
-    </Reference>
-    <Reference Include="ScintillaNET, Version=3.5.10.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>.\ScintillaNET.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -94,6 +87,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cmd\CmdHandlers.cs" />
+    <Compile Include="Edit\Edit.cs" />
+    <Compile Include="Files\_FormNewCollection.cs" />
+    <Compile Include="Program\CommandLine.cs" />
+    <Compile Include="Util\EImageUtil.cs" />
+    <Compile Include="Util\ProgramSettings.cs" />
+    <None Include="Default\files\Script 1.cs" />
+    <Compile Include="Files\FileNode-file.cs" />
     <Compile Include="Files\FileNode.cs" />
     <Compile Include="Files\FilesModel.cs" />
     <Compile Include="Panels\PanelFind.cs">
@@ -117,15 +117,14 @@
     <Compile Include="Util\EditorApi.cs" />
     <Compile Include="Util\EditorUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
-    <Compile Include="Test\PanelFilesOLV.cs" />
     <Compile Include="Test\TestEditor.cs" />
-    <None Include="packages.config" />
+    <Compile Include="Edit\Edit.Images.cs" />
     <None Include="Properties\CatkeysSN.pfx" />
     <Compile Include="Files\PanelFiles.cs" />
-    <Compile Include="EForm.cs">
+    <Compile Include="Program\EForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Program.cs" />
+    <Compile Include="Program\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Cmd\CmdStrips.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -153,6 +152,10 @@
       <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
       <Name>G.Controls</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ScintillaNET\ScintillaNET.csproj">
+      <Project>{22ae2386-60f1-476e-9303-61cdb0aac4cf}</Project>
+      <Name>ScintillaNET</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TreeList\TreeList.csproj">
       <Project>{e73bb233-d88b-44a7-a98f-d71ee158381d}</Project>
       <Name>TreeList</Name>
@@ -160,9 +163,11 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Default\Main.xml" />
     <Content Include="Default\Panels.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Default\Settings.xml" />
     <Content Include="Default\Strips.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -207,6 +212,7 @@
     <None Include="Resources\Folder_16x.png" />
     <None Include="Resources\FolderOpen_16x.png" />
     <None Include="Resources\CS_16x.png" />
+    <None Include="Resources\NewSolutionFolder_16x.png" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

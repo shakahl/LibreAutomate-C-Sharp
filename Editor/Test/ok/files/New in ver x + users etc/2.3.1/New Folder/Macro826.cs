@@ -1,4 +1,0 @@
-out 0x8000000000000000
-out 0xFFFFFFFFFFFFFFFF
- out 0x80000000
- out 0xffffffff

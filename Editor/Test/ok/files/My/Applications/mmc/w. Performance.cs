@@ -1,1 +1,0 @@
-ont val(_command)

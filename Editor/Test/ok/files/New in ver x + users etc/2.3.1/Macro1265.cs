@@ -1,1 +1,0 @@
-run "\\gintaras\myprojects"

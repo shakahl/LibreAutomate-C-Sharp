@@ -1,1 +1,0 @@
-PhpDebugRun :mac "PhpDebugRun"
