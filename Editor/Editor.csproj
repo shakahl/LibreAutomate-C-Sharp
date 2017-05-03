@@ -90,7 +90,6 @@
     <Compile Include="Edit\Edit.cs" />
     <Compile Include="Files\_FormNewCollection.cs" />
     <Compile Include="Program\CommandLine.cs" />
-    <Compile Include="Util\EImageUtil.cs" />
     <Compile Include="Util\ProgramSettings.cs" />
     <None Include="Default\files\Script 1.cs" />
     <Compile Include="Files\FileNode-file.cs" />
@@ -118,7 +117,6 @@
     <Compile Include="Util\EditorUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
     <Compile Include="Test\TestEditor.cs" />
-    <Compile Include="Edit\Edit.Images.cs" />
     <None Include="Properties\CatkeysSN.pfx" />
     <Compile Include="Files\PanelFiles.cs" />
     <Compile Include="Program\EForm.cs">

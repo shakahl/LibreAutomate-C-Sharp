@@ -31,3 +31,6 @@ public class HelloWorld : Form
 <image "%Folders.Virtual.ControlPanel%">
 <image ":: 14001F50E04FD020EA3A6910A2D808002B30309D">
  corrupt embedded:  <image "Ig1gBiHyBWA2JGBhYGdCAAxXziAgzZl38xbKozYFCM/sww5cNfBv2YQoYDi2YyPDsxgeH3h5sM9d1Aeqoeg8DsewzPr21m+PPjK0NKdTJDUOtrhrtEAYZBry6NKEAFe5UQQBdDXdUqGKhVL4cDTHXL4XJrSVNXQKx5DFjVrTkz72koAwPPmTNrdc4AwblzD4AksjpeiLq8mb93794dCVN35t07NHUQxprc+V8EBaW34lbHyQtRN3GioKDg1jlgdeeNjf+ceYNQdwGYjjkngFgrcqf8BKqTjuhYq9HRbwwEH190dMDU3Tw5c+ack7wQdZIiLi4uP0HqPgOVWb47gaQO7BSoOseZIABU128PUmj8A0kdUGLOAYi9E12A9s7pAKn7//8/UJ0FQh0IzOGFus8FaCAedWBvANVNy5x590YfRN3Xr6j2gsBcqDowBVbX8f9rAFBdB6o6CFgBTLvARLUIrK4zgIEh9Ad2dTnlZUClEHUd+aGh8R04zQMZCFHXEdHRgV3dWgRLFyGKN93jVYcE8OYjXIB4de+IAiNPHQA=">
+<image "shell32.dll,17|shell32.dll,18|shell32.dll,19|C:\Users\G\Documents\Untitled.png">
+more
+Ctrl+S

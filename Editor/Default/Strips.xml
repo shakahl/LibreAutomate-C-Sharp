@@ -82,7 +82,7 @@
 				<sep/>
 				<File_FindInCollections t="Find in Other Collections..."/>
 				<File_CollectionProperties t="Collection Properties..."/>
-				<File_SaveAllNow i="save"/>
+				<File_SaveAllNow i="save" hk="Ctrl+S"/>
 			</File_Collection>
 			<sep/>
 			<File_Exit hkText="Alt+F4"/>

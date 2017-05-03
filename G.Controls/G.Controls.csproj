@@ -53,8 +53,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ControlsApi.cs" />
-    <Compile Include="ControlUtil.cs" />
+    <Compile Include="Sci\SciTags.cs" />
+    <Compile Include="Util, Api\ControlsApi.cs" />
+    <Compile Include="Util, Api\ControlUtil.cs" />
     <Compile Include="GDockPanel\GDP common.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -76,7 +77,9 @@
     <Compile Include="GDockPanel\GAcc.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GSci\GOutput.cs" />
+    <Compile Include="Sci\SciCommon.cs" />
+    <Compile Include="Sci\SciImages.cs" />
+    <Compile Include="Sci\SciOutput.cs" />
     <Compile Include="GStripManager\GSMProp.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,6 +92,7 @@
     </Compile>
     <Compile Include="Other\ToolStripSpringBox.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util, Api\ImageUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Catkeys\Catkeys.csproj">

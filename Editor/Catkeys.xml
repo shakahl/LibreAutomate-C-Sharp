@@ -7305,11 +7305,6 @@
             Gets T type size.
             </summary>
         </member>
-        <member name="T:Catkeys.Util.LibDebug">
-            <summary>
-            Functions useful when testing and debugging.
-            </summary>
-        </member>
         <member name="T:Catkeys.Util.Dpi">
             <summary>
             Functions for high-DPI screen support.

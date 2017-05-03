@@ -23,7 +23,7 @@ using static Catkeys.NoClass;
 
 namespace G.Controls
 {
-	public class GOutput
+	public class SciOutput
 	{
 	}
 }

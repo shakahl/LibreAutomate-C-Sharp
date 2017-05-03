@@ -21,6 +21,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using ScintillaNET;
+using G.Controls;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -196,34 +197,7 @@ partial class Edit
 		return Color.FromArgb(255, (byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
 	}
 
-	//unsafe void _InitImages()
-	//{
-	//	_sci_AnnotationDrawCallback = _AnnotationDrawCallback_;
-	//	_c.DirectMessage(SciMod.SCI_SETANNOTATIONDRAWCALLBACK, Zero, Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback));
-
-	//	_testIcon = Icons.GetFileIconHandle(@"Q:\", 16);
-	//	//Print(_testIcon);
-	//}
-
-	//~Edit() { Icons.DestroyIconHandle(_testIcon); }
-
-
-	//SciMod.Sci_AnnotationDrawCallback _sci_AnnotationDrawCallback;
-	//unsafe int _AnnotationDrawCallback_(void* cbParam, ref SciMod.SCAnnotationDrawCallback c)
-	//{
-	//	var s = new string(c.text, 0, c.textLen, Encoding.UTF8);
-	//	if(c.step == 0) return 100;
-	//	PrintList(c.line, c.annotLine, s);
-	//	//PrintList(c.hdc, _testIcon);
-	//	DrawIconEx(c.hdc, c.rect.left, c.rect.top, _testIcon, 16, 16, 0, Zero, 3);
-	//	return 100;
-	//}
-
-	//IntPtr _testIcon;
-	//[DllImport("user32.dll")]
-	//internal static extern bool DrawIconEx(IntPtr hdc, int xLeft, int yTop, IntPtr hIcon, int cxWidth, int cyWidth, uint istepIfAniCur, IntPtr hbrFlickerFreeDraw, uint diFlags);
-
-	public void Test()
+	public unsafe void Test()
 	{
 #if TEST_SIMPLE
 		//_c.Indicators[8].Style=IndicatorStyle.Hidden;
@@ -255,7 +229,14 @@ partial class Edit
 
 		_c.Lines[0].AnnotationStyle = 1;
 		if(Empty(_c.Lines[0].AnnotationText))
-		_c.Lines[0].AnnotationText = "|Test\nAnnotations";
+			_c.Lines[-1].AnnotationText = "|Test\nAnnotations";
+		//	{
+		//	fixed (byte* bp = Encoding.UTF8.GetBytes("|Test\nAnnotations"))
+		//		_c.DirectMessage(2540, (IntPtr)(-1), (IntPtr)bp);
+		//}
+
+		//_c.Lines[0].AnnotationText = null;
+		//return;
 
 		//Perf.First();
 		var text = _c.Text;
@@ -284,31 +265,4 @@ partial class Edit
 
 #endif
 	}
-}
-
-static class SciCommon
-{
-	//public const int SCI_UPDATESCROLLBARS= 9501; //not impl
-	public const int SCI_MARGINSTYLENEXT = 9502;
-	//public unsafe delegate void Sci_NotifyCallback(void* cbParam, ref SCNotification n);
-	//public const int SCI_SETNOTIFYCALLBACK = 9503;
-	public unsafe delegate int Sci_AnnotationDrawCallback(void* cbParam, ref SCAnnotationDrawCallback c);
-	public const int SCI_SETANNOTATIONDRAWCALLBACK = 9504;
-	public const int SCI_ISXINMARGIN = 9506;
-	//these not impl
-	//public const int SC_DOCUMENT_USERDATA_OFFSET= 12;
-	//public const int SC_DOCUMENT_USERDATA_SIZE= 4;
-
-#pragma warning disable 649
-	public unsafe struct SCAnnotationDrawCallback
-	{
-		public int step;
-		public IntPtr hdc;
-		public RECT rect;
-		public sbyte* text;
-		public int textLen, line, annotLine;
-	};
-#pragma warning restore 649
-
-	public const int IndicImages = 8;
 }
