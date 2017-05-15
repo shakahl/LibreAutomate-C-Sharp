@@ -92,7 +92,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// <see cref="Print(object)">Print</see> that works only in Debug configuration, ie if DEBUG is defined.
-		/// In Release configuration the function call statement is removed, and arguments not evalueted.
+		/// Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
 		/// The 3 optional parameters are not used.
 		/// </summary>
 		[Conditional("DEBUG")]
@@ -113,8 +113,22 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Calls Output.Write(current function name).
+		/// Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
+		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void DebugPrintFunc([CallerMemberName] string name = null) { Output.Write(name); }
+
+		/// <summary>
+		/// Gets current function name.
+		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
+		/// </summary>
+		public static string FuncName([CallerMemberName] string name = null) { return name; }
+
+		/// <summary>
 		/// Shows simplest task dialog that works only in Debug configuration, ie if DEBUG is defined.
-		/// In Release configuration the function call statement is removed, and arguments not evalueted.
+		/// Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
 		/// The 3 optional parameters are not used.
 		/// Calls <see cref="TaskDialog.Show"/>.
 		/// </summary>
@@ -123,17 +137,6 @@ namespace Catkeys
 		{
 			TaskDialog.ShowEx("Debug", text?.ToString(), flags: TDFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
 		}
-
-		/// <summary>
-		/// Gets caller function name.
-		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
-		/// </summary>
-		public static string FunctionName([CallerMemberName] string name = null) { return name; }
-		/// <summary>
-		/// Calls Output.Write(caller function name).
-		/// Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
-		/// </summary>
-		public static void PrintFunc([CallerMemberName] string name = null) { Output.Write(name); }
 
 		/// <summary>
 		/// Returns true if the string is null or "".

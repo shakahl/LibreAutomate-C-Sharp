@@ -21,12 +21,11 @@ using System.Drawing;
 using Catkeys;
 using static Catkeys.NoClass;
 using static Program;
-
-using ScintillaNET;
+using G.Controls;
 
 class PanelStatus :Control
 {
-	Scintilla _c;
+	SciControl _c;
 	StringBuilder _s;
 	POINT _p;
 	Time.Timer_ _timer;
@@ -39,12 +38,13 @@ class PanelStatus :Control
 		this.Size = new Size(0, z.Height + 3);
 		this.Dock = DockStyle.Bottom;
 
-		_c = new Scintilla();
-		_c.BorderStyle = BorderStyle.None;
+		_c = new SciControl();
 		_c.Dock = DockStyle.Fill;
 		_c.AccessibleName = "Status bar";
 		_c.AccessibleRole = AccessibleRole.StatusBar;
 
+		_c.InitReadOnlyAlways = true;
+		_c.WrapLines = true;
 		_c.HandleCreated += _c_HandleCreated;
 
 		this.Controls.Add(_c);
@@ -56,12 +56,13 @@ class PanelStatus :Control
 
 	private void _c_HandleCreated(object sender, EventArgs e)
 	{
-		var font = MainForm.Font; //Print(font);
-		_c.Margins[1].Width = 2;
-		_c.Styles[Style.Default].BackColor = _c.Styles[0].BackColor = Color_.ColorFromRGB(0xF0F0F0);
-		_c.Styles[0].Font = font.Name; _c.Styles[0].SizeF = font.Size;
-		_c.HScrollBar = false; _c.VScrollBar = false; //_c.ScrollWidth = 1;
-		_c.WrapVisualFlags = WrapVisualFlags.End;
+		var t = _c.ST;
+		t.StyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
+		var font = MainForm.Font;
+		t.StyleFont(Sci.STYLE_DEFAULT, font.Name, (int)font.Size);
+		t.MarginWidth(1, 4);
+		t.StyleClearAll();
+		_c.Call(Sci.SCI_SETHSCROLLBAR); _c.Call(Sci.SCI_SETVSCROLLBAR);
 	}
 
 	protected override void Dispose(bool disposing)
@@ -130,16 +131,7 @@ class PanelStatus :Control
 		//Let's say, this func is called at 10 ms period when moving the mouse, and average text size is 340.
 		//Then need 1 KB. In second - 100 KB. In minute - 6 MB.
 #else
-		//This makes no garbage.
-		var encoder = Encoding.UTF8;
-		int i, n1 = Math.Min(_s.Length, 2000);
-		var s1 = stackalloc char[n1 + 1]; s1[n1] = '\0';
-		for(i = 0; i < n1; i++) s1[i] = _s[i]; //the slowest part, about 2 mcs for 300 length
-		int n2 = encoder.GetByteCount(s1, n1 + 1);
-		var s2 = stackalloc byte[n2];
-		if(encoder.GetBytes(s1, n1 + 1, s2, n2) != n2) return;
-		//Perf.Next();
-		_c.DirectMessage(2181, Zero, (IntPtr)s2); //SCI_SETTEXT
+		//_c.ST.SetText(_s);
 #endif
 		//Perf.Next();
 		//_c.Update();

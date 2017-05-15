@@ -2,8 +2,8 @@
 /** @file ViewStyle.cxx
  ** Store information on how the document is to be viewed.
  **/
-// Copyright 1998-2003 by Neil Hodgson <neilh@scintilla.org>
-// The License.txt file describes the conditions under which this software may be distributed.
+ // Copyright 1998-2003 by Neil Hodgson <neilh@scintilla.org>
+ // The License.txt file describes the conditions under which this software may be distributed.
 
 #include <string.h>
 #include <assert.h>
@@ -42,8 +42,8 @@ FontNames::~FontNames() {
 }
 
 void FontNames::Clear() {
-	for (std::vector<char *>::const_iterator it=names.begin(); it != names.end(); ++it) {
-		delete []*it;
+	for (std::vector<char *>::const_iterator it = names.begin(); it != names.end(); ++it) {
+		delete[] * it;
 	}
 	names.clear();
 }
@@ -52,7 +52,7 @@ const char *FontNames::Save(const char *name) {
 	if (!name)
 		return 0;
 
-	for (std::vector<char *>::const_iterator it=names.begin(); it != names.end(); ++it) {
+	for (std::vector<char *>::const_iterator it = names.begin(); it != names.end(); ++it) {
 		if (strcmp(*it, name) == 0) {
 			return *it;
 		}
@@ -93,19 +93,19 @@ ViewStyle::ViewStyle() {
 
 ViewStyle::ViewStyle(const ViewStyle &source) {
 	Init(source.styles.size());
-	for (unsigned int sty=0; sty<source.styles.size(); sty++) {
+	for (unsigned int sty = 0; sty < source.styles.size(); sty++) {
 		styles[sty] = source.styles[sty];
 		// Can't just copy fontname as its lifetime is relative to its owning ViewStyle
 		styles[sty].fontName = fontNames.Save(source.styles[sty].fontName);
 	}
 	nextExtendedStyle = source.nextExtendedStyle;
-	for (int mrk=0; mrk<=MARKER_MAX; mrk++) {
+	for (int mrk = 0; mrk <= MARKER_MAX; mrk++) {
 		markers[mrk] = source.markers[mrk];
 	}
 	CalcLargestMarkerHeight();
 	indicatorsDynamic = 0;
 	indicatorsSetFore = 0;
-	for (int ind=0; ind<=INDIC_MAX; ind++) {
+	for (int ind = 0; ind <= INDIC_MAX; ind++) {
 		indicators[ind] = source.indicators[ind];
 		if (indicators[ind].IsDynamic())
 			indicatorsDynamic++;
@@ -332,12 +332,12 @@ void ViewStyle::Refresh(Surface &surface, int tabInChars) {
 	selbar = Platform::Chrome();
 	selbarlight = Platform::ChromeHighlight();
 
-	for (unsigned int i=0; i<styles.size(); i++) {
+	for (unsigned int i = 0; i < styles.size(); i++) {
 		styles[i].extraFontFlag = extraFontFlag;
 	}
 
 	CreateAndAddFont(styles[STYLE_DEFAULT]);
-	for (unsigned int j=0; j<styles.size(); j++) {
+	for (unsigned int j = 0; j < styles.size(); j++) {
 		CreateAndAddFont(styles[j]);
 	}
 
@@ -345,7 +345,7 @@ void ViewStyle::Refresh(Surface &surface, int tabInChars) {
 		it->second->Realise(surface, zoomLevel, technology, it->first);
 	}
 
-	for (unsigned int k=0; k<styles.size(); k++) {
+	for (unsigned int k = 0; k < styles.size(); k++) {
 		FontRealised *fr = Find(styles[k]);
 		styles[k].Copy(fr->font, *fr);
 	}
@@ -371,7 +371,7 @@ void ViewStyle::Refresh(Surface &surface, int tabInChars) {
 
 	someStylesProtected = false;
 	someStylesForceCase = false;
-	for (unsigned int l=0; l<styles.size(); l++) {
+	for (unsigned int l = 0; l < styles.size(); l++) {
 		if (styles[l].IsProtected()) {
 			someStylesProtected = true;
 		}
@@ -401,7 +401,7 @@ int ViewStyle::AllocateExtendedStyles(int numberStyles) {
 	int startRange = static_cast<int>(nextExtendedStyle);
 	nextExtendedStyle += numberStyles;
 	EnsureStyle(nextExtendedStyle);
-	for (size_t i=startRange; i<nextExtendedStyle; i++) {
+	for (size_t i = startRange; i < nextExtendedStyle; i++) {
 		styles[i].ClearTo(styles[STYLE_DEFAULT]);
 	}
 	return startRange;
@@ -409,21 +409,25 @@ int ViewStyle::AllocateExtendedStyles(int numberStyles) {
 
 void ViewStyle::EnsureStyle(size_t index) {
 	if (index >= styles.size()) {
-		AllocStyles(index+1);
+		AllocStyles(index + 1);
 	}
 }
 
 void ViewStyle::ResetDefaultStyle() {
-	styles[STYLE_DEFAULT].Clear(ColourDesired(0,0,0),
-	        ColourDesired(0xff,0xff,0xff),
-	        Platform::DefaultFontSize() * SC_FONT_SIZE_MULTIPLIER, fontNames.Save(Platform::DefaultFont()),
-	        SC_CHARSET_DEFAULT,
-	        SC_WEIGHT_NORMAL, false, false, false, Style::caseMixed, true, true, false);
+	styles[STYLE_DEFAULT].Clear(ColourDesired(0, 0, 0),
+		ColourDesired(0xff, 0xff, 0xff),
+		Platform::DefaultFontSize() * SC_FONT_SIZE_MULTIPLIER, fontNames.Save(Platform::DefaultFont()),
+		SC_CHARSET_DEFAULT,
+		SC_WEIGHT_NORMAL, false, false, false, Style::caseMixed, true, true, false);
 }
 
-void ViewStyle::ClearStyles() {
+//Catkeys: added from and to. Replaced whole function.
+//info: to is not included.
+void ViewStyle::ClearStyles(int from, int to) {
+	int n = styles.size();
+	if (to == 0 || to > n) to = n;
 	// Reset all styles to be like the default style
-	for (unsigned int i=0; i<styles.size(); i++) {
+	for (int i = from; i < to; i++) {
 		if (i != STYLE_DEFAULT) {
 			styles[i].ClearTo(styles[STYLE_DEFAULT]);
 		}
@@ -431,9 +435,24 @@ void ViewStyle::ClearStyles() {
 	styles[STYLE_LINENUMBER].back = Platform::Chrome();
 
 	// Set call tip fore/back to match the values previously set for call tips
-	styles[STYLE_CALLTIP].back = ColourDesired(0xff, 0xff, 0xff);
-	styles[STYLE_CALLTIP].fore = ColourDesired(0x80, 0x80, 0x80);
+	if (STYLE_CALLTIP >= from && STYLE_CALLTIP < to) {
+		styles[STYLE_CALLTIP].back = ColourDesired(0xff, 0xff, 0xff);
+		styles[STYLE_CALLTIP].fore = ColourDesired(0x80, 0x80, 0x80);
+	}
 }
+//void ViewStyle::ClearStyles() {
+//	// Reset all styles to be like the default style
+//	for (unsigned int i=0; i<styles.size(); i++) {
+//		if (i != STYLE_DEFAULT) {
+//			styles[i].ClearTo(styles[STYLE_DEFAULT]);
+//		}
+//	}
+//	styles[STYLE_LINENUMBER].back = Platform::Chrome();
+//
+//	// Set call tip fore/back to match the values previously set for call tips
+//	styles[STYLE_CALLTIP].back = ColourDesired(0xff, 0xff, 0xff);
+//	styles[STYLE_CALLTIP].fore = ColourDesired(0x80, 0x80, 0x80);
+//}
 
 void ViewStyle::SetStyleFontName(int styleIndex, const char *name) {
 	styles[styleIndex].fontName = fontNames.Save(name);
@@ -582,10 +601,10 @@ bool ViewStyle::SetWrapIndentMode(int wrapIndentMode_) {
 }
 
 void ViewStyle::AllocStyles(size_t sizeNew) {
-	size_t i=styles.size();
+	size_t i = styles.size();
 	styles.resize(sizeNew);
 	if (styles.size() > STYLE_DEFAULT) {
-		for (; i<sizeNew; i++) {
+		for (; i < sizeNew; i++) {
 			if (i != STYLE_DEFAULT) {
 				styles[i].ClearTo(styles[STYLE_DEFAULT]);
 			}

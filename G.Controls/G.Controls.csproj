@@ -53,6 +53,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Sci\SciStyles.cs" />
+    <Compile Include="Sci\SciText.cs" />
+    <Compile Include="Sci\SciControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Sci\SciTags.cs" />
     <Compile Include="Util, Api\ControlsApi.cs" />
     <Compile Include="Util, Api\ControlUtil.cs" />
@@ -77,7 +82,7 @@
     <Compile Include="GDockPanel\GAcc.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Sci\SciCommon.cs" />
+    <Compile Include="Sci\Sci API.cs" />
     <Compile Include="Sci\SciImages.cs" />
     <Compile Include="Sci\SciOutput.cs" />
     <Compile Include="GStripManager\GSMProp.cs">
@@ -98,10 +103,6 @@
     <ProjectReference Include="..\Catkeys\Catkeys.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Catkeys</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ScintillaNET\ScintillaNET.csproj">
-      <Project>{22ae2386-60f1-476e-9303-61cdb0aac4cf}</Project>
-      <Name>ScintillaNET</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

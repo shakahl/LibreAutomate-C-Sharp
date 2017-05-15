@@ -4,6 +4,427 @@
         <name>G.Controls</name>
     </assembly>
     <members>
+        <member name="T:G.Controls.SciText">
+            <summary>
+            Functions to work with Scintilla control text, code, etc.
+            A SciText object is created by SciControl which is the SC property.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.StyleMeasureStringWidth(System.Int32,System.String)">
+            <summary>
+            Measures string width.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.StyleClearAll">
+            <summary>
+            Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
+            Then also sets some special styles, eg STYLE_HIDDEN.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.StyleClearRange(System.Int32,System.Int32)">
+            <summary>
+            Calls SCI_STYLECLEARALL(styleFrom, styleToNotIncluding), which sets range of styles to be the same as STYLE_DEFAULT.
+            If styleToNotIncluding is 0, clears all starting from styleFrom.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.GetStyleAt(System.Int32)">
+            <summary>
+            Gets style at position.
+            Uses SCI_GETSTYLEAT.
+            Returns 0 if pos is invalid.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciText.SC">
+            <summary>
+            The host SciControl.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.Call(System.Int32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary>
+            Calls a Scintilla message to the control.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.Call(System.Int32,Catkeys.LPARAM)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.Call(System.Int32)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.SetString(System.Int32,Catkeys.LPARAM,System.String)">
+            <summary>
+            Calls a Scintilla message that sets a string which is passed using lParam.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.SetStringString(System.Int32,System.String)">
+            <summary>
+            Calls a Scintilla message and passes two strings using wParam and lParam.
+            wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.GetString(System.Int32,Catkeys.LPARAM,System.Int32)">
+            <summary>
+            Calls a Scintilla message that gets a string.
+            Don't call this function from another thread.
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="bufferSize">
+            How much bytes to allocate for Scintilla to store the text.
+            If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
+            If 0, returns "" and does not call the message.
+            If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
+            The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
+            </param>
+        </member>
+        <member name="M:G.Controls.SciText.GetStringOfLength(System.Int32,Catkeys.LPARAM,System.Int32)">
+            <summary>
+            The same as <see cref="M:G.Controls.SciText.GetString(System.Int32,Catkeys.LPARAM,System.Int32)"/>, but always uses utf8Length bytes of the result (does not find length).
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="utf8Length">
+            Known length (bytes) of the result UTF8 string, without the terminating '\0' character.
+            If 0, returns "" and does not call the message.
+            Cannot be negative.
+            </param>
+            <remarks>
+            This function can get binary string (with '\0' characters).
+            </remarks>
+        </member>
+        <member name="M:G.Controls.SciText.ClearText">
+            <summary>
+            Removes all text.
+            Uses SCI_CLEARALL.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.SetText(System.String,System.Boolean)">
+            <summary>
+            Replaces all text.
+            </summary>
+            <param name="s">Text.</param>
+            <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+        </member>
+        <member name="M:G.Controls.SciText.SetText(System.Text.StringBuilder,System.Boolean)">
+            <summary>
+            Replaces all text with StringBuilder text.
+            </summary>
+            <remarks>
+            This function can be used in controls where text changes very frequently and you want to avoid generating garbage when converting StringBuilder text to UTF8 that is sent to the Scintilla control.
+            If possible, converts to UTF8 directly without an intermediate String.
+            Parses tags if !ignoreTags and SC.InitTagsStyle is AutoWithPrefix and s starts with "&lt;&gt;". Then uses intermediate String.
+            SC.InitTagsStyle must not be AutoAlways. Then asserts and ignores tags.
+            </remarks>
+        </member>
+        <member name="M:G.Controls.SciText.AppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Appends text and optionally "\r\n".
+            Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
+            </summary>
+            <param name="s"></param>
+            <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
+            <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
+            <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LibAddText(System.Boolean,System.Byte*,System.Int32)">
+            <summary>
+            Appends UTF8 text of specified length.
+            Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.LibSetText(System.Byte*)">
+            <summary>
+            Sets UTF8 text.
+            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.GetText">
+            <summary>
+            Gets all text.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciText.TextLengthBytes">
+            <summary>
+            Gets text length. It is the number of bytes, not characters.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.LineIndexFromPosition(System.Int32)">
+            <summary>
+            Gets line index from character position.
+            </summary>
+            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LineStart(System.Int32)">
+            <summary>
+            Gets line start position from line index.
+            </summary>
+            <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LineEnd(System.Int32,System.Boolean)">
+            <summary>
+            Gets line end position from line index.
+            </summary>
+            <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
+            <param name="withRN">Include \r\n.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LineStartFromPosition(System.Int32)">
+            <summary>
+            Gets line start position from any position.
+            </summary>
+            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LineEndFromPosition(System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Gets line end position from any position.
+            </summary>
+            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
+            <param name="withRN">Include \r\n.</param>
+            <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LineText(System.Int32)">
+            <summary>
+            Gets line text.
+            </summary>
+            <param name="line">0-based line index. If invalid, returns "".</param>
+        </member>
+        <member name="M:G.Controls.SciText.RangeText(System.Int32,System.Int32)">
+            <summary>
+            Gets range text.
+            </summary>
+            <param name="from">If less than 0, uses 0.</param>
+            <param name="to">If less than 0, uses TextLengthBytes.</param>
+        </member>
+        <member name="M:G.Controls.SciText.LineHeight(System.Int32)">
+            <summary>
+            Gets line height.
+            Currently all lines are the same height.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciText.LineCount">
+            <summary>
+            Gets the number of lines.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.AnnotationText(System.Int32)">
+            <summary>
+            Gets annotation text of line.
+            Returns "" if the line does not contain annotation or is invalid line index.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.LibAnnotationText(System.Int32)">
+            <summary>
+            Gets raw annotation text which can contain image info.
+            AnnotationText gets text without image info.
+            Returns "" if the line does not contain annotation or is invalid line index.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.AnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets annotation text of line.
+            Does nothing if invalid line index.
+            If s is null or "", removes annotation.
+            Preserves existing image info.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.LibAnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets raw annotation text which can contain image info.
+            If s is null or "", removes annotation.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciText.RangeToFullLines(System.Int32@,System.Int32@,System.Boolean)">
+            <summary>
+            Moves 'from' to the start of its line, and 'to' to the end of its line.
+            Does not change 'to' if it is at a line start.
+            </summary>
+            <param name="from"></param>
+            <param name="to"></param>
+            <param name="withRN">Include "\r\n".</param>
+        </member>
+        <member name="T:G.Controls.SciControl">
+            <summary>
+            This .NET control wraps native Scintilla control.
+            This is not an universal Scintilla wrapper class. Designed just for purposes of this library and related software.
+            Responsible for creating and initializing the control. Also used to set/change control properties.
+            The ST property returns a Catilla object that can be used to work with text, code styling etc.
+            </summary>
+            <remarks>
+            Why don't use ScintillaNET:
+            1. Delays to update for the newest Scintilla version.
+            2. Possibly will be abandoned some day.
+            3. Adds yet another layer of bugs, and I found one.
+            4. I don't like some things how it is implemented. Eg aggressively uses "clamping", creates much garbage, eg new Line object for each line-related Scintilla message call.
+            5. For me it does not make much easier because I used Scintilla in QM2 (C++) and am familiar with its API (which is well documented). When using ScintillaNET, I often search its source code just to find which function calls the API I need. Now I can simply convert much of QM2 code to C#.
+            6. I use modified Scintilla. Would need to synchronize some modifications with ScintillaNET. For example I use a callback function instead of WM_NOTIFY/WM_REFLECT.
+            </remarks>
+        </member>
+        <member name="P:G.Controls.SciControl.ST">
+            <summary>
+            Gets the Catilla object that contains most Scintilla-related functions.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciControl.#ctor">
+            
+        </member>
+        <member name="M:G.Controls.SciControl.Call(System.Int32,Catkeys.LPARAM,Catkeys.LPARAM)">
+            <summary>
+            Calls a Scintilla message to the control.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciControl.Call(System.Int32,Catkeys.LPARAM)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciControl.Call(System.Int32)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciControl.SciLexerDllPath">
+            <summary>
+            Scintilla dll path.
+            Default is Folders.ThisApp + "SciLexer" + (Ver.Is64BitProcess ? "64" : "32") + ".dll". If you want to change it, call this before creating first control.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciControl.InitBorderStyle">
+            <summary>
+            Border style.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciControl.InitUseDefaultContextMenu">
+            <summary>
+            Use the default Scintilla's context menu.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciControl.InitReadOnlyAlways">
+            <summary>
+            This control is used just to display text, not to edit.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="T:G.Controls.SciControl.ImagesStyle">
+            <summary>
+            See <see cref="P:G.Controls.SciControl.InitImagesStyle"/>.
+            </summary>
+        </member>
+        <member name="F:G.Controls.SciControl.ImagesStyle.NoImages">
+            <summary>Don't show images. The Images property is null.</summary>
+        </member>
+        <member name="F:G.Controls.SciControl.ImagesStyle.ImageTag">
+            <summary>Display only images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.</summary>
+        </member>
+        <member name="F:G.Controls.SciControl.ImagesStyle.AnyString">
+            <summary>Display images specified in any string like "image file path", and only of image file types. Then limits image height to 10 lines.</summary>
+        </member>
+        <member name="P:G.Controls.SciControl.InitImagesStyle">
+            <summary>
+            Whether and how to show images.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="T:G.Controls.SciControl.TagsStyle">
+            <summary>
+            See <see cref="P:G.Controls.SciControl.InitImagesStyle"/>.
+            </summary>
+        </member>
+        <member name="F:G.Controls.SciControl.TagsStyle.NoTags">
+            <summary>Don't support tags. The Images property is null.</summary>
+        </member>
+        <member name="F:G.Controls.SciControl.TagsStyle.AutoWithPrefix">
+            <summary>Let Text, ST.SetText and ST.AppendText parse tags when the text has prefix "&lt;&gt;".</summary>
+        </member>
+        <member name="F:G.Controls.SciControl.TagsStyle.AutoAlways">
+            <summary>Let Text, ST.SetText and ST.AppendText parse tags always.</summary>
+        </member>
+        <member name="F:G.Controls.SciControl.TagsStyle.User">
+            <summary>Tags are parsed only when calling Tags.AddText.</summary>
+        </member>
+        <member name="P:G.Controls.SciControl.InitTagsStyle">
+            <summary>
+            Whether and when supports tags.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciControl.WrapLines">
+            <summary>
+            Word-wrap.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciControl.Text">
+            <summary>
+            Gets or sets all text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciTags._ClearUserStyles">
+            <summary>
+            Clears user-defined (through tags) styles.
+            Max number of user styles is NUM_STYLES_EX (216). Need to clear old styles before new styles can be defined.
+            This func is usually called after clearing control text.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Sets or appends styled text.
+            </summary>
+            <param name="text">Text with tags (optionally).</param>
+            <param name="appendLine">Append. Also appends "\r\n". Sets caret and scrolls to the end. If false, replaces control text.</param>
+            <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
+        </member>
+        <member name="M:G.Controls.SciTags.LibOnLinkClick(System.Int32,System.Boolean)">
+            <summary>
+            Called on SCN_HOTSPOTRELEASECLICK.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})">
+            <summary>
+            Adds (registers) a user-defined link tag for this control.
+            </summary>
+            <param name="name">
+            Tag name, like "_myTag".
+            Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+            Or can be one of predefined link tags, if you want to override it. For example "help", which is not implemented by the control.
+            If already exists, replaces the delegate.
+            </param>
+            <param name="a">
+            A delegate to a callback function (probably you'll use a lambda) that is called on link click.
+            It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
+            The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
+            </param>
+            <seealso cref="M:G.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>
+        </member>
+        <member name="M:G.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})">
+            <summary>
+            Adds (registers) a user-defined link tag for all controls.
+            </summary>
+            <param name="name">
+            Tag name, like "_myTag".
+            Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+            Or can be one of predefined link tags, if you want to override it. For example "help", which is not implemented by the control.
+            If already exists, replaces the delegate.
+            </param>
+            <param name="a">
+            A delegate to a callback function (probably you'll use a lambda) that is called on link click.
+            It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
+            The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
+            </param>
+            <seealso cref="M:G.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>
+        </member>
         <member name="T:G.Controls.GDockPanel.GNode">
             <summary>
             Base of GSplit, GContentNode (GPanel and GTab) and GDummyNode.
@@ -359,25 +780,39 @@
             We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
             </summary>
         </member>
+        <member name="P:G.Controls.Sci.SCNotification.Text">
+            <summary>
+            Converts textUTF8 to C# string.
+            Returns null if textUTF8 is null.
+            Don't call this property multiple times for the same notification. Store the return value in a variable and use it.
+            </summary>
+        </member>
         <member name="T:G.Controls.SciImages">
             <summary>
             Gets image file paths etc from Scintilla control text and displays the images below that lines.
-            A single variable can be used with multiple Scintilla controls. Benefit - shared cache.
             </summary>
+            <remarks>
+            Draws images in annotation areas.
+            Supports text annotations too, below images and in no-image lines. But it is limited:
+            1. To set/get it use <see cref="M:G.Controls.SciText.AnnotationText(System.Int32,System.String)"/>, not direct Scintilla API.
+            2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
+            3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
+            4. Setting annotation styles is currently not supported.
+            </remarks>
         </member>
-        <member name="P:G.Controls.SciImages.HideAnnotations">
+        <member name="M:G.Controls.SciImages._ThreadSharedData.CompactCache">
             <summary>
-            Use this if want to hide all annotations (annotation text).
-            When using this class, don't use Csintilla API to show/hide all annotations. This class sets it to show always, because it draws images in annotation areas.
+            If cache is large (at least MaxCacheSize and 4 images), removes about 3/4 of older cached images.
+            Will auto-reload from files etc when need.
             </summary>
         </member>
-        <member name="M:G.Controls.SciImages.#ctor(ScintillaNET.Scintilla,System.Boolean)">
+        <member name="M:G.Controls.SciImages.#ctor(G.Controls.SciControl,System.Boolean)">
             <summary>
             Prepares this variable and the Scintilla control to display images.
-            Sets sci.AnnotationVisible to visible. Need it because will draw images in annotation areas.
+            Calls SCI_ANNOTATIONSETVISIBLE(ANNOTATION_STANDARD). Need it because will draw images in annotation areas.
             </summary>
-            <param name="sci">The control.</param>
-            <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images.</param>
+            <param name="c">The control.</param>
+            <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
         </member>
         <member name="M:G.Controls.SciImages.ClearCache">
             <summary>
@@ -394,7 +829,52 @@
         <member name="P:G.Controls.SciImages.MaxCacheSize">
             <summary>
             Maximal size of the image cache.
-            Default 2 MB.
+            Default 4 MB.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciImages._SetImagesForTextRange(System.Int32,System.Byte*,System.Int32,System.Boolean,System.Int32)">
+            <summary>
+            Sets image annotations for one or more lines of text.
+            </summary>
+            <param name="firstLine">First line index.</param>
+            <param name="text">Text that starts at line firstLine.</param>
+            <param name="length">Text length.</param>
+            <param name="allText">Added all text (not edited or appended).</param>
+            <param name="textPos">Position where the text starts.</param>
+        </member>
+        <member name="M:G.Controls.SciImages._ParseAnnotText(System.Byte*,System.Int32,System.Int32@)">
+            <summary>
+            Parses annotation text.
+            If it starts with image info string ("\x3NNN\n\n..."), returns its length. Else returns 0.
+            </summary>
+            <param name="s">Annotation text. Can start with image info string or not.</param>
+            <param name="length">s length.</param>
+            <param name="imageInfo">The NNN part of image info, or 0.</param>
+        </member>
+        <member name="M:G.Controls.SciImages.LibAnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets annotation text, preserving existing image info.
+            </summary>
+            <param name="line"></param>
+            <param name="s">New text without image info.</param>
+        </member>
+        <member name="M:G.Controls.SciImages.LibAnnotationText(System.Int32)">
+            <summary>
+            Gets annotation text without image info.
+            </summary>
+        </member>
+        <member name="M:G.Controls.SciImages._GetTextRange(System.Int32,System.Int32)">
+            <summary>
+            Copies text range to BufferForText.
+            If cannot get from-to length text, asserts and returns null.
+            Does not validate arguments.
+            </summary>
+        </member>
+        <member name="P:G.Controls.SciImages.Visible">
+            <summary>
+            Hides/shows all images, or changes the display style of annotation areas.
+            Default is ANNOTATION_STANDARD (images visible).
+            When hiding, it just removes images, does not hide text annotations (SCI_ANNOTATIONGETVISIBLE remains unchanged).
             </summary>
         </member>
         <member name="F:G.Controls.GStripManagerPropertiesDialog.components">
@@ -572,7 +1052,7 @@
         </member>
         <member name="T:G.Controls.ImageUtil.ImageType">
             <summary>
-            Image type as detected by <see cref="M:G.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String,System.Int32,System.Int32)"/>.
+            Image type as detected by <see cref="M:G.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)"/>.
             </summary>
         </member>
         <member name="F:G.Controls.ImageUtil.ImageType.None">
@@ -602,14 +1082,20 @@
         <member name="F:G.Controls.ImageUtil.ImageType.ShellIcon">
             <summary>None of other image types, when anyFile is true.</summary>
         </member>
-        <member name="M:G.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String,System.Int32,System.Int32)">
+        <member name="M:G.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Byte*,System.Int32)">
             <summary>
-            Gets image type from string segment start/length.
+            Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
             <param name="s"></param>
-            <param name="start">Segment start index.</param>
-            <param name="length">If -1, gets segment from start to s end.</param>
+            <param name="length">If -1, calls CharPtr.Length(s).</param>
+        </member>
+        <member name="M:G.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)">
+            <summary>
+            Gets image type from string.
+            </summary>
+            <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+            <param name="s"></param>
         </member>
         <member name="M:G.Controls.ImageUtil.BitmapFileDataFromString(System.String,G.Controls.ImageUtil.ImageType,System.Boolean)">
             <summary>
@@ -634,6 +1120,19 @@
             Returns null if path is not a valid image string or the file does not exist.
             </summary>
             <remarks>Supports env. var. etc. If not full path, searches in Folders.ThisAppImages and standard directories.</remarks>
+        </member>
+        <member name="M:G.Controls.ImageUtil.ImageFromAppAssemblyResources(System.String)">
+            <summary>
+            Gets an Image from managed resources of appdomain's entry assembly.
+            The Image is not cached. Will need to Dispose.
+            </summary>
+            <param name="name">Image resource name. Must be just name, without "Project.Properties.Resources." etc.</param>
+        </member>
+        <member name="M:G.Controls.ImageUtil.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
+            <summary>
+            Gets ResourceManager of appdomain's entry assembly.
+            Returns null if the assembly does not have resources or if fails.
+            </summary>
         </member>
     </members>
 </doc>

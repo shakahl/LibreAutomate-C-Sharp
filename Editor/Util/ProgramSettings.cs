@@ -23,6 +23,7 @@ using static Catkeys.NoClass;
 
 /// <summary>
 /// Manages program settings in XML format.
+/// Must be single static variable. Now it is Program.Settings.
 /// </summary>
 class ProgramSettings
 {
@@ -58,7 +59,6 @@ class ProgramSettings
 
 	~ProgramSettings()
 	{
-		//Program.Timer1s -= _Program_Timer1s; //should we?
 		_Program_Timer1s();
 	}
 
@@ -193,4 +193,6 @@ class ProgramSettings
 		if(r == null && addIfDoesNotExist) _x.Add(r = new XElement(name));
 		return r;
 	}
+
+	//TODO: now Get/Set/Xml are not thread-safe
 }

@@ -71,7 +71,7 @@ namespace Catkeys
 				case 1:
 					using(var p = new Process_.LibProcessHandle(w)) {
 						if(!p.Is0) {
-							var b = Util.LibCharBuffer.Common; int na = 1000;
+							var b = Util.CharBuffer.LibCommon; int na = 1000;
 							if(0 == _Api.GetApplicationUserModelId(p, ref na, b.Alloc(na))) appId = b.ToString();
 						}
 					}

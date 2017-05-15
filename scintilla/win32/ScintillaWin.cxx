@@ -1376,7 +1376,10 @@ sptr_t ScintillaWin::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam
 			//	Platform::IsKeyDown(VK_SHIFT),
 			//	Platform::IsKeyDown(VK_CONTROL),
 			//	Platform::IsKeyDown(VK_MENU));
-			::SetFocus(MainHWND());
+
+			//Catkeys: we need to not set focus in some cases. In other cases we set focus in WndProc of our superclass.
+			//::SetFocus(MainHWND());
+
 			ButtonDown(Point::FromLong(static_cast<long>(lParam)), ::GetMessageTime(),
 				(wParam & MK_SHIFT) != 0,
 				(wParam & MK_CONTROL) != 0,
@@ -1971,15 +1974,20 @@ bool ScintillaWin::ModifyScrollBars(int nMax, int nPage) {
 }
 
 void ScintillaWin::NotifyChange() {
-	::SendMessage(::GetParent(MainHWND()), WM_COMMAND,
-	        MAKELONG(GetCtrlID(), SCEN_CHANGE),
-		reinterpret_cast<LPARAM>(MainHWND()));
+	//Catkeys: don't need it. WinForms also would reflect it.
+
+	//::SendMessage(::GetParent(MainHWND()), WM_COMMAND,
+	//        MAKELONG(GetCtrlID(), SCEN_CHANGE),
+	//	reinterpret_cast<LPARAM>(MainHWND()));
 }
 
 void ScintillaWin::NotifyFocus(bool focus) {
-	::SendMessage(::GetParent(MainHWND()), WM_COMMAND,
-	        MAKELONG(GetCtrlID(), focus ? SCEN_SETFOCUS : SCEN_KILLFOCUS),
-		reinterpret_cast<LPARAM>(MainHWND()));
+	//Catkeys: don't need it. WinForms also would reflect it.
+
+	//::SendMessage(::GetParent(MainHWND()), WM_COMMAND,
+	//        MAKELONG(GetCtrlID(), focus ? SCEN_SETFOCUS : SCEN_KILLFOCUS),
+	//	reinterpret_cast<LPARAM>(MainHWND()));
+
 	Editor::NotifyFocus(focus);
 }
 

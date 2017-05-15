@@ -25,6 +25,26 @@ namespace Catkeys
 {
 	public static partial class Input
 	{
+		/// <summary>
+		/// Returns true if Alt key is pressed.
+		/// </summary>
+		public static bool IsAlt { get => Api.GetKeyState(Api.VK_MENU) < 0; }
+
+		/// <summary>
+		/// Returns true if Ctrl key is pressed.
+		/// </summary>
+		public static bool IsCtrl { get => Api.GetKeyState(Api.VK_CONTROL) < 0; }
+
+		/// <summary>
+		/// Returns true if Shift key is pressed.
+		/// </summary>
+		public static bool IsShift { get => Api.GetKeyState(Api.VK_SHIFT) < 0; }
+
+		/// <summary>
+		/// Returns true if the Windows logo key is pressed (left or right).
+		/// </summary>
+		public static bool IsWin { get => Api.GetKeyState(Api.VK_LWIN) < 0 || Api.GetKeyState(Api.VK_RWIN) < 0; }
+
 		//EditorBrowsableAttribute does not work for Equals and ReferenceEquals in intellisense lists, although correct Options are used.
 		//[EditorBrowsable(EditorBrowsableState.Never)]
 		////[EditorBrowsable(EditorBrowsableState.Advanced)]

@@ -165,9 +165,19 @@ namespace Catkeys
 		public static bool IsDigit(char c) { return c <= '9' && c >= '0'; }
 
 		/// <summary>
+		/// Returns true if character is '0' to '9'.
+		/// </summary>
+		public static bool IsDigit(byte c) { return c <= '9' && c >= '0'; }
+
+		/// <summary>
 		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
 		/// </summary>
 		public static bool IsAlpha(char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
+
+		/// <summary>
+		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
+		/// </summary>
+		public static bool IsAlpha(byte c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
 
 		/// <summary>
 		/// Calculates angle degrees from coordinates x and y.

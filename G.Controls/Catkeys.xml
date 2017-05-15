@@ -4,6 +4,26 @@
         <name>Catkeys</name>
     </assembly>
     <members>
+        <member name="P:Catkeys.Input.IsAlt">
+            <summary>
+            Returns true if Alt key is pressed.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsCtrl">
+            <summary>
+            Returns true if Ctrl key is pressed.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsShift">
+            <summary>
+            Returns true if Shift key is pressed.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsWin">
+            <summary>
+            Returns true if the Windows logo key is pressed (left or right).
+            </summary>
+        </member>
         <member name="M:Catkeys.Input.GetTextCursorRect(Catkeys.RECT@)">
             <summary>
             Gets current text cursor (caret) rectangle in screen coordinates.
@@ -2263,7 +2283,17 @@
             Returns true if character is '0' to '9'.
             </summary>
         </member>
+        <member name="M:Catkeys.Calc.IsDigit(System.Byte)">
+            <summary>
+            Returns true if character is '0' to '9'.
+            </summary>
+        </member>
         <member name="M:Catkeys.Calc.IsAlpha(System.Char)">
+            <summary>
+            Returns true if character is 'A' to 'Z' or 'a' to 'z'.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Calc.IsAlpha(System.Byte)">
             <summary>
             Returns true if character is 'A' to 'Z' or 'a' to 'z'.
             </summary>
@@ -3797,7 +3827,7 @@
         <member name="M:Catkeys.NoClass.DebugPrint(System.Object,System.String,System.Int32,System.String)">
             <summary>
             <see cref="M:Catkeys.NoClass.Print(System.Object)">Print</see> that works only in Debug configuration, ie if DEBUG is defined.
-            In Release configuration the function call statement is removed, and arguments not evalueted.
+            Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
             The 3 optional parameters are not used.
             </summary>
         </member>
@@ -3808,24 +3838,25 @@
             The 3 optional parameters are not used.
             </summary>
         </member>
+        <member name="M:Catkeys.NoClass.DebugPrintFunc(System.String)">
+            <summary>
+            Calls Output.Write(current function name).
+            Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
+            Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
+            </summary>
+        </member>
+        <member name="M:Catkeys.NoClass.FuncName(System.String)">
+            <summary>
+            Gets current function name.
+            Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
+            </summary>
+        </member>
         <member name="M:Catkeys.NoClass.DebugDialog(System.Object,System.String,System.Int32,System.String)">
             <summary>
             Shows simplest task dialog that works only in Debug configuration, ie if DEBUG is defined.
-            In Release configuration the function call statement is removed, and arguments not evalueted.
+            Works only in Debug configuration, ie if DEBUG is defined. Else the function call statement is removed, and arguments not evalueted.
             The 3 optional parameters are not used.
             Calls <see cref="M:Catkeys.TaskDialog.Show(System.String,System.String,System.String,Catkeys.TDIcon,Catkeys.TDFlags,Catkeys.WndOrControl,System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.NoClass.FunctionName(System.String)">
-            <summary>
-            Gets caller function name.
-            Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
-            </summary>
-        </member>
-        <member name="M:Catkeys.NoClass.PrintFunc(System.String)">
-            <summary>
-            Calls Output.Write(caller function name).
-            Does not get the type name. For example, not useful if called from a constructor (returns ".ctor").
             </summary>
         </member>
         <member name="M:Catkeys.NoClass.Empty(System.String)">
@@ -3850,37 +3881,51 @@
         </member>
         <member name="T:Catkeys.Convert_">
             <summary>
-            Data conversion functions - hash, encode, compress.
+            Data conversion functions - hash, hex-encode, compress, UTF8.
             </summary>
         </member>
         <member name="M:Catkeys.Convert_.HashFnv1(System.String)">
             <summary>
-            FNV-1 hash.
-            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Convert_.HashFnv1(System.String,System.Int32,System.Int32)">
-            <summary>
-            FNV-1 hash.
+            32-bit FNV-1 hash.
             Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
             </summary>
         </member>
         <member name="M:Catkeys.Convert_.HashFnv1(System.Char*,System.Int32)">
             <summary>
-            FNV-1 hash.
+            32-bit FNV-1 hash.
             Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
             </summary>
         </member>
         <member name="M:Catkeys.Convert_.HashFnv1(System.Byte[])">
             <summary>
-            FNV-1 hash.
+            32-bit FNV-1 hash.
             Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
             </summary>
         </member>
         <member name="M:Catkeys.Convert_.HashFnv1(System.Byte*,System.Int32)">
             <summary>
-            FNV-1 hash.
+            32-bit FNV-1 hash.
             Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1_64(System.String)">
+            <summary>
+            64-bit FNV-1 hash.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1_64(System.Char*,System.Int32)">
+            <summary>
+            64-bit FNV-1 hash.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1_64(System.Byte[])">
+            <summary>
+            64-bit FNV-1 hash.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Convert_.HashFnv1_64(System.Byte*,System.Int32)">
+            <summary>
+            64-bit FNV-1 hash.
             </summary>
         </member>
         <member name="M:Catkeys.Convert_.HashMD5(System.Byte[])">
@@ -3941,44 +3986,116 @@
             <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
             <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
         </member>
-        <member name="M:Catkeys.Convert_.BytesToHexString(System.Byte[],System.Boolean)">
+        <member name="M:Catkeys.Convert_.HexEncode(System.Byte[],System.Boolean)">
             <summary>
-            Converts byte array (binary data) to hex-encoded string.
+            Converts binary data stored in byte[] to hex-encoded string.
             </summary>
-            <param name="a">The data. Can be null.</param>
+            <param name="a">The data. Can be null, then returns null.</param>
             <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-            <seealso cref="M:System.Convert.ToBase64String(System.Byte[])"/>
-        </member>
-        <member name="M:Catkeys.Convert_.BytesToHexString(System.Void*,System.Int32,System.Boolean)">
-            <summary>
-            Converts binary data to hex-encoded string.
-            </summary>
-            <param name="data">The data. Can be any valid memory of specified size, for example a struct address. Can be null.</param>
-            <param name="size">data memory size.</param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-        </member>
-        <member name="M:Catkeys.Convert_.BytesFromHexString(System.String)">
-            <summary>
-            Converts hex-encoded string to byte array (binary data).
-            </summary>
-            <param name="s">Hex-encoded string. Can be null.</param>
             <remarks>
-            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
+            The result string length is 2 * array length.
+            In most cases it's better to use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>, then result is 4/3 of array length. Both functions are fast.
             </remarks>
-            <seealso cref="M:System.Convert.FromBase64String(System.String)"/>
         </member>
-        <member name="M:Catkeys.Convert_.BytesFromHexString(System.String,System.Void*,System.Int32,System.Int32)">
+        <member name="M:Catkeys.Convert_.HexEncode(System.Void*,System.Int32,System.Boolean)">
             <summary>
-            Converts hex-encoded string to binary data.
-            Returns the number of bytes stored in data memory. It is equal or less than Math.Min(size, (s.Length - startFrom) / 2).
+            Converts binary data stored in any memory to hex-encoded string.
+            </summary>
+            <param name="data">The data. Can be any valid memory of specified size, for example a struct address. Can be null, then returns null.</param>
+            <param name="size">data memory size (bytes).</param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+        </member>
+        <member name="M:Catkeys.Convert_.HexDecode(System.String)">
+            <summary>
+            Converts hex-encoded string to binary data. Stores it in byte[].
+            </summary>
+            <param name="s">Hex-encoded string. Can be null, then returns null.</param>
+            <remarks>
+            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
+            The number of hex-digit characters should be divisible by 2, else the last character is ignored.
+            </remarks>
+            <seealso cref="M:Catkeys.Convert_.Base64Decode(System.String)"/>
+        </member>
+        <member name="M:Catkeys.Convert_.HexDecode(System.String,System.Void*,System.Int32,System.Int32)">
+            <summary>
+            Converts hex-encoded string to binary data. Stores it in caller's memory buffer.
+            Returns the number of bytes stored in resultBuffer memory. It is equal or less than Math.Min(bufferSize, (s.Length - stringStartIndex) / 2).
             </summary>
             <param name="s">Hex-encoded string. Can be null.</param>
-            <param name="data">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
-            <param name="size">data memory size.</param>
-            <param name="startIndex">0 or index of first character of hex-encoded substring in s.</param>
+            <param name="resultBuffer">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
+            <param name="bufferSize">resultBuffer memory size. Note: this function will damage process memory if using bad resultBuffer or bufferSize.</param>
+            <param name="stringStartIndex">0 or index of first character of hex-encoded substring in s.</param>
             <remarks>
-            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667". Skips hex-digits that are not in pair, for example 2 in "01 2 34".
-            <note>This function is unsafe, it will damage process memory if using bad data or size.</note>
+            Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
+            The number of hex-digit characters should be divisible by 2, else the last character is ignored.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.HexDecode(System.Char*,System.Int32,System.Void*,System.Int32)">
+            <summary>
+            The same as <see cref="M:Catkeys.Convert_.HexDecode(System.String,System.Void*,System.Int32,System.Int32)"/> but the string can be an unmanaged UTF-16 string.
+            </summary>
+            <param name="s">UTF-16 string.</param>
+            <param name="length">s length (characters).</param>
+            <param name="resultBuffer"></param>
+            <param name="bufferSize"></param>
+        </member>
+        <member name="M:Catkeys.Convert_.Base64Decode(System.Byte*,System.Int32,System.Void*,System.Int32)">
+            <summary>
+            Converts Base64 ANSI string to binary data (bytes). Stores it in caller's memory buffer.
+            Returns the number of bytes stored in resultBuffer.
+            </summary>
+            <param name="s">Base64 string. Can be null if len is 0.</param>
+            <param name="len">s length (bytes).</param>
+            <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
+            <param name="bufferSize">resultBuffer buffer length (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
+            <remarks>
+            Allows (discards) non-base64 characters.
+            Supports URL-safe characters: '-' for '+' and '_' for '/'.
+            </remarks>
+            <exception cref="T:System.ArgumentException">bufferSize too small.</exception>
+        </member>
+        <member name="M:Catkeys.Convert_.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)">
+            <summary>
+            Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
+            Returns the number of bytes stored in resultBuffer.
+            </summary>
+            <param name="s">Base64 string. Can be null if len is 0.</param>
+            <param name="len">s length (characters).</param>
+            <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
+            <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
+            <remarks>
+            How it is different than Convert.FromBase64String:
+            1. Allows (discards) non-base64 characters.
+            2. Supports URL-safe characters: '-' for '+' and '_' for '/'.
+            3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 
+            4. Faster.
+            </remarks>
+            <exception cref="T:System.ArgumentException">bufferSize too small.</exception>
+        </member>
+        <member name="M:Catkeys.Convert_.Base64Decode(System.String,System.Void*,System.Int32,System.Int32)">
+            <summary>
+            The same as <see cref="M:Catkeys.Convert_.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)"/>, just different input string type.
+            </summary>
+            <param name="s">Base64 string. Can be null, then returns null.</param>
+            <param name="resultBuffer"></param>
+            <param name="bufferSize"></param>
+            <param name="stringStartIndex">0 or index of first character of Base64 substring in s.</param>
+        </member>
+        <member name="M:Catkeys.Convert_.Base64Decode(System.String)">
+            <summary>
+            Converts Base64 string to binary data (bytes).
+            Returns byte[] containing the data.
+            </summary>
+            <param name="s">Base64 string. Can be null, then returns null.</param>
+            <remarks>
+            How it is different than Convert.FromBase64String:
+            1. Allows (discards) non-base64 characters.
+            2. Supports URL-safe characters: '-' for '+' and '_' for '/'.
+            3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 
+            4. Faster.
+            
+            This library does not have Base64-encode functions. Use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>.
+            See also <see cref="M:System.Convert.FromBase64String(System.String)"/>. It does the same, but does not support some parameter types (char*, ANSI string, byte* buffer) that are used internally in this libray and related software, that is why these library functions were created.
             </remarks>
         </member>
         <member name="M:Catkeys.Convert_.Compress(System.Byte[])">
@@ -3994,6 +4111,69 @@
             </summary>
             <param name="data"></param>
             <exception cref="T:System.Exception">Exceptions thrown by DeflateStream.</exception>
+        </member>
+        <member name="M:Catkeys.Convert_.Utf8LengthFromString(System.String)">
+            <summary>
+            Returns the number of bytes that would by produced by converting C# string to UTF8, not including the terminating '\0' character.
+            </summary>
+            <param name="s">C# string (UTF16). Can be null.</param>
+        </member>
+        <member name="M:Catkeys.Convert_.Utf8FromString(System.String,System.Byte*,System.Int32)">
+            <summary>
+            Converts C# string to '\0'-terminated UTF8 string. Stores the UTF8 string in caller's buffer.
+            Returns UTF8 string length in bytes, not including the terminating '\0' character.
+            If fails (unlikely if passed correct arguments), returns 0 and sets buffer="".
+            </summary>
+            <param name="s">C# string (UTF16). Can be null.</param>
+            <param name="buffer">Caller-allocated memory of bufLen length.</param>
+            <param name="bufLen">buffer length in bytes. Should be at least <see cref="M:Catkeys.Convert_.Utf8LengthFromString(System.String)"/>+1, else converts only part of string. The maximal possible required buffer length for whole string can be s.Length*3+1.</param>
+            <remarks>
+            Calls API <msdn>WideCharToMultiByte</msdn>.
+            This is the most low-level and therefore fastest overload. Does not allocate any memory. With big strings much faster than .NET Encoding class functions.
+            Use buffer/bufLen carefully. If bufLen is greater that the memory buffer length, other memory will be overwritten/damaged.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.Utf8FromString(System.String)">
+            <summary>
+            Converts C# string to '\0'-terminated UTF8 string.
+            </summary>
+            <param name="s">C# string (UTF16). If null, returns null.</param>
+            <remarks>
+            How this is different from .NET Encoding class functions: 1. Uses <msdn>WideCharToMultiByte</msdn>. 2. Faster with big strings. 3. The returned string is '\0'-terminated. 4. No exceptions (unless the string is so large that fails to allocate so much memory).
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.LibUtf8FromString(System.String,Catkeys.Util.ByteBuffer,System.Int32*,System.Int32)">
+            <summary>
+            Converts C# string to '\0'-terminated UTF8 string stored in a Catkeys.Util.ByteBuffer.
+            </summary>
+            <param name="s">C# string (UTF16). If null, by default returns null; returns "" if using allocExtraBytes.</param>
+            <param name="buffer">A Util.ByteBuffer variable (probably [ThreadStatic]). If null, uses Catkeys.Util.ByteBuffer.LibCommon.</param>
+            <param name="utf8Length">If not null, receives UTF8 text length not including '\0' and allocExtraBytes.</param>
+            <param name="allocExtraBytes">Allocate this number of extra bytes after the string.</param>
+        </member>
+        <member name="M:Catkeys.Convert_.Utf8ToStringLength(System.Byte*,System.Int32)">
+            <summary>
+            Returns the number of characters that would by produced by converting UTF8 to C# string.
+            The terminating '\0' character is not included in the return value.
+            </summary>
+            <param name="utf8">UTF8 string. Can be null.</param>
+            <param name="lengthBytes">Length of utf8 or part of it. If negative, the function finds utf8 length; then utf8 must be '\0'-terminated.</param>
+            <remarks>
+            Uses API <msdn>MultiByteToWideChar</msdn>.
+            There is no overload that takes byte[], because for it can be used .NET Encoding class functions.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Convert_.Utf8ToString(System.Byte*,System.Int32)">
+            <summary>
+            Converts UTF8 string to C# string (which is UTF16).
+            The terminating '\0' character is not included in the returned string.
+            </summary>
+            <param name="utf8">UTF8 string. If null, returns null.</param>
+            <param name="lengthBytes">Length of utf8 or part of it. If negative, the function finds utf8 length; then utf8 must be '\0'-terminated.</param>
+            <remarks>
+            Uses API <msdn>MultiByteToWideChar</msdn>.
+            There is no overload that takes byte[], because for it can be used .NET Encoding class functions. The speed is similar; this is slower with short strings but faster with long strings.
+            </remarks>
         </member>
         <member name="T:Catkeys.Output">
             <summary>
@@ -4456,6 +4636,72 @@
             </summary>
             <param name="processHandle">Native process handle.</param>
         </member>
+        <member name="T:Catkeys.CharPtr">
+            <summary>
+            String functions that work with char* and ANSI byte* strings.
+            </summary>
+        </member>
+        <member name="M:Catkeys.CharPtr.Length(System.Char*)">
+            <summary>
+            Finds unmanaged UTF-16 string length (number of characters).
+            Scans the string until '\0' character found.
+            </summary>
+            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.Length(System.Char*,System.Int32)">
+            <summary>
+            Finds unmanaged UTF-16 string length (number of characters).
+            Scans the string until '\0' character found, but not exceeding the specified length.
+            </summary>
+            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
+            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.Length(System.Byte*)">
+            <summary>
+            Finds unmanaged ANSI string length (number of bytes).
+            Scans the string until '\0' character found.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be any ANSI encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.Length(System.Byte*,System.Int32)">
+            <summary>
+            Finds unmanaged ANSI string length (number of bytes).
+            Scans the string until '\0' character found, but not exceeding the specified length.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be any encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
+            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.AsciiStartsWith(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged ANSI string p starts with string s. Case-sensitive.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.AsciiStartsWithI(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged ANSI string p starts with string s. Case-insensitive.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.AsciiFindChar(System.Byte*,System.Int32,System.Byte)">
+            <summary>
+            Finds character in unmanaged ANSI string which can be binary.
+            </summary>
+            <param name="s">ANSI string. Can be null.</param>
+            <param name="len">Length of s to search in.</param>
+            <param name="ch">ASCII character.</param>
+        </member>
+        <member name="M:Catkeys.CharPtr.AsciiFindString(System.Byte*,System.Int32,System.String)">
+            <summary>
+            Finds substring in unmanaged ANSI string which can be binary.
+            Returns -1 if not found or if s is null/"" or s2 is "".
+            </summary>
+            <param name="s">ANSI string. Can be null.</param>
+            <param name="len">Length of s to search in.</param>
+            <param name="s2">Substring to find. Must contain only ASCII characters. Cannot be null.</param>
+        </member>
         <member name="T:Catkeys.String_">
             <summary>
             Adds extension methods to System.String.
@@ -4498,12 +4744,6 @@
             <summary>
             Calls <see cref="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)">Like_</see>(patterns[i], ignoreCase) for each wildcard pattern specified in the argument list until it returns true.
             Returns 1-based index of matching pattern, or 0 if none.
-            </summary>
-        </member>
-        <member name="P:Catkeys.String_.LibLowerCaseTable">
-            <summary>
-            Gets unmanaged char[0x10000] containing lower-case versions of the first 0x10000 characters.
-            Auto-creates when called first time. The memory is shared by appdomains.
             </summary>
         </member>
         <member name="M:Catkeys.String_.Equals_(System.String,System.String,System.Boolean)">
@@ -6665,8 +6905,9 @@
             <summary>
             
             </summary>
-            <param name="typeSize">Element type size. If don't know, use <see cref="T:Catkeys.Util.TypeSize`1"/>.</param>
+            <param name="typeSize">Element type size. If don't know, use <see cref="T:Catkeys.Util.TypeSize`1"/>. Note that size of some types is different in 32-bit and 64-bit process.</param>
             <param name="capacity">Initial Capacity. If 0 (or set to 0 later), on first allocation will be used default capacity; it is 512 elements for types not bigger than 32 bytes; it is smaller for bigger types, trying to not exceed 16384 bytes.</param>
+            <exception cref="T:System.ArgumentException">typeSize less than 1 or capacity less than 0.</exception>
         </member>
         <member name="P:Catkeys.Util.LibArrayBuilder.Ptr">
             <summary>
@@ -6750,6 +6991,30 @@
             <summary>
             Classes that wrap LibArrayBuilder for types used in this library.
             Because LibArrayBuilder is quite difficult and unsafe to use, and we cannot create a generic class.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.LibTables">
+            <summary>
+            Lookup tables for various functions of this library.
+            Multiple appdomains share the same tables.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibTables.LowerCase">
+            <summary>
+            Gets native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
+            Auto-creates when called first time. The memory is shared by appdomains.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibTables.Base64">
+            <summary>
+            Gets table for <see cref="M:Catkeys.Convert_.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)"/> and co.
+            Auto-creates when called first time. The memory is shared by appdomains.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.LibTables.Hex">
+            <summary>
+            Gets table for <see cref="M:Catkeys.Convert_.HexDecode(System.String,System.Void*,System.Int32,System.Int32)"/> and co.
+            Auto-creates when called first time. The memory is shared by appdomains.
             </summary>
         </member>
         <member name="T:Catkeys.Util.AppDomain_">
@@ -6850,70 +7115,143 @@
             Memory size.
             </summary>
         </member>
-        <member name="T:Catkeys.Util.LibCharBuffer">
+        <member name="T:Catkeys.Util.CharBuffer">
             <summary>
             Allocates a native memory buffer as char*.
-            The property <see cref="P:Catkeys.Util.LibCharBuffer.Common"/> can be used when calling API functions that require a char buffer. It returns a ThreadStatic variable.
-            Using this is much faster than StringBuilder, and does not collect .NET garbage. Almost as fast as stackalloc.
+            Normally is used as a [ThreadStatic] variable. It is faster than StringBuilder, local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
+            When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="M:Catkeys.Util.CharBuffer.Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
+            Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
             </summary>
         </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Ptr">
+        <member name="P:Catkeys.Util.CharBuffer.Ptr">
             <summary>
             Gets buffer pointer.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Capacity">
+        <member name="P:Catkeys.Util.CharBuffer.Capacity">
             <summary>
             Gets current buffer length (n characters).
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Max(System.Int32)">
+        <member name="M:Catkeys.Util.CharBuffer.Max(System.Int32)">
             <summary>
             Returns Math.Max(n, Capacity).
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32@,System.Char*@,System.Boolean)">
+        <member name="M:Catkeys.Util.CharBuffer.Alloc(System.Int32@,System.Char*@,System.Boolean)">
             <summary>
-            Gets memory buffer of at least Math.Max(n, 300) characters.
+            Gets memory buffer of at least Math.Max(n+1, 300) characters.
             Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            By default always returns true. If noThrow, returns false if fails to allocate meory (unlikely).
+            By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
+            The buffer content is uninitialized (random bytes).
             </summary>
             <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
             <param name="ptr">Receives buffer pointer.</param>
             <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
             <exception cref="T:System.OutOfMemoryException"></exception>
+            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32)">
+        <member name="M:Catkeys.Util.CharBuffer.Alloc(System.Int32)">
             <summary>
-            Gets memory buffer of at least Math.Max(n, 300) characters.
+            Gets memory buffer of at least Math.Max(n+1, 300) characters.
             Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+            The buffer content is uninitialized (random bytes).
             </summary>
             <exception cref="T:System.OutOfMemoryException"></exception>
+            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToString">
+        <member name="M:Catkeys.Util.CharBuffer.ToString">
             <summary>
             Converts the buffer, which contains native '\0'-terminated UTF-16 string, to String.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToString(System.Int32)">
+        <member name="M:Catkeys.Util.CharBuffer.ToString(System.Int32)">
             <summary>
             Converts the buffer, which contains native UTF-16 string of n length, to String.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToStringFromAnsi(System.Text.Encoding)">
+        <member name="M:Catkeys.Util.CharBuffer.ToStringFromAnsi(System.Text.Encoding)">
             <summary>
             Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
             </summary>
             <param name="enc">If null, uses system's default ANSI encoding.</param>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Compact">
+        <member name="M:Catkeys.Util.CharBuffer.Compact">
             <summary>
             Frees the buffer if more than 5000 characters.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Common">
+        <member name="M:Catkeys.Util.CharBuffer.Finalize">
+            
+        </member>
+        <member name="P:Catkeys.Util.CharBuffer.LibCommon">
             <summary>
-            A ThreadStatic LibCharBuffer instance.
+            A [ThreadStatic] CharBuffer instance used in this library.
+            Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
+            </summary>
+        </member>
+        <member name="T:Catkeys.Util.ByteBuffer">
+            <summary>
+            Allocates a native memory buffer as byte*.
+            Normally is used as a [ThreadStatic] variable. It is faster than local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
+            When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="M:Catkeys.Util.ByteBuffer.Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.ByteBuffer.Ptr">
+            <summary>
+            Gets buffer pointer.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.ByteBuffer.Capacity">
+            <summary>
+            Gets current buffer length (n bytes).
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ByteBuffer.Max(System.Int32)">
+            <summary>
+            Returns Math.Max(n, Capacity).
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ByteBuffer.Alloc(System.Int32@,System.Byte*@,System.Boolean)">
+            <summary>
+            Gets memory buffer of at least Math.Max(n+1, 300) bytes.
+            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+            By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
+            The buffer content is uninitialized (random bytes).
+            </summary>
+            <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
+            <param name="ptr">Receives buffer pointer.</param>
+            <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
+            <exception cref="T:System.OutOfMemoryException"></exception>
+            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
+        </member>
+        <member name="M:Catkeys.Util.ByteBuffer.Alloc(System.Int32)">
+            <summary>
+            Gets memory buffer of at least Math.Max(n+1, 300) bytes.
+            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+            The buffer content is uninitialized (random bytes).
+            </summary>
+            <exception cref="T:System.OutOfMemoryException"></exception>
+            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
+        </member>
+        <member name="M:Catkeys.Util.ByteBuffer.ToStringFromAnsi(System.Text.Encoding)">
+            <summary>
+            Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+            </summary>
+            <param name="enc">If null, uses system's default ANSI encoding.</param>
+        </member>
+        <member name="M:Catkeys.Util.ByteBuffer.Compact">
+            <summary>
+            Frees the buffer if more than 10000 bytes.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.ByteBuffer.Finalize">
+            
+        </member>
+        <member name="P:Catkeys.Util.ByteBuffer.LibCommon">
+            <summary>
+            A [ThreadStatic] ByteBuffer instance used in this library.
+            Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
             </summary>
         </member>
         <member name="T:Catkeys.Util.NativeHeap">
@@ -7129,9 +7467,22 @@
         </member>
         <member name="T:Catkeys.Util.MemoryBitmap">
             <summary>
-            Creates and manages native bitmap handle and memory DC.
+            Creates and manages native bitmap handle and memory DC (GDI device context).
             The bitmap is selected in the DC.
             </summary>
+        </member>
+        <member name="P:Catkeys.Util.MemoryBitmap.Hdc">
+            <summary>
+            DC handle.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.MemoryBitmap.Hbitmap">
+            <summary>
+            Bitmap handle.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.MemoryBitmap.#ctor">
+            
         </member>
         <member name="M:Catkeys.Util.MemoryBitmap.#ctor(System.Int32,System.Int32)">
             <summary>
@@ -7245,43 +7596,6 @@
             Frees as much as possible physical memory used by this process.
             Calls <see cref="M:System.GC.Collect"/> and API <msdn>SetProcessWorkingSetSize</msdn>.
             </summary>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.Char*)">
-            <summary>
-            Finds unmanaged '\0'-terminated string length.
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">Unmanaged string. Can be null.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.Char*,System.Int32)">
-            <summary>
-            Finds unmanaged '\0'-terminated string length.
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">Unmanaged string. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.SByte*)">
-            <summary>
-            Finds unmanaged '\0'-terminated ANSI string length.
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">Unmanaged ANSI string. Can be null.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrLength(System.SByte*,System.Int32)">
-            <summary>
-            Finds unmanaged '\0'-terminated ANSI string length.
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">Unmanaged ANSI string. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Catkeys.Util.Misc.CharPtrStartsWith(System.Char*,System.String)">
-            <summary>
-            Returns true if p starts with s.
-            </summary>
-            <param name="p">Unmanaged string. Can be null.</param>
-            <param name="s"></param>
         </member>
         <member name="M:Catkeys.Util.Misc.LibGetTypeSize(System.Type)">
             <summary>

@@ -29,8 +29,8 @@ partial class EForm
 {
 	void TestEditor()
 	{
-		//Panels.Status.SetText("same thread");
-		//Task.Run(() => { Wait(2); Panels.Status.SetText("other thread"); });
+		Panels.Status.SetText("same thread\r\nline2\r\nline3");
+		Task.Run(() => { Wait(2); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
 	}
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()

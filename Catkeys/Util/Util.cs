@@ -31,16 +31,24 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
-	/// Creates and manages native bitmap handle and memory DC.
+	/// Creates and manages native bitmap handle and memory DC (GDI device context).
 	/// The bitmap is selected in the DC.
 	/// </summary>
-	class MemoryBitmap :IDisposable
+	public class MemoryBitmap :IDisposable
 	{
 		IntPtr _dc, _bm, _oldbm;
 
+		/// <summary>
+		/// DC handle.
+		/// </summary>
 		public IntPtr Hdc { get => _dc; }
+
+		/// <summary>
+		/// Bitmap handle.
+		/// </summary>
 		public IntPtr Hbitmap { get => _bm; }
 
+		///
 		public MemoryBitmap() { }
 
 		/// <summary>
@@ -258,70 +266,6 @@ namespace Catkeys.Util
 			//return;
 			GC.Collect();
 			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), (UIntPtr)(~0U), (UIntPtr)(~0U));
-		}
-
-		/// <summary>
-		/// Finds unmanaged '\0'-terminated string length.
-		/// Scans the string until '\0' character found.
-		/// </summary>
-		/// <param name="p">Unmanaged string. Can be null.</param>
-		public static unsafe int CharPtrLength(char* p)
-		{
-			if(p == null) return 0;
-			for(int i = 0; ; i++) if(p[i] == '\0') return i;
-		}
-
-		/// <summary>
-		/// Finds unmanaged '\0'-terminated string length.
-		/// Scans the string until '\0' character found, but not exceeding the specified length.
-		/// </summary>
-		/// <param name="p">Unmanaged string. Can be null.</param>
-		/// <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-		public static unsafe int CharPtrLength(char* p, int nMax)
-		{
-			if(p == null) return 0;
-			for(int i = 0; i < nMax; i++) if(p[i] == '\0') return i;
-			return nMax;
-		}
-
-		/// <summary>
-		/// Finds unmanaged '\0'-terminated ANSI string length.
-		/// Scans the string until '\0' character found.
-		/// </summary>
-		/// <param name="p">Unmanaged ANSI string. Can be null.</param>
-		public static unsafe int CharPtrLength(sbyte* p)
-		{
-			if(p == null) return 0;
-			for(int i = 0; ; i++) if(p[i] == 0) return i;
-		}
-
-		/// <summary>
-		/// Finds unmanaged '\0'-terminated ANSI string length.
-		/// Scans the string until '\0' character found, but not exceeding the specified length.
-		/// </summary>
-		/// <param name="p">Unmanaged ANSI string. Can be null.</param>
-		/// <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-		public static unsafe int CharPtrLength(sbyte* p, int nMax)
-		{
-			if(p == null) return 0;
-			for(int i = 0; i < nMax; i++) if(p[i] == 0) return i;
-			return nMax;
-		}
-
-		/// <summary>
-		/// Returns true if p starts with s.
-		/// </summary>
-		/// <param name="p">Unmanaged string. Can be null.</param>
-		/// <param name="s"></param>
-		public static unsafe bool CharPtrStartsWith(char* p, string s)
-		{
-			if(p == null || s == null) return false;
-			int i, n = s.Length;
-			for(i = 0; i < n; i++, p++) {
-				if(*p != s[i]) return false;
-				if(*p == '\0') return false;
-			}
-			return true;
 		}
 
 		/// <summary>

@@ -183,7 +183,7 @@ public:
 	int AllocateExtendedStyles(int numberStyles);
 	void EnsureStyle(size_t index);
 	void ResetDefaultStyle();
-	void ClearStyles();
+	void ClearStyles(int from, int to);
 	void SetStyleFontName(int styleIndex, const char *name);
 	bool ProtectionActive() const;
 	int ExternalMarginWidth() const;

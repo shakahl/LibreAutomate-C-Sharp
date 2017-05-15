@@ -127,9 +127,9 @@ namespace Catkeys.Util
 		//Be careful with types whose sizes are different in 32 and 64 bit process. Use long and cast to IntPtr etc.
 
 		//public int test;
+		internal LibTables.ProcessVariables tables;
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
-		internal String_.ProcessVariables str;
 
 		#endregion
 
@@ -180,10 +180,11 @@ namespace Catkeys.Util
 
 	/// <summary>
 	/// Allocates a native memory buffer as char*.
-	/// The property <see cref="Common"/> can be used when calling API functions that require a char buffer. It returns a ThreadStatic variable.
-	/// Using this is much faster than StringBuilder, and does not collect .NET garbage. Almost as fast as stackalloc.
+	/// Normally is used as a [ThreadStatic] variable. It is faster than StringBuilder, local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
+	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
+	/// Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
 	/// </summary>
-	internal unsafe class LibCharBuffer
+	public unsafe class CharBuffer
 	{
 		char* _p;
 		int _n;
@@ -207,19 +208,22 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Gets memory buffer of at least Math.Max(n, 300) characters.
+		/// Gets memory buffer of at least Math.Max(n+1, 300) characters.
 		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-		/// By default always returns true. If noThrow, returns false if fails to allocate meory (unlikely).
+		/// By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
+		/// The buffer content is uninitialized (random bytes).
 		/// </summary>
 		/// <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
 		/// <param name="ptr">Receives buffer pointer.</param>
 		/// <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
 		/// <exception cref="OutOfMemoryException"></exception>
+		/// <exception cref="ArgumentException">n is less than 0.</exception>
 		public bool Alloc(ref int n, out char* ptr, bool noThrow = false)
 		{
+			if(n < 0) throw new ArgumentException();
 			if(_p == null || n > _n) {
 				if(n < 300) n = 300;
-				var p = (char*)Api.LocalAlloc(0, (n + 2) * 2);
+				var p = (char*)NativeHeap.Alloc((n + 2) * 2);
 				if(p == null) {
 					ptr = null;
 					if(noThrow) return false;
@@ -235,10 +239,12 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Gets memory buffer of at least Math.Max(n, 300) characters.
+		/// Gets memory buffer of at least Math.Max(n+1, 300) characters.
 		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+		/// The buffer content is uninitialized (random bytes).
 		/// </summary>
 		/// <exception cref="OutOfMemoryException"></exception>
+		/// <exception cref="ArgumentException">n is less than 0.</exception>
 		public char* Alloc(int n)
 		{
 			Alloc(ref n, out var p);
@@ -251,7 +257,7 @@ namespace Catkeys.Util
 		public override string ToString()
 		{
 			if(_p == null) return null;
-			int n = Misc.CharPtrLength(_p, _n);
+			int n = CharPtr.Length(_p, _n);
 			return new string(_p, 0, n);
 		}
 
@@ -271,9 +277,8 @@ namespace Catkeys.Util
 		public string ToStringFromAnsi(Encoding enc = null)
 		{
 			if(_p == null) return null;
-			var s = (sbyte*)_p;
-			int n = Misc.CharPtrLength(s, _n * 2);
-			return new String(s, 0, n, enc);
+			int n = CharPtr.Length((byte*)_p, _n * 2);
+			return new String((sbyte*)_p, 0, n, enc);
 		}
 
 		/// <summary>
@@ -290,23 +295,203 @@ namespace Catkeys.Util
 				var p = _p;
 				_p = null;
 				_n = 0;
-				Api.LocalFree(p);
+				NativeHeap.Free(p);
 			}
 		}
 
-		~LibCharBuffer()
+		///
+		~CharBuffer()
 		{
 			_Free();
 		}
 
 		/// <summary>
-		/// A ThreadStatic LibCharBuffer instance.
+		/// A [ThreadStatic] CharBuffer instance used in this library.
+		/// Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
 		/// </summary>
-		public static LibCharBuffer Common { get => _common ?? (_common = new LibCharBuffer()); }
-		[ThreadStatic] static LibCharBuffer _common;
-		//this works only in the first thread. In other threads it will be null. It's documented.
-		//[ThreadStatic] public static readonly LibCharBuffer Common = new LibCharBuffer();
+		internal static CharBuffer LibCommon { get => _common ?? (_common = new CharBuffer()); }
+		[ThreadStatic] static CharBuffer _common;
 	}
+
+	/// <summary>
+	/// Allocates a native memory buffer as byte*.
+	/// Normally is used as a [ThreadStatic] variable. It is faster than local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
+	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
+	/// </summary>
+	public unsafe class ByteBuffer
+	{
+		byte* _p;
+		int _n;
+
+		/// <summary>
+		/// Gets buffer pointer.
+		/// </summary>
+		public byte* Ptr { get => _p; }
+
+		/// <summary>
+		/// Gets current buffer length (n bytes).
+		/// </summary>
+		public int Capacity { get => _n; }
+
+		/// <summary>
+		/// Returns Math.Max(n, Capacity).
+		/// </summary>
+		public int Max(int n)
+		{
+			return Math.Max(n, _n);
+		}
+
+		/// <summary>
+		/// Gets memory buffer of at least Math.Max(n+1, 300) bytes.
+		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+		/// By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
+		/// The buffer content is uninitialized (random bytes).
+		/// </summary>
+		/// <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
+		/// <param name="ptr">Receives buffer pointer.</param>
+		/// <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
+		/// <exception cref="OutOfMemoryException"></exception>
+		/// <exception cref="ArgumentException">n is less than 0.</exception>
+		public bool Alloc(ref int n, out byte* ptr, bool noThrow = false)
+		{
+			if(n < 0) throw new ArgumentException();
+			if(_p == null || n > _n) {
+				if(n < 300) n = 300;
+				var p = (byte*)NativeHeap.Alloc(n + 1);
+				if(p == null) {
+					ptr = null;
+					if(noThrow) return false;
+					throw new OutOfMemoryException();
+				}
+				_Free();
+				_p = p;
+				_n = n;
+			}
+			n = _n;
+			ptr = _p;
+			return true;
+		}
+
+		/// <summary>
+		/// Gets memory buffer of at least Math.Max(n+1, 300) bytes.
+		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
+		/// The buffer content is uninitialized (random bytes).
+		/// </summary>
+		/// <exception cref="OutOfMemoryException"></exception>
+		/// <exception cref="ArgumentException">n is less than 0.</exception>
+		public byte* Alloc(int n)
+		{
+			Alloc(ref n, out var p);
+			return _p;
+		}
+
+		/// <summary>
+		/// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+		/// </summary>
+		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+		public string ToStringFromAnsi(Encoding enc = null)
+		{
+			if(_p == null) return null;
+			int n = CharPtr.Length(_p, _n * 2);
+			return new String((sbyte*)_p, 0, n, enc);
+		}
+
+		/// <summary>
+		/// Frees the buffer if more than 10000 bytes.
+		/// </summary>
+		public void Compact()
+		{
+			if(_n > 10000) _Free();
+		}
+
+		void _Free()
+		{
+			if(_p != null) {
+				var p = _p;
+				_p = null;
+				_n = 0;
+				NativeHeap.Free(p);
+			}
+		}
+
+		///
+		~ByteBuffer()
+		{
+			_Free();
+		}
+
+		/// <summary>
+		/// A [ThreadStatic] ByteBuffer instance used in this library.
+		/// Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
+		/// </summary>
+		internal static ByteBuffer LibCommon { get => _common ?? (_common = new ByteBuffer()); }
+		[ThreadStatic] static ByteBuffer _common;
+	}
+
+	//Tried to create a fast memory buffer class, eg for calling API.
+	//Failed, because compiler memsets the buffer. If buffer size is > 1000, it is slower than HeapAlloc/HeapFree.
+	//stackalloc also memsets, in most cases.
+	///// <summary>
+	///// Allocates a memory buffer on the stack (fast but fixed-size) or heap (slower but can be any size), depending on the size required.
+	///// The variable must be a local variable (not a class member etc). Else it is not on stack, which is dangerous because can be moved by GC.
+	///// </summary>
+	//public unsafe struct MemoryBufferOnStackOrHeap :IDisposable
+	//{
+	//	byte* _pOnHeap;
+	//	int _sizeOnHeap;
+	//	fixed byte _bOnStack[StackSize];
+
+	//	/// <summary>
+	//	/// Size of memory buffer in this variable (on stack).
+	//	/// It is almost 1% of normal stack size (1 MB).
+	//	/// </summary>
+	//	public const int StackSize = 10000;
+
+	//	/// <summary>
+	//	/// Returns pointer to a memory buffer.
+	//	/// If nBytes is less or equal to StackSize (10000), the memory is on the stack (in this variable), else on the native heap.
+	//	/// </summary>
+	//	/// <param name="nBytes">Requested memory size (number of bytes).</param>
+	//	/// <exception cref="OutOfMemoryException"></exception>
+	//	/// <remarks>
+	//	/// Can be called multiple times, for example when need a bigger buffer than already allocated. In such case frees the previously allocated heap memory if need.
+	//	/// </remarks>
+	//	[MethodImpl(MethodImplOptions.NoInlining)]
+	//	public byte* Allocate(int nBytes)
+	//	{
+	//		//if(nBytes <= c_stackSize) return _bOnStack; //error
+	//		if(nBytes <= StackSize) {
+	//			fixed (byte* p = _bOnStack) return p; //disassembly: no function calls etc, just returns _bOnStack address
+	//		}
+	//		if(nBytes > _sizeOnHeap) {
+	//			Dispose();
+	//			_pOnHeap = (byte*)NativeHeap.Alloc(nBytes);
+	//			_sizeOnHeap = nBytes;
+	//		}
+	//		return _pOnHeap;
+	//	}
+
+	//	/// <summary>
+	//	/// Frees the memory buffer if need (if uses heap).
+	//	/// Always call this finally, either explicitly or through <c>using(...){...}</c>. Else the heap memory will never be freed, because this is a struct and therefore cannot have a finalizer.
+	//	/// </summary>
+	//	[MethodImpl(MethodImplOptions.NoInlining)]
+	//	public void Dispose()
+	//	{
+	//		if(_sizeOnHeap > 0) {
+	//			_sizeOnHeap = 0;
+	//			NativeHeap.Free(_pOnHeap);
+	//			_pOnHeap = null;
+	//		}
+	//	}
+
+	//	//public MemoryBufferOnStackOrHeap(bool unused)
+	//	//{
+	//	//	_pOnHeap = null;
+	//	//	_sizeOnHeap = 0;
+	//	//	//_bOnStack is zeroed implicitly
+	//	//}
+	//}
 
 	/// <summary>
 	/// Allocates memory from native heap of this process using heap API.

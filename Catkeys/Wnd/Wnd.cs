@@ -2463,6 +2463,8 @@ namespace Catkeys
 				int n = _Api.GetClassName(this, b, stackSize);
 				if(n > 0) return new string(b, 0, n);
 				return null;
+
+				//tested: same speed with CharBuffer etc
 			}
 		}
 
@@ -2566,7 +2568,7 @@ namespace Catkeys
 		unsafe string _GetTextFast(bool useSlowIfEmpty)
 		{
 			if(Is0) return null;
-			var b = Util.LibCharBuffer.Common;
+			var b = Util.CharBuffer.LibCommon;
 			for(int na = 300; b.Alloc(ref na, out var p, true); na *= 2) {
 				Native.ClearError();
 				int nr = _Api.InternalGetWindowText(this, p, na);
@@ -2598,7 +2600,7 @@ namespace Catkeys
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
 				p[n] = '\0';
-				int n2 = Util.Misc.CharPtrLength(p); //info: some buggy controls return incorrect nt, eg including '\0'
+				int n2 = CharPtr.Length(p); //info: some buggy controls return incorrect nt, eg including '\0'
 				if(n2 < n) {
 					s = s.Remove(n2);
 					//PrintList(n, n2, this); //2 from > 1000 tested controls

@@ -667,7 +667,7 @@ public partial class Test
 		}
 		~TestDtor() { Print("~TestDtor"); }
 
-		void Met() { PrintFunc(); }
+		void Met() { DebugPrintFunc(); }
 
 		class ContextMenuStrip_ :ContextMenuStrip
 		{
@@ -703,7 +703,7 @@ public partial class Test
 
 				//_cat = null;
 
-				PrintFunc();
+				DebugPrintFunc();
 
 				((Wnd)Handle).Post(Api.WM_CLOSE);
 
@@ -729,7 +729,7 @@ public partial class Test
 
 		~TestDtor2() { Print("~TestDtor2"); }
 
-		void Met() { PrintFunc(); }
+		void Met() { DebugPrintFunc(); }
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -903,7 +903,7 @@ public partial class Test
 
 	private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 		_mlTb.Stop();
 	}
 
@@ -986,7 +986,7 @@ public partial class Test
 
 	private static void B_Click1(object sender, EventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 		_mlTb.Stop();
 	}
 

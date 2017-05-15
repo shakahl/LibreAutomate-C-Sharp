@@ -968,10 +968,10 @@ partial class FilesModel :ITreeModel
 
 	void _UninitWatcher()
 	{
-		_watcher.Changed -= _watcher_Changed;
-		_watcher.Created -= _watcher_Created;
-		_watcher.Deleted -= _watcher_Deleted;
-		_watcher.Renamed -= _watcher_Renamed;
+		//_watcher.Changed -= _watcher_Changed;
+		//_watcher.Created -= _watcher_Created;
+		//_watcher.Deleted -= _watcher_Deleted;
+		//_watcher.Renamed -= _watcher_Renamed;
 		_watcher.Dispose();
 	}
 

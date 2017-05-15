@@ -20,7 +20,6 @@ using System.Linq;
 using System.Xml.Linq;
 
 using G.Controls;
-using ScintillaNET;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -52,6 +51,8 @@ partial class EForm :Form
 		//#endif
 		MainForm = this;
 		Panels = new EPanels();
+
+		//SciTags.AddCommonLinkTag("_call", s => Print($"'{s}'"));
 
 		this.SuspendLayout();
 		this.Font = Stock.FontNormal;
@@ -94,7 +95,7 @@ partial class EForm :Form
 
 		_dock = new GDockPanel();
 		_dock.Create(Folders.ThisApp + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
-			Code.Sci, Panels.Files, Panels.Output, Panels.Find, Panels.Open, Panels.Running, Panels.Recent, c,
+			Code.SC, Panels.Files, Panels.Output, Panels.Find, Panels.Open, Panels.Running, Panels.Recent, c,
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
@@ -126,7 +127,7 @@ partial class EForm :Form
 			//Perf.NW();
 			Perf.Next();
 			//TaskDialog.Show("", Perf.Times);
-			if(_dock != null) Panels.Output.Write(Perf.Times); else Print(Perf.Times);
+			if(_dock != null) Panels.Output.Output.Write(Perf.Times); else Print(Perf.Times);
 			//TaskDialog.Show(Perf.Times, IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
 			//GC.Collect();
 

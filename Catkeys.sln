@@ -42,6 +42,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScintillaNET", "ScintillaNET\ScintillaNET.csproj", "{22AE2386-60F1-476E-9303-61CDB0AAC4CF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Editor", "Editor\Editor.csproj", "{466DE975-A615-4871-98BA-07C13E192953}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FBE04237-9C7B-4973-9C60-505975998B39} = {FBE04237-9C7B-4973-9C60-505975998B39}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "G.Controls", "G.Controls\G.Controls.csproj", "{4C53EA3E-D770-41AC-9A19-381B840CD14A}"
 EndProject
@@ -50,6 +53,44 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LineBreaks", "Help\LineBreaks\LineBreaks.csproj", "{5E4EF1F4-388E-4FFE-B896-C126116FEEA5}"
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HelpHtml", "Help\HelpHtml\", "{5F2E4298-39D0-4F15-8D9F-558414281BF4}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
+		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
+		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "65384"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
+		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
+		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "65384"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
@@ -430,9 +471,9 @@ Global
 		{E73BB233-D88B-44A7-A98F-D71EE158381D}.Release|x64.Build.0 = Release|Any CPU
 		{E73BB233-D88B-44A7-A98F-D71EE158381D}.Release|x86.ActiveCfg = Release|Any CPU
 		{E73BB233-D88B-44A7-A98F-D71EE158381D}.Release|x86.Build.0 = Release|Any CPU
-		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|x64.ActiveCfg = Debug|x64
-		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|x64.Build.0 = Debug|x64
+		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|Any CPU.ActiveCfg = Release|Win32
+		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|x64.ActiveCfg = Release|x64
+		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|x64.Build.0 = Release|x64
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|x86.ActiveCfg = Debug|Win32
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Debug|x86.Build.0 = Debug|Win32
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|Any CPU.ActiveCfg = Release|Win32

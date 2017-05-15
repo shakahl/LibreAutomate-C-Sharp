@@ -60,7 +60,7 @@ namespace Catkeys
 				return s;
 			}
 
-			var b = Util.LibCharBuffer.Common; int na = b.Max(s.Length + 100);
+			var b = Util.CharBuffer.LibCommon; int na = b.Max(s.Length + 100);
 			g1: int nr = _Api.ExpandEnvironmentStrings(s, b.Alloc(na), na);
 			if(nr > na) { na = nr; goto g1; }
 			if(nr == 0) return s;
@@ -80,7 +80,7 @@ namespace Catkeys
 		/// </remarks>
 		internal static string LibGetEnvVar(string name)
 		{
-			var b = Util.LibCharBuffer.Common; int na = b.Max(300);
+			var b = Util.CharBuffer.LibCommon; int na = b.Max(300);
 			g1: int nr = _Api.GetEnvironmentVariable(name, b.Alloc(na), na);
 			if(nr > na) { na = nr; goto g1; }
 			if(nr == 0) return "";
@@ -435,7 +435,7 @@ namespace Catkeys
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath.
-				var b = Util.LibCharBuffer.Common; int na = b.Max(s.Length + 10);
+				var b = Util.CharBuffer.LibCommon; int na = b.Max(s.Length + 10);
 				g1: int nr = Api.GetFullPathName(s, na, b.Alloc(na), null);
 				if(nr > na) { na = nr; goto g1; }
 				if(nr > 0) s = b.ToString(nr);
@@ -459,7 +459,7 @@ namespace Catkeys
 		internal static string LibExpandDosPath(string s)
 		{
 			if(!Empty(s)) {
-				var b = Util.LibCharBuffer.Common; int na = b.Max(300);
+				var b = Util.CharBuffer.LibCommon; int na = b.Max(300);
 				g1: int nr = Api.GetLongPathName(s, b.Alloc(na), na);
 				if(nr > na) { na = nr; goto g1; }
 				if(nr > 0) s = b.ToString(nr);

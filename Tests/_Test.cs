@@ -2643,28 +2643,28 @@ bbb"", b3
 	static class TestStaticInitClass
 	{
 		static int _x = _InitX();
-		static int _InitX() { PrintFunc(); return 1; }
+		static int _InitX() { DebugPrintFunc(); return 1; }
 		public static int GetX()
 		{
-			PrintFunc();
+			DebugPrintFunc();
 			return _x;
 		}
 		public static int Other()
 		{
-			PrintFunc();
+			DebugPrintFunc();
 			return -1;
 		}
 	}
 
 	static void TestStaticInit1()
 	{
-		PrintFunc();
+		DebugPrintFunc();
 		Print(TestStaticInitClass.GetX());
 	}
 
 	static void TestStaticInit2()
 	{
-		PrintFunc();
+		DebugPrintFunc();
 		Print(TestStaticInitClass.Other());
 	}
 
@@ -3711,7 +3711,7 @@ A,""B """"Q"""" Z"",C
 	{
 		protected override void ExitThreadCore()
 		{
-			PrintFunc();
+			DebugPrintFunc();
 			base.ExitThreadCore();
 		}
 	}
@@ -3738,17 +3738,17 @@ A,""B """"Q"""" Z"",C
 
 	private static void Application_ThreadExit1(object sender, EventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 	}
 
 	private static void Application_ThreadExit2(object sender, EventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 	}
 
 	private static void Application_ApplicationExit(object sender, EventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 		//Application.ApplicationExit -= Application_ApplicationExit;
 		//Print(Api.GetCurrentThreadId());
 	}
@@ -5720,14 +5720,14 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static unsafe void TestBytesToHexString()
 	{
 		byte[] a = new byte[4] { 65, 66, 67, 68 };
-		var s = Convert_.BytesToHexString(a, true);
+		var s = Convert_.HexEncode(a, true);
 		Print(s);
-		Print(Convert_.BytesFromHexString(s));
+		Print(Convert_.HexDecode(s));
 		fixed (byte* p = a) {
-			var s2 = Convert_.BytesToHexString(p, 4, true);
+			var s2 = Convert_.HexEncode(p, 4, true);
 			Print(s2);
 			int a2;
-			Print(Convert_.BytesFromHexString(s2, &a2, 4));
+			Print(Convert_.HexDecode(s2, &a2, 4));
 			PrintHex(a2);
 		}
 	}
@@ -7722,7 +7722,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	//static unsafe string GetFullPath7(string s)
 	//{
-	//	var b = Catkeys.Util.LibCharBuffer.Common;
+	//	var b = Catkeys.Util.CharBuffer.LibCommon;
 	//	int na = s.Length + 10;
 	//	int nr = GetFullPathName(s, na, b.Alloc(na), null);
 	//	if(nr > 0 && nr < na) s = b.ToString(nr);
@@ -8837,7 +8837,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		var path = @"Q:\My QM\C8375087.bmp";
 		byte[] data = File.ReadAllBytes(path);
 		Print(data.Length); //1638
-		using(var m=new MemoryStream(data)) {
+		using(var m = new MemoryStream(data)) {
 			byte[] compressed = Compress(m);
 			Print(compressed.Length); //DeflateStream 422, GZipStream 440
 			Print(Convert.ToBase64String(compressed));
@@ -8861,11 +8861,445 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		var bytes = Convert.FromBase64String(png);
 		Perf.Next();
 		using(var m = new MemoryStream(bytes, false)) {
-		Perf.Next();
+			Perf.Next();
 			using(var b = Image.FromStream(m)) {
-		Perf.Next();
+				Perf.Next();
 				e.Graphics.DrawImageUnscaled(b, 0, 0);
-		Perf.NW();
+				Perf.NW();
+			}
+		}
+	}
+
+	static unsafe void TestConvertUtf8()
+	{
+		string s = @"	[HandleProcessCorruptedStateExceptions]
+	static unsafe void TestMain()
+	{
+		Output.Clear();
+		Thread.Sleep(100);
+
+		//TODO: InitLibrary. Optional but recommended. Would set error mode, default domain data, etc.
+
+		try {
+			//TestPngSize();
+			//Print(_big.Length);
+			//Print(Convert.FromBase64String(_big).Length);
+			//TestDictionary();
+		}
+		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(ArgumentException ex) { PrintList(ex); }
+		catch(Win32Exception ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(Exception ex) when(!(ex is ThreadAbortException)) { PrintList(ex.GetType(), ex); }
+		//catch(Exception ex) { }
+		//Why try/catch creates 3 more threads? Does not do it if there is only catch(Exception ex). Only if STA thread.
+		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(ArgumentException ex) { PrintList(ex); }
+		catch(Win32Exception ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(Exception ex) when(!(ex is Thre
+";
+		//Print(s.Length); //1000
+		//string s2 = s.Remove(50);
+
+		//var b = new sbyte[4000];
+		//fixed (sbyte* p = b) {
+		//	int n = ConvertUtf8.ToUtf8(s, p, 4000);
+		//	Print(n);
+		//	//Print(new string(p, 0, n, Encoding.UTF8));
+
+		//	byte[] r = null;
+
+		//	Perf.SpinCPU(100);
+		//	var a1 = new Action(() => { r = Encoding.UTF8.GetBytes(s); });
+		//	var a2 = new Action(() => {
+		//		fixed(sbyte* pp = b) {
+		//			n = ConvertUtf8.ToUtf8(s, pp, 4000);
+		//		}
+		//	});
+		//	var a3 = new Action(() => { });
+		//	var a4 = new Action(() => { });
+		//	Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//	PrintList(r.Length, n);
+		//}
+
+		//s = "abc";
+		s = s.Remove(50);
+		//Print(Encoding.UTF8.GetBytes(s).Length);
+
+		//Print(Convert_.Utf8Length(s));
+		//Print(Convert_.Utf8FromString(s));
+
+		//using(var b = new Catkeys.Util.MemoryBufferOnStackOrHeap()) {
+		//	var p = b.Allocate(200);
+		//	Print((LPARAM)p);
+		//	//for(int i = 0; i < Catkeys.Util.MemoryBufferOnStackOrHeap.StackSize; i++) Print(p[i]);
+		//}
+
+		//for(int j=0; j<2; j++) {
+		//	var m = stackalloc byte[100];
+		//	Print((LPARAM)m);
+		//	for(int i = 0; i < 100; i++) {
+		//		Print(m[i]);
+		//		m[i] = 1;
+		//	}
+		//}
+
+		//var p = stackalloc byte[10000];
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() =>
+		//{
+		//	Convert_.Utf8FromString(s, p, 10000);
+		//});
+		//var a2 = new Action(() =>
+		//{
+		//	int n = Convert_.Utf8LengthFromString(s) + 1;
+		//	Convert_.Utf8FromString(s, p, n);
+		//});
+		////var a3 = new Action(() => { Convert_.Utf8FromString_stackalloc(s); });
+		////var a4 = new Action(() => { Convert_.Utf8FromString_thread(s); });
+		////var a5 = new Action(() => { Convert_.Utf8FromString_thread2(s); });
+		////var a6 = new Action(() => { Convert_.Utf8FromString_thread4(s); });
+		////var a7 = new Action(() => { Convert_.Utf8FromString_simple(s); });
+		////Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4, a5, a6, a7);
+		//var a3 = new Action(() => { Convert_.Utf8FromString(s); });
+		//var a4 = new Action(() => { Encoding.UTF8.GetBytes(s); });
+		////var a5 = new Action(() => { Convert_.Utf8FromString2(s); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//var b = Convert_.Utf8FromString(s);
+		//Print(b.Length);
+
+		//Print(Convert_.Utf8ToStringLength(b));
+		//var r = Convert_.Utf8ToString(b);
+		//Print(r);
+
+		//fixed (byte* p = b) {
+		//	r = Convert_.Utf8ToString(p);
+		//	PrintList(r, r.Length);
+		//	r = Convert_.Utf8ToString(p, b.Length);
+		//	PrintList(r, r.Length);
+		//	r = Convert_.Utf8ToString(p, 10);
+		//	PrintList(r, r.Length);
+		//}
+
+		//Print(Encoding.UTF8.GetString(b).Length);
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { var r = Convert_.Utf8ToString(b); });
+		//var a2 = new Action(() => { var r = Encoding.UTF8.GetString(b); });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void SA2()
+	{
+		byte* p = stackalloc byte[1000];
+		Print((LPARAM)p);
+		for(int i = 0; i < 1000; i++) p[i] = 1;
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void SA1()
+	{
+		//SA2();
+		//byte* p = stackalloc byte[1000];
+		////Print((LPARAM)p);
+		////Print2(p);
+		//Print3("kk", p);
+		////for(int i=0; i<1000; i++) Print(p[i]);
+
+		//Convert_.Utf8FromString("string", p, 1000);
+
+		//Convert_.Utf8FromString("stringgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg");
+	}
+
+	//public static unsafe void Print2(void* value) { Output.Write((LPARAM)value); }
+	public static unsafe void Print2(byte* value) { Output.WriteList((LPARAM)value, value[500]); }
+	public static unsafe void Print3(string s, byte* value) { Output.WriteList(s, (LPARAM)value, value[500]); }
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestStackallocSpeed1()
+	{
+		//var m = new Catkeys.Util.MemoryBufferOnStackOrHeap();
+		//var p =m.Allocate(10);
+		//Convert_.Utf8FromString("", p, 10);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestStackallocSpeed2()
+	{
+		var p = stackalloc byte[1000];
+		Convert_.Utf8FromString("", p, 10);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestStackallocSpeed3()
+	{
+		var p = (byte*)_mmm;
+		if(p == null) { p = (byte*)Catkeys.Util.NativeHeap.Alloc(1000); _mmm = p; }
+		Convert_.Utf8FromString("", p, 10);
+	}
+
+	[ThreadStatic] static LPARAM _mmm;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestStackallocSpeed4()
+	{
+		var p = (byte*)Catkeys.Util.NativeHeap.Alloc(1000);
+		Convert_.Utf8FromString("", p, 10);
+		Catkeys.Util.NativeHeap.Free(p);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestStackallocSpeed()
+	{
+		//var m = new Catkeys.Util.MemoryBufferOnStackOrHeap();
+		//var p =m.Allocate(1000);
+		//Convert_.Utf8FromString("string", p, 1000);
+		//SA1();
+
+		Perf.SpinCPU(100);
+		var a1 = new Action(() => { TestStackallocSpeed1(); });
+		var a2 = new Action(() => { TestStackallocSpeed2(); });
+		var a3 = new Action(() => { TestStackallocSpeed3(); });
+		var a4 = new Action(() => { TestStackallocSpeed4(); });
+		Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+	}
+
+	static void TestReadTextFile()
+	{
+		var path = Folders.Temp + "test.txt";
+		//File.WriteAllText(path, "12345", Encoding.UTF8);
+		//Print(new FileInfo(path).Length);
+		//var s = File.ReadAllBytes(path);
+		//Print(s);
+
+		//var f=File.OpenRead(path);
+		//f.
+	}
+
+	static void TestSciControl()
+	{
+		var f = new Form();
+
+		G.Controls.SciControl.SciLexerDllPath = Ver.Is64BitProcess ? @"Q:\app\catkeys\Editor\SciLexer64.dll" : @"Q:\app\catkeys\Editor\SciLexer32.dll";
+		var x = new G.Controls.SciControl();
+		x.Width = 200;
+		x.Height = 100;
+		f.Controls.Add(x);
+
+		var c1 = new Button() { Text = "OK", Top = 100, DialogResult = DialogResult.OK };
+		var c2 = new Button() { Text = "Cancel", Top = 100, Left = 100 };
+		f.AcceptButton = c1;
+		f.CancelButton = c2;
+		f.Controls.Add(c1);
+		f.Controls.Add(c2);
+
+		f.ShowDialog();
+	}
+
+	public static unsafe int CharPtrFindChar(byte* s, int len, byte ch)
+	{
+		if(s != null)
+			for(int i = 0; i < len; i++) if(s[i] == ch) return i;
+		return -1;
+	}
+
+	public static unsafe int CharPtrFindString(byte* s, int len, byte* s2, int len2)
+	{
+		if(s != null && len2 <= len && len2 > 0) {
+			var ch = s2[0];
+			for(int i = 0, n = len - len2; i <= n; i++) if(s[i] == ch) {
+					for(int j = 1; j < len2; j++) if(s[i + j] != s2[j]) goto g1;
+					return i;
+					g1:;
+				}
+		}
+		return -1;
+	}
+
+	public static unsafe int CharPtrFindString(byte* s, int len, string s2)
+	{
+		int len2 = s2.Length;
+		if(s != null && len2 <= len && len2 > 0) {
+			var ch = s2[0];
+			for(int i = 0, n = len - len2; i <= n; i++) if(s[i] == ch) {
+					for(int j = 1; j < len2; j++) if(s[i + j] != s2[j]) goto g1;
+					return i;
+					g1:;
+				}
+		}
+		return -1;
+	}
+
+	[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+	internal static unsafe extern byte* strstr(byte* s1, byte* s2);
+
+	static unsafe void TestFindUtf8()
+	{
+		string s = "abcd", s2 = "cd";
+		char ch = 'd';
+		s = "jshdhskafhkldshfkshflsjdgl;sdjgkljsdghjshglshgjkshfgydsgfhjgfsgfdgfkshgahg;dlgh;slgjhsgjslghdghids <ijshdhskafhkldshfkshflsjdgl;sdjgkljsdghjshglshgjkshfgydsgfhjgfsgfdgfkshgahg;dlgh;slgjhsgjslghdghids <ijshdhskafhkldshfkshflsjdgl;sdjgkljsdghjshglshgjkshfgydsgfhjgfsgfdgfkshgahg;dlgh;slgjhsgjslghdghids <ijshdhskafhkldshfkshflsjdgl;sdjgkljsdghjshglshgjkshfgydsgfhjgfsgfdgfkshgahg;dlgh;slgjhsgjslghdghids <ijshdhskafhkldshfkshflsjdgl;sdjgkljsdghjshglshgjkshfgydsgfhjgfsgfdgfkshgahg;dlgh;slgjhsgjslghdghids <image \"mmm";
+		s2 = "<image \"";
+		ch = '<';
+
+		var t = Convert_.Utf8FromString(s);
+		var t2 = Convert_.Utf8FromString(s2);
+		fixed (byte* p = t)
+		fixed (byte* p2 = t2) {
+			Print(CharPtrFindChar(p, s.Length, (byte)ch));
+			Print(CharPtrFindString(p, s.Length, p2, s2.Length));
+			Print(CharPtrFindString(p, s.Length, s2));
+			Print(strstr(p, p2) - p);
+
+			Perf.SpinCPU(100);
+			for(int i = 0; i < 5; i++) {
+				Perf.First();
+				for(int j = 0; j < 1000; j++) CharPtrFindChar(p, s.Length, (byte)ch);
+				Perf.Next();
+				for(int j = 0; j < 1000; j++) CharPtrFindString(p, s.Length, p2, s2.Length);
+				Perf.Next();
+				for(int j = 0; j < 1000; j++) CharPtrFindString(p, s.Length, s2);
+				Perf.Next();
+				for(int j = 0; j < 1000; j++) strstr(p, p2);
+				Perf.NW();
+			}
+
+		}
+	}
+
+	static unsafe void TestAsciiStartsWithI()
+	{
+		fixed (byte* p = Convert_.Utf8FromString("Test")) {
+			Print(CharPtr.AsciiStartsWith(p, "Tes"));
+			Print(CharPtr.AsciiStartsWith(p, "tes"));
+			Print(CharPtr.AsciiStartsWith(p, "Mes"));
+			Print(CharPtr.AsciiStartsWithI(p, "Tes"));
+			Print(CharPtr.AsciiStartsWithI(p, "tes"));
+			Print(CharPtr.AsciiStartsWithI(p, "Mes"));
+		}
+	}
+
+
+
+	static unsafe void TestBase64()
+	{
+		//var b = new byte[] { 0, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, };
+		var b = new byte[] { 0, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, };
+
+		for(int i = 0; i < 0; i++) {
+			var bb = b;
+			b = new byte[bb.Length * 2];
+			bb.CopyTo(b, bb.Length);
+		}
+
+		var s = Convert.ToBase64String(b);
+		if(s.Length < 2000) Print(s);
+
+		Print(Convert.FromBase64String(s).Length);
+		Print("------");
+
+		var b2 = new byte[b.Length + 4];
+		fixed (char* p = s) {
+			fixed (byte* pp = b2) {
+				int n = b2.Length, n2 = n;
+				//Convert_.Base64Decode(p, s.Length, pp, n); Print(b2);
+				//return;
+				//Print(Convert_.Base64Decode(s));
+				//Print(Convert_.Base64Decode2(s));
+				//Print(Convert_.Base64Decode3(s));
+
+				Perf.SpinCPU(100);
+				for(int i = 0; i < 5; i++) {
+					int N = 100;
+					Perf.First();
+					for(int j = 0; j < N; j++) Convert.FromBase64String(s);
+					Perf.Next();
+					for(int j = 0; j < N; j++) Convert_.Base64Decode(p, s.Length, pp, n);
+					Perf.Next();
+					for(int j = 0; j < N; j++) Convert_.Base64Decode(s);
+					Perf.NW();
+				}
+
+			}
+		}
+	}
+
+	static unsafe void TestHexEncode()
+	{
+		var b = new byte[] { 0, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, };
+		//var b = new byte[] { 0, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 251, 252, 253, 254, 255, };
+
+		for(int i = 0; i < 0; i++) {
+			var bb = b;
+			b = new byte[bb.Length * 2];
+			bb.CopyTo(b, bb.Length);
+		}
+
+		var s = Convert_.HexEncode(b);
+		if(s.Length < 2000) Print(s);
+		//s = "123";
+
+		Print(Convert_.HexDecode(s).Length);
+		Print("------");
+
+		var b2 = new byte[b.Length + 4];
+		fixed (char* p = s) {
+			fixed (byte* pp = b2) {
+				int n = b2.Length, n2 = n;
+				Convert_.HexDecode(s, pp, n); Print(b2); return;
+				//Convert_.HexDecode2(s, pp, n); Print(b2); return;
+
+				Perf.SpinCPU(100);
+				for(int i = 0; i < 5; i++) {
+					int N = 100;
+					Perf.First();
+					for(int j = 0; j < N; j++) Convert_.HexDecode(s, pp, n);
+					Perf.Next();
+					for(int j = 0; j < N; j++) Convert_.HexEncode(b);
+					Perf.NW();
+				}
+
+			}
+		}
+	}
+
+	static unsafe void TestFnv64()
+	{
+		var s = "qjsjhjkhsfjkhajfkhsjkfklsjfsalkfjdslgkasglkdhsglshgldkjhgklsghjdlkhgkj";
+		Print(Convert_.HashFnv1(s));
+		Print(Convert_.HashFnv1_64(s));
+
+		fixed (char* p = s) {
+
+			Perf.SpinCPU(100);
+			for(int i1 = 0; i1 < 5; i1++) {
+				int n2 = 1000;
+				Perf.First();
+				for(int i2 = 0; i2 < n2; i2++) { Convert_.HashFnv1(s); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { Convert_.HashFnv1(p, s.Length); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { Convert_.HashFnv1_64(s); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { Convert_.HashFnv1_64(p, s.Length); }
+				Perf.NW();
+			}
+
+			byte* b = (byte*)p;
+			Perf.SpinCPU(100);
+			for(int i1 = 0; i1 < 5; i1++) {
+				int n2 = 1000;
+				Perf.First();
+				for(int i2 = 0; i2 < n2; i2++) { Convert_.HashFnv1(b, s.Length * 2); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { Convert_.HashFnv1_64(b, s.Length * 2); }
+				Perf.NW();
 			}
 		}
 	}
@@ -8879,7 +9313,16 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//TODO: InitLibrary. Optional but recommended. Would set error mode, default domain data, etc.
 
 		try {
-			TestPngSize();
+			//TestFnv64();
+			//TestHexEncode();
+			//TestBase64();
+			//TestAsciiStartsWithI();
+			//TestFindUtf8();
+			//TestSciControl();
+			//TestReadTextFile();
+			//TestConvertUtf8();
+			//TestStackallocSpeed();
+			//TestPngSize();
 			//Print(_big.Length);
 			//Print(Convert.FromBase64String(_big).Length);
 			//TestDictionary();

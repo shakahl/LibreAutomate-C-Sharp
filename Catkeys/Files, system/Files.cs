@@ -357,7 +357,7 @@ namespace Catkeys
 			s = Folders.ThisApp + path;
 			if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 
-			var b = Util.LibCharBuffer.Common; int na = b.Max(300);
+			var b = Util.CharBuffer.LibCommon; int na = b.Max(300);
 			g1: int nr = Api.SearchPath(null, path, null, na, b.Alloc(na), null);
 			if(nr > na) { na = nr; goto g1; }
 			if(nr > 0) return b.ToString(nr);

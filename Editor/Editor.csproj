@@ -150,10 +150,6 @@
       <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
       <Name>G.Controls</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ScintillaNET\ScintillaNET.csproj">
-      <Project>{22ae2386-60f1-476e-9303-61cdb0aac4cf}</Project>
-      <Name>ScintillaNET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TreeList\TreeList.csproj">
       <Project>{e73bb233-d88b-44a7-a98f-d71ee158381d}</Project>
       <Name>TreeList</Name>
@@ -161,6 +157,14 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="..\scintilla\win32\Release\bin\SciLexer32.dll">
+      <Link>SciLexer32.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\scintilla\win32\x64\Release\bin\SciLexer64.dll">
+      <Link>SciLexer64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Default\Main.xml" />
     <Content Include="Default\Panels.xml">
       <SubType>Designer</SubType>

@@ -21,144 +21,302 @@ using System.Xml.Linq;
 using Catkeys;
 using static Catkeys.NoClass;
 
-using ScintillaNET;
-
 namespace G.Controls
 {
+	using static Sci;
+
 	/// <summary>
 	/// Gets image file paths etc from Scintilla control text and displays the images below that lines.
-	/// A single variable can be used with multiple Scintilla controls. Benefit - shared cache.
 	/// </summary>
-	public unsafe class SciImages :IDisposable
+	/// <remarks>
+	/// Draws images in annotation areas.
+	/// Supports text annotations too, below images and in no-image lines. But it is limited:
+	/// 1. To set/get it use <see cref="SciText.AnnotationText(int, string)"/>, not direct Scintilla API.
+	/// 2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
+	/// 3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
+	/// 4. Setting annotation styles is currently not supported.
+	/// </remarks>
+	public unsafe class SciImages
 	{
 		class _Image
 		{
+			public long nameHash;
 			public byte[] data;
-			public int nameHash;
-			public int nLines, width;
+			public int width, height;
 		}
 
-		List<_Image> _a;
-		IntPtr _pen;
-		Scintilla _c;
-		int _lineHeight;
-		int _cacheSize;
-		StringBuilder _sb;
+		SciControl _c;
+		SciText _t;
+		IntPtr _callbackPtr;
 		bool _isEditor;
 
-		/// <summary>
-		/// Use this if want to hide all annotations (annotation text).
-		/// When using this class, don't use Csintilla API to show/hide all annotations. This class sets it to show always, because it draws images in annotation areas.
-		/// </summary>
-		public bool HideAnnotations { get; set; }
+		class _ThreadSharedData
+		{
+			public readonly Catkeys.Util.ByteBuffer
+				BufferForAnnot = new Catkeys.Util.ByteBuffer(),
+				BufferForText = new Catkeys.Util.ByteBuffer();
+			List<_Image> _a;
+			public int CacheSize { get; private set; }
+
+			public void AddImage(_Image im)
+			{
+				if(_a == null) _a = new List<_Image>();
+				_a.Add(im);
+				CacheSize += im.data.Length;
+			}
+
+			public _Image FindImage(long nameHash)
+			{
+				if(_a != null)
+					for(int j = 0; j < _a.Count; j++) if(_a[j].nameHash == nameHash) return _a[j];
+				return null;
+			}
+
+			public void ClearCache()
+			{
+				if(_a == null) return;
+				_a.Clear();
+				CacheSize = 0;
+			}
+
+			/// <summary>
+			/// If cache is large (at least MaxCacheSize and 4 images), removes about 3/4 of older cached images.
+			/// Will auto-reload from files etc when need.
+			/// </summary>
+			public void CompactCache()
+			{
+				if(_a == null) return;
+				//Print(_cacheSize);
+				if(CacheSize < MaxCacheSize || _a.Count < 4) return;
+				CacheSize = 0;
+				int n = _a.Count, max = MaxCacheSize / 4;
+				while(CacheSize < max && n > 2) CacheSize += _a[--n].data.Length;
+				_a.RemoveRange(0, n);
+			}
+
+			public int MaxCacheSize { get; set; } = 4 * 1024 * 1024;
+		}
+
+		//All SciImages of a thread share single cache etc.
+		[ThreadStatic] static _ThreadSharedData t_data;
 
 		/// <summary>
 		/// Prepares this variable and the Scintilla control to display images.
-		/// Sets sci.AnnotationVisible to visible. Need it because will draw images in annotation areas.
+		/// Calls SCI_ANNOTATIONSETVISIBLE(ANNOTATION_STANDARD). Need it because will draw images in annotation areas.
 		/// </summary>
-		/// <param name="sci">The control.</param>
-		/// <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images.</param>
-		public SciImages(Scintilla sci, bool isEditor = false)
+		/// <param name="c">The control.</param>
+		/// <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
+		internal SciImages(SciControl c, bool isEditor = false)
 		{
-			_c = sci;
+			if(t_data == null) t_data = new _ThreadSharedData();
+			_c = c;
+			_t = c.ST;
 			_isEditor = isEditor;
 			_sci_AnnotationDrawCallback = _AnnotationDrawCallback_;
-			_c.DirectMessage(SciCommon.SCI_SETANNOTATIONDRAWCALLBACK, Zero, Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback));
-			_c.AnnotationVisible = Annotation.Standard; //keep annotations always visible. Adding annotations while visible is slower, but much faster than getting images from files etc.
-		}
-
-		public void Dispose()
-		{
-			if(_pen != Zero) { Api.DeleteObject(_pen); _pen = Zero; }
-
-			GC.SuppressFinalize(this);
-		}
-
-		~SciImages()
-		{
-			Dispose();
+			_callbackPtr = Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback);
+			_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);
+			_visible = AnnotationsVisible.ANNOTATION_STANDARD;
+			_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible); //keep annotations always visible. Adding annotations while visible is slower, but much faster than getting images from files etc.
 		}
 
 		/// <summary>
 		/// Removes all cached images.
 		/// Will auto-reload from files etc when need.
 		/// </summary>
-		public void ClearCache()
-		{
-			if(_a == null) return;
-			_a.Clear();
-			_cacheSize = 0;
-		}
+		public void ClearCache() { t_data.ClearCache(); }
 
 		/// <summary>
 		/// If cache is large (at least MaxCacheSize and 4 images), removes about 3/4 of older cached images.
 		/// Will auto-reload from files etc when need.
 		/// </summary>
-		public void CompactCache()
-		{
-			if(_a == null) return;
-			//Print(_cacheSize);
-			if(_cacheSize < MaxCacheSize || _a.Count < 4) return;
-			_cacheSize = 0;
-			int n = _a.Count, max = MaxCacheSize / 4;
-			while(_cacheSize < max && n > 2) _cacheSize += _a[--n].data.Length;
-			_a.RemoveRange(0, n);
-		}
+		public void CompactCache() { t_data.CompactCache(); }
 
 		/// <summary>
 		/// Maximal size of the image cache.
-		/// Default 2 MB.
+		/// Default 4 MB.
 		/// </summary>
-		public int MaxCacheSize { get; set; } = 2 * 1024 * 1024;
+		public int MaxCacheSize { get => t_data.MaxCacheSize; set => t_data.MaxCacheSize = value; }
 
-		//TODO: cache:
-		//	Maybe don't cache some: embedded, very large.
-		//	Maybe in cache store zipped.
-
-		public void ParseTextAndSetAnnotationsForImages(int iLine, string text, int start = 0, int length = -1)
+		/// <summary>
+		/// Sets image annotations for one or more lines of text.
+		/// </summary>
+		/// <param name="firstLine">First line index.</param>
+		/// <param name="text">Text that starts at line firstLine.</param>
+		/// <param name="length">Text length.</param>
+		/// <param name="allText">Added all text (not edited or appended).</param>
+		/// <param name="textPos">Position where the text starts.</param>
+		public void _SetImagesForTextRange(int firstLine, byte* text, int length, bool allText, int textPos)
 		{
-			if(length < 0) length = text.Length - start;
-			Debug.Assert(start >= 0 && start + length <= text.Length);
 			if(length < 10) return; //"C:\x.ico"
-									//bool annotAdded = false;
 
-			for(int i = start, iTo = i + length; i < iTo; iLine++) {
-				int nAnnotLines = 0, totalWidth = 0;
-				_Image u; bool isMulti = false;
-				while(null != (u = _GetImageInLine(text, ref i, iTo, ref isMulti))) {
-					if(nAnnotLines < u.nLines) nAnnotLines = u.nLines;
+			bool annotAdded = false;
+			int iLine = firstLine;
+			for(int i = 0, iTo = i + length; i < iTo; iLine++) {
+				int maxHeight = 0, totalWidth = 0;
+				_Image u; bool isMulti = false; int imStrStart = 0;
+				while(null != (u = _GetImageInLine(text, ref i, iTo, ref isMulti, ref imStrStart))) {
+					if(maxHeight < u.height) maxHeight = u.height;
 					if(totalWidth > 0) totalWidth += 30;
 					totalWidth += u.width;
+
+					//if(!isMulti) {
+					//	bool hide = true; int imStrEnd = i;
+					//	if(_isEditor) {
+					//		if(text[imStrStart + 1] == '~') { imStrStart += 3; imStrEnd--; } else hide = false;
+					//	} else {
+					//		if(imStrEnd < iTo && text[imStrEnd] == '>') imStrEnd++;
+					//		//PrintList(imStrStart, imStrEnd);
+					//	}
+					//	if(hide) {
+					//		int len = imStrEnd - imStrStart;
+					//		_c.Call(SCI_STARTSTYLING, imStrStart + textPos);
+					//		_c.Call(SCI_SETSTYLING, len, STYLE_HIDDEN);
+					//	}
+					//}
+					if(!isMulti && _isEditor && text[imStrStart + 1] == '~') { //if !_isEditor, the <image...> tags are already hidden by SciTags
+						_c.Call(SCI_STARTSTYLING, imStrStart + 2 + textPos);
+						_c.Call(SCI_SETSTYLING, i - imStrStart - 3, STYLE_HIDDEN);
+					}
 				}
 
-				if(nAnnotLines == 0) continue;
+				if(maxHeight == 0) continue;
 
-				if(_sb == null) _sb = new StringBuilder(); else _sb.Clear();
-				_sb.AppendFormat("|{0:x6}|", Calc.MakeUint(Math.Min(totalWidth, 0xffff), nAnnotLines));
-				if(nAnnotLines > 1) _sb.Append('\n', nAnnotLines - 1);
+				int annotLen = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //we'll need old annotation text later, and we'll get it into the same buffer after the new image info
 
-				string annot = _c.Lines[iLine].AnnotationText, sNew = null;
-				if(annot.Length == _sb.Length || (annot.Length > 0 && !HideAnnotations)) {
-					bool skip = false;
-					if(HideAnnotations) {
-						sNew = _sb.ToString();
-						if(sNew == annot) skip = true;
-					} else {
-						if(annot[0] == '|' && annot.Length >= 8 && annot[7] == '|') skip = true;
-						else { _sb.Append('\n'); _sb.Append(annot); sNew = _sb.ToString(); }
+				//calculate n annotation lines from image height
+				int lineHeight = _t.LineHeight(iLine); if(lineHeight <= 0) continue;
+				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
+				//PrintList(lineHeight, maxHeight, nAnnotLines);
+
+				byte* b0 = t_data.BufferForAnnot.Alloc(annotLen + nAnnotLines + 20);
+				var b = b0;
+				*b++ = 3; Api._ltoa(totalWidth << 8 | nAnnotLines, b, 16); while(*(++b) != 0) { }
+				while(nAnnotLines-- > 1) *b++ = (byte)'\n';
+				*b = 0;
+
+				//An annotation possibly already exists. Possible cases:
+				//1. No annotation. Need to add our image annotation.
+				//2. A text-only annotation. Need to add our image annotation + that text.
+				//3. Different image, no text. Need to replace it with our image annotation.
+				//4. Different image + text. Need to replace it with our image annotation + that text.
+				//5. This image, with or without text. Don't need to change.
+				if(annotLen > 0) {
+					//get existing annotation into the same buffer after our image info
+					var a = b + 1;
+					_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a);
+					a[annotLen] = 0;
+					//Print($"OLD: '{new string((sbyte*)a)}'");
+
+					//is it our image info?
+					int imageLen = (int)(b - b0);
+					if(annotLen >= imageLen) {
+						int j;
+						for(j = 0; j < imageLen; j++) if(a[j] != b0[j]) goto g1;
+						if(annotLen == imageLen || a[imageLen] == '\n') continue; //case 5
 					}
-					if(skip) { /*Print("SAME");*/ continue; }
-				} else sNew = _sb.ToString();
+					g1:
+					//contains image?
+					if(a[0] == 3) {
+						int j = _ParseAnnotText(a, annotLen, out var u1);
+						if(j < annotLen) { //case 4
+							Api.memmove(a, a + j, annotLen - j + 1);
+							b[0] = (byte)'\n';
+						} //else case 3
+					} else { //case 2
+						b[0] = (byte)'\n';
+					}
+				} //else case 1
 
-				//Print(sNew);
-				_c.Lines[iLine].AnnotationText = sNew;
-				//annotAdded = true;
+				//Print($"NEW: '{new string((sbyte*)b0)}'");
+				//Perf.First();
+				if(!annotAdded) {
+					annotAdded = true;
+					if(allText) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN);
+				}
+				_c.Call(SCI_ANNOTATIONSETTEXT, iLine, b0);
+				//Perf.NW();
+			}
+
+			if(annotAdded && allText) {
+				//Perf.First();
+				_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible);
+				//Perf.NW();
 			}
 
 			//never mind: scintilla prints without annotations, therefore without images too.
 		}
 
-		_Image _GetImageInLine(string s, ref int iFrom, int iTo, ref bool isMulti)
+		/// <summary>
+		/// Parses annotation text.
+		/// If it starts with image info string ("\x3NNN\n\n..."), returns its length. Else returns 0.
+		/// </summary>
+		/// <param name="s">Annotation text. Can start with image info string or not.</param>
+		/// <param name="length">s length.</param>
+		/// <param name="imageInfo">The NNN part of image info, or 0.</param>
+		static int _ParseAnnotText(byte* s, int length, out int imageInfo)
+		{
+			imageInfo = 0;
+			if(s == null || length < 4 || s[0] != '\x3') return 0;
+			byte* s2;
+			int k = Api.strtoul(s + 1, &s2, 16);
+			int len = (int)(s2 - s); if(len < 4) return 0;
+			int n = k & 0xff;
+			len += (n - 1);
+			if(n < 1 || length < len) return 0;
+			if(length > len) len++; //\n between image info and visible annotation text
+			imageInfo = k;
+			return len;
+		}
+
+		/// <summary>
+		/// Sets annotation text, preserving existing image info.
+		/// </summary>
+		/// <param name="line"></param>
+		/// <param name="s">New text without image info.</param>
+		internal void LibAnnotationText(int line, string s)
+		{
+			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
+			if(n > 0) {
+				int lens = (s == null) ? 0 : s.Length;
+				var b = t_data.BufferForAnnot.Alloc(n + 1 + lens * 3);
+				_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
+				int imageLen = _ParseAnnotText(b, n, out var u1);
+				if(imageLen > 0) {
+					//info: now len<=n
+					if(lens == 0) {
+						if(imageLen == n) return; //no "\nPrevText"
+						b[--imageLen] = 0; //remove "\nPrevText"
+					} else {
+						if(imageLen == n) b[imageLen++] = (byte)'\n'; //no "\nPrevText"
+						Convert_.Utf8FromString(s, b + imageLen, lens * 3);
+					}
+					_c.Call(SCI_ANNOTATIONSETTEXT, line, b);
+					return;
+				}
+			}
+			_t.LibAnnotationText(line, s);
+		}
+
+		/// <summary>
+		/// Gets annotation text without image info.
+		/// </summary>
+		internal string LibAnnotationText(int line)
+		{
+			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
+			if(n > 0) {
+				var b = t_data.BufferForAnnot.Alloc(n);
+				_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
+				int imageLen = _ParseAnnotText(b, n, out var u1);
+				//info: now len<=n
+				if(imageLen < n) {
+					if(imageLen != 0) { b += imageLen; n -= imageLen; }
+					return Convert_.Utf8ToString(b, n);
+				}
+			}
+			return "";
+		}
+
+		_Image _GetImageInLine(byte* s, ref int iFrom, int iTo, ref bool isMulti, ref int imageStringStartPos)
 		{
 			g1:
 			int i = iFrom;
@@ -174,21 +332,27 @@ namespace G.Controls
 			int i2 = iFrom - 1;
 
 			//if not editor, skip if not <image "..."
-			if(!_isEditor && !isMulti) { if(i < 8 || !s.EqualsPart_(i - 8, "<image ")) goto g1; }
+			if(!isMulti) {
+				if(_isEditor) imageStringStartPos = i - 1;
+				else if(i >= 8 && CharPtr.AsciiStartsWith(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else goto g1;
+			}
 
 			//support "image1|image2|..."
-			int i3 = s.IndexOf('|', i, i2 - i);
+			int i3 = CharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
-			var imType = ImageUtil.ImageTypeFromString(!_isEditor, s, i, i2 - i);
+			var imType = ImageUtil.ImageTypeFromString(!_isEditor, s + i, i2 - i);
 			if(imType == ImageUtil.ImageType.None) goto g1;
 
-			if(_a == null) _a = new List<_Image>();
+			var d = t_data;
 
 			//is already loaded?
-			int hash = Convert_.HashFnv1(s, i, i2 - i);
-			for(int j = 0; j < _a.Count; j++) if(_a[j].nameHash == hash) return _a[j];
+			long hash = Convert_.HashFnv1_64(s + i, i2 - i);
+			var im = d.FindImage(hash);
+			//PrintList(im != null, new string((sbyte*)s, i, i2 - i));
+			if(im != null) return im;
 
 			//var test = s.Substring(i, i2 - i);
 			//PrintList(test, EImageUtil.ImageToString(test));
@@ -198,75 +362,83 @@ namespace G.Controls
 			case ImageUtil.ImageType.Resource: i += 9; break; //resource:
 			}
 
-			string path = s.Substring(i, i2 - i);
+			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8);
 
 			//load
 			byte[] b = ImageUtil.BitmapFileDataFromString(path, imType, !_isEditor);
 			if(b == null) goto g1;
 			if(!ImageUtil.GetBitmapFileInfo(b, out var q)) goto g1;
 
-			//to avoid memory problems when loaded many big images, eg showing all png in Program Files
-			CompactCache(); //will auto reload when need, it does not noticeably slow down
-			_cacheSize += b.Length;
-
-			//add to _a
-			var u = new _Image() {
+			//create _Image
+			im = new _Image() {
 				data = b,
 				nameHash = hash,
-				width = q.width
+				width = q.width,
+				height = Math.Min(q.height + IMAGE_MARGIN_TOP + IMAGE_MARGIN_BOTTOM, _isEditor ? 200 : 2000)
 			};
-			_a.Add(u);
 
-			//calculate n annotation lines from image height, max 10 lines
-			if(0 == _lineHeight) _lineHeight = _c.Lines[0].Height;
-			int n = (q.height + IMAGE_MARGIN_TOP + IMAGE_MARGIN_BOTTOM + (_lineHeight - 1)) / _lineHeight;
-			u.nLines = Math.Min(n, _isEditor ? 10 : 250);
+			//add to cache
+			//Compact cache to avoid memory problems when loaded many big images, eg showing all png in Program Files.
+			//Will auto reload when need, it does not noticeably slow down.
+			//Cache even very large images, because we draw each line separately, would need to load whole image for each line, which is VERY slow.
+			d.CompactCache();
+			d.AddImage(im);
 
-			return u;
+			return im;
 		}
 
 		const int IMAGE_MARGIN_TOP = 2; //frame + 1
 		const int IMAGE_MARGIN_BOTTOM = 1; //just for frame. It is minimal margin, in most cases will be more.
 
 		//Searches for '\"' or '\n' until iTo.
-		int _FindQuoteInLine(string s, int i, int iTo)
+		int _FindQuoteInLine(byte* s, int i, int iTo)
 		{
 			for(; i < iTo && s[i] != '\n'; i++) if(s[i] == '\"') break;
 			return i;
 		}
 
-		SciCommon.AnnotationDrawCallback _sci_AnnotationDrawCallback;
-		unsafe int _AnnotationDrawCallback_(void* cbParam, ref SciCommon.AnnotationDrawCallbackData c)
+		Sci_AnnotationDrawCallback _sci_AnnotationDrawCallback;
+		unsafe int _AnnotationDrawCallback_(void* cbParam, ref Sci_AnnotationDrawCallbackData c)
 		{
-			sbyte* s = c.text, s2;
-			if(c.textLen < 8 || s[0] != '|' || s[7] != '|') return 0;
-			int k = strtoul(s + 1, &s2, 16); if((int)(s2 - s) != 7) return 0;
-			int nLines = Calc.HiUshort(k), width = Calc.LoUshort(k);
-			//PrintList(nLines, width);
+			//Function info:
+			//Called for all annotations, not just for images.
+			//Returns image width. Returns 0 if there is no image or when called for annotation text line below image.
+			//Called for each line of annotation, not once for whole image. Draws each image slice separately.
+			//Called 2 times for each line: step 0 - to get width; step 1 - to draw that image slice on that line.
 
-			//just get width?
-			if(c.step == 0) return width + 1;
+			//Get image info from annotation text. Return 0 if there is no image info, ie no image.
+			//Image info is at the start. Format "\x3XXX", where XXX is a hex number that contains image width and number of lines.
+			byte* s = c.text;
+			if(c.textLen < 4 || s[0] != '\x3') return 0;
+			int k = Api.strtoul(++s, null, 16); if(k < 256) return 0;
+			int nLines = k & 0xff, width = k >> 8;
+
+			if(c.step == 0) return width + 1; //just get width
 			if(c.annotLine >= nLines) return 0; //an annotation text line below the image lines
-
-			var hdc = c.hdc;
-			RECT r = c.rect;
 
 			//Get line text, to find image strings.
 			//Cannot store array indices in annotation, because they may change.
 			//Also cannot store image strings in annotation, because then boxed annotation would be too wide (depends on text length).
+			//Getting/parsing text takes less than 20% time. Other time - drawing image.
+			int from = _t.LineStart(c.line), to = _t.LineEnd(c.line), len = to - from;
+			var text = _GetTextRange(from, to);
 
-			var text = _c.Lines[c.line].Text; if(Empty(text)) return 1;
-			//bool hasImages = false;
-
-			//Perf.First();
-			bool isPenSelected = false; IntPtr oldPen = Zero;
+			//find image strings and draw the images
+			bool hasImages = false;
+			var hdc = c.hdc;
+			RECT r = c.rect;
+			IntPtr pen = Zero, oldPen = Zero;
 			try {
-				//handle exceptions because SetDIBitsToDevice may read more than need, like CreateDIBitmap, although never noticed this.
-				//for each image string in this code line: find images cached in _a, or load and add to _a; draw image; draw frame.
-				_Image u; bool isMulti = false;
+				//Handle exceptions because SetDIBitsToDevice may read more than need, like CreateDIBitmap, although I never noticed this.
+
+				//Call _GetImageInLine repeatedly. It finds next image string, finds its cached image or loads and addd to the cache.
+				//Then draw the image, and finally frame. Actually just single slice, for this line.
+
+				_Image u; bool isMulti = false; int imStrStart = 0;
 				int x = r.left + 1;
-				for(int i = 0; null != (u = _GetImageInLine(text, ref i, text.Length, ref isMulti));) {
-					//hasImages = true;
+				for(int i = 0; null != (u = _GetImageInLine(text, ref i, len, ref isMulti, ref imStrStart));) {
+					hasImages = true;
+
 					//draw image
 					if(!ImageUtil.GetBitmapFileInfo(u.data, out var q)) { Debug.Assert(false); continue; }
 					int isFirstLine = (c.annotLine == 0) ? 1 : 0, hLine = r.bottom - r.top;
@@ -305,8 +477,7 @@ namespace G.Controls
 					}
 
 					//draw frame
-					if(_pen == Zero) _pen = CreatePen(0, 1, 0x8000);
-					oldPen = Api.SelectObject(hdc, _pen); isPenSelected = true;
+					if(pen == Zero) oldPen = Api.SelectObject(hdc, pen = CreatePen(0, 1, 0x60C060)); //quite fast. Caching in a static or ThreadStatic var is difficult.
 					int xx = x + q.width;
 					if(isFirstLine != 0) y--;
 					if(yy > y) {
@@ -320,8 +491,16 @@ namespace G.Controls
 				}
 			}
 			catch(Exception ex) { DebugPrint(ex.Message); }
-			finally { if(isPenSelected) Api.SelectObject(hdc, oldPen); }
+			finally { if(pen != Zero) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 			//Perf.NW();
+
+			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
+			if(!hasImages && c.annotLine == 0) {
+				int line = c.line; var annot = LibAnnotationText(line);
+				//_t.LibAnnotationText(line, annot); //dangerous
+				_c.BeginInvoke(new Action(() => { _t.LibAnnotationText(line, annot); }));
+				return 1;
+			}
 
 			return width + 1;
 
@@ -332,9 +511,6 @@ namespace G.Controls
 			//tested: in QM2 was used LZO compression, now ZIP (DeflateStream). ZIP compresses better, but not so much. LZO is faster, but ZIP is fast enough. GIF and JPG in most cases compress less than ZIP and sometimes less than LZO.
 			//tested: saving in 8-bit format in most cases does not make much smaller when compressed. For screenshots we reduce colors to 4-bit.
 		}
-
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int strtoul(sbyte* s, sbyte** endPtr, int numberBase = 0);
 
 		[DllImport("gdi32.dll")]
 		internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, byte* lpvBits, void* lpbmi, uint ColorUse); //BITMAPINFO*
@@ -348,5 +524,142 @@ namespace G.Controls
 		[DllImport("gdi32.dll")]
 		internal static extern bool LineTo(IntPtr hdc, int x, int y);
 
+		internal void LibOnTextChanged(bool inserted, ref SCNotification n)
+		{
+			if(_visible == AnnotationsVisible.ANNOTATION_HIDDEN) return;
+
+			//info: maybe half of this code is to avoid SCI_GETTEXTRANGE when we can use n.textUTF8.
+			//	Eg can use n.textUTF8 when added all text or appended lines. These cases are the most important for good performance.
+			//	Cannot use n.textUTF8 eg when editing in a middle of a line, because we need whole line, not just the inserted part.
+
+			byte* s = null;
+			int from = n.position, to = from + (inserted ? n.length : 0), len = 0, firstLine = 0, textPos = 0;
+			bool allText = false;
+			if(from == 0) {
+				len = _t.TextLengthBytes;
+				if(len < 10) return; //eg 0 when deleted all text
+				if(inserted && len == n.length) { //added all text
+					allText = true;
+					s = n.textUTF8;
+				}
+			}
+			if(s == null) {
+				firstLine = _t.LineIndexFromPosition(from);
+				int from2 = _t.LineStart(firstLine);
+				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
+				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPosition(to);
+				len = to2 - from2;
+				//PrintList(inserted, from, to, from2, to2, len);
+				if(len < 10) return;
+				if(from2 == from && to2 == to) {
+					s = n.textUTF8;
+				} else {
+					//DebugPrint("need to get text");
+					s = _GetTextRange(from2, to2); if(s == null) return;
+				}
+				textPos = from2;
+			}
+
+			int r = _isEditor ? CharPtr.AsciiFindChar(s, len, (byte)'\"') : CharPtr.AsciiFindString(s, len, "<image \"");
+			if(r < 0) return;
+			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
+
+			//PrintList(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
+			this._SetImagesForTextRange(firstLine, s, len, allText, textPos);
+		}
+
+		/// <summary>
+		/// Copies text range to BufferForText.
+		/// If cannot get from-to length text, asserts and returns null.
+		/// Does not validate arguments.
+		/// </summary>
+		byte* _GetTextRange(int from, int to)
+		{
+			Debug.Assert(to >= from);
+			int len = to - from;
+			var s = t_data.BufferForText.Alloc(len);
+			if(len > 0) {
+				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = s };
+				var r = _c.Call(SCI_GETTEXTRANGE, 0, &tr);
+				Debug.Assert(r == len);
+				if(r != len) return null;
+			} else *s = 0;
+			return s;
+			//tested: this is faster than SCI_GETGAPPOSITION/SCI_GETRANGEPOINTER.
+		}
+
+		/// <summary>
+		/// Hides/shows all images, or changes the display style of annotation areas.
+		/// Default is ANNOTATION_STANDARD (images visible).
+		/// When hiding, it just removes images, does not hide text annotations (SCI_ANNOTATIONGETVISIBLE remains unchanged).
+		/// </summary>
+		public AnnotationsVisible Visible
+		{
+			get => _visible;
+			set
+			{
+				if(value == _visible) return;
+				if(value == AnnotationsVisible.ANNOTATION_HIDDEN) {
+					_c.Call(SCI_SETANNOTATIONDRAWCALLBACK);
+					int len = _c.Call(SCI_GETTEXTLENGTH);
+					if(len >= 10) {
+						bool tempHidden = false;
+						var buf = t_data.BufferForAnnot;
+						for(int iLine = 0, nLines = _c.Call(SCI_GETLINECOUNT); iLine < nLines; iLine++) {
+							len = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //fast
+							if(len < 4) continue;
+							//Perf.First();
+							if(!tempHidden) {
+								tempHidden = true;
+								_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN); //makes many times faster
+							}
+							var a = buf.Alloc(len);
+							_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
+							var imageLen = _ParseAnnotText(a, len, out var u1);
+							if(imageLen > 0) {
+								if(len > imageLen) a += imageLen; else a = null;
+								_c.Call(SCI_ANNOTATIONSETTEXT, iLine, a);
+							}
+							//Perf.NW(); //surprisingly fast
+						}
+						//Perf.First();
+						if(tempHidden) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible);
+						//Perf.NW(); //fast
+					}
+				} else if(_visible == AnnotationsVisible.ANNOTATION_HIDDEN) {
+					_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);
+					int len = _c.Call(SCI_GETTEXTLENGTH);
+					if(len >= 10) {
+						var s = _GetTextRange(0, len);
+						if(s != null) this._SetImagesForTextRange(0, s, len, true, 0);
+					}
+				}
+
+				_visible = value;
+				if(value != AnnotationsVisible.ANNOTATION_HIDDEN) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)value);
+			}
+		}
+		AnnotationsVisible _visible;
+
+		//[Flags]
+		//enum _TimerTasks
+		//{
+		//	UpdateScrollBars = 1
+		//}
+
+		//void _SetTimer(_TimerTasks task)
+		//{
+		//	if(_timer10 == null) _timer10 = new Time.Timer_(t =>
+		//	{
+		//		Perf.First();
+		//		if(0 != (_timerTasks & _TimerTasks.UpdateScrollBars)) _c.Call(SCI_UPDATESCROLLBARS);
+		//		Perf.NW();
+		//		_timerTasks = 0;
+		//	});
+		//	if(_timerTasks == 0) _timer10.Start(10, true);
+		//	_timerTasks |= task;
+		//}
+		//Time.Timer_ _timer10;
+		//_TimerTasks _timerTasks;
 	}
 }

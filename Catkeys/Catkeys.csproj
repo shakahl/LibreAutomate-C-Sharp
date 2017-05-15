@@ -111,6 +111,7 @@
     <Compile Include="Other\Convert_.cs" />
     <Compile Include="Other\Output.cs" />
     <Compile Include="Files, system\Process_.cs" />
+    <Compile Include="String\CharPtr.cs" />
     <Compile Include="String\wildcard.cs" />
     <Compile Include="Menus, dialogs\TaskDialog.cs" />
     <Compile Include="String\Csv.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="Time\Time.cs" />
     <Compile Include="Time\WaitFor_other.cs" />
     <Compile Include="Util\ArrayBuilder.cs" />
+    <Compile Include="Util\Tables.cs" />
     <Compile Include="Wnd\Wnd.cs" />
     <Compile Include="Wnd\Wnd_child.cs" />
     <Compile Include="Wnd\Wnd_fromxy.cs" />

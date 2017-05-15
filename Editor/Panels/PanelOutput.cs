@@ -20,38 +20,57 @@ using System.Drawing;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using G.Controls;
 
-using ScintillaNET;
+using static G.Controls.Sci;
 
 class PanelOutput :Control
 {
-	Scintilla _c;
+	SciOutput _c;
+
+	public SciOutput Output { get => _c; }
 
 	public PanelOutput()
 	{
-		_c = new Scintilla();
-		_c.BorderStyle = BorderStyle.None;
+		_c = new SciOutput();
 		_c.Dock = DockStyle.Fill;
 		_c.AccessibleName = this.Name = "Output";
-
-		_c.HandleCreated += _c_HandleCreated;
-
 		this.Controls.Add(_c);
-	}
 
-	private void _c_HandleCreated(object sender, EventArgs e)
-	{
-		_c.Margins[1].Width = 3;
-		_c.Styles[Style.Default].BackColor = _c.Styles[0].BackColor = Color_.ColorFromRGB(0xF7F7F7);
-		_c.Styles[0].Font = "Courier New"; _c.Styles[0].Size = 8;
-		_c.ScrollWidth = 1;
-		//_c.WrapVisualFlags = WrapVisualFlags.End;
+		//_c.Deb = true;
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
+}
+
+class SciOutput :SciControl
+{
+	public SciOutput()
+	{
+		InitReadOnlyAlways = true;
+		InitImagesStyle = ImagesStyle.ImageTag;
+		InitTagsStyle = TagsStyle.AutoWithPrefix;
+
+	}
+
+	protected override void OnHandleCreated(EventArgs e)
+	{
+		base.OnHandleCreated(e);
+
+		ST.MarginWidth(1, 3);
+		ST.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
+		ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
+		ST.StyleClearAll();
+	}
 
 	public void Write(object text)
 	{
-		_c.AppendText(text.ToString() + "\r\n");
+		var s = text.ToString();
+		ST.AppendText(s, true, true);
+	}
+
+	public void Clear()
+	{
+		ST.ClearText();
 	}
 }

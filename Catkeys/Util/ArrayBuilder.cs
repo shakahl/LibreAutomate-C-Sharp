@@ -40,15 +40,17 @@ namespace Catkeys.Util
 		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="typeSize">Element type size. If don't know, use <see cref="TypeSize{T}"/>.</param>
+		/// <param name="typeSize">Element type size. If don't know, use <see cref="TypeSize{T}"/>. Note that size of some types is different in 32-bit and 64-bit process.</param>
 		/// <param name="capacity">Initial Capacity. If 0 (or set to 0 later), on first allocation will be used default capacity; it is 512 elements for types not bigger than 32 bytes; it is smaller for bigger types, trying to not exceed 16384 bytes.</param>
+		/// <exception cref="ArgumentException">typeSize less than 1 or capacity less than 0.</exception>
 		public LibArrayBuilder(int typeSize, int capacity)
 		{
+			if(typeSize < 1 || capacity < 0) throw new ArgumentException();
 			_typeSize = typeSize;
 
 			//minimal capacity
 			var r = 16384 / _typeSize; //above 16384 the memory allocation API become >=2 times slower
-			if(r > 512) r = 512; else if(r < 4) r = 4; //normally there are ~400 windows on my PC, rarely exceeds 512
+			if(r > 512) r = 512; else if(r < 4) r = 4; //tested with Wnd: normally there are ~400 windows on my PC, rarely exceeds 512
 			_minCap = r;
 
 			Capacity = capacity;

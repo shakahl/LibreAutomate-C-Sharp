@@ -51,7 +51,7 @@ partial class EForm
 
 		public void File_Disable()
 		{
-			PrintFunc();
+			DebugPrintFunc();
 
 		}
 
@@ -67,7 +67,7 @@ partial class EForm
 
 		public void File_Properties()
 		{
-			PrintFunc();
+			DebugPrintFunc();
 
 		}
 
@@ -93,7 +93,7 @@ partial class EForm
 
 		public void File_PreviousDocument()
 		{
-			PrintFunc();
+			DebugPrintFunc();
 
 		}
 

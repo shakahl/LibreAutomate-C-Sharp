@@ -1021,7 +1021,8 @@ namespace Catkeys
 						if(_x != null) {
 							var x = _x.Element_("i", "name", file, true);
 							if(x != null) {
-								using(var ms = new MemoryStream(Convert.FromBase64String(x.Value))) {
+								//using(var ms = new MemoryStream(Convert.FromBase64String(x.Value))) {
+								using(var ms = new MemoryStream(Convert_.Base64Decode(x.Value))) {
 									R = new Bitmap(ms);
 								}
 							}

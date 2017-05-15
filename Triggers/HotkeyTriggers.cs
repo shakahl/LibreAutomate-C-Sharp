@@ -38,14 +38,14 @@ namespace Catkeys.Triggers
 			set
 			{
 				//_t.Add(1, value);
-				_t[1]=value;
+				_t[1] = value;
 			}
 		}
 
 		static HotkeyTriggers()
 		{
 			//System.Reflection.
-			Assembly assembly = Assembly.GetEntryAssembly();
+			Assembly assembly = Util.AppDomain_.EntryAssembly;
 
 			var methods = assembly.GetTypes()
 						.SelectMany(t => t.GetMethods())
@@ -55,7 +55,7 @@ namespace Catkeys.Triggers
 				Print($"\t{m.Name}");
 				foreach(var a in (Trigger.HotkeyAttribute[])m.GetCustomAttributes(typeof(Trigger.HotkeyAttribute), false)) {
 					Print($"\t\t{a.hotkey}");
-					Trigger.Hotkey[a.hotkey]=(Target)m.CreateDelegate(typeof(Target));
+					Trigger.Hotkey[a.hotkey] = (Target)m.CreateDelegate(typeof(Target));
 					//Trigger.Hotkey[a.hotkey] = (TargetPath)Delegate.CreateDelegate(typeof(TargetPath), m);
 				}
 			}

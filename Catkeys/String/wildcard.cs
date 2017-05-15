@@ -63,7 +63,7 @@ namespace Catkeys
 			if(t.Length == 0) return false;
 
 			fixed (char* str = t, pat = pattern) {
-				return __WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? LibLowerCaseTable : null);
+				return __WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.LibTables.LowerCase : null);
 			}
 
 			//info:
@@ -140,29 +140,6 @@ namespace Catkeys
 			for(int i = 0; i < patterns.Length; i++) if(t.Like_(patterns[i], ignoreCase)) return i + 1;
 			return 0;
 		}
-
-		internal unsafe struct ProcessVariables
-		{
-			char* _caseTable; //char[0x10000] containing lower-case versions of the first 0x10000 characters
-
-			internal char* GetCaseTable()
-			{
-				if(_caseTable == null) {
-					var t = (char*)Api.VirtualAlloc(Zero, 0x20000); //faster than Marshal.AllocHGlobal when need big memory, especially when need to zero it
-					if(t == null) throw new OutOfMemoryException();
-					for(int i = 0; i < 0x10000; i++) t[i] = (char)i;
-					Api.CharLowerBuff(t, 0x10000);
-					if(_caseTable == null) _caseTable = t; else Api.VirtualFree((IntPtr)t); //another thread can outrun us
-				} //speed: 350
-				return _caseTable;
-			}
-		}
-
-		/// <summary>
-		/// Gets unmanaged char[0x10000] containing lower-case versions of the first 0x10000 characters.
-		/// Auto-creates when called first time. The memory is shared by appdomains.
-		/// </summary>
-		internal static unsafe char* LibLowerCaseTable { get => Util.LibProcessMemory.Ptr->str.GetCaseTable(); }
 
 		#endregion Like_
 	}

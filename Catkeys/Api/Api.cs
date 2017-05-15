@@ -1308,6 +1308,19 @@ namespace Catkeys
 		[DllImport("kernel32.dll")]
 		internal static extern bool HeapFree(IntPtr hHeap, uint dwFlags, void* lpMem);
 
+		internal const int CP_UTF8 = 65001;
+
+		[DllImport("kernel32.dll")]
+		internal static extern int MultiByteToWideChar(uint CodePage, uint dwFlags, byte* lpMultiByteStr, int cbMultiByte, char* lpWideCharStr, int cchWideChar);
+
+		[DllImport("kernel32.dll")]
+		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, string lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar, int* lpUsedDefaultChar);
+
+		[DllImport("kernel32.dll")]
+		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, char* lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar, int* lpUsedDefaultChar);
+
+
+
 
 
 
@@ -1878,8 +1891,21 @@ namespace Catkeys
 			return strtoi64(s, out endPtr, numberBase);
 		}
 
+		//info: using strtoul with int return value because strtol eg returns 0x7FFFFFFF for "0xFFFFFFFF".
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int strtoul(byte* s, byte** endPtr, int radix);
+
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern char* _ltoa(int value, byte* s, int radix);
+
 		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* memcpy(void* to, void* from, LPARAM n);
+
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* memmove(void* to, void* from, LPARAM n);
+
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* memset(void* ptr, int ch, LPARAM n);
 
 
 

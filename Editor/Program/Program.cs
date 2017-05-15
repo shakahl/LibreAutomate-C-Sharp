@@ -163,14 +163,6 @@ static class Program
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			ScintillaNET.Scintilla.SetDestroyHandleBehavior(false);
-			//ScintillaNET.Scintilla.SetModulePath(Folders.ThisApp + ("SciLexer" + IntPtr.Size * 8 + ".dll"));
-#if DEBUG
-			ScintillaNET.Scintilla.SetModulePath(@"Q:\app\catkeys\Debug\SciLexer.dll"); //TODO
-#else
-			ScintillaNET.Scintilla.SetModulePath(@"Q:\app\catkeys\Release\SciLexer.dll"); //TODO
-#endif
-
 			Time.SetTimer(1000, false, t => Timer1s?.Invoke());
 
 			Settings = new ProgramSettings();

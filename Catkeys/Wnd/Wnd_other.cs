@@ -179,7 +179,7 @@ namespace Catkeys
 			if(!LibGetWindowPlacement(out var p)) return null;
 			//PrintList(p.showCmd, p.flags);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
-			return Convert_.BytesToHexString(&p, Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT)), true);
+			return Convert_.HexEncode(&p, Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT)), true);
 		}
 
 		/// <summary>
@@ -192,7 +192,7 @@ namespace Catkeys
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
 			Api.WINDOWPLACEMENT p; int siz = Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT));
-			if(siz == Convert_.BytesFromHexString(s, &p, siz)) {
+			if(siz == Convert_.HexDecode(s, &p, siz)) {
 				//PrintList(p.showCmd, p.flags);
 				if(!showActivate && !this.IsVisible) {
 					uint style = this.Style;

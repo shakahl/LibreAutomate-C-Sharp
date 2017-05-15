@@ -1929,6 +1929,18 @@
             Returns the CHARACTER offset where the line begins.
             </summary>
         </member>
+        <member name="M:ScintillaNET.LineCollection.Dump">
+            <summary>
+            Dumps the line buffer to a string.
+            </summary>
+            <returns>A string representing the line buffer.</returns>
+        </member>
+        <member name="M:ScintillaNET.LineCollection.Dump(System.IO.TextWriter)">
+            <summary>
+            Dumps the line buffer to the specified TextWriter.
+            </summary>
+            <param name="writer">The writer to use for dumping the line buffer.</param>
+        </member>
         <member name="M:ScintillaNET.LineCollection.GetCharCount(System.Int32,System.Int32)">
             <summary>
             Gets the number of CHARACTERS int a BYTE range.
