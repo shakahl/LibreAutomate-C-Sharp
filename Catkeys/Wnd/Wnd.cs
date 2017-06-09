@@ -393,6 +393,22 @@ namespace Catkeys
 		/// <seealso cref="IsAlive"/>
 		public bool Is0 { get => _h == default(IntPtr); }
 
+		//Better don't need it. Possibly can create some difficult-to-debug problems. Less readable than w.Is0, which is short enough.
+		///// <summary>
+		///// This operator allows to use code <c>if(w)</c> instead of <c>if(!w.Is0)</c> or <c>if(w != Wnd0)</c>.
+		///// Experimental. Will be removed in final release if some problems with it will be discovered.
+		///// </summary>
+		//public static bool operator true(Wnd w) { return w._h != default(IntPtr); }
+
+		/////
+		//public static bool operator false(Wnd w) { return w._h == default(IntPtr); }
+
+		///// <summary>
+		///// This operator allows to use code <c>if(!w)</c> instead of <c>if(w.Is0)</c> or <c>if(w == Wnd0)</c>.
+		///// Experimental. Will be removed in final release if some problems with it will be discovered.
+		///// </summary>
+		//public static bool operator !(Wnd w) { return w._h == default(IntPtr); }
+
 		/// <summary>
 		/// Returns true if the <see cref="Wnd">handle</see> identifies an existing window.
 		/// Returns false if the handle is 0 or invalid.
@@ -1973,7 +1989,7 @@ namespace Catkeys
 		/// Makes this window topmost (always on top of non-topmost windows in the Z order).
 		/// Does not activate.
 		/// If this window has an owner window, the owner does not become topmost.
-		/// Thic cannot be a control.
+		/// This cannot be a control.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTopmost()
@@ -1984,7 +2000,7 @@ namespace Catkeys
 		/// <summary>
 		/// Makes this window non-topmost.
 		/// If this window has an owner window, makes the owner window non-topmost too.
-		/// Thic cannot be a control.
+		/// This cannot be a control.
 		/// </summary>
 		/// <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -2634,7 +2650,7 @@ namespace Catkeys
 		/// <seealso cref="ControlText"/>
 		public void SetText(string text)
 		{
-			if(!SendTimeoutS(30000, out var u, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
+			if(!SendTimeoutS(30000, out var _, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
 		}
 
 		/// <summary>

@@ -69,8 +69,8 @@ namespace Catkeys
 			if(Ver.MinWin8) {
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
-					using(var p = new Process_.LibProcessHandle(w)) {
-						if(!p.Is0) {
+					using(var p = Process_.LibProcessHandle.FromWnd(w)) {
+						if(p!=null) {
 							var b = Util.CharBuffer.LibCommon; int na = 1000;
 							if(0 == _Api.GetApplicationUserModelId(p, ref na, b.Alloc(na))) appId = b.ToString();
 						}

@@ -468,6 +468,7 @@ namespace Catkeys
 		internal const int ERROR_NO_MORE_FILES = 18;
 		internal const int ERROR_NOT_READY = 21;
 		internal const int ERROR_SHARING_VIOLATION = 32;
+		internal const int ERROR_HANDLE_EOF = 38;
 		internal const int ERROR_BAD_NETPATH = 53;
 		internal const int ERROR_BAD_NET_NAME = 67;
 		internal const int ERROR_FILE_EXISTS = 80;

@@ -164,6 +164,11 @@
             <param name="dllName"></param>
             <param name="funcName"></param>
         </member>
+        <member name="M:Catkeys.Api.SECURITY_ATTRIBUTES.#ctor">
+            <summary>
+            Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
+            </summary>
+        </member>
         <member name="M:Catkeys.Api.strtoi64(System.Char*,System.Char*@,System.Int32)">
             <summary>
             This overload has different parameter types.
@@ -3636,6 +3641,13 @@
             The same as the explicit cast Control-to-Wnd.
             </summary>
         </member>
+        <member name="M:Catkeys.DotNetExtensions.CreateHandle_(System.Windows.Forms.Control)">
+            <summary>
+            If control handle still not created, creates handle.
+            Like <see cref="M:System.Windows.Forms.Control.CreateHandle"/>, which is protected.
+            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
+            </summary>
+        </member>
         <member name="M:Catkeys.DotNetExtensions.MouseClientXY_(System.Windows.Forms.Control)">
             <summary>
             Gets mouse cursor position in client area coordinates.
@@ -3750,6 +3762,27 @@
             <summary>
             Gets next sibling element.
             Returns null if no element.
+            </summary>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.ToString_(System.Double,System.String)">
+            <summary>
+            Converts double to string.
+            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+            Calls <see cref="M:System.Double.ToString(System.String,System.IFormatProvider)"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.ToString_(System.Single,System.String)">
+            <summary>
+            Converts double to string.
+            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+            Calls <see cref="M:System.Single.ToString(System.String,System.IFormatProvider)"/>.
+            </summary>
+        </member>
+        <member name="M:Catkeys.DotNetExtensions.ToString_(System.Decimal,System.String)">
+            <summary>
+            Converts double to string.
+            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+            Calls <see cref="M:System.Decimal.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.DotNetExtensions.IsEmpty_(System.Drawing.Rectangle)">
@@ -4177,8 +4210,7 @@
         </member>
         <member name="T:Catkeys.Output">
             <summary>
-            Writes text to the output pane.
-            In console process writes to the console window by default.
+            Writes text to the output window, console or log file.
             </summary>
         </member>
         <member name="P:Catkeys.Output.IsConsoleProcess">
@@ -4186,93 +4218,388 @@
             Returns true if this is a console process.
             </summary>
         </member>
-        <member name="P:Catkeys.Output.AlwaysOutput">
+        <member name="P:Catkeys.Output.IsWritingToConsole">
             <summary>
-            If true, Output.WriteX and Output.Clear functions will use output even in console process.
-            This is not applied to Console.Write and other Console class functions.
+            Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="P:Catkeys.Output.Writer"/> is not changed.
+            Does not write to console in these cases: <see cref="P:Catkeys.Output.IsConsoleProcess"/> is false. <see cref="P:Catkeys.Output.IgnoreConsole"/> is true. <see cref="P:Catkeys.Output.LogFile"/> is not null. The startup info of this process tells to not show console window and to not redirect the standard output.
             </summary>
+        </member>
+        <member name="P:Catkeys.Output.IgnoreConsole">
+            <summary>
+            If true, Write and related functions in console process don't not use the console window. Then everything is like in non-console process.
+            </summary>
+            <seealso cref="P:Catkeys.Output.RedirectConsoleOutput"/>
+            <seealso cref="P:Catkeys.Output.RedirectDebugOutput"/>
         </member>
         <member name="M:Catkeys.Output.Clear">
             <summary>
-            Clears output pane or console text.
+            Clears the output window or console text (if <see cref="P:Catkeys.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Catkeys.Output.LogFile"/> not null).
             </summary>
         </member>
         <member name="M:Catkeys.Output.Write(System.String)">
             <summary>
-            Writes value to the output pane or console.
+            Writes string value + "\r\n" to the output window or console (if <see cref="P:Catkeys.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Catkeys.Output.LogFile"/> not null).
             </summary>
         </member>
         <member name="M:Catkeys.Output.Write(System.Object)">
             <summary>
-            Writes value.ToString() to the output pane or console.
+            Writes value?.ToString().
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.Write``1(System.Collections.Generic.IEnumerable{``0},System.String)">
             <summary>
             Writes array, List&lt;T&gt; or other generic collection as a list of element values.
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.Write(System.Collections.IEnumerable,System.String)">
             <summary>
             Writes non-generic collection as a list of element values.
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.Write``2(System.Collections.Generic.IDictionary{``0,``1},System.String)">
             <summary>
             Writes dictionary as a list of [key, value].
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.WriteList(System.Object[])">
             <summary>
             Writes multiple argument values using separator ", ".
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.WriteListSep(System.String,System.Object[])">
             <summary>
             Writes multiple argument values using the specified separator.
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.WriteHex(System.Object)">
             <summary>
             Writes an integer in hexadecimal format, like "0x5A".
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Output.Warning(System.String,System.Int32)">
             <summary>
-            Writes a string prefixed with "Warning: " and optionally followed by the stack trace.
+            Writes a string with prefix "Warning: " and followed by the stack trace.
+            Calls <see cref="M:Catkeys.Output.Write(System.String)"/>.
             </summary>
             <param name="s">Warning text.</param>
             <param name="showStackFromThisFrame">If &gt;= 0, appends stack trace, skipping this number of frames.</param>
         </member>
         <member name="P:Catkeys.Output.Writer">
             <summary>
-            Gets or sets object that actually writes text when your script or the automation library calls Output.Write or Write.
-            If you want to redirect or modify output text (for example write to a file or add time), use code like this:
-            <c>Output.Writer=myWriter;</c>, where myWriter is a variable of your class that is derived from TextWriter and overrides its functions WriteLine, Write and Encoding.
-            It is like redirecting console output with code <c>Console.SetOut(myWriter);</c> (see <see cref="M:System.Console.SetOut(System.IO.TextWriter)"/>).
-            Usually the best place to redirect is in static ScriptClass() {  }.
-            Redirection is applied to whole script appdomain, and does not affect other scripts.
-            Redirection affects Write, RedirectConsoleOutput, RedirectDebugOutput, AlwaysOutput and all OutX. It does not affect WriteDirectly and Clear.
-            Don't call Output.Write and Write in your writer class; it would create stack overflow; if need, use Output.WriteDirectly.
+            Gets or sets object that actually writes text when is called Output.Write, Print and similar functions.
+            </summary>
+            <remarks>
+            If you want to redirect, modify or just monitor output text, use code like in the example. It is known as "output redirection".
+            Redirection is applied to whole appdomain, and does not affect other appdomains.
+            Redirection affects Output.Write, Print and similar functions, also Output.RedirectConsoleOutput and Output.RedirectDebugOutput. It does not affect Output.WriteDirectly and Output.Clear.
+            Don't call Output.Write, Print etc in method WriteLine(string) of your writer class. It would call itself and create stack overflow. But you can call Output.WriteDirectly.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            [STAThread]
+            static void Main()
+            {
+            	Output.Writer = new TestOutputWriter();
+            
+            	Print("test");
+            }
+            
+            class TestOutputWriter :TextWriter
+            {
+            	public override void WriteLine(string value) { Output.WriteDirectly("redir: " + value); }
+            	public override Encoding Encoding { get => Encoding.Unicode; }
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Catkeys.Output._OutputWriter">
+            <summary>
+            Our default writer class for the Writer property.
             </summary>
         </member>
         <member name="M:Catkeys.Output.WriteDirectly(System.String)">
             <summary>
-            Writes string value to the output or console.
-            Unlike other Write methods, this function ignores custom Writer used to redirect output, therefore can be used in your custom writer class.
+            Writes string value + "\r\n" to the output window or console (if <see cref="P:Catkeys.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Catkeys.Output.LogFile"/> not null).
+            Unlike Output.Write, Print etc, the string is not passed to <see cref="P:Catkeys.Output.Writer"/>.
             </summary>
         </member>
-        <member name="M:Catkeys.Output.RedirectConsoleOutput">
+        <member name="P:Catkeys.Output.RedirectConsoleOutput">
             <summary>
-            Let Console.WriteX methods write to the output, unless this is a console process (even if AlwaysOutput is true).
+            Let Console.WriteX methods in non-console process write to the same destination as Output.Write etc.
+            If value is null - restores default behavior.
+            </summary>
+            <remarks>
             Console.Write will write line, like Console.WriteLine.
-            Note: Console.Clear will not clear output; it will throw exception; use Output.Clear or try/catch.
+            Console.Clear will not clear output; it will throw exception.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Output.RedirectDebugOutput">
+            <summary>
+            Let Debug.WriteX and Trace.WriteX methods write to the same destination as Output.Write etc.
+            If value is null - restores default behavior.
+            </summary>
+            <remarks>
+            Tip: To write to the output window even in console process, set <c>Output.IgnoreConsole=true;</c> before calling this method first time.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Output.LogFile">
+            <summary>
+            Sets log file path.
+            When set (not null), text passed to Output.Write, Print and similar functions will be written to the file. Assuming that <see cref="P:Catkeys.Output.Writer"/> is not changed.
+            If value is null - restores default behavior.
+            </summary>
+            <remarks>
+            The first Write etc call (in this app domain) creates or opens the file and deletes old content if the file already exists.
+            Multiple appdomains cannot use the same file. If the file is open for writing, Write makes unique filename and changes LogFile value.
+            
+            Also supports mailslots. For LogFile use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
+            </remarks>
+            <exception cref="T:System.ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
+        </member>
+        <member name="P:Catkeys.Output.LogFileTimestamp">
+            <summary>
+            Let Write etc also add current time when using log file (see <see cref="P:Catkeys.Output.LogFile"/>).
+            The time is local, not UTC.
             </summary>
         </member>
-        <member name="M:Catkeys.Output.RedirectDebugOutput">
+        <member name="M:Catkeys.Output._CreateFile(System.String,System.Boolean)">
             <summary>
-            Let Debug.WriteX and Trace.WriteX methods write to the output or console.
-            To write to the output even in console process, set Output.AlwaysOutput=true; before calling this method first time.
+            Calls Api.CreateFile to open file or mailslot.
+            </summary>
+            <param name="name">File path or mailslot name.</param>
+            <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
+        </member>
+        <member name="M:Catkeys.Output._LogFile.Open">
+            <summary>
+            Opens LogFile file handle for writing.
+            Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
+            </summary>
+            <remarks>
+            Multiple appdomains cannot use the same file. Each appdomain overwrites it when opens first time.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Output._LogFile.WriteLine(System.String)">
+            <summary>
+            Writes s + "\r\n" and optionally timestamp.
+            </summary>
+            <remarks>
+            If fails to write to file:
+            	Sets LogFile=null, which closes file handle.
+            	Writes a warning and s to the output window or console.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Output._LogFile.Clear">
+            <summary>
+            Sets file size = 0.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Output._LogFile.Close">
+            <summary>
+            Closes file handle.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Output._LogFile._StringToUtf8(System.String,System.Int32@)">
+            <summary>
+            Converts string to UTF8 (stored in Util.ByteBuffer.LibCommon).
+            Appends "\r\n". If LogFileTimestamp, prepends timestamp.
+            </summary>
+            <param name="s"></param>
+            <param name="len">Receives UTF8 length.</param>
+        </member>
+        <member name="T:Catkeys.Output.Server">
+            <summary>
+            Receives messages sent from clients when they call Output.Write and related methods.
+            If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
+            </summary>
+            <remarks>
+            Works asynchronously, to make writing messages faster.
+            When a client writes a message, the message arrives to the server with some delay and is placed in the <see cref="P:Catkeys.Output.Server.Messages"/> queue.
+            You then can get/remove messages (call Messages.TryDequeue) and display them in a window (for example).
+            You can be notified about new messages.
+            
+            Recommended setup (see example):
+            1. When your application starts, create an Output.Server instance and assign to a static variable. Call Start.
+            2. When your application creates its output window, call <see cref="M:Catkeys.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)"/> to register callback function.
+            3. In the callback function get/remove/display all new messages.
+            4. Call Stop when closing the window. Optional but recommended.
+            </remarks>
+            <example>
+            Simple program with output window.
+            <code><![CDATA[
+            class OutputFormExample :Form
+            {
+            	TextBox _tb;
+            
+            	public OutputFormExample()
+            	{
+            		_tb = new TextBox();
+            		_tb.ReadOnly = true;
+            		_tb.Multiline = true;
+            		_tb.ScrollBars = ScrollBars.Both;
+            		_tb.WordWrap = false;
+            		_tb.Dock = DockStyle.Fill;
+            		_tb.TabStop = false;
+            		this.Controls.Add(_tb);
+            
+            		_os.SetNotifications(_ProcessMessages, this);
+            	}
+            
+            	void _ProcessMessages()
+            	{
+            		while(_os.Messages.TryDequeue(out var m)) {
+            			switch(m.Type) {
+            			case Output.Server.MessageType.Clear:
+            				_tb.Clear();
+            				break;
+            			case Output.Server.MessageType.Write:
+            				//_tb.AppendText(m.Text);
+            				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
+            				break;
+            			}
+            		}
+            	}
+            
+            	static Output.Server _os = new Output.Server(false);
+            
+            	[STAThread]
+            	public static void Main()
+            	{
+            		_os.Start();
+            
+            		//test Print and Clear, before and after creating window
+            		Output.IgnoreConsole = true;
+            		Print("test before setting notifications");
+            		Task.Run(() => { Wait(1); Print("test after"); Wait(1); Output.Clear(); Wait(1); Print("test after Clear"); });
+            
+            		var f = new OutputFormExample();
+            		f.ShowDialog();
+            		_os.Stop();
+            	}
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Catkeys.Output.Server.MessageType">
+            <summary>
+            See <see cref="P:Catkeys.Output.Server.Message.Type"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Output.Server.MessageType.Write">
+            <summary>
+            Add line to the output window.
+            All Message members can be used.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Output.Server.MessageType.Clear">
+            <summary>
+            Clear the output window.
+            Other Message members are not used.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Output.Server.Message">
+            <summary>
+            Contains message text and/or related info.
+            See <see cref="P:Catkeys.Output.Server.Messages"/>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.Message.Type">
+            <summary>
+            Message type.
+            Currently there are 2 types - Write and Clear.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.Message.Text">
+            <summary>
+            Message text.
+            Used with MessageType.Write.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.Message.TimeUtc">
+            <summary>
+            Message time in FILETIME format, UTC.
+            Used with MessageType.Write.
+            To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.Message.Domain">
+            <summary>
+            The name of the appdomain that called the Write/Print/etc method.
+            Used with MessageType.Write.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.Messages">
+            <summary>
+            Contains all received and still not removed messages that were sent by clients when they call Output.Write etc.
+            Call TryDequeue to get/remove them.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Output.Server.#ctor(System.Boolean)">
+            <param name="isGlobal">Serve all appdomains and processes that don't have local server.</param>
+        </member>
+        <member name="M:Catkeys.Output.Server.Start">
+            <summary>
+            Starts server.
+            Returns false if server already exists (if global - in any process).
+            </summary>
+            <exception cref="T:Catkeys.CatException">Failed.</exception>
+        </member>
+        <member name="M:Catkeys.Output.Server.Stop">
+            <summary>
+            Stops server.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Output.Server.Finalize">
+            <summary>
+            Calls Stop.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)">
+            <summary>
+            Sets callback function, to be notified about server events.
+            </summary>
+            <param name="cbFunc">
+            Callback function's delegate. Called when one or more messages are available.
+            It should get/remove messages from <see cref="P:Catkeys.Output.Server.Messages"/> queue (call TryDequeue).
+            See example in class help.
+            </param>
+            <param name="c">A control or form. The callback function will be called in its thread (<see cref="M:System.Windows.Forms.Control.BeginInvoke(System.Delegate)"/>). If null, the callback function will be called in other thread.</param>
+        </member>
+        <member name="M:Catkeys.Output.Server.LocalWrite(System.String,System.Int64,System.String)">
+            <summary>
+            Adds s directly to Messages and sets timer.
+            If s is null, it is 'Clear' command.
+            Else if !NoNewline, appends "\r\n".
+            Used with local server only.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.NoNewline">
+            <summary>
+            Let messages don't end with "\r\n".
+            </summary>
+            <remarks>
+            This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Output.Server.LibMailslotName">
+            <summary>
+            Gets mailslot name like @"\\.\mailslot\Catkeys.Output\" + sessionId.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Output.Server.LibTimerName">
+            <summary>
+            Gets waitable timer name like "timer.Catkeys.Output".
+            </summary>
+        </member>
+        <member name="T:Catkeys.Output.Server.LibSharedMemoryData">
+            <summary>
+            Shared memory variables. Used with global server only.
             </summary>
         </member>
         <member name="T:Catkeys.Process_">
@@ -4349,8 +4676,7 @@
         </member>
         <member name="T:Catkeys.Process_.LibProcessHandle">
             <summary>
-            Opens and manages a process handle.
-            Calls API <msdn>CloseHandle</msdn> in Dispose (which normally is implicitly called at the end of <c>using(...){...}</c>) or in finalizer (which is called later by the GC).
+            Opens and manages process handle.
             </summary>
         </member>
         <member name="M:Catkeys.Process_.LibProcessHandle.#ctor(System.IntPtr)">
@@ -4360,23 +4686,23 @@
             </summary>
             <param name="handle"></param>
         </member>
-        <member name="M:Catkeys.Process_.LibProcessHandle.#ctor(System.Int32,System.UInt32)">
+        <member name="M:Catkeys.Process_.LibProcessHandle.FromId(System.Int32,System.UInt32)">
             <summary>
-            Opens a process handle.
+            Opens process handle.
             Calls API OpenProcess.
-            No exception when fails; use Is0. Supports Native.GetError().
+            Returns null if fails. Supports Native.GetError().
             </summary>
             <param name="processId">Process id.</param>
-            <param name="desiredAccess">Desired access, as documented in MSDN -> OpenProcess.</param>
+            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
         </member>
-        <member name="M:Catkeys.Process_.LibProcessHandle.#ctor(Catkeys.Wnd,System.UInt32)">
+        <member name="M:Catkeys.Process_.LibProcessHandle.FromWnd(Catkeys.Wnd,System.UInt32)">
             <summary>
             Opens window's process handle.
             This overload is more powerful: if API OpenProcess fails, it tries GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-            No exception when fails; use Is0. Supports Native.GetError().
+            Returns null if fails. Supports Native.GetError().
             </summary>
-            <param name="w">Window.</param>
-            <param name="desiredAccess">Api.PROCESS_</param>
+            <param name="w"></param>
+            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
         </member>
         <member name="T:Catkeys.Process_.LibProcessWaitHandle">
             <summary>
@@ -4550,11 +4876,6 @@
             Most processes don't have this property and cannot access/automate windows of higher integrity level (High, System, Middle+uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
             Note: High IL (admin) processes also can have this property, therefore IsUIAccess is not the same as IntegrityLevelAndUIAccess==IL.UIAccess (IntegrityLevelAndUIAccess returns IL.UIAccess only for Medium+uiAccess processes; for High+uiAccess processes it returns IL.High). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
             This property is rarely useful. Instead use other properties of this class.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Process_.UacInfo.IsAppContainer">
-            <summary>
-            Returns true if the process is a Windows Store app.
             </summary>
         </member>
         <member name="P:Catkeys.Process_.UacInfo.IntegrityLevel">
@@ -7058,16 +7379,16 @@
             </summary>
             <seealso cref="M:Catkeys.Wnd.Misc.InterProcessSendData(Catkeys.Wnd,System.Int32,System.String,Catkeys.Wnd)"/>
         </member>
-        <member name="M:Catkeys.Util.SharedMemory.CreateOrGet(System.String,System.UInt32,System.Boolean)">
+        <member name="M:Catkeys.Util.SharedMemory.CreateOrGet(System.String,System.UInt32,System.Boolean@)">
             <summary>
-            Creates named shared memory of specified size. If already exists, just gets its address.
+            Creates named shared memory of specified size. Opens if already exists.
             Returns shared memory address in this process.
             Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
             </summary>
             <param name="name">Shared memory name. Case-insensitive.</param>
-            <param name="size">Shared memory size. The function uses it only when creating the memory; it does not check whether the size argument matches the size of existing memory.</param>
-            <param name="allowLIL">Allow UAC low-integrity-level processes to access the shared memory.</param>
-            <exception cref="T:System.ComponentModel.Win32Exception">The API failed.</exception>
+            <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
+            <param name="created">Receives true if created and not opened.</param>
+            <exception cref="T:Catkeys.CatException">The API failed.</exception>
             <remarks>
             Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
             There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
@@ -7101,8 +7422,8 @@
             <remarks>
             When need to prevent simultaneous access of the memory by multiple threads, use <c>lock("uniqueString"){...}</c> .
             It locks in all appdomains, because literal strings are interned, ie shared by all appdomains.
-            Using some other object with 'lock' would lock only in that appdomain.
-            However use this only in single module, because ngened modules have own interned strings.
+            Using some other object with 'lock' would lock only in that appdomain. Maybe except Type.
+            Use this only in single module, because ngened modules have own interned strings.
             </remarks>
         </member>
         <member name="P:Catkeys.Util.LibProcessMemory.Ptr">
@@ -7173,6 +7494,12 @@
         <member name="M:Catkeys.Util.CharBuffer.ToStringFromAnsi(System.Text.Encoding)">
             <summary>
             Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+            </summary>
+            <param name="enc">If null, uses system's default ANSI encoding.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharBuffer.ToStringFromAnsi(System.Int32,System.Text.Encoding)">
+            <summary>
+            Converts the buffer, which contains native ANSI string of n length, to String.
             </summary>
             <param name="enc">If null, uses system's default ANSI encoding.</param>
         </member>
@@ -7329,6 +7656,13 @@
             </summary>
             <param name="onlyIfAutoInstall">Do nothing if WindowsFormsSynchronizationContext.AutoInstall==false. Normally WindowsFormsSynchronizationContext.AutoInstall is true (default).</param>
         </member>
+        <member name="M:Catkeys.Util.LibEnsureWindowsFormsSynchronizationContext.EnsurePermanently">
+            <summary>
+            If synchronization context of this thread is null or not WindowsFormsSynchronizationContext, makes it WindowsFormsSynchronizationContext.
+            Use this instead of creating instance when will not need to restore previous synchronization context.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">This thread has a synchronization context other than WindowsFormsSynchronizationContext or null. Or it is null and thread's GetApartmentState is not STA.</exception>
+        </member>
         <member name="T:Catkeys.Util.DragDrop">
             <summary>
             Drag-drop functions.
@@ -7408,6 +7742,7 @@
             <param name="workCallback">Callback function to call in a thread pool thread.</param>
             <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
             <exception cref="T:System.ComponentModel.Win32Exception"/>
+            <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
         </member>
         <member name="M:Catkeys.Util.ThreadPoolSTA.CreateWork(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
             <summary>
@@ -7420,6 +7755,7 @@
             Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
             </remarks>
             <exception cref="T:System.ComponentModel.Win32Exception"/>
+            <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
         </member>
         <member name="T:Catkeys.Util.ThreadPoolSTA.Work">
             <summary>
@@ -7435,6 +7771,7 @@
         </member>
         <member name="M:Catkeys.Util.ThreadPoolSTA.Work.#ctor(System.Object,Catkeys.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback,System.Boolean)">
             <exception cref="T:System.ComponentModel.Win32Exception"/>
+            <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
         </member>
         <member name="M:Catkeys.Util.ThreadPoolSTA.Work.Submit">
             <summary>
@@ -7658,6 +7995,52 @@
             Else returns image.Size.
             </summary>
             <param name="image"></param>
+        </member>
+        <member name="T:Catkeys.Util.WaitableTimer">
+            <summary>
+            Wraps a waitable timer handle. Allows to create, open, set and wait.
+            More info: API <msdn>CreateWaitableTimer</msdn>.
+            Note: will need to dispose.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.WaitableTimer.Create(System.Boolean,System.String)">
+            <summary>
+            Calls API <msdn>CreateWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
+            </summary>
+            <param name="manualReset"></param>
+            <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If null, creates unnamed timer.</param>
+            <exception cref="T:Catkeys.CatException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+        </member>
+        <member name="M:Catkeys.Util.WaitableTimer.Open(System.String,System.UInt32,System.Boolean,System.Boolean)">
+            <summary>
+            Calls API <msdn>OpenWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
+            </summary>
+            <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="M:Catkeys.Util.WaitableTimer.Create(System.Boolean,System.String)"/>.</param>
+            <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
+            <exception cref="T:Catkeys.CatException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+            <param name="inheritHandle"></param>
+            <param name="noException">If fails, return null, don't throw exception. Supports <see cref="M:Catkeys.Native.GetError"/>.</param>
+            <exception cref="T:Catkeys.CatException">Failed. For example, the timer does not exist.</exception>
+        </member>
+        <member name="M:Catkeys.Util.WaitableTimer.Set(System.Int64,System.Int32)">
+            <summary>
+            Calls API <msdn>SetWaitableTimer</msdn>.
+            Returns false if fails. Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+            <param name="dueTime">
+            The time after which the state of the timer is to be set to signaled. It is relative time (from now).
+            If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds*10), see <msdn>FILETIME</msdn>.
+            Also can be 0, to set minimal time.</param>
+            <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
+            <exception cref="T:System.OverflowException">dueTime*10000 is greater than long.MaxValue.</exception>
+        </member>
+        <member name="M:Catkeys.Util.WaitableTimer.SetAbsolute(System.DateTime,System.Int32)">
+            <summary>
+            Calls API <msdn>SetWaitableTimer</msdn>.
+            Returns false if fails. Supports <see cref="M:Catkeys.Native.GetError"/>.
+            </summary>
+            <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
+            <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
         </member>
         <member name="M:Catkeys.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>
@@ -9315,7 +9698,7 @@
             Makes this window topmost (always on top of non-topmost windows in the Z order).
             Does not activate.
             If this window has an owner window, the owner does not become topmost.
-            Thic cannot be a control.
+            This cannot be a control.
             </summary>
             <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
         </member>
@@ -9323,7 +9706,7 @@
             <summary>
             Makes this window non-topmost.
             If this window has an owner window, makes the owner window non-topmost too.
-            Thic cannot be a control.
+            This cannot be a control.
             </summary>
             <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
             <remarks>Supports <see cref="M:Catkeys.Native.GetError"/>.</remarks>
@@ -10024,8 +10407,7 @@
         </member>
         <member name="P:Catkeys.Wnd.IsWindows10StoreApp">
             <summary>
-            Returns non-zero if this window is a Windows 10 Store app window.
-            Returns 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+            Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
             </summary>
             <seealso cref="M:Catkeys.Wnd.Misc.GetWindowsStoreAppId(Catkeys.Wnd,System.Boolean,System.Boolean)"/>
         </member>
@@ -11251,6 +11633,941 @@
             Repeatedly executes codes (zero or more lambda functions) timeMS milliseconds (recommended 100 or more).
             Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
             </summary>
+        </member>
+        <member name="T:System.ITupleInternal">
+            <summary>
+            Helper so we can call some tuple methods recursively without knowing the underlying types.
+            </summary>
+        </member>
+        <member name="T:System.ValueTuple">
+            <summary>
+            The ValueTuple types (from arity 0 to 8) comprise the runtime implementation that underlies tuples in C# and struct tuples in F#.
+            Aside from created via language syntax, they are most easily created via the ValueTuple.Create factory methods.
+            The System.ValueTuple types differ from the System.Tuple types in that:
+            - they are structs rather than classes,
+            - they are mutable rather than readonly, and
+            - their members (such as Item1, Item2, etc) are fields rather than properties.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if <paramref name="obj"/> is a <see cref="T:System.ValueTuple"/>.</returns>
+        </member>
+        <member name="M:System.ValueTuple.Equals(System.ValueTuple)">
+            <summary>Returns a value indicating whether this instance is equal to a specified value.</summary>
+            <param name="other">An instance to compare to this instance.</param>
+            <returns>true if <paramref name="other"/> has the same value as this instance; otherwise, false.</returns>
+        </member>
+        <member name="M:System.ValueTuple.CompareTo(System.ValueTuple)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple.GetHashCode">
+            <summary>Returns the hash code for this instance.</summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>()</c>.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple.Create">
+            <summary>Creates a new struct 0-tuple.</summary>
+            <returns>A 0-tuple.</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``1(``0)">
+            <summary>Creates a new struct 1-tuple, or singleton.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <returns>A 1-tuple (singleton) whose value is (item1).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``2(``0,``1)">
+            <summary>Creates a new struct 2-tuple, or pair.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <returns>A 2-tuple (pair) whose value is (item1, item2).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``3(``0,``1,``2)">
+            <summary>Creates a new struct 3-tuple, or triple.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <typeparam name="T3">The type of the third component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <param name="item3">The value of the third component of the tuple.</param>
+            <returns>A 3-tuple (triple) whose value is (item1, item2, item3).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``4(``0,``1,``2,``3)">
+            <summary>Creates a new struct 4-tuple, or quadruple.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <typeparam name="T3">The type of the third component of the tuple.</typeparam>
+            <typeparam name="T4">The type of the fourth component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <param name="item3">The value of the third component of the tuple.</param>
+            <param name="item4">The value of the fourth component of the tuple.</param>
+            <returns>A 4-tuple (quadruple) whose value is (item1, item2, item3, item4).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``5(``0,``1,``2,``3,``4)">
+            <summary>Creates a new struct 5-tuple, or quintuple.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <typeparam name="T3">The type of the third component of the tuple.</typeparam>
+            <typeparam name="T4">The type of the fourth component of the tuple.</typeparam>
+            <typeparam name="T5">The type of the fifth component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <param name="item3">The value of the third component of the tuple.</param>
+            <param name="item4">The value of the fourth component of the tuple.</param>
+            <param name="item5">The value of the fifth component of the tuple.</param>
+            <returns>A 5-tuple (quintuple) whose value is (item1, item2, item3, item4, item5).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``6(``0,``1,``2,``3,``4,``5)">
+            <summary>Creates a new struct 6-tuple, or sextuple.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <typeparam name="T3">The type of the third component of the tuple.</typeparam>
+            <typeparam name="T4">The type of the fourth component of the tuple.</typeparam>
+            <typeparam name="T5">The type of the fifth component of the tuple.</typeparam>
+            <typeparam name="T6">The type of the sixth component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <param name="item3">The value of the third component of the tuple.</param>
+            <param name="item4">The value of the fourth component of the tuple.</param>
+            <param name="item5">The value of the fifth component of the tuple.</param>
+            <param name="item6">The value of the sixth component of the tuple.</param>
+            <returns>A 6-tuple (sextuple) whose value is (item1, item2, item3, item4, item5, item6).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``7(``0,``1,``2,``3,``4,``5,``6)">
+            <summary>Creates a new struct 7-tuple, or septuple.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <typeparam name="T3">The type of the third component of the tuple.</typeparam>
+            <typeparam name="T4">The type of the fourth component of the tuple.</typeparam>
+            <typeparam name="T5">The type of the fifth component of the tuple.</typeparam>
+            <typeparam name="T6">The type of the sixth component of the tuple.</typeparam>
+            <typeparam name="T7">The type of the seventh component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <param name="item3">The value of the third component of the tuple.</param>
+            <param name="item4">The value of the fourth component of the tuple.</param>
+            <param name="item5">The value of the fifth component of the tuple.</param>
+            <param name="item6">The value of the sixth component of the tuple.</param>
+            <param name="item7">The value of the seventh component of the tuple.</param>
+            <returns>A 7-tuple (septuple) whose value is (item1, item2, item3, item4, item5, item6, item7).</returns>
+        </member>
+        <member name="M:System.ValueTuple.Create``8(``0,``1,``2,``3,``4,``5,``6,``7)">
+            <summary>Creates a new struct 8-tuple, or octuple.</summary>
+            <typeparam name="T1">The type of the first component of the tuple.</typeparam>
+            <typeparam name="T2">The type of the second component of the tuple.</typeparam>
+            <typeparam name="T3">The type of the third component of the tuple.</typeparam>
+            <typeparam name="T4">The type of the fourth component of the tuple.</typeparam>
+            <typeparam name="T5">The type of the fifth component of the tuple.</typeparam>
+            <typeparam name="T6">The type of the sixth component of the tuple.</typeparam>
+            <typeparam name="T7">The type of the seventh component of the tuple.</typeparam>
+            <typeparam name="T8">The type of the eighth component of the tuple.</typeparam>
+            <param name="item1">The value of the first component of the tuple.</param>
+            <param name="item2">The value of the second component of the tuple.</param>
+            <param name="item3">The value of the third component of the tuple.</param>
+            <param name="item4">The value of the fourth component of the tuple.</param>
+            <param name="item5">The value of the fifth component of the tuple.</param>
+            <param name="item6">The value of the sixth component of the tuple.</param>
+            <param name="item7">The value of the seventh component of the tuple.</param>
+            <param name="item8">The value of the eighth component of the tuple.</param>
+            <returns>An 8-tuple (octuple) whose value is (item1, item2, item3, item4, item5, item6, item7, item8).</returns>
+        </member>
+        <member name="T:System.ValueTuple`1">
+            <summary>Represents a 1-tuple, or singleton, as a value type.</summary>
+            <typeparam name="T1">The type of the tuple's only component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`1.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`1"/> instance's first component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`1.#ctor(`0)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`1"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+        </member>
+        <member name="M:System.ValueTuple`1.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`1"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`1"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`1.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`1"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`1"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its field
+            is equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`1.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`1.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`1"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`1.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`1"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`1"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1)</c>,
+            where <c>Item1</c> represents the value of <see cref="F:System.ValueTuple`1.Item1"/>. If the field is <see langword="null"/>,
+            it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`2">
+            <summary>
+            Represents a 2-tuple, or pair, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`2.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`2"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`2.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`2"/> instance's first component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`2.#ctor(`0,`1)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`2"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+        </member>
+        <member name="M:System.ValueTuple`2.Equals(System.Object)">
+             <summary>
+             Returns a value that indicates whether the current <see cref="T:System.ValueTuple`2"/> instance is equal to a specified object.
+             </summary>
+             <param name="obj">The object to compare with this instance.</param>
+             <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            
+             <remarks>
+             The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+             <list type="bullet">
+                 <item><description>It is a <see cref="T:System.ValueTuple`2"/> value type.</description></item>
+                 <item><description>Its components are of the same types as those of the current instance.</description></item>
+                 <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+             </list>
+             </remarks>
+        </member>
+        <member name="M:System.ValueTuple`2.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`2"/> instance is equal to a specified <see cref="T:System.ValueTuple`2"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`2.System#Collections#IStructuralEquatable#Equals(System.Object,System.Collections.IEqualityComparer)">
+             <summary>
+             Returns a value that indicates whether the current <see cref="T:System.ValueTuple`2"/> instance is equal to a specified object based on a specified comparison method.
+             </summary>
+             <param name="other">The object to compare with this instance.</param>
+             <param name="comparer">An object that defines the method to use to evaluate whether the two objects are equal.</param>
+             <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            
+             <remarks>
+             This member is an explicit interface member implementation. It can be used only when the
+              <see cref="T:System.ValueTuple`2"/> instance is cast to an <see cref="T:System.Collections.IStructuralEquatable"/> interface.
+            
+             The <see cref="M:System.Collections.IEqualityComparer.Equals(System.Object,System.Object)"/> implementation is called only if <c>other</c> is not <see langword="null"/>,
+              and if it can be successfully cast (in C#) or converted (in Visual Basic) to a <see cref="T:System.ValueTuple`2"/>
+              whose components are of the same types as those of the current instance. The IStructuralEquatable.Equals(Object, IEqualityComparer) method
+              first passes the <see cref="F:System.ValueTuple`2.Item1"/> values of the <see cref="T:System.ValueTuple`2"/> objects to be compared to the
+              <see cref="M:System.Collections.IEqualityComparer.Equals(System.Object,System.Object)"/> implementation. If this method call returns <see langword="true"/>, the method is
+              called again and passed the <see cref="F:System.ValueTuple`2.Item2"/> values of the two <see cref="T:System.ValueTuple`2"/> instances.
+             </remarks>
+        </member>
+        <member name="M:System.ValueTuple`2.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`2.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`2"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`2.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`2"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`2"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2)</c>,
+            where <c>Item1</c> and <c>Item2</c> represent the values of the <see cref="F:System.ValueTuple`2.Item1"/>
+            and <see cref="F:System.ValueTuple`2.Item2"/> fields. If either field value is <see langword="null"/>,
+            it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`3">
+            <summary>
+            Represents a 3-tuple, or triple, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+            <typeparam name="T3">The type of the tuple's third component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`3.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`3"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`3.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`3"/> instance's second component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`3.Item3">
+            <summary>
+            The current <see cref="T:System.ValueTuple`3"/> instance's third component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`3.#ctor(`0,`1,`2)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`3"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+            <param name="item3">The value of the tuple's third component.</param>
+        </member>
+        <member name="M:System.ValueTuple`3.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`3"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`3"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`3.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`3"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`3"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`3.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`3.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`3"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`3.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`3"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`3"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2, Item3)</c>.
+            If any field value is <see langword="null"/>, it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`4">
+            <summary>
+            Represents a 4-tuple, or quadruple, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+            <typeparam name="T3">The type of the tuple's third component.</typeparam>
+            <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`4.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`4"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`4.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`4"/> instance's second component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`4.Item3">
+            <summary>
+            The current <see cref="T:System.ValueTuple`4"/> instance's third component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`4.Item4">
+            <summary>
+            The current <see cref="T:System.ValueTuple`4"/> instance's fourth component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`4.#ctor(`0,`1,`2,`3)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`4"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+            <param name="item3">The value of the tuple's third component.</param>
+            <param name="item4">The value of the tuple's fourth component.</param>
+        </member>
+        <member name="M:System.ValueTuple`4.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`4"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`4"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`4.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`4"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`4"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`4.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`4.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`4"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`4.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`4"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`4"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2, Item3, Item4)</c>.
+            If any field value is <see langword="null"/>, it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`5">
+            <summary>
+            Represents a 5-tuple, or quintuple, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+            <typeparam name="T3">The type of the tuple's third component.</typeparam>
+            <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
+            <typeparam name="T5">The type of the tuple's fifth component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`5.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`5"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`5.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`5"/> instance's second component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`5.Item3">
+            <summary>
+            The current <see cref="T:System.ValueTuple`5"/> instance's third component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`5.Item4">
+            <summary>
+            The current <see cref="T:System.ValueTuple`5"/> instance's fourth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`5.Item5">
+            <summary>
+            The current <see cref="T:System.ValueTuple`5"/> instance's fifth component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`5.#ctor(`0,`1,`2,`3,`4)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`5"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+            <param name="item3">The value of the tuple's third component.</param>
+            <param name="item4">The value of the tuple's fourth component.</param>
+            <param name="item5">The value of the tuple's fifth component.</param>
+        </member>
+        <member name="M:System.ValueTuple`5.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`5"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`5"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`5.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`5"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`5"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`5.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`5.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`5"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`5.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`5"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`5"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2, Item3, Item4, Item5)</c>.
+            If any field value is <see langword="null"/>, it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`6">
+            <summary>
+            Represents a 6-tuple, or sixtuple, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+            <typeparam name="T3">The type of the tuple's third component.</typeparam>
+            <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
+            <typeparam name="T5">The type of the tuple's fifth component.</typeparam>
+            <typeparam name="T6">The type of the tuple's sixth component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`6.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`6"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`6.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`6"/> instance's second component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`6.Item3">
+            <summary>
+            The current <see cref="T:System.ValueTuple`6"/> instance's third component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`6.Item4">
+            <summary>
+            The current <see cref="T:System.ValueTuple`6"/> instance's fourth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`6.Item5">
+            <summary>
+            The current <see cref="T:System.ValueTuple`6"/> instance's fifth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`6.Item6">
+            <summary>
+            The current <see cref="T:System.ValueTuple`6"/> instance's sixth component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`6.#ctor(`0,`1,`2,`3,`4,`5)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`6"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+            <param name="item3">The value of the tuple's third component.</param>
+            <param name="item4">The value of the tuple's fourth component.</param>
+            <param name="item5">The value of the tuple's fifth component.</param>
+            <param name="item6">The value of the tuple's sixth component.</param>
+        </member>
+        <member name="M:System.ValueTuple`6.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`6"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`6"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`6.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`6"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`6"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`6.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`6.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`6"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`6.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`6"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`6"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2, Item3, Item4, Item5, Item6)</c>.
+            If any field value is <see langword="null"/>, it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`7">
+            <summary>
+            Represents a 7-tuple, or sentuple, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+            <typeparam name="T3">The type of the tuple's third component.</typeparam>
+            <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
+            <typeparam name="T5">The type of the tuple's fifth component.</typeparam>
+            <typeparam name="T6">The type of the tuple's sixth component.</typeparam>
+            <typeparam name="T7">The type of the tuple's seventh component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`7.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`7.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's second component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`7.Item3">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's third component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`7.Item4">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's fourth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`7.Item5">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's fifth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`7.Item6">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's sixth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`7.Item7">
+            <summary>
+            The current <see cref="T:System.ValueTuple`7"/> instance's seventh component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`7.#ctor(`0,`1,`2,`3,`4,`5,`6)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`7"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+            <param name="item3">The value of the tuple's third component.</param>
+            <param name="item4">The value of the tuple's fourth component.</param>
+            <param name="item5">The value of the tuple's fifth component.</param>
+            <param name="item6">The value of the tuple's sixth component.</param>
+            <param name="item7">The value of the tuple's seventh component.</param>
+        </member>
+        <member name="M:System.ValueTuple`7.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`7"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`7"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`7.Equals(System.)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`7"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`7"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`7.CompareTo(System.)">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`7.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`7"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`7.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`7"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`7"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2, Item3, Item4, Item5, Item6, Item7)</c>.
+            If any field value is <see langword="null"/>, it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
+        </member>
+        <member name="T:System.ValueTuple`8">
+            <summary>
+            Represents an 8-tuple, or octuple, as a value type.
+            </summary>
+            <typeparam name="T1">The type of the tuple's first component.</typeparam>
+            <typeparam name="T2">The type of the tuple's second component.</typeparam>
+            <typeparam name="T3">The type of the tuple's third component.</typeparam>
+            <typeparam name="T4">The type of the tuple's fourth component.</typeparam>
+            <typeparam name="T5">The type of the tuple's fifth component.</typeparam>
+            <typeparam name="T6">The type of the tuple's sixth component.</typeparam>
+            <typeparam name="T7">The type of the tuple's seventh component.</typeparam>
+            <typeparam name="TRest">The type of the tuple's eighth component.</typeparam>
+        </member>
+        <member name="F:System.ValueTuple`8.Item1">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's first component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Item2">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's second component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Item3">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's third component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Item4">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's fourth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Item5">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's fifth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Item6">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's sixth component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Item7">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's seventh component.
+            </summary>
+        </member>
+        <member name="F:System.ValueTuple`8.Rest">
+            <summary>
+            The current <see cref="T:System.ValueTuple`8"/> instance's eighth component.
+            </summary>
+        </member>
+        <member name="M:System.ValueTuple`8.#ctor(`0,`1,`2,`3,`4,`5,`6,`7)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.ValueTuple`8"/> value type.
+            </summary>
+            <param name="item1">The value of the tuple's first component.</param>
+            <param name="item2">The value of the tuple's second component.</param>
+            <param name="item3">The value of the tuple's third component.</param>
+            <param name="item4">The value of the tuple's fourth component.</param>
+            <param name="item5">The value of the tuple's fifth component.</param>
+            <param name="item6">The value of the tuple's sixth component.</param>
+            <param name="item7">The value of the tuple's seventh component.</param>
+            <param name="rest">The value of the tuple's eight component.</param>
+        </member>
+        <member name="M:System.ValueTuple`8.Equals(System.Object)">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`8"/> instance is equal to a specified object.
+            </summary>
+            <param name="obj">The object to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified object; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="obj"/> parameter is considered to be equal to the current instance under the following conditions:
+            <list type="bullet">
+                <item><description>It is a <see cref="T:System.ValueTuple`8"/> value type.</description></item>
+                <item><description>Its components are of the same types as those of the current instance.</description></item>
+                <item><description>Its components are equal to those of the current instance. Equality is determined by the default object equality comparer for each component.</description></item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`8.Equals(System.ValueTuple{`0,`1,`2,`3,`4,`5,`6,`7})">
+            <summary>
+            Returns a value that indicates whether the current <see cref="T:System.ValueTuple`8"/>
+            instance is equal to a specified <see cref="T:System.ValueTuple`8"/>.
+            </summary>
+            <param name="other">The tuple to compare with this instance.</param>
+            <returns><see langword="true"/> if the current instance is equal to the specified tuple; otherwise, <see langword="false"/>.</returns>
+            <remarks>
+            The <paramref name="other"/> parameter is considered to be equal to the current instance if each of its fields
+            are equal to that of the current instance, using the default comparer for that field's type.
+            </remarks>
+        </member>
+        <member name="M:System.ValueTuple`8.CompareTo(System.ValueTuple{`0,`1,`2,`3,`4,`5,`6,`7})">
+            <summary>Compares this instance to a specified instance and returns an indication of their relative values.</summary>
+            <param name="other">An instance to compare.</param>
+            <returns>
+            A signed number indicating the relative values of this instance and <paramref name="other"/>.
+            Returns less than zero if this instance is less than <paramref name="other"/>, zero if this
+            instance is equal to <paramref name="other"/>, and greater than zero if this instance is greater 
+            than <paramref name="other"/>.
+            </returns>
+        </member>
+        <member name="M:System.ValueTuple`8.GetHashCode">
+            <summary>
+            Returns the hash code for the current <see cref="T:System.ValueTuple`8"/> instance.
+            </summary>
+            <returns>A 32-bit signed integer hash code.</returns>
+        </member>
+        <member name="M:System.ValueTuple`8.ToString">
+            <summary>
+            Returns a string that represents the value of this <see cref="T:System.ValueTuple`8"/> instance.
+            </summary>
+            <returns>The string representation of this <see cref="T:System.ValueTuple`8"/> instance.</returns>
+            <remarks>
+            The string returned by this method takes the form <c>(Item1, Item2, Item3, Item4, Item5, Item6, Item7, Rest)</c>.
+            If any field value is <see langword="null"/>, it is represented as <see cref="F:System.String.Empty"/>.
+            </remarks>
         </member>
     </members>
 </doc>

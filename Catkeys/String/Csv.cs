@@ -419,7 +419,7 @@ namespace Catkeys
 		/// <param name="value">The number.</param>
 		public void SetDouble(int row, int column, double value)
 		{
-			this[row, column] = value.ToString();
+			this[row, column] = value.ToString_();
 		}
 
 		/// <summary>
@@ -429,7 +429,7 @@ namespace Catkeys
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		public double GetDouble(int row, int column)
 		{
-			return double.TryParse(this[row, column], out double R) ? R : 0.0;
+			return this[row, column].ToDouble_();
 		}
 	}
 }

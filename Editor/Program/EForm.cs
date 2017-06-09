@@ -27,7 +27,7 @@ using static Program;
 
 partial class EForm :Form
 {
-	GDockPanel _dock;
+	public GDockPanel PanelManager;
 
 	public class EPanels //not struct because of warning CS1690
 	{
@@ -93,28 +93,30 @@ partial class EForm :Form
 		//c.SetScrollInfo(false, 100, 30, false);
 		//c.SetScrollPos(false, 10, false);
 
-		_dock = new GDockPanel();
-		_dock.Create(Folders.ThisApp + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
+		PanelManager = new GDockPanel();
+		PanelManager.Create(Folders.ThisApp + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
 			Code.SC, Panels.Files, Panels.Output, Panels.Find, Panels.Open, Panels.Running, Panels.Recent, c,
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
-		_dock.GetPanel(Panels.Open).Init("Currently open files", EResources.GetImageUseCache("open"));
-		_dock.GetPanel(Panels.Output).Init("Errors and other information", EResources.GetImageUseCache("output"));
-		_dock.GetPanel(Panels.Find).Init("Find files, text, triggers", EResources.GetImageUseCache("find"));
-		_dock.GetPanel(Panels.Files).Init("All scripts and other files of current collection");
-		_dock.GetPanel(Panels.Running).Init("Running scripts");
-		_dock.GetPanel(Panels.Recent).Init("Recent running scripts");
-		_dock.GetPanel(c).Init("New panel", EResources.GetImageUseCache("paste"));
+		PanelManager.GetPanel(Panels.Open).Init("Currently open files", EResources.GetImageUseCache("open"));
+		PanelManager.GetPanel(Panels.Output).Init("Errors and other information", EResources.GetImageUseCache("output"));
+		PanelManager.GetPanel(Panels.Find).Init("Find files, text, triggers", EResources.GetImageUseCache("find"));
+		PanelManager.GetPanel(Panels.Files).Init("All scripts and other files of current collection");
+		PanelManager.GetPanel(Panels.Running).Init("Running scripts");
+		PanelManager.GetPanel(Panels.Recent).Init("Recent running scripts");
+		PanelManager.GetPanel(c).Init("New panel", EResources.GetImageUseCache("paste"));
 
-		this.Controls.Add(_dock);
+		this.Controls.Add(PanelManager);
 		this.Controls.Add(Panels.Status);
 
 		_DisableTabOrderOfControls(this);
-
 		this.ResumeLayout(false);
+
+		Application.AddMessageFilter(new AppMessageFilter());
+
 		Perf.Next();
-		Panels.Files.LoadCollection(CommandLine.CollectionFile);
+		Panels.Files.LoadCollection(CommandLine.CollectionDirectory);
 		Perf.Next();
 
 		//#if DEBUG
@@ -127,7 +129,7 @@ partial class EForm :Form
 			//Perf.NW();
 			Perf.Next();
 			//TaskDialog.Show("", Perf.Times);
-			if(_dock != null) Panels.Output.Output.Write(Perf.Times); else Print(Perf.Times);
+			Print(Perf.Times);
 			//TaskDialog.Show(Perf.Times, IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
 			//GC.Collect();
 
@@ -162,7 +164,7 @@ partial class EForm :Form
 			//.NET ignores this. Eg if an owned form etc disables this window, the Enabled property is not changed and no EnabledChanged event.
 			//PrintList(wParam, Enabled);
 			//Enabled = wParam != 0; //not good
-			_dock.EnableDisableAllFloatingWindows(wParam != 0);
+			PanelManager.EnableDisableAllFloatingWindows(wParam != 0);
 			break;
 		}
 	}
@@ -179,6 +181,34 @@ partial class EForm :Form
 		foreach(Control cc in c.Controls) {
 			cc.TabStop = false;
 			_DisableTabOrderOfControls(cc);
+		}
+	}
+
+	/// <summary>
+	/// Modifies message loop of this thread, for all forms.
+	/// </summary>
+	class AppMessageFilter :IMessageFilter
+	{
+		public bool PreFilterMessage(ref Message m)
+		{
+			//switch((uint)m.Msg) {
+			//case Api.WM_PAINT:
+			//case Api.WM_TIMER:
+			//case Api.WM_MOUSEMOVE:
+			//case Api.WM_NCMOUSEMOVE:
+			//case 0xc281:
+			//case 0x60:
+			//	return false;
+			//}
+			//Print(m);
+
+			switch((uint)m.Msg) {
+			case Api.WM_MOUSEWHEEL: //let's scroll the mouse control, not the focused control
+				var w1 = Wnd.FromMouse();
+				if(w1.IsOfThisThread) m.HWnd = w1.Handle;
+				break;
+			}
+			return false;
 		}
 	}
 

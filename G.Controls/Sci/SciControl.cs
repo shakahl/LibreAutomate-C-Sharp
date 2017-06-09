@@ -29,7 +29,7 @@ namespace G.Controls
 	/// This .NET control wraps native Scintilla control.
 	/// This is not an universal Scintilla wrapper class. Designed just for purposes of this library and related software.
 	/// Responsible for creating and initializing the control. Also used to set/change control properties.
-	/// The ST property returns a Catilla object that can be used to work with text, code styling etc.
+	/// The ST property returns a SciText object that can be used to work with text, code styling etc.
 	/// </summary>
 	/// <remarks>
 	/// Why don't use ScintillaNET:
@@ -51,7 +51,7 @@ namespace G.Controls
 		public SciTags Tags { get; private set; }
 
 		/// <summary>
-		/// Gets the Catilla object that contains most Scintilla-related functions.
+		/// Gets the SciText object that contains most Scintilla-related functions.
 		/// </summary>
 		public SciText ST { get; internal set; }
 
@@ -221,10 +221,17 @@ namespace G.Controls
 		/// </summary>
 		public LPARAM Call(int sciMessage, LPARAM wParam, LPARAM lParam)
 		{
-			if(!IsHandleCreated) {
-				Debug.Assert(!Visible);
-				CreateHandle(); //does not create handle if initially Visible is false
-			}
+			//if(!IsHandleCreated) {
+			//	Debug.Assert(!Visible);
+			//	CreateHandle(); //because did not create handle if initially Visible is false
+			//}
+			Debug.Assert(IsHandleCreated);
+			if(!IsHandleCreated) CreateHandle();
+			//note: auto-creating handle is not good:
+			//	1. May create parked control. Not good for performance.
+			//	2. Can be dangerous, eg if passing a reusable buffer that also is used by OnHandleCreated.
+			//Better create explicitly if need, eg 'CreateHandle();' or 'var h=_c.Handle;'.
+
 			return _fnDirect(_ptrDirect, sciMessage, wParam, lParam);
 		}
 

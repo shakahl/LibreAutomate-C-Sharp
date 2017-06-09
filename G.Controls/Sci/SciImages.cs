@@ -217,7 +217,7 @@ namespace G.Controls
 					g1:
 					//contains image?
 					if(a[0] == 3) {
-						int j = _ParseAnnotText(a, annotLen, out var u1);
+						int j = _ParseAnnotText(a, annotLen, out var _);
 						if(j < annotLen) { //case 4
 							Api.memmove(a, a + j, annotLen - j + 1);
 							b[0] = (byte)'\n';
@@ -280,7 +280,7 @@ namespace G.Controls
 				int lens = (s == null) ? 0 : s.Length;
 				var b = t_data.BufferForAnnot.Alloc(n + 1 + lens * 3);
 				_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
-				int imageLen = _ParseAnnotText(b, n, out var u1);
+				int imageLen = _ParseAnnotText(b, n, out var _);
 				if(imageLen > 0) {
 					//info: now len<=n
 					if(lens == 0) {
@@ -306,7 +306,7 @@ namespace G.Controls
 			if(n > 0) {
 				var b = t_data.BufferForAnnot.Alloc(n);
 				_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
-				int imageLen = _ParseAnnotText(b, n, out var u1);
+				int imageLen = _ParseAnnotText(b, n, out var _);
 				//info: now len<=n
 				if(imageLen < n) {
 					if(imageLen != 0) { b += imageLen; n -= imageLen; }
@@ -615,7 +615,7 @@ namespace G.Controls
 							}
 							var a = buf.Alloc(len);
 							_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
-							var imageLen = _ParseAnnotText(a, len, out var u1);
+							var imageLen = _ParseAnnotText(a, len, out var _);
 							if(imageLen > 0) {
 								if(len > imageLen) a += imageLen; else a = null;
 								_c.Call(SCI_ANNOTATIONSETTEXT, iLine, a);

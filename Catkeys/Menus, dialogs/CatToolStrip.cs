@@ -168,7 +168,7 @@ namespace Catkeys
 		//Then base.OnFontChanged creates parked control + drop-down etc.
 		protected override void OnFontChanged(EventArgs e)
 		{
-			//PrintFunc();
+			//DebugPrintFunc();
 			if(!IsHandleCreated) return;
 			base.OnFontChanged(e);
 		}

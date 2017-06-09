@@ -84,7 +84,6 @@
     </Compile>
     <Compile Include="Sci\Sci API.cs" />
     <Compile Include="Sci\SciImages.cs" />
-    <Compile Include="Sci\SciOutput.cs" />
     <Compile Include="GStripManager\GSMProp.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -104,9 +103,6 @@
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Catkeys</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="unused.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CatkeysSN.pfx" />

@@ -71,6 +71,30 @@ namespace Catkeys
 
 		#region add
 
+		/*
+		CONSIDER:
+		Specialized AddX methods.
+		
+		For example, instead of
+		m["Label"] = o => Shell.RunSafe("notepad.exe");
+		can use
+		m.Run("notepad.exe", "label"); //label is optional
+		Then can auto-get icon without disassembling the delegate.
+
+		Another example: instead of
+		m["Label"] = o => Paste("notepad.exe");
+		can use
+		m.Paste("notepad.exe", "label"); //label is optional
+		And the same for Key.
+
+		Can even use extension methods for this. Example:
+		public static void Run(this CatMenu m, string path, string label = null)
+		{
+			m[label ?? path, path] = o => Shell.RunSafe(path);
+		}
+
+		*/
+
 		/// <summary>
 		/// Adds new item as ToolStripMenuItem.
 		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
@@ -163,7 +187,7 @@ namespace Catkeys
 		//Called when a text box or combo box clicked. Before MouseDown, which does not work well with combo box.
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//PrintFunc();
+			//DebugPrintFunc();
 			if(!(_isOwned || ActivateMenuWindow)) {
 				var t = sender as ToolStripItem;
 
@@ -592,7 +616,7 @@ namespace Catkeys
 			{
 				//var perf = new Perf.Inst(true);
 
-				//PrintFunc();
+				//DebugPrintFunc();
 				base.OnPaint(e);
 
 				//perf.Next(); PrintList("------------------ paint", perf.Times);
@@ -717,7 +741,7 @@ namespace Catkeys
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//PrintFunc();
+				//DebugPrintFunc();
 				base.OnPaint(e);
 				_paintedOnce = true;
 			}

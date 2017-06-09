@@ -117,7 +117,7 @@ namespace Catkeys
 
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//PrintFunc();
+			//DebugPrintFunc();
 			//_w.ActivateLL();
 			Api.SetForegroundWindow(_w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 		}
@@ -347,7 +347,7 @@ namespace Catkeys
 			////Solves ToolStrip problem in inactive window: no tooltips.
 			//protected override void OnMouseHover(EventArgs e)
 			//{
-			//	//PrintFunc();
+			//	//DebugPrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
 			//		//Print("focus");
 			//		Focus();
@@ -362,7 +362,7 @@ namespace Catkeys
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			//protected override void OnMouseEnter(EventArgs e)
 			//{
-			//	//PrintFunc();
+			//	//DebugPrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
 			//		//Print("focus");
 			//		Print(_parent._showTime);
@@ -376,7 +376,7 @@ namespace Catkeys
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			protected override void OnMouseEnter(EventArgs e)
 			{
-				//PrintFunc();
+				//DebugPrintFunc();
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
 					long td = Time.Milliseconds - _parent._showTime - 500;

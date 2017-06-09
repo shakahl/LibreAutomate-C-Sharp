@@ -55,10 +55,10 @@ partial class FilesModel
 		private void _ButtonOK_Click(object sender, EventArgs e)
 		{
 			var ok = true;
-			string file = textFile.Text, dir;
-			if(!Path_.IsFullPath(file)) ok = false;
-			else if(Files.ExistsAsAny(dir = Path_.GetDirectoryPath(file))) {
-				TaskDialog.ShowError("Already exists", dir, owner: this);
+			var path = textPath.Text;
+			if(!Path_.IsFullPath(path)) ok = false;
+			else if(Files.ExistsAsAny(path)) {
+				TaskDialog.ShowError("Already exists", path, owner: this);
 				ok = false;
 			}
 			this.DialogResult = ok ? DialogResult.OK : DialogResult.None;
@@ -68,15 +68,14 @@ partial class FilesModel
 		{
 			var location = textLocation.Text.Trim();
 			var name = textName.Text.Trim();
-			string file = null;
+			string path = null;
 			if(location.Length > 0 && name.Length > 0) {
 				name = Path_.CorrectFileName(name);
-				var folder = Path_.Combine(location, name);
-				file = Path_.Combine(folder, name) + ".xml";
-				try { file = Path_.Normalize(file); } catch { file = null; }
+				path = Path_.Combine(location, name);
+				try { path = Path_.Normalize(path); } catch { path = null; }
 			}
-			textFile.Text = file;
-			buttonOK.Enabled = file != null;
+			textPath.Text = path;
+			buttonOK.Enabled = path != null;
 		}
 
 		#region Windows Form Designer generated code
@@ -95,7 +94,7 @@ partial class FilesModel
 			this.textLocation = new System.Windows.Forms.TextBox();
 			this.buttonBrowse = new System.Windows.Forms.Button();
 			this.label3 = new System.Windows.Forms.Label();
-			this.textFile = new System.Windows.Forms.TextBox();
+			this.textPath = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// buttonOK
@@ -146,8 +145,8 @@ partial class FilesModel
 			// 
 			// textLocation
 			// 
-			this.textLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.textLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			| System.Windows.Forms.AnchorStyles.Right)));
 			this.textLocation.Location = new System.Drawing.Point(64, 40);
 			this.textLocation.Name = "textLocation";
 			this.textLocation.Size = new System.Drawing.Size(424, 23);
@@ -170,26 +169,26 @@ partial class FilesModel
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(25, 15);
 			this.label3.TabIndex = 5;
-			this.label3.Text = "File";
+			this.label3.Text = "Path";
 			// 
 			// textFile
 			// 
-			this.textFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.textFile.CausesValidation = false;
-			this.textFile.Location = new System.Drawing.Point(64, 72);
-			this.textFile.Name = "textFile";
-			this.textFile.ReadOnly = true;
-			this.textFile.Size = new System.Drawing.Size(504, 23);
-			this.textFile.TabIndex = 6;
-			this.textFile.TabStop = false;
+			this.textPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+			| System.Windows.Forms.AnchorStyles.Right)));
+			this.textPath.CausesValidation = false;
+			this.textPath.Location = new System.Drawing.Point(64, 72);
+			this.textPath.Name = "textFile";
+			this.textPath.ReadOnly = true;
+			this.textPath.Size = new System.Drawing.Size(504, 23);
+			this.textPath.TabIndex = 6;
+			this.textPath.TabStop = false;
 			// 
 			// _FormNewCollection
 			// 
 			this.AcceptButton = this.buttonOK;
 			this.CancelButton = this.buttonCancel;
 			this.ClientSize = new System.Drawing.Size(579, 145);
-			this.Controls.Add(this.textFile);
+			this.Controls.Add(this.textPath);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.buttonBrowse);
 			this.Controls.Add(this.textLocation);
@@ -220,7 +219,7 @@ partial class FilesModel
 		public TextBox textLocation;
 		private Button buttonBrowse;
 		private Label label3;
-		public TextBox textFile;
+		public TextBox textPath;
 	}
 #if !DESIGNER
 }

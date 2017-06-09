@@ -46,7 +46,7 @@ REMOVED TAGS:
 DIFFERENT SYNTAX:
 	Most tags can be closed with <> or </> or </anything>.
 		Except these: <_>text</_>, <code>code</code>.
-		No cloing tag: <image>.
+		No closing tag: <image>.
 	Attributes can be enclosed with "" or '' or non-enclosed (except for <image>).
 		Does not support escape sequences. An attribute ends with "> (if starts with ") or '> (if starts with ') or > (if non-enclosed).
 		In QM2 need "" for most; some can be non-enclosed. QM2 supports escape sequences.
@@ -167,6 +167,82 @@ namespace G.Controls
 		}
 
 		/// <summary>
+		/// Displays <see cref="Output.Server"/> messages that are currently int its queue.
+		/// </summary>
+		/// <param name="os">The Output.Server instance.</param>
+		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.Messages.</param>
+		/// <remarks>
+		/// Removes messages from the queue.
+		/// Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
+		/// Messages with tags must have prefix "&lt;&gt;".
+		/// Limits text length to about 4 MB (removes oldest text when exceeded).
+		/// </remarks>
+		/// <seealso cref="Output.Server.SetNotifications"/>
+		public void OutputServerProcessMessages(Output.Server os, Action<Output.Server.Message> onMessage = null)
+		{
+			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
+			//	If multiple messages, use StringBuilder.
+			//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.
+
+			string s = null;
+			StringBuilder sb = null;
+			bool hasTags = false, hasTagsPrev = false;
+			//Output.DebugWriteToQM2(OutputServer.Messages.Count.ToString());
+			while(os.Messages.TryDequeue(out var m)) {
+				onMessage?.Invoke(m);
+				switch(m.Type) {
+				case Output.Server.MessageType.Clear:
+					_c.ST.ClearText();
+					s = null;
+					sb?.Clear();
+					break;
+				case Output.Server.MessageType.Write:
+					if(s == null) {
+						s = m.Text;
+						hasTags = hasTagsPrev = s.StartsWith_("<>");
+					} else {
+						if(sb == null) sb = new StringBuilder();
+						if(sb.Length == 0) sb.Append(s);
+
+						s = m.Text;
+
+						bool hasTagsThis = m.Text.StartsWith_("<>");
+						if(hasTagsThis && !hasTags) { hasTags = true; sb.Insert(0, "<\x15\x0\x4"); }
+
+						if(!hasTags) {
+							sb.Append("\r\n");
+						} else if(hasTagsThis) {
+							sb.Append("\r\n<\x15\x0\x4");
+							//info: add "\r\n" here, not later, because later it would make more difficult <Z> tag
+						} else {
+							sb.Append(hasTagsPrev ? "\r\n<\x15\x0\x4" : "\r\n");
+						}
+						sb.Append(s);
+						hasTagsPrev = hasTagsThis;
+					}
+					break;
+				}
+			}
+			if(s == null) return; //0 messages, or the last message is Clear
+			if(sb != null && sb.Length > 0) s = sb.ToString();
+
+			//_c.ST.AppendText(s, true, true, true); return;
+
+			//limit
+			int len = _c.ST.TextLengthBytes;
+			if(len > 4 * 1024 * 1024) {
+				len = _c.ST.LineStartFromPosition(len / 2);
+				if(len > 0) {
+					_c.ST.DeleteRange(0, len);
+					_c.ST.InsertText(0, "...\r\n");
+				}
+			}
+
+			if(hasTags) AddText(s, true, true);
+			else _c.ST.AppendText(s, true, true, true);
+		}
+
+		/// <summary>
 		/// Sets or appends styled text.
 		/// </summary>
 		/// <param name="text">Text with tags (optionally).</param>
@@ -236,6 +312,18 @@ namespace G.Controls
 					} else {
 
 					}
+					continue;
+				}
+
+				//multi-message separator
+				if(s[0] == 0x15 && s[1] == 0 && s[2] == 4 && (s - s0 == 1 || s[-2] == 10)) {
+					s += 3;
+					if(s[0] == '<' && s[1] == '>') s += 2; //message with tags
+					else { //one or more messages without tags
+						while(s < sEnd && !(s[0] == '<' && s[1] == 0x15 && s[2] == 0 && s[3] == 4 && s[-1] == 10)) _Write(*s++, STYLE_DEFAULT);
+					}
+					currentStyle = STYLE_DEFAULT;
+					_stack.Clear();
 					continue;
 				}
 
@@ -316,9 +404,9 @@ namespace G.Controls
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
 					int i1 = CharPtr.AsciiFindString(s, (int)(sEnd - s), "</_>"); //use </_> because <> is much more often used, eg as operator or our tag ending. Could also support <> if </_> not found, but it is not good.
 					if(i1 < 0) goto ge;
-					while(i1-- > 0) _Write(*s++, STYLE_DEFAULT);
+					while(i1-- > 0) _Write(*s++, currentStyle);
 					s += 4;
-					hasTags = true;
+					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
 					int i2 = CharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>");
@@ -399,7 +487,7 @@ namespace G.Controls
 					for(i = 0; i < n; i++) if(_styles[i].Equals(style)) break;
 					if(i == NUM_STYLES_EX) {
 						i = currentStyle;
-						//SHOULDDO: overwrite old styles added in previous calls. Also, should auto-clear styles when control text cleared.
+						//CONSIDER: overwrite old styles added in previous calls. Now we just clear styles when control text cleared.
 					} else {
 						if(i == n) _styles.Add(style);
 						i += STYLE_FIRST_EX;
@@ -528,7 +616,7 @@ namespace G.Controls
 				//Global classes and typedefs
 				//Preprocessor definitions
 				//Task marker and error marker keywords
-				_t.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in in int interface internal is lock long namespace new null object operator out out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield");
+				_t.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in in int interface internal is lock long namespace new null object operator out out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield __arglist __makeref __reftype __refvalue");
 				//_t.SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
 				//_t.SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
 				//_t.SetString(SCI_SETKEYWORDS, 3, "Catkeys"); //types. Not using here.
@@ -662,6 +750,7 @@ namespace G.Controls
 			}
 		}
 
-		//FUTURE: let our links be accessible objects
+		//FUTURE: add control-tags, like <clear> (clear output), <scroll> (ensure line visible), <mark x> (add some marker etc).
+		//FUTURE: let our links be accessible objects.
 	}
 }

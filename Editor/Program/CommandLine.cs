@@ -41,10 +41,10 @@ static class CommandLine
 			if(s.StartsWith_('/')) {
 
 			} else { //one or more files
-				if(a.Length == 1 && FilesModel.IsCollectionFile(s)) {
+				if(a.Length == 1 && FilesModel.IsCollectionDirectory(s)) {
 					switch(cmd = TaskDialog.ShowEx("Collection", s, "1 Import|2 Open|0 Cancel", flags: TDFlags.Wider, footerText: FilesModel.GetSecurityInfo(true))) {
 					case 1: _importCollection = s; break;
-					case 2: CollectionFile = s; break;
+					case 2: CollectionDirectory = s; break;
 					}
 				} else {
 					cmd = 3;
@@ -93,7 +93,7 @@ static class CommandLine
 	/// <summary>
 	/// null or collection file specified in command line.
 	/// </summary>
-	public static string CollectionFile;
+	public static string CollectionDirectory;
 
 	static string _importCollection;
 	static string[] _importFiles;

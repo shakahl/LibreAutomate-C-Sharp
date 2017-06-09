@@ -47,6 +47,8 @@ namespace Catkeys
 			var em = Api.GetErrorMode();
 			if(0 == (em & Api.SEM_FAILCRITICALERRORS)) Api.SetErrorMode(em | Api.SEM_FAILCRITICALERRORS);
 			_disabledDeviceNotReadyMessageBox = true;
+
+			//CONSIDER: SetThreadErrorMode
 		}
 		static bool _disabledDeviceNotReadyMessageBox;
 
@@ -104,7 +106,7 @@ namespace Catkeys
 			_DisableDeviceNotReadyMessageBox();
 			Api.WIN32_FILE_ATTRIBUTE_DATA d;
 			if(!Api.GetFileAttributesEx(path, 0, out d)) {
-				if(!_GetAttributesOnError(path, flags, out var unused, &d)) return false;
+				if(!_GetAttributesOnError(path, flags, out var _, &d)) return false;
 			}
 			properties.Attributes = d.dwFileAttributes;
 			properties.Size = (long)d.nFileSizeHigh << 32 | d.nFileSizeLow;
@@ -1229,7 +1231,7 @@ namespace Catkeys
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
 			DebugPrint("_DeleteLL failed. " + Native.GetErrorMessage(ec) + "  " + path
-				+ "   Children: " + string.Join(" | ", EnumDirectory(path).Select(f => f.Name)));
+				+ (dir ? ("   Children: " + string.Join(" | ", EnumDirectory(path).Select(f => f.Name))) : null));
 			return ec;
 
 			//never mind: .NET also calls DeleteVolumeMountPoint if it is a mounted folder.
@@ -1497,26 +1499,6 @@ namespace Catkeys
 
 			[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryExW", SetLastError = true)]
 			internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
-
-			[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-			internal static extern IntPtr CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
-
-			internal struct BY_HANDLE_FILE_INFORMATION
-			{
-				public uint dwFileAttributes;
-				public Api.FILETIME ftCreationTime;
-				public Api.FILETIME ftLastAccessTime;
-				public Api.FILETIME ftLastWriteTime;
-				public uint dwVolumeSerialNumber;
-				public uint nFileSizeHigh;
-				public uint nFileSizeLow;
-				public uint nNumberOfLinks;
-				public uint nFileIndexHigh;
-				public uint nFileIndexLow;
-			}
-
-			[DllImport("kernel32.dll", SetLastError = true)]
-			internal static extern bool GetFileInformationByHandle(IntPtr hFile, out BY_HANDLE_FILE_INFORMATION lpFileInformation);
 
 			[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
 			internal static extern bool PathIsDirectoryEmpty(string pszPath);

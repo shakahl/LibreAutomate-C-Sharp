@@ -30,50 +30,35 @@ namespace Catkeys.Util
 	public unsafe static class SharedMemory
 	{
 		/// <summary>
-		/// Creates named shared memory of specified size. If already exists, just gets its address.
+		/// Creates named shared memory of specified size. Opens if already exists.
 		/// Returns shared memory address in this process.
 		/// Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
 		/// </summary>
 		/// <param name="name">Shared memory name. Case-insensitive.</param>
-		/// <param name="size">Shared memory size. The function uses it only when creating the memory; it does not check whether the size argument matches the size of existing memory.</param>
-		/// <param name="allowLIL">Allow UAC low-integrity-level processes to access the shared memory.</param>
-		/// <exception cref="Win32Exception">The API failed.</exception>
+		/// <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
+		/// <param name="created">Receives true if created and not opened.</param>
+		/// <exception cref="CatException">The API failed.</exception>
 		/// <remarks>
 		/// Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
 		/// There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
 		/// </remarks>
-		public static void* CreateOrGet(string name, uint size, bool allowLIL = false)
+		public static void* CreateOrGet(string name, uint size, out bool created)
 		{
+			created = false;
 			lock("AF2liKVWtEej+lRYCx0scQ") {
 				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
 				if(!InterDomain.GetVariable(name, out IntPtr t)) {
-					var sa = new _SecurityAttributes();
-					var hm = Api.CreateFileMapping((IntPtr)(~0), (allowLIL && sa.Create()) ? &sa.sa : null, Api.PAGE_READWRITE, 0, size, name);
-					if(hm == Zero) throw new Win32Exception();
-					//bool opened = Native.GetError() == Api.ERROR_ALREADY_EXISTS;
-					sa.Dispose();
+					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.Common, Api.PAGE_READWRITE, 0, size, name);
+					if(hm == Zero) goto ge;
+					created = Native.GetError() != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
-					if(t == Zero) { var e = new Win32Exception(); Api.CloseHandle(hm); throw e; }
+					if(t == Zero) { Api.CloseHandle(hm); goto ge; }
 					InterDomain.SetVariable(name, t);
 				}
 				return (void*)t;
 			}
-		}
-
-		struct _SecurityAttributes
-		{
-			internal Api.SECURITY_ATTRIBUTES sa;
-
-			internal bool Create()
-			{
-				sa.nLength = (uint)sizeof(Api.SECURITY_ATTRIBUTES);
-				return Api.ConvertStringSecurityDescriptorToSecurityDescriptor("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)", 1, out sa.lpSecurityDescriptor);
-			}
-
-			internal void Dispose()
-			{
-				if(sa.lpSecurityDescriptor != null) Api.LocalFree(sa.lpSecurityDescriptor);
-			}
+			ge:
+			throw new CatException(0, "*open shared memory");
 		}
 	}
 
@@ -81,13 +66,24 @@ namespace Catkeys.Util
 	/// Memory shared by all appdomains and by other related processes.
 	/// </summary>
 	[DebuggerStepThrough]
+	[StructLayout(LayoutKind.Explicit, Size = 0x10000)]
 	unsafe struct LibSharedMemory
 	{
 		#region variables used by our library classes
 		//Declare variables used by our library classes.
-		//Be careful with types whose sizes are different in 32 and 64 bit process. Use long and cast to IntPtr etc.
+		//Be careful:
+		//1. Some type sizes are different in 32 and 64 bit process, eg IntPtr.
+		//	Solution: Use long and cast to IntPtr etc.
+		//2. The memory may be used by processes that use different library versions.
+		//	Solution: In new library versions don't change struct offsets and old members. Maybe reserve some space for future members. If need more, add new struct. Use Assert(sizeof) in our static ctor.
 
-		internal Perf.Inst perf;
+		//reserve 16 for some header, eg shared memory version.
+		[FieldOffset(16)]
+		internal Output.Server.LibSharedMemoryData outp; //now sizeof 2, reserve 16
+		[FieldOffset(32)]
+		internal Perf.Inst perf; //now sizeof 184, reserve 256-32
+		[FieldOffset(256)]
+		byte _futureStructPlaceholder;
 
 		#endregion
 
@@ -99,7 +95,23 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Creates or opens shared memory on demand in a thread-safe and process-safe way.
 		/// </summary>
-		static LibSharedMemory* _sm = (LibSharedMemory*)SharedMemory.CreateOrGet("Catkeys_SM_0x10000", Size);
+		static LibSharedMemory* _sm;
+
+		static LibSharedMemory()
+		{
+			Debug.Assert(sizeof(Output.Server.LibSharedMemoryData) <= 16);
+			Debug.Assert(sizeof(Perf.Inst) <= 256 - 32);
+
+			_sm = (LibSharedMemory*)SharedMemory.CreateOrGet("Catkeys_SM_0x10000", Size, out var created);
+#if DEBUG
+			if(created) { //must be zero-inited, it's documented
+				int* p = (int*)_sm;
+				int i, n = 1000;
+				for(i = 0; i < n; i++) if(p[i] != 0) break;
+				Debug.Assert(i == n);
+			}
+#endif
+		}
 
 		/// <summary>
 		/// Gets pointer to the shared memory.
@@ -114,8 +126,8 @@ namespace Catkeys.Util
 	/// <remarks>
 	/// When need to prevent simultaneous access of the memory by multiple threads, use <c>lock("uniqueString"){...}</c> .
 	/// It locks in all appdomains, because literal strings are interned, ie shared by all appdomains.
-	/// Using some other object with 'lock' would lock only in that appdomain.
-	/// However use this only in single module, because ngened modules have own interned strings.
+	/// Using some other object with 'lock' would lock only in that appdomain. Maybe except Type.
+	/// Use this only in single module, because ngened modules have own interned strings.
 	/// </remarks>
 	[DebuggerStepThrough]
 	unsafe struct LibProcessMemory
@@ -278,6 +290,18 @@ namespace Catkeys.Util
 		{
 			if(_p == null) return null;
 			int n = CharPtr.Length((byte*)_p, _n * 2);
+			return new String((sbyte*)_p, 0, n, enc);
+		}
+
+		/// <summary>
+		/// Converts the buffer, which contains native ANSI string of n length, to String.
+		/// </summary>
+		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+		public string ToStringFromAnsi(int n, Encoding enc = null)
+		{
+			if(_p == null) return null;
+			Debug.Assert(n <= _n * 2);
+			n = Math.Min(n, _n * 2);
 			return new String((sbyte*)_p, 0, n, enc);
 		}
 

@@ -56,6 +56,7 @@ namespace Catkeys.Util
 		/// <param name="workCallback">Callback function to call in a thread pool thread.</param>
 		/// <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
 		/// <exception cref="Win32Exception"/>
+		/// <exception cref="InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
 		public static void SubmitCallback(object state, WorkCallback workCallback, SendOrPostCallback completionCallback = null)
 		{
 			new Work(state, workCallback, completionCallback, false);
@@ -71,6 +72,7 @@ namespace Catkeys.Util
 		/// Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
 		/// </remarks>
 		/// <exception cref="Win32Exception"/>
+		/// <exception cref="InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
 		public static Work CreateWork(object state, WorkCallback workCallback, SendOrPostCallback completionCallback = null)
 		{
 			return new Work(state, workCallback, completionCallback, true);
@@ -95,9 +97,8 @@ namespace Catkeys.Util
 			SynchronizationContext _context; //for '_context.Post(_completionCallback, _state)'
 			IntPtr _work; //CreateThreadpoolWork. Not used with simple callbacks.
 
-			[ThreadStatic]			static WindowsFormsSynchronizationContext _wfContext;
-
 			/// <exception cref="Win32Exception"/>
+			/// <exception cref="InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
 			internal Work(object state, WorkCallback workCallback, SendOrPostCallback completionCallback, bool createWork)
 			{
 				_state = state;
@@ -105,15 +106,7 @@ namespace Catkeys.Util
 				if(completionCallback != null) {
 					_completionCallback = completionCallback;
 					//we need WindowsFormsSynchronizationContext to call _completionCallback in this thread
-					_context = SynchronizationContext.Current;
-					if(!(_context is WindowsFormsSynchronizationContext)) {
-						if(_wfContext == null) _wfContext = new WindowsFormsSynchronizationContext();
-						if(_context == null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA) {
-							SynchronizationContext.SetSynchronizationContext(_wfContext);
-							WindowsFormsSynchronizationContext.AutoInstall = false; //prevent Application.Run/DoEvents setting wrong context
-						}
-						_context = _wfContext;
-					}
+					_context = LibEnsureWindowsFormsSynchronizationContext.EnsurePermanently();
 				}
 
 				_gc = GCHandle.Alloc(this);

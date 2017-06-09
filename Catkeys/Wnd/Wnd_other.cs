@@ -154,8 +154,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns non-zero if this window is a Windows 10 Store app window.
-		/// Returns 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+		/// Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
 		/// <seealso cref="Misc.GetWindowsStoreAppId"/>
 		public int IsWindows10StoreApp
@@ -177,9 +176,9 @@ namespace Catkeys
 		public unsafe string SavePositionSizeState(bool canBeMinimized = false)
 		{
 			if(!LibGetWindowPlacement(out var p)) return null;
-			//PrintList(p.showCmd, p.flags);
+			//PrintList(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
-			return Convert_.HexEncode(&p, Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT)), true);
+			return Convert_.HexEncode(&p, sizeof(Api.WINDOWPLACEMENT), true);
 		}
 
 		/// <summary>
@@ -191,18 +190,16 @@ namespace Catkeys
 		/// <exception cref="WndException"/>
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
-			Api.WINDOWPLACEMENT p; int siz = Marshal.SizeOf(typeof(Api.WINDOWPLACEMENT));
+			Api.WINDOWPLACEMENT p; int siz = sizeof(Api.WINDOWPLACEMENT);
 			if(siz == Convert_.HexDecode(s, &p, siz)) {
-				//PrintList(p.showCmd, p.flags);
+				//PrintList(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 				if(!showActivate && !this.IsVisible) {
 					uint style = this.Style;
 					switch(p.showCmd) {
 					case Api.SW_SHOWMAXIMIZED:
 						if((style & Native.WS_MAXIMIZE) == 0) {
+							this.LibMove(p.rcNormalPosition.left, p.rcNormalPosition.top, p.rcNormalPosition.Width, p.rcNormalPosition.Height); //without this would be always in primary monitor
 							this.SetStyle(style | Native.WS_MAXIMIZE);
-							RECT r = Screen.FromHandle(this.Handle).WorkingArea;
-							r.Inflate(1, 1); //normally p.ptMaxPosition.x/y are -1 even if on non-primary monitor
-							this.MoveLL(r.left, r.top, r.Width, r.Height);
 						}
 						break;
 					case Api.SW_SHOWMINIMIZED:

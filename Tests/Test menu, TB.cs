@@ -634,7 +634,7 @@ public partial class Test
 	//	}
 	//	~TestDtor() { Print("~TestDtor"); }
 
-	//	void Met() { PrintFunc(); }
+	//	void Met() { DebugPrintFunc(); }
 
 	//	class ContextMenuStrip_ :ContextMenuStrip
 	//	{
@@ -791,20 +791,20 @@ public partial class Test
 		//#endif
 	}
 
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void TestCatMenuDtors2()
-	{
-		var t = new ContextMenuStrip();
-		t.Items.Add("test");
-#if true
-		//t.Closed += (unu, sed) => Application.ExitThread();
-		t.Closed += (unu, sed) => _loop.Stop();
-		t.Disposed += (unu, sed) => Print("disposed");
-		t.Show();
-		//Application.Run();
-		_loop.Loop();
-#endif
-	}
+//	[MethodImpl(MethodImplOptions.NoInlining)]
+//	static void TestCatMenuDtors2()
+//	{
+//		var t = new ContextMenuStrip();
+//		t.Items.Add("test");
+//#if true
+//		//t.Closed += (unu, sed) => Application.ExitThread();
+//		t.Closed += (unu, sed) => _loop.Stop();
+//		t.Disposed += (unu, sed) => Print("disposed");
+//		t.Show();
+//		//Application.Run();
+//		_loop.Loop();
+//#endif
+//	}
 
 	//Util.MessageLoop _loop = new Util.MessageLoop();
 
@@ -1266,7 +1266,7 @@ public partial class Test
 
 	static void TestToolbar()
 	{
-		//PrintFunc();
+		//DebugPrintFunc();
 		for(int i = 0; i < 1; i++) { TestCatBar(); /*Thread.Sleep(500);*/ }
 
 		//for(int i=0; i<1; i++) TestOldToolbar();

@@ -558,14 +558,19 @@ namespace G.Controls
 			XElement x = item.Tag as XElement, xtbTo = tsTo?.Tag as XElement;
 
 			switch(Calc.LoUshort(action)) {
-			case 1: //copy from standard to custom toolbar
+			case 1: //copy from menu or standard toolbar to custom toolbar
 				var xNew = new XElement(x.Name, x.Attributes()); //copy without descendants but with attributes
 				if(item is ToolStripDropDownItem ddi && ddi.HasDropDown) {
 					var dd = ddi.DropDown as ToolStripDropDownMenu;
 					xNew.SetAttributeValue("dd", dd.Name);
 				}
 				xtbTo.Add(xNew);
-				_AddChildItem(xNew, _CreateChildItem(xNew, false), tsTo);
+				var k = _CreateChildItem(xNew, false);
+				if(k is ToolStripButton b) { //copy checked and disabled states
+					if(item is ToolStripMenuItem m1) b.Checked = m1.Checked; else if(item is ToolStripButton b1) b.Checked = b1.Checked;
+					b.Enabled = item.Enabled;
+				}
+				_AddChildItem(xNew, k, tsTo);
 				break;
 			case 2: //move
 				if(etc != null) {

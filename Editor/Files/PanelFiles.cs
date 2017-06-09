@@ -86,7 +86,7 @@ partial class PanelFiles :Control
 
 	protected override void Dispose(bool disposing)
 	{
-		//PrintFunc();
+		//DebugPrintFunc();
 		_model?.SaveCollectionNowIfDirty();
 		_model?.Dispose();
 		base.Dispose(disposing);
@@ -250,21 +250,23 @@ partial class PanelFiles :Control
 	/// If fails, shows a task dialog with several choices - retry, load another, create new, cancel.
 	/// Sets Model and Text properties of the main form. Updates recent files.
 	/// </summary>
-	/// <param name="file">
-	/// Collection's XML file.
-	/// If null, loads the last used file from settings.
-	/// If the file or the setting does not exist, copies from Folders.ThisAppDocuments + @"Main\Main.xml".
+	/// <param name="collDir">
+	/// Collection's directory. The directory should contain file "files.xml" and subdirectory "files".
+	/// If null, loads the last used collection (its path is in settings).
+	/// If the setting does not exist, uses Folders.ThisAppDocuments + @"Main".
+	/// If the file does not exist, copies from Folders.ThisApp + @"Default".
 	/// </param>
-	public FilesModel LoadCollection(string file = null)
+	public FilesModel LoadCollection(string collDir = null)
 	{
-		if(file == null) file = Settings.Get("collection");
-		if(Empty(file)) file = Folders.ThisAppDocuments + @"Main\Main.xml";
+		if(collDir == null) collDir = Settings.Get("collection");
+		if(Empty(collDir)) collDir = Folders.ThisAppDocuments + @"Main";
 		g1:
+		var xmlFile = collDir + @"\files.xml";
 		try {
-			var collDir = Path_.GetDirectoryPath(file);
-			if(!Files.ExistsAsFile(file)) {
-				Files.Copy(Folders.ThisApp + @"Default\Main.xml", file);
+			//CONSIDER: use different logic. Now silently creates empty files, it's not always good. Add parameter createNew. If false, show error if file not found.
+			if(!Files.ExistsAsFile(xmlFile)) {
 				Files.CopyTo(Folders.ThisApp + @"Default\files", collDir);
+				Files.Copy(Folders.ThisApp + @"Default\files.xml", xmlFile);
 			}
 
 			if(_model != null) {
@@ -273,19 +275,21 @@ partial class PanelFiles :Control
 			}
 
 			var oldModel = _model;
-			var m = new FilesModel(_c, file);
+			var m = new FilesModel(_c, xmlFile);
 			m.InitNodeControls(_ccIcon, _ccName);
 			_c.Model = _model = m;
 			//_c.SelectedNode = null;
 			oldModel?.Dispose();
 
 			//CONSIDER: unexpand path
-			if(Settings.Set("collection", file)) {
+			if(Settings.Set("collection", collDir)) {
 				//add to recent
-				var x1 = Settings.XmlOf("recent", true);
-				var x2 = x1.Element_("f", "n", file, true);
-				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-				if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", file)));
+				lock(Settings) {
+					var x1 = Settings.XmlOf("recent", true);
+					var x2 = x1.Element_("f", "n", collDir, true);
+					if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
+					if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", collDir)));
+				}
 			}
 
 			MainForm.Model = _model;
@@ -293,8 +297,8 @@ partial class PanelFiles :Control
 		}
 		catch(Exception ex) {
 			FilesModel m = null;
-			//Print($"Failed to load '{file}'. {ex.Message}");
-			switch(TaskDialog.ShowError("Failed to load collection", file,
+			//Print($"Failed to load '{collDir}'. {ex.Message}");
+			switch(TaskDialog.ShowError("Failed to load collection", collDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
 				owner: this, expandedText: ex.Message)) {
 			case 1: goto g1;
@@ -313,11 +317,9 @@ partial class PanelFiles :Control
 	/// </summary>
 	public FilesModel LoadAnotherCollection()
 	{
-		var d = new OpenFileDialog() { Title = "Open collection" };
-		d.DefaultExt = ".xml";
-		d.Filter = "Collection files (*.xml)|*.xml";
+		var d = new OpenFileDialog() { Title = "Open collection", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
-		return LoadCollection(d.FileName);
+		return LoadCollection(Path_.GetDirectoryPath(d.FileName));
 	}
 
 	/// <summary>
@@ -326,17 +328,19 @@ partial class PanelFiles :Control
 	/// </summary>
 	public FilesModel LoadNewCollection()
 	{
-		var file = _model.GetFilePathForNewCollection();
-		if(file == null) return null;
-		return LoadCollection(file);
+		var path = _model.GetDirectoryPathForNewCollection();
+		if(path == null) return null;
+		return LoadCollection(path);
 	}
 
 	void _AddToRecentCollections(string file)
 	{
-		var x1 = Settings.XmlOf("recent", true);
-		var x2 = x1.Element_("f", "n", file, true);
-		if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-		if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", file)));
+		lock(Settings) {
+			var x1 = Settings.XmlOf("recent", true);
+			var x2 = x1.Element_("f", "n", file, true);
+			if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
+			if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", file)));
+		}
 	}
 
 	/// <summary>
@@ -344,28 +348,30 @@ partial class PanelFiles :Control
 	/// </summary>
 	public void FillMenuRecentCollections(ToolStripDropDownMenu dd)
 	{
-		var x1 = Settings.XmlOf("recent");
-		if(x1 == null) return;
-		var current = Settings.Get("collection");
-		dd.SuspendLayout();
-		dd.Items.Clear();
-		bool currentOK = false;
-		var aRem = new List<XElement>();
-		foreach(var x2 in x1.Elements("f")) {
-			var path = x2.Attribute_("n");
-			if(dd.Items.Count == 20 || !Files.ExistsAsFile(path)) {
-				aRem.Add(x2);
-				continue;
+		lock(Settings) {
+			var x1 = Settings.XmlOf("recent");
+			if(x1 == null) return;
+			var current = Settings.Get("collection");
+			dd.SuspendLayout();
+			dd.Items.Clear();
+			bool currentOK = false;
+			var aRem = new List<XElement>();
+			foreach(var x2 in x1.Elements("f")) {
+				var path = x2.Attribute_("n");
+				if(dd.Items.Count == 20 || !Files.ExistsAsDirectory(path)) {
+					aRem.Add(x2);
+					continue;
+				}
+				var mi = dd.Items.Add(path, null, (o, u) => LoadCollection(o.ToString()));
+				if(!currentOK && (path == current)) {
+					currentOK = true;
+					mi.Font = Stock.FontBold;
+				}
 			}
-			var mi = dd.Items.Add(path, null, (o, u) => LoadCollection(o.ToString()));
-			if(!currentOK && (path == current)) {
-				currentOK = true;
-				mi.Font = Stock.FontBold;
+			dd.ResumeLayout();
+			if(aRem.Count > 0) {
+				foreach(var v in aRem) v.Remove();
 			}
-		}
-		dd.ResumeLayout();
-		if(aRem.Count > 0) {
-			foreach(var v in aRem) v.Remove();
 		}
 	}
 }

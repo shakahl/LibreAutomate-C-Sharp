@@ -21,45 +21,47 @@ using System.Xml;
 using Catkeys;
 using static Catkeys.NoClass;
 
+/// <summary>
+/// Extension methods for .NET classes.
+/// See also <see cref="DotNetExtensions"/>.
+/// </summary>
+static class EDotNetExtensions
+{
+	/// <summary>
+	/// Shows ToolStripDropDownMenu menu at current mouse position, like it would be a ContextMenuStrip menu.
+	/// </summary>
+	/// <remarks>
+	/// This way is undocumented and possibly will stop working in future .NET versions. I did not find a better way.
+	/// </remarks>
+	public static void ShowAsContextMenu_(this ToolStripDropDownMenu t)
+	{
+		var oi = t.OwnerItem; t.OwnerItem = null; //to set position
+		try { t.Show(Mouse.XY); }
+		finally { t.OwnerItem = oi; }
+	}
+
+	///// <summary>
+	///// Checks or unchecks item by name.
+	///// See also: <see cref="EForm.CheckCmd"/>
+	///// </summary>
+	///// <exception cref="NullReferenceException">Item does not exist.</exception>
+	//public static void CheckItem(this ToolStripDropDownMenu t, string itemName, bool check)
+	//{
+	//	(t.Items[itemName] as ToolStripMenuItem).Checked = check;
+	//}
+
+}
+
 //[DebuggerStepThrough]
 static class EResources
 {
-	/// <summary>
-	/// Call this from other thread (than the UI thread that will use resources) at the very startup of the app.
-	/// It makes the UI thread start faster.
-	/// </summary>
-	public static void Init()
+	static EResources()
 	{
-		//if(_initializingResources == 0) _initializingResources = 1;
-		//var p = new Perf.Inst(true);
-		Project.Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture; //makes 3 times faster. Default culture is en-US.
-																						  //p.Next();
-		GetImageUseCache("_new"); //5-8 ms. Without InvariantCulture 15-20 ms.
-
-		//var b = Properties.Resources.il_tv;
-		//p.Next();
-		//_initializingResources = 2;
-		//ImageList il = new ImageList();
-		//il.LoadFromImage(b);
-		//p.NW();
-		//_ilFile = il;
+		//this makes the first access of managed resources 3 times faster. Then app starts ~10 ms faster. Default culture is en-US.
+		Project.Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture;
 	}
-	//static int _initializingResources;
-	//static ImageList _ilFile;
 
-	///// <summary>
-	///// Gets ImageList used for the files/scripts list pane.
-	///// </summary>
-	//public static ImageList ImageList_Files
-	//{
-	//	get
-	//	{
-	//		if(_ilFile == null) DebugPrint("need to wait for __ilFile");
-	//		while(_ilFile == null) Thread.Sleep(5);
-	//		return _ilFile;
-	//	}
-	//}
-
+#if false //currently not used. Imagelists have problems with high DPI.
 	/// <summary>
 	/// Loads imagelist from Image.
 	/// Appends if the ImageList is not empty.
@@ -101,6 +103,7 @@ static class EResources
 		//With managed resources slow, ~40 ms first time, tested non-ngened. But slightly faster (than file) if managed resources were already used.
 		//The same (~40 ms) with a designer-added ImageList with designer-added images. Also then noticed an anomaly when closing the form.
 	}
+#endif
 
 	/// <summary>
 	/// Gets a non-string resource (eg Bitmap) from project resources.
@@ -112,17 +115,9 @@ static class EResources
 	/// <param name="name">Resource name. If fileIcon - file path.</param>
 	public static object GetObjectUseCache(string name)
 	{
-		lock("3moj2pOaoUGgRILqYfBGPw") {
-			object R;
-			if(_cache == null) {
-				_cache = new Hashtable();
-			} else {
-				R = _cache[name];
-				if(R != null) return R;
-			}
-			//#if DEBUG
-			//				if(_initializingResources == 1) DebugPrint($"warning: the resource initialization thread still not finished. The first get-resource then is slow.");
-			//#endif
+		lock(_cache) {
+			object R = _cache[name];
+			if(R != null) return R;
 			//var p = new Perf.Inst(true);
 			R = Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture);
 			//p.NW();
@@ -131,7 +126,7 @@ static class EResources
 			return R;
 		}
 	}
-	static Hashtable _cache;
+	static Hashtable _cache = new Hashtable();
 
 	/// <summary>
 	/// Gets a Bitmap resource from project resources or cache.

@@ -251,12 +251,27 @@
             <param name="to"></param>
             <param name="withRN">Include "\r\n".</param>
         </member>
+        <member name="M:G.Controls.SciText.DeleteRange(System.Int32,System.Int32)">
+            <summary>
+            SCI_DELETERANGE.
+            </summary>
+            <param name="pos"></param>
+            <param name="length"></param>
+        </member>
+        <member name="M:G.Controls.SciText.InsertText(System.Int32,System.String)">
+            <summary>
+            SCI_INSERTTEXT.
+            Does not parse tags.
+            </summary>
+            <param name="pos"></param>
+            <param name="s"></param>
+        </member>
         <member name="T:G.Controls.SciControl">
             <summary>
             This .NET control wraps native Scintilla control.
             This is not an universal Scintilla wrapper class. Designed just for purposes of this library and related software.
             Responsible for creating and initializing the control. Also used to set/change control properties.
-            The ST property returns a Catilla object that can be used to work with text, code styling etc.
+            The ST property returns a SciText object that can be used to work with text, code styling etc.
             </summary>
             <remarks>
             Why don't use ScintillaNET:
@@ -270,7 +285,7 @@
         </member>
         <member name="P:G.Controls.SciControl.ST">
             <summary>
-            Gets the Catilla object that contains most Scintilla-related functions.
+            Gets the SciText object that contains most Scintilla-related functions.
             </summary>
         </member>
         <member name="M:G.Controls.SciControl.#ctor">
@@ -377,6 +392,20 @@
             Max number of user styles is NUM_STYLES_EX (216). Need to clear old styles before new styles can be defined.
             This func is usually called after clearing control text.
             </summary>
+        </member>
+        <member name="M:G.Controls.SciTags.OutputServerProcessMessages(Catkeys.Output.Server,System.Action{Catkeys.Output.Server.Message})">
+            <summary>
+            Displays <see cref="T:Catkeys.Output.Server"/> messages that are currently int its queue.
+            </summary>
+            <param name="os">The Output.Server instance.</param>
+            <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.Messages.</param>
+            <remarks>
+            Removes messages from the queue.
+            Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
+            Messages with tags must have prefix "&lt;&gt;".
+            Limits text length to about 4 MB (removes oldest text when exceeded).
+            </remarks>
+            <seealso cref="M:Catkeys.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
         </member>
         <member name="M:G.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
             <summary>

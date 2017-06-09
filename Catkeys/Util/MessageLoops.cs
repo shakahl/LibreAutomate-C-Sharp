@@ -48,7 +48,7 @@ namespace Catkeys.Util
 						Application.DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.
 
-						if(Api.PeekMessage(out var u, Wnd0, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
+						if(Api.PeekMessage(out var _, Wnd0, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
 					}
 				}
 				finally {
@@ -122,6 +122,27 @@ namespace Catkeys.Util
 		bool _disposed;
 		~LibEnsureWindowsFormsSynchronizationContext() { Debug.Assert(_disposed); }
 #endif
+
+		/// <summary>
+		/// If synchronization context of this thread is null or not WindowsFormsSynchronizationContext, makes it WindowsFormsSynchronizationContext.
+		/// Use this instead of creating instance when will not need to restore previous synchronization context.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">This thread has a synchronization context other than WindowsFormsSynchronizationContext or null. Or it is null and thread's GetApartmentState is not STA.</exception>
+		public static WindowsFormsSynchronizationContext EnsurePermanently()
+		{
+			var c = SynchronizationContext.Current;
+			if(!(c is WindowsFormsSynchronizationContext wfc)) {
+				if(!(c == null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)) {
+					Debug.Assert(false);
+					throw new InvalidOperationException("this thread has wrong SynchronizationContext type or is not STA");
+				}
+				if(_wfContext == null) _wfContext = new WindowsFormsSynchronizationContext();
+				SynchronizationContext.SetSynchronizationContext(_wfContext);
+				WindowsFormsSynchronizationContext.AutoInstall = false; //prevent Application.Run/DoEvents setting wrong context
+				wfc = _wfContext;
+			}
+			return wfc;
+		}
 	}
 
 	/// <summary>

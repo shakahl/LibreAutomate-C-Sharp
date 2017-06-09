@@ -114,14 +114,14 @@ namespace G.Controls
 		#region drag-drop
 		private void _TextIcon_DragEnter(object sender, DragEventArgs e)
 		{
-			//PrintFunc();
+			//DebugPrintFunc();
 			if(e.Data.GetDataPresent(DataFormats.FileDrop, false)) e.Effect = DragDropEffects.Link;
 			else if(e.Data.GetDataPresent(DataFormats.UnicodeText, false)) e.Effect = DragDropEffects.Copy;
 		}
 
 		private void _TextIcon_DragDrop(object sender, DragEventArgs e)
 		{
-			//PrintFunc();
+			//DebugPrintFunc();
 			string s = null;
 			if(e.Data.GetData(DataFormats.FileDrop, false) is string[] a && a.Length > 0) s = a[0];
 			else s = e.Data.GetData(DataFormats.UnicodeText, false) as string;

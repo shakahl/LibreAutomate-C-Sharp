@@ -101,34 +101,34 @@ public partial class Test
 
 	private static void M_Unloaded(object sender, RoutedEventArgs e)
 	{
-		//PrintFunc();
+		//DebugPrintFunc();
 		test_mLoop.Stop();
 	}
 
 	//private static void M_Closed(object sender, RoutedEventArgs e)
 	//{
-	//	PrintFunc();
+	//	DebugPrintFunc();
 	//	test_mLoop.Stop();
 	//}
 
 	//private static void M_Opened(object sender, RoutedEventArgs e)
 	//{
-	//	PrintFunc();
+	//	DebugPrintFunc();
 	//}
 
 	//private static void M_Loaded(object sender, RoutedEventArgs e)
 	//{
-	//	PrintFunc();
+	//	DebugPrintFunc();
 	//}
 
 	//private static void M_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
 	//{
-	//	PrintFunc();
+	//	DebugPrintFunc();
 	//}
 
 	private static void A_Click(object sender, RoutedEventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 	}
 
 
@@ -168,7 +168,7 @@ public partial class Test
 
 	private static void B_Click(object sender, RoutedEventArgs e)
 	{
-		PrintFunc();
+		DebugPrintFunc();
 		_mlTbWpf.Stop();
 	}
 }

@@ -49,8 +49,8 @@ namespace Catkeys
 			if(processId == 0) return null;
 			string R = null;
 
-			using(var ph = new LibProcessHandle(processId)) {
-				if(!ph.Is0) {
+			using(var ph = LibProcessHandle.FromId(processId)) {
+				if(ph != null) {
 					//info:
 					//In non-admin process fails if the process is of another user session; then use the slooow enumeration.
 					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
@@ -261,8 +261,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Opens and manages a process handle.
-		/// Calls API <msdn>CloseHandle</msdn> in Dispose (which normally is implicitly called at the end of <c>using(...){...}</c>) or in finalizer (which is called later by the GC).
+		/// Opens and manages process handle.
 		/// </summary>
 		internal sealed class LibProcessHandle :IDisposable
 		{
@@ -294,54 +293,55 @@ namespace Catkeys
 			public LibProcessHandle(IntPtr handle) { _h = handle; }
 
 			/// <summary>
-			/// Opens a process handle.
+			/// Opens process handle.
 			/// Calls API OpenProcess.
-			/// No exception when fails; use Is0. Supports Native.GetError().
+			/// Returns null if fails. Supports Native.GetError().
 			/// </summary>
 			/// <param name="processId">Process id.</param>
-			/// <param name="desiredAccess">Desired access, as documented in MSDN -> OpenProcess.</param>
-			public LibProcessHandle(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) { _Open(processId, desiredAccess); }
+			/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+			public static LibProcessHandle FromId(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+			{
+				if(!_Open(out var h, processId, desiredAccess)) return null;
+				return new LibProcessHandle(h);
+			}
 
 			/// <summary>
 			/// Opens window's process handle.
 			/// This overload is more powerful: if API OpenProcess fails, it tries GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-			/// No exception when fails; use Is0. Supports Native.GetError().
+			/// Returns null if fails. Supports Native.GetError().
 			/// </summary>
-			/// <param name="w">Window.</param>
-			/// <param name="desiredAccess">Api.PROCESS_</param>
-			public LibProcessHandle(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION) { _Open(w.ProcessId, desiredAccess, w); }
-
-			void _Open(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default(Wnd))
+			/// <param name="w"></param>
+			/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+			public static LibProcessHandle FromWnd(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 			{
+				if(!_Open(out var h, w.ProcessId, desiredAccess, w)) return null;
+				return new LibProcessHandle(h);
+			}
+
+			static bool _Open(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default(Wnd))
+			{
+				R = Zero;
 				int e = 0;
 				if(processId != 0) {
-					_h = Api.OpenProcess(desiredAccess, false, processId);
-					if(!Is0) return;
+					R = Api.OpenProcess(desiredAccess, false, processId);
+					if(R != Zero) return true;
 					e = Native.GetError();
 				}
 				if(!processWindow.Is0) {
 					if((desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE)) == 0
 					&& UacInfo.ThisProcess.IsUIAccess
-					) _h = GetProcessHandleFromHwnd(processWindow);
+					) R = GetProcessHandleFromHwnd(processWindow);
 
-					if(Is0) Api.SetLastError(e);
+					if(R != Zero) return true;
+					Api.SetLastError(e);
 				}
+				return false;
 			}
 
 			[DllImport("oleacc.dll")]
 			static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
-			//void _Open(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
-			//{
-			//	if(processId != 0) _h = Api.OpenProcess(desiredAccess, false, processId);
-			//	if(Is0) GC.SuppressFinalize(this);
-			//}
-
-			//public static implicit operator LibProcessHandle(IntPtr handle) { return handle == Zero ? null : new LibProcessHandle(handle); } //unsafe, because does not dispose the left-side object immediately if it already holds a handle; but it is unlikely, and not dangerous, because the handle eventually would be disposed by the finalizer.
 			public static implicit operator IntPtr(LibProcessHandle p) { return p._h; }
-
-			public bool Is0 { get => _h == Zero; }
-
 		}
 
 		/// <summary>
@@ -398,14 +398,20 @@ namespace Catkeys
 
 			void _Alloc(int pid, Wnd w, int nBytes)
 			{
+				string err = null;
 				const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
-				_hproc = w.Is0 ? new LibProcessHandle(pid, fl) : new LibProcessHandle(w, fl);
-				if(_hproc.Is0) { var e = new CatException(0, "Failed to open process handle."); _Dispose(); throw e; }
+				_hproc = w.Is0 ? LibProcessHandle.FromId(pid, fl) : LibProcessHandle.FromWnd(w, fl);
+				if(_hproc == null) { err = "Failed to open process handle."; goto ge; }
 
 				if(nBytes != 0) {
 					Mem = Api.VirtualAllocEx(_hproc, Zero, nBytes);
-					if(Mem == Zero) { var e = new CatException(0, "Failed to allocate process memory."); _Dispose(); throw e; }
+					if(Mem == Zero) { err = "Failed to allocate process memory."; goto ge; }
 				}
+				return;
+				ge:
+				var e = new CatException(0, err);
+				_Dispose();
+				throw e;
 			}
 
 			/// <summary>
@@ -474,8 +480,8 @@ namespace Catkeys
 				var b = Util.CharBuffer.LibCommon;
 				int na = nChars; if(!ansiString) na *= 2;
 				if(!ReadProcessMemory(_hproc, Mem + offsetBytes, b.Alloc((na + 1) / 2), na, null)) return null;
-				if(!ansiString) return b.ToString();
-				return b.ToStringFromAnsi(enc);
+				if(!ansiString) return b.ToString(nChars);
+				return b.ToStringFromAnsi(nChars, enc);
 			}
 
 			/// <summary>
@@ -676,22 +682,20 @@ namespace Catkeys
 				}
 			}
 
-			/// <summary>
-			/// Returns true if the process is a Windows Store app.
-			/// </summary>
-			public bool IsAppContainer
-			{
-				get
-				{
-					if(!Ver.MinWin8) return false;
-					unsafe
-					{
-						uint isac;
-						if(Failed = !Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out var siz)) return false;
-						return isac != 0;
-					}
-				}
-			}
+			//not very useful. Returns false for ApplicationFrameWindow. Can use Wnd.IsWindows10StoreApp.
+			///// <summary>
+			///// Returns true if the process is a Windows Store app.
+			///// </summary>
+			//public unsafe bool IsAppContainer
+			//{
+			//	get
+			//	{
+			//		if(!Ver.MinWin8) return false;
+			//		uint isac;
+			//		if(Failed = !Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out var siz)) return false;
+			//		return isac != 0;
+			//	}
+			//}
 
 #pragma warning disable 649
 			struct TOKEN_MANDATORY_LABEL { internal IntPtr Sid; internal uint Attributes; }
@@ -741,24 +745,20 @@ namespace Catkeys
 						Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
 						if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 						else {
-							TOKEN_MANDATORY_LABEL* tml = (TOKEN_MANDATORY_LABEL*)Marshal.AllocHGlobal((int)siz);
-							if(tml == null) _haveIntegrityLevel = 2;
-							else {
-								if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
-								uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
+							var b = stackalloc byte[(int)siz];
+							var tml = (TOKEN_MANDATORY_LABEL*)b;
+							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
+							uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
 
-								//Output.WriteHex(IL);
-								if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = IL.Untrusted;
-								else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = IL.Low;
-								else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = IL.Medium;
-								else if(x < SECURITY_MANDATORY_SYSTEM_RID) {
-									if(IsUIAccess && Elevation != ElevationType.Full) _integrityLevel = IL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
-									else _integrityLevel = IL.High;
-								} else if(x < SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = IL.System;
-								else _integrityLevel = IL.Protected;
-
-								Marshal.FreeHGlobal((IntPtr)tml);
-							}
+							//Output.WriteHex(IL);
+							if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = IL.Untrusted;
+							else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = IL.Low;
+							else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = IL.Medium;
+							else if(x < SECURITY_MANDATORY_SYSTEM_RID) {
+								if(IsUIAccess && Elevation != ElevationType.Full) _integrityLevel = IL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
+								else _integrityLevel = IL.High;
+							} else if(x < SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = IL.System;
+							else _integrityLevel = IL.Protected;
 						}
 					}
 				}
@@ -785,8 +785,8 @@ namespace Catkeys
 			public static UacInfo GetOfProcess(int processId)
 			{
 				if(processId == 0) return null;
-				using(var hp = new LibProcessHandle(processId)) {
-					if(hp.Is0) return null;
+				using(var hp = LibProcessHandle.FromId(processId)) {
+					if(hp == null) return null;
 					return _Create(hp);
 				}
 			}

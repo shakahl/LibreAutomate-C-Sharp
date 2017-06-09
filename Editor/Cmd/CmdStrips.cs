@@ -30,7 +30,7 @@ partial class EForm
 	{
 		public MenuStrip Menubar;
 		public CatToolStrip tbFile, tbEdit, tbRun, tbTools, tbHelp, tbCustom1, tbCustom2; //toolbars
-		public ToolStripDropDownMenu ddFile, ddFileNew;
+		public ToolStripDropDownMenu ddFile, ddFileNew, ddEdit, ddOutput, ddStatusBar;
 		public ToolStripSpringTextBox cHelpFind;
 	}
 	public EStrips Strips;
@@ -62,13 +62,16 @@ partial class EForm
 		Strips.tbCustom1 = _strips.Toolbars["Custom1"];
 		Strips.tbCustom2 = _strips.Toolbars["Custom2"];
 
-		//get submenus that will be filled later etc
+		//get submenus that will be filled later or used separately etc
 		_strips.Submenus["File_Templates"].Opening += _Strips_MenuOpening_Templates;
 		_strips.Submenus["File_RecentCollections"].Opening += (o, e) => MainForm.Panels.Files.FillMenuRecentCollections(o as ToolStripDropDownMenu);
 		(Strips.ddFileNew = _strips.Submenus["File_New"]).Opening += _Strips_MenuOpening_New;
-		_strips.Submenus["Tools_Panels"].Opening += (se, da) => _dock.AddShowPanelsToMenu(se as ToolStripDropDown, false, true);
-		_strips.Submenus["Tools_Toolbars"].Opening += (se, da) => _dock.AddShowPanelsToMenu(se as ToolStripDropDown, true, true);
+		_strips.Submenus["Tools_Panels"].Opening += (se, da) => PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, false, true);
+		_strips.Submenus["Tools_Toolbars"].Opening += (se, da) => PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, true, true);
 		Strips.ddFile = _strips.Submenus["Menu_File"];
+		Strips.ddEdit = _strips.Submenus["Menu_Edit"];
+		Strips.ddOutput = _strips.Submenus["Tools_Output"];
+		Strips.ddStatusBar = _strips.Submenus["Tools_StatusBar"];
 
 		//get controls
 		Strips.cHelpFind = Strips.tbHelp.Items["Help_Find"] as ToolStripSpringTextBox;
@@ -110,6 +113,43 @@ partial class EForm
 		//dd.Items.Clear();
 		//TODO
 		dd.ResumeLayout();
+	}
+
+	/// <summary>
+	/// Checks or unchecks command's menu item and toolbar buttons.
+	/// </summary>
+	/// <param name="cmd">Command name. See Strips.xml.</param>
+	/// <param name="check"></param>
+	public void CheckCmd(string cmd, bool check)
+	{
+		var a = _strips.Find(cmd);
+		int i, n = a.Count;
+		if(n == 0) { DebugPrint("item not found: " + cmd); return; }
+		for(i = 0; i < n; i++) {
+			switch(a[i]) {
+			case ToolStripMenuItem m:
+				m.Checked = check;
+				break;
+			case ToolStripButton b:
+				b.Checked = check;
+				break;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Enables or disables command's menu item and toolbar buttons.
+	/// </summary>
+	/// <param name="cmd">Command name. See Strips.xml.</param>
+	/// <param name="enable"></param>
+	public void EnableCmd(string cmd, bool enable)
+	{
+		var a = _strips.Find(cmd);
+		int i, n = a.Count;
+		if(n == 0) { DebugPrint("item not found: " + cmd); return; }
+		for(i = 0; i < n; i++) {
+			a[i].Enabled = enable;
+		}
 	}
 
 	partial class _Commands :IGStripManagerCallbacks
@@ -204,6 +244,7 @@ partial class EForm
 			_commands.Add(nameof(Edit_Uncomment), Edit_Uncomment);
 			_commands.Add(nameof(Edit_HideRegion), Edit_HideRegion);
 			_commands.Add(nameof(Edit_SelectAll), Edit_SelectAll);
+			_commands.Add(nameof(Edit_Output), Edit_Output);
 			_commands.Add(nameof(Edit_ImagesInCode), Edit_ImagesInCode);
 			_commands.Add(nameof(Edit_WrapLines), Edit_WrapLines);
 			_commands.Add(nameof(Edit_LineNumbers), Edit_LineNumbers);

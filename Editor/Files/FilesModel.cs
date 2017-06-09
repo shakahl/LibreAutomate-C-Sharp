@@ -144,7 +144,7 @@ partial class FilesModel :ITreeModel
 	//info: this is before Dispose
 	//protected override void OnHandleDestroyed(EventArgs e)
 	//{
-	//	PrintFunc();
+	//	DebugPrintFunc();
 	//}
 
 	#endregion
@@ -424,9 +424,7 @@ partial class FilesModel :ITreeModel
 		  };
 		m.Closed += onClosed;
 
-		var oi = m.OwnerItem; m.OwnerItem = null; //to set position
-		m.Show(Mouse.XY);
-		m.OwnerItem = oi;
+		m.ShowAsContextMenu_();
 		_msgLoop.Loop();
 		if(TV.SelectedNodes.Count < 2) {
 			if(_currentFile == null) TV.ClearSelection(); else _currentFile.SelectSingle();
@@ -636,32 +634,33 @@ partial class FilesModel :ITreeModel
 	/// <summary>
 	/// Imports another collection into this collection.
 	/// </summary>
-	/// <param name="collectionFile">If null, shows dialog to select files.</param>
+	/// <param name="collDir">Collection directory. If null, shows dialog to select.</param>
 	/// <param name="target">If null, calls _GetInsertPos.</param>
 	/// <param name="pos">Used when target is not null.</param>
-	public void ImportCollection(string collectionFile = null, FileNode target = null, NodePosition pos = 0)
+	public void ImportCollection(string collDir = null, FileNode target = null, NodePosition pos = 0)
 	{
-		if(collectionFile == null) {
-			var d = new OpenFileDialog() { Title = "Import collection" };
+		string xmlFile;
+		if(collDir != null) xmlFile = collDir + @"\files.xml";
+		else {
+			var d = new OpenFileDialog() { Title = "Import collection", Filter = "files.xml|files.xml" };
 			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
-			collectionFile = d.FileName;
+			collDir = Path_.GetDirectoryPath(xmlFile = d.FileName);
 		}
 
 		try {
 			//create new folder for collection's items
 			if(target == null) target = _GetInsertPos(out pos);
-			var folderName = Path_.GetFileNameWithoutExtension(collectionFile);
-			target = FileNode.NewItem(this, target, pos, FileNode.NewItemTemplate.Folder, folderName);
+			target = FileNode.NewItem(this, target, pos, FileNode.NewItemTemplate.Folder, Path_.GetFileName(collDir));
 			if(target == null) return;
 
-			var m = new FilesModel(null, collectionFile);
+			var m = new FilesModel(null, xmlFile);
 			var a = m.Xml.Elements().Select(t => FileNode.FromX(t)).ToArray();
 			_MultiCopyMove(true, a, target, NodePosition.Inside, true);
 			m.Dispose();
 
 			target.SelectSingle();
 
-			Print($"Info: Imported collection '{collectionFile}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
+			Print($"Info: Imported collection '{collDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
 		}
 		catch(Exception ex) { Print(ex.Message); }
 	}
@@ -879,14 +878,14 @@ partial class FilesModel :ITreeModel
 			_MultiCopyMove(copy, a, target, pos);
 		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
 			var a = (string[])e.Data.GetData(DataFormats.FileDrop);
-			if(a.Length == 1 && IsCollectionFile(a[0])) {
+			if(a.Length == 1 && IsCollectionDirectory(a[0])) {
 				switch(TaskDialog.ShowEx("Collection", a[0],
-					"1 Open collection|2 Import collection|3 Import as file|0 Cancel",
+					"1 Open collection|2 Import collection|0 Cancel",
 					flags: TDFlags.Wider, footerText: GetSecurityInfo(true))) {
-				case 0: return;
-				case 1: Time.SetTimer(1, true, t => MainForm.Panels.Files.LoadCollection(a[0])); return;
-				case 2: ImportCollection(a[0], target, pos); return;
+				case 1: Time.SetTimer(1, true, t => MainForm.Panels.Files.LoadCollection(a[0])); break;
+				case 2: ImportCollection(a[0], target, pos); break;
 				}
+				return;
 			}
 			_ImportFiles(copy, a, target, pos);
 		}
@@ -897,19 +896,19 @@ partial class FilesModel :ITreeModel
 	#region export
 
 	/// <summary>
-	/// Shows dialog(s) to get name and location for new or exporting collection.
-	/// Returns collection's XML file path.
-	/// Does not create the file and folders.
+	/// Shows dialog to get path for new or exporting collection.
+	/// Returns collection's directory path.
+	/// Does not create any files/directories.
 	/// </summary>
 	/// <param name="name">Default name of the collection.</param>
-	/// <param name="location">Default parent folder of the main folder of the collection.</param>
-	public string GetFilePathForNewCollection(string name = null, string location = null)
+	/// <param name="location">Default parent directory of the main directory of the collection.</param>
+	public string GetDirectoryPathForNewCollection(string name = null, string location = null)
 	{
 		var f = new _FormNewCollection();
 		f.textName.Text = name;
 		f.textLocation.Text = location ?? Folders.ThisAppDocuments;
 		if(f.ShowDialog(TV) != DialogResult.OK) return null;
-		return f.textFile.Text;
+		return f.textPath.Text;
 	}
 
 	public bool ExportSelected(string location = null)
@@ -920,8 +919,8 @@ partial class FilesModel :ITreeModel
 
 		if(a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children.ToArray();
 
-		var file = GetFilePathForNewCollection(name, location);
-		if(file == null) return false;
+		var collDir = GetDirectoryPathForNewCollection(name, location);
+		if(collDir == null) return false;
 
 		var x = new XElement("files");
 		foreach(var f in a) {
@@ -931,13 +930,13 @@ partial class FilesModel :ITreeModel
 		}
 		//Print(x);
 
-		string collDir = Path_.GetDirectoryPath(file), filesDir = collDir + @"\files";
+		string filesDir = collDir + @"\files";
 		try {
 			Files.CreateDirectory(filesDir);
 			foreach(var f in a) {
 				if(!f.IsLink()) Files.CopyTo(f.FilePath, filesDir);
 			}
-			x.Save(file);
+			x.Save(collDir + @"\files.xml");
 		}
 		catch(Exception ex) {
 			Print(ex.Message);
@@ -1004,17 +1003,15 @@ partial class FilesModel :ITreeModel
 	public bool IsMyFileNode(FileNode f) { return Root.ContainsDescendant(f); }
 
 	/// <summary>
-	/// Returns true if s is path of a collection file (XML file containing item names, folder structure etc).
+	/// Returns true if s is path of a collection directory.
 	/// </summary>
-	public static bool IsCollectionFile(string s)
+	public static bool IsCollectionDirectory(string s)
 	{
-		if(!s.EndsWith_(".xml", true)) return false;
-		if(!Files.ExistsAsDirectory(s + @"\..\files")) return false;
-		try {
-			var x = XElement.Load(s);
-			return x.Name == "files";
+		string xmlFile = s + @"\files.xml";
+		if(Files.ExistsAsFile(xmlFile) && Files.ExistsAsDirectory(s + @"\files")) {
+			try { return XElement.Load(xmlFile).Name == "files"; } catch { }
 		}
-		catch { return false; }
+		return false;
 	}
 
 	/// <summary>

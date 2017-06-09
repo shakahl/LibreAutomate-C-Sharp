@@ -171,7 +171,7 @@ namespace G.Controls
 		//	return _byteBuffer.Alloc(n);
 		//}
 
-		#endregion
+#endregion
 
 		bool _CanParseTags(string s)
 		{
@@ -498,5 +498,29 @@ namespace G.Controls
 			to = LineEndFromPosition(to, withRN, true);
 		}
 
+		/// <summary>
+		/// SCI_DELETERANGE.
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <param name="length"></param>
+		public void DeleteRange(int pos, int length)
+		{
+			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
+			Call(SCI_DELETERANGE, pos, length);
+			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+		}
+
+		/// <summary>
+		/// SCI_INSERTTEXT.
+		/// Does not parse tags.
+		/// </summary>
+		/// <param name="pos"></param>
+		/// <param name="s"></param>
+		public void InsertText(int pos, string s)
+		{
+			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
+			SetString(SCI_INSERTTEXT, pos, s);
+			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+		}
 	}
 }

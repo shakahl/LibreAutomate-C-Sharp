@@ -34,7 +34,7 @@ class ScriptClass :Script
 	//void Script(string unu)
 	//void Script(int unu, string unus)
 	{
-		//PrintFunc();
+		//DebugPrintFunc();
 		//Print(unu);
 		//ScriptOptions.ThreadDefault.speed=50;
 

@@ -120,23 +120,16 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="path">Full path. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 			/// <param name="fileId"></param>
-			public static bool GetFileId(string path, out FileId fileId)
+			public static unsafe bool GetFileId(string path, out FileId fileId)
 			{
 				path = Path_.LibNormalizeMinimally(path, false);
 				fileId = new FileId();
-				IntPtr h = (IntPtr)(-1);
-				try {
-					h = _Api.CreateFile(path, 0x80, 7, Zero, 3, 0x02000000, Zero);
-					//FILE_READ_ATTRIBUTES, all sharing, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS
-					//TODO: test access 0, it should allow to query attributes.
-					if(h == (IntPtr)(-1)) return false;
-					if(!_Api.GetFileInformationByHandle(h, out var k)) return false;
+				using(var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, null, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS)) {
+					if(h.IsInvalid) return false;
+					if(!Api.GetFileInformationByHandle(h, out var k)) return false;
 					fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
 					fileId.FileIndex = (long)((ulong)k.nFileIndexHigh << 32 | k.nFileIndexLow);
 					return true;
-				}
-				finally {
-					if(h != (IntPtr)(-1)) Api.CloseHandle(h);
 				}
 			}
 

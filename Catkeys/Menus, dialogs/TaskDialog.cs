@@ -519,8 +519,8 @@ namespace Catkeys
 			/// </summary>
 			internal unsafe void MarshalFreeButtons(ref TASKDIALOGCONFIG c)
 			{
-				Marshal.FreeHGlobal((IntPtr)c.pButtons);
-				Marshal.FreeHGlobal((IntPtr)c.pRadioButtons);
+				Util.NativeHeap.Free(c.pButtons);
+				Util.NativeHeap.Free(c.pRadioButtons);
 				c.pButtons = null; c.pRadioButtons = null;
 				c.cButtons = 0; c.cRadioButtons = 0;
 			}
@@ -531,9 +531,9 @@ namespace Catkeys
 				int n = a == null ? 0 : a.Count;
 				nButtons = n;
 				if(n == 0) return null;
-				int nba = n * Marshal.SizeOf(typeof(TASKDIALOG_BUTTON)), nb = nba;
+				int nba = n * sizeof(TASKDIALOG_BUTTON), nb = nba;
 				foreach(var v in a) nb += (v.s.Length + 1) * 2;
-				var r = (TASKDIALOG_BUTTON*)Marshal.AllocHGlobal(nb);
+				var r = (TASKDIALOG_BUTTON*)Util.NativeHeap.Alloc(nb);
 				char* s = (char*)((byte*)r + nba);
 				for(int i = 0; i < n; i++) {
 					var v = a[i];
@@ -995,6 +995,9 @@ namespace Catkeys
 				if(_IsEdit) _EditControlCreate();
 
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
+
+				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
+				Time.SetTimer(1, true, tt => _dlg.ShowLL(true)); //use timer because at this time still invisible always
 
 				e = Created;
 				break;

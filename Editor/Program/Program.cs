@@ -42,9 +42,6 @@ static class Program
 		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
 
 
-		//TODO: why Output.Write causes Xml assembly to load?
-
-
 		//TaskDialog.Show("test");
 
 
@@ -111,52 +108,20 @@ static class Program
 	static void Main(string[] args)
 	{
 		try {
-			//Task.Run(() => { while(true) { Thread.Sleep(100); GC.Collect(); } });
-
-			Output.Clear();
 			//Test(); return;
 			//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
 			//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
 			//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
+
 			Perf.First();
-			//var p = new Perf.Inst(true);
 
 			if(CommandLine.OnProgramStarted(args)) return;
 
-#if true
-			//Run some code in other thread, to make it faster later in main thread.
-			if(Environment.ProcessorCount > 1) {
-				//if(false) { //TODO: currently the init code is too fast...
-				var t = new Thread(() =>
-					{
-						//Control.BackColor first time takes 15 ms here, 9 ms in main thread where actually used.
-						//However this does not make the app load faster. Maybe slightly slower.
-						//var c = new Splitter(); c.BackColor = Color.DarkBlue; c.Dispose();
-						//p.Next(); //15
+			OutputServer.NoNewline = true;
+			OutputServer.Start();
 
-						//Accessing .NET resources and creating imagelist first time takes 50-70 ms...
-						EResources.Init();
-						//p.Next(); //60 with resources (now 45 *), 30 with imagelist png file (now 13 *), 14 if c.BackColor used above
-						//* after updating Windows 10 to 14986 and ngening all used .NET assemblies everything starts much faster, and program starts almost 2 times faster!
+			//Task.Run(() => { while(true) { Thread.Sleep(100); GC.Collect(); } });
 
-						//var m = new ToolStrip();
-						//m.Items.Add("a");
-						////m.Show();
-						//var h = m.Handle;
-						//m.Dispose();
-
-						//p.Write();
-						//Print(1);
-					});
-				//t.SetApartmentState(ApartmentState.STA);
-				t.Start();
-
-				//Thread.Sleep(50);
-			} else {
-				EResources.Init();
-				//p.NW();
-			}
-#endif
 			Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 			Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
@@ -169,10 +134,13 @@ static class Program
 
 			var form = new EForm();
 			Application.Run(form);
+
+			OutputServer.Stop();
 		}
 		catch(Exception e) { Print(e); }
 	}
 
+	public static Output.Server OutputServer = new Output.Server(true);
 	public static ProgramSettings Settings;
 	public static EForm MainForm;
 

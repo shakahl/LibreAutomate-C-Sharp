@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
 
@@ -788,7 +789,7 @@ namespace Catkeys
 				Debug.Assert(Size == INPUTMOUSE.Size);
 			}
 
-			public static readonly int Size = Marshal.SizeOf(typeof(INPUTKEY));
+			public static readonly int Size = sizeof(INPUTKEY);
 
 			public const uint CatkeysExtraInfo = 0xA1427fa5;
 			const int INPUT_KEYBOARD = 1;
@@ -830,7 +831,7 @@ namespace Catkeys
 				}
 			}
 
-			public static readonly int Size = Marshal.SizeOf(typeof(INPUTMOUSE));
+			public static readonly int Size = sizeof(INPUTMOUSE);
 
 			public const uint CatkeysExtraInfo = 0xA1427fa5;
 			const int INPUT_MOUSE = 0;
@@ -979,6 +980,20 @@ namespace Catkeys
 		[DllImport("user32.dll", EntryPoint = "CharLowerBuffW")]
 		internal static unsafe extern int CharLowerBuff(char* lpsz, int cchLength);
 
+		//[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int wsprintfW(char* lpOut1024, string lpFmt, int i, string s);
+		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int wsprintfW(char* lpOut1024, string lpFmt, __arglist);
+
+		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+		internal static extern int wsprintfA(byte* lpOut1024, string lpFmt, __arglist);
+
+		//these are more difficult to use. For each case need to declare struct which must be blittable, ie cannot contain managed string etc. Then better for each case to declare API overload.
+		//[DllImport("user32.dll")]
+		//internal static extern int wvsprintfW(char* lpOut1024, string lpFmt, void* arglist);
+
+		//[DllImport("user32.dll", CharSet = CharSet.Ansi)]
+		//internal static extern int wvsprintfA(byte* lpOut1024, string lpFmt, void* arglist);
 
 
 
@@ -1089,7 +1104,7 @@ namespace Catkeys
 		internal static extern int GetCurrentProcessId();
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES* lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
+		internal static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
 		//[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
 		//internal static extern IntPtr OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
@@ -1151,6 +1166,7 @@ namespace Catkeys
 		internal const uint STANDARD_RIGHTS_WRITE = READ_CONTROL;
 		internal const uint STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
 		internal const uint STANDARD_RIGHTS_ALL = 0x001F0000;
+		internal const uint TIMER_MODIFY_STATE = 0x2;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
@@ -1290,6 +1306,9 @@ namespace Catkeys
 			public static implicit operator long(FILETIME ft) { return (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); } //in Release faster than *(long*)&ft
 		}
 
+		[DllImport("kernel32.dll")]
+		internal static extern void GetSystemTimeAsFileTime(out long lpSystemTimeAsFileTime);
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
 
@@ -1318,6 +1337,175 @@ namespace Catkeys
 
 		[DllImport("kernel32.dll")]
 		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, char* lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar, int* lpUsedDefaultChar);
+
+		internal struct STARTUPINFO
+		{
+			public uint cb;
+			public IntPtr lpReserved;
+			public IntPtr lpDesktop;
+			public IntPtr lpTitle;
+			public uint dwX;
+			public uint dwY;
+			public uint dwXSize;
+			public uint dwYSize;
+			public uint dwXCountChars;
+			public uint dwYCountChars;
+			public uint dwFillAttribute;
+			public uint dwFlags;
+			public ushort wShowWindow;
+			public ushort cbReserved2;
+			public IntPtr lpReserved2;
+			public IntPtr hStdInput;
+			public IntPtr hStdOutput;
+			public IntPtr hStdError;
+		}
+
+		[DllImport("kernel32.dll", EntryPoint = "GetStartupInfoW")]
+		internal static extern void GetStartupInfo(out STARTUPINFO lpStartupInfo);
+
+		internal const uint FILE_READ_DATA = 0x1;
+		internal const uint FILE_LIST_DIRECTORY = 0x1;
+		internal const uint FILE_WRITE_DATA = 0x2;
+		internal const uint FILE_ADD_FILE = 0x2;
+		internal const uint FILE_APPEND_DATA = 0x4;
+		internal const uint FILE_ADD_SUBDIRECTORY = 0x4;
+		internal const uint FILE_CREATE_PIPE_INSTANCE = 0x4;
+		internal const uint FILE_READ_EA = 0x8;
+		internal const uint FILE_WRITE_EA = 0x10;
+		internal const uint FILE_EXECUTE = 0x20;
+		internal const uint FILE_TRAVERSE = 0x20;
+		internal const uint FILE_DELETE_CHILD = 0x40;
+		internal const uint FILE_READ_ATTRIBUTES = 0x80;
+		internal const uint FILE_WRITE_ATTRIBUTES = 0x100;
+		internal const uint FILE_ALL_ACCESS = 0x1F01FF;
+		internal const uint FILE_GENERIC_READ = 0x120089;
+		internal const uint FILE_GENERIC_WRITE = 0x120116;
+		internal const uint FILE_GENERIC_EXECUTE = 0x1200A0;
+
+		internal const int CREATE_NEW = 1;
+		internal const int CREATE_ALWAYS = 2;
+		internal const int OPEN_EXISTING = 3;
+		internal const int OPEN_ALWAYS = 4;
+		internal const int TRUNCATE_EXISTING = 5;
+
+		internal const uint FILE_SHARE_READ = 0x1;
+		internal const uint FILE_SHARE_WRITE = 0x2;
+		internal const uint FILE_SHARE_DELETE = 0x4;
+		internal const uint FILE_SHARE_ALL = 0x7;
+
+		internal const uint GENERIC_READ = 0x80000000;
+		internal const uint GENERIC_WRITE = 0x40000000;
+
+		//internal const uint FILE_ATTRIBUTE_READONLY = 0x1;
+		//internal const uint FILE_ATTRIBUTE_HIDDEN = 0x2;
+		//internal const uint FILE_ATTRIBUTE_SYSTEM = 0x4;
+		//internal const uint FILE_ATTRIBUTE_DIRECTORY = 0x10;
+		//internal const uint FILE_ATTRIBUTE_ARCHIVE = 0x20;
+		//internal const uint FILE_ATTRIBUTE_DEVICE = 0x40;
+		internal const uint FILE_ATTRIBUTE_NORMAL = 0x80;
+		//internal const uint FILE_ATTRIBUTE_TEMPORARY = 0x100;
+		//internal const uint FILE_ATTRIBUTE_SPARSE_FILE = 0x200;
+		//internal const uint FILE_ATTRIBUTE_REPARSE_POINT = 0x400;
+		//internal const uint FILE_ATTRIBUTE_COMPRESSED = 0x800;
+		//internal const uint FILE_ATTRIBUTE_OFFLINE = 0x1000;
+		//internal const uint FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000;
+		//internal const uint FILE_ATTRIBUTE_ENCRYPTED = 0x4000;
+		//internal const uint FILE_ATTRIBUTE_INTEGRITY_STREAM = 0x8000;
+		//internal const uint FILE_ATTRIBUTE_VIRTUAL = 0x10000;
+		//internal const uint FILE_ATTRIBUTE_NO_SCRUB_DATA = 0x20000;
+		//internal const uint FILE_ATTRIBUTE_EA = 0x40000;
+
+		internal const uint FILE_FLAG_WRITE_THROUGH = 0x80000000;
+		internal const uint FILE_FLAG_OVERLAPPED = 0x40000000;
+		internal const uint FILE_FLAG_NO_BUFFERING = 0x20000000;
+		internal const uint FILE_FLAG_RANDOM_ACCESS = 0x10000000;
+		internal const uint FILE_FLAG_SEQUENTIAL_SCAN = 0x8000000;
+		internal const uint FILE_FLAG_DELETE_ON_CLOSE = 0x4000000;
+		internal const uint FILE_FLAG_BACKUP_SEMANTICS = 0x2000000;
+		internal const uint FILE_FLAG_POSIX_SEMANTICS = 0x1000000;
+		internal const uint FILE_FLAG_SESSION_AWARE = 0x800000;
+		internal const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x200000;
+		internal const uint FILE_FLAG_OPEN_NO_RECALL = 0x100000;
+		internal const uint FILE_FLAG_FIRST_PIPE_INSTANCE = 0x80000;
+		internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
+		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default(IntPtr));
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, out int lpNumberOfBytesWritten, OVERLAPPED* lpOverlapped = null);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, OVERLAPPED* lpOverlapped = null);
+
+		internal struct OVERLAPPED
+		{
+			public LPARAM Internal;
+			public LPARAM InternalHigh;
+
+			[StructLayout(LayoutKind.Explicit)]
+			internal struct TYPE_2
+			{
+				internal struct TYPE_1
+				{
+					public uint Offset;
+					public uint OffsetHigh;
+				}
+				[FieldOffset(0)] public TYPE_1 _1;
+				[FieldOffset(0)] public IntPtr Pointer;
+			}
+			public TYPE_2 _3;
+			public IntPtr hEvent;
+		}
+
+		internal struct BY_HANDLE_FILE_INFORMATION
+		{
+			public uint dwFileAttributes;
+			public FILETIME ftCreationTime;
+			public FILETIME ftLastAccessTime;
+			public FILETIME ftLastWriteTime;
+			public uint dwVolumeSerialNumber;
+			public uint nFileSizeHigh;
+			public uint nFileSizeLow;
+			public uint nNumberOfLinks;
+			public uint nFileIndexHigh;
+			public uint nFileIndexLow;
+		}
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetFileInformationByHandle(SafeFileHandle hFile, out BY_HANDLE_FILE_INFORMATION lpFileInformation);
+
+		internal const int FILE_BEGIN = 0;
+		internal const int FILE_CURRENT = 1;
+		internal const int FILE_END = 2;
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool SetFilePointerEx(SafeFileHandle hFile, long liDistanceToMove, long* lpNewFilePointer, uint dwMoveMethod);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool SetEndOfFile(SafeFileHandle hFile);
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateMailslotW", SetLastError = true)]
+		internal static extern SafeFileHandle CreateMailslot(string lpName, uint nMaxMessageSize, uint lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetMailslotInfo(SafeFileHandle hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, uint* lpReadTimeout = null);
+
+		internal struct SYSTEMTIME
+		{
+			public ushort wYear;
+			public ushort wMonth;
+			public ushort wDayOfWeek;
+			public ushort wDay;
+			public ushort wHour;
+			public ushort wMinute;
+			public ushort wSecond;
+			public ushort wMilliseconds;
+		}
+
+		[DllImport("kernel32.dll")]
+		internal static extern void GetLocalTime(out SYSTEMTIME lpSystemTime);
+
 
 
 
@@ -1414,40 +1602,40 @@ namespace Catkeys
 		[DllImport("advapi32.dll")]
 		internal static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
 
-		internal struct ACL
+		[StructLayout(LayoutKind.Sequential)]
+		internal class SECURITY_ATTRIBUTES :IDisposable
 		{
-			public byte AclRevision;
-			public byte Sbz1;
-			public ushort AclSize;
-			public ushort AceCount;
-			public ushort Sbz2;
-		}
-
-		internal struct SECURITY_DESCRIPTOR
-		{
-			public byte Revision;
-			public byte Sbz1;
-			public ushort Control;
-			public IntPtr Owner;
-			public IntPtr Group;
-			public ACL* Sacl;
-			public ACL* Dacl;
-		}
-
-		internal struct SECURITY_ATTRIBUTES
-		{
-			public uint nLength;
-			public SECURITY_DESCRIPTOR* lpSecurityDescriptor;
+			public int nLength;
+			public void* lpSecurityDescriptor;
 			public int bInheritHandle;
+
+			/// <summary>
+			/// Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
+			/// </summary>
+			public SECURITY_ATTRIBUTES()
+			{
+				nLength = IntPtr.Size + 8;
+				if(!ConvertStringSecurityDescriptorToSecurityDescriptor("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)", 1, out lpSecurityDescriptor)) throw new CatException(0, "SECURITY_ATTRIBUTES");
+			}
+
+			public void Dispose()
+			{
+				if(lpSecurityDescriptor != null) {
+					LocalFree(lpSecurityDescriptor);
+					lpSecurityDescriptor = null;
+				}
+			}
+
+			~SECURITY_ATTRIBUTES() => Dispose();
+
+			public static SECURITY_ATTRIBUTES Common = new SECURITY_ATTRIBUTES();
 		}
 
 		[DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW", SetLastError = true)]
-		internal static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(string StringSecurityDescriptor, uint StringSDRevision, out SECURITY_DESCRIPTOR* SecurityDescriptor, uint* SecurityDescriptorSize = null);
+		internal static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(string StringSecurityDescriptor, uint StringSDRevision, out void* SecurityDescriptor, uint* SecurityDescriptorSize = null);
 
 		//[DllImport("advapi32.dll", EntryPoint = "ConvertSecurityDescriptorToStringSecurityDescriptorW")]
-		//internal static extern bool ConvertSecurityDescriptorToStringSecurityDescriptor(SECURITY_DESCRIPTOR* SecurityDescriptor, uint RequestedStringSDRevision, uint SecurityInformation, out char* StringSecurityDescriptor, out uint StringSecurityDescriptorLen);
-
-
+		//internal static extern bool ConvertSecurityDescriptorToStringSecurityDescriptor(void* SecurityDescriptor, uint RequestedStringSDRevision, uint SecurityInformation, out char* StringSecurityDescriptor, out uint StringSecurityDescriptorLen);
 
 
 

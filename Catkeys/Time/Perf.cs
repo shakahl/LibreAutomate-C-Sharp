@@ -71,6 +71,8 @@ namespace Catkeys
 				if(callFirst) First();
 			}
 
+			//BE CAREFUL: this struct is in shared memory. Max allowed size is 256-32. Currently used 184.
+
 			volatile int _counter;
 			bool _incremental;
 			int _nMeasurements; //used with incremental to display n measurements and average times

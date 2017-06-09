@@ -110,6 +110,7 @@
 				<Edit_Uncomment/>
 				<Edit_HideRegion/>
 				<Edit_SelectAll/>
+				<Edit_Output/>
 			</Edit_Lines>
 			<Edit_View>
 				<Edit_ImagesInCode i="images"/>
@@ -168,9 +169,9 @@
 			<Tools_Portable/>
 			<sep/>
 			<Tools_Output>
-				<Tools_Output_Clear/>
-				<Tools_Output_Copy/>
-				<Tools_Output_FindSelectedText/>
+				<Tools_Output_Clear hkText="M-click"/>
+				<Tools_Output_Copy hkText="Ctrl+C"/>
+				<Tools_Output_FindSelectedText hkText="Ctrl+F"/>
 				<Tools_Output_History/>
 				<sep/>
 				<Tools_Output_LogWindowEvents/>

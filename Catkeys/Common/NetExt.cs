@@ -24,6 +24,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Security; //for XML comments
+using System.Globalization;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -286,6 +287,18 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// If control handle still not created, creates handle.
+		/// Like <see cref="Control.CreateHandle"/>, which is protected.
+		/// Unlike <see cref="Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
+		/// </summary>
+		public static void CreateHandle_(this Control t)
+		{
+			if(!t.IsHandleCreated) {
+				var h = t.Handle;
+			}
+		}
+
+		/// <summary>
 		/// Gets mouse cursor position in client area coordinates.
 		/// </summary>
 		public static Point MouseClientXY_(this Control t)
@@ -489,6 +502,36 @@ namespace Catkeys
 		#endregion
 
 		#region value types
+
+		/// <summary>
+		/// Converts double to string.
+		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
+		/// </summary>
+		public static string ToString_(this double t, string format = null)
+		{
+			return t.ToString(format, NumberFormatInfo.InvariantInfo);
+		}
+
+		/// <summary>
+		/// Converts double to string.
+		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+		/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
+		/// </summary>
+		public static string ToString_(this float t, string format = null)
+		{
+			return t.ToString(format, NumberFormatInfo.InvariantInfo);
+		}
+
+		/// <summary>
+		/// Converts double to string.
+		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+		/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
+		/// </summary>
+		public static string ToString_(this decimal t, string format = null)
+		{
+			return t.ToString(format, NumberFormatInfo.InvariantInfo);
+		}
 
 		/// <summary>
 		/// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.

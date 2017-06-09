@@ -85,7 +85,7 @@ namespace G.Controls
 				x.WriteStartElement("split");
 				if(!IsVerticalSplit) x.WriteAttributeString("hor", "");
 
-				if(_isFraction) x.WriteAttributeString("f", _fraction.ToString());
+				if(_isFraction) x.WriteAttributeString("f", _fraction.ToString_());
 				else if(_isWidth1) x.WriteAttributeString("w1", _width.ToString());
 				else x.WriteAttributeString("w2", _width.ToString());
 
