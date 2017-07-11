@@ -84,8 +84,8 @@ static class CommandLine
 	public static void OnAfterCreatedFormAndOpenedCollection()
 	{
 		try {
-			if(_importCollection != null) MainForm.Model.ImportCollection(_importCollection);
-			else if(_importFiles != null) MainForm.Model.ImportFiles(_importFiles);
+			if(_importCollection != null) Model.ImportCollection(_importCollection);
+			else if(_importFiles != null) Model.ImportFiles(_importFiles);
 		}
 		catch(Exception ex) { Print(ex.Message); }
 	}
@@ -120,14 +120,14 @@ static class CommandLine
 		//Print(id);
 		switch(id) {
 		case 1:
-			MainForm.Model.ImportCollection(s);
+			Model.ImportCollection(s);
 			break;
 		case 2:
-			MainForm.Panels.Files.LoadCollection(s);
+			Panels.Files.LoadCollection(s);
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
-			MainForm.Model.ImportFiles(s.Split('\0'));
+			Model.ImportFiles(s.Split('\0'));
 			break;
 		default:
 			Debug.Assert(false);

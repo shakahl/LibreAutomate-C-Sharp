@@ -1152,6 +1152,7 @@ namespace Catkeys
 				return r;
 			}
 		}
+		//TODO: Need a function to get the visible part of window rect, without the transparent border on Win10. There is API, but don't remember.
 
 		/// <summary>
 		/// Gets width and height.

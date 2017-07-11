@@ -4,6 +4,11 @@
         <name>Catkeys</name>
     </assembly>
     <members>
+        <member name="T:Catkeys.Acc">
+            <summary>
+            TODO
+            </summary>
+        </member>
         <member name="P:Catkeys.Input.IsAlt">
             <summary>
             Returns true if Alt key is pressed.
@@ -22,6 +27,21 @@
         <member name="P:Catkeys.Input.IsWin">
             <summary>
             Returns true if the Windows logo key is pressed (left or right).
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsMouseLeft">
+            <summary>
+            Returns true if mouse left button is pressed.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsMouseRight">
+            <summary>
+            Returns true if mouse right button is pressed.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsMouseMiddle">
+            <summary>
+            Returns true if mouse middle button is pressed.
             </summary>
         </member>
         <member name="M:Catkeys.Input.GetTextCursorRect(Catkeys.RECT@)">
@@ -130,6 +150,11 @@
             Converts part of string to Keys.
             The string should contain single key name, eg "Esc", "A", "=".
             Returns 0 if invalid key name.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Api.PROPVARIANT.Dispose">
+            <summary>
+            Calls PropVariantClear.
             </summary>
         </member>
         <member name="M:Catkeys.Api.SizeOf``1(``0)">
@@ -584,6 +609,155 @@
         </member>
         <member name="F:Catkeys.Native.SMTO_ERRORONEXIT">
             <exclude />
+        </member>
+        <member name="T:Catkeys.ScreenImage">
+            <summary>
+            Captures and finds images on screen.
+            </summary>
+        </member>
+        <member name="M:Catkeys.ScreenImage.Capture(Catkeys.RECT)">
+            <summary>
+            Copies a rectangle of screen pixels to a new Bitmap object.
+            </summary>
+            <param name="r">A rectangle in screen coordinates.</param>
+            <exception cref="T:Catkeys.CatException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
+            <exception cref="T:System.Exception">Exceptions of Image.FromHbitmap.</exception>
+            <remarks>
+            PixelFormat is always Format32bppRgb.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.ScreenImage.Capture(Catkeys.Wnd,Catkeys.RECT)">
+            <summary>
+            Copies a rectangle of window client area pixels to a new Bitmap object.
+            </summary>
+            <param name="w">Window or control.</param>
+            <param name="r">A rectangle in w client area coordinates.</param>
+            <exception cref="T:Catkeys.WndException">Invalid w.</exception>
+            <exception cref="T:Catkeys.CatException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
+            <exception cref="T:System.Exception">Exceptions of Image.FromHbitmap.</exception>
+            <remarks>
+            How this is different from <see cref="M:Catkeys.ScreenImage.Capture(Catkeys.RECT)"/>:
+            1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. 
+            2. If the window is partially or completely transparent, gets non-transparent image.
+            3. Does not work with Windows Store app windows (creates black image) and possibly with some other windows.
+            4. If the window is DPI-scaled, captures its non-scaled view. And r must contain non-scaled coordinates.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.ScreenImage.FindFlags">
+            <summary>
+            <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.Types{Catkeys.Wnd,Catkeys.Acc,System.Drawing.Bitmap},Catkeys.ScreenImage.FindFlags,System.Nullable{Catkeys.RECT},System.Int32,System.Int32)"/> flags.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindFlags.MoveMouse">
+            <summary>
+            Move the mouse to the image.
+            Not used when waiting until image disappears.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindFlags.WaitMouseReleased">
+            <summary>
+            When found, wait until mouse buttons released.
+            It is especially useful when waiting and using flag MoveMouse.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindFlags.ThrowIfNotFound">
+            <summary>
+            Throw CatException exception if not found.
+            Not used when waiting.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindFlags.WindowDC">
+            <summary>
+            Get pixels from window's device context (DC), not from screen DC.
+            Notes:
+            Usually significantly faster.
+            Can get pixels from window parts that are covered by other windows or offscreen. But not from hidden and minimized windows.
+            Does not work on Windows 7 if Aero theme is turned off. Then this flag is ignored.
+            If the window is DPI-scaled, the specified image must be taken from its non-scaled version.
+            Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels taken from these windows/parts are black.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindFlags.AllInstances">
+            <summary>
+            Find all instances of the specified image. Store rectangles in <see cref="F:Catkeys.ScreenImage.FindResult.a"/> or <see cref="F:Catkeys.ScreenImage.FindResult.a2"/>; uses a2 if multiple images are specified.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindFlags.AllMustExist">
+            <summary>
+            When the image argument specifies multiple images, all they must exist, else result is "not found".
+            </summary>
+        </member>
+        <member name="T:Catkeys.ScreenImage.FindResult">
+            <summary>
+            <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.Types{Catkeys.Wnd,Catkeys.Acc,System.Drawing.Bitmap},Catkeys.ScreenImage.FindFlags,System.Nullable{Catkeys.RECT},System.Int32,System.Int32)"/> results.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindResult.r">
+            <summary>
+            Screen coordinates of the found image.
+            Used in these cases:
+            1. The image argument specifies single image and is not used flag AllInstances.
+            2. The image argument specifies multiple images and are not used flags AllInstances or AllMustExist.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindResult.a">
+            <summary>
+            Screen coordinates of found images.
+            Used in these cases:
+            1. The image argument specifies single image and is used flag AllInstances. Then the array contains all found instances of the image.
+            2. The image argument specifies multiple images and is used flag AllMustExist and not AllInstances. Then the array contains the first found instance of each image.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindResult.a2">
+            <summary>
+            Screen coordinates of found images.
+            Used when the image argument specifies multiple images and is used flag AllInstances.
+            It is array of arrays. The main array matches the specified images. Each indice - array containing rectangles of all found instances of that image, or null if not found.
+            </summary>
+        </member>
+        <member name="F:Catkeys.ScreenImage.FindResult.index">
+            <summary>
+            0 if not found, 1 or greater if found.
+            When the image argument specifies multiple images, and flag AllMustExist not used, this is the 1-based index of the first found image.
+            </summary>
+        </member>
+        <member name="P:Catkeys.ScreenImage.FindResult.Found">
+            <summary>
+            true if the image was found.
+            </summary>
+        </member>
+        <member name="M:Catkeys.ScreenImage.FindResult.op_Implicit(Catkeys.ScreenImage.FindResult)~System.Boolean">
+            <summary>
+            true if the image was found.
+            </summary>
+        </member>
+        <member name="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.Types{Catkeys.Wnd,Catkeys.Acc,System.Drawing.Bitmap},Catkeys.ScreenImage.FindFlags,System.Nullable{Catkeys.RECT},System.Int32,System.Int32)">
+            <summary>
+            Finds the specified image(s) or color(s) on the screen.
+            Returns <see cref="T:Catkeys.ScreenImage.FindResult"/> object containing screen rectangle(s) of found image(s) etc. It also can be used like <c>if(!ScreenImage.Find(...)) Print("not found");</c>.
+            </summary>
+            <param name="image">
+            One or more images or colors to find. Can be:
+            string - path of .png or .bmp file. If not full path, uses <see cref="P:Catkeys.Folders.ThisAppImages"/>.
+            Bitmap - image object in memory.
+            int - color in 0xRRGGBB format. Alpha is not used.
+            IEnumerable of string, Bitmap, int or object - multiple images or colors. Default action - find any. If flag AllMustExist - find all.
+            </param>
+            <param name="wndEtc">
+            Where to search. Can be:
+            Wnd - window or control. The function searches only in the client area.
+            Acc - accessible object.
+            Bitmap - another image.
+            </param>
+            <param name="flags"></param>
+            <param name="r">A rectangle in wndEtc where to search. If null (default), searches in whole wndEtc rectangle.</param>
+            <param name="colorDiff">Maximal color difference. Allows to find on-screen images that have slightly different colors than the specified image. Can be 0 - 255, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
+            <param name="skip">Number of matching image instances to skip. Use when there are several matching image instances in the search area and you need not the first one.</param>
+            <exception cref="T:System.ArgumentException">An argument is of unsupported type or is/contains a null/empty/invalid string/collection/Bitmap/etc.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, Bitmap.LockBits.</exception>
+            <exception cref="T:Catkeys.WndException">Invalid window (the wndEtc argument).</exception>
+            <exception cref="T:Catkeys.CatException">Something failed.</exception>
+            <exception cref="T:Catkeys.NotFoundException">Not found, when used flag ThrowIfNotFound.</exception>
         </member>
         <member name="T:Catkeys.Files">
             <summary>
@@ -2503,6 +2677,21 @@
         <member name="P:Catkeys.WndException.Message">
             <summary> Gets error message. </summary>
         </member>
+        <member name="T:Catkeys.NotFoundException">
+            <summary>
+            Functions that search for an object can throw this exception when not found.
+            </summary>
+        </member>
+        <member name="M:Catkeys.NotFoundException.#ctor">
+            <summary>
+            Sets Message = "Not found.".
+            </summary>
+        </member>
+        <member name="M:Catkeys.NotFoundException.#ctor(System.String)">
+            <summary>
+            Sets Message = "Not found: " + objectName.
+            </summary>
+        </member>
         <member name="T:Catkeys.Types`2">
             <summary>
             Used for method parameters that accept one of two types.
@@ -2822,6 +3011,11 @@
         <member name="F:Catkeys.RECT.Empty">
             <summary>
             RECT with all fields 0.
+            </summary>
+        </member>
+        <member name="M:Catkeys.VARIANT.Dispose">
+            <summary>
+            Calls VariantClear.
             </summary>
         </member>
         <member name="T:Catkeys.Folders">
@@ -4369,13 +4563,6 @@
             The time is local, not UTC.
             </summary>
         </member>
-        <member name="M:Catkeys.Output.DebugWriteToQM2(System.String)">
-            <summary>
-            Sends string to QM2.
-            Was used mostly to debug the Output class itself. Although can instead use console.
-            </summary>
-            <param name="s">If null, clears output.</param>
-        </member>
         <member name="M:Catkeys.Output._CreateFile(System.String,System.Boolean)">
             <summary>
             Calls Api.CreateFile to open file or mailslot.
@@ -4883,11 +5070,6 @@
             Most processes don't have this property and cannot access/automate windows of higher integrity level (High, System, Middle+uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
             Note: High IL (admin) processes also can have this property, therefore IsUIAccess is not the same as IntegrityLevelAndUIAccess==IL.UIAccess (IntegrityLevelAndUIAccess returns IL.UIAccess only for Medium+uiAccess processes; for High+uiAccess processes it returns IL.High). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
             This property is rarely useful. Instead use other properties of this class.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Process_.UacInfo.IsAppContainer">
-            <summary>
-            Returns true if the process is a Windows Store app.
             </summary>
         </member>
         <member name="P:Catkeys.Process_.UacInfo.IntegrityLevel">
@@ -7502,6 +7684,7 @@
             <summary>
             Converts the buffer, which contains native UTF-16 string of n length, to String.
             </summary>
+            <param name="n">String length.</param>
         </member>
         <member name="M:Catkeys.Util.CharBuffer.ToStringFromAnsi(System.Text.Encoding)">
             <summary>
@@ -7513,6 +7696,7 @@
             <summary>
             Converts the buffer, which contains native ANSI string of n length, to String.
             </summary>
+            <param name="n">String length.</param>
             <param name="enc">If null, uses system's default ANSI encoding.</param>
         </member>
         <member name="M:Catkeys.Util.CharBuffer.Compact">
@@ -7837,6 +8021,7 @@
             <summary>
             Calls <see cref="M:Catkeys.Util.MemoryBitmap.Create(System.Int32,System.Int32)"/>.
             </summary>
+            <exception cref="T:Catkeys.CatException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
         </member>
         <member name="M:Catkeys.Util.MemoryBitmap.Dispose">
             <summary>
@@ -7966,11 +8151,6 @@
         <member name="F:Catkeys.Util.TypeSize`1.Size">
             <summary>
             Gets T type size.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibDebug">
-            <summary>
-            Functions useful when testing and debugging.
             </summary>
         </member>
         <member name="T:Catkeys.Util.Dpi">
@@ -10424,8 +10604,7 @@
         </member>
         <member name="P:Catkeys.Wnd.IsWindows10StoreApp">
             <summary>
-            Returns non-zero if this window is a Windows 10 Store app window.
-            Returns 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+            Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
             </summary>
             <seealso cref="M:Catkeys.Wnd.Misc.GetWindowsStoreAppId(Catkeys.Wnd,System.Boolean,System.Boolean)"/>
         </member>

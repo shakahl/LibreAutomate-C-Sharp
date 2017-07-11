@@ -49,13 +49,13 @@
 			<File_Rename hkText="F2"/>
 			<File_Delete i="delete" hkText="Delete"/>
 			<File_Properties t="Properties..." i="properties" hk="Ctrl+P"/>
-			<File_OpenClose>
+			<File_OpenClose t="Open/Close">
 				<File_Open/>
 				<File_OpenInNewWindow/>
 				<File_OpenInDefaultApp/>
 				<File_SelectInExplorer/>
 				<sep/>
-				<File_Close/>
+				<File_Close hk="Ctrl+F4" hkText="M-click"/>
 				<File_CloseAll/>
 				<File_CollapseFolders/>
 				<sep/>

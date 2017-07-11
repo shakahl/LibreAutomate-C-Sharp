@@ -81,6 +81,8 @@ namespace Catkeys
 	/// }
 	/// ]]></code>
 	/// </example>
+	[DebuggerStepThrough]
+	[StructLayout(LayoutKind.Auto)]
 	public struct Types<T1, T2>
 	{
 		/// <summary> Value type. 1 if T1 (v1 is valid), 2 if T2 (v2 is valid), 0 if unassigned (unlikely). </summary>
@@ -130,6 +132,7 @@ namespace Catkeys
 	/// Used for method parameters that accept one of three types.
 	/// More info: <see cref="Types{T1, T2}"/>.
 	/// </summary>
+	[DebuggerStepThrough]
 	[StructLayout(LayoutKind.Auto)]
 	public struct Types<T1, T2, T3>
 	{
@@ -163,6 +166,8 @@ namespace Catkeys
 	/// Used for method parameters that accept one of four types.
 	/// More info: <see cref="Types{T1, T2}"/>.
 	/// </summary>
+	[DebuggerStepThrough]
+	[StructLayout(LayoutKind.Auto)]
 	public struct Types<T1, T2, T3, T4>
 	{
 		/// <summary> Value type. 1 if T1 (v1 is valid), 2 if T2 (v2 is valid), and so on. 0 if unassigned (unlikely). </summary>
@@ -201,6 +206,7 @@ namespace Catkeys
 	/// Has implicit conversion operators: from Wnd and from Control.
 	/// Often used for function parameters that support both these types. You can pass Control or Wnd variables to such functions directly.
 	/// </summary>
+	[DebuggerStepThrough]
 	public class WndOrControl
 	{
 		/// <summary>
@@ -474,22 +480,18 @@ namespace Catkeys
 		public bool Contains(RECT r2) { return r2.left >= left && r2.top >= top && r2.right <= right && r2.bottom <= bottom; }
 
 		/// <summary>
-		/// Returns true if this rectangle and another rectangle intersect.
-		/// </summary>
-		public bool Intersects(RECT r2) { RECT r; return Api.IntersectRect(out r, ref this, ref r2); }
-
-		/// <summary>
-		/// Virtually moves the rectangle:
-		/// left+=dx; right+=dx; top+=dy; bottom+=dy;
-		/// </summary>
-		public void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
-
-		/// <summary>
-		/// Makes the rectangle bigger or smaller:
+		/// Makes this rectangle bigger or smaller:
 		/// left-=dx; right+=dx; top-=dy; bottom+=dy;
-		/// Note: negative coordinates can make the rectangle invalid (right&lt;left or bottom&lt;top).
+		/// Use negative dx/dy to make the rectangle smaller. Note: too big negative dx/dy can make it invalid (right&lt;left or bottom&lt;top).
 		/// </summary>
 		public void Inflate(int dx, int dy) { left -= dx; right += dx; top -= dy; bottom += dy; }
+
+		/// <summary>
+		/// Replaces this rectangle with the intersection of itself and the specified rectangle.
+		/// Returns true if the rectangles intersect.
+		/// If they don't intersect, makes this RECT empty (IsEmpty would return true).
+		/// </summary>
+		public bool Intersect(RECT r2) { return Api.IntersectRect(out this, ref this, ref r2); }
 
 		/// <summary>
 		/// Returns the intersection rectangle of two rectangles.
@@ -498,7 +500,29 @@ namespace Catkeys
 		public static RECT Intersect(RECT r1, RECT r2) { RECT r; Api.IntersectRect(out r, ref r1, ref r2); return r; }
 
 		/// <summary>
-		/// Returns the rectangle that would contain two entire rectangles.
+		/// Returns true if this rectangle and another rectangle intersect.
+		/// </summary>
+		public bool IntersectsWith(RECT r2) { RECT r; return Api.IntersectRect(out r, ref this, ref r2); }
+
+		/// <summary>
+		/// Moves this rectangle by the specified offsets:
+		/// left+=dx; right+=dx; top+=dy; bottom+=dy;
+		/// Negative dx moves to the left. Negative dy moves up.
+		/// </summary>
+		public void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
+
+		/// <summary>
+		/// Replaces this rectangle with the union of itself and the specified rectangle.
+		/// Union is the smallest rectangle that contains two full rectangles.
+		/// Returns true if finally this rectangle is not empty.
+		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
+		/// </summary>
+		public bool Union(RECT r2) { return Api.UnionRect(out this, ref this, ref r2); }
+
+		/// <summary>
+		/// Returns the union of two rectangles.
+		/// Union is the smallest rectangle that contains two full rectangles.
+		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
 		public static RECT Union(RECT r1, RECT r2) { RECT r; Api.UnionRect(out r, ref r1, ref r2); return r; }
 
@@ -540,5 +564,36 @@ namespace Catkeys
 #pragma warning restore 1591 //XML doc
 	}
 #pragma warning restore 660, 661
+
+	[DebuggerStepThrough]
+	internal struct VARIANT :IDisposable
+	{
+		public Api.VARENUM vt; //ushort
+		public ushort _u1;
+		public uint _u2;
+		public LPARAM value;
+		public LPARAM value2;
+		//note: cannot use FieldOffset because of different 32/64 bit size
+
+		public VARIANT(int x) : this() { vt = Api.VARENUM.VT_I4; value = x; }
+		public VARIANT(string x) : this() { vt = Api.VARENUM.VT_BSTR; value = Marshal.StringToBSTR(x); }
+
+		public static implicit operator VARIANT(int x) { return new VARIANT(x); }
+		public static implicit operator VARIANT(string x) { return new VARIANT(x); }
+
+		/// <summary>
+		/// Calls VariantClear.
+		/// </summary>
+		public void Dispose()
+		{
+			_Clear();
+		}
+
+		void _Clear()
+		{
+			if(vt >= Api.VARENUM.VT_BSTR) Api.VariantClear(ref this);
+			else vt = 0; //info: VariantClear just sets vt=0 and does not clear other members
+		}
+	}
 
 }

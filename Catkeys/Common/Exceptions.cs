@@ -200,4 +200,20 @@ namespace Catkeys
 			}
 		}
 	}
+
+	/// <summary>
+	/// Functions that search for an object can throw this exception when not found.
+	/// </summary>
+	public class NotFoundException :Exception
+	{
+		/// <summary>
+		/// Sets Message = "Not found.".
+		/// </summary>
+		public NotFoundException() : base("Not found.") { }
+
+		/// <summary>
+		/// Sets Message = "Not found: " + objectName.
+		/// </summary>
+		public NotFoundException(string objectName) : base("Not found: " + objectName) { }
+	}
 }

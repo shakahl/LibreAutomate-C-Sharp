@@ -276,6 +276,7 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Converts the buffer, which contains native UTF-16 string of n length, to String.
 		/// </summary>
+		/// <param name="n">String length.</param>
 		public string ToString(int n)
 		{
 			Debug.Assert(n <= _n && _p != null);
@@ -296,6 +297,7 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Converts the buffer, which contains native ANSI string of n length, to String.
 		/// </summary>
+		/// <param name="n">String length.</param>
 		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
 		public string ToStringFromAnsi(int n, Encoding enc = null)
 		{

@@ -130,7 +130,7 @@ namespace Aga.Controls.Tree
 				return;
 			}
 
-			if(!Focused)
+			if(!Focused && this.GetStyle(ControlStyles.Selectable))
 				Focus();
 
 			//_search?.EndSearch();

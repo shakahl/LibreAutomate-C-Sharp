@@ -5831,6 +5831,230 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		PrintList(u.IntegrityLevel);
 	}
 
+	static void TestRect()
+	{
+		RECT r1, r2;
+		r1 = new RECT(1, 2, 3, 4, true);
+		r2 = new RECT(2, 3, 4, 5, true);
+		//Print(RECT.Union(r1, r2));
+		//Print(r2.Union(r1)); Print(r2);
+		Print(RECT.Intersect(r1, r2));
+		Print(r2.Intersect(r1)); Print(r2);
+	}
+
+	static void TestScreenImage()
+	{
+		//var b = new Catkeys.Util.MemoryBitmap(-1, -1);
+		//var b = new Catkeys.Util.MemoryBitmap(60000, 10000);
+		//PrintList(b.Hdc, b.Hbitmap);
+
+		//Wnd.Find("app -*").Activate();Sleep(100);
+		//var w = Wnd.Find("app -*");
+		//var w = Wnd.Find("Catkeys -*");
+
+		//var s1 = Folders.Temp + "test.bmp";
+		//var s2 = Folders.Temp + "test.png";
+		////ScreenImage.Capture(new RECT(100, 30, 100, 100, true), s);
+		////using(var b = ScreenImage.Capture(new RECT(100, 30, 100, 100, true))) {
+		//using(var b = ScreenImage.Capture(w, new RECT(100, 30, 100, 100, true))) {
+		//	//var b = b0.Clone(new Rectangle(0, 0, b0.Width, b0.Height), PixelFormat.Format24bppRgb);
+		//	Print(b.PixelFormat);
+		//	//b.Save()
+		//	b.Save(s1, ImageFormat.Bmp);
+		//	b.Save(s2, ImageFormat.Png);
+		//	//b.Dispose();
+		//}
+		//Files.GetProperties(s1, out var p1);
+		//Files.GetProperties(s2, out var p2);
+		//PrintList(p1.Size, p2.Size);
+		////return;
+		//Shell.Run(s1);
+		//Shell.Run(s2);
+
+		//var r = new RECT(30, 30, 16, 16, true);
+		//using(var b = ScreenImage.Capture(w, r)) {
+		//	//using(var b = Image.FromFile(s) as Bitmap) {
+		//	Print(b.PixelFormat);
+
+		//	r.Offset(-r.left, -r.top);
+		//	var k = b.LockBits(r, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+		//	PrintList(k.Height, k.Width, k.Stride, k.PixelFormat, k.Scan0);
+
+		//	b.UnlockBits(k);
+
+		//	k = b.LockBits(r, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+		//	PrintList(k.Height, k.Width, k.Stride, k.PixelFormat, k.Scan0);
+
+		//	b.UnlockBits(k);
+		//}
+
+		//foreach(var f in Files.EnumDirectory(Folders.ProgramFiles, Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+		//	if(f.IsDirectory || !(f.Name.EndsWith_(".png", true))) continue;
+		//	//Print(f.FullPath);
+
+		//	PixelFormat pf = 0;
+		//	Perf.First();
+		//	using(var b = Image.FromFile(f.FullPath) as Bitmap) {
+		//		//PrintList(b.PixelFormat, f.Name);
+
+		//		Perf.Next();
+		//		pf = b.PixelFormat;
+		//		//if(pf != PixelFormat.Format24bppRgb) continue;
+
+		//		var t = b;
+		//		//if(pf != PixelFormat.Format24bppRgb) {
+		//		//	t = b.Clone(new Rectangle(0, 0, b.Width, b.Height), PixelFormat.Format24bppRgb);
+		//		//	Perf.Next();
+		//		//}
+		//		var k = t.LockBits(new Rectangle(0, 0, t.Width, t.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+		//		t.UnlockBits(k);
+		//		Perf.Next();
+		//		if(t != b) t.Dispose();
+		//	}
+		//	Perf.Next();
+		//	Print(Perf.Times + "     " + pf);
+		//}
+
+		Perf.SpinCPU(100);
+
+		var bmp = Folders.ThisAppImages + "big.png";
+		//var bmp = new string[] { Folders.ThisAppImages + "test.png", Folders.ThisApp + "test.png-" };
+		//var bmp = new object[] { Folders.ThisAppImages + "test.png", 0xff5555 };
+
+		Wnd w;
+		//w = Wnd.Misc.WndRoot;
+		//w = Wnd.Find("* Word");
+		//w = Wnd.Find("*- Notepad");
+		//w = Wnd.Find("Quick *");
+		w = Wnd.Find("app - Microsoft Visual Studio", "wndclass_desked_gsk");
+		w = w.Child("Class View", "GenericPane");
+		w.ThrowIf0();
+		//w.GetWindowAndClientRectInScreen(out var r1, out var r2); Print(r1); Print(r2); return;
+		CatException.ThrowIfFailed(Api.AccessibleObjectFromWindow(w, Api.OBJID_WINDOW, ref Api.IID_IAccessible, out var iacc));
+		var acc = new Acc() { a = iacc, elem = 0 };
+		//Print(w.Rect);
+		ScreenImage.FindFlags f = 0;
+		f |= ScreenImage.FindFlags.WindowDC;
+		//f |= ScreenImage.FindFlags.ResultInScreen;
+		int colorDiff = 0;
+		RECT? rect = null;
+		//rect = new RECT(665, 693, 11, 15, true);
+		//rect = new RECT(1691, 28, 203, 238, true);
+		//rect = new RECT(714, 68, 230, 250, true);
+		//rect = new RECT(2, 20, 230, 250, true);
+
+		string sp = null;
+		for(int i = 0; i < 1; i++) {
+			//Perf.SpinCPU(100);
+			Perf.First();
+			//var u=ScreenImage.Find(bmp, w, colorDiff: colorDiff);
+			var u = ScreenImage.Find(bmp, acc, f, colorDiff: colorDiff, r: rect);
+			Perf.Next(); sp += Perf.Times; sp += "\r\n";
+			PrintList(u.Found, u.r);
+			//ScreenImage.Test(bmp, w);
+			//ScreenImage.Test(bmp, w, ScreenImage.FindFlags.WindowDC);
+			//Sleep(100);
+		}
+		Print(sp);
+
+		//using(var b = ScreenImage.Capture(new RECT(100, 30, 100, 100, true))) {
+		//	Print(b.PixelFormat);
+		//}
+		//using(var b = ScreenImage.Capture(Wnd.Find("Calculator"), new RECT(100, 30, 100, 100, true))) {
+		//	Print(b.PixelFormat);
+		//}
+	}
+
+	static void ShowBitmap(Bitmap b)
+	{
+		var testFile = Folders.Temp + "ScreenImage.png";
+		b.Save(testFile);
+		Shell.Run(testFile);
+		Wait(0.5);
+	}
+
+	static void TestScreenImage_InBitmap()
+	{
+		var bmp = Folders.ThisAppImages + "test.png";
+		//var bmp = Image.FromFile(Folders.ThisAppImages + "test.png") as Bitmap;
+		//Shell.Run(bmp);
+		Wnd w;
+		w = Wnd.Find("app - Microsoft Visual Studio", "wndclass_desked_gsk");
+		w.ThrowIf0();
+		using(var area = ScreenImage.Capture(w, w.ClientRect)) {
+			//ShowBitmap(area);
+			var u = ScreenImage.Find(bmp, area, 0);
+			PrintList(u.Found, u.r);
+		}
+	}
+
+	static void TestScreenImage_BottomUp()
+	{
+		//using(var b = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
+		//							   Screen.PrimaryScreen.Bounds.Height,
+		//							   PixelFormat.Format32bppArgb)) {
+
+		//	using(var g = Graphics.FromImage(b)) {
+		//		g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size, CopyPixelOperation.SourceCopy);
+
+		//		_PrintBitmapStride(b);
+		//	}
+		//}
+		//return;
+
+		//var file = Folders.Temp + "test.bmp";
+		//var r = new RECT(0, 0, 1, 4, true);
+		//using(var b = ScreenImage.Capture(r)) {
+		//	_PrintBitmapStride(b);
+		//	//b.Save(file);
+		//	b.Save(file,ImageFormat.Bmp);
+		//}
+		//using(var b = Bitmap.FromFile(file) as Bitmap) {
+		//	_PrintBitmapStride(b);
+		//}
+
+		//Wnd w;
+		//w = Wnd.Find("app - Microsoft Visual Studio", "wndclass_desked_gsk");
+		//w.ThrowIf0();
+		//var r = w.ClientRect;
+		//Perf.First();
+		//for(int i=0; i<7; i++) {
+		//	var b = ScreenImage.Capture(w, r);
+		//	Perf.Next();
+		//}
+		//Perf.Write();
+	}
+
+	static void _PrintBitmapStride(Bitmap b)
+	{
+		var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, b.PixelFormat);
+		PrintList(d.Stride, b.PixelFormat);
+		b.UnlockBits(d);
+	}
+
+	static void TestScreenImage_CaptureExample()
+	{
+		//var file = Folders.Temp + "notepad.png";
+		//Wnd w = Wnd.Find("* Notepad");
+		//w.Activate();
+		//using(var b = ScreenImage.Capture(w.Rect)) { b.Save(file); }
+		//Shell.Run(file);
+
+		var file = Folders.Temp + "notepad.png";
+		Wnd w = Wnd.Find("* Notepad");
+		using(var b = ScreenImage.Capture(w, w.ClientRect)) { b.Save(file); }
+		Shell.Run(file);
+
+		//var file = Folders.Temp + "notepad.png";
+		//Wnd w = Wnd.Find("* Notepad");
+		////w.Activate();
+		//var r = w.Rect; r.Offset(-r.left, -r.top);
+		//using(var b = ScreenImage.Capture(w, r, true)) { b.Save(file); }
+		//Shell.Run(file);
+	}
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -5838,7 +6062,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		Thread.Sleep(100);
 
 		try {
+			//TestScreenImage_BottomUp();
+			//TestScreenImage_InBitmap();
+			//TestScreenImage_CaptureExample();
+			//TestScreenImage();
 
+			//TestRect();
 			//TestLibProcessHandle();
 			//TestInterDomainLock();
 			//TestOutputAllCases();

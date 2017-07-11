@@ -14,7 +14,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
@@ -25,85 +25,106 @@ using Catkeys;
 using static Catkeys.NoClass;
 using static Program;
 
-partial class Edit
+partial class PanelEdit :Control
 {
-	SciCode _c;
-	//SciText _t;
-	FileNode _fn;
+	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note that FilesModel.OpenFiles contains these and possibly more.
+	SciCode _activeDoc;
 
-	public Edit()
+	public PanelEdit()
 	{
-		_c = new SciCode();
-		//_t = _c.ST;
-		_c.Name = _c.AccessibleName = "Code";
-		_SetIsOpenState(false);
+		this.Name = "Code";
+		this.BackColor = SystemColors.AppWorkspace;
 
-		MainForm.Load += _MainForm_Load;
+		_UpdateUI_IsOpen(); //never mind: makes startup slower by ~4ms (later, when enabling toolbars etc)
+
 	}
 
-	private void _MainForm_Load(object sender, EventArgs e)
+	protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
+
+	//public SciControl SC { get => _activeDoc; }
+
+	/// <summary>
+	/// If f is null, closes current file and destroys its control.
+	/// Else hides current file's control, and:
+	///		If f is already open, unhides its control.
+	///		Else loads f text and creates control. If fails, does not change anything.
+	/// </summary>
+	/// <param name="f"></param>
+	public bool Open(FileNode f)
 	{
-		_c.CreateHandle_(); //info: not auto-created because not Visible
+		Debug.Assert(MainForm.IsHandleCreated);
 
-#if TEST
-		MainForm.Model.SetCurrentFile(MainForm.Model.FindFile("form.cs"));
-
-		//Test();
-#endif
-	}
-
-	public SciControl SC { get => _c; }
-
-	public void Open(FileNode f)
-	{
-		_fn = f;
-		string s = null;
-		if(f != null) {
-			try {
-				s = File.ReadAllText(f.FilePath);
-			}
-			catch(Exception ex) { Print(ex.Message); }
-
+		if(f == null) {
+			if(_activeDoc == null) return true;
+			_activeDoc.Dispose();
+			_docs.Remove(_activeDoc);
+			_activeDoc = null;
 		} else {
+			bool focus = _activeDoc != null ? _activeDoc.Focused : false;
+			var doc = _docs.Find(v => v.FN == f);
+			if(doc != null) {
+				if(_activeDoc != null) _activeDoc.Visible = false;
+				_activeDoc = doc;
+				_activeDoc.Visible = true;
+			} else {
+				string s = null;
+				try {
+					s = File.ReadAllText(f.FilePath);
+				}
+				catch(Exception ex) { Print(ex.Message); return false; }
 
+				if(_activeDoc != null) _activeDoc.Visible = false;
+				doc = new SciCode(f);
+				_docs.Add(doc);
+				_activeDoc = doc;
+				this.Controls.Add(doc);
+				//doc.CreateHandle_(); //info: not auto-created because not Visible
+				doc.Text = s;
+				//TODO: maybe temp disable undo collection etc
+				doc.Call(SCI_EMPTYUNDOBUFFER);
+				//doc.Call(SCI_SETSAVEPOINT); //SCI_EMPTYUNDOBUFFER probably does it
+			}
+			if(focus) _activeDoc.Focus();
 		}
-		_c.Text = s;
-		_c.Call(SCI_EMPTYUNDOBUFFER);
-		//_c.Call(SCI_SETSAVEPOINT); //SCI_EMPTYUNDOBUFFER probably does it
 
-		_SetIsOpenState(s != null);
+		bool wasOpen = IsOpen;
+		IsOpen = _activeDoc != null;
+		if(IsOpen != wasOpen) _UpdateUI_IsOpen();
+		return true;
 	}
 
-	public void Save()
+	public bool Save()
 	{
-		if(_fn == null) return;
-		try {
-			File.WriteAllText(_fn.FilePath, _c.Text);
-		}
-		catch(Exception ex) { Print(ex.Message); }
+		if(IsOpen) return _activeDoc.Save();
+		return true;
 	}
 
-	void _SetIsOpenState(bool isOpen)
-	{
-		if(isOpen == _c.Visible) return;
-		_c.Visible = isOpen;
+	public bool IsOpen { get; private set; }
 
-		var t = MainForm.Strips;
+	//public bool IsModified { get => _activeDoc.IsModified; }
+
+	/// <summary>
+	/// Updates all UI (toolbars etc) depending on IsOpen.
+	/// </summary>
+	void _UpdateUI_IsOpen()
+	{
+		bool isOpen = IsOpen;
+
 		//toolbars
-		t.tbEdit.Enabled = isOpen;
-		t.tbRun.Enabled = isOpen;
+		Strips.tbEdit.Enabled = isOpen;
+		Strips.tbRun.Enabled = isOpen;
 		//toolbar buttons
-		t.tbFile.Items["File_Properties"].Enabled = isOpen;
+		Strips.tbFile.Items["File_Properties"].Enabled = isOpen;
 		//top-level menu items
-		t.Menubar.Items["Menu_Edit"].Enabled = isOpen;
-		t.Menubar.Items["Menu_Run"].Enabled = isOpen;
+		Strips.Menubar.Items["Menu_Edit"].Enabled = isOpen;
+		Strips.Menubar.Items["Menu_Run"].Enabled = isOpen;
 		//drop-down menu items and submenus
 		//don't disable these because can right-click...
-		//t.ddFile.Items["File_Disable"].Enabled = isOpen;
-		//t.ddFile.Items["File_Rename"].Enabled = isOpen;
-		//t.ddFile.Items["File_Delete"].Enabled = isOpen;
-		//t.ddFile.Items["File_Properties"].Enabled = isOpen;
-		//t.ddFile.Items["File_More"].Enabled = isOpen;
+		//Strips.ddFile.Items["File_Disable"].Enabled = isOpen;
+		//Strips.ddFile.Items["File_Rename"].Enabled = isOpen;
+		//Strips.ddFile.Items["File_Delete"].Enabled = isOpen;
+		//Strips.ddFile.Items["File_Properties"].Enabled = isOpen;
+		//Strips.ddFile.Items["File_More"].Enabled = isOpen;
 	}
 
 	public unsafe void Test()
@@ -148,11 +169,11 @@ partial class Edit
 		//	break;
 		//}
 
-		var o = MainForm.Panels.Output;
+		var o = Panels.Output;
 		//o.Write(@"Three green strips: <image ""C:\Users\G\Documents\Untitled.bmp"">");
 		//Print(_c.Text);
 		Output.Clear();
-		Print(_c.Text);
+		Print(_activeDoc?.Text);
 		//_c.Text = "";
 
 		//Print("one\0two");
@@ -175,8 +196,16 @@ partial class Edit
 
 	class SciCode :SciControl
 	{
-		public SciCode()
+		public readonly FileNode FN;
+
+		public SciCode(FileNode file)
 		{
+			//_edit = edit;
+			FN = file;
+
+			this.Dock = DockStyle.Fill;
+			this.AccessibleName = "Code";
+
 			InitImagesStyle = ImagesStyle.AnyString;
 		}
 
@@ -205,10 +234,17 @@ partial class Edit
 		{
 			switch(e.Button) {
 			case MouseButtons.Right:
-				MainForm.Strips.ddEdit.ShowAsContextMenu_();
+				Strips.ddEdit.ShowAsContextMenu_();
 				break;
 			}
 			base.OnMouseUp(e);
+		}
+
+		protected override void OnSciNotify(ref SCNotification n)
+		{
+			//Print(n.nmhdr.code);
+
+			base.OnSciNotify(ref n);
 		}
 
 		void _SetLexer(LexLanguage lang)
@@ -271,5 +307,21 @@ partial class Edit
 			}
 		}
 		LexLanguage _currentLexer;
+
+		public bool IsModified { get; private set; }
+
+		public bool Save()
+		{
+			if(IsModified) {
+				try {
+					File.WriteAllText(FN.FilePath, this.Text);
+				}
+				catch(Exception ex) {
+					Print(ex.Message);
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 }

@@ -55,7 +55,7 @@ partial class FileNode
 
 		_x.SetAttributeValue("n", name);
 		if(notifyControl) UpdateControl(true);
-		_model.SaveCollectionLater();
+		_model.Save.CollectionLater();
 		return true;
 	}
 
@@ -129,7 +129,7 @@ partial class FileNode
 		}
 		_model.OnNodeInserted(this);
 
-		_model.SaveCollectionLater();
+		_model.Save.CollectionLater();
 	}
 
 	/// <summary>
@@ -234,11 +234,16 @@ partial class FileNode
 	}
 
 	/// <summary>
-	/// Deletes this item and optionally its file.
+	/// Deletes this item and optionally its file. If folder - deletes descendants too.
+	/// Before deleting, calls CloseFile (for descendants too).
 	/// By default does not delete the link target file.
 	/// </summary>
 	public bool FileDelete(bool tryRecycleBin = true, bool doNotDeleteFile = false, bool canDeleteLinkTarget = false)
 	{
+		var e = _x.DescendantsAndSelf().Select(v => FromX(v));
+
+		foreach(var f in e) _model.CloseFile(f);
+
 		if(!doNotDeleteFile && (canDeleteLinkTarget || !IsLink())) {
 			try {
 				Files.Delete(this.FilePath, tryRecycleBin);
@@ -246,15 +251,11 @@ partial class FileNode
 			catch(Exception ex) { Print(ex.Message); return false; }
 		}
 
-		foreach(var v in _x.DescendantsAndSelf()) {
-			var f = FromX(v);
-			if(f == _model.CurrentFile) _model.SetCurrentFile(null);
-			_model.GuidMap.Remove(f.GUID);
-		}
+		foreach(var f in e) _model.GuidMap.Remove(f.GUID);
 		_model.OnNodeRemoved(this);
 		_x.Remove();
 
-		_model.SaveCollectionLater();
+		_model.Save.CollectionLater();
 		return true;
 	}
 

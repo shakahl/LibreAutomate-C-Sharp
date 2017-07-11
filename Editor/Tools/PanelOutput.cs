@@ -67,7 +67,7 @@ class PanelOutput :Control
 		_inInitSettings = true;
 		if(WrapLines) WrapLines = true;
 		if(WhiteSpace) WhiteSpace = true;
-		if(Topmost) MainForm.CheckCmd("Tools_Output_Topmost", true); //see also OnParentChanged, below
+		if(Topmost) Strips.CheckCmd("Tools_Output_Topmost", true); //see also OnParentChanged, below
 		_inInitSettings = false;
 	}
 	bool _inInitSettings;
@@ -82,7 +82,7 @@ class PanelOutput :Control
 			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in SciControl.OnHandleCreated
 			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in SciControl.OnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
-			MainForm.CheckCmd("Tools_Output_WrapLines", value);
+			Strips.CheckCmd("Tools_Output_WrapLines", value);
 		}
 	}
 
@@ -95,7 +95,7 @@ class PanelOutput :Control
 			if(!_inInitSettings) Settings.Set("Tools_Output_WhiteSpace", value);
 			_c.Call(SCI_SETWHITESPACEFORE, 1, 0xFF0080);
 			_c.Call(SCI_SETVIEWWS, value);
-			MainForm.CheckCmd("Tools_Output_WhiteSpace", value);
+			Strips.CheckCmd("Tools_Output_WhiteSpace", value);
 		}
 	}
 
@@ -104,11 +104,11 @@ class PanelOutput :Control
 		get => Settings.Get("Tools_Output_Topmost", false);
 		set
 		{
-			var p = MainForm.PanelManager.GetPanel(this);
+			var p = Panels.PanelManager.GetPanel(this);
 			if(value) p.Floating = true;
 			if(p.Floating) _SetTopmost(value);
 			Settings.Set("Tools_Output_Topmost", value);
-			MainForm.CheckCmd("Tools_Output_Topmost", value);
+			Strips.CheckCmd("Tools_Output_Topmost", value);
 		}
 	}
 
@@ -166,7 +166,7 @@ class PanelOutput :Control
 		{
 			switch(e.Button) {
 			case MouseButtons.Right:
-				MainForm.Strips.ddOutput.ShowAsContextMenu_();
+				Strips.ddOutput.ShowAsContextMenu_();
 				break;
 			}
 			base.OnMouseUp(e);

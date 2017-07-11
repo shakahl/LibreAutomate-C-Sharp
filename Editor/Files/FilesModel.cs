@@ -33,7 +33,10 @@ partial class FilesModel :ITreeModel
 	public readonly XElement Xml;
 	public readonly string CollectionFile;
 	public readonly string FilesDirectory;
+	public readonly string StateFile;
 	public readonly Dictionary<string, FileNode> GuidMap;
+	public readonly List<FileNode> OpenFiles;
+	public readonly AutoSave Save;
 
 	/// <summary>
 	/// 
@@ -46,16 +49,19 @@ partial class FilesModel :ITreeModel
 	{
 		TV = c;
 		CollectionFile = Path_.Normalize(file);
-		this.FilesDirectory = Path_.GetDirectoryPath(CollectionFile, true) + "files";
+		var colDir = Path_.GetDirectoryPath(CollectionFile, true);
+		this.FilesDirectory = colDir + "files";
 		Files.CreateDirectory(this.FilesDirectory);
+		this.StateFile = colDir + "state.xml";
 
 		Xml = XElement.Load(CollectionFile);
 
 		GuidMap = new Dictionary<string, FileNode>();
 		Root = new FileNode(this, Xml, true); //recursively creates whole model tree
 
-		if(TV != null) {
-			_InitOpenSave();
+		if(TV != null) { //null when importing
+			OpenFiles = new List<FileNode>();
+			Save = new AutoSave(this);
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
@@ -71,10 +77,11 @@ partial class FilesModel :ITreeModel
 
 	public void Dispose()
 	{
-		if(TV != null) {
-			//SaveCollectionNowIfDirty(); //owner FilesPanel calls this implicitly. It also calls Dispose.
+		if(Save != null) { //null when importing
+
+			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
+			Save.Dispose();
 			_UninitWatcher();
-			_UninitOpenSave();
 			_UninitClickSelect();
 			_UninitDragDrop();
 			_UninitNodeControls();
@@ -87,67 +94,6 @@ partial class FilesModel :ITreeModel
 	//	GuidMap.Clear();
 	//	OnStructureChanged();
 	//}
-
-	#region open save collection
-
-	void _InitOpenSave()
-	{
-		Timer1s += _program_Timer1s;
-		MainForm.VisibleChanged += _mainForm_VisibleChanged;
-	}
-
-	void _UninitOpenSave()
-	{
-		Timer1s -= _program_Timer1s;
-		MainForm.VisibleChanged -= _mainForm_VisibleChanged;
-	}
-
-	public bool SaveCollectionNow()
-	{
-		_saveAfterS = 0;
-		try {
-			//Print("saving");
-			//Perf.First();
-			Xml.Save(CollectionFile);
-			//Perf.NW();
-			return true;
-		}
-		catch(Exception ex) { //XElement.Save exceptions are undocumented
-			TaskDialog.ShowError("Failed to save", CollectionFile, expandedText: ex.Message);
-			_saveAfterS = 60;
-			return false;
-		}
-	}
-
-	public void SaveCollectionNowIfDirty()
-	{
-		if(_saveAfterS > 0) SaveCollectionNow();
-	}
-
-	public void SaveCollectionLater(int afterS = 5)
-	{
-		if(_saveAfterS < 1 || _saveAfterS > afterS) _saveAfterS = afterS;
-	}
-
-	int _saveAfterS;
-
-	private void _program_Timer1s()
-	{
-		if(_saveAfterS > 0 && --_saveAfterS == 0) SaveCollectionNow();
-	}
-
-	private void _mainForm_VisibleChanged(object sender, EventArgs e)
-	{
-		if(!MainForm.Visible) SaveCollectionNowIfDirty();
-	}
-
-	//info: this is before Dispose
-	//protected override void OnHandleDestroyed(EventArgs e)
-	//{
-	//	DebugPrintFunc();
-	//}
-
-	#endregion
 
 	#region node controls
 
@@ -307,6 +253,8 @@ partial class FilesModel :ITreeModel
 		TV.NodeMouseClick += _TV_NodeMouseClick;
 		TV.SelectionChanged += _TV_SelectionChanged;
 		TV.KeyDown += _TV_KeyDown;
+		TV.Expanded += _TV_Expanded;
+		TV.Collapsed += _TV_Expanded;
 	}
 
 	void _UninitClickSelect()
@@ -314,6 +262,8 @@ partial class FilesModel :ITreeModel
 		TV.NodeMouseClick -= _TV_NodeMouseClick;
 		TV.SelectionChanged -= _TV_SelectionChanged;
 		TV.KeyDown -= _TV_KeyDown;
+		TV.Expanded -= _TV_Expanded;
+		TV.Collapsed -= _TV_Expanded;
 	}
 
 	private void _TV_SelectionChanged(object sender, SelectionReason reason)
@@ -343,6 +293,8 @@ partial class FilesModel :ITreeModel
 			_SetCurrentFile(f);
 			break;
 		}
+
+		//TODO: don't use this to select file etc. Select only on click and key.
 	}
 
 	//Variable to save selected node received in SelectionChanged event.
@@ -354,7 +306,9 @@ partial class FilesModel :ITreeModel
 
 	private void _TV_NodeMouseClick(object sender, TreeNodeAdvMouseEventArgs e)
 	{
+		//PrintList(e.Button, e.ModifierKeys);
 		_selectOnClick_multi = false;
+		if(e.ModifierKeys != 0) return;
 		var f = e.Node.Tag as FileNode;
 		switch(e.Button) {
 		case MouseButtons.Left:
@@ -369,26 +323,84 @@ partial class FilesModel :ITreeModel
 			//_ItemRightClicked(f);
 			TV.BeginInvoke(new Action(() => _ItemRightClicked(f)));
 			break;
+		case MouseButtons.Middle:
+			CloseFile(f);
+			break;
 		}
+	}
+
+	/// <summary>
+	/// Closes an open file.
+	/// If f is open, closes it.
+	/// Saves if need, removes from OpenItems, deselects in treeview.
+	/// When closing current file, does not select another.
+	/// </summary>
+	/// <param name="f">Can be any item or null. Does nothing if it is null, folder or not open.</param>
+	public void CloseFile(FileNode f)
+	{
+		if(f == null) return;
+
+		if(f == _currentFile) _SetCurrentFile(null);
+		else if(OpenFiles.Remove(f)) {
+			Panels.Open.UpdateList();
+			Panels.Open.UpdateCurrent(_currentFile);
+			Save.StateLater();
+		} else return;
+
+		SelectDeselectItem(f, false); //else cannot click-open again
 	}
 
 	FileNode _currentFile;
 	bool _disableSetCurrentFile;
 
+	/// <summary>
+	/// Closes current file in editor, saves its text.
+	/// If f is not null, opens it in editor, adds to OpenFiles.
+	/// Sets _currentFile, saves state, updates UI.
+	/// </summary>
+	/// <param name="f">
+	/// Can be any.
+	/// Does nothing if f is folder or f==_currentFile or _disableSetCurrentFile==true.
+	/// If null, closes current and removes from OpenFiles.</param>
 	void _SetCurrentFile(FileNode f)
 	{
 		if(_disableSetCurrentFile && _currentFile != null) return;
 		if(f == _currentFile) return;
 		//Print(f);
-		if(f != null && f.IsFolder) {
-		} else {
-			MainForm.Code.Open(f);
+		if(f != null && f.IsFolder) return;
 
-			var sfPrev = _currentFile;
-			_currentFile = f;
-			if(sfPrev != null) TV.UpdateNode(sfPrev.TreeNodeAdv);
-			if(f != null) TV.UpdateNode(f.TreeNodeAdv);
+		Save.TextNowIfNeed();
+		if(!Panels.Editor.Open(f)) {
+			if(OpenFiles.Remove(f)) {
+				Panels.Open.UpdateList();
+				Save.StateLater();
+			}
+			return;
 		}
+
+		var fPrev = _currentFile;
+		_currentFile = f;
+
+		if(fPrev != null) TV.UpdateNode(fPrev.TreeNodeAdv);
+
+		if(f != null) {
+			TV.UpdateNode(f.TreeNodeAdv);
+
+			var of = OpenFiles;
+			int iLast = of.Count - 1;
+			if(!(iLast >= 0 && of[iLast] == f)) {
+				of.Remove(f);
+				of.Add(f);
+				Panels.Open.UpdateList();
+			}
+		} else {
+			OpenFiles.Remove(fPrev);
+			Panels.Open.UpdateList();
+		}
+
+		Panels.Open.UpdateCurrent(f);
+
+		Save.StateLater();
 	}
 
 	/// <summary>
@@ -406,15 +418,31 @@ partial class FilesModel :ITreeModel
 	/// <param name="doNotChangeSelection"></param>
 	public void SetCurrentFile(FileNode f, bool doNotChangeSelection = false)
 	{
-		if(!doNotChangeSelection && f != null) TV.SelectedNode = f.TreeNodeAdv;
+		if(!doNotChangeSelection && f != null) {
+			_disableSetCurrentFile = true;
+			f.SelectSingle();
+			_disableSetCurrentFile = false;
+		}
 		if(_currentFile != f) _SetCurrentFile(f);
 	}
 
 	public FileNode[] SelectedItems { get => TV.SelectedNodes.Select(tn => tn.Tag as FileNode).ToArray(); }
 
+	/// <summary>
+	/// Selects or deselects item in treeview. Does not set current file etc. Does not deselect others.
+	/// </summary>
+	/// <param name="f"></param>
+	/// <param name="select"></param>
+	public void SelectDeselectItem(FileNode f, bool select)
+	{
+		_disableSetCurrentFile = true; //note: even when deselecting, if there is single selected item left, would set current file
+		f.TreeNodeAdv.IsSelected = select;
+		_disableSetCurrentFile = false;
+	}
+
 	void _ItemRightClicked(FileNode f)
 	{
-		var m = MainForm.Strips.ddFile;
+		var m = Strips.ddFile;
 
 		ToolStripDropDownClosedEventHandler onClosed = null;
 		onClosed = (sender, e) =>
@@ -432,9 +460,15 @@ partial class FilesModel :ITreeModel
 	}
 	Catkeys.Util.MessageLoop _msgLoop = new Catkeys.Util.MessageLoop();
 
+	private void _TV_Expanded(object sender, TreeViewAdvEventArgs e)
+	{
+		if(e.Node.Level == 0) return;
+		Save.StateLater();
+	}
+
 	#endregion
 
-	#region hotkeys, new, delete, cut, copy, paste
+	#region hotkeys, new, delete, open/close, cut/copy/paste
 
 	private void _TV_KeyDown(object sender, KeyEventArgs e)
 	{
@@ -495,9 +529,9 @@ partial class FilesModel :ITreeModel
 		string[] paths = null;
 		if(!r.IsChecked) paths = a.Select(f => f.FilePath).ToArray();
 
-		//delete XML
+		//close file (if folder - descendants), delete XML, don't delete files now
 		foreach(var f in a) {
-			f.FileDelete(true, true); //and calls SaveCollectionLater
+			f.FileDelete(true, true); //info: and saves everything, now and/or later
 		}
 
 		//delete files
@@ -558,48 +592,58 @@ partial class FilesModel :ITreeModel
 
 	public void SelectedCopyPath(bool full)
 	{
-		var a = SelectedItems; if(a.Length < 1) return;
+		var a = SelectedItems; if(a.Length == 0) return;
 		Clipboard.SetText(string.Join("\r\n", a.Select(f => full ? f.FilePath : f.ItemPath)));
 	}
 
 	/// <summary>
-	/// Opens the selected item (only if 1 item is selected) in our editor or in default app or selects in Explorer.
+	/// Opens the selected item(s) in our editor or in default app or selects in Explorer.
 	/// </summary>
 	/// <param name="how">1 open, 2 open in new window (not impl), 3 open in default app, 4 select in Explorer.</param>
 	public void OpenSelected(int how)
 	{
-		var a = TV.SelectedNodes; if(a.Count != 1) return;
-		var f = a[0].Tag as FileNode;
-		switch(how) {
-		case 1:
-			this.SetCurrentFile(f);
-			break;
-		case 2:
-			//FUTURE
-			break;
-		case 3:
-			Shell.Run(f.FilePath);
-			break;
-		case 4:
-			Shell.SelectFileInExplorer(f.FilePath);
-			break;
+		var a = SelectedItems; if(a.Length == 0) return;
+		foreach(var f in a) {
+			switch(how) {
+			case 1:
+				if(f.IsFolder) f.TreeNodeAdv.Expand();
+				else this.SetCurrentFile(f);
+				break;
+			case 2:
+				if(f.IsFolder) continue;
+				//FUTURE
+				break;
+			case 3:
+				Shell.Run(f.FilePath);
+				break;
+			case 4:
+				Shell.SelectFileInExplorer(f.FilePath);
+				break;
+			}
 		}
 	}
 
 	/// <summary>
-	/// Closes some or all items, or collapses folders.
-	/// partially impl, because now only single item can be open.
+	/// Closes selected or all items, or collapses folders.
+	/// Used to implement menu File -> Open/Close.
 	/// </summary>
-	/// <param name="how">1 close all selected or the current, 2 close all, 3 collapse folders.</param>
-	public void Close(int how)
+	/// <param name="how">1 close selected file(s) and current file, 2 close all, 3 collapse folders.</param>
+	/// <remarks>
+	/// When how is 1: Closes selected files. If there are no selected files, closes current file. Does not collapse selected folders.
+	/// When how is 2: Closes all files and collapses folders.
+	/// </remarks>
+	public void CloseEtc(int how)
 	{
-		//FUTURE
 		switch(how) {
 		case 1:
-			SetCurrentFile(null);
+			bool isSelected = false;
+			foreach(var f in SelectedItems) {
+				if(!f.IsFolder) { CloseFile(f); isSelected = true; }
+			}
+			if(!isSelected) CloseFile(_currentFile);
 			break;
 		case 2:
-			SetCurrentFile(null);
+			foreach(var f in OpenFiles.ToArray()) CloseFile(f);
 			TV.CollapseAll();
 			break;
 		case 3:
@@ -658,7 +702,7 @@ partial class FilesModel :ITreeModel
 			_MultiCopyMove(true, a, target, NodePosition.Inside, true);
 			m.Dispose();
 
-			target.SelectSingle();
+			target.SelectSingle(); //TODO: async, because if rightclicked, will restore selection
 
 			Print($"Info: Imported collection '{collDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
 		}
@@ -778,7 +822,7 @@ partial class FilesModel :ITreeModel
 		}
 		catch(Exception ex) { Print(ex.Message); }
 		finally { TV.EndUpdate(); _disableSetCurrentFile = false; }
-		SaveCollectionLater();
+		Save.CollectionLater();
 
 		void _AddDirToXml(string path, XElement x)
 		{
@@ -882,7 +926,7 @@ partial class FilesModel :ITreeModel
 				switch(TaskDialog.ShowEx("Collection", a[0],
 					"1 Open collection|2 Import collection|0 Cancel",
 					flags: TDFlags.Wider, footerText: GetSecurityInfo(true))) {
-				case 1: Time.SetTimer(1, true, t => MainForm.Panels.Files.LoadCollection(a[0])); break;
+				case 1: Time.SetTimer(1, true, t => Panels.Files.LoadCollection(a[0])); break;
 				case 2: ImportCollection(a[0], target, pos); break;
 				}
 				return;

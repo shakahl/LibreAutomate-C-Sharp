@@ -86,45 +86,48 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cmd\CmdHandlers.cs" />
-    <Compile Include="Edit\Edit.cs" />
+    <Compile Include="Files\Save.cs" />
+    <Compile Include="UI\CmdHandlers.cs" />
+    <Compile Include="Edit\PanelEdit.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Files\_FormNewCollection.cs" />
     <Compile Include="Program\CommandLine.cs" />
-    <Compile Include="Util\ProgramSettings.cs" />
+    <Compile Include="Program\ProgramSettings.cs" />
     <None Include="Default\files\Script 1.cs" />
     <Compile Include="Files\FileNode-file.cs" />
     <Compile Include="Files\FileNode.cs" />
     <Compile Include="Files\FilesModel.cs" />
-    <Compile Include="Panels\PanelFind.cs">
+    <Compile Include="Tools\PanelFind.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panels\PanelOpen.cs">
+    <Compile Include="Tools\PanelOpen.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panels\PanelOutput.cs">
+    <Compile Include="Tools\PanelOutput.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panels\PanelRecent.cs">
+    <Compile Include="Tools\PanelRecent.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panels\PanelRunning.cs">
+    <Compile Include="Tools\PanelRunning.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panels\PanelStatus.cs">
+    <Compile Include="Tools\PanelStatus.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Util\EditorApi.cs" />
-    <Compile Include="Util\EditorUtil.cs" />
+    <Compile Include="Util\EApi.cs" />
+    <Compile Include="Util\EUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
     <Compile Include="Test\TestEditor.cs" />
     <None Include="Properties\CatkeysSN.pfx" />
     <Compile Include="Files\PanelFiles.cs" />
-    <Compile Include="Program\EForm.cs">
+    <Compile Include="UI\EForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Cmd\CmdStrips.cs" />
+    <Compile Include="UI\CmdStrips.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -155,7 +158,9 @@
       <Name>TreeList</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Run\" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="..\scintilla\win32\Release\bin\SciLexer32.dll">
       <Link>SciLexer32.dll</Link>

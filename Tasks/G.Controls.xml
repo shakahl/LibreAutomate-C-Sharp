@@ -291,6 +291,17 @@
         <member name="M:G.Controls.SciControl.#ctor">
             
         </member>
+        <member name="M:G.Controls.SciControl.OnSciNotify(G.Controls.Sci.SCNotification@)">
+            <summary>
+            Raises the SciNotify event.
+            </summary>
+            <param name="n"></param>
+        </member>
+        <member name="E:G.Controls.SciControl.SciNotify">
+            <summary>
+            Occurs when any Scintilla notification is received.
+            </summary>
+        </member>
         <member name="M:G.Controls.SciControl.Call(System.Int32,Catkeys.LPARAM,Catkeys.LPARAM)">
             <summary>
             Calls a Scintilla message to the control.

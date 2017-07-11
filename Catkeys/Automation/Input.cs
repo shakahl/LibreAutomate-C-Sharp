@@ -45,6 +45,21 @@ namespace Catkeys
 		/// </summary>
 		public static bool IsWin { get => Api.GetKeyState(Api.VK_LWIN) < 0 || Api.GetKeyState(Api.VK_RWIN) < 0; }
 
+		/// <summary>
+		/// Returns true if mouse left button is pressed.
+		/// </summary>
+		public static bool IsMouseLeft { get => Api.GetKeyState(Api.VK_LBUTTON) < 0; }
+
+		/// <summary>
+		/// Returns true if mouse right button is pressed.
+		/// </summary>
+		public static bool IsMouseRight { get => Api.GetKeyState(Api.VK_RBUTTON) < 0; }
+
+		/// <summary>
+		/// Returns true if mouse middle button is pressed.
+		/// </summary>
+		public static bool IsMouseMiddle { get => Api.GetKeyState(Api.VK_MBUTTON) < 0; }
+
 		//EditorBrowsableAttribute does not work for Equals and ReferenceEquals in intellisense lists, although correct Options are used.
 		//[EditorBrowsable(EditorBrowsableState.Never)]
 		////[EditorBrowsable(EditorBrowsableState.Advanced)]

@@ -182,8 +182,7 @@ namespace G.Controls
 		unsafe void _NotifyCallback(void* cbParam, ref SCNotification n)
 		{
 			var code = n.nmhdr.code;
-			if(code == NOTIF.SCN_PAINTED) return;
-			//PrintList(code);
+			//if(code != NOTIF.SCN_PAINTED) PrintList(code);
 			switch(code) {
 			case NOTIF.SCN_MODIFIED:
 				_NotifyModified(ref n);
@@ -192,6 +191,7 @@ namespace G.Controls
 				Tags?.LibOnLinkClick(n.position, 0 != (n.modifiers & SCMOD_CTRL));
 				break;
 			}
+			OnSciNotify(ref n);
 		}
 
 		unsafe void _NotifyModified(ref SCNotification n)
@@ -207,13 +207,18 @@ namespace G.Controls
 			//if(0!=(code& MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 		}
 
-		//public delegate void SciEventHandler(SciControl c, ref SCNotification n);
+		/// <summary>
+		/// Raises the SciNotify event.
+		/// </summary>
+		/// <param name="n"></param>
+		protected virtual void OnSciNotify(ref SCNotification n) { SciNotify?.Invoke(this, ref n); }
 
-		//public event SciEventHandler ChangedAnnotation;
+		public delegate void SciEventHandler(SciControl c, ref SCNotification n);
 
-		//#if DEBUG
-		//		public bool Deb { get; set; }
-		//#endif
+		/// <summary>
+		/// Occurs when any Scintilla notification is received.
+		/// </summary>
+		public event SciEventHandler SciNotify;
 
 		/// <summary>
 		/// Calls a Scintilla message to the control.

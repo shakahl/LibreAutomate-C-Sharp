@@ -30,21 +30,6 @@ namespace G.Controls
 	{
 		#region API
 
-		internal struct BITMAPINFOHEADER
-		{
-			public int biSize;
-			public int biWidth;
-			public int biHeight;
-			public ushort biPlanes;
-			public ushort biBitCount;
-			public int biCompression;
-			public int biSizeImage;
-			public int biXPelsPerMeter;
-			public int biYPelsPerMeter;
-			public int biClrUsed;
-			public int biClrImportant;
-		}
-
 		[StructLayout(LayoutKind.Sequential, Pack = 2)]
 		internal struct BITMAPFILEHEADER
 		{
@@ -129,9 +114,9 @@ namespace G.Controls
 				if(mem.Length <= minHS || f->bfType != (((byte)'M' << 8) | (byte)'B') || f->bfOffBits >= mem.Length || f->bfOffBits < minHS)
 					return false;
 
-				BITMAPINFOHEADER* h = (BITMAPINFOHEADER*)(f + 1);
+				Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
 				int siz = h->biSize;
-				if(siz >= sizeof(BITMAPINFOHEADER) && siz <= sizeof(BITMAPV5HEADER) * 2) {
+				if(siz >= sizeof(Api.BITMAPINFOHEADER) && siz <= sizeof(BITMAPV5HEADER) * 2) {
 					x.width = h->biWidth;
 					x.height = h->biHeight;
 					x.bitCount = h->biBitCount;
@@ -362,15 +347,15 @@ namespace G.Controls
 					Api.FillRect(m.Hdc, ref r, GetStockObject(0)); //WHITE_BRUSH
 					if(!DrawIconEx(m.Hdc, 0, 0, hi, siz, siz, 0, Zero, 3)) return null; //DI_NORMAL
 
-					int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+					int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
 					var a = new byte[headersSize + siz * siz * 3];
 					fixed (byte* p = a) {
 						BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)p;
-						BITMAPINFOHEADER* h = (BITMAPINFOHEADER*)(f + 1);
+						Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
 						for(int i = 0; i < headersSize; i++) p[i] = 0;
 						byte* bits = p + headersSize;
-						h->biSize = sizeof(BITMAPINFOHEADER); h->biBitCount = 24; h->biWidth = siz; h->biHeight = siz; h->biPlanes = 1;
-						if(0 == GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
+						h->biSize = sizeof(Api.BITMAPINFOHEADER); h->biBitCount = 24; h->biWidth = siz; h->biHeight = siz; h->biPlanes = 1;
+						if(0 == Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
 						f->bfType = ((byte)'M' << 8) | (byte)'B'; f->bfOffBits = headersSize; f->bfSize = a.Length;
 					}
 					return a;
@@ -389,9 +374,6 @@ namespace G.Controls
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr GetStockObject(int i);
-
-		[DllImport("gdi32.dll")]
-		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, byte* lpvBits, void* lpbmi, uint usage); //BITMAPINFO*
 
 #if false //currently not used
 

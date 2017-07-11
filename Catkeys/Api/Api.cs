@@ -1023,6 +1023,9 @@ namespace Catkeys
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr GetDC(Wnd hWnd);
 
+		//[DllImport("user32.dll", SetLastError = true)]
+		//internal static extern IntPtr GetWindowDC(Wnd hWnd);
+
 		[DllImport("user32.dll")] //note: no SetLastError = true
 		internal static extern int ReleaseDC(Wnd hWnd, IntPtr hDC);
 
@@ -1038,7 +1041,7 @@ namespace Catkeys
 		[DllImport("gdi32.dll", EntryPoint = "GetObjectW")]
 		internal static extern int GetObject(IntPtr h, int c, void* pv);
 
-		[DllImport("gdi32.dll")]
+		[DllImport("gdi32.dll")] //tested: does not set last error
 		internal static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int cx, int cy);
 
 		[DllImport("gdi32.dll")]
@@ -1056,6 +1059,26 @@ namespace Catkeys
 		[DllImport("user32.dll")]
 		internal static extern int FillRect(IntPtr hDC, ref RECT lprc, IntPtr hbr);
 
+		[DllImport("gdi32.dll")] //tested: in some cases does not set last error even if returns false
+		internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
+
+		internal struct BITMAPINFOHEADER
+		{
+			public int biSize;
+			public int biWidth;
+			public int biHeight;
+			public ushort biPlanes;
+			public ushort biBitCount;
+			public int biCompression;
+			public int biSizeImage;
+			public int biXPelsPerMeter;
+			public int biYPelsPerMeter;
+			public int biClrUsed;
+			public int biClrImportant;
+		}
+
+		[DllImport("gdi32.dll")]
+		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, BITMAPINFOHEADER* lpbmi, uint usage);
 
 
 
@@ -1912,10 +1935,20 @@ namespace Catkeys
 
 
 
+		//OLEAUT32
+
+		[DllImport("oleaut32.dll", EntryPoint = "#9", PreserveSig = true)]
+		internal static extern int VariantClear(ref VARIANT pvarg);
+
+
+
+
+
+
 		//OLE32
 
 		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int PropVariantClear(ref PROPVARIANT_LPARAM pvar);
+		internal static extern int PropVariantClear(ref PROPVARIANT pvar);
 
 
 

@@ -49,7 +49,7 @@ partial class PanelFiles :Control
 		//p.Next();
 		//_c.AutoRowHeight = false; _c.RowHeight = 25; //RowHeight ignored if AutoRowHeight true
 		//p.Next();
-		_c.BackgroundImageLayout = ImageLayout.Center;
+		//_c.BackgroundImageLayout = ImageLayout.Center;
 		//_c.DefaultToolTipProvider = null;
 		//_c.GridLineStyle = GridLineStyle.Vertical;
 		//_c.LineColor = SystemColors.ControlDark; //default
@@ -87,8 +87,11 @@ partial class PanelFiles :Control
 	protected override void Dispose(bool disposing)
 	{
 		//DebugPrintFunc();
-		_model?.SaveCollectionNowIfDirty();
-		_model?.Dispose();
+		var m = _model;
+		if(m != null) {
+			m.Save.AllNowIfNeed();
+			m.Dispose();
+		}
 		base.Dispose(disposing);
 	}
 
@@ -260,8 +263,10 @@ partial class PanelFiles :Control
 	{
 		if(collDir == null) collDir = Settings.Get("collection");
 		if(Empty(collDir)) collDir = Folders.ThisAppDocuments + @"Main";
-		g1:
 		var xmlFile = collDir + @"\files.xml";
+		var oldModel = _model;
+		FilesModel m = null;
+		g1:
 		try {
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good. Add parameter createNew. If false, show error if file not found.
 			if(!Files.ExistsAsFile(xmlFile)) {
@@ -270,33 +275,17 @@ partial class PanelFiles :Control
 			}
 
 			if(_model != null) {
-				_model.SaveCollectionNowIfDirty();
+				_model.Save.AllNowIfNeed(); //before SetCurrentFile
 				_model.SetCurrentFile(null);
 			}
 
-			var oldModel = _model;
-			var m = new FilesModel(_c, xmlFile);
+			m = new FilesModel(_c, xmlFile);
 			m.InitNodeControls(_ccIcon, _ccName);
-			_c.Model = _model = m;
-			//_c.SelectedNode = null;
-			oldModel?.Dispose();
-
-			//CONSIDER: unexpand path
-			if(Settings.Set("collection", collDir)) {
-				//add to recent
-				lock(Settings) {
-					var x1 = Settings.XmlOf("recent", true);
-					var x2 = x1.Element_("f", "n", collDir, true);
-					if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-					if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", collDir)));
-				}
-			}
-
-			MainForm.Model = _model;
-			MainForm.Text = "Catkeys - " + collDir;
+			_c.Model = m;
 		}
 		catch(Exception ex) {
-			FilesModel m = null;
+			m?.Dispose();
+			m = null;
 			//Print($"Failed to load '{collDir}'. {ex.Message}");
 			switch(TaskDialog.ShowError("Failed to load collection", collDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
@@ -308,6 +297,24 @@ partial class PanelFiles :Control
 			if(m != null) return m;
 			if(_model == null) Environment.Exit(1);
 		}
+
+		oldModel?.Dispose();
+		Program.Model = _model = m;
+		MainForm.Text = "Catkeys - " + collDir;
+
+		//CONSIDER: unexpand path
+		if(Settings.Set("collection", collDir)) {
+			//add to recent
+			lock(Settings) {
+				var x1 = Settings.XmlOf("recent", true);
+				var x2 = x1.Element_("f", "n", collDir, true);
+				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
+				if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", collDir)));
+			}
+		}
+
+		m.LoadState();
+
 		return _model;
 	}
 

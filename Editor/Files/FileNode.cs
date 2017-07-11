@@ -45,7 +45,7 @@ partial class FileNode
 				var g = Guid.NewGuid();
 				guid = Convert.ToBase64String(g.ToByteArray()).TrimEnd('=').Replace("/", "-");
 				_x.SetAttributeValue("g", guid);
-				_model.SaveCollectionLater();
+				_model.Save?.CollectionLater(); //_model.Save is null when importing this collection
 			}
 			try {
 				_model.GuidMap.Add(guid, this);

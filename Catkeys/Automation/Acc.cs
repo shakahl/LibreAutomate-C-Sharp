@@ -15,24 +15,25 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-//using System.Xml.Linq;
+using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
 using static Catkeys.NoClass;
 
-class PanelOpen :Control
+namespace Catkeys
 {
-	ListView _c;
-
-	public PanelOpen()
+	/// <summary>
+	/// TODO
+	/// </summary>
+	public class Acc
 	{
-		_c = new ListView();
-		_c.BorderStyle = BorderStyle.None;
-		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = this.Name = "Open";
-		this.Controls.Add(_c);
-	}
+		internal Api.IAccessible a;
+		internal int elem;
+	};
 
-	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
+	//internal struct LibAccVariant
+	//{
+
+	//}
 }

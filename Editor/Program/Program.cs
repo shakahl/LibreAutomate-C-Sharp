@@ -18,89 +18,13 @@ using System.Drawing;
 using System.Linq;
 //using System.Configuration;
 using System.Xml.Linq;
+using System.Runtime;
 
 using Catkeys;
 using static Catkeys.NoClass;
 
 static class Program
 {
-	static void Test()
-	{
-		//Process.Start("https://referencesource.microsoft.com/#mscorlib/system/text/stringbuilder.cs,ec674e2123a44860");
-
-		//var xml = "<x><a/><b/><!--comm--><c/><!--comm2--><d/><e/></x>";
-		//XElement x = XElement.Parse(xml).Element("c");
-		//Print(x.PreviousElement_());
-		//Print(x.NextElement_());
-		//Print(x.PreviousNode);
-		//Print(x.NextNode);
-
-		//var a1 = new Action(() => { x.PreviousElement_(); });
-		//var a2 = new Action(() => { x.NextElement_(); });
-		//var a3 = new Action(() => { });
-		//var a4 = new Action(() => { });
-		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
-
-
-		//TaskDialog.Show("test");
-
-
-		//Print(Application.CompanyName);
-		//Print(Application.ProductName);
-		//Print(Application.ProductVersion);
-		//Print(Application.UserAppDataPath);
-		//Print(Application.CommonAppDataPath);
-
-		//PrintList("ThisApp", Folders.ThisApp);
-		//PrintList("ThisAppData", Folders.ThisAppData);
-		//PrintList("ThisAppDataCommon", Folders.ThisAppDataCommon);
-		//PrintList("ThisAppDataLocal", Folders.ThisAppDataLocal);
-		//PrintList("ThisAppDocuments", Folders.ThisAppDocuments);
-		//PrintList("ThisAppTemp", Folders.ThisAppTemp);
-		//PrintList("ThisProcess", Folders.ThisProcess);
-
-		//Perf.Next();
-		////var s = Properties.Settings.Default.Setting;
-		////Perf.Next();
-		//var xml = Properties.Settings.Default.PanelsXML;
-		//Perf.Next();
-		//XmlElement xFirstSplit = xml.SelectSingleNode("panels/split") as XmlElement;
-		//Perf.NW();
-		//Print(xml.InnerXml);
-		//doc.DocumentElement.InnerText = "neew";
-		//Properties.Settings.Default.Save();
-
-		//Print(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoaming).FilePath);
-		//Print(Properties.Settings.Default.Setting);
-		//Properties.Settings.Default.Setting = "kkk";
-		//Properties.Settings.Default.Save();
-
-		//Print(Folders.RoamingAppData);
-		//Print(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData));
-
-		//Print(Folders.ThisApp);
-		//Print(Folders.ThisAppTemp);
-		//Print(Folders.ThisAppDocuments);
-		//Print(Folders.ThisAppData);
-		//Print(Folders.ThisAppDataLocal);
-		//Print(Folders.ThisAppDataCommon);
-
-
-		//Application.Run(new Form1());
-
-		//var f = new Form();
-		//var t = new TextBox();
-		//t.Font = new Font("Segoe UI", 9);
-		//PrintList(t.MaximumSize, t.MinimumSize, t.AutoSize, t.Size);
-		//t.AutoSize = false;
-		////t.MaximumSize = new Size(10000, 10);
-		//f.Height -=3;
-		//PrintList(t.MaximumSize, t.MinimumSize, t.AutoSize, t.Size);
-
-		//f.Controls.Add(t);
-		//f.ShowDialog();
-	}
-
 	/// <summary>
 	/// The main entry point for the application.
 	/// </summary>
@@ -108,12 +32,16 @@ static class Program
 	static void Main(string[] args)
 	{
 		try {
-			//Test(); return;
+			//_Test(); return;
 			//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
 			//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
 			//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
 
 			Perf.First();
+
+			//TODO: test this
+			//ProfileOptimization.SetProfileRoot("Q:\\Profiles\\");
+			//ProfileOptimization.StartProfile("Editor");
 
 			if(CommandLine.OnProgramStarted(args)) return;
 
@@ -132,19 +60,21 @@ static class Program
 
 			Settings = new ProgramSettings();
 
-			var form = new EForm();
-			Application.Run(form);
+			Application.Run(new EForm()); //info: EForm ctor sets Program.MainForm
 
 			OutputServer.Stop();
 		}
 		catch(Exception e) { Print(e); }
 	}
 
-	public static Output.Server OutputServer = new Output.Server(true);
-	public static ProgramSettings Settings;
-	public static EForm MainForm;
+	internal static Output.Server OutputServer = new Output.Server(true);
+	internal static ProgramSettings Settings;
+	internal static EForm MainForm;
+	internal static FilesModel Model;
 
-	public struct Stock
+	internal static event Action Timer1s;
+
+	internal struct Stock
 	{
 		static Stock()
 		{
@@ -156,5 +86,7 @@ static class Program
 		public static Font FontNormal, FontBold;
 	}
 
-	public static event Action Timer1s;
+	static void _Test()
+	{
+	}
 }

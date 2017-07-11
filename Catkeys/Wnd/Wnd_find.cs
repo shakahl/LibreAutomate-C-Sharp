@@ -99,8 +99,7 @@ namespace Catkeys
 					case Wnd owner:
 						_owner = owner;
 						break;
-					default:
-						throw new ArgumentException("Bad type.", nameof(programEtc));
+					default: throw new ArgumentException("Bad type.", nameof(programEtc));
 					}
 					if(isPidTid) {
 						if(pidTid == 0) throw new ArgumentException("Cannot be 0. Can be null.", nameof(programEtc));

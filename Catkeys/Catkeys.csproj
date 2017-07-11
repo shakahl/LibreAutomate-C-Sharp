@@ -81,10 +81,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Automation\Acc.cs" />
     <Compile Include="Automation\Input.cs" />
     <Compile Include="Api\Api COM.cs" />
     <Compile Include="Api\Api public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
+    <Compile Include="Automation\ScreenImage.cs" />
     <Compile Include="Common\ValueTuple.cs" />
     <Compile Include="Files, system\Files.Misc.cs" />
     <Compile Include="Files, system\Shell.Pidl.cs" />

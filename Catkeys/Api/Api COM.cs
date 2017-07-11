@@ -125,20 +125,28 @@ namespace Catkeys
 			[PreserveSig] int GetCurFile(out IntPtr ppszFileName);
 		}
 
+		//see also VARIANT in Struct.cs
+		internal struct PROPVARIANT :IDisposable
+		{
+			public VARENUM vt; //ushort
+			public ushort _u1;
+			public uint _u2;
+			public LPARAM value;
+			public LPARAM value2;
+
+			/// <summary>
+			/// Calls PropVariantClear.
+			/// </summary>
+			public void Dispose()
+			{
+				PropVariantClear(ref this);
+			}
+		}
+
 		internal struct PROPERTYKEY
 		{
 			public Guid fmtid;
 			public uint pid;
-		}
-
-		internal struct PROPVARIANT_LPARAM
-		{
-			public ushort vt;
-			public ushort wReserved1;
-			public ushort wReserved2;
-			public ushort wReserved3;
-			public LPARAM value;
-			public IntPtr _u1;
 		}
 
 		internal static Guid IID_IPropertyStore = new Guid(0x886D8EEB, 0x8CF2, 0x4446, 0x8D, 0x02, 0xCD, 0xBA, 0x1D, 0xBD, 0xCF, 0x99);
@@ -148,55 +156,56 @@ namespace Catkeys
 		{
 			[PreserveSig] int GetCount(out int cProps);
 			[PreserveSig] int GetAt(int iProp, out PROPERTYKEY pkey);
-			[PreserveSig] int GetValue([In] ref PROPERTYKEY key, out PROPVARIANT_LPARAM pv);
-			[PreserveSig] int SetValue([In] ref PROPERTYKEY key, [In] ref PROPVARIANT_LPARAM propvar);
+			[PreserveSig] int GetValue([In] ref PROPERTYKEY key, out PROPVARIANT pv);
+			[PreserveSig] int SetValue([In] ref PROPERTYKEY key, [In] ref PROPVARIANT propvar);
 			[PreserveSig] int Commit();
 		}
 
-		internal struct IMAGEINFO
-		{
-			public IntPtr hbmImage;
-			public IntPtr hbmMask;
-			public int Unused1;
-			public int Unused2;
-			public RECT rcImage;
-		}
+		//internal struct IMAGEINFO
+		//{
+		//	public IntPtr hbmImage;
+		//	public IntPtr hbmMask;
+		//	public int Unused1;
+		//	public int Unused2;
+		//	public RECT rcImage;
+		//}
 
+		//note: this is used in the lib, even if IImageList isn't.
 		internal static Guid IID_IImageList = new Guid(0x46EB5926, 0x582E, 0x4017, 0x9F, 0xDF, 0xE8, 0x99, 0x8D, 0xAA, 0x09, 0x50);
 
-		[ComImport, Guid("46EB5926-582E-4017-9FDF-E8998DAA0950"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		internal interface IImageList
-		{
-			[PreserveSig] int Add(IntPtr hbmImage, IntPtr hbmMask, out int pi);
-			[PreserveSig] int ReplaceIcon(int i, IntPtr hicon, out int pi);
-			[PreserveSig] int SetOverlayImage(int iImage, int iOverlay);
-			[PreserveSig] int Replace(int i, IntPtr hbmImage, IntPtr hbmMask);
-			[PreserveSig] int AddMasked(IntPtr hbmImage, uint crMask, out int pi);
-			[PreserveSig] int Draw(IntPtr pimldp); //ref IMAGELISTDRAWPARAMS
-			[PreserveSig] int Remove(int i);
-			[PreserveSig] int GetIcon(int i, uint flags, out IntPtr picon);
-			[PreserveSig] int GetImageInfo(int i, out IMAGEINFO pImageInfo);
-			[PreserveSig] int Copy(int iDst, [MarshalAs(UnmanagedType.IUnknown)] Object punkSrc, int iSrc, uint uFlags);
-			[PreserveSig] int Merge(int i1, [MarshalAs(UnmanagedType.IUnknown)] Object punk2, int i2, int dx, int dy, [In] ref Guid riid, out IntPtr ppv);
-			[PreserveSig] int Clone([In] ref Guid riid, out IntPtr ppv);
-			[PreserveSig] int GetImageRect(int i, out RECT prc);
-			[PreserveSig] int GetIconSize(out int cx, out int cy);
-			[PreserveSig] int SetIconSize(int cx, int cy);
-			[PreserveSig] int GetImageCount(out int pi);
-			[PreserveSig] int SetImageCount(int uNewCount);
-			[PreserveSig] int SetBkColor(uint clrBk, out uint pclr);
-			[PreserveSig] int GetBkColor(out uint pclr);
-			[PreserveSig] int BeginDrag(int iTrack, int dxHotspot, int dyHotspot);
-			[PreserveSig] int EndDrag();
-			[PreserveSig] int DragEnter(Wnd hwndLock, int x, int y);
-			[PreserveSig] int DragLeave(Wnd hwndLock);
-			[PreserveSig] int DragMove(int x, int y);
-			[PreserveSig] int SetDragCursorImage([MarshalAs(UnmanagedType.IUnknown)] Object punk, int iDrag, int dxHotspot, int dyHotspot);
-			[PreserveSig] int DragShowNolock([MarshalAs(UnmanagedType.Bool)] bool fShow);
-			[PreserveSig] int GetDragImage(out POINT ppt, out POINT pptHotspot, [In] ref Guid riid, out IntPtr ppv);
-			[PreserveSig] int GetItemFlags(int i, out uint dwFlags);
-			[PreserveSig] int GetOverlayImage(int iOverlay, out int piIndex);
-		}
+		//[ComImport, Guid("46EB5926-582E-4017-9FDF-E8998DAA0950"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		//internal interface IImageList
+		//{
+		//	[PreserveSig] int Add(IntPtr hbmImage, IntPtr hbmMask, out int pi);
+		//	[PreserveSig] int ReplaceIcon(int i, IntPtr hicon, out int pi);
+		//	[PreserveSig] int SetOverlayImage(int iImage, int iOverlay);
+		//	[PreserveSig] int Replace(int i, IntPtr hbmImage, IntPtr hbmMask);
+		//	[PreserveSig] int AddMasked(IntPtr hbmImage, uint crMask, out int pi);
+		//	[PreserveSig] int Draw(IntPtr pimldp); //ref IMAGELISTDRAWPARAMS
+		//	[PreserveSig] int Remove(int i);
+		//	[PreserveSig] int GetIcon(int i, uint flags, out IntPtr picon);
+		//	[PreserveSig] int GetImageInfo(int i, out IMAGEINFO pImageInfo);
+		//	[PreserveSig] int Copy(int iDst, [MarshalAs(UnmanagedType.IUnknown)] Object punkSrc, int iSrc, uint uFlags);
+		//	[PreserveSig] int Merge(int i1, [MarshalAs(UnmanagedType.IUnknown)] Object punk2, int i2, int dx, int dy, [In] ref Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int Clone([In] ref Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int GetImageRect(int i, out RECT prc);
+		//	[PreserveSig] int GetIconSize(out int cx, out int cy);
+		//	[PreserveSig] int SetIconSize(int cx, int cy);
+		//	[PreserveSig] int GetImageCount(out int pi);
+		//	[PreserveSig] int SetImageCount(int uNewCount);
+		//	[PreserveSig] int SetBkColor(uint clrBk, out uint pclr);
+		//	[PreserveSig] int GetBkColor(out uint pclr);
+		//	[PreserveSig] int BeginDrag(int iTrack, int dxHotspot, int dyHotspot);
+		//	[PreserveSig] int EndDrag();
+		//	[PreserveSig] int DragEnter(Wnd hwndLock, int x, int y);
+		//	[PreserveSig] int DragLeave(Wnd hwndLock);
+		//	[PreserveSig] int DragMove(int x, int y);
+		//	[PreserveSig] int SetDragCursorImage([MarshalAs(UnmanagedType.IUnknown)] Object punk, int iDrag, int dxHotspot, int dyHotspot);
+		//	[PreserveSig] int DragShowNolock([MarshalAs(UnmanagedType.Bool)] bool fShow);
+		//	[PreserveSig] int GetDragImage(out POINT ppt, out POINT pptHotspot, [In] ref Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int GetItemFlags(int i, out uint dwFlags);
+		//	[PreserveSig] int GetOverlayImage(int iOverlay, out int piIndex);
+		//}
 
 		[ComImport, Guid("00020400-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
 		internal interface IDispatch
@@ -239,6 +248,9 @@ namespace Catkeys
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
 		internal static extern int AccessibleObjectFromWindow(Wnd hwnd, uint dwId, [In] ref Guid riid, out IAccessible ppvObject);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int WindowFromAccessibleObject(IAccessible param1, out Wnd phwnd);
 
 		internal const uint WINEVENT_OUTOFCONTEXT = 0x0;
 		internal const uint WINEVENT_SKIPOWNTHREAD = 0x1;

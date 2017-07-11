@@ -70,7 +70,7 @@ namespace Catkeys
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
 					using(var p = Process_.LibProcessHandle.FromWnd(w)) {
-						if(p!=null) {
+						if(p != null) {
 							var b = Util.CharBuffer.LibCommon; int na = 1000;
 							if(0 == _Api.GetApplicationUserModelId(p, ref na, b.Alloc(na))) appId = b.ToString();
 						}
@@ -78,11 +78,11 @@ namespace Catkeys
 					break;
 				case 2:
 					if(Ver.MinWin10) {
-						Api.IPropertyStore ps; Api.PROPVARIANT_LPARAM v;
+						Api.IPropertyStore ps; Api.PROPVARIANT v;
 						if(0 == Api.SHGetPropertyStoreForWindow(w, ref Api.IID_IPropertyStore, out ps)) {
 							if(0 == ps.GetValue(ref Api.PKEY_AppUserModel_ID, out v)) {
-								if(v.vt == (ushort)Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
-								Api.PropVariantClear(ref v);
+								if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
+								v.Dispose();
 							}
 							Marshal.ReleaseComObject(ps);
 						}

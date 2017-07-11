@@ -55,9 +55,10 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Calls <see cref="Create(int, int)"/>.
 		/// </summary>
+		/// <exception cref="CatException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
 		public MemoryBitmap(int width, int height)
 		{
-			Create(width, height);
+			if(!Create(width, height)) throw new CatException("*create memory bitmap of specified size");
 		}
 
 		/// <summary>
@@ -95,7 +96,7 @@ namespace Catkeys.Util
 		/// </summary>
 		/// <param name="width">Width, pixels.</param>
 		/// <param name="height">Height, pixels.</param>
-		bool Create(int width, int height)
+		public bool Create(int width, int height)
 		{
 			IntPtr dcs = Api.GetDC(Wnd0);
 			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
@@ -109,7 +110,7 @@ namespace Catkeys.Util
 		/// Deletes previous bitmap and DC.
 		/// </summary>
 		/// <param name="hBitmap">Native bitmap handle.</param>
-		void Attach(IntPtr hBitmap)
+		public void Attach(IntPtr hBitmap)
 		{
 			Delete();
 			if(hBitmap != Zero) {
@@ -122,7 +123,7 @@ namespace Catkeys.Util
 		/// Deletes memory DC, clears this variable and returns its bitmap (native bitmap handle).
 		/// The returned bitmap is not selected into a DC. Will need to delete it with API DeleteObject.
 		/// </summary>
-		IntPtr Detach()
+		public IntPtr Detach()
 		{
 			IntPtr bret = _bm;
 			if(_bm != Zero) {
