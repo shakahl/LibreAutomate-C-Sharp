@@ -202,7 +202,7 @@ namespace Catkeys
 		//	[PreserveSig] int DragMove(int x, int y);
 		//	[PreserveSig] int SetDragCursorImage([MarshalAs(UnmanagedType.IUnknown)] Object punk, int iDrag, int dxHotspot, int dyHotspot);
 		//	[PreserveSig] int DragShowNolock([MarshalAs(UnmanagedType.Bool)] bool fShow);
-		//	[PreserveSig] int GetDragImage(out POINT ppt, out POINT pptHotspot, [In] ref Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int GetDragImage(out Point ppt, out Point pptHotspot, [In] ref Guid riid, out IntPtr ppv);
 		//	[PreserveSig] int GetItemFlags(int i, out uint dwFlags);
 		//	[PreserveSig] int GetOverlayImage(int iOverlay, out int piIndex);
 		//}
@@ -237,6 +237,7 @@ namespace Catkeys
 			[PreserveSig] int get_accDefaultAction(object varChild, out string pszDefaultAction);
 			[PreserveSig] int accSelect(int flagsSelect, object varChild);
 			[PreserveSig] int accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, object varChild);
+			//[PreserveSig] int accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, [MarshalAs(UnmanagedType.Struct)] int varChild); //error. Tried to avoid int boxing.
 			[PreserveSig] int accNavigate(int navDir, object varStart, out object pvarEndUpAt);
 			[PreserveSig] int accHitTest(int xLeft, int yTop, out object pvarChild);
 			[PreserveSig] int accDoDefaultAction(object varChild);

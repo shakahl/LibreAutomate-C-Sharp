@@ -50,7 +50,7 @@ namespace Catkeys
 					_timeRemaining = _timePrev = 0;
 					_isTimeout = _throw = false;
 				} else {
-					_timePrev = Time.MillisecondsWithoutSleepTime;
+					_timePrev = Time.MillisecondsWithoutComputerSleepTime;
 					_timeRemaining = (long)(timeoutS * 1000.0);
 					if(_timeRemaining > 0) _throw = true; else { _throw = false; _timeRemaining = -_timeRemaining; }
 					_isTimeout = true;
@@ -67,7 +67,7 @@ namespace Catkeys
 			internal bool IsTimeout()
 			{
 				if(!_isTimeout) return false;
-				var t = Time.MillisecondsWithoutSleepTime;
+				var t = Time.MillisecondsWithoutComputerSleepTime;
 				_timeRemaining -= t - _timePrev;
 				_timePrev = t;
 				if(_timeRemaining > 0) return false;
@@ -86,6 +86,8 @@ namespace Catkeys
 				Thread.Sleep(Period);
 				if(Period < MaxPeriod) Period++;
 				return true;
+
+				//CONSIDER: show warning if after some time there are messages in the queue. Use Api.GetQueueStatus. But be careful, eg maybe the script repeatedly sleeps for 10 ms and then calls doevent.
 			}
 		}
 
@@ -103,13 +105,74 @@ namespace Catkeys
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
 		/// <exception cref="ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the condition callback function.</exception>
-		/// <seealso cref="Time.SystemWaitPrecision"/>
+		/// <seealso cref="Time.SleepPrecision"/>
 		public static bool Condition(double timeoutS, Func<object, bool> condition, object param = null, int minPeriod = 10, int maxPeriod = 200)
 		{
 			if(minPeriod < 1 || maxPeriod < minPeriod) throw new ArgumentException();
 			var to = new _Timeout(timeoutS, minPeriod, maxPeriod);
 			for(;;) {
 				if(condition(param)) return true;
+				if(!to.Sleep()) return false;
+			}
+		}
+
+		/// <summary>
+		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state.
+		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// </summary>
+		/// <param name="timeoutS">
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// </param>
+		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
+		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
+		/// <seealso cref="Input.IsModified"/>
+		public static bool NoModifierKeys(double timeoutS = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
+		{
+			//return WaitFor.Condition(timeoutS, o => !Input.LibIsModifiers(modifierKeys)); //shorter but creates garbage
+			var to = new _Timeout(timeoutS);
+			for(;;) {
+				if(!Input.IsModified(modifierKeys)) return true;
+				if(!to.Sleep()) return false;
+			}
+		}
+
+		/// <summary>
+		/// Waits while some mouse buttons are in pressed state.
+		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// </summary>
+		/// <param name="timeoutS">
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// </param>
+		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
+		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <seealso cref="Mouse.IsPressed(MouseButtons)"/>
+		public static bool NoMouseButtons(double timeoutS = 0.0, MouseButtons buttons= MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		{
+			var to = new _Timeout(timeoutS);
+			for(;;) {
+				if(!Mouse.IsPressed(buttons)) return true;
+				if(!to.Sleep()) return false;
+			}
+		}
+
+		/// <summary>
+		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
+		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// </summary>
+		/// <param name="timeoutS">
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// </param>
+		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
+		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
+		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
+		/// <seealso cref="Input.IsModified"/>
+		public static bool NoModifierKeysAndMouseButtons(double timeoutS = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		{
+			var to = new _Timeout(timeoutS);
+			for(;;) {
+				if(!Input.IsModified(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
 			}
 		}

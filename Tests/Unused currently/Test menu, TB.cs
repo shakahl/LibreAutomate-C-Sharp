@@ -409,10 +409,10 @@ public partial class Test
 		m[".cat", @".cat"] = null;
 		//}
 
-		//Time.SetTimer(1000, true, t => { m.CMS.Close(); });
-		//Time.SetTimer(1000, true, t => { m.CMS.Visible=false; });
-		//Time.SetTimer(1000, true, t => { m.Dispose(); });
-		//Time.SetTimer(1000, true, t => { m.CMS.Dispose(); });
+		//Timer_.After(1000, t => { m.CMS.Close(); });
+		//Timer_.After(1000, t => { m.CMS.Visible=false; });
+		//Timer_.After(1000, t => { m.Dispose(); });
+		//Timer_.After(1000, t => { m.CMS.Dispose(); });
 
 		//m.MultiShow = true;
 		m.Show();
@@ -557,7 +557,7 @@ public partial class Test
 			//	//Print(e.Button); //no right-click event if a context menu assigned
 			//	//if(e.Button == MouseButtons.Right) Wnd.FindFast("QM_Editor").ActivateLL();
 			//	//TestCatMenu(sender as Form);
-			//	Time.SetTimer(100, true, o => TestCatMenu(sender as Form));
+			//	Timer_.After(100, o => TestCatMenu(sender as Form));
 			//};
 
 			TestCatMenu(this);
@@ -617,7 +617,7 @@ public partial class Test
 
 		//with this loop does not show f
 		//Native.MSG u;
-		//while(Api.GetMessage(out u, Wnd0, 0, 0) > 0) {
+		//while(Api.GetMessage(out u, default(Wnd), 0, 0) > 0) {
 		//	Api.TranslateMessage(ref u);
 		//	Api.DispatchMessage(ref u);
 		//}
@@ -634,7 +634,7 @@ public partial class Test
 	//	}
 	//	~TestDtor() { Print("~TestDtor"); }
 
-	//	void Met() { DebugPrintFunc(); }
+	//	void Met() { Debug_.PrintFunc(); }
 
 	//	class ContextMenuStrip_ :ContextMenuStrip
 	//	{
@@ -667,7 +667,7 @@ public partial class Test
 		}
 		~TestDtor() { Print("~TestDtor"); }
 
-		void Met() { DebugPrintFunc(); }
+		void Met() { Debug_.PrintFunc(); }
 
 		class ContextMenuStrip_ :ContextMenuStrip
 		{
@@ -703,7 +703,7 @@ public partial class Test
 
 				//_cat = null;
 
-				DebugPrintFunc();
+				Debug_.PrintFunc();
 
 				((Wnd)Handle).Post(Api.WM_CLOSE);
 
@@ -729,7 +729,7 @@ public partial class Test
 
 		~TestDtor2() { Print("~TestDtor2"); }
 
-		void Met() { DebugPrintFunc(); }
+		void Met() { Debug_.PrintFunc(); }
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -743,10 +743,10 @@ public partial class Test
 		m.MultiShow = true;
 		//m.MouseClosingDistance = 2000;
 		//var k = new ContextMenu(); k.MenuItems.Add("context"); m.CMS.ContextMenu = k;
-		//Time.SetTimer(2000, true, t => m.Close());
-		//Time.SetTimer(2000, true, t => m.Dispose());
-		//Time.SetTimer(2000, true, t => m.CMS.Close());
-		//Time.SetTimer(2000, true, t => m.CMS.Dispose());
+		//Timer_.After(2000, t => m.Close());
+		//Timer_.After(2000, t => m.Dispose());
+		//Timer_.After(2000, t => m.CMS.Close());
+		//Timer_.After(2000, t => m.CMS.Dispose());
 		m.Show();
 		//Print(1);
 		//GC.Collect();
@@ -903,7 +903,7 @@ public partial class Test
 
 	private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
 	{
-		DebugPrintFunc();
+		Debug_.PrintFunc();
 		_mlTb.Stop();
 	}
 
@@ -986,7 +986,7 @@ public partial class Test
 
 	private static void B_Click1(object sender, EventArgs e)
 	{
-		DebugPrintFunc();
+		Debug_.PrintFunc();
 		_mlTb.Stop();
 	}
 
@@ -1047,7 +1047,7 @@ public partial class Test
 
 		//bool topMost = true;
 		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass2.Name, null,
-			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
+			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
 		Perf.Next();
 
 #if true
@@ -1140,7 +1140,7 @@ public partial class Test
 		Perf.First();
 		//bool topMost = true;
 		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass3.Name, null,
-			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
+			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
 		Perf.Next();
 
 
@@ -1204,7 +1204,7 @@ public partial class Test
 
 		//bool topMost = true;
 		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _WndClassNW.Name, null,
-			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
+			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
 		Perf.Next();
 		w.Show(true);
 		//w.ActivateLL();
@@ -1266,7 +1266,7 @@ public partial class Test
 
 	static void TestToolbar()
 	{
-		//DebugPrintFunc();
+		//Debug_.PrintFunc();
 		for(int i = 0; i < 1; i++) { TestCatBar(); /*Thread.Sleep(500);*/ }
 
 		//for(int i=0; i<1; i++) TestOldToolbar();

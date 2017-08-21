@@ -26,7 +26,7 @@ namespace Catkeys
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class CatBar :CatMenu_CatBar_Base
+	public class CatBar :_MenuBase
 	{
 		static Wnd.Misc.WindowClass _WndClass = Wnd.Misc.WindowClass.Register("CatBar", _WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
 
@@ -158,7 +158,7 @@ namespace Catkeys
 			RECT r = Screen.PrimaryScreen.WorkingArea;
 			r.Inflate(-2, -2); r.top += 4;
 
-			Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, r.top, r.left, r.Width, r.Height, Wnd0, 0, Zero, (IntPtr)GCHandle.Alloc(this));
+			Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, r.top, r.left, r.Width, r.Height, default(Wnd), 0, Zero, (IntPtr)GCHandle.Alloc(this));
 			if(_w.Is0) throw new Win32Exception();
 			Perf.Next();
 
@@ -216,9 +216,9 @@ namespace Catkeys
 		}
 #pragma warning restore 649
 
-		//[ThreadStatic] static Dictionary<Wnd, CatBar> _objects; //adds 3.3 ms at startup
-		//[ThreadStatic] static SortedList<Wnd, CatBar> _objects; //adds 3.6 ms at startup
-		[ThreadStatic] static System.Collections.Hashtable _objects; //adds 0.35 ms at startup
+		//[ThreadStatic] static Dictionary<Wnd, CatBar> t_objects; //adds 3.3 ms at startup
+		//[ThreadStatic] static SortedList<Wnd, CatBar> t_objects; //adds 3.6 ms at startup
+		[ThreadStatic] static System.Collections.Hashtable t_objects; //adds 0.35 ms at startup
 
 		//TODO: test Hashtable retrieving speed. Maybe even does not work because need boxing.
 
@@ -233,11 +233,11 @@ namespace Catkeys
 				g.Free();
 				x._w = w;
 				//Perf.Next();
-				if(_objects == null) _objects = new System.Collections.Hashtable();
-				_objects.Add(w, x);
+				if(t_objects == null) t_objects = new System.Collections.Hashtable();
+				t_objects.Add(w, x);
 			} else {
-				//if(!_objects.TryGetValue(w, out x)) return Api.DefWindowProc(w, msg, wParam, lParam);
-				x = _objects?[w] as CatBar; if(x == null) return Api.DefWindowProc(w, msg, wParam, lParam);
+				//if(!t_objects.TryGetValue(w, out x)) return Api.DefWindowProc(w, msg, wParam, lParam);
+				x = t_objects?[w] as CatBar; if(x == null) return Api.DefWindowProc(w, msg, wParam, lParam);
 			}
 			//Perf.NW();
 			//Print(x.MainWnd);
@@ -245,7 +245,7 @@ namespace Catkeys
 			LPARAM R = x._WndProc(msg, wParam, lParam);
 
 			if(msg == Api.WM_NCDESTROY) {
-				_objects?.Remove(w);
+				t_objects?.Remove(w);
 			}
 			return R;
 		}
@@ -380,9 +380,9 @@ namespace Catkeys
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
 					long td = Time.Milliseconds - _parent._showTime - 500;
-					if(td < 0) { /*DebugPrint("timer");*/ } //TODO: timer
+					if(td < 0) { /*Debug_.Print("timer");*/ } //TODO: timer
 					else Focus();
-					//TODO: Time.SetTimer(interval, delegate void TimerHandler(Timer t))
+					//TODO: timer
 				}
 				base.OnMouseEnter(e);
 			}

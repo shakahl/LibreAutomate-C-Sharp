@@ -309,7 +309,7 @@ namespace G.Controls
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;
 							_HideTooltip();
 							_toolTipTabButton = ht.gp;
-							Time.SetTimer(delay, true, t =>
+							Timer_.After(delay, t =>
 							{
 								var gp = _toolTipTabButton; if(gp == null) return;
 								var p2 = gp.ParentControl.MouseClientXY_();

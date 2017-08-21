@@ -143,7 +143,7 @@ namespace G.Controls
 			None,
 			/// <summary>Compressed and Base64-encoded bitmap file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
 			Embedded,
-			/// <summary>"resource:resource name". An image name from managed resources of this project.</summary>
+			/// <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
 			Resource,
 			/// <summary>.bmp file.</summary>
 			Bmp,
@@ -208,47 +208,6 @@ namespace G.Controls
 		{
 			fixed (byte* p = Convert_.Utf8FromString(s)) return ImageTypeFromString(true, p);
 		}
-		///// <summary>
-		///// Gets image type from string segment start/length.
-		///// </summary>
-		///// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-		///// <param name="s"></param>
-		///// <param name="start">Segment start index.</param>
-		///// <param name="length">If -1, gets segment from start to s end.</param>
-		//public static ImageType ImageTypeFromString(bool anyFile, string s, int start = 0, int length = -1)
-		//{
-		//	if(length < 0) length = s.Length - start;
-		//	if(length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
-		//	char c1 = s[start], c2 = s[start + 1];
-
-		//	//special strings
-		//	switch(c1) {
-		//	case '~': return (c2 == ':') ? ImageType.Embedded : ImageType.None;
-		//	case 'r': if(s.EqualsPart_(start, "resource:")) return ImageType.Resource; break;
-		//	}
-
-		//	//file path
-		//	if(length >= 8 && (c1 == '%' || (c2 == ':' && Calc.IsAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
-		//		int ext = start + length - 3;
-		//		if(s[ext - 1] == '.') {
-		//			if(s.EqualsPart_(ext, "bmp", true)) return ImageType.Bmp;
-		//			if(s.EqualsPart_(ext, "png", true)) return ImageType.PngGifJpg;
-		//			if(s.EqualsPart_(ext, "gif", true)) return ImageType.PngGifJpg;
-		//			if(s.EqualsPart_(ext, "jpg", true)) return ImageType.PngGifJpg;
-		//			if(s.EqualsPart_(ext, "ico", true)) return ImageType.Ico;
-		//			if(s.EqualsPart_(ext, "cur", true)) return ImageType.Cur;
-		//			if(s.EqualsPart_(ext, "ani", true)) return ImageType.Cur;
-		//		} else if(Calc.IsDigit(s[ext + 2])) { //can be like C:\x.dll,10
-		//			int i = ext + 1;
-		//			for(; i > start + 8; i--) if(!Calc.IsDigit(s[i])) break;
-		//			if(s[i] == '-') i--;
-		//			if(s[i] == ',' && s[i - 4] == '.' && Calc.IsAlpha(s[i - 1])) return ImageType.IconLib;
-		//		}
-		//	}
-
-		//	if(anyFile) return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
-		//	return ImageType.None;
-		//}
 
 		/// <summary>
 		/// Loads image and returns its data in .bmp file format.
@@ -269,7 +228,7 @@ namespace G.Controls
 						s = Files.SearchPath(s, Folders.ThisAppImages);
 						if(s == null) return null;
 					} else {
-						if(!Path_.IsFullPathEEV(ref s)) return null;
+						if(!Path_.IsFullPathExpandEnvVar(ref s)) return null;
 						s = Path_.Normalize(s, Folders.ThisAppImages);
 						if(!Files.ExistsAsFile(s)) return null;
 					}
@@ -292,15 +251,13 @@ namespace G.Controls
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				}
 			}
-			catch(Exception ex) { DebugPrint(ex.Message + "    " + s); }
+			catch(Exception ex) { Debug_.Print(ex.Message + "    " + s); }
 			return null;
 		}
 
 		static byte[] _ImageToBytes(string s, bool isResource)
 		{
-			//FUTURE: support resources of script assembly.
-
-			Image im = isResource ? ImageFromAppAssemblyResources(s) : Image.FromFile(s);
+			Image im = isResource ? (Catkeys.Util.Misc.GetAppResource(s) as Image) : Image.FromFile(s);
 			if(im == null) return null;
 			try {
 				//workaround for the black alpha problem. Does not make slower.
@@ -447,46 +404,5 @@ namespace G.Controls
 			}
 			return ImageToString(BitmapFileDataFromString(path, t, true));
 		}
-
-		/// <summary>
-		/// Gets an Image from managed resources of appdomain's entry assembly.
-		/// The Image is not cached. Will need to Dispose.
-		/// </summary>
-		/// <param name="name">Image resource name. Must be just name, without "Project.Properties.Resources." etc.</param>
-		public static Image ImageFromAppAssemblyResources(string name)
-		{
-			var rm = LibGetAppResourceManager(out var culture);
-			return rm?.GetObject(name, culture) as Image;
-
-			//info: why need culture? Because much much faster if culture is set to invariant.
-		}
-
-		/// <summary>
-		/// Gets ResourceManager of appdomain's entry assembly.
-		/// Returns null if the assembly does not have resources or if fails.
-		/// </summary>
-		internal static System.Resources.ResourceManager LibGetAppResourceManager(out System.Globalization.CultureInfo culture)
-		{
-			culture = null;
-			if(_appResourceManager == null) {
-				var asm = Catkeys.Util.AppDomain_.EntryAssembly;
-				var s = asm?.GetManifestResourceNames()?.FirstOrDefault(k => k.EndsWith_(".resources")); //eg "Project.Properties.Resources.resources"
-				if(s == null) return null; //no resources
-				s = s.Remove(s.Length - 10); //remove ".resources", it's documented
-				var t = asm.GetType(s); if(t == null) return null;
-				var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal
-				if(t.GetProperty("ResourceManager", fl)?.GetValue(null) is System.Resources.ResourceManager rm) {
-					_appResourceCulture = t.GetProperty("Culture")?.GetValue(null) as System.Globalization.CultureInfo;
-					_appResourceManager = rm;
-				} else {
-					DebugPrint("failed to get ResourceManager property");
-					_appResourceManager = new System.Resources.ResourceManager(s, asm);
-				}
-			}
-			culture = _appResourceCulture;
-			return _appResourceManager;
-		}
-		static System.Resources.ResourceManager _appResourceManager;
-		static System.Globalization.CultureInfo _appResourceCulture;
 	}
 }

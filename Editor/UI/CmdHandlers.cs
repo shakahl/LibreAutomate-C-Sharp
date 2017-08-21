@@ -203,7 +203,7 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_Disable()
 	{
-		DebugPrintFunc();
+		Debug_.PrintFunc();
 
 	}
 
@@ -219,7 +219,7 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_Properties()
 	{
-		DebugPrintFunc();
+		Debug_.PrintFunc();
 
 	}
 
@@ -245,7 +245,7 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_PreviousDocument()
 	{
-		DebugPrintFunc();
+		Debug_.PrintFunc();
 
 	}
 

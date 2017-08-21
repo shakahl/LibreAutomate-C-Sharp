@@ -197,7 +197,7 @@ namespace Catkeys
 			/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
 			public string GetIconLocation(out int iconIndex)
 			{
-				var b = Util.CharBuffer.LibCommon; int na = 300;
+				var b = Util.LibCharBuffer.LibCommon; int na = 300;
 				if(0 != _isl.GetIconLocation(b.Alloc(na), na, out iconIndex)) return null;
 				return _CorrectPath(b.ToString());
 			}
@@ -327,7 +327,7 @@ namespace Catkeys
 			string _GetString(_WhatString what, int bufferSize)
 			{
 				int na = bufferSize, hr = 1;
-				var b = Util.CharBuffer.LibCommon; var a = b.Alloc(na);
+				var b = Util.LibCharBuffer.LibCommon; var a = b.Alloc(na);
 				switch(what) {
 				case _WhatString.Path: hr = _isl.GetPath(a, na); break;
 				case _WhatString.Arguments: hr = _isl.GetArguments(a, na); break;
@@ -354,7 +354,7 @@ namespace Catkeys
 					//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
 					//	Could not find a workaround.
 
-					var b = Util.CharBuffer.LibCommon; int na = 300;
+					var b = Util.LibCharBuffer.LibCommon; int na = 300;
 					int hr = _Api.MsiGetComponentPath(product, component, b.Alloc(na), ref na);
 					if(hr < 0) return null; //eg not installed, just advertised
 					R = b.ToString();

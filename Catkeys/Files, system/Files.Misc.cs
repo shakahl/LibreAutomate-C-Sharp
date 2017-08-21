@@ -136,7 +136,6 @@ namespace Catkeys
 			/// <summary>
 			/// Calls <see cref="GetFileId"/> for two paths and returns true if both calls succeed and the ids are equal.
 			/// Paths should be normalized. They are passed to API unmodified.
-			/// If DEBUG is defined, calls DebugPrint if some GetFileId call fails.
 			/// </summary>
 			/// <param name="path1"></param>
 			/// <param name="path2"></param>
@@ -151,8 +150,9 @@ namespace Catkeys
 
 				var ok1 = GetFileId(path1, out var fid1);
 				var ok2 = GetFileId(path2, out var fid2);
-				DebugPrintIf(!ok1 || !ok2, "GetFileId failed");
-				return ok1 && ok2 && fid1 == fid2;
+				if(ok1 && ok2) return fid1 == fid2;
+				Output.Warning("GetFileId failed"); //CONSIDER: throw
+				return false;
 			}
 
 			//static char[] _sep3 = new char[] { '\\', '/', '~' };

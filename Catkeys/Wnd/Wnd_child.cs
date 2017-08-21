@@ -159,14 +159,14 @@ namespace Catkeys
 			/// Else returns -2 if wSingle matches, else -1.
 			/// Returns -1 if using aFindAll.
 			/// </summary>
-			/// <param name="wParent">Parent window. Can be Wnd0 if inList is true and no DirectChild flag and not using winforms name.</param>
+			/// <param name="wParent">Parent window. Can be default(Wnd) if inList is true and no DirectChild flag and not using winforms name.</param>
 			/// <param name="a">Array etc of Wnd.</param>
 			/// <param name="inList">Called by FindInList or FindAllInList.</param>
 			/// <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
 			/// <param name="wSingle">Can be used instead of a. Then a must be null.</param>
 			int _FindInList(Wnd wParent, IEnumerable<Wnd> a, bool inList, [Out] List<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
 			{
-				Result = Wnd0;
+				Result = default(Wnd);
 				if(a == null) return -1;
 
 				int skipCount = _skipCount;
@@ -275,7 +275,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds child control.
-		/// Returns its handle as Wnd. Returns Wnd0 if not found.
+		/// Returns its handle as Wnd. Returns default(Wnd) if not found.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -349,7 +349,7 @@ namespace Catkeys
 		/// </example>
 		public bool HasChild(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
-			return Wnd0 != Child(name, className, flags, also, skip);
+			return default(Wnd) != Child(name, className, flags, also, skip);
 		}
 
 		/// <summary>
@@ -413,7 +413,7 @@ namespace Catkeys
 		//public Wnd ChildByClass(string className, bool directChild = false, bool onlyVisible = false, int skip = 0)
 		//{
 		//	ThrowIfInvalid();
-		//	Wnd R = Wnd0;
+		//	Wnd R = default(Wnd);
 		//	LibAllChildren(e =>
 		//	{
 		//		if(!e.ClassNameIs(className)) return false;
@@ -444,7 +444,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds direct child control.
-		/// Returns its handle as Wnd. Returns Wnd0 if not found.
+		/// Returns its handle as Wnd. Returns default(Wnd) if not found.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child">Child</see>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -468,7 +468,7 @@ namespace Catkeys
 			//ThrowIfInvalid(); //no, it can be Message
 			if(Is0) {
 				Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE);
-				return Wnd0;
+				return default(Wnd);
 			}
 			return Api.FindWindowEx(this, wAfter, className, name);
 		}

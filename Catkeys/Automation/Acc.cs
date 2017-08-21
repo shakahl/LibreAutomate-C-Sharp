@@ -30,6 +30,31 @@ namespace Catkeys
 	{
 		internal Api.IAccessible a;
 		internal int elem;
+
+		public Wnd WndDirectParent
+		{
+			get
+			{
+				CatException.ThrowIfFailed(Api.WindowFromAccessibleObject(a, out var w), "*get object's parent window");
+				return w;
+			}
+		}
+
+		public RECT Rect
+		{
+			get
+			{
+				CatException.ThrowIfFailed(a.accLocation(out var x, out var y, out var cx, out var cy, elem), "*get object's rectangle");
+				return new RECT(x, y, cx, cy, true);
+			}
+		}
+
+		public RECT RectInClientOf(Wnd w)
+		{
+			var r = Rect;
+			if(!w.MapScreenToClient(ref r)) w.ThrowUseNative();
+			return r;
+		}
 	};
 
 	//internal struct LibAccVariant

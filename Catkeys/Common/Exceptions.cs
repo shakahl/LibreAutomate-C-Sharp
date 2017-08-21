@@ -212,8 +212,8 @@ namespace Catkeys
 		public NotFoundException() : base("Not found.") { }
 
 		/// <summary>
-		/// Sets Message = "Not found: " + objectName.
+		/// Sets Message = message.
 		/// </summary>
-		public NotFoundException(string objectName) : base("Not found: " + objectName) { }
+		public NotFoundException(string message) : base(message) { }
 	}
 }

@@ -326,7 +326,7 @@ namespace Catkeys
 		{
 			if(s == null) return null;
 			int n = s.Length / 2;
-			var buf = Util.CharBuffer.LibCommon;
+			var buf = Util.LibCharBuffer.LibCommon;
 			var b = buf.Alloc(n);
 			n = HexDecode(s, b, n, 0);
 			var r = new byte[n];
@@ -560,7 +560,7 @@ namespace Catkeys
 			if(s == null) return null;
 			fixed (char* p = s) {
 				int len = s.Length, n = (int)(len * 3L / 4);
-				var buf = Util.ByteBuffer.LibCommon;
+				var buf = Util.LibByteBuffer.LibCommon;
 				var b = buf.Alloc(n);
 				n = Base64Decode(p, len, b, n);
 				var r = new byte[n];
@@ -669,20 +669,20 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts C# string to '\0'-terminated UTF8 string stored in a Catkeys.Util.ByteBuffer.
+		/// Converts C# string to '\0'-terminated UTF8 string stored in a Catkeys.Util.LibByteBuffer.
 		/// </summary>
 		/// <param name="s">C# string (UTF16). If null, by default returns null; returns "" if using allocExtraBytes.</param>
-		/// <param name="buffer">A Util.ByteBuffer variable (probably [ThreadStatic]). If null, uses Catkeys.Util.ByteBuffer.LibCommon.</param>
+		/// <param name="buffer">A Util.LibByteBuffer variable (probably [ThreadStatic]). If null, uses Catkeys.Util.LibByteBuffer.LibCommon.</param>
 		/// <param name="utf8Length">If not null, receives UTF8 text length not including '\0' and allocExtraBytes.</param>
 		/// <param name="allocExtraBytes">Allocate this number of extra bytes after the string.</param>
-		internal static byte* LibUtf8FromString(string s, Util.ByteBuffer buffer = null, int* utf8Length = null, int allocExtraBytes = 0)
+		internal static byte* LibUtf8FromString(string s, Util.LibByteBuffer buffer = null, int* utf8Length = null, int allocExtraBytes = 0)
 		{
 			if(utf8Length != null) *utf8Length = 0;
 			if(s == null) {
 				if(allocExtraBytes == 0) return null;
 				s = "";
 			}
-			if(buffer == null) buffer = Util.ByteBuffer.LibCommon;
+			if(buffer == null) buffer = Util.LibByteBuffer.LibCommon;
 			byte* p;
 			var len = s.Length;
 			if(len == 0) {

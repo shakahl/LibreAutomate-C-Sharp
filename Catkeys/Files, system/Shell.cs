@@ -40,6 +40,7 @@ namespace Catkeys
 			return Path_.LibNormalize(s, Path_.NormalizeFlags.DoNotPrefixLongPath, true);
 		}
 
+		//TODO: Shell.RunFlags -> SRFlags
 		/// <summary>
 		/// flags for <see cref="Run"/>.
 		/// </summary>
@@ -48,7 +49,7 @@ namespace Catkeys
 		{
 			/// <summary>
 			/// Show error message box if fails, for example if file not found.
-			/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="RunSafe"/>.
+			/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="TryRun"/>.
 			/// </summary>
 			ShowErrorUI = 1,
 
@@ -86,7 +87,6 @@ namespace Catkeys
 		/// It works like when you double-click an icon. It may start new process or not. For example it may just activate window if the program is already running.
 		/// Uses API <msdn>ShellExecuteEx</msdn>.
 		/// Similar to <see cref="Process.Start(string, string)"/>.
-		/// 
 		/// The returned process id can be used to find a window of the new process. Example:
 		/// <code><![CDATA[
 		/// Wnd w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", Shell.Run("notepad.exe"));
@@ -99,8 +99,14 @@ namespace Catkeys
 		/// w.Activate();
 		/// ]]></code>
 		/// </example>
+		/// <seealso cref="Wnd.FindOrRun"/>
 		public static int Run(string s, string args = null, RunFlags flags = 0, RunMoreParams more = null)
 		{
+			//TODO: return RunResult object that contains process id or exit code.
+			//	It also contains other info that helps Wnd.Find and WaitFor.WindowActive etc to find correct window.
+			//	It also could contain unclosed process handle, if a flag is set.
+			//	Pass it to Wnd.Find as programEtc.
+
 			var x = new _Api.SHELLEXECUTEINFO();
 			x.cbSize = Api.SizeOf(x);
 			x.fMask = _Api.SEE_MASK_NOZONECHECKS | _Api.SEE_MASK_NOASYNC | _Api.SEE_MASK_NOCLOSEPROCESS | _Api.SEE_MASK_CONNECTNETDRV | _Api.SEE_MASK_UNICODE;
@@ -109,7 +115,7 @@ namespace Catkeys
 				more.ProcessHandle = null;
 				x.lpVerb = more.Verb;
 				x.lpDirectory = Path_.ExpandEnvVar(more.CurrentDirectory);
-				if(more.OwnerWindow != null) x.hwnd = more.OwnerWindow.GetWnd().WndWindow;
+				if(!more.OwnerWindow.IsNull) x.hwnd = more.OwnerWindow.Wnd.WndWindow;
 				switch(more.WindowState) {
 				case ProcessWindowStyle.Hidden: x.nShow = Api.SW_HIDE; break;
 				case ProcessWindowStyle.Minimized: x.nShow = Api.SW_SHOWMINIMIZED; break;
@@ -192,25 +198,27 @@ namespace Catkeys
 			return 0;
 
 			//tested: works well in MTA apartment.
-			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use a Find/Run/Wait pattern, like in the examples.
+			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use Wnd.FindOrRun or Find/Run/Wait like in the examples.
 			//rejected: in QM2, run also has 'autodelay'. Better don't add such hidden things. Let the script decide what to do.
 		}
 
 		/// <summary>
-		/// Calls <see cref="Run"/> and handles exceptions.
-		/// If Run throws exception, prints its Message and returns 0.
-		/// Handles only exception of type CatException. It is thrown when fails, usually when the file does not exist.
-		/// All parameters are the same.
+		/// Calls <see cref="Run"/> and handles exceptions. All parameters are the same.
+		/// If Run throws exception, shows warning with its Message and returns int.MinValue.
 		/// This is useful when you don't care whether Run succeeded, for example in CatMenu menu item command handlers. Using try/catch there would not look good.
+		/// Handles only exception of type CatException. It is thrown when fails, usually when the file does not exist.
 		/// </summary>
-		public static int RunSafe(string s, string args = null, RunFlags flags = 0, RunMoreParams more = null)
+		/// <seealso cref="Output.Warning"/>
+		/// <seealso cref="ScriptOptions.DisableWarnings"/>
+		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
+		public static int TryRun(string s, string args = null, RunFlags flags = 0, RunMoreParams more = null)
 		{
 			try {
 				return Run(s, args, flags, more);
 			}
 			catch(CatException e) {
-				Print(e.Message);
-				return 0;
+				Output.Warning(e.Message, 1);
+				return int.MinValue;
 			}
 		}
 

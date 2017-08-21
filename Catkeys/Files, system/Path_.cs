@@ -60,7 +60,7 @@ namespace Catkeys
 				return s;
 			}
 
-			var b = Util.CharBuffer.LibCommon; int na = b.Max(s.Length + 100);
+			var b = Util.LibCharBuffer.LibCommon; int na = b.Max(s.Length + 100);
 			g1: int nr = _Api.ExpandEnvironmentStrings(s, b.Alloc(na), na);
 			if(nr > na) { na = nr; goto g1; }
 			if(nr == 0) return s;
@@ -80,7 +80,7 @@ namespace Catkeys
 		/// </remarks>
 		internal static string LibGetEnvVar(string name)
 		{
-			var b = Util.CharBuffer.LibCommon; int na = b.Max(300);
+			var b = Util.LibCharBuffer.LibCommon; int na = b.Max(300);
 			g1: int nr = _Api.GetEnvironmentVariable(name, b.Alloc(na), na);
 			if(nr > na) { na = nr; goto g1; }
 			if(nr == 0) return "";
@@ -116,7 +116,7 @@ namespace Catkeys
 		/// <remarks>
 		/// Supports '/' characters too.
 		/// Supports only file-system paths. Returns false if path is URL (use <see cref="IsUrl"/> instead) or starts with "::".
-		/// If path starts with "%environmentVariable%", returns false, and in DEBUG configuration shows warning. You should at first expand environment variables with <see cref="ExpandEnvVar"/> or instead use <see cref="IsFullPathEEV"/>.
+		/// If path starts with "%environmentVariable%", shows warning and returns false. You should at first expand environment variables with <see cref="ExpandEnvVar"/> or instead use <see cref="IsFullPathExpandEnvVar"/>.
 		/// </remarks>
 		public static bool IsFullPath(string path)
 		{
@@ -133,10 +133,14 @@ namespace Catkeys
 				case '/':
 					return LibIsSepChar(s[1]);
 				case '%':
-					DebugPrint("IsFullPath: path starts with '%' character. Call ExpandEnvVar at first, or use IsFullPathEEV instead.");
+#if true
+					if(!ExpandEnvVar(s).StartsWith_('%'))
+						Output.Warning("Path starts with %environmentVariable%. Use Path_.IsFullPathExpandEnvVar instead.");
+#else
+					s = ExpandEnvVar(s); //quite fast. 70% slower than just LibEnvVarExists, but reliable.
+					return !s.StartsWith_('%') && IsFullPath(s);
+#endif
 					break;
-					//s = ExpandEnvVar(s); //quite fast. 70% slower than just LibEnvVarExists, but reliable.
-					//return !s.StartsWith_('%') && IsFullPath(s);
 				}
 			}
 
@@ -144,7 +148,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls <see cref="IsFullPath"/> with expanded environment variables.
+		/// Expands environment variables and calls <see cref="IsFullPath"/>.
 		/// Returns true if path matches one of these wildcard patterns:
 		///		@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.
 		///		@"?:" - drive name, like @"C:". Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
@@ -158,7 +162,7 @@ namespace Catkeys
 		/// Supports '/' characters too.
 		/// Supports only file-system paths. Returns false if path is URL (use <see cref="IsUrl"/> instead) or starts with "::".
 		/// </remarks>
-		public static bool IsFullPathEEV(ref string path)
+		public static bool IsFullPathExpandEnvVar(ref string path)
 		{
 			var s = path;
 			if(s == null || s.Length < 2) return false;
@@ -283,7 +287,7 @@ namespace Catkeys
 			string r;
 			if(Empty(s1)) r = s2 ?? "";
 			else if(Empty(s2)) r = s1 ?? "";
-			else if(0 != (flags & CombineFlags.s2CanBeFullPath) && IsFullPathEEV(ref s2)) r = s2;
+			else if(0 != (flags & CombineFlags.s2CanBeFullPath) && IsFullPathExpandEnvVar(ref s2)) r = s2;
 			else {
 				int k = 0;
 				if(LibIsSepChar(s1[s1.Length - 1])) k |= 1;
@@ -435,7 +439,7 @@ namespace Catkeys
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath.
-				var b = Util.CharBuffer.LibCommon; int na = b.Max(s.Length + 10);
+				var b = Util.LibCharBuffer.LibCommon; int na = b.Max(s.Length + 10);
 				g1: int nr = Api.GetFullPathName(s, na, b.Alloc(na), null);
 				if(nr > na) { na = nr; goto g1; }
 				if(nr > 0) s = b.ToString(nr);
@@ -459,7 +463,7 @@ namespace Catkeys
 		internal static string LibExpandDosPath(string s)
 		{
 			if(!Empty(s)) {
-				var b = Util.CharBuffer.LibCommon; int na = b.Max(300);
+				var b = Util.LibCharBuffer.LibCommon; int na = b.Max(300);
 				g1: int nr = Api.GetLongPathName(s, b.Alloc(na), na);
 				if(nr > na) { na = nr; goto g1; }
 				if(nr > 0) s = b.ToString(nr);

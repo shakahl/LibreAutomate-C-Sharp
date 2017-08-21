@@ -522,18 +522,18 @@
             Calculates and shows transparent rectangles where the floating panel can be docked when dragging it.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._OnFloatMoved(Catkeys.POINT,Catkeys.RECT@,Catkeys.RECT@)">
+        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._OnFloatMoved(System.Drawing.Point,Catkeys.RECT@,Catkeys.RECT@)">
             <summary>
             Everything is in _manager client area.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._CalcDockRectPart(Catkeys.RECT,Catkeys.POINT)">
+        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._CalcDockRectPart(Catkeys.RECT,System.Drawing.Point)">
             <summary>
             Returns the left, top, right or bottom half of r, depending on where p is in it.
             Sets _target.side.
             </summary>
         </member>
-        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._CalcNewTabButtonRectInFullCaption(G.Controls.GDockPanel.GPanel,Catkeys.RECT,Catkeys.POINT)">
+        <member name="M:G.Controls.GDockPanel.GFloat._DockIndicator._CalcNewTabButtonRectInFullCaption(G.Controls.GDockPanel.GPanel,Catkeys.RECT,System.Drawing.Point)">
             <summary>
             Returns a half of r (gp full caption, not just tab button), depending on where p is (even if not in r).
             Sets _target.side.
@@ -1102,7 +1102,7 @@
             <summary>Compressed and Base64-encoded bitmap file data with "~:" prefix. See <see cref="M:G.Controls.ImageUtil.ImageToString(System.String)"/>.</summary>
         </member>
         <member name="F:G.Controls.ImageUtil.ImageType.Resource">
-            <summary>"resource:resource name". An image name from managed resources of this project.</summary>
+            <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
         </member>
         <member name="F:G.Controls.ImageUtil.ImageType.Bmp">
             <summary>.bmp file.</summary>
@@ -1160,19 +1160,6 @@
             Returns null if path is not a valid image string or the file does not exist.
             </summary>
             <remarks>Supports env. var. etc. If not full path, searches in Folders.ThisAppImages and standard directories.</remarks>
-        </member>
-        <member name="M:G.Controls.ImageUtil.ImageFromAppAssemblyResources(System.String)">
-            <summary>
-            Gets an Image from managed resources of appdomain's entry assembly.
-            The Image is not cached. Will need to Dispose.
-            </summary>
-            <param name="name">Image resource name. Must be just name, without "Project.Properties.Resources." etc.</param>
-        </member>
-        <member name="M:G.Controls.ImageUtil.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
-            <summary>
-            Gets ResourceManager of appdomain's entry assembly.
-            Returns null if the assembly does not have resources or if fails.
-            </summary>
         </member>
     </members>
 </doc>

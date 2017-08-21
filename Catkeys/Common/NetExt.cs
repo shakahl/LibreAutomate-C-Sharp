@@ -38,31 +38,46 @@ namespace Catkeys
 	public static class Screen_
 	{
 		/// <summary>
-		/// Special screen index to specify the primary screen.
+		/// Screen index of the primary screen. Value 0.
+		/// Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
 		/// </summary>
 		public const int Primary = 0;
 		/// <summary>
-		/// Special screen index to specify the screen of the mouse pointer.
+		/// Special screen index to specify the screen of the mouse pointer. Value -1.
 		/// </summary>
 		public const int OfMouse = -1;
 		/// <summary>
-		/// Special screen index to specify the screen of the active window.
+		/// Special screen index to specify the screen of the active window. Value -2.
 		/// </summary>
 		public const int OfActiveWindow = -2;
 
 		/// <summary>
-		/// Gets <see cref="Screen"/> object from 1-based screen index.
-		/// index also can be one of constants defined in this class: Primary (0), OfMouse, OfActiveWindow.
-		/// If index is invalid, gets the primary screen.
+		/// Gets <see cref="Screen"/> object from screen index.
 		/// </summary>
+		/// <param name="index">
+		/// Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+		/// Also can be <see cref="Primary"/> (0), <see cref="OfMouse"/> (-1), <see cref="OfActiveWindow"/> (-2).
+		/// </param>
+		/// <param name="noThrow">Don't throw exception if index is invalid. Instead show warning and return null.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <remarks>
-		/// As screen index is used index in the array returned by <see cref="Screen.AllScreens"/> + 1. It is not the screen index that you can see in Control Panel.
+		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
 		/// </remarks>
-		public static Screen FromIndex(int index)
+		public static Screen FromIndex(int index, bool noThrow = false)
 		{
+			//note: screen indices may be unexpectedly changed, breaking scripts that use them.
+			//	Eg on my Win10 PC was always 1 = primary screen, but one day become 2 = primary screen.
+			//	Using non-0 indices for non-primary screens mitigates this. Most multimonitor systems probably have only 2 monitors.
+			//	CONSIDER: Need another way to identify screens.
+			//		Eg allow to specify monitor index (or name) of each monitor (using eg a point). Let users add the code to the script template. Recorder must be able to get it from script.
+
 			if(index > 0) {
 				var a = Screen.AllScreens;
-				if(--index < a.Length) return a[index];
+				for(int i = 0; i < a.Length; i++) {
+					var s = a[i];
+					if(s.Primary) continue;
+					if(--index == 0) return s;
+				}
 				//SHOULDDO: ignore invisible pseudo-monitors associated with mirroring drivers.
 				//	iScreen.AllScreens and EnumDisplayMonitors should include them,
 				//	but in my recent tests with NetMeeting (noticed this long ago on an old OS version) and UltraVnc (wiki etc say) they didn't.
@@ -71,6 +86,11 @@ namespace Catkeys
 			} else if(index == OfMouse) return Screen.FromPoint(Mouse.XY);
 			else if(index == OfActiveWindow) return FromWindow(Wnd.WndActive);
 
+			if(index != 0) {
+				if(!noThrow) throw new ArgumentOutOfRangeException(null, "Invalid screen index.");
+				Output.Warning("Invalid screen index.");
+				return null;
+			}
 			return Screen.PrimaryScreen;
 
 			//speed compared with the API monitor functions:
@@ -79,15 +99,40 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Gets screen index that can be used with <see cref="FromIndex"/> (also with FromObject and some other functions of this library).
+		/// Primary screen is 0. Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+		/// </summary>
+		/// <param name="t"></param>
+		/// <exception cref="CatException">Failed (probably the Screen object is invalid).</exception>
+		public static int GetIndex_(this Screen t)
+		{
+			if(t.Primary) return 0;
+			var a = Screen.AllScreens;
+			for(int j = 0; j < 2; j++) {
+				for(int i = 0, index = 0; i < a.Length; i++) {
+					var s = a[i];
+					if(s.Primary) continue;
+					index++;
+					bool found = (j == 0) ? (s == t) : (s.GetHashCode() == t.GetHashCode());
+					if(found) return index;
+					//GetHashCode is HMONITOR, but it is undocumented.
+					//When changed display settings, AllScreens objects are replaced with new objects. HMONITOR in most cases are the same. 
+				}
+			}
+			throw new CatException();
+		}
+
+		/// <summary>
 		/// Gets <see cref="Screen"/> object of the screen that contains the specified window (the biggest part of it) or is nearest to it.
 		/// If w handle is 0 or invalid, gets the primary screen (<see cref="Screen.FromHandle"/> would return an invalid object if the window handle is invalid).
 		/// </summary>
 		public static Screen FromWindow(Wnd w)
 		{
-			if(w.Is0) return Screen.PrimaryScreen;
-			Screen R = Screen.FromHandle((IntPtr)w);
-			if(R.Bounds.IsEmpty) return Screen.PrimaryScreen;
-			return R;
+			if(!w.Is0) {
+				Screen R = Screen.FromHandle((IntPtr)w);
+				if(!R.Bounds.IsEmpty) return R;
+			}
+			return Screen.PrimaryScreen;
 		}
 
 		/// <summary>
@@ -96,32 +141,43 @@ namespace Catkeys
 		/// <param name="screen">
 		/// Depends on type:
 		/// <list type="bullet">
-		/// <item>null: primary screen (calls <see cref="Screen.PrimaryScreen"/>).</item>
-		/// <item>int: 1-based screen index (calls <see cref="FromIndex"/>), or Screen_.Primary, Screen_.OfMouse, Screen_.OfActiveWindow.</item>
-		/// <item>Wnd: a window (calls <see cref="FromWindow"/>). If invalid, gets primary screen.</item>
-		/// <item>POINT, Point: a point (calls <see cref="Screen.FromPoint"/>).</item>
-		/// <item>RECT, Rectangle: a rectangle (calls <see cref="Screen.FromRectangle"/>).</item>
+		/// <item>null: primary screen.</item>
 		/// <item>Screen: a <see cref="Screen"/> object. If invalid, gets primary screen.</item>
+		/// <item>int: 1-based non-primary screen index (see <see cref="FromIndex"/>), or Screen_.Primary (0), Screen_.OfMouse (-1), Screen_.OfActiveWindow (-2).</item>
+		/// <item>Wnd: a window (see <see cref="FromWindow"/>). If invalid, gets primary screen.</item>
+		/// <item>Control: a .NET form or control (see <see cref="Screen.FromControl"/>). If invalid, gets primary screen.</item>
+		/// <item>Point: a point (see <see cref="Screen.FromPoint"/>).</item>
+		/// <item>Rectangle, RECT: a rectangle (see <see cref="Screen.FromRectangle"/>).</item>
 		/// </list>
 		/// </param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
+		/// <exception cref="ArgumentException">Bad object type (not one from the above list).</exception>
 		/// <remarks>
-		/// If something fails, gets primary screen.
+		/// If something fails (except if invalid index), gets primary screen.
 		/// As screen index is used index in the array returned by <see cref="Screen.AllScreens"/> + 1. It is not the screen index that you can see in Control Panel.
 		/// </remarks>
 		public static Screen FromObject(object screen)
 		{
+			//CONSIDER: don't use this. Now it is used to get 'screen' parameters of object type.
+			//	Such parameters are unsafe and unclear to read the code.
+			//		Eg instead of Mouse.Move(x, y, false, 1) better to write Mouse.Move(x, y, false, Screen_.FromIndex(1)).
+			//		Although can write Mouse.Move(x, y, screen: 1), but most people will not use it.
+			//	But in some cases better object.
+			//		Eg then can use Screen_.FromMouse etc for TaskDialog.Options.DefaultScreen. If it was a Screen object, even if retrieved from index, it can become invalid after changing display settings.
+
+			Screen R = null;
 			switch(screen) {
-			case null: return Screen.PrimaryScreen;
+			case null: break;
+			case Screen s: R = s; break;
 			case int index: return FromIndex(index);
 			case Wnd wnd: return FromWindow(wnd);
-			case POINT p: return Screen.FromPoint(p);
-			case RECT r: return Screen.FromRectangle(r);
-			case Point pp: return Screen.FromPoint(pp);
+			case Control c: R = Screen.FromControl(c); break;
+			case Point p: return Screen.FromPoint(p);
 			case Rectangle rr: return Screen.FromRectangle(rr);
-			case Screen s: return s.Bounds.IsEmpty ? Screen.PrimaryScreen : s;
+			case RECT r: return Screen.FromRectangle(r);
+			default: throw new ArgumentException("Bad object type.");
 			}
-
-			//throw new ArgumentException("Bad type.", nameof(screen)); //no, forgive it. This place is too deep etc to throw exceptions.
+			if(R != null && !R.Bounds.IsEmpty) return R;
 			return Screen.PrimaryScreen;
 		}
 
@@ -136,6 +192,11 @@ namespace Catkeys
 		//public static int Width { get => Screen.PrimaryScreen.Bounds.Width; } //faster (gets cached value), but very slow first time, eg 15 ms
 
 		/// <summary>
+		/// Gets primary screen rectangle.
+		/// </summary>
+		public static RECT Rect => new RECT(0, 0, Width, Height, false);
+
+		/// <summary>
 		/// Gets primary screen work area.
 		/// </summary>
 		public static unsafe RECT WorkArea
@@ -147,6 +208,40 @@ namespace Catkeys
 				return r;
 			}
 		}
+
+		/// <summary>
+		/// Returns true if point p is in some screen.
+		/// </summary>
+		public static bool IsInAnyScreen(Point p)
+		{
+			return MonitorFromPoint(p, 0) != Zero; //0 - MONITOR_DEFAULTTONULL
+		}
+
+		/// <summary>
+		/// Returns true if rectangle r intersects with some screen.
+		/// </summary>
+		public static bool IsInAnyScreen(RECT r)
+		{
+			return MonitorFromRect(ref r, 0) != Zero;
+		}
+
+		/// <summary>
+		/// Returns true if rectangle of window w intersects with some screen.
+		/// </summary>
+		public static bool IsInAnyScreen(Wnd w)
+		{
+			return MonitorFromWindow(w, 0) != Zero;
+		}
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromPoint(Point pt, uint dwFlags);
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromRect(ref RECT lprc, uint dwFlags);
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromWindow(Wnd hwnd, uint dwFlags);
+
+		//CONSIDER: add functions to map coordinates from one screen to another screen, or just to primary. Overloads for Coord too.
+		//	But maybe better just use Coord.Normalize. Because to map Coord need more parameters eg workArea anyway.
 	}
 
 	/// <summary>
@@ -271,7 +366,7 @@ namespace Catkeys
 	}
 
 	/// <summary>
-	/// Add extension methods to some .NET classes.
+	/// Adds extension methods to some .NET classes.
 	/// </summary>
 	public static class DotNetExtensions
 	{
@@ -313,7 +408,7 @@ namespace Catkeys
 		{
 			var p = Mouse.XY;
 			var k = t.Location;
-			return new Point(p.x - k.X, p.y - k.Y);
+			return new Point(p.X - k.X, p.Y - k.Y);
 		}
 
 		/// <summary>
@@ -543,61 +638,51 @@ namespace Catkeys
 			return t.Width <= 0 || t.Height <= 0;
 		}
 
-#if dont_use
-	////[DebuggerStepThrough]
-	//public static class Int32_
-	//{
-	//	//This does not work because int is a value type and therefore the x parameter is a copy. Better don't need this func.
-	//	//public static void LimitMinMax_(this int x, int min, int max)
-	//	//{
-	//	//	if(x>max) x=max;
-	//	//	if(x<min) x=min;
-	//	//}
-
-	//	////Allows code like this: foreach(int u in 5.Times()) Print(u);
-	//	////However the code is longer than for(int u=0; u<5; u++) Print(u);
-	//	//public static IEnumerable<int> Times(this int nTimes)
-	//	//{
-	//	//	for(int i = 0; i<nTimes; i++) yield return i;
-	//	//}
-	//}
-
-	/// <summary>
-	/// Enum extension methods.
-	/// </summary>
-	[DebuggerStepThrough]
-	public static class Enum_
-	{
-		/// <summary>
-		/// Returns true if this has one or more flags specified in flagOrFlags.
-		/// It is different from HasFlag, which returns true if this has ALL specified flags.
-		/// Speed: 0.1 mcs. It is several times slower than HasFlag, and 100 times slower than operators.
-		/// Like HasFlag, does not catch wrong enum type at compile time.
-		/// </summary>
-		public static bool HasAny(this Enum t, Enum flagOrFlags)
-		{
-			return (Convert.ToUInt64(t) & Convert.ToUInt64(flagOrFlags)) !=0;
-			//info: cannot apply operator & to Enum, or cast to uint, or use unsafe pointer.
-		}
-		////same speed:
-		//public static bool Has<T>(this T t, T flagOrFlags) where T: struct
+		//rejected:
+		//This does not work because int is a value type and therefore the x parameter is a copy. Better don't need this func.
+		//public static void LimitMinMax_(this int x, int min, int max)
 		//{
-		//	//return ((uint)t & (uint)flagOrFlags) !=0; //error
-		//	return (Convert.ToUInt64(t) & Convert.ToUInt64(flagOrFlags)) !=0;
+		//	if(x>max) x=max;
+		//	if(x<min) x=min;
 		//}
 
-		public static void SetFlag(ref Enum t, Enum flag, bool set)
+		////Allows code like this:     foreach(int u in 5.Times()) Print(u);
+		////However it is longer than: for(int u = 0; u < 5; u++) Print(u);
+		//public static IEnumerable<int> Times(this int nTimes)
+		//{
+		//	for(int i = 0; i<nTimes; i++) yield return i;
+		//}
+
+		#endregion
+
+		#region enum
+#pragma warning disable CS3024 // Constraint type is not CLS-compliant (IConvertible uses uint)
+
+		/// <summary>
+		/// Returns true if this enum variable has flag(s) f (all bits).
+		/// Compiled as inlined code <c>(t &amp; flag) == flags</c>. The same as Enum.HasFlag, but much much faster.
+		/// The enum type must be of size 4 (default).
+		/// </summary>
+		public static bool Has_<T>(this T t, T flag) where T : struct, IComparable, IFormattable, IConvertible
 		{
-			ulong _t = Convert.ToUInt64(t), _f = Convert.ToUInt64(flag);
-			if(set) _t|=_f; else _t&=~_f;
-			t=(Enum)(object)_t; //can do it better?
-			//info: Cannot make this a true extension method.
-			//	If we use 'this Enum t', t is a copy of the actual variable, because Enum is a value type.
-			//	That is why we need ref.
-			//Speed not tested.
+			int a = Unsafe.As<T, int>(ref t);
+			int b = Unsafe.As<T, int>(ref flag);
+			return (a & b) == b;
 		}
-	}
-#endif
+
+		/// <summary>
+		/// Returns true if this enum variable has one or more flag bits specified in f.
+		/// Compiled as inlined code <c>(t &amp; flags) != 0</c>. This is different from Enum.HasFlag.
+		/// The enum type must be of size 4 (default).
+		/// </summary>
+		public static bool HasAny_<T>(this T t, T flags) where T : struct, IComparable, IFormattable, IConvertible
+		{
+			int a = Unsafe.As<T, int>(ref t);
+			int b = Unsafe.As<T, int>(ref flags);
+			return (a & b) != 0;
+		}
+
+#pragma warning restore CS3024 // Constraint type is not CLS-compliant
 		#endregion
 	}
 }

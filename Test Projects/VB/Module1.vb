@@ -1,13 +1,12 @@
 ﻿'Imports System.Runtime.CompilerServices
-'Imports System.Windows.Forms
+Imports System.Windows.Forms
+Imports System.Drawing
 Imports K = System.Windows.Forms.Keys
 'Imports System.Windows.Forms.Keys
 
 Imports Catkeys
 Imports Catkeys.NoClass
-Imports Catkeys.Automation
-Imports Catkeys.Automation.NoClass
-Imports Catkeys.Automation.Input
+'Imports Catkeys.Automation.Input
 
 Imports Catkeys.TaskDialog
 

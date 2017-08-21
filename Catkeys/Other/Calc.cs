@@ -153,10 +153,6 @@ namespace Catkeys
 			if(value < min) return min;
 			if(value > max) return max;
 			return value;
-
-			//why this is not an extension method:
-			//1. Less chances to not use the return value (expecting that the function modifies variable's value, which it can't do). There is no attribute to warn about it, unless you have ReSharper (then [Pure] etc).
-			//2. All similar functions are in Calc class. Like most similar .NET functions are in .NET class, and not in Int32 etc.
 		}
 
 		/// <summary>
@@ -187,5 +183,26 @@ namespace Catkeys
 			return Math.Atan2(y, x) * (180 / Math.PI);
 		}
 
+#pragma warning disable CS3024 // Constraint type is not CLS-compliant (IConvertible uses uint)
+
+		/// <summary>
+		/// Adds or removes an enum flag.
+		/// </summary>
+		/// <typeparam name="T">enum. Must be of size 4 (default).</typeparam>
+		/// <param name="enumVariable">Enum variable to modify.</param>
+		/// <param name="flag">One or more flags to add or remove.</param>
+		/// <param name="add">If true, adds flag to enumVariable, else removes flag from enumVariable.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)] //makes caller's code nut just faster but also smaller, optimized maximally.
+		public static void SetFlag<T>(ref T enumVariable, T flag, bool add) where T : struct, IComparable, IFormattable, IConvertible
+		{
+			//note: this func is not an extension method of Enum, because 'this T t' is passed by value, cannot modify the variable.
+
+			int a = Unsafe.As<T, int>(ref enumVariable);
+			int b = Unsafe.As<T, int>(ref flag);
+			if(add) a |= b; else a &= ~b;
+			enumVariable = Unsafe.As<int, T>(ref a);
+		}
+
+#pragma warning restore CS3024 // Constraint type is not CLS-compliant
 	}
 }

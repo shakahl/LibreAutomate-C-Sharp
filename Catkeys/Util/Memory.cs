@@ -132,9 +132,6 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	unsafe struct LibProcessMemory
 	{
-		//Api.RTL_CRITICAL_SECTION _cs; //slower than SRW but not much. Initialization speed not tested.
-		//Api.RTL_SRWLOCK _lock; //2 times slower than C# lock, but we need this because C# lock is appdomain-local
-
 		#region variables used by our library classes
 		//Be careful with types whose sizes are different in 32 and 64 bit process. Use long and cast to IntPtr etc.
 
@@ -142,6 +139,7 @@ namespace Catkeys.Util
 		internal LibTables.ProcessVariables tables;
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
+		internal Thread_.ProcessVariables thread_;
 
 		#endregion
 
@@ -196,7 +194,7 @@ namespace Catkeys.Util
 	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
 	/// Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
 	/// </summary>
-	public unsafe class CharBuffer
+	internal unsafe class LibCharBuffer
 	{
 		char* _p;
 		int _n;
@@ -326,25 +324,23 @@ namespace Catkeys.Util
 		}
 
 		///
-		~CharBuffer()
-		{
-			_Free();
-		}
+		~LibCharBuffer()=>_Free();
 
 		/// <summary>
-		/// A [ThreadStatic] CharBuffer instance used in this library.
+		/// A [ThreadStatic] LibCharBuffer instance used in this library.
 		/// Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
 		/// </summary>
-		internal static CharBuffer LibCommon { get => _common ?? (_common = new CharBuffer()); }
-		[ThreadStatic] static CharBuffer _common;
+		internal static LibCharBuffer LibCommon { get => t_common ?? (t_common = new LibCharBuffer()); }
+		[ThreadStatic] static LibCharBuffer t_common;
 	}
 
 	/// <summary>
 	/// Allocates a native memory buffer as byte*.
 	/// Normally is used as a [ThreadStatic] variable. It is faster than local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
-	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
+	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated at least until the thread ends or some other function compacts it.
+	/// Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
 	/// </summary>
-	public unsafe class ByteBuffer
+	internal unsafe class LibByteBuffer
 	{
 		byte* _p;
 		int _n;
@@ -441,18 +437,22 @@ namespace Catkeys.Util
 		}
 
 		///
-		~ByteBuffer()
-		{
-			_Free();
-		}
+		~LibByteBuffer()=>_Free();
 
 		/// <summary>
-		/// A [ThreadStatic] ByteBuffer instance used in this library.
+		/// A [ThreadStatic] LibByteBuffer instance used in this library.
 		/// Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
 		/// </summary>
-		internal static ByteBuffer LibCommon { get => _common ?? (_common = new ByteBuffer()); }
-		[ThreadStatic] static ByteBuffer _common;
+		internal static LibByteBuffer LibCommon { get => t_common ?? (t_common = new LibByteBuffer()); }
+		[ThreadStatic] static LibByteBuffer t_common;
 	}
+
+	//SHOULDDO: dispose soon when thread ends. When the Thread_.Exit event will be available.
+	//	Or better use WeakReference.
+	//CONSIDER: instead of native memory use byte[].
+	//	Or even reject this altogether and create something maybe slightly slower and generating garbage.
+	//		Because sharing a ThreadStatic buffer between functions is not good.
+
 
 	//Tried to create a fast memory buffer class, eg for calling API.
 	//Failed, because compiler memsets the buffer. If buffer size is > 1000, it is slower than HeapAlloc/HeapFree.
@@ -529,63 +529,45 @@ namespace Catkeys.Util
 		static IntPtr _processHeap = Api.GetProcessHeap();
 
 		/// <summary>
-		/// Allocates size bytes of memory.
-		/// The memory is uninitialized, ie random byte values.
+		/// Allocates new memory block and returns its address.
 		/// Calls API <msdn>HeapAlloc</msdn>.
 		/// </summary>
+		/// <param name="size">Byte count.</param>
+		/// <param name="zeroInit">Set all bytes = 0. If false (default), the memory is uninitialized, ie random byte values. Slower when true.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
-		public static void* Alloc(LPARAM size)
+		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or <see cref="ReAlloc"/> if need to resize it without losing data.</remarks>
+		public static void* Alloc(LPARAM size, bool zeroInit=false)
 		{
-			void* r = Api.HeapAlloc(_processHeap, 0, size);
+			void* r = Api.HeapAlloc(_processHeap, zeroInit?8u:0u, size);
 			if(r == null) throw new OutOfMemoryException();
 			return r;
+
+			//rejected: GC.AddMemoryPressure. Marshal.AllocHGlobal does not do it.
 		}
 
 		/// <summary>
-		/// Allocates size bytes of memory and sets all bytes to 0.
-		/// Calls API <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
-		/// </summary>
-		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
-		public static void* AllocZero(LPARAM size)
-		{
-			void* r = Api.HeapAlloc(_processHeap, 8, size);
-			if(r == null) throw new OutOfMemoryException();
-			return r;
-		}
-
-		/// <summary>
-		/// Reallocates size bytes of memory.
-		/// When size is growing, the added memory is uninitialized, ie random byte values.
-		/// If mem is null, allocates new memory like Alloc.
+		/// Reallocates a memory block to make it bigger or smaller.
+		/// Returns its address, which in most cases is different than the old memory block address.
+		/// Preserves data in Math.Min(old size, new size) bytes of old memory (copies from old memory if need).
 		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
 		/// </summary>
+		/// <param name="mem">Old memory address. If null, allocates new memory like Alloc.</param>
+		/// <param name="size">New byte count.</param>
+		/// <param name="zeroInit">When size is growing, set all added bytes = 0. If false (default), the added memory is uninitialized, ie random byte values. Slower when true.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
-		public static void* ReAlloc(void* mem, LPARAM size)
+		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or ReAlloc if need to resize it without losing data.</remarks>
+		public static void* ReAlloc(void* mem, LPARAM size, bool zeroInit = false)
 		{
+			uint flag = zeroInit ? 8u : 0u;
 			void* r;
-			if(mem == null) r = Api.HeapAlloc(_processHeap, 0, size);
-			else r = Api.HeapReAlloc(_processHeap, 0, mem, size);
+			if(mem == null) r = Api.HeapAlloc(_processHeap, flag, size);
+			else r = Api.HeapReAlloc(_processHeap, flag, mem, size);
 			if(r == null) throw new OutOfMemoryException();
 			return r;
 		}
 
 		/// <summary>
-		/// Reallocates size bytes of memory and sets added bytes to 0.
-		/// If mem is null, allocates new memory like AllocZero.
-		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn> with flag HEAP_ZERO_MEMORY.
-		/// </summary>
-		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
-		public static void* ReAllocZero(void* mem, LPARAM size)
-		{
-			void* r;
-			if(mem == null) r = Api.HeapAlloc(_processHeap, 8, size);
-			else r = Api.HeapReAlloc(_processHeap, 8, mem, size);
-			if(r == null) throw new OutOfMemoryException();
-			return r;
-		}
-
-		/// <summary>
-		/// Frees memory.
+		/// Frees a memory block.
 		/// Does nothing if mem is null.
 		/// Calls API <msdn>HeapFree</msdn>.
 		/// </summary>

@@ -126,7 +126,7 @@ static class Strips
 	{
 		var a = _strips.Find(cmd);
 		int i, n = a.Count;
-		if(n == 0) { DebugPrint("item not found: " + cmd); return; }
+		if(n == 0) { Debug_.Print("item not found: " + cmd); return; }
 		for(i = 0; i < n; i++) {
 			switch(a[i]) {
 			case ToolStripMenuItem m:
@@ -148,7 +148,7 @@ static class Strips
 	{
 		var a = _strips.Find(cmd);
 		int i, n = a.Count;
-		if(n == 0) { DebugPrint("item not found: " + cmd); return; }
+		if(n == 0) { Debug_.Print("item not found: " + cmd); return; }
 		for(i = 0; i < n; i++) {
 			a[i].Enabled = enable;
 		}

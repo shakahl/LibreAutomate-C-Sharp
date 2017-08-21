@@ -257,7 +257,7 @@ namespace G.Controls
 				var handler = _callbacks.GetClickHandler(tag);
 				if(handler != null) item.Click += handler;
 				else {
-					DebugPrint("no handler of " + tag);
+					Debug_.Print("no handler of " + tag);
 					//return null;
 					//item.Enabled = false;
 					item.Visible = false;
@@ -290,7 +290,7 @@ namespace G.Controls
 					//Fill menu items later. This saves ~50 ms of startup time if not using dd.SuspendLayout. With dd.SuspendLayout - just 5 ms.
 					//Can do it with Opening event or with timer. With timer easier. With event users cannot use MSAA etc to automate clicking menu items (with timer cannot use it only the first 1-2 seconds).
 #if true
-					Time.SetTimer(500, true, t =>
+					Timer_.After(500, t =>
 					{
 						dd.SuspendLayout();
 						_AddChildItems(x, dd, true);
@@ -348,7 +348,7 @@ namespace G.Controls
 				if(x.Attribute_(out s, "hk")) {
 					bool ok = Input.Misc.ReadHotkeyString(s, out var hk);
 					if(ok) try { mi.ShortcutKeys = hk; } catch { ok = false; }
-					if(!ok) DebugPrint("Invalid hotkey: " + s);
+					if(!ok) Debug_.Print("Invalid hotkey: " + s);
 				}
 				if(x.Attribute_(out string ss, "hkText")) mi.ShortcutKeyDisplayString = (s == null) ? ss : s + ", " + ss;
 			} else {

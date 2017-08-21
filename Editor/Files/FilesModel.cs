@@ -240,7 +240,7 @@ partial class FilesModel :ITreeModel
 	public FileNode FindByGUID(string guid)
 	{
 		if(GuidMap.TryGetValue(guid, out var f)) return f;
-		DebugPrint("GUID not found: " + guid);
+		Debug_.Print("GUID not found: " + guid);
 		return null;
 	}
 
@@ -748,7 +748,7 @@ partial class FilesModel :ITreeModel
 			var s = a[i] = Path_.Normalize(a[i]);
 			if(s.IndexOf_(@"\$RECYCLE.BIN\", true) > 0) {
 				TaskDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{this.FilesDirectory}\">collection folder</a> or other normal folder.",
-					icon: TDIcon.Info, owner: TV, onLinkClick: e => Shell.RunSafe(e.LinkHref));
+					icon: TDIcon.Info, owner: TV, onLinkClick: e => Shell.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = this.FilesDirectory;
@@ -926,7 +926,7 @@ partial class FilesModel :ITreeModel
 				switch(TaskDialog.ShowEx("Collection", a[0],
 					"1 Open collection|2 Import collection|0 Cancel",
 					flags: TDFlags.Wider, footerText: GetSecurityInfo(true))) {
-				case 1: Time.SetTimer(1, true, t => Panels.Files.LoadCollection(a[0])); break;
+				case 1: Timer_.After(1, t => Panels.Files.LoadCollection(a[0])); break;
 				case 2: ImportCollection(a[0], target, pos); break;
 				}
 				return;

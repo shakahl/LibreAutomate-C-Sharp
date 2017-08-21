@@ -32,7 +32,7 @@ namespace Catkeys.Util
 		//	SHFB cannot resolve it.
 #if USE_TUPLE
 		/// <summary>
-		/// Gets default app domain.
+		/// Gets default appdomain.
 		/// Returns tuple containing AppDomain domain and bool isCurrentDomain which is true if the domain is current (caller's) domain.
 		/// </summary>
 		public static (AppDomain domain, bool isCurrentDomain) GetDefaultDomain()
@@ -66,9 +66,9 @@ namespace Catkeys.Util
 		static AppDomain _defaultAppDomain; static bool _defaultAppDomainIsCurrent;
 #else
 		/// <summary>
-		/// Gets default app domain.
+		/// Gets default appdomain.
 		/// </summary>
-		/// <param name="isCurrentDomain">Receives true if called from default app domain.</param>
+		/// <param name="isCurrentDomain">Receives true if called from default appdomain.</param>
 		public static AppDomain GetDefaultDomain(out bool isCurrentDomain)
 		{
 			if(_defaultAppDomain == null) {
@@ -101,7 +101,7 @@ namespace Catkeys.Util
 		static AppDomain _defaultAppDomain; static bool _defaultAppDomainIsCurrent;
 
 		/// <summary>
-		/// Gets default app domain.
+		/// Gets default appdomain.
 		/// </summary>
 		public static AppDomain GetDefaultDomain()
 		{
@@ -137,7 +137,7 @@ namespace Catkeys.Util
 		class CorRuntimeHost { }
 
 		/// <summary>
-		/// Occurs when current app domain exits.
+		/// Occurs when current appdomain exits.
 		/// </summary>
 		/// <remarks>
 		/// The event handler is called when one of these AppDomain events occur, with their parameters:
@@ -181,7 +181,7 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Gets the entry assembly of current appdomain.
+		/// Gets the entry assembly of this appdomain.
 		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it fails if appdomain launched through <see cref="AppDomain.DoCallBack">AppDomain.DoCallBack</see>.
 		/// </summary>
 		public static Assembly EntryAssembly

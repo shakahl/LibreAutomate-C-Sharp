@@ -171,7 +171,7 @@ namespace G.Controls
 			var s = textHotkey.Text.Trim();
 			if(Empty(s)) return;
 			bool ok = true;
-			if(!Input.Misc.ReadHotkeyString(s, out var hk) || (hk & Input.Keys_.Windows) != 0) ok = false;
+			if(!Input.Misc.ReadHotkeyString(s, out var hk) || (hk & Keys_.Windows) != 0) ok = false;
 			else if((hk & (Keys.Control | Keys.Alt)) == 0) { var k = hk & Keys.KeyCode; ok = (k >= Keys.F2 && k <= Keys.F24); }
 
 			if(!ok) {

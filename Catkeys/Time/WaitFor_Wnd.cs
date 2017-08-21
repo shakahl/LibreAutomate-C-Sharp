@@ -24,7 +24,7 @@ namespace Catkeys
 	/// Contains functions to wait for a condition, such as 'window exists'.
 	/// </summary>
 	/// <remarks>
-	/// All functions have a timeoutS parameter. It is the maximal time to wait, in seconds. If it is 0, waits indefinitely. If &gt;0, after timeoutS time throws <see cref="TimeoutException"/>. If &lt;0, after -timeoutS time just stops waiting and returns default value (false, Wnd0, etc).
+	/// All functions have a timeoutS parameter. It is the maximal time to wait, in seconds. If it is 0, waits indefinitely. If &gt;0, after timeoutS time throws <see cref="TimeoutException"/>. If &lt;0, after -timeoutS time just stops waiting and returns default value (false, default(Wnd), etc).
 	/// 
 	/// While waiting, messages and events are not processed. For example, if used in a Form/Control event handler, the form would stop responding. Then need to use another thread, for example async/await/Task, like in the example.
 	/// </remarks>
@@ -50,11 +50,11 @@ namespace Catkeys
 	{
 		/// <summary>
 		/// Waits until the specified window exists and (optionally) is visible. Or the opposite, if <b>not</b> is true.
-		/// Returns window handle. If timeoutS is negative, on timeout returns Wnd0 (else exception).
+		/// Returns window handle. If timeoutS is negative, on timeout returns default(Wnd) (else exception).
 		/// All undocumented parameters etc are the same as <see cref="Wnd.Find"/>.
 		/// </summary>
 		/// <param name="timeoutS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns Wnd0.
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns default(Wnd).
 		/// </param>
 		/// <param name="name"></param>
 		/// <param name="className"></param>
@@ -63,13 +63,13 @@ namespace Catkeys
 		/// <param name="also"></param>
 		/// <param name="not">
 		/// Do the opposite - wait until no such windows exist.
-		/// The return value is opposite too. If succeeded - Wnd0. If timeout - a matching window (if no exception).
+		/// The return value is opposite too. If succeeded - default(Wnd). If timeout - a matching window (if no exception).
 		/// If you have a window's Wnd variable, use <see cref="WindowClosed"/> or <see cref="WindowVisible"/> instead.
 		/// </param>
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Wnd.Find"/>.</exception>
 		/// <remarks>
-		/// With default flags, the window also must be visible. Use flag HiddenToo to check hidden windows too.
+		/// By default ignores invisible windows. Use flag HiddenToo if need.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -133,7 +133,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the specified window exists and is the active window. Or the opposite, if <b>not</b> is true.
-		/// Returns window handle. If timeoutS is negative, on timeout returns Wnd0 (else exception).
+		/// Returns window handle. If timeoutS is negative, on timeout returns default(Wnd) (else exception).
 		/// All undocumented parameters etc are the same as <see cref="Wnd.Find"/>.
 		/// If you have a window's Wnd, use <see cref="WindowActive(Wnd, double, bool)"/> instead.
 		/// </summary>
@@ -145,7 +145,7 @@ namespace Catkeys
 		/// <param name="also"></param>
 		/// <param name="not">
 		/// Do the opposite - wait until the window is not the active window or does not exist.
-		/// The return value is always Wnd0.
+		/// The return value is always default(Wnd).
 		/// </param>
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Wnd.Find"/>.</exception>
@@ -182,7 +182,7 @@ namespace Catkeys
 				Wnd w = Wnd.WndActive;
 				if(not) {
 					if(!f.IsMatch(w)) break;
-					if(!to.Sleep()) break; //could return w, but it can be Wnd0. Better always return Wnd0.
+					if(!to.Sleep()) break; //could return w, but it can be default(Wnd). Better always return default(Wnd).
 				} else {
 					if(f.IsMatch(w)) return w;
 					if(!to.Sleep()) break;
@@ -200,9 +200,9 @@ namespace Catkeys
 		/// <param name="timeoutS">
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
-		/// <param name="not">Do the opposite - wait until the window is inactive or closed (no exception if closed/Wnd0/invalid).</param>
+		/// <param name="not">Do the opposite - wait until the window is inactive or closed (no exception if closed/default(Wnd)/invalid).</param>
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
-		/// <exception cref="WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+		/// <exception cref="WndException">w is default(Wnd)/invalid or the window was closed while waiting.</exception>
 		public static bool WindowActive(Wnd w, double timeoutS = 0.0, bool not = false)
 		{
 			if(not) return WindowCondition(w, t => !t.IsActive, timeoutS, true);
@@ -213,15 +213,15 @@ namespace Catkeys
 		/// Waits until the window is visible. Or the opposite, if <b>not</b> is true.
 		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
 		/// Uses <see cref="Wnd.IsVisible"/>.
-		/// For 'exists and is visible' use <see cref="WindowExists(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>.
+		/// For 'exists and is visible' use <see cref="WindowExists(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>. With default flags it waits for visible window and ignores invisible windows.
 		/// </summary>
 		/// <param name="w">A window or control.</param>
 		/// <param name="timeoutS">
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
-		/// <param name="not">Do the opposite - wait until the window is invisible or closed (no exception if closed/Wnd0/invalid).</param>
+		/// <param name="not">Do the opposite - wait until the window is invisible or closed (no exception if closed/default(Wnd)/invalid).</param>
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
-		/// <exception cref="WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+		/// <exception cref="WndException">w is default(Wnd)/invalid or the window was closed while waiting.</exception>
 		public static bool WindowVisible(Wnd w, double timeoutS = 0.0, bool not = false)
 		{
 			if(not) return WindowCondition(w, t => !t.IsVisible, timeoutS, true);
@@ -237,9 +237,9 @@ namespace Catkeys
 		/// <param name="timeoutS">
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
-		/// <param name="not">Do the opposite - wait until the window is disabled or closed (no exception if closed/Wnd0/invalid).</param>
+		/// <param name="not">Do the opposite - wait until the window is disabled or closed (no exception if closed/default(Wnd)/invalid).</param>
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
-		/// <exception cref="WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+		/// <exception cref="WndException">w is default(Wnd)/invalid or the window was closed while waiting.</exception>
 		public static bool WindowEnabled(Wnd w, double timeoutS = 0.0, bool not = false)
 		{
 			if(not) return WindowCondition(w, t => !t.IsEnabled, timeoutS, true);
@@ -251,7 +251,7 @@ namespace Catkeys
 		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
 		/// Uses <see cref="Wnd.IsAlive"/>.
 		/// </summary>
-		/// <param name="w">A window or control. Can be Wnd0/invalid.</param>
+		/// <param name="w">A window or control. Can be default(Wnd)/invalid.</param>
 		/// <param name="timeoutS">
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
@@ -263,7 +263,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the specified control (child window) is found in the window. Or the opposite, if <b>not</b> is true.
-		/// Returns the control. If timeoutS is negative, on timeout returns Wnd0 (else exception).
+		/// Returns the control. If timeoutS is negative, on timeout returns default(Wnd) (else exception).
 		/// Uses <see cref="Wnd.IsEnabled"/>.
 		/// </summary>
 		/// <param name="w">Direct or indirect parent window.</param>
@@ -272,12 +272,12 @@ namespace Catkeys
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
 		/// <param name="not">
-		/// Do the opposite - wait until the control not found, or until the window closed (no exception if closed/Wnd0/invalid).
-		/// The return value is opposite too. If succeeded - Wnd0. If timeout - a matching control (if no exception).
+		/// Do the opposite - wait until the control not found, or until the window closed (no exception if closed/default(Wnd)/invalid).
+		/// The return value is opposite too. If succeeded - default(Wnd). If timeout - a matching control (if no exception).
 		/// If you have a control's Wnd variable, use <see cref="WindowClosed"/> or <see cref="WindowVisible"/> instead.
 		/// </param>
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
-		/// <exception cref="WndException">w is Wnd0/invalid or the window was closed while waiting.</exception>
+		/// <exception cref="WndException">w is default(Wnd)/invalid or the window was closed while waiting.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Wnd w = Wnd.Find("Options");

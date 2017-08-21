@@ -41,8 +41,8 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the top-level parent window of this control.
-		/// If this is a top-level window, returns this window.
-		/// Calls API <msdn>GetAncestor</msdn>(GA_ROOT).
+		/// If this is a top-level window, returns this. Returns default(Wnd) if this is invalid.
+		/// Calls API <msdn>GetAncestor</msdn>(GA_ROOT). Unlike the API, this function does not return default(Wnd) when this is Misc.WndRoot.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public Wnd WndWindow
@@ -74,7 +74,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the window or control that is the direct parent of this control.
-		/// Returns Wnd0 (0) if this is a top-level window.
+		/// Returns default(Wnd) if this is a top-level window.
 		/// If need top-level parent window, use <see cref="WndWindow"/>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -83,7 +83,7 @@ namespace Catkeys
 			get
 			{
 				Wnd R = Api.GetParent(this);
-				if(R.Is0 || R == Api.GetWindow(this, Api.GW_OWNER) || R == _wDesktop) return Wnd0;
+				if(R.Is0 || R == Api.GetWindow(this, Api.GW_OWNER) || R == _wDesktop) return default(Wnd);
 				return R;
 				//tested: GetAncestor much slower. IsChild also slower.
 				//About 'R == _wDesktop': it is rare but I have seen that desktop is owner.
@@ -104,7 +104,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the window of the same type that is highest in the Z order.
 		/// If this is a top-level window, gets first top-level window, else gets first control of the same direct parent.
-		/// If this is the first, returns this, not Wnd0.
+		/// If this is the first, returns this, not default(Wnd).
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -113,7 +113,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the window of the same type that is lowest in the Z order.
 		/// If this is a top-level window, gets last top-level window, else gets last control of the same direct parent.
-		/// If this is the last, returns this, not Wnd0.
+		/// If this is the last, returns this, not default(Wnd).
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -122,7 +122,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the window of the same type that is next (below this) in the Z order.
 		/// If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
-		/// If this is the last, returns Wnd0.
+		/// If this is the last, returns default(Wnd).
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDNEXT).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -131,7 +131,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the window of the same type that is previous (above this) in the Z order.
 		/// If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
-		/// If this is the first, returns Wnd0.
+		/// If this is the first, returns default(Wnd).
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDPREV).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -139,7 +139,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the child control at the top of the Z order.
-		/// Returns Wnd0 if no children.
+		/// Returns default(Wnd) if no children.
 		/// The same as <see cref="WndChild">WndChild</see>(0).
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_CHILD).
 		/// </summary>
@@ -148,20 +148,20 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the child control at the bottom of the Z order.
-		/// Returns Wnd0 if no children.
+		/// Returns default(Wnd) if no children.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public Wnd WndLastChild { get { var c = Api.GetWindow(this, Api.GW_CHILD); return c.Is0 ? c : Api.GetWindow(c, Api.GW_HWNDLAST); } }
 
 		/// <summary>
 		/// Gets the child control at the specified position in the Z order.
-		/// Returns Wnd0 if no children or if index is invalid.
+		/// Returns default(Wnd) if no children or if index is invalid.
 		/// </summary>
 		/// <param name="index">0-based index of the child control in the Z order.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public Wnd WndChild(int index)
 		{
-			if(index < 0) return Wnd0;
+			if(index < 0) return default(Wnd);
 			Wnd c = Api.GetWindow(this, Api.GW_CHILD);
 			for(; index > 0 && !c.Is0; index--) c = Api.GetWindow(c, Api.GW_HWNDNEXT);
 			return c;
@@ -170,7 +170,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the active (foreground) window.
 		/// Calls API <msdn>GetForegroundWindow</msdn>.
-		/// Returns Wnd0 if there is no active window; more info: <see cref="Misc.WaitForAnActiveWindow"/>.
+		/// Returns default(Wnd) if there is no active window; more info: <see cref="Misc.WaitForAnActiveWindow"/>.
 		/// </summary>
 		public static Wnd WndActive { get => Api.GetForegroundWindow(); }
 
@@ -204,9 +204,9 @@ namespace Catkeys
 			/// <summary>
 			/// Gets the very first top-level window in the Z order.
 			/// Usually it is a topmost window.
-			/// Calls API <msdn>GetTopWindow</msdn>(Wnd0).
+			/// Calls API <msdn>GetTopWindow</msdn>(default(Wnd)).
 			/// </summary>
-			public static Wnd WndTop { get => Api.GetTopWindow(Wnd0); }
+			public static Wnd WndTop { get => Api.GetTopWindow(default(Wnd)); }
 
 			/// <summary>
 			/// Gets the first (top) enabled window in the chain of windows owned by w, or w itself if there are no such windows.
@@ -267,7 +267,7 @@ namespace Catkeys
 						if(!lvControl.Is0) return t;
 					}
 				}
-				return Wnd0;
+				return default(Wnd);
 
 				//info:
 				//If no wallpaper, desktop is GetShellWindow, else a visible WorkerW window.
@@ -286,10 +286,10 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets next window in the Z order, skipping invisible and other windows that would not be added to taskbar or not activated by Alt+Tab.
-		/// Returns Wnd0 if there are no such windows.
-		/// If this is Wnd0, starts from the top of the Z order.
+		/// Returns default(Wnd) if there are no such windows.
+		/// If this is default(Wnd), starts from the top of the Z order.
 		/// </summary>
-		/// <param name="retryFromTop">If this is not Wnd0 and there are no matching windows after it, retry from the top of the Z order. Like Alt+Tab does. Can return wFrom.</param>
+		/// <param name="retryFromTop">If this is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Like Alt+Tab does. Can return wFrom.</param>
 		/// <param name="skipMinimized">Skip minimized windows.</param>
 		/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has UAC integrity level uiAccess).</param>
 		/// <param name="likeAltTab">
@@ -303,7 +303,7 @@ namespace Catkeys
 		/// <seealso cref="Misc.MainWindows"/>
 		public Wnd WndNextMain(bool retryFromTop = false, bool skipMinimized = false, bool allDesktops = false, bool likeAltTab = false)
 		{
-			Wnd lastFound = Wnd0, w2 = Wnd0, w = this;
+			Wnd lastFound = default(Wnd), w2 = default(Wnd), w = this;
 			if(w.Is0) retryFromTop = false;
 
 			for(;;) {
@@ -376,7 +376,7 @@ namespace Catkeys
 			public static List<Wnd> MainWindows(bool allDesktops = false, bool likeAltTab = false)
 			{
 				List<Wnd> a = new List<Wnd>();
-				for(Wnd w = Wnd0; ;) {
+				for(Wnd w = default(Wnd); ;) {
 					w = w.WndNextMain(allDesktops: allDesktops, likeAltTab: likeAltTab);
 					if(w.Is0) break;
 					a.Add(w);
@@ -444,7 +444,7 @@ namespace Catkeys
 
 			///// <summary>
 			///// Activates another main window, like with Alt+Tab.
-			///// Returns the window. Returns Wnd0 if there is no such window or fails to activate.
+			///// Returns the window. Returns default(Wnd) if there is no such window or fails to activate.
 			///// Calls <see cref="WndNextMain"/> and <see cref="Activate()"/>.
 			///// When all or all except one windows are minimized, may restore a different window than Alt+Tab would.
 			///// An alternative way - send Alt+Tab keys, but it works not everywhere.
@@ -456,7 +456,7 @@ namespace Catkeys
 			//		Wnd wa = WndActive;
 			//		Wnd w = wa.WndNextMain(retryFromTop: true, skipMinimized: true, likeAltTab: true);
 			//		if(w.Is0 || w == wa) { //0 or 1 non-minimized windows; activate the most recently minimized, which usually is at the Z bottom.
-			//			w = Wnd0;
+			//			w = default(Wnd);
 			//			var a = Misc.MainWindows(likeAltTab: true);
 			//			int i = a.Count - 1;
 			//			if(i >= 0 && a[i] != wa) w = a[i];
@@ -465,7 +465,7 @@ namespace Catkeys
 			//		return w;
 			//	}
 			//	catch(WndException) { }
-			//	return Wnd0;
+			//	return default(Wnd);
 
 			//	//notes:
 			//	//The order of windows used by Alt+Tab is not the same as the Z order, especially when there are minimized windows.
@@ -485,7 +485,7 @@ namespace Catkeys
 			//		for(int i = 0; i < 2; i++) {
 			//			Wnd w = WndNextMain(wa, retryFromTop: true, skipMinimized: i == 0, likeAltTab: true);
 			//			if(w.Is0 || w == wa) {
-			//				if(i == 0 && w.Is0) wa = Wnd0; //0 non-minimized windows; activate the first minimized.
+			//				if(i == 0 && w.Is0) wa = default(Wnd); //0 non-minimized windows; activate the first minimized.
 			//				continue;
 			//			}
 			//			w._Activate();
@@ -493,7 +493,7 @@ namespace Catkeys
 			//		}
 			//	}
 			//	catch(WndException) { }
-			//	return Wnd0;
+			//	return default(Wnd);
 			//}
 		}
 	}

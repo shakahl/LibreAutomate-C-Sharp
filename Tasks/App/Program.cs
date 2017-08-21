@@ -79,7 +79,7 @@ namespace Catkeys.Tasks
 
 				Perf.First();
 				//_TrayIcon(true); //13 ms
-				Time.SetTimer(1, true, t=>_TrayIcon(true)); //note: shows tray icon with a delay if we have a work in this thread at startup
+				Timer_.After(1, t=>_TrayIcon(true)); //note: shows tray icon with a delay if we have a work in this thread at startup
 				//new Thread(() => { _TrayIcon(true); }).Start(); //cannot use NotifyIcon in a temporary thread
 
 				if(measureStartupTime) Perf.NW();

@@ -212,7 +212,7 @@ namespace Catkeys
 		#region static options
 
 		/// <summary>
-		/// Default options used by TaskDialog class functions called in this app domain.
+		/// Default options used by TaskDialog class functions called in this appdomain.
 		/// </summary>
 		public static class Options
 		{
@@ -242,8 +242,10 @@ namespace Catkeys
 
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
+			/// If screen index is invalid, the 'show' method shows warning, no exception.
 			/// </summary>
 			public static object DefaultScreen { get; set; }
+			//SHOULDDO: check invalid index now
 
 			/// <summary>
 			/// If icon not specified, use <see cref="TDIcon.App"/>.
@@ -273,9 +275,9 @@ namespace Catkeys
 		/// All parameters are the same as of <see cref="ShowEx"/>.
 		/// </summary>
 		public TaskDialog(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null,
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			) : this()
 		{
 			FlagEndThread = 0 != (flags & TDFlags.EndThread);
@@ -344,14 +346,23 @@ namespace Catkeys
 		/// <summary>
 		/// Sets custom icon.
 		/// </summary>
-		/// <param name="icon">System.Drawing.Icon or IntPtr (native icon handle). Size should be 32 or 16. The icon must remain valid until the dialog is closed, then you can dispose/destroy it.</param>
-		public void SetIcon(Types<Icon, IntPtr> icon)
+		/// <param name="icon">
+		/// Icon of size 32 or 16.
+		/// If you have native handle (see <see cref="Icons.GetFileIconHandle"/>), use Icon.FromHandle.
+		/// In any case, the icon must remain valid until the dialog is closed. Then you can dispose/destroy it.
+		/// This TaskDialog variable keeps icon reference to protect it from GC.
+		/// </param>
+		public void SetIcon(Icon icon)
 		{
-			_c.hMainIcon = icon.type == 1 ? icon.v1.Handle : icon.v2;
+			//rejected: accept native handle too (IntPtr). It's easy for callers to convert: Icon.FromHandle(h), and it just sets 2 Icon fields.
+
+			_iconGC = icon; //keep from GC
+			_c.hMainIcon = (icon == null) ? Zero : icon.Handle;
 			_SetFlag(TDF_.USE_HICON_MAIN, _c.hMainIcon != Zero);
 			//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
 			//note: for App icon ShowDialog will execute more code. The same for footer icon.
 		}
+		Icon _iconGC; //keep from GC
 
 		#region buttons
 
@@ -385,27 +396,22 @@ namespace Catkeys
 
 			bool _hasXButton;
 
-			internal TDCBF_ SetButtons(string buttons, Types<string, IEnumerable<string>> customButtons)
+			internal TDCBF_ SetButtons(string buttons, object customButtons)
 			{
 				_customButtons = null;
 				_mapIdUserNative = null;
 				_defaultButtonUserId = 0;
 				_isDefaultButtonSet = false;
 
-				switch(customButtons.type) {
-				case 1:
-					_ParseStringList(customButtons.v1, true);
-					break;
-				case 2:
+				if(customButtons is IEnumerable<string> e) {
 					int id = 0;
-					foreach(var v in customButtons.v2) {
+					foreach(var v in e) {
 						if(_customButtons == null) _customButtons = new List<_Button>();
 						string s = _ParseSingleString(v, ref id, true);
 						_customButtons.Add(new _Button(id, s));
 						DefaultButtonUserId = 1;
 					}
-					break;
-				}
+				} else _ParseStringList(customButtons?.ToString(), true);
 
 				return _ParseStringList(buttons, false);
 			}
@@ -559,9 +565,9 @@ namespace Catkeys
 		/// List of labels without ids. Can be string like "One|Two|..." or IEnumerable&lt;string&gt;.
 		/// Button ids will be 1, 2, ... . DefaultButton will be 1 (you can change it later).
 		/// </param>
-		public void SetButtons(string buttons, bool asCommandLinks = false, Types<string, IEnumerable<string>>? customButtons = null)
+		public void SetButtons(string buttons, bool asCommandLinks = false, object customButtons = null)
 		{
-			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons.GetValueOrDefault());
+			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
 			_SetFlag(TDF_.USE_COMMAND_LINKS, asCommandLinks);
 		}
 
@@ -669,13 +675,15 @@ namespace Catkeys
 		/// Adds text and custom icon at the bottom of the dialog.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">System.Drawing.Icon or IntPtr (native icon handle). Size should be 16. The icon must remain valid until the dialog is closed, then you can dispose/destroy it.</param>
-		public void SetFooterText(string text, Types<Icon, IntPtr> icon)
+		/// <param name="icon">Icon of size 16. Read more: <see cref="SetIcon(Icon)"/>.</param>
+		public void SetFooterText(string text, Icon icon)
 		{
 			_c.pszFooter = text;
-			_c.hFooterIcon = icon.type == 1 ? icon.v1.Handle : icon.v2;
+			_iconFooterGC = icon; //keep from GC
+			_c.hFooterIcon = (icon == null) ? Zero : icon.Handle;
 			_SetFlag(TDF_.USE_HICON_FOOTER, _c.hFooterIcon != Zero);
 		}
+		Icon _iconFooterGC; //keep from GC
 
 		/// <summary>
 		/// Adds Edit or Combo control (if editType is not TDEdit.None (0)).
@@ -715,7 +723,7 @@ namespace Catkeys
 		/// <seealso cref="Options.AutoOwnerWindow"/>
 		public void SetOwnerWindow(WndOrControl owner, bool ownerCenter = false, bool doNotDisable = false)
 		{
-			_c.hwndParent = (owner == null) ? Wnd0 : owner.GetWnd().WndWindow;
+			_c.hwndParent = owner.IsNull ? default(Wnd) : owner.Wnd.WndWindow;
 			_SetFlag(TDF_.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
 		}
@@ -724,20 +732,21 @@ namespace Catkeys
 		/// <summary>
 		/// Sets dialog position in screen.
 		/// </summary>
-		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
-		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
-		/// <param name="rawXY">Don't interpret 0 and negative x y in a special way.</param>
-		public void SetXY(int x, int y, bool rawXY = false)
+		/// <param name="x">X position in <see cref="Screen"/>. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure thet entire window is in screen.</param>
+		public void SetXY(Coord x, Coord y, bool rawXY = false)
 		{
 			_x = x; _y = y;
 			_rawXY = rawXY;
 		}
 
-		int _x, _y; bool _rawXY;
+		Coord _x, _y; bool _rawXY;
 
 		/// <summary>
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
 		/// If null or not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
+		/// If screen index is invalid, the 'show' method shows warning, no exception.
 		/// More info: <see cref="Screen_.FromObject"/>, <see cref="Wnd.MoveInScreen"/>.
 		/// </summary>
 		public object Screen { set; private get; }
@@ -807,6 +816,7 @@ namespace Catkeys
 
 		Wnd _dlg;
 		int _threadIdInShow;
+		bool _locked;
 
 		/// <summary>
 		/// Shows the dialog.
@@ -883,13 +893,24 @@ namespace Catkeys
 				//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
 				actCtxCookie = Util.LibActCtx.Activate();
 
-				for(int i = 0; i < 100; i++) { //see the API bug-workaround comment below
+				for(int i = 0; i < 10; i++) { //see the API bug-workaround comment below
+					_LockUnlock(true); //see the API bug-workaround comment below
+
 					hr = _CallTDI(out rNativeButton, out rRadioButton, out rIsChecked);
-					//TaskDialog[Indirect] API bug: if called simultaneously by 2 threads, fails and returns an unknown error code 0x800403E9.
-					//Workaround: retry. Also retry for other errors, eg E_OUTOFMEMORY and all other unexpected errors.
-					//In all my tests with 2 threads, was enough 1 retry, but in real life may be more threads.
-					if(hr == 0 || hr == Api.E_INVALIDARG || !_dlg.Is0) break; //about _dlg.Is0: _dlg is set if our callback function was called; then don't retry, because the dialog was possibly shown, and only then error.
-					Thread.Sleep(30); //100*30=3000
+
+					//TaskDialog[Indirect] API bug:
+					//	If called simultaneously by 2 threads, often fails and returns an unknown error code 0x800403E9.
+					//Known workarounds:
+					//	1. Lock. Unlock on first callback message. Now used.
+					//	2. Retry. Now used only for other unexpected errors, eg out-of-memory.
+
+					//if(hr != 0) PrintList("0x" + hr.ToString("X"), !_dlg.Is0);
+					if(hr == 0 //succeeded
+						|| hr == Api.E_INVALIDARG //will never succeed
+						|| hr == unchecked((int)0x8007057A) //invalid cursor handle (custom icon disposed)
+						|| !_dlg.Is0 //_dlg is set if our callback function was called; then don't retry, because the dialog was possibly shown, and only then error.
+						) break;
+					Thread.Sleep(30);
 				}
 
 				if(hr == 0) {
@@ -899,6 +920,8 @@ namespace Catkeys
 				}
 			}
 			finally {
+				_LockUnlock(false);
+
 				//Normally the dialog now is destroyed and _dlg now is 0, because _SetClosed called on the destroy message.
 				//But on Thread.Abort or other exception it is not called and the dialog is still alive and visible.
 				//Therefore Windows shows its annoying "stopped working" UI.
@@ -911,7 +934,7 @@ namespace Catkeys
 				_threadIdInShow = 0;
 
 				//DeactivateActCtx throws SEHException on Thread.Abort, don't know why.
-				try { Util.LibActCtx.Deactivate(actCtxCookie); } catch(SEHException) { /*DebugPrint("exc");*/ }
+				try { Util.LibActCtx.Deactivate(actCtxCookie); } catch(SEHException) { /*Debug_.Print("exc");*/ }
 
 				if(hhook != Zero) Api.UnhookWindowsHookEx(hhook);
 
@@ -946,7 +969,7 @@ namespace Catkeys
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
-				return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
+			return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
 			catch(Exception e) when(!(e is ThreadAbortException)) {
@@ -956,7 +979,26 @@ namespace Catkeys
 			//The API throws 'access violation' exception if some value is invalid (eg unknown flags in dwCommonButtons) or it does not like something.
 			//.NET does not allow to handle such exceptions, unless we use [HandleProcessCorruptedStateExceptions] or <legacyCorruptedStateExceptionsPolicy enabled="true"/> in config file.
 			//It makes dev/debug more difficult.
+
+			//CONSIDER: don't use the API. Reinvent wheel with Form. Because:
+			//	1. The API is so unreliable. Unexpected errors and even exceptions. Etc, etc.
+			//	2. Has not all we need, and modifying it is so dirty. Eg adding input field.
+			//	3. Not everything is possible, eg cannot show window inactive.
+			//	4. Does not auto-set correct width from text, like MessageBox API does.
 #endif
+		}
+
+		void _LockUnlock(bool on)
+		{
+			var obj = "/0p4oSiwoE+7Saqf30udQQ";
+			if(on) {
+				Debug.Assert(!_locked);
+				_locked = false;
+				Monitor.Enter(obj, ref _locked);
+			} else if(_locked) {
+				Monitor.Exit(obj);
+				_locked = false;
+			}
 		}
 
 		int _CallbackProc(Wnd w, TDApi.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
@@ -967,6 +1009,7 @@ namespace Catkeys
 			//Print(message);
 			switch(message) {
 			case TDApi.TDN.DIALOG_CONSTRUCTED:
+				_LockUnlock(false);
 				Send = new TDMessageSender(w, this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
 
@@ -980,10 +1023,12 @@ namespace Catkeys
 				if(_enableOwner) _c.hwndParent.Enable(true);
 
 				if(!_HasFlag(TDF_.POSITION_RELATIVE_TO_WINDOW)) {
-					object scr = Screen; if(scr == null && _c.hwndParent.Is0) scr = Options.DefaultScreen;
-					if((_x != 0 || _y != 0 || _rawXY || scr != null)) {
-						w.MoveInScreen(_x, _y, scr, rawXY: _rawXY);
-					}
+					bool isXY = !_x.IsNull || !_y.IsNull;
+					if(!_rawXY) {
+						object scr = Screen; if(scr == null && _c.hwndParent.Is0) scr = Options.DefaultScreen;
+						if(scr is int) scr = Screen_.FromIndex((int)scr, noThrow: true); //returns null if invalid
+						if(isXY || scr != null) w.MoveInScreen(_x, _y, scr);
+					} else if(isXY) w.Move(_x, _y);
 				}
 
 				bool topmost = false;
@@ -997,7 +1042,7 @@ namespace Catkeys
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
 
 				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
-				Time.SetTimer(1, true, tt => _dlg.ShowLL(true)); //use timer because at this time still invisible always
+				Timer_.After(1, tt => _dlg.ShowLL(true)); //use timer because at this time still invisible always
 
 				e = Created;
 				break;
@@ -1201,7 +1246,7 @@ namespace Catkeys
 		{
 			_isClosed = true;
 			if(_dlg.Is0) return;
-			_dlg = Wnd0;
+			_dlg = default(Wnd);
 			Send.Clear();
 			Util.AppDomain_.Exit -= _AppDomain__Exit;
 		}
@@ -1213,7 +1258,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets dialog window handle as Wnd.
-		/// Returns Wnd0 if the dialog is not open.
+		/// Returns default(Wnd) if the dialog is not open.
 		/// </summary>
 		public Wnd DialogWindow { get => _dlg; }
 
@@ -1239,7 +1284,7 @@ namespace Catkeys
 			TaskDialog _tdo; //note: using _tdo._hdlg would be unsafe in multithreaded context because may be already set to null, even if caller called IsOpen before.
 
 			internal TDMessageSender(Wnd dlg, TaskDialog tdo) { _dlg = dlg; _tdo = tdo; }
-			internal void Clear() { _dlg = Wnd0; _tdo = null; }
+			internal void Clear() { _dlg = default(Wnd); _tdo = null; }
 
 			/// <summary>
 			/// Sends a message to the dialog.
@@ -1427,8 +1472,8 @@ namespace Catkeys
 			if(_editWnd.Is0) return;
 			if(!onlyZorder) {
 				_EditControlGetPlace(out RECT r);
-				_editParent.LibMove(r.left, r.top, r.Width, r.Height);
-				_editWnd.LibMove(0, 0, r.Width, r.Height);
+				_editParent.MoveLL(r.left, r.top, r.Width, r.Height);
+				_editWnd.MoveLL(0, 0, r.Width, r.Height);
 			}
 			_editParent.ZorderTop();
 		}
@@ -1501,7 +1546,7 @@ namespace Catkeys
 				} else _editWnd.SetText(_editText?.ToString());
 
 				RECT cbr = _editWnd.Rect;
-				_editParent.LibResize(cbr.Width, cbr.Height); //because ComboBox resizes itself
+				_editParent.ResizeLL(cbr.Width, cbr.Height); //because ComboBox resizes itself
 			} else {
 				_editWnd.SetText(_editText?.ToString());
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
@@ -1576,7 +1621,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Your application icon.
-		/// It is the first native icon of the entry assembly of this app domain; if there are no icons - of the program file of this process (if it's different); if there are no icons too - the default program icon.
+		/// It is the first native icon of the entry assembly of this appdomain; if there are no icons - of the program file of this process (if it's different); if there are no icons too - the default program icon.
 		/// </summary>
 		App = Api.IDI_APPLICATION
 	}
@@ -1599,7 +1644,7 @@ namespace Catkeys
 	public enum TDFlags
 	{
 		/// <summary>
-		/// Display custom buttons as a column of commandl-links, not as a row of classic buttons.
+		/// Display custom buttons as a column of command-links, not as a row of classic buttons.
 		/// Command links can have multi-line text. The first line has bigger font.
 		/// More info about custom buttons: <see cref="TaskDialog.Show"/>.
 		/// </summary>
@@ -1622,7 +1667,7 @@ namespace Catkeys
 		OwnerCenter = 8,
 
 		/// <summary>
-		/// Don't interpret 0 and negative x y in a special way.
+		/// x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure thet entire window is in screen.
 		/// More info: <see cref="TaskDialog.SetXY"/>. 
 		/// </summary>
 		RawXY = 16,
@@ -1651,7 +1696,7 @@ namespace Catkeys
 		///// Show keyboard shortcuts (underlined characters), like when you press the Alt key.
 		///// More info: <see cref="TaskDialog.FlagKeyboardShortcutsVisible"/>.
 		///// </summary>
-		//KeyboardShortcutsVisible = 0x100,
+		//KeyboardShortcutsVisible = ,
 
 		//NoTaskbarButton = , //not so useful
 		//NeverActivate = , //don't know how to implement. LockSetForegroundWindow does not work if we can activate windows. HCBT_ACTIVATE can prevent activating but does not prevent deactivating.
@@ -1732,8 +1777,8 @@ namespace Catkeys
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
 		/// <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
-		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="TDResult.Timeout"/>.</param>
 		/// <param name="onLinkClick">
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
@@ -1761,9 +1806,9 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static TDResult ShowEx(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null,
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			)
 		{
 			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
@@ -1811,7 +1856,7 @@ namespace Catkeys
 		/// <seealso cref="ShowError"/>
 		/// <seealso cref="ShowOKCancel"/>
 		/// <seealso cref="ShowYesNo"/>
-		/// <seealso cref="DebugDialog">DebugDialog</seealso>
+		/// <seealso cref="Debug_.Dialog"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// if(TaskDialog.Show("Show another example?", null, "1 OK|2 Cancel", TDIcon.Info) != 1) return;
@@ -1825,7 +1870,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
 		{
 			return ShowEx(text1, text2, buttons, icon, flags, owner, expandedText).Button;
 		}
@@ -1835,7 +1880,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
 		{
 			return Show(text1, text2, buttons, TDIcon.Info, flags, owner, expandedText);
 		}
@@ -1845,7 +1890,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
 		{
 			return Show(text1, text2, buttons, TDIcon.Warning, flags, owner, expandedText);
 		}
@@ -1855,7 +1900,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
 		{
 			return Show(text1, text2, buttons, TDIcon.Error, flags, owner, expandedText);
 		}
@@ -1866,7 +1911,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
 		{
 			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner, expandedText);
 		}
@@ -1877,7 +1922,7 @@ namespace Catkeys
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null, string expandedText = null)
+		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
 		{
 			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner, expandedText);
 		}
@@ -1901,8 +1946,8 @@ namespace Catkeys
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
-		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
@@ -1938,9 +1983,9 @@ namespace Catkeys
 		public static TDResult ShowInputEx(
 			string text1 = null, string text2 = null,
 			TDEdit editType = TDEdit.Text, object editText = null,
-			TDFlags flags = 0, WndOrControl owner = null,
+			TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
-			int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null,
+			Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null,
 			string buttons = "1 OK|2 Cancel", Action<TDEventArgs> onButtonClick = null
 			)
 		{
@@ -1986,7 +2031,7 @@ namespace Catkeys
 			out string s,
 			string text1 = null, string text2 = null,
 			TDEdit editType = TDEdit.Text, object editText = null,
-			TDFlags flags = 0, WndOrControl owner = null
+			TDFlags flags = 0, WndOrControl owner = default(WndOrControl)
 			)
 		{
 			s = null;
@@ -2021,7 +2066,7 @@ namespace Catkeys
 		public static bool ShowInput(
 			out int i,
 			string text1 = null, string text2 = null, TDEdit editType = TDEdit.Number, object editText = null,
-			TDFlags flags = 0, WndOrControl owner = null
+			TDFlags flags = 0, WndOrControl owner = default(WndOrControl)
 			)
 		{
 			i = 0;
@@ -2049,8 +2094,8 @@ namespace Catkeys
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-		/// <param name="x">X position. 0 - screen center; negative - relative to the right edge.</param>
-		/// <param name="y">Y position. 0 - screen center; negative - relative to the bottom edge.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <remarks>
@@ -2065,9 +2110,9 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static TDResult ShowListEx(
-			Types<string, IEnumerable<string>> list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null,
+			object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
-			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0,
+			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0,
 			Action<TDEventArgs> onLinkClick = null
 			)
 		{
@@ -2101,7 +2146,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(Types<string, IEnumerable<string>> list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = null)
+		public static int ShowList(object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl))
 		{
 			return ShowListEx(list, text1, text2, flags, owner);
 		}
@@ -2134,9 +2179,9 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="CatException">Failed to show dialog.</exception>
 		public static TaskDialog ShowProgressEx(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = null,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 		)
 		{
 			if(Empty(buttons)) buttons = "0 Cancel";
@@ -2177,8 +2222,8 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="CatException">Failed to show dialog.</exception>
 		public static TaskDialog ShowProgress(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = null,
-			int x = 0, int y = 0)
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
+			Coord x = default(Coord), Coord y = default(Coord))
 		{
 			return ShowProgressEx(marquee, text1, text2, buttons, flags, owner, x: x, y: y);
 		}
@@ -2211,9 +2256,9 @@ namespace Catkeys
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static TaskDialog ShowNoWaitEx(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = null,
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, int x = 0, int y = 0, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			)
 		{
 			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
@@ -2236,7 +2281,7 @@ namespace Catkeys
 		public static TaskDialog ShowNoWait(
 			string text1 = null, string text2 = null,
 			string buttons = null, TDIcon icon = 0, TDFlags flags = 0,
-			WndOrControl owner = null
+			WndOrControl owner = default(WndOrControl)
 			)
 		{
 			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);

@@ -233,7 +233,7 @@ partial class FilesModel
 				if(fn != null) _SetCurrentFile(fn);
 			}
 		}
-		catch(Exception ex) { DebugPrint(ex.Message); }
+		catch(Exception ex) { Debug_.Print(ex.Message); }
 		finally { Save.LoadingState = false; }
 	}
 

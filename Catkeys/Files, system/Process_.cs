@@ -35,7 +35,7 @@ namespace Catkeys
 		static unsafe bool _QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, out string s)
 		{
 			s = null;
-			var b = Util.CharBuffer.LibCommon; int size = b.Max(300);
+			var b = Util.LibCharBuffer.LibCommon; int size = b.Max(300);
 			g1: if(!QueryFullProcessImageNameW(hProcess, nativeFormat, b.Alloc(size), ref size)) {
 				if(Native.GetError() == Api.ERROR_INSUFFICIENT_BUFFER) { size *= 2; goto g1; }
 				return false;
@@ -436,7 +436,7 @@ namespace Catkeys
 			/// <exception cref="CatException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(int processId, int nBytes)
 			{
-				_Alloc(processId, Wnd0, nBytes);
+				_Alloc(processId, default(Wnd), nBytes);
 			}
 
 			/// <summary>
@@ -477,7 +477,7 @@ namespace Catkeys
 			string _ReadString(bool ansiString, int nChars, int offsetBytes, Encoding enc = null)
 			{
 				if(Mem == Zero) return null;
-				var b = Util.CharBuffer.LibCommon;
+				var b = Util.LibCharBuffer.LibCommon;
 				int na = nChars; if(!ansiString) na *= 2;
 				if(!ReadProcessMemory(_hproc, Mem + offsetBytes, b.Alloc((na + 1) / 2), na, null)) return null;
 				if(!ansiString) return b.ToString(nChars);

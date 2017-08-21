@@ -52,9 +52,9 @@ namespace G.Controls
 
 		class _ThreadSharedData
 		{
-			public readonly Catkeys.Util.ByteBuffer
-				BufferForAnnot = new Catkeys.Util.ByteBuffer(),
-				BufferForText = new Catkeys.Util.ByteBuffer();
+			public readonly Catkeys.Util.LibByteBuffer
+				BufferForAnnot = new Catkeys.Util.LibByteBuffer(),
+				BufferForText = new Catkeys.Util.LibByteBuffer();
 			List<_Image> _a;
 			public int CacheSize { get; private set; }
 
@@ -490,7 +490,7 @@ namespace G.Controls
 					x += u.width + 30;
 				}
 			}
-			catch(Exception ex) { DebugPrint(ex.Message); }
+			catch(Exception ex) { Debug_.Print(ex.Message); }
 			finally { if(pen != Zero) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 			//Perf.NW();
 
@@ -519,7 +519,7 @@ namespace G.Controls
 		internal static extern IntPtr CreatePen(int iStyle, int cWidth, uint color);
 
 		[DllImport("gdi32.dll")]
-		internal static extern bool MoveToEx(IntPtr hdc, int x, int y, POINT* lppt = null);
+		internal static extern bool MoveToEx(IntPtr hdc, int x, int y, Point* lppt = null);
 
 		[DllImport("gdi32.dll")]
 		internal static extern bool LineTo(IntPtr hdc, int x, int y);
@@ -554,7 +554,7 @@ namespace G.Controls
 				if(from2 == from && to2 == to) {
 					s = n.textUTF8;
 				} else {
-					//DebugPrint("need to get text");
+					//Debug_.Print("need to get text");
 					s = _GetTextRange(from2, to2); if(s == null) return;
 				}
 				textPos = from2;
@@ -649,7 +649,7 @@ namespace G.Controls
 
 		//void _SetTimer(_TimerTasks task)
 		//{
-		//	if(_timer10 == null) _timer10 = new Time.Timer_(t =>
+		//	if(_timer10 == null) _timer10 = new Timer_(t =>
 		//	{
 		//		Perf.First();
 		//		if(0 != (_timerTasks & _TimerTasks.UpdateScrollBars)) _c.Call(SCI_UPDATESCROLLBARS);
@@ -659,7 +659,7 @@ namespace G.Controls
 		//	if(_timerTasks == 0) _timer10.Start(10, true);
 		//	_timerTasks |= task;
 		//}
-		//Time.Timer_ _timer10;
+		//Timer_ _timer10;
 		//_TimerTasks _timerTasks;
 	}
 }

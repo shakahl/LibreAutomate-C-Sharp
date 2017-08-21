@@ -265,8 +265,8 @@ namespace Catkeys
 				/// </param>
 				/// <exception cref="Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
 				/// <remarks>
-				/// This function can be called multiple times for the same class, for example called once in each app domain. Next time it just returns class atom.
-				/// Each app domain that calls this function uses its own instance of window procedure delegate.
+				/// This function can be called multiple times for the same class, for example called once in each appdomain. Next time it just returns class atom.
+				/// Each appdomain that calls this function uses its own instance of window procedure delegate.
 				/// The window class remains registered until this process ends. Don't need to unregister.
 				/// Thread-safe.
 				/// </remarks>
@@ -296,7 +296,7 @@ namespace Catkeys
 					}
 				}
 
-				//className/wndProc of classes registered with InterDomainRegister in this app domain.
+				//className/wndProc of classes registered with InterDomainRegister in this appdomain.
 				//InterDomainCreateWindow() uses it to get wndProc. Also it protects wndProc from GC.
 				static ConcurrentDictionary<string, Native.WNDPROC> _interDomain = new ConcurrentDictionary<string, Native.WNDPROC>(StringComparer.OrdinalIgnoreCase);
 
@@ -310,7 +310,7 @@ namespace Catkeys
 				/// </remarks>
 				public static Wnd InterDomainCreateWindow(uint exStyle, string className, string name, uint style, int x, int y, int width, int height, Wnd parent = default(Wnd), LPARAM controlId = default(LPARAM))
 				{
-					if(!_interDomain.TryGetValue(className, out Native.WNDPROC wndProc)) return Wnd0;
+					if(!_interDomain.TryGetValue(className, out Native.WNDPROC wndProc)) return default(Wnd);
 					Wnd w = Misc.CreateWindow(exStyle, className, name, style, x, y, width, height, parent, controlId);
 					if(!w.Is0 && wndProc != null) w.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					return w;
@@ -323,7 +323,7 @@ namespace Catkeys
 				/// </summary>
 				public static Wnd InterDomainCreateMessageWindow(string className)
 				{
-					return InterDomainCreateWindow(Native.WS_EX_NOACTIVATE, className, null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message);
+					return InterDomainCreateWindow(Native.WS_EX_NOACTIVATE, className, null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.HWND_MESSAGE);
 					//note: WS_EX_NOACTIVATE is important.
 				}
 

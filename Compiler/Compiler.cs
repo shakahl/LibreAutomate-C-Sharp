@@ -48,7 +48,7 @@ namespace Compiler
 
 			//message loop (not Application.Run() because then loads slower etc)
 			Native.MSG m;
-			while(Api.GetMessage(out m, Wnd0, 0, 0) > 0) { Api.DispatchMessage(ref m); }
+			while(Api.GetMessage(out m, default(Wnd), 0, 0) > 0) { Api.DispatchMessage(ref m); }
 		}
 
 		unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)

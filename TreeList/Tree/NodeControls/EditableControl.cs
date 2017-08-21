@@ -12,7 +12,7 @@ namespace Aga.Controls.Tree.NodeControls
 {
 	public abstract class EditableControl :InteractiveControl
 	{
-		private Time.Timer_ _timer;
+		private Timer_ _timer;
 		private bool _editFlag;
 
 		#region Properties
@@ -134,7 +134,7 @@ namespace Aga.Controls.Tree.NodeControls
 		void _StartTimer()
 		{
 			if(_timer == null)
-				_timer = new Time.Timer_(t =>
+				_timer = new Timer_(t =>
 				{
 					if(_editFlag) BeginEdit();
 					_editFlag = false;

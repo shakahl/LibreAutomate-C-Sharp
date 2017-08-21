@@ -38,11 +38,11 @@ class ScriptClass :Script
 		//Print(unu);
 		//ScriptOptions.ThreadDefault.speed=50;
 
-		Print(Option.Speed);
-		Option.Speed=10;
+		Print(Options.MouseClickSleep);
+		Options.MouseClickSleep = 10;
 		//Print(Option.speed);
 		TestStatic();
-		Option.Speed=20;
+		Options.MouseClickSleep = 20;
 		AnotherClass.TestAnother();
 
 		//var t=new Thread(ThreadProc);
@@ -68,12 +68,12 @@ class ScriptClass :Script
 
 	void ThreadProc()
 	{
-		Print(Option.Speed);
+		Print(Options.MouseClickSleep);
 	}
 
 	public static void TestStatic()
 	{
-		Print(Option.Speed);
+		Print(Options.MouseClickSleep);
 	}
 }
 
@@ -81,16 +81,16 @@ class AnotherClass
 {
 	public static void TestAnother()
 	{
-		Print(Script.Option.Speed);
+		Print(Options.MouseClickSleep);
 
 		var o = new ScriptOptions();
-		Print(o.Speed);
-		Moo(new ScriptOptions() { Speed=6, SlowKeys=true });
+		Print(o.MouseClickSleep);
+		Moo(new ScriptOptions() { MouseClickSleep = 6, MouseMoveSpeed = 100 });
 	}
 
 	public static void Moo(ScriptOptions o)
 	{
-		Print(o.Speed);
+		Print(o.MouseClickSleep);
 	}
 }
 
@@ -98,6 +98,35 @@ partial class Test
 {
 	static void TestOptions()
 	{
-		ScriptClass.TestMain();
+		//ScriptClass.TestMain();
+
+		//Print(Options.MouseClickSleep);
+		//using(ScriptOptions.Temp()) {
+		//	Options.MouseClickSleep = 1000;
+		//	Print(Options.MouseClickSleep);
+		//}
+		//Print(Options.MouseClickSleep);
+
+		//Print(Options.MouseClickSleep);
+		//using(var r=ScriptOptions.Temp()) {
+		//	Options.MouseClickSleep = 1000;
+		//	Print(Options.MouseClickSleep);
+		//	r.Dispose();
+		//	Print(Options.MouseClickSleep);
+		//	Options.MouseClickSleep = 1;
+		//}
+		//Print(Options.MouseClickSleep);
+
+		Print(Options.MouseClickSleep);
+		using(ScriptOptions.Temp()) {
+			Options.MouseClickSleep = 1000;
+			Print(Options.MouseClickSleep);
+			using(ScriptOptions.Temp()) {
+				Options.MouseClickSleep = 1;
+				Print(Options.MouseClickSleep);
+			}
+			Print(Options.MouseClickSleep);
+		}
+		Print(Options.MouseClickSleep);
 	}
 }

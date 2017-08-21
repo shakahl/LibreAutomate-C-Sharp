@@ -14,9 +14,11 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Reflection.Emit;
 using Microsoft.Win32.SafeHandles;
+using System.Resources;
+using System.Globalization;
 
 using Catkeys;
 using static Catkeys.NoClass;
@@ -98,9 +100,9 @@ namespace Catkeys.Util
 		/// <param name="height">Height, pixels.</param>
 		public bool Create(int width, int height)
 		{
-			IntPtr dcs = Api.GetDC(Wnd0);
+			IntPtr dcs = Api.GetDC(default(Wnd));
 			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
-			Api.ReleaseDC(Wnd0, dcs);
+			Api.ReleaseDC(default(Wnd), dcs);
 			return _bm != Zero;
 		}
 
@@ -155,18 +157,18 @@ namespace Catkeys.Util
 
 		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
 		{
-			var dcScreen = Api.GetDC(Wnd0);
+			var dcScreen = Api.GetDC(default(Wnd));
 			int h2 = -Calc.MulDiv(height, Api.GetDeviceCaps(dcScreen, 90), 72);
 			Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
 			if(calculateHeightOnScreen) {
 				var dcMem = Api.CreateCompatibleDC(dcScreen);
 				var of = Api.SelectObject(dcMem, Handle);
 				Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
-				HeightOnScreen = z.cy;
+				HeightOnScreen = z.Height;
 				Api.SelectObject(dcMem, of);
 				Api.DeleteDC(dcMem);
 			}
-			Api.ReleaseDC(Wnd0, dcScreen);
+			Api.ReleaseDC(default(Wnd), dcScreen);
 		}
 	}
 
@@ -198,7 +200,7 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Gets native module handle of current app domain entry assembly.
+		/// Gets native module handle of the entry assembly of this appdomain.
 		/// If the assembly consists of multiple modules, gets its first loaded module.
 		/// </summary>
 		public static IntPtr OfAppDomainEntryAssembly()
@@ -236,14 +238,14 @@ namespace Catkeys.Util
 
 		/// <summary>
 		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
 		public static bool IsCatkeysNgened { get => IsAssemblyNgened(typeof(Misc).Assembly); }
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
 		/// Returns true if assembly asm is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
 		public static bool IsAssemblyNgened(Assembly asm)
 		{
@@ -255,7 +257,7 @@ namespace Catkeys.Util
 		}
 		/// <summary>
 		/// Returns true if assembly of type is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process or app domain.
+		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
 		public static bool IsAssemblyNgened(Type type) { return IsAssemblyNgened(type.Assembly); }
 
@@ -271,40 +273,88 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Do not call. Use class TypeSize, which caches the type size.
-		/// This is used by TypeSize, not in it, because it is a generic type...
+		/// Gets an Image or other object from managed resources of appdomain's entry assembly.
+		/// Returns null if not found.
 		/// </summary>
-		/// <param name="t"></param>
-		/// <returns></returns>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		internal static int LibGetTypeSize(Type t)
+		/// <param name="name">Resource name, like "example", not like "Project.Properties.Resources.example".</param>
+		/// <remarks>
+		/// Uses <see cref="ResourceManager.GetObject(string, CultureInfo)"/>.
+		/// The Image is not cached. Will need to Dispose.
+		/// </remarks>
+		public static object GetAppResource(string name)
 		{
-			var dm = new DynamicMethod("SizeOfType", typeof(int), Type.EmptyTypes);
-			ILGenerator il = dm.GetILGenerator();
-			il.Emit(OpCodes.Sizeof, t);
-			il.Emit(OpCodes.Ret);
-			return (int)dm.Invoke(null, null);
-			//Print(dm.MethodImplementationFlags);
+			try {
+				var rm = LibGetAppResourceManager(out var culture);
+				return rm?.GetObject(name, culture);
+			}
+			catch { return null; }
+
+			//info: why need culture? Because much much faster if culture is set to invariant.
 		}
-	}
 
-	/// <summary>
-	/// Gets managed run-time size of type T. Works with any type.
-	/// Unlike sizeof, can be used in generic classes too.
-	/// Unlike Marshal.SizeOf, gets managed type size (eg 1 for bool), not native type size (eg 4 for bool).
-	/// Example: <c>Print(Catkeys.Util.TypeSize&lt;T&gt;.Size);</c>.
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public static class TypeSize<T>
-	{
 		/// <summary>
-		/// Gets T type size.
+		/// Gets ResourceManager of appdomain's entry assembly.
+		/// Returns null if the assembly does not have resources or if fails.
 		/// </summary>
-		public readonly static int Size;
-		static TypeSize() { Size = Misc.LibGetTypeSize(typeof(T)); }
+		internal static ResourceManager LibGetAppResourceManager(out CultureInfo culture)
+		{
+			if(_appResourceManager == null) {
+				culture = null;
+				var asm = AppDomain_.EntryAssembly;
+				var s = asm?.GetManifestResourceNames()?.FirstOrDefault(k => k.EndsWith_(".Properties.Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
+				if(s == null) return null; //no resources
+				s = s.Remove(s.Length - 10); //remove ".resources", it's documented
+				var t = asm.GetType(s); if(t == null) return null;
+				var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal
+				if(t.GetProperty("ResourceManager", fl)?.GetValue(null) is ResourceManager rm) {
+					_appResourceCulture = t.GetProperty("Culture")?.GetValue(null) as CultureInfo;
+					_appResourceManager = rm;
+				} else {
+					Debug_.Print("failed to get ResourceManager property");
+					_appResourceManager = new ResourceManager(s, asm);
+				}
+			}
+			culture = _appResourceCulture;
+			return _appResourceManager;
+		}
+		static ResourceManager _appResourceManager;
+		static CultureInfo _appResourceCulture;
 
-		//speed: quite fast, especially when ngened. When using this generic class, LibGetTypeSize is called once for each type.
+		//rejected: now we have Unsafe.SizeOf<T>().
+		///// <summary>
+		///// Do not call. Use class TypeSize, which caches the type size.
+		///// This is used by TypeSize, not in it, because it is a generic type...
+		///// </summary>
+		///// <param name="t"></param>
+		//[MethodImpl(MethodImplOptions.NoInlining)]
+		//internal static int LibGetTypeSize(Type t)
+		//{
+		//	var dm = new DynamicMethod("SizeOfType", typeof(int), Type.EmptyTypes);
+		//	ILGenerator il = dm.GetILGenerator();
+		//	il.Emit(OpCodes.Sizeof, t);
+		//	il.Emit(OpCodes.Ret);
+		//	return (int)dm.Invoke(null, null);
+		//	//Print(dm.MethodImplementationFlags);
+		//}
 	}
+
+	///// <summary>
+	///// Gets managed run-time size of type T. Works with any type.
+	///// Unlike sizeof, can be used in generic classes too.
+	///// Unlike Marshal.SizeOf, gets managed type size (eg 1 for bool), not native type size (eg 4 for bool).
+	///// Example: <c>Print(Catkeys.Util.TypeSize&lt;T&gt;.Size);</c>.
+	///// </summary>
+	///// <typeparam name="T"></typeparam>
+	//public static class TypeSize<T>
+	//{
+	//	/// <summary>
+	//	/// Gets T type size.
+	//	/// </summary>
+	//	public readonly static int Size;
+	//	static TypeSize() { Size = Misc.LibGetTypeSize(typeof(T)); }
+
+	//	//speed: quite fast, especially when ngened. When using this generic class, LibGetTypeSize is called once for each type.
+	//}
 
 #if DEBUG
 	/// <summary>
@@ -348,9 +398,9 @@ namespace Catkeys.Util
 			get
 			{
 				if(_baseDPI == 0) {
-					var dc = Api.GetDC(Wnd0);
+					var dc = Api.GetDC(default(Wnd));
 					_baseDPI = Api.GetDeviceCaps(dc, 90); //LOGPIXELSY
-					Api.ReleaseDC(Wnd0, dc);
+					Api.ReleaseDC(default(Wnd), dc);
 				}
 				return _baseDPI;
 			}

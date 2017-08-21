@@ -27,8 +27,8 @@ class PanelStatus :Control
 {
 	SciControl _c;
 	StringBuilder _s;
-	POINT _p;
-	Time.Timer_ _timer;
+	Point _p;
+	Timer_ _timer;
 	bool _isMyTimer;
 	int _timerStopCounter;
 
@@ -50,7 +50,7 @@ class PanelStatus :Control
 		this.Controls.Add(_c);
 
 		_s = new StringBuilder(1000);
-		_timer = new Time.Timer_(_MouseInfo);
+		_timer = new Timer_(_MouseInfo);
 		Program.Timer1s += Program_Timer1s;
 	}
 
@@ -89,7 +89,7 @@ class PanelStatus :Control
 		_MouseInfo(null);
 	}
 
-	void _MouseInfo(Time.Timer_ timer)
+	void _MouseInfo(Timer_ timer)
 	{
 		var p = Mouse.XY;
 		bool noChange = p == _p;
@@ -112,7 +112,7 @@ class PanelStatus :Control
 
 		_s.Clear();
 		//Print(_s.Capacity);
-		_s.AppendFormat("{0}\n{1} j", p.x, p.y);
+		_s.AppendFormat("{0}\n{1} j", p.X, p.Y);
 		//remember: limit long text, each line separatelly
 
 		_MouseInfo_SetText();

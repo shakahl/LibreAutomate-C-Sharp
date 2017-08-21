@@ -20,7 +20,6 @@ using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	//[DebuggerStepThrough]
 	public partial struct Wnd
 	{
 		/// <summary>
@@ -71,7 +70,7 @@ namespace Catkeys
 				case 1:
 					using(var p = Process_.LibProcessHandle.FromWnd(w)) {
 						if(p != null) {
-							var b = Util.CharBuffer.LibCommon; int na = 1000;
+							var b = Util.LibCharBuffer.LibCommon; int na = 1000;
 							if(0 == _Api.GetApplicationUserModelId(p, ref na, b.Alloc(na))) appId = b.ToString();
 						}
 					}
@@ -114,15 +113,15 @@ namespace Catkeys
 			bool retry = false;
 			string name = null;
 			g1:
-			if(!Ver.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return Wnd0;
-			Wnd c = Api.FindWindowEx(w, Wnd0, "Windows.UI.Core.CoreWindow", null);
+			if(!Ver.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default(Wnd);
+			Wnd c = Api.FindWindowEx(w, default(Wnd), "Windows.UI.Core.CoreWindow", null);
 			if(!c.Is0) return c;
-			if(retry) return Wnd0;
+			if(retry) return default(Wnd);
 
-			name = w.GetText(false, false); if(Empty(name)) return Wnd0;
+			name = w.GetText(false, false); if(Empty(name)) return default(Wnd);
 
 			for(;;) {
-				c = Api.FindWindowEx(Wnd0, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
+				c = Api.FindWindowEx(default(Wnd), c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
 				if(c.Is0) break;
 				if(c.IsCloaked) return c; //else probably it is an unrelated window
 			}
@@ -136,72 +135,10 @@ namespace Catkeys
 		/// </summary>
 		static Wnd _WindowsStoreAppHost(Wnd w)
 		{
-			if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return Wnd0;
+			if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default(Wnd);
 			Wnd wo = w.WndDirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
-			string s = w.GetText(false, false); if(Empty(s)) return Wnd0;
+			string s = w.GetText(false, false); if(Empty(s)) return default(Wnd);
 			return Api.FindWindow("ApplicationFrameWindow", s);
-		}
-
-		/// <summary>
-		/// Normalizes coordinates or width/height (converts fraction to pixels, adds offsets, etc).
-		/// </summary>
-		[DebuggerStepThrough]
-		static class _Coord
-		{
-			/// <summary>
-			/// If c.type == 1, returns c.v1 + min.
-			/// Else calculates and returns non-fraction coordinate.
-			/// </summary>
-			static int _Normalize(Types<int, float> c, int min, int max)
-			{
-				Debug.Assert(c.type != 0);
-				return (c.type == 2 ? (int)((max - min) * c.v2) : c.v1) + min;
-			}
-
-			/// <summary>
-			/// Returns new POINT(x, y), relative to the primary screen, where fractional x and/or y are converted to pixels.
-			/// x or/and y .type can be 0, then the returned x or y value will be 0.
-			/// </summary>
-			/// <param name="x"></param>
-			/// <param name="y"></param>
-			/// <param name="workArea">If false, coordinates are in primary screen, else in its work area.</param>
-			/// <param name="widthHeight">Don't add work area offset. Use when x and y are width and height.</param>
-			internal static POINT GetNormalizedInScreen(Types<int, float> x, Types<int, float> y, bool workArea = false, bool widthHeight = false)
-			{
-				var p = new POINT();
-				if(x.type != 0 || y.type != 0) {
-					RECT r;
-					if(workArea) {
-						r = Screen_.WorkArea;
-						if(widthHeight) r.Offset(-r.left, -r.top);
-					} else {
-						r = new RECT(0, 0, Screen_.Width, Screen_.Height, false);
-					}
-					if(x.type != 0) p.x = _Normalize(x, r.left, r.right);
-					if(y.type != 0) p.y = _Normalize(y, r.top, r.bottom);
-				}
-				return p;
-			}
-
-			/// <summary>
-			/// Returns new POINT(x, y), relative to the window w client area, where fractional x and/or y are converted to pixels.
-			/// x or/and y .type can be 0, then the returned x or y value will be 0.
-			/// </summary>
-			internal static POINT GetNormalizedInWindowClientArea(Types<int, float> x, Types<int, float> y, Wnd w)
-			{
-				var p = new POINT();
-				if(x.type != 0 || y.type != 0) {
-					if(x.type == 2 || y.type == 2) {
-						RECT r = w.ClientRect;
-						if(x.type != 0) p.x = _Normalize(x, 0, r.right);
-						if(y.type != 0) p.y = _Normalize(y, 0, r.bottom);
-					} else {
-						if(x.type != 0) p.x = x.v1;
-						if(y.type != 0) p.y = y.v1;
-					}
-				}
-				return p;
-			}
 		}
 	}
 }

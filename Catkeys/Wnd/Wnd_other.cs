@@ -20,7 +20,6 @@ using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	//[DebuggerStepThrough]
 	public partial struct Wnd
 	{
 		/// <summary>
@@ -198,7 +197,7 @@ namespace Catkeys
 					switch(p.showCmd) {
 					case Api.SW_SHOWMAXIMIZED:
 						if((style & Native.WS_MAXIMIZE) == 0) {
-							this.LibMove(p.rcNormalPosition.left, p.rcNormalPosition.top, p.rcNormalPosition.Width, p.rcNormalPosition.Height); //without this would be always in primary monitor
+							this.MoveLL(p.rcNormalPosition.left, p.rcNormalPosition.top, p.rcNormalPosition.Width, p.rcNormalPosition.Height); //without this would be always in primary monitor
 							this.SetStyle(style | Native.WS_MAXIMIZE);
 						}
 						break;
@@ -220,6 +219,26 @@ namespace Catkeys
 				this.Show(true);
 				this.ActivateLL();
 			}
+		}
+
+		/// <summary>
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
+		/// By default x y coordinates are relative to the client area.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
+		public void MouseMove(Coord x, Coord y, bool nonClient = false)
+		{
+			Mouse.Move(this, x, y, nonClient);
+		}
+
+		/// <summary>
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
+		/// By default x y coordinates are relative to the client area.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of Mouse.Click.</exception>
+		public void MouseClick(Coord x, Coord y, MButton button = MButton.Left, bool nonClient = false)
+		{
+			Mouse.ClickEx(button, this, x, y, nonClient);
 		}
 	}
 }

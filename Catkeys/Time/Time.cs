@@ -36,7 +36,7 @@ namespace Catkeys
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
-		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutSleepTime"/>). Independent of computer clock time changes.
+		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
 		/// MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
 		/// </remarks>
 		public static long Microseconds { get => (long)(Stopwatch.GetTimestamp() * _freqMCS); }
@@ -47,23 +47,22 @@ namespace Catkeys
 		/// See also <see cref="Microseconds"/>.
 		/// </summary>
 		/// <remarks>
-		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
-		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutSleepTime"/>). Independent of computer clock time changes.
-		/// Unlike Environment.TickCount, this function is more precise and returns a 64-bit value that will not roll over in 100 years from the most recent system boot.
+		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
+		/// Unlike Environment.TickCount, this function is more precise and returns a 64-bit value that will not roll over in 100 years.
 		/// </remarks>
 		public static long Milliseconds { get => (long)(Stopwatch.GetTimestamp() * _freqMS); }
 		//public static long Milliseconds { get => Api.GetTickCount64(); } //15 ms precision. On current OS and hardware, QueryPerformanceCounter is reliable and almost as fast.
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup, not including time the system spends in sleep or hibernation.
-		/// The precision is 1-16 milliseconds, depending on the system wait precision (see <see cref="SystemWaitPrecision"/>).
+		/// The precision is 1-16 milliseconds, depending on the system wait time resolution (see <see cref="SleepPrecision"/>).
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
 		/// Independent of computer clock time changes.
-		/// This function can be used to implement a timeout in 'wait for something' functions, when repeatedly checking a condition.
+		/// This function can be used to implement a timeout in 'wait for' functions, when repeatedly checking a condition.
 		/// </remarks>
-		public static long MillisecondsWithoutSleepTime
+		public static long MillisecondsWithoutComputerSleepTime
 		{
 			get
 			{
@@ -78,14 +77,13 @@ namespace Catkeys
 		/// The same as <see cref="Sleep"/>, but uses seconds, not milliseconds.
 		/// </summary>
 		/// <param name="timeS">
-		/// The number of seconds to wait.
+		/// Time to wait, seconds.
 		/// The smallest value is 0.001 (1 ms).
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-		/// Usually waits longer by 1-15 milliseconds, but not shorter. It depends on the system wait precision (see <see cref="SystemWaitPrecision"/>).
 		/// If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
 		/// </remarks>
 		public static void Wait(double timeS)
@@ -100,26 +98,26 @@ namespace Catkeys
 		/// The same as <see cref="Wait"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
 		/// </summary>
 		/// <param name="timeMS">
-		/// The number of milliseconds to wait.
-		/// The smallest value is 1.
+		/// Time to wait, milliseconds.
+		/// If 0, can wait briefly if another busy thread runs on the same logical CPU, which happens not often on modern multi-core CPU.
 		/// Also can be <see cref="Timeout.Infinite"/>.
 		/// </param>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process events and messages, therefore should not be used with big timeMS in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-		/// Usually waits longer by 1-15 milliseconds, but not shorter. It depends on the system wait precision (see <see cref="SystemWaitPrecision"/>).
 		/// If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
 		public static void Sleep(int timeMS)
 		{
+			SleepPrecision.LibTempSet1(timeMS);
 			if(timeMS < 2000) {
 				Thread.Sleep(timeMS);
 			} else { //fix Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
 				g1:
-				long t = MillisecondsWithoutSleepTime;
+				long t = MillisecondsWithoutComputerSleepTime;
 				Thread.Sleep(timeMS);
-				t = timeMS - (MillisecondsWithoutSleepTime - t);
+				t = timeMS - (MillisecondsWithoutComputerSleepTime - t);
 				if(t >= 500) { timeMS = (int)t; goto g1; }
 			}
 		}
@@ -145,12 +143,13 @@ namespace Catkeys
 		{
 			if(timeMS == 0) { DoEvents(); return; }
 			if(timeMS < 0 && timeMS != Timeout.Infinite) throw new ArgumentOutOfRangeException();
+			SleepPrecision.LibTempSet1(timeMS);
 			for(;;) {
 				long t = 0;
 				int timeSlice = 100; //we call API in loop with small timeout to make it respond to Thread.Abort
 				if(timeMS > 0) {
 					if(timeMS < timeSlice) timeSlice = timeMS;
-					t = MillisecondsWithoutSleepTime;
+					t = MillisecondsWithoutComputerSleepTime;
 				}
 
 				uint k = Api.MsgWaitForMultipleObjectsEx(0, null, (uint)timeSlice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE);
@@ -159,7 +158,7 @@ namespace Catkeys
 				if(k == 0) DoEvents();
 
 				if(timeMS > 0) {
-					timeMS -= (int)(MillisecondsWithoutSleepTime - t);
+					timeMS -= (int)(MillisecondsWithoutComputerSleepTime - t);
 					if(timeMS <= 0) break;
 				}
 			}
@@ -176,10 +175,10 @@ namespace Catkeys
 		/// <exception cref="Exception">Any exceptions thrown by functions that are executed while dispatching messages (event handlers etc).</exception>
 		public static void DoEvents()
 		{
-			if(Application.MessageLoop) {
+			if(Application.MessageLoop) { //never mind: loads Forms.dll. It's fast.
 				Application.DoEvents();
 			} else {
-				while(Api.PeekMessage(out var m, Wnd0, 0, 0, Api.PM_REMOVE)) {
+				while(Api.PeekMessage(out var m, default(Wnd), 0, 0, Api.PM_REMOVE)) {
 					//Wnd.Misc.PrintMsg(ref m);
 					if(m.message == Api.WM_QUIT) { Api.PostQuitMessage(m.wParam); return; }
 					Api.TranslateMessage(ref m);
@@ -189,178 +188,6 @@ namespace Catkeys
 
 			//info: Could be bool, return false on WM_QUIT. But probably not useful. It seems that WM_QUIT is not used when closing Form.
 		}
-
-#if true
-		/// <summary>
-		/// Sets new timer for this thread.
-		/// Returns new Timer_ object that can be used to change or stop the timer if you want to do it not in the callback function; usually don't need it.
-		/// </summary>
-		/// <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds. Min interval is 10; if this parameter is 0-9, uses 10. Max interval is int.MaxValue.</param>
-		/// <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
-		/// <param name="callback">A callback function (delegate), for example lambda.</param>
-		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
-		/// <remarks>
-		/// Uses class Time.Timer_, which calls API <msdn>SetTimer</msdn>.
-		/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
-		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
-		/// The timer interval precision is 15 ms.
-		/// </remarks>
-		public static Timer_ SetTimer(int intervalMS, bool singlePeriod, Action<Timer_> callback, object tag = null)
-		{
-			var t = new Timer_(callback, tag);
-			t.Start(intervalMS, singlePeriod);
-			return t;
-		}
-
-		/// <summary>
-		/// Manages a timer for this thread.
-		/// Calls API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
-		/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
-		/// Used by <see cref="Time.SetTimer">Time.SetTimer</see>, more info there.
-		/// </summary>
-		public class Timer_
-		{
-			Action<Timer_> _callback;
-			int _id;
-			int _threadId;
-			bool _singlePeriod;
-
-			//Api.TIMERPROC _timerProc;
-			//GCHandle _gch;
-
-			//To control object lifetime we use a thread-static array (actually Hashtable).
-			//Tried GCHandle, but could not find a way to delete object when thread ends.
-			//Calling KillTimer when thread ends is optional. Need just to re-enable garbage collection for this object.
-			[ThreadStatic] static System.Collections.Hashtable _timers;
-
-			/// <summary>
-			/// Some object or value attached to this Timer_ variable.
-			/// Can be set with this property or with <see cref="Time.SetTimer">Time.SetTimer</see>.
-			/// </summary>
-			public object Tag { get; set; }
-
-			/// <summary>
-			/// Initializes a new <see cref="Timer_"/> instance.
-			/// Used by <see cref="Time.SetTimer"/>.
-			/// </summary>
-			public Timer_(Action<Timer_> callback, object tag = null) : base()
-			{
-				_callback = callback;
-				Tag = tag;
-
-				//_timerProc = _TimerProc; //creates new delegate and keeps from GC until GC deletes this object. The delegate is non-static, ie has a reference to this object.
-			}
-
-			/// <summary>
-			/// Starts timer. If already started, resets and changes its period.
-			/// </summary>
-			/// <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds.</param>
-			/// <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
-			/// <remarks>
-			/// If already started, this function must be called in same thread.
-			/// </remarks>
-			/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
-			public void Start(int intervalMS, bool singlePeriod)
-			{
-				bool isNew = _id == 0;
-				if(!isNew) {
-					if(!_IsSameThread()) return;
-				}
-				int r = Api.SetTimer(Wnd0, _id, (uint)intervalMS, _timerProc);
-				if(r == 0) throw new Win32Exception();
-				//_gch = GCHandle.Alloc(this);
-				_id = r;
-				_singlePeriod = singlePeriod;
-				if(isNew) {
-					_threadId = Thread.CurrentThread.ManagedThreadId;
-					if(_timers == null) _timers = new System.Collections.Hashtable();
-					_timers.Add(_id, this);
-				}
-			}
-
-			static Api.TIMERPROC _timerProc = _TimerProc;
-			static void _TimerProc(Wnd w, uint msg, LPARAM idEvent, uint time)
-			{
-				var t = _timers[(int)idEvent] as Timer_;
-				if(t == null) {
-					Debug.Assert(false);
-					return;
-				}
-				if(t._singlePeriod) t.Stop();
-				t._callback(t);
-			}
-			//void _TimerProc(Wnd w, uint msg, LPARAM idEvent, uint time)
-			//{
-			//	if(_id == 0) {
-			//		Debug.Assert(false);
-			//		return;
-			//	}
-			//	if(_singlePeriod) Stop();
-			//	_callback(this);
-			//}
-
-			/// <summary>
-			/// Stops the timer.
-			/// </summary>
-			/// <remarks>
-			/// Your callback function will never be called after this, even if a timer period is elapsed.
-			/// Later you can call Start() again.
-			/// Calling Stop() is optional.
-			/// Must be called in same thread.
-			/// </remarks>
-			public void Stop()
-			{
-				//Print("Stop: " + _id);
-				if(_id != 0) {
-					if(!_IsSameThread()) return;
-					Api.KillTimer(Wnd0, _id);
-					//tested: despite what MSDN says, KillTimer removes pending WM_TIMER messages from queue. Tested on Win 10 and 7.
-					_timers.Remove(_id);
-					_id = 0;
-					//_gch.Free();
-				}
-			}
-
-			bool _IsSameThread()
-			{
-				bool isSameThread = _threadId == Thread.CurrentThread.ManagedThreadId;
-				Debug.Assert(isSameThread);
-				return isSameThread;
-			}
-
-			//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
-		}
-#else //tried with System.Windows.Forms.Timer. Works, but creates hidden windows, I don't like it.
-		public static void SetTimer(int intervalMS, TimerHandler onTick, bool singleTick = false, object tag = null)
-		{
-			var t = new _Timer(intervalMS, onTick, singleTick, tag);
-			t.Start();
-		}
-
-		public delegate void TimerHandler(System.Windows.Forms.Timer t);
-
-		class _Timer :System.Windows.Forms.Timer
-		{
-			TimerHandler _onTick;
-			bool _singleTick;
-
-			internal _Timer(int intervalMS, TimerHandler onTick, bool singleTick = false, object tag = null) : base()
-			{
-				_onTick = onTick;
-				_singleTick = singleTick;
-				Interval = intervalMS;
-				Tag = tag;
-				Tick += _Tick;
-			}
-
-			void _Tick(object sender, EventArgs e)
-			{
-				if(_singleTick) Stop();
-				_onTick(this);
-			}
-		}
-#endif
 
 #if false
 		//Don't use. Unfinished.
@@ -383,7 +210,7 @@ namespace Catkeys
 				i += 2; t += i; if(t > ms) i -= t - ms;
 				//Print(i);
 				Sleep(i);
-				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = Wnd0;
+				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = default(Wnd);
 			}
 		}
 
@@ -399,28 +226,31 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="minMS">Minimal time to wait, ms.</param>
 		/// <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
-		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(Wnd0, minMS, maxMS); }
+		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(default(Wnd), minMS, maxMS); }
 
 		/// <summary>
 		/// Waits Script.Speed milliseconds.
 		/// </summary>
-		public static void AutoDelay() { AutoDelay(Wnd0, 0, 0); }
+		public static void AutoDelay() { AutoDelay(default(Wnd), 0, 0); }
 #endif
 
 		/// <summary>
-		/// Changes the precision of wait functions.
-		/// Calls API <msdn>timeBeginPeriod</msdn>, which requests a minimum resolution (period) for various system timers and wait functions.
-		/// Normal period on Windows 7-10 is 15.625 ms, minimal 1 ms. This class can temporarily make it smaller. It is applied to all threads and processes.
-		/// The new period is revoked when disposing the variable or when this process ends. See example.
-		/// Other applications can change it too. For example, Firefox and other web browsers temporarily set period 1 ms when opening a web page.
-		/// The system uses the smallest period (highest precision) that currently is set by any application. You cannot make it bigger than current value.
-		/// <note>It is not recommended to keep small period for a long time. It can be bad for power saving.</note>
-		/// <note>This does not change the minimal period of <see cref="SetTimer">SetTimer</see>.</note>
+		/// Temporarily changes the time resolution/precision of Thread.Sleep and some other functions.
 		/// </summary>
+		/// <remarks>
+		/// Uses API <msdn>timeBeginPeriod</msdn>, which requests a time resolution for various system timers and wait functions. Actually it is the system thread scheduling timer period.
+		/// Normal resolution on Windows 7-10 is 15.625 ms. It means that, for example, <c>Thread.Sleep(1);</c> sleeps not 1 but 1-15 ms. If you set resolution 1, it sleeps 1-2 ms.
+		/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the SleepPrecision variable or when this process ends. See example. See also <see cref="TempSet1"/>.
+		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
+		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
+		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
+		/// Don't need this for Time.Sleep, Time.Wait, Time.SleepDoEvents and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
+		/// This does not change the minimal period of <see cref="Timer_"/> and System.Windows.Forms.Timer.
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// _Test("before");
-		/// using(new Time.SystemWaitPrecision(2)) {
+		/// using(new Time.SleepPrecision(2)) {
 		/// 	_Test("in");
 		/// }
 		/// _Test("after");
@@ -429,27 +259,37 @@ namespace Catkeys
 		/// {
 		/// 	Print(name);
 		/// 	Perf.First();
-		/// 	for(int i = 0; i < 10; i++) { Thread.Sleep(1); Perf.Next(); }
+		/// 	for(int i = 0; i < 8; i++) { Thread.Sleep(1); Perf.Next(); }
 		/// 	Perf.Write();
 		/// }
 		/// ]]></code>
 		/// </example>
-		public sealed class SystemWaitPrecision :IDisposable
+		public sealed class SleepPrecision :IDisposable
 		{
 			int _period;
-
-			//Also tested NtSetTimerResolution, it is undocumented. It can set min 0.5 ms resolution. Tested on Win10.
-			//Also tested NtQueryTimerResolution. NtSetTimerResolution also can be used for this, partially.
 
 			/// <summary>
 			/// Calls API <msdn>timeBeginPeriod</msdn>.
 			/// </summary>
-			/// <param name="periodMS">Period, in milliseconds. Should be 1 - 16.</param>
-			/// <exception cref="ArgumentOutOfRangeException"/>
-			public SystemWaitPrecision(int periodMS)
+			/// <param name="periodMS">
+			/// New system timer period, milliseconds.
+			/// Should be 1. Other values may stuck and later cannot be made smaller due to bugs in OS or some applications; this bug would impact many functions of this library.
+			/// </param>
+			/// <exception cref="ArgumentOutOfRangeException">periodMS &lt;= 0.</exception>
+			public SleepPrecision(int periodMS)
 			{
-				if(timeBeginPeriod((uint)periodMS) != 0) throw new ArgumentOutOfRangeException(); //eg when periodMS is 0
+				if(periodMS <= 0) throw new ArgumentOutOfRangeException();
+				if(timeBeginPeriod((uint)periodMS) != 0) return;
+				//Print("set");
 				_period = periodMS;
+
+				//Bug in OS or drivers or some apps:
+				//	On my main PC often something briefly sets 0.5 ms resolution.
+				//	If at that time this process already has set a resolution of more than 1 ms, then after that time this process cannot change resolution.
+				//	It means that if this app eg has set 10 ms resolution, then Time.Sleep(1) will sleep 10 ms and not the normal 1-2 ms.
+				//	Known workaround (but don't use, sometimes does not work, eg cannot end period that was set by another process):
+				//		timeBeginPeriod(periodMS);
+				//		var r=(int)Current; if(r>periodMS) { timeEndPeriod(periodMS); timeEndPeriod(r); timeBeginPeriod(r); timeBeginPeriod(periodMS); }
 			}
 
 			/// <summary>
@@ -457,19 +297,238 @@ namespace Catkeys
 			/// </summary>
 			public void Dispose()
 			{
-				if(_period != 0) { timeEndPeriod((uint)_period); _period = 0; }
+				if(_period == 0) return;
+				//Print("revoke");
+				timeEndPeriod((uint)_period); _period = 0;
+				GC.SuppressFinalize(this);
 			}
 
 			///
-			~SystemWaitPrecision()
+			~SleepPrecision() { Dispose(); }
+
+			/// <summary>
+			/// Gets current actual system time resolution (period).
+			/// The return value usually is between 0.5 and 15.625 milliseconds. Returns 0 if fails.
+			/// </summary>
+			public static float Current
 			{
-				Dispose();
+				get
+				{
+					if(0 != NtQueryTimerResolution(out _, out _, out var t)) return 0f;
+					return (float)t / 10000;
+				}
+			}
+
+			/// <summary>
+			/// Temporarily sets the system wait precision to 1 ms. It will be revoked after the specified time or when this appdomain ends.
+			/// If already set, just updates the revoking time.
+			/// </summary>
+			/// <param name="endAfterMS">Revoke after this time, milliseconds.</param>
+			/// <example>
+			/// <code><![CDATA[
+			/// Print(Time.SleepPrecision.Current); //probably 15.625
+			/// Time.SleepPrecision.TempSet1(500);
+			/// Print(Time.SleepPrecision.Current); //1
+			/// Thread.Sleep(600);
+			/// Print(Time.SleepPrecision.Current); //probably 15.625 again
+			/// ]]></code>
+			/// </example>
+			public static void TempSet1(int endAfterMS = 1111)
+			{
+				lock("2KgpjPxRck+ouUuRC4uBYg") {
+					s_TS1_EndTime = MillisecondsWithoutComputerSleepTime + endAfterMS;
+					if(s_TS1_Obj == null) {
+						s_TS1_Obj = new SleepPrecision(1); //info: instead could call the API directly, but may need to auto-revoke using the finalizer
+						ThreadPool.QueueUserWorkItem(_ =>
+						{
+							Thread.Sleep(endAfterMS);
+							for(;;) {
+								int t;
+								lock("2KgpjPxRck+ouUuRC4uBYg") {
+									t = (int)(s_TS1_EndTime - MillisecondsWithoutComputerSleepTime);
+									if(t <= 0) {
+										s_TS1_Obj.Dispose();
+										s_TS1_Obj = null;
+										break;
+									}
+								}
+								Thread.Sleep(t);
+							}
+						});
+						//perf: single QueueUserWorkItem adds 3 threads, >=2 adds 5. But Thread.Start is too slow etc.
+						//QueueUserWorkItem speed first time is similar to Thread.Start, then ~8.
+						//Task.Run and Task.Delay are much much slower first time. Single Delay adds 5 threads.
+					}
+				}
+				//tested: Task Manager shows 0% CPU. If we set/revoke period for each Sleep(1) in loop, shows ~0.5% CPU.
+			}
+			static SleepPrecision s_TS1_Obj;
+			static long s_TS1_EndTime;
+
+			/// <summary>
+			/// Calls TempSetMax if sleepTimeMS is 1-99.
+			/// </summary>
+			/// <param name="sleepTimeMS">timeMS of the caller 'sleep' function.</param>
+			internal static void LibTempSet1(int sleepTimeMS)
+			{
+				if(sleepTimeMS < 100 && sleepTimeMS > 0) TempSet1(1111);
 			}
 
 			[DllImport("winmm.dll")]
 			static extern uint timeBeginPeriod(uint uPeriod);
 			[DllImport("winmm.dll")]
 			static extern uint timeEndPeriod(uint uPeriod);
+			[DllImport("ntdll.dll")]
+			static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
+			//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
+		}
+	}
+
+	/// <summary>
+	/// Timer that uses API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
+	/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
+	/// Use in UI threads (need a message loop).
+	/// </summary>
+	/// <example>
+	/// <code><![CDATA[
+	/// //this example sets 3 timers
+	/// Timer_.After(500, t => Print("simple one-time timer"));
+	/// Timer_.Every(1000, t => Print("simple periodic timer"));
+	/// var t3 = new Timer_(t => Print("with Timer_ object")); t3.Start(3000, true); //the same as Timer_.After
+	/// MessageBox.Show("");
+	/// ]]></code>
+	/// </example>
+	public class Timer_
+	{
+		Action<Timer_> _callback;
+		int _id;
+		int _threadId;
+		bool _singlePeriod;
+
+		//To control object lifetime we use a thread-static array (actually Hashtable).
+		//Tried GCHandle, but could not find a way to delete object when thread ends.
+		//Calling KillTimer when thread ends is optional. Need just to re-enable garbage collection for this object.
+		[ThreadStatic] static System.Collections.Hashtable t_timers;
+
+		/// <summary>
+		/// Some object or value attached to this Timer_ variable.
+		/// </summary>
+		public object Tag { get; set; }
+
+		/// <summary>
+		/// Initializes a new <see cref="Timer_"/> instance.
+		/// </summary>
+		public Timer_(Action<Timer_> callback, object tag = null) : base()
+		{
+			_callback = callback;
+			Tag = tag;
+		}
+
+		/// <summary>
+		/// Starts timer. If already started, resets and changes its period.
+		/// </summary>
+		/// <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds.</param>
+		/// <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
+		/// <remarks>
+		/// If already started, this function must be called in same thread.
+		/// </remarks>
+		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+		public void Start(int intervalMS, bool singlePeriod)
+		{
+			bool isNew = _id == 0;
+			if(!isNew) {
+				if(!_IsSameThread()) return;
+			}
+			int r = Api.SetTimer(default(Wnd), _id, (uint)intervalMS, _timerProc);
+			if(r == 0) throw new Win32Exception();
+			_id = r;
+			_singlePeriod = singlePeriod;
+			if(isNew) {
+				_threadId = Thread.CurrentThread.ManagedThreadId;
+				if(t_timers == null) t_timers = new System.Collections.Hashtable();
+				t_timers.Add(_id, this);
+			}
+		}
+
+		static Api.TIMERPROC _timerProc = _TimerProc;
+		static void _TimerProc(Wnd w, uint msg, LPARAM idEvent, uint time)
+		{
+			var t = t_timers[(int)idEvent] as Timer_;
+			if(t == null) {
+				Debug.Assert(false);
+				return;
+			}
+			if(t._singlePeriod) t.Stop();
+			t._callback(t);
+		}
+
+		/// <summary>
+		/// Stops the timer.
+		/// </summary>
+		/// <remarks>
+		/// Your callback function will never be called after this, even if a timer period is elapsed.
+		/// Later you can call Start() again.
+		/// Calling Stop() is optional.
+		/// Must be called in same thread.
+		/// </remarks>
+		public void Stop()
+		{
+			//Print("Stop: " + _id);
+			if(_id != 0) {
+				if(!_IsSameThread()) return;
+				Api.KillTimer(default(Wnd), _id);
+				//tested: despite what MSDN says, KillTimer removes pending WM_TIMER messages from queue. Tested on Win 10 and 7.
+				t_timers.Remove(_id);
+				_id = 0;
+			}
+		}
+
+		bool _IsSameThread()
+		{
+			bool isSameThread = _threadId == Thread.CurrentThread.ManagedThreadId;
+			Debug.Assert(isSameThread);
+			return isSameThread;
+		}
+
+		//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
+
+		static Timer_ _Set(int intervalMS, bool singlePeriod, Action<Timer_> callback, object tag = null)
+		{
+			var t = new Timer_(callback, tag);
+			t.Start(intervalMS, singlePeriod);
+			return t;
+		}
+
+		/// <summary>
+		/// Sets new one-time timer.
+		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
+		/// </summary>
+		/// <param name="timeMS">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
+		/// <param name="callback">A callback function (delegate), for example lambda.</param>
+		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+		/// <remarks>
+		/// The callback function will be called in this thread.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
+		/// </remarks>
+		public static Timer_ After(int timeMS, Action<Timer_> callback, object tag = null)
+		{
+			return _Set(timeMS, true, callback, tag);
+		}
+
+		/// <summary>
+		/// Sets new periodic timer.
+		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
+		/// </summary>
+		/// <param name="periodMS">Time interval (period) of calling the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal period usually is 10-20.</param>
+		/// <param name="callback">A callback function (delegate), for example lambda.</param>
+		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+		/// <remarks>
+		/// The callback function will be called in this thread.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
+		/// </remarks>
+		public static Timer_ Every(int periodMS, Action<Timer_> callback, object tag = null)
+		{
+			return _Set(periodMS, false, callback, tag);
 		}
 	}
 }

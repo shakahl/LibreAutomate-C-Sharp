@@ -21,108 +21,19 @@ using static Catkeys.NoClass;
 namespace Catkeys
 {
 	/// <summary>
-	/// Stores script speed and other options common to multiple automation library methods and script statements.
-	/// </summary>
-	[DebuggerStepThrough]
-	public class ScriptOptions
-	{
-		/// <summary>
-		/// Auto-delay in milliseconds.
-		/// Used by some automation functions.
-		/// </summary>
-		public int Speed
-		{
-			get => _speed;
-			set { if(value < 0 || value > 60000) throw new ArgumentOutOfRangeException(); _speed = value; }
-		}
-		int _speed;
-		//CONSIDER: use two speeds - function-specific and thread-specific.
-		//To implement function-specific speed, can use thread-specific Dictionary. When a function sets speed, write to the dictionary: function id, its position in stack, its speed.
-		//Then called functions can access caller's speed by walking the stack.
-		//Alternative implementation: set function's speed in its attributes.
-
-		/// <summary>
-		/// TODO
-		/// </summary>
-		public bool SlowMouse { get; set; }
-		/// <summary>
-		/// TODO
-		/// </summary>
-		public bool SlowKeys { get; set; }
-		/// <summary>
-		/// TODO
-		/// </summary>
-		public bool WaitMsg { get; set; }
-
-		/// <summary>
-		/// Copies all options from ScriptOptions.Default.
-		/// </summary>
-		public ScriptOptions() : this(Default) { }
-
-		/// <summary>
-		/// Copies all options from another ScriptOptions object.
-		/// </summary>
-		/// <param name="o">If null, sets speed = 100 and other members = false/0/null.</param>
-		public ScriptOptions(ScriptOptions o)
-		{
-			if(o == null) { Speed = 100; return; }
-			Speed = o.Speed;
-			SlowMouse = o.SlowMouse; SlowKeys = o.SlowKeys; WaitMsg = o.WaitMsg;
-		}
-
-		/// <summary>
-		/// Creates new object with all the same option values.
-		/// Code <c>var o2=o1.Copy();</c> does the same as <c>var o2=new ScriptOptions(o1);</c> .
-		/// </summary>
-		public ScriptOptions Copy() { return new ScriptOptions(this); }
-
-		/// <summary>
-		/// Default options used by:
-		/// 	All threads of current script's appdomain;
-		///		New ScriptOptions objects created like var o=new ScriptOptions();.
-		/// Initially default speed is 100, other options false/0/null.
-		/// You can modify them in scripts and script templates. Do it in ScriptClass static constructor.
-		/// </summary>
-		/// <example>
-		/// <code>
-		/// 	static ScriptClass() { ScriptOptions.Default.speed=50; } //constructor
-		///		...
-		///		Print(Option.speed); //speed of this thread
-		///		Option.speed=10; //changes only for this thread
-		/// </code>
-		/// </example>
-		public static ScriptOptions Default { get; set; } = new ScriptOptions(null);
-
-		//Equals() - don't need.
-
-		//CONSIDER:
-		//public override string ToString()
-		//{
-		//	return $"(speed={speed}, SlowMouse={SlowMouse}, SlowKeys={SlowKeys}, WaitMsg={WaitMsg}, ...)";
-		//}
-	}
-
-	/// <summary>
 	/// Base class of user main script class. Manages script options, calling script methods on launch/trigger, etc.
 	/// </summary>
 	[DebuggerStepThrough]
 	public class Script
 	{
-		[ThreadStatic]		static ScriptOptions _opt;
-
-		/// <summary>
-		/// Gets ScriptOptions object of this thread.
-		/// </summary>
-		public static ScriptOptions Option { get => _opt ?? (_opt = new ScriptOptions()); }
-
-		/// <summary>
-		/// Gets or sets Option.speed (auto-delay and speed for some automation functions, for this thread).
-		/// </summary>
-		public static int Speed
-		{
-			get { var t = _opt; return t != null ? t.Speed : ScriptOptions.Default.Speed; }
-			set { Option.Speed = value; }
-		}
+		///// <summary>
+		///// Gets or sets Option.Speed (auto-delay and speed for some automation functions, for this thread).
+		///// </summary>
+		//public static int Speed
+		//{
+		//	get => (t_opt ?? ScriptOptions.Default).Speed;
+		//	set { Option.Speed = value; }
+		//}
 
 		/// <summary>
 		/// Calls the first non-static method of the derived class.

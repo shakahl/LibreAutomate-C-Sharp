@@ -222,7 +222,7 @@ namespace G.Controls
 					}
 				}
 
-				internal void OnFloatMoved(POINT p)
+				internal void OnFloatMoved(Point p)
 				{
 					RECT r, rb;
 					_isTargetValid = _OnFloatMoved(p, out r, out rb);
@@ -236,7 +236,7 @@ namespace G.Controls
 				/// <summary>
 				/// Everything is in _manager client area.
 				/// </summary>
-				bool _OnFloatMoved(POINT p, out RECT r, out RECT rb)
+				bool _OnFloatMoved(Point p, out RECT r, out RECT rb)
 				{
 					r = rb = new RECT();
 
@@ -306,10 +306,10 @@ namespace G.Controls
 				/// Returns the left, top, right or bottom half of r, depending on where p is in it.
 				/// Sets _target.side.
 				/// </summary>
-				RECT _CalcDockRectPart(RECT r, POINT p)
+				RECT _CalcDockRectPart(RECT r, Point p)
 				{
 					GDockHow side;
-					int wid = r.Width, hei = r.Height, wid2 = wid / 2, hei2 = hei / 2, dx = p.x - r.left, dy = p.y - r.top;
+					int wid = r.Width, hei = r.Height, wid2 = wid / 2, hei2 = hei / 2, dx = p.X - r.left, dy = p.Y - r.top;
 					double k = wid / (double)hei;
 					if(dx < wid2) side = GDockHow.SplitLeft; else { side = GDockHow.SplitRight; dx = wid - dx; }
 					if(dy < hei2) { if(dy * k < dx) side = GDockHow.SplitAbove; } else { if((hei - dy) * k < dx) side = GDockHow.SplitBelow; }
@@ -326,15 +326,15 @@ namespace G.Controls
 				/// Returns a half of r (gp full caption, not just tab button), depending on where p is (even if not in r).
 				/// Sets _target.side.
 				/// </summary>
-				RECT _CalcNewTabButtonRectInFullCaption(GPanel gp, RECT r, POINT p)
+				RECT _CalcNewTabButtonRectInFullCaption(GPanel gp, RECT r, Point p)
 				{
 					bool after;
 					if(gp.IsVerticalCaption) {
 						int mid = (r.top + r.bottom) / 2;
-						if(after = (p.y >= mid)) r.top = mid; else r.bottom = mid;
+						if(after = (p.Y >= mid)) r.top = mid; else r.bottom = mid;
 					} else {
 						int mid = (r.left + r.right) / 2;
-						if(after = (p.x >= mid)) r.left = mid; else r.right = mid;
+						if(after = (p.X >= mid)) r.left = mid; else r.right = mid;
 					}
 					_target.side = after ? GDockHow.TabAfter : GDockHow.TabBefore;
 					return r;
@@ -362,20 +362,20 @@ namespace G.Controls
 				internal GDockHow side;
 			}
 
-			internal DockTarget Drag(POINT p)
+			internal DockTarget Drag(Point p)
 			{
 				bool canDock = false;
 				DockTarget target = null;
 
 				Wnd w = (Wnd)this;
 				RECT r = w.Rect;
-				POINT offs = new POINT(p.x - r.left, p.y - r.top);
+				Point offs = new Point(p.X - r.left, p.Y - r.top);
 				bool ok = Catkeys.Util.DragDrop.SimpleDragDrop(w, MouseButtons.Left, d =>
 				  {
 					  if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 
 					  p = Mouse.XY;
-					  w.MoveLL(p.x - offs.x, p.y - offs.y);
+					  w.MoveLL(p.X - offs.X, p.Y - offs.Y);
 
 					  if(!canDock && ModifierKeys.HasFlag(Keys.Alt)) {
 						  canDock = true;

@@ -111,13 +111,13 @@ namespace Catkeys
 		/// <param name="hi">Icon handle.</param>
 		public static Bitmap HandleToImage(IntPtr hi)
 		{
-			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc. Icon.ToBitmap works around it.
+			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 
 			if(hi == Zero) return null;
 			//var perf = new Perf.Inst(true);
 			Icon ic = Icon.FromHandle(hi);
 			Bitmap im = null;
-			try { im = ic.ToBitmap(); } catch(Exception e) { DebugPrint(e.Message); }
+			try { im = ic.ToBitmap(); } catch(Exception e) { Debug_.Print(e.Message); }
 			ic.Dispose();
 			Api.DestroyIcon(hi);
 			//perf.NW();
@@ -366,7 +366,7 @@ namespace Catkeys
 					if(il != Zero) index = x.iIcon;
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}
-				catch { DebugPrint("exception"); }
+				catch { Debug_.Print("exception"); }
 			}
 			if(index < 0) return Zero;
 
@@ -383,7 +383,7 @@ namespace Catkeys
 					}
 				}
 			}
-			catch(Exception e) { DebugPrint(e.Message); }
+			catch(Exception e) { Debug_.Print(e.Message); }
 			//finally { if(il != Zero) Marshal.Release(il); }
 			return R;
 		}
@@ -527,7 +527,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets the first native icon handle of the entry assembly of current appdomain.
+		/// Gets the first native icon handle of the entry assembly of this appdomain.
 		/// Returns Zero if there are no icons.
 		/// It is not an icon from managed resources.
 		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
@@ -997,7 +997,7 @@ namespace Catkeys
 						if(ext.Equals_(".ico", true) || ext.Equals_(".exe", true) || ext.StartsWith_(".exe,", true) || ext.StartsWith_(".dll,", true)) ext = file;
 					}
 					file = ext;
-				} else if(Path_.IsFullPathEEV(ref file)) {
+				} else if(Path_.IsFullPathExpandEnvVar(ref file)) {
 					file = Path_.LibNormalize(file, noExpandEV: true);
 				}
 
@@ -1013,7 +1013,7 @@ namespace Catkeys
 							_x = XElement.Load(_cacheFile);
 							if(_iconSize != _x.Attribute_("size", 0) || Util.Dpi.BaseDPI != _x.Attribute_("dpi", 0)) {
 								_x = null;
-								DebugPrint("info: cleared icon cache");
+								Debug_.Print("info: cleared icon cache");
 							}
 
 							//TODO: Delete unused entries. Maybe try to auto-update changed icons.
@@ -1029,7 +1029,7 @@ namespace Catkeys
 						}
 					}
 					catch(Exception ex) {
-						DebugPrint(ex.Message);
+						Debug_.Print(ex.Message);
 					}
 
 					if(R == null) {

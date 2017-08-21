@@ -30,27 +30,28 @@ namespace Catkeys
 		public static partial class Misc
 		{
 			/// <summary>
-			/// Can be used with some functions as a special window handle value. It is implicitly converted to Wnd.
+			/// Contains static properties that return special window handle values that can be used with some API functions and with some Wnd functions too.
 			/// </summary>
 			/// <tocexclude />
-			public enum SpecHwnd
+			public class SpecHwnd
 			{
-				/// <summary>API HWND_TOP. Used with SetWindowPos.</summary>
-				Top = 0,
-				/// <summary>API HWND_BOTTOM. Used with SetWindowPos.</summary>
-				Bottom = 1,
-				/// <summary>API HWND_TOPMOST. Used with SetWindowPos.</summary>
-				Topmost = -1,
-				/// <summary>API HWND_NOTOPMOST. Used with SetWindowPos.</summary>
-				NoTopmost = -2,
-				/// <summary>API HWND_MESSAGE. Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
-				Message = -3,
-				/// <summary>API HWND_BROADCAST. Used with API SendMessage, Wnd.Send etc.</summary>
-				Broadcast = 0xffff
+				/// <summary>API HWND_TOP (0). Used with SetWindowPos.</summary>
+				public static Wnd HWND_TOP { get => (Wnd)(LPARAM)0; }
+				/// <summary>API HWND_BOTTOM (1). Used with SetWindowPos.</summary>
+				public static Wnd HWND_BOTTOM { get => (Wnd)(LPARAM)1; }
+				/// <summary>API HWND_TOPMOST (-1). Used with SetWindowPos.</summary>
+				public static Wnd HWND_TOPMOST { get => (Wnd)(LPARAM)(-1); }
+				/// <summary>API HWND_NOTOPMOST (-2). Used with SetWindowPos.</summary>
+				public static Wnd HWND_NOTOPMOST { get => (Wnd)(LPARAM)(-2); }
+				/// <summary>API HWND_MESSAGE (-3). Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
+				public static Wnd HWND_MESSAGE { get => (Wnd)(LPARAM)(-3); }
+				/// <summary>API HWND_BROADCAST (0xffff). Used with API SendMessage, Wnd.Send etc.</summary>
+				public static Wnd HWND_BROADCAST { get => (Wnd)(LPARAM)0xffff; }
 			}
 
 			/// <summary>
-			/// Returns true if w is one of enum <see cref="SpecHwnd"/> members.
+			/// Returns true if w contains a non-zero special handle value (see <see cref="SpecHwnd"/>).
+			/// Note that HWND_TOP is 0.
 			/// </summary>
 			public static bool IsSpecHwnd(Wnd w)
 			{
@@ -148,7 +149,7 @@ namespace Catkeys
 			/// <param name="className">Window class name. Can be any existing class.</param>
 			public static Wnd CreateMessageWindow(string className)
 			{
-				return CreateWindow(Native.WS_EX_NOACTIVATE, className, null, Native.WS_POPUP, parent: SpecHwnd.Message);
+				return CreateWindow(Native.WS_EX_NOACTIVATE, className, null, Native.WS_POPUP, parent: SpecHwnd.HWND_MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 

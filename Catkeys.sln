@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test old", "Test Projects\Test\Test old.csproj", "{E40D1949-97DE-43E0-80AE-D7EBFFD18C32}"
 EndProject
@@ -72,201 +72,16 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "HelpHtml", "Help\HelpHtml\"
 		VWDPort = "65384"
 		DefaultWebSiteLanguage = "Visual C#"
 	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
-	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Debug.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Debug.AspNetCompiler.Updateable = "true"
-		Debug.AspNetCompiler.ForceOverwrite = "true"
-		Debug.AspNetCompiler.FixedNames = "false"
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_65384"
-		Release.AspNetCompiler.PhysicalPath = "Help\HelpHtml\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_65384\"
-		Release.AspNetCompiler.Updateable = "true"
-		Release.AspNetCompiler.ForceOverwrite = "true"
-		Release.AspNetCompiler.FixedNames = "false"
-		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "65384"
-		SlnRelativePath = "Help\HelpHtml\"
-		DefaultWebSiteLanguage = "Visual C#"
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeList", "TreeList\TreeList.csproj", "{E73BB233-D88B-44A7-A98F-D71EE158381D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SciLexer", "scintilla\win32\SciLexer.vcxproj", "{FBE04237-9C7B-4973-9C60-505975998B39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple", "Test Projects\Simple\Simple.csproj", "{168C7B27-3B32-4F3E-B8E6-99382C8E601C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleLib", "Tests\SimpleLib\SimpleLib.csproj", "{417FF287-D121-46DA-BE0D-A6E6019A5B7B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unused", "Unused\Unused.csproj", "{FC071F03-B2EB-4895-A8BF-F29D1F209155}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -481,6 +296,42 @@ Global
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|x64.Build.0 = Release|x64
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|x86.ActiveCfg = Release|Win32
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|x86.Build.0 = Release|Win32
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Debug|x64.Build.0 = Debug|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Debug|x86.Build.0 = Debug|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Release|x64.ActiveCfg = Release|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Release|x64.Build.0 = Release|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Release|x86.ActiveCfg = Release|Any CPU
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C}.Release|x86.Build.0 = Release|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Debug|x64.Build.0 = Debug|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Debug|x86.Build.0 = Debug|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Release|x64.ActiveCfg = Release|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Release|x64.Build.0 = Release|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Release|x86.ActiveCfg = Release|Any CPU
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B}.Release|x86.Build.0 = Release|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Debug|x64.Build.0 = Debug|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Debug|x86.Build.0 = Debug|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Release|x64.ActiveCfg = Release|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Release|x64.Build.0 = Release|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -507,5 +358,8 @@ Global
 		{5F2E4298-39D0-4F15-8D9F-558414281BF4} = {63A18AE7-A97F-4D92-939A-6FE708D79F6E}
 		{E73BB233-D88B-44A7-A98F-D71EE158381D} = {0C880B80-8ECC-4252-A9C9-00BAF5C58A3C}
 		{FBE04237-9C7B-4973-9C60-505975998B39} = {0C880B80-8ECC-4252-A9C9-00BAF5C58A3C}
+		{168C7B27-3B32-4F3E-B8E6-99382C8E601C} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
+		{417FF287-D121-46DA-BE0D-A6E6019A5B7B} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
+		{FC071F03-B2EB-4895-A8BF-F29D1F209155} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
 	EndGlobalSection
 EndGlobal

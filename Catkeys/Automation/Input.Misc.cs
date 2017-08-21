@@ -23,20 +23,30 @@ using static Catkeys.NoClass;
 
 namespace Catkeys
 {
+	/// <summary>
+	/// Keys and modifiers that are missing in enum <see cref="Keys"/>.
+	/// </summary>
+	public static class Keys_
+	{
+		/// <summary>
+		/// Modifier key Windows (flag). Can be used like Keys.Shift etc.
+		/// Can be used only with functions of this library or other libraries that support it. Don't use with .NET functions.
+		/// </summary>
+		public const Keys Windows = (Keys)0x80000;
+
+		/// <summary>
+		/// Numpad Enter key.
+		/// Can be used only with functions of this library or other libraries that support it. Don't use with .NET functions.
+		/// </summary>
+		public const Keys NumEnter = Keys.Enter | (Keys)0x100000;
+	}
+
+	/// <summary>
+	/// Keyboard and clipboard functions.
+	/// </summary>
 	//[DebuggerStepThrough]
 	public static partial class Input
 	{
-		/// <summary>
-		/// Keys and modifiers that are missing in <see cref="Keys"/> enumeration.
-		/// </summary>
-		public static class Keys_
-		{
-			/// <summary> Modifier key Windows (flag). Can be used like Keys.Shift etc. </summary>
-			public static Keys Windows { get => (Keys)0x80000; }
-			/// <summary> Numpad Enter key. </summary>
-			public static Keys NumEnter { get => Keys.Enter | (Keys)0x100000; }
-		}
-
 		class _KeyFunc
 		{
 			/// <summary>

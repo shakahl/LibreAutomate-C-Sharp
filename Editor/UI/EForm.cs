@@ -59,7 +59,7 @@ partial class EForm :Form
 		//Perf.Next();
 
 		//#if DEBUG
-		//		DebugPrint("Ending form ctor. Please make sure there are no parked controls created before now. Use SetHookToMonitorCreatedWindowsOfThisThread.");
+		//		Debug_.Print("Ending form ctor. Please make sure there are no parked controls created before now. Use SetHookToMonitorCreatedWindowsOfThisThread.");
 		//#endif
 	}
 
@@ -69,7 +69,7 @@ partial class EForm :Form
 		Panels.Files.LoadCollection(CommandLine.CollectionDirectory);
 
 		//Perf.Next();
-		Time.SetTimer(1, true, t =>
+		Timer_.After(1, t =>
 		{
 			//Perf.NW();
 			Perf.Next();

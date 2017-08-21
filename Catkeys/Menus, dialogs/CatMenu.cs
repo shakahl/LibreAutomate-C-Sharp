@@ -24,7 +24,7 @@ namespace Catkeys
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class CatMenu :CatMenu_CatBar_Base, IDisposable
+	public class CatMenu :_MenuBase, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
@@ -76,7 +76,7 @@ namespace Catkeys
 		Specialized AddX methods.
 		
 		For example, instead of
-		m["Label"] = o => Shell.RunSafe("notepad.exe");
+		m["Label"] = o => Shell.TryRun("notepad.exe");
 		can use
 		m.Run("notepad.exe", "label"); //label is optional
 		Then can auto-get icon without disassembling the delegate.
@@ -90,7 +90,7 @@ namespace Catkeys
 		Can even use extension methods for this. Example:
 		public static void Run(this CatMenu m, string path, string label = null)
 		{
-			m[label ?? path, path] = o => Shell.RunSafe(path);
+			m[label ?? path, path] = o => Shell.TryRun(path);
 		}
 
 		*/
@@ -102,7 +102,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="CatMenu_CatBar_Base.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="_MenuBase.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -130,7 +130,7 @@ namespace Catkeys
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="CatMenu_CatBar_Base.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="_MenuBase.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -217,7 +217,7 @@ namespace Catkeys
 		/// 2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">The same as with <see cref="Add(string, Action{CatMenu_CatBar_Base.ClickEventData}, object)"/>.</param>
+		/// <param name="icon">The same as with <see cref="Add(string, Action{_MenuBase.ClickEventData}, object)"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
@@ -343,7 +343,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onOpening">Lambda etc callback function that should add submenu items.</param>
-		/// <param name="icon">The same as with <see cref="Add(string, Action{CatMenu_CatBar_Base.ClickEventData}, object)"/>.</param>
+		/// <param name="icon">The same as with <see cref="Add(string, Action{_MenuBase.ClickEventData}, object)"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <example><code>
 		/// var m = new CatMenu();
@@ -423,11 +423,12 @@ namespace Catkeys
 		/// <summary>
 		/// Shows the menu at the specified position.
 		/// </summary>
-		/// <param name="x">Mouse X position in screen.</param>
-		/// <param name="y">Mouse Y position in screen.</param>
+		/// <param name="x">X position in screen.</param>
+		/// <param name="y">Y position in screen.</param>
 		/// <param name="direction">Menu drop direction.</param>
 		public void Show(int x, int y, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
 		{
+			//CONSIDER: Coord, screen. Maybe as new overload.
 			_Show(2, x, y, direction);
 		}
 
@@ -435,8 +436,8 @@ namespace Catkeys
 		/// Shows the menu on a form or control.
 		/// </summary>
 		/// <param name="owner">A control or form that will own the menu.</param>
-		/// <param name="x">Mouse X position in control's client area.</param>
-		/// <param name="y">Mouse Y position in control's client area.</param>
+		/// <param name="x">X position in control's client area.</param>
+		/// <param name="y">Y position in control's client area.</param>
 		/// <param name="direction">Menu drop direction.</param>
 		/// <remarks>
 		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call Show(). Use the <see cref="CMS"/> property, which gets <see cref="ContextMenuStrip"/>.
@@ -885,7 +886,7 @@ namespace Catkeys
 				//Close menu windows. Else they are just hidden and prevent garbage collection until appdomain ends.
 				foreach(var k in _windows) ((Wnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
 
-				if(!MultiShow && !_isModal) Time.SetTimer(10, true, o => { Dispose(); }); //cannot dispose now, exception
+				if(!MultiShow && !_isModal) Timer_.After(10, o => { Dispose(); }); //cannot dispose now, exception
 
 				if(_isModal) _msgLoop.Stop();
 			}
@@ -923,7 +924,7 @@ namespace Catkeys
 		public static int DefaultMouseClosingDistance { get; set; } = 200;
 
 		List<ToolStripDropDownMenu> _visibleSubmenus = new List<ToolStripDropDownMenu>();
-		Time.Timer_ _timer;
+		Timer_ _timer;
 		bool _mouseWasIn;
 		bool _hotkeyRegistered;
 		const int _hotkeyEsc = 8405;
@@ -936,7 +937,7 @@ namespace Catkeys
 			_visibleSubmenus.Clear();
 			_mouseWasIn = false;
 			if(init) {
-				_timer = Time.SetTimer(100, false, _OnTimer);
+				_timer = Timer_.Every(100, _OnTimer);
 				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, Api.VK_ESCAPE);
 			} else {
 				if(_timer != null) { _timer.Stop(); _timer = null; }
@@ -945,7 +946,7 @@ namespace Catkeys
 		}
 
 		//100 ms
-		void _OnTimer(Time.Timer_ t)
+		void _OnTimer(Timer_ t)
 		{
 			Debug.Assert(!IsDisposed); if(IsDisposed) return;
 
@@ -955,7 +956,7 @@ namespace Catkeys
 		void _CloseIfMouseIsFar()
 		{
 			int dist = MouseClosingDistance;
-			POINT p = Mouse.XY;
+			Point p = Mouse.XY;
 			for(int i = -1; i < _visibleSubmenus.Count; i++) {
 				var k = i >= 0 ? _visibleSubmenus[i] : _cm as ToolStripDropDown;
 				RECT r = k.Bounds;
@@ -1013,13 +1014,15 @@ namespace Catkeys
 	/// </summary>
 	/// <tocexclude />
 	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-	public abstract class CatMenu_CatBar_Base
+#pragma warning disable CS3008 // Identifier is not CLS-compliant
+	public abstract class _MenuBase
+#pragma warning restore CS3008 // Identifier is not CLS-compliant
 	{
 		internal bool m_inRightClick;
 		EventHandler _onClick;
 		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
 
-		internal CatMenu_CatBar_Base()
+		internal _MenuBase()
 		{
 			_onClick = _OnClick;
 		}
@@ -1132,7 +1135,7 @@ namespace Catkeys
 					case Folders.FolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
 					}
 				}
-				catch(Exception e) { DebugPrint(e.Message); } //ToBitmap() may throw
+				catch(Exception e) { Debug_.Print(e.Message); } //ToBitmap() may throw
 			}
 #endif
 			LastItem = item;
@@ -1222,7 +1225,7 @@ namespace Catkeys
 
 		void _SetItemIcon(ToolStrip ts, ToolStripItem item, Image im)
 		{
-			Wnd w = Wnd0;
+			Wnd w = default(Wnd);
 			var its = ts as _ICatToolStrip;
 			if(its.PaintedOnce) {
 				if(_region1 == Zero) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
@@ -1280,7 +1283,7 @@ namespace Catkeys
 		}
 
 		///
-		~CatMenu_CatBar_Base() { /*Print("base dtor");*/ _Dispose(false); }
+		~_MenuBase() { /*Print("base dtor");*/ _Dispose(false); }
 	}
 
 	interface _ICatToolStrip

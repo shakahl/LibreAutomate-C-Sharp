@@ -113,6 +113,10 @@ namespace Catkeys
 				_ClearToLogFile();
 			} else if(IsWritingToConsole) {
 				try { Console.Clear(); } catch { } //exception if redirected, it is documented
+#if DEBUG
+			} else if(DebugWriteToQM2) {
+				_DebugWriteToQM2(null);
+#endif
 			} else {
 				_ClearToOutputServer();
 			}
@@ -189,20 +193,33 @@ namespace Catkeys
 		public static void WriteHex(object value) { Write($"0x{value:X}"); }
 		//never mind: this is slower, but with Write("0x" + value.ToString("X")); we'd need switch or overloads for all 8 integer types.
 
+		//SHOULDDO: review all Output.Warning(...) calls and maybe replace some with Debug_.WarningOpt(...)
 		/// <summary>
-		/// Writes a string with prefix "Warning: " and followed by the stack trace.
+		/// Writes string followed by the stack trace.
+		/// Prepends "Warning: ", except when the string starts with "Warning:", "Note:", "Info:" or "Debug:" (case-insensitive).
 		/// Calls <see cref="Write(string)"/>.
 		/// </summary>
-		/// <param name="s">Warning text.</param>
+		/// <param name="text">Warning text.</param>
 		/// <param name="showStackFromThisFrame">If &gt;= 0, appends stack trace, skipping this number of frames.</param>
+		/// <seealso cref="ScriptOptions.DisableWarnings"/>
+		/// <seealso cref="Debug_.WarningOpt"/>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void Warning(string s, int showStackFromThisFrame = 0)
+		public static void Warning(object text, int showStackFromThisFrame = 0)
 		{
-			const string prefix = "Warning: ";
+			string s = text?.ToString();
+			if(s == null) s = "";
+
+			var a = Options.LibDisabledWarnings;
+			if(a != null) foreach(var k in a) if(s.Like_(k, true)) return;
+
+			string prefix = "Warning: ";
+			if(0 != s.StartsWith_(true, "Warning:", "Note:", "Info:", "Debug:")) prefix = null;
+
 			if(showStackFromThisFrame >= 0) {
-				var x = new StackTrace(showStackFromThisFrame + 1, false);
+				var x = new StackTrace(showStackFromThisFrame + 1, true);
 				s = prefix + s + "\r\n" + x.ToString();
 			} else s = prefix + s;
+
 			Print(s);
 		}
 
@@ -256,6 +273,9 @@ namespace Catkeys
 
 			if(LogFile != null) _WriteToLogFile(value);
 			else if(IsWritingToConsole) Console.WriteLine(value);
+#if DEBUG
+			else if(DebugWriteToQM2) _DebugWriteToQM2(value);
+#endif
 			else _WriteToOutputServer(value);
 		}
 
@@ -313,7 +333,7 @@ namespace Catkeys
 		/// If value is null - restores default behavior.
 		/// </summary>
 		/// <remarks>
-		/// The first Write etc call (in this app domain) creates or opens the file and deletes old content if the file already exists.
+		/// The first Write etc call (in this appdomain) creates or opens the file and deletes old content if the file already exists.
 		/// Multiple appdomains cannot use the same file. If the file is open for writing, Write makes unique filename and changes LogFile value.
 		/// 
 		/// Also supports mailslots. For LogFile use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
@@ -442,11 +462,13 @@ namespace Catkeys
 
 #if DEBUG
 		/// <summary>
-		/// Sends string to QM2.
-		/// Was used mostly to debug the Output class itself. Although can instead use console.
+		/// Sets to use QM2 as the output server.
+		/// Eg can be used to debug the Output class itself. Although can instead use console.
 		/// </summary>
+		public static bool DebugWriteToQM2 { get; set; }
+
 		/// <param name="s">If null, clears output.</param>
-		public static void DebugWriteToQM2(string s)
+		static void _DebugWriteToQM2(string s)
 		{
 			if(!_hwndQM2.IsAlive) {
 				_hwndQM2 = Api.FindWindow("QM_Editor", null);
@@ -519,7 +541,7 @@ namespace Catkeys
 					WriteDirectly(s);
 					//Debug.Assert(false);
 				}
-				Util.ByteBuffer.LibCommon.Compact();
+				Util.LibByteBuffer.LibCommon.Compact();
 				return ok;
 			}
 
@@ -539,7 +561,7 @@ namespace Catkeys
 			public void Close() { if(_h != null) { _h.Close(); _h = null; } }
 
 			/// <summary>
-			/// Converts string to UTF8 (stored in Util.ByteBuffer.LibCommon).
+			/// Converts string to UTF8 (stored in Util.LibByteBuffer.LibCommon).
 			/// Appends "\r\n". If LogFileTimestamp, prepends timestamp.
 			/// </summary>
 			/// <param name="s"></param>
@@ -548,7 +570,7 @@ namespace Catkeys
 			{
 				len = 0;
 				int n = Convert_.Utf8LengthFromString(s) + 1;
-				var b = Util.ByteBuffer.LibCommon.Alloc(n + 35);
+				var b = Util.LibByteBuffer.LibCommon.Alloc(n + 35);
 				if(LogFileTimestamp) {
 					Api.SYSTEMTIME t; Api.GetLocalTime(out t);
 					Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
@@ -580,7 +602,7 @@ namespace Catkeys
 				lock(_lockObj1) {
 					if(!_Connect()) return;
 
-					var buffer = Util.ByteBuffer.LibCommon;
+					var buffer = Util.LibByteBuffer.LibCommon;
 					int lenS = s.Length, lenCaller = (caller != null) ? Math.Min(caller.Length, 255) : 0;
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
 					var b = buffer.Alloc(lenAll);
@@ -947,7 +969,7 @@ namespace Catkeys
 
 							if(_isGlobal) { //read messages from mailslot and add to Messages. Else messages are added directly to Messages.
 								while(Api.GetMailslotInfo(_mailslot, null, out var nextSize, out var msgCount) && msgCount > 0) {
-									var buffer = Util.ByteBuffer.LibCommon;
+									var buffer = Util.LibByteBuffer.LibCommon;
 									byte* b0 = buffer.Alloc(nextSize + 4), b = b0; //+4 for "\r\n"
 									bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;
 									if(ok) {
@@ -1003,7 +1025,7 @@ namespace Catkeys
 					}
 				}
 				catch(Exception ex) {
-					DebugDialog(ex.Message);
+					Debug_.Dialog(ex.Message);
 				}
 			}
 

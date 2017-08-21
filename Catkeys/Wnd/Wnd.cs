@@ -37,7 +37,7 @@ namespace Catkeys
 	/// <item>Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="Native.GetError"/>, and it is mentioned in function documentation.</item>
 	/// <item>Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="WndException"/>.</item>
 	/// <item>Other functions that change window properties return false. They are more often used in programming than in automation scripts.</item>
-	/// <item>When a 'find' function does not find the window or control, it returns Wnd0 (window handle 0). Then <see cref="Is0"/> will return true.</item>
+	/// <item>When a 'find' function does not find the window or control, it returns default(Wnd) (window handle 0). Then <see cref="Is0"/> will return true.</item>
 	/// <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
 	/// </list>
 	/// 
@@ -57,42 +57,41 @@ namespace Catkeys
 	/// ]]></code>
 	/// </example>
 	[Serializable]
-	public partial struct Wnd
+	public unsafe partial struct Wnd
 	{
 #if false
-		/// Why Wnd is a struct, not a class:
+		/// Why Wnd is struct, not class:
 		///		Advantages:
 		///		<list type="number">
-		///		<item>Lightweight. Contains just IntPtr, which is 4 or 8 bytes.</item>
+		///		<item>Lightweight. Contains just void*, which is 4 or 8 bytes.</item>
 		///		<item>Easier to create overloaded functions that have a window parameter. If it was a class, then a null argument could be ambiguous if eg could also be a string etc.</item>
 		///		<item>When a find-window function does not find the window, calling next function (without checking the return value) does not throw null-reference exception. Instead the function can throw a more specific exception or just return false etc.</item>
 		///		<item>The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.</item>
-		///		<item>Code where a window argument is Wnd0 is more clear. If if it would be null, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.</item>
+		///		<item>Code where a window argument is default(Wnd) is more clear. If it would be null, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.</item>
 		///		<item>In my experience, it makes programming/scripting easier that if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a 'not found' exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/nonthrowing overloads).</item>
 		///		<item>Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET DateTime is a struct.</item>
 		///		</list>
 		///		Disadvantages:
 		///		<list type="number">
 		///		<item>Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because Wnd has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like x.NewClassMethod() and x.w.WndMethod(); anyway, in most cases we'll need the new window classes only for the functions that they add, not for Wnd functions, eg we would use a class ButtonWnd mostly only for button functions, not for general window functions.</item>
-		///		<item>In some cases C# does not allow to call a property-set function. Wnd has few such functions.</item>
+		///		<item>In some cases C# does not allow to call a property-set function. Wnd has few such functions, maybe none.</item>
 		///		</list>
 		///		
 		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when Wnd used.
 #endif
 
-		IntPtr _h;
+		void* _h;
 
 		#region constructors, operators, overrides, constants
 
 #pragma warning disable 1591 //XML doc
-		public Wnd(IntPtr hwnd) { _h = hwnd; }
+		Wnd(void* hwnd) { _h = hwnd; }
+		Wnd(IntPtr hwnd) { _h = (void*)hwnd; }
 
 		public static explicit operator Wnd(IntPtr hwnd) { return new Wnd(hwnd); } //Wnd=(Wnd)IntPtr //don't need implicit, it creates more problems than is useful
-		public static explicit operator IntPtr(Wnd w) { return w._h; } //IntPtr=(IntPtr)Wnd //could be implicit, but then problems with operator ==
-		public static explicit operator Wnd(LPARAM hwnd) { return new Wnd(hwnd); } //Wnd=(Wnd)LPARAM
+		public static explicit operator IntPtr(Wnd w) { return w.Handle; } //IntPtr=(IntPtr)Wnd //could be implicit, but then problems with operator ==
+		public static explicit operator Wnd(LPARAM hwnd) { return new Wnd((void*)hwnd); } //Wnd=(Wnd)LPARAM
 		public static explicit operator LPARAM(Wnd w) { return w._h; } //LPARAM=(LPARAM)Wnd
-		public static implicit operator Wnd(Misc.SpecHwnd value) { return new Wnd((IntPtr)value); } //Wnd=Wnd.Misc.SpecHwnd
-		public static explicit operator Wnd(int hwnd) { return new Wnd((IntPtr)hwnd); } //Wnd=(Wnd)int
 
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
@@ -102,9 +101,9 @@ namespace Catkeys
 		public static explicit operator Wnd(Control c) { return new Wnd(c == null ? Zero : c.Handle); } //Wnd=(Wnd)Control //implicit would allow Wnd==null
 
 		/// <summary>
-		/// If this Wnd variable contains the window handle from a System.Windows.Forms.Control (or Form etc) variable, gets the Control variable, else returns null.
+		/// If this window is a System.Windows.Forms.Control (or Form etc), gets the Control variable, else returns null.
 		/// </summary>
-		public static explicit operator Control(Wnd w) { return Control.FromHandle(w._h); } //Control=(Control)Wnd
+		public static explicit operator Control(Wnd w) { return Control.FromHandle(w.Handle); } //Control=(Control)Wnd
 
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(Wnd w1, Wnd w2) { return w1._h == w2._h; }
@@ -135,16 +134,9 @@ namespace Catkeys
 		/// </summary>
 		public override bool Equals(object obj)
 		{
-			return obj is Wnd w && this == w;
+			//return obj is Wnd w && this == w; //compiler creates very slow and big code if 'is ValueType variable'
+			return obj is Wnd && this == (Wnd)obj;
 		}
-
-		//Unsuccessfully tried to hide the inherited static Equals and ReferenceEquals in intellisense.
-		///// <exclude/>
-		//[EditorBrowsable(EditorBrowsableState.Never)]
-		//public static new bool Equals(object a, object b) { return object.Equals(a, b); }
-		///// <exclude/>
-		//[EditorBrowsable(EditorBrowsableState.Never)]
-		//public static new bool ReferenceEquals(object a, object b) { return object.ReferenceEquals(a, b); }
 
 		/// <exclude/>
 		public override int GetHashCode()
@@ -161,16 +153,16 @@ namespace Catkeys
 		{
 			if(Is0) return "0";
 			var cn = ClassName;
-			if(cn == null) return $"{_h} <invalid handle>";
+			if(cn == null) return $"{Handle} <invalid handle>";
 			string s = Name; if(s != null) s = s.Limit_(250);
-			return $"{_h} {cn} \"{s}\"";
+			return $"{Handle} {cn} \"{s}\"";
 		}
 
 		/// <summary>
 		/// Gets window handle as IntPtr.
 		/// Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c> .
 		/// </summary>
-		public IntPtr Handle { get => _h; }
+		public IntPtr Handle { get => new IntPtr(_h); }
 
 		//not useful. Required eg for SortedList, but better use Dictionary. We'll never need a sorted list of window handles.
 		///// <summary>
@@ -310,12 +302,12 @@ namespace Catkeys
 		{
 			/// <summary>
 			/// Posts a message to the message queue of this thread.
-			/// Calls API <msdn>PostMessage</msdn> with Wnd0. 
+			/// Calls API <msdn>PostMessage</msdn> with default(Wnd). 
 			/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 			/// </summary>
 			public static bool PostThreadMessage(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
 			{
-				return _Api.PostMessage(Wnd0, message, wParam, lParam);
+				return _Api.PostMessage(default(Wnd), message, wParam, lParam);
 			}
 
 			/// <summary>
@@ -339,7 +331,7 @@ namespace Catkeys
 		/// <exception cref="WndException"></exception>
 		public void ThrowIf0()
 		{
-			if(_h == default(IntPtr)) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			if(_h == null) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		/// <summary>
@@ -348,7 +340,7 @@ namespace Catkeys
 		/// <exception cref="WndException"></exception>
 		public void ThrowIfInvalid()
 		{
-			if(_h == default(IntPtr) || !Api.IsWindow(this)) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			if(_h == null || !Api.IsWindow(this)) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		/// <summary>
@@ -382,7 +374,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns true if the <see cref="Wnd">handle</see> is 0 (<see cref="Wnd0"/>).
+		/// Returns true if the <see cref="Wnd">handle</see> is 0.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -391,23 +383,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="IsAlive"/>
-		public bool Is0 { get => _h == default(IntPtr); }
-
-		//Better don't need it. Possibly can create some difficult-to-debug problems. Less readable than w.Is0, which is short enough.
-		///// <summary>
-		///// This operator allows to use code <c>if(w)</c> instead of <c>if(!w.Is0)</c> or <c>if(w != Wnd0)</c>.
-		///// Experimental. Will be removed in final release if some problems with it will be discovered.
-		///// </summary>
-		//public static bool operator true(Wnd w) { return w._h != default(IntPtr); }
-
-		/////
-		//public static bool operator false(Wnd w) { return w._h == default(IntPtr); }
-
-		///// <summary>
-		///// This operator allows to use code <c>if(!w)</c> instead of <c>if(w.Is0)</c> or <c>if(w == Wnd0)</c>.
-		///// Experimental. Will be removed in final release if some problems with it will be discovered.
-		///// </summary>
-		//public static bool operator !(Wnd w) { return w._h == default(IntPtr); }
+		public bool Is0 { get => _h == null; }
 
 		/// <summary>
 		/// Returns true if the <see cref="Wnd">handle</see> identifies an existing window.
@@ -744,38 +720,73 @@ namespace Catkeys
 		/// <seealso cref="Misc.SwitchActiveWindow"/>
 		public void Activate()
 		{
-			ThrowIfInvalid();
-			var w = WndWindow;
-			if(w.Is0) w = this;
-			w.LibActivate();
+			LibActivate(0);
+		}
+
+		[Flags]
+		internal enum LibActivateFlags
+		{
+			/// <summary>
+			/// Don't call ThrowIfInvalid at the very start (ie called ensures it is valid).
+			/// </summary>
+			NoThrowIfInvalid = 1,
+
+			/// <summary>
+			/// Don't call WndWindow (ie caller ensures it's a top-level window, not control).
+			/// </summary>
+			NoGetWndWindow = 2,
+
+			/// <summary>
+			/// Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked.
+			/// Then just calls ZorderTop(), which in most cases does not work (inactive window).
+			/// </summary>
+			IgnoreIfNoActivateStyleEtc = 4,
+
+			/// <summary>
+			/// Wait for window animations to end. Eg when switching Win10 desktops.
+			/// </summary>
+			ForScreenCapture = 8,
 		}
 
 		/// <summary>
 		/// Activates this window (brings to the foreground).
 		/// The same as <see cref="Activate()"/>, but has some options.
+		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
-		/// <param name="ignoreIfNoActivateStyleEtc">Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked. Then returns true.</param>
-		/// <param name="forScreenCapture">Wait for window animations to end. Eg when switching Win10 desktops.</param>
 		/// <exception cref="WndException"/>
-		internal void LibActivate(bool ignoreIfNoActivateStyleEtc = false, bool forScreenCapture = false)
+		internal bool LibActivate(LibActivateFlags flags)
 		{
-			Debug.Assert(!IsChildWindow);
+			//CONSIDER: use Options.Relaxed
+
+			if(0 != (flags & LibActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
+			if(0 != (flags & LibActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
+			else {
+				var w = WndWindow;
+				if(w != this) {
+					return w.LibActivate((flags | LibActivateFlags.NoGetWndWindow) & ~LibActivateFlags.NoThrowIfInvalid);
+				}
+			}
+
 			bool R = false, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
+			bool forScreenCapture = 0 != (flags & LibActivateFlags.ForScreenCapture);
 
 			if(IsMinimized) {
 				ShowNotMinimized(true);
 				isMinimized = IsMinimized;
-				if(forScreenCapture && !isMinimized && !ofThisThread) Thread.Sleep(200); //although we use noAnimation, in some cases still restores with animation
+				if(forScreenCapture && !isMinimized && !ofThisThread) Thread.Sleep(250); //although we use noAnimation, in some cases still restores with animation
 			}
 			if(!IsVisible) Show(true);
 
 			R = LibIsActiveOrNoActiveAndThisIsWndRoot;
 			if(!R) {
-				if(ignoreIfNoActivateStyleEtc) {
+				if(0 != (flags & LibActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					uint est = ExStyle;
 					if((est & Native.WS_EX_NOACTIVATE) != 0) noAct = true;
 					else if((est & (Native.WS_EX_TOOLWINDOW | Native.WS_EX_APPWINDOW)) == Native.WS_EX_TOOLWINDOW) noAct = !HasStyle(Native.WS_CAPTION);
-					if(noAct && !IsCloaked) return; //if cloaked, need to activate to uncloak
+					if(noAct && !IsCloaked) {
+						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
+						return false; //if cloaked, need to activate to uncloak
+					}
 				}
 
 				for(int i = 0; i < 3; i++) {
@@ -797,7 +808,6 @@ namespace Catkeys
 								if(isMinimized || (f.WndOwner == this && Rect.IsEmpty)) {
 									R = true;
 								} else {
-									DebugPrint("");
 									R = Api.SetForegroundWindow(Misc.WndRoot) && ActivateLL() && WndActive.ThreadId == tid;
 									if(R && !ofThisThread) {
 										_MinimalWaitNoCheckThread();
@@ -842,6 +852,10 @@ namespace Catkeys
 
 			if(!R) ThrowNoNative("*activate*");
 			if(forScreenCapture) _MinimalWaitIfOtherThread();
+
+			return true;
+
+			//tested: if the window is hung, activates the ghost window and fails (exception). It's ok.
 		}
 
 		/// <summary>
@@ -954,10 +968,10 @@ namespace Catkeys
 		/// </summary>
 		static void _EnableActivate_SendKey(bool debugOut)
 		{
-			if(debugOut) DebugPrint("EnableActivate: need key");
+			if(debugOut) Debug_.Print("EnableActivate: need key");
 
 			var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
-			Api.SendInputKey(ref x);
+			Api.SendInput_Key(ref x);
 			//info: works without waiting.
 		}
 
@@ -967,7 +981,7 @@ namespace Catkeys
 		/// </summary>
 		static void _EnableActivate_MinRes()
 		{
-			DebugPrint("EnableActivate: need min/res");
+			Debug_.Print("EnableActivate: need min/res");
 
 			Wnd t = Misc.CreateWindow(Native.WS_EX_TOOLWINDOW, "#32770", null, Native.WS_POPUP | Native.WS_MINIMIZE | Native.WS_VISIBLE);
 			//info: When restoring, the window must be visible, or may not work.
@@ -1023,7 +1037,7 @@ namespace Catkeys
 		{
 			ThrowIfInvalid();
 			Wnd wTL = WndWindow;
-			if(wTL != Api.GetForegroundWindow()) wTL.Activate();
+			if(!wTL.IsActive) wTL.LibActivate(LibActivateFlags.NoGetWndWindow);
 
 			int th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
@@ -1130,10 +1144,10 @@ namespace Catkeys
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		bool _GetSize(out SIZE z)
+		bool _GetSize(out Size z)
 		{
-			if(Api.GetWindowRect(this, out RECT r)) { z = new SIZE(r.Width, r.Height); return true; }
-			z = new SIZE();
+			if(Api.GetWindowRect(this, out RECT r)) { z = new Size(r.Width, r.Height); return true; }
+			z = new Size();
 			return false;
 		}
 
@@ -1158,14 +1172,14 @@ namespace Catkeys
 		/// Gets width and height.
 		/// </summary>
 		/// <remarks>
-		/// Calls API <msdn>GetWindowRect</msdn>. Returns empty SIZE if fails (eg window closed).
+		/// Calls API <msdn>GetWindowRect</msdn>. Returns empty Size if fails (eg window closed).
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public SIZE Size
+		public Size Size
 		{
 			get
 			{
-				_GetSize(out SIZE z);
+				_GetSize(out Size z);
 				return z;
 			}
 		}
@@ -1230,10 +1244,10 @@ namespace Catkeys
 		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		bool _GetClientSize(out SIZE z)
+		bool _GetClientSize(out Size z)
 		{
-			if(Api.GetClientRect(this, out RECT r)) { z = new SIZE(r.right, r.bottom); return true; }
-			z = new SIZE();
+			if(Api.GetClientRect(this, out RECT r)) { z = new Size(r.right, r.bottom); return true; }
+			z = new Size();
 			return false;
 		}
 
@@ -1259,14 +1273,14 @@ namespace Catkeys
 		/// The same as <see cref="ClientRect"/>, just the return type is different.
 		/// </summary>
 		/// <remarks>
-		/// Calls <msdn>GetClientRect</msdn>. Returns empty SIZE value if fails (eg window closed).
+		/// Calls <msdn>GetClientRect</msdn>. Returns empty Size value if fails (eg window closed).
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public SIZE ClientSize
+		public Size ClientSize
 		{
 			get
 			{
-				_GetClientSize(out SIZE z);
+				_GetClientSize(out Size z);
 				return z;
 			}
 		}
@@ -1276,7 +1290,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public int ClientWidth
 		{
-			get => ClientSize.cx;
+			get => ClientSize.Width;
 		}
 		/// <summary>
 		/// Gets client area height.
@@ -1284,7 +1298,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public int ClientHeight
 		{
-			get => ClientSize.cy;
+			get => ClientSize.Height;
 		}
 
 		/// <summary>
@@ -1300,7 +1314,7 @@ namespace Catkeys
 				int W = width != null ? width.Value : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
 				int H = height != null ? height.Value : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
 
-				if(LibResize(W, H)) return;
+				if(ResizeLL(W, H)) return;
 			}
 
 			ThrowUseNative();
@@ -1360,7 +1374,7 @@ namespace Catkeys
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public unsafe bool MapClientToClientOf(Wnd w, ref POINT p)
+		public unsafe bool MapClientToClientOf(Wnd w, ref Point p)
 		{
 			fixed (void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
 		}
@@ -1371,14 +1385,14 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool MapClientToScreen(ref RECT r)
 		{
-			return MapClientToClientOf(Wnd0, ref r);
+			return MapClientToClientOf(default(Wnd), ref r);
 		}
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapClientToScreen(ref POINT p)
+		public bool MapClientToScreen(ref Point p)
 		{
 			return Api.ClientToScreen(this, ref p);
 		}
@@ -1389,14 +1403,14 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public unsafe bool MapScreenToClient(ref RECT r)
 		{
-			fixed (void* t = &r) { return _MapWindowPoints(Wnd0, this, t, 2); }
+			fixed (void* t = &r) { return _MapWindowPoints(default(Wnd), this, t, 2); }
 		}
 
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public unsafe bool MapScreenToClient(ref POINT p)
+		public unsafe bool MapScreenToClient(ref Point p)
 		{
 			return Api.ScreenToClient(this, ref p);
 		}
@@ -1412,10 +1426,10 @@ namespace Catkeys
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapClientToWindow(ref POINT p)
+		public bool MapClientToWindow(ref Point p)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
-			p.x += rc.left - rw.left; p.y += rc.top - rw.top;
+			p.X += rc.left - rw.left; p.Y += rc.top - rw.top;
 			return true;
 		}
 
@@ -1434,10 +1448,10 @@ namespace Catkeys
 		/// Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapWindowToClient(ref POINT p)
+		public bool MapWindowToClient(ref Point p)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
-			p.x += rw.left - rc.left; p.y += rw.top - rc.top;
+			p.X += rw.left - rc.left; p.Y += rw.top - rc.top;
 			return true;
 		}
 
@@ -1453,9 +1467,31 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public bool MapWindowToScreen(ref Point p)
+		{
+			if(!_GetRect(out var rw)) return false;
+			p.X += rw.left; p.Y += rw.top;
+			return true;
+		}
+
+		/// <summary>
+		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public bool MapWindowToScreen(ref RECT r)
+		{
+			if(!_GetRect(out var rw)) return false;
+			r.Offset(rw.left, rw.top);
+			return true;
+		}
+
+		/// <summary>
 		/// Gets rectangle of this window (usually control) relative to the client area of another window (usually the parent).
 		/// </summary>
-		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is Wnd0, gets rectangle in screen.</param>
+		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is default(Wnd), gets rectangle in screen.</param>
 		/// <param name="r">Receives the rectangle.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		/// <seealso cref="RectInParent"/>
@@ -1493,12 +1529,12 @@ namespace Catkeys
 		/// <summary>
 		/// Returns mouse pointer position relative to the client area of this window.
 		/// </summary>
-		public POINT MouseClientXY
+		public Point MouseClientXY
 		{
 			get
 			{
 				Api.GetCursorPos(out var p);
-				if(!MapScreenToClient(ref p)) p = default(POINT);
+				if(!MapScreenToClient(ref p)) p = default(Point);
 				return p;
 			}
 		}
@@ -1506,14 +1542,14 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this window (its rectangle) contains the specified point in primary screen coordinates.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction, eg 0.5 is middle). Not used if null.</param>
-		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction, eg 0.5 is middle). Not used if null.</param>
+		/// <param name="x">X coordinate. Not used if null.</param>
+		/// <param name="y">Y coordinate. Not used if null.</param>
 		/// <param name="workArea">The coordinates are relative to the work area.</param>
-		public bool ContainsScreenXY(Types<int, float>? x = null, Types<int, float>? y = null, bool workArea = false)
+		public bool ContainsScreenXY(Coord x, Coord y, bool workArea = false)
 		{
-			POINT p = _Coord.GetNormalizedInScreen(x.GetValueOrDefault(), y.GetValueOrDefault());
+			Point p = Coord.Normalize(x, y, workArea);
 			if(!_GetRect(out RECT r)) return false;
-			if(!r.Contains(x == null ? r.left : p.x, y == null ? r.top : p.y)) return false;
+			if(!r.Contains(x.IsNull ? r.left : p.X, y.IsNull ? r.top : p.Y)) return false;
 			return true;
 
 			//note: we don't use name ContainsXY and 2 overloads, mostly because of possible incorrect usage. Also now easier to read the code.
@@ -1526,21 +1562,21 @@ namespace Catkeys
 		/// Direct or indirect parent window. The coordinates are relative to its client area.
 		/// Actually this and parent can be any windows or controls, the function does not check whether this is a child of parent.
 		/// </param>
-		/// <param name="x">X coordinate. Can be int (pixels) or float (fraction, eg 0.5 is middle). Not used if null.</param>
-		/// <param name="y">Y coordinate. Can be int (pixels) or float (fraction, eg 0.5 is middle). Not used if null.</param>
-		public bool ContainsWindowXY(Wnd parent, Types<int, float>? x = null, Types<int, float>? y = null)
+		/// <param name="x">X coordinate. Not used if null.</param>
+		/// <param name="y">Y coordinate. Not used if null.</param>
+		public bool ContainsWindowXY(Wnd parent, Coord x, Coord y)
 		{
 			if(!parent.IsAlive) return false;
-			POINT p = _Coord.GetNormalizedInWindowClientArea(x.GetValueOrDefault(), y.GetValueOrDefault(), parent);
+			Point p = Coord.NormalizeInWindow(x, y, parent);
 			if(!GetRectInClientOf(parent, out RECT r)) return false;
-			if(!r.Contains(x == null ? r.left : p.x, y == null ? r.top : p.y)) return false;
+			if(!r.Contains(x.IsNull ? r.left : p.X, y.IsNull ? r.top : p.Y)) return false;
 			return true;
 		}
 
 		/// <summary>
-		/// This overload calls <see cref="ContainsWindowXY(Wnd, Types{int, float}?, Types{int, float}?)">ContainsWindowXY</see>(WndWindow, x, y).
+		/// This overload calls <see cref="ContainsWindowXY(Wnd, Coord, Coord)">ContainsWindowXY</see>(WndWindow, x, y).
 		/// </summary>
-		public bool ContainsWindowXY(Types<int, float>? x = null, Types<int, float>? y = null)
+		public bool ContainsWindowXY(Coord x, Coord y)
 		{
 			return ContainsWindowXY(WndWindow, x, y);
 		}
@@ -1551,9 +1587,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Calls API <msdn>SetWindowPos</msdn>.
-		/// For swpFlags you can use Native.SWP_ constants.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>
+		/// Supports <see cref="Native.GetError"/>.
+		/// For swpFlags you can use Native.SWP_ constants.
+		/// </remarks>
 		public bool SetWindowPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default(Wnd))
 		{
 			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags);
@@ -1561,160 +1599,88 @@ namespace Catkeys
 
 		/// <summary>
 		/// Moves and resizes.
-		/// Calls API SetWindowPos with flags SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd.
-		/// The same as MoveLL, but does not support optional coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		internal bool LibMove(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
+		/// <remarks>
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP_ flags.
+		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
+		/// Supports <see cref="Native.GetError"/>.
+		/// 
+		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
+		/// </remarks>
+		/// <seealso cref="SetWindowPos"/>
+		public bool MoveLL(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
 		{
 			return SetWindowPos(Native.SWP_NOZORDER | Native.SWP_NOOWNERZORDER | Native.SWP_NOACTIVATE | swpFlagsToAdd, x, y, width, height);
 		}
 
 		/// <summary>
 		/// Moves.
-		/// Calls API SetWindowPos with flags SWP_NOSIZE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd.
-		/// The same as MoveLL, but does not support optional coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		internal bool LibMove(int x, int y, uint swpFlagsToAdd = 0)
+		/// <remarks>
+		/// See also <see cref="Move(Coord, Coord, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOSIZE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
+		/// Supports <see cref="Native.GetError"/>.
+		/// 
+		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
+		/// </remarks>
+		/// <seealso cref="SetWindowPos"/>
+		public bool MoveLL(int x, int y)
 		{
-			return LibMove(x, y, 0, 0, Native.SWP_NOSIZE | swpFlagsToAdd);
+			return MoveLL(x, y, 0, 0, Native.SWP_NOSIZE);
 		}
 
 		/// <summary>
 		/// Resizes.
-		/// Calls API SetWindowPos with flags SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd.
-		/// The same as ResizeLL, but does not support optional coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		internal bool LibResize(int width, int height, uint swpFlagsToAdd = 0)
+		/// <remarks>
+		/// See also <see cref="Resize(Coord, Coord, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
+		/// Supports <see cref="Native.GetError"/>.
+		/// </remarks>
+		/// <seealso cref="SetWindowPos"/>
+		public bool ResizeLL(int width, int height)
 		{
-			return LibMove(0, 0, width, height, Native.SWP_NOMOVE | swpFlagsToAdd);
+			return MoveLL(0, 0, width, height, Native.SWP_NOMOVE);
 		}
 
 		/// <summary>
 		/// Moves and/or resizes.
+		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, uint)"/>.
 		/// </summary>
-		/// <remarks>
-		/// This library has two similar functions - <b>Move</b> and <b>MoveLL</b>. <b>Move</b> is better to use in automation scripts, with windows of any process/thread. <b>MoveLL</b> usually is better to use in programming, with windows of current thread.
-		/// <b>MoveLL</b> is more low-level than <b>Move</b> (which can throw exceptions, supports fractional/workarea coordinates, restores if min/max, does not support SWP_ flags).
-		///
-		/// Calls API <msdn>SetWindowPos</msdn>.
-		/// Supports <see cref="Native.GetError"/>.
-		/// 
-		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
-		/// </remarks>
-		/// <param name="x">Left. Can be null to not move in X axis.</param>
-		/// <param name="y">Top. Can be null to not move in Y axis.</param>
-		/// <param name="width">Width. Can be null to not change width.</param>
-		/// <param name="height">Height. Can be null to not change height.</param>
-		/// <param name="swpFlagsToAdd">One or more Native.SWP_ flags, except SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_NOOWNERZORDER, SWP_NOACTIVATE.</param>
-		public bool MoveLL(int? x, int? y, int? width, int? height, uint swpFlagsToAdd = 0)
-		{
-			int L = 0, T = 0, W = 0, H = 0, getRect = 0;
-
-			var f = swpFlagsToAdd;
-			if(x == null && y == null) f |= Native.SWP_NOMOVE;
-			else {
-				if(x != null) L = x.Value; else getRect |= 1;
-				if(y != null) T = y.Value; else getRect |= 2;
-			}
-
-			if(width == null && height == null) f |= Native.SWP_NOSIZE;
-			else {
-				if(width != null) W = width.Value; else getRect |= 4;
-				if(height != null) H = height.Value; else getRect |= 8;
-			}
-
-			if(getRect != 0) {
-				RECT r; if(!GetRectInClientOf(WndDirectParent, out r)) return false;
-				if((getRect & 1) != 0) L = r.left;
-				if((getRect & 2) != 0) T = r.top;
-				if((getRect & 4) != 0) W = r.Width;
-				if((getRect & 8) != 0) H = r.Height;
-			}
-
-			return LibMove(L, T, W, H, f);
-		}
-
-		/// <summary>
-		/// Moves.
-		/// Calls MoveLL(x, y, null, null, 0).
-		/// </summary>
-		/// <remarks>
-		/// This library has two similar functions - <b>Move</b> and <b>MoveLL</b>. <b>Move</b> is better to use in automation scripts, with windows of any process/thread. <b>MoveLL</b> usually is better to use in programming, with windows of current thread.
-		/// <b>MoveLL</b> is more low-level than <b>Move</b> (which can throw exceptions, supports fractional/workarea coordinates, restores if min/max).
-		///
-		/// Calls API <msdn>SetWindowPos</msdn>.
-		/// Supports <see cref="Native.GetError"/>.
-		/// 
-		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
-		/// </remarks>
-		/// <param name="x">Left. Can be null to not move in X axis.</param>
-		/// <param name="y">Top. Can be null to not move in Y axis.</param>
-		public bool MoveLL(int? x, int? y)
-		{
-			return MoveLL(x, y, null, null);
-		}
-
-		/// <summary>
-		/// Resizes.
-		/// Calls MoveLL(null, null, width, height, 0).
-		/// </summary>
-		/// <remarks>
-		/// This library has two similar functions - <b>Resize</b> and <b>ResizeLL</b>. <b>Resize</b> is better to use in automation scripts, with windows of any process/thread. <b>ResizeLL</b> usually is better to use in programming, with windows of current thread.
-		/// <b>ResizeLL</b> is more low-level than <b>Resize</b> (which can throw exceptions, supports fractional/workarea coordinates, restores if min/max).
-		///
-		/// Calls API <msdn>SetWindowPos</msdn>.
-		/// Supports <see cref="Native.GetError"/>.
-		/// 
-		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
-		/// </remarks>
-		/// <param name="width">Width. Can be null to not change width.</param>
-		/// <param name="height">Height. Can be null to not change height.</param>
-		public bool ResizeLL(int? width, int? height)
-		{
-			return MoveLL(null, null, width, height);
-		}
-
-		/// <summary>
-		/// Moves and/or resizes.
-		/// With windows of current thread usually it's better to use <see cref="MoveLL(int?, int?, int?, int?, uint)">MoveLL</see>.
-		/// </summary>
-		/// <param name="x">Left. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
-		/// <param name="y">Top. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
-		/// <param name="width">Width. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change width.</param>
-		/// <param name="height">Height. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change height.</param>
+		/// <param name="x">Left. If null, does not move in X axis.</param>
+		/// <param name="y">Top. If null, does not move in Y axis.</param>
+		/// <param name="width">Width. If null, does not change width.</param>
+		/// <param name="height">Height. If null, does not change height.</param>
 		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <exception cref="WndException"/>
-		public void Move(Types<int, float>? x, Types<int, float>? y, Types<int, float>? width, Types<int, float>? height, bool workArea = false)
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false)
 		{
 			ThrowIfInvalid();
 
 			Wnd w = WndDirectParent;
-			POINT xy, wh;
+			Point xy, wh;
 			if(!w.Is0) {
-				xy = _Coord.GetNormalizedInWindowClientArea(x.GetValueOrDefault(), y.GetValueOrDefault(), w);
-				wh = _Coord.GetNormalizedInWindowClientArea(width.GetValueOrDefault(), height.GetValueOrDefault(), w);
+				xy = Coord.NormalizeInWindow(x, y, w);
+				wh = Coord.NormalizeInWindow(width, height, w);
 			} else {
-				xy = _Coord.GetNormalizedInScreen(x.GetValueOrDefault(), y.GetValueOrDefault(), workArea);
-				wh = _Coord.GetNormalizedInScreen(width.GetValueOrDefault(), height.GetValueOrDefault(), workArea, true);
+				xy = Coord.Normalize(x, y, workArea);
+				wh = Coord.Normalize(width, height, workArea, widthHeight: true);
 			}
 
 			uint f = 0, getRect = 0;
-			if(x == null && y == null) f |= Native.SWP_NOMOVE; else if(x == null) getRect |= 1; else if(y == null) getRect |= 2;
-			if(width == null && height == null) f |= Native.SWP_NOSIZE; else if(width == null) getRect |= 4; else if(height == null) getRect |= 8;
+			if(x.IsNull && y.IsNull) f |= Native.SWP_NOMOVE; else if(x.IsNull) getRect |= 1; else if(y.IsNull) getRect |= 2;
+			if(width.IsNull && height.IsNull) f |= Native.SWP_NOSIZE; else if(width.IsNull) getRect |= 4; else if(height.IsNull) getRect |= 8;
 
 			if(getRect != 0) {
 				RECT r; if(!GetRectInClientOf(w, out r)) ThrowUseNative("*move/resize*");
-				if((getRect & 1) != 0) xy.x = r.left;
-				if((getRect & 2) != 0) xy.y = r.top;
-				if((getRect & 4) != 0) wh.x = r.Width;
-				if((getRect & 8) != 0) wh.y = r.Height;
+				if((getRect & 1) != 0) xy.X = r.left;
+				if((getRect & 2) != 0) xy.Y = r.top;
+				if((getRect & 4) != 0) wh.X = r.Width;
+				if((getRect & 8) != 0) wh.Y = r.Height;
 			}
 
 			//restore min/max, except if child or hidden
@@ -1723,26 +1689,25 @@ namespace Catkeys
 				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 
-			if(!LibMove(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
+			if(!MoveLL(xy.X, xy.Y, wh.X, wh.Y, f)) ThrowUseNative("*move/resize*");
 
 			_MinimalWaitIfOtherThread();
 		}
 
-
 		/// <summary>
 		/// Moves.
 		/// Calls Move(x, y, null, null, workArea).
-		/// With windows of current thread usually it's better to use <see cref="MoveLL(int?, int?)">MoveLL</see>.
+		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </summary>
-		/// <param name="x">Left. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in X axis.</param>
-		/// <param name="y">Top. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not move in Y axis.</param>
+		/// <param name="x">Left. If null, does not move in X axis.</param>
+		/// <param name="y">Top. If null, does not move in Y axis.</param>
 		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
-		public void Move(Types<int, float>? x, Types<int, float>? y, bool workArea = false)
+		public void Move(Coord x, Coord y, bool workArea = false)
 		{
 			Move(x, y, null, null, workArea);
 		}
@@ -1750,16 +1715,16 @@ namespace Catkeys
 		/// <summary>
 		/// Resizes.
 		/// Calls Move(null, null, width, height, workArea).
-		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int?, int?)">ResizeLL</see>.
+		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </summary>
-		/// <param name="width">Width. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change width.</param>
-		/// <param name="height">Height. Can be int (pixels) or float (fraction of screen or work area or direct parent client area) or null to not change height.</param>
-		/// <param name="workArea">If false, fractional width/height are part of the primary screen, else of its work area. Not used when this is a child window.</param>
+		/// <param name="width">Width. If null, does not change width.</param>
+		/// <param name="height">Height. If null, does not change height.</param>
+		/// <param name="workArea">If false, reverse and fractional width/height are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// </remarks>
-		public void Resize(Types<int, float>? width, Types<int, float>? height, bool workArea = false)
+		public void Resize(Coord width, Coord height, bool workArea = false)
 		{
 			Move(null, null, width, height, workArea);
 		}
@@ -1769,63 +1734,59 @@ namespace Catkeys
 		#region MoveInScreen, EnsureInScreen, Screen
 
 		/// <summary>
-		/// Used by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen, also indirectly by other functions.
+		/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen.
 		/// </summary>
-		internal static void LibMoveInScreen(bool useWindow, Wnd w, ref RECT r, object screen, bool bWorkArea, bool bJustMoveIntoScreen, bool bCanLimitSize, bool bRawXY)
+		internal static void LibMoveInScreen(bool bEnsureMethod,
+			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
+			object screen, bool bWorkArea, bool bEnsureInScreen)
 		{
-			int x = 0, y = 0, x0 = r.left, y0 = r.top, wid, hei, xmax, ymax;
+			Screen scr;
+			if(screen == null) {
+				if(useWindow) scr = Screen_.FromWindow(w);
+				else scr = bEnsureMethod ? Screen.FromRectangle(r) : Screen.PrimaryScreen;
+			} else scr = Screen_.FromObject(screen);
 
-			if(bJustMoveIntoScreen) { //only make sure that whole w or r (which must be relative to the primary screen) is in its (or nearest) screen
-				if(screen == null) {
-					if(useWindow) screen = w;
-					else screen = r;
-				}
-				bRawXY = false;
-			} // else //move w or r to r.left r.top in selected screen, etc
-
-			Screen scr = Screen_.FromObject(screen ?? (useWindow ? (object)w : null));
 			RECT rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
-
-			if(!bJustMoveIntoScreen) { x = r.left + rs.left; y = r.top + rs.top; }
 
 			if(useWindow) {
 				if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
 			}
 
-			if(!bRawXY) {
-				wid = r.right - r.left; hei = r.bottom - r.top;
-				xmax = rs.right - wid; ymax = rs.bottom - hei;
-				if(bJustMoveIntoScreen) {
-					x = r.left;
-					y = r.top;
-				} else {
-					if(x0 < 0) x = xmax + x0; else if(x0 == 0) x = (rs.left + rs.right - wid) / 2; else x = rs.left + x0;
-					if(y0 < 0) y = ymax + y0; else if(y0 == 0) y = (rs.top + rs.bottom - hei) / 2; else y = rs.top + y0;
-				}
+			int x, y, wid = r.Width, hei = r.Height;
+			if(bEnsureMethod) {
+				Debug.Assert(bEnsureInScreen == true && left.IsNull && top.IsNull); //left/top unused
+				x = r.left;
+				y = r.top;
+			} else {
+				if(left.IsNull) left = Coord.Center;
+				if(top.IsNull) top = Coord.Center;
+				var p = Coord.NormalizeInRect(left, top, rs);
+				x = p.X; y = p.Y;
+				switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
+				switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
+			}
 
-				x = Math.Max(Math.Min(x, xmax), rs.left);
-				y = Math.Max(Math.Min(y, ymax), rs.top);
+			if(bEnsureInScreen) {
+				x = Math.Max(Math.Min(x, rs.right - wid), rs.left);
+				y = Math.Max(Math.Min(y, rs.bottom - hei), rs.top);
+				if(r.Width > rs.Width) r.Width = rs.Width;
+				if(r.Height > rs.Height) r.Height = rs.Height;
 			}
 
 			r.Offset(x - r.left, y - r.top);
-
-			if(bCanLimitSize) {
-				if(r.right > rs.right) r.right = rs.right;
-				if(r.bottom > rs.bottom) r.bottom = rs.bottom;
-			}
 
 			if(useWindow) { //move window
 				w.LibGetWindowPlacement(out var wp, "*move*");
 				bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.FromWindow(w));
 				if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
-				Wnd hto = Wnd0; bool visible = w.IsVisible;
+				Wnd hto = default(Wnd); bool visible = w.IsVisible;
 				try {
 					//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
 					//There are several workarounds. The best of them - temporarily set owner window 0.
 					if(!visible) {
 						hto = w.WndOwner;
-						if(!hto.Is0) w.WndOwner = Wnd0;
+						if(!hto.Is0) w.WndOwner = default(Wnd);
 					}
 
 					wp.rcNormalPosition = r;
@@ -1834,11 +1795,11 @@ namespace Catkeys
 
 					if(moveMaxWindowToOtherMonitor) {
 						//I found this way of moving max window to other screen by experimenting.
-						//When moved to screen's coordinates and sized to screen's work area size, Windows adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
+						//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
 						//Must call SetWindowPos twice, or it may refuse to move at all.
 						//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
 						rs = scr.WorkingArea;
-						if(!w.LibMove(rs.left, rs.top) || !w.LibResize(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
+						if(!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
 					}
 				}
 				finally {
@@ -1851,59 +1812,61 @@ namespace Catkeys
 
 		/// <summary>
 		/// Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
-		/// By default, 0 and negative x y are interpreted as: 0 - screen center, &lt;0 - relative to the right or bottom edge of the screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen.</param>
-		/// <param name="y">Y coordinate in the specified screen.</param>
-		/// <param name="screen">Move to this screen. If null, use screen of this window. The same as with <see cref="Screen_.FromObject"/>.</param>
-		/// <param name="workArea">Use the work area, not whole screen.</param>
-		/// <param name="limitSize">If window is bigger than screen, resize it.</param>
-		/// <param name="rawXY">Don't interpret 0 and negative x y in a special way. They are relative to the top-left corner of the screen.</param>
+		/// <param name="x">X coordinate in the specified screen. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y coordinate in the specified screen. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="screen">Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), use screen of this window.</param>
+		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
+		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
+		/// <exception cref="WndException"/>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// </remarks>
-		/// <exception cref="WndException"/>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveInScreen(int x, int y, object screen = null, bool workArea = true, bool limitSize = false, bool rawXY = false)
+		public void MoveInScreen(Coord x, Coord y, object screen = null, bool workArea = true, bool ensureInScreen = true)
 		{
-			var r = new RECT(x, y, x, y, false);
-			LibMoveInScreen(true, this, ref r, screen, workArea, false, limitSize, rawXY);
+			var r = new RECT();
+			LibMoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
 		/// Moves this window if need, to ensure that entire window is in screen.
 		/// </summary>
-		/// <param name="screen">Move to this screen. If null, use screen of this window. See <see cref="Screen_.FromObject"/>.</param>
-		/// <param name="workArea">Use the work area, not whole screen.</param>
-		/// <param name="limitSize">If window is bigger than screen, resize it.</param>
+		/// <param name="screen">
+		/// Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses screen of this window.
+		/// If screen index is invalid, shows warning, no exception. Then uses screen of this window.
+		/// </param>
+		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
+		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// </remarks>
-		/// <exception cref="WndException"/>
 		/// <seealso cref="RECT.EnsureInScreen"/>
-		public void EnsureInScreen(object screen = null, bool workArea = true, bool limitSize = false)
+		public void EnsureInScreen(object screen = null, bool workArea = true)
 		{
 			var r = new RECT();
-			LibMoveInScreen(true, this, ref r, screen, workArea, true, limitSize, false);
+			if(screen is int) screen = Screen_.FromIndex((int)screen, noThrow: true); //returns null if invalid
+			LibMoveInScreen(true, null, null, true, this, ref r, screen, workArea, true);
 		}
 
 		/// <summary>
 		/// Moves this window to the center of the screen.
-		/// Calls MoveInScreen(0, 0, screen, workArea). Also makes not minimized/maximized/hidden.
+		/// Calls ShowNotMinMax(true) and MoveInScreen(null, null, screen, true, true).
 		/// </summary>
-		/// <param name="screen">Move to this screen. If null, use screen of this window. See <see cref="Screen_.FromObject"/>.</param>
-		/// <param name="workArea">Use the work area, not whole screen.</param>
+		/// <param name="screen">Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses screen of this window.</param>
 		/// <exception cref="WndException"/>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveToScreenCenter(object screen = null, bool workArea = true)
+		public void MoveToScreenCenter(object screen = null)
 		{
 			ShowNotMinMax(true);
-			MoveInScreen(0, 0, screen, workArea);
+			MoveInScreen(null, null, screen, true);
 		}
 
 		/// <summary>
 		/// Gets <see cref="System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
-		/// If this window handle is Wnd0 or invalid, gets the primary screen.
+		/// If this window handle is default(Wnd) or invalid, gets the primary screen.
 		/// Calls <see cref="Screen_.FromWindow"/>.
 		/// </summary>
 		public Screen Screen
@@ -1921,7 +1884,7 @@ namespace Catkeys
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
 		/// This window and w can be both top-level windows or both controls of same parent.
 		/// May not work with top-level windows when it would move an inactive window above the active window.
-		/// If w is Wnd0, calls <see cref="ZorderBottom"/>.
+		/// If w is default(Wnd), calls <see cref="ZorderBottom"/>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderAbove(Wnd w)
@@ -1934,7 +1897,7 @@ namespace Catkeys
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
 		/// This window and w can be both top-level windows or both controls of same parent.
 		/// May not work with top-level windows when it would move an inactive window above the active window.
-		/// If w is Wnd0, calls <see cref="ZorderTop"/>.
+		/// If w is default(Wnd), calls <see cref="ZorderTop"/>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderBelow(Wnd w)
@@ -1946,7 +1909,7 @@ namespace Catkeys
 		{
 			if(w.Is0) return before ? ZorderBottom() : ZorderTop();
 			if(w == this) return true;
-			if(IsTopmost && !w.IsTopmost) ZorderNotopmost(); //see comments below
+			if(IsTopmost && !w.IsTopmost) ZorderNoTopmost(); //see comments below
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, before ? w.WndPrev : w);
 		}
 
@@ -1954,12 +1917,14 @@ namespace Catkeys
 		/// Places this window or control at the top of the Z order.
 		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows (after topmost windows).
 		/// Does not activate.
-		/// In most cases does not work with top-level inactive windows; instead use <see cref="ActivateLL"/>.
+		/// In most cases does not work with top-level inactive windows, although returns true; instead use <see cref="ActivateLL"/>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTop()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.Top);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_TOP);
+
+			//CONSIDER: find a workaround. Eg in some cases this works: set HWND_TOPMOST then HWND_NOTOPMOST.
 		}
 		//This version tries a workaround, but on latest Windows it does not work.
 		//Better don't use workarounds here.
@@ -1969,7 +1934,7 @@ namespace Catkeys
 		//	if(!IsChildWindow) {
 		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
 		//		//Workaround: insert this after the first window, then insert the first window after this.
-		//		wa = Api.GetTopWindow(IsTopmost ? Wnd0 : this);
+		//		wa = Api.GetTopWindow(IsTopmost ? default(Wnd) : this);
 		//		return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa) && wa.SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, this);
 		//	}
 		//	return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
@@ -1982,8 +1947,8 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderBottom()
 		{
-			ZorderNotopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.Bottom);
+			ZorderNoTopmost(); //see comments below
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_BOTTOM);
 		}
 
 		/// <summary>
@@ -1995,7 +1960,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTopmost()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.Topmost);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_TOPMOST);
 		}
 
 		/// <summary>
@@ -2005,12 +1970,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool ZorderNotopmost(bool afterActiveWindow = false)
+		public bool ZorderNoTopmost(bool afterActiveWindow = false)
 		{
 			if(!IsTopmost) return true;
 
 			for(int i = 0; i < 4; i++) {
-				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.NoTopmost)) return false;
+				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_NOTOPMOST)) return false;
 				if(i == 0 && !IsTopmost) break;
 				//Print("retry");
 			}
@@ -2481,7 +2446,7 @@ namespace Catkeys
 				if(n > 0) return new string(b, 0, n);
 				return null;
 
-				//tested: same speed with CharBuffer etc
+				//tested: same speed with LibCharBuffer etc
 			}
 		}
 
@@ -2585,7 +2550,7 @@ namespace Catkeys
 		unsafe string _GetTextFast(bool useSlowIfEmpty)
 		{
 			if(Is0) return null;
-			var b = Util.CharBuffer.LibCommon;
+			var b = Util.LibCharBuffer.LibCommon;
 			for(int na = 300; b.Alloc(ref na, out var p, true); na *= 2) {
 				Native.ClearError();
 				int nr = _Api.InternalGetWindowText(this, p, na);

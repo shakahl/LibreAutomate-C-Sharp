@@ -1,4 +1,649 @@
-﻿
+﻿	//struct, 1 int field, fraction as int*10000
+	//Slightly bigger and slower than 1 long field. Need noinline.
+	/// <summary>
+	/// Contains x or y coordinate that can be specified as normal (from left or top), reverse (from right or bottom), fractional (fraction of width or height) or null.
+	/// Used for parameters of functions like Mouse.Move, Wnd.Move.
+	/// Also has functions to convert to normal coodinates.
+	/// </summary>
+	//[DebuggerStepThrough]
+	public struct Coord
+	{
+		/// <summary>
+		/// Coord variable value type.
+		/// </summary>
+		public enum CoordType
+		{
+			/// <summary>
+			/// No value. Assigned null or default(Coord).
+			/// </summary>
+			None,
+
+			/// <summary>
+			/// <see cref="Value"/> is pixel offset from left or top of a rectangle.
+			/// </summary>
+			Normal,
+
+			/// <summary>
+			/// <see cref="Value"/> is pixel offset from right or bottom of a rectangle -1.
+			/// </summary>
+			Reverse,
+
+			/// <summary>
+			/// <see cref="Value"/> is fraction of a rectangle multiplied by 10000.
+			/// </summary>
+			Fraction,
+		}
+
+		//Pack 30 bits of int and 2 bits of CoordType in single int field.
+		//Using multiple fields is not necessary, then compiler generates bigger/slower native code.
+		int _v;
+
+		/// <summary>
+		/// Value type.
+		/// </summary>
+		public CoordType Type { get => (CoordType)(_v & 3); }
+
+		/// <summary>
+		/// Value.
+		/// When Type is Fraction, this is the floating-point value multiplied by 10000.
+		/// </summary>
+		public int Value { get => _v >> 2; }
+
+		/// <summary>
+		/// Returns true if type is None. This is when assigned null or default(Coord).
+		/// </summary>
+		public bool IsNone { get => Type == CoordType.None; }
+
+		Coord(CoordType type, int v)
+		{
+			if(v > 500000000) v = 500000000;
+			if(v < -500000000) v = -500000000;
+			_v = (v << 2) | (int)type;
+		}
+
+		Coord(double v)
+		{
+			if(v > 50000) v = 50000;
+			if(v < -50000) v = -50000;
+			_v = (int)(v * 40000) | (int)CoordType.Fraction;
+		}
+
+		/// <summary>
+		/// Creates Coord of Normal type.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)] //no
+		public static implicit operator Coord(int v) => new Coord(CoordType.Normal, v);
+
+		//rejected. Would be used when assigning uint, long, ulong. Or need functions for these too.
+		///// <summary>
+		///// Creates Coord of Fraction type.
+		///// </summary>
+		//public static implicit operator Coord(float v) => new Coord(v);
+
+		/// <summary>
+		/// Infrastructure. Allows to assign null.
+		/// </summary>
+		/// <param name="v">null.</param>
+		public static implicit operator Coord(CatkeysPrivate.TypesNull1 v) => new Coord();
+
+		/// <summary>
+		/// Creates Coord of Reverse type.
+		/// Value 0 is at the right or bottom, and belongs to the rectangle. Positive values are towards left or top.
+		/// </summary>
+		public static Coord Reverse(int v)
+		{
+			return new Coord(CoordType.Reverse, v);
+		}
+
+		/// <summary>
+		/// Creates Coord of Fraction type.
+		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
+		/// </summary>
+		public static Coord Fraction(double v)
+		{
+			return new Coord(v);
+		}
+
+		static bool _NeedRect(Coord x, Coord y)
+		{
+			return x.Type > CoordType.Normal || y.Type > CoordType.Normal;
+		}
+
+		static int _Normalize(Coord c, int min, int max)
+		{
+			var v = c.Value;
+			switch(c.Type) {
+			case CoordType.Normal: return min + v;
+			case CoordType.Reverse: return max - 1 - v;
+			case CoordType.Fraction: return min + (int)((long)(max - min) * v / 10000);
+			default: return 0;
+			}
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="workArea">x y are coordinates in work area.</param>
+		/// <param name="widthHeight">x y are width and height.</param>
+		public static POINT GetNormalizedInScreen(Coord x, Coord y, bool workArea = false, bool widthHeight = false)
+		{
+			var p = new POINT();
+			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+				RECT r;
+				if(workArea) {
+					r = Screen_.WorkArea;
+					if(widthHeight) r.Offset(-r.left, -r.top);
+				} else if(_NeedRect(x, y)) {
+					r = Screen_.Rect;
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the window w client area. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="w"></param>
+		/// <param name="nonClient">x y are coordinates in full w rectangle, not in client area.</param>
+		public static POINT GetNormalizedInWindowClientArea(Coord x, Coord y, Wnd w, bool nonClient = false)
+		{
+			var p = new POINT();
+			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+				RECT r;
+				if(nonClient) {
+					w.GetRectInClientOf(w, out r);
+				} else if(_NeedRect(x, y)) {
+					r = w.ClientRect; //TODO: throw if fails
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+	}
+
+
+
+
+
+#if false
+	/// <summary>
+	/// Contains x or y coordinate that can be specified as normal (from left or top), reverse (from right or bottom) or fractional (fraction of width or height).
+	/// Used for parameters of functions like Mouse.Move, Wnd.Move.
+	/// Also has functions to convert to normal coodinates.
+	/// </summary>
+	//[DebuggerStepThrough]
+	public class Coord
+	{
+		/// <summary>
+		/// Coord variable value type.
+		/// </summary>
+		public enum CoordType
+		{
+			/// <summary>
+			/// <see cref="IntValue"/> is pixel offset from left or top of a rectangle.
+			/// </summary>
+			Normal,
+
+			/// <summary>
+			/// <see cref="IntValue"/> is pixel offset from right or bottom of a rectangle.
+			/// </summary>
+			Reverse,
+
+			/// <summary>
+			/// <see cref="FloatValue"/> is fraction of a rectangle.
+			/// </summary>
+			Fraction,
+		}
+
+		/// <summary>
+		/// Value type.
+		/// </summary>
+		public CoordType Type { get; set; }
+
+		/// <summary>
+		/// int value. Used when Type is Normal or Reverse.
+		/// </summary>
+		public int IntValue { get; set; }
+
+		/// <summary>
+		/// float value. Used when Type is Fraction.
+		/// </summary>
+		public float FloatValue { get; set; }
+
+		///
+		public Coord() { }
+
+		/// <summary>
+		/// Creates Coord of Normal type.
+		/// </summary>
+		/// <seealso cref="Reverse"/>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static implicit operator Coord(int i) => new Coord() { IntValue = i };
+
+		/// <summary>
+		/// Creates Coord of Fraction type.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static implicit operator Coord(float f) => new Coord() { Type = CoordType.Fraction, FloatValue = f };
+
+		/// <summary>
+		/// Creates Coord of Reverse type.
+		/// Value 0 is at the right or bottom, and belongs to the rectangle. Positive values are towards left or top.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static Coord Reverse(int i)
+		{
+			return new Coord() { Type = CoordType.Reverse, IntValue = i };
+		}
+
+		/// <summary>
+		/// Creates Coord of Fraction type.
+		/// The same as the implicit assignment Coord=float. Can be used to make code easier to read.
+		/// Values 0.0f to less than 1.0f belong to the rectangle. Negative values are to the left or top from the rectangle. Values 1.0f and larger are to the right or bottom from the rectangle.
+		/// </summary>
+		public static Coord Fraction(double f)
+		{
+			return (float)f;
+		}
+
+		static bool _NeedRect(Coord x, Coord y)
+		{
+			if(x != null && x.Type != CoordType.Normal) return true;
+			if(y != null && y.Type != CoordType.Normal) return true;
+			return false;
+		}
+
+		static int _Normalize(Coord c, int min, int max)
+		{
+			if(c == null) return 0;
+			switch(c.Type) {
+			case CoordType.Fraction: return min + (int)((max - min) * c.FloatValue);
+			case CoordType.Reverse: return max - 1 - c.IntValue;
+			default: return min + c.IntValue;
+			}
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="workArea">x y are coordinates in work area.</param>
+		/// <param name="widthHeight">x y are width and height.</param>
+		public static POINT GetNormalizedInScreen(Coord x, Coord y, bool workArea = false, bool widthHeight = false)
+		{
+			var p = new POINT();
+			if(x != null || y != null) {
+				RECT r;
+				if(workArea) {
+					r = Screen_.WorkArea;
+					if(widthHeight) r.Offset(-r.left, -r.top);
+				} else if(_NeedRect(x, y)) {
+					r = Screen_.Rect;
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the window w client area. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="w"></param>
+		/// <param name="nonClient">x y are coordinates in full w rectangle, not in client area.</param>
+		public static POINT GetNormalizedInWindowClientArea(Coord x, Coord y, Wnd w, bool nonClient = false)
+		{
+			var p = new POINT();
+			if(x != null || y != null) {
+				RECT r;
+				if(nonClient) {
+					w.GetRectInClientOf(w, out r);
+				} else if(_NeedRect(x, y)) {
+					r = w.ClientRect; //TODO: throw if fails
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+	}
+
+#elif false
+	//struct, 2 fields, fraction as int*10000
+	/// <summary>
+	/// Contains x or y coordinate that can be specified as normal (from left or top), reverse (from right or bottom) or fractional (fraction of width or height).
+	/// Used for parameters of functions like Mouse.Move, Wnd.Move.
+	/// Also has functions to convert to normal coodinates.
+	/// </summary>
+	//[DebuggerStepThrough]
+	public struct Coord
+	{
+		/// <summary>
+		/// Coord variable value type.
+		/// </summary>
+		public enum CoordType
+		{
+			/// <summary>
+			/// No value. Assigned null or default(Coord).
+			/// </summary>
+			None,
+
+			/// <summary>
+			/// <see cref="Value"/> is pixel offset from left or top of a rectangle.
+			/// </summary>
+			Normal,
+
+			/// <summary>
+			/// <see cref="Value"/> is pixel offset from right or bottom of a rectangle.
+			/// </summary>
+			Reverse,
+
+			/// <summary>
+			/// <see cref="Value"/> is fraction of a rectangle multiplied by 10000.
+			/// </summary>
+			Fraction,
+		}
+
+		/// <summary>
+		/// Value type.
+		/// </summary>
+		public CoordType Type { get; }
+
+		/// <summary>
+		/// Value.
+		/// When Type is Fraction, this is the passed floating-point value multiplied by 10000.
+		/// </summary>
+		public int Value { get; }
+
+		/// <summary>
+		/// Returns true if type is None. This is when assigned null or default(Coord).
+		/// </summary>
+		public bool IsNone { get => Type == CoordType.None; }
+
+		Coord(CoordType type, int value) { Type = type; Value = value; }
+
+		/// <summary>
+		/// Creates Coord of Normal type.
+		/// </summary>
+		/// <seealso cref="Reverse"/>
+		/// <seealso cref="Fraction"/>
+		//[MethodImpl(MethodImplOptions.NoInlining)] //no, bigger/slower
+		public static implicit operator Coord(int v) => new Coord(CoordType.Normal, v);
+
+		//rejected. Would be used when assigning uint, long, ulong. Or need functions for these too.
+		///// <summary>
+		///// Creates Coord of Fraction type.
+		///// </summary>
+		//public static implicit operator Coord(float v) => new Coord(CoordType.Fraction, (int)(v*10000));
+
+		/// <summary>
+		/// Infrastructure. Allows to assign null.
+		/// </summary>
+		/// <param name="v">null.</param>
+		public static implicit operator Coord(CatkeysPrivate.TypesNull1 v) => new Coord();
+
+		/// <summary>
+		/// Creates Coord of Reverse type.
+		/// Value 0 is at the right or bottom, and belongs to the rectangle. Positive values are towards left or top.
+		/// </summary>
+		public static Coord Reverse(int v)
+		{
+			return new Coord(CoordType.Reverse, v);
+		}
+
+		/// <summary>
+		/// Creates Coord of Fraction type.
+		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
+		/// </summary>
+		public static unsafe Coord Fraction(double v)
+		{
+			return new Coord(CoordType.Fraction, (int)(v*10000));
+		}
+
+		static bool _NeedRect(Coord x, Coord y)
+		{
+			return (x.Type > CoordType.Normal) || (y.Type > CoordType.Normal);
+		}
+
+		static int _Normalize(Coord c, int min, int max)
+		{
+			switch(c.Type) {
+			case CoordType.Normal: return min + c.Value;
+			case CoordType.Reverse: return max - 1 - c.Value;
+			case CoordType.Fraction: return min + (int)((long)(max - min) * c.Value / 10000);
+			default: return 0;
+			}
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="workArea">x y are coordinates in work area.</param>
+		/// <param name="widthHeight">x y are width and height.</param>
+		public static POINT GetNormalizedInScreen(Coord x, Coord y, bool workArea = false, bool widthHeight = false)
+		{
+			var p = new POINT();
+			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+				RECT r;
+				if(workArea) {
+					r = Screen_.WorkArea;
+					if(widthHeight) r.Offset(-r.left, -r.top);
+				} else if(_NeedRect(x, y)) {
+					r = Screen_.Rect;
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the window w client area. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="w"></param>
+		/// <param name="nonClient">x y are coordinates in full w rectangle, not in client area.</param>
+		public static POINT GetNormalizedInWindowClientArea(Coord x, Coord y, Wnd w, bool nonClient = false)
+		{
+			var p = new POINT();
+			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+				RECT r;
+				if(nonClient) {
+					w.GetRectInClientOf(w, out r);
+				} else if(_NeedRect(x, y)) {
+					r = w.ClientRect; //TODO: throw if fails
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+	}
+#elif false
+	//struct, 2 fields, fraction as float.
+	//Good in 32-bit, but huge code in 64-bit.
+	/// <summary>
+	/// Contains x or y coordinate that can be specified as normal (from left or top), reverse (from right or bottom) or fractional (fraction of width or height).
+	/// Used for parameters of functions like Mouse.Move, Wnd.Move.
+	/// Also has functions to convert to normal coodinates.
+	/// </summary>
+	//[DebuggerStepThrough]
+	[StructLayout(LayoutKind.Sequential, Pack =8, Size =8)]
+	public struct Coord
+	{
+		/// <summary>
+		/// Coord variable value type.
+		/// </summary>
+		public enum CoordType
+		{
+			/// <summary>
+			/// No value. Assigned null or default(Coord).
+			/// </summary>
+			None,
+
+			/// <summary>
+			/// <see cref="Value"/> is pixel offset from left or top of a rectangle.
+			/// </summary>
+			Normal,
+
+			/// <summary>
+			/// <see cref="Value"/> is pixel offset from right or bottom of a rectangle.
+			/// </summary>
+			Reverse,
+
+			/// <summary>
+			/// <see cref="Value"/> is fraction of a rectangle.
+			/// </summary>
+			Fraction,
+		}
+
+		/// <summary>
+		/// Value type.
+		/// </summary>
+		public CoordType Type { get; }
+
+		/// <summary>
+		/// Non-fraction value.
+		/// </summary>
+		public int Value { get; }
+
+		/// <summary>
+		/// Fraction value.
+		/// </summary>
+		public unsafe float FractionValue { get { int i = Value; return *(float*)&i; } }
+		//note: don't use struct or union with both int and float fields. It creates slow and huge calling code.
+
+		/// <summary>
+		/// Returns true if type is None. This is when assigned null or default(Coord).
+		/// </summary>
+		public bool IsNone { get => Type == CoordType.None; }
+
+		Coord(CoordType type, int value) { Type = type; Value = value; }
+
+		/// <summary>
+		/// Creates Coord of Normal type.
+		/// </summary>
+		/// <seealso cref="Reverse"/>
+		/// <seealso cref="Fraction"/>
+		//[MethodImpl(MethodImplOptions.NoInlining)] //no, bigger/slower
+		public static implicit operator Coord(int v) => new Coord(CoordType.Normal, v);
+
+		//rejected. Would be used when assigning uint, long, ulong. Or need functions for these too.
+		///// <summary>
+		///// Creates Coord of Fraction type.
+		///// </summary>
+		//public static implicit operator Coord(float v) => new Coord(CoordType.Fraction, (int)(v*10000));
+
+		/// <summary>
+		/// Infrastructure. Allows to assign null.
+		/// </summary>
+		/// <param name="v">null.</param>
+		public static implicit operator Coord(CatkeysPrivate.TypesNull1 v) => new Coord();
+
+		/// <summary>
+		/// Creates Coord of Reverse type.
+		/// Value 0 is at the right or bottom, and belongs to the rectangle. Positive values are towards left or top.
+		/// </summary>
+		public static Coord Reverse(int v)
+		{
+			return new Coord(CoordType.Reverse, v);
+		}
+
+		/// <summary>
+		/// Creates Coord of Fraction type.
+		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
+		/// </summary>
+		public static unsafe Coord Fraction(double v)
+		{
+			float f = (float)v;
+			return new Coord(CoordType.Fraction, *(int*)&f);
+		}
+
+		static bool _NeedRect(Coord x, Coord y)
+		{
+			return (x.Type > CoordType.Normal) || (y.Type > CoordType.Normal);
+		}
+
+		static int _Normalize(Coord c, int min, int max)
+		{
+			switch(c.Type) {
+			case CoordType.Normal: return min + c.Value;
+			case CoordType.Reverse: return max - 1 - c.Value;
+			case CoordType.Fraction: return min + (int)((max - min) * c.FractionValue);
+			default: return 0;
+			}
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="workArea">x y are coordinates in work area.</param>
+		/// <param name="widthHeight">x y are width and height.</param>
+		public static POINT GetNormalizedInScreen(Coord x, Coord y, bool workArea = false, bool widthHeight = false)
+		{
+			var p = new POINT();
+			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+				RECT r;
+				if(workArea) {
+					r = Screen_.WorkArea;
+					if(widthHeight) r.Offset(-r.left, -r.top);
+				} else if(_NeedRect(x, y)) {
+					r = Screen_.Rect;
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+
+		/// <summary>
+		/// Returns normal coordinates relative to the window w client area. Converts fractional/reverse coordinates etc.
+		/// </summary>
+		/// <param name="x">X coordinate. If null, returns 0 x.</param>
+		/// <param name="y">Y coordinate. If null, returns 0 y.</param>
+		/// <param name="w"></param>
+		/// <param name="nonClient">x y are coordinates in full w rectangle, not in client area.</param>
+		public static POINT GetNormalizedInWindowClientArea(Coord x, Coord y, Wnd w, bool nonClient = false)
+		{
+			var p = new POINT();
+			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+				RECT r;
+				if(nonClient) {
+					w.GetRectInClientOf(w, out r);
+				} else if(_NeedRect(x, y)) {
+					r = w.ClientRect; //TODO: throw if fails
+				} else r = new RECT();
+				p.x = _Normalize(x, r.left, r.right);
+				p.y = _Normalize(y, r.top, r.bottom);
+			}
+			return p;
+		}
+	}
+
+
+
+
+
+
+
+
+
+
 	static void TestInterDomainLock()
 	{
 		new Thread(() => { var d = AppDomain.CreateDomain("one"); d.DoCallBack(_Domain); }).Start();
@@ -2673,10 +3318,10 @@ bbb"", b3
 	{
 		//Time.SetTimer(1000, (t, p) => { Print(1); });
 		Perf.First();
-		//Time.SetTimer(1000, t => { Print(t.Tag); Application.ExitThread(); }, false, "test 1");
-		//Time.SetTimer(1000, t => { Print(t.Tag); }, true, "test 1");
+		//Timer_.Every(1000, t => { Print(t.Tag); Application.ExitThread(); }, "test 1");
+		//Timer_.After(1000, t => { Print(t.Tag); }, "test 1");
 		//Perf.Next();
-		//Time.SetTimer(1100, t => { Print(t.Tag); Application.ExitThread(); }, true, "test 2");
+		//Timer_.After(1100, t => { Print(t.Tag); Application.ExitThread(); }, "test 2");
 
 		//Api.SetTimer(Wnd0, 1, 1000, (w, m, i, t)=>{ Api.KillTimer(w, i); Print(1); Application.ExitThread(); });
 		//Perf.Next();
@@ -2694,11 +3339,11 @@ bbb"", b3
 		//tt.Tick += (s, d) => { Print(2); };
 		//tt.Interval = 900; tt.Start();
 
-		//var t1=Time.SetTimer(1000, true, t => { Print(t.Tag); }, "test 1");
+		//var t1=Timer_.After(1000, t => { Print(t.Tag); }, "test 1");
 		//Perf.Next();
-		//var t2=Time.SetTimer(1100, true, t => { Print(t.Tag); Application.ExitThread(); }, "test 2");
+		//var t2=Timer_.After(1100, t => { Print(t.Tag); Application.ExitThread(); }, "test 2");
 
-		Time.SetTimer(1100, false, t => { Print(t.Tag); Application.ExitThread(); }, "test 2");
+		Timer_.Every(1100, t => { Print(t.Tag); Application.ExitThread(); }, "test 2");
 		//GC.Collect();
 
 		//t1.Stop();
@@ -2726,9 +3371,9 @@ bbb"", b3
 
 		var T = new Thread(() =>
 		{
-			Time.SetTimer(1000, true, t => { Print(t.Tag); }, "test 2");
-			//Time.SetTimer(1000, true, t => { Print(t.Tag); t.Start(1000, true); }, "test 2");
-			//u=Time.SetTimer(1000, false, t => { Print(t.Tag); }, "test 2");
+			Timer_.After(1000, t => { Print(t.Tag); }, "test 2");
+			//Timer_.After(1000, t => { Print(t.Tag); t.Start(1000, true); }, "test 2");
+			//u=Timer_.Every(1000, t => { Print(t.Tag); }, "test 2");
 			//_StartFormsTimer();
 
 			//u.Start(3000, false);
@@ -2920,7 +3565,7 @@ bbb"", b3
 		//Print(WindowsFormsSynchronizationContext.AutoInstall);
 
 		Print(SynchronizationContext.Current);
-		//Time.SetTimer(100, true, t =>
+		//Timer_.After(100, t =>
 		//{
 		//	Print(SynchronizationContext.Current);
 		//	Application.ExitThread();
@@ -2929,7 +3574,7 @@ bbb"", b3
 		//var f = new Form();
 		//Print(SynchronizationContext.Current);
 		//SynchronizationContext.Current.Post(state => { PrintList("posted", SynchronizationContext.Current); }, null);
-		Time.SetTimer(1, true, t => { PrintList("posted", SynchronizationContext.Current); });
+		Timer_.After(1, t => { PrintList("posted", SynchronizationContext.Current); });
 		Thread.Sleep(100);
 		//WindowsFormsSynchronizationContext.AutoInstall = false;
 		Print(1);
@@ -3246,7 +3891,7 @@ bbb"", b3
 	//		_n = _nTasks;
 	//		for(int i = 0; i < _nTasks; i++) _TestTasksDefault();
 	//	}
-	//	Time.SetTimer(500, true, t => _loop.Stop());
+	//	Timer_.After(500, t => _loop.Stop());
 	//	_loop.Loop();
 	//}
 
@@ -3270,7 +3915,7 @@ bbb"", b3
 	//		_n = _nTasks;
 	//		for(int i = 0; i < _nTasks; i++) _TestTasksSta();
 	//	}
-	//	Time.SetTimer(500, true, t => _loop.Stop());
+	//	Timer_.After(500, t => _loop.Stop());
 	//	_loop.Loop();
 	//}
 
@@ -3299,7 +3944,7 @@ bbb"", b3
 		_n = _nTasks;
 		for(int i = 0; i < _nTasks; i++) _TestThreadPoolSTA2();
 		//}
-		Time.SetTimer(1000, true, t => _loop.Stop());
+		Timer_.After(1000, t => _loop.Stop());
 		_loop.Loop();
 		Print("END");
 	}
@@ -3674,7 +4319,7 @@ A,""B """"Q"""" Z"",C
 		//MessageBox.Show("");
 		//MessageBoxX(Wnd0, "", "", 0);
 
-		//Time.SetTimer(1000, true, t => { Application.ExitThread(); });
+		//Timer_.After(1000, t => { Application.ExitThread(); });
 		//Application.Run();
 		//Print("after main loop");
 
@@ -3773,8 +4418,8 @@ A,""B """"Q"""" Z"",C
 		//m.Show();
 		//TaskDialog.ShowEx("", timeoutS: 1);
 		//new Form().ShowDialog();
-		//Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
-		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
+		//Timer_.After(1000, t => _loop2.Stop()); _loop2.Loop();
+		//Timer_.After(1000, t => Application.ExitThread()); Application.Run();
 		//PrintList("end", _n);
 	}
 
@@ -5176,8 +5821,8 @@ A,""B """"Q"""" Z"",C
 		//m.Show();
 		//ShowRen.ShowEx("", timeoutS: 1);
 		//new Form().ShowDialog();
-		//Time.SetTimer(1000, true, t => _loop2.Stop()); _loop2.Loop();
-		//Time.SetTimer(1000, true, t => Application.ExitThread()); Application.Run();
+		//Timer_.After(1000, t => _loop2.Stop()); _loop2.Loop();
+		//Timer_.After(1000, t => Application.ExitThread()); Application.Run();
 		//PrintList("end", _n);
 	}
 
@@ -5969,7 +6614,7 @@ A,""B """"Q"""" Z"",C
 		//	cm.Show(dd, dd.PointToClient(Mouse.XY));
 
 		//	//when user clicks disabled menu dd to close cm, don't enable dd until the left mouse button released, or it would select the menu item
-		//	Time.SetTimer(10, false, t =>
+		//	Timer_.Every(10, t =>
 		//	{
 		//		if(Control.MouseButtons.HasFlag(MouseButtons.Left) && w.Visible) return;
 		//		t.Stop();

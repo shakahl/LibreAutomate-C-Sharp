@@ -35,7 +35,7 @@ namespace Catkeys
 		//these are used for tooltip
 		ToolTip _ttToolTip;
 		ToolStripItem _ttItem; //the last mouse move event hit test result
-		Time.Timer_ _ttTimer;
+		Timer_ _ttTimer;
 
 		public CatToolStrip()
 		{
@@ -70,7 +70,7 @@ namespace Catkeys
 			int delay = (_ttItem == null) ? _ttToolTip.InitialDelay : _ttToolTip.ReshowDelay;
 			_HideTooltip();
 			_ttItem = b1;
-			if(_ttTimer == null) _ttTimer = new Time.Timer_(t =>
+			if(_ttTimer == null) _ttTimer = new Timer_(t =>
 			{
 				if(_ttItem == null) return;
 				_ttToolTip.Hide(_TopLevelParent);

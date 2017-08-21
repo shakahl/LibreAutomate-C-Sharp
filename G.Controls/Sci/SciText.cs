@@ -36,18 +36,18 @@ namespace G.Controls
 		/// </summary>
 		public SciControl SC { get; private set; }
 
-		Catkeys.Util.ByteBuffer _byteBuffer;
-		Catkeys.Util.CharBuffer _charBuffer;
-		[ThreadStatic] static Catkeys.Util.ByteBuffer s_byteBuffer;
-		[ThreadStatic] static Catkeys.Util.CharBuffer s_charBuffer;
+		Catkeys.Util.LibByteBuffer _byteBuffer;
+		Catkeys.Util.LibCharBuffer _charBuffer;
+		[ThreadStatic] static Catkeys.Util.LibByteBuffer t_byteBuffer;
+		[ThreadStatic] static Catkeys.Util.LibCharBuffer t_charBuffer;
 
 
 		internal SciText(SciControl sc)
 		{
 			SC = sc;
 
-			_byteBuffer = s_byteBuffer ?? (s_byteBuffer = new Catkeys.Util.ByteBuffer());
-			_charBuffer = s_charBuffer ?? (s_charBuffer = new Catkeys.Util.CharBuffer());
+			_byteBuffer = t_byteBuffer ?? (t_byteBuffer = new Catkeys.Util.LibByteBuffer());
+			_charBuffer = t_charBuffer ?? (t_charBuffer = new Catkeys.Util.LibCharBuffer());
 			//note: we could use Catkeys.Util.Lib[Char|Byte]Buffer.Common, but it can be unsafe, better have our own.
 		}
 

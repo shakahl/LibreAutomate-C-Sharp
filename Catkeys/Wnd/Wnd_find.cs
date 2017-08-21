@@ -42,7 +42,6 @@ namespace Catkeys
 		//ProgramPath = 8,
 	}
 
-	//[DebuggerStepThrough]
 	public partial struct Wnd
 	{
 		/// <summary>
@@ -321,7 +320,7 @@ namespace Catkeys
 				{
 					_processId = value;
 					_threadId = 0;
-					_owner = Wnd0;
+					_owner = default(Wnd);
 					if(value != 0) _program = null;
 				}
 			}
@@ -329,7 +328,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds window.
-		/// Returns its handle as Wnd. Returns Wnd0 if not found.
+		/// Returns its handle as Wnd. Returns default(Wnd) if not found.
 		/// </summary>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
@@ -378,11 +377,12 @@ namespace Catkeys
 		/// if(w.Is0) Print("not found");
 		/// </code>
 		/// </example>
+		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
 		public static Wnd Find(string name = null, string className = null, object programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
 		{
 			var f = new Finder(name, className, programEtc, flags, also);
 			f.Find();
-			_lastFindParams = f;
+			LastFind = f;
 			return f.Result;
 		}
 
@@ -398,8 +398,8 @@ namespace Catkeys
 		/// if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
 		/// ]]></code>
 		/// </example>
-		public static Finder LastFind { get => _lastFindParams; set { _lastFindParams = value; } }
-		[ThreadStatic] static Finder _lastFindParams;
+		public static Finder LastFind { get => t_lastFindParams; set { t_lastFindParams = value; } }
+		[ThreadStatic] static Finder t_lastFindParams;
 
 		/// <summary>
 		/// Finds all matching windows.
@@ -414,13 +414,13 @@ namespace Catkeys
 		{
 			var f = new Finder(name, className, programEtc, flags, also);
 			var a = f.FindAll();
-			_lastFindParams = f;
+			LastFind = f;
 			return a;
 		}
 
 		/// <summary>
 		/// Finds window.
-		/// Returns its handle as Wnd. Returns Wnd0 if not found.
+		/// Returns its handle as Wnd. Returns default(Wnd) if not found.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Find">Find</see>, which uses API <msdn>EnumWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -442,7 +442,7 @@ namespace Catkeys
 		/// </remarks>
 		public static Wnd FindFast(string name, string className, Wnd wAfter = default(Wnd))
 		{
-			return Api.FindWindowEx(Wnd0, wAfter, className, name);
+			return Api.FindWindowEx(default(Wnd), wAfter, className, name);
 		}
 
 		//public static List<Wnd> FindAll(params Finder[] a)
@@ -452,8 +452,55 @@ namespace Catkeys
 
 		//public static Wnd FindAny(params Finder[] a)
 		//{
-		//	return Wnd0;
+		//	return default(Wnd);
 		//}
+
+		//TODO: test more.
+		/// <summary>
+		/// Finds window. If found, activates (optionally), else calls callback function that should open the window (eg call <see cref="Shell.Run"/>) and waits for the window.
+		/// Returns window handle as Wnd. Returns default(Wnd) if not found (if runWaitTimeoutS is negative; else exception).
+		/// The first 5 parameters are the same as <see cref="Find"/>.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="className"></param>
+		/// <param name="programEtc"></param>
+		/// <param name="flags"></param>
+		/// <param name="also"></param>
+		/// <param name="run">Callback function's delegate. See example.</param>
+		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="WaitFor.WindowActive(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>.</param>
+		/// <param name="needActiveWindow">Finally the window must be active. For more info see the algorithm in Remarks.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
+		/// <exception cref="TimeoutException">runWaitTimeoutS time has expired.</exception>
+		/// <remarks>
+		/// The algorithm is:
+		/// <code>
+		/// var w=Wnd.Find(...);
+		/// if(!w.Is0) { if(needActiveWindow) w.Activate(); }
+		/// else if(run!=null) { run(); if(needActiveWindow) w = WaitFor.WindowActive(..., runWaitTimeoutS); else WaitFor.WindowExists(..., runWaitTimeoutS); }
+		/// return w;
+		/// </code>
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
+		/// Print(w);
+		/// ]]></code>
+		/// </example>
+		public static Wnd FindOrRun(string name = null, string className = null, object programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null,
+			Func<int> run = null, double runWaitS = 60.0, bool needActiveWindow = true)
+		{
+			var w = Find(name, className, programEtc, flags, also);
+			if(!w.Is0) {
+				if(needActiveWindow) w.Activate();
+			} else if(run != null) {
+				var finder = LastFind;
+				var r = run();
+				//TODO: set finder.programEtc = r (when we have Shell.RunResult). Allow null.
+				if(needActiveWindow) w = WaitFor.WindowActive(finder, runWaitS);
+				else w = WaitFor.WindowExists(finder, runWaitS);
+			}
+			return w;
+		}
 
 		public static partial class Misc
 		{
@@ -488,17 +535,16 @@ namespace Catkeys
 				Wnd wParent = default(Wnd), bool directChild = false, int threadId = 0)
 			{
 				if(onlyVisible) sortFirstVisible = false;
-				Util.LibArrayBuilder.Specialized._Wnd a, aHidden;
-				a = new Util.LibArrayBuilder.Specialized._Wnd((onlyVisible || sortFirstVisible) ? 256 : 1024);
-				aHidden = sortFirstVisible ? new Util.LibArrayBuilder.Specialized._Wnd(800) : new Util.LibArrayBuilder.Specialized._Wnd();
+				var a = new Util.LibArrayBuilder<Wnd>(onlyVisible ? 250 : 1020); //tested: normally there are 200-400 windows on my PC, rarely exceeds 500
 				try {
 					Api.WNDENUMPROC proc = (w, param) =>
 					  {
-						  if(onlyVisible && !Api.IsWindowVisible(w)) return 1;
+						  if(onlyVisible && !w.IsVisible) return 1;
 						  if(directChild && Api.GetParent(w) != wParent) return 1;
 						  if(also != null && !also(w)) return 1;
-						  if(sortFirstVisible && !Api.IsWindowVisible(w)) aHidden.Add(w); else a.Add(w);
+						  a.AddV(w);
 						  return 1;
+						  //tested: using a non-anonymous callback function does not make faster.
 					  };
 
 					switch(api) {
@@ -513,28 +559,22 @@ namespace Catkeys
 						break;
 					}
 
-					if(sortFirstVisible) return a.ToArray(aHidden);
-					return a.ToArray();
+					if(!sortFirstVisible) return a.ToArray();
+					int j = 0, n = a.Count;
+					var r = new Wnd[n];
+					for(int i = 0; i < n; i++) {
+						var w = a[i]; if(!w.IsVisible) continue;
+						r[j++] = w;
+						a[i] = default(Wnd);
+					}
+					for(int i = 0; i < n; i++) {
+						var w = a[i];
+						if(!w.Is0) r[j++] = w;
+					}
+					return r;
 				}
-				finally {
-					a.Dispose();
-					if(sortFirstVisible) aHidden.Dispose();
-				}
-
-				//tested: using a non-anonymous callback function does not make faster.
+				finally { a.Dispose(); }
 			}
-
-			//Better don't use this.
-			//Why tried to use this? Because once one IME window was visible. IME windows are zero-size, disabled. Tested only on Win10.
-			//bool _HiddenOrZeroSize
-			//{
-			//	get
-			//	{
-			//		if(!IsVisible) return true;
-			//		RECT r; if(!Api.GetWindowRect(this, out r)) return true;
-			//		return r.left == 0 && r.top == 0 && r.right == 0 && r.bottom == 0;
-			//	}
-			//}
 
 			/// <summary>
 			/// Gets top-level windows of a thread.
@@ -566,13 +606,13 @@ namespace Catkeys
 
 			/// <summary>
 			/// Finds window of the specified thread.
-			/// Returns its handle as Wnd. Returns Wnd0 if not found.
+			/// Returns its handle as Wnd. Returns default(Wnd) if not found.
 			/// Parameters are the same as of <see cref="Find"/>.
 			/// </summary>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
 			/// See <see cref="Process_.CurrentThreadId"/>, <see cref="ThreadId"/>.
-			/// If 0, throws exception. If other invalid value (ended thread?), returns Wnd0.
+			/// If 0, throws exception. If other invalid value (ended thread?), returns default(Wnd).
 			/// </param>
 			/// <param name="name"></param>
 			/// <param name="className"></param>
@@ -583,12 +623,12 @@ namespace Catkeys
 			{
 				var a = ThreadWindows(threadId, 0 == (flags & WFFlags.HiddenToo), true);
 				var f = new Finder(name, className, null, flags | WFFlags.HiddenToo, also);
-				return f.FindInList(a) >= 0 ? f.Result : Wnd0;
+				return f.FindInList(a) >= 0 ? f.Result : default(Wnd);
 			}
 
 			/// <summary>
 			/// Finds a message-only window.
-			/// Returns its handle as Wnd. Returns Wnd0 if not found.
+			/// Returns its handle as Wnd. Returns default(Wnd) if not found.
 			/// Calls API <msdn>FindWindowEx</msdn>.
 			/// Faster than <see cref="Find">Find</see>, which does not find message-only windows.
 			/// Can be used only when you know full name and/or class name.
@@ -608,7 +648,7 @@ namespace Catkeys
 			/// </remarks>
 			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default(Wnd))
 			{
-				return Api.FindWindowEx(SpecHwnd.Message, wAfter, className, name);
+				return Api.FindWindowEx(SpecHwnd.HWND_MESSAGE, wAfter, className, name);
 			}
 		}
 	}

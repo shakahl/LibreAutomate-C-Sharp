@@ -349,7 +349,7 @@ namespace G.Controls
 						Wnd.Misc.WindowRectFromClientRect(ref rect, Native.WS_POPUP | Native.WS_THICKFRAME, Native.WS_EX_TOOLWINDOW);
 					} else { //new panel, empty bounds
 						var mp = Mouse.XY;
-						rect = new RECT(mp.x - 15, mp.y - 15, 300, 150, true);
+						rect = new RECT(mp.X - 15, mp.Y - 15, 300, 150, true);
 						rect.EnsureInScreen();
 					}
 				}
@@ -477,7 +477,7 @@ namespace G.Controls
 
 			internal void OnMouseLeftDown()
 			{
-				POINT p = Mouse.XY;
+				Point p = Mouse.XY;
 				if(Api.DragDetect((Wnd)this.ParentControl, p)) {
 					if(!this.IsFloating) this.SetDockState(GDockState.Floating, true);
 					var d = (this.ParentControl as GFloat)?.Drag(p);
@@ -507,7 +507,7 @@ namespace G.Controls
 								_manager.Paint -= eh;
 								//Print(1);
 								//SetDockState(GDockState.Floating);
-								Time.SetTimer(200, true, tt => SetDockState(GDockState.Floating));
+								Timer_.After(200, tt => SetDockState(GDockState.Floating));
 							};
 						_manager.Paint += eh;
 					}

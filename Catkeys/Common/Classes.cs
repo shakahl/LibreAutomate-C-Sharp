@@ -197,8 +197,8 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets a reference to an object that lives in default app domain. Auto-creates new object there if does not exist.
-		/// The object can be used in any app domain. When a non-default domain calls its methods, the call is marshaled to the default domain and executed there.
+		/// Gets a reference to an object that lives in default appdomain. Auto-creates new object there if does not exist.
+		/// The object can be used in any appdomain. When a non-default domain calls its methods, the call is marshaled to the default domain and executed there.
 		/// The type must be derived from MarshalByRefObject and have default constructor.
 		/// Returns true if created new object, false if it already existed.
 		/// Thread-safe.

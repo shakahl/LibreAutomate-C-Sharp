@@ -27,56 +27,52 @@ namespace Catkeys
 	{
 		/// <summary>
 		/// Returns true if Alt key is pressed.
+		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
 		public static bool IsAlt { get => Api.GetKeyState(Api.VK_MENU) < 0; }
 
 		/// <summary>
 		/// Returns true if Ctrl key is pressed.
+		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
 		public static bool IsCtrl { get => Api.GetKeyState(Api.VK_CONTROL) < 0; }
 
 		/// <summary>
 		/// Returns true if Shift key is pressed.
+		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
 		public static bool IsShift { get => Api.GetKeyState(Api.VK_SHIFT) < 0; }
 
 		/// <summary>
-		/// Returns true if the Windows logo key is pressed (left or right).
+		/// Returns true if Win key is pressed (left or right).
+		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
 		public static bool IsWin { get => Api.GetKeyState(Api.VK_LWIN) < 0 || Api.GetKeyState(Api.VK_RWIN) < 0; }
 
 		/// <summary>
-		/// Returns true if mouse left button is pressed.
+		/// Returns true if one or more of the specified modifier keys are pressed.
+		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt), <see cref="IsWin"/>.
 		/// </summary>
-		public static bool IsMouseLeft { get => Api.GetKeyState(Api.VK_LBUTTON) < 0; }
+		/// <param name="modifierKeys">Check only these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
+		/// <exception cref="ArgumentException">modifierKeys contains non-modifier keys.</exception>
+		/// <seealso cref="WaitFor.NoModifierKeys"/>
+		public static bool IsModified(Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
+		{
+			bool badKeys = modifierKeys!=(modifierKeys & (Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows));
+			Debug.Assert(!badKeys); if(badKeys) throw new ArgumentException();
+			if(0 != (modifierKeys & Keys.Control) && IsCtrl) return true;
+			if(0 != (modifierKeys & Keys.Shift) && IsShift) return true;
+			if(0 != (modifierKeys & Keys.Menu) && IsAlt) return true;
+			if(0 != (modifierKeys & Keys_.Windows) && IsWin) return true;
+			return false;
+		}
 
-		/// <summary>
-		/// Returns true if mouse right button is pressed.
-		/// </summary>
-		public static bool IsMouseRight { get => Api.GetKeyState(Api.VK_RBUTTON) < 0; }
-
-		/// <summary>
-		/// Returns true if mouse middle button is pressed.
-		/// </summary>
-		public static bool IsMouseMiddle { get => Api.GetKeyState(Api.VK_MBUTTON) < 0; }
-
-		//EditorBrowsableAttribute does not work for Equals and ReferenceEquals in intellisense lists, although correct Options are used.
-		//[EditorBrowsable(EditorBrowsableState.Never)]
-		////[EditorBrowsable(EditorBrowsableState.Advanced)]
-		//static new bool Equals(object a, object b) { return false; }
-
-		//[EditorBrowsable(EditorBrowsableState.Never)]
-		////[EditorBrowsable(EditorBrowsableState.Advanced)]
-		//static new bool ReferenceEquals(object a, object b) { return false; }
-
-		////[EditorBrowsable(EditorBrowsableState.Never)]
-		//////[EditorBrowsable(EditorBrowsableState.Advanced)]
-		////public override bool Equals(object a) { return false; }
+		//TODO: IsCapsLocked, IsNumLocked, IsScrollLocked
 
 		/// <summary>
 		/// Gets current text cursor (caret) rectangle in screen coordinates.
 		/// Returns the control that contains it.
-		/// If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns Wnd0.
+		/// If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns default(Wnd).
 		/// </summary>
 		public static Wnd GetTextCursorRect(out RECT r)
 		{
@@ -88,34 +84,32 @@ namespace Catkeys
 			}
 
 			Api.GetCursorPos(out var p);
-			r = new RECT(p.x, p.y, 0, 16, true);
-			return Wnd0;
+			r = new RECT(p.X, p.Y, 0, 16, true);
+			return default(Wnd);
 
 			//note: in Word, after changing caret pos, gets pos 0 0. After 0.5 s gets correct. After typing always correct.
 			//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.
 		}
 
 
-		public static void Key(params string[] keys_text_keys_text_andSoOn)
+		public static void Key(params string[] keys)
 		{
-			var keys = keys_text_keys_text_andSoOn;
+			//better name would be Keys, but it conflicts with the .NET Forms Keys enum that is used in this class and everywhere.
+			//	The WPF Key enum is rarely used.
+			//	Anyway, in scripts everybody will use the alias K().
+
+			//idea: params object[] keys. Then the last parameter can be eg ScriptOptions.
+
 			if(keys == null) return;
 		}
 
+		public static void Text(params string[] text)
+		{
+			if(text == null) return;
+		}
 		//note:
 		//	Don't use the hybrid option in Catkeys. In many apps sending keys for text snippets etc is too slow, better to paste always.
 		//	Then probably don't need Text(). In that rare cases when need, can use Keys("", "text");
-		//public static void Text(params string[] text_keys_text_keys_andSoOn)
-		//{
-		//	var keys = text_keys_text_keys_andSoOn;
-		//	if(keys == null) return;
-		//}
-
-		//public static void Text(bool hybrid, params string[] text_keys_text_keys_andSoOn)
-		//{
-		//	var keys = text_keys_text_keys_andSoOn;
-		//	if(keys == null) return;
-		//}
 
 		//public static void Text(ScriptOptions options, params string[] text_keys_text_keys_andSoOn)
 		//{
@@ -140,6 +134,11 @@ namespace Catkeys
 		//}
 
 		//public static KeysToSend K { get => new KeysToSend(); }
+
+		public static void Paste(string text)
+		{
+			if(text == null) return;
+		}
 
 
 		static void Test()

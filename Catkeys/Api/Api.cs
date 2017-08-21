@@ -2,7 +2,8 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Text;
+//using System.Text; //StringBuilder, we don't use it, very slow
+using System.Drawing; //Point, Size
 using Microsoft.Win32.SafeHandles;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
@@ -236,6 +237,16 @@ namespace Catkeys
 
 		internal delegate LPARAM HOOKPROC(int code, LPARAM wParam, LPARAM lParam);
 
+		internal struct MSLLHOOKSTRUCT
+		{
+			public Point pt;
+			public uint mouseData;
+			public uint flags;
+			public uint time;
+			public LPARAM dwExtraInfo;
+		}
+
+
 		internal const int GA_PARENT = 1;
 		internal const int GA_ROOT = 2;
 		internal const int GA_ROOTOWNER = 3;
@@ -334,7 +345,7 @@ namespace Catkeys
 		//The classic GetCursorPos API gets logical pos. Also it has a bug: randomly gets physical pos, even for same point.
 		//Make sure that the process is DPI-aware.
 		[DllImport("user32.dll", EntryPoint = "GetPhysicalCursorPos", SetLastError = true)]
-		internal static extern bool GetCursorPos(out POINT lpPoint);
+		internal static extern bool GetCursorPos(out Point lpPoint);
 
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
 		internal static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint LR_X);
@@ -363,8 +374,8 @@ namespace Catkeys
 			/// <summary> WPF_ </summary>
 			public uint flags;
 			public int showCmd;
-			public POINT ptMinPosition;
-			public POINT ptMaxPosition;
+			public Point ptMinPosition;
+			public Point ptMaxPosition;
 			public RECT rcNormalPosition;
 		}
 
@@ -738,19 +749,19 @@ namespace Catkeys
 		#endregion
 
 		[DllImport("user32.dll")]
-		internal static extern Wnd WindowFromPoint(POINT Point);
+		internal static extern Wnd WindowFromPoint(Point Point);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern Wnd RealChildWindowFromPoint(Wnd hwndParent, POINT ptParentClientCoords);
+		internal static extern Wnd RealChildWindowFromPoint(Wnd hwndParent, Point ptParentClientCoords);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ScreenToClient(Wnd hWnd, ref POINT lpPoint);
+		internal static extern bool ScreenToClient(Wnd hWnd, ref Point lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ClientToScreen(Wnd hWnd, ref POINT lpPoint);
+		internal static extern bool ClientToScreen(Wnd hWnd, ref Point lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref POINT lpPoints, int cPoints = 1);
+		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref Point lpPoints, int cPoints = 1);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref RECT lpPoints, int cPoints = 2);
@@ -786,10 +797,8 @@ namespace Catkeys
 				wVk = (ushort)vk; wScan = (ushort)sc; dwFlags = flags;
 				time = 0; dwExtraInfo = CatkeysExtraInfo;
 				_u2 = _u1 = 0;
-				Debug.Assert(Size == INPUTMOUSE.Size);
+				Debug.Assert(sizeof(INPUTKEY) == sizeof(INPUTMOUSE));
 			}
-
-			public static readonly int Size = sizeof(INPUTKEY);
 
 			public const uint CatkeysExtraInfo = 0xA1427fa5;
 			const int INPUT_KEYBOARD = 1;
@@ -802,12 +811,14 @@ namespace Catkeys
 			LeftDown = 2, LeftUp = 4,
 			RightDown = 8, RightUp = 16,
 			MiddleDown = 32, MiddleUp = 64,
-			X1Down = 0x80, X1Up = 0x100,
-			X2Down = 0x80000080, X2Up = 0x80000100,
+			XDown = 0x80, XUp = 0x100,
 			Wheel = 0x0800, HWheel = 0x01000,
 			NoCoalesce = 0x2000,
 			VirtualdDesktop = 0x4000,
-			Absolute = 0x8000
+			Absolute = 0x8000,
+			//not API
+			X1 = 0x1000000,
+			X2 = 0x2000000,
 		};
 
 		internal struct INPUTMOUSE
@@ -820,18 +831,12 @@ namespace Catkeys
 			public uint time;
 			public LPARAM dwExtraInfo;
 
-			public INPUTMOUSE(IMFlag flags, int x = 0, int y = 0, int wheelTicks = 0)
+			public INPUTMOUSE(IMFlag flags, int x = 0, int y = 0, int data = 0)
 			{
 				_type = INPUT_MOUSE;
-				dx = x; dy = y; dwFlags = flags; mouseData = wheelTicks * 120;
+				dx = x; dy = y; dwFlags = flags; mouseData = data;
 				time = 0; dwExtraInfo = CatkeysExtraInfo;
-				if((dwFlags & (IMFlag.X1Down | IMFlag.X2Up)) != 0) {
-					mouseData = ((dwFlags & (IMFlag)0x80000000U) != 0) ? 2 : 1;
-					dwFlags &= (IMFlag)0x7fffffff;
-				}
 			}
-
-			public static readonly int Size = sizeof(INPUTMOUSE);
 
 			public const uint CatkeysExtraInfo = 0xA1427fa5;
 			const int INPUT_MOUSE = 0;
@@ -848,36 +853,37 @@ namespace Catkeys
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int SendInput(int cInputs, void* pInputs, int cbSize);
+		//note: the API never indicates a failure if arguments are valid. Tested UAC (documented), BlockInput, ClipCursor.
 
-		internal static bool SendInputKey(ref INPUTKEY ik)
+		internal static bool SendInput_Key(ref INPUTKEY ik)
 		{
 			fixed (void* p = &ik) {
-				return SendInput(1, p, INPUTKEY.Size) != 0;
+				return SendInput(1, p, sizeof(INPUTKEY)) != 0;
 			}
 		}
 
-		internal static bool SendInputKey(INPUTKEY[] ik)
+		internal static bool SendInput_Key(INPUTKEY[] ik)
 		{
 			if(ik == null || ik.Length == 0) return false;
 			fixed (void* p = ik) {
-				return SendInput(ik.Length, p, INPUTKEY.Size) != 0;
+				return SendInput(ik.Length, p, sizeof(INPUTKEY)) != 0;
 			}
 		}
 
-		internal static bool SendInputMouse(ref INPUTMOUSE ik)
+		internal static bool SendInput_Mouse(ref INPUTMOUSE ik)
 		{
 			fixed (void* p = &ik) {
-				return SendInput(1, p, INPUTMOUSE.Size) != 0;
+				return SendInput(1, p, sizeof(INPUTMOUSE)) != 0;
 			}
 		}
 
-		internal static bool SendInputMouse(INPUTMOUSE[] ik)
-		{
-			if(ik == null || ik.Length == 0) return false;
-			fixed (void* p = ik) {
-				return SendInput(ik.Length, p, INPUTMOUSE.Size) != 0;
-			}
-		}
+		//internal static bool SendInput_Mouse(INPUTMOUSE[] ik)
+		//{
+		//	if(ik == null || ik.Length == 0) return false;
+		//	fixed (void* p = ik) {
+		//		return SendInput(ik.Length, p, sizeof(INPUTMOUSE)) != 0;
+		//	}
+		//}
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsHungAppWindow(Wnd hwnd);
@@ -963,7 +969,7 @@ namespace Catkeys
 		internal static extern bool InvalidateRgn(Wnd hWnd, IntPtr hRgn, bool bErase);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool DragDetect(Wnd hwnd, POINT pt);
+		internal static extern bool DragDetect(Wnd hwnd, Point pt);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr SetCursor(IntPtr hCursor);
@@ -994,6 +1000,12 @@ namespace Catkeys
 
 		//[DllImport("user32.dll", CharSet = CharSet.Ansi)]
 		//internal static extern int wvsprintfA(byte* lpOut1024, string lpFmt, void* arglist);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool BlockInput(bool fBlockIt);
+
+
+
 
 
 
@@ -1048,7 +1060,7 @@ namespace Catkeys
 		internal static extern int GetDeviceCaps(IntPtr hdc, int index);
 
 		[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
-		internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out SIZE psizl);
+		internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out Size psizl);
 
 		[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
 		internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, int bItalic = 0, int bUnderline = 0, int bStrikeOut = 0, int iCharSet = 0, int iOutPrecision = 0, int iClipPrecision = 0, int iQuality = 0, int iPitchAndFamily = 0, string pszFaceName = null);
@@ -1079,6 +1091,7 @@ namespace Catkeys
 
 		[DllImport("gdi32.dll")]
 		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, BITMAPINFOHEADER* lpbmi, uint usage);
+
 
 
 

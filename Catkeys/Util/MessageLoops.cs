@@ -48,7 +48,7 @@ namespace Catkeys.Util
 						Application.DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.
 
-						if(Api.PeekMessage(out var _, Wnd0, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
+						if(Api.PeekMessage(out var _, default(Wnd), Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
 					}
 				}
 				finally {
@@ -78,7 +78,7 @@ namespace Catkeys.Util
 	[DebuggerStepThrough]
 	class LibEnsureWindowsFormsSynchronizationContext :IDisposable
 	{
-		[ThreadStatic] static WindowsFormsSynchronizationContext _wfContext;
+		[ThreadStatic] static WindowsFormsSynchronizationContext t_wfContext;
 		SynchronizationContext _prevContext;
 		bool _restoreContext, _prevAutoInstall;
 
@@ -93,8 +93,8 @@ namespace Catkeys.Util
 			//Ensure WindowsFormsSynchronizationContext for this thread.
 			_prevContext = SynchronizationContext.Current;
 			if(!(_prevContext is WindowsFormsSynchronizationContext)) {
-				if(_wfContext == null) _wfContext = new WindowsFormsSynchronizationContext();
-				SynchronizationContext.SetSynchronizationContext(_wfContext);
+				if(t_wfContext == null) t_wfContext = new WindowsFormsSynchronizationContext();
+				SynchronizationContext.SetSynchronizationContext(t_wfContext);
 				_restoreContext = _prevContext != null;
 			}
 
@@ -113,7 +113,7 @@ namespace Catkeys.Util
 #endif
 			if(_restoreContext) {
 				_restoreContext = false;
-				if(SynchronizationContext.Current == _wfContext)
+				if(SynchronizationContext.Current == t_wfContext)
 					SynchronizationContext.SetSynchronizationContext(_prevContext);
 			}
 			if(_prevAutoInstall) WindowsFormsSynchronizationContext.AutoInstall = true;
@@ -136,10 +136,10 @@ namespace Catkeys.Util
 					Debug.Assert(false);
 					throw new InvalidOperationException("this thread has wrong SynchronizationContext type or is not STA");
 				}
-				if(_wfContext == null) _wfContext = new WindowsFormsSynchronizationContext();
-				SynchronizationContext.SetSynchronizationContext(_wfContext);
+				if(t_wfContext == null) t_wfContext = new WindowsFormsSynchronizationContext();
+				SynchronizationContext.SetSynchronizationContext(t_wfContext);
 				WindowsFormsSynchronizationContext.AutoInstall = false; //prevent Application.Run/DoEvents setting wrong context
-				wfc = _wfContext;
+				wfc = t_wfContext;
 			}
 			return wfc;
 		}
@@ -165,7 +165,7 @@ namespace Catkeys.Util
 			var x = new SimpleDragDropCallbackArgs();
 			for(;;) {
 				if(Api.GetCapture() != w) return false;
-				if(Api.GetMessage(out x.Msg, Wnd0, 0, 0) <= 0) {
+				if(Api.GetMessage(out x.Msg, default(Wnd), 0, 0) <= 0) {
 					if(x.Msg.message == Api.WM_QUIT) Api.PostQuitMessage(x.Msg.wParam);
 					break;
 				}

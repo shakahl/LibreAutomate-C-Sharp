@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <files>
   <f n="Send WM_COPYDATA to C#.cs" g="06fSNnLzEU+xYimP-FQH7w" />
+  <f n="test app resources.cs" g="xrc03LKmf0+oE0-olB01pg" />
+  <d n="Images" g="aO-J635q00CG8UbDoNSFfA">
+    <f n="big.png" g="gm5PKdG5vEOWVIkm0oVXLA" />
+  </d>
   <d n="Catkeys file format" g="X701ukrWlUG00SWYHWl3Ww">
     <f n="Catkeys files.cs" g="TqFDGWV750m+hmTzMelRQQ" />
     <f n="Export QM2 items to Catkeys collection - XML.cs" g="I5MQIzS7n0iCRpV7ws1Ncg" />

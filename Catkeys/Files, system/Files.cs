@@ -342,7 +342,7 @@ namespace Catkeys
 			if(Empty(path)) return null;
 
 			string s = path;
-			if(Path_.IsFullPathEEV(ref s)) {
+			if(Path_.IsFullPathExpandEnvVar(ref s)) {
 				if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 				return null;
 			}
@@ -350,7 +350,7 @@ namespace Catkeys
 			if(dirs != null) {
 				foreach(var d in dirs) {
 					s = d;
-					if(!Path_.IsFullPathEEV(ref s)) continue;
+					if(!Path_.IsFullPathExpandEnvVar(ref s)) continue;
 					s = Path_.Combine(s, path);
 					if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 				}
@@ -359,7 +359,7 @@ namespace Catkeys
 			s = Folders.ThisApp + path;
 			if(ExistsAsAny(s)) return Path_.LibNormalize(s, noExpandEV: true);
 
-			var b = Util.CharBuffer.LibCommon; int na = b.Max(300);
+			var b = Util.LibCharBuffer.LibCommon; int na = b.Max(300);
 			g1: int nr = Api.SearchPath(null, path, null, na, b.Alloc(na), null);
 			if(nr > na) { na = nr; goto g1; }
 			if(nr > 0) return b.ToString(nr);
@@ -372,7 +372,7 @@ namespace Catkeys
 						if(ExistsAsAny(path, true)) return path;
 					}
 				}
-				catch(Exception ex) { DebugPrint(path + "    " + ex.Message); }
+				catch(Exception ex) { Debug_.Print(path + "    " + ex.Message); }
 			}
 
 			return null;
@@ -816,7 +816,7 @@ namespace Catkeys
 					default:
 						if(Misc.LibIsSameFile(path1, path2)) {
 							//eg renaming "file.txt" to "FILE.txt"
-							DebugPrint("same file");
+							Debug_.Print("same file");
 							//deleted = true;
 							//copy will fail, move will succeed
 						} else if(ifExists == IfExists.MergeDirectory && (existsAs == ItIs2.Directory || existsAs == ItIs2.SymLinkDirectory)) {
@@ -931,7 +931,7 @@ namespace Catkeys
 						//To create or copy symbolic links, need SeCreateSymbolicLinkPrivilege privilege.
 						//Admins have it, else this process cannot get it.
 						//More info: MS technet -> "Create symbolic links".
-						//DebugPrint($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {Native.GetErrorMessage()}");
+						//Debug_.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {Native.GetErrorMessage()}");
 						continue;
 					}
 					if(0 != (copyFlags & CopyFlags.IgnoreAccessDeniedErrors)) {
@@ -1153,7 +1153,7 @@ namespace Catkeys
 				}
 				if(a.Count == 0) return;
 				if(_DeleteShell(null, true, a)) return;
-				DebugPrint("_DeleteShell failed");
+				Debug_.Print("_DeleteShell failed");
 			}
 			foreach(var v in paths) Delete(v);
 		}
@@ -1169,7 +1169,7 @@ namespace Catkeys
 
 			if(tryRecycleBin) {
 				if(_DeleteShell(path, true)) return type;
-				DebugPrint("_DeleteShell failed");
+				Debug_.Print("_DeleteShell failed");
 			}
 
 			int ec = 0;
@@ -1189,7 +1189,7 @@ namespace Catkeys
 					_ShellNotify(Api.SHCNE_RMDIR, path);
 					return type;
 				}
-				DebugPrint("Using _DeleteShell.");
+				Debug_.Print("Using _DeleteShell.");
 				//if(_DeleteShell(path, Recycle.No)) return type;
 				if(_DeleteShell(path, false)) return type;
 			} else {
@@ -1222,7 +1222,7 @@ namespace Catkeys
 			}
 			if(ec == Api.ERROR_DIR_NOT_EMPTY && _Api.PathIsDirectoryEmpty(path)) {
 				//see comments above about Explorer
-				DebugPrint("ERROR_DIR_NOT_EMPTY when empty");
+				Debug_.Print("ERROR_DIR_NOT_EMPTY when empty");
 				for(int i = 0; i < 5; i++) {
 					Thread.Sleep(15);
 					if(_Api.RemoveDirectory(path)) return 0;
@@ -1230,7 +1230,7 @@ namespace Catkeys
 				ec = Native.GetError();
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
-			DebugPrint("_DeleteLL failed. " + Native.GetErrorMessage(ec) + "  " + path
+			Debug_.Print("_DeleteLL failed. " + Native.GetErrorMessage(ec) + "  " + path
 				+ (dir ? ("   Children: " + string.Join(" | ", EnumDirectory(path).Select(f => f.Name))) : null));
 			return ec;
 
@@ -1355,7 +1355,7 @@ namespace Catkeys
 
 		static void _ShellNotify(uint @event, string path, string path2 = null)
 		{
-			Task.Run(() => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2));
+			ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2));
 		}
 
 		/// <summary>
@@ -1364,7 +1364,7 @@ namespace Catkeys
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		static string _PreparePath(string path)
 		{
-			if(!Path_.IsFullPathEEV(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
+			if(!Path_.IsFullPathExpandEnvVar(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
 			return Path_.LibNormalize(path, noExpandEV: true);
 		}
 

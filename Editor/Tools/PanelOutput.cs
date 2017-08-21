@@ -116,19 +116,19 @@ class PanelOutput :Control
 	{
 		var w = ((Wnd)this).WndWindow;
 		if(on) {
-			w.WndOwner = Wnd0;
+			w.WndOwner = default(Wnd);
 			w.ZorderTopmost();
 			//w.SetExStyle(Native.WS_EX_APPWINDOW, SetAddRemove.Add);
 			//Wnd.Misc.WndRoot.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
-			w.ZorderNotopmost();
+			w.ZorderNoTopmost();
 			w.WndOwner = MainForm.Wnd_();
 		}
 	}
 
 	protected override void OnParentChanged(EventArgs e)
 	{
-		if(Parent is Form && Topmost) Time.SetTimer(1, true, t => _SetTopmost(true));
+		if(Parent is Form && Topmost) Timer_.After(1, t => _SetTopmost(true));
 
 		base.OnParentChanged(e);
 	}

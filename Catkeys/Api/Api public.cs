@@ -2,7 +2,8 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Text;
+//using System.Text; //StringBuilder, we don't use it, very slow
+using System.Drawing; //Point, Size
 using System.ComponentModel;
 
 using static Catkeys.NoClass;
@@ -110,7 +111,7 @@ namespace Catkeys
 			public LPARAM wParam;
 			public LPARAM lParam;
 			public uint time;
-			public POINT pt;
+			public Point pt;
 		}
 
 		/// <summary><msdn>SHSTOCKICONID</msdn></summary>

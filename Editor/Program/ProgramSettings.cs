@@ -69,7 +69,7 @@ class ProgramSettings
 				_x.Save(_settFile);
 			}
 			_isDirty = false;
-			//DebugPrint("settings saved");
+			//Debug_.Print("settings saved");
 		}
 	}
 

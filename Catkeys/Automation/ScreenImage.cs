@@ -1,7 +1,6 @@
 //#define SI_DEBUG_PERF
 //#define SI_SIMPLE
 //#define SI_TEST_NO_OPTIMIZATION
-//#define SI_CAPTURE_BOTTOM_UP
 
 using System;
 using System.Collections.Generic;
@@ -34,12 +33,10 @@ namespace Catkeys
 	/// </summary>
 	public static class ScreenImage
 	{
-		#region capture
-
 		/// <summary>
 		/// Copies a rectangle of screen pixels to a new Bitmap object.
 		/// </summary>
-		/// <param name="r">A rectangle in screen coordinates.</param>
+		/// <param name="rect">A rectangle in screen coordinates.</param>
 		/// <exception cref="CatException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
 		/// <exception cref="Exception">Exceptions of Image.FromHbitmap.</exception>
 		/// <remarks>
@@ -54,16 +51,16 @@ namespace Catkeys
 		/// Shell.Run(file);
 		/// ]]></code>
 		/// </example>
-		public static Bitmap Capture(RECT r)
+		public static Bitmap Capture(RECT rect)
 		{
-			return _Capture(r);
+			return _Capture(rect);
 		}
 
 		/// <summary>
 		/// Copies a rectangle of window client area pixels to a new Bitmap object.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="r">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
+		/// <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
 		/// <exception cref="WndException">Invalid w.</exception>
 		/// <exception cref="CatException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
 		/// <exception cref="Exception">Exceptions of Image.FromHbitmap.</exception>
@@ -72,12 +69,12 @@ namespace Catkeys
 		/// 1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. 
 		/// 2. If the window is partially or completely transparent, gets non-transparent image.
 		/// 3. Does not work with Windows Store app windows (creates black image) and possibly with some other windows.
-		/// 4. If the window is DPI-scaled, captures its non-scaled view. And r must contain non-scaled coordinates.
+		/// 4. If the window is DPI-scaled, captures its non-scaled view. And rect must contain non-scaled coordinates.
 		/// </remarks>
-		public static Bitmap Capture(Wnd w, RECT r)
+		public static Bitmap Capture(Wnd w, RECT rect)
 		{
 			w.ThrowIfInvalid();
-			return _Capture(r, w);
+			return _Capture(rect, w);
 		}
 
 		static unsafe Bitmap _Capture(RECT r, Wnd w = default(Wnd))
@@ -85,40 +82,16 @@ namespace Catkeys
 			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
 
 			using(var mb = new Util.MemoryBitmap(r.Width, r.Height)) {
-				//IntPtr dc = includeNonClient ? Api.GetWindowDC(w) : Api.GetDC(w); //window DC - nothing good: if in background, captures incorrect caption etc. If need nonclient part, better activate window and capture window rect from screen.
+				//IntPtr dc = includeNonClient ? Api.GetWindowDC(w) : Api.GetDC(w); //window DC - nothing good: if in background, captures incorrect caption etc. If need nonclient part, better activate window and capture window rectangle from screen.
 				IntPtr dc = Api.GetDC(w);
 				if(dc == Zero && !w.Is0) w.ThrowNoNative("Failed");
 				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, 0xCC0020); //SRCCOPY
 				Api.ReleaseDC(w, dc);
 				Debug.Assert(ok); //fails only if a dc is invalid
 				_Debug("captured to MemBmp");
-#if SI_CAPTURE_BOTTOM_UP
-				//The bitmap is bottom-up, unlike bitmaps created/loaded/captured by GDI+.
-				//Such bitmap cannot be passed directly to Find. Or Find would have to convert or adapt to it.
-				//When saved/loaded, it is top-down.
-				//Slightly faster.
-
-				var R = Image.FromHbitmap(mb.Hbitmap);
-				//Normally display colors is 32-bit (True Color). Then PixelFormat is Format32bppRgb.
-				//On older OS it's possible to set 16-bit display colors (High Color). Then PixelFormat is Format16bppRgb565.
-				Debug.Assert(R.PixelFormat == PixelFormat.Format32bppRgb); //asserts when testing 16-bit display colors
-				if(R.PixelFormat != PixelFormat.Format32bppRgb) {
-					var t = R;
-					try { R = t.Clone(new Rectangle(0, 0, t.Width, t.Height), PixelFormat.Format32bppRgb); }
-					finally { t.Dispose(); }
-				}
-				_Debug("Image.FromHbitmap");
-				return R;
-
-				//Convert PixelFormat from 32 to 24 bit, it's more compact, we don't need alpha.
-				//No, 32 bit is easier to search, and png size is not much bigger.
-				//using(var k = Image.FromHbitmap(b.Hbitmap)) {
-				//	return k.Clone(new Rectangle(0, 0, k.Width, k.Height), PixelFormat.Format24bppRgb);
-				//}
-#else
 				var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
 				try {
-					var h = new Api.BITMAPINFOHEADER() {
+					var bh = new Api.BITMAPINFOHEADER() {
 						biSize = sizeof(Api.BITMAPINFOHEADER),
 						biWidth = r.Width, biHeight = -r.Height, //use -height for top-down
 						biPlanes = 1, biBitCount = 32,
@@ -126,7 +99,7 @@ namespace Catkeys
 					};
 					var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
 					try {
-						var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &h, 0); //DIB_RGB_COLORS
+						var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &bh, 0); //DIB_RGB_COLORS
 						if(apiResult != r.Height) throw new CatException("GetDIBits");
 
 						//remove alpha (why it is here?). Will compress better.
@@ -140,21 +113,41 @@ namespace Catkeys
 					return R;
 				}
 				catch { R.Dispose(); throw; }
-#endif
 			}
 		}
 
-		//Creates Format32bppRgb top-down bitmap. Unlike Image.FromHbitmap, which usually creates bottom-up bitmap which is incompatible with ScreenImage functions.
-		//static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
-		//{
-		//	var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-		//	var hdc = Api.GetDC(Wnd0);
-		//	try {
+		/// <summary>
+		/// Creates Bitmap from a GDI bitmap.
+		/// </summary>
+		/// <param name="hbitmap">GDI bitmap handle. This function makes its copy.</param>
+		/// <remarks>
+		/// How this function is different from Image.FromHbitmap:
+		/// 1. Image.FromHbitmap usually creates bottom-up bitmap, which is incompatible with ScreenImage.Find and similar functions. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc do.
+		/// 2. This function always creates bitmap of Format32bppRgb PixelFormat.
+		/// </remarks>
+		/// <exception cref="CatException">Failed. For example hbitmap is Zero.</exception>
+		/// <exception cref="Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
+		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
+		{
+			var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
+			var hdc = Api.GetDC(default(Wnd));
+			try {
+				if(0 == Api.GetDIBits(hdc, hbitmap, 0, 0, null, &bh, 0)) goto ge;
+				int wid = bh.biWidth, hei = bh.biHeight;
+				if(hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
+				bh.biBitCount = 32;
 
-		//	}
-		//	finally { Api.ReleaseDC(Wnd0, hdc); }
-		//	if(Api.GetDIBits())
-		//}
+				var R = new Bitmap(wid, hei, PixelFormat.Format32bppRgb);
+				var d = R.LockBits(new Rectangle(0, 0, wid, hei), ImageLockMode.ReadWrite, R.PixelFormat);
+				bool ok = hei == Api.GetDIBits(hdc, hbitmap, 0, hei, (void*)d.Scan0, &bh, 0);
+				R.UnlockBits(d);
+				if(!ok) { R.Dispose(); goto ge; }
+				return R;
+			}
+			finally { Api.ReleaseDC(default(Wnd), hdc); }
+			ge:
+			throw new CatException();
+		}
 
 		//FUTURE
 		//public static bool CaptureUI()
@@ -162,212 +155,98 @@ namespace Catkeys
 
 		//}
 
-		#endregion
-
-		/// <summary>
-		/// <see cref="Find"/> flags.
-		/// </summary>
-		[Flags]
-		public enum FindFlags
-		{
-			/// <summary>
-			/// Move the mouse to the image.
-			/// Not used with WaitNot, WaitChanged and when wndEtc is Bitmap.
-			/// </summary>
-			MoveMouse = 1,
-
-			/// <summary>
-			/// When found, wait until mouse buttons released.
-			/// It is especially useful when waiting and using flag MoveMouse.
-			/// Not when wndEtc is Bitmap.
-			/// </summary>
-			WaitMouseReleased = 2,
-
-			/// <summary>
-			/// Throw CatException exception if not found.
-			/// Not used when waiting.
-			/// </summary>
-			ThrowIfNotFound = 4,
-
-			/// <summary>
-			/// Get pixels from window's device context (DC), not from screen DC.
-			/// Notes:
-			/// Usually significantly faster.
-			/// Can get pixels from window parts that are covered by other windows or offscreen. But not from hidden and minimized windows.
-			/// Does not work on Windows 7 if Aero theme is turned off. Then this flag is ignored.
-			/// If the window is DPI-scaled, the specified image must be taken from its non-scaled version.
-			/// Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels taken from these windows/parts are black.
-			/// Not used when wndEtc is Bitmap.
-			/// </summary>
-			WindowDC = 8,
-
-			/// <summary>
-			/// Find all instances of the specified image. Store rectangles in <see cref="FindResult.a"/> or <see cref="FindResult.a2"/>; uses a2 if multiple images are specified.
-			/// Not used with WaitNot, WaitChanged.
-			/// </summary>
-			AllInstances = 16,
-
-			/// <summary>
-			/// When the image argument specifies multiple images, all they must exist, else result is "not found".
-			/// </summary>
-			AllMustExist = 32,
-
-			/// <summary>
-			/// Get result rectangles in screen coordinates.
-			/// Without this flag the rectangles are in window client area coordinates. When searching in accessible object - in object coordinates.
-			/// Not used with WaitNot, WaitChanged and when wndEtc is Bitmap.
-			/// </summary>
-			ResultInScreen = 64,
-
-			//this was used in QM2. Now using png alpha channel instead.
-			///// <summary>
-			///// Use the top-left pixel color of the image as transparent color (don't compare pixels that have this color).
-			///// </summary>
-			//MakeTransparent = 64,
-		}
-
-		/// <summary>
-		/// <see cref="Find"/> results.
-		/// </summary>
-		public class FindResult
-		{
-			/// <summary>
-			/// Screen coordinates of the found image.
-			/// Used in these cases:
-			/// 1. The image argument specifies single image and is not used flag AllInstances.
-			/// 2. The image argument specifies multiple images and are not used flags AllInstances or AllMustExist.
-			/// </summary>
-			public RECT r;
-
-			/// <summary>
-			/// Screen coordinates of found images.
-			/// Used in these cases:
-			/// 1. The image argument specifies single image and is used flag AllInstances. Then the array contains all found instances of the image.
-			/// 2. The image argument specifies multiple images and is used flag AllMustExist and not AllInstances. Then the array contains the first found instance of each image.
-			/// </summary>
-			public RECT[] a;
-
-			/// <summary>
-			/// Screen coordinates of found images.
-			/// Used when the image argument specifies multiple images and is used flag AllInstances.
-			/// It is array of arrays. The main array matches the specified images. Each indice - array containing rectangles of all found instances of that image, or null if not found.
-			/// </summary>
-			public RECT[][] a2;
-
-			/// <summary>
-			/// 0 if not found, 1 or greater if found.
-			/// When the image argument specifies multiple images, and flag AllMustExist not used, this is the 1-based index of the first found image.
-			/// </summary>
-			public int index;
-
-			/// <summary>
-			/// true if the image was found.
-			/// </summary>
-			public bool Found { get => index > 0; }
-
-			/// <summary>
-			/// true if the image was found.
-			/// </summary>
-			public static implicit operator bool(FindResult r) => r.Found;
-
-			internal void Clear()
-			{
-				r.SetEmpty();
-				a = null;
-				a2 = null;
-				index = 0;
-			}
-		}
-
 		/// <summary>
 		/// Finds the specified image(s) or color(s) on the screen.
-		/// Returns <see cref="FindResult"/> object containing screen rectangle(s) of found image(s) etc. It also can be used like <c>if(!ScreenImage.Find(...)) Print("not found");</c>.
+		/// Returns <see cref="SIResult"/> object containing screen rectangle(s) of found image(s) etc. It also can be used like <c>if(!ScreenImage.Find(...)) Print("not found");</c>.
 		/// </summary>
 		/// <param name="image">
-		/// One or more images or colors to find. Can be:
-		/// string - path of .png or .bmp file. If not full path, uses <see cref="Folders.ThisAppImages"/>.
+		/// Image or color to find. Can be:
+		/// string - path of .png or .bmp file. If not full path, uses <see cref="Folders.ThisAppImages"/>. Also can use resources, read in Remarks.
 		/// Bitmap - image object in memory.
 		/// int - color in 0xRRGGBB format. Alpha is not used.
 		/// IEnumerable of string, Bitmap, int or object - multiple images or colors. Default action - find any. If flag AllMustExist - find all.
-		/// 
-		/// Some pixels in png images can be transparent or partially transparent. These pixels are not compared.
 		/// </param>
-		/// <param name="wndEtc">
-		/// Where to search. Can be:
-		/// Wnd - window or control. The function searches only in the client area.
-		/// Acc - accessible object. The function searches in the intersection rectangle of the object's reactangle and the client area of the object's direct container control or window.
-		/// Bitmap - another image. These flags are not used: MoveMouse, WaitMouseReleased, WindowDC, ResultInScreen.
+		/// <param name="area">
+		/// Where to search.
+		/// Can be a <see cref="SIArea"/> object containing a value of one of the following types and optionally a limiting rectangle.
+		/// Values of these types also can be passed to this function directly. Example: <c>ScreenImage.Find("image", w);</c>. Need SIArea only if you also want to use a limiting rectangle. Example: <c>ScreenImage.Find("image", new SIArea(w, 100, 100, 100, 100));</c>.
+		/// <list type="bullet">
+		/// <item>Wnd - window or control. The search area is its client area or a rectangle in it. The result rectangle is relative to its client area.</item>
+		/// <item>Acc - accessible object. The result rectangle is relative to its rectangle.</item>
+		/// <item>Bitmap - another image. The result rectangle is relative to its rectangle. These flags are not used: WindowDC.</item>
+		/// <item>RECT - a rectangle area in screen. The result rectangle is relative to the screen. These flags are not used: WindowDC.</item>
+		/// </list>
 		/// </param>
 		/// <param name="flags"></param>
-		/// <param name="r">A rectangle in wndEtc where to search. If null (default), searches in whole wndEtc rectangle.</param>
-		/// <param name="colorDiff">Maximal color difference. Allows to find on-screen images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
-		/// <param name="skip">Number of matching image instances to skip. Use when there are several matching image instances in the search area and you need not the first one.</param>
-		/// <exception cref="ArgumentException">An argument is of unsupported type or is/contains a null/empty/invalid string/collection/Bitmap/etc.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Image.FromFile(string)"/>, Bitmap.LockBits.</exception>
-		/// <exception cref="WndException">Invalid window (the wndEtc argument).</exception>
-		/// <exception cref="CatException">Something failed. A Bitmap object uses bottom-up format.</exception>
-		/// <exception cref="NotFoundException">Not found, when used flag ThrowIfNotFound.</exception>
-		public static FindResult Find(object image, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0, int skip = 0)
+		/// <param name="colorDiff">Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
+		/// <param name="skip">Skip this number of matching image instances. Use when there are several matching image instances in the search area and you need not the first one.</param>
+		/// <exception cref="WndException">Invalid window handle (the area argument).</exception>
+		/// <exception cref="ArgumentException">An argument is of unsupported type or is/contains a null/invalid string/Bitmap/flag/etc.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Image.FromFile(string)"/>, Bitmap.LockBits. For example when the image file does not exist.</exception>
+		/// <exception cref="CatException">Something failed.</exception>
+		/// <remarks>
+		/// If image is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file "C:\\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) ScreenImage.Find(b, w);</c>.
+		/// 
+		/// Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
+		/// 
+		/// Throws ArgumentException if image or area is a bottom-up Bitmap object (see <see cref="BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by Image.FromHbitmap; instead use <see cref="BitmapFromHbitmap"/>.
+		/// 
+		/// The speed mostly depends on:
+		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>new SIArea(w, r)</c>).
+		/// 2. Flag WindowDC (usually makes several times faster). With this flag the speed depends on window.
+		/// 3. Video driver. Can be eg 10 times slower if incorrect or generic driver is used, for example on a virtual PC. Flag WindowDC should help.
+		/// 4. colorDiff. Should be as small as possible.
+		/// 5. The speed rarely depends on image.
+		/// 
+		/// If flag WindowDC is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in other windows.
+		/// 
+		/// The function can only find images that exactly match the specified image. With colorDiff it can find images with slightly different colors and brightness. It cannot find images with different shapes.
+		/// 
+		/// This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
+		/// </remarks>
+		public static SIResult Find(object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, int skip = 0)
 		{
-			using(var f = new _Finder(_Action.Find, image, wndEtc, flags, r, colorDiff, skip)) {
-				//f.Find();
-				while(f.Find()) { if(_Finally(f, flags)) break; }
+			using(var f = new _Finder(_Action.Find, image, area, flags, colorDiff, skip)) {
+				f.Find();
 				return f.Result;
 			}
 		}
 
-		enum _Action { Find, Wait, WaitNot, WaitChanged }
+		internal enum _Action { Find, Wait, WaitNot, WaitChanged }
 
-		public static FindResult Wait(double timeS, object image, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0, int skip = 0)
+		public static SIResult Wait(double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, int skip = 0)
 		{
-			return _Wait(_Action.Wait, timeS, image, wndEtc, flags, r, colorDiff, skip);
+			return _Wait(_Action.Wait, timeS, image, area, flags, colorDiff, skip);
 		}
 
-		public static bool WaitNot(double timeS, object image, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0, int skip = 0)
+		public static bool WaitNot(double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, int skip = 0)
 		{
-			return !_Wait(_Action.WaitNot, timeS, image, wndEtc, flags, r, colorDiff, skip);
+			return !_Wait(_Action.WaitNot, timeS, image, area, flags, colorDiff, skip);
 		}
 
-		public static bool WaitChanged(double timeS, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0, int skip = 0)
+		public static bool WaitChanged(double timeS, SIArea area, SIFlags flags = 0, int colorDiff = 0, int skip = 0)
 		{
-			return !_Wait(_Action.WaitChanged, timeS, null, wndEtc, flags, r, colorDiff, skip);
+			return !_Wait(_Action.WaitChanged, timeS, null, area, flags, colorDiff, skip);
 		}
 
-		static FindResult _Wait(_Action action, double timeS, object image, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0, int skip = 0)
+		static SIResult _Wait(_Action action, double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, int skip = 0)
 		{
-			using(var f = new _Finder(action, image, wndEtc, flags, r, colorDiff, skip)) {
-				while(WaitFor.Condition(timeS, v => (v as _Finder).Find_ApplyNot(), f, 50, 1000)) {
-					if(_Finally(f, flags)) break;
-					//CONSIDER: adjust timeS, if not 0. Would need to subtract elapsed time and add maybe 5 s.
-				}
+			using(var f = new _Finder(action, image, area, flags, colorDiff, skip)) {
+				WaitFor.Condition(timeS, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
 				return f.Result;
 			}
 		}
 
 		//TODO
-		internal static void Test(object image, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0)
+		internal static void Test(object image, SIArea area, SIFlags flags = 0, int colorDiff = 0)
 		{
-			using(var f = new _Finder(_Action.Find, image, wndEtc, flags, r, colorDiff, 0)) {
+			using(var f = new _Finder(_Action.Find, image, area, flags, colorDiff, 0)) {
 				for(int i = 0; i < 1; i++) f.Find();
 			}
 		}
 
-		static bool _Finally(_Finder f, FindFlags flags)
-		{
-			if(0 != (flags & FindFlags.WaitMouseReleased)) {
-				bool pressed = false;
-				while(Input.IsMouseLeft || Input.IsMouseRight || Input.IsMouseMiddle) { pressed = true; Time.Sleep(20); }
-				if(pressed) return false; //need to search again because eg the window with the image may be moved or resized
-			}
-
-			if(0 != (flags & FindFlags.MoveMouse)) {
-				//TODO
-			}
-
-			return true;
-		}
-
-		unsafe class _Finder :IDisposable
+		//info: this class and some its members ar not private because used by SIResult. Sadly C# does not have 'friend' keyword.
+		unsafe internal class _Finder :IDisposable
 		{
 			class _Image
 			{
@@ -378,12 +257,18 @@ namespace Catkeys
 
 				public _Image(string file)
 				{
+					object o = null;
 					file = Path_.Normalize(file, Folders.ThisAppImages);
-					_b = Image.FromFile(file) as Bitmap;
+					if(!Files.ExistsAsFile(file)) {
+						o = Util.Misc.GetAppResource(Path_.GetFileNameWithoutExtension(file));
+					}
+					if(o == null) o = Image.FromFile(file);
+					_b = o as Bitmap;
+					if(_b == null) throw new ArgumentException("bad image format"); //Image but not Bitmap
 					_dispose = true;
 					_InitBitmap();
 
-					//CONSIDER: support resources and Base64 image data strings.
+					//CONSIDER: support Base64 image data strings.
 				}
 
 				public _Image(Bitmap bmp)
@@ -397,7 +282,7 @@ namespace Catkeys
 					data = _b.LockBits(new Rectangle(0, 0, _b.Width, _b.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
 					if(data.Stride < 0) {
 						_b.UnlockBits(data); data = null;
-						throw new CatException("bottom-up Bitmap");
+						throw new ArgumentException("bottom-up Bitmap");
 					}
 
 					//speed: Clone is much slower than LockBits, which is often quite fast even if need conversion.
@@ -431,17 +316,14 @@ namespace Catkeys
 			}
 
 			//input
+			internal _Action _action;
 			List<_Image> _images; //support multiple images
-			Wnd _w;
-			Acc _acc;
-			Bitmap _bmp;
-			RECT? _r;
+			internal SIArea _area;
+			internal SIFlags _flags;
 			uint _colorDiff;
 			int _skip;
-			FindFlags _flags;
-			_Action _action;
 			//output
-			FindResult _result;
+			SIResult _result;
 			List<RECT> _tempResults;
 			//area data
 			Util.MemoryBitmap _areaMB; //reuse while waiting, it makes slightly faster
@@ -451,8 +333,8 @@ namespace Catkeys
 
 			public void Dispose()
 			{
-				if(_bmp != null) {
-					if(_areaData != null) _bmp.UnlockBits(_areaData);
+				if(_area.Type == SIArea.AType.Bitmap) {
+					if(_areaData != null) _area.B.UnlockBits(_areaData);
 				} else {
 					Util.NativeHeap.Free(_areaPixels);
 					_areaMB?.Dispose();
@@ -465,32 +347,45 @@ namespace Catkeys
 				if(_images != null) foreach(var v in _images) v.Dispose();
 			}
 
-			public FindResult Result { get => _result ?? (_result = new FindResult()); }
+			public SIResult Result { get => _result; }
 
-			public _Finder(_Action action, object image, Types<Wnd, Acc, Bitmap> wndEtc, FindFlags flags = 0, RECT? r = null, int colorDiff = 0, int skip = 0)
+			internal _Finder(_Action action, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, int skip = 0)
 			{
+				if(image == null || area == null) throw new ArgumentNullException();
+
 				_action = action;
+				_area = area;
 				_flags = flags;
-				_colorDiff = (uint)colorDiff; if(_colorDiff > 250) throw new ArgumentException("colorDiff can be 0 - 250");
-				_r = r;
+				_colorDiff = (uint)colorDiff; if(_colorDiff > 250) throw new ArgumentOutOfRangeException("colorDiff can be 0 - 250");
 				_skip = Math.Max(skip, 0);
 
-				switch(wndEtc.type) {
-				case 1:
-					wndEtc.v1.ThrowIfInvalid();
-					_w = wndEtc.v1;
+				SIFlags badFlags = 0; string sBadFlags = null;
+
+				switch(_area.Type) {
+				case SIArea.AType.Screen:
+					badFlags = SIFlags.WindowDC;
 					break;
-				case 2:
-					if(wndEtc.v2.a == null) throw new ArgumentException("null object", nameof(wndEtc));
-					CatException.ThrowIfFailed(Api.WindowFromAccessibleObject(wndEtc.v2.a, out _w), "*get object's window");
-					_acc = wndEtc.v2;
+				case SIArea.AType.Wnd:
+					_area.W.ThrowIfInvalid();
 					break;
-				case 3 when action == _Action.Find: //throw if action is 'wait'. There is no sense to wait for some changes in Bitmap.
-					_bmp = wndEtc.v3;
-					if(_bmp == null) throw new ArgumentException("null object", nameof(wndEtc));
+				case SIArea.AType.Acc:
+					if(_area.A.a == null) throw new ArgumentNullException(nameof(area));
+					_area.W = _area.A.WndDirectParent;
 					break;
-				default: throw new ArgumentException();
+				case SIArea.AType.Bitmap:
+					badFlags = SIFlags.WindowDC;
+					if(action != _Action.Find) throw new ArgumentException(); //there is no sense to wait for some changes in Bitmap
+					if(_area.B == null) throw new ArgumentNullException(nameof(area));
+					break;
 				}
+
+				if(0 != (_flags & badFlags)) sBadFlags = "Invalid flags for this area type: " + badFlags;
+				else if(action != _Action.Find) {
+					badFlags = 0;
+					if(action >= _Action.WaitNot) badFlags |= SIFlags.AllInstances;
+					if(0 != (_flags & badFlags)) sBadFlags = "Invalid flags for this function: " + badFlags;
+				}
+				if(sBadFlags != null) throw new ArgumentException(sBadFlags);
 
 				_images = new List<_Image>();
 				if(action != _Action.WaitChanged) {
@@ -499,23 +394,7 @@ namespace Catkeys
 					if(_images.Count == 0) throw new ArgumentException("Empty.", nameof(image));
 				} //else the first Find will add the area to _images
 
-				if(action < _Action.WaitNot) _result = new FindResult(); //else don't need results
-
-#if DEBUG
-				if(_bmp != null) {
-					FindFlags bad = FindFlags.MoveMouse | FindFlags.ResultInScreen | FindFlags.WaitMouseReleased | FindFlags.WindowDC;
-					if(0 != (flags & bad)) Output.Warning("These flags are not used when wndEtc is Bitmap: " + bad);
-					flags &= ~bad;
-				}
-				if(action != _Action.Find) {
-					FindFlags bad = FindFlags.ThrowIfNotFound;
-					if(action >= _Action.WaitNot) {
-						bad |= FindFlags.AllInstances | FindFlags.MoveMouse | FindFlags.ResultInScreen;
-					}
-					if(0 != (flags & bad)) Output.Warning("These flags are not used with this function: " + bad);
-					flags &= ~bad;
-				}
-#endif
+				_result = new SIResult(this);
 			}
 
 			void _AddImage(object image)
@@ -542,47 +421,52 @@ namespace Catkeys
 				Perf.Next(); //TODO
 				_result?.Clear();
 
-				bool allMustExist = 0 != (_flags & FindFlags.AllMustExist);
-				bool windowDC = 0 != (_flags & FindFlags.WindowDC);
+				bool allMustExist = 0 != (_flags & SIFlags.AllMustExist);
+				bool windowDC = 0 != (_flags & SIFlags.WindowDC);
 
-				//Get area rect.
-				var r = new RECT();
-				var offset = new POINT();
-				bool resultInScreen = 0 != (_flags & FindFlags.ResultInScreen);
-				if(_bmp != null) {
-					r.right = _bmp.Width;
-					r.bottom = _bmp.Height;
-				} else {
-					if(_acc != null) {
-						CatException.ThrowIfFailed(_acc.a.accLocation(out var x, out var y, out var cx, out var cy, _acc.elem));
-						r.Set(x, y, cx, cy, true);
-						if(resultInScreen) { offset.x = r.left; offset.y = r.top; }
-						if(windowDC) _w.MapScreenToClient(ref r);
-					} else {
-						r = _w.ClientRectInScreen;
-						if(resultInScreen) { offset.x = r.left; offset.y = r.top; }
-						if(windowDC) r.Offset(-r.left, -r.top);
-					}
-					//TODO: DPI
+				//Get area rectangle.
+				RECT r;
+				var resultOffset = new Point();
+				switch(_area.Type) {
+				case SIArea.AType.Wnd:
+					r = windowDC ? _area.W.ClientRect : _area.W.ClientRectInScreen;
+					break;
+				case SIArea.AType.Acc:
+					r = windowDC ? _area.A.RectInClientOf(_area.W) : _area.A.Rect;
+					break;
+				case SIArea.AType.Bitmap:
+					r = new RECT(0, 0, _area.B.Width, _area.B.Height, false);
+					break;
+				default: //Screen
+					r = _area.R;
+					if(!Screen_.IsInAnyScreen(r)) r.SetEmpty();
+					_area.HasRect = false;
+					resultOffset.X = r.left; resultOffset.Y = r.top;
+					break;
 				}
-				if(_r != null) {
-					var rr = _r.GetValueOrDefault();
-					offset.x += rr.left; offset.y += rr.top;
+				//FUTURE: DPI
+
+				//r is the area from where to get pixels. If windowDC, it is relative to the client area.
+				//Intermediate results will be relative to r. Then will be added resultOffset if a limiting lectangle is used.
+
+				if(_area.HasRect) {
+					var rr = _area.R;
+					resultOffset.X = rr.left; resultOffset.Y = rr.top;
 					rr.Offset(r.left, r.top);
 					r.Intersect(rr);
 				}
-				if(_acc != null) {
-					//may need to adjust r and offset,
-					//	because object rect may be bigger than client area (eg WINDOW object)
+
+				if(_area.Type == SIArea.AType.Acc) {
+					//adjust r and resultOffset,
+					//	because object rectangle may be bigger than client area (eg WINDOW object)
 					//	or its part is not in client area (eg scrolled web page).
 					//	If not adjusted, then may capture part of parent or sibling controls or even other windows...
-					//	Never mind: should also adjust control rect in ancestors in the same way.
+					//	Never mind: should also adjust control rectangle in ancestors in the same way.
 					//		This is not so important because usually whole control is visible (resized, not clipped).
-					//		More often there are sibling controls on top. Difficult to exclude them.
 					int x = r.left, y = r.top;
-					r.Intersect(windowDC ? _w.ClientRect : _w.ClientRectInScreen);
+					r.Intersect(windowDC ? _area.W.ClientRect : _area.W.ClientRectInScreen);
 					x -= r.left; y -= r.top;
-					offset.x -= x; offset.y -= y;
+					resultOffset.X -= x; resultOffset.Y -= y;
 				}
 				//Print(r);
 				if(r.IsEmpty) return false; //never mind: if WaitChanged and this is the first time, immediately returns 'changed'
@@ -602,11 +486,11 @@ namespace Catkeys
 				if(n == 0 || (allMustExist && n < _images.Count)) return false;
 
 				//Get area pixels.
-				if(_bmp != null) {
+				if(_area.Type == SIArea.AType.Bitmap) {
 					if(_areaData == null) {
-						var pf = (_bmp.PixelFormat == PixelFormat.Format32bppArgb) ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb; //if possible, use PixelFormat of _bmp, to avoid conversion/copying. Both these formats are ok, we don't use alpha.
-						_areaData = _bmp.LockBits(r, ImageLockMode.ReadOnly, pf);
-						if(_areaData.Stride < 0) throw new CatException("bottom-up Bitmap");
+						var pf = (_area.B.PixelFormat == PixelFormat.Format32bppArgb) ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb; //if possible, use PixelFormat of _bmp, to avoid conversion/copying. Both these formats are ok, we don't use alpha.
+						_areaData = _area.B.LockBits(r, ImageLockMode.ReadOnly, pf);
+						if(_areaData.Stride < 0) throw new ArgumentException("bottom-up Bitmap");
 					}
 					_areaPixels = (uint*)_areaData.Scan0;
 					_areaWidth = _areaData.Width; _areaHeight = _areaData.Height;
@@ -617,35 +501,35 @@ namespace Catkeys
 
 				//Find image(s) in area.
 				bool found = false;
-				bool allInst = 0 != (_flags & FindFlags.AllInstances), multipleImages = _images.Count > 1;
+				bool allInst = 0 != (_flags & SIFlags.AllInstances), multipleImages = _images.Count > 1;
 				for(int i = 0; i < _images.Count; i++) {
 					if(_FindImage(_images[i])) {
 						found = true;
-						if(_result == null) continue; //don't need results (WaitNot, WaitChanged)
-						if(_result.index == 0) _result.index = i + 1;
+						if(_action >= _Action.WaitNot) continue; //don't need and don't have results (WaitNot, WaitChanged)
+						if(_result.MultiIndex == 0) _result.MultiIndex = i + 1;
 
 						RECT R = _tempResults[0]; RECT[] A = null;
 						if(allInst) {
 							A = _tempResults.ToArray();
-							for(int j = 0; j < A.Length; j++) A[j].Offset(offset.x, offset.y);
+							for(int j = 0; j < A.Length; j++) A[j].Offset(resultOffset.X, resultOffset.Y);
 						} else {
-							R.Offset(offset.x, offset.y);
+							R.Offset(resultOffset.X, resultOffset.Y);
 						}
 
 						if(multipleImages) {
 							if(allInst) {
-								if(_result.a2 == null) _result.a2 = new RECT[_images.Count][];
-								_result.a2[i] = A;
+								if(_result.MultiAll == null) _result.MultiAll = new RECT[_images.Count][];
+								_result.MultiAll[i] = A;
 							} else if(allMustExist) {
-								if(_result.a == null) _result.a = new RECT[_images.Count];
-								_result.a[i] = R;
+								if(_result.All == null) _result.All = new RECT[_images.Count];
+								_result.All[i] = R;
 							} else {
-								_result.r = R;
+								_result.Rect = R;
 								break;
 							}
 						} else {
-							if(allInst) _result.a = A;
-							else _result.r = R;
+							if(allInst) _result.All = A;
+							else _result.Rect = R;
 						}
 					} else {
 						if(allMustExist) {
@@ -791,13 +675,13 @@ namespace Catkeys
 				//Print(nTimesFound);
 
 				found = true;
-				if(_result != null) { //else don't need results (WaitNot, WaitChanged)
+				if(_action < _Action.WaitNot) { //else don't need results (WaitNot, WaitChanged)
 					if(_tempResults == null) _tempResults = new List<RECT>(); //else cleared at the beginning of this func
 					int iFound = (int)(f.p - o_pos0 - areaPixels);
 					_tempResults.Add(new RECT(iFound % _areaWidth, iFound / _areaWidth, imageWidth, imageHeight, true));
 				}
 
-				if(0 != (_flags & FindFlags.AllInstances)) {
+				if(0 != (_flags & SIFlags.AllInstances)) {
 					skip = 1;
 					goto gContinue;
 				}
@@ -981,10 +865,10 @@ namespace Catkeys
 					_Debug("created MemBmp");
 				}
 				//get DC of screen or window
-				bool windowDC = 0 != (_flags & FindFlags.WindowDC);
-				Wnd w = windowDC ? _w : Wnd0;
+				bool windowDC = 0 != (_flags & SIFlags.WindowDC);
+				Wnd w = windowDC ? _area.W : default(Wnd);
 				IntPtr dc = Api.GetDC(w); //quite fast, when compared with other parts
-				if(dc == Zero && windowDC) _w.ThrowNoNative("Failed");
+				if(dc == Zero && windowDC) _area.W.ThrowNoNative("Failed");
 				_Debug("get DC");
 				//copy from screen/window DC to memory bitmap
 				bool bbOK = Api.BitBlt(_areaMB.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, 0xCC0020); //SRCCOPY
@@ -1036,6 +920,210 @@ namespace Catkeys
 			case 2: Perf.Next(); break;
 			case 3: Perf.NW(); break;
 			}
+		}
+	}
+
+
+	public class SIArea
+	{
+		internal enum AType :byte { Screen, Wnd, Acc, Bitmap }
+
+		internal AType Type;
+		internal bool HasRect;
+		internal Wnd W;
+		internal Acc A;
+		internal Bitmap B;
+		internal RECT R;
+
+		public static implicit operator SIArea(Wnd w) => new SIArea() { W = w, Type = AType.Wnd };
+
+		public static implicit operator SIArea(Acc a) => new SIArea() { A = a, Type = AType.Acc };
+
+		public static implicit operator SIArea(Bitmap b) => new SIArea() { B = b, Type = AType.Bitmap };
+
+		public static implicit operator SIArea(RECT r) => new SIArea() { R = r, Type = AType.Screen };
+
+		SIArea() { }
+
+		public SIArea(Wnd w, RECT r) { W = w; Type = AType.Wnd; SetRect(r); }
+
+		public SIArea(Wnd w, int x, int y, int width, int height) { W = w; Type = AType.Wnd; SetRect(x, y, width, height); }
+
+		public SIArea(Acc a, RECT r) { A = a; Type = AType.Acc; SetRect(r); }
+
+		public SIArea(Bitmap b, RECT r) { B = b; Type = AType.Bitmap; SetRect(r); }
+
+		public SIArea(int x, int y, int width, int height) { Type = AType.Screen; SetRect(x, y, width, height); }
+
+		public void SetRect(RECT r) { R = r; HasRect = true; }
+
+		public void SetRect(int x, int y, int width, int height) { R = new RECT(x, y, width, height, true); HasRect = true; }
+	}
+
+	/// <summary>
+	/// Flags for <see cref="ScreenImage.Find"/> and similar functions.
+	/// </summary>
+	[Flags]
+	public enum SIFlags
+	{
+		/// <summary>
+		/// Get pixels from the device context (DC) of the window client area, not from screen DC.
+		/// Not used when area is Bitmap.
+		/// Notes:
+		/// Usually much faster.
+		/// Can get pixels from window parts that are covered by other windows or offscreen. But not from hidden and minimized windows.
+		/// Does not work on Windows 7 if Aero theme is turned off. Then this flag is ignored.
+		/// If the window is DPI-scaled, the specified image must be captured from its non-scaled version.
+		/// Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels captured from these windows/parts are black.
+		/// </summary>
+		WindowDC = 1,
+
+		/// <summary>
+		/// Find all instances of the specified image. Store rectangles in <see cref="SIResult.All"/> or <see cref="SIResult.MultiAll"/> (if multiple images are specified).
+		/// Not used with functions WaitNot, WaitChanged.
+		/// </summary>
+		AllInstances = 2,
+
+		/// <summary>
+		/// When the image argument specifies multiple images, all they must exist, else result is "not found".
+		/// </summary>
+		AllMustExist = 4,
+
+		//this was used in QM2. Now using png alpha channel instead.
+		///// <summary>
+		///// Use the top-left pixel color of the image as transparent color (don't compare pixels that have this color).
+		///// </summary>
+		//MakeTransparent = 64,
+	}
+
+	/// <summary>
+	/// Result of <see cref="ScreenImage.Find"/> and similar functions.
+	/// </summary>
+	public class SIResult
+	{
+		ScreenImage._Finder _f;
+
+		internal SIResult() { } //wait-not action
+
+		internal SIResult(ScreenImage._Finder f)
+		{
+			_f = f;
+		}
+
+		/// <summary>
+		/// Screen coordinates of the found image.
+		/// Used in these cases:
+		/// 1. The image argument specifies single image and is not used flag AllInstances.
+		/// 2. The image argument specifies multiple images and are not used flags AllInstances or AllMustExist.
+		/// </summary>
+		public RECT Rect;
+
+		/// <summary>
+		/// Screen coordinates of found images.
+		/// Used in these cases:
+		/// 1. The image argument specifies single image and is used flag AllInstances. Then the array contains all found instances of the image.
+		/// 2. The image argument specifies multiple images and is used flag AllMustExist and not AllInstances. Then the array contains the first found instance of each image.
+		/// </summary>
+		public RECT[] All;
+
+		/// <summary>
+		/// Screen coordinates of found images.
+		/// Used when the image argument specifies multiple images and is used flag AllInstances.
+		/// It is array of arrays. The main array matches the specified images. Each indice - array containing rectangles of all found instances of that image, or null if not found.
+		/// </summary>
+		public RECT[][] MultiAll;
+		//TODO: remove. It's just perfectionism, nobody will use it.
+
+		/// <summary>
+		/// When the image argument specifies multiple images, this is the 1-based index of the first found image; 0 if not found.
+		/// When the image argument specifies single image, this is 1 if found, 0 if not found. But it's easier to use the Found property instead.
+		/// </summary>
+		public int MultiIndex;
+
+		/// <summary>
+		/// true if the image has been found.
+		/// </summary>
+		public bool Found { get => MultiIndex > 0; }
+
+		/// <summary>
+		/// true if the image has been found.
+		/// </summary>
+		public static implicit operator bool(SIResult r) => r.Found;
+
+		internal void Clear()
+		{
+			Rect.SetEmpty();
+			All = null;
+			MultiAll = null;
+			MultiIndex = 0;
+		}
+
+		void _MouseAction(MButton button, Coord x, Coord y)
+		{
+			var area = _f._area;
+
+			if(area.Type == SIArea.AType.Bitmap
+				|| 0 != (_f._flags & (SIFlags.AllInstances | SIFlags.AllMustExist)) //CONSIDER: click all
+				) throw new InvalidOperationException();
+			if(!Found) throw new NotFoundException("Image not found.");
+
+			Debug.Assert(!Rect.IsEmpty);
+			if(Rect.IsEmpty) return;
+
+			if(0 != (_f._flags & SIFlags.WindowDC)) {
+				Debug.Assert(!area.W.Is0); //must be no WindowDC flag if area is screen or bitmap
+				if(area.W.IsCloaked) area.W.ActivateLL(); //TODO: test
+			}
+
+			if(x.IsNull) x = Coord.Center;
+			if(y.IsNull) y = Coord.Center;
+			var p = Coord.NormalizeInRect(x, y, Rect);
+
+			if(area.Type == SIArea.AType.Screen) {
+				if(button == 0) Mouse.Move(p.X, p.Y);
+				else Mouse.ClickEx(button, p.X, p.Y);
+			} else {
+				if(area.Type == SIArea.AType.Acc) {
+					var r = area.A.RectInClientOf(area.W);
+					p.Offset(r.left, r.top);
+				}
+				if(button == 0) Mouse.Move(area.W, p.X, p.Y);
+				else Mouse.ClickEx(button, area.W, p.X, p.Y);
+			}
+		}
+
+		/// <summary>
+		/// Moves the mouse to the found image.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord, bool, object)"/>.
+		/// </summary>
+		/// <param name="x">X coordinate in the found image. Default/null - center.</param>
+		/// <param name="y">Y coordinate in the found image. Default/null - center.</param>
+		/// <exception cref="NotFoundException">Image not found.</exception>
+		/// <exception cref="InvalidOperationException">
+		/// area is Bitmap.
+		/// Possible multiple found instances (used flag AllInstances or AllMustExist).</exception>
+		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
+		public void MouseMove(Coord x = default(Coord), Coord y = default(Coord))
+		{
+			_MouseAction(0, x, y);
+		}
+
+		/// <summary>
+		/// Clicks the found image.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="x">X coordinate in the found image. Default/null - center.</param>
+		/// <param name="y">Y coordinate in the found image. Default/null - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <exception cref="NotFoundException">Image not found.</exception>
+		/// <exception cref="InvalidOperationException">
+		/// area is Bitmap.
+		/// Possible multiple found instances (used flag AllInstances or AllMustExist).</exception>
+		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
+		public void MouseClick(Coord x = default(Coord), Coord y = default(Coord), MButton button = MButton.Left)
+		{
+			if(button == 0) button = MButton.Left;
+			_MouseAction(button, x, y);
 		}
 	}
 }

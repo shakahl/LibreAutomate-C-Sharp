@@ -258,12 +258,12 @@ namespace Catkeys
 		static string __Temp;
 
 		/// <summary>
-		/// Folder containing assemblies of current app domain.
+		/// Folder containing assemblies of this appdomain.
 		/// Calls <see cref="AppDomain.BaseDirectory"/>.
 		/// </summary>
 		/// <remarks>
-		/// Unlike <see cref="ThisProcess"/>, this path can be different for each app domain; it is set when creating the AppDomain.
-		/// See also <see cref="Application.ExecutablePath"/>, it gets full path (with file name) of current app domain's main/entry assembly.
+		/// Unlike <see cref="ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
+		/// See also <see cref="Application.ExecutablePath"/>, it gets full path (with file name) of appdomain's entry assembly.
 		/// </remarks>
 		public static FolderPath ThisApp { get => __App ?? (__App = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\')); }
 		static string __App;

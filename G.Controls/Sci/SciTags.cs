@@ -61,8 +61,8 @@ OTHER CHANGES:
 
 CHANGES IN <image>:
 	Don't need the closing tag (</image>).
-	Supports managed image resources of entry assembly. Syntax: <image "resource:ResourceName". Does not support resources from forms or other assemblies.
-	Supports images embedded directly in text, like "~:BmpFileData_Base64Encoded_DeflateStreamCompressed".
+	Supports managed image resources of the entry assembly. Syntax: <image "resource:ResourceName". Does not support resources from forms or other assemblies.
+	Supports images embedded directly in text, like "~:BmpFileData_EncodedBase64_CompressedDeflateStream".
 	Currently supports only 16x16 icons. Does not support icon resources.
 	
 */
@@ -281,7 +281,7 @@ namespace G.Controls
 			bool hasTags = false;
 			byte currentStyle = STYLE_DEFAULT;
 			_stack.Clear();
-			List<POINT> codes = null;
+			List<Point> codes = null;
 
 			while(s < sEnd) {
 				//find '<'
@@ -411,9 +411,9 @@ namespace G.Controls
 				case 4 << 16 | 'c': //<code>code</code>
 					int i2 = CharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>");
 					if(i2 < 0) goto ge;
-					if(codes == null) codes = new List<POINT>();
+					if(codes == null) codes = new List<Point>();
 					int iStartCode = (int)(t - s0);
-					codes.Add(new POINT(iStartCode, iStartCode + i2));
+					codes.Add(new Point(iStartCode, iStartCode + i2));
 					while(i2-- > 0) _Write(*s++, STYLE_DEFAULT);
 					s += 7;
 					hasTags = true;
@@ -532,15 +532,15 @@ namespace G.Controls
 				_SetLexer(LexLanguage.SCLEX_CPP);
 				//Perf.Next();
 				for(int i = 0; i < codes.Count; i++) {
-					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
+					_c.Call(SCI_COLOURISE, codes[i].X + prevLen, codes[i].Y + prevLen);
 				}
 				//Perf.Next();
 				//_SetLexer(LexLanguage.SCLEX_NULL);
 				//Perf.Next();
 
 				for(int i = 0; i < codes.Count; i++) {
-					_StyleRange(codes[i].x);
-					endStyled = codes[i].y;
+					_StyleRange(codes[i].X);
+					endStyled = codes[i].Y;
 				}
 			}
 			_StyleRange(len);
@@ -674,10 +674,10 @@ namespace G.Controls
 
 			switch(tag) {
 			case "link":
-				Shell.RunSafe(s1, s2);
+				Shell.TryRun(s1, s2);
 				break;
 			case "google":
-				Shell.RunSafe("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+				Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "dialog":
 				TaskDialog.Show(one ? null : s1, one ? s1 : s2, owner: _c);
@@ -688,7 +688,7 @@ namespace G.Controls
 			default:
 				//case "help": case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '_' (others are displayed as text).
-				DebugDialog("Tag '" + tag + "' is not implemented.\nUse AddCommonLinkTag or AddLinkTag.");
+				Debug_.DialogOpt("Tag '" + tag + "' is not implemented.\nUse AddCommonLinkTag or AddLinkTag.");
 				break;
 			}
 		}
