@@ -52,9 +52,7 @@ namespace G.Controls
 
 		class _ThreadSharedData
 		{
-			public readonly Catkeys.Util.LibByteBuffer
-				BufferForAnnot = new Catkeys.Util.LibByteBuffer(),
-				BufferForText = new Catkeys.Util.LibByteBuffer();
+			public WeakReference<byte[]> BufferForAnnot, BufferForText;
 			List<_Image> _a;
 			public int CacheSize { get; private set; }
 
@@ -188,53 +186,54 @@ namespace G.Controls
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
 				//PrintList(lineHeight, maxHeight, nAnnotLines);
 
-				byte* b0 = t_data.BufferForAnnot.Alloc(annotLen + nAnnotLines + 20);
-				var b = b0;
-				*b++ = 3; Api._ltoa(totalWidth << 8 | nAnnotLines, b, 16); while(*(++b) != 0) { }
-				while(nAnnotLines-- > 1) *b++ = (byte)'\n';
-				*b = 0;
+				fixed (byte* b0 = Catkeys.Util.Buffers.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
+					var b = b0;
+					*b++ = 3; Api._ltoa(totalWidth << 8 | nAnnotLines, b, 16); while(*(++b) != 0) { }
+					while(nAnnotLines-- > 1) *b++ = (byte)'\n';
+					*b = 0;
 
-				//An annotation possibly already exists. Possible cases:
-				//1. No annotation. Need to add our image annotation.
-				//2. A text-only annotation. Need to add our image annotation + that text.
-				//3. Different image, no text. Need to replace it with our image annotation.
-				//4. Different image + text. Need to replace it with our image annotation + that text.
-				//5. This image, with or without text. Don't need to change.
-				if(annotLen > 0) {
-					//get existing annotation into the same buffer after our image info
-					var a = b + 1;
-					_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a);
-					a[annotLen] = 0;
-					//Print($"OLD: '{new string((sbyte*)a)}'");
+					//An annotation possibly already exists. Possible cases:
+					//1. No annotation. Need to add our image annotation.
+					//2. A text-only annotation. Need to add our image annotation + that text.
+					//3. Different image, no text. Need to replace it with our image annotation.
+					//4. Different image + text. Need to replace it with our image annotation + that text.
+					//5. This image, with or without text. Don't need to change.
+					if(annotLen > 0) {
+						//get existing annotation into the same buffer after our image info
+						var a = b + 1;
+						_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a);
+						a[annotLen] = 0;
+						//Print($"OLD: '{new string((sbyte*)a)}'");
 
-					//is it our image info?
-					int imageLen = (int)(b - b0);
-					if(annotLen >= imageLen) {
-						int j;
-						for(j = 0; j < imageLen; j++) if(a[j] != b0[j]) goto g1;
-						if(annotLen == imageLen || a[imageLen] == '\n') continue; //case 5
-					}
-					g1:
-					//contains image?
-					if(a[0] == 3) {
-						int j = _ParseAnnotText(a, annotLen, out var _);
-						if(j < annotLen) { //case 4
-							Api.memmove(a, a + j, annotLen - j + 1);
+						//is it our image info?
+						int imageLen = (int)(b - b0);
+						if(annotLen >= imageLen) {
+							int j;
+							for(j = 0; j < imageLen; j++) if(a[j] != b0[j]) goto g1;
+							if(annotLen == imageLen || a[imageLen] == '\n') continue; //case 5
+						}
+						g1:
+						//contains image?
+						if(a[0] == 3) {
+							int j = _ParseAnnotText(a, annotLen, out var _);
+							if(j < annotLen) { //case 4
+								Api.memmove(a, a + j, annotLen - j + 1);
+								b[0] = (byte)'\n';
+							} //else case 3
+						} else { //case 2
 							b[0] = (byte)'\n';
-						} //else case 3
-					} else { //case 2
-						b[0] = (byte)'\n';
-					}
-				} //else case 1
+						}
+					} //else case 1
 
-				//Print($"NEW: '{new string((sbyte*)b0)}'");
-				//Perf.First();
-				if(!annotAdded) {
-					annotAdded = true;
-					if(allText) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN);
+					//Print($"NEW: '{new string((sbyte*)b0)}'");
+					//Perf.First();
+					if(!annotAdded) {
+						annotAdded = true;
+						if(allText) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN);
+					}
+					_c.Call(SCI_ANNOTATIONSETTEXT, iLine, b0);
+					//Perf.NW();
 				}
-				_c.Call(SCI_ANNOTATIONSETTEXT, iLine, b0);
-				//Perf.NW();
 			}
 
 			if(annotAdded && allText) {
@@ -278,20 +277,21 @@ namespace G.Controls
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
 				int lens = (s == null) ? 0 : s.Length;
-				var b = t_data.BufferForAnnot.Alloc(n + 1 + lens * 3);
-				_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
-				int imageLen = _ParseAnnotText(b, n, out var _);
-				if(imageLen > 0) {
-					//info: now len<=n
-					if(lens == 0) {
-						if(imageLen == n) return; //no "\nPrevText"
-						b[--imageLen] = 0; //remove "\nPrevText"
-					} else {
-						if(imageLen == n) b[imageLen++] = (byte)'\n'; //no "\nPrevText"
-						Convert_.Utf8FromString(s, b + imageLen, lens * 3);
+				fixed (byte* b = Catkeys.Util.Buffers.Get(n + 1 + lens * 3, ref t_data.BufferForAnnot)) {
+					_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
+					int imageLen = _ParseAnnotText(b, n, out var _);
+					if(imageLen > 0) {
+						//info: now len<=n
+						if(lens == 0) {
+							if(imageLen == n) return; //no "\nPrevText"
+							b[--imageLen] = 0; //remove "\nPrevText"
+						} else {
+							if(imageLen == n) b[imageLen++] = (byte)'\n'; //no "\nPrevText"
+							Convert_.Utf8FromString(s, b + imageLen, lens * 3);
+						}
+						_c.Call(SCI_ANNOTATIONSETTEXT, line, b);
+						return;
 					}
-					_c.Call(SCI_ANNOTATIONSETTEXT, line, b);
-					return;
 				}
 			}
 			_t.LibAnnotationText(line, s);
@@ -304,13 +304,15 @@ namespace G.Controls
 		{
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
-				var b = t_data.BufferForAnnot.Alloc(n);
-				_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
-				int imageLen = _ParseAnnotText(b, n, out var _);
-				//info: now len<=n
-				if(imageLen < n) {
-					if(imageLen != 0) { b += imageLen; n -= imageLen; }
-					return Convert_.Utf8ToString(b, n);
+				fixed (byte* b0 = Catkeys.Util.Buffers.Get(n, ref t_data.BufferForAnnot)) {
+					var b = b0;
+					_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
+					int imageLen = _ParseAnnotText(b, n, out var _);
+					//info: now len<=n
+					if(imageLen < n) {
+						if(imageLen != 0) { b += imageLen; n -= imageLen; }
+						return Convert_.Utf8ToString(b, n);
+					}
 				}
 			}
 			return "";
@@ -334,12 +336,12 @@ namespace G.Controls
 			//if not editor, skip if not <image "..."
 			if(!isMulti) {
 				if(_isEditor) imageStringStartPos = i - 1;
-				else if(i >= 8 && CharPtr.AsciiStartsWith(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else if(i >= 8 && Catkeys.Util.CharPtr.AsciiStartsWith(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 
 			//support "image1|image2|..."
-			int i3 = CharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
+			int i3 = Catkeys.Util.CharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
@@ -358,14 +360,15 @@ namespace G.Controls
 			//PrintList(test, EImageUtil.ImageToString(test));
 
 			switch(imType) {
-			case ImageUtil.ImageType.Embedded: i += 2; break; //~:
+			case ImageUtil.ImageType.EmbeddedCompressedBmp: i += 2; break; //~:
+			case ImageUtil.ImageType.EmbeddedPngGifJpg: i += 6; break; //image:
 			case ImageUtil.ImageType.Resource: i += 9; break; //resource:
 			}
 
-			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8);
+			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8); //CONSIDER: it this the fastest way to convert UTF8 to string?
 
 			//load
-			byte[] b = ImageUtil.BitmapFileDataFromString(path, imType, !_isEditor);
+			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
 			if(b == null) goto g1;
 			if(!ImageUtil.GetBitmapFileInfo(b, out var q)) goto g1;
 
@@ -449,7 +452,7 @@ namespace G.Controls
 						fixed (byte* bp = u.data) {
 							ImageUtil.BITMAPFILEHEADER* f = (ImageUtil.BITMAPFILEHEADER*)bp;
 							byte* pBits = bp + f->bfOffBits;
-							int bytesInLine = Calc.AlignUp(q.width * q.bitCount, 32) / 8;
+							int bytesInLine = Math_.AlignUp(q.width * q.bitCount, 32) / 8;
 							int sizF = u.data.Length - f->bfOffBits, siz = bytesInLine * q.height;
 							if(q.isCompressed) {
 								//this is slow with big images. It seems processes current line + all remaining lines. Such bitmaps are rare.
@@ -560,7 +563,7 @@ namespace G.Controls
 				textPos = from2;
 			}
 
-			int r = _isEditor ? CharPtr.AsciiFindChar(s, len, (byte)'\"') : CharPtr.AsciiFindString(s, len, "<image \"");
+			int r = _isEditor ? Catkeys.Util.CharPtr.AsciiFindChar(s, len, (byte)'\"') : Catkeys.Util.CharPtr.AsciiFindString(s, len, "<image \"");
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 
@@ -577,14 +580,15 @@ namespace G.Controls
 		{
 			Debug.Assert(to >= from);
 			int len = to - from;
-			var s = t_data.BufferForText.Alloc(len);
-			if(len > 0) {
-				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = s };
-				var r = _c.Call(SCI_GETTEXTRANGE, 0, &tr);
-				Debug.Assert(r == len);
-				if(r != len) return null;
-			} else *s = 0;
-			return s;
+			fixed (byte* s = Catkeys.Util.Buffers.Get(len, ref t_data.BufferForText)) {
+				if(len > 0) {
+					var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = s };
+					var r = _c.Call(SCI_GETTEXTRANGE, 0, &tr);
+					Debug.Assert(r == len);
+					if(r != len) return null;
+				} else *s = 0;
+				return s;
+			}
 			//tested: this is faster than SCI_GETGAPPOSITION/SCI_GETRANGEPOINTER.
 		}
 
@@ -613,12 +617,14 @@ namespace G.Controls
 								tempHidden = true;
 								_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN); //makes many times faster
 							}
-							var a = buf.Alloc(len);
-							_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
-							var imageLen = _ParseAnnotText(a, len, out var _);
-							if(imageLen > 0) {
-								if(len > imageLen) a += imageLen; else a = null;
-								_c.Call(SCI_ANNOTATIONSETTEXT, iLine, a);
+							fixed (byte* a0 = Catkeys.Util.Buffers.Get(len, ref buf)) {
+								var a = a0;
+								_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
+								var imageLen = _ParseAnnotText(a, len, out var _);
+								if(imageLen > 0) {
+									if(len > imageLen) a += imageLen; else a = null;
+									_c.Call(SCI_ANNOTATIONSETTEXT, iLine, a);
+								}
 							}
 							//Perf.NW(); //surprisingly fast
 						}

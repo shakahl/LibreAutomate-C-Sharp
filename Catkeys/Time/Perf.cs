@@ -44,7 +44,7 @@ namespace Catkeys
 			static Inst()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				if(!Util.Misc.IsCatkeysNgened) {
+				if(!Util.Assembly_.LibIsCatkeysNgened) {
 					Stopwatch.GetTimestamp(); //maybe the .NET assembly not ngened
 #if false
 					//RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("First", new Type[0]).MethodHandle);
@@ -263,11 +263,9 @@ namespace Catkeys
 			{
 				int n = 0;
 				for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMS * 1000; n++) {
-					First(); Next(); //JIT-compile
 					for(int i = 0; i < codes.Length; i++) codes[i]();
 				}
 				//Print(n);
-				First();
 			}
 		}
 

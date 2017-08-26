@@ -66,6 +66,21 @@
             <exception cref="T:System.ArgumentException">modifierKeys contains non-modifier keys.</exception>
             <seealso cref="M:Catkeys.WaitFor.NoModifierKeys(System.Double,System.Windows.Forms.Keys)"/>
         </member>
+        <member name="P:Catkeys.Input.IsCapsLock">
+            <summary>
+            Returns true if the Caps Lock key is in the locked statue.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsNumLock">
+            <summary>
+            Returns true if the Num Lock key is in the locked statue.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Input.IsScrollLock">
+            <summary>
+            Returns true if the Scroll Lock key is in the locked statue.
+            </summary>
+        </member>
         <member name="M:Catkeys.Input.GetTextCursorRect(Catkeys.RECT@)">
             <summary>
             Gets current text cursor (caret) rectangle in screen coordinates.
@@ -693,60 +708,121 @@
             <exception cref="T:Catkeys.CatException">Failed. For example hbitmap is Zero.</exception>
             <exception cref="T:System.Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
         </member>
-        <member name="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Int32)">
+        <member name="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})">
             <summary>
             Finds the specified image(s) or color(s) on the screen.
-            Returns <see cref="T:Catkeys.SIResult"/> object containing screen rectangle(s) of found image(s) etc. It also can be used like <c>if(!ScreenImage.Find(...)) Print("not found");</c>.
+            Returns <see cref="T:Catkeys.SIResult"/> object containing the rectangle of the found image. It also can be used like bool: <c>if(!ScreenImage.Find(...)) Print("not found");</c>.
             </summary>
             <param name="image">
             Image or color to find. Can be:
-            string - path of .png or .bmp file. If not full path, uses <see cref="P:Catkeys.Folders.ThisAppImages"/>. Also can use resources, read in Remarks.
+            string - path of .png or .bmp file. If not full path, uses <see cref="P:Catkeys.Folders.ThisAppImages"/>. Also can use resources and embedded images; read in Remarks.
             Bitmap - image object in memory.
             int - color in 0xRRGGBB format. Alpha is not used.
-            IEnumerable of string, Bitmap, int or object - multiple images or colors. Default action - find any. If flag AllMustExist - find all.
+            IEnumerable of string, Bitmap, int or object - multiple images or colors. Default action - find any. If flag AllMustExist - must find all.
             </param>
             <param name="area">
-            Where to search.
-            Can be a <see cref="T:Catkeys.SIArea"/> object containing a value of one of the following types and optionally a limiting rectangle.
-            Values of these types also can be passed to this function directly. Example: <c>ScreenImage.Find("image", w);</c>. Need SIArea only if you also want to use a limiting rectangle. Example: <c>ScreenImage.Find("image", new SIArea(w, 100, 100, 100, 100));</c>.
+            Where to search. Can be a window/control, accessible object, Bitmap or a rectangle in screen.
             <list type="bullet">
-            <item>Wnd - window or control. The search area is its client area or a rectangle in it. The result rectangle is relative to its client area.</item>
-            <item>Acc - accessible object. The result rectangle is relative to its rectangle.</item>
-            <item>Bitmap - another image. The result rectangle is relative to its rectangle. These flags are not used: WindowDC.</item>
-            <item>RECT - a rectangle area in screen. The result rectangle is relative to the screen. These flags are not used: WindowDC.</item>
+            <item>Wnd - window or control. The search area is its client area.</item>
+            <item>Acc - accessible object.</item>
+            <item>Bitmap - another image. These flags are invalid: WindowDC.</item>
+            <item>RECT - a rectangle area in screen. These flags are invalid: WindowDC.</item>
+            <item><see cref="T:Catkeys.SIArea"/> - can contain Wnd, Acc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>ScreenImage.Find("image.png", new SIArea(w, 100, 100, 100, 100));</c>.</item>
             </list>
             </param>
             <param name="flags"></param>
             <param name="colorDiff">Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
-            <param name="skip">Skip this number of matching image instances. Use when there are several matching image instances in the search area and you need not the first one.</param>
+            <param name="also">
+            A callback function to call for each found image until it returns true.
+            Can be used to create actions like "skip n matching images" (like <c>also: t => t.MatchIndex == 1</c>), "click all matching images" (<c>also: t => { t.MouseClick(); Wait(0.5); return false; }</c>), "get rectangles of all matching images" (<c>also: t => { rectList.Add(t.Rect); return false; }</c>), "ignore images that are or aren't in some custom areas", etc.
+            When the callback function returns true, Find() returns result "found". Else Find() tries to find more matching images (towards the right and bottom) and calls the callback function again when found. If the callback function returns false every time, Find() returns result "not found".
+            </param>
             <exception cref="T:Catkeys.WndException">Invalid window handle (the area argument).</exception>
-            <exception cref="T:System.ArgumentException">An argument is of unsupported type or is/contains a null/invalid string/Bitmap/flag/etc.</exception>
+            <exception cref="T:System.ArgumentException">An argument is of unsupported type or is/contains a null/invalid value.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, Bitmap.LockBits. For example when the image file does not exist.</exception>
             <exception cref="T:Catkeys.CatException">Something failed.</exception>
             <remarks>
             If image is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file "C:\\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) ScreenImage.Find(b, w);</c>.
             
-            Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
+            image can be string containing Base-64 encoded .png image file data with prefix "image:".
             
-            Throws ArgumentException if image or area is a bottom-up Bitmap object (see <see cref="P:System.Drawing.Imaging.BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by Image.FromHbitmap; instead use <see cref="M:Catkeys.ScreenImage.BitmapFromHbitmap(System.IntPtr)"/>.
+            Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
             
             The speed mostly depends on:
             1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>new SIArea(w, r)</c>).
             2. Flag WindowDC (usually makes several times faster). With this flag the speed depends on window.
             3. Video driver. Can be eg 10 times slower if incorrect or generic driver is used, for example on a virtual PC. Flag WindowDC should help.
             4. colorDiff. Should be as small as possible.
-            5. The speed rarely depends on image.
             
-            If flag WindowDC is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in other windows.
+            If flag WindowDC is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in these windows.
             
             The function can only find images that exactly match the specified image. With colorDiff it can find images with slightly different colors and brightness. It cannot find images with different shapes.
             
             This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
+            
+            Throws ArgumentException if image or area is a bottom-up Bitmap object (see <see cref="P:System.Drawing.Imaging.BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by Image.FromHbitmap; instead use <see cref="M:Catkeys.ScreenImage.BitmapFromHbitmap(System.IntPtr)"/>.
             </remarks>
+        </member>
+        <member name="M:Catkeys.ScreenImage.Wait(System.Double,System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})">
+            <summary>
+            Waits for the specified image(s) or color(s) on the screen.
+            Returns <see cref="T:Catkeys.SIResult"/> object containing the rectangle of the found image. It also can be used like bool: <c>if(!ScreenImage.Wait(-10, ...)) Print("not found");</c>.
+            </summary>
+            <param name="timeS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="image"></param>
+            <param name="area"></param>
+            <param name="flags"></param>
+            <param name="colorDiff"></param>
+            <param name="also"></param>
+            <remarks>
+            Parameters and other info is the same as with <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.ScreenImage.WaitNot(System.Double,System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})">
+            <summary>
+            Waits until the specified image(s) or color(s) is not found on the screen.
+            Returns true. If timeS is negative, on timeout returns false (else exception).
+            </summary>
+            <param name="timeS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="image"></param>
+            <param name="area"></param>
+            <param name="flags"></param>
+            <param name="colorDiff"></param>
+            <param name="also"></param>
+            <remarks>
+            Parameters and other info is the same as with <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.ScreenImage.WaitChanged(System.Double,Catkeys.SIArea,Catkeys.SIFlags,System.Int32)">
+            <summary>
+            Waits until something visually changes in a screen area.
+            Returns true. If timeS is negative, on timeout returns false (else exception).
+            </summary>
+            <param name="timeS">
+            The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+            </param>
+            <param name="area"></param>
+            <param name="flags"></param>
+            <param name="colorDiff"></param>
+            <remarks>
+            Parameters and other info is the same as with <see cref="M:Catkeys.ScreenImage.WaitNot(System.Double,System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/> and <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/>. Instead of <b>image</b> parameter, this function captures the screen area image at the beginning.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.SIArea">
+            <summary>
+            Defines the search area for <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/> and similar functions.
+            It can be a window/control, accessible object, Bitmap or a rectangle in screen.
+            Also allows to specify a rectangle in it, which makes the search area smaller and the function faster.
+            Example: <c>ScreenImage.Find("image.png", new SIArea(w, 100, 100, 100, 100));</c>.
+            </summary>
         </member>
         <member name="T:Catkeys.SIFlags">
             <summary>
-            Flags for <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Int32)"/> and similar functions.
+            Flags for <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/> and similar functions.
             </summary>
         </member>
         <member name="F:Catkeys.SIFlags.WindowDC">
@@ -761,49 +837,34 @@
             Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels captured from these windows/parts are black.
             </summary>
         </member>
-        <member name="F:Catkeys.SIFlags.AllInstances">
-            <summary>
-            Find all instances of the specified image. Store rectangles in <see cref="F:Catkeys.SIResult.All"/> or <see cref="F:Catkeys.SIResult.MultiAll"/> (if multiple images are specified).
-            Not used with functions WaitNot, WaitChanged.
-            </summary>
-        </member>
         <member name="F:Catkeys.SIFlags.AllMustExist">
             <summary>
             When the image argument specifies multiple images, all they must exist, else result is "not found".
+            The result rectangle is of the last image. To get all rectangles, use the <b>also</b> parameter: <c>also: t => { rectList.Add(t.Rect); return true; }</c>.
             </summary>
         </member>
         <member name="T:Catkeys.SIResult">
             <summary>
-            Result of <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Int32)"/> and similar functions.
+            Result of <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/> and similar functions.
             </summary>
         </member>
         <member name="F:Catkeys.SIResult.Rect">
             <summary>
-            Screen coordinates of the found image.
-            Used in these cases:
-            1. The image argument specifies single image and is not used flag AllInstances.
-            2. The image argument specifies multiple images and are not used flags AllInstances or AllMustExist.
+            Location of the found image.
+            Relative to the window/control client area (if area type is Wnd), accessible object (if Acc), bitmap (if Bitmap) or screen (if RECT).
+            More info: <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.SIArea,Catkeys.SIFlags,System.Int32,System.Func{Catkeys.SIResult,System.Boolean})"/>.
             </summary>
         </member>
-        <member name="F:Catkeys.SIResult.All">
+        <member name="P:Catkeys.SIResult.MatchIndex">
             <summary>
-            Screen coordinates of found images.
-            Used in these cases:
-            1. The image argument specifies single image and is used flag AllInstances. Then the array contains all found instances of the image.
-            2. The image argument specifies multiple images and is used flag AllMustExist and not AllInstances. Then the array contains the first found instance of each image.
+            When there are multiple matching images on the screen, this is the 0-based index of current matching image.
+            Can be used in callback function to create action "skip n matching images". Example: <c>also: t => t.MatchIndex==1</c>.
+            When the image argument specifies multiple images, this will start from 0 for each image.
             </summary>
         </member>
-        <member name="F:Catkeys.SIResult.MultiAll">
+        <member name="P:Catkeys.SIResult.ListIndex">
             <summary>
-            Screen coordinates of found images.
-            Used when the image argument specifies multiple images and is used flag AllInstances.
-            It is array of arrays. The main array matches the specified images. Each indice - array containing rectangles of all found instances of that image, or null if not found.
-            </summary>
-        </member>
-        <member name="F:Catkeys.SIResult.MultiIndex">
-            <summary>
-            When the image argument specifies multiple images, this is the 1-based index of the first found image; 0 if not found.
-            When the image argument specifies single image, this is 1 if found, 0 if not found. But it's easier to use the Found property instead.
+            When the image argument specifies multiple images, this is the 0-based index of the found image in the list.
             </summary>
         </member>
         <member name="P:Catkeys.SIResult.Found">
@@ -813,7 +874,8 @@
         </member>
         <member name="M:Catkeys.SIResult.op_Implicit(Catkeys.SIResult)~System.Boolean">
             <summary>
-            true if the image has been found.
+            true if the image has been found (r.Found==true).
+            Allows to use SIResult like bool.
             </summary>
         </member>
         <member name="M:Catkeys.SIResult.MouseMove(Catkeys.Coord,Catkeys.Coord)">
@@ -824,24 +886,103 @@
             <param name="x">X coordinate in the found image. Default/null - center.</param>
             <param name="y">Y coordinate in the found image. Default/null - center.</param>
             <exception cref="T:Catkeys.NotFoundException">Image not found.</exception>
-            <exception cref="T:System.InvalidOperationException">
-            area is Bitmap.
-            Possible multiple found instances (used flag AllInstances or AllMustExist).</exception>
+            <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
             <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
         </member>
         <member name="M:Catkeys.SIResult.MouseClick(Catkeys.Coord,Catkeys.Coord,Catkeys.MButton)">
             <summary>
             Clicks the found image.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.MButton,Catkeys.Wnd,Catkeys.Coord,Catkeys.Coord,System.Boolean)"/> or <see cref="!:Mouse.ClickEx(MButton, Coord, Coord, bool)"/>.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.MButton,Catkeys.Wnd,Catkeys.Coord,Catkeys.Coord,System.Boolean)"/> or <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.MButton,Catkeys.Coord,Catkeys.Coord,System.Boolean,System.Object)"/>.
             </summary>
             <param name="x">X coordinate in the found image. Default/null - center.</param>
             <param name="y">Y coordinate in the found image. Default/null - center.</param>
             <param name="button">Which button and how to use it.</param>
             <exception cref="T:Catkeys.NotFoundException">Image not found.</exception>
-            <exception cref="T:System.InvalidOperationException">
-            area is Bitmap.
-            Possible multiple found instances (used flag AllInstances or AllMustExist).</exception>
+            <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
             <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
+        </member>
+        <member name="T:Catkeys.InterDomainVariables">
+            <summary>
+            Inter-domain variables. Allows to share values by all app domains of this process.
+            Similar to environment variables, but supports more types and does not inherit parent process variables; the speed is similar.
+            Supports not all types. The type must have one of these properties:
+            1. Derived from MarshalByRefObject. The stored value is a virtual reference (proxy), not a copy. The owner domain must be still alive when other domains access (call methods etc) the retrieved value, else AppDomainUnloadedException.
+            2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
+            </summary>
+        </member>
+        <member name="M:Catkeys.InterDomainVariables.SetVariable(System.String,System.Object)">
+            <summary>
+            Adds or modifies an inter-domain variable.
+            </summary>
+            <param name="name">Name. Can be any unique string, for example a GUID string. Case-sensitive.</param>
+            <param name="value">Value.</param>
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
+        </member>
+        <member name="M:Catkeys.InterDomainVariables.GetVariable(System.String)">
+            <summary>
+            Gets the value of an inter-domain variable.
+            Returns null if the variable does not exist. Else returns the value as object; need a cast.
+            </summary>
+            <param name="name">Name. Case-sensitive.</param>
+        </member>
+        <member name="M:Catkeys.InterDomainVariables.GetVariable``1(System.String,``0@)">
+            <summary>
+            Gets the value of an inter-domain variable.
+            Returns true if the variable exists and is not null.
+            </summary>
+            <param name="name">Name. Case-sensitive.</param>
+            <param name="value">Receives the value. If the variable does not exist, receives the default value of that type (for reference types it is null).</param>
+            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
+        </member>
+        <member name="M:Catkeys.InterDomainVariables.GetVariable``1(System.String,System.Func{``0})">
+            <summary>
+            Gets the value of an inter-domain variable.
+            If the variable does not exist or is null, calls a callback function that provides an initial value; then sets the variable = the initial value.
+            Thread-safe.
+            </summary>
+            <param name="name">Name. Case-sensitive.</param>
+            <param name="initValue">A callback function delegate (eg lambda) that is called when the variable does not exist or is null. It must return an initial value.</param>
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
+            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
+            <remarks>
+            Be careful with types derived from MarshalByRefObject. If the object does not exist, your callback function creates it in this appdomain. Maybe this appdomain is not where you want it to live. Instead use SetVariable and another overload of GetVariable.
+            </remarks>
+            <example><code>int test = InterDomainVariables.GetVariable("test", () => 10);</code></example>
+        </member>
+        <member name="M:Catkeys.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)">
+            <summary>
+            Gets a reference to an object that lives in default appdomain. Auto-creates new object there if does not exist.
+            The object can be used in any appdomain. When a non-default domain calls its methods, the call is marshaled to the default domain and executed there.
+            </summary>
+            <typeparam name="T">The type must be derived from MarshalByRefObject and have default constructor.</typeparam>
+            <param name="name">Inter-domain variable name. Any unique string. Case-sensitive.</param>
+            <param name="createdNew">Receives true if now created new object, false if the object alrady existed.</param>
+            <remarks>
+            Thread-safe.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            static DefDomainVar s_idvTest = InterDomainVariables.DefaultDomainVariable<DefDomainVar>(nameof(s_idvTest));
+            
+            static void Main()
+            {
+            	s_idvTest.Method(7);
+            }
+            
+            class DefDomainVar :MarshalByRefObject
+            {
+            	public void Method(int param)
+            	{
+            		PrintList(param, AppDomain.CurrentDomain.FriendlyName);
+            	}
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.InterDomainVariables.DefaultDomainVariable``1(System.String)">
+            <summary>
+            The same as <see cref="M:Catkeys.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)"/>, just does not have the bool parameter.
+            </summary>
         </member>
         <member name="T:Catkeys.Infrastructure.NamespaceDoc">
             <tocexclude />
@@ -2462,7 +2603,7 @@
             Returns "" if variable not found.
             Does not support Folders.X.
             </summary>
-            <param name="name">Case-insensitive name.</param>
+            <param name="name">Case-insensitive name. Without %.</param>
             <remarks>
             Environment variable values cannot be "" or null. Setting empty value removes the variable.
             </remarks>
@@ -2923,89 +3064,101 @@
             Returns true if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.
             </summary>
         </member>
-        <member name="T:Catkeys.Calc">
+        <member name="T:Catkeys.Math_">
             <summary>
             Simple calculation functions.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.MakeUint(System.UInt32,System.UInt32)">
+        <member name="M:Catkeys.Math_.MakeUint(System.UInt32,System.UInt32)">
             <summary>
             Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
             Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.MakeUint(System.Int32,System.Int32)">
+        <member name="M:Catkeys.Math_.MakeUint(System.Int32,System.Int32)">
             <summary>
             Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
             Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.MakeUshort(System.UInt32,System.UInt32)">
+        <member name="M:Catkeys.Math_.MakeUshort(System.UInt32,System.UInt32)">
             <summary>
             Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
             Like C macro MAKEWORD.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.MakeUshort(System.Int32,System.Int32)">
+        <member name="M:Catkeys.Math_.MakeUshort(System.Int32,System.Int32)">
             <summary>
             Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
             Like C macro MAKEWORD.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.LoUshort(Catkeys.LPARAM)">
+        <member name="M:Catkeys.Math_.LoUshort(Catkeys.LPARAM)">
             <summary>
             Gets bits 1-16 as ushort.
             Like C macro LOWORD.
             </summary>
+            <remarks>
+            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            </remarks>
         </member>
-        <member name="M:Catkeys.Calc.HiUshort(Catkeys.LPARAM)">
+        <member name="M:Catkeys.Math_.HiUshort(Catkeys.LPARAM)">
             <summary>
             Gets bits 17-32 as ushort.
             Like C macro HIWORD.
             </summary>
+            <remarks>
+            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            </remarks>
         </member>
-        <member name="M:Catkeys.Calc.LoShort(Catkeys.LPARAM)">
+        <member name="M:Catkeys.Math_.LoShort(Catkeys.LPARAM)">
             <summary>
             Gets bits 1-16 as short.
             Like C macro GET_X_LPARAM.
             </summary>
+            <remarks>
+            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            </remarks>
         </member>
-        <member name="M:Catkeys.Calc.HiShort(Catkeys.LPARAM)">
+        <member name="M:Catkeys.Math_.HiShort(Catkeys.LPARAM)">
             <summary>
             Gets bits 17-32 as short.
             Like C macro GET_Y_LPARAM.
             </summary>
+            <remarks>
+            The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+            </remarks>
         </member>
-        <member name="M:Catkeys.Calc.LoByte(Catkeys.LPARAM)">
+        <member name="M:Catkeys.Math_.LoByte(System.UInt16)">
             <summary>
             Gets bits 1-8 as byte.
             Like C macro LOBYTE.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.HiByte(Catkeys.LPARAM)">
+        <member name="M:Catkeys.Math_.HiByte(System.UInt16)">
             <summary>
             Gets bits 9-16 as byte.
             Like C macro HIBYTE.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.MulDiv(System.Int32,System.Int32,System.Int32)">
+        <member name="M:Catkeys.Math_.MulDiv(System.Int32,System.Int32,System.Int32)">
             <summary>
             Multiplies number and numerator without overflow, and divides by denominator.
             The return value is rounded up or down to the nearest integer.
             If either an overflow occurred or denominator was 0, the return value is –1.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.Percent(System.Int32,System.Int32)">
+        <member name="M:Catkeys.Math_.Percent(System.Int32,System.Int32)">
             <summary>
             Returns percent of part in whole.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.Percent(System.Double,System.Double)">
+        <member name="M:Catkeys.Math_.Percent(System.Double,System.Double)">
             <summary>
             Returns percent of part in whole.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.AlignUp(System.UInt32,System.UInt32)">
+        <member name="M:Catkeys.Math_.AlignUp(System.UInt32,System.UInt32)">
             <summary>
             If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
             </summary>
@@ -3013,7 +3166,7 @@
             <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
             <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
         </member>
-        <member name="M:Catkeys.Calc.AlignUp(System.Int32,System.UInt32)">
+        <member name="M:Catkeys.Math_.AlignUp(System.Int32,System.UInt32)">
             <summary>
             If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
             </summary>
@@ -3021,39 +3174,19 @@
             <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
             <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
         </member>
-        <member name="M:Catkeys.Calc.MinMax(System.Int32,System.Int32,System.Int32)">
+        <member name="M:Catkeys.Math_.MinMax(System.Int32,System.Int32,System.Int32)">
             <summary>
             Returns value but not less than min and not greater than max.
             If value is less than min, returns min.
             If value is greater than max, returns max.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.IsDigit(System.Char)">
-            <summary>
-            Returns true if character is '0' to '9'.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.IsDigit(System.Byte)">
-            <summary>
-            Returns true if character is '0' to '9'.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.IsAlpha(System.Char)">
-            <summary>
-            Returns true if character is 'A' to 'Z' or 'a' to 'z'.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.IsAlpha(System.Byte)">
-            <summary>
-            Returns true if character is 'A' to 'Z' or 'a' to 'z'.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Calc.AngleFromXY(System.Int32,System.Int32)">
+        <member name="M:Catkeys.Math_.AngleFromXY(System.Int32,System.Int32)">
             <summary>
             Calculates angle degrees from coordinates x and y.
             </summary>
         </member>
-        <member name="M:Catkeys.Calc.SetFlag``1(``0@,``0,System.Boolean)">
+        <member name="M:Catkeys.Math_.SetFlag``1(``0@,``0,System.Boolean)">
             <summary>
             Adds or removes an enum flag.
             </summary>
@@ -3061,62 +3194,6 @@
             <param name="enumVariable">Enum variable to modify.</param>
             <param name="flag">One or more flags to add or remove.</param>
             <param name="add">If true, adds flag to enumVariable, else removes flag from enumVariable.</param>
-        </member>
-        <member name="T:Catkeys.InterDomain">
-            <summary>
-            Inter-domain variables. Allows to share values by all app domains of this process.
-            Similar to environment variables, but supports more types and does not inherit parent process variables; the speed is similar.
-            Supports not all types. The type must have one of these properties:
-            1. Derived from MarshalByRefObject. The stored value is a virtual reference (proxy), not a copy. The owner domain must be still alive when other domains access (call methods etc) the retrieved value, else AppDomainUnloadedException.
-            2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
-            </summary>
-        </member>
-        <member name="M:Catkeys.InterDomain.SetVariable(System.String,System.Object)">
-            <summary>
-            Adds or modifies an inter-domain variable.
-            </summary>
-            <param name="name">Name. Can be any unique string, for example a GUID string. Case-sensitive.</param>
-            <param name="value">Value.</param>
-            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
-        </member>
-        <member name="M:Catkeys.InterDomain.GetVariable(System.String)">
-            <summary>
-            Gets the value of an inter-domain variable.
-            Returns null if the variable does not exist. Else returns the value as object; need a cast.
-            </summary>
-            <param name="name">Name. Case-sensitive.</param>
-        </member>
-        <member name="M:Catkeys.InterDomain.GetVariable``1(System.String,``0@)">
-            <summary>
-            Gets the value of an inter-domain variable.
-            Returns true if the variable exists and is not null.
-            </summary>
-            <param name="name">Name. Case-sensitive.</param>
-            <param name="value">Receives the value. If the variable does not exist, receives the default value of that type.</param>
-            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
-        </member>
-        <member name="M:Catkeys.InterDomain.GetVariable``1(System.String,System.Func{``0})">
-            <summary>
-            Gets the value of an inter-domain variable.
-            If the variable does not exist or is null, calls a callback function that provides an initial value; then sets the variable = the initial value.
-            Thread-safe.
-            </summary>
-            <param name="name">Name. Case-sensitive.</param>
-            <param name="initValue">A callback function delegate (eg lambda) that is called when the variable does not exist or is null. It must return an initial value.</param>
-            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
-            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
-            <example><code>int test = InterDomain.GetVariable("test", () => 10);</code></example>
-        </member>
-        <member name="M:Catkeys.InterDomain.DefaultDomainVariable``1(System.String,``0@)">
-            <summary>
-            Gets a reference to an object that lives in default appdomain. Auto-creates new object there if does not exist.
-            The object can be used in any appdomain. When a non-default domain calls its methods, the call is marshaled to the default domain and executed there.
-            The type must be derived from MarshalByRefObject and have default constructor.
-            Returns true if created new object, false if it already existed.
-            Thread-safe.
-            </summary>
-            <param name="name">Inter-domain variable name. Any unique string. Case-sensitive.</param>
-            <param name="value">Receives the reference.</param>
         </member>
         <member name="T:Catkeys.SetAddRemove">
             <summary>
@@ -4560,12 +4637,78 @@
             <param name="recorded">
             List of x y distances from previous.
             The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="P:Catkeys.Mouse.LastMoveXY"/>.
-            To create uint value from distance dx dy use this code: <c>Calc.MakeUint(dx, dy)</c>.
+            To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
             </param>
             <param name="withSleepTimes">
             <b>recorded</b> also contains sleep times (milliseconds) alternating with distances.
             It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
             </param>
+        </member>
+        <member name="T:Catkeys.Util.CharPtr">
+            <summary>
+            String functions that work with char* and ANSI byte* strings.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.Length(System.Char*)">
+            <summary>
+            Finds unmanaged UTF-16 string length (number of characters).
+            Scans the string until '\0' character found.
+            </summary>
+            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.Length(System.Char*,System.Int32)">
+            <summary>
+            Finds unmanaged UTF-16 string length (number of characters).
+            Scans the string until '\0' character found, but not exceeding the specified length.
+            </summary>
+            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
+            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.Length(System.Byte*)">
+            <summary>
+            Finds unmanaged ANSI string length (number of bytes).
+            Scans the string until '\0' character found.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be any ANSI encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.Length(System.Byte*,System.Int32)">
+            <summary>
+            Finds unmanaged ANSI string length (number of bytes).
+            Scans the string until '\0' character found, but not exceeding the specified length.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be any encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
+            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.AsciiStartsWith(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged ANSI string p starts with string s. Case-sensitive.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.AsciiStartsWithI(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged ANSI string p starts with string s. Case-insensitive.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.AsciiFindChar(System.Byte*,System.Int32,System.Byte)">
+            <summary>
+            Finds character in unmanaged ANSI string which can be binary.
+            </summary>
+            <param name="s">ANSI string. Can be null.</param>
+            <param name="len">Length of s to search in.</param>
+            <param name="ch">ASCII character.</param>
+        </member>
+        <member name="M:Catkeys.Util.CharPtr.AsciiFindString(System.Byte*,System.Int32,System.String)">
+            <summary>
+            Finds substring in unmanaged ANSI string which can be binary.
+            Returns -1 if not found or if s is null/"" or s2 is "".
+            </summary>
+            <param name="s">ANSI string. Can be null.</param>
+            <param name="len">Length of s to search in.</param>
+            <param name="s2">Substring to find. Must contain only ASCII characters. Cannot be null.</param>
         </member>
         <member name="T:Catkeys.Util.LibArrayBuilder`1">
             <summary>
@@ -4637,15 +4780,15 @@
             Calls Free and GC.SuppressFinalize.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibArrayBuilder`1.Add(`0@)">
+        <member name="M:Catkeys.Util.LibArrayBuilder`1.AddR(`0@)">
             <summary>
             Adds one element.
             Uses ref to avoid copying when T size is big. Does not modify the passed variable.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibArrayBuilder`1.AddV(`0)">
+        <member name="M:Catkeys.Util.LibArrayBuilder`1.Add(`0)">
             <summary>
-            Adds one element by value.
+            Adds one element.
             </summary>
         </member>
         <member name="M:Catkeys.Util.LibArrayBuilder`1.Add">
@@ -4727,12 +4870,6 @@
             The event handler is called before static object finalizers.
             </remarks>
         </member>
-        <member name="P:Catkeys.Util.AppDomain_.EntryAssembly">
-            <summary>
-            Gets the entry assembly of this appdomain.
-            Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it fails if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)">AppDomain.DoCallBack</see>.
-            </summary>
-        </member>
         <member name="T:Catkeys.Util.SharedMemory">
             <summary>
             Memory that can be used by multiple processes and app domains.
@@ -4797,153 +4934,100 @@
             Memory size.
             </summary>
         </member>
-        <member name="T:Catkeys.Util.LibCharBuffer">
+        <member name="T:Catkeys.Util.Buffers">
             <summary>
-            Allocates a native memory buffer as char*.
-            Normally is used as a [ThreadStatic] variable. It is faster than StringBuilder, local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
-            When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="M:Catkeys.Util.LibCharBuffer.Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
-            Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
+            Allocates memory buffers that can be used with API functions and not only.
+            Can allocate arrays of any value type - char[], byte[] etc.
+            </summary>
+            <example>
+            <code><![CDATA[
+            class Example
+            {
+            	public static void Test()
+            	{
+            		Wnd w = Wnd.FindFast(null, "Notepad");
+            		string s = GetWndText(w);
+            		Print(s);
+            	}
+            
+            	public static string GetWndText(Wnd w)
+            	{
+            		for(int na = 300; ; na *= 2) {
+            			var b = _GetCharBuffer(ref na);
+            			int nr = GetWindowText(w, b, na);
+            			if(nr < na - 1) return (nr > 0) ? b.ToString(nr) : "";
+            		}
+            	}
+            
+            	//this variable manages the buffer
+            	[ThreadStatic] static WeakReference<char[]> t_char;
+            
+            	//a helper method
+            	static Catkeys.Util.Buffers.CharBuffer _GetCharBuffer(ref int n) { var r = Catkeys.Util.Buffers.Get(n, ref t_char); n = r.Length - 1; return r; }
+            
+            	//we'll use this API in this example
+            	[DllImport("user32.dll", EntryPoint = "GetWindowTextW")]
+            	static extern int GetWindowText(Wnd hWnd, [Out] char[] lpString, int nMaxCount);
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.Util.Buffers.Get``1(System.Int32,System.WeakReference{``0[]}@)">
+            <summary>
+            Allocates new or gets "cached" array of type T of length n or more.
+            The returned array is managed by a WeakReference&lt;T[]&gt; variable provided by the caller. Its contents is undefined.
+            </summary>
+            <typeparam name="T">Any value type, for example char, byte, RECT.</typeparam>
+            <param name="n">
+            How many elements you need.
+            If array in the WeakReference variable is null or too small, creates new array and stores it there.
+            For byte[] and char[] types actually allocates Math.Max(n, 300)+1 elements. The 300 is to avoid future reallocations. The +1 can be used for example for '\0' character at the end of string.</param>
+            <param name="weakReference">
+            A reference to a WeakReference variable that manages the returned array. If null, this function will create it.
+            The variable should be [ThreadStatic] static. Or can be a non-static field of a long-living object. Must not be simply static, it's not thread-safe (unless locked).
+            </param>
+            <remarks>
+            Used to avoid creating much garbage when array allocations are needed frequently. Also is faster than code like <c>var b=new byte[1000]</c> or StringBuilder.
+            The WeakReference variable allows the array to be garbage-collected if it is not used when GC runs. It is automatic and safe. Next time this function will create new array.
+            Actually this function is a wrapper for WeakReference&lt;T[]&gt; functions TryGetTarget/SetTarget. Makes it easier to use.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Util.Buffers.CharBuffer">
+            <summary>
+            Provides functions to convert char[] to string easily.
+            Assign char[] and call the ToString functions. Example: <see cref="T:Catkeys.Util.Buffers"/>.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Ptr">
+        <member name="F:Catkeys.Util.Buffers.CharBuffer.A">
             <summary>
-            Gets buffer pointer.
+            The array that is stored in this variable.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.Capacity">
+        <member name="M:Catkeys.Util.Buffers.CharBuffer.op_Implicit(Catkeys.Util.Buffers.CharBuffer)~System.Char[]">
+            
+        </member>
+        <member name="M:Catkeys.Util.Buffers.CharBuffer.op_Implicit(System.Char[])~Catkeys.Util.Buffers.CharBuffer">
+            
+        </member>
+        <member name="M:Catkeys.Util.Buffers.CharBuffer.ToString">
             <summary>
-            Gets current buffer length (n characters).
+            Converts the array, which contains native '\0'-terminated UTF-16 string, to String.
+            Unlike code <c>new string(charArray)</c>, gets array part until '\0' character, not whole array.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Max(System.Int32)">
+        <member name="M:Catkeys.Util.Buffers.CharBuffer.ToString(System.Int32)">
             <summary>
-            Returns Math.Max(n, Capacity).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32@,System.Char*@,System.Boolean)">
-            <summary>
-            Gets memory buffer of at least Math.Max(n+1, 300) characters.
-            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
-            The buffer content is uninitialized (random bytes).
-            </summary>
-            <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
-            <param name="ptr">Receives buffer pointer.</param>
-            <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
-            <exception cref="T:System.OutOfMemoryException"></exception>
-            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Alloc(System.Int32)">
-            <summary>
-            Gets memory buffer of at least Math.Max(n+1, 300) characters.
-            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            The buffer content is uninitialized (random bytes).
-            </summary>
-            <exception cref="T:System.OutOfMemoryException"></exception>
-            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToString">
-            <summary>
-            Converts the buffer, which contains native '\0'-terminated UTF-16 string, to String.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToString(System.Int32)">
-            <summary>
-            Converts the buffer, which contains native UTF-16 string of n length, to String.
+            Converts the array, which contains native UTF-16 string of n length, to String.
+            Uses <c>new string(A, 0, n)</c>, which throws exception if the array is null or n is invalid.
             </summary>
             <param name="n">String length.</param>
         </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToStringFromAnsi(System.Text.Encoding)">
-            <summary>
-            Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
-            </summary>
-            <param name="enc">If null, uses system's default ANSI encoding.</param>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.ToStringFromAnsi(System.Int32,System.Text.Encoding)">
+        <member name="M:Catkeys.Util.Buffers.CharBuffer.LibToStringFromAnsi(System.Int32,System.Text.Encoding)">
             <summary>
             Converts the buffer, which contains native ANSI string of n length, to String.
             </summary>
             <param name="n">String length.</param>
             <param name="enc">If null, uses system's default ANSI encoding.</param>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Compact">
-            <summary>
-            Frees the buffer if more than 5000 characters.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibCharBuffer.Finalize">
-            
-        </member>
-        <member name="P:Catkeys.Util.LibCharBuffer.LibCommon">
-            <summary>
-            A [ThreadStatic] LibCharBuffer instance used in this library.
-            Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibByteBuffer">
-            <summary>
-            Allocates a native memory buffer as byte*.
-            Normally is used as a [ThreadStatic] variable. It is faster than local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
-            When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="M:Catkeys.Util.LibByteBuffer.Compact"/>, else the memory remains allocated at least until the thread ends or some other function compacts it.
-            Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.LibByteBuffer.Ptr">
-            <summary>
-            Gets buffer pointer.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Util.LibByteBuffer.Capacity">
-            <summary>
-            Gets current buffer length (n bytes).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibByteBuffer.Max(System.Int32)">
-            <summary>
-            Returns Math.Max(n, Capacity).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibByteBuffer.Alloc(System.Int32@,System.Byte*@,System.Boolean)">
-            <summary>
-            Gets memory buffer of at least Math.Max(n+1, 300) bytes.
-            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
-            The buffer content is uninitialized (random bytes).
-            </summary>
-            <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
-            <param name="ptr">Receives buffer pointer.</param>
-            <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
-            <exception cref="T:System.OutOfMemoryException"></exception>
-            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
-        </member>
-        <member name="M:Catkeys.Util.LibByteBuffer.Alloc(System.Int32)">
-            <summary>
-            Gets memory buffer of at least Math.Max(n+1, 300) bytes.
-            Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-            The buffer content is uninitialized (random bytes).
-            </summary>
-            <exception cref="T:System.OutOfMemoryException"></exception>
-            <exception cref="T:System.ArgumentException">n is less than 0.</exception>
-        </member>
-        <member name="M:Catkeys.Util.LibByteBuffer.ToStringFromAnsi(System.Text.Encoding)">
-            <summary>
-            Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
-            </summary>
-            <param name="enc">If null, uses system's default ANSI encoding.</param>
-        </member>
-        <member name="M:Catkeys.Util.LibByteBuffer.Compact">
-            <summary>
-            Frees the buffer if more than 10000 bytes.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Util.LibByteBuffer.Finalize">
-            
-        </member>
-        <member name="P:Catkeys.Util.LibByteBuffer.LibCommon">
-            <summary>
-            A [ThreadStatic] LibByteBuffer instance used in this library.
-            Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
-            </summary>
         </member>
         <member name="T:Catkeys.Util.NativeHeap">
             <summary>
@@ -5256,41 +5340,45 @@
             Gets native module handle of the program file of this process.
             </summary>
         </member>
-        <member name="T:Catkeys.Util.Misc">
+        <member name="T:Catkeys.Util.Assembly_">
             <summary>
-            Miscellaneous functions.
+            Assembly functions.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.Misc.IsCatkeysInGAC">
+        <member name="P:Catkeys.Util.Assembly_.EntryAssembly">
+            <summary>
+            Gets the entry assembly of this appdomain.
+            Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)">AppDomain.DoCallBack</see>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Util.Assembly_.LibIsCatkeysInGAC">
             <summary>
             Returns true if Catkeys.dll is installed in the global assembly cache.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.Misc.IsCatkeysNgened">
+        <member name="P:Catkeys.Util.Assembly_.LibIsCatkeysNgened">
             <summary>
             Returns true if Catkeys.dll is compiled to native code using ngen.exe.
             It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Reflection.Assembly)">
+        <member name="M:Catkeys.Util.Assembly_.IsAssemblyNgened(System.Reflection.Assembly)">
             <summary>
             Returns true if assembly asm is compiled to native code using ngen.exe.
             It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.Misc.IsAssemblyNgened(System.Type)">
+        <member name="T:Catkeys.Util.Misc">
             <summary>
-            Returns true if assembly of type is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
+            Miscellaneous functions (currently none).
             </summary>
         </member>
-        <member name="M:Catkeys.Util.Misc.MinimizeMemory">
+        <member name="T:Catkeys.Util.Resources_">
             <summary>
-            Frees as much as possible physical memory used by this process.
-            Calls <see cref="M:System.GC.Collect"/> and API <msdn>SetProcessWorkingSetSize</msdn>.
+            Miscellaneous functions.
             </summary>
         </member>
-        <member name="M:Catkeys.Util.Misc.GetAppResource(System.String)">
+        <member name="M:Catkeys.Util.Resources_.GetAppResource(System.String)">
             <summary>
             Gets an Image or other object from managed resources of appdomain's entry assembly.
             Returns null if not found.
@@ -5301,15 +5389,10 @@
             The Image is not cached. Will need to Dispose.
             </remarks>
         </member>
-        <member name="M:Catkeys.Util.Misc.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
+        <member name="M:Catkeys.Util.Resources_.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
             <summary>
             Gets ResourceManager of appdomain's entry assembly.
             Returns null if the assembly does not have resources or if fails.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Util.LibDebug">
-            <summary>
-            Functions useful when testing and debugging.
             </summary>
         </member>
         <member name="T:Catkeys.Util.Dpi">
@@ -5872,9 +5955,35 @@
             </param>
             <exception cref="T:System.ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
         </member>
+        <member name="T:Catkeys.Char_">
+            <summary>
+            Provides function to get ASCII character type (is digit etc) etc.
+            Unlike Char.IsDigit etc, these functions never return true for non-ASCII characters. Also they are faster.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Char_.IsAsciiDigit(System.Char)">
+            <summary>
+            Returns true if character is '0' to '9'.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Char_.IsAsciiDigit(System.Byte)">
+            <summary>
+            Returns true if character is '0' to '9'.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Char_.IsAsciiAlpha(System.Char)">
+            <summary>
+            Returns true if character is 'A' to 'Z' or 'a' to 'z'.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Char_.IsAsciiAlpha(System.Byte)">
+            <summary>
+            Returns true if character is 'A' to 'Z' or 'a' to 'z'.
+            </summary>
+        </member>
         <member name="T:Catkeys.Convert_">
             <summary>
-            Data conversion functions - hash, hex-encode, compress, UTF8.
+            Data conversion functions - hash, compress, hex-encode, Base64, UTF8.
             </summary>
         </member>
         <member name="M:Catkeys.Convert_.HashFnv1(System.String)">
@@ -6067,11 +6176,13 @@
         </member>
         <member name="M:Catkeys.Convert_.Base64Decode(System.String,System.Void*,System.Int32,System.Int32)">
             <summary>
+            Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
+            Returns the number of bytes stored in resultBuffer.
             The same as <see cref="M:Catkeys.Convert_.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)"/>, just different input string type.
             </summary>
             <param name="s">Base64 string. Can be null, then returns null.</param>
-            <param name="resultBuffer"></param>
-            <param name="bufferSize"></param>
+            <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
+            <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
             <param name="stringStartIndex">0 or index of first character of Base64 substring in s.</param>
         </member>
         <member name="M:Catkeys.Convert_.Base64Decode(System.String)">
@@ -6098,12 +6209,35 @@
             <param name="data"></param>
             <exception cref="T:System.Exception">Exceptions thrown by DeflateStream.</exception>
         </member>
-        <member name="M:Catkeys.Convert_.Decompress(System.Byte[])">
+        <member name="M:Catkeys.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)">
             <summary>
             Decompresses data using <see cref="T:System.IO.Compression.DeflateStream"/>.
+            Returns byte[] containing decompressed data.
             </summary>
-            <param name="data"></param>
+            <param name="compressedData">Compressed data.</param>
+            <param name="index">Start index of compressed data in the compressedData array.</param>
+            <param name="count">Length of compressed data in the compressedData array.</param>
             <exception cref="T:System.Exception">Exceptions thrown by DeflateStream.</exception>
+        </member>
+        <member name="M:Catkeys.Convert_.Decompress(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Decompresses data using <see cref="T:System.IO.Compression.DeflateStream"/>.
+            Writes the decompressed data to a caller-provided memory stream.
+            </summary>
+            <param name="streamForDecompressedData">A memory stream where this function will write decompressed data. See example.</param>
+            <param name="compressedData">Compressed data.</param>
+            <param name="index">Start index of compressed data in the compressedData array.</param>
+            <param name="count">Length of compressed data in the compressedData array.</param>
+            <exception cref="T:System.Exception">Exceptions thrown by DeflateStream.</exception>
+            <example>
+            This code is used by the other Decompress overload.
+            <code><![CDATA[
+            using(var stream = new MemoryStream()) {
+            	Decompress(stream, compressedData, index, count);
+            	return stream.ToArray();
+            }
+            ]]></code>
+            </example>
         </member>
         <member name="M:Catkeys.Convert_.Utf8LengthFromString(System.String)">
             <summary>
@@ -6135,13 +6269,13 @@
             How this is different from .NET Encoding class functions: 1. Uses <msdn>WideCharToMultiByte</msdn>. 2. Faster with big strings. 3. The returned string is '\0'-terminated. 4. No exceptions (unless the string is so large that fails to allocate so much memory).
             </remarks>
         </member>
-        <member name="M:Catkeys.Convert_.LibUtf8FromString(System.String,Catkeys.Util.LibByteBuffer,System.Int32*,System.Int32)">
+        <member name="M:Catkeys.Convert_.LibUtf8FromString(System.String,System.WeakReference{System.Byte[]}@,System.Int32*,System.Int32)">
             <summary>
-            Converts C# string to '\0'-terminated UTF8 string stored in a Catkeys.Util.LibByteBuffer.
+            Converts C# string to '\0'-terminated UTF8 string managed by a WeakReference variable.
             </summary>
-            <param name="s">C# string (UTF16). If null, by default returns null; returns "" if using allocExtraBytes.</param>
-            <param name="buffer">A Util.LibByteBuffer variable (probably [ThreadStatic]). If null, uses Catkeys.Util.LibByteBuffer.LibCommon.</param>
-            <param name="utf8Length">If not null, receives UTF8 text length not including '\0' and allocExtraBytes.</param>
+            <param name="s">C# string (UTF16). If null, returns null, unless allocExtraBytes is not 0.</param>
+            <param name="buffer">A WeakReference variable (probably [ThreadStatic]) that manages the returned array. If null, this function will create it.</param>
+            <param name="utf8Length">If not null, receives UTF8 text length, not including '\0' and allocExtraBytes.</param>
             <param name="allocExtraBytes">Allocate this number of extra bytes after the string.</param>
         </member>
         <member name="M:Catkeys.Convert_.Utf8ToStringLength(System.Byte*,System.Int32)">
@@ -6425,9 +6559,7 @@
             Writes s + "\r\n" and optionally timestamp.
             </summary>
             <remarks>
-            If fails to write to file:
-            	Sets LogFile=null, which closes file handle.
-            	Writes a warning and s to the output window or console.
+            If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
             </remarks>
         </member>
         <member name="M:Catkeys.Output._LogFile.Clear">
@@ -6439,14 +6571,6 @@
             <summary>
             Closes file handle.
             </summary>
-        </member>
-        <member name="M:Catkeys.Output._LogFile._StringToUtf8(System.String,System.Int32@)">
-            <summary>
-            Converts string to UTF8 (stored in Util.LibByteBuffer.LibCommon).
-            Appends "\r\n". If LogFileTimestamp, prepends timestamp.
-            </summary>
-            <param name="s"></param>
-            <param name="len">Receives UTF8 length.</param>
         </member>
         <member name="T:Catkeys.Output.Server">
             <summary>
@@ -6991,72 +7115,6 @@
             Returns 0 if failed. Supports <see cref="M:Catkeys.Native.GetError"/>.
             </summary>
             <param name="processHandle">Native process handle.</param>
-        </member>
-        <member name="T:Catkeys.CharPtr">
-            <summary>
-            String functions that work with char* and ANSI byte* strings.
-            </summary>
-        </member>
-        <member name="M:Catkeys.CharPtr.Length(System.Char*)">
-            <summary>
-            Finds unmanaged UTF-16 string length (number of characters).
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.Length(System.Char*,System.Int32)">
-            <summary>
-            Finds unmanaged UTF-16 string length (number of characters).
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.Length(System.Byte*)">
-            <summary>
-            Finds unmanaged ANSI string length (number of bytes).
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be any ANSI encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.Length(System.Byte*,System.Int32)">
-            <summary>
-            Finds unmanaged ANSI string length (number of bytes).
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be any encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.AsciiStartsWith(System.Byte*,System.String)">
-            <summary>
-            Returns true if unmanaged ANSI string p starts with string s. Case-sensitive.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
-            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.AsciiStartsWithI(System.Byte*,System.String)">
-            <summary>
-            Returns true if unmanaged ANSI string p starts with string s. Case-insensitive.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
-            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.AsciiFindChar(System.Byte*,System.Int32,System.Byte)">
-            <summary>
-            Finds character in unmanaged ANSI string which can be binary.
-            </summary>
-            <param name="s">ANSI string. Can be null.</param>
-            <param name="len">Length of s to search in.</param>
-            <param name="ch">ASCII character.</param>
-        </member>
-        <member name="M:Catkeys.CharPtr.AsciiFindString(System.Byte*,System.Int32,System.String)">
-            <summary>
-            Finds substring in unmanaged ANSI string which can be binary.
-            Returns -1 if not found or if s is null/"" or s2 is "".
-            </summary>
-            <param name="s">ANSI string. Can be null.</param>
-            <param name="len">Length of s to search in.</param>
-            <param name="s2">Substring to find. Must contain only ASCII characters. Cannot be null.</param>
         </member>
         <member name="T:Catkeys.String_">
             <summary>
@@ -11414,7 +11472,7 @@
         <member name="M:Catkeys.Wnd.ChildFinder.FindAllIn(Catkeys.Wnd)">
             <summary>
             Finds all matching child controls, like <see cref="M:Catkeys.Wnd.ChildAll(System.String,System.String,Catkeys.WCFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
-            Returns List containing 0 or more control handles as Wnd.
+            Returns array containing 0 or more control handles as Wnd.
             </summary>
             <param name="wParent">Direct or indirect parent window.</param>
             <exception cref="T:Catkeys.WndException">Invalid wParent.</exception>
@@ -11422,12 +11480,12 @@
         <member name="M:Catkeys.Wnd.ChildFinder.FindAllInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd},Catkeys.Wnd)">
             <summary>
             Finds all matching controls in a list of controls.
-            Returns List containing 0 or more control handles as Wnd.
+            Returns array containing 0 or more control handles as Wnd.
             </summary>
             <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})"/>.</param>
             <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
         </member>
-        <member name="M:Catkeys.Wnd.ChildFinder._FindInList(Catkeys.Wnd,System.Collections.Generic.IEnumerable{Catkeys.Wnd},System.Boolean,System.Collections.Generic.List{Catkeys.Wnd},Catkeys.Wnd)">
+        <member name="M:Catkeys.Wnd.ChildFinder._FindInList(Catkeys.Wnd,System.Collections.Generic.IEnumerable{Catkeys.Wnd},System.Boolean,Catkeys.Util.LibArrayBuilder{Catkeys.Wnd},Catkeys.Wnd)">
             <summary>
             If a is not null, returns index of matching element or -1.
             Else returns -2 if wSingle matches, else -1.
@@ -11778,17 +11836,17 @@
         <member name="M:Catkeys.Wnd.Finder.FindAll">
             <summary>
             Finds all matching windows, like <see cref="M:Catkeys.Wnd.FindAll(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">Wnd.FindAll</see>.
-            Returns list containing 0 or more window handles as Wnd.
+            Returns array containing 0 or more window handles as Wnd.
             </summary>
         </member>
         <member name="M:Catkeys.Wnd.Finder.FindAllInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd})">
             <summary>
             Finds all matching windows in a list of windows.
-            Returns list containing 0 or more window handles as Wnd.
+            Returns array containing 0 or more window handles as Wnd.
             </summary>
             <param name="a">Array or list of windows, for example returned by <see cref="M:Catkeys.Wnd.Misc.AllWindows(System.Boolean,System.Boolean,System.Func{Catkeys.Wnd,System.Boolean})"/>.</param>
         </member>
-        <member name="M:Catkeys.Wnd.Finder._FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd},System.Boolean,System.Collections.Generic.List{Catkeys.Wnd},Catkeys.Wnd)">
+        <member name="M:Catkeys.Wnd.Finder._FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd},System.Boolean,Catkeys.Util.LibArrayBuilder{Catkeys.Wnd},Catkeys.Wnd)">
             <summary>
             If a is not null, returns index of matching element or -1.
             Else returns -2 if wSingle matches, else -1.
@@ -11887,7 +11945,7 @@
         <member name="M:Catkeys.Wnd.FindAll(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})">
             <summary>
             Finds all matching windows.
-            Returns list containing 0 or more window handles as Wnd.
+            Returns array containing 0 or more window handles as Wnd.
             Everything except the return type is the same as with <see cref="M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
             </summary>
             <exception cref="T:System.ArgumentException"/>

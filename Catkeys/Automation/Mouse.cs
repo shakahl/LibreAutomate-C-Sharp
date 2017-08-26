@@ -140,7 +140,7 @@ namespace Catkeys
 			bool relaxed = Options.Relaxed, willFail = false;
 
 			if(!Screen_.IsInAnyScreen(p)) {
-				if(!relaxed) throw new ArgumentOutOfRangeException("This x y is not in screen");
+				if(!relaxed) throw new ArgumentOutOfRangeException(null, "Cannot mouse-move. This x y is not in screen. " + p.ToString());
 				willFail = true;
 			}
 
@@ -169,7 +169,7 @@ namespace Catkeys
 				//note: don't put the _Sleep(7) here
 			}
 			if(!ok && !relaxed) {
-				var es = $"*mouse-move to this x y: screen {p.X} {p.Y}";
+				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				if(Wnd.WndActive.IsUacAccessDenied) {
 					//it's a mystery for users. API SendInput fails even if the point is not in the window.
 					//rejected:
@@ -440,7 +440,7 @@ namespace Catkeys
 			/// <param name="recorded">
 			/// List of x y distances from previous.
 			/// The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="Mouse.LastMoveXY"/>.
-			/// To create uint value from distance dx dy use this code: <c>Calc.MakeUint(dx, dy)</c>.
+			/// To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
 			/// </param>
 			/// <param name="withSleepTimes">
 			/// <b>recorded</b> also contains sleep times (milliseconds) alternating with distances.
@@ -469,8 +469,8 @@ namespace Catkeys
 						//never mind: ~90% is 7. Removing it would make almost 2 times smaller string. But need much more code. Or compress (see comment below).
 					} else {
 						//info: to make more compact, we write not distances (dx dy) but distance changes (x y).
-						int dx = Calc.LoShort(u), x = dx - pdx; pdx = dx;
-						int dy = Calc.HiShort(u), y = dy - pdy; pdy = dy;
+						int dx = Math_.LoShort(u), x = dx - pdx; pdx = dx;
+						int dy = Math_.HiShort(u), y = dy - pdy; pdy = dy;
 
 						if(x >= -4 && x < 4 && y >= -4 && y < 4) nbytes = 1; //3+3+2=8 bits, 90%
 						else if(x >= -64 && x < 64 && y >= -64 && y < 64) nbytes = 2; //7+7+2=16 bits, ~10%
@@ -677,7 +677,9 @@ namespace Catkeys
 			//_SleepMax(-1, windowOfThisThread);
 			_SleepMax(-1);
 
-			//CONSIDER: detect click failures (UAC, BlockInput, hooks). Cannot detect reliably, therefore show warning, not exception. Only if not relaxed.
+			//rejected: detect click failures (UAC, BlockInput, hooks).
+			//	Difficult. Cannot detect reliably. SendInput returns true.
+			//	Eg when blocked by UAC, GetKeyState shows changed toggle state. Then probably hooks also called, did not test.
 		}
 
 		/// <summary>
@@ -1136,10 +1138,8 @@ namespace Catkeys
 
 	/// <summary>Infrastructure.</summary>
 	/// <tocexclude />
-	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-#pragma warning disable CS3008 // Identifier is not CLS-compliant
+	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
 	public struct _MBtn :IDisposable
-#pragma warning restore CS3008 // Identifier is not CLS-compliant
 	{
 		MButton _buttons;
 		///

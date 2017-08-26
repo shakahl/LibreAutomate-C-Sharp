@@ -129,29 +129,31 @@ namespace Catkeys
 
 			/// <summary>
 			/// Finds all matching child controls, like <see cref="ChildAll"/>.
-			/// Returns List containing 0 or more control handles as Wnd.
+			/// Returns array containing 0 or more control handles as Wnd.
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window.</param>
 			/// <exception cref="WndException">Invalid wParent.</exception>
-			public List<Wnd> FindAllIn(Wnd wParent)
+			public Wnd[] FindAllIn(Wnd wParent)
 			{
 				var a = wParent.AllChildren(0 != (_flags & WCFlags.DirectChild), 0 == (_flags & WCFlags.HiddenToo), true);
-				var R = new List<Wnd>();
-				_FindInList(wParent, a, false, R);
-				return R;
+				using(var ab = new Util.LibArrayBuilder<Wnd>()) {
+					_FindInList(wParent, a, false, ab);
+					return ab.ToArray();
+				}
 			}
 
 			/// <summary>
 			/// Finds all matching controls in a list of controls.
-			/// Returns List containing 0 or more control handles as Wnd.
+			/// Returns array containing 0 or more control handles as Wnd.
 			/// </summary>
 			/// <param name="a">List of controls, for example returned by <see cref="AllChildren"/>.</param>
 			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
-			public List<Wnd> FindAllInList(IEnumerable<Wnd> a, Wnd wParent = default(Wnd))
+			public Wnd[] FindAllInList(IEnumerable<Wnd> a, Wnd wParent = default(Wnd))
 			{
-				var R = new List<Wnd>();
-				_FindInList(wParent, a, true, R);
-				return R;
+				using(var ab = new Util.LibArrayBuilder<Wnd>()) {
+					_FindInList(wParent, a, true, ab);
+					return ab.ToArray();
+				}
 			}
 
 			/// <summary>
@@ -164,7 +166,7 @@ namespace Catkeys
 			/// <param name="inList">Called by FindInList or FindAllInList.</param>
 			/// <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
 			/// <param name="wSingle">Can be used instead of a. Then a must be null.</param>
-			int _FindInList(Wnd wParent, IEnumerable<Wnd> a, bool inList, [Out] List<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
+			int _FindInList(Wnd wParent, IEnumerable<Wnd> a, bool inList, Util.LibArrayBuilder<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
 			{
 				Result = default(Wnd);
 				if(a == null) return -1;
@@ -433,7 +435,7 @@ namespace Catkeys
 		/// <remarks>
 		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
 		/// </remarks>
-		public List<Wnd> ChildAll(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
+		public Wnd[] ChildAll(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, className, flags, also);

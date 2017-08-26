@@ -43,10 +43,8 @@ namespace Catkeys
 
 		/// <summary>Infrastructure.</summary>
 		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-#pragma warning disable CS3008 // Identifier is not CLS-compliant
+		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
 		public struct _Unblock :IDisposable
-#pragma warning restore CS3008 // Identifier is not CLS-compliant
 		{
 			[Flags]
 			public enum What { None, Keys, Mouse, All }

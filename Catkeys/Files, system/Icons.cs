@@ -566,7 +566,7 @@ namespace Catkeys
 		/// </summary>
 		public static IntPtr CreateBlankIcon(int width, int height)
 		{
-			int nb = Calc.AlignUp(width, 32) / 8 * height;
+			int nb = Math_.AlignUp(width, 32) / 8 * height;
 			var aAnd = new byte[nb]; for(int i = 0; i < nb; i++) aAnd[i] = 0xff;
 			var aXor = new byte[nb];
 			return Api.CreateIcon(Zero, width, height, 1, 1, aAnd, aXor);
@@ -614,7 +614,7 @@ namespace Catkeys
 			if(Empty(s)) return false;
 			if(s[0] == '\"') s = s.Replace("\"", ""); //can be eg "path",index
 			if(s.Length < 3) return false;
-			if(!Calc.IsDigit(s[s.Length - 1])) return false;
+			if(!Char_.IsAsciiDigit(s[s.Length - 1])) return false;
 			int e, i = s.LastIndexOf(','); if(i < 1) return false;
 			index = s.ToInt32_(i + 1, out e); if(e != s.Length) return false;
 			s = s.Remove(i);

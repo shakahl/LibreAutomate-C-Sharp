@@ -82,31 +82,34 @@ namespace Catkeys
 		//[ComImport, Guid("000214fa-0000-0000-c000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		//internal interface IExtractIcon
 		//{
-		//	[PreserveSig] int GetIconLocation(uint uFlags, char* pszIconFile, int cchMax, out int piIndex, out uint pwFlags);
+		//	[PreserveSig] int GetIconLocation(uint uFlags, [MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszIconFile, int cchMax, out int piIndex, out uint pwFlags);
 		//	[PreserveSig] int Extract([MarshalAs(UnmanagedType.LPWStr)] string pszFile, int nIconIndex, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
 		//}
 
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellLink
 		{
-			[PreserveSig] int GetPath(char* pszFile, int cch, IntPtr pfd = default(IntPtr), uint fFlags = 0);
+			[PreserveSig] int GetPath([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszFile, int cch, IntPtr pfd = default(IntPtr), uint fFlags = 0);
 			[PreserveSig] int GetIDList(out IntPtr ppidl);
 			[PreserveSig] int SetIDList(IntPtr pidl);
-			[PreserveSig] int GetDescription(char* pszName, int cch);
+			[PreserveSig] int GetDescription([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszName, int cch);
 			[PreserveSig] int SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-			[PreserveSig] int GetWorkingDirectory(char* pszDir, int cch);
+			[PreserveSig] int GetWorkingDirectory([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszDir, int cch);
 			[PreserveSig] int SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-			[PreserveSig] int GetArguments(char* pszArgs, int cch);
+			[PreserveSig] int GetArguments([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszArgs, int cch);
 			[PreserveSig] int SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
 			[PreserveSig] int GetHotkey(out ushort pwHotkey);
 			[PreserveSig] int SetHotkey(ushort wHotkey);
 			[PreserveSig] int GetShowCmd(out int piShowCmd);
 			[PreserveSig] int SetShowCmd(int iShowCmd);
-			[PreserveSig] int GetIconLocation(char* pszIconPath, int cch, out int piIcon);
+			[PreserveSig] int GetIconLocation([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszIconPath, int cch, out int piIcon);
 			[PreserveSig] int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
 			[PreserveSig] int SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved = 0);
 			[PreserveSig] int Resolve(Wnd hwnd, uint fFlags);
 			[PreserveSig] int SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
+
+			//info: default string marshaling in COM interfaces is BSTR, but in this interface strings are LPWSTR. Cannot use plain string and char[].
+			//	Instead of [MarshalAs(UnmanagedType.LPArray)] [Out] char[] can be just char*. Then also need fixed when calling.
 		}
 
 		[ComImport, Guid("00021401-0000-0000-C000-000000000046"), ClassInterface(ClassInterfaceType.None)]
@@ -248,7 +251,7 @@ namespace Catkeys
 		internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromWindow(Wnd hwnd, uint dwId, [In] ref Guid riid, out IAccessible ppvObject);
+		internal static extern int AccessibleObjectFromWindow(Wnd hwnd, int dwId, [In] ref Guid riid, out IAccessible ppvObject);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
 		internal static extern int WindowFromAccessibleObject(IAccessible param1, out Wnd phwnd);
@@ -260,20 +263,20 @@ namespace Catkeys
 		internal const int CHILDID_SELF = 0;
 		internal const int INDEXID_OBJECT = 0;
 		internal const int INDEXID_CONTAINER = 0;
-		internal const uint OBJID_WINDOW = 0x0;
-		internal const uint OBJID_SYSMENU = 0xFFFFFFFF;
-		internal const uint OBJID_TITLEBAR = 0xFFFFFFFE;
-		internal const uint OBJID_MENU = 0xFFFFFFFD;
-		internal const uint OBJID_CLIENT = 0xFFFFFFFC;
-		internal const uint OBJID_VSCROLL = 0xFFFFFFFB;
-		internal const uint OBJID_HSCROLL = 0xFFFFFFFA;
-		internal const uint OBJID_SIZEGRIP = 0xFFFFFFF9;
-		internal const uint OBJID_CARET = 0xFFFFFFF8;
-		internal const uint OBJID_CURSOR = 0xFFFFFFF7;
-		internal const uint OBJID_ALERT = 0xFFFFFFF6;
-		internal const uint OBJID_SOUND = 0xFFFFFFF5;
-		internal const uint OBJID_QUERYCLASSNAMEIDX = 0xFFFFFFF4;
-		internal const uint OBJID_NATIVEOM = 0xFFFFFFF0;
+		internal const int OBJID_WINDOW = 0x0;
+		internal const int OBJID_SYSMENU = -1;
+		internal const int OBJID_TITLEBAR = -2;
+		internal const int OBJID_MENU = -3;
+		internal const int OBJID_CLIENT = -4;
+		internal const int OBJID_VSCROLL = -5;
+		internal const int OBJID_HSCROLL = -6;
+		internal const int OBJID_SIZEGRIP = -7;
+		internal const int OBJID_CARET = -8;
+		internal const int OBJID_CURSOR = -9;
+		internal const int OBJID_ALERT = -10;
+		internal const int OBJID_SOUND = -11;
+		internal const int OBJID_QUERYCLASSNAMEIDX = -12;
+		internal const int OBJID_NATIVEOM = -16;
 		internal const uint EVENT_MIN = 0x1;
 		internal const uint EVENT_MAX = 0x7FFFFFFF;
 		internal const uint EVENT_SYSTEM_SOUND = 0x1;

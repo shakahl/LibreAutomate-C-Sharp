@@ -557,7 +557,7 @@ namespace G.Controls
 			string s;
 			XElement x = item.Tag as XElement, xtbTo = tsTo?.Tag as XElement;
 
-			switch(Calc.LoUshort(action)) {
+			switch(Math_.LoUshort(action)) {
 			case 1: //copy from menu or standard toolbar to custom toolbar
 				var xNew = new XElement(x.Name, x.Attributes()); //copy without descendants but with attributes
 				if(item is ToolStripDropDownItem ddi && ddi.HasDropDown) {

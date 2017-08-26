@@ -156,5 +156,13 @@ namespace Catkeys
 			//Output.Warning(s.ToString(), 1);
 			throw new ArgumentException(s.ToString());
 		}
+
+#if DEBUG
+		internal static int LibGetComObjRefCount(IntPtr obj)
+		{
+			Marshal.AddRef(obj);
+			return Marshal.Release(obj);
+		}
+#endif
 	}
 }

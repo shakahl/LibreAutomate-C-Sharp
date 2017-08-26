@@ -91,6 +91,7 @@
     <Compile Include="Api\Api public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
     <Compile Include="Automation\ScreenImage.cs" />
+    <Compile Include="Util\InterDomainVariables.cs" />
     <Compile Include="Common\Param types.cs" />
     <Compile Include="Common\ScriptOptions.cs" />
     <Compile Include="Common\ValueTuple.cs" />
@@ -100,7 +101,7 @@
     <Compile Include="Files, system\Path_.cs" />
     <Compile Include="Files, system\Shell.cs" />
     <Compile Include="Files, system\Ver.cs" />
-    <Compile Include="Other\Calc.cs" />
+    <Compile Include="Other\Math_.cs" />
     <Compile Include="Common\Classes.cs" />
     <Compile Include="Common\common.cs" />
     <Compile Include="Common\Exceptions.cs" />
@@ -114,11 +115,12 @@
     <Compile Include="Automation\Mouse.cs" />
     <Compile Include="Common\NetExt.cs" />
     <Compile Include="Common\NoClass.cs" />
+    <Compile Include="Other\Char_.cs" />
     <Compile Include="Other\Convert_.cs" />
     <Compile Include="Other\Debug_.cs" />
     <Compile Include="Other\Output.cs" />
     <Compile Include="Files, system\Process_.cs" />
-    <Compile Include="String\CharPtr.cs" />
+    <Compile Include="Util\CharPtr.cs" />
     <Compile Include="String\wildcard.cs" />
     <Compile Include="Menus, dialogs\TaskDialog.cs" />
     <Compile Include="String\Csv.cs" />

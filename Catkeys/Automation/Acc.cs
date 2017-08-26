@@ -55,6 +55,25 @@ namespace Catkeys
 			if(!w.MapScreenToClient(ref r)) w.ThrowUseNative();
 			return r;
 		}
+
+		public static Acc FromWindow(Wnd w, int objid = Api.OBJID_WINDOW)
+		{
+			var hr = Api.AccessibleObjectFromWindow(w, objid, ref Api.IID_IAccessible, out var iacc);
+			if(hr != 0) _WndThrow(hr, w, "*get accessible object from window");
+			return new Acc() { a = iacc };
+		}
+
+		static void _WndThrow(int hr, Wnd w, string es)
+		{
+			if(hr == 0) return;
+			if(hr == unchecked((int)0x80070005) && w.IsUacAccessDenied) es += ". Window of admin process (UAC). Run this app as admin or uiAccess";
+			CatException.ThrowIfFailed(hr, es);
+		}
+
+		public static Acc FromWindowClientArea(Wnd w)
+		{
+			return FromWindow(w, Api.OBJID_CLIENT);
+		}
 	};
 
 	//internal struct LibAccVariant

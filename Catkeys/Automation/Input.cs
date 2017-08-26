@@ -67,7 +67,20 @@ namespace Catkeys
 			return false;
 		}
 
-		//TODO: IsCapsLocked, IsNumLocked, IsScrollLocked
+		/// <summary>
+		/// Returns true if the Caps Lock key is in the locked statue.
+		/// </summary>
+		public static bool IsCapsLock { get => (Api.GetKeyState(Api.VK_CAPITAL) & 1) != 0; }
+
+		/// <summary>
+		/// Returns true if the Num Lock key is in the locked statue.
+		/// </summary>
+		public static bool IsNumLock { get => (Api.GetKeyState(Api.VK_NUMLOCK) & 1) != 0; }
+
+		/// <summary>
+		/// Returns true if the Scroll Lock key is in the locked statue.
+		/// </summary>
+		public static bool IsScrollLock { get => (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; }
 
 		/// <summary>
 		/// Gets current text cursor (caret) rectangle in screen coordinates.

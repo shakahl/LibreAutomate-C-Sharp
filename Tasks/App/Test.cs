@@ -58,8 +58,8 @@ public partial class Test
 
 		//AppDomain.CurrentDomain.SetData("test7", "Catkeys-");
 		//Perf.First();
-		//InterDomain.SetVariable("-", "");
-		//InterDomain.Init();
+		//InterDomainVariables.SetVariable("-", "");
+		//InterDomainVariables.Init();
 		//Perf.NW();
 
 		for(int i = 0; i < 1; i++) {
@@ -136,7 +136,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 			t.Join();
 		}
 
-		//Print(InterDomain.Get2("test"));
+		//Print(InterDomainVariables.Get2("test"));
 		//TaskDialog.Show("after all");
 		//Print("exit default domain");
 	}

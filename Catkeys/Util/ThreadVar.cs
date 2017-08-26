@@ -21,6 +21,7 @@ using System.Xml.Linq;
 using Catkeys;
 using static Catkeys.NoClass;
 
+#if false //unfinished. Currently not used in lib.
 namespace Catkeys//.Util
 {
 	public static unsafe class Thread_
@@ -164,3 +165,4 @@ namespace Catkeys//.Util
 		}
 	}
 }
+#endif

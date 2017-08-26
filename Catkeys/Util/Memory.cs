@@ -47,13 +47,13 @@ namespace Catkeys.Util
 			created = false;
 			lock("AF2liKVWtEej+lRYCx0scQ") {
 				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
-				if(!InterDomain.GetVariable(name, out IntPtr t)) {
+				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
 					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.Common, Api.PAGE_READWRITE, 0, size, name);
 					if(hm == Zero) goto ge;
 					created = Native.GetError() != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
 					if(t == Zero) { Api.CloseHandle(hm); goto ge; }
-					InterDomain.SetVariable(name, t);
+					InterDomainVariables.SetVariable(name, t);
 				}
 				return (void*)t;
 			}
@@ -139,7 +139,7 @@ namespace Catkeys.Util
 		internal LibTables.ProcessVariables tables;
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
-		internal Thread_.ProcessVariables thread_;
+		//internal Thread_.ProcessVariables thread_;
 
 		#endregion
 
@@ -157,9 +157,9 @@ namespace Catkeys.Util
 #if true
 		static LibProcessMemory()
 		{
-			Ptr = (LibProcessMemory*)InterDomain.GetVariable("Catkeys_LibProcessMemory", () => Api.VirtualAlloc(Zero, Size));
+			Ptr = (LibProcessMemory*)InterDomainVariables.GetVariable("Catkeys_LibProcessMemory", () => Api.VirtualAlloc(Zero, Size));
 		}
-		//This is slower (especially if using InterDomain first time in domain) but not so bizarre as with window class. And less code.
+		//This is slower (especially if using InterDomainVariables first time in domain) but not so bizarre as with window class. And less code.
 #else
 		static LibProcessMemory()
 		{
@@ -189,269 +189,190 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
-	/// Allocates a native memory buffer as char*.
-	/// Normally is used as a [ThreadStatic] variable. It is faster than StringBuilder, local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
-	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated until the thread ends or some other function compacts it.
-	/// Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
+	/// Allocates memory buffers that can be used with API functions and not only.
+	/// Can allocate arrays of any value type - char[], byte[] etc.
 	/// </summary>
-	internal unsafe class LibCharBuffer
+	/// <example>
+	/// <code><![CDATA[
+	/// class Example
+	/// {
+	/// 	public static void Test()
+	/// 	{
+	/// 		Wnd w = Wnd.FindFast(null, "Notepad");
+	/// 		string s = GetWndText(w);
+	/// 		Print(s);
+	/// 	}
+	/// 
+	/// 	public static string GetWndText(Wnd w)
+	/// 	{
+	/// 		for(int na = 300; ; na *= 2) {
+	/// 			var b = _GetCharBuffer(ref na);
+	/// 			int nr = GetWindowText(w, b, na);
+	/// 			if(nr < na - 1) return (nr > 0) ? b.ToString(nr) : "";
+	/// 		}
+	/// 	}
+	/// 
+	/// 	//this variable manages the buffer
+	/// 	[ThreadStatic] static WeakReference<char[]> t_char;
+	/// 
+	/// 	//a helper method
+	/// 	static Catkeys.Util.Buffers.CharBuffer _GetCharBuffer(ref int n) { var r = Catkeys.Util.Buffers.Get(n, ref t_char); n = r.Length - 1; return r; }
+	/// 
+	/// 	//we'll use this API in this example
+	/// 	[DllImport("user32.dll", EntryPoint = "GetWindowTextW")]
+	/// 	static extern int GetWindowText(Wnd hWnd, [Out] char[] lpString, int nMaxCount);
+	/// }
+	/// ]]></code>
+	/// </example>
+	public static class Buffers
 	{
-		char* _p;
-		int _n;
-
 		/// <summary>
-		/// Gets buffer pointer.
+		/// Allocates new or gets "cached" array of type T of length n or more.
+		/// The returned array is managed by a WeakReference&lt;T[]&gt; variable provided by the caller. Its contents is undefined.
 		/// </summary>
-		public char* Ptr { get => _p; }
-
-		/// <summary>
-		/// Gets current buffer length (n characters).
-		/// </summary>
-		public int Capacity { get => _n; }
-
-		/// <summary>
-		/// Returns Math.Max(n, Capacity).
-		/// </summary>
-		public int Max(int n)
+		/// <typeparam name="T">Any value type, for example char, byte, RECT.</typeparam>
+		/// <param name="n">
+		/// How many elements you need.
+		/// If array in the WeakReference variable is null or too small, creates new array and stores it there.
+		/// For byte[] and char[] types actually allocates Math.Max(n, 300)+1 elements. The 300 is to avoid future reallocations. The +1 can be used for example for '\0' character at the end of string.</param>
+		/// <param name="weakReference">
+		/// A reference to a WeakReference variable that manages the returned array. If null, this function will create it.
+		/// The variable should be [ThreadStatic] static. Or can be a non-static field of a long-living object. Must not be simply static, it's not thread-safe (unless locked).
+		/// </param>
+		/// <remarks>
+		/// Used to avoid creating much garbage when array allocations are needed frequently. Also is faster than code like <c>var b=new byte[1000]</c> or StringBuilder.
+		/// The WeakReference variable allows the array to be garbage-collected if it is not used when GC runs. It is automatic and safe. Next time this function will create new array.
+		/// Actually this function is a wrapper for WeakReference&lt;T[]&gt; functions TryGetTarget/SetTarget. Makes it easier to use.
+		/// </remarks>
+		public static T[] Get<T>(int n, ref WeakReference<T[]> weakReference) where T : struct
 		{
-			return Math.Max(n, _n);
-		}
+			//if(threadStaticWeakReference != null && !threadStaticWeakReference.TryGetTarget(out var test)) Print("collected"); test = null;
 
-		/// <summary>
-		/// Gets memory buffer of at least Math.Max(n+1, 300) characters.
-		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-		/// By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
-		/// The buffer content is uninitialized (random bytes).
-		/// </summary>
-		/// <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
-		/// <param name="ptr">Receives buffer pointer.</param>
-		/// <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
-		/// <exception cref="OutOfMemoryException"></exception>
-		/// <exception cref="ArgumentException">n is less than 0.</exception>
-		public bool Alloc(ref int n, out char* ptr, bool noThrow = false)
-		{
-			if(n < 0) throw new ArgumentException();
-			if(_p == null || n > _n) {
+			if(Unsafe.SizeOf<T>() <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
 				if(n < 300) n = 300;
-				var p = (char*)NativeHeap.Alloc((n + 2) * 2);
-				if(p == null) {
-					ptr = null;
-					if(noThrow) return false;
-					throw new OutOfMemoryException();
+				n++; //for safety add 1 for terminating '\0'. See also code 'r.Length - 1' in LibChar etc.
+			}
+
+			if(weakReference == null) weakReference = new WeakReference<T[]>(null);
+			if(!weakReference.TryGetTarget(out var a)
+				|| a.Length < n
+				) weakReference.SetTarget(a = new T[n]);
+			return a;
+
+			//speed: 7 ns (tested loop 1000)
+			//	When already allocated, in most cases several times faster than allocating array every time.
+			//	If need big array, can be >10 times faster, because does not set all bytes = 0.
+		}
+
+		[ThreadStatic] static WeakReference<char[]> t_char;
+
+		internal static CharBuffer LibChar(int n) { return Get(n, ref t_char); }
+		internal static CharBuffer LibChar(ref int n) { var r = Get(n, ref t_char); n = r.Length - 1; return r; }
+		internal static CharBuffer LibChar(int n, out int nHave) { var r = Get(n, ref t_char); nHave = r.Length - 1; return r; }
+
+		/// <summary>
+		/// Provides functions to convert char[] to string easily.
+		/// Assign char[] and call the ToString functions. Example: <see cref="Buffers"/>.
+		/// </summary>
+		public unsafe struct CharBuffer
+		{
+			/// <summary>
+			/// The array that is stored in this variable.
+			/// </summary>
+			public char[] A;
+			//public int N { get => A.Length; }
+
+			///
+			public static implicit operator char[] (CharBuffer v) => v.A;
+			///
+			public static implicit operator CharBuffer(char[] v) => new CharBuffer() { A = v };
+
+			/// <summary>
+			/// Converts the array, which contains native '\0'-terminated UTF-16 string, to String.
+			/// Unlike code <c>new string(charArray)</c>, gets array part until '\0' character, not whole array.
+			/// </summary>
+			public override string ToString()
+			{
+				if(A == null) return null;
+				fixed (char* p = A) {
+					int n = CharPtr.Length(p, A.Length);
+					return new string(p, 0, n);
 				}
-				_Free();
-				_p = p;
-				_n = n;
 			}
-			n = _n;
-			ptr = _p;
-			return true;
-		}
 
-		/// <summary>
-		/// Gets memory buffer of at least Math.Max(n+1, 300) characters.
-		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-		/// The buffer content is uninitialized (random bytes).
-		/// </summary>
-		/// <exception cref="OutOfMemoryException"></exception>
-		/// <exception cref="ArgumentException">n is less than 0.</exception>
-		public char* Alloc(int n)
-		{
-			Alloc(ref n, out var p);
-			return _p;
-		}
-
-		/// <summary>
-		/// Converts the buffer, which contains native '\0'-terminated UTF-16 string, to String.
-		/// </summary>
-		public override string ToString()
-		{
-			if(_p == null) return null;
-			int n = CharPtr.Length(_p, _n);
-			return new string(_p, 0, n);
-		}
-
-		/// <summary>
-		/// Converts the buffer, which contains native UTF-16 string of n length, to String.
-		/// </summary>
-		/// <param name="n">String length.</param>
-		public string ToString(int n)
-		{
-			Debug.Assert(n <= _n && _p != null);
-			return new string(_p, 0, Math.Min(n, _n));
-		}
-
-		/// <summary>
-		/// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
-		/// </summary>
-		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-		public string ToStringFromAnsi(Encoding enc = null)
-		{
-			if(_p == null) return null;
-			int n = CharPtr.Length((byte*)_p, _n * 2);
-			return new String((sbyte*)_p, 0, n, enc);
-		}
-
-		/// <summary>
-		/// Converts the buffer, which contains native ANSI string of n length, to String.
-		/// </summary>
-		/// <param name="n">String length.</param>
-		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-		public string ToStringFromAnsi(int n, Encoding enc = null)
-		{
-			if(_p == null) return null;
-			Debug.Assert(n <= _n * 2);
-			n = Math.Min(n, _n * 2);
-			return new String((sbyte*)_p, 0, n, enc);
-		}
-
-		/// <summary>
-		/// Frees the buffer if more than 5000 characters.
-		/// </summary>
-		public void Compact()
-		{
-			if(_n > 5000) _Free();
-		}
-
-		void _Free()
-		{
-			if(_p != null) {
-				var p = _p;
-				_p = null;
-				_n = 0;
-				NativeHeap.Free(p);
+			/// <summary>
+			/// Converts the array, which contains native UTF-16 string of n length, to String.
+			/// Uses <c>new string(A, 0, n)</c>, which throws exception if the array is null or n is invalid.
+			/// </summary>
+			/// <param name="n">String length.</param>
+			public string ToString(int n)
+			{
+				return new string(A, 0, n);
 			}
-		}
 
-		///
-		~LibCharBuffer()=>_Free();
+			//currently not used
+			///// <summary>
+			///// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+			///// </summary>
+			///// <param name="enc">If null, uses system's default ANSI encoding.</param>
+			//internal string LibToStringFromAnsi(Encoding enc = null)
+			//{
+			//	if(A == null) return null;
+			//	fixed (char* p = A) {
+			//		int n = CharPtr.Length((byte*)p, A.Length * 2);
+			//		return new string((sbyte*)p, 0, n, enc);
+			//	}
+			//}
 
-		/// <summary>
-		/// A [ThreadStatic] LibCharBuffer instance used in this library.
-		/// Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
-		/// </summary>
-		internal static LibCharBuffer LibCommon { get => t_common ?? (t_common = new LibCharBuffer()); }
-		[ThreadStatic] static LibCharBuffer t_common;
-	}
-
-	/// <summary>
-	/// Allocates a native memory buffer as byte*.
-	/// Normally is used as a [ThreadStatic] variable. It is faster than local array or native memory, and does not create .NET garbage. When big buffer, this is also faster than stackalloc which then is slow because sets all bytes to 0.
-	/// When allocating large buffer using a [ThreadStatic] variable, finally call <see cref="Compact"/>, else the memory remains allocated at least until the thread ends or some other function compacts it.
-	/// Because a [ThreadStatic] variable can be used by any function, make sure that, while a function uses it, cannot be called other functions that use the same variable (unless they are known to use the same buffer).
-	/// </summary>
-	internal unsafe class LibByteBuffer
-	{
-		byte* _p;
-		int _n;
-
-		/// <summary>
-		/// Gets buffer pointer.
-		/// </summary>
-		public byte* Ptr { get => _p; }
-
-		/// <summary>
-		/// Gets current buffer length (n bytes).
-		/// </summary>
-		public int Capacity { get => _n; }
-
-		/// <summary>
-		/// Returns Math.Max(n, Capacity).
-		/// </summary>
-		public int Max(int n)
-		{
-			return Math.Max(n, _n);
-		}
-
-		/// <summary>
-		/// Gets memory buffer of at least Math.Max(n+1, 300) bytes.
-		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-		/// By default always returns true. If noThrow, returns false if fails to allocate memory (unlikely).
-		/// The buffer content is uninitialized (random bytes).
-		/// </summary>
-		/// <param name="n">In - min needed buffer length. Out - available buffer length; not less than n and not less than 300.</param>
-		/// <param name="ptr">Receives buffer pointer.</param>
-		/// <param name="noThrow">If fails to allocate, return false and don't throw exception.</param>
-		/// <exception cref="OutOfMemoryException"></exception>
-		/// <exception cref="ArgumentException">n is less than 0.</exception>
-		public bool Alloc(ref int n, out byte* ptr, bool noThrow = false)
-		{
-			if(n < 0) throw new ArgumentException();
-			if(_p == null || n > _n) {
-				if(n < 300) n = 300;
-				var p = (byte*)NativeHeap.Alloc(n + 1);
-				if(p == null) {
-					ptr = null;
-					if(noThrow) return false;
-					throw new OutOfMemoryException();
+			/// <summary>
+			/// Converts the buffer, which contains native ANSI string of n length, to String.
+			/// </summary>
+			/// <param name="n">String length.</param>
+			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+			internal string LibToStringFromAnsi(int n, Encoding enc = null)
+			{
+				if(A == null) return null;
+				fixed (char* p = A) {
+					Debug.Assert(n <= A.Length * 2);
+					n = Math.Min(n, A.Length * 2);
+					return new string((sbyte*)p, 0, n, enc);
 				}
-				_Free();
-				_p = p;
-				_n = n;
-			}
-			n = _n;
-			ptr = _p;
-			return true;
-		}
-
-		/// <summary>
-		/// Gets memory buffer of at least Math.Max(n+1, 300) bytes.
-		/// Allocates new buffer only if n is greater than Capacity. Else returns previous buffer.
-		/// The buffer content is uninitialized (random bytes).
-		/// </summary>
-		/// <exception cref="OutOfMemoryException"></exception>
-		/// <exception cref="ArgumentException">n is less than 0.</exception>
-		public byte* Alloc(int n)
-		{
-			Alloc(ref n, out var p);
-			return _p;
-		}
-
-		/// <summary>
-		/// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
-		/// </summary>
-		/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-		public string ToStringFromAnsi(Encoding enc = null)
-		{
-			if(_p == null) return null;
-			int n = CharPtr.Length(_p, _n * 2);
-			return new String((sbyte*)_p, 0, n, enc);
-		}
-
-		/// <summary>
-		/// Frees the buffer if more than 10000 bytes.
-		/// </summary>
-		public void Compact()
-		{
-			if(_n > 10000) _Free();
-		}
-
-		void _Free()
-		{
-			if(_p != null) {
-				var p = _p;
-				_p = null;
-				_n = 0;
-				NativeHeap.Free(p);
 			}
 		}
 
-		///
-		~LibByteBuffer()=>_Free();
+		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
-		/// <summary>
-		/// A [ThreadStatic] LibByteBuffer instance used in this library.
-		/// Don't use in other assemblies even if can access it becuse of [InternalsVisibleTo].
-		/// </summary>
-		internal static LibByteBuffer LibCommon { get => t_common ?? (t_common = new LibByteBuffer()); }
-		[ThreadStatic] static LibByteBuffer t_common;
+		internal static byte[] LibByte(int n) { return Get(n, ref t_byte); }
+		//these currently not used
+		//internal static byte[] LibByte(ref int n) { var r = Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static byte[] LibByte(int n, out int nHave) { var r = Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+
+		//currently not used
+		//internal static ByteBuffer LibByte(int n) { return Get(n, ref t_byte); }
+		//internal static ByteBuffer LibByte(ref int n) { var r = Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static ByteBuffer LibByte(int n, out int nHave) { var r = Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+
+		//public unsafe struct ByteBuffer
+		//{
+		//	public byte[] A;
+
+		//	public static implicit operator byte[] (ByteBuffer v) => v.A;
+		//	public static implicit operator ByteBuffer(byte[] v) => new ByteBuffer() { A = v };
+
+		//	/// <summary>
+		//	/// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
+		//	/// </summary>
+		//	/// <param name="enc">If null, uses system's default ANSI encoding.</param>
+		//	public string ToStringFromAnsi(Encoding enc = null)
+		//	{
+		//		if(A == null) return null;
+		//		fixed (byte* p = A) {
+		//			int n = CharPtr.Length(p, A.Length * 2);
+		//			return new String((sbyte*)p, 0, n, enc);
+		//		}
+		//	}
+		//}
 	}
-
-	//SHOULDDO: dispose soon when thread ends. When the Thread_.Exit event will be available.
-	//	Or better use WeakReference.
-	//CONSIDER: instead of native memory use byte[].
-	//	Or even reject this altogether and create something maybe slightly slower and generating garbage.
-	//		Because sharing a ThreadStatic buffer between functions is not good.
 
 
 	//Tried to create a fast memory buffer class, eg for calling API.
@@ -536,9 +457,9 @@ namespace Catkeys.Util
 		/// <param name="zeroInit">Set all bytes = 0. If false (default), the memory is uninitialized, ie random byte values. Slower when true.</param>
 		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
 		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or <see cref="ReAlloc"/> if need to resize it without losing data.</remarks>
-		public static void* Alloc(LPARAM size, bool zeroInit=false)
+		public static void* Alloc(LPARAM size, bool zeroInit = false)
 		{
-			void* r = Api.HeapAlloc(_processHeap, zeroInit?8u:0u, size);
+			void* r = Api.HeapAlloc(_processHeap, zeroInit ? 8u : 0u, size);
 			if(r == null) throw new OutOfMemoryException();
 			return r;
 

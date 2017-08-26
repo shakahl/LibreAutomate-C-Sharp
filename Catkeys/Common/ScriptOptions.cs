@@ -225,7 +225,7 @@ namespace Catkeys
 
 		static bool _IsAppDebugConfig()
 		{
-			var a = Util.AppDomain_.EntryAssembly.GetCustomAttribute<DebuggableAttribute>();
+			var a = Util.Assembly_.EntryAssembly.GetCustomAttribute<DebuggableAttribute>();
 			if(a == null) return false;
 			//return a.IsJITOptimizerDisabled; //depends on 'Optimize code' checkbox in project Properties, regardless of config
 			return a.IsJITTrackingEnabled; //depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe the above too)
@@ -288,10 +288,9 @@ namespace Catkeys
 
 		[ThreadStatic] static Stack<ScriptOptions> t_savedOptions;
 
-#pragma warning disable CS3008 // Identifier is not CLS-compliant
 		/// <summary>Infrastructure.</summary>
 		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
+		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
 		public struct _Restore :IDisposable
 		{
 			bool _disposed;
@@ -310,7 +309,7 @@ namespace Catkeys
 
 		/// <summary>Infrastructure.</summary>
 		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
+		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
 		public struct _RestoreWarnings :IDisposable
 		{
 			int _listCount;
@@ -327,6 +326,5 @@ namespace Catkeys
 				if(n > 0) a.RemoveRange(_listCount, n);
 			}
 		}
-#pragma warning restore CS3008 // Identifier is not CLS-compliant
 	}
 }

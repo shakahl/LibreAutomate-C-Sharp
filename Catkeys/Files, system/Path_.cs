@@ -60,13 +60,16 @@ namespace Catkeys
 				return s;
 			}
 
-			var b = Util.LibCharBuffer.LibCommon; int na = b.Max(s.Length + 100);
-			g1: int nr = _Api.ExpandEnvironmentStrings(s, b.Alloc(na), na);
-			if(nr > na) { na = nr; goto g1; }
-			if(nr == 0) return s;
-			var R = b.ToString(nr - 1);
-			if(R == s) return R;
-			return ExpandEnvVar(R); //can be %envVar2% in envVar1 value
+			for(int na = s.Length + 100; ;) {
+				var b = Util.Buffers.LibChar(ref na);
+				int nr = _Api.ExpandEnvironmentStrings(s, b, na);
+				if(nr > na) na = nr;
+				else if(nr > 0) {
+					var R = b.ToString(nr - 1);
+					if(R == s) return R;
+					return ExpandEnvVar(R); //can be %envVar2% in envVar1 value
+				} else return s;
+			}
 		}
 
 		/// <summary>
@@ -74,17 +77,17 @@ namespace Catkeys
 		/// Returns "" if variable not found.
 		/// Does not support Folders.X.
 		/// </summary>
-		/// <param name="name">Case-insensitive name.</param>
+		/// <param name="name">Case-insensitive name. Without %.</param>
 		/// <remarks>
 		/// Environment variable values cannot be "" or null. Setting empty value removes the variable.
 		/// </remarks>
 		internal static string LibGetEnvVar(string name)
 		{
-			var b = Util.LibCharBuffer.LibCommon; int na = b.Max(300);
-			g1: int nr = _Api.GetEnvironmentVariable(name, b.Alloc(na), na);
-			if(nr > na) { na = nr; goto g1; }
-			if(nr == 0) return "";
-			return b.ToString(nr);
+			for(int na = 300; ;) {
+				var b = Util.Buffers.LibChar(ref na);
+				int nr = _Api.GetEnvironmentVariable(name, b, na);
+				if(nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
+			}
 		}
 
 		/// <summary>
@@ -100,10 +103,10 @@ namespace Catkeys
 		static class _Api
 		{
 			[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentVariableW", SetLastError = true)]
-			internal static extern int GetEnvironmentVariable(string lpName, char* lpBuffer, int nSize);
+			internal static extern int GetEnvironmentVariable(string lpName, [Out] char[] lpBuffer, int nSize);
 
 			[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
-			internal static extern int ExpandEnvironmentStrings(string lpSrc, char* lpDst, int nSize);
+			internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
 		}
 
 		/// <summary>
@@ -124,7 +127,7 @@ namespace Catkeys
 			int len = (s == null) ? 0 : s.Length;
 
 			if(len >= 2) {
-				if(s[1] == ':' && Calc.IsAlpha(s[0])) {
+				if(s[1] == ':' && Char_.IsAsciiAlpha(s[0])) {
 					return len == 2 || LibIsSepChar(s[2]);
 					//info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
 				}
@@ -190,7 +193,7 @@ namespace Catkeys
 			if(len >= 2) {
 				switch(s[1]) {
 				case ':':
-					if(Calc.IsAlpha(s[i])) {
+					if(Char_.IsAsciiAlpha(s[i])) {
 						int j = i + 2;
 						if(len == j) return j;
 						if(LibIsSepChar(s[j])) return j + 1;
@@ -230,11 +233,11 @@ namespace Catkeys
 		public static int GetUrlProtocolLength(string s)
 		{
 			int len = (s == null) ? 0 : s.Length;
-			if(len > 2 && Calc.IsAlpha(s[0]) && s[1] != ':') {
+			if(len > 2 && Char_.IsAsciiAlpha(s[0]) && s[1] != ':') {
 				for(int i = 1; i < len; i++) {
 					var c = s[i];
 					if(c == ':') return i + 1;
-					if(!(Calc.IsAlpha(c) || Calc.IsDigit(c) || c == '.' || c == '-' || c == '+')) break;
+					if(!(Char_.IsAsciiAlpha(c) || Char_.IsAsciiDigit(c) || c == '.' || c == '-' || c == '+')) break;
 				}
 			}
 			return 0;
@@ -349,7 +352,7 @@ namespace Catkeys
 			if(s == null) return false;
 			int i = ((length < 0) ? s.Length : length) - 1;
 			if(i < 1 || s[i] != ':') return false;
-			if(!Calc.IsAlpha(s[--i])) return false;
+			if(!Char_.IsAsciiAlpha(s[--i])) return false;
 			if(i > 0 && !LibIsSepChar(s[i - 1])) return false;
 			return true;
 		}
@@ -439,13 +442,13 @@ namespace Catkeys
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath.
-				var b = Util.LibCharBuffer.LibCommon; int na = b.Max(s.Length + 10);
-				g1: int nr = Api.GetFullPathName(s, na, b.Alloc(na), null);
-				if(nr > na) { na = nr; goto g1; }
-				if(nr > 0) s = b.ToString(nr);
+				for(int na = 300; ;) {
+					var b = Util.Buffers.LibChar(ref na);
+					int nr = Api.GetFullPathName(s, na, b, null);
+					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
+				}
 
 				if(0 == (flags & NormalizeFlags.DoNotExpandDosPath) && s.IndexOf('~') > 0) s = LibExpandDosPath(s);
-				b.Compact();
 
 				if(0 == (flags & NormalizeFlags.DoNotRemoveEndSeparator)) s = _AddRemoveSep(s);
 				else if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
@@ -463,10 +466,11 @@ namespace Catkeys
 		internal static string LibExpandDosPath(string s)
 		{
 			if(!Empty(s)) {
-				var b = Util.LibCharBuffer.LibCommon; int na = b.Max(300);
-				g1: int nr = Api.GetLongPathName(s, b.Alloc(na), na);
-				if(nr > na) { na = nr; goto g1; }
-				if(nr > 0) s = b.ToString(nr);
+				for(int na = 300; ;) {
+					var b = Util.Buffers.LibChar(ref na);
+					int nr = Api.GetLongPathName(s, b, na);
+					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
+				}
 			}
 			return s;
 			//CONSIDER: the API fails if the file does not exist.

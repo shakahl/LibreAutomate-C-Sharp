@@ -64,6 +64,8 @@ using Microsoft.Win32.SafeHandles;
 
 using System.IO.Compression;
 using System.Reflection.Emit;
+using System.Net;
+using System.Net.NetworkInformation;
 
 //using static Test.CatAlias;
 
@@ -73,7 +75,7 @@ using System.Reflection.Emit;
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 
 
-static partial class Test
+static unsafe partial class Test
 {
 	//Why .NET creates so many threads?
 	//Even simplest app has 6 threads.
@@ -144,6 +146,8 @@ static partial class Test
 		Application.EnableVisualStyles();
 		Application.SetCompatibleTextRenderingDefault(false);
 	}
+
+	#region ScreenImage
 
 	static void TestScreenImage()
 	{
@@ -385,6 +389,10 @@ static partial class Test
 
 	static void TestScreenImage2()
 	{
+		object image;
+		//image = "yellow macro.png";
+		//image = "qm info.png";
+		image = new string[] { "yellow macro.png", "qm info.png", "white macro.png" };
 		SIFlags flags = 0;
 		//flags = SIFlags.WindowDC;
 
@@ -392,266 +400,166 @@ static partial class Test
 
 		var w = Wnd.Find("Quick*");
 		area = w;
-		area = new SIArea(400, 1600, 200, 200);
+		//area = new SIArea(400, 1600, 200, 200);
+		//area = new SIArea(w, 1200, 0, 200, 200);
 
 		//w = w.ChildById(2207); //vertical toolbar
-		//CatException.ThrowIfFailed(Api.AccessibleObjectFromWindow(w, Api.OBJID_CLIENT, ref Api.IID_IAccessible, out var iacc));
-		//var acc = new Acc() { a = iacc, elem = 3 };
+		//w = w.ChildById(2212); //open items
+		//var acc = Acc.FromWindowClientArea(w);
+		////Print(acc.Rect);
 		//area = acc;
+		//area = new SIArea(acc, 2, 2, 20, 16);
+		//area.SetRect(2, 2, 20, 16);
 
-		//var r = ScreenImage.Find("qm info.png", area, flags);
-		var r = ScreenImage.Wait(0, "qm info.png", area, flags);
+		//var r = ScreenImage.Find(image, area, flags);
+		//var r = ScreenImage.Wait(10, image, area, flags);
+		//var r = ScreenImage.Wait(0.1, image, area, flags, 0, t=> { Print($"{t.ListIndex} {t.MatchIndex} {t.Rect}"); return false; });
+		//Print(ScreenImage.WaitNot(-5, image, area, flags));
+		//Print(ScreenImage.WaitChanged(-5, area, flags));
+		//var r = ScreenImage.Find(image, area, flags, 0, also: t => t.MatchIndex == 1);
+		//var r = ScreenImage.Find(image, area, flags, 0, also: t => { t.MouseClick(); Wait(0.5); return false; });
+		//var r = ScreenImage.Find(image, area, flags|SIFlags.AllMustExist);
+
+		//var rectList = new List<RECT>();
+		////var r = ScreenImage.Find(image, area, flags, 0, also: t => { rectList.Add(t.Rect); return false; });
+		//var r = ScreenImage.Find(image, area, flags|SIFlags.AllMustExist, 0, also: t => { rectList.Add(t.Rect); return true; });
+		//Print(rectList);
+
+		SIResult r = null;
+		for(int i = 0; i < 1; i++) {
+			r = ScreenImage.Find(
+				//"~:zZLPaxNBFMcrePfiwT9AbBXbVHE9CQueVKihp9rTgj8QT7nmVPakEXIYECsWLYtWmhqJS2vTH0I6VIUIohPbYrRaxxTXtdpkjEmTdXcnvt2NumyIV/3y5rE/5sP3vTdztE/b3uHqMKwuWDuba1vHLve72vzvF/svRV/mVEmKC0K8R5geisJr656ZW1dOHzsUiKG+g3ggRBWZZVWGFYIiKLRjKX2vla19fAv5dyyMXiYRkROVc0azGIkhrhM2iwAPuMNm43Ohrr2rFfLVtaXK6nM6qzAVcVeUYKIgrlN4AvfpaDTIFvX6xnpdW6utv66+X6Fy2DV1xRgKizgWARyKj/d0BlizvJm/cICc7X0s7Z85tY/F/rBMp45hWCQJxLEyckQIsNbWd7NcNEsbxhfN0D8wRYZtAOKYrAyIwELGCqIJGZ+X/Oz8nWHb2HJ8z4U836nBbp6IcJiwTj0cMgwcBqivvvGzmYkRbpm2UbdrFavCzG+bP4r6p0zKwcGdEiewQmPhwmI6cEaPUqNQ3i/fbvAd799z/cTumye7GPSIJBgWHHSJvmq9G9nJ2w1PtmWbBtRvVcvN9r9q3s1ppTw9S48D5+t3b6K/05lepeRdlTPHhXZs7mGy4Re3uem071FetGNXFu43AoL+LXNu7Oryk3ko+O7wxXZsfnEyyLo8Tt4AMHntUjvQYwOxnEm9mJt4OjWWww/+Av4T/QQ="
+				"image:iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIxSURBVDhPrdLPaxNBFAdw/wP/CbEqtlExNyFXFTT01Hpa8AfiKdecyp40Qg4DYsWiZdFKt42kobVJWyFdaoUIohPbYrRaxxTjWm0yxqTJuruTvvjGbEhRD/XLY9jD+8ybmWQP30X+B55cyHVUPL08NvtyZOrZIyOLPTvj4caOiEbjTsw4fvL8tVsxbOuIxBPzK1L8jhAN2xE3R2bnni6Dvzo4jp3tkTj2OCvRr7ggbVG33Bv3Uv5TF7Cwsz0Sjyafgzl6Jee7RA8riwf7U129+o8tp1SxweMW2Nkeie9PZnCm4zYs292y3HLVKZbtjZJd+GYBhpNjZ3skHo4/EULg5G5l8VB/an/v6L7Ttw+cvUt0rhARJFzV2GtWwn6MxENjaXgeuGSl5vKKs/ndNos/4+nPIV1ohqCsWfARjLDkQh4JROLBB3Nw1NadYXL3uSmQiYxgJlcjRqBPgzWR4YEQfbtqopIYbgXPIy/51fpoWqrGYRQEJaUMVqIZqs6UywYqD2+WbZh85KKcHIzwBG1iCAxv4iAhOoUd/SeGUHnYLFrrG/W1Qv3Nem3lQzWoshbmXIAMRQxmws15V08UlYfzX6z3hXouX1taq75YrWgzjCQ4YoMyolGQ8GwhQsPhaVQefvepBmurrg/Pw9vAcNjAyDBfgFBTkBm+10eyrxgqD8PfoKOOnRnw9Rnw88Ijw2lhJsiHySUkEIn/FBiiKAm/P+rviYYHplszMf/Af88uMOfbZ5LV4Uf3+sYAAAAASUVORK5CYII="
+				, area, flags);
+
+			if(!r) { Print("not found"); return; }
+		}
 		Print(r.Rect);
-		//r.MouseMove();
+		r.MouseMove();
 		//r.MouseMove(1, 1);
 		//r.MouseMove(Coord.Reverse(1), Coord.Fraction(0.9));
-		r.MouseClick();
+		//r.MouseClick();
+		//Wnd.FromMouse().Activate();
+		//r.MouseClick();
 
 		//ScreenImage.Find("qm info.png", area, flags)
 		//	.MouseClick();
 
 		//Mouse.
+
+		//var s = G.Controls.ImageUtil.ImageToString(Folders.ThisAppImages + "qm info.bmp");
+		//Print(s);
+
+		//ScreenImage.Find(
+		//#region .   image
+		//	"~:zZLPaxNBFMcjePfiwT9AbBXbVHE9CQueVKihp9rTglXEU645lT1phBwGxIpFy6KVpqakobXpDyEdqkIE0Y1tMVqtY4rrWm0yxqTJursT3+5UGzasV/3y3rAL78P3vTdzslvbHXB1HLIdcu927grsC/iJ/pcir3IpSYoJQqxTmB6IwG9rzczd6+dPHfPEQPdR3BskikyzKYoVFYVRcM9SeryVrX16B+efWBi+poZFpqYYoySLkRhkukpnEeAedyg2vhTq2vtaIV9dW6qsviCzCk0h5oqoWFUQ0wl8gft0JOJli3p9Y72urdXW31Q/rBA55Jq6ohSFRBwNAw7NxzrbPKxZ3sxfPqJe6HoiHZ45d4hGd1iqE8cwJKpxxLAydELwsNbWD7NcNEsbxlfN0D9SRYYyAHFUVnpFYOHECiJxGV+Smtn5+4O2seX4Xgxy36m+DhYPM9iwTjgOJywcFqivvm1mM2NDzDJto27XKlaFmt83fxb1z5mkg4M7UZ3AComGCotpzx09Tg5De799O8B3tOfArTP775xtpzAjkmBZcNEl8rr1bWQn7zW4bMs2Dejfqpa3x/+m8ZfTSnE9T48C1zTvwXhPm7O9Sok/lf7Tgh+be5RoNIvZzHTG5xQPP3ZlYaLhEcxvmXMjN5afzkPDDwav+LH5xUkv6/I4cRvAxM2rfiBnPbGcSb6cG3s2NZLDD/8C/hP9Ag=="
+		//#endregion
+		//	, area, flags);
 	}
 
-	static void TestWndClick()
+	static void ConvertBmpToPng()
 	{
-		//Options.Relaxed = true;
+		//Output.DebugWriteToQM2 = true;
+		//Output.IgnoreConsole = true;
 
-		//Wnd.Find("Quick*").ChildById(2207).Click(10, 10);
-		//Wnd.Find("Quick*").ChildById(2207).MouseMove(10, 10);
-		//WaitFor.WindowActive(0, "Quick*").MouseMove(100, 100);
+		//foreach(var f in Files.EnumDirectory(Folders.ThisAppImages)) {
+		//	if(f.IsDirectory) continue;
+		//	var path = f.FullPath; if(!path.EndsWith_(".bmp", true)) continue;
+		//	Print(path);
+		//	using(var im = Image.FromFile(path)) {
+		//		var path2 = Path.ChangeExtension(path, ".png");
+		//		im.Save(path2, ImageFormat.Png);
+		//	}
+		//}
+		foreach(var f in Files.EnumDirectory(Folders.ThisAppImages)) {
+			if(f.IsDirectory) continue;
+			var path = f.FullPath;
+			Print(path);
+			Print(G.Controls.ImageUtil.ImageToString(path));
+		}
+	}
 
-		//Print(WaitFor.ModifierKeysReleased(-5));
-		//Print(WaitFor.MouseButtonsReleased(-5));
-		//WaitFor.MouseButtonsReleased(out var wasPressed); Print(wasPressed);
+	#endregion
 
-		//Wnd.Find("Quick*").Click(10, 10);
-		//Wnd.Find("Quick*").Click(20, 10, mmFlags:MFlags.NonClientXY|MFlags.WaitForButtonsReleased);
+	static void TestGarbageOfWaitWindowEtc()
+	{
+		object o = Wnd.Misc.WndTop;
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Wnd.Find(null, null, o, flags: WFFlags.HiddenToo); });
+		//var a2 = new Action(() => { Wnd.Find(null, null, o);});
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(8, 1000, a1, a2, a3, a4);
+		//return;
+
+		new PrintGcCollect();
+		Task.Run(() =>
+		{
+			for(;;) {
+				Print((GC.GetTotalMemory(false) / 1024 / 1024d).ToString_("F3"));
+				Wait(1);
+			}
+			//var t = Time.Microseconds;
+			//for(;;) {
+			//	var tt = Time.Microseconds;
+			//	var d = tt - t;
+			//	if(d >= 200) { Print(d); Wait(0.1); tt = Time.Microseconds; }
+			//	t = tt;
+			//}
+		});
+		//WaitFor.WindowExists(-0.001, null, null, o, flags: WFFlags.HiddenToo);
+		//Print(0.55555555.ToString_("F3"));
+		Wait(0.2);
+		//Print((GC.GetTotalMemory(false) / 1024 / 1024d).ToString_("F3"));
+		//TaskDialog.Show("wait"); return;
+		var w = Wnd.Find("Quick*", flags: WFFlags.HiddenToo); Print(w); return;
+		for(int i = 0; i < 10; i++) {
+			//WaitFor.WindowExists(-30, "nnname");
+			//WaitFor.WindowExists(-30, null, "nnname");
+			WaitFor.WindowExists(-1, null, "nnname", flags: WFFlags.HiddenToo);
+			//WaitFor.WindowExists(-1, "nnname", flags: WFFlags.HiddenToo);
+			//WaitFor.WindowExists(-1, null, null, o, flags: WFFlags.HiddenToo);
+			//ScreenImage.Wait(-30, "qm info.png", w);
+			//GC.Collect();
+		}
+		//Print((GC.GetTotalMemory(false) / 1024 / 1024d).ToString_("F3"));
+		//var t = Time.Milliseconds;
+		//for(int i = 0; Time.Milliseconds<t+30_000; i++) {
+		//	var a = Wnd.Misc.AllWindows();
+		//	//foreach(var v in a) {
+		//	//	//var s = v.Name;
+		//	//	var s = v.ClassName;
+		//	//}
+		//	Wait(0.01);
+		//}
+	}
+
+	class PrintGcCollect
+	{
+		int k;
+		~PrintGcCollect()
+		{
+			Print("GC");
+			Task.Delay(500).ContinueWith(t => new PrintGcCollect());
+		}
+	}
+
+	static void TestWndArray()
+	{
+		//var a = Wnd.FindAll("*u*");
+		//Print(a);
+		//Print("------");
+		//var f = new Wnd.Finder("*m*");
+		//Print(f.FindAllInList(a));
 
 		//var w = Wnd.Find("Quick*");
-		var w = Wnd.Find("* Notepad");
-		//w.Click(100, 100);
-		//w.Click(100, 100, flags:MFlags.Relaxed);
-		//w.Click(10, 10, flags:MFlags.NonClientXY);
-		//w.Click(10, 10, flags:MFlags.WorkAreaXY);
-		//w.Click(400, 90, MButton.Down);
-		//Wait(0.1);
-		//Wait(3);
-		//w.MouseMove(350, 70);
-		//w.MouseMove(350, 70, mmFlags: MFlags.Relaxed);
-		//Wait(0.1);
-		//Mouse.LeftUp();
+		//var a = w.ChildAll(null, "QM_*");
+		//Print(a);
 
-		//Mouse.Move(-100, 400);
-
-		//Mouse.LeftDown(w, 1, 100, true);
-		//Mouse.LeftDown(w, -1, 100);
-		//Mouse.LeftUp(w, 200, w.MouseClientXY.Y);
-
-	}
-
-	static void TestOptionsMouseMoveSpeed()
-	{
-		//Wnd.Find("app -*").Activate(); Wait(0.5);
-		Options.MouseMoveSpeed = 50;
-		//Mouse.LeftDown(176, 910);
-		//Mouse.MoveRelative(50, 0);
-		//Mouse.LeftUp();
-
-		Mouse.MoveRelative(50, 0);
-		Mouse.MoveRelative(50, 200);
-		Mouse.MoveRelative(-150, -100);
-		Mouse.MoveRelative(500, 500);
-
-		//test crossing an offscreen area
-		//Mouse.Move(100, 200, screen: 1);
-		//Options.MouseMoveSpeed = 500;
-		//Mouse.Move(11, 962);
-
-	}
-
-	static void TestRecordMouseMove()
-	{
-		var xy0 = Mouse.XY;
-		s_withSleepTimes = false;
-		s_recptime = Time.Milliseconds;
-		s_recMoves = new List<uint>();
-
-		var hh = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, _testRecordMouseMove_Proc, Catkeys.Util.ModuleHandle.OfProcessExe(), 0);
-		Thread.CurrentThread.Join(7000);
-		Api.UnhookWindowsHookEx(hh);
-
-		var s = Catkeys.Util.Recording.MouseToString(s_recMoves, s_withSleepTimes);
-		Print(s);
-
-		Wait(1);
-		Mouse.Move(xy0);
-		Mouse.MoveRecorded(s);
-	}
-
-	static Api.HOOKPROC _testRecordMouseMove_Proc = _TestRecordMouseMove_Proc;
-	static unsafe LPARAM _TestRecordMouseMove_Proc(int code, LPARAM msg, LPARAM lParam)
-	{
-		//var m = (Api.MSLLHOOKSTRUCT*)lParam;
-		ref Api.MSLLHOOKSTRUCT m = ref *(Api.MSLLHOOKSTRUCT*)lParam;
-
-		//PrintList(m.pt.X, m.pt.Y);
-		//PrintList(m.pt.X - s_pp.X, m.pt.Y - s_pp.Y);
-
-		var d = new Point(m.pt.X - s_pp.X, m.pt.Y - s_pp.Y);
-		int ddx = d.X - s_ppd.X, ddy = d.Y - s_ppd.Y;
-		//string s = null;
-		//if(ddx < -16 || ddx > 15 || ddy < -16 || ddy > 15) s = ">15";
-		//else if(ddx < -8 || ddx > 7 || ddy < -8 || ddy > 7) s = ">7";
-		//else if(ddx < -4 || ddx > 3 || ddy < -4 || ddy > 3) s = ">3";
-		//Print($"{d.X}, {d.Y}      {ddx}, {ddy}     {s}");
-		s_pp = m.pt;
-		s_ppd = d;
-
-		if(s_withSleepTimes) {
-			var t = Time.Milliseconds;
-			s_recMoves.Add((uint)(t - s_recptime));
-			s_recptime = t;
-		}
-		s_recMoves.Add(Calc.MakeUint(d.X, d.Y));
-
-		return Api.CallNextHookEx(Zero, code, msg, lParam);
-	}
-	static Point s_pp = Mouse.XY;
-	static Point s_ppd;
-	static bool s_withSleepTimes;
-	static long s_recptime;
-	static List<uint> s_recMoves;
-
-	static void TestHowLooksRecordedMouseScript()
-	{
-		Wnd w1 = Wnd.Find("Untitled - Notepad", "Notepad");
-
-		//Mouse.Click(w1, 100, 100);
-		//w1.MouseClick(100, 100);
-
-		//Mouse.RightClick(w1, 100, 100);
-		//w1.MouseClick(100, 100, MButton.Right);
-
-		//Mouse.MoveRecorded("sjdksjdkjskdjksjdksjkdsjdks");
-
-		//var speed = 0.5;
-		//Mouse.MoveRecorded("sjdksjdkjskdjksjdksjkdsjdks", speed);
-		//Mouse.Click(w1, 100, 100); Wait(0.5 * speed);
-		////Mouse.Click(w1, 100, 100); WaitSF(0.5); //=Wait(0.5 * Options.SpeedFactor);
-		////Mouse.ClickWait(w1, 100, 100, 0.5);
-
-		//Mouse.RightClick()
-		//Mouse.Move(
-		Mouse.Click(w1, 1, 2);
-		Mouse.ClickEx(MButton.Middle, w1, 1, 2);
-		w1.MouseClick(1, 2);
-		w1.MouseClick(1, 2, MButton.Right);
-		Mouse.LeftDown(w1, 100, 200);
-		Mouse.ClickEx(MButton.Left | MButton.Down, w1, 100, 200);
-
-		//var f=new FileStream()
-	}
-
-	static void TestFindOrRun()
-	{
-		Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
-		Print(w);
-	}
-
-	static void TestMouseDragDrop()
-	{
-		var w = Wnd.Find("* Notepad");
-		//w.Activate();
-		//Wait(0.5);
-
-		//Mouse.LeftDown(w, 8, 8);
-		//Mouse.LeftUp(w, 28, 8);
-
-		//Mouse.LeftDown(w, 8, 8);
-		//Mouse.MoveRelative(20, 0, drop: true);
-
-		//Mouse.LeftDown(w, 8, 8);
-		//Mouse.MoveRelative(20, 0);
-		////Mouse.Drop();
-		//Wait(3);
-		//Mouse.LeftUp(true);
-
-		//using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(20, 0);
-		//using(Mouse.ClickEx(MButton.Left|MButton.Down, w, 8, 8)) Mouse.MoveRelative(20, 0);
-
-		//Mouse.Move(w, 100, 100);
-		//Mouse.Wheel(-5);
-		//Wait(0.5);
-		//Mouse.Wheel(1);
-
-		//Wnd w2 = Wnd.Find("* WordPad");
-		//w2.ZorderTopmost();
-		//w2.ZorderNoTopmost();
-		//Wait(0.5);
-
-		//w = Wnd.Find("", "WorkerW");
-
-		Mouse.Click(w, 20, 20);
-	}
-
-	//static int s_four = 4;
-
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void TestUnsafeLibrary(MButton b, bool add)
-	{
-		//int i =Unsafe.SizeOf<RECT>();
-		//if(i== s_four) Print("4");
-
-		//bool y = b.Has_(MButton.Right|MButton.Left);
-		//bool y = b.Has_(MButton.Right);
-		//Print(y ? "yes" : "no");
-
-		//var p = new Point();
-		//p.
-
-		//Calc.SetFlag(ref b, MButton.Left, add);
-		////Calc.SetFlag(ref b, MButton.Down, false);
-		////Print(b);
-		//Print(b==(MButton.Left|MButton.Right) ? "yes" : "no");
-
-		//Debug_.CheckFlagsOpt(b, MButton.Down|MButton.Up);
-	}
-
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void TestArrayBuilder()
-	{
-		//var a = new Catkeys.Util.LibArrayBuilder<long>();
-		//a.Add() = 8;
-		//var v=a[i];
-		//Print(v==8 ? "8" : "no");
-
-		var a = Wnd.Misc.AllWindows(sortFirstVisible: true);
+		var a = Wnd.Misc.AllWindows();
 		Print(a);
-		Print(a.Length);
-		//Print(Wnd.Misc.AllWindows(onlyVisible:true));
 	}
-	//static void TestArrayBuilder()
-	//{
-	//	var a = new Catkeys.Util.LibArrayBuilder<long>();
-	//	a.Add() = 8;
-	//	PrintList(a.Count, a.Capacity);
-	//	var v=a[0];
-	//	Print(v);
-	//	a[0] = 9;
-	//	Print(a[0]);
-	//	long i = 10;
-	//	//a.Add(ref i);
-	//	a.AddV(10); Print(a[1]);
-	//	//Print(a[2]);
-
-	//	var r = new RECT(1, 2, 3, 4, false);
-	//	var aa = new Catkeys.Util.LibArrayBuilder<RECT>();
-	//	//aa.Add(ref r);
-	//	aa.AddV(r);
-	//	Print(aa[0]);
-	//	aa.Add()=r;
-	//}
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -666,18 +574,29 @@ static partial class Test
 		}
 
 		try {
-			//TestArrayBuilder();
-			//TestUnsafeLibrary(MButton.Right|MButton.Down, true);
-
-			//TestFindOrRun();
-
+			//TestWndArray();
+			TestGarbageOfWaitWindowEtc();
+			//ConvertBmpToPng();
 			//TestScreenImage2();
 			//TestBitmapFromHbitmap();
 			//TestScreenImage_BottomUp();
 			//TestScreenImage_InBitmap();
 			//TestScreenImage_CaptureExample();
 
-			TestMouseDragDrop();
+			//TestFtpUploadWithProgress(@"q:\app\ok - Copy.qml", "ftp://ftp.quickmacros.com/public_html/test/", "quickmac", "jucabA8~/ke+f4");
+			//TestInterDomainVariables();
+
+			//Example.Test();
+			//TestLibBuffers();
+			//TestWeakReference();
+			//TestFormatSpeed();
+			//TestSetStringLength();
+			//TestArrayBuilder();
+			//TestUnsafeLibrary(MButton.Right|MButton.Down, true);
+
+			//TestFindOrRun();
+
+			//TestMouseDragDrop();
 			//TestRecordMouseMove();
 			//TestOptionsMouseMoveSpeed();
 			//TestWndClick();

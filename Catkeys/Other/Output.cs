@@ -526,14 +526,30 @@ namespace Catkeys
 			/// Writes s + "\r\n" and optionally timestamp.
 			/// </summary>
 			/// <remarks>
-			/// If fails to write to file:
-			///		Sets LogFile=null, which closes file handle.
-			///		Writes a warning and s to the output window or console.
+			/// If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
 			/// </remarks>
 			public bool WriteLine(string s)
 			{
-				var b = _StringToUtf8(s, out var n);
-				bool ok = Api.WriteFile(_h, b, n, out var nWritten);
+				bool ok;
+				int n = Convert_.Utf8LengthFromString(s) + 1;
+				fixed (byte* b = Util.Buffers.LibByte(n + 35)) {
+					if(LogFileTimestamp) {
+						Api.SYSTEMTIME t; Api.GetLocalTime(out t);
+						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
+						int nn = Util.CharPtr.Length(b);
+						Convert_.Utf8FromString(s, b + nn, n);
+						n += nn;
+						if(s.StartsWith_("<>")) {
+							Api.memmove(b + 2, b, nn);
+							b[0] = (byte)'<'; b[1] = (byte)'>';
+						}
+					} else {
+						Convert_.Utf8FromString(s, b, n);
+					}
+					b[n - 1] = 13; b[n++] = 10;
+
+					ok = Api.WriteFile(_h, b, n, out var nWritten);
+				}
 				if(!ok) {
 					string emsg = Native.GetErrorMessage();
 					LogFile = null;
@@ -541,7 +557,6 @@ namespace Catkeys
 					WriteDirectly(s);
 					//Debug.Assert(false);
 				}
-				Util.LibByteBuffer.LibCommon.Compact();
 				return ok;
 			}
 
@@ -559,35 +574,6 @@ namespace Catkeys
 			/// Closes file handle.
 			/// </summary>
 			public void Close() { if(_h != null) { _h.Close(); _h = null; } }
-
-			/// <summary>
-			/// Converts string to UTF8 (stored in Util.LibByteBuffer.LibCommon).
-			/// Appends "\r\n". If LogFileTimestamp, prepends timestamp.
-			/// </summary>
-			/// <param name="s"></param>
-			/// <param name="len">Receives UTF8 length.</param>
-			static unsafe byte* _StringToUtf8(string s, out int len)
-			{
-				len = 0;
-				int n = Convert_.Utf8LengthFromString(s) + 1;
-				var b = Util.LibByteBuffer.LibCommon.Alloc(n + 35);
-				if(LogFileTimestamp) {
-					Api.SYSTEMTIME t; Api.GetLocalTime(out t);
-					Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-					int nn = CharPtr.Length(b);
-					Convert_.Utf8FromString(s, b + nn, n);
-					n += nn;
-					if(s.StartsWith_("<>")) {
-						Api.memmove(b + 2, b, nn);
-						b[0] = (byte)'<'; b[1] = (byte)'>';
-					}
-				} else {
-					Convert_.Utf8FromString(s, b, n);
-				}
-				b[n - 1] = 13; b[n++] = 10;
-				len = n;
-				return b;
-			}
 		}
 
 		unsafe class _ClientOfGlobalServer
@@ -602,19 +588,19 @@ namespace Catkeys
 				lock(_lockObj1) {
 					if(!_Connect()) return;
 
-					var buffer = Util.LibByteBuffer.LibCommon;
 					int lenS = s.Length, lenCaller = (caller != null) ? Math.Min(caller.Length, 255) : 0;
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
-					var b = buffer.Alloc(lenAll);
-					b[0] = (byte)Server.MessageType.Write; //type
-					*(long*)(b + 1) = time; //time
-					b[9] = (byte)lenCaller; if(lenCaller != 0) fixed (char* p = caller) Api.memcpy(b + 10, p, lenCaller * 2); //caller
-					if(lenS != 0) fixed (char* p = s) Api.memcpy(b + 10 + lenCaller * 2, p, lenS * 2); //s
+					bool ok;
+					fixed (byte* b = Util.Buffers.LibByte(lenAll)) {
+						b[0] = (byte)Server.MessageType.Write; //type
+						*(long*)(b + 1) = time; //time
+						b[9] = (byte)lenCaller; if(lenCaller != 0) fixed (char* p = caller) Api.memcpy(b + 10, p, lenCaller * 2); //caller
+						if(lenS != 0) fixed (char* p = s) Api.memcpy(b + 10 + lenCaller * 2, p, lenS * 2); //s
 
-					g1:
-					bool ok = Api.WriteFile(_mailslot, b, lenAll, out var nWritten);
-					if(!ok && _ReopenMailslot()) goto g1;
-					buffer.Compact();
+						g1:
+						ok = Api.WriteFile(_mailslot, b, lenAll, out var nWritten);
+						if(!ok && _ReopenMailslot()) goto g1;
+					}
 
 					if(ok) _SetTimer();
 				}
@@ -969,45 +955,44 @@ namespace Catkeys
 
 							if(_isGlobal) { //read messages from mailslot and add to Messages. Else messages are added directly to Messages.
 								while(Api.GetMailslotInfo(_mailslot, null, out var nextSize, out var msgCount) && msgCount > 0) {
-									var buffer = Util.LibByteBuffer.LibCommon;
-									byte* b0 = buffer.Alloc(nextSize + 4), b = b0; //+4 for "\r\n"
-									bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;
-									if(ok) {
-										long time = 0; string s = null, caller = null;
-										var mtype = (MessageType)(*b++);
-										switch(mtype) {
-										case MessageType.Write:
-											if(nextSize < 10) { ok = false; break; } //type, time(8), lenCaller
-											time = *(long*)b; b += 8;
-											int lenCaller = *b++;
-											if(lenCaller > 0) {
-												if(10 + lenCaller * 2 > nextSize) { ok = false; break; }
-												caller = _GetCallerString((char*)b, lenCaller);
-												b += lenCaller * 2;
-											}
-											int len = (nextSize - (int)(b - b0)) / 2;
-											if(!NoNewline) {
-												char* p = (char*)(b0 + nextSize);
-												p[0] = '\r'; p[1] = '\n';
-												len += 2;
-											}
-											s = new string((char*)b, 0, len);
-											break;
-										case MessageType.Clear:
-											if(nextSize != 1) ok = false;
-											break;
-										default:
-											ok = false;
-											break;
-										}
-										Debug.Assert(ok);
+									fixed (byte* b0 = Util.Buffers.LibByte(nextSize + 4)) {
+										var b = b0; //+4 for "\r\n"
+										bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;
 										if(ok) {
-											var m = new Message(mtype, s, time, caller);
-											Messages.Enqueue(m);
+											long time = 0; string s = null, caller = null;
+											var mtype = (MessageType)(*b++);
+											switch(mtype) {
+											case MessageType.Write:
+												if(nextSize < 10) { ok = false; break; } //type, time(8), lenCaller
+												time = *(long*)b; b += 8;
+												int lenCaller = *b++;
+												if(lenCaller > 0) {
+													if(10 + lenCaller * 2 > nextSize) { ok = false; break; }
+													caller = _GetCallerString((char*)b, lenCaller);
+													b += lenCaller * 2;
+												}
+												int len = (nextSize - (int)(b - b0)) / 2;
+												if(!NoNewline) {
+													char* p = (char*)(b0 + nextSize);
+													p[0] = '\r'; p[1] = '\n';
+													len += 2;
+												}
+												s = new string((char*)b, 0, len);
+												break;
+											case MessageType.Clear:
+												if(nextSize != 1) ok = false;
+												break;
+											default:
+												ok = false;
+												break;
+											}
+											Debug.Assert(ok);
+											if(ok) {
+												var m = new Message(mtype, s, time, caller);
+												Messages.Enqueue(m);
+											}
 										}
 									}
-
-									buffer.Compact();
 									if(msgCount == 1) break;
 								}
 							}

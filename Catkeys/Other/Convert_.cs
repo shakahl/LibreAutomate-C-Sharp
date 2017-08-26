@@ -24,7 +24,7 @@ using static Catkeys.NoClass;
 namespace Catkeys
 {
 	/// <summary>
-	/// Data conversion functions - hash, hex-encode, compress, UTF8.
+	/// Data conversion functions - hash, compress, hex-encode, Base64, UTF8.
 	/// </summary>
 	public unsafe class Convert_
 	{
@@ -326,14 +326,14 @@ namespace Catkeys
 		{
 			if(s == null) return null;
 			int n = s.Length / 2;
-			var buf = Util.LibCharBuffer.LibCommon;
-			var b = buf.Alloc(n);
-			n = HexDecode(s, b, n, 0);
-			var r = new byte[n];
-			Marshal.Copy((IntPtr)b, r, 0, n);
-			//var b1 = (byte*)b; for(int i = 0; i < n; i++) r[i] = b1[i]; //faster when array small, slower when big
-			buf.Compact();
-			return r;
+			var b = Util.Buffers.LibChar(n);
+			fixed (char* p = b.A) {
+				n = HexDecode(s, p, n, 0);
+				var r = new byte[n];
+				Marshal.Copy((IntPtr)p, r, 0, n);
+				//var b1 = (byte*)p; for(int i = 0; i < n; i++) r[i] = b1[i]; //faster when array small, slower when big
+				return r;
+			}
 
 			//These functions have similar speed as the Base64 functions. Slower for the same binary data size because then the hex string is significantly longer.
 		}
@@ -435,6 +435,8 @@ namespace Catkeys
 		/// <exception cref="ArgumentException">bufferSize too small.</exception>
 		public static unsafe int Base64Decode(byte* s, int len, void* resultBuffer, int bufferSize)
 		{
+			//TODO: remove this overload if not used.
+
 			if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");
 			byte* r = (byte*)resultBuffer;
 			byte* t = Util.LibTables.Base64;
@@ -489,6 +491,8 @@ namespace Catkeys
 		/// <exception cref="ArgumentException">bufferSize too small.</exception>
 		public static unsafe int Base64Decode(char* s, int len, void* resultBuffer, int bufferSize)
 		{
+			//TODO: try to do it in a safer way, eg with a WeakReference<byte[]>.
+
 			if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");
 			byte* r = (byte*)resultBuffer;
 			byte* t = Util.LibTables.Base64;
@@ -528,11 +532,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
+		/// Returns the number of bytes stored in resultBuffer.
 		/// The same as <see cref="Base64Decode(char*, int, void*, int)"/>, just different input string type.
 		/// </summary>
 		/// <param name="s">Base64 string. Can be null, then returns null.</param>
-		/// <param name="resultBuffer"></param>
-		/// <param name="bufferSize"></param>
+		/// <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
+		/// <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
 		/// <param name="stringStartIndex">0 or index of first character of Base64 substring in s.</param>
 		public static int Base64Decode(string s, void* resultBuffer, int bufferSize, int stringStartIndex = 0)
 		{
@@ -560,13 +566,12 @@ namespace Catkeys
 			if(s == null) return null;
 			fixed (char* p = s) {
 				int len = s.Length, n = (int)(len * 3L / 4);
-				var buf = Util.LibByteBuffer.LibCommon;
-				var b = buf.Alloc(n);
-				n = Base64Decode(p, len, b, n);
-				var r = new byte[n];
-				Marshal.Copy((IntPtr)b, r, 0, n);
-				buf.Compact();
-				return r;
+				fixed (byte* b = Util.Buffers.LibByte(n)) {
+					n = Base64Decode(p, len, b, n);
+					var r = new byte[n];
+					Marshal.Copy((IntPtr)b, r, 0, n);
+					return r;
+				}
 			}
 		}
 
@@ -591,22 +596,49 @@ namespace Catkeys
 
 		/// <summary>
 		/// Decompresses data using <see cref="DeflateStream"/>.
+		/// Returns byte[] containing decompressed data.
 		/// </summary>
-		/// <param name="data"></param>
+		/// <param name="compressedData">Compressed data.</param>
+		/// <param name="index">Start index of compressed data in the compressedData array.</param>
+		/// <param name="count">Length of compressed data in the compressedData array.</param>
 		/// <exception cref="Exception">Exceptions thrown by DeflateStream.</exception>
-		public static byte[] Decompress(byte[] data)
+		public static byte[] Decompress(byte[] compressedData, int index = 0, int count = -1)
 		{
-			using(MemoryStream decompressedStream = new MemoryStream()) {
-				using(MemoryStream compressStream = new MemoryStream(data, false)) {
-					using(DeflateStream deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress)) {
-						deflateStream.CopyTo(decompressedStream);
-					}
+			using(var stream = new MemoryStream()) {
+				Decompress(stream, compressedData, index, count);
+				return stream.ToArray();
+			}
+		}
+
+		/// <summary>
+		/// Decompresses data using <see cref="DeflateStream"/>.
+		/// Writes the decompressed data to a caller-provided memory stream.
+		/// </summary>
+		/// <param name="streamForDecompressedData">A memory stream where this function will write decompressed data. See example.</param>
+		/// <param name="compressedData">Compressed data.</param>
+		/// <param name="index">Start index of compressed data in the compressedData array.</param>
+		/// <param name="count">Length of compressed data in the compressedData array.</param>
+		/// <exception cref="Exception">Exceptions thrown by DeflateStream.</exception>
+		/// <example>
+		/// This code is used by the other Decompress overload.
+		/// <code><![CDATA[
+		/// using(var stream = new MemoryStream()) {
+		/// 	Decompress(stream, compressedData, index, count);
+		/// 	return stream.ToArray();
+		/// }
+		/// ]]></code>
+		/// </example>
+		public static void Decompress(Stream streamForDecompressedData, byte[] compressedData, int index = 0, int count = -1)
+		{
+			if(count < 0) count = compressedData.Length - index;
+			using(MemoryStream compressStream = new MemoryStream(compressedData, index, count, false)) {
+				using(DeflateStream deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress)) {
+					deflateStream.CopyTo(streamForDecompressedData);
 				}
-				return decompressedStream.ToArray();
 			}
 
 			//note: cannot deflateStream.Read directly to array because its Length etc are not supported.
-			//note: also cannot use decompressedStream.GetBuffer because it sometimes can be bigger.
+			//note: also cannot use decompressedStream.GetBuffer because it can be bigger.
 		}
 
 		#endregion
@@ -669,34 +701,33 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts C# string to '\0'-terminated UTF8 string stored in a Catkeys.Util.LibByteBuffer.
+		/// Converts C# string to '\0'-terminated UTF8 string managed by a WeakReference variable.
 		/// </summary>
-		/// <param name="s">C# string (UTF16). If null, by default returns null; returns "" if using allocExtraBytes.</param>
-		/// <param name="buffer">A Util.LibByteBuffer variable (probably [ThreadStatic]). If null, uses Catkeys.Util.LibByteBuffer.LibCommon.</param>
-		/// <param name="utf8Length">If not null, receives UTF8 text length not including '\0' and allocExtraBytes.</param>
+		/// <param name="s">C# string (UTF16). If null, returns null, unless allocExtraBytes is not 0.</param>
+		/// <param name="buffer">A WeakReference variable (probably [ThreadStatic]) that manages the returned array. If null, this function will create it.</param>
+		/// <param name="utf8Length">If not null, receives UTF8 text length, not including '\0' and allocExtraBytes.</param>
 		/// <param name="allocExtraBytes">Allocate this number of extra bytes after the string.</param>
-		internal static byte* LibUtf8FromString(string s, Util.LibByteBuffer buffer = null, int* utf8Length = null, int allocExtraBytes = 0)
+		internal static byte[] LibUtf8FromString(string s, ref WeakReference<byte[]> buffer, int* utf8Length = null, int allocExtraBytes = 0)
 		{
 			if(utf8Length != null) *utf8Length = 0;
 			if(s == null) {
 				if(allocExtraBytes == 0) return null;
 				s = "";
 			}
-			if(buffer == null) buffer = Util.LibByteBuffer.LibCommon;
-			byte* p;
-			var len = s.Length;
+			byte[] b; int len = s.Length;
 			if(len == 0) {
-				p = buffer.Alloc(1 + allocExtraBytes);
-				*p = 0;
+				b = Util.Buffers.Get(allocExtraBytes, ref buffer);
+				b[0] = 0;
 			} else {
 				int n = Utf8LengthFromString(s);
 				if(utf8Length != null) *utf8Length = n;
-				n++;
-				p = buffer.Alloc(n + allocExtraBytes);
-				var r = Utf8FromString(s, p, n);
-				Debug.Assert(r + 1 == n);
+				b = Util.Buffers.Get(n + allocExtraBytes, ref buffer);
+				fixed (byte* p = b) {
+					var r = Utf8FromString(s, p, n + 1);
+					Debug.Assert(r == n);
+				}
 			}
-			return p;
+			return b;
 		}
 
 		/// <summary>
@@ -713,7 +744,7 @@ namespace Catkeys
 		{
 			if(utf8 == null) return 0;
 			int n = lengthBytes;
-			if(n < 0) n = CharPtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
+			if(n < 0) n = Util.CharPtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
 			if(n == 0) return 0;
 			return Api.MultiByteToWideChar(Api.CP_UTF8, 0, utf8, n, null, 0);
 		}
@@ -732,7 +763,7 @@ namespace Catkeys
 		{
 			if(utf8 == null) return null;
 			int n1 = lengthBytes;
-			if(n1 < 0) n1 = CharPtr.Length(utf8); else if(n1 > 0 && utf8[n1 - 1] == 0) n1--;
+			if(n1 < 0) n1 = Util.CharPtr.Length(utf8); else if(n1 > 0 && utf8[n1 - 1] == 0) n1--;
 			if(n1 == 0) return "";
 			int n2 = Api.MultiByteToWideChar(Api.CP_UTF8, 0, utf8, n1, null, 0);
 			var s = new string('\0', n2);

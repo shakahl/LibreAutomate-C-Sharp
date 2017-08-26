@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define ENUMWINDOWS_LESS_GARBAGE
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -122,11 +124,26 @@ namespace Catkeys
 			/// Returns true if found.
 			/// The <see cref="Result"/> property will be the window.
 			/// </summary>
+#if ENUMWINDOWS_LESS_GARBAGE
+			public bool Find()
+			{
+				using(var a = Misc.LibEnumWindows2(Misc.LibEnumWindowsAPI.EnumWindows, 0 == (_flags & WFFlags.HiddenToo), true)) {
+					//Print(a.ToArray());
+					return _FindInList(a, false) >= 0;
+				}
+			}
+			//public bool Find()
+			//{
+			//	return _FindInList(Misc.LibEnumWindows3(Misc.LibEnumWindowsAPI.EnumWindows, 0 == (_flags & WFFlags.HiddenToo), true), false) >= 0;
+			//}
+#else
 			public bool Find()
 			{
 				var a = Misc.AllWindows(0 == (_flags & WFFlags.HiddenToo), true);
+				//Print(a);
 				return _FindInList(a, false) >= 0;
 			}
+#endif
 
 			/// <summary>
 			/// Finds the specified window in a list of windows.
@@ -141,26 +158,28 @@ namespace Catkeys
 
 			/// <summary>
 			/// Finds all matching windows, like <see cref="Wnd.FindAll">Wnd.FindAll</see>.
-			/// Returns list containing 0 or more window handles as Wnd.
+			/// Returns array containing 0 or more window handles as Wnd.
 			/// </summary>
-			public List<Wnd> FindAll()
+			public Wnd[] FindAll()
 			{
 				var a = Misc.AllWindows(0 == (_flags & WFFlags.HiddenToo), true);
-				var R = new List<Wnd>();
-				_FindInList(a, false, R);
-				return R;
+				using(var ab = new Util.LibArrayBuilder<Wnd>()) {
+					_FindInList(a, false, ab);
+					return ab.ToArray();
+				}
 			}
 
 			/// <summary>
 			/// Finds all matching windows in a list of windows.
-			/// Returns list containing 0 or more window handles as Wnd.
+			/// Returns array containing 0 or more window handles as Wnd.
 			/// </summary>
 			/// <param name="a">Array or list of windows, for example returned by <see cref="Misc.AllWindows"/>.</param>
-			public List<Wnd> FindAllInList(IEnumerable<Wnd> a)
+			public Wnd[] FindAllInList(IEnumerable<Wnd> a)
 			{
-				var R = new List<Wnd>();
-				_FindInList(a, true, R);
-				return R;
+				using(var ab = new Util.LibArrayBuilder<Wnd>()) {
+					_FindInList(a, true, ab);
+					return ab.ToArray();
+				}
 			}
 
 			/// <summary>
@@ -172,7 +191,7 @@ namespace Catkeys
 			/// <param name="inList">Called by FindInList or FindAllInList.</param>
 			/// <param name="aFindAll">If not null, adds all matching to it and returns -1.</param>
 			/// <param name="wSingle">Can be used instead of a. Then a must be null.</param>
-			int _FindInList(IEnumerable<Wnd> a, bool inList, [Out] List<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
+			int _FindInList(IEnumerable<Wnd> a, bool inList, Util.LibArrayBuilder<Wnd> aFindAll = null, Wnd wSingle = default(Wnd))
 			{
 				Result = default(Wnd);
 				bool mustBeVisible = inList && (_flags & WFFlags.HiddenToo) == 0;
@@ -212,6 +231,16 @@ namespace Catkeys
 						if(_className != null) {
 							if(!_className.Match(w.ClassName)) continue;
 						}
+						//CONSIDER: to make less garbage when waiting:
+						//	Use a list of windows that will not match. As a field of this class.
+						//	Turned on through an internal get/set property of this class. The wait functions would set it.
+						//	If class or pid etc didn't match, next time we can continue without getting it.
+						//	Maybe even pass it to Misc.AllWindows, let it add these windows to the array.
+						//	Then getting class etc should be before getting name. Not good.
+						//	For name cannot do such optimization because name can change.
+						//		But still can avoid creating garbage:
+						//			Add non-matching window names to a dictionary.
+						//			Then the get-name method can be optimized to return null (don't create new string) if current name is the same as in the dictionary.
 
 						int pid = 0, tid = 0;
 						if(_program != null || _processId != 0 || _threadId != 0) {
@@ -403,14 +432,14 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds all matching windows.
-		/// Returns list containing 0 or more window handles as Wnd.
+		/// Returns array containing 0 or more window handles as Wnd.
 		/// Everything except the return type is the same as with <see cref="Find"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException"/>
 		/// <remarks>
 		/// The list is sorted to match the Z order, however hidden windows (when using WFFlags.HiddenToo) are always after visible windows.
 		/// </remarks>
-		public static List<Wnd> FindAll(string name = null, string className = null, object programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
+		public static Wnd[] FindAll(string name = null, string className = null, object programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
 		{
 			var f = new Finder(name, className, programEtc, flags, also);
 			var a = f.FindAll();
@@ -444,16 +473,6 @@ namespace Catkeys
 		{
 			return Api.FindWindowEx(default(Wnd), wAfter, className, name);
 		}
-
-		//public static List<Wnd> FindAll(params Finder[] a)
-		//{
-		//	return null;
-		//}
-
-		//public static Wnd FindAny(params Finder[] a)
-		//{
-		//	return default(Wnd);
-		//}
 
 		//TODO: test more.
 		/// <summary>
@@ -542,9 +561,8 @@ namespace Catkeys
 						  if(onlyVisible && !w.IsVisible) return 1;
 						  if(directChild && Api.GetParent(w) != wParent) return 1;
 						  if(also != null && !also(w)) return 1;
-						  a.AddV(w);
+						  a.Add(w);
 						  return 1;
-						  //tested: using a non-anonymous callback function does not make faster.
 					  };
 
 					switch(api) {
@@ -575,6 +593,117 @@ namespace Catkeys
 				}
 				finally { a.Dispose(); }
 			}
+
+#if ENUMWINDOWS_LESS_GARBAGE
+			//This version creates 12 times less garbage (the garbage is the returned array). But very slightly slower when need to sort.
+			//But it is not so easy to use (the caller must dispose it).
+			//CONSIDER: Finder can have own LibArrayBuilder. Then even don't need to allocate/free memory many times when waiting.
+			internal static Util.LibArrayBuilder<Wnd> LibEnumWindows2(LibEnumWindowsAPI api,
+				bool onlyVisible, bool sortFirstVisible, Func<Wnd, bool> also = null,
+				Wnd wParent = default(Wnd), bool directChild = false, int threadId = 0)
+			{
+				if(onlyVisible) sortFirstVisible = false;
+				var a = new Util.LibArrayBuilder<Wnd>(onlyVisible ? 250 : 1020); //tested: normally there are 200-400 windows on my PC, rarely exceeds 500
+				try {
+					Api.WNDENUMPROC proc = (w, param) =>
+					  {
+						  if(onlyVisible && !w.IsVisible) return 1;
+						  if(directChild && Api.GetParent(w) != wParent) return 1;
+						  if(also != null && !also(w)) return 1;
+						  a.Add(w);
+						  return 1;
+					  };
+
+					switch(api) {
+					case LibEnumWindowsAPI.EnumWindows:
+						Api.EnumWindows(proc, Zero);
+						break;
+					case LibEnumWindowsAPI.EnumThreadWindows:
+						Api.EnumThreadWindows(threadId, proc, Zero);
+						break;
+					case LibEnumWindowsAPI.EnumChildWindows:
+						Api.EnumChildWindows(wParent, proc, Zero);
+						break;
+					}
+
+					if(sortFirstVisible) {
+						if(t_sort == null) t_sort = new WeakReference<List<Wnd>>(null);
+						if(!t_sort.TryGetTarget(out var aVisible)) t_sort.SetTarget(aVisible = new List<Wnd>(250));
+						else aVisible.Clear();
+						int n = a.Count;
+						for(int i = 0; i < n; i++) {
+							var w = a[i]; if(!w.IsVisible) continue;
+							aVisible.Add(w);
+							a[i] = default(Wnd);
+						}
+						for(int i = n - 1, j = i; i >= 0; i--) {
+							var w = a[i];
+							if(!w.Is0) a[j--] = w;
+						}
+						for(int i = 0; i < aVisible.Count; i++) a[i] = aVisible[i];
+					}
+
+					var R = a; a = null; //don't dispose
+					return R;
+				}
+				finally { a?.Dispose(); } //dispose if exception
+			}
+			[ThreadStatic] static WeakReference<List<Wnd>> t_sort;
+
+			////This version is easier to use than if returning LibArrayBuilder (the caller must dispose it).
+			////But slightly slower and creates ~50% more garbage.
+			//internal static IEnumerable<Wnd> LibEnumWindows3(LibEnumWindowsAPI api,
+			//	bool onlyVisible, bool sortFirstVisible, Func<Wnd, bool> also = null,
+			//	Wnd wParent = default(Wnd), bool directChild = false, int threadId = 0)
+			//{
+			//	if(onlyVisible) sortFirstVisible = false;
+			//	var a = new Util.LibArrayBuilder<Wnd>(onlyVisible ? 250 : 1020); //tested: normally there are 200-400 windows on my PC, rarely exceeds 500
+			//	try {
+			//		Api.WNDENUMPROC proc = (w, param) =>
+			//		  {
+			//			  if(onlyVisible && !w.IsVisible) return 1;
+			//			  if(directChild && Api.GetParent(w) != wParent) return 1;
+			//			  if(also != null && !also(w)) return 1;
+			//			  a.Add(w);
+			//			  return 1;
+			//		  };
+
+			//		switch(api) {
+			//		case LibEnumWindowsAPI.EnumWindows:
+			//			Api.EnumWindows(proc, Zero);
+			//			break;
+			//		case LibEnumWindowsAPI.EnumThreadWindows:
+			//			Api.EnumThreadWindows(threadId, proc, Zero);
+			//			break;
+			//		case LibEnumWindowsAPI.EnumChildWindows:
+			//			Api.EnumChildWindows(wParent, proc, Zero);
+			//			break;
+			//		}
+
+			//		if(sortFirstVisible) {
+			//			if(t_sort == null) t_sort = new WeakReference<List<Wnd>>(null);
+			//			if(!t_sort.TryGetTarget(out var aVisible)) t_sort.SetTarget(aVisible = new List<Wnd>(250));
+			//			else aVisible.Clear();
+			//			int n = a.Count;
+			//			for(int i = 0; i < n; i++) {
+			//				var w = a[i]; if(!w.IsVisible) continue;
+			//				aVisible.Add(w);
+			//				a[i] = default(Wnd);
+			//			}
+			//			for(int i = n - 1, j = i; i >= 0; i--) {
+			//				var w = a[i];
+			//				if(!w.Is0) a[j--] = w;
+			//			}
+			//			for(int i = 0; i < aVisible.Count; i++) a[i] = aVisible[i];
+			//		}
+
+			//		for(int i = 0, n = a.Count; i < n; i++) {
+			//			yield return a[i];
+			//		}
+			//	}
+			//	finally { a.Dispose(); }
+			//}
+#endif
 
 			/// <summary>
 			/// Gets top-level windows of a thread.

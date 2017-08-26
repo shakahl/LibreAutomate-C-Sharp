@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using Catkeys.Util;
 
 /*
 Most tags are like in QM2.
@@ -83,7 +84,7 @@ namespace G.Controls
 			//u1
 			public int Color { get => (int)(u1 & 0xffffff); set => u1 = (u1 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
 			public bool HasColor { get => 0 != (u1 & 0x1000000); }
-			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)Calc.MinMax(value, 0, 127) << 25); }
+			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)Math_.MinMax(value, 0, 127) << 25); }
 
 			//u2
 			public int BackColor { get => (int)(u2 & 0xffffff); set => u2 = (u2 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
@@ -295,7 +296,7 @@ namespace G.Controls
 
 				//end tag. Support <> and </tag>, but don't care what tag it is. The </tag> form can be used just to make the code more readable.
 				if(s[0] == '/') {
-					s++; while(Calc.IsAlpha(*s)) s++;
+					s++; while(Char_.IsAsciiAlpha(*s)) s++;
 					if(s[0] != '>') goto ge;
 				}
 				if(s[0] == '>') {
@@ -329,7 +330,7 @@ namespace G.Controls
 
 				//read tag name
 				if(*s == '_') s++;
-				while(Calc.IsAlpha(*s)) s++;
+				while(Char_.IsAsciiAlpha(*s)) s++;
 				int tagLen = (int)(s - tag);
 				if(tagLen == 0) goto ge;
 
@@ -374,7 +375,7 @@ namespace G.Controls
 				case 1 << 16 | 'Z':
 					if(attr == null) goto ge;
 					int color;
-					if(Calc.IsDigit(*attr)) color = Api.strtoul(attr, null, 0);
+					if(Char_.IsAsciiDigit(*attr)) color = Api.strtoul(attr, null, 0);
 					else {
 						var c = Color.FromName(new string((sbyte*)attr, 0, attrLen));
 						if(c.A == 0) break; //invalid color name
@@ -744,7 +745,7 @@ namespace G.Controls
 		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
 		{
 			if(setFocus && _c.InitReadOnlyAlways && !Input.IsAlt) {
-				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Calc.LoShort(m.LParam), Calc.HiShort(m.LParam));
+				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math_.LoShort(m.LParam), Math_.HiShort(m.LParam));
 				//Print(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;
 			}

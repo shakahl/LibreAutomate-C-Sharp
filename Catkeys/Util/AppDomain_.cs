@@ -98,7 +98,8 @@ namespace Catkeys.Util
 			isCurrentDomain = _defaultAppDomainIsCurrent;
 			return _defaultAppDomain;
 		}
-		static AppDomain _defaultAppDomain; static bool _defaultAppDomainIsCurrent;
+		static AppDomain _defaultAppDomain;
+		static bool _defaultAppDomainIsCurrent;
 
 		/// <summary>
 		/// Gets default appdomain.
@@ -180,23 +181,79 @@ namespace Catkeys.Util
 			if(k != null) try { k(sender, e); } catch { }
 		}
 
+#if false //rejected. Use InterDomainVariables.DefaultDomainVariable; call it once and assign the reference to a static field.
 		/// <summary>
-		/// Gets the entry assembly of this appdomain.
-		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it fails if appdomain launched through <see cref="AppDomain.DoCallBack">AppDomain.DoCallBack</see>.
+		/// Through this property you call methods added to the LibObjectInDefaultDomain class.
+		/// Can be called from any appdomain, but the method is actually executed in the default appdomain.
 		/// </summary>
-		public static Assembly EntryAssembly
+		internal static LibObjectInDefaultDomain LibCallInDefaultDomain
 		{
 			get
 			{
-				if(_appdomainAssembly == null) {
-					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
-					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
-					_appdomainAssembly = asm;
-				}
-				return _appdomainAssembly;
+				_Init();
+				return _inDD;
 			}
 		}
-		static Assembly _appdomainAssembly;
+		static LibObjectInDefaultDomain _inDD;
 
+		//public //could be called from default appdomain. But it saves < 100 mcs. Now we always auto-init on demand.
+		static void _Init()
+		{
+			if(_inDD == null) {
+				var d = GetDefaultDomain(out bool isThisDomainDefault);
+				_inDD = d.GetData("Catkeys_CIDD\x5") as LibObjectInDefaultDomain;
+				if(_inDD == null) {
+					if(isThisDomainDefault) {
+						_inDD = new LibObjectInDefaultDomain();
+					} else {
+						var t = typeof(LibObjectInDefaultDomain);
+						_inDD = (LibObjectInDefaultDomain)d.CreateInstanceAndUnwrap(t.Assembly.FullName, t.FullName);
+					}
+					d.SetData("Catkeys_CIDD\x5", _inDD);
+				}
+			}
+		}
+
+		//This can be used to execute methods in default appdomain. Unlike with AppDomain.DoCallback, we can have parameters. Also slightly faster. Unlike with AppDomain.CreateInstanceAndUnwrap or Activator.CreateInstance, don't need to create a MarshalByRefObject-derived class for each such method.
+		//When will need it, add methods in this class and call through CallInDefaultDomain.
+		//note: be careful with the number and type of parameters, as it can make much slower. Eg out parameters make several times slower.
+		internal sealed class LibObjectInDefaultDomain :MarshalByRefObject
+		{
+			//This is the fastest, almost like AppDomain.CreateInstanceAndUnwrap.
+			//public object SetDefaultDomainVariable(string assemblyName, string typeName)
+			//{
+			//	return Activator.CreateInstance(assemblyName, typeName).Unwrap();
+			//}
+			//public object SetDefaultDomainVariable(Type t)
+			//{
+			//	return Activator.CreateInstance(t);
+			//}
+			//public ObjectHandle SetDefaultDomainVariable(string assemblyName, string typeName)
+			//{
+			//	return Activator.CreateInstance(assemblyName, typeName);
+			//         }
+			//public void SetDefaultDomainVariable<T>(string name) where T : MarshalByRefObject, new()
+			//{
+			//	var x = new T();
+			//	SetVariable(name, x);
+			//}
+			//public T SetDefaultDomainVariable<T>(string name) where T : MarshalByRefObject, new()
+			//{
+			//	var x = new T();
+			//	SetVariable(name, x);
+			//	return x;
+			//}
+			//public object SetDefaultDomainVariable<T>(string name) where T : MarshalByRefObject, new()
+			//{
+			//	var x = new T();
+			//	SetVariable(name, x);
+			//	return x;
+			//}
+			//public void SetDefaultDomainVariable<T>(string name, out T value) where T : MarshalByRefObject, new()
+			//{
+			//	value = new T();
+			//}
+		}
+#endif
 	}
 }

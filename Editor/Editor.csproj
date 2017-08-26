@@ -22,7 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009,162,649,169</NoWarn>
   </PropertyGroup>
@@ -75,6 +75,9 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.4.0\lib\netstandard1.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -120,6 +123,7 @@
     <Compile Include="Util\EUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
     <Compile Include="Test\TestEditor.cs" />
+    <None Include="packages.config" />
     <None Include="Properties\CatkeysSN.pfx" />
     <Compile Include="Files\PanelFiles.cs" />
     <Compile Include="UI\EForm.cs">

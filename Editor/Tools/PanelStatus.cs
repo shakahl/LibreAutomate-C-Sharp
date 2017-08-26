@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define MOUSE_INFO_FAST_RESPONSE
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -26,11 +28,15 @@ using G.Controls;
 class PanelStatus :Control
 {
 	SciControl _c;
-	StringBuilder _s;
+	StringBuilder _sb;
+	//WeakReference<char[]> _wrca=new WeakReference<char[]>(null);
+	//WeakReference<string> _wrs = new WeakReference<string>(null);
 	Point _p;
+#if MOUSE_INFO_FAST_RESPONSE
 	Timer_ _timer;
 	bool _isMyTimer;
 	int _timerStopCounter;
+#endif
 
 	public PanelStatus()
 	{
@@ -47,10 +53,15 @@ class PanelStatus :Control
 		_c.WrapLines = true;
 		_c.HandleCreated += _c_HandleCreated;
 
+		_c.InitTagsStyle = SciControl.TagsStyle.AutoWithPrefix;
+
+		_sb = new StringBuilder(1000);
+
 		this.Controls.Add(_c);
 
-		_s = new StringBuilder(1000);
+#if MOUSE_INFO_FAST_RESPONSE
 		_timer = new Timer_(_MouseInfo);
+#endif
 		Program.Timer1s += Program_Timer1s;
 	}
 
@@ -85,14 +96,18 @@ class PanelStatus :Control
 
 	private void Program_Timer1s()
 	{
-		if(_isMyTimer || !Visible) return;
+#if MOUSE_INFO_FAST_RESPONSE
+		if(_isMyTimer) return;
+#endif
+		if(!Visible) return;
 		_MouseInfo(null);
 	}
 
-	void _MouseInfo(Timer_ timer)
+	unsafe void _MouseInfo(Timer_ timer)
 	{
 		var p = Mouse.XY;
 		bool noChange = p == _p;
+#if MOUSE_INFO_FAST_RESPONSE
 		if(noChange) {
 			if(_isMyTimer && ++_timerStopCounter >= 30) {
 				_timer.Stop();
@@ -107,35 +122,38 @@ class PanelStatus :Control
 			}
 			_timerStopCounter = 0;
 		}
+#endif
 		if(noChange) return;
 		_p = p;
 
-		_s.Clear();
-		//Print(_s.Capacity);
-		_s.AppendFormat("{0}\n{1} j", p.X, p.Y);
+		_sb.Clear();
+
+		_sb.Append(p.X);
+		_sb.Append("\n");
+		_sb.Append(p.Y);
+
+		_c.ST.SetText(_sb.ToString());
+
 		//remember: limit long text, each line separatelly
 
-		_MouseInfo_SetText();
-	}
+		//possible alternatives:
 
-	unsafe void _MouseInfo_SetText()
-	{
-		//a test-string, almost 300 length
-		//_s.Append("Chars is the default property of the StringBuilder class. In C#, it is an indexer.\r\nThis means that individual characters can be retrieved from the Chars property as shown in the following example, which counts the number of alphabetic, white-space, and punctuation characters in a string.");
-		//Print(_s.Length);
+		//var b = Catkeys.Util.Buffers.Get(1024, ref _wrca);
+		//fixed (char* line1 = b) {
+		//	Api.wsprintfW(line1, "%i\n%i", __arglist(p.X, p.Y));
+		//	_c.ST.SetText(new string(line1));
+		//}
+		//no advantages. Creates garbage too, harder to use, slower than StringBuilder.Append (same speed as StringBuilder.AppendFormat).
 
-		//Perf.First();
-#if false
-		_SetText(_s.ToString());
-		//This would make too much garbage: the string and a temporary byte[].
-		//Let's say, this func is called at 10 ms period when moving the mouse, and average text size is 340.
-		//Then need 1 KB. In second - 100 KB. In minute - 6 MB.
-#else
-		//_c.ST.SetText(_s);
-#endif
-		//Perf.Next();
-		//_c.Update();
-		//Perf.NW(); //~1.3 ms. Also tried to draw directly to this control (without scintilla), but it is slightly slower, even when using API.
+		//if(!_wrs.TryGetTarget(out var b)) _wrs.SetTarget(b = new string('\0', 1000));
+		//fixed (char* line1 = b) {
+		//	//Api.wsprintfW(line1, "%i\n%i", __arglist(p.X, p.Y));
+		//	Api.wsprintfW(line1, "<>%i\n<c 0xff>%i</c>", __arglist(p.X, p.Y));
+		//	int len = CharPtr.Length(line1);
+		//	Unsafe.Write(line1 - 2, len);
+		//	_c.ST.SetText(b);
+		//}
+		//does not create garbage, but too dangerous, may not work with other .NET versions etc.
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

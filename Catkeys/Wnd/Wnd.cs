@@ -2426,10 +2426,10 @@ namespace Catkeys
 		static unsafe partial class _Api
 		{
 			[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
-			public static extern int GetClassName(Wnd hWnd, [Out] char* lpClassName, int nMaxCount);
+			public static extern int GetClassName(Wnd hWnd, char* lpClassName, int nMaxCount);
 
 			[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
-			public static extern int InternalGetWindowText(Wnd hWnd, [Out] char* pString, int cchMaxCount);
+			public static extern int InternalGetWindowText(Wnd hWnd, [Out] char[] pString, int cchMaxCount);
 		}
 
 		/// <summary>
@@ -2446,7 +2446,7 @@ namespace Catkeys
 				if(n > 0) return new string(b, 0, n);
 				return null;
 
-				//tested: same speed with LibCharBuffer etc
+				//tested: same speed with Util.Buffers
 			}
 		}
 
@@ -2547,13 +2547,13 @@ namespace Catkeys
 		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="Native.GetError"/>.
 		/// Calls API InternalGetWindowText. If it fails, and getControlTextIfEmpty==true, and this is a control, calls _GetTextSlow, which uses WM_GETTEXT.
 		/// </summary>
-		unsafe string _GetTextFast(bool useSlowIfEmpty)
+		string _GetTextFast(bool useSlowIfEmpty)
 		{
 			if(Is0) return null;
-			var b = Util.LibCharBuffer.LibCommon;
-			for(int na = 300; b.Alloc(ref na, out var p, true); na *= 2) {
+			for(int na = 300; ; na *= 2) {
+				var b = Util.Buffers.LibChar(ref na);
 				Native.ClearError();
-				int nr = _Api.InternalGetWindowText(this, p, na);
+				int nr = _Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
 					if(nr > 0) return b.ToString(nr);
 					if(Native.GetError() != 0) return null;
@@ -2561,8 +2561,6 @@ namespace Catkeys
 					return "";
 				}
 			}
-			b.Compact();
-			return null;
 		}
 
 		/// <summary>
@@ -2582,7 +2580,7 @@ namespace Catkeys
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
 				p[n] = '\0';
-				int n2 = CharPtr.Length(p); //info: some buggy controls return incorrect nt, eg including '\0'
+				int n2 = Util.CharPtr.Length(p); //info: some buggy controls return incorrect nt, eg including '\0'
 				if(n2 < n) {
 					s = s.Remove(n2);
 					//PrintList(n, n2, this); //2 from > 1000 tested controls

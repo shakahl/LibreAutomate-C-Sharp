@@ -30,18 +30,16 @@ namespace Catkeys
 	public static class Process_
 	{
 		[DllImport("kernel32.dll", SetLastError = true)]
-		static extern unsafe bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, char* lpExeName, ref int lpdwSize);
+		static extern unsafe bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
 
 		static unsafe bool _QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, out string s)
 		{
 			s = null;
-			var b = Util.LibCharBuffer.LibCommon; int size = b.Max(300);
-			g1: if(!QueryFullProcessImageNameW(hProcess, nativeFormat, b.Alloc(size), ref size)) {
-				if(Native.GetError() == Api.ERROR_INSUFFICIENT_BUFFER) { size *= 2; goto g1; }
-				return false;
+			for(int na = 300; ; na *= 2) {
+				var b = Util.Buffers.LibChar(ref na);
+				if(QueryFullProcessImageNameW(hProcess, nativeFormat, b, ref na)) { s = b.ToString(na); return true; }
+				if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) return false;
 			}
-			s = b.ToString(size);
-			return true;
 		}
 
 		static unsafe string _GetProcessName(int processId, bool fullPath, bool dontEnumerate = false, bool unDOS = false)
@@ -477,11 +475,10 @@ namespace Catkeys
 			string _ReadString(bool ansiString, int nChars, int offsetBytes, Encoding enc = null)
 			{
 				if(Mem == Zero) return null;
-				var b = Util.LibCharBuffer.LibCommon;
 				int na = nChars; if(!ansiString) na *= 2;
-				if(!ReadProcessMemory(_hproc, Mem + offsetBytes, b.Alloc((na + 1) / 2), na, null)) return null;
-				if(!ansiString) return b.ToString(nChars);
-				return b.ToStringFromAnsi(nChars, enc);
+				var b = Util.Buffers.LibChar((na + 1) / 2);
+				fixed (char* p = b.A) if(!ReadProcessMemory(_hproc, Mem + offsetBytes, p, na, null)) return null;
+				return ansiString ? b.LibToStringFromAnsi(nChars, enc) : b.ToString(nChars);
 			}
 
 			/// <summary>

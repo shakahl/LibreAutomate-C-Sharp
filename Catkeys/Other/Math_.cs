@@ -25,7 +25,7 @@ namespace Catkeys
 	/// Simple calculation functions.
 	/// </summary>
 	//[DebuggerStepThrough]
-	public static class Calc
+	public static class Math_
 	{
 		/// <summary>
 		/// Creates uint by placing (ushort)loWord in bits 1-16 and (ushort)hiWord in bits 17-32.
@@ -59,37 +59,49 @@ namespace Catkeys
 		/// Gets bits 1-16 as ushort.
 		/// Like C macro LOWORD.
 		/// </summary>
+		/// <remarks>
+		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// </remarks>
 		public static ushort LoUshort(LPARAM x) { return (ushort)((uint)x & 0xFFFF); }
 
 		/// <summary>
 		/// Gets bits 17-32 as ushort.
 		/// Like C macro HIWORD.
 		/// </summary>
+		/// <remarks>
+		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// </remarks>
 		public static ushort HiUshort(LPARAM x) { return (ushort)((uint)x >> 16); }
 
 		/// <summary>
 		/// Gets bits 1-16 as short.
 		/// Like C macro GET_X_LPARAM.
 		/// </summary>
+		/// <remarks>
+		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// </remarks>
 		public static short LoShort(LPARAM x) { return (short)((uint)x & 0xFFFF); }
 
 		/// <summary>
 		/// Gets bits 17-32 as short.
 		/// Like C macro GET_Y_LPARAM.
 		/// </summary>
+		/// <remarks>
+		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
+		/// </remarks>
 		public static short HiShort(LPARAM x) { return (short)((uint)x >> 16); }
 
 		/// <summary>
 		/// Gets bits 1-8 as byte.
 		/// Like C macro LOBYTE.
 		/// </summary>
-		public static byte LoByte(LPARAM x) { return (byte)((uint)x & 0xFF); }
+		public static byte LoByte(ushort x) { return (byte)((uint)x & 0xFF); }
 
 		/// <summary>
 		/// Gets bits 9-16 as byte.
 		/// Like C macro HIBYTE.
 		/// </summary>
-		public static byte HiByte(LPARAM x) { return (byte)((uint)x >> 8); }
+		public static byte HiByte(ushort x) { return (byte)((uint)x >> 8); }
 
 		/// <summary>
 		/// Multiplies number and numerator without overflow, and divides by denominator.
@@ -154,26 +166,6 @@ namespace Catkeys
 			if(value > max) return max;
 			return value;
 		}
-
-		/// <summary>
-		/// Returns true if character is '0' to '9'.
-		/// </summary>
-		public static bool IsDigit(char c) { return c <= '9' && c >= '0'; }
-
-		/// <summary>
-		/// Returns true if character is '0' to '9'.
-		/// </summary>
-		public static bool IsDigit(byte c) { return c <= '9' && c >= '0'; }
-
-		/// <summary>
-		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
-		/// </summary>
-		public static bool IsAlpha(char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
-
-		/// <summary>
-		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
-		/// </summary>
-		public static bool IsAlpha(byte c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
 
 		/// <summary>
 		/// Calculates angle degrees from coordinates x and y.

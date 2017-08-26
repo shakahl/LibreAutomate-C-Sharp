@@ -1013,10 +1013,8 @@ namespace Catkeys
 	/// Base class of CatMenu and CatBar.
 	/// </summary>
 	/// <tocexclude />
-	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-#pragma warning disable CS3008 // Identifier is not CLS-compliant
+	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
 	public abstract class _MenuBase
-#pragma warning restore CS3008 // Identifier is not CLS-compliant
 	{
 		internal bool m_inRightClick;
 		EventHandler _onClick;

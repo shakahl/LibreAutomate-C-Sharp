@@ -85,8 +85,8 @@ namespace Catkeys
 		{
 			if(errorCode == 0) return null;
 			char* p = null;
-			const uint fl = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS;
-			int r = FormatMessage(fl, Zero, errorCode, 0, &p, 0, Zero);
+			const uint fl = Api.FORMAT_MESSAGE_FROM_SYSTEM | Api.FORMAT_MESSAGE_ALLOCATE_BUFFER | Api.FORMAT_MESSAGE_IGNORE_INSERTS;
+			int r = Api.FormatMessage(fl, Zero, errorCode, 0, &p, 0, Zero);
 			while(r > 0 && p[r - 1] <= ' ') r--;
 			if(r == 0) return $"Unknown error (0x{errorCode:X}).";
 			if(p[r - 1] != '.') p[r++] = '.';
@@ -94,13 +94,6 @@ namespace Catkeys
 			Api.LocalFree(p);
 			return s;
 		}
-
-		const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
-		const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x100;
-		const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
-
-		[DllImport("kernel32.dll", EntryPoint = "FormatMessageW")]
-		static extern int FormatMessage(uint dwFlags, IntPtr lpSource, int code, uint dwLanguageId, char** lpBuffer, int nSize, IntPtr Arguments);
 
 		/// <summary><msdn>MSG</msdn></summary>
 		/// <tocexclude />
@@ -319,27 +312,27 @@ namespace Catkeys
 		//GCW_
 
 		/// <exclude />
-		public static int GCW_ATOM = -32;
+		public const int GCW_ATOM = -32;
 		/// <exclude />
-		public static int GCL_WNDPROC = -24;
+		public const int GCL_WNDPROC = -24;
 		/// <exclude />
-		public static int GCL_STYLE = -26;
+		public const int GCL_STYLE = -26;
 		/// <exclude />
-		public static int GCL_MENUNAME = -8;
+		public const int GCL_MENUNAME = -8;
 		/// <exclude />
-		public static int GCL_HMODULE = -16;
+		public const int GCL_HMODULE = -16;
 		/// <exclude />
-		public static int GCL_HICONSM = -34;
+		public const int GCL_HICONSM = -34;
 		/// <exclude />
-		public static int GCL_HICON = -14;
+		public const int GCL_HICON = -14;
 		/// <exclude />
-		public static int GCL_HCURSOR = -12;
+		public const int GCL_HCURSOR = -12;
 		/// <exclude />
-		public static int GCL_HBRBACKGROUND = -10;
+		public const int GCL_HBRBACKGROUND = -10;
 		/// <exclude />
-		public static int GCL_CBWNDEXTRA = -18;
+		public const int GCL_CBWNDEXTRA = -18;
 		/// <exclude />
-		public static int GCL_CBCLSEXTRA = -20;
+		public const int GCL_CBCLSEXTRA = -20;
 		//info: also there are GCLP_, but their values are the same.
 
 		//WS_

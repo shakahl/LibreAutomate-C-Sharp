@@ -94,6 +94,16 @@ namespace Catkeys
 		{
 			var f = new Wnd.Finder(name, className, programEtc, flags, also);
 			return WindowExists(f, timeoutS, not);
+
+			//not good: creates much garbage. Then GC runs quite frequently. It runs when exceeds 2 MB (GC.GetTotalMemory).
+			//	The garbage is mostly the Wnd.ClassName and Wnd.Name strings. The Wnd array adds some too.
+			//	Case: HiddenToo, only className, wait max 1 s, 30 times in loop. GC runs every 3-4 s. Better if only name, because many windows have no name.
+			//	Case: HiddenToo, only className, wait max 60 s. GC runs after 8 s, then every 18-23 s.
+			//	Case: no HiddenToo, only className, wait max 30 s, 6 main windows. GC didn't run. Memory 584 KB. After 60 s 870 KB.
+			//	Case: no HiddenToo, only name, wait max 30 s, 6 main windows. GC didn't run. Memory 459 KB.
+			//	
+			//	Tried to measure how long a busy thread is suspended when GC runs. It seems about 250 mcs. Not bad.
+			//		But the PC is fast, has CPU with 2 cores and hyperthreading, 4 logical CPU. Need to test on a 1-CPU PC.
 		}
 
 		/// <summary>

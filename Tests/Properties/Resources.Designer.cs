@@ -86,15 +86,5 @@ namespace Tests.Properties {
                 return ResourceManager.GetString("String3", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap test_r {
-            get {
-                object obj = ResourceManager.GetObject("test_r", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
     }
 }

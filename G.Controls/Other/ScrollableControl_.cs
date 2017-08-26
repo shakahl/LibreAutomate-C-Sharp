@@ -113,7 +113,7 @@ namespace G.Controls
 		public void SetScrollPos(bool vertical, int pos, bool notify)
 		{
 			_GetScrollInfo(vertical, out var k);
-			pos = Calc.MinMax(pos, k.nMin, k.nMax);
+			pos = Math_.MinMax(pos, k.nMin, k.nMax);
 			if(pos == k.nPos) return;
 			k.nPos = pos;
 
@@ -166,7 +166,7 @@ namespace G.Controls
 			switch(msg) {
 			case Api.WM_HSCROLL:
 			case Api.WM_VSCROLL:
-				_OnScroll(msg == Api.WM_VSCROLL, (ScrollEventType)Calc.LoUshort(m.WParam));
+				_OnScroll(msg == Api.WM_VSCROLL, (ScrollEventType)Math_.LoUshort(m.WParam));
 				break;
 			}
 			base.WndProc(ref m);

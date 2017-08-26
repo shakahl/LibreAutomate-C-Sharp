@@ -183,7 +183,7 @@ namespace Catkeys
 
 				//is R transparent?
 				//PrintList("WM_NCHITTEST", R);
-				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Calc.MakeUint(p.X, p.Y))) {
+				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Math_.MakeUint(p.X, p.Y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
 					//break;

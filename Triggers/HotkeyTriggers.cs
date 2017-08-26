@@ -45,7 +45,7 @@ namespace Catkeys.Triggers
 		static HotkeyTriggers()
 		{
 			//System.Reflection.
-			Assembly assembly = Util.AppDomain_.EntryAssembly;
+			Assembly assembly = Util.Assembly_.EntryAssembly;
 
 			var methods = assembly.GetTypes()
 						.SelectMany(t => t.GetMethods())

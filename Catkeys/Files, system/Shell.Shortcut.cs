@@ -197,8 +197,8 @@ namespace Catkeys
 			/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
 			public string GetIconLocation(out int iconIndex)
 			{
-				var b = Util.LibCharBuffer.LibCommon; int na = 300;
-				if(0 != _isl.GetIconLocation(b.Alloc(na), na, out iconIndex)) return null;
+				var b = Util.Buffers.LibChar(300);
+				if(0 != _isl.GetIconLocation(b, 300, out iconIndex)) return null;
 				return _CorrectPath(b.ToString());
 			}
 
@@ -326,13 +326,13 @@ namespace Catkeys
 
 			string _GetString(_WhatString what, int bufferSize)
 			{
-				int na = bufferSize, hr = 1;
-				var b = Util.LibCharBuffer.LibCommon; var a = b.Alloc(na);
+				int hr = 1;
+				var b = Util.Buffers.LibChar(bufferSize);
 				switch(what) {
-				case _WhatString.Path: hr = _isl.GetPath(a, na); break;
-				case _WhatString.Arguments: hr = _isl.GetArguments(a, na); break;
-				case _WhatString.WorkingDirectory: hr = _isl.GetWorkingDirectory(a, na); break;
-				case _WhatString.Description: hr = _isl.GetDescription(a, na); break;
+				case _WhatString.Path: hr = _isl.GetPath(b, bufferSize); break;
+				case _WhatString.Arguments: hr = _isl.GetArguments(b, bufferSize); break;
+				case _WhatString.WorkingDirectory: hr = _isl.GetWorkingDirectory(b, bufferSize); break;
+				case _WhatString.Description: hr = _isl.GetDescription(b, bufferSize); break;
 				}
 				if(hr != 0) return null;
 				var R = b.ToString();
@@ -354,10 +354,10 @@ namespace Catkeys
 					//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
 					//	Could not find a workaround.
 
-					var b = Util.LibCharBuffer.LibCommon; int na = 300;
-					int hr = _Api.MsiGetComponentPath(product, component, b.Alloc(na), ref na);
+					var b = Util.Buffers.LibChar(300, out int na);
+					int hr = _Api.MsiGetComponentPath(product, component, b, ref na);
 					if(hr < 0) return null; //eg not installed, just advertised
-					R = b.ToString();
+					R = b.ToString(na);
 					if(R.Length == 0) return null;
 					//note: can be a registry key instead of file path. No such shortcuts on my PC.
 				}
@@ -382,11 +382,17 @@ namespace Catkeys
 
 			static partial class _Api
 			{
+				//[DllImport("msi.dll", EntryPoint = "#217")]
+				//public static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
+
+				//[DllImport("msi.dll", EntryPoint = "#173")]
+				//public static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
+
 				[DllImport("msi.dll", EntryPoint = "#217")]
 				public static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
 
 				[DllImport("msi.dll", EntryPoint = "#173")]
-				public static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
+				public static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
 
 				//MsiGetComponentPath returns:
 				//public enum INSTALLSTATE

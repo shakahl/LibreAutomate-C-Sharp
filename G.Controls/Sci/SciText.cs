@@ -36,19 +36,17 @@ namespace G.Controls
 		/// </summary>
 		public SciControl SC { get; private set; }
 
-		Catkeys.Util.LibByteBuffer _byteBuffer;
-		Catkeys.Util.LibCharBuffer _charBuffer;
-		[ThreadStatic] static Catkeys.Util.LibByteBuffer t_byteBuffer;
-		[ThreadStatic] static Catkeys.Util.LibCharBuffer t_charBuffer;
+		[ThreadStatic] static WeakReference<byte[]> t_byte;
+
+		internal static byte[] LibByte(int n) { return Catkeys.Util.Buffers.Get(n, ref t_byte); }
+		//these currently not used
+		//internal static Catkeys.Util.Buffers.ByteBuffer LibByte(ref int n) { var r = Catkeys.Util.Buffers.Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static Catkeys.Util.Buffers.ByteBuffer LibByte(int n, out int nHave) { var r = Catkeys.Util.Buffers.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
 		internal SciText(SciControl sc)
 		{
 			SC = sc;
-
-			_byteBuffer = t_byteBuffer ?? (t_byteBuffer = new Catkeys.Util.LibByteBuffer());
-			_charBuffer = t_charBuffer ?? (t_charBuffer = new Catkeys.Util.LibCharBuffer());
-			//note: we could use Catkeys.Util.Lib[Char|Byte]Buffer.Common, but it can be unsafe, better have our own.
 		}
 
 		#region util
@@ -87,7 +85,9 @@ namespace G.Controls
 		/// </summary>
 		public LPARAM SetString(int sciMessage, LPARAM wParam, string lParam)
 		{
-			return SC.Call(sciMessage, wParam, LibToUtf8(lParam));
+			fixed (byte* s = _ToUtf8(lParam)) {
+				return SC.Call(sciMessage, wParam, s);
+			}
 		}
 
 		/// <summary>
@@ -99,10 +99,11 @@ namespace G.Controls
 		public LPARAM SetStringString(int sciMessage, string wParam0lParam)
 		{
 			int len;
-			var s = LibToUtf8(wParam0lParam, &len);
-			int i = CharPtr.Length(s);
-			Debug.Assert(i < len);
-			return SC.Call(sciMessage, s, s + i + 1);
+			fixed (byte* s = _ToUtf8(wParam0lParam, &len)) {
+				int i = Catkeys.Util.CharPtr.Length(s);
+				Debug.Assert(i < len);
+				return SC.Call(sciMessage, s, s + i + 1);
+			}
 		}
 
 		/// <summary>
@@ -122,11 +123,13 @@ namespace G.Controls
 		{
 			if(bufferSize < 0) return GetStringOfLength(sciMessage, wParam, Call(sciMessage, wParam));
 			if(bufferSize == 0) return "";
-			var b = _byteBuffer.Alloc(bufferSize); b[bufferSize] = 0;
-			Call(sciMessage, wParam, b);
-			Debug.Assert(b[bufferSize] == 0); if(b[bufferSize] != 0) Environment.FailFast("SciText.CallS");
-			int len = CharPtr.Length(b, bufferSize);
-			return LibFromUtf8(len);
+			fixed (byte* b = LibByte(bufferSize)) {
+				b[bufferSize] = 0;
+				Call(sciMessage, wParam, b);
+				Debug.Assert(b[bufferSize] == 0); if(b[bufferSize] != 0) Environment.FailFast("SciText.CallS");
+				int len = Catkeys.Util.CharPtr.Length(b, bufferSize);
+				return _FromUtf8(b, len);
+			}
 		}
 
 		/// <summary>
@@ -145,33 +148,25 @@ namespace G.Controls
 		public string GetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length)
 		{
 			if(utf8Length == 0) return "";
-			var b = _byteBuffer.Alloc(utf8Length); b[utf8Length] = 0;
-			Call(sciMessage, wParam, b);
-			Debug.Assert(b[utf8Length] == 0); if(b[utf8Length] != 0) Environment.FailFast("SciText.CallS");
-			return LibFromUtf8(utf8Length);
+			fixed (byte* b = LibByte(utf8Length)) {
+				b[utf8Length] = 0;
+				Call(sciMessage, wParam, b);
+				Debug.Assert(b[utf8Length] == 0); if(b[utf8Length] != 0) Environment.FailFast("SciText.CallS");
+				return _FromUtf8(b, utf8Length);
+			}
 		}
 
-		internal string LibFromUtf8(int n = -1)
+		string _FromUtf8(byte* b, int n = -1)
 		{
-			var r = Convert_.Utf8ToString(_byteBuffer.Ptr, n);
-			_byteBuffer.Compact();
-			return r;
+			return Convert_.Utf8ToString(b, n);
 		}
 
-		internal byte* LibToUtf8(string s, int* utf8Length = null)
+		byte[] _ToUtf8(string s, int* utf8Length = null)
 		{
-			return Convert_.LibUtf8FromString(s, _byteBuffer, utf8Length);
+			return Convert_.LibUtf8FromString(s, ref t_byte, utf8Length);
 		}
 
-		///// <summary>
-		///// return _byteBuffer.Alloc(n);
-		///// </summary>
-		//internal byte* LibAllocBytes(int n)
-		//{
-		//	return _byteBuffer.Alloc(n);
-		//}
-
-#endregion
+		#endregion
 
 		bool _CanParseTags(string s)
 		{
@@ -214,45 +209,6 @@ namespace G.Controls
 		}
 
 		/// <summary>
-		/// Replaces all text with StringBuilder text.
-		/// </summary>
-		/// <remarks>
-		/// This function can be used in controls where text changes very frequently and you want to avoid generating garbage when converting StringBuilder text to UTF8 that is sent to the Scintilla control.
-		/// If possible, converts to UTF8 directly without an intermediate String.
-		/// Parses tags if !ignoreTags and SC.InitTagsStyle is AutoWithPrefix and s starts with "&lt;&gt;". Then uses intermediate String.
-		/// SC.InitTagsStyle must not be AutoAlways. Then asserts and ignores tags.
-		/// </remarks>
-		public void SetText(StringBuilder s, bool ignoreTags = false)
-		{
-			var n = s.Length;
-			if(n == 0) {
-				ClearText();
-				return;
-			}
-
-			bool garbage = false; //because the for loop is quite slow. //SHOULDDO: test
-			if(n > 2000) garbage = true;
-			else if(!ignoreTags && SC.InitTagsStyle == SciControl.TagsStyle.AutoWithPrefix && n >= 2 && s[0] == '<' && s[1] == '>') garbage = true;
-			Debug.Assert(SC.InitTagsStyle != SciControl.TagsStyle.AutoAlways);
-
-			if(garbage) {
-				SetText(s.ToString(), ignoreTags);
-				return;
-			}
-
-			var c = _charBuffer.Alloc(n);
-			for(int i = 0; i < n; i++) c[i] = s[i];
-			c[n] = '\0';
-			int n2 = n * 3;
-			var b = _byteBuffer.Alloc(n2);
-			var r = Api.WideCharToMultiByte(Api.CP_UTF8, 0, c, n + 1, b, n2 + 1, Zero, null);
-
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			Call(SCI_SETTEXT, 0, b);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
-		}
-
-		/// <summary>
 		/// Appends text and optionally "\r\n".
 		/// Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
 		/// </summary>
@@ -268,14 +224,14 @@ namespace G.Controls
 			}
 
 			int n = Convert_.Utf8LengthFromString(s);
-			var b = _byteBuffer.Alloc(n + 2);
-			Convert_.Utf8FromString(s, b, n + 1);
-			if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
+			fixed (byte* b = LibByte(n + 2)) {
+				Convert_.Utf8FromString(s, b, n + 1);
+				if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
 
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			Call(SCI_APPENDTEXT, n, b);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
-
+				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
+				Call(SCI_APPENDTEXT, n, b);
+				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+			}
 			if(scroll) Call(SCI_GOTOPOS, TextLengthBytes);
 		}
 
@@ -403,13 +359,6 @@ namespace G.Controls
 		{
 			return RangeText(LineStart(line), LineEnd(line));
 		}
-		//This version is unsafe. Also need to trim \r\n.
-		//public string GetLineText(int line)
-		//{
-		//	int n = Call(SCI_GETLINE, line); if(n == 0) return "";
-		//	Call(SCI_GETLINE, line, _byteBuffer.Alloc(n));
-		//	return _FromUtf8(n);
-		//}
 
 		/// <summary>
 		/// Gets range text.
@@ -422,10 +371,12 @@ namespace G.Controls
 			if(to < 0) to = TextLengthBytes;
 			Debug.Assert(to >= from);
 			int n = to - from; if(n <= 0) return "";
-			var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = _byteBuffer.Alloc(n) };
-			int r = Call(SCI_GETTEXTRANGE, 0, &tr);
-			Debug.Assert(r == n);
-			return LibFromUtf8(r);
+			fixed (byte* b = LibByte(n)) {
+				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = b };
+				int r = Call(SCI_GETTEXTRANGE, 0, &tr);
+				Debug.Assert(r == n);
+				return _FromUtf8(b, r);
+			}
 		}
 
 		/// <summary>

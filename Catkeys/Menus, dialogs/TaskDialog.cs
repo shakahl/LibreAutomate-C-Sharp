@@ -74,7 +74,7 @@ namespace Catkeys
 				CLICK_BUTTON = WM_USER + 102, // wParam = button id
 				SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
 				SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state (0, 1 or 2)
-				SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Calc.MakeUint(min, max)
+				SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Math_.MakeUint(min, max)
 				SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
 				SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
 				SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum TDApi.TDE), lParam = new element text (string)

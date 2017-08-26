@@ -21,6 +21,7 @@ using System.Xml.Linq;
 
 using Catkeys;
 using static Catkeys.NoClass;
+using Catkeys.Util;
 
 #pragma warning disable 649
 
@@ -141,20 +142,31 @@ namespace G.Controls
 		{
 			/// <summary>The string isn't image.</summary>
 			None,
+
 			/// <summary>Compressed and Base64-encoded bitmap file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
-			Embedded,
+			EmbeddedCompressedBmp,
+
+			/// <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
+			EmbeddedPngGifJpg,
+
 			/// <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
 			Resource,
+
 			/// <summary>.bmp file.</summary>
 			Bmp,
+
 			/// <summary>.png, .gif or .jpg file.</summary>
 			PngGifJpg,
+
 			/// <summary>.ico file.</summary>
 			Ico,
+
 			/// <summary>.cur or .ani file.</summary>
 			Cur,
+
 			/// <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
 			IconLib,
+
 			/// <summary>None of other image types, when anyFile is true.</summary>
 			ShellIcon
 		}
@@ -173,12 +185,13 @@ namespace G.Controls
 
 			//special strings
 			switch(c1) {
-			case '~': return (c2 == ':') ? ImageType.Embedded : ImageType.None;
+			case '~': return (c2 == ':') ? ImageType.EmbeddedCompressedBmp : ImageType.None;
+			case 'i': if(CharPtr.AsciiStartsWith(s, "image:")) return ImageType.EmbeddedPngGifJpg; break;
 			case 'r': if(CharPtr.AsciiStartsWith(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
-			if(length >= 8 && (c1 == '%' || (c2 == ':' && Calc.IsAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
+			if(length >= 8 && (c1 == '%' || (c2 == ':' && Char_.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if(ext[-1] == '.') {
 					if(CharPtr.AsciiStartsWithI(ext, "bmp")) return ImageType.Bmp;
@@ -188,11 +201,11 @@ namespace G.Controls
 					if(CharPtr.AsciiStartsWithI(ext, "ico")) return ImageType.Ico;
 					if(CharPtr.AsciiStartsWithI(ext, "cur")) return ImageType.Cur;
 					if(CharPtr.AsciiStartsWithI(ext, "ani")) return ImageType.Cur;
-				} else if(Calc.IsDigit(ext[2])) { //can be like C:\x.dll,10
+				} else if(Char_.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
-					for(; k > k2; k--) if(!Calc.IsDigit(*k)) break;
+					for(; k > k2; k--) if(!Char_.IsAsciiDigit(*k)) break;
 					if(*k == '-') k--;
-					if(*k == ',' && k[-4] == '.' && Calc.IsAlpha(k[-1])) return ImageType.IconLib;
+					if(*k == ',' && k[-4] == '.' && Char_.IsAsciiAlpha(k[-1])) return ImageType.IconLib;
 				}
 			}
 
@@ -212,11 +225,11 @@ namespace G.Controls
 		/// <summary>
 		/// Loads image and returns its data in .bmp file format.
 		/// </summary>
-		/// <param name="s"></param>
-		/// <param name="t"></param>
+		/// <param name="s">Depends on t. File path or resource name without prefix or embedded image data without prefix.</param>
+		/// <param name="t">Image type and string format.</param>
 		/// <param name="searchPath">Use <see cref="Files.SearchPath"/></param>
-		/// <remarks>Supports env. var. etc. If not full path, searches in Folders.ThisAppImages.</remarks>
-		public static byte[] BitmapFileDataFromString(string s, ImageType t, bool searchPath = false)
+		/// <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages.</remarks>
+		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
 			//PrintList(t, s);
 			try {
@@ -236,14 +249,18 @@ namespace G.Controls
 				}
 
 				switch(t) {
-				case ImageType.Embedded:
+				case ImageType.EmbeddedCompressedBmp:
 					return Convert_.Decompress(Convert_.Base64Decode(s));
+				case ImageType.EmbeddedPngGifJpg:
+					using(var stream = new MemoryStream(Convert_.Base64Decode(s), false)) {
+						return _ImageToBytes(Image.FromStream(stream));
+					}
 				case ImageType.Resource:
-					return _ImageToBytes(s, true);
+					return _ImageToBytes(Resources_.GetAppResource(s) as Image);
 				case ImageType.Bmp:
 					return File.ReadAllBytes(s);
 				case ImageType.PngGifJpg:
-					return _ImageToBytes(s, false);
+					return _ImageToBytes(Image.FromFile(s));
 				case ImageType.Ico:
 				case ImageType.IconLib:
 				case ImageType.ShellIcon:
@@ -255,9 +272,8 @@ namespace G.Controls
 			return null;
 		}
 
-		static byte[] _ImageToBytes(string s, bool isResource)
+		static byte[] _ImageToBytes(Image im)
 		{
-			Image im = isResource ? (Catkeys.Util.Misc.GetAppResource(s) as Image) : Image.FromFile(s);
 			if(im == null) return null;
 			try {
 				//workaround for the black alpha problem. Does not make slower.
@@ -299,7 +315,7 @@ namespace G.Controls
 			}
 			if(hi == Zero) return null;
 			try {
-				using(var m = new Catkeys.Util.MemoryBitmap(siz, siz)) {
+				using(var m = new MemoryBitmap(siz, siz)) {
 					var r = new RECT(0, 0, siz, siz, false);
 					Api.FillRect(m.Hdc, ref r, GetStockObject(0)); //WHITE_BRUSH
 					if(!DrawIconEx(m.Hdc, 0, 0, hi, siz, siz, 0, Zero, 3)) return null; //DI_NORMAL
@@ -378,31 +394,37 @@ namespace G.Controls
 #endif
 
 		/// <summary>
-		/// Compresses in-memory bitmap file data (<see cref="Convert_.Compress"/>) and Base64-encodes.
-		/// Returns string containing only data (no "~:" prefix).
+		/// Compresses in-memory .bmp file data (<see cref="Convert_.Compress"/>) and Base64-encodes.
+		/// Returns string with "~:" prefix.
 		/// </summary>
-		public static string ImageToString(byte[] bitmapFileData)
+		public static string BmpFileDataToString(byte[] bmpFileData)
 		{
-			if(bitmapFileData == null) return null;
-			return Convert.ToBase64String(Convert_.Compress(bitmapFileData));
+			if(bmpFileData == null) return null;
+			return "~:" + Convert.ToBase64String(Convert_.Compress(bmpFileData));
 		}
 
 		/// <summary>
-		/// Compresses image file data (<see cref="Convert_.Compress"/>) and Base64-encodes.
-		/// Returns string containing only data (no "~:" prefix).
+		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library.
+		/// Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
 		/// Supports all <see cref="ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
-		/// Returns null if path is not a valid image string or the file does not exist.
+		/// Returns null if path is not a valid image string or the file does not exist or failed to load.
 		/// </summary>
-		/// <remarks>Supports env. var. etc. If not full path, searches in Folders.ThisAppImages and standard directories.</remarks>
+		/// <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages and standard directories.</remarks>
 		public static string ImageToString(string path)
 		{
 			var t = ImageTypeFromString(true, path);
 			switch(t) {
 			case ImageType.None: return null;
-			case ImageType.Embedded: return path.Substring(2);
-			case ImageType.Resource: path = path.Substring(9); break;
+			case ImageType.EmbeddedCompressedBmp:
+			case ImageType.EmbeddedPngGifJpg:
+			case ImageType.Resource:
+				return path;
+			case ImageType.PngGifJpg:
+				path = Files.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
+				try { return "image:" + Convert.ToBase64String(File.ReadAllBytes(path)); }
+				catch(Exception ex) { Debug_.Print(ex.Message); return null; }
 			}
-			return ImageToString(BitmapFileDataFromString(path, t, true));
+			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}
 	}
 }

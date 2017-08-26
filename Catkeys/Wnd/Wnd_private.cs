@@ -49,8 +49,10 @@ namespace Catkeys
 
 		static unsafe partial class _Api
 		{
+			//[DllImport("kernel32.dll")]
+			//internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, char* sbAppUserModelID);
 			[DllImport("kernel32.dll")]
-			internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, [Out] char* sbAppUserModelID);
+			internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, [Out] char[] sbAppUserModelID);
 		}
 
 		/// <summary>
@@ -61,7 +63,7 @@ namespace Catkeys
 		/// <param name="appId">Receives app ID.</param>
 		/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
-		static unsafe int _GetWindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+		static int _GetWindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		{
 			appId = null;
 
@@ -70,8 +72,8 @@ namespace Catkeys
 				case 1:
 					using(var p = Process_.LibProcessHandle.FromWnd(w)) {
 						if(p != null) {
-							var b = Util.LibCharBuffer.LibCommon; int na = 1000;
-							if(0 == _Api.GetApplicationUserModelId(p, ref na, b.Alloc(na))) appId = b.ToString();
+							var b = Util.Buffers.LibChar(1000, out int na);
+							if(0 == _Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
 						}
 					}
 					break;

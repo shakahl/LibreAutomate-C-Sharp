@@ -274,7 +274,7 @@ namespace SdkConverter
 
 		/// <summary>
 		/// Converts type name/pointer to C# type name.
-		/// The return value is type name, possibly with * or []. If parameter, also can have ref/out and [In}/[Out].
+		/// The return value is type name, possibly with * or []. If parameter, also can have ref/out and [In]/[Out].
 		/// </summary>
 		/// <param name="t">The type.</param>
 		/// <param name="ptr">Pointer level. The function may adjust it depending on typedef pointer level etc.</param>

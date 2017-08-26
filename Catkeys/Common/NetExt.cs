@@ -4,6 +4,14 @@
 //	Extension method name: related .NET method name with _ suffix. Or new name with _ suffix.
 //	Static method name: any name without _ suffix.
 
+//TODO: rename namespace Catkeys to Au.
+//	For .NET extension classes and methods use suffix Au, not _.
+//		Then in intellisense lists it will be immediately after the .NET identifier. Now sometimes it is below several other .NET identifiers.
+//		Or just A. Then will need less Shift.
+//		Compare: e.Has_(...);   s.EndsWith_(...);
+//		Compare: e.HasA(...);   s.EndsWithA(...);
+//		Compare: e.HasAu(...);   s.EndsWithAu(...);
+
 using System;
 using System.Collections.Generic;
 using System.Text;

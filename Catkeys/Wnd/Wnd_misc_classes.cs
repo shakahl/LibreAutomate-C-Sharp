@@ -29,6 +29,7 @@ namespace Catkeys
 	{
 		public static partial class Misc
 		{
+			//CONSIDER: move to Util
 
 			/// <summary>
 			/// Registers and unregisters a window class.
@@ -274,7 +275,7 @@ namespace Catkeys
 				{
 					lock("jU0tLiIbtE6KWg5aCu7RDg") {
 						string interDomainVarName = "jU0tLiIbtE6KWg5aCu7RDg" + className.ToLower_();
-						if(!InterDomain.GetVariable(interDomainVarName, out ushort atom)) {
+						if(!InterDomainVariables.GetVariable(interDomainVarName, out ushort atom)) {
 							var x = (ex != null) ? new Api.WNDCLASSEX(ex) : new Api.WNDCLASSEX(true);
 
 							fixed (char* pCN = className) {
@@ -289,7 +290,7 @@ namespace Catkeys
 								if(atom == 0) throw new Win32Exception();
 							}
 
-							InterDomain.SetVariable(interDomainVarName, atom);
+							InterDomainVariables.SetVariable(interDomainVarName, atom);
 						}
 						_interDomain[className] = wndProc;
 						return atom;

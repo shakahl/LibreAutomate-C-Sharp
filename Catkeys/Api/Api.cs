@@ -895,7 +895,7 @@ namespace Catkeys
 		internal static extern IntPtr CreateIcon(IntPtr hInstance, int nWidth, int nHeight, byte cPlanes, byte cBitsPixel, byte[] lpbANDbits, byte[] lpbXORbits);
 
 		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW", SetLastError = true)]
-		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, [Out] IntPtr[] phicon, IntPtr piconid, int nIcons, uint flags);
+		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, IntPtr[] phicon, IntPtr piconid, int nIcons, uint flags);
 		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW", SetLastError = true)]
 		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, out IntPtr phicon, IntPtr piconid, int nIcons, uint flags);
 
@@ -986,20 +986,21 @@ namespace Catkeys
 		[DllImport("user32.dll", EntryPoint = "CharLowerBuffW")]
 		internal static unsafe extern int CharLowerBuff(char* lpsz, int cchLength);
 
-		//[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int wsprintfW(char* lpOut1024, string lpFmt, int i, string s);
 		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int wsprintfW(char* lpOut1024, string lpFmt, __arglist);
+		//note: with __arglist always returns 0. Could instead use void*, but then much work to properly pack arguments.
+
+		//tested speed (time %) of various formatting functions, with two int and one string arg, with converting to string:
+		//	StringBuilder.Append + int.ToString(CultureInfo.InvariantCulture): 85% - FASTEST
+		//	StringBuilder.Append: 100%
+		//	StringBuilder.AppendFormat + int.ToString() (avoid int boxing): 140%
+		//	StringBuilder.AppendFormat: 150%
+		//	$"{var} string": 160% (probably uses StringBuilder)
+		//	wsprintfW (user32.dll): 150%
+		//	_snwprintf (msvcrt.dll): 500% - SLOWEST
 
 		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		internal static extern int wsprintfA(byte* lpOut1024, string lpFmt, __arglist);
-
-		//these are more difficult to use. For each case need to declare struct which must be blittable, ie cannot contain managed string etc. Then better for each case to declare API overload.
-		//[DllImport("user32.dll")]
-		//internal static extern int wvsprintfW(char* lpOut1024, string lpFmt, void* arglist);
-
-		//[DllImport("user32.dll", CharSet = CharSet.Ansi)]
-		//internal static extern int wvsprintfA(byte* lpOut1024, string lpFmt, void* arglist);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool BlockInput(bool fBlockIt);
@@ -1102,6 +1103,13 @@ namespace Catkeys
 		[DllImport("kernel32.dll", SetLastError = true)] //note: without 'SetLastError = true' Marshal.GetLastWin32Error is unaware that we set the code to 0 etc and returns old captured error code
 		internal static extern void SetLastError(int errCode);
 
+		internal const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
+		internal const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x100;
+		internal const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
+
+		[DllImport("kernel32.dll", EntryPoint = "FormatMessageW")]
+		internal static extern int FormatMessage(uint dwFlags, IntPtr lpSource, int code, uint dwLanguageId, char** lpBuffer, int nSize, IntPtr Arguments);
+
 		[DllImport("kernel32.dll", EntryPoint = "SetDllDirectoryW", SetLastError = true)]
 		internal static extern bool SetDllDirectory(string lpPathName);
 
@@ -1150,9 +1158,6 @@ namespace Catkeys
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", SetLastError = true)]
 		internal static extern IntPtr GetModuleHandle(string name);
@@ -1207,11 +1212,11 @@ namespace Catkeys
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
-		[DllImport("kernel32.dll", EntryPoint = "GetLongPathNameW", SetLastError = true)]
-		internal static extern int GetLongPathName(string lpszShortPath, char* lpszLongPath, int cchBuffer);
-
 		[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
-		internal static extern int GetFullPathName(string lpFileName, int nBufferLength, char* lpBuffer, char** lpFilePart);
+		internal static extern int GetFullPathName(string lpFileName, int nBufferLength, [Out] char[] lpBuffer, char** lpFilePart);
+
+		[DllImport("kernel32.dll", EntryPoint = "GetLongPathNameW", SetLastError = true)]
+		internal static extern int GetLongPathName(string lpszShortPath, [Out] char[] lpszLongPath, int cchBuffer);
 
 		internal const uint TH32CS_SNAPHEAPLIST = 0x00000001;
 		internal const uint TH32CS_SNAPPROCESS = 0x00000002;
@@ -1302,7 +1307,7 @@ namespace Catkeys
 		internal static extern bool GetFileAttributesEx(string lpFileName, int zero, out WIN32_FILE_ATTRIBUTE_DATA lpFileInformation);
 
 		[DllImport("kernel32.dll", EntryPoint = "SearchPathW", SetLastError = true)]
-		internal static extern int SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, char* lpBuffer, char** lpFilePart);
+		internal static extern int SearchPath(string lpPath, string lpFileName, string lpExtension, int nBufferLength, [Out] char[] lpBuffer, char** lpFilePart);
 
 		internal const uint BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE = 0x1;
 		internal const uint BASE_SEARCH_PATH_DISABLE_SAFE_SEARCHMODE = 0x10000;

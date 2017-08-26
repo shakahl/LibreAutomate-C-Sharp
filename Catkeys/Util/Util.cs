@@ -158,7 +158,7 @@ namespace Catkeys.Util
 		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
 		{
 			var dcScreen = Api.GetDC(default(Wnd));
-			int h2 = -Calc.MulDiv(height, Api.GetDeviceCaps(dcScreen, 90), 72);
+			int h2 = -Math_.MulDiv(height, Api.GetDeviceCaps(dcScreen, 90), 72);
 			Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
 			if(calculateHeightOnScreen) {
 				var dcMem = Api.CreateCompatibleDC(dcScreen);
@@ -205,7 +205,7 @@ namespace Catkeys.Util
 		/// </summary>
 		public static IntPtr OfAppDomainEntryAssembly()
 		{
-			return OfAssembly(AppDomain_.EntryAssembly);
+			return OfAssembly(Assembly_.EntryAssembly);
 		}
 
 		/// <summary>
@@ -226,21 +226,38 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
-	/// Miscellaneous functions.
+	/// Assembly functions.
 	/// </summary>
-	[DebuggerStepThrough]
-	public static class Misc
+	public static class Assembly_
 	{
+		/// <summary>
+		/// Gets the entry assembly of this appdomain.
+		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="AppDomain.DoCallBack">AppDomain.DoCallBack</see>.
+		/// </summary>
+		public static Assembly EntryAssembly
+		{
+			get
+			{
+				if(_appdomainAssembly == null) {
+					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
+					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
+					_appdomainAssembly = asm;
+				}
+				return _appdomainAssembly;
+			}
+		}
+		static Assembly _appdomainAssembly;
+
 		/// <summary>
 		/// Returns true if Catkeys.dll is installed in the global assembly cache.
 		/// </summary>
-		public static bool IsCatkeysInGAC { get => typeof(Misc).Assembly.GlobalAssemblyCache; }
+		internal static bool LibIsCatkeysInGAC { get => typeof(Misc).Assembly.GlobalAssemblyCache; }
 
 		/// <summary>
 		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		public static bool IsCatkeysNgened { get => IsAssemblyNgened(typeof(Misc).Assembly); }
+		internal static bool LibIsCatkeysNgened { get => IsAssemblyNgened(typeof(Misc).Assembly); }
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
@@ -255,22 +272,21 @@ namespace Catkeys.Util
 			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
 			return Zero != Api.GetModuleHandle(s);
 		}
-		/// <summary>
-		/// Returns true if assembly of type is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
-		/// </summary>
-		public static bool IsAssemblyNgened(Type type) { return IsAssemblyNgened(type.Assembly); }
+	}
 
-		/// <summary>
-		/// Frees as much as possible physical memory used by this process.
-		/// Calls <see cref="GC.Collect()"/> and API <msdn>SetProcessWorkingSetSize</msdn>.
-		/// </summary>
-		public static void MinimizeMemory()
-		{
-			//return;
-			GC.Collect();
-			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), (UIntPtr)(~0U), (UIntPtr)(~0U));
-		}
+	/// <summary>
+	/// Miscellaneous functions (currently none).
+	/// </summary>
+	public static class Misc
+	{
+
+	}
+
+	/// <summary>
+	/// Miscellaneous functions.
+	/// </summary>
+	public static class Resources_
+	{
 
 		/// <summary>
 		/// Gets an Image or other object from managed resources of appdomain's entry assembly.
@@ -300,7 +316,7 @@ namespace Catkeys.Util
 		{
 			if(_appResourceManager == null) {
 				culture = null;
-				var asm = AppDomain_.EntryAssembly;
+				var asm = Assembly_.EntryAssembly;
 				var s = asm?.GetManifestResourceNames()?.FirstOrDefault(k => k.EndsWith_(".Properties.Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
 				if(s == null) return null; //no resources
 				s = s.Remove(s.Length - 10); //remove ".resources", it's documented
@@ -355,33 +371,6 @@ namespace Catkeys.Util
 
 	//	//speed: quite fast, especially when ngened. When using this generic class, LibGetTypeSize is called once for each type.
 	//}
-
-#if DEBUG
-	/// <summary>
-	/// Functions useful when testing and debugging.
-	/// </summary>
-	[DebuggerStepThrough]
-	internal static class LibDebug
-	{
-
-		internal static void PrintLoadedAssemblies()
-		{
-			AppDomain currentDomain = AppDomain.CurrentDomain;
-			Assembly[] assems = currentDomain.GetAssemblies();
-			foreach(Assembly assem in assems) {
-				PrintList(assem.ToString(), assem.CodeBase, assem.Location);
-			}
-		}
-
-		internal static int GetComObjRefCount(IntPtr obj)
-		{
-			Marshal.AddRef(obj);
-			return Marshal.Release(obj);
-		}
-
-		internal static bool IsScrollLock { get => (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; }
-	}
-#endif
 
 	/// <summary>
 	/// Functions for high-DPI screen support.

@@ -3830,13 +3830,13 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//		string s2 = null;
 		//#if false
 		//		s = "14001F706806EE260AA0D7449371BEB064C98683";
-		//		var a = Calc.BytesFromHexString(s);
-		//		s2 = Calc.BytesToHexString(a);
+		//		var a = Convert_.BytesFromHexString(s);
+		//		s2 = Convert_.BytesToHexString(a);
 		//#else
 		//		var a = new byte[(s.Length - 3)/2];
 		//		fixed(byte* p = a){
-		//			Calc.BytesFromHexString(s, p, a.Length, 3);
-		//			s2 = Calc.BytesToHexString(p, a.Length, false);
+		//			Convert_.BytesFromHexString(s, p, a.Length, 3);
+		//			s2 = Convert_.BytesToHexString(p, a.Length, false);
 		//		}
 		//#endif
 		//		Print(a);
@@ -4012,22 +4012,22 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//	int n = (s.Length - offs) / 2;
 
 	//	var b1 = stackalloc byte[n];
-	//	int n1 = Calc.BytesFromHexString_old(s, b1, n, offs);
-	//	Print(Calc.BytesToHexString(b1, n1, true));
+	//	int n1 = Convert_.BytesFromHexString_old(s, b1, n, offs);
+	//	Print(Convert_.BytesToHexString(b1, n1, true));
 
 	//	var b2 = stackalloc byte[n];
-	//	int n2 = Calc.BytesFromHexString(s, b2, n, offs);
-	//	Print(Calc.BytesToHexString(b2, n2, true));
+	//	int n2 = Convert_.BytesFromHexString(s, b2, n, offs);
+	//	Print(Convert_.BytesToHexString(b2, n2, true));
 
-	//	var b3=Calc.BytesFromHexString(s);
-	//	Print(Calc.BytesToHexString(b3, true));
+	//	var b3=Convert_.BytesFromHexString(s);
+	//	Print(Convert_.BytesToHexString(b3, true));
 
 	//	PrintList(n, n1, n2, b3.Length);
 
 	//	Perf.SpinCPU(100);
-	//	var a1 = new Action(() => { Calc.BytesFromHexString_old(s, b1, n, 3); });
-	//	var a2 = new Action(() => { Calc.BytesFromHexString(s, b2, n, 3); });
-	//	var a3 = new Action(() => { Calc.BytesFromHexString(s); });
+	//	var a1 = new Action(() => { Convert_.BytesFromHexString_old(s, b1, n, 3); });
+	//	var a2 = new Action(() => { Convert_.BytesFromHexString(s, b2, n, 3); });
+	//	var a3 = new Action(() => { Convert_.BytesFromHexString(s); });
 	//	var a4 = new Action(() => { });
 	//	Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
 
@@ -5018,12 +5018,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static unsafe void TestAsciiStartsWithI()
 	{
 		fixed (byte* p = Convert_.Utf8FromString("Test")) {
-			Print(CharPtr.AsciiStartsWith(p, "Tes"));
-			Print(CharPtr.AsciiStartsWith(p, "tes"));
-			Print(CharPtr.AsciiStartsWith(p, "Mes"));
-			Print(CharPtr.AsciiStartsWithI(p, "Tes"));
-			Print(CharPtr.AsciiStartsWithI(p, "tes"));
-			Print(CharPtr.AsciiStartsWithI(p, "Mes"));
+			Print(Catkeys.Util.CharPtr.AsciiStartsWith(p, "Tes"));
+			Print(Catkeys.Util.CharPtr.AsciiStartsWith(p, "tes"));
+			Print(Catkeys.Util.CharPtr.AsciiStartsWith(p, "Mes"));
+			Print(Catkeys.Util.CharPtr.AsciiStartsWithI(p, "Tes"));
+			Print(Catkeys.Util.CharPtr.AsciiStartsWithI(p, "tes"));
+			Print(Catkeys.Util.CharPtr.AsciiStartsWithI(p, "Mes"));
 		}
 	}
 
@@ -6794,5 +6794,483 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	[DllImport("kernel32.dll")]
 	internal static extern bool FlsFree(int dwFlsIndex);
 
+	#endregion
+
+	//static int s_four = 4;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void TestUnsafeLibrary(MButton b, bool add)
+	{
+		//int i =Unsafe.SizeOf<RECT>();
+		//if(i== s_four) Print("4");
+
+		//bool y = b.Has_(MButton.Right|MButton.Left);
+		//bool y = b.Has_(MButton.Right);
+		//Print(y ? "yes" : "no");
+
+		//var p = new Point();
+		//p.
+
+		//Math_.SetFlag(ref b, MButton.Left, add);
+		////Math_.SetFlag(ref b, MButton.Down, false);
+		////Print(b);
+		//Print(b==(MButton.Left|MButton.Right) ? "yes" : "no");
+
+		//Debug_.CheckFlagsOpt(b, MButton.Down|MButton.Up);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void TestArrayBuilder()
+	{
+		//var a = new Catkeys.Util.LibArrayBuilder<long>();
+		//a.Add() = 8;
+		//var v=a[i];
+		//Print(v==8 ? "8" : "no");
+
+		var a = Wnd.Misc.AllWindows(sortFirstVisible: true);
+		Print(a);
+		Print(a.Length);
+		//Print(Wnd.Misc.AllWindows(onlyVisible:true));
+	}
+	//static void TestArrayBuilder()
+	//{
+	//	var a = new Catkeys.Util.LibArrayBuilder<long>();
+	//	a.Add() = 8;
+	//	PrintList(a.Count, a.Capacity);
+	//	var v=a[0];
+	//	Print(v);
+	//	a[0] = 9;
+	//	Print(a[0]);
+	//	long i = 10;
+	//	//a.Add(ref i);
+	//	a.AddV(10); Print(a[1]);
+	//	//Print(a[2]);
+
+	//	var r = new RECT(1, 2, 3, 4, false);
+	//	var aa = new Catkeys.Util.LibArrayBuilder<RECT>();
+	//	//aa.Add(ref r);
+	//	aa.AddV(r);
+	//	Print(aa[0]);
+	//	aa.Add()=r;
+	//}
+
+	static void TestWeakReference()
+	{
+		//var k = Catkeys.Util.LibCharBuffer.LibCommon;
+
+		//for(int i = 0; i < 3; i++) {
+		//	var w = Wnd.Find("* Notepad");
+		//	Wait(0.5);
+		//	GC.Collect();
+		//	Wait(0.5);
+		//}
+
+		//var a = Catkeys.Util.LibBuffer.Get(100, ref t_ca);
+		//Print(a.Length);
+
+		//Perf.First();
+		//t_ca = new WeakReference<char[]>(null);
+		//t_test = null; //speed 1500-3000 when assigning a [ThreadStatic] first time in appdomain (maybe in process, not tested)
+		//Perf.NW();
+		//Task.Run(() =>
+		//{
+		//	Perf.First();
+		////t_ca = new WeakReference<char[]>(null);
+		//t_test = null;
+		//	Perf.NW();
+		//});
+		Wait(0.2);
+
+		//Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 8; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { var a = new char[300]; }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { var a = Catkeys.Util.LibBuffer.Get(300, ref t_ca); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.NW();
+		//}
+
+		//Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 10; i1++) {
+		//	int n2 = 1000;
+		//	Perf.Incremental = true;
+		//	for(int i2 = 0; i2 < n2; i2++) {
+		//		//Thread.Sleep(1);
+		//		Perf.First(1);
+		//		Perf.Next();
+		//		var a = new char[3000];
+		//		Perf.Next();
+		//		var a2 = Catkeys.Util.LibBuffer.Get(3000, ref t_ca);
+		//		Perf.Next();
+		//	}
+		//	Perf.Write(); Perf.Incremental = false;
+		//}
+
+	}
+
+	static unsafe void TestLibBuffers()
+	{
+		Wnd w = Wnd.FindFast(null, "Notepad");
+		//string s;
+		//s = w.ClassName;
+		//Print(s);
+		//s = w.Name;
+		//Print(s);
+		//Wait(0.1);
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { s = w.ClassName; });
+		//var a2 = new Action(() => { s = w.Name; });
+		//var a3 = new Action(() => { var b = Catkeys.Util.LibCharBuffer.LibCommon.Alloc(300); });
+		//var a4 = new Action(() => { var b = Catkeys.Util.LibBuffers.LibChar(300); });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//Wnd w = Wnd.FindFast("Calculator", null);
+		//w = w.ChildFast(null, "Windows.UI.Core.CoreWindow");
+		//Print(Wnd.Misc.GetWindowsStoreAppId(w));
+
+		//var x = Shell.Shortcut.Create(Folders.Desktop + "test.lnk");
+		//x.TargetPath = Folders.System + "notepad.exe";
+		//x.Arguments = "/args";
+		//x.Description = "descr";
+		//x.WorkingDirectory="Q:\\";
+		//x.SetIconLocation(@"Q:\app\paste.ico");
+		//x.Save();
+
+		//var x=Shell.Shortcut.Open(Folders.Desktop + "test.lnk");
+		//PrintList(x.TargetPath, x.Arguments, x.Description, x.WorkingDirectory);
+		//Print(x.GetIconLocation(out var i));
+
+		//Print(Shell.Shortcut.GetTarget(Folders.CommonPrograms+@"Microsoft Office\Microsoft Office Word 2003.lnk"));
+
+		//Print(Files.SearchPath("notepad.exe"));
+
+		//Print(w.ProcessName);
+
+		//var m = new Process_.Memory(w, 1000);
+		//m.WriteUnicodeString("unicode", 100);
+		//m.WriteAnsiString("ansi", 200);
+		//Print(m.ReadUnicodeString(7, 100));
+		//Print(m.ReadAnsiString(4, 200));
+
+		//Print(Path_.ExpandEnvVar("%temp%"));
+		//Print(Path_.LibGetEnvVar("temp"));
+		//Print(Path_.LibEnvVarExists("temp"));
+		//Print(Path_.Normalize(@"Q:\app\catkeys\..\icons"));
+		//Print(Path_.Normalize(@"c:\progra~1"));
+
+		//Print(Convert_.HexDecode("4041"));
+
+		//var s = Convert.ToBase64String(new byte[] { 1, 2, 3, 4 });
+		//Print(Convert_.Base64Decode(s));
+
+		//var file = Folders.Temp + "test.txt";
+		//Output.LogFile = file;
+		//Print("aaa bbb");
+		//Output.LogFileTimestamp = true;
+		//Print("ccc ddd");
+		//Shell.Run(file);
+
+	}
+
+	class Example
+	{
+		public static void Test()
+		{
+			Wnd w = Wnd.FindFast(null, "Notepad");
+			string s = GetWndText(w);
+			Print(s);
+		}
+
+		public static string GetWndText(Wnd w)
+		{
+			for(int na = 300; ; na *= 2) {
+				var b = _GetCharBuffer(ref na);
+				int nr = GetWindowText(w, b, na);
+				if(nr < na - 1) return (nr > 0) ? b.ToString(nr) : "";
+			}
+		}
+
+		//this variable manages the buffer
+		[ThreadStatic] static WeakReference<char[]> t_char;
+
+		//a helper method
+		static Catkeys.Util.Buffers.CharBuffer _GetCharBuffer(ref int n) { var r = Catkeys.Util.Buffers.Get(n, ref t_char); n = r.Length - 1; return r; }
+
+		//we'll use this API in this example
+		[DllImport("user32.dll", EntryPoint = "GetWindowTextW")]
+		static extern int GetWindowText(Wnd hWnd, [Out] char[] lpString, int nMaxCount);
+	}
+
+	//[ThreadStatic] static WeakReference<char[]> t_ca;
+	//[ThreadStatic] static char[] t_test;
+
+	//static unsafe void TestSetStringLength()
+	//{
+	//	string s = new string('A', 10);
+
+	//	fixed (char* p = s) {
+
+	//		Unsafe.Write(p - 2, 4);
+	//	}
+	//	Print(s.Length);
+	//	Print(s);
+	//}
+
+	public static unsafe class TestFormat
+	{
+
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int _snwprintf(char* lpOut1024, int count, string lpFmt, __arglist);
+
+		static void TestFormatSpeed()
+		{
+			var sb = new StringBuilder(1000);
+			var ca = new char[1000];
+			int x = 500, y = 600; string s = "sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss";
+			string r1 = null, r2 = null, r3 = null, r4 = null;
+
+			//sb.Clear(); sb.AppendFormat("{0}    {1}    {2}", x, y, s); r1 = sb.ToString();
+			//fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, CharPtr.Length(p)); }
+			//fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, CharPtr.Length(p)); }
+			//sb.Clear(); sb.Append(x); sb.Append("    "); sb.Append(y); sb.Append("    "); sb.Append(s); r4 = sb.ToString();
+
+			Perf.SpinCPU(100);
+			for(int i1 = 0; i1 < 9; i1++) {
+				int n2 = 1000;
+				Perf.First();
+				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.AppendFormat("{0}    {1}    {2}", x.ToString(), y.ToString(), s); r1 = sb.ToString(); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.AppendFormat("{0}    {1}    {2}", x, y, s); r1 = sb.ToString(); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, Catkeys.Util.CharPtr.Length(p)); } }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, Catkeys.Util.CharPtr.Length(p)); } }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.Append(x); sb.Append("    "); sb.Append(y); sb.Append("    "); sb.Append(s); r4 = sb.ToString(); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.Append(x.ToString(CultureInfo.InvariantCulture)); sb.Append("    "); sb.Append(y.ToString(CultureInfo.InvariantCulture)); sb.Append("    "); sb.Append(s); r4 = sb.ToString(); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { r1 = $"{x}    {y}    {s}"; }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { var ss = x.ToString(); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { var ss = x.ToString(CultureInfo.InvariantCulture); }
+				Perf.NW();
+			}
+
+			Print(r1);
+			Print(r2);
+			Print(r3);
+			Print(r4);
+		}
+	}
+
+
+	//static _DefDomainVar s_ggg;
+	//static bool boo = InterDomainVariables.DefaultDomainVariable2("gggg", out  s_ggg);
+
+	static DefDomainVar s_idvTest = InterDomainVariables.DefaultDomainVariable<DefDomainVar>(nameof(s_idvTest));
+
+	static void TestInterDomainVariables()
+	{
+		s_idvTest.Method(7);
+	}
+
+	class DefDomainVar :MarshalByRefObject
+	{
+		public void Method(int param)
+		{
+			PrintList(param, AppDomain.CurrentDomain.FriendlyName);
+		}
+	}
+
+	#region mouse
+	static void TestWndClick()
+	{
+		//Options.Relaxed = true;
+
+		//Wnd.Find("Quick*").ChildById(2207).Click(10, 10);
+		//Wnd.Find("Quick*").ChildById(2207).MouseMove(10, 10);
+		//WaitFor.WindowActive(0, "Quick*").MouseMove(100, 100);
+
+		//Print(WaitFor.ModifierKeysReleased(-5));
+		//Print(WaitFor.MouseButtonsReleased(-5));
+		//WaitFor.MouseButtonsReleased(out var wasPressed); Print(wasPressed);
+
+		//Wnd.Find("Quick*").Click(10, 10);
+		//Wnd.Find("Quick*").Click(20, 10, mmFlags:MFlags.NonClientXY|MFlags.WaitForButtonsReleased);
+
+		//var w = Wnd.Find("Quick*");
+		var w = Wnd.Find("* Notepad");
+		//w.Click(100, 100);
+		//w.Click(100, 100, flags:MFlags.Relaxed);
+		//w.Click(10, 10, flags:MFlags.NonClientXY);
+		//w.Click(10, 10, flags:MFlags.WorkAreaXY);
+		//w.Click(400, 90, MButton.Down);
+		//Wait(0.1);
+		//Wait(3);
+		//w.MouseMove(350, 70);
+		//w.MouseMove(350, 70, mmFlags: MFlags.Relaxed);
+		//Wait(0.1);
+		//Mouse.LeftUp();
+
+		//Mouse.Move(-100, 400);
+
+		//Mouse.LeftDown(w, 1, 100, true);
+		//Mouse.LeftDown(w, -1, 100);
+		//Mouse.LeftUp(w, 200, w.MouseClientXY.Y);
+
+	}
+
+	static void TestOptionsMouseMoveSpeed()
+	{
+		//Wnd.Find("app -*").Activate(); Wait(0.5);
+		Options.MouseMoveSpeed = 50;
+		//Mouse.LeftDown(176, 910);
+		//Mouse.MoveRelative(50, 0);
+		//Mouse.LeftUp();
+
+		Mouse.MoveRelative(50, 0);
+		Mouse.MoveRelative(50, 200);
+		Mouse.MoveRelative(-150, -100);
+		Mouse.MoveRelative(500, 500);
+
+		//test crossing an offscreen area
+		//Mouse.Move(100, 200, screen: 1);
+		//Options.MouseMoveSpeed = 500;
+		//Mouse.Move(11, 962);
+
+	}
+
+	static void TestRecordMouseMove()
+	{
+		var xy0 = Mouse.XY;
+		s_withSleepTimes = false;
+		s_recptime = Time.Milliseconds;
+		s_recMoves = new List<uint>();
+
+		var hh = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, _testRecordMouseMove_Proc, Catkeys.Util.ModuleHandle.OfProcessExe(), 0);
+		Thread.CurrentThread.Join(7000);
+		Api.UnhookWindowsHookEx(hh);
+
+		var s = Catkeys.Util.Recording.MouseToString(s_recMoves, s_withSleepTimes);
+		Print(s);
+
+		Wait(1);
+		Mouse.Move(xy0);
+		Mouse.MoveRecorded(s);
+	}
+
+	static Api.HOOKPROC _testRecordMouseMove_Proc = _TestRecordMouseMove_Proc;
+	static unsafe LPARAM _TestRecordMouseMove_Proc(int code, LPARAM msg, LPARAM lParam)
+	{
+		//var m = (Api.MSLLHOOKSTRUCT*)lParam;
+		ref Api.MSLLHOOKSTRUCT m = ref *(Api.MSLLHOOKSTRUCT*)lParam;
+
+		//PrintList(m.pt.X, m.pt.Y);
+		//PrintList(m.pt.X - s_pp.X, m.pt.Y - s_pp.Y);
+
+		var d = new Point(m.pt.X - s_pp.X, m.pt.Y - s_pp.Y);
+		int ddx = d.X - s_ppd.X, ddy = d.Y - s_ppd.Y;
+		//string s = null;
+		//if(ddx < -16 || ddx > 15 || ddy < -16 || ddy > 15) s = ">15";
+		//else if(ddx < -8 || ddx > 7 || ddy < -8 || ddy > 7) s = ">7";
+		//else if(ddx < -4 || ddx > 3 || ddy < -4 || ddy > 3) s = ">3";
+		//Print($"{d.X}, {d.Y}      {ddx}, {ddy}     {s}");
+		s_pp = m.pt;
+		s_ppd = d;
+
+		if(s_withSleepTimes) {
+			var t = Time.Milliseconds;
+			s_recMoves.Add((uint)(t - s_recptime));
+			s_recptime = t;
+		}
+		s_recMoves.Add(Math_.MakeUint(d.X, d.Y));
+
+		return Api.CallNextHookEx(Zero, code, msg, lParam);
+	}
+	static Point s_pp = Mouse.XY;
+	static Point s_ppd;
+	static bool s_withSleepTimes;
+	static long s_recptime;
+	static List<uint> s_recMoves;
+
+	static void TestHowLooksRecordedMouseScript()
+	{
+		Wnd w1 = Wnd.Find("Untitled - Notepad", "Notepad");
+
+		//Mouse.Click(w1, 100, 100);
+		//w1.MouseClick(100, 100);
+
+		//Mouse.RightClick(w1, 100, 100);
+		//w1.MouseClick(100, 100, MButton.Right);
+
+		//Mouse.MoveRecorded("sjdksjdkjskdjksjdksjkdsjdks");
+
+		//var speed = 0.5;
+		//Mouse.MoveRecorded("sjdksjdkjskdjksjdksjkdsjdks", speed);
+		//Mouse.Click(w1, 100, 100); Wait(0.5 * speed);
+		////Mouse.Click(w1, 100, 100); WaitSF(0.5); //=Wait(0.5 * Options.SpeedFactor);
+		////Mouse.ClickWait(w1, 100, 100, 0.5);
+
+		//Mouse.RightClick()
+		//Mouse.Move(
+		Mouse.Click(w1, 1, 2);
+		Mouse.ClickEx(MButton.Middle, w1, 1, 2);
+		w1.MouseClick(1, 2);
+		w1.MouseClick(1, 2, MButton.Right);
+		Mouse.LeftDown(w1, 100, 200);
+		Mouse.ClickEx(MButton.Left | MButton.Down, w1, 100, 200);
+
+		//var f=new FileStream()
+	}
+
+	static void TestFindOrRun()
+	{
+		Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
+		Print(w);
+	}
+
+	static void TestMouseDragDrop()
+	{
+		var w = Wnd.Find("* Notepad");
+		//w.Activate();
+		//Wait(0.5);
+
+		//Mouse.LeftDown(w, 8, 8);
+		//Mouse.LeftUp(w, 28, 8);
+
+		//Mouse.LeftDown(w, 8, 8);
+		//Mouse.MoveRelative(20, 0, drop: true);
+
+		//Mouse.LeftDown(w, 8, 8);
+		//Mouse.MoveRelative(20, 0);
+		////Mouse.Drop();
+		//Wait(3);
+		//Mouse.LeftUp(true);
+
+		//using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(20, 0);
+		//using(Mouse.ClickEx(MButton.Left|MButton.Down, w, 8, 8)) Mouse.MoveRelative(20, 0);
+
+		//Mouse.Move(w, 100, 100);
+		//Mouse.Wheel(-5);
+		//Wait(0.5);
+		//Mouse.Wheel(1);
+
+		//Wnd w2 = Wnd.Find("* WordPad");
+		//w2.ZorderTopmost();
+		//w2.ZorderNoTopmost();
+		//Wait(0.5);
+
+		//w = Wnd.Find("", "WorkerW");
+
+		Mouse.Click(w, 20, 20);
+	}
 	#endregion
 }

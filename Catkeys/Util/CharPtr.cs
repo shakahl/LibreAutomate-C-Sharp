@@ -20,7 +20,7 @@ using System.Xml.Linq;
 
 using static Catkeys.NoClass;
 
-namespace Catkeys
+namespace Catkeys.Util
 {
 	/// <summary>
 	/// String functions that work with char* and ANSI byte* strings.
