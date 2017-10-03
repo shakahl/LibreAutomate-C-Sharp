@@ -22,6 +22,7 @@ using System.Drawing;
 using K = System.Windows.Forms.Keys;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using Catkeys.Triggers;
 

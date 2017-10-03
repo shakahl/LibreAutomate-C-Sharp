@@ -19,8 +19,8 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
-
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -47,7 +47,7 @@ partial class FileNode
 
 		if(!this.IsLink()) {
 			try {
-				Files.Rename(this.FilePath, name, Files.IfExists.Fail);
+				Files.Rename(this.FilePath, name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
 			//if(IsLink(out string sp)) _x.SetAttributeValue("path", Path_.GetDirectoryPath(sp, true) + name); //if we would rename the taget file
@@ -101,7 +101,7 @@ partial class FileNode
 			var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 			if(newParent != oldParent) {
 				try {
-					Files.Move(this.FilePath, newParent.FilePath + "\\" + Name, Files.IfExists.Fail);
+					Files.Move(this.FilePath, newParent.FilePath + "\\" + Name, IfExists.Fail);
 				}
 				catch(Exception ex) { Print(ex.Message); return false; }
 			}
@@ -154,7 +154,7 @@ partial class FileNode
 		//copy file or directory
 		if(!IsLink()) {
 			try {
-				Files.Copy(this.FilePath, newParent.FilePath + "\\" + name, Files.IfExists.Fail);
+				Files.Copy(this.FilePath, newParent.FilePath + "\\" + name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return null; }
 		}

@@ -18,6 +18,7 @@ using System.Linq;
 using System.Xml.Linq;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -134,7 +135,7 @@ namespace G.Controls
 
 				t.Tag = x;
 				t.Text = t.Name = name;
-				//t.AllowItemReorder = true; //don't use, it's buggy etc, we know better how to do it
+				//t.AllowItemReorder = true; //don't use, it's has bugs etc, we know better how to do it
 				if(tsRenderer != null) t.Renderer = tsRenderer;
 				if(isMenu) {
 					t.Padding = new Padding(); //remove menu bar paddings
@@ -326,14 +327,14 @@ namespace G.Controls
 
 			Image im = null;
 			if(x.Attribute_(out s, "i2")) { //custom image as icon file
-				im = Icons.GetFileIconImage(s, (int)Icons.ShellSize.SysSmall, Icons.IconFlags.SearchPath);
+				im = Icons.GetFileIconImage(s, (int)Icons.ShellSize.SysSmall, GIFlags.SearchPath);
 				if(im == null) Print($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}
 			if(im == null && x.Attribute_(out s, "i")) im = _callbacks.GetImage(s); //image from resources
 			item.Image = im;
 
-			if(x.Attribute_(out s, "color") && Color_.ColorFromNameOrRGB(s, out var color)) item.ForeColor = color;
+			if(x.Attribute_(out s, "color") && Catkeys.Util.Color_.ColorFromNameOrRGB(s, out var color)) item.ForeColor = color;
 			else if(!_inBuildAll) item.ForeColor = Color.FromKnownColor(KnownColor.ControlText);
 
 			bool hasCustomText = x.Attribute_(out s, "t2"); //custom text
@@ -396,7 +397,7 @@ namespace G.Controls
 				//reorder toolbar buttons
 				if(xtsCust.Attribute_(out string s, "order")) {
 					xtsDef.Elements("sep").Remove(); //remove all default <sep/>, because all separators now are in the 'order' attribute
-					var a = s.Split(' ');
+					var a = s.Split_(" ");
 					for(int i = a.Length - 1; i >= 0; i--) {
 						if(a[i] == "sep") {
 							xtsDef.AddFirst(new XElement("sep"));

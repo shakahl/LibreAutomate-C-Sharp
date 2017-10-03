@@ -18,18 +18,19 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
 {
 	//[DebuggerStepThrough]
-	static partial class WaitFor
+	public static partial class WaitFor
 	{
 		/// <summary>
 		/// Can be used to easily implement timeout in wait-for functions.
-		/// See how it is used eg in WindowExists or Condition.
+		/// See how it is used eg in <see cref="Condition"/>.
 		/// </summary>
-		struct _Timeout
+		internal struct LibTimeout
 		{
 			long _timeRemaining, _timePrev;
 			bool _isTimeout, _throw;
@@ -44,7 +45,7 @@ namespace Catkeys
 			/// </summary>
 			internal int MaxPeriod;
 
-			internal _Timeout(double timeoutS, int initPeriod = 10, int maxPeriod = 200)
+			internal LibTimeout(double timeoutS, int initPeriod = 10, int maxPeriod = 200)
 			{
 				if(timeoutS == 0) {
 					_timeRemaining = _timePrev = 0;
@@ -79,7 +80,6 @@ namespace Catkeys
 			/// If IsTimeout(), returns false.
 			/// Else sleeps for Period milliseconds, increments Period if it is less than MaxPeriod, and returns true.
 			/// </summary>
-			/// <returns></returns>
 			internal bool Sleep()
 			{
 				if(IsTimeout()) return false;
@@ -102,14 +102,13 @@ namespace Catkeys
 		/// <param name="param">Something to pass to the callback function.</param>
 		/// <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
 		/// <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the condition callback function.</exception>
-		/// <seealso cref="Time.SleepPrecision"/>
 		public static bool Condition(double timeoutS, Func<object, bool> condition, object param = null, int minPeriod = 10, int maxPeriod = 200)
 		{
 			if(minPeriod < 1 || maxPeriod < minPeriod) throw new ArgumentException();
-			var to = new _Timeout(timeoutS, minPeriod, maxPeriod);
+			var to = new LibTimeout(timeoutS, minPeriod, maxPeriod);
 			for(;;) {
 				if(condition(param)) return true;
 				if(!to.Sleep()) return false;
@@ -124,13 +123,13 @@ namespace Catkeys
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
 		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
 		/// <seealso cref="Input.IsModified"/>
 		public static bool NoModifierKeys(double timeoutS = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
 		{
 			//return WaitFor.Condition(timeoutS, o => !Input.LibIsModifiers(modifierKeys)); //shorter but creates garbage
-			var to = new _Timeout(timeoutS);
+			var to = new LibTimeout(timeoutS);
 			for(;;) {
 				if(!Input.IsModified(modifierKeys)) return true;
 				if(!to.Sleep()) return false;
@@ -145,11 +144,11 @@ namespace Catkeys
 		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
 		/// </param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
 		/// <seealso cref="Mouse.IsPressed(MouseButtons)"/>
 		public static bool NoMouseButtons(double timeoutS = 0.0, MouseButtons buttons= MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
-			var to = new _Timeout(timeoutS);
+			var to = new LibTimeout(timeoutS);
 			for(;;) {
 				if(!Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
@@ -165,12 +164,12 @@ namespace Catkeys
 		/// </param>
 		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
+		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
 		/// <seealso cref="Input.IsModified"/>
 		public static bool NoModifierKeysAndMouseButtons(double timeoutS = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
-			var to = new _Timeout(timeoutS);
+			var to = new LibTimeout(timeoutS);
 			for(;;) {
 				if(!Input.IsModified(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;

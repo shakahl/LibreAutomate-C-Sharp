@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys.Util
@@ -61,7 +61,7 @@ namespace Catkeys.Util
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
 			ThreadStart d = () =>
 			{
-				Wnd w = Api.CreateWindowEx(Native.WS_EX_NOACTIVATE, "#32770", null, Native.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message, 0, Zero, 0);
+				Wnd w = Api.CreateWindowEx(Native.WS_EX_NOACTIVATE, "#32770", null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message, 0, Zero, 0);
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.

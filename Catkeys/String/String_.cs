@@ -17,6 +17,7 @@ using System.Drawing;
 //using System.Linq;
 using System.Globalization;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -31,15 +32,18 @@ namespace Catkeys
 	public static partial class String_
 	{
 		/// <summary>
-		/// Returns Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.Equals(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static bool Equals_(this string t, string value, bool ignoreCase = false)
 		{
-			return t.Equals(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return ignoreCase ? t.Equals(value, StringComparison.OrdinalIgnoreCase) : t.Equals(value);
+			//speed: t.Equals(value) is faster than t.Equals(value, StringComparison.Ordinal)
 		}
+		//CONSIDER: allow null t, like Like_. Maybe only for Equals_, not StartsWith_ etc.
+		//	Or for all; then can easier use eg in Acc.Find 'also', like 'also: o => o.Value.StartsWith_("x")', because now need 'also: o => o.Value?.StartsWith_("x") ?? false' to make it safe.
 
 		/// <summary>
-		/// Calls Equals_(strings[i], ignoreCase) for each string specified in the argument list until it returns true.
+		/// Calls <see cref="Equals_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
 		public static int Equals_(this string t, bool ignoreCase = false, params string[] strings)
@@ -49,7 +53,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns EndsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.EndsWith(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static bool EndsWith_(this string t, string value, bool ignoreCase = false)
 		{
@@ -57,7 +61,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls EndsWith_(strings[i], ignoreCase) for each string specified in the argument list until it returns true.
+		/// Calls <see cref="EndsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
 		public static int EndsWith_(this string t, bool ignoreCase = false, params string[] strings)
@@ -77,7 +81,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns StartsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.StartsWith(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static bool StartsWith_(this string t, string value, bool ignoreCase = false)
 		{
@@ -85,7 +89,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls StartsWith_(strings[i], ignoreCase) for each string specified in the argument list until it returns true.
+		/// Calls <see cref="StartsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
 		public static int StartsWith_(this string t, bool ignoreCase = false, params string[] strings)
@@ -105,39 +109,40 @@ namespace Catkeys
 
 		/// <summary>
 		/// Compares part of this string with another string and returns true if matches.
-		/// Calls <see cref="string.Compare(string, int, string, int, int, StringComparison)"/>.
+		/// Calls <see cref="string.Compare(string, int, string, int, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
-		public static bool EqualsPart_(this string t, int startIndex, string value, bool ignoreCase = false)
+		public static bool EqualsAt_(this string t, int startIndex, string value, bool ignoreCase = false)
 		{
 			return 0 == string.Compare(t, startIndex, value, 0, value.Length, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			//tested: with Ordinal 60% slower than Equals. Slightly faster than CompareOrdinal.
 		}
 
 		/// <summary>
-		/// Calls EqualsPart_(startIndex, strings[i], ignoreCase) for each string specified in the argument list until it returns true.
+		/// Calls <see cref="EqualsAt_(string, int, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		public static int EqualsPart_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
+		public static int EqualsAt_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
 		{
-			for(int i = 0; i < strings.Length; i++) if(t.EqualsPart_(startIndex, strings[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < strings.Length; i++) if(t.EqualsAt_(startIndex, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
 		/// <summary>
-		/// Returns IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.IndexOf(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static int IndexOf_(this string t, string value, bool ignoreCase = false)
 		{
 			return t.IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.IndexOf(string, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static int IndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
 		{
 			return t.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.IndexOf(string, int, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static int IndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
 		{
@@ -145,127 +150,148 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns IndexOfAny(anyOf.ToCharArray()).
+		/// Returns <c>IndexOfAny(anyOf.ToCharArray())</c>.
 		/// </summary>
 		public static int IndexOfAny_(this string t, string anyOf)
 		{
 			return t.IndexOfAny(anyOf.ToCharArray());
 		}
 		/// <summary>
-		/// Returns IndexOfAny(anyOf.ToCharArray(), startIndex).
+		/// Returns <c>IndexOfAny(anyOf.ToCharArray(), startIndex)</c>.
 		/// </summary>
 		public static int IndexOfAny_(this string t, string anyOf, int startIndex)
 		{
 			return t.IndexOfAny(anyOf.ToCharArray(), startIndex);
 		}
 		/// <summary>
-		/// Returns IndexOfAny(anyOf.ToCharArray(), startIndex, count).
+		/// Returns <c>IndexOfAny(anyOf.ToCharArray(), startIndex, count)</c>.
 		/// </summary>
 		public static int IndexOfAny_(this string t, string anyOf, int startIndex, int count)
 		{
 			return t.IndexOfAny(anyOf.ToCharArray(), startIndex, count);
+			//FUTURE: create own code. Now ToCharArray is slow and generates garbage.
 		}
 
 		/// <summary>
-		/// Returns LastIndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.LastIndexOf(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static int LastIndexOf_(this string t, string value, bool ignoreCase = false)
 		{
 			return t.LastIndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns LastIndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.LastIndexOf(string, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static int LastIndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
 		{
 			return t.LastIndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		/// <summary>
-		/// Returns LastIndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal).
+		/// Calls <see cref="String.LastIndexOf(string, int, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static int LastIndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.LastIndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
+		//rejected: rarely used. If need, can use "any".ToCharArray().
+		///// <summary>
+		///// Returns LastIndexOfAny(anyOf.ToCharArray()).
+		///// </summary>
+		//public static int LastIndexOfAny_(this string t, string anyOf)
+		//{
+		//	return t.LastIndexOfAny(anyOf.ToCharArray());
+		//}
+		///// <summary>
+		///// Returns LastIndexOfAny(anyOf.ToCharArray(), startIndex).
+		///// </summary>
+		//public static int LastIndexOfAny_(this string t, string anyOf, int startIndex)
+		//{
+		//	return t.LastIndexOfAny(anyOf.ToCharArray(), startIndex);
+		//}
+		///// <summary>
+		///// Returns LastIndexOfAny(anyOf.ToCharArray(), startIndex, count).
+		///// </summary>
+		//public static int LastIndexOfAny_(this string t, string anyOf, int startIndex, int count)
+		//{
+		//	return t.LastIndexOfAny(anyOf.ToCharArray(), startIndex, count);
+		//}
+
 		/// <summary>
-		/// Returns LastIndexOfAny(anyOf.ToCharArray()).
+		/// Returns <see cref="String.Length"/>. If this is null, returns 0.
 		/// </summary>
-		public static int LastIndexOfAny_(this string t, string anyOf)
-		{
-			return t.LastIndexOfAny(anyOf.ToCharArray());
-		}
+		public static int Length_(this string t) => t?.Length ?? 0;
+
 		/// <summary>
-		/// Returns LastIndexOfAny(anyOf.ToCharArray(), startIndex).
+		/// Splits this string into substrings using the specified separators.
+		/// Returns string[].
 		/// </summary>
-		public static int LastIndexOfAny_(this string t, string anyOf, int startIndex)
+		/// <param name="t"></param>
+		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="maxCount">The maximum number of substrings to get. If negative, gets all.</param>
+		/// <param name="flags"></param>
+		/// <seealso cref="Segments_(string, string, SegFlags)"/>
+		/// <seealso cref="SplitLines_"/>
+		public static string[] Split_(this string t, string separators, int maxCount, SegFlags flags = 0)
 		{
-			return t.LastIndexOfAny(anyOf.ToCharArray(), startIndex);
-		}
-		/// <summary>
-		/// Returns LastIndexOfAny(anyOf.ToCharArray(), startIndex, count).
-		/// </summary>
-		public static int LastIndexOfAny_(this string t, string anyOf, int startIndex, int count)
-		{
-			return t.LastIndexOfAny(anyOf.ToCharArray(), startIndex, count);
+			var x = new SegParser(t, separators, flags);
+			return x.ToStringArray(maxCount);
 		}
 
 		/// <summary>
-		/// Returns Split(separators.ToCharArray()).
+		/// Splits this string into substrings using the specified separators.
+		/// Returns string[].
 		/// </summary>
-		public static string[] Split_(this string t, string separators)
+		/// <param name="t"></param>
+		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="flags"></param>
+		/// <seealso cref="Segments_(string, string, SegFlags)"/>
+		/// <seealso cref="SplitLines_"/>
+		public static string[] Split_(this string t, string separators, SegFlags flags = 0)
 		{
-			return t.Split(separators.ToCharArray());
-		}
-		/// <summary>
-		/// Returns Split(separators.ToCharArray(), count).
-		/// </summary>
-		public static string[] Split_(this string t, string separators, int count)
-		{
-			return t.Split(separators.ToCharArray(), count);
-		}
-		/// <summary>
-		/// Returns Split(separators.ToCharArray(), options).
-		/// </summary>
-		public static string[] Split_(this string t, string separators, StringSplitOptions options)
-		{
-			return t.Split(separators.ToCharArray(), options);
-		}
-		/// <summary>
-		/// Returns Split(separators.ToCharArray(), count, options).
-		/// </summary>
-		public static string[] Split_(this string t, string separators, int count, StringSplitOptions options)
-		{
-			return t.Split(separators.ToCharArray(), count, options);
+			var x = new SegParser(t, separators, flags);
+			return x.ToStringArray();
 		}
 
 		/// <summary>
-		/// Returns array of lines. Line separators can be \r\n or \n or \r.
+		/// Splits this string into lines using separators "\r\n", "\n", "\r".
+		/// Returns string[].
 		/// </summary>
-		public static string[] SplitLines_(this string t, bool removeEmptyLines = false)
+		/// <param name="t"></param>
+		/// <param name="noEmptyLines">Don't get empty lines.</param>
+		/// <remarks>
+		/// Calls <see cref="Split_(string, string, int, SegFlags)"/> with separators = Separators.Line, maxCount = -1 (all lines), flags = noEmptyLines ? SegFlags.NoEmpty : 0.
+		/// </remarks>
+		/// <seealso cref="Segments_(string, string, SegFlags)"/>
+		public static string[] SplitLines_(this string t, bool noEmptyLines = false)
 		{
-			return t.Split(_newlines, removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
+			return Split_(t, Separators.Line, noEmptyLines ? SegFlags.NoEmpty : 0);
 		}
-		static readonly string[] _newlines = { "\r\n", "\n", "\r" }; //error if const. Not public because elements can be changed.
 
 		/// <summary>
 		/// Returns the number of lines.
+		/// Counts line separators "\r\n", "\n", "\r".
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="preferMore">If the number of lines is ambiguous, return the bigger. It is ambiguous in these cases: 1. Length is 0. 2. Ends with '\n'.</param>
-		public static int LineCount_(this string t, bool preferMore = false)
+		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
+		public static int CountLines_(this string t, bool preferMore = false)
 		{
 			if(Empty(t)) return preferMore ? 1 : 0;
 			int i = 0, n = 1;
 			for(; i < t.Length; i++) {
-				if(t[i] == '\n') n++;
+				char c = t[i];
+				if(c > '\r') continue;
+				if(c == '\r') {
+					if(++i == t.Length || t[i] != '\n') i--; //single \r ?
+					n++;
+				} else if(c == '\n') n++;
 			}
-			if(!preferMore && t[i - 1] == '\n') n--;
+			if(!preferMore) switch(t[i - 1]) { case '\n': case '\r': n--; break; }
 			return n;
 		}
 
 		/// <summary>
-		/// Returns ToLowerInvariant().
+		/// Calls <see cref="String.ToLowerInvariant"/>.
 		/// </summary>
 		public static string ToLower_(this string t)
 		{
@@ -273,7 +299,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns ToUpperInvariant().
+		/// Calls <see cref="String.ToUpperInvariant"/>.
 		/// </summary>
 		public static string ToUpper_(this string t)
 		{
@@ -281,16 +307,15 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns Trim(trimChars.ToCharArray()).
+		/// Returns <c>Trim(trimChars.ToCharArray())</c>.
 		/// </summary>
 		public static string Trim_(this string t, string trimChars)
 		{
 			return t.Trim(trimChars.ToCharArray());
 		}
-		//This is not in System.String.
 
 		/// <summary>
-		/// Returns TrimEnd(trimChars.ToCharArray()).
+		/// Returns <c>TrimEnd(trimChars.ToCharArray())</c>.
 		/// </summary>
 		public static string TrimEnd_(this string t, string trimChars)
 		{
@@ -298,11 +323,12 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Returns TrimStart(trimChars.ToCharArray()).
+		/// Returns <c>TrimStart(trimChars.ToCharArray())</c>.
 		/// </summary>
 		public static string TrimStart_(this string t, string trimChars)
 		{
 			return t.TrimStart(trimChars.ToCharArray());
+			//FUTURE: create own code. Now ToCharArray is slow and generates garbage.
 		}
 
 		/// <summary>
@@ -318,7 +344,7 @@ namespace Catkeys
 		///		Much faster.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="startIndex">Offset in string where to start parsing.</param>
+		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <remarks>
 		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
@@ -362,7 +388,7 @@ namespace Catkeys
 		///		Much faster.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="startIndex">Offset in string where to start parsing.</param>
+		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <remarks>
 		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
@@ -398,7 +424,7 @@ namespace Catkeys
 			numberEndIndex = 0;
 			int len = t == null ? 0 : t.Length;
 			if(startIndex < 0 || startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
-			int i = startIndex; char c = default(char);
+			int i = startIndex; char c = default;
 
 			//skip spaces
 			for(; ; i++) {
@@ -472,27 +498,24 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Converts string to int (calls <see cref="ToInt32_(string, int, out int)"/>) and gets string part that follows the number.
-		/// For example, for string "123text" sets the tail variable = "text" and returns 123.
-		/// For string like "123" sets tail = "".
-		/// If fails to convert, sets tail = null.
-		/// Skips 1 ASCII space or tab character after the number part. For example, for string "123 text" sets tail = "text", not " text".
-		/// Everything else is the same as with ToInt32_.
+		/// If this string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
+		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
+		/// Everything else is the same as with <see cref="ToInt32_(string, int, out int)"/>.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="tail">A string variable. Can be this variable.</param>
-		public static int ToIntAndString_(this string t, out string tail)
+		/// <param name="num">Receives the number. Receives 0 if no number.</param>
+		/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
+		/// <param name="startIndex">Offset in this string where to start parsing.</param>
+		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0)
 		{
-			int eon, R = ToInt32_(t, 0, out eon);
-
-			if(eon == 0)
+			num = ToInt32_(t, startIndex, out int end);
+			if(end == 0) {
 				tail = null;
-			else {
-				if(eon < t.Length) { char c = t[eon]; if(c == ' ' || c == '\t') eon++; }
-				if(eon < t.Length) tail = t.Substring(eon); else tail = "";
+				return false;
 			}
-
-			return R;
+			if(end < t.Length && t[end] == ' ') end++;
+			tail = t.Substring(end);
+			return true;
 		}
 
 		/// <summary>
@@ -532,7 +555,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if this string matches regular expression pattern.
-		/// Calls Regex.IsMatch(this, pattern, options|RegexOptions.CultureInvariant).
+		/// Calls <see cref="Regex.IsMatch(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
 		/// </summary>
 		public static bool RegexIs_(this string t, string pattern, RegexOptions options = 0)
 		{
@@ -540,7 +563,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls RegexIs_(patterns[i], options) for each regular expression pattern specified in the argument list until it returns true.
+		/// Calls <see cref="RegexIs_(string, string, RegexOptions)"/> for each regular expression pattern specified in the argument list until it returns true.
 		/// Returns 1-based index of matching pattern, or 0 if none.
 		/// </summary>
 		public static int RegexIs_(this string t, RegexOptions options, params string[] patterns)
@@ -550,8 +573,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
-		/// Returns its return value.
+		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
 		/// </summary>
 		public static Match RegexMatch_(this string t, string pattern, RegexOptions options = 0)
 		{
@@ -559,8 +581,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Matches(this, pattern, options|RegexOptions.CultureInvariant).
-		/// Returns its return value.
+		/// Calls <see cref="Regex.Matches(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
 		/// </summary>
 		public static MatchCollection RegexMatches_(this string t, string pattern, RegexOptions options = 0)
 		{
@@ -568,12 +589,12 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
-		/// Returns Match.Index, or -1 if does not match.
+		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
+		/// Returns the match position in this string, or -1. If group is not 0, it is submatch position.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="pattern"></param>
-		/// <param name="group">Group number. If 0, gets whole match.</param>
+		/// <param name="group">0 or a group number. For example, if pattern is "one(two)" and group is 1, returns "two" position.</param>
 		/// <param name="options"></param>
 		public static int RegexIndexOf_(this string t, string pattern, int group = 0, RegexOptions options = 0)
 		{
@@ -581,13 +602,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
-		/// Returns 0-based position of the matched substring, or -1 if does not match. Also gets match length.
+		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant. Also gets match length.
+		/// Returns the match position in this string, or -1. If group is not 0 - submatch position.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="pattern"></param>
-		/// <param name="length">Receives match length.</param>
-		/// <param name="group">Group number. If 0, gets whole match.</param>
+		/// <param name="length">Receives match length. If group is not 0 - submatch length.</param>
+		/// <param name="group">0 or a group number. For example, if pattern is "one(two)" and group is 1, gets "two" length and returns "two" position.</param>
 		/// <param name="options"></param>
 		public static int RegexIndexOf_(this string t, string pattern, out int length, int group = 0, RegexOptions options = 0)
 		{
@@ -601,13 +622,13 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Match(this, pattern, options|RegexOptions.CultureInvariant).
-		/// Returns 0-based position of the matched substring, or -1 if does not match. Also gets the substring.
+		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant. Also gets the match string.
+		/// Returns the match position in this string, or -1. If group is not 0 - submatch position.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="pattern"></param>
-		/// <param name="match">Receives match length.</param>
-		/// <param name="group">Group number. If 0, gets whole match.</param>
+		/// <param name="match">Receives the match string. If group is not 0 - submatch.</param>
+		/// <param name="group">0 or a group number. For example, if pattern is "one(two)" and group is 1, gets "two" and returns "two" position.</param>
 		/// <param name="options"></param>
 		public static int RegexIndexOf_(this string t, string pattern, out string match, int group = 0, RegexOptions options = 0)
 		{
@@ -618,8 +639,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Replace(t, pattern, replacement, options|RegexOptions.CultureInvariant).
-		/// Returns its return value.
+		/// Calls <see cref="Regex.Replace(string, string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
 		/// </summary>
 		public static string RegexReplace_(this string t, string pattern, string replacement, RegexOptions options = 0)
 		{
@@ -627,8 +647,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls Regex.Replace(t, pattern, evaluator, options|RegexOptions.CultureInvariant).
-		/// Returns its return value.
+		/// Calls <see cref="Regex.Replace(string, string, MatchEvaluator, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
 		/// </summary>
 		public static string RegexReplace_(this string t, string pattern, MatchEvaluator evaluator, RegexOptions options = 0)
 		{
@@ -636,44 +655,79 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls result = Regex.Replace(t, pattern, replacement, options|RegexOptions.CultureInvariant).
-		/// Returns the number of replacements made.
+		/// Calls <see cref="Regex.Replace(string, string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
+		/// Gets the result string and returns the number of replacements made.
 		/// </summary>
 		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, RegexOptions options = 0)
 		{
 			int n = 0;
-			result = Regex.Replace(t, pattern, me => { n++; return me.Result(replacement); }, options | RegexOptions.CultureInvariant);
+			result = Regex.Replace(t, pattern, m => { n++; return m.Result(replacement); }, options | RegexOptions.CultureInvariant);
 			return n;
 		}
 
 		/// <summary>
+		/// Calls <see cref="Regex.Replace(string, string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
+		/// Gets the result string and returns the number of replacements made.
 		/// This overload has parameter 'count' (max number of replacements).
-		/// Returns the number of replacements made.
 		/// </summary>
 		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, int count, RegexOptions options = 0)
 		{
 			var x = new Regex(pattern, options | RegexOptions.CultureInvariant);
 			int n = 0;
-			result = x.Replace(t, (m) => { n++; return m.Result(replacement); }, count);
+			result = x.Replace(t, m => { n++; return m.Result(replacement); }, count);
 			return n;
 		}
 
 		/// <summary>
-		/// Returns a new string in which a specified string replaces a spcified count of characters at a specified position in this instance.
+		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex or startIndex+count is outside of this string bounds.</exception>
 		public static string ReplaceAt_(this string t, int startIndex, int count, string value)
 		{
 			return t.Remove(startIndex, count).Insert(startIndex, value);
 
-			//almost the same speed, 1 more allocations
+			//slightly slower, 1 more allocations
 			//return t.Substring(0, startIndex) + value + t.Substring(startIndex + count);
 
-			//2.5 times slower
-			//var s = new StringBuilder(t);
-			//s.Remove(startIndex, count);
-			//s.Insert(startIndex, value);
-			//return s.ToString();
+			//maybe less garbage (didn't measure), but slightly slower
+			//var s = Util.LibStringBuilderCache.Acquire();
+			//if(startIndex != 0) s.Append(t, 0, startIndex);
+			//s.Append(value);
+			//int i = startIndex + count, n = t.Length - i;
+			//if(n != 0) s.Append(t, i, n);
+			//return s.ToStringCached_();
+		}
+
+		/// <summary>
+		/// Replaces some characters to C# escape sequences.
+		/// Replaces these characters: '\\', '\"', '\t', '\n', '\r' and all in range 0-31.
+		/// If the string contains these characters, replaces and returns new string. Else returns this string.
+		/// </summary>
+		public static string Escape_(this string t)
+		{
+			if(t.Length == 0) return t;
+			int i;
+			for(i = 0; i < t.Length; i++) {
+				var c = t[i];
+				if(c < ' ' || c == '\\' || c == '\"') break;
+				//tested: Unicode line-break chars in most controls don't break lines, therefore don't need to escape
+			}
+			if(i == t.Length) return t;
+			var s = Util.LibStringBuilderCache.Acquire(t.Length + t.Length / 16 + 100);
+			for(i = 0; i < t.Length; i++) {
+				var c = t[i];
+				if(c < ' ') {
+					switch(c) {
+					case '\t': s.Append("\\t"); break;
+					case '\n': s.Append("\\n"); break;
+					case '\r': s.Append("\\r"); break;
+					default: s.Append("\\u"); s.Append(((ushort)c).ToString("x4")); break;
+					}
+				} else if(c == '\\') s.Append("\\\\");
+				else if(c == '\"') s.Append("\\\"");
+				else s.Append(c);
+			}
+			return s.ToStringCached_();
 		}
 	}
 

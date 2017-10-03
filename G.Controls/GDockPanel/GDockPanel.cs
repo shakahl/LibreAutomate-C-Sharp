@@ -19,6 +19,7 @@ using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -271,7 +272,7 @@ namespace G.Controls
 		{
 			//foreach(var gp in _aPanel) e.Graphics.ExcludeClip(gp.Content.Bounds); //makes erasing 2 times faster when window maximized (2 -> 1 ms)
 
-			e.Graphics.Clear(Color_.ColorFromBGR(0xAAAAAA)); //draw borders
+			e.Graphics.Clear(Catkeys.Util.Color_.ColorFromBGR(0xAAAAAA)); //draw borders
 
 			//speed: this is the slowest part of painting this control. Using API does not help.
 		}

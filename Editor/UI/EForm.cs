@@ -19,11 +19,11 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Xml.Linq;
 
-using G.Controls;
-
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
+using G.Controls;
 
 partial class EForm :Form
 {

@@ -30,6 +30,7 @@ using Microsoft.CodeAnalysis.CSharp;
 //using Microsoft.CodeAnalysis.CSharp.Scripting;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Compiler
@@ -48,7 +49,7 @@ namespace Compiler
 
 			//message loop (not Application.Run() because then loads slower etc)
 			Native.MSG m;
-			while(Api.GetMessage(out m, default(Wnd), 0, 0) > 0) { Api.DispatchMessage(ref m); }
+			while(Api.GetMessage(out m, default, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 		}
 
 		unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
@@ -150,7 +151,7 @@ public static class Test
 					FileInfo f1 = new FileInfo(s1), f2 = new FileInfo(s2);
 					if(f1.LastWriteTimeUtc == f2.LastWriteTimeUtc && f1.Length == f2.Length) continue;
 				}
-				Files.Copy(s1, s2, Files.IfExists.Delete);
+				Files.Copy(s1, s2, IfExists.Delete);
 				//TODO: exception handling
 			}
 

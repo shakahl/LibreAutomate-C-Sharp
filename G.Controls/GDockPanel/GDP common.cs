@@ -19,6 +19,7 @@ using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -533,7 +534,7 @@ namespace G.Controls
 				var r = (this.DockState == GDockState.Floating) ? this.ParentControl.Bounds : this.SavedFloatingBounds;
 				if(!r.IsEmpty) x.WriteAttributeString("rectFloating", _RectToString(r));
 
-				if(this.CaptionAt != default(GCaptionEdge) && (!this.IsTabbedPanel || this.IsFloating))
+				if(this.CaptionAt != default && (!this.IsTabbedPanel || this.IsFloating))
 					x.WriteAttributeString("captionAt", this.CaptionAt.ToString());
 			}
 
@@ -544,7 +545,7 @@ namespace G.Controls
 
 			static Rectangle _RectFromString(string s)
 			{
-				var r = default(Rectangle);
+				Rectangle r = default;
 				if(s != null) {
 					r.X = s.ToInt32_(0, out int i);
 					r.Y = s.ToInt32_(i, out i);

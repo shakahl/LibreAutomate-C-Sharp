@@ -19,11 +19,12 @@ using System.Drawing;
 using System.Xml;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 /// <summary>
 /// Extension methods for .NET classes.
-/// See also <see cref="DotNetExtensions"/>.
+/// See also <see cref="ExtensionMethods"/>.
 /// </summary>
 static class EDotNetExtensions
 {

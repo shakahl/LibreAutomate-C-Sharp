@@ -21,6 +21,7 @@ using System.Drawing;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
 using G.Controls;
@@ -28,9 +29,6 @@ using G.Controls;
 class PanelStatus :Control
 {
 	SciControl _c;
-	StringBuilder _sb;
-	//WeakReference<char[]> _wrca=new WeakReference<char[]>(null);
-	//WeakReference<string> _wrs = new WeakReference<string>(null);
 	Point _p;
 #if MOUSE_INFO_FAST_RESPONSE
 	Timer_ _timer;
@@ -54,8 +52,6 @@ class PanelStatus :Control
 		_c.HandleCreated += _c_HandleCreated;
 
 		_c.InitTagsStyle = SciControl.TagsStyle.AutoWithPrefix;
-
-		_sb = new StringBuilder(1000);
 
 		this.Controls.Add(_c);
 
@@ -126,34 +122,15 @@ class PanelStatus :Control
 		if(noChange) return;
 		_p = p;
 
-		_sb.Clear();
+		var sb = Catkeys.Util.LibStringBuilderCache.Acquire(1000);
 
-		_sb.Append(p.X);
-		_sb.Append("\n");
-		_sb.Append(p.Y);
+		sb.Append(p.X);
+		sb.Append("\n");
+		sb.Append(p.Y);
 
-		_c.ST.SetText(_sb.ToString());
+		_c.ST.SetText(sb.ToStringCached_());
 
 		//remember: limit long text, each line separatelly
-
-		//possible alternatives:
-
-		//var b = Catkeys.Util.Buffers.Get(1024, ref _wrca);
-		//fixed (char* line1 = b) {
-		//	Api.wsprintfW(line1, "%i\n%i", __arglist(p.X, p.Y));
-		//	_c.ST.SetText(new string(line1));
-		//}
-		//no advantages. Creates garbage too, harder to use, slower than StringBuilder.Append (same speed as StringBuilder.AppendFormat).
-
-		//if(!_wrs.TryGetTarget(out var b)) _wrs.SetTarget(b = new string('\0', 1000));
-		//fixed (char* line1 = b) {
-		//	//Api.wsprintfW(line1, "%i\n%i", __arglist(p.X, p.Y));
-		//	Api.wsprintfW(line1, "<>%i\n<c 0xff>%i</c>", __arglist(p.X, p.Y));
-		//	int len = CharPtr.Length(line1);
-		//	Unsafe.Write(line1 - 2, len);
-		//	_c.ST.SetText(b);
-		//}
-		//does not create garbage, but too dangerous, may not work with other .NET versions etc.
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

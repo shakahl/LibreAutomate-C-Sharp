@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable 1591 //missing XML documentation
@@ -614,25 +614,25 @@ namespace Catkeys
 		interface IKnownFolderManager
 		{
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FolderIdFromCsidl([In] int nCsidl, out Guid pfid);
+			int FolderIdFromCsidl(int nCsidl, out Guid pfid);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FolderIdToCsidl([In] ref Guid rfid, out int pnCsidl);
+			int FolderIdToCsidl(ref Guid rfid, out int pnCsidl);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetFolderIds(out IntPtr ppKFId, out uint ids); //KNOWNFOLDERID **ppKFId
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolder([In] ref Guid rfid, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
+			int GetFolder(ref Guid rfid, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetFolderByName([In, MarshalAs(UnmanagedType.LPWStr)] string pszCanonicalName, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int RegisterFolder([In] ref Guid rfid, ref KNOWNFOLDER_DEFINITION pKFD);
+			int RegisterFolder(ref Guid rfid, ref KNOWNFOLDER_DEFINITION pKFD);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int UnregisterFolder([In] ref Guid rfid);
+			int UnregisterFolder(ref Guid rfid);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int FindFolderFromPath([In, MarshalAs(UnmanagedType.LPWStr)] string pszPath, FFFP_MODE mode, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
@@ -641,9 +641,9 @@ namespace Catkeys
 			int FindFolderFromIDList(IntPtr pidl, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int Redirect([In] ref Guid rfid, IntPtr hwnd, [In] uint Flags,
-					[In, MarshalAs(UnmanagedType.LPWStr)] string pszTargetPath, [In] uint cFolders,
-					[In] ref Guid pExclusion, [MarshalAs(UnmanagedType.LPWStr)] out string ppszError);
+			int Redirect(ref Guid rfid, IntPtr hwnd, uint Flags,
+					[In, MarshalAs(UnmanagedType.LPWStr)] string pszTargetPath, uint cFolders,
+					ref Guid pExclusion, [MarshalAs(UnmanagedType.LPWStr)] out string ppszError);
 		}
 
 		[ComImport, Guid("4df0c730-df9d-4ae3-9153-aa6b82e9795a")]
@@ -669,17 +669,17 @@ namespace Catkeys
 			int GetCategory(out KF_CATEGORY category);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			//int GetShellItem([In] uint dwFlags, ref Guid riid, out Api.IShellItem si);
-			int GetShellItem([In] uint dwFlags, ref Guid riid, out IntPtr si);
+			//int GetShellItem(uint dwFlags, ref Guid riid, out Api.IShellItem si);
+			int GetShellItem(uint dwFlags, ref Guid riid, out IntPtr si);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetPath([In] uint dwFlags, [MarshalAs(UnmanagedType.LPWStr)]out string path);
+			int GetPath(uint dwFlags, [MarshalAs(UnmanagedType.LPWStr)]out string path);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int SetPath([In] uint dwFlags, [In, MarshalAs(UnmanagedType.LPWStr)] string pszPath);
+			int SetPath(uint dwFlags, [In, MarshalAs(UnmanagedType.LPWStr)] string pszPath);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetIDList([In] uint dwFlags, out IntPtr idList);
+			int GetIDList(uint dwFlags, out IntPtr idList);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetFolderType(out Guid fType);

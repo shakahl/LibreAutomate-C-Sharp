@@ -16,7 +16,12 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
+
+//CONSIDER: add an option to inject and execute the script in any process/thread.
+//	For example, to work with accessible objects faster.
+//	[assembly: Inject("firefox.exe", windowName="* - Firefox")]
 
 namespace Catkeys
 {

@@ -173,7 +173,7 @@ namespace LineBreaks
 
 		void _Process(XmlNode members)
 		{
-			//Output.Clear();
+			Output.Clear();
 
 			var doc = members.OwnerDocument;
 
@@ -195,10 +195,10 @@ namespace LineBreaks
 
 				var tag = p.Name;
 				//don't process text in these tags
-				switch(tag) { case "code": case "c": case "see": case "seealso": case "a": case "conceptualLink": case "para": case "b": case "i": continue; }
+				switch(tag) { case "code": case "c": case "see": case "seealso": case "a": case "conceptualLink": case "para": case "b": case "i": case "term": continue; }
 				//show new tags, maybe need to exclude too (add to the above switch)
 				switch(tag) {
-				case "summary": case "remarks": case "param": case "value": case "exception": case "example": case "note": case "item": break;
+				case "summary": case "remarks": case "param": case "typeparam": case "value": case "exception": case "example": case "note": case "item": case "description": break;
 				//default: Print(tag); break;
 				default: Print(p.OuterXml); break;
 				}

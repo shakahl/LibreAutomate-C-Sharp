@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using Aga.Controls.Tree.NodeControls;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Aga.Controls.Tree

@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -100,7 +101,7 @@ namespace G.Controls
 		{
 			int len;
 			fixed (byte* s = _ToUtf8(wParam0lParam, &len)) {
-				int i = Catkeys.Util.CharPtr.Length(s);
+				int i = Catkeys.Util.LibCharPtr.Length(s);
 				Debug.Assert(i < len);
 				return SC.Call(sciMessage, s, s + i + 1);
 			}
@@ -127,7 +128,7 @@ namespace G.Controls
 				b[bufferSize] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[bufferSize] == 0); if(b[bufferSize] != 0) Environment.FailFast("SciText.CallS");
-				int len = Catkeys.Util.CharPtr.Length(b, bufferSize);
+				int len = Catkeys.Util.LibCharPtr.Length(b, bufferSize);
 				return _FromUtf8(b, len);
 			}
 		}

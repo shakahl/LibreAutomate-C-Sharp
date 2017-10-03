@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 using System.IO.Compression;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -126,6 +127,62 @@ namespace Catkeys
 				hash = (hash * 1099511628211) ^ data[i];
 
 			return (long)hash;
+		}
+
+		/// <summary>
+		/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
+		/// </summary>
+		public static int HashFast(char* data, int lengthChars)
+		{
+			//Also we take the last 1-2 characters (in the second loop), because often there are several strings like Chrome_WidgetWin_0, Chrome_WidgetWin_1...
+			//Also we hash uints, not chars, unless the string is very short.
+			//Tested speed with 400 unique strings (window/control names/classnames/programnames). The time was 7 mcs. For single call 17 ns.
+
+			uint hash = 2166136261;
+			int i = 0;
+
+			if(lengthChars > 8) {
+				int lc = lengthChars--;
+				lengthChars /= 2; //we'll has uints, not chars
+				int every = lengthChars / 8 + 1;
+
+				for(; i < lengthChars; i += every)
+					hash = (hash * 16777619) ^ ((uint*)data)[i];
+
+				i = lengthChars * 2;
+				lengthChars = lc;
+			}
+
+			for(; i < lengthChars; i++)
+				hash = (hash * 16777619) ^ data[i];
+
+			return (int)hash;
+		}
+
+		/// <summary>
+		/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
+		/// </summary>
+		/// <param name="s">The string to hash. Can be null.</param>
+		public static int HashFast(string s)
+		{
+			if(s == null) return 0;
+			fixed (char* p = s) return HashFast(p, s.Length);
+		}
+
+		/// <summary>
+		/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).
+		/// This overload hashes a substring.
+		/// </summary>
+		/// <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>
+		/// <param name="startIndex">Start of substring in s.</param>
+		/// <param name="count">Length of substring.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static int HashFast(string s, int startIndex, int count)
+		{
+			int len = s?.Length ?? 0;
+			if((uint)startIndex > len || count < 0 || startIndex + count > len) throw new ArgumentOutOfRangeException();
+			if(s == null) return 0;
+			fixed (char* p = s) return HashFast(p + startIndex, count);
 		}
 
 		#endregion
@@ -744,7 +801,7 @@ namespace Catkeys
 		{
 			if(utf8 == null) return 0;
 			int n = lengthBytes;
-			if(n < 0) n = Util.CharPtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
+			if(n < 0) n = Util.LibCharPtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
 			if(n == 0) return 0;
 			return Api.MultiByteToWideChar(Api.CP_UTF8, 0, utf8, n, null, 0);
 		}
@@ -763,7 +820,7 @@ namespace Catkeys
 		{
 			if(utf8 == null) return null;
 			int n1 = lengthBytes;
-			if(n1 < 0) n1 = Util.CharPtr.Length(utf8); else if(n1 > 0 && utf8[n1 - 1] == 0) n1--;
+			if(n1 < 0) n1 = Util.LibCharPtr.Length(utf8); else if(n1 > 0 && utf8[n1 - 1] == 0) n1--;
 			if(n1 == 0) return "";
 			int n2 = Api.MultiByteToWideChar(Api.CP_UTF8, 0, utf8, n1, null, 0);
 			var s = new string('\0', n2);

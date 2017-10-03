@@ -16,10 +16,25 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
 {
+	//TODO: move all to Wnd.
+	//	WaitFor.WindowExists
+	//	Wnd.Wait
+	//	
+	//	WaitFor.WindowActive
+	//	Wnd.WaitActive
+	//	
+	//	WaitFor.WindowActive(w, 
+	//	w.WaitActive
+	//	
+	//	WaitFor.WindowCondition(w, 
+	//	w.WaitCondition
+
+
 	/// <summary>
 	/// Contains functions to wait for a condition, such as 'window exists'.
 	/// </summary>
@@ -46,7 +61,7 @@ namespace Catkeys
 	/// ]]></code>
 	/// </example>
 	//[DebuggerStepThrough]
-	static partial class WaitFor
+	public static partial class WaitFor
 	{
 		/// <summary>
 		/// Waits until the specified window exists and (optionally) is visible. Or the opposite, if <b>not</b> is true.
@@ -89,25 +104,19 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		public static Wnd WindowExists(double timeoutS = 0.0,
-			string name = null, string className = null, object programEtc = null,
+			string name = null, string className = null, WFOwner programEtc = null,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, bool not = false)
 		{
 			var f = new Wnd.Finder(name, className, programEtc, flags, also);
 			return WindowExists(f, timeoutS, not);
 
-			//not good: creates much garbage. Then GC runs quite frequently. It runs when exceeds 2 MB (GC.GetTotalMemory).
-			//	The garbage is mostly the Wnd.ClassName and Wnd.Name strings. The Wnd array adds some too.
-			//	Case: HiddenToo, only className, wait max 1 s, 30 times in loop. GC runs every 3-4 s. Better if only name, because many windows have no name.
-			//	Case: HiddenToo, only className, wait max 60 s. GC runs after 8 s, then every 18-23 s.
-			//	Case: no HiddenToo, only className, wait max 30 s, 6 main windows. GC didn't run. Memory 584 KB. After 60 s 870 KB.
-			//	Case: no HiddenToo, only name, wait max 30 s, 6 main windows. GC didn't run. Memory 459 KB.
-			//	
-			//	Tried to measure how long a busy thread is suspended when GC runs. It seems about 250 mcs. Not bad.
-			//		But the PC is fast, has CPU with 2 cores and hyperthreading, 4 logical CPU. Need to test on a 1-CPU PC.
+			//note: this and other similar functions can create much garbage. Then GC runs quite frequently. It runs when exceeds 2 MB (GC.GetTotalMemory).
+			//	In this case, the garbage would be the name, classname and programname strings. Currently they are cached and don't create unnecessary garbage.
+			//	Tried to measure how long a busy thread is suspended when GC runs. It seems about 250 mcs. Not bad. But the PC is fast, has CPU with 4 logical CPU. Need to test on a 1-CPU PC.
 		}
 
 		/// <summary>
-		/// The same as <see cref="WindowExists(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>, just arguments are passed differently.
+		/// The same as <see cref="WindowExists(double, string, string, WFOwner, WFFlags, Func{Wnd, bool}, bool)"/>, just arguments are passed differently.
 		/// </summary>
 		/// <param name="f">Window properties etc.</param>
 		/// <param name="timeoutS"></param>
@@ -115,12 +124,12 @@ namespace Catkeys
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
 		public static Wnd WindowExists(Wnd.Finder f, double timeoutS = 0.0, bool not = false)
 		{
-			var to = new _Timeout(timeoutS);
+			var to = new LibTimeout(timeoutS);
 			if(not) {
-				Wnd w = default(Wnd);
+				Wnd w = default;
 				for(;;) {
 					if(!w.IsAlive || !f.IsMatch(w)) { //if first time, or closed (!IsAlive), or changed properties (!IsMatch)
-						if(!f.Find()) return default(Wnd);
+						if(!f.Find()) return default;
 						w = f.Result;
 					}
 					if(!to.Sleep()) return f.Result;
@@ -128,7 +137,7 @@ namespace Catkeys
 			} else {
 				for(;;) {
 					if(f.Find()) return f.Result;
-					if(!to.Sleep()) return default(Wnd);
+					if(!to.Sleep()) return default;
 				}
 			}
 
@@ -162,7 +171,7 @@ namespace Catkeys
 		/// <remarks>
 		/// Hidden and minimized windows also can be active. This function by default waits until the window is active and visible. To ignore visibility, use flag <see cref="WFFlags.HiddenToo"/>. To wait until the window also is not minimized, use the 'also' parameter, like in the example.
 		///
-		/// More examples: see <see cref="WindowExists(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>.
+		/// More examples: see <see cref="WindowExists(double, string, string, WFOwner, WFFlags, Func{Wnd, bool}, bool)"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -171,7 +180,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		public static Wnd WindowActive(double timeoutS = 0.0,
-			string name = null, string className = null, object programEtc = null,
+			string name = null, string className = null, WFOwner programEtc = null,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, bool not = false)
 		{
 			var f = new Wnd.Finder(name, className, programEtc, flags, also);
@@ -179,7 +188,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// The same as <see cref="WindowActive(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>, just arguments are passed differently.
+		/// The same as <see cref="WindowActive(double, string, string, WFOwner, WFFlags, Func{Wnd, bool}, bool)"/>, just arguments are passed differently.
 		/// </summary>
 		/// <param name="f">Window properties etc.</param>
 		/// <param name="timeoutS"></param>
@@ -187,7 +196,7 @@ namespace Catkeys
 		/// <exception cref="TimeoutException">timeoutS time has expired.</exception>
 		public static Wnd WindowActive(Wnd.Finder f, double timeoutS = 0.0, bool not = false)
 		{
-			var to = new _Timeout(timeoutS);
+			var to = new LibTimeout(timeoutS);
 			for(;;) {
 				Wnd w = Wnd.WndActive;
 				if(not) {
@@ -198,7 +207,7 @@ namespace Catkeys
 					if(!to.Sleep()) break;
 				}
 			}
-			return default(Wnd);
+			return default;
 		}
 
 		/// <summary>
@@ -223,7 +232,7 @@ namespace Catkeys
 		/// Waits until the window is visible. Or the opposite, if <b>not</b> is true.
 		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
 		/// Uses <see cref="Wnd.IsVisible"/>.
-		/// For 'exists and is visible' use <see cref="WindowExists(double, string, string, object, WFFlags, Func{Wnd, bool}, bool)"/>. With default flags it waits for visible window and ignores invisible windows.
+		/// For 'exists and is visible' use <see cref="WindowExists(double, string, string, WFOwner, WFFlags, Func{Wnd, bool}, bool)"/>. With default flags it waits for visible window and ignores invisible windows.
 		/// </summary>
 		/// <param name="w">A window or control.</param>
 		/// <param name="timeoutS">
@@ -335,7 +344,7 @@ namespace Catkeys
 		public static bool WindowCondition(Wnd w, Func<Wnd, bool> condition, double timeoutS = 0.0, bool doNotThrowIfClosed = false)
 		{
 			bool wasInvalid = false;
-			var to = new _Timeout(timeoutS);
+			var to = new LibTimeout(timeoutS);
 			for(;;) {
 				if(!doNotThrowIfClosed) w.ThrowIfInvalid();
 				if(condition(w)) return true;

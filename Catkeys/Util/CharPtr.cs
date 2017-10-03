@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys.Util
@@ -26,7 +27,7 @@ namespace Catkeys.Util
 	/// String functions that work with char* and ANSI byte* strings.
 	/// </summary>
 	//[DebuggerStepThrough]
-	internal static unsafe class CharPtr
+	internal static unsafe class LibCharPtr
 	{
 		/// <summary>
 		/// Finds unmanaged UTF-16 string length (number of characters).
@@ -85,14 +86,37 @@ namespace Catkeys.Util
 		public static bool StartsWith(char* p, string s)
 		{
 			if(p == null) return false;
-			int i, n = s.Length;
-			for(i = 0; i < n; i++, p++) {
+			for(int i = 0, n = s.Length; i < n; i++, p++) {
 				if(*p != s[i]) return false;
 				if(*p == '\0') return false;
 			}
 			return true;
 		}
 #endif
+		/// <summary>
+		/// Returns true if unmanaged UTF-16 string p ends with string s.
+		/// </summary>
+		/// <param name="p">UTF-16 string. Can be null.</param>
+		/// <param name="len">p length.</param>
+		/// <param name="s">Cannot be null.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		public static bool EndsWith(char* p, int len, string s, bool ignoreCase)
+		{
+			if(p == null || len<s.Length) return false;
+			p += len - s.Length;
+			if(ignoreCase) {
+				var t = LibTables.LowerCase;
+				for(int i = 0; i < s.Length; i++, p++) {
+					if(t[*p] != t[s[i]]) return false;
+				}
+			} else {
+				for(int i = 0; i < s.Length; i++, p++) {
+					if(*p != s[i]) return false;
+				}
+			}
+			return true;
+		}
+
 		/// <summary>
 		/// Returns true if unmanaged ANSI string p starts with string s. Case-sensitive.
 		/// </summary>
@@ -116,7 +140,7 @@ namespace Catkeys.Util
 		public static bool AsciiStartsWithI(byte* p, string s)
 		{
 			if(p == null) return false;
-			var t = Util.LibTables.LowerCase;
+			var t = LibTables.LowerCase;
 			int i, n = s.Length;
 			for(i = 0; i < n; i++, p++) {
 				if(t[*p] != t[s[i]]) return false;
@@ -128,13 +152,13 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Finds character in unmanaged ANSI string which can be binary.
 		/// </summary>
-		/// <param name="s">ANSI string. Can be null.</param>
-		/// <param name="len">Length of s to search in.</param>
+		/// <param name="p">ANSI string. Can be null.</param>
+		/// <param name="len">Length of p to search in.</param>
 		/// <param name="ch">ASCII character.</param>
-		public static int AsciiFindChar(byte* s, int len, byte ch)
+		public static int AsciiFindChar(byte* p, int len, byte ch)
 		{
-			if(s != null)
-				for(int i = 0; i < len; i++) if(s[i] == ch) return i;
+			if(p != null)
+				for(int i = 0; i < len; i++) if(p[i] == ch) return i;
 			return -1;
 		}
 
@@ -142,16 +166,16 @@ namespace Catkeys.Util
 		/// Finds substring in unmanaged ANSI string which can be binary.
 		/// Returns -1 if not found or if s is null/"" or s2 is "".
 		/// </summary>
-		/// <param name="s">ANSI string. Can be null.</param>
-		/// <param name="len">Length of s to search in.</param>
-		/// <param name="s2">Substring to find. Must contain only ASCII characters. Cannot be null.</param>
-		public static int AsciiFindString(byte* s, int len, string s2)
+		/// <param name="p">ANSI string. Can be null.</param>
+		/// <param name="len">Length of p to search in.</param>
+		/// <param name="s">Substring to find. Must contain only ASCII characters. Cannot be null.</param>
+		public static int AsciiFindString(byte* p, int len, string s)
 		{
-			int len2 = s2.Length;
-			if(s != null && len2 <= len && len2 > 0) {
-				var ch = s2[0];
-				for(int i = 0, n = len - len2; i <= n; i++) if(s[i] == ch) {
-						for(int j = 1; j < len2; j++) if(s[i + j] != s2[j]) goto g1;
+			int len2 = s.Length;
+			if(p != null && len2 <= len && len2 > 0) {
+				var ch = s[0];
+				for(int i = 0, n = len - len2; i <= n; i++) if(p[i] == ch) {
+						for(int j = 1; j < len2; j++) if(p[i + j] != s[j]) goto g1;
 						return i;
 						g1:;
 					}
@@ -182,5 +206,20 @@ namespace Catkeys.Util
 
 		//	//speed: with long strings slightly slower than strstr.
 		//}
+
+		/// <summary>
+		/// Case-sensitive compares native string with managed string and returns true if they are equal.
+		/// </summary>
+		/// <param name="p">Native string.</param>
+		/// <param name="len">p length. Returns false if it is != s.Length.</param>
+		/// <param name="s">Managed string.</param>
+		public static bool Equals(char* p, int len, string s)
+		{
+			if(p == null) return s == null; if(s == null) return false;
+			if(len != s.Length) return false;
+			int i;
+			for(i = 0; i < s.Length; i++) if(s[i] != p[i]) break;
+			return i == s.Length;
+		}
 	}
 }

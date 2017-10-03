@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define USE_WTS
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,7 +19,7 @@ using System.Drawing;
 //using System.Linq;
 using System.Security.Principal;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -27,174 +29,8 @@ namespace Catkeys
 	/// Also has some thread functions.
 	/// </summary>
 	//[DebuggerStepThrough]
-	public static class Process_
+	public static unsafe class Process_
 	{
-		[DllImport("kernel32.dll", SetLastError = true)]
-		static extern unsafe bool QueryFullProcessImageNameW(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
-
-		static unsafe bool _QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, out string s)
-		{
-			s = null;
-			for(int na = 300; ; na *= 2) {
-				var b = Util.Buffers.LibChar(ref na);
-				if(QueryFullProcessImageNameW(hProcess, nativeFormat, b, ref na)) { s = b.ToString(na); return true; }
-				if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) return false;
-			}
-		}
-
-		static unsafe string _GetProcessName(int processId, bool fullPath, bool dontEnumerate = false, bool unDOS = false)
-		{
-			if(processId == 0) return null;
-			string R = null;
-
-			using(var ph = LibProcessHandle.FromId(processId)) {
-				if(ph != null) {
-					//info:
-					//In non-admin process fails if the process is of another user session; then use the slooow enumeration.
-					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
-
-					bool getNormal = fullPath || unDOS; //getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\SysWOW64\notepad.exe" and there is no API to convert to normal
-					if(_QueryFullProcessImageName(ph, !getNormal, out var s)) {
-						R = s;
-						if(!fullPath) R = GetFileNameWithoutExe(R);
-
-						if(R.IndexOf('~') >= 0) { //DOS path?
-							if(getNormal || _QueryFullProcessImageName(ph, false, out s)) {
-								R = Path_.LibExpandDosPath(s);
-								if(!fullPath) R = GetFileNameWithoutExe(R);
-							}
-						}
-					}
-				} else if(!dontEnumerate && !fullPath) {
-					EnumProcesses(p =>
-						{
-							if(p.ProcessID != processId) return false;
-							R = GetFileNameWithoutExe(p.ProcessName);
-							//Print(R);
-							return true;
-						});
-				}
-			}
-
-			return R;
-		}
-
-		//Use ProcessInfoInternal and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory, therefore GetProcesses() converts ProcessInfoInternal to ProcessInfo where ProcessName is string. Almost same speed.
-		internal struct ProcessInfoInternal
-		{
-#pragma warning disable 649 //says never used
-			public int SessionID;
-			public int ProcessID;
-			IntPtr _ProcessName;
-			public IntPtr UserSid;
-#pragma warning restore
-
-			/// <summary>
-			/// Process executable file name without ".exe". Not full path.
-			/// </summary>
-			public string ProcessName
-			{
-				get
-				{
-					string R = Marshal.PtrToStringUni(_ProcessName);
-					if(R.IndexOf('~') >= 0) {
-						string t = _GetProcessName(ProcessID, false, true, true);
-						if(t != null) R = t;
-					} else R = GetFileNameWithoutExe(R);
-					return R;
-				}
-			}
-		}
-
-		[DllImport("wtsapi32.dll", SetLastError = true)]
-		static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out IntPtr ppProcessInfo, out int pCount);
-
-		[DllImport("wtsapi32.dll", SetLastError = false)]
-		static extern void WTSFreeMemory(IntPtr memory);
-
-		/// <summary>
-		/// Calls callback function for each process, until the function returns true.
-		/// </summary>
-		/// <param name="f">Lambda etc function that is called for each process.</param>
-		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
-		internal static unsafe bool EnumProcesses(Func<ProcessInfoInternal, bool> f, bool ofThisSession = false)
-		{
-			int sessionId = 0;
-			if(ofThisSession) {
-				if(!Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out sessionId)) return false;
-			}
-
-			if(!WTSEnumerateProcessesW(Zero, 0, 1, out IntPtr pp, out int n)) return false;
-			try {
-				ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
-				for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
-					if(ofThisSession && p[i].SessionID != sessionId) continue;
-					if(f(p[i])) break;
-				}
-			}
-			finally { WTSFreeMemory(pp); }
-
-			return true;
-
-			//Other ways to enumerate processes or get process id:
-
-			////speed: 15% slower
-			//var pi = new Api.PROCESSENTRY32(); pi.dwSize = Api.SizeOf(pi);
-			//IntPtr hSnap = Api.CreateToolhelp32Snapshot(Api.TH32CS_SNAPPROCESS, 0); if(hSnap == Zero) return null;
-			//for(bool ok = Api.Process32First(hSnap, ref pi); ok; ok = Api.Process32Next(hSnap, ref pi)) {
-			//	if(pi.th32ProcessID == processId) {
-			//		R = RemoveExeFromFileName(pi.szExeFile);
-			//		break;
-			//	}
-			//}
-			//Api.CloseHandle(hSnap);
-
-			////speed: 30% slower
-			//Process p = Process.GetProcessById((int)processId);
-			//if(p != null) try { R = p.ProcessName; } catch { } //fails
-		}
-
-		/// <summary>
-		/// Contains process id, name, user session id.
-		/// </summary>
-		/// <tocexclude />
-		public struct ProcessInfo
-		{
-			///
-			public int SessionID;
-			///
-			public int ProcessID;
-			/// <summary>
-			/// Process executable file name without ".exe". Not full path.
-			/// </summary>
-			public string ProcessName;
-			//public IntPtr UserSid; //where is its memory?
-		}
-
-		/// <summary>
-		/// Gets processes array that contains process name, id and session id.
-		/// </summary>
-		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
-		public static unsafe ProcessInfo[] GetProcesses(bool ofThisSession = false)
-		{
-			int sessionId = 0;
-			if(ofThisSession) {
-				if(!Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out sessionId)) return null;
-			}
-
-			if(!WTSEnumerateProcessesW(Zero, 0, 1, out IntPtr pp, out int n)) return null;
-
-			var t = new List<ProcessInfo>((int)n);
-			ProcessInfoInternal* p = (ProcessInfoInternal*)pp;
-			for(int i = 1; i < n; i++) { //i=1 because the first process is inaccessible, its name is empty
-				if(ofThisSession && p[i].SessionID != sessionId) continue;
-				t.Add(new ProcessInfo() { SessionID = p[i].SessionID, ProcessID = p[i].ProcessID, ProcessName = p[i].ProcessName });
-			}
-			WTSFreeMemory(pp);
-
-			return t.ToArray();
-		}
-
 		/// <summary>
 		/// Gets process executable file name without ".exe", or full path.
 		/// Returns null if fails.
@@ -207,84 +43,358 @@ namespace Catkeys
 			return _GetProcessName(processId, fullPath, noSlowAPI);
 		}
 
+		static string _GetProcessName(int processId, bool fullPath, bool dontEnumerate = false)
+		{
+			if(processId == 0) return null;
+			string R = null;
+
+			using(var ph = LibProcessHandle.FromId(processId)) {
+				if(!ph.Is0) {
+					//In non-admin process fails if the process is of another user session.
+					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
+
+					//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
+					if(_QueryFullProcessImageName(ph, !fullPath, out var s)) {
+						R = s;
+						if(R.IndexOf('~') >= 0) { //DOS path?
+							if(fullPath || _QueryFullProcessImageName(ph, false, out s)) {
+								R = Path_.LibExpandDosPath(s);
+								if(!fullPath) fixed (char* p = R) R = _GetFileNameWithoutExe(p, R.Length);
+							}
+						}
+					}
+				} else if(!dontEnumerate && !fullPath) { //the slow way. Can get only names, not paths.
+					using(new _AllProcesses(out var p, out int n)) {
+						for(int i = 0; i < n; i++)
+							if(p[i].processID == processId) {
+								R = p[i].ProcessName;
+								break;
+							}
+					}
+				}
+			}
+
+			return R;
+
+			//Would be good to cache process names. But it's difficult because process id can be reused.
+			//	tested: a process id is reused after creating ~100 processes (and waiting until exits). It takes ~2 s.
+			//	The window finder is optimized to call this once for each process and not for each window.
+		}
+
+		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s)
+		{
+			s = null;
+			for(int na = 300; ; na *= 2) {
+				var b = Util.Buffers.LibChar(ref na);
+				if(QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
+					if(getFilename) s = _GetFileNameWithoutExe(b, na);
+					else s = b.LibToStringCached(na);
+					return true;
+				}
+				if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) return false;
+			}
+		}
+
+		[DllImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW", SetLastError = true)]
+		static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
+
+#if USE_WTS //simple, safe, but ~2 times slower
+		struct _AllProcesses :IDisposable
+		{
+			ProcessInfoInternal* _p;
+
+			public _AllProcesses(out ProcessInfoInternal* p, out int count)
+			{
+				if(WTSEnumerateProcessesW(Zero, 0, 1, out p, out count)) _p = p; else _p = null;
+			}
+
+			public void Dispose()
+			{
+				if(_p != null) WTSFreeMemory(_p);
+			}
+
+			[DllImport("wtsapi32.dll", SetLastError = true)]
+			static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out ProcessInfoInternal* ppProcessInfo, out int pCount);
+
+			[DllImport("wtsapi32.dll", SetLastError = false)]
+			static extern void WTSFreeMemory(ProcessInfoInternal* memory);
+		}
+#else //the .NET Process class uses this. But it creates about 0.4 MB of garbage.
+		struct _AllProcesses :IDisposable
+		{
+			ProcessInfoInternal* _p;
+
+			public _AllProcesses(out ProcessInfoInternal* pi, out int count)
+			{
+				_p = null;
+				SYSTEM_PROCESS_INFORMATION* b = null;
+				try {
+					for(int na = 300_000; ;) {
+						b = (SYSTEM_PROCESS_INFORMATION*)Util.NativeHeap.Alloc(na);
+
+						int status = NtQuerySystemInformation(5, b, na, out na);
+						//Print(na); //eg 224000
+
+						if(status == 0) break;
+						if(status != STATUS_INFO_LENGTH_MISMATCH) throw new CatException(status);
+						var t = b; b = null; Util.NativeHeap.Free(t);
+					}
+
+					SYSTEM_PROCESS_INFORMATION* p;
+					int nProcesses = 0, nbNames = 0;
+					for(p = b; p->NextEntryOffset != 0; p = (SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
+						nProcesses++;
+						nbNames += p->NameLength; //bytes, not chars
+					}
+					count = nProcesses;
+					_p = (ProcessInfoInternal*)Util.NativeHeap.Alloc(nProcesses * sizeof(ProcessInfoInternal) + nbNames);
+					ProcessInfoInternal* r = _p;
+					char* names = (char*)(_p + nProcesses);
+					for(p = b; p->NextEntryOffset != 0; p = (SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
+						r->processID = (int)p->UniqueProcessId;
+						r->sessionID = (int)p->SessionId;
+						int len = p->NameLength/2;
+						r->processNameLen = len;
+						if(len > 0) {
+							//copy name to _p memory because it's in the huge buffer that will be released in this func
+							r->processNamePtr = names;
+							Api.memcpy(names, (char*)p->NamePtr, len * 2);
+							names += len;
+						} else r->processNamePtr = null; //Idle
+					}
+					pi = _p;
+				}
+				finally { Util.NativeHeap.Free(b); }
+			}
+
+			public void Dispose()
+			{
+				Util.NativeHeap.Free(_p);
+			}
+
+			[DllImport("ntdll.dll")]
+			static extern int NtQuerySystemInformation(int five, SYSTEM_PROCESS_INFORMATION* SystemInformation, int SystemInformationLength, out int ReturnLength);
+
+#pragma warning disable 649, 169 //unused fields
+			struct SYSTEM_PROCESS_INFORMATION
+			{
+				internal uint NextEntryOffset;
+				internal uint NumberOfThreads;
+				long SpareLi1;
+				long SpareLi2;
+				long SpareLi3;
+				internal long CreateTime;
+				internal long UserTime;
+				internal long KernelTime;
+
+				internal ushort NameLength;   // UNICODE_STRING   
+				internal ushort MaximumNameLength;
+				internal IntPtr NamePtr;     // This will point into the data block returned by NtQuerySystemInformation
+
+				internal int BasePriority;
+				internal IntPtr UniqueProcessId;
+				internal IntPtr InheritedFromUniqueProcessId;
+				internal uint HandleCount;
+				internal uint SessionId;
+
+				//unused members
+			}
+#pragma warning restore 649, 169
+
+			const int STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004);
+		}
+#endif
+
+		//Use ProcessInfoInternal and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory.
+		//	GetProcesses() converts ProcessInfoInternal to ProcessInfo where ProcessName is string. Almost same speed.
+		internal unsafe struct ProcessInfoInternal
+		{
+#pragma warning disable 649 //says never used
+			public int sessionID;
+			public int processID;
+			public char* processNamePtr;
+#if USE_WTS
+			public IntPtr userSid;
+#else
+			public int processNameLen;
+#endif
+#pragma warning restore
+
+			/// <summary>
+			/// Process executable file name without ".exe". Not full path.
+			/// If contains '~', tries to unexpand DOS path.
+			/// Don't call multiple times, because always converts from raw char*.
+			/// </summary>
+			public string ProcessName
+			{
+				get
+				{
+					if(processNamePtr == null) {
+						if(processID == 0) return "Idle";
+						return null;
+					}
+					string R = _GetFileNameWithoutExe(processNamePtr
+#if !USE_WTS
+						, processNameLen
+#endif
+						);
+					if(R.IndexOf('~') >= 0) {
+						string s = null;
+						using(var ph = LibProcessHandle.FromId(processID)) {
+							if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out s)) {
+								s = Path_.LibExpandDosPath(s);
+								fixed (char* p = s) R = _GetFileNameWithoutExe(p, s.Length);
+							}
+						}
+					}
+					return R;
+				}
+			}
+		}
+
 		/// <summary>
-		/// Returns list of process id of all processes whose names match processName.
-		/// Returns empty list if there are no matching processes.
+		/// Contains process id, name and session id.
+		/// </summary>
+		/// <tocexclude />
+		public struct ProcessInfo
+		{
+			/// <summary>User session id.</summary>
+			public int SessionId;
+
+			/// <summary>Process id.</summary>
+			public int ProcessId;
+
+			/// <summary>Process executable file name without ".exe". Not full path.</summary>
+			public string ProcessName;
+
+			//public IntPtr UserSid; //where is its memory?
+
+			///
+			public ProcessInfo(int session, int pid, string name)
+			{
+				SessionId = session; ProcessId = pid; ProcessName = name;
+			}
+
+			///
+			public override string ToString()
+			{
+				return ProcessName;
+			}
+		}
+
+		/// <summary>
+		/// Gets processes array that contains process name, id and session id.
+		/// </summary>
+		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
+		/// <exception cref="CatException">Failed. Unlikely.</exception>
+		public static ProcessInfo[] GetProcesses(bool ofThisSession = false)
+		{
+			using(new _AllProcesses(out var p, out int n)) {
+				if(n == 0) throw new CatException();
+				if(ofThisSession) {
+					int sessionId = GetSessionId();
+
+					var t = new List<ProcessInfo>(n / 2);
+					for(int i = 0; i < n; i++) {
+						if(p[i].sessionID != sessionId) continue;
+						t.Add(new ProcessInfo(p[i].sessionID, p[i].processID, p[i].ProcessName));
+					}
+					return t.ToArray();
+				} else {
+					var a = new ProcessInfo[n];
+					for(int i = 0; i < n; i++) {
+						a[i] = new ProcessInfo(p[i].sessionID, p[i].processID, p[i].ProcessName);
+					}
+					return a;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets array of process id of all processes whose names match processName.
+		/// Returns empty array if there are no matching processes.
 		/// </summary>
 		/// <param name="processName">
 		/// Process name.
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// </param>
 		/// <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is admin; also fails to get full path of some system processes.</param>
+		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		/// <exception cref="ArgumentException">
 		/// processName is "" or null.
 		/// Invalid wildcard expression ("**options|" or regular expression).
 		/// </exception>
-		public static List<int> GetProcessesByName(string processName, bool fullPath = false)
+		public static int[] GetProcessesByName(string processName, bool fullPath = false, bool ofThisSession = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
-			return GetProcessesByName((Wildex)processName, fullPath);
+			List<int> a = null;
+			LibGetProcessesByName(ref a, processName, fullPath, ofThisSession);
+			if(a == null) return new int[0];
+			return a.ToArray();
 		}
 
-		internal static List<int> GetProcessesByName(Wildex processName, bool fullPath = false)
+		internal static void LibGetProcessesByName(ref List<int> a, Wildex processName, bool fullPath = false, bool ofThisSession = false)
 		{
-			List<int> a = new List<int>();
-			EnumProcesses(p =>
-			{
-				string s;
-				if(fullPath) {
-					s = GetProcessName(p.ProcessID, true);
-					if(s == null) return false;
-				} else s = GetFileNameWithoutExe(p.ProcessName);
+			if(a != null) a.Clear();
 
-				if(processName.Match(s)) {
-					a.Add(p.ProcessID);
+			int sessionId = ofThisSession ? GetSessionId() : 0;
+
+			using(new _AllProcesses(out var p, out int n)) {
+				for(int i = 0; i < n; i++) {
+					if(ofThisSession && p[i].sessionID != sessionId) continue;
+					string s;
+					if(fullPath) {
+						s = GetProcessName(p[i].processID, true);
+						if(s == null) continue;
+					} else s = p[i].ProcessName;
+
+					if(processName.Match(s)) {
+						if(a == null) a = new List<int>();
+						a.Add(p[i].processID);
+					}
 				}
-				return false;
-			});
+			}
+		}
 
-			return a;
+		static string _GetFileNameWithoutExe(char[] s, int len = -1)
+		{
+			fixed (char* p = s) return _GetFileNameWithoutExe(p, len);
+		}
+
+		static string _GetFileNameWithoutExe(char* s, int len = -1)
+		{
+			if(s == null) return null;
+			if(len < 0) len = Util.LibCharPtr.Length(s);
+			if(Util.LibCharPtr.EndsWith(s, len, ".exe", true)) len -= 4;
+			char* ss = s + len;
+			for(; ss > s; ss--) if(ss[-1] == '\\' || ss[-1] == '/') break;
+			return Util.StringCache.LibAdd(ss, len - (int)(ss - s));
 		}
 
 		/// <summary>
-		/// Removes path and ".exe" extension from file name.
-		/// Does not remove other extensions.
+		/// Opens and manages a process handle.
+		/// Must be disposed.
 		/// </summary>
-		/// <param name="fileName">A file name or full path. Can be null.</param>
-		public static string GetFileNameWithoutExe(string fileName)
+		internal struct LibProcessHandle :IDisposable
 		{
-			if(fileName == null) return null;
-			if(fileName.EndsWith_(".exe")) return Path_.GetFileNameWithoutExtension(fileName);
-			return Path_.GetFileName(fileName);
-		}
+			//note: this must be struct, not class, because in some cases used very frequently and would create much garbage.
 
-		/// <summary>
-		/// Opens and manages process handle.
-		/// </summary>
-		internal sealed class LibProcessHandle :IDisposable
-		{
 			IntPtr _h;
 
-			#region IDisposable Support
+			///
+			public IntPtr Handle { get => _h; }
 
-			void _Dispose()
+			///
+			public bool Is0 { get { return _h == Zero; } }
+
+			///
+			public void Dispose()
 			{
 				if(_h != Zero) { Api.CloseHandle(_h); _h = Zero; }
 			}
 
-			~LibProcessHandle() { _Dispose(); }
-
-			public void Dispose()
-			{
-				_Dispose();
-				GC.SuppressFinalize(this);
-			}
-			#endregion
-
-			//public LibProcessHandle() { }
-
 			/// <summary>
-			/// Attaches a kernel handle to this new object.
+			/// Attaches a kernel handle to this new variable.
 			/// No exception when handle is invalid.
 			/// </summary>
 			/// <param name="handle"></param>
@@ -299,7 +409,7 @@ namespace Catkeys
 			/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
 			public static LibProcessHandle FromId(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 			{
-				if(!_Open(out var h, processId, desiredAccess)) return null;
+				_Open(out var h, processId, desiredAccess);
 				return new LibProcessHandle(h);
 			}
 
@@ -312,11 +422,11 @@ namespace Catkeys
 			/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
 			public static LibProcessHandle FromWnd(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 			{
-				if(!_Open(out var h, w.ProcessId, desiredAccess, w)) return null;
+				_Open(out var h, w.ProcessId, desiredAccess, w);
 				return new LibProcessHandle(h);
 			}
 
-			static bool _Open(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default(Wnd))
+			static bool _Open(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
 			{
 				R = Zero;
 				int e = 0;
@@ -344,7 +454,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Process handle that is inherited from WaitHandle.
-		/// When don't need to wait, use LibProcessHandle, it's more lightweight and has more creation methods. Or use .NET Process class.
+		/// When don't need to wait, use LibProcessHandle, it's more lightweight and has more creation methods.
 		/// </summary>
 		internal class LibProcessWaitHandle :WaitHandle
 		{
@@ -357,6 +467,9 @@ namespace Catkeys
 		/// <summary>
 		/// Allocates, writes and reads memory in other process.
 		/// </summary>
+		/// <remarks>
+		/// Objects of this class must be disposed. Example: <c>using(var pm=new Process_.Memory(...)) { ... }</c>.
+		/// </remarks>
 		public sealed unsafe class Memory :IDisposable
 		{
 			LibProcessHandle _hproc;
@@ -375,10 +488,9 @@ namespace Catkeys
 
 			void _Dispose()
 			{
-				if(_hproc == null) return;
+				if(_hproc.Is0) return;
 				if(Mem != Zero) { Api.VirtualFreeEx(_hproc, Mem); Mem = Zero; }
 				_hproc.Dispose();
-				_hproc = null;
 			}
 
 			#endregion
@@ -399,7 +511,7 @@ namespace Catkeys
 				string err = null;
 				const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
 				_hproc = w.Is0 ? LibProcessHandle.FromId(pid, fl) : LibProcessHandle.FromWnd(w, fl);
-				if(_hproc == null) { err = "Failed to open process handle."; goto ge; }
+				if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
 
 				if(nBytes != 0) {
 					Mem = Api.VirtualAllocEx(_hproc, Zero, nBytes);
@@ -434,7 +546,7 @@ namespace Catkeys
 			/// <exception cref="CatException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(int processId, int nBytes)
 			{
-				_Alloc(processId, default(Wnd), nBytes);
+				_Alloc(processId, default, nBytes);
 			}
 
 			/// <summary>
@@ -472,25 +584,42 @@ namespace Catkeys
 				}
 			}
 
-			string _ReadString(bool ansiString, int nChars, int offsetBytes, Encoding enc = null)
+			string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null, bool cache = false)
 			{
 				if(Mem == Zero) return null;
 				int na = nChars; if(!ansiString) na *= 2;
 				var b = Util.Buffers.LibChar((na + 1) / 2);
-				fixed (char* p = b.A) if(!ReadProcessMemory(_hproc, Mem + offsetBytes, p, na, null)) return null;
-				return ansiString ? b.LibToStringFromAnsi(nChars, enc) : b.ToString(nChars);
+				fixed (char* p = b.A) {
+					if(!ReadProcessMemory(_hproc, Mem + offsetBytes, p, na, null)) return null;
+					if(findLength) {
+						if(ansiString) nChars = Util.LibCharPtr.Length((byte*)p, nChars);
+						else nChars = Util.LibCharPtr.Length(p, nChars);
+					}
+				}
+				if(ansiString) return b.LibToStringFromAnsi(nChars, enc);
+				if(cache) return b.LibToStringCached(nChars);
+				return b.ToString(nChars);
 			}
 
 			/// <summary>
 			/// Copies a string from the memory in that process allocated by the constructor to this process.
-			/// Returns the copies string, or null if fails.
+			/// Returns the copied string, or null if fails.
 			/// In that process the string must be in Unicode UTF-16 format (ie not ANSI).
 			/// </summary>
 			/// <param name="nChars">Number of characters to copy. In both processes a character is 2 bytes.</param>
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public string ReadUnicodeString(int nChars, int offsetBytes = 0)
+			/// <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
+			public string ReadUnicodeString(int nChars, int offsetBytes = 0, bool findLength = false)
 			{
-				return _ReadString(false, nChars, offsetBytes);
+				return _ReadString(false, nChars, offsetBytes, findLength);
+			}
+
+			/// <summary>
+			/// The same as <see cref="ReadUnicodeString"/> but uses our StringCache.
+			/// </summary>
+			internal string LibReadUnicodeStringCached(int nChars, int offsetBytes = 0, bool findLength = false)
+			{
+				return _ReadString(false, nChars, offsetBytes, findLength, cache: true);
 			}
 
 			/// <summary>
@@ -498,12 +627,13 @@ namespace Catkeys
 			/// Returns the copies string, or null if fails.
 			/// In that process the string must be in ANSI format (ie not Unicode UTF-16).
 			/// </summary>
-			/// <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding), in this process will be 2 bytes (normal C# string).</param>
+			/// <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+			/// <param name="findLength">Find true string length by searching for '\0' character in nBytes range of the ANSI string.</param>
 			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-			public string ReadAnsiString(int nBytes, int offsetBytes = 0, Encoding enc = null)
+			public string ReadAnsiString(int nBytes, int offsetBytes = 0, bool findLength = false, Encoding enc = null)
 			{
-				return _ReadString(true, nBytes, offsetBytes, enc);
+				return _ReadString(true, nBytes, offsetBytes, findLength, enc);
 			}
 
 			/// <summary>
@@ -783,7 +913,7 @@ namespace Catkeys
 			{
 				if(processId == 0) return null;
 				using(var hp = LibProcessHandle.FromId(processId)) {
-					if(hp == null) return null;
+					if(hp.Is0) return null;
 					return _Create(hp);
 				}
 			}
@@ -944,11 +1074,12 @@ namespace Catkeys
 		/// <summary>
 		/// Gets process id from handle.
 		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>GetProcessId</msdn>.
 		/// </summary>
-		/// <param name="processHandle">Native process handle.</param>
+		/// <param name="processHandle">Process handle.</param>
 		public static int GetProcessId(IntPtr processHandle)
 		{
-			return _Api.GetProcessId(processHandle);
+			return Api.GetProcessId(processHandle);
 			//speed: 250 ns
 		}
 
@@ -956,15 +1087,28 @@ namespace Catkeys
 		//{
 		//	int pid = GetProcessId(processHandle);
 		//	if(pid == 0) return null;
-		//	return Process.GetProcessById(pid); //slow, makes tons of garbage, at first gets all processes just to throw exception if pid not found...
+		//	return Process.GetProcessById(pid); //slow, makes much garbage, at first gets all processes just to throw exception if pid not found...
 		//}
 
-		static partial class _Api
+		/// <summary>
+		/// Gets user session id of a process.
+		/// Returns -1 if failed. Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		public static int GetSessionId(int processId)
 		{
-			[DllImport("kernel32.dll", SetLastError = true)]
-			internal static extern int GetProcessId(IntPtr Process);
-
+			if(!Api.ProcessIdToSessionId(processId, out var R)) return -1;
+			return R;
 		}
-	} //Process_
 
+		/// <summary>
+		/// Gets user session id of this process.
+		/// Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
+		/// </summary>
+		public static int GetSessionId()
+		{
+			return GetSessionId(Api.GetCurrentProcessId());
+		}
+	}
 }

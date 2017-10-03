@@ -18,6 +18,7 @@ using System.Linq;
 using System.Xml.Linq;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
 using G.Controls;

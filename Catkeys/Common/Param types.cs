@@ -15,29 +15,30 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
+//using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
 using static Catkeys.NoClass;
 
-namespace Catkeys
+namespace Catkeys.Types
 {
-	namespace Infrastructure
+	/// <summary>
+	/// Types of function parameters and return values, base classes, exceptions.
+	/// Class NetExtensions contains extension methods for various .NET classes.
+	/// </summary>
+	internal class NamespaceDoc
 	{
-		/// <tocexclude />
-		internal class NamespaceDoc
-		{
-			//SHFB uses this for namespace documentation.
-		}
-
-		/// <summary>Infrastructure.</summary>
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-		public class JustNull { }
-		/// <summary>Infrastructure.</summary>
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
-		public class JustNull2 { }
+		//SHFB uses this for namespace documentation.
 	}
+
+	/// <summary>Infrastructure.</summary>
+	/// <tocexclude />
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class JustNull { }
+	/// <summary>Infrastructure.</summary>
+	/// <tocexclude />
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class JustNull2 { }
 
 	//TODO: review usage. Maybe reject. Or instead use a struct containing member of 'object' type. Because now the calling code is huge and in most cases slower than with object.
 	/// <summary>
@@ -107,8 +108,8 @@ namespace Catkeys
 		/// <summary> Value of type T2. Valid when type is 2. </summary>
 		public T2 v2;
 
-		Types(T1 v) { type = 1; v1 = v; v2 = default(T2); }
-		Types(T2 v) { type = 2; v2 = v; v1 = default(T1); }
+		Types(T1 v) { type = 1; v1 = v; v2 = default; }
+		Types(T2 v) { type = 2; v2 = v; v1 = default; }
 
 		/// <summary> Assignment of a value of type T1. </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)] //makes caller's native code much smaller, although slightly slower
@@ -123,9 +124,9 @@ namespace Catkeys
 		//Now compiler error if caller tries to pass null. If need to support null, let use nullable.
 		//Need two operators because with single operator would allow to assign null when all value types, eg Types<double, int>.
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types<T1, T2>(Infrastructure.JustNull n) { return default(Types<T1, T2>); }
+		public static implicit operator Types<T1, T2>(JustNull n) => default;
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types<T1, T2>(Infrastructure.JustNull2 n) { return default(Types<T1, T2>); }
+		public static implicit operator Types<T1, T2>(JustNull2 n) => default;
 	}
 
 	/// <summary>
@@ -160,9 +161,9 @@ namespace Catkeys
 		public static implicit operator Types<T1, T2, T3>(T3 x) { return new Types<T1, T2, T3>(x); }
 
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types<T1, T2, T3>(Infrastructure.JustNull n) { return default(Types<T1, T2, T3>); }
+		public static implicit operator Types<T1, T2, T3>(JustNull n) => default;
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types<T1, T2, T3>(Infrastructure.JustNull2 n) { return default(Types<T1, T2, T3>); }
+		public static implicit operator Types<T1, T2, T3>(JustNull2 n) => default;
 	}
 
 	/// <summary>
@@ -203,9 +204,9 @@ namespace Catkeys
 		public static implicit operator Types<T1, T2, T3, T4>(T4 x) { return new Types<T1, T2, T3, T4>(x); }
 
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types<T1, T2, T3, T4>(Infrastructure.JustNull n) { return default(Types<T1, T2, T3, T4>); }
+		public static implicit operator Types<T1, T2, T3, T4>(JustNull n) => default;
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types<T1, T2, T3, T4>(Infrastructure.JustNull2 n) { return default(Types<T1, T2, T3, T4>); }
+		public static implicit operator Types<T1, T2, T3, T4>(JustNull2 n) => default;
 	}
 
 #if false
@@ -232,9 +233,9 @@ namespace Catkeys
 		//Now compiler error if caller tries to pass null. If need to support null, let use nullable.
 		//Need two operators because with single operator would allow to assign null when all value types, eg Types<double, int>.
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types2<T1, T2>(CatkeysPrivate.JustNull n) { return default(Types2<T1, T2>); }
+		public static implicit operator Types2<T1, T2>(CatkeysPrivate.JustNull n) => default;
 		/// <summary>Infrastructure.</summary>
-		public static implicit operator Types2<T1, T2>(CatkeysPrivate.JustNull2 n) { return default(Types2<T1, T2>); }
+		public static implicit operator Types2<T1, T2>(CatkeysPrivate.JustNull2 n) => default;
 	}
 #endif
 
@@ -317,7 +318,7 @@ namespace Catkeys
 		/// Infrastructure. Allows to assign null.
 		/// </summary>
 		/// <param name="v">null.</param>
-		public static implicit operator Coord(Infrastructure.JustNull v) => new Coord();
+		public static implicit operator Coord(JustNull v) => new Coord();
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -473,7 +474,7 @@ namespace Catkeys
 			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms.dll when don't need
 			get
 			{
-				if(_o == null) return default(Wnd);
+				if(_o == null) return default;
 				if(_o is Control c) return (Wnd)c;
 				return (Wnd)_o;
 			}

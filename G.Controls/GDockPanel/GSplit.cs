@@ -19,6 +19,7 @@ using System.Xml.Linq;
 using System.Xml;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls

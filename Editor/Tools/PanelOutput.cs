@@ -19,6 +19,7 @@ using System.Drawing;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
 using G.Controls;
@@ -116,7 +117,7 @@ class PanelOutput :Control
 	{
 		var w = ((Wnd)this).WndWindow;
 		if(on) {
-			w.WndOwner = default(Wnd);
+			w.WndOwner = default;
 			w.ZorderTopmost();
 			//w.SetExStyle(Native.WS_EX_APPWINDOW, SetAddRemove.Add);
 			//Wnd.Misc.WndRoot.ActivateLL(); w.ActivateLL(); //let taskbar add button

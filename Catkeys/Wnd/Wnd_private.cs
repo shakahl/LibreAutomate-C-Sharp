@@ -16,12 +16,26 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	public partial struct Wnd
+	public unsafe partial struct Wnd
 	{
+		/// <summary>
+		/// 
+		/// </summary>
+		static string _String(char* p, int len)
+		{
+			return Util.StringCache.LibAdd(p, len);
+		}
+
+		static string _String(char[] p, int len)
+		{
+			return Util.StringCache.LibAdd(p, len);
+		}
+
 		/// <summary>
 		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
 		/// </summary>
@@ -42,19 +56,6 @@ namespace Catkeys
 			//Perf.NW();
 		}
 
-		static void _ThrowIfStringEmptyNotNull(string s, string paramName)
-		{
-			if(s != null && s.Length == 0) throw new ArgumentException("Cannot be \"\". Can be null.", paramName);
-		}
-
-		static unsafe partial class _Api
-		{
-			//[DllImport("kernel32.dll")]
-			//internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, char* sbAppUserModelID);
-			[DllImport("kernel32.dll")]
-			internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, [Out] char[] sbAppUserModelID);
-		}
-
 		/// <summary>
 		/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 		/// Returns 1 if gets user model id, 2 if gets path, 0 if fails.
@@ -71,17 +72,16 @@ namespace Catkeys
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
 					using(var p = Process_.LibProcessHandle.FromWnd(w)) {
-						if(p != null) {
+						if(!p.Is0) {
 							var b = Util.Buffers.LibChar(1000, out int na);
-							if(0 == _Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
+							if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
 						}
 					}
 					break;
 				case 2:
 					if(Ver.MinWin10) {
-						Api.IPropertyStore ps; Api.PROPVARIANT v;
-						if(0 == Api.SHGetPropertyStoreForWindow(w, ref Api.IID_IPropertyStore, out ps)) {
-							if(0 == ps.GetValue(ref Api.PKEY_AppUserModel_ID, out v)) {
+						if(0 == Api.SHGetPropertyStoreForWindow(w, ref Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
+							if(0 == ps.GetValue(ref Api.PKEY_AppUserModel_ID, out var v)) {
 								if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
 								v.Dispose();
 							}
@@ -115,15 +115,15 @@ namespace Catkeys
 			bool retry = false;
 			string name = null;
 			g1:
-			if(!Ver.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default(Wnd);
-			Wnd c = Api.FindWindowEx(w, default(Wnd), "Windows.UI.Core.CoreWindow", null);
+			if(!Ver.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
+			Wnd c = Api.FindWindowEx(w, default, "Windows.UI.Core.CoreWindow", null);
 			if(!c.Is0) return c;
-			if(retry) return default(Wnd);
+			if(retry) return default;
 
-			name = w.GetText(false, false); if(Empty(name)) return default(Wnd);
+			name = w.GetText(false, false); if(Empty(name)) return default;
 
 			for(;;) {
-				c = Api.FindWindowEx(default(Wnd), c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
+				c = Api.FindWindowEx(default, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
 				if(c.Is0) break;
 				if(c.IsCloaked) return c; //else probably it is an unrelated window
 			}
@@ -132,15 +132,16 @@ namespace Catkeys
 			goto g1;
 		}
 
-		/// <summary>
-		/// The reverse of _WindowsStoreAppFrameChild.
-		/// </summary>
-		static Wnd _WindowsStoreAppHost(Wnd w)
-		{
-			if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default(Wnd);
-			Wnd wo = w.WndDirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
-			string s = w.GetText(false, false); if(Empty(s)) return default(Wnd);
-			return Api.FindWindow("ApplicationFrameWindow", s);
-		}
+		//not used
+		///// <summary>
+		///// The reverse of _WindowsStoreAppFrameChild.
+		///// </summary>
+		//static Wnd _WindowsStoreAppHost(Wnd w)
+		//{
+		//	if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default;
+		//	Wnd wo = w.WndDirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
+		//	string s = w.GetText(false, false); if(Empty(s)) return default;
+		//	return Api.FindWindow("ApplicationFrameWindow", s);
+		//}
 	}
 }

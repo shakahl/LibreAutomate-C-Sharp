@@ -18,7 +18,7 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -50,10 +50,11 @@ namespace Catkeys
 				KeySleep,
 				KeySpeed;
 			public bool //info: could instead use enum flags. Then smaller object memory, but bigger source code and calling code.
-				Relaxed,
+				Relaxed
 				//MouseBlockUserInput,
 				//KeyBlockUserInput,
-				WaitMsg;
+				//WaitMsg
+				;
 			public byte Debug; //0 non-init, 1 false, 2 true
 		}
 		_Options _o;
@@ -203,7 +204,7 @@ namespace Catkeys
 		///// </remarks>
 		//public bool KeyBlockUserInput { get => _o.KeyBlockUserInput; set => _o.KeyBlockUserInput = value; }
 
-		public bool WaitMsg { get => _o.WaitMsg; set => _o.WaitMsg = value; }
+		//public bool WaitMsg { get => _o.WaitMsg; set => _o.WaitMsg = value; }
 		//TODO: implement or remove.
 
 		/// <summary>
@@ -251,10 +252,10 @@ namespace Catkeys
 		/// } //here warnings are automatically restored
 		/// ]]></code>
 		/// </example>
-		public _RestoreWarnings DisableWarnings(params string[] warningsWild)
+		public SORestoreWarnings DisableWarnings(params string[] warningsWild)
 		{
 			if(LibDisabledWarnings == null) LibDisabledWarnings = new List<string>();
-			var r = new _RestoreWarnings(LibDisabledWarnings.Count);
+			var r = new SORestoreWarnings(LibDisabledWarnings.Count);
 			LibDisabledWarnings.AddRange(warningsWild);
 			return r;
 		}
@@ -265,66 +266,70 @@ namespace Catkeys
 		/// Saves current Options so that it will be automatically restored like in the example.
 		/// </summary>
 		/// <remarks>
-		/// Multiple <c>using(ScriptOptions.Temp())</c> can be nested.
+		/// Multiple <c>using(ScriptOptions.Temp)</c> can be nested.
 		/// Note: Each thread has its own Options. This function saves/restores Options of this thread.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Print(Options.MouseClickSleep);
-		/// using(ScriptOptions.Temp()) {
+		/// using(ScriptOptions.Temp) {
 		/// 	Options.MouseClickSleep = 1000;
 		/// 	Print(Options.MouseClickSleep);
 		/// } //here Options is automatically restored
 		/// Print(Options.MouseClickSleep);
 		/// ]]></code>
 		/// </example>
-		public static _Restore Temp()
+		public static SORestore Temp { get => new SORestore(ref t_opt); }
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>Infrastructure.</summary>
+	/// <tocexclude />
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public struct SORestore :IDisposable
+	{
+		bool _disposed;
+		[ThreadStatic] static Stack<ScriptOptions> t_savedOptions;
+
+		internal SORestore(ref ScriptOptions t_opt)
 		{
+			_disposed = false;
 			if(t_savedOptions == null) t_savedOptions = new Stack<ScriptOptions>();
 			t_savedOptions.Push(t_opt);
 			if(t_opt != null) t_opt = new ScriptOptions(t_opt);
-			return new _Restore();
 		}
 
-		[ThreadStatic] static Stack<ScriptOptions> t_savedOptions;
-
-		/// <summary>Infrastructure.</summary>
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
-		public struct _Restore :IDisposable
+		/// <summary>
+		/// Restores Options saved by <see cref="ScriptOptions.Temp"/>.
+		/// </summary>
+		public void Dispose()
 		{
-			bool _disposed;
-
-			/// <summary>
-			/// Restores Options saved by <see cref="Temp"/>.
-			/// </summary>
-			public void Dispose()
-			{
-				if(!_disposed) {
-					_disposed = true;
-					t_opt = t_savedOptions.Pop();
-				}
+			if(!_disposed) {
+				_disposed = true;
+				ScriptOptions.Options = t_savedOptions.Pop();
 			}
 		}
+	}
 
-		/// <summary>Infrastructure.</summary>
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
-		public struct _RestoreWarnings :IDisposable
+	/// <summary>Infrastructure.</summary>
+	/// <tocexclude />
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public struct SORestoreWarnings :IDisposable
+	{
+		int _listCount;
+
+		internal SORestoreWarnings(int listCount) { _listCount = listCount; }
+
+		/// <summary>
+		/// Restores warnings disabled by <see cref="ScriptOptions.DisableWarnings"/>.
+		/// </summary>
+		public void Dispose()
 		{
-			int _listCount;
-
-			internal _RestoreWarnings(int listCount) { _listCount = listCount; }
-
-			/// <summary>
-			/// Restores warnings disabled by <see cref="DisableWarnings"/>.
-			/// </summary>
-			public void Dispose()
-			{
-				var a = Options.LibDisabledWarnings;
-				int n = a.Count - _listCount;
-				if(n > 0) a.RemoveRange(_listCount, n);
-			}
+			var a = Options.LibDisabledWarnings;
+			int n = a.Count - _listCount;
+			if(n > 0) a.RemoveRange(_listCount, n);
 		}
 	}
 }

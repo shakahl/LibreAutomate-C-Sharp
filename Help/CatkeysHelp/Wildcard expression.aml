@@ -4,7 +4,7 @@
 
   <introduction>
    <para>
-    A Catkeys <newTerm>wildcard expression</newTerm> is a very simple text format that allows you to use wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Typically used for arguments of 'find' functions, for example <codeEntityReference qualifyHint="true" autoUpgrade="true">M:Catkeys.Wnd.Find(System.String,System.String,System.Object,Catkeys.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})</codeEntityReference>.
+    A Catkeys <newTerm>wildcard expression</newTerm> is a very simple text format that allows you to use wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Typically used for arguments of 'find' functions, for example <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Catkeys.Wnd.Find(System.String,System.String,Catkeys.Types.WFOwner,Catkeys.Types.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})</codeEntityReference>.
    </para>
   </introduction>
 
@@ -141,7 +141,7 @@
   </section>
 
   <relatedTopics>
-   <codeEntityReference qualifyHint="false">T:Catkeys.Wildex</codeEntityReference>
+   <codeEntityReference qualifyHint="false">T:Catkeys.Types.Wildex</codeEntityReference>
    <codeEntityReference qualifyHint="false">M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)</codeEntityReference>
   </relatedTopics>
  </developerConceptualDocument>

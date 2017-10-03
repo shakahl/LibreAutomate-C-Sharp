@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 //using System.Text; //StringBuilder, we don't use it, very slow
 using System.Drawing; //Point, Size
 using Microsoft.Win32.SafeHandles;
+using Catkeys.Types;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
 
@@ -17,8 +18,13 @@ using Microsoft.Win32.SafeHandles;
 [assembly: InternalsVisibleTo("Catkeys.Compiler, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
 [assembly: InternalsVisibleTo("Catkeys.Triggers, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
 [assembly: InternalsVisibleTo("SdkConverter, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
+[assembly: InternalsVisibleTo("TreeList, PublicKey=0024000004800000940000000602000000240000525341310004000001000100d7836581375ad28892abd6476a89a68f879d2df07404cfcddf2899cd05616f8fb45c9bab78b972a2ca99339af3774b0a2b6f2a5768acdf2995a255106943fffa9aa65d66a37829f7ebbc7c0ffc75b6d2bf95c1964ec84774834c07438584125afdfb58b77b5411c1401589adbefadef502893b8c8cff8b682b05043703ca479e")]
 
-namespace Catkeys
+#pragma warning disable IDE1006 // Naming Styles
+
+//TODO: test [SuppressUnmanagedCodeSecurity]. Does it really make faster?
+
+namespace Catkeys.Types
 {
 	[DebuggerStepThrough]
 	//[CLSCompliant(false)]
@@ -51,12 +57,57 @@ namespace Catkeys
 		/// <summary>
 		/// If o is not null, calls <see cref="Marshal.ReleaseComObject"/>.
 		/// </summary>
-		internal static void ReleaseComObject(object o)
+		internal static void ReleaseComObject<T>(T o) where T: class
 		{
 			if(o != null) Marshal.ReleaseComObject(o);
 		}
 
 		//USER32
+
+		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
+		internal static extern LPARAM SendMessage(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
+		internal static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
+
+		[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
+		internal static extern bool SendNotifyMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
+		internal static extern bool PostMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
+		internal static extern bool PostThreadMessage(uint idThread, uint Msg, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
+		internal static extern int GetWindowLong32(Wnd hWnd, int nIndex);
+
+		[DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
+		internal static extern LPARAM GetWindowLong64(Wnd hWnd, int nIndex);
+
+		[DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
+		internal static extern int SetWindowLong32(Wnd hWnd, int nIndex, int dwNewLong);
+
+		[DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+		internal static extern LPARAM SetWindowLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+
+		[DllImport("user32.dll", EntryPoint = "GetClassLongW", SetLastError = true)]
+		internal static extern int GetClassLong32(Wnd hWnd, int nIndex);
+
+		[DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
+		internal static extern LPARAM GetClassLong64(Wnd hWnd, int nIndex);
+
+		[DllImport("user32.dll", EntryPoint = "SetClassLongW", SetLastError = true)]
+		internal static extern int SetClassLong32(Wnd hWnd, int nIndex, int dwNewLong);
+
+		[DllImport("user32.dll", EntryPoint = "SetClassLongPtrW", SetLastError = true)]
+		internal static extern LPARAM SetClassLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+
+		[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
+		internal static extern int GetClassName(Wnd hWnd, char* lpClassName, int nMaxCount);
+
+		[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
+		internal static extern int InternalGetWindowText(Wnd hWnd, [Out] char[] pString, int cchMaxCount);
 
 		internal struct COPYDATASTRUCT
 		{
@@ -127,16 +178,16 @@ namespace Catkeys
 
 			public WNDCLASSEX(bool setCursorAndBrush) : this()
 			{
-				this.cbSize = Api.SizeOf<WNDCLASSEX>();
+				this.cbSize = SizeOf<WNDCLASSEX>();
 				if(setCursorAndBrush) {
-					hCursor = Api.LoadCursor(default(IntPtr), Api.IDC_ARROW);
-					hbrBackground = (IntPtr)(Api.COLOR_BTNFACE + 1);
+					hCursor = LoadCursor(default, IDC_ARROW);
+					hbrBackground = (IntPtr)(COLOR_BTNFACE + 1);
 				}
 			}
 
 			public WNDCLASSEX(Wnd.Misc.WindowClass.WndClassEx ex) : this()
 			{
-				this.cbSize = Api.SizeOf<WNDCLASSEX>();
+				this.cbSize = SizeOf<WNDCLASSEX>();
 				this.cbClsExtra = ex.cbClsExtra;
 				this.hInstance = ex.hInstance;
 				this.hIcon = ex.hIcon;
@@ -245,7 +296,6 @@ namespace Catkeys
 			public uint time;
 			public LPARAM dwExtraInfo;
 		}
-
 
 		internal const int GA_PARENT = 1;
 		internal const int GA_ROOT = 2;
@@ -385,7 +435,7 @@ namespace Catkeys
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SetWindowPlacement(Wnd hWnd, ref WINDOWPLACEMENT lpwndpl);
 
-		public struct WINDOWINFO
+		internal struct WINDOWINFO
 		{
 			public uint cbSize;
 			public RECT rcWindow;
@@ -441,17 +491,6 @@ namespace Catkeys
 
 		[DllImport("user32.dll", EntryPoint = "EnumPropsExW", SetLastError = true)]
 		internal static extern int EnumPropsEx(Wnd hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam);
-
-		internal delegate int WNDENUMPROC(Wnd hwnd, LPARAM lParam);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool EnumWindows(WNDENUMPROC lpEnumFunc, LPARAM lParam);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool EnumThreadWindows(int dwThreadId, WNDENUMPROC lpfn, LPARAM lParam);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool EnumChildWindows(Wnd hWndParent, WNDENUMPROC lpEnumFunc, LPARAM lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern Wnd GetDlgItem(Wnd hDlg, int nIDDlgItem);
@@ -845,11 +884,11 @@ namespace Catkeys
 		//[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern int SendInput(int cInputs, ref INPUTKEY pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern int SendInput(int cInputs, [In] INPUTKEY[] pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, INPUTKEY[] pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern int SendInput(int cInputs, ref INPUTMOUSE pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern int SendInput(int cInputs, [In] INPUTMOUSE[] pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, INPUTMOUSE[] pInputs, int cbSize);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int SendInput(int cInputs, void* pInputs, int cbSize);
@@ -894,11 +933,6 @@ namespace Catkeys
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr CreateIcon(IntPtr hInstance, int nWidth, int nHeight, byte cPlanes, byte cBitsPixel, byte[] lpbANDbits, byte[] lpbXORbits);
 
-		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW", SetLastError = true)]
-		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, IntPtr[] phicon, IntPtr piconid, int nIcons, uint flags);
-		[DllImport("user32.dll", EntryPoint = "PrivateExtractIconsW", SetLastError = true)]
-		internal static extern int PrivateExtractIcons(string szFileName, int nIconIndex, int cxIcon, int cyIcon, out IntPtr phicon, IntPtr piconid, int nIcons, uint flags);
-
 		[DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
 		internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
 
@@ -927,7 +961,7 @@ namespace Catkeys
 		internal const uint MWMO_INPUTAVAILABLE = 0x4;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, [In] IntPtr[] pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
+		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, IntPtr[] pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, ref IntPtr pHandle, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
@@ -950,7 +984,7 @@ namespace Catkeys
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ValidateRect(Wnd hWnd, ref RECT lpRect);
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ValidateRect(Wnd hWnd, LPARAM zero = default(LPARAM));
+		internal static extern bool ValidateRect(Wnd hWnd, LPARAM zero = default);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetUpdateRect(Wnd hWnd, out RECT lpRect, bool bErase);
@@ -1178,7 +1212,7 @@ namespace Catkeys
 		internal static IntPtr GetProcAddress(string dllName, string funcName)
 		{
 			IntPtr hmod = GetModuleHandle(dllName);
-			if(hmod == default(IntPtr)) { hmod = LoadLibrary(dllName); if(hmod == default(IntPtr)) return hmod; }
+			if(hmod == default) { hmod = LoadLibrary(dllName); if(hmod == default) return hmod; }
 
 			return GetProcAddress(hmod, funcName);
 		}
@@ -1218,36 +1252,6 @@ namespace Catkeys
 		[DllImport("kernel32.dll", EntryPoint = "GetLongPathNameW", SetLastError = true)]
 		internal static extern int GetLongPathName(string lpszShortPath, [Out] char[] lpszLongPath, int cchBuffer);
 
-		internal const uint TH32CS_SNAPHEAPLIST = 0x00000001;
-		internal const uint TH32CS_SNAPPROCESS = 0x00000002;
-		internal const uint TH32CS_SNAPTHREAD = 0x00000004;
-		internal const uint TH32CS_SNAPMODULE = 0x00000008;
-		internal const uint TH32CS_SNAPMODULE32 = 0x00000010;
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, int th32ProcessID);
-
-		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-		//internal struct PROCESSENTRY32
-		//{
-		//	public uint dwSize;
-		//	public uint cntUsage;
-		//	public int th32ProcessID;
-		//	public IntPtr th32DefaultHeapID;
-		//	public uint th32ModuleID;
-		//	public uint cntThreads;
-		//	public uint th32ParentProcessID;
-		//	public int pcPriClassBase;
-		//	public uint dwFlags;
-		//	[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-		//	public string szExeFile;
-		//};
-
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool ProcessIdToSessionId(int dwProcessId, out int pSessionId);
 
@@ -1278,13 +1282,13 @@ namespace Catkeys
 		internal static extern IntPtr VirtualAlloc(IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFree(IntPtr lpAddress, LPARAM dwSize = default(LPARAM), uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFree(IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, LPARAM dwSize = default(LPARAM), uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
 		internal static extern System.IO.FileAttributes GetFileAttributes(string lpFileName);
@@ -1471,7 +1475,7 @@ namespace Catkeys
 		internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default(IntPtr));
+		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, out int lpNumberOfBytesWritten, OVERLAPPED* lpOverlapped = null);
@@ -1547,6 +1551,109 @@ namespace Catkeys
 		[DllImport("kernel32.dll")]
 		internal static extern void GetLocalTime(out SYSTEMTIME lpSystemTime);
 
+		[DllImport("kernel32.dll")]
+		internal static extern int GetApplicationUserModelId(IntPtr hProcess, ref int AppModelIDLength, [Out] char[] sbAppUserModelID);
+
+		[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentVariableW", SetLastError = true)]
+		internal static extern int GetEnvironmentVariable(string lpName, [Out] char[] lpBuffer, int nSize);
+
+		[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
+		internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern int GetProcessId(IntPtr Process);
+
+		internal struct WIN32_FIND_DATA
+		{
+			public System.IO.FileAttributes dwFileAttributes;
+			public Api.FILETIME ftCreationTime;
+			public Api.FILETIME ftLastAccessTime;
+			public Api.FILETIME ftLastWriteTime;
+			public uint nFileSizeHigh;
+			public uint nFileSizeLow;
+			public uint dwReserved0;
+			public uint dwReserved1;
+			public fixed char cFileName[260];
+			public fixed char cAlternateFileName[14];
+
+			internal unsafe string Name
+			{
+				get
+				{
+					fixed (char* p = cFileName) {
+						if(p[0] == '.') {
+							if(p[1] == '\0') return null;
+							if(p[1] == '.' && p[2] == '\0') return null;
+						}
+						return new string(p);
+					}
+				}
+			}
+		}
+
+		[DllImport("kernel32.dll", EntryPoint = "FindFirstFileW", SetLastError = true)]
+		internal static extern IntPtr FindFirstFile(string lpFileName, out WIN32_FIND_DATA lpFindFileData);
+
+		[DllImport("kernel32.dll", EntryPoint = "FindNextFileW", SetLastError = true)]
+		internal static extern bool FindNextFile(IntPtr hFindFile, out WIN32_FIND_DATA lpFindFileData);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool FindClose(IntPtr hFindFile);
+
+#if TEST_FINDFIRSTFILEEX
+			internal enum FINDEX_INFO_LEVELS
+			{
+				FindExInfoStandard,
+				FindExInfoBasic,
+				FindExInfoMaxInfoLevel
+			}
+
+			internal const uint FIND_FIRST_EX_LARGE_FETCH = 0x2;
+
+			[DllImport("kernel32.dll", EntryPoint = "FindFirstFileExW")]
+			internal static extern IntPtr FindFirstFileEx(string lpFileName, FINDEX_INFO_LEVELS fInfoLevelId, out WIN32_FIND_DATA lpFindFileData, int fSearchOp, IntPtr lpSearchFilter, uint dwAdditionalFlags);
+#endif
+
+		internal const uint MOVEFILE_REPLACE_EXISTING = 0x1;
+		internal const uint MOVEFILE_COPY_ALLOWED = 0x2;
+		internal const uint MOVEFILE_DELAY_UNTIL_REBOOT = 0x4;
+		internal const uint MOVEFILE_WRITE_THROUGH = 0x8;
+		internal const uint MOVEFILE_CREATE_HARDLINK = 0x10;
+		internal const uint MOVEFILE_FAIL_IF_NOT_TRACKABLE = 0x20;
+
+		[DllImport("kernel32.dll", EntryPoint = "MoveFileExW", SetLastError = true)]
+		internal static extern bool MoveFileEx(string lpExistingFileName, string lpNewFileName, uint dwFlags);
+
+		//[DllImport("kernel32.dll", EntryPoint = "CopyFileW", SetLastError = true)]
+		//internal static extern bool CopyFile(string lpExistingFileName, string lpNewFileName, bool bFailIfExists);
+
+		internal const uint COPY_FILE_FAIL_IF_EXISTS = 0x1;
+		internal const uint COPY_FILE_RESTARTABLE = 0x2;
+		internal const uint COPY_FILE_OPEN_SOURCE_FOR_WRITE = 0x4;
+		internal const uint COPY_FILE_ALLOW_DECRYPTED_DESTINATION = 0x8;
+		internal const uint COPY_FILE_COPY_SYMLINK = 0x800;
+		internal const uint COPY_FILE_NO_BUFFERING = 0x1000;
+
+		[DllImport("kernel32.dll", EntryPoint = "CopyFileExW", SetLastError = true)]
+		internal static extern bool CopyFileEx(string lpExistingFileName, string lpNewFileName, LPPROGRESS_ROUTINE lpProgressRoutine, IntPtr lpData, int* pbCancel, uint dwCopyFlags);
+
+		internal delegate uint LPPROGRESS_ROUTINE(long TotalFileSize, long TotalBytesTransferred, long StreamSize, long StreamBytesTransferred, uint dwStreamNumber, uint dwCallbackReason, IntPtr hSourceFile, IntPtr hDestinationFile, IntPtr lpData);
+
+		[DllImport("kernel32.dll", EntryPoint = "DeleteFileW", SetLastError = true)]
+		internal static extern bool DeleteFile(string lpFileName);
+
+		[DllImport("kernel32.dll", EntryPoint = "RemoveDirectoryW", SetLastError = true)]
+		internal static extern bool RemoveDirectory(string lpPathName);
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryW", SetLastError = true)]
+		internal static extern bool CreateDirectory(string lpPathName, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryExW", SetLastError = true)]
+		internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
+
+		[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
+		internal static extern bool PathIsDirectoryEmpty(string pszPath);
+		//speed: slightly faster than with EnumDirectory.
 
 
 
@@ -1739,7 +1846,7 @@ namespace Catkeys
 		//There are 2 newer API - SHCreateItemFromIDList (absoulte) and SHCreateItemWithParent (parent+relative). They can get IShellItem2 too, which is currently not useful here. Same speed.
 
 		//[DllImport("shell32.dll", PreserveSig = true)]
-		//internal static extern int SHCreateItemFromIDList(IntPtr pidl, [In] ref Guid riid, out IShellItem ppv); //or IShellItem2
+		//internal static extern int SHCreateItemFromIDList(IntPtr pidl, ref Guid riid, out IShellItem ppv); //or IShellItem2
 
 		//[DllImport("shell32.dll", PreserveSig = true)]
 		//internal static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
@@ -1895,11 +2002,145 @@ namespace Catkeys
 		[DllImport("shell32.dll")]
 		internal static extern void SHChangeNotify(uint wEventId, uint uFlags, string dwItem1, string dwItem2);
 
+		internal const uint SEE_MASK_CONNECTNETDRV = 0x80;
+		internal const uint SEE_MASK_NOZONECHECKS = 0x800000;
+		internal const uint SEE_MASK_UNICODE = 0x4000;
+		internal const uint SEE_MASK_FLAG_NO_UI = 0x400;
+		internal const uint SEE_MASK_INVOKEIDLIST = 0xC;
+		internal const uint SEE_MASK_NOCLOSEPROCESS = 0x40;
+		internal const uint SEE_MASK_NOASYNC = 0x100;
+		internal const uint SEE_MASK_NO_CONSOLE = 0x8000;
+		internal const uint SEE_MASK_HMONITOR = 0x200000;
+		internal const uint SEE_MASK_WAITFORINPUTIDLE = 0x2000000;
+
+		internal struct SHELLEXECUTEINFO
+		{
+			public uint cbSize;
+			public uint fMask;
+			public Wnd hwnd;
+			public string lpVerb;
+			public string lpFile;
+			public string lpParameters;
+			public string lpDirectory;
+			public int nShow;
+			public IntPtr hInstApp;
+			public IntPtr lpIDList;
+			public string lpClass;
+			public IntPtr hkeyClass;
+			public uint dwHotKey;
+			public IntPtr hMonitor;
+			public IntPtr hProcess;
+		}
+
+		[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
+		internal static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO pExecInfo);
+
+		[DllImport("shell32.dll", PreserveSig = true)]
+		internal static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, IntPtr[] apidl, uint dwFlags);
+
+		[DllImport("shell32.dll")]
+		internal static extern int ILGetSize(IntPtr pidl);
+
+		internal const uint FO_MOVE = 0x1;
+		internal const uint FO_COPY = 0x2;
+		internal const uint FO_DELETE = 0x3;
+		internal const uint FO_RENAME = 0x4;
+
+		internal const uint FOF_MULTIDESTFILES = 0x1;
+		internal const uint FOF_CONFIRMMOUSE = 0x2;
+		internal const uint FOF_SILENT = 0x4;
+		internal const uint FOF_RENAMEONCOLLISION = 0x8;
+		internal const uint FOF_NOCONFIRMATION = 0x10;
+		internal const uint FOF_WANTMAPPINGHANDLE = 0x20;
+		internal const uint FOF_ALLOWUNDO = 0x40;
+		internal const uint FOF_FILESONLY = 0x80;
+		internal const uint FOF_SIMPLEPROGRESS = 0x100;
+		internal const uint FOF_NOCONFIRMMKDIR = 0x200;
+		internal const uint FOF_NOERRORUI = 0x400;
+		internal const uint FOF_NOCOPYSECURITYATTRIBS = 0x800;
+		internal const uint FOF_NORECURSION = 0x1000;
+		internal const uint FOF_NO_CONNECTED_ELEMENTS = 0x2000;
+		internal const uint FOF_WANTNUKEWARNING = 0x4000;
+		internal const uint FOF_NORECURSEREPARSE = 0x8000;
+		internal const uint FOF_NO_UI = 0x614;
+
+		internal struct SHFILEOPSTRUCT
+		{
+			public Wnd hwnd;
+			public uint wFunc;
+			public string pFrom;
+			public string pTo;
+			public ushort fFlags;
+
+			//workaround for this problem: the 32-bit version of SHFILEOPSTRUCT uses Pack = 1, ie no 2-byte gap after fFlags.
+			//	I don't want to use two versions. Then also would need two versions of code that use this struct.
+			//	The last two members are not useful, but we need fAnyOperationsAborted. This workaround gets it through a property function.
+			//	Update: we don't need fAnyOperationsAborted. We use FOF_SILENT therefore cannot be aborted. And it is unreliable.
+			//		But the workaround is tested, on both platformas.
+
+#if use_fAnyOperationsAborted
+				//public bool fAnyOperationsAborted; //BOOL
+				ushort _fAnyOperationsAborted_32, _fAnyOperationsAborted_common, _fAnyOperationsAborted_64;
+				public bool fAnyOperationsAborted
+				{
+					get
+					{
+						if(_fAnyOperationsAborted_common != 0) return true;
+						var v = Ver.Is64BitProcess ? _fAnyOperationsAborted_64 : _fAnyOperationsAborted_32;
+						return v != 0;
+					}
+				}
+#else
+			private int fAnyOperationsAborted;
+#endif
+			private IntPtr hNameMappings;
+			private string lpszProgressTitle;
+			//these are private and not used, because would be at invalid offsets on 32-bit
+		}
+
+		//internal struct SHFILEOPSTRUCT
+		//{
+		//	public Wnd hwnd;
+		//	public uint wFunc;
+		//	public string pFrom;
+		//	public string pTo;
+		//	public ushort fFlags;
+		//	public bool fAnyOperationsAborted;
+		//	public IntPtr hNameMappings;
+		//	public string lpszProgressTitle;
+		//}
+
+		//[StructLayout(LayoutKind.Sequential, Pack = 1)]
+		//internal struct SHFILEOPSTRUCT__32
+		//{
+		//	public Wnd hwnd;
+		//	public uint wFunc;
+		//	public string pFrom;
+		//	public string pTo;
+		//	public ushort fFlags;
+		//	public bool fAnyOperationsAborted;
+		//	public IntPtr hNameMappings;
+		//	public string lpszProgressTitle;
+		//}
+
+		[DllImport("shell32.dll", EntryPoint = "SHFileOperationW")]
+		internal static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
+
+
+
+
+
+
 
 
 
 
 		//SHLWAPI
+
+		[DllImport("shlwapi.dll", EntryPoint = "#176", PreserveSig = true)]
+		internal static extern int IUnknown_QueryService(IntPtr punk, ref Guid guidService, ref Guid riid, out IntPtr ppvOut);
+		//internal static extern int IUnknown_QueryService(IntPtr punk, ref Guid guidService, ref Guid riid, void* ppvOut);
+		//internal static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, ref Guid guidService, ref Guid riid, out IntPtr ppvOut);
 
 		//internal enum ASSOCSTR
 		//{
@@ -1944,6 +2185,9 @@ namespace Catkeys
 
 		[DllImport("comctl32.dll")]
 		internal static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
+
+		[DllImport("oleaut32.dll", EntryPoint = "#147", PreserveSig = true)]
+		internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, ref VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
 
 
 
@@ -2081,8 +2325,7 @@ namespace Catkeys
 		/// </summary>
 		internal static int strtoi(string s, int startIndex = 0, int numberBase = 0)
 		{
-			int len;
-			return strtoi(s, startIndex, out len, numberBase);
+			return strtoi(s, startIndex, out int len, numberBase);
 		}
 
 		/// <summary>
@@ -2090,8 +2333,7 @@ namespace Catkeys
 		/// </summary>
 		internal static uint strtoui(string s, int startIndex = 0, int numberBase = 0)
 		{
-			int len;
-			return strtoui(s, startIndex, out len, numberBase);
+			return strtoui(s, startIndex, out int len, numberBase);
 		}
 
 		/// <summary>
@@ -2099,8 +2341,7 @@ namespace Catkeys
 		/// </summary>
 		internal static long strtoi64(string s, int startIndex = 0, int numberBase = 0)
 		{
-			int len;
-			return strtoi64(s, startIndex, out len, numberBase);
+			return strtoi64(s, startIndex, out int len, numberBase);
 		}
 
 		/// <summary>
@@ -2108,8 +2349,7 @@ namespace Catkeys
 		/// </summary>
 		internal static int strtoi(char* s, int numberBase = 0)
 		{
-			char* endPtr;
-			return strtoi(s, out endPtr, numberBase);
+			return strtoi(s, out char* endPtr, numberBase);
 		}
 
 		/// <summary>
@@ -2117,8 +2357,7 @@ namespace Catkeys
 		/// </summary>
 		internal static uint strtoui(char* s, int numberBase = 0)
 		{
-			char* endPtr;
-			return strtoui(s, out endPtr, numberBase);
+			return strtoui(s, out char* endPtr, numberBase);
 		}
 
 		/// <summary>
@@ -2126,8 +2365,7 @@ namespace Catkeys
 		/// </summary>
 		internal static long strtoi64(char* s, int numberBase = 0)
 		{
-			char* endPtr;
-			return strtoi64(s, out endPtr, numberBase);
+			return strtoi64(s, out char* endPtr, numberBase);
 		}
 
 		//info: using strtoul with int return value because strtol eg returns 0x7FFFFFFF for "0xFFFFFFFF".
@@ -2162,10 +2400,33 @@ namespace Catkeys
 
 
 
+
+		//NTDLL
+
+		[DllImport("ntdll.dll")]
+		internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
+		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
+
+
+
+
 		//OTHER
 
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
+
+		[DllImport("msi.dll", EntryPoint = "#217")]
+		internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
+
+		[DllImport("msi.dll", EntryPoint = "#173")]
+		internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
+
+		[DllImport("winmm.dll")]
+		internal static extern uint timeBeginPeriod(uint uPeriod);
+
+		[DllImport("winmm.dll")]
+		internal static extern uint timeEndPeriod(uint uPeriod);
+
 
 
 
@@ -2176,7 +2437,7 @@ namespace Catkeys
 		internal static bool GetDelegate<T>(out T deleg, string dllName, string funcName) where T : class
 		{
 			deleg = null;
-			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default(IntPtr)) return false;
+			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default) return false;
 			//deleg = (T)Marshal.GetDelegateForFunctionPointer(fa, typeof(T)); //error
 			Type t = typeof(T);
 			deleg = (T)Convert.ChangeType(Marshal.GetDelegateForFunctionPointer(fa, t), t);
@@ -2186,7 +2447,7 @@ namespace Catkeys
 		internal static bool GetDelegate<T>(out T deleg, IntPtr hModule, string funcName) where T : class
 		{
 			deleg = null;
-			IntPtr fa = GetProcAddress(hModule, funcName); if(fa == default(IntPtr)) return false;
+			IntPtr fa = GetProcAddress(hModule, funcName); if(fa == default) return false;
 			//deleg = (T)Marshal.GetDelegateForFunctionPointer(fa, typeof(T)); //error
 			Type t = typeof(T);
 			deleg = (T)Convert.ChangeType(Marshal.GetDelegateForFunctionPointer(fa, t), t);

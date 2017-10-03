@@ -20,10 +20,9 @@ using System.Drawing;
 //using System.Xml;
 //using System.Xml.Schema;
 
-using Catkeys;
 using static Catkeys.NoClass;
 
-namespace Catkeys
+namespace Catkeys.Types
 {
 #pragma warning disable 660, 661 //no Equals()
 
@@ -39,7 +38,7 @@ namespace Catkeys
 	/// </remarks>
 	[DebuggerStepThrough]
 	//[Serializable]
-	public unsafe struct LPARAM //:IXmlSerializable
+	public unsafe struct LPARAM :IEquatable<LPARAM>, IComparable<LPARAM>
 	{
 #pragma warning disable 1591 //XML doc
 		//[NonSerialized]
@@ -81,7 +80,15 @@ namespace Catkeys
 		public static bool operator ==(LPARAM a, LPARAM b) { return a._v == b._v; }
 		public static bool operator !=(LPARAM a, LPARAM b) { return a._v != b._v; }
 
-		public override string ToString() { return ((IntPtr)_v).ToString(); }
+		public override string ToString() => ((IntPtr)_v).ToString();
+
+		public override int GetHashCode() => (int)_v;
+
+		public override bool Equals(object other) => other is LPARAM && (LPARAM)other == this;
+
+		public bool Equals(LPARAM other) => _v == other._v;
+
+		public int CompareTo(LPARAM other) => _v == other._v ? 0 : (_v < other._v ? -1 : 1);
 
 		//ISerializable implementation.
 		//Need it because default serialization: 1. Gets only public members. 2. Exception if void*. 3. If would work, would format like <...><_v>value</_v></...>, but we need <...>value</...>.
@@ -103,6 +110,14 @@ namespace Catkeys
 #pragma warning disable 1591 //XML doc
 		public int left, top, right, bottom;
 
+		/// <summary>
+		/// Initializes this instance.
+		/// </summary>
+		/// <param name="left"></param>
+		/// <param name="top"></param>
+		/// <param name="rightOrWidth">right or width, depending on <paramref name="useWidthHeight"/>.</param>
+		/// <param name="bottomOrHeight">bottom or height, depending on <paramref name="useWidthHeight"/>.</param>
+		/// <param name="useWidthHeight">If true, used width/height. If false, used right/bottom.</param>
 		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight)
 		{
 			this.left = left; this.top = top;
@@ -116,6 +131,9 @@ namespace Catkeys
 		public static bool operator ==(RECT r1, RECT r2) { return r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom; }
 		public static bool operator !=(RECT r1, RECT r2) { return !(r1 == r2); }
 
+		/// <summary>
+		/// Sets fields like the constructor <see cref="RECT(int,int,int,int,bool)"/>.
+		/// </summary>
 		public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight)
 		{
 			this.left = left; this.top = top;
@@ -124,13 +142,17 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Sets all fields to 0.
+		/// Sets all fields = 0.
 		/// </summary>
-		public void SetEmpty() { left = right = top = bottom = 0; }
+		public void Set0() { left = right = top = bottom = 0; }
 
 		/// <summary>
-		/// Returns true if this rectangle is empty or invalid:
-		/// return right&lt;=left || bottom&lt;=top;
+		/// Returns true if all fields == 0.
+		/// </summary>
+		public bool Is0 { get => left == 0 && top == 0 && right == 0 && bottom == 0; }
+
+		/// <summary>
+		/// Returns true if the rectangle is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
 		/// </summary>
 		public bool IsEmpty { get => right <= left || bottom <= top; }
 
@@ -160,8 +182,7 @@ namespace Catkeys
 		public bool Contains(RECT r2) { return r2.left >= left && r2.top >= top && r2.right <= right && r2.bottom <= bottom; }
 
 		/// <summary>
-		/// Makes this rectangle bigger or smaller:
-		/// left-=dx; right+=dx; top-=dy; bottom+=dy;
+		/// Makes this rectangle bigger or smaller: <c>left-=dx; right+=dx; top-=dy; bottom+=dy;</c>
 		/// Use negative dx/dy to make the rectangle smaller. Note: too big negative dx/dy can make it invalid (right&lt;left or bottom&lt;top).
 		/// </summary>
 		public void Inflate(int dx, int dy) { left -= dx; right += dx; top -= dy; bottom += dy; }
@@ -177,16 +198,15 @@ namespace Catkeys
 		/// Returns the intersection rectangle of two rectangles.
 		/// If they don't intersect, returns empty rectangle (IsEmpty would return true).
 		/// </summary>
-		public static RECT Intersect(RECT r1, RECT r2) { RECT r; Api.IntersectRect(out r, ref r1, ref r2); return r; }
+		public static RECT Intersect(RECT r1, RECT r2) { Api.IntersectRect(out RECT r, ref r1, ref r2); return r; }
 
 		/// <summary>
 		/// Returns true if this rectangle and another rectangle intersect.
 		/// </summary>
-		public bool IntersectsWith(RECT r2) { RECT r; return Api.IntersectRect(out r, ref this, ref r2); }
+		public bool IntersectsWith(RECT r2) { return Api.IntersectRect(out RECT r, ref this, ref r2); }
 
 		/// <summary>
-		/// Moves this rectangle by the specified offsets:
-		/// left+=dx; right+=dx; top+=dy; bottom+=dy;
+		/// Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>
 		/// Negative dx moves to the left. Negative dy moves up.
 		/// </summary>
 		public void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
@@ -204,7 +224,7 @@ namespace Catkeys
 		/// Union is the smallest rectangle that contains two full rectangles.
 		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
-		public static RECT Union(RECT r1, RECT r2) { RECT r; Api.UnionRect(out r, ref r1, ref r2); return r; }
+		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, ref r1, ref r2); return r; }
 
 		/// <summary>
 		/// Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
@@ -221,7 +241,7 @@ namespace Catkeys
 		/// </remarks>
 		public void MoveInScreen(Coord x, Coord y, object screen = null, bool workArea = true, bool ensureInScreen = true)
 		{
-			Wnd.LibMoveInScreen(false, x, y, false, default(Wnd), ref this, screen, workArea, ensureInScreen);
+			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -236,13 +256,8 @@ namespace Catkeys
 		/// </remarks>
 		public void EnsureInScreen(object screen = null, bool workArea = true)
 		{
-			Wnd.LibMoveInScreen(true, null, null, false, default(Wnd), ref this, screen, workArea, true);
+			Wnd.Lib.MoveInScreen(true, null, null, false, default, ref this, screen, workArea, true);
 		}
-
-		///// <summary>
-		///// RECT with all fields 0.
-		///// </summary>
-		//public static readonly RECT Empty;
 
 		public override string ToString() { return $"{{L={left} T={top} R={right} B={bottom}  Width={Width} Height={Height}}}"; }
 #pragma warning restore 1591 //XML doc
@@ -253,8 +268,8 @@ namespace Catkeys
 	internal struct VARIANT :IDisposable
 	{
 		public Api.VARENUM vt; //ushort
-		public ushort _u1;
-		public uint _u2;
+		ushort _u1;
+		uint _u2;
 		public LPARAM value;
 		public LPARAM value2;
 		//note: cannot use FieldOffset because of different 32/64 bit size
@@ -264,6 +279,8 @@ namespace Catkeys
 
 		public static implicit operator VARIANT(int x) { return new VARIANT(x); }
 		public static implicit operator VARIANT(string x) { return new VARIANT(x); }
+
+		public int ValueInt { get { Debug.Assert(vt == Api.VARENUM.VT_I4); return value; } }
 
 		/// <summary>
 		/// Calls VariantClear.
@@ -278,6 +295,104 @@ namespace Catkeys
 			if(vt >= Api.VARENUM.VT_BSTR) Api.VariantClear(ref this);
 			else vt = 0; //info: VariantClear just sets vt=0 and does not clear other members
 		}
+
+		/// <summary>
+		/// Converts to string.
+		/// Does not cache.
+		/// </summary>
+		public override string ToString()
+		{
+			return _ToString(noCache: true);
+		}
+
+		string _ToString(bool noCache)
+		{
+			switch(vt) {
+			case Api.VARENUM.VT_BSTR: return value == default ? null : ((BSTR)value).ToString();
+			case Api.VARENUM.VT_I4: return value.ToString();
+			case Api.VARENUM.VT_EMPTY: case Api.VARENUM.VT_NULL: return null;
+			}
+			VARIANT v2 = default;
+			uint lcid = 0x409; //invariant
+			switch(vt & (Api.VARENUM)0xff) { case Api.VARENUM.VT_DATE: case Api.VARENUM.VT_DISPATCH: lcid = 0x400; break; } //LOCALE_USER_DEFAULT
+			if(0 != Api.VariantChangeTypeEx(ref v2, ref this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
+			return v2.value == default ? null : ((BSTR)v2.value).ToStringAndDispose(noCache);
+		}
+
+		/// <summary>
+		/// Converts to string.
+		/// By default adds to our string cache.
+		/// Disposes this VARIANT.
+		/// </summary>
+		public string ToStringAndDispose(bool noCache = false)
+		{
+			var r = _ToString(noCache);
+			Dispose();
+			return r;
+		}
+	}
+
+	[DebuggerStepThrough]
+	internal unsafe struct BSTR :IDisposable
+	{
+		char* _p;
+
+		BSTR(char* p) => _p = p;
+
+		//rejected: too easy to forget to dispose
+		//public static implicit operator string(BSTR b)
+		//{
+		//	var p = b._p; if(p == null) return null;
+		//	return Util.StringCache.LibAdd(p, SysStringLen(p));
+		//}
+
+		//public static implicit operator BSTR(string s) { fixed (char* p = s) return new BSTR(p); }
+		public static explicit operator BSTR(LPARAM p) => new BSTR((char*)p);
+
+		public char* Ptr { get => _p; }
+
+		/// <summary>
+		/// Returns true if the string is null.
+		/// </summary>
+		public bool Is0 { get => _p == null; }
+
+		/// <summary>
+		/// Converts to string.
+		/// Does not dispose. Doen not cache.
+		/// </summary>
+		public override string ToString()
+		{
+			var p = _p; if(p == null) return null;
+			return Marshal.PtrToStringBSTR((IntPtr)_p);
+		}
+
+		/// <summary>
+		/// Converts to string and frees the BSTR (calls Dispose()).
+		/// By default adds to our string cache.
+		/// </summary>
+		public string ToStringAndDispose(bool noCache = false)
+		{
+			var p = _p; if(p == null) return null;
+			int len = SysStringLen(p); if(len == 0) return "";
+			string r = noCache ? Marshal.PtrToStringUni((IntPtr)p, len) : Util.StringCache.LibAdd(p, len);
+			Dispose();
+			return r;
+		}
+
+		public void Dispose()
+		{
+			var t = _p;
+			if(t != null) {
+				_p = null;
+				SysFreeString(t);
+			}
+		}
+
+		[DllImport("oleaut32.dll", EntryPoint = "#6")]
+		internal static extern void SysFreeString(char* bstrString);
+
+		[DllImport("oleaut32.dll", EntryPoint = "#7")]
+		internal static extern int SysStringLen(char* pbstr);
 	}
 
 }

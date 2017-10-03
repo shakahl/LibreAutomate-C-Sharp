@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Windows.Forms;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls

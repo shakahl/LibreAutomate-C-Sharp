@@ -18,7 +18,7 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #if false //unfinished. Currently not used in lib.

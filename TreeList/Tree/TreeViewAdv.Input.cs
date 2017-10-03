@@ -9,6 +9,7 @@ using System.Threading;
 using System.Diagnostics;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Aga.Controls.Tree

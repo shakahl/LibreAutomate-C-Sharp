@@ -18,6 +18,7 @@ using System.Drawing;
 //using System.Linq;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field

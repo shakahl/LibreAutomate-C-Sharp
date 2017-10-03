@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -33,8 +33,8 @@ namespace Catkeys
 		/// * - zero or more of any characters.
 		/// ? - any character.
 		/// </summary>
-		/// <param name="t">This string. If null, returns true if pattern is null. If "", returns true if pattern is "" or "*".</param>
-		/// <param name="pattern">String that possibly contains wildcard characters. If null, returns true if this string is null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
+		/// <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
+		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <remarks>
 		/// Like all String_ functions, performs ordinal comparison, ie does not depend on current culture.
@@ -55,7 +55,6 @@ namespace Catkeys
 		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>
 		public static unsafe bool Like_(this string t, string pattern, bool ignoreCase = false)
 		{
-			if(pattern == null) return t == null;
 			if(t == null) return false;
 			int patLen = pattern.Length;
 			if(patLen == 0) return t.Length == 0;
@@ -132,9 +131,12 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls <see cref="Like_(string, string, bool)">Like_</see>(patterns[i], ignoreCase) for each wildcard pattern specified in the argument list until it returns true.
+		/// Calls <see cref="Like_(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
 		/// Returns 1-based index of matching pattern, or 0 if none.
 		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
 		public static int Like_(this string t, bool ignoreCase = false, params string[] patterns)
 		{
 			for(int i = 0; i < patterns.Length; i++) if(t.Like_(patterns[i], ignoreCase)) return i + 1;
@@ -143,7 +145,10 @@ namespace Catkeys
 
 		#endregion Like_
 	}
+}
 
+namespace Catkeys.Types
+{
 	/// <summary>
 	/// This class implements <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> parsing and matching (comparing).
 	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find">Wnd.Find</see> uses it to compare window name, class name and program.
@@ -174,6 +179,7 @@ namespace Catkeys
 	public class Wildex
 	{
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
+		//	//TODO: test again. Maybe in the past tested in 32-bit process. Also try to use single int field instead of _type, _ignoreCase and _not.
 
 		object _obj; //string, Regex or Wildex[]. Tested: getting string etc with '_obj as string' is fast.
 		WildType _type;
@@ -182,13 +188,15 @@ namespace Catkeys
 
 		/// <param name="wildcardExpression">
 		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
-		/// null will match null. "" will match "".
+		/// Cannot be null (throws exception).
+		/// "" will match "".
 		/// </param>
+		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
 		public Wildex(string wildcardExpression)
 		{
 			var w = wildcardExpression;
-			if(w == null) return;
+			if(w == null) throw new ArgumentNullException();
 			_type = WildType.Wildcard;
 			_ignoreCase = true;
 
@@ -213,7 +221,7 @@ namespace Catkeys
 					_obj = new Regex(w, ro);
 					return;
 				case WildType.Multi:
-					var a = w.Split(new string[] { "[]" }, StringSplitOptions.None);
+					var a = w.Split(_splitMulti, StringSplitOptions.None); //TODO: use Split_. But currently it does not support string separators. Maybe better use eg ` instead of [].
 					var multi = new Wildex[a.Length];
 					for(int i = 0; i < a.Length; i++) multi[i] = new Wildex(a[i]);
 					_obj = multi;
@@ -221,34 +229,51 @@ namespace Catkeys
 				}
 			}
 
-			if(_type == WildType.Wildcard && !Wildex.HasWildcards(w)) _type = WildType.Text;
+			if(_type == WildType.Wildcard && !HasWildcards(w)) _type = WildType.Text;
 			_obj = w;
 		}
+		static string[] _splitMulti = new string[] { "[]" };
 
 		/// <summary>
 		/// Creates new Wildex from wildcard expression string.
-		/// If the string is null, returns null, else creates and returns new Wildex.
+		/// If the string is null, returns null.
 		/// </summary>
 		/// <param name="wildcardExpression">
 		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
 		/// </param>
-		public static implicit operator Wildex(string wildcardExpression) { return (wildcardExpression == null) ? null : new Wildex(wildcardExpression); }
+		public static implicit operator Wildex(string wildcardExpression)
+		{
+			if(wildcardExpression == null) return null;
+
+			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of Wnd.Find and Wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'className' and 'programEtc' parameters, where "" causes exception, so they will quickly learn.
+			///// If the string is "", calls <see cref="Output.Warning"/>. To match "", use "**empty" instead. Or <see cref="ScriptOptions.DisableWarnings"/>.
+			//	if(wildcardExpression.Length == 0) Output.Warning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
+
+			return new Wildex(wildcardExpression);
+		}
 
 		/// <summary>
 		/// Compares a string with the <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> used to create this <see cref="Wildex"/>.
 		/// Returns true if they match.
 		/// </summary>
-		/// <param name="s">String. If null, returns true if wildcardExpression was null. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
+		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
 		public bool Match(string s)
 		{
-			if(s == null) return _obj == null;
-			if(_obj == null) return false;
+			if(s == null) return false;
 
 			bool R = false;
 			switch(_type) {
-			case WildType.Wildcard: R = s.Like_(_obj as string, _ignoreCase); break;
-			case WildType.Text: R = s.Equals_(_obj as string, _ignoreCase); break;
-			case WildType.Regex: R = (_obj as Regex).IsMatch(s); break;
+			case WildType.Wildcard:
+				R = s.Like_(_obj as string, _ignoreCase);
+				break;
+			case WildType.Text:
+				var t = _obj as string;
+				if(t.Length == 0) R = s.Length == 0;
+				else R = s.Equals_(t, _ignoreCase);
+				break;
+			case WildType.Regex:
+				R = (_obj as Regex).IsMatch(s);
+				break;
 			case WildType.Multi:
 				var multi = _obj as Wildex[];
 				//[n] parts: all must match (with their option n applied)
@@ -275,7 +300,6 @@ namespace Catkeys
 		/// <summary>
 		/// The type of text (wildcard expression) used when creating the Wildex variable.
 		/// </summary>
-		/// <tocexclude />
 		public enum WildType :byte
 		{
 			/// <summary>
@@ -283,16 +307,19 @@ namespace Catkeys
 			/// Match() calls <see cref="String_.Equals_(string, string, bool)"/>.
 			/// </summary>
 			Text,
+
 			/// <summary>
 			/// Wildcard (has *? characters and no t r options).
 			/// Match() calls <see cref="String_.Like_(string, string, bool)"/>.
 			/// </summary>
 			Wildcard,
+
 			/// <summary>
 			/// Regular expression (option r).
 			/// Match() calls <see cref="Regex.IsMatch(string)"/>.
 			/// </summary>
 			Regex,
+
 			/// <summary>
 			/// Multiple parts (option m).
 			/// Match() calls Match() for each part (see <see cref="MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
@@ -343,11 +370,15 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
-		/// <param name="s"></param>
+		/// <param name="s">Can be null.</param>
 		public static bool HasWildcards(string s)
 		{
-			return s != null && s.IndexOfAny(_wildcardChars) >= 0;
+			if(s == null) return false;
+			for(int i = 0; i < s.Length; i++) {
+				var c = s[i];
+				if(c == '*' || c == '?') goto yes;
+			}
+			return false; yes: return true;
 		}
-		static readonly char[] _wildcardChars = new char[] { '*', '?' };
 	}
 }

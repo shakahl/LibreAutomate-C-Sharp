@@ -16,45 +16,11 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	/// <summary>
-	/// Flags for <see cref="Wnd.FromXY"/> and <see cref="Wnd.FromMouse"/>.
-	/// </summary>
-	[Flags]
-	public enum WXYFlags
-	{
-		/// <summary>
-		/// Need top-level window. If at that point is a control, gets its top-level parent.
-		/// Don't use together with NeedControl.
-		/// If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
-		/// </summary>
-		NeedWindow = 1,
-
-		/// <summary>
-		/// Need a control (child window). Returns default(Wnd) if there is no control at that point.
-		/// Don't use together with NeedWindow.
-		/// If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
-		/// </summary>
-		NeedControl = 2,
-
-		/// <summary>
-		/// Just call API <msdn>WindowFromPoint</msdn>.
-		/// Faster but less accurate with controls. Does not see disabled controls, does not prefer non-transparent controls.
-		/// Not used with flag NeedWindow.
-		/// </summary>
-		Raw = 4,
-
-		/// <summary>
-		/// The coordinates are relative to the work area.
-		/// Not used with Wnd.FromMouse.
-		/// </summary>
-		WorkArea = 8,
-	}
-
 	public partial struct Wnd
 	{
 		#region top-level or child
@@ -67,21 +33,21 @@ namespace Catkeys
 		/// Gets visible top-level window or control from point.
 		/// By default the coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be normal, Coord.Reverse or Coord.Fraction; cannot be null.</param>
-		/// <param name="y">Y coordinate. Can be normal, Coord.Reverse or Coord.Fraction; cannot be null.</param>
+		/// <param name="x">X coordinate in screen.</param>
+		/// <param name="y">Y coordinate in screen.</param>
 		/// <param name="flags"></param>
+		/// <param name="workArea">x y are relative to the work area, not entire screen.</param>
+		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
 		/// <remarks>
 		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <b>RealChildWindowFromPoint</b>. Also does not skip disabled controls. All this is not true with flag Raw.
 		/// This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
+		/// x and y can be Coord.Reverse etc; cannot be null
 		/// </remarks>
-		public static Wnd FromXY(Coord x, Coord y, WXYFlags flags = 0)
+		public static Wnd FromXY(Coord x, Coord y, WXYFlags flags = 0, bool workArea = false, object screen = null)
 		{
-			//CONSIDER: add parameter Screen
-
 			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
-			bool workArea = 0 != (flags & WXYFlags.WorkArea);
-			return _FromXY(Coord.Normalize(x, y, workArea), flags);
+			return _FromXY(Coord.Normalize(x, y, workArea, screen), flags);
 		}
 
 		static Wnd _FromXY(Point p, WXYFlags flags)
@@ -116,7 +82,7 @@ namespace Catkeys
 			if(w.Is0) return w;
 
 			if(0 != (flags & WXYFlags.Raw)) {
-				if(needW) w = w.WndWindow; else if(needC && w == w.WndWindow) w = default(Wnd);
+				if(needW) w = w.WndWindow; else if(needC && w == w.WndWindow) w = default;
 				return w;
 			}
 
@@ -125,7 +91,7 @@ namespace Catkeys
 
 			t = w._ChildFromXY(p, false, true);
 			if(t.Is0) t = w;
-			if(needC && t == w) return default(Wnd);
+			if(needC && t == w) return default;
 			return t;
 		}
 
@@ -144,14 +110,16 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets child control from point.
-		/// Returns default(Wnd) if the point is not within a child or is outside this window.
-		/// By default, x y must be relative to the client area of this window.
+		/// Returns default(Wnd) if the point is not in a child control or not in the client area of this window.
 		/// </summary>
-		/// <param name="x">X coordinate. Can be normal, Coord.Reverse or Coord.Fraction; cannot be null.</param>
-		/// <param name="y">Y coordinate. Can be normal, Coord.Reverse or Coord.Fraction; cannot be null.</param>
+		/// <param name="x">X coordinate in the client area of this window.</param>
+		/// <param name="y">Y coordinate in the client area of this window.</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
-		/// <param name="screenXY">x y are relative to the pimary screen.</param>
+		/// <param name="screenXY">x y are relative to the pimary screen, not to the client area.</param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <remarks>
+		/// x y can be Coord.Reverse etc; cannot be null.
+		/// </remarks>
 		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
 		{
 			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
@@ -207,9 +175,9 @@ namespace Catkeys
 		//Returns child or default(Wnd).
 		static Wnd _TopChildWindowFromPointSimple(Wnd w, Point p, bool directChild, bool screenXY)
 		{
-			if(screenXY && !Api.ScreenToClient(w, ref p)) return default(Wnd);
+			if(screenXY && !Api.ScreenToClient(w, ref p)) return default;
 
-			for(Wnd R = default(Wnd); ;) {
+			for(Wnd R = default; ;) {
 				Wnd t = _RealChildWindowFromPoint_RtlAware(w, p);
 				if(directChild) return t;
 				if(t.Is0 || !w.MapClientToClientOf(t, ref p)) return R;
@@ -222,9 +190,40 @@ namespace Catkeys
 		{
 			if(w.HasExStyle(Native.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.X = rc.right - p.X; }
 			Wnd R = Api.RealChildWindowFromPoint(w, p);
-			return R == w ? default(Wnd) : R;
+			return R == w ? default : R;
 		}
 
 		#endregion
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// Flags for <see cref="Wnd.FromXY"/> and <see cref="Wnd.FromMouse"/>.
+	/// </summary>
+	[Flags]
+	public enum WXYFlags
+	{
+		/// <summary>
+		/// Need top-level window. If at that point is a control, gets its top-level parent.
+		/// Don't use together with NeedControl.
+		/// If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
+		/// </summary>
+		NeedWindow = 1,
+
+		/// <summary>
+		/// Need a control (child window). Returns default(Wnd) if there is no control at that point.
+		/// Don't use together with NeedWindow.
+		/// If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
+		/// </summary>
+		NeedControl = 2,
+
+		/// <summary>
+		/// Just call API <msdn>WindowFromPoint</msdn>.
+		/// Faster but less accurate with controls. Does not see disabled controls, does not prefer non-transparent controls.
+		/// Not used with flag NeedWindow.
+		/// </summary>
+		Raw = 4,
 	}
 }

@@ -20,9 +20,9 @@ using System.Xml.Linq;
 using System.Collections;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
-
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -786,8 +786,8 @@ partial class FilesModel :ITreeModel
 			foreach(var s in a) {
 				bool isDir;
 				var itIs = Files.ExistsAs2(s, true);
-				if(itIs == Files.ItIs2.File) isDir = false;
-				else if(itIs == Files.ItIs2.Directory && r != 1) isDir = true;
+				if(itIs == FileDir2.File) isDir = false;
+				else if(itIs == FileDir2.Directory && r != 1) isDir = true;
 				else continue; //skip symlinks or if does not exist
 
 				var name = Path_.GetFileName(s);
@@ -806,8 +806,8 @@ partial class FilesModel :ITreeModel
 					}
 					if(isDir) _AddDirToXml(s, x);
 					try {
-						if(r == 2) Files.CopyTo(s, newParentPath, Files.IfExists.Fail);
-						else Files.MoveTo(s, newParentPath, Files.IfExists.Fail);
+						if(r == 2) Files.CopyTo(s, newParentPath, IfExists.Fail);
+						else Files.MoveTo(s, newParentPath, IfExists.Fail);
 					}
 					catch(Exception ex) { Print(ex.Message); continue; }
 				}
@@ -826,7 +826,7 @@ partial class FilesModel :ITreeModel
 
 		void _AddDirToXml(string path, XElement x)
 		{
-			foreach(var u in Files.EnumDirectory(path, Files.EDFlags.UseRawPath | Files.EDFlags.SkipHiddenSystem)) {
+			foreach(var u in Files.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isDir = u.IsDirectory;
 				var x2 = new XElement(isDir ? "d" : "f", new XAttribute("n", u.Name));
 				x.Add(x2);

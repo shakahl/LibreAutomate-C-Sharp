@@ -18,7 +18,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -62,7 +62,7 @@ namespace Catkeys
 
 			for(int na = s.Length + 100; ;) {
 				var b = Util.Buffers.LibChar(ref na);
-				int nr = _Api.ExpandEnvironmentStrings(s, b, na);
+				int nr = Api.ExpandEnvironmentStrings(s, b, na);
 				if(nr > na) na = nr;
 				else if(nr > 0) {
 					var R = b.ToString(nr - 1);
@@ -85,7 +85,7 @@ namespace Catkeys
 		{
 			for(int na = 300; ;) {
 				var b = Util.Buffers.LibChar(ref na);
-				int nr = _Api.GetEnvironmentVariable(name, b, na);
+				int nr = Api.GetEnvironmentVariable(name, b, na);
 				if(nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
 			}
 		}
@@ -97,16 +97,7 @@ namespace Catkeys
 		/// <returns></returns>
 		internal static bool LibEnvVarExists(string name)
 		{
-			return 0 != _Api.GetEnvironmentVariable(name, null, 0);
-		}
-
-		static class _Api
-		{
-			[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentVariableW", SetLastError = true)]
-			internal static extern int GetEnvironmentVariable(string lpName, [Out] char[] lpBuffer, int nSize);
-
-			[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
-			internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
+			return 0 != Api.GetEnvironmentVariable(name, null, 0);
 		}
 
 		/// <summary>
@@ -256,41 +247,24 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// flags for <see cref="Combine"/>.
+		/// Combines two path parts using character '\\'. For example directory path and file name.
 		/// </summary>
-		[Flags]
-		public enum CombineFlags
-		{
-			/// <summary>
-			/// s2 can be full path. If it is, ignore s1 and return s2 with expanded environment variables.
-			/// If this flag not used, simply combines s1 and s2, creating invalid path if s2 is full path.
-			/// </summary>
-			s2CanBeFullPath = 1,
-
-			/// <summary>
-			/// Don't call <see cref="PrefixLongPathIfNeed"/> which may prepend @"\\?\" if the result path is very long.
-			/// </summary>
-			DoNotPrefixLongPath = 2,
-		}
-
-		/// <summary>
-		/// Combines two path parts, for example directory path and file name.
-		/// Joins them using character '\\' so that there will not be two '\\' or '/'.
-		/// </summary>
-		/// <param name="s1">First path. Usually a directory.</param>
-		/// <param name="s2">Second path. Usually a filename or relative path. Use flag s2CanBeFullPath if it can be full path.</param>
-		/// <param name="flags"></param>
+		/// <param name="s1">First part. Usually a directory.</param>
+		/// <param name="s2">Second part. Usually a filename or relative path.</param>
+		/// <param name="s2CanBeFullPath">s2 can be full path. If it is, ignore s1 and return s2 with expanded environment variables. If false (default), simply combines s1 and s2.</param>
+		/// <param name="prefixLongPath">Call <see cref="PrefixLongPathIfNeed"/> which may prepend @"\\?\" if the result path is very long. Default true.</param>
 		/// <remarks>
 		/// If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
-		/// Similar to Path.Combine (.NET function). Main differences: does not throw exceptions; does not ignore s1 if s2 is a relative path starting with @"\" or "/".
-		/// See also <see cref="Normalize"/>.
+		/// Similar to System.IO.Path.Combine. Main differences: does not throw exceptions; has some options.
+		/// Does not expand environment variables. For it use <see cref="ExpandEnvVar"/> before, or <see cref="Normalize"/> instead. Path that starts with an environment variable is considerd not full path.
 		/// </remarks>
-		public static string Combine(string s1, string s2, CombineFlags flags = 0)
+		/// <seealso cref="Normalize"/>
+		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false, bool prefixLongPath = true)
 		{
 			string r;
 			if(Empty(s1)) r = s2 ?? "";
 			else if(Empty(s2)) r = s1 ?? "";
-			else if(0 != (flags & CombineFlags.s2CanBeFullPath) && IsFullPathExpandEnvVar(ref s2)) r = s2;
+			else if(s2CanBeFullPath && IsFullPath(s2)) r = s2;
 			else {
 				int k = 0;
 				if(LibIsSepChar(s1[s1.Length - 1])) k |= 1;
@@ -301,13 +275,13 @@ namespace Catkeys
 				default: r = s1 + s2; break;
 				}
 			}
-			if(0 == (flags & CombineFlags.DoNotPrefixLongPath)) r = PrefixLongPathIfNeed(r);
+			if(prefixLongPath) r = PrefixLongPathIfNeed(r);
 			return r;
 		}
 
 		/// <summary>
 		/// Combines two path parts.
-		/// Unlike Path_.Combine, fails if some part is empty or @"\" or if s2 is @"\\". Also does not check s2 full path.
+		/// Unlike <see cref="Combine"/>, fails if some part is empty or @"\" or if s2 is @"\\". Also does not check s2 full path.
 		/// If fails, throws exception or returns null (if noException).
 		/// </summary>
 		internal static string LibCombine(string s1, string s2, bool noException = false)
@@ -377,27 +351,11 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// flags for <see cref="Normalize"/>.
-		/// </summary>
-		[Flags]
-		public enum NormalizeFlags
-		{
-			/// <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
-			DoNotExpandDosPath = 1,
-			/// <summary>Don't call <see cref="PrefixLongPathIfNeed"/>.</summary>
-			DoNotPrefixLongPath = 2,
-			/// <summary>Don't remove '\\' character at the end.</summary>
-			DoNotRemoveEndSeparator = 4,
-			/// <summary>If path is not a file-system path but looks like URL (eg "http:..." or "file:...") or starts with "::", don't throw exception and don't process more (only expand environment variables).</summary>
-			CanBeUrlOrShell = 8,
-		}
-
-		/// <summary>
 		/// Makes normal full path from path that can contain special substrings etc.
 		/// The sequence of actions:
-		/// 1. If path starts with '%' character, expands environment variables (see <see cref="Path_.ExpandEnvVar"/>).
+		/// 1. If path starts with '%' character, expands environment variables (see <see cref="ExpandEnvVar"/>).
 		/// 2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
-		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with defaultParentDirectory.
+		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
 		/// 4. If path is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' to '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
 		/// 6. If no flag DoNotExpandDosPath, if contains '~' character, calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
@@ -412,13 +370,13 @@ namespace Catkeys
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, supports @"\\?\very long path", trims '\\' at the end if need, does not throw exceptions when [it thinks that] path is invalid (except when path is not full).
 		/// </remarks>
-		public static string Normalize(string path, string defaultParentDirectory = null, NormalizeFlags flags = 0)
+		public static string Normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0)
 		{
 			path = ExpandEnvVar(path);
 			if(!IsFullPath(path)) { //note: not EEV
-				if(0 != (flags & NormalizeFlags.CanBeUrlOrShell)) if(LibIsShellPath(path) || IsUrl(path)) return path;
+				if(0 != (flags & PNFlags.CanBeUrlOrShell)) if(LibIsShellPath(path) || IsUrl(path)) return path;
 				if(Empty(defaultParentDirectory)) goto ge;
-				path = LibCombine(defaultParentDirectory, path);
+				path = LibCombine(ExpandEnvVar(defaultParentDirectory), path);
 				if(!IsFullPath(path)) goto ge;
 			}
 
@@ -431,7 +389,7 @@ namespace Catkeys
 		/// Same as <see cref="Normalize"/>, but skips full-path checking.
 		/// s should be full path. If not full and not null/"", combines with current directory.
 		/// </summary>
-		internal static string LibNormalize(string s, NormalizeFlags flags = 0, bool noExpandEV = false)
+		internal static string LibNormalize(string s, PNFlags flags = 0, bool noExpandEV = false)
 		{
 			if(!Empty(s)) {
 				if(!noExpandEV) s = ExpandEnvVar(s);
@@ -448,12 +406,12 @@ namespace Catkeys
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
 
-				if(0 == (flags & NormalizeFlags.DoNotExpandDosPath) && s.IndexOf('~') > 0) s = LibExpandDosPath(s);
+				if(0 == (flags & PNFlags.DoNotExpandDosPath) && s.IndexOf('~') > 0) s = LibExpandDosPath(s);
 
-				if(0 == (flags & NormalizeFlags.DoNotRemoveEndSeparator)) s = _AddRemoveSep(s);
+				if(0 == (flags & PNFlags.DoNotRemoveEndSeparator)) s = _AddRemoveSep(s);
 				else if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
 
-				if(0 == (flags & NormalizeFlags.DoNotPrefixLongPath)) s = PrefixLongPathIfNeed(s);
+				if(0 == (flags & PNFlags.DoNotPrefixLongPath)) s = PrefixLongPathIfNeed(s);
 			}
 			return s;
 		}
@@ -569,7 +527,7 @@ namespace Catkeys
 			if(s == null) return 0;
 			int len = s.Length;
 			if(len >= 4 && s[2] == '?' && LibIsSepChar(s[0]) && LibIsSepChar(s[1]) && LibIsSepChar(s[3])) {
-				if(len >= 8 && LibIsSepChar(s[7]) && s.EqualsPart_(4, "UNC", true)) return 8;
+				if(len >= 8 && LibIsSepChar(s[7]) && s.EqualsAt_(4, "UNC", true)) return 8;
 				return 4;
 			}
 			return 0;
@@ -844,5 +802,27 @@ namespace Catkeys
 				if(!Files.ExistsAsAny(s)) return s;
 			}
 		}
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// flags for <see cref="Path_.Normalize"/>.
+	/// </summary>
+	[Flags]
+	public enum PNFlags
+	{
+		/// <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
+		DoNotExpandDosPath = 1,
+
+		/// <summary>Don't call <see cref="Path_.PrefixLongPathIfNeed"/>.</summary>
+		DoNotPrefixLongPath = 2,
+
+		/// <summary>Don't remove '\\' character at the end.</summary>
+		DoNotRemoveEndSeparator = 4,
+
+		/// <summary>If path is not a file-system path but looks like URL (eg "http:..." or "file:...") or starts with "::", don't throw exception and don't process more (only expand environment variables).</summary>
+		CanBeUrlOrShell = 8,
 	}
 }

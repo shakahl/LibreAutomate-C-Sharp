@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable 649 //unused fields in API structs
@@ -52,87 +53,9 @@ namespace Catkeys
 	/// ]]></code>
 	/// </example>
 	//[DebuggerStepThrough]
-	public partial class TaskDialog
+	public class TaskDialog
 	{
 		#region API
-		#region public API
-#pragma warning disable 1591 //missing XML documentation
-		/// <summary>
-		/// Constants for TaskDialog API messages etc.
-		/// </summary>
-		/// <tocexclude />
-		public static class TDApi
-		{
-			/// <summary>
-			/// Messages that your event handler can send to the dialog.
-			/// Reference: <msdn>task dialog messages</msdn>.
-			/// </summary>
-			/// <tocexclude />
-			public enum TDM :uint
-			{
-				NAVIGATE_PAGE = WM_USER + 101,
-				CLICK_BUTTON = WM_USER + 102, // wParam = button id
-				SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
-				SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state (0, 1 or 2)
-				SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Math_.MakeUint(min, max)
-				SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
-				SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
-				SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum TDApi.TDE), lParam = new element text (string)
-				CLICK_RADIO_BUTTON = WM_USER + 110, // wParam = radio button id
-				ENABLE_BUTTON = WM_USER + 111, // wParam = button id, lParam = 0 (disable), lParam != 0 (enable)
-				ENABLE_RADIO_BUTTON = WM_USER + 112, // wParam = radio button id, lParam = 0 (disable), lParam != 0 (enable)
-				CLICK_VERIFICATION = WM_USER + 113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
-				UPDATE_ELEMENT_TEXT = WM_USER + 114, // wParam = element (enum TDApi.TDE), lParam = new element text (string)
-				SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER + 115, // wParam = button id, lParam = 0 (elevation not required), lParam != 0 (elevation required)
-				UPDATE_ICON = WM_USER + 116  // wParam = icon element (enum TDApi.TDIE), lParam = new icon (icon handle or TDIcon)
-			}
-			const uint WM_USER = Api.WM_USER;
-
-			/// <summary>
-			/// Notification messages that your event handler receives.
-			/// Reference: <msdn>task dialog notifications</msdn>.
-			/// </summary>
-			/// <tocexclude />
-			public enum TDN :uint
-			{
-				CREATED = 0,
-				NAVIGATED = 1,
-				BUTTON_CLICKED = 2,
-				HYPERLINK_CLICKED = 3,
-				TIMER = 4,
-				DESTROYED = 5,
-				RADIO_BUTTON_CLICKED = 6,
-				DIALOG_CONSTRUCTED = 7,
-				VERIFICATION_CLICKED = 8,
-				HELP = 9,
-				EXPANDO_BUTTON_CLICKED = 10
-			}
-
-			/// <summary>
-			/// Constants for TaskDialog.TDApi.TDM.SET_ELEMENT_TEXT and TaskDialog.TDApi.TDM.UPDATE_ELEMENT_TEXT messages and TaskDialog.Send.Text().
-			/// </summary>
-			/// <tocexclude />
-			public enum TDE
-			{
-				CONTENT,
-				EXPANDED_INFORMATION,
-				FOOTER,
-				MAIN_INSTRUCTION
-			}
-
-			/// <summary>
-			/// Constants for TaskDialog.TDApi.TDM.UPDATE_ICON message.
-			/// </summary>
-			/// <tocexclude />
-			public enum TDIE
-			{
-				ICON_MAIN,
-				ICON_FOOTER
-			}
-		}
-
-#pragma warning restore 1591 //missing XML documentation
-		#endregion public API
 		#region private API
 
 		[DllImport("comctl32.dll")]
@@ -275,9 +198,9 @@ namespace Catkeys
 		/// All parameters are the same as of <see cref="ShowEx"/>.
 		/// </summary>
 		public TaskDialog(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
 			) : this()
 		{
 			FlagEndThread = 0 != (flags & TDFlags.EndThread);
@@ -387,9 +310,6 @@ namespace Catkeys
 			}
 			List<_Button> _customButtons, _radioButtons;
 
-			static char[] _sep = { '|' };
-			static char[] _newlines = { '\r', '\n' };
-
 			int _defaultButtonUserId;
 			bool _isDefaultButtonSet;
 			internal int DefaultButtonUserId { get => _defaultButtonUserId; set { _defaultButtonUserId = value; _isDefaultButtonSet = true; } }
@@ -423,7 +343,7 @@ namespace Catkeys
 				TDCBF_ commonButtons = 0;
 				int id = 0, nextNativeId = 100;
 
-				foreach(var v in b.Split(_sep)) {
+				foreach(var v in b.Split_("|")) {
 					string s = _ParseSingleString(v, ref id, onlyCustom);
 
 					int nativeId = 0;
@@ -461,7 +381,7 @@ namespace Catkeys
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
-				foreach(var v in buttons.Split(_sep)) {
+				foreach(var v in buttons.Split_("|")) {
 					string s = _ParseSingleString(v, ref id, false);
 					_radioButtons.Add(new _Button(id, s));
 				}
@@ -469,10 +389,8 @@ namespace Catkeys
 
 			static string _ParseSingleString(string s, ref int id, bool dontSplit)
 			{
-				string r = null;
-				if(!dontSplit) { int i = s.ToIntAndString_(out r); if(r != null) id = i; }
-				if(r == null) { r = s; id++; }
-				r = r.Trim(_newlines); //API does not like newline at start, etc
+				if(!dontSplit && s.ToIntAndString_(out var i, out string r)) id = i; else { r = s; id++; }
+				r = r.Trim_("\r\n"); //API does not like newline at start, etc
 				if(r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
 				return r;
@@ -723,7 +641,7 @@ namespace Catkeys
 		/// <seealso cref="Options.AutoOwnerWindow"/>
 		public void SetOwnerWindow(WndOrControl owner, bool ownerCenter = false, bool doNotDisable = false)
 		{
-			_c.hwndParent = owner.IsNull ? default(Wnd) : owner.Wnd.WndWindow;
+			_c.hwndParent = owner.IsNull ? default : owner.Wnd.WndWindow;
 			_SetFlag(TDF_.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
 		}
@@ -887,7 +805,7 @@ namespace Catkeys
 					hhook = Api.SetWindowsHookEx(Api.WH_GETMESSAGE, hpHolder = _HookProc, Zero, Api.GetCurrentThreadId());
 				}
 
-				Wnd.LibEnableActivate(true);
+				Wnd.Lib.EnableActivate(true);
 
 				//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
 				//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
@@ -969,7 +887,7 @@ namespace Catkeys
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
-			return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
+				return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
 			catch(Exception e) when(!(e is ThreadAbortException)) {
@@ -1032,7 +950,8 @@ namespace Catkeys
 				}
 
 				bool topmost = false;
-				if(FlagTopmost != null) topmost = FlagTopmost.Value; else if(_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
+				if(FlagTopmost != null) topmost = FlagTopmost.GetValueOrDefault();
+				else if(_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
 				if(topmost) w.ZorderTopmost();
 
 				//w.SetStyleAdd(Native.WS_THICKFRAME); //does not work
@@ -1106,59 +1025,6 @@ namespace Catkeys
 		/// </summary>
 		public event Action<TDEventArgs>
 			Created, Destroyed, Timer, ButtonClicked, HyperlinkClicked, HelpF1, OtherEvents;
-
-		/// <summary>
-		/// Arguments for TaskDialog event handlers.
-		/// More info: <msdn>TaskDialogCallbackProc</msdn>.
-		/// To return a non-zero value from the callback function, assign the value to the returnValue field.
-		/// </summary>
-		/// <tocexclude />
-		public class TDEventArgs :EventArgs
-		{
-			internal TDEventArgs(TaskDialog obj_, Wnd hwnd_, TDApi.TDN message_, LPARAM wParam_, LPARAM lParam_)
-			{
-				dialog = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
-				LinkHref = (message_ == TDApi.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
-			}
-
-#pragma warning disable 1591 //missing XML documentation
-			public TaskDialog dialog;
-			public Wnd hwnd;
-			public TDApi.TDN message;
-			public LPARAM wParam;
-			public int returnValue;
-#pragma warning restore 1591 //missing XML documentation
-
-			/// <summary>
-			/// Clicked hyperlink href attribute value. Use in HyperlinkClicked event handler.
-			/// </summary>
-			public string LinkHref { get; private set; }
-
-			/// <summary>
-			/// Clicked button id. Use in ButtonClicked event handler.
-			/// </summary>
-			public int Button { get => wParam; }
-
-			/// <summary>
-			/// Dialog timer time in milliseconds. Use in Timer event handler.
-			/// The event handler can set returnValue=1 to reset this.
-			/// </summary>
-			public int TimerTimeMS { get => wParam; }
-
-			/// <summary>
-			/// Your ButtonClicked event handler function can use this to prevent closing the dialog.
-			/// </summary>
-			public bool DoNotCloseDialog { set { returnValue = value ? 1 : 0; } }
-
-			/// <summary>
-			/// Gets or sets edit field text.
-			/// </summary>
-			public string EditText
-			{
-				get => dialog.EditControl.ControlText;
-				set { dialog.EditControl.SetText(value); }
-			}
-		}
 
 		#region async etc
 
@@ -1246,7 +1112,7 @@ namespace Catkeys
 		{
 			_isClosed = true;
 			if(_dlg.Is0) return;
-			_dlg = default(Wnd);
+			_dlg = default;
 			Send.Clear();
 			Util.AppDomain_.Exit -= _AppDomain__Exit;
 		}
@@ -1266,7 +1132,7 @@ namespace Catkeys
 		/// Allows to modify dialog controls while it is open, and close the dialog.
 		/// Example: <c>td.Send.Close();</c> .
 		/// Example: <c>td.Send.ChangeText2("new text", false);</c> .
-		/// Example: <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
+		/// Example: <c>td.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// </summary>
 		/// <remarks>
 		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
@@ -1275,26 +1141,27 @@ namespace Catkeys
 		public TDMessageSender Send { get; private set; }
 
 		/// <summary>
-		/// Used to send task dialog API messages, like <c>td.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
+		/// Sends task dialog API messages, like <c>td.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// </summary>
-		//[DebuggerStepThrough]
+		/// <tocexclude />
+		[EditorBrowsable(EditorBrowsableState.Never)] //this class is nested because uses many TaskDialog private fields and types
 		public class TDMessageSender
 		{
 			Wnd _dlg;
 			TaskDialog _tdo; //note: using _tdo._hdlg would be unsafe in multithreaded context because may be already set to null, even if caller called IsOpen before.
 
 			internal TDMessageSender(Wnd dlg, TaskDialog tdo) { _dlg = dlg; _tdo = tdo; }
-			internal void Clear() { _dlg = default(Wnd); _tdo = null; }
+			internal void Clear() { _dlg = default; _tdo = null; }
 
 			/// <summary>
 			/// Sends a message to the dialog.
 			/// Call this method while the dialog is open, eg in an event handler.
-			/// Example (in an event handler): <c>e.dialog.Send.Message(TaskDialog.TDApi.TDM.CLICK_VERIFICATION, 1);</c>
+			/// Example (in an event handler): <c>e.dialog.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
 			/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, set progress.
 			/// Reference: <msdn>task dialog messages</msdn>.
 			/// NAVIGATE_PAGE currently not supported.
 			/// </summary>
-			public int Message(TDApi.TDM message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
+			public int Message(TDApi.TDM message, LPARAM wParam = default, LPARAM lParam = default)
 			{
 				var td = _tdo; if(td == null) return 0;
 
@@ -1364,7 +1231,7 @@ namespace Catkeys
 			/// <summary>
 			/// Applies new properties to the dialog while it is already open.
 			/// Call this method while the dialog is open, eg in an event handler, after setting new properties.
-			/// Sends message TaskDialog.TDApi.TDM.NAVIGATE_PAGE.
+			/// Sends message TDApi.TDM.NAVIGATE_PAGE.
 			/// </summary>
 			public void Reconstruct()
 			{
@@ -1378,7 +1245,7 @@ namespace Catkeys
 			/// <summary>
 			/// Clicks a button. Normally it closes the dialog.
 			/// Call this method while the dialog is open, eg in an event handler.
-			/// Sends message TaskDialog.TDApi.TDM.CLICK_BUTTON.
+			/// Sends message TDApi.TDM.CLICK_BUTTON.
 			/// </summary>
 			/// <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
 			public bool Close(int buttonId = 0)
@@ -1390,7 +1257,7 @@ namespace Catkeys
 			/// Enables or disables a button.
 			/// Call this method while the dialog is open, eg in an event handler.
 			/// Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
-			/// Sends message TaskDialog.TDApi.TDM.ENABLE_BUTTON.
+			/// Sends message TDApi.TDM.ENABLE_BUTTON.
 			/// </summary>
 			public void EnableButton(int buttonId, bool enable)
 			{
@@ -1400,13 +1267,14 @@ namespace Catkeys
 			/// <summary>
 			/// Sets progress bar value, 0 to 100.
 			/// Call this method while the dialog is open, eg in an event handler.
-			/// Sends message TaskDialog.TDApi.TDM.SET_PROGRESS_BAR_POS.
+			/// Sends message TDApi.TDM.SET_PROGRESS_BAR_POS.
 			/// </summary>
 			public int Progress(int percent)
 			{
 				return Message(TDApi.TDM.SET_PROGRESS_BAR_POS, percent);
 			}
-		} //class TDMessageSender
+		}
+
 		#endregion send messages
 
 		#region hookProc, timeoutText
@@ -1440,12 +1308,12 @@ namespace Catkeys
 
 		string _TimeoutFooterText(int timeLeft)
 		{
-			var s = new StringBuilder(FlagRtlLayout ? "." : "");
-			s.AppendFormat("This dialog will disappear if not clicked in {0} s.", timeLeft);
-			if(!Empty(_timeoutActionText)) s.AppendFormat(" Timeout action: {0}.", _timeoutActionText);
-			if(FlagRtlLayout) s.Length--;
-			if(!Empty(_timeoutFooterText)) s.AppendFormat("\n{0}", _timeoutFooterText);
-			return s.ToString();
+			var s = Util.LibStringBuilderCache.Acquire();
+			s.Append("This dialog will disappear if not clicked in "); s.Append(timeLeft); s.Append(" s.");
+			if(!Empty(_timeoutActionText)) s.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
+			if(FlagRtlLayout) s.Replace(".", "");
+			if(!Empty(_timeoutFooterText)) { s.Append('\n'); s.Append(_timeoutFooterText); }
+			return s.ToStringCached_();
 		}
 
 		#endregion hookProc, timeoutText
@@ -1603,15 +1471,547 @@ namespace Catkeys
 		delegate int DLGPROC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam);
 
 		#endregion Edit control
-	}
 
-	#region global definitions
+		#region Show
+
+		/// <summary>
+		/// Shows task dialog.
+		/// Returns selected button id and other results packed in a TDResult variable (more info in Remarks).
+		/// </summary>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Text below main instruction.</param>
+		/// <param name="buttons">See <see cref="Show"/>.</param>
+		/// <param name="icon"></param>
+		/// <param name="flags"></param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
+		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
+		/// <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
+		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="timeoutS">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="TDResult.Timeout"/>.</param>
+		/// <param name="onLinkClick">
+		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
+		/// Example:
+		/// <code><![CDATA[
+		/// TaskDialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { Print(e.LinkHref); });
+		/// ]]></code>
+		/// </param>
+		/// <remarks>
+		/// The returned TDResult variable has these properties: selected button id, selected radio button id, check box state.
+		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog.ShowEx(...))</c> instead of <c>switch(TaskDialog.ShowEx(...).Button)</c> .
+		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.ShowEx("Text.", icon: TDIcon.Info, title: "Title")</c> .
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var r = TaskDialog.ShowEx("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", radioButtons: "1 One|2 Two|3 Three", checkBox: "Check", timeoutS: 30);
+		/// Print(r);
+		/// switch(r) {
+		/// case 1: Print("OK"); break;
+		/// case TDResult.Timeout: Print("timeout"); break;
+		/// default: Print("Cancel"); break;
+		/// }
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static TDResult ShowEx(
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default,
+			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
+			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			)
+		{
+			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
+				expandedText, footerText, title, radioButtons, checkBox,
+				defaultButton, x, y, timeoutS, onLinkClick);
+			return d.ShowDialog();
+		}
+
+		/// <summary>
+		/// Shows task dialog.
+		/// Returns selected button id.
+		/// </summary>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Text below main instruction.</param>
+		/// <param name="buttons">
+		/// A list of button ids and labels in this format: "id label|id label|...". Example: "1 OK|2 Cancel|5 Save|4 Don't Save".
+		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
+		/// The first in the list button is <i>default</i>, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
+		/// Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
+		/// 
+		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: "1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday".
+		/// 
+		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
+		/// How common buttons are different:
+		///		1. TDFlags.CommandLinks does not change their style.
+		///		2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
+		///		3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
+		///		4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
+		///		5. The displayed button label is localized, ie different when the Windows UI language is not English.
+		///	
+		/// If omitted, null or "", the dialog will have OK button, id 1.
+		/// You can use <see cref="TDFlags.CommandLinks"/> in flags to change the style of custom buttons.
+		/// See also: <see cref="SetButtons"/>.
+		/// </param>
+		/// <param name="icon"><see cref="TDIcon"/>.</param>
+		/// <param name="flags"><see cref="TDFlags"/>.</param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <remarks>
+		/// Calls <see cref="ShowEx"/>.
+		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.Show("Text.", icon: TDIcon.Info)</c> .
+		/// </remarks>
+		/// <seealso cref="ShowInfo"/>
+		/// <seealso cref="ShowWarning"/>
+		/// <seealso cref="ShowError"/>
+		/// <seealso cref="ShowOKCancel"/>
+		/// <seealso cref="ShowYesNo"/>
+		/// <seealso cref="Debug_.Dialog"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// if(TaskDialog.Show("Show another example?", null, "1 OK|2 Cancel", TDIcon.Info) != 1) return;
+		/// Print("OK");
+		/// 
+		/// switch(TaskDialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|Cancel")) {
+		/// case 1: Print("save"); break;
+		/// case 2: Print("don't"); break;
+		/// default: Print("cancel"); break;
+		/// }
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default, string expandedText = null)
+		{
+			return ShowEx(text1, text2, buttons, icon, flags, owner, expandedText).Button;
+		}
+
+		/// <summary>
+		/// Shows task dialog with TDIcon.Info icon.
+		/// Calls <see cref="Show"/>.
+		/// </summary>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default, string expandedText = null)
+		{
+			return Show(text1, text2, buttons, TDIcon.Info, flags, owner, expandedText);
+		}
+
+		/// <summary>
+		/// Shows task dialog with TDIcon.Warning icon.
+		/// Calls <see cref="Show"/>.
+		/// </summary>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default, string expandedText = null)
+		{
+			return Show(text1, text2, buttons, TDIcon.Warning, flags, owner, expandedText);
+		}
+
+		/// <summary>
+		/// Shows task dialog with TDIcon.Error icon.
+		/// Calls <see cref="Show"/>.
+		/// </summary>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default, string expandedText = null)
+		{
+			return Show(text1, text2, buttons, TDIcon.Error, flags, owner, expandedText);
+		}
+
+		/// <summary>
+		/// Shows task dialog with OK and Cancel buttons.
+		/// Returns true if selected OK.
+		/// Calls <see cref="Show"/>.
+		/// </summary>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default, string expandedText = null)
+		{
+			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner, expandedText);
+		}
+
+		/// <summary>
+		/// Shows task dialog with Yes and No buttons.
+		/// Returns true if selected Yes.
+		/// Calls <see cref="Show"/>.
+		/// </summary>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default, string expandedText = null)
+		{
+			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner, expandedText);
+		}
+
+		#endregion Show
+
+		#region ShowInput
+
+		/// <summary>
+		/// Shows dialog with a text edit field, buttons OK and Cancel, optionally check box, radio buttons and custom buttons.
+		/// Returns results packed in a TDResult variable: selected button id (1 for OK, 2 for Cancel), text and check box state.
+		/// </summary>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
+		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <param name="editText">Initial edit field text. If editType is Combo, it can be a string array, List or IEnumerable; the first item sets combo-box editable text, other items - combo box drop-down list items.</param>
+		/// <param name="flags"><see cref="TDFlags"/>.</param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
+		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
+		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
+		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
+		/// <param name="onButtonClick">
+		/// A button-clicked event handler function, eg lambda.
+		/// Examples:
+		/// <code><![CDATA[
+		/// TaskDialog.ShowInputEx("Example", flags: TDFlags.CommandLinks, buttons: "OK|Cancel|10 Browse\nSets edit control text.",
+		///		onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DoNotCloseDialog = true; } });
+		/// 
+		/// TaskDialog.ShowInputEx("Example", "Try to click OK while text is empty.", onButtonClick: e =>
+		/// {
+		/// 	if(e.Button == 1 && Empty(e.EditText)) {
+		/// 		TaskDialog.Show("Text cannot be empty.", owner: e.hwnd);
+		/// 		e.dialog.EditControl.FocusControlOfThisThread();
+		/// 		e.DoNotCloseDialog = true;
+		/// 	}
+		/// });
+		/// ]]></code>
+		/// </param>
+		/// <remarks>
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var r = TaskDialog.ShowInputEx("Example", "Comments.", checkBox: "Check");
+		/// if(r.Button != 1) return;
+		/// Print(r.EditText);
+		/// Print(r.IsChecked);
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static TDResult ShowInputEx(
+			string text1 = null, string text2 = null,
+			TDEdit editType = TDEdit.Text, object editText = null,
+			TDFlags flags = 0, WndOrControl owner = default,
+			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
+			Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null,
+			string buttons = "1 OK|2 Cancel", Action<TDEventArgs> onButtonClick = null
+			)
+		{
+			if(Empty(buttons)) buttons = "1 OK|2 Cancel";
+
+			var d = new TaskDialog(text1, text2, buttons, 0, flags, owner,
+				expandedText, footerText, title, radioButtons, checkBox,
+				0, x, y, timeoutS, onLinkClick);
+
+			d.SetEditControl((editType == TDEdit.None) ? TDEdit.Text : editType, editText);
+			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
+
+			return d.ShowDialog();
+		}
+
+		/// <summary>
+		/// Shows dialog with a text edit field and buttons OK and Cancel, and gets that text.
+		/// Returns true if selected OK, false if Cancel.
+		/// </summary>
+		/// <param name="s">Variable that receives the text.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
+		/// <param name="editType">Edit field type.</param>
+		/// <param name="editText">Initial edit field text. If editType is TDEdit.Combo, it can be a string array, List or IEnumerable; the first item sets combo-box editable text, other items - combo box drop-down list items.</param>
+		/// <param name="flags"><see cref="TDFlags"/>.</param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <remarks>
+		/// Calls <see cref="ShowInputEx"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// string s;
+		/// if(!TaskDialog.ShowInput(out s, "Example")) return;
+		/// Print(s);
+		/// 
+		/// //or you can declare the variable like this
+		/// if(!TaskDialog.ShowInput(out string s2, "Example")) return;
+		/// Print(s2);
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static bool ShowInput(
+			out string s,
+			string text1 = null, string text2 = null,
+			TDEdit editType = TDEdit.Text, object editText = null,
+			TDFlags flags = 0, WndOrControl owner = default
+			)
+		{
+			s = null;
+			TDResult r = ShowInputEx(text1, text2, editType, editText, flags, owner);
+			if(r.Button != 1) return false;
+			s = r.EditText;
+			return true;
+		}
+
+		/// <summary>
+		/// Shows dialog with a number edit field and buttons OK and Cancel, and gets that number.
+		/// Returns true if selected OK, false if Cancel.
+		/// </summary>
+		/// <param name="i">Variable that receives the number.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
+		/// <param name="editType">Edit field type.</param>
+		/// <param name="editText">Initial edit field text.</param>
+		/// <param name="flags"><see cref="TDFlags"/>.</param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <remarks>
+		/// Calls <see cref="ShowInputEx"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// int i;
+		/// if(!TaskDialog.ShowInput(out i, "Example")) return;
+		/// Print(i);
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static bool ShowInput(
+			out int i,
+			string text1 = null, string text2 = null, TDEdit editType = TDEdit.Number, object editText = null,
+			TDFlags flags = 0, WndOrControl owner = default
+			)
+		{
+			i = 0;
+			if(!ShowInput(out string s, text1, text2, editType, editText, flags, owner)) return false;
+			i = s.ToInt32_();
+			return true;
+		}
+
+		#endregion ShowInput
+
+		#region ShowList
+
+		/// <summary>
+		/// Shows task dialog with a list of command-link buttons.
+		/// Returns results packed in a <see cref="TDResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
+		/// The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
+		/// </summary>
+		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or IEnumerable&lt;string&gt;. See <see cref="SetButtons"/>.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Text below main instruction.</param>
+		/// <param name="flags"><see cref="TDFlags"/>.</param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
+		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
+		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
+		/// <remarks>
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// int r = TaskDialog.ShowListEx("One|Two|Three", "Example", y: -1, timeoutS: 15);
+		/// if(r <= 0) return; //X/Esc or timeout
+		/// Print(r);
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static TDResult ShowListEx(
+			object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default,
+			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
+			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0,
+			Action<TDEventArgs> onLinkClick = null
+			)
+		{
+			var d = new TaskDialog(text1, text2, null, 0, flags, owner,
+				expandedText, footerText, title, null, checkBox,
+				defaultButton, x, y, timeoutS, onLinkClick);
+
+			d.SetButtons(null, true, list);
+			d.FlagXCancel = true;
+			d.SetExpandedText(expandedText, true);
+			return d.ShowDialog();
+		}
+
+		/// <summary>
+		/// Shows dialog with a list of command-link buttons.
+		/// Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
+		/// </summary>
+		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or IEnumerable&lt;string&gt;. See <see cref="SetButtons"/>.</param>
+		/// <param name="text1">Main instruction. Bigger font.</param>
+		/// <param name="text2">Text below main instruction.</param>
+		/// <param name="flags"><see cref="TDFlags"/>.</param>
+		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <remarks>
+		/// Calls <see cref="ShowListEx"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// int r = TaskDialog.ShowList("One|Two|Three", "Example");
+		/// if(r == 0) return; //X/Esc
+		/// Print(r);
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		public static int ShowList(object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default)
+		{
+			return ShowListEx(list, text1, text2, flags, owner);
+		}
+
+		#endregion ShowList
+
+		#region ShowProgress
+#pragma warning disable 1573 //missing XML documentation for parameters
+
+		/// <summary>
+		/// Shows dialog with progress bar.
+		/// Creates dialog in new thread and returns without waiting until it is closed.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
+		/// Most parameters are the same as with <see cref="ShowEx"/>.
+		/// </summary>
+		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
+		/// <remarks>
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var pd = TaskDialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
+		/// for(int i = 1; i <= 100; i++) {
+		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
+		/// 	pd.Send.Progress(i); //don't need this if marquee
+		/// 	Thread.Sleep(50); //do something in the loop
+		/// }
+		/// pd.Send.Close();
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="CatException">Failed to show dialog.</exception>
+		public static TaskDialog ShowProgressEx(bool marquee,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default,
+			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
+			Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+		)
+		{
+			if(Empty(buttons)) buttons = "0 Cancel";
+
+			var d = new TaskDialog(text1, text2, buttons, 0, flags, owner,
+				expandedText, footerText, title, radioButtons, checkBox,
+				0, x, y, timeoutS, onLinkClick);
+
+			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
+
+			d.ShowDialogNoWait();
+
+			if(marquee) d.Send.Message(TDApi.TDM.SET_PROGRESS_BAR_MARQUEE, true);
+
+			return d;
+		}
+
+		/// <summary>
+		/// Shows dialog with progress bar.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
+		/// All parameters except marquee are the same as with <see cref="ShowEx"/>.
+		/// </summary>
+		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
+		/// <remarks>
+		/// Calls <see cref="ShowProgressEx"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var pd = TaskDialog.ShowProgress(false, "Working");
+		/// for(int i = 1; i <= 100; i++) {
+		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
+		/// 	pd.Send.Progress(i); //don't need this if marquee
+		/// 	Thread.Sleep(50); //do something in the loop
+		/// }
+		/// pd.Send.Close();
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="CatException">Failed to show dialog.</exception>
+		public static TaskDialog ShowProgress(bool marquee,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default,
+			Coord x = default, Coord y = default)
+		{
+			return ShowProgressEx(marquee, text1, text2, buttons, flags, owner, x: x, y: y);
+		}
+
+#pragma warning restore 1573 //missing XML documentation for parameters
+		#endregion ShowProgress
+
+		#region ShowNoWait
+#pragma warning disable 1573 //missing XML documentation for parameters
+
+		/// <summary>
+		/// Shows task dialog like <see cref="ShowEx"/> but does not wait.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
+		/// Parameters are the same as with <see cref="ShowEx"/>.
+		/// </summary>
+		/// <remarks>
+		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// TaskDialog.ShowNoWait("Simple example");
+		/// 
+		/// var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
+		/// Wait(2); //do something while the dialog is open
+		/// td.Send.ChangeText2("new text", false);
+		/// Wait(2); //do something while the dialog is open
+		/// td.ThreadWaitClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
+		/// ]]></code>
+		/// </example>
+		/// <exception cref="AggregateException">Failed to show dialog.</exception>
+		public static TaskDialog ShowNoWaitEx(
+			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default,
+			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
+			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			)
+		{
+			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
+				expandedText, footerText, title, radioButtons, checkBox,
+				defaultButton, x, y, timeoutS, onLinkClick);
+			d.ShowDialogNoWait();
+			return d;
+		}
+
+		/// <summary>
+		/// Shows task dialog like <see cref="Show"/> but does not wait.
+		/// Creates dialog in other thread and returns without waiting until it is closed.
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="ShowNoWaitEx">example</see>).
+		/// Parameters are the same as with <see cref="Show"/>.
+		/// </summary>
+		/// <remarks>
+		/// Calls <see cref="ShowNoWaitEx"/>.
+		/// </remarks>
+		/// <exception cref="AggregateException">Failed to show dialog.</exception>
+		public static TaskDialog ShowNoWait(
+			string text1 = null, string text2 = null,
+			string buttons = null, TDIcon icon = 0, TDFlags flags = 0,
+			WndOrControl owner = default
+			)
+		{
+			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);
+		}
+
+#pragma warning restore 1573 //missing XML documentation for parameters
+		#endregion ShowNoWait
+	}
+}
+
+namespace Catkeys.Types
+{
 #pragma warning disable 1591 //missing XML documentation
 
 	/// <summary>
 	/// TaskDialog icon. Used with <see cref="TaskDialog.Show"/> and similar functions.
 	/// </summary>
-	/// <tocexclude />
 	public enum TDIcon
 	{
 		Warning = 0xffff,
@@ -1629,7 +2029,6 @@ namespace Catkeys
 	/// <summary>
 	/// Text edit field type for <see cref="TaskDialog.ShowInputEx"/> and <see cref="TaskDialog.SetEditControl"/>.
 	/// </summary>
-	/// <tocexclude />
 	public enum TDEdit
 	{
 		None, Text, Multiline, Password, Number, Combo
@@ -1639,7 +2038,6 @@ namespace Catkeys
 	/// <summary>
 	/// TaskDialog flags. Used with <see cref="TaskDialog.Show"/> and similar functions.
 	/// </summary>
-	/// <tocexclude />
 	[Flags]
 	public enum TDFlags
 	{
@@ -1755,539 +2153,133 @@ namespace Catkeys
 		}
 	}
 
-	#endregion global definitions
-
-	public partial class TaskDialog
+	/// <summary>
+	/// Arguments for TaskDialog event handlers.
+	/// More info: <msdn>TaskDialogCallbackProc</msdn>.
+	/// To return a non-zero value from the callback function, assign the value to the returnValue field.
+	/// </summary>
+	public class TDEventArgs :EventArgs
 	{
-		#region Show
-
-		/// <summary>
-		/// Shows task dialog.
-		/// Returns selected button id and other results packed in a TDResult variable (more info in Remarks).
-		/// </summary>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="buttons">See <see cref="Show"/>.</param>
-		/// <param name="icon"></param>
-		/// <param name="flags"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="timeoutS">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="TDResult.Timeout"/>.</param>
-		/// <param name="onLinkClick">
-		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
-		/// Example:
-		/// <code><![CDATA[
-		/// TaskDialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { Print(e.LinkHref); });
-		/// ]]></code>
-		/// </param>
-		/// <remarks>
-		/// The returned TDResult variable has these properties: selected button id, selected radio button id, check box state.
-		/// Tip: TDResult supports implicit cast to int. You can use code <c>switch(TaskDialog.ShowEx(...))</c> instead of <c>switch(TaskDialog.ShowEx(...).Button)</c> .
-		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.ShowEx("Text.", icon: TDIcon.Info, title: "Title")</c> .
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var r = TaskDialog.ShowEx("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", radioButtons: "1 One|2 Two|3 Three", checkBox: "Check", timeoutS: 30);
-		/// Print(r);
-		/// switch(r) {
-		/// case 1: Print("OK"); break;
-		/// case TDResult.Timeout: Print("timeout"); break;
-		/// default: Print("Cancel"); break;
-		/// }
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static TDResult ShowEx(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
-			)
+		internal TDEventArgs(TaskDialog obj_, Wnd hwnd_, TDApi.TDN message_, LPARAM wParam_, LPARAM lParam_)
 		{
-			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				defaultButton, x, y, timeoutS, onLinkClick);
-			return d.ShowDialog();
+			dialog = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
+			LinkHref = (message_ == TDApi.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
 		}
 
-		/// <summary>
-		/// Shows task dialog.
-		/// Returns selected button id.
-		/// </summary>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="buttons">
-		/// A list of button ids and labels in this format: "id label|id label|...". Example: "1 OK|2 Cancel|5 Save|4 Don't Save".
-		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
-		/// The first in the list button is <i>default</i>, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
-		/// Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
-		/// 
-		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: "1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday".
-		/// 
-		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
-		/// How common buttons are different:
-		///		1. TDFlags.CommandLinks does not change their style.
-		///		2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
-		///		3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
-		///		4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
-		///		5. The displayed button label is localized, ie different when the Windows UI language is not English.
-		///	
-		/// If omitted, null or "", the dialog will have OK button, id 1.
-		/// You can use <see cref="TDFlags.CommandLinks"/> in flags to change the style of custom buttons.
-		/// See also: <see cref="SetButtons"/>.
-		/// </param>
-		/// <param name="icon"><see cref="TDIcon"/>.</param>
-		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <remarks>
-		/// Calls <see cref="ShowEx"/>.
-		/// Tip: For optional parameters use named arguments. Example: <c>TaskDialog.Show("Text.", icon: TDIcon.Info)</c> .
-		/// </remarks>
-		/// <seealso cref="ShowInfo"/>
-		/// <seealso cref="ShowWarning"/>
-		/// <seealso cref="ShowError"/>
-		/// <seealso cref="ShowOKCancel"/>
-		/// <seealso cref="ShowYesNo"/>
-		/// <seealso cref="Debug_.Dialog"/>
-		/// <example>
-		/// <code><![CDATA[
-		/// if(TaskDialog.Show("Show another example?", null, "1 OK|2 Cancel", TDIcon.Info) != 1) return;
-		/// Print("OK");
-		/// 
-		/// switch(TaskDialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|Cancel")) {
-		/// case 1: Print("save"); break;
-		/// case 2: Print("don't"); break;
-		/// default: Print("cancel"); break;
-		/// }
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
-		{
-			return ShowEx(text1, text2, buttons, icon, flags, owner, expandedText).Button;
-		}
+#pragma warning disable 1591 //missing XML documentation
+		public TaskDialog dialog;
+		public Wnd hwnd;
+		public TDApi.TDN message;
+		public LPARAM wParam;
+		public int returnValue;
+#pragma warning restore 1591 //missing XML documentation
 
 		/// <summary>
-		/// Shows task dialog with TDIcon.Info icon.
-		/// Calls <see cref="Show"/>.
+		/// Clicked hyperlink href attribute value. Use in HyperlinkClicked event handler.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
-		{
-			return Show(text1, text2, buttons, TDIcon.Info, flags, owner, expandedText);
-		}
+		public string LinkHref { get; private set; }
 
 		/// <summary>
-		/// Shows task dialog with TDIcon.Warning icon.
-		/// Calls <see cref="Show"/>.
+		/// Clicked button id. Use in ButtonClicked event handler.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
-		{
-			return Show(text1, text2, buttons, TDIcon.Warning, flags, owner, expandedText);
-		}
+		public int Button { get => wParam; }
 
 		/// <summary>
-		/// Shows task dialog with TDIcon.Error icon.
-		/// Calls <see cref="Show"/>.
+		/// Dialog timer time in milliseconds. Use in Timer event handler.
+		/// The event handler can set returnValue=1 to reset this.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
-		{
-			return Show(text1, text2, buttons, TDIcon.Error, flags, owner, expandedText);
-		}
+		public int TimerTimeMS { get => wParam; }
 
 		/// <summary>
-		/// Shows task dialog with OK and Cancel buttons.
-		/// Returns true if selected OK.
-		/// Calls <see cref="Show"/>.
+		/// Your ButtonClicked event handler function can use this to prevent closing the dialog.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
-		{
-			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner, expandedText);
-		}
+		public bool DoNotCloseDialog { set { returnValue = value ? 1 : 0; } }
 
 		/// <summary>
-		/// Shows task dialog with Yes and No buttons.
-		/// Returns true if selected Yes.
-		/// Calls <see cref="Show"/>.
+		/// Gets or sets edit field text.
 		/// </summary>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl), string expandedText = null)
+		public string EditText
 		{
-			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner, expandedText);
+			get => dialog.EditControl.ControlText;
+			set { dialog.EditControl.SetText(value); }
 		}
-
-		#endregion Show
-
-		#region ShowInput
-
-		/// <summary>
-		/// Shows dialog with a text edit field, buttons OK and Cancel, optionally check box, radio buttons and custom buttons.
-		/// Returns results packed in a TDResult variable: selected button id (1 for OK, 2 for Cancel), text and check box state.
-		/// </summary>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type. It can be simple text (TDEdit.Text, default), multiline, number, password or combo box.</param>
-		/// <param name="editText">Initial edit field text. If editType is Combo, it can be a string array, List or IEnumerable; the first item sets combo-box editable text, other items - combo box drop-down list items.</param>
-		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
-		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
-		/// <param name="onButtonClick">
-		/// A button-clicked event handler function, eg lambda.
-		/// Examples:
-		/// <code><![CDATA[
-		/// TaskDialog.ShowInputEx("Example", flags: TDFlags.CommandLinks, buttons: "OK|Cancel|10 Browse\nSets edit control text.",
-		///		onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DoNotCloseDialog = true; } });
-		/// 
-		/// TaskDialog.ShowInputEx("Example", "Try to click OK while text is empty.", onButtonClick: e =>
-		/// {
-		/// 	if(e.Button == 1 && Empty(e.EditText)) {
-		/// 		TaskDialog.Show("Text cannot be empty.", owner: e.hwnd);
-		/// 		e.dialog.EditControl.FocusControlOfThisThread();
-		/// 		e.DoNotCloseDialog = true;
-		/// 	}
-		/// });
-		/// ]]></code>
-		/// </param>
-		/// <remarks>
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var r = TaskDialog.ShowInputEx("Example", "Comments.", checkBox: "Check");
-		/// if(r.Button != 1) return;
-		/// Print(r.EditText);
-		/// Print(r.IsChecked);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static TDResult ShowInputEx(
-			string text1 = null, string text2 = null,
-			TDEdit editType = TDEdit.Text, object editText = null,
-			TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
-			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
-			Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null,
-			string buttons = "1 OK|2 Cancel", Action<TDEventArgs> onButtonClick = null
-			)
-		{
-			if(Empty(buttons)) buttons = "1 OK|2 Cancel";
-
-			var d = new TaskDialog(text1, text2, buttons, 0, flags, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				0, x, y, timeoutS, onLinkClick);
-
-			d.SetEditControl((editType == TDEdit.None) ? TDEdit.Text : editType, editText);
-			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
-
-			return d.ShowDialog();
-		}
-
-		/// <summary>
-		/// Shows dialog with a text edit field and buttons OK and Cancel, and gets that text.
-		/// Returns true if selected OK, false if Cancel.
-		/// </summary>
-		/// <param name="s">Variable that receives the text.</param>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type.</param>
-		/// <param name="editText">Initial edit field text. If editType is TDEdit.Combo, it can be a string array, List or IEnumerable; the first item sets combo-box editable text, other items - combo box drop-down list items.</param>
-		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <remarks>
-		/// Calls <see cref="ShowInputEx"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// string s;
-		/// if(!TaskDialog.ShowInput(out s, "Example")) return;
-		/// Print(s);
-		/// 
-		/// //or you can declare the variable like this
-		/// if(!TaskDialog.ShowInput(out string s2, "Example")) return;
-		/// Print(s2);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowInput(
-			out string s,
-			string text1 = null, string text2 = null,
-			TDEdit editType = TDEdit.Text, object editText = null,
-			TDFlags flags = 0, WndOrControl owner = default(WndOrControl)
-			)
-		{
-			s = null;
-			TDResult r = ShowInputEx(text1, text2, editType, editText, flags, owner);
-			if(r.Button != 1) return false;
-			s = r.EditText;
-			return true;
-		}
-
-		/// <summary>
-		/// Shows dialog with a number edit field and buttons OK and Cancel, and gets that number.
-		/// Returns true if selected OK, false if Cancel.
-		/// </summary>
-		/// <param name="i">Variable that receives the number.</param>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type.</param>
-		/// <param name="editText">Initial edit field text.</param>
-		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <remarks>
-		/// Calls <see cref="ShowInputEx"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// int i;
-		/// if(!TaskDialog.ShowInput(out i, "Example")) return;
-		/// Print(i);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowInput(
-			out int i,
-			string text1 = null, string text2 = null, TDEdit editType = TDEdit.Number, object editText = null,
-			TDFlags flags = 0, WndOrControl owner = default(WndOrControl)
-			)
-		{
-			i = 0;
-			if(!ShowInput(out string s, text1, text2, editType, editText, flags, owner)) return false;
-			i = s.ToInt32_();
-			return true;
-		}
-
-		#endregion ShowInput
-
-		#region ShowList
-
-		/// <summary>
-		/// Shows task dialog with a list of command-link buttons.
-		/// Returns results packed in a <see cref="TDResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
-		/// The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
-		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or IEnumerable&lt;string&gt;. See <see cref="SetButtons"/>.</param>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
-		/// <remarks>
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// int r = TaskDialog.ShowListEx("One|Two|Three", "Example", y: -1, timeoutS: 15);
-		/// if(r <= 0) return; //X/Esc or timeout
-		/// Print(r);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static TDResult ShowListEx(
-			object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
-			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0,
-			Action<TDEventArgs> onLinkClick = null
-			)
-		{
-			var d = new TaskDialog(text1, text2, null, 0, flags, owner,
-				expandedText, footerText, title, null, checkBox,
-				defaultButton, x, y, timeoutS, onLinkClick);
-
-			d.SetButtons(null, true, list);
-			d.FlagXCancel = true;
-			d.SetExpandedText(expandedText, true);
-			return d.ShowDialog();
-		}
-
-		/// <summary>
-		/// Shows dialog with a list of command-link buttons.
-		/// Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
-		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or IEnumerable&lt;string&gt;. See <see cref="SetButtons"/>.</param>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="flags"><see cref="TDFlags"/>.</param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <remarks>
-		/// Calls <see cref="ShowListEx"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// int r = TaskDialog.ShowList("One|Two|Three", "Example");
-		/// if(r == 0) return; //X/Esc
-		/// Print(r);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default(WndOrControl))
-		{
-			return ShowListEx(list, text1, text2, flags, owner);
-		}
-
-		#endregion ShowList
-
-		#region ShowProgress
-#pragma warning disable 1573 //missing XML documentation for parameters
-
-		/// <summary>
-		/// Shows dialog with progress bar.
-		/// Creates dialog in new thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-		/// Most parameters are the same as with <see cref="ShowEx"/>.
-		/// </summary>
-		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
-		/// <remarks>
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var pd = TaskDialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
-		/// for(int i = 1; i <= 100; i++) {
-		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
-		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	Thread.Sleep(50); //do something in the loop
-		/// }
-		/// pd.Send.Close();
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="CatException">Failed to show dialog.</exception>
-		public static TaskDialog ShowProgressEx(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
-		)
-		{
-			if(Empty(buttons)) buttons = "0 Cancel";
-
-			var d = new TaskDialog(text1, text2, buttons, 0, flags, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				0, x, y, timeoutS, onLinkClick);
-
-			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
-
-			d.ShowDialogNoWait();
-
-			if(marquee) d.Send.Message(TDApi.TDM.SET_PROGRESS_BAR_MARQUEE, true);
-
-			return d;
-		}
-
-		/// <summary>
-		/// Shows dialog with progress bar.
-		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-		/// All parameters except marquee are the same as with <see cref="ShowEx"/>.
-		/// </summary>
-		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
-		/// <remarks>
-		/// Calls <see cref="ShowProgressEx"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var pd = TaskDialog.ShowProgress(false, "Working");
-		/// for(int i = 1; i <= 100; i++) {
-		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
-		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	Thread.Sleep(50); //do something in the loop
-		/// }
-		/// pd.Send.Close();
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="CatException">Failed to show dialog.</exception>
-		public static TaskDialog ShowProgress(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
-			Coord x = default(Coord), Coord y = default(Coord))
-		{
-			return ShowProgressEx(marquee, text1, text2, buttons, flags, owner, x: x, y: y);
-		}
-
-#pragma warning restore 1573 //missing XML documentation for parameters
-		#endregion ShowProgress
-
-		#region ShowNoWait
-#pragma warning disable 1573 //missing XML documentation for parameters
-
-		/// <summary>
-		/// Shows task dialog like <see cref="ShowEx"/> but does not wait.
-		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
-		/// Parameters are the same as with <see cref="ShowEx"/>.
-		/// </summary>
-		/// <remarks>
-		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// TaskDialog.ShowNoWait("Simple example");
-		/// 
-		/// var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
-		/// Wait(2); //do something while the dialog is open
-		/// td.Send.ChangeText2("new text", false);
-		/// Wait(2); //do something while the dialog is open
-		/// td.ThreadWaitClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="AggregateException">Failed to show dialog.</exception>
-		public static TaskDialog ShowNoWaitEx(
-			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default(WndOrControl),
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default(Coord), Coord y = default(Coord), int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
-			)
-		{
-			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				defaultButton, x, y, timeoutS, onLinkClick);
-			d.ShowDialogNoWait();
-			return d;
-		}
-
-		/// <summary>
-		/// Shows task dialog like <see cref="Show"/> but does not wait.
-		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="ShowNoWaitEx">example</see>).
-		/// Parameters are the same as with <see cref="Show"/>.
-		/// </summary>
-		/// <remarks>
-		/// Calls <see cref="ShowNoWaitEx"/>.
-		/// </remarks>
-		/// <exception cref="AggregateException">Failed to show dialog.</exception>
-		public static TaskDialog ShowNoWait(
-			string text1 = null, string text2 = null,
-			string buttons = null, TDIcon icon = 0, TDFlags flags = 0,
-			WndOrControl owner = default(WndOrControl)
-			)
-		{
-			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);
-		}
-
-#pragma warning restore 1573 //missing XML documentation for parameters
-		#endregion ShowNoWait
 	}
+
+	#region public API
+#pragma warning disable 1591 //missing XML documentation
+	/// <summary>
+	/// Constants for TaskDialog API messages etc.
+	/// </summary>
+	public static class TDApi
+	{
+		/// <summary>
+		/// Messages that your event handler can send to the dialog.
+		/// Reference: <msdn>task dialog messages</msdn>.
+		/// </summary>
+		/// <tocexclude />
+		public enum TDM :uint
+		{
+			NAVIGATE_PAGE = WM_USER + 101,
+			CLICK_BUTTON = WM_USER + 102, // wParam = button id
+			SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
+			SET_PROGRESS_BAR_STATE = WM_USER + 104, // wParam = new progress state (0, 1 or 2)
+			SET_PROGRESS_BAR_RANGE = WM_USER + 105, // lParam = Math_.MakeUint(min, max)
+			SET_PROGRESS_BAR_POS = WM_USER + 106, // wParam = new position
+			SET_PROGRESS_BAR_MARQUEE = WM_USER + 107, // wParam = 0 (stop marquee), wParam != 0 (start marquee), lParam = speed (milliseconds between repaints)
+			SET_ELEMENT_TEXT = WM_USER + 108, // wParam = element (enum TDApi.TDE), lParam = new element text (string)
+			CLICK_RADIO_BUTTON = WM_USER + 110, // wParam = radio button id
+			ENABLE_BUTTON = WM_USER + 111, // wParam = button id, lParam = 0 (disable), lParam != 0 (enable)
+			ENABLE_RADIO_BUTTON = WM_USER + 112, // wParam = radio button id, lParam = 0 (disable), lParam != 0 (enable)
+			CLICK_VERIFICATION = WM_USER + 113, // wParam = 0 (unchecked), 1 (checked), lParam = 1 (set key focus)
+			UPDATE_ELEMENT_TEXT = WM_USER + 114, // wParam = element (enum TDApi.TDE), lParam = new element text (string)
+			SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER + 115, // wParam = button id, lParam = 0 (elevation not required), lParam != 0 (elevation required)
+			UPDATE_ICON = WM_USER + 116  // wParam = icon element (enum TDApi.TDIE), lParam = new icon (icon handle or TDIcon)
+		}
+		const uint WM_USER = Api.WM_USER;
+
+		/// <summary>
+		/// Notification messages that your event handler receives.
+		/// Reference: <msdn>task dialog notifications</msdn>.
+		/// </summary>
+		/// <tocexclude />
+		public enum TDN :uint
+		{
+			CREATED = 0,
+			NAVIGATED = 1,
+			BUTTON_CLICKED = 2,
+			HYPERLINK_CLICKED = 3,
+			TIMER = 4,
+			DESTROYED = 5,
+			RADIO_BUTTON_CLICKED = 6,
+			DIALOG_CONSTRUCTED = 7,
+			VERIFICATION_CLICKED = 8,
+			HELP = 9,
+			EXPANDO_BUTTON_CLICKED = 10
+		}
+
+		/// <summary>
+		/// Constants for TDApi.TDM.SET_ELEMENT_TEXT and TDApi.TDM.UPDATE_ELEMENT_TEXT messages and TaskDialog.Send.Text().
+		/// </summary>
+		/// <tocexclude />
+		public enum TDE
+		{
+			CONTENT,
+			EXPANDED_INFORMATION,
+			FOOTER,
+			MAIN_INSTRUCTION
+		}
+
+		/// <summary>
+		/// Constants for TDApi.TDM.UPDATE_ICON message.
+		/// </summary>
+		/// <tocexclude />
+		public enum TDIE
+		{
+			ICON_MAIN,
+			ICON_FOOTER
+		}
+	}
+
+#pragma warning restore 1591 //missing XML documentation
+	#endregion public API
 }

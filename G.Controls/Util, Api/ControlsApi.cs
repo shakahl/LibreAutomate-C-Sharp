@@ -4,13 +4,14 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
 namespace G.Controls
 {
-	internal static class _Api
+	internal static class Api2
 	{
 
 
@@ -21,8 +22,8 @@ namespace G.Controls
 		//[DllImport("user32.dll")]
 		//public static extern int ReleaseDC(Wnd hWnd, IntPtr hDC);
 
-		[DllImport("gdi32.dll")]
-		public static extern IntPtr CreateSolidBrush(uint color);
+		//[DllImport("gdi32.dll")]
+		//public static extern IntPtr CreateSolidBrush(uint color);
 
 	}
 

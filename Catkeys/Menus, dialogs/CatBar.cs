@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable 1591 //XML doc //TODO
@@ -26,7 +26,7 @@ namespace Catkeys
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class CatBar :_MenuBase
+	public class CatBar :MTBase
 	{
 		static Wnd.Misc.WindowClass _WndClass = Wnd.Misc.WindowClass.Register("CatBar", _WndProc, IntPtr.Size, Api.CS_GLOBALCLASS);
 
@@ -38,7 +38,7 @@ namespace Catkeys
 		/// </summary>
 		public ToolStrip Ex { get => _ts; }
 
-		//Our base uses this.
+		/// <summary>Infrastructure.</summary>
 		protected override ToolStrip MainToolStrip { get => _ts; }
 
 		public CatBar()
@@ -65,7 +65,7 @@ namespace Catkeys
 		/// t["Two", @"icon file path"] = o => { Print(o); TaskDialog.Show(o.ToString()); };
 		/// t.LastItem.ToolTipText = "tooltip";
 		/// </code></example>
-		public Action<ClickEventData> this[string text, object icon = null]
+		public Action<MTClickArgs> this[string text, object icon = null]
 		{
 			set { Add(text, value, icon); }
 		}
@@ -90,7 +90,7 @@ namespace Catkeys
 		/// t.LastItem.ToolTipText = "tooltip";
 		/// t.Add("Two", o => { Print(o.MenuItem.Checked); });
 		/// </code></example>
-		public ToolStripButton Add(string text, Action<ClickEventData> onClick, object icon = null)
+		public ToolStripButton Add(string text, Action<MTClickArgs> onClick, object icon = null)
 		{
 			var item = new ToolStripButton(text);
 			_Items.Add(item);
@@ -105,14 +105,14 @@ namespace Catkeys
 		/// <param name="item">An already created item of any supported type.</param>
 		/// <param name="icon">The same as with other overload.</param>
 		/// <param name="onClick">Lambda etc function to be called when the item clicked. Not useful for most item types.</param>
-		public void Add(ToolStripItem item, object icon = null, Action<ClickEventData> onClick = null)
+		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			_Items.Add(item);
 			_SetItemProp(true, item, onClick, icon);
 
 			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
-			var cb = item as ToolStripControlHost; //combo, edit, progress
-			if(cb != null) cb.GotFocus += _Item_GotFocus; //info: this is before MouseDown, which does not work well with combo box
+			if(item is ToolStripControlHost cb) //combo, edit, progress
+				cb.GotFocus += _Item_GotFocus; //info: this is before MouseDown, which does not work well with combo box
 		}
 
 		void _Item_GotFocus(object sender, EventArgs e)
@@ -158,7 +158,7 @@ namespace Catkeys
 			RECT r = Screen.PrimaryScreen.WorkingArea;
 			r.Inflate(-2, -2); r.top += 4;
 
-			Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, r.top, r.left, r.Width, r.Height, default(Wnd), 0, Zero, (IntPtr)GCHandle.Alloc(this));
+			Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, r.top, r.left, r.Width, r.Height, default, 0, Zero, (IntPtr)GCHandle.Alloc(this));
 			if(_w.Is0) throw new Win32Exception();
 			Perf.Next();
 

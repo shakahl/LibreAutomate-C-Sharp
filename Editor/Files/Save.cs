@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
 
@@ -207,8 +208,8 @@ partial class FilesModel
 			if(!Empty(s)) {
 				//Perf.First();
 				TV.BeginUpdate();
-				foreach(var guid in s.Split(' ')) {
-					var fn = this.FindByGUID(guid);
+				foreach(var guid in s.Segments_(" ")) {
+					var fn = this.FindByGUID(guid.Value);
 					if(fn == null) continue; //unexpected, but it's ok, we'll rebuild XML eventually
 					fn.TreeNodeAdv.Expand();
 				}
@@ -219,8 +220,8 @@ partial class FilesModel
 			s = xr.Element("open")?.Value;
 			if(!Empty(s)) {
 				//Perf.First();
-				foreach(var guid in s.Split(' ')) {
-					var fn = this.FindByGUID(guid);
+				foreach(var guid in s.Segments_(" ")) {
+					var fn = this.FindByGUID(guid.Value);
 					if(fn == null) continue;
 					OpenFiles.Add(fn);
 				}

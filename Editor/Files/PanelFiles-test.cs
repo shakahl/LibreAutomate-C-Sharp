@@ -19,8 +19,8 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
-
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 

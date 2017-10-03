@@ -21,6 +21,7 @@ using System.Xml.Linq;
 using System.Runtime;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 static class Program

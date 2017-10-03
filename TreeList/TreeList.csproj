@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Aga.Controls</RootNamespace>
-    <AssemblyName>Aga.Controls</AssemblyName>
+    <AssemblyName>TreeList</AssemblyName>
     <SccProjectName>
     </SccProjectName>
     <SccLocalPath>
@@ -18,7 +18,7 @@
     <SccProvider>
     </SccProvider>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
@@ -61,6 +61,7 @@
     <Compile Include="Tree\TVAcc.cs">
       <SubType>Component</SubType>
     </Compile>
+    <None Include="CatkeysSN.pfx" />
     <None Include="removed\GifDecoder.cs" />
     <None Include="removed\PerformanceAnalyzer.cs" />
     <Compile Include="ResourceHelper.cs" />
@@ -187,7 +188,6 @@
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="key.snk" />
     <Content Include="Resources\minus.bmp" />
     <Content Include="Resources\plus.bmp" />
     <Content Include="Resources\check.bmp" />

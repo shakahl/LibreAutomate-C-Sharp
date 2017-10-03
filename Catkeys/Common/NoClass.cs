@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -42,7 +43,7 @@ namespace Catkeys
 		///// </summary>
 		///// <remarks>
 		///// Can be used like <c>Wnd w = Wnd0;</c> or FunctionX(Wnd0). Cannot use 0 or null for it because the Wnd type is struct.
-		///// However this is error: <c>void FunctionX(Wnd w = Wnd0){}</c>; use <c>void FunctionX(Wnd w = default(Wnd)){}</c> .
+		///// However this is error: <c>void FunctionX(Wnd w = Wnd0){}</c>; use <c>void FunctionX(Wnd w = default){}</c> .
 		///// </remarks>
 		//public static readonly Wnd Wnd0;
 
@@ -52,43 +53,30 @@ namespace Catkeys
 		/// </summary>
 		/// <remarks>
 		/// Can be used like <c>IntPtr p = Zero;</c> or <c>if(p == Zero)</c> or FunctionX(Zero). Cannot use 0 or null for it because the IntPtr type is struct.
-		/// However this is error: <c>void FunctionX(IntPtr p = Zero){}</c>; use <c>void FunctionX(IntPtr p = default(IntPtr)){}</c> .
+		/// However this is error: <c>void FunctionX(IntPtr p = Zero){}</c>; use <c>void FunctionX(IntPtr p = default){}</c> .
 		/// </remarks>
-		internal static readonly IntPtr Zero;
-
-		///// <summary>
-		///// Windows newline string "\r\n".
-		///// Allows to replace "one\r\ntwo\r\nthree" with "one"+_+"two"+_+"three" or $"one{_}two{_}three" when you don't want @"multiline string".
-		///// </summary>
-		//public const string _ = "\r\n";
-		////Compiler optimizes "one"+_+"two"+_+"three", but not $"one{_}two{_}three"
-		////public static readonly string _ = Environment.NewLine; //compiler does not optimize "one"+_+"two"+_+"three"
-		////Not so useful, and interferes with intellisense.
+		internal static readonly IntPtr Zero; //TODO: remove and use default
 
 		/// <summary>
 		/// Alias of <see cref="Output.Write(string)"/>.
 		/// </summary>
 		public static void Print(string value) { Output.Write(value); }
+
 		/// <summary>
 		/// Alias of <see cref="Output.Write(object)"/>.
 		/// </summary>
 		public static void Print(object value) { Output.Write(value); }
+
 		/// <summary>
 		/// Alias of <see cref="Output.Write{T}(IEnumerable{T}, string)"/>.
 		/// </summary>
 		public static void Print<T>(IEnumerable<T> value, string separator = "\r\n") { Output.Write(value, separator); }
-		/// <summary>
-		/// Alias of <see cref="Output.Write(System.Collections.IEnumerable, string)"/>.
-		/// </summary>
-		public static void Print(System.Collections.IEnumerable value, string separator = "\r\n") { Output.Write(value, separator); }
-		/// <summary>
-		/// Alias of <see cref="Output.Write{K, V}(IDictionary{K, V}, string)"/>.
-		/// </summary>
-		public static void Print<K, V>(IDictionary<K, V> value, string separator = "\r\n") { Output.Write(value, separator); }
+
 		/// <summary>
 		/// Alias of <see cref="Output.WriteList"/>.
 		/// </summary>
 		public static void PrintList(params object[] values) { Output.WriteList(values); }
+
 		/// <summary>
 		/// Alias of <see cref="Output.WriteHex"/>.
 		/// </summary>

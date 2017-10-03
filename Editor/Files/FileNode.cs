@@ -19,8 +19,8 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
-
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -195,7 +195,7 @@ partial class FileNode
 		if(Empty(name)) return null;
 		XElement x;
 		if(name[0] == '\\') {
-			var a = name.Split_("\\", StringSplitOptions.RemoveEmptyEntries);
+			var a = name.Split_("\\", SegFlags.NoEmpty); //TODO: use Segment_, it is faster and garbageless
 			if(a.Length == 0) return null;
 			x = _x;
 			for(int i = 0; i < a.Length; i++) {

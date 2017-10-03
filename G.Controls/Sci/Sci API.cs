@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -57,7 +58,7 @@ namespace G.Controls
 
 		#endregion
 
-		public delegate LPARAM SciFnDirect(LPARAM ptr, int iMessage, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM));
+		public delegate LPARAM SciFnDirect(LPARAM ptr, int iMessage, LPARAM wParam = default, LPARAM lParam = default);
 
 		public const int INVALID_POSITION = -1;
 		public const int SCI_START = 2000;

@@ -18,75 +18,37 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member //TODO
+#pragma warning disable CS0169 // field never used //TODO
 
 namespace Catkeys
 {
 	//TODO
 	public static class BlockUserInput
 	{
-		public static _Unblock All()
+		public static BIUnblock All()
 		{
-			return new _Unblock(_Unblock.What.All);
+			return new BIUnblock(BIUnblock.What.All);
 		}
 
-		public static _Unblock Keys()
+		public static BIUnblock Keys()
 		{
-			return new _Unblock(_Unblock.What.Keys);
+			return new BIUnblock(BIUnblock.What.Keys);
 		}
 
-		public static _Unblock Mouse()
+		public static BIUnblock Mouse()
 		{
-			return new _Unblock(_Unblock.What.Mouse);
-		}
-
-		/// <summary>Infrastructure.</summary>
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
-		public struct _Unblock :IDisposable
-		{
-			[Flags]
-			public enum What { None, Keys, Mouse, All }
-
-			//What _blocked;
-			IntPtr _kHook, _mHook;
-
-			//note: don't use Api.BlockInput because:
-			//	UAC. Fails if our process has Medium IL.
-			//	Too limited, eg cannot block only keys or only mouse.
-
-			public _Unblock(What what) : this()
-			{
-				//_blocked = what;
-			}
-
-			/// <summary>
-			/// Starts blocking input.
-			/// </summary>
-			public void Start(What what)
-			{
-
-			}
-
-			/// <summary>
-			/// Stops blocking input.
-			/// </summary>
-			public void Stop()
-			{
-
-			}
-
-			/// <summary>
-			/// Calls Stop.
-			/// </summary>
-			public void Dispose() { Stop(); }
+			return new BIUnblock(BIUnblock.What.Mouse);
 		}
 
 		//note: don't use Api.BlockInput because:
 		//	UAC. Fails if our process has Medium IL.
 		//	Too limited, eg cannot block only keys or only mouse.
-		/// <summary>Infrastructure.</summary>
+		///// <summary>Infrastructure.</summary>
+		///// <tocexclude />
 		//[EditorBrowsable(EditorBrowsableState.Never), Browsable(false)]
 		//public struct BlockInput_All :IDisposable
 		//{
@@ -118,5 +80,50 @@ namespace Catkeys
 		//	/// </summary>
 		//	public void Dispose() { Stop(); }
 		//}
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>Infrastructure.</summary>
+	/// <tocexclude />
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public struct BIUnblock :IDisposable
+	{
+		[Flags]
+		public enum What { None, Keys, Mouse, All }
+
+		//What _blocked;
+		IntPtr _kHook, _mHook;
+
+		//note: don't use Api.BlockInput because:
+		//	UAC. Fails if our process has Medium IL.
+		//	Too limited, eg cannot block only keys or only mouse.
+
+		public BIUnblock(What what) : this()
+		{
+			//_blocked = what;
+		}
+
+		/// <summary>
+		/// Starts blocking input.
+		/// </summary>
+		public void Start(What what)
+		{
+
+		}
+
+		/// <summary>
+		/// Stops blocking input.
+		/// </summary>
+		public void Stop()
+		{
+
+		}
+
+		/// <summary>
+		/// Calls Stop.
+		/// </summary>
+		public void Dispose() { Stop(); }
 	}
 }

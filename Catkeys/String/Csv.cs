@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -175,7 +175,7 @@ namespace Catkeys
 		{
 			if(RowCount == 0 || ColumnCount == 0) return null;
 
-			var s = new StringBuilder();
+			var s = Util.LibStringBuilderCache.Acquire();
 			char quote = Quote;
 			string sQuote1 = null, sQuote2 = null;
 
@@ -198,7 +198,7 @@ namespace Catkeys
 				}
 				s.AppendLine();
 			}
-			return s.ToString();
+			return s.ToStringCached_();
 		}
 
 		/// <summary>

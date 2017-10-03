@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -51,9 +51,7 @@ namespace Catkeys
 		/// <summary>
 		/// Converts from string like "one|two|three" to string[] {"one", "two", "three"}.
 		/// </summary>
-		public static implicit operator StringList(string s) { return Empty(s) ? null : new StringList(s.Split(_sep)); }
-
-		static char[] _sep = { '|' };
+		public static implicit operator StringList(string s) { return Empty(s) ? null : new StringList(s.Split_("|")); }
 
 		/// <summary>
 		/// Gets string[] stored in StringList.

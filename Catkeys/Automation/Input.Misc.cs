@@ -18,29 +18,11 @@ using System.Drawing;
 //using System.Xml;
 //using System.Xml.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	/// <summary>
-	/// Keys and modifiers that are missing in enum <see cref="Keys"/>.
-	/// </summary>
-	public static class Keys_
-	{
-		/// <summary>
-		/// Modifier key Windows (flag). Can be used like Keys.Shift etc.
-		/// Can be used only with functions of this library or other libraries that support it. Don't use with .NET functions.
-		/// </summary>
-		public const Keys Windows = (Keys)0x80000;
-
-		/// <summary>
-		/// Numpad Enter key.
-		/// Can be used only with functions of this library or other libraries that support it. Don't use with .NET functions.
-		/// </summary>
-		public const Keys NumEnter = Keys.Enter | (Keys)0x100000;
-	}
-
 	/// <summary>
 	/// Keyboard and clipboard functions.
 	/// </summary>
@@ -122,7 +104,7 @@ namespace Catkeys
 
 					//read token
 					int start = i;
-					char c2 = '\0';
+					char c2 = default;
 					for(; i < eos; i++) {
 						c2 = s[i];
 						if(c2 <= ' ' || c2 == '+' || c2 == '*' || c2 == '(' || c2 == ')') break;
@@ -441,5 +423,26 @@ namespace Catkeys
 			}
 #endif
 		}
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// Keys and modifiers that are missing in enum <see cref="Keys"/>.
+	/// </summary>
+	public static class Keys_
+	{
+		/// <summary>
+		/// Modifier key Windows (flag). Can be used like Keys.Shift etc.
+		/// Can be used only with functions of this library or other libraries that support it. Don't use with .NET functions.
+		/// </summary>
+		public const Keys Windows = (Keys)0x80000;
+
+		/// <summary>
+		/// Numpad Enter key.
+		/// Can be used only with functions of this library or other libraries that support it. Don't use with .NET functions.
+		/// </summary>
+		public const Keys NumEnter = Keys.Enter | (Keys)0x100000;
 	}
 }

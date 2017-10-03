@@ -19,7 +19,7 @@ using System.Runtime.Serialization;
 
 using static Catkeys.NoClass;
 
-namespace Catkeys
+namespace Catkeys.Types
 {
 	/// <summary>
 	/// The base exception used in this library.
@@ -216,4 +216,38 @@ namespace Catkeys
 		/// </summary>
 		public NotFoundException(string message) : base(message) { }
 	}
+
+	public static partial class ExtensionMethods
+	{
+		/// <summary>
+		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.
+		/// Used with 'find object' or 'get object' functions that return null if not found.
+		/// Example: <c>var a = Acc.Find(...).OrThrow();</c>. It is equivalent to <c>var a = Acc.Find(...) ?? throw new NotFoundException();</c>.
+		/// This extension method is added to classes that implement <see cref="ISupportOrThrow"/> interface.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static T OrThrow<T>(this T t) where T : class, ISupportOrThrow
+		{
+			return t ?? throw new NotFoundException();
+		}
+
+		/// <summary>
+		/// If this is default(Wnd), throws <see cref="NotFoundException"/>, else returns this.
+		/// Used with <see cref="Wnd.Find"/> and other functions that return default(Wnd) if not found.
+		/// Example: <c>var w = Wnd.Find(...).OrThrow();</c>. It is equivalent to <c>var w = Wnd.Find(...); if(w.Is0) throw new NotFoundException();</c>.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public static Wnd OrThrow(this Wnd t)
+		{
+			if(t.Is0) throw new NotFoundException();
+			return t;
+		}
+	}
+
+	/// <summary>
+	/// Adds <see cref="ExtensionMethods.OrThrow{T}(T)"/> method to classes that implement this interface.
+	/// Actually this interface has no methods to implement. Just add ISupportOrThrow to the implemented interfaces list in class declaration.
+	/// Not used with struct. If you want to add OrThrow to a struct, add it as a normal or extension method of that struct. Example - <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+	/// </summary>
+	public interface ISupportOrThrow { }
 }

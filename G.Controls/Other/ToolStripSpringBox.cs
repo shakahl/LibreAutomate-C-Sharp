@@ -21,6 +21,7 @@ using System.Drawing;
 //using System.Linq;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls

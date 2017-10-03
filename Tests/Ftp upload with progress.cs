@@ -4,13 +4,16 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 using Catkeys;
 using static Catkeys.NoClass;
 
 static partial class Test
 {
-	public static void TestFtpUploadWithProgress(string localFile, string ftpURL, string ftpUser, string ftpPassword)
+	public delegate void CbType(bool success);
+
+	public static bool TestFtpUploadWithProgress(string localFile, string ftpURL, string ftpUser, string ftpPassword, bool autoStart, bool autoClose, int cbFunc)
 	{
 		var f = new FtpUploadForm();
 
@@ -18,8 +21,13 @@ static partial class Test
 		f.ftpURL = ftpURL;
 		f.ftpUser = ftpUser;
 		f.ftpPassword = ftpPassword;
+		if(cbFunc != 0) f.cbFunc = (CbType)Marshal.GetDelegateForFunctionPointer((IntPtr)cbFunc, typeof(CbType));
+		f.autoStart = autoStart;
+		f.autoClose = autoClose;
 
 		f.ShowDialog();
+
+		return f.success;
 	}
 
 	class FtpUploadForm :Form
@@ -28,6 +36,10 @@ static partial class Test
 		public string ftpURL { get; set; }
 		public string ftpUser { get; set; }
 		public string ftpPassword { get; set; }
+		public CbType cbFunc { get; set; }
+		public bool autoStart { get; set; }
+		public bool autoClose { get; set; }
+		public bool success { get; private set; }
 
 		Button button1;
 		Label label1;
@@ -69,19 +81,23 @@ static partial class Test
 			label1.Text = localFile + "\n" + ftpURL;
 			base.OnLoad(e);
 
-			//var t = new Timer(); t.Interval = 1; t.Tick += (unu, sed) => { t.Stop(); button1_Click(null, null); }; t.Start();
+			if(autoStart) {
+				var t = new Timer(); t.Interval = 1; t.Tick += (unu, sed) => { t.Stop(); button1_Click(null, null); }; t.Start();
+			}
 		}
 
-		// Mark the event handler with async so you can use await in it. 
 		private async void button1_Click(object sender, EventArgs e)
 		{
-			label2.Text = "Uploading";
-			button1.Enabled = false;
 			await processFtp();
+			if(cbFunc != null) cbFunc(this.success);
+			if(autoClose && this.success) this.Close();
 		}
 
 		async Task processFtp()
 		{
+			label2.Text = "Uploading";
+			button1.Enabled = false;
+			this.success = false;
 			string result = "";
 			try {
 				FtpWebRequest request = (FtpWebRequest)WebRequest.Create(ftpURL);
@@ -108,6 +124,7 @@ static partial class Test
 				FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 				result = "Uploaded\nStatus: " + response.StatusDescription;
 				response.Close();
+				this.success = true;
 			}
 			catch(WebException e) {
 				result = "Failed\n" + e.Message;

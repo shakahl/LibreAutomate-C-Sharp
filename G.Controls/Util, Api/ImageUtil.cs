@@ -20,6 +20,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using Catkeys.Util;
 
@@ -176,31 +177,31 @@ namespace G.Controls
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
 		/// <param name="s"></param>
-		/// <param name="length">If -1, calls CharPtr.Length(s).</param>
+		/// <param name="length">If -1, calls LibCharPtr.Length(s).</param>
 		public static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1)
 		{
-			if(length < 0) length = CharPtr.Length(s);
+			if(length < 0) length = LibCharPtr.Length(s);
 			if(length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
 
 			//special strings
 			switch(c1) {
 			case '~': return (c2 == ':') ? ImageType.EmbeddedCompressedBmp : ImageType.None;
-			case 'i': if(CharPtr.AsciiStartsWith(s, "image:")) return ImageType.EmbeddedPngGifJpg; break;
-			case 'r': if(CharPtr.AsciiStartsWith(s, "resource:")) return ImageType.Resource; break;
+			case 'i': if(LibCharPtr.AsciiStartsWith(s, "image:")) return ImageType.EmbeddedPngGifJpg; break;
+			case 'r': if(LibCharPtr.AsciiStartsWith(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
 			if(length >= 8 && (c1 == '%' || (c2 == ':' && Char_.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if(ext[-1] == '.') {
-					if(CharPtr.AsciiStartsWithI(ext, "bmp")) return ImageType.Bmp;
-					if(CharPtr.AsciiStartsWithI(ext, "png")) return ImageType.PngGifJpg;
-					if(CharPtr.AsciiStartsWithI(ext, "gif")) return ImageType.PngGifJpg;
-					if(CharPtr.AsciiStartsWithI(ext, "jpg")) return ImageType.PngGifJpg;
-					if(CharPtr.AsciiStartsWithI(ext, "ico")) return ImageType.Ico;
-					if(CharPtr.AsciiStartsWithI(ext, "cur")) return ImageType.Cur;
-					if(CharPtr.AsciiStartsWithI(ext, "ani")) return ImageType.Cur;
+					if(LibCharPtr.AsciiStartsWithI(ext, "bmp")) return ImageType.Bmp;
+					if(LibCharPtr.AsciiStartsWithI(ext, "png")) return ImageType.PngGifJpg;
+					if(LibCharPtr.AsciiStartsWithI(ext, "gif")) return ImageType.PngGifJpg;
+					if(LibCharPtr.AsciiStartsWithI(ext, "jpg")) return ImageType.PngGifJpg;
+					if(LibCharPtr.AsciiStartsWithI(ext, "ico")) return ImageType.Ico;
+					if(LibCharPtr.AsciiStartsWithI(ext, "cur")) return ImageType.Cur;
+					if(LibCharPtr.AsciiStartsWithI(ext, "ani")) return ImageType.Cur;
 				} else if(Char_.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
 					for(; k > k2; k--) if(!Char_.IsAsciiDigit(*k)) break;
@@ -310,7 +311,7 @@ namespace G.Controls
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
 			} else {
-				hi = Icons.GetFileIconHandle(s, 16, searchPath ? Icons.IconFlags.SearchPath : 0);
+				hi = Icons.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
 				siz = 16;
 			}
 			if(hi == Zero) return null;

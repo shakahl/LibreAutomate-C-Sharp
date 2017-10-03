@@ -18,7 +18,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -96,6 +96,7 @@ namespace Catkeys
 			/// <remarks>
 			/// Path to the same file or directory can be specified in many different ways. To determine whether two paths represent to the same file, get and compare FileId of them.
 			/// </remarks>
+			/// <tocexclude />
 			public struct FileId
 			{
 				/// <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
@@ -167,7 +168,7 @@ namespace Catkeys
 			Perf.Next();
 			var si = _ShellItem(path, "*rename");
 			Perf.Next();
-			var fo = new _Api.FileOperation() as _Api.IFileOperation;
+			var fo = new Api.FileOperation() as Api.IFileOperation;
 			Perf.Next();
 			try {
 				fo.SetOperationFlags(4); //FOF_SILENT. Without it shows a hidden dialog that becomes the active window.
@@ -188,16 +189,16 @@ namespace Catkeys
 			var pidl = Misc.PidlFromString(path, true);
 			try {
 				var guid = typeof(Api.IShellItem).GUID;
-				CatException.ThrowIfFailed(_Api.SHCreateItemFromIDList(pidl, ref guid, out var R), errMsg);
+				CatException.ThrowIfFailed(Api.SHCreateItemFromIDList(pidl, ref guid, out var R), errMsg);
 				return R;
 			}
 			finally { Marshal.FreeCoTaskMem(pidl); }
 		}
 
-		static class _Api
+		static class Api
 		{
 			[DllImport("shell32.dll", PreserveSig = true)]
-			internal static extern int SHCreateItemFromIDList(IntPtr pidl, [In] ref Guid riid, out IShellItem ppv);
+			internal static extern int SHCreateItemFromIDList(IntPtr pidl, ref Guid riid, out IShellItem ppv);
 
 			[ComImport, Guid("3ad05575-8857-4850-9277-11b85bdb8e09"), ClassInterface(ClassInterfaceType.None)]
 			internal class FileOperation { }

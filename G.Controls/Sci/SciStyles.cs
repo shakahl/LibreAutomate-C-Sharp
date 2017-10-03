@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -97,7 +98,7 @@ namespace G.Controls
 
 		public void StyleForeColor(int style, int colorRGB)
 		{
-			Call(SCI_STYLESETFORE, style, Color_.SwapRedBlue((uint)(colorRGB & 0xffffff)));
+			Call(SCI_STYLESETFORE, style, Catkeys.Util.Color_.SwapRedBlue((uint)(colorRGB & 0xffffff)));
 		}
 
 		//public void StyleForeColor(int style, Color color)
@@ -107,7 +108,7 @@ namespace G.Controls
 
 		public void StyleBackColor(int style, int colorRGB)
 		{
-			Call(SCI_STYLESETBACK, style, Color_.SwapRedBlue((uint)(colorRGB & 0xffffff)));
+			Call(SCI_STYLESETBACK, style, Catkeys.Util.Color_.SwapRedBlue((uint)(colorRGB & 0xffffff)));
 		}
 
 		//public void StyleBackColor(int style, Color color)
@@ -163,18 +164,18 @@ namespace G.Controls
 
 		public void SelectionForeColor(bool use, int colorRGB)
 		{
-			Call(SCI_SETSELFORE, use, Color_.SwapRedBlue((uint)colorRGB));
+			Call(SCI_SETSELFORE, use, Catkeys.Util.Color_.SwapRedBlue((uint)colorRGB));
 		}
 
 		public void SelectionBackColor(bool use, int colorRGB, int alpha = 256)
 		{
-			Call(SCI_SETSELBACK, use, Color_.SwapRedBlue((uint)colorRGB));
+			Call(SCI_SETSELBACK, use, Catkeys.Util.Color_.SwapRedBlue((uint)colorRGB));
 			Call(SCI_SETSELALPHA, alpha);
 		}
 
 		public void CaretLineColor(bool use, int colorRGB = 0xffffff, int alpha = 256)
 		{
-			Call(SCI_SETCARETLINEBACK, Color_.SwapRedBlue((uint)colorRGB));
+			Call(SCI_SETCARETLINEBACK, Catkeys.Util.Color_.SwapRedBlue((uint)colorRGB));
 			Call(SCI_SETCARETLINEBACKALPHA, alpha);
 			Call(SCI_SETCARETLINEVISIBLE, use);
 		}

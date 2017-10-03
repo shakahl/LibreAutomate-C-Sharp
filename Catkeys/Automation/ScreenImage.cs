@@ -23,7 +23,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 using System.Drawing.Imaging;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -77,7 +77,7 @@ namespace Catkeys
 			return _Capture(rect, w);
 		}
 
-		static unsafe Bitmap _Capture(RECT r, Wnd w = default(Wnd))
+		static unsafe Bitmap _Capture(RECT r, Wnd w = default)
 		{
 			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
 
@@ -129,7 +129,7 @@ namespace Catkeys
 		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
 		{
 			var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-			var hdc = Api.GetDC(default(Wnd));
+			var hdc = Api.GetDC(default);
 			try {
 				if(0 == Api.GetDIBits(hdc, hbitmap, 0, 0, null, &bh, 0)) goto ge;
 				int wid = bh.biWidth, hei = bh.biHeight;
@@ -143,7 +143,7 @@ namespace Catkeys
 				if(!ok) { R.Dispose(); goto ge; }
 				return R;
 			}
-			finally { Api.ReleaseDC(default(Wnd), hdc); }
+			finally { Api.ReleaseDC(default, hdc); }
 			ge:
 			throw new CatException();
 		}
@@ -156,7 +156,8 @@ namespace Catkeys
 
 		/// <summary>
 		/// Finds the specified image(s) or color(s) on the screen.
-		/// Returns <see cref="SIResult"/> object containing the rectangle of the found image. It also can be used like bool: <c>if(!ScreenImage.Find(...)) Print("not found");</c>.
+		/// Returns <see cref="SIResult"/> object containing the rectangle of the found image.
+		/// Returns null if not found. You can use <see cref="ExtensionMethods.OrThrow{T}"/>: <c>var r = ScreenImage.Find(...).OrThrow();</c>
 		/// </summary>
 		/// <param name="image">
 		/// Image or color to find. Can be:
@@ -187,9 +188,9 @@ namespace Catkeys
 		/// <exception cref="Exception">Exceptions of <see cref="Image.FromFile(string)"/>, Bitmap.LockBits. For example when the image file does not exist.</exception>
 		/// <exception cref="CatException">Something failed.</exception>
 		/// <remarks>
-		/// If image is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file "C:\\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) ScreenImage.Find(b, w);</c>.
+		/// If <paramref name="image"/> is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file "C:\\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) ScreenImage.Find(b, w);</c>.
 		/// 
-		/// image can be string containing Base-64 encoded .png image file data with prefix "image:".
+		/// <paramref name="image"/> can be string containing Base-64 encoded .png image file data with prefix "image:".
 		/// 
 		/// Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
 		/// 
@@ -210,7 +211,7 @@ namespace Catkeys
 		public static SIResult Find(object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
 		{
 			using(var f = new _Finder(_Action.Find, image, area, flags, colorDiff, also)) {
-				f.Find();
+				if(!f.Find()) return null;
 				return f.Result;
 			}
 		}
@@ -219,32 +220,35 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits for the specified image(s) or color(s) on the screen.
-		/// Returns <see cref="SIResult"/> object containing the rectangle of the found image. It also can be used like bool: <c>if(!ScreenImage.Wait(-10, ...)) Print("not found");</c>.
+		/// Returns <see cref="SIResult"/> object containing the rectangle of the found image.
+		/// On timeout returns false if timeS is negative (else exception).
 		/// </summary>
 		/// <param name="timeS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeS time throws <b>TimeoutException</b>. If &lt;0, after -timeS time returns null.
 		/// </param>
 		/// <param name="image"></param>
 		/// <param name="area"></param>
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
 		/// <param name="also"></param>
+		/// <exception cref="TimeoutException">Timeout. Thrown only when timeS is greater than 0.</exception>
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="Find"/>.
 		/// </remarks>
 		public static SIResult Wait(double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
 		{
-			return _Wait(_Action.Wait, timeS, image, area, flags, colorDiff, also);
+			var r = _Wait(_Action.Wait, timeS, image, area, flags, colorDiff, also);
+			return r.ok ? r.result : null;
 
 			//tested: does not create garbage while waiting.
 		}
 
 		/// <summary>
-		/// Waits until the specified image(s) or color(s) is not found on the screen.
-		/// Returns true. If timeS is negative, on timeout returns false (else exception).
+		/// Waits until the specified image(s) or color(s) is NOT found on the screen.
+		/// Returns true. On timeout returns false if timeS is negative (else exception).
 		/// </summary>
 		/// <param name="timeS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeS time throws <b>TimeoutException</b>. If &lt;0, after -timeS time returns false.
 		/// </param>
 		/// <param name="image"></param>
 		/// <param name="area"></param>
@@ -256,15 +260,15 @@ namespace Catkeys
 		/// </remarks>
 		public static bool WaitNot(double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
 		{
-			return !_Wait(_Action.WaitNot, timeS, image, area, flags, colorDiff, also);
+			return _Wait(_Action.WaitNot, timeS, image, area, flags, colorDiff, also).ok;
 		}
 
 		/// <summary>
 		/// Waits until something visually changes in a screen area.
-		/// Returns true. If timeS is negative, on timeout returns false (else exception).
+		/// Returns true. On timeout returns false if timeS is negative (else exception).
 		/// </summary>
 		/// <param name="timeS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeS time throws <b>TimeoutException</b>. If &lt;0, after -timeS time returns false.
 		/// </param>
 		/// <param name="area"></param>
 		/// <param name="flags"></param>
@@ -274,14 +278,14 @@ namespace Catkeys
 		/// </remarks>
 		public static bool WaitChanged(double timeS, SIArea area, SIFlags flags = 0, int colorDiff = 0)
 		{
-			return !_Wait(_Action.WaitChanged, timeS, null, area, flags, colorDiff, null);
+			return _Wait(_Action.WaitChanged, timeS, null, area, flags, colorDiff, null).ok;
 		}
 
-		static SIResult _Wait(_Action action, double timeS, object image, SIArea area, SIFlags flags, int colorDiff, Func<SIResult, bool> also)
+		static (bool ok, SIResult result) _Wait(_Action action, double timeS, object image, SIArea area, SIFlags flags, int colorDiff, Func<SIResult, bool> also)
 		{
 			using(var f = new _Finder(action, image, area, flags, colorDiff, also)) {
-				WaitFor.Condition(timeS, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
-				return f.Result;
+				var ok = WaitFor.Condition(timeS, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
+				return (ok, f.Result);
 			}
 		}
 
@@ -421,8 +425,8 @@ namespace Catkeys
 					_area.W.ThrowIfInvalid();
 					break;
 				case SIArea.AType.Acc:
-					if(_area.A.a == null) throw new ArgumentNullException(nameof(area));
-					_area.W = _area.A.WndDirectParent;
+					if(_area.A.Is0) throw new ArgumentNullException(nameof(area));
+					_area.W = _area.A.WndContainer;
 					break;
 				case SIArea.AType.Bitmap:
 					badFlags = SIFlags.WindowDC;
@@ -477,16 +481,17 @@ namespace Catkeys
 				switch(_area.Type) {
 				case SIArea.AType.Wnd:
 					r = windowDC ? _area.W.ClientRect : _area.W.ClientRectInScreen;
+					//TODO: if failed, probably the window is destroyed, then throw
 					break;
 				case SIArea.AType.Acc:
-					r = windowDC ? _area.A.RectInClientOf(_area.W) : _area.A.Rect;
+					if(!(windowDC ? _area.A.GetRect(out r, _area.W) : _area.A.GetRect(out r))) throw new CatException("*get rectangle");
 					break;
 				case SIArea.AType.Bitmap:
 					r = new RECT(0, 0, _area.B.Width, _area.B.Height, false);
 					break;
 				default: //Screen
 					r = _area.R;
-					if(!Screen_.IsInAnyScreen(r)) r.SetEmpty();
+					if(!Screen_.IsInAnyScreen(r)) r.Set0();
 					_area.HasRect = false;
 					_resultOffset.X = r.left; _resultOffset.Y = r.top;
 					break;
@@ -615,7 +620,7 @@ namespace Catkeys
 					var p_ = f_->p + 1; //register
 					var color_ = f_->color; //register
 					var pLineLast_ = f_->pLineLast; //register
-					for(;;) { //lines
+					for(; ; ) { //lines
 						if(color_ < 0x1000000) {
 							for(; p_ <= pLineLast_; p_++) {
 								if(color_ == (*p_ & 0xffffff)) goto gPixelFound;
@@ -661,7 +666,7 @@ namespace Catkeys
 				//now compare all pixels of the image
 				//Perf.First();
 				uint* ip = imagePixels, ipLineTo = ip + imageWidth;
-				for(;;) { //lines
+				for(; ; ) { //lines
 					if(f.color < 0x1000000) {
 						do {
 							if(!_MatchPixelExact(*ap, *ip)) goto gContinue;
@@ -685,7 +690,6 @@ namespace Catkeys
 
 				#endregion
 
-				_result.Found = true; //need to set it before calling _also, which eg can call MouseClick which throws if !Found
 				if(_action != _Action.WaitChanged) {
 					int iFound = (int)(f.p - o_pos0 - areaPixels);
 					RECT r = new RECT(iFound % _areaWidth, iFound / _areaWidth, imageWidth, imageHeight, true);
@@ -702,7 +706,6 @@ namespace Catkeys
 
 				return true;
 				gNotFound:
-				_result.Found = false;
 				return false;
 			}
 
@@ -881,7 +884,7 @@ namespace Catkeys
 				}
 				//get DC of screen or window
 				bool windowDC = 0 != (_flags & SIFlags.WindowDC);
-				Wnd w = windowDC ? _area.W : default(Wnd);
+				Wnd w = windowDC ? _area.W : default;
 				IntPtr dc = Api.GetDC(w); //quite fast, when compared with other parts
 				if(dc == Zero && windowDC) _area.W.ThrowNoNative("Failed");
 				//_Debug("get DC");
@@ -937,7 +940,10 @@ namespace Catkeys
 		//	}
 		//}
 	}
+}
 
+namespace Catkeys.Types
+{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 	/// <summary>
 	/// Defines the search area for <see cref="ScreenImage.Find"/> and similar functions.
@@ -1016,7 +1022,7 @@ namespace Catkeys
 	/// <summary>
 	/// Result of <see cref="ScreenImage.Find"/> and similar functions.
 	/// </summary>
-	public class SIResult
+	public class SIResult :ISupportOrThrow
 	{
 		ScreenImage._Finder _f;
 
@@ -1044,31 +1050,17 @@ namespace Catkeys
 		/// </summary>
 		public int ListIndex { get; internal set; }
 
-		/// <summary>
-		/// true if the image has been found.
-		/// </summary>
-		public bool Found { get; internal set; }
-
-		/// <summary>
-		/// true if the image has been found (r.Found==true).
-		/// Allows to use SIResult like bool.
-		/// </summary>
-		public static implicit operator bool(SIResult r) => r.Found;
-
 		internal void LibClear()
 		{
-			Rect.SetEmpty();
+			Rect.Set0();
 			ListIndex = 0;
 			MatchIndex = 0;
-			Found = false;
 		}
 
-		void _MouseAction(MButton button, Coord x, Coord y)
+		internal void LibMouseAction(MButton button, Coord x, Coord y)
 		{
 			var area = _f._area;
-
 			if(area.Type == SIArea.AType.Bitmap) throw new InvalidOperationException();
-			if(!Found) throw new NotFoundException("Image not found.");
 
 			Debug.Assert(!Rect.IsEmpty);
 			if(Rect.IsEmpty) return;
@@ -1087,42 +1079,12 @@ namespace Catkeys
 				else Mouse.ClickEx(button, p.X, p.Y);
 			} else {
 				if(area.Type == SIArea.AType.Acc) {
-					var r = area.A.RectInClientOf(area.W);
+					if(!area.A.GetRect(out var r, area.W)) throw new CatException("*get rectangle");
 					p.Offset(r.left, r.top);
 				}
 				if(button == 0) Mouse.Move(area.W, p.X, p.Y);
 				else Mouse.ClickEx(button, area.W, p.X, p.Y);
 			}
-		}
-
-		/// <summary>
-		/// Moves the mouse to the found image.
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord, bool, object)"/>.
-		/// </summary>
-		/// <param name="x">X coordinate in the found image. Default/null - center.</param>
-		/// <param name="y">Y coordinate in the found image. Default/null - center.</param>
-		/// <exception cref="NotFoundException">Image not found.</exception>
-		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
-		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
-		public void MouseMove(Coord x = default(Coord), Coord y = default(Coord))
-		{
-			_MouseAction(0, x, y);
-		}
-
-		/// <summary>
-		/// Clicks the found image.
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord, bool, object)"/>.
-		/// </summary>
-		/// <param name="x">X coordinate in the found image. Default/null - center.</param>
-		/// <param name="y">Y coordinate in the found image. Default/null - center.</param>
-		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="NotFoundException">Image not found.</exception>
-		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
-		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
-		public void MouseClick(Coord x = default(Coord), Coord y = default(Coord), MButton button = MButton.Left)
-		{
-			if(button == 0) button = MButton.Left;
-			_MouseAction(button, x, y);
 		}
 	}
 }

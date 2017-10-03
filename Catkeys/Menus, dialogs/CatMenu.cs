@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -24,7 +24,7 @@ namespace Catkeys
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class CatMenu :_MenuBase, IDisposable
+	public class CatMenu :MTBase, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
@@ -35,10 +35,11 @@ namespace Catkeys
 		/// </summary>
 		public ContextMenuStrip CMS { get => _cm; }
 
-#pragma warning disable 1591 //XML doc
-		//Our base uses this.
+		/// <summary>Infrastructure.</summary>
 		protected override ToolStrip MainToolStrip { get => _cm; }
+		//Our base uses this.
 
+		///
 		public CatMenu()
 		{
 			_cm = new ContextMenuStrip_(this);
@@ -46,6 +47,7 @@ namespace Catkeys
 
 		//~CatMenu() { Print("main dtor"); } //info: don't need finalizer. _cm and base have their own, and we don't have other unmanaged resources.
 
+		///
 		public void Dispose()
 		{
 			if(!_cm.IsDisposed) _cm.Dispose();
@@ -61,8 +63,8 @@ namespace Catkeys
 			base._Dispose(true);
 		}
 
+		///
 		public bool IsDisposed { get => _cm.IsDisposed; }
-#pragma warning restore 1591 //XML doc
 
 		void _CheckDisposed()
 		{
@@ -102,7 +104,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="_MenuBase.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="MTBase.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -117,7 +119,7 @@ namespace Catkeys
 		/// m.LastMenuItem.Checked = true;
 		/// m.Show();
 		/// </code></example>
-		public Action<ClickEventData> this[string text, object icon = null]
+		public Action<MTClickArgs> this[string text, object icon = null]
 		{
 			set { Add(text, value, icon); }
 		}
@@ -130,7 +132,7 @@ namespace Catkeys
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="_MenuBase.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="MTBase.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// IntPtr - unmanaged icon handle (the function makes its own copy).
@@ -143,7 +145,7 @@ namespace Catkeys
 		/// m.LastMenuItem.Checked = true;
 		/// m.Show();
 		/// </code></example>
-		public ToolStripMenuItem Add(string text, Action<ClickEventData> onClick, object icon = null)
+		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, object icon = null)
 		{
 			string sk = null;
 			if(!Empty(text)) {
@@ -159,7 +161,7 @@ namespace Catkeys
 			return item;
 		}
 
-		void _Add(ToolStripItem item, Action<ClickEventData> onClick, object icon)
+		void _Add(ToolStripItem item, Action<MTClickArgs> onClick, object icon)
 		{
 			var dd = CurrentAddMenu;
 			dd.SuspendLayout(); //makes adding items much faster. It's OK to suspend/resume when already suspended; .NET uses a layoutSuspendCount.
@@ -175,13 +177,12 @@ namespace Catkeys
 		/// <param name="item">An already created item of any supported type.</param>
 		/// <param name="icon">The same as with other overload.</param>
 		/// <param name="onClick">Lambda etc function to be called when the item clicked. Not useful for most item types.</param>
-		public void Add(ToolStripItem item, object icon = null, Action<ClickEventData> onClick = null)
+		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			_Add(item, onClick, icon);
 
 			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
-			var cb = item as ToolStripControlHost; //combo, edit, progress
-			if(cb != null) cb.GotFocus += _Item_GotFocus;
+			if(item is ToolStripControlHost cb) cb.GotFocus += _Item_GotFocus; //combo, edit, progress
 		}
 
 		//Called when a text box or combo box clicked. Before MouseDown, which does not work well with combo box.
@@ -217,7 +218,7 @@ namespace Catkeys
 		/// 2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">The same as with <see cref="Add(string, Action{_MenuBase.ClickEventData}, object)"/>.</param>
+		/// <param name="icon">The same as with <see cref="Add(string, Action{MTClickArgs}, object)"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
@@ -240,14 +241,14 @@ namespace Catkeys
 		/// m["Eight"] = o => Print(o);
 		/// m.Show();
 		/// </code></example>
-		public SubmenuBlock Submenu(string text, object icon = null, Action<ClickEventData> onClick = null)
+		public UsingSubmenu Submenu(string text, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon);
 			_submenuStack.Push(dd);
-			return new SubmenuBlock(this, item);
+			return new UsingSubmenu(this, item);
 		}
 
-		ToolStripMenuItem _Submenu(out ToolStripDropDownMenu_ dd, string text, Action<ClickEventData> onClick, object icon)
+		ToolStripMenuItem _Submenu(out ToolStripDropDownMenu_ dd, string text, Action<MTClickArgs> onClick, object icon)
 		{
 			var item = new ToolStripMenuItem(text);
 			_Add(item, onClick, icon);
@@ -320,7 +321,8 @@ namespace Catkeys
 		/// <summary>
 		/// Allows to use code: <c>using(m.Submenu("Name")) { add items; }</c> .
 		/// </summary>
-		public class SubmenuBlock :IDisposable
+		/// <tocexclude />
+		public struct UsingSubmenu :IDisposable
 		{
 			CatMenu _m;
 
@@ -329,7 +331,7 @@ namespace Catkeys
 			/// </summary>
 			public ToolStripMenuItem MenuItem { get; }
 
-			internal SubmenuBlock(CatMenu m, ToolStripMenuItem mi) { _m = m; MenuItem = mi; }
+			internal UsingSubmenu(CatMenu m, ToolStripMenuItem mi) { _m = m; MenuItem = mi; }
 
 			/// <summary>
 			/// Calls m.EndSubmenu().
@@ -343,7 +345,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onOpening">Lambda etc callback function that should add submenu items.</param>
-		/// <param name="icon">The same as with <see cref="Add(string, Action{_MenuBase.ClickEventData}, object)"/>.</param>
+		/// <param name="icon">The same as with <see cref="Add(string, Action{MTClickArgs}, object)"/>.</param>
 		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <example><code>
 		/// var m = new CatMenu();
@@ -365,7 +367,7 @@ namespace Catkeys
 		/// m["Eight"] = o => Print(o);
 		/// m.Show();
 		/// </code></example>
-		public ToolStripMenuItem Submenu(string text, Action<CatMenu> onOpening, object icon = null, Action<ClickEventData> onClick = null)
+		public ToolStripMenuItem Submenu(string text, Action<CatMenu> onOpening, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon);
 			dd._lazySubmenuDelegate = onOpening;
@@ -1008,19 +1010,27 @@ namespace Catkeys
 
 		#endregion
 	}
+}
+
+namespace Catkeys.Types
+{
+	interface _ICatToolStrip
+	{
+		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
+		bool PaintedOnce { get; }
+	}
 
 	/// <summary>
 	/// Base class of CatMenu and CatBar.
 	/// </summary>
-	/// <tocexclude />
-	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
-	public abstract class _MenuBase
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public abstract class MTBase
 	{
 		internal bool m_inRightClick;
 		EventHandler _onClick;
 		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
 
-		internal _MenuBase()
+		internal MTBase()
 		{
 			_onClick = _OnClick;
 		}
@@ -1031,37 +1041,9 @@ namespace Catkeys
 		{
 			//Print(m_inRightClick);
 			if(m_inRightClick) return; //disable this item while showing a context menu for this item
-			var d = _clickDelegates[sender] as Action<ClickEventData>;
+			var d = _clickDelegates[sender] as Action<MTClickArgs>;
 			Debug.Assert(d != null); if(d == null) return;
-			d(new ClickEventData(sender as ToolStripItem));
-		}
-
-		/// <summary>
-		/// Data passed to Click event handler functions.
-		/// </summary>
-		/// <tocexclude />
-		public class ClickEventData
-		{
-			/// <summary>
-			/// Gets the clicked item as ToolStripItem.
-			/// </summary>
-			public ToolStripItem Item { get; }
-
-			/// <summary>
-			/// Gets the clicked item as ToolStripMenuItem.
-			/// Returns null if it is not ToolStripMenuItem.
-			/// </summary>
-			public ToolStripMenuItem MenuItem { get => Item as ToolStripMenuItem; }
-
-			internal ClickEventData(ToolStripItem item) { Item = item; }
-
-			/// <summary>
-			/// Gets item text.
-			/// </summary>
-			public override string ToString()
-			{
-				return Item.ToString();
-			}
+			d(new MTClickArgs(sender as ToolStripItem));
 		}
 
 		/// <summary>
@@ -1093,9 +1075,9 @@ namespace Catkeys
 		//}
 
 		/// <summary>
-		/// Flags to pass to <see cref="Icons.GetFileIconHandle"/>. See <see cref="Icons.IconFlags"/>.
+		/// Flags to pass to <see cref="Icons.GetFileIconHandle"/>. See <see cref="GIFlags"/>.
 		/// </summary>
-		public Icons.IconFlags IconFlags { get; set; }
+		public GIFlags IconFlags { get; set; }
 
 		/// <summary>
 		/// Image width and height.
@@ -1114,7 +1096,7 @@ namespace Catkeys
 		//Sets icon and onClick delegate.
 		//Sets LastItem.
 		//Calls ItemAdded event handlers.
-		internal void _SetItemProp(bool isBar, ToolStripItem item, Action<ClickEventData> onClick, object icon)
+		internal void _SetItemProp(bool isBar, ToolStripItem item, Action<MTClickArgs> onClick, object icon)
 		{
 			if(onClick != null) {
 				_clickDelegates[item] = onClick;
@@ -1223,7 +1205,7 @@ namespace Catkeys
 
 		void _SetItemIcon(ToolStrip ts, ToolStripItem item, Image im)
 		{
-			Wnd w = default(Wnd);
+			Wnd w = default;
 			var its = ts as _ICatToolStrip;
 			if(its.PaintedOnce) {
 				if(_region1 == Zero) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
@@ -1281,12 +1263,33 @@ namespace Catkeys
 		}
 
 		///
-		~_MenuBase() { /*Print("base dtor");*/ _Dispose(false); }
+		~MTBase() { /*Print("base dtor");*/ _Dispose(false); }
 	}
 
-	interface _ICatToolStrip
+	/// <summary>
+	/// Data passed to Click event handler functions of CatMenu and CatBar.
+	/// </summary>
+	public class MTClickArgs
 	{
-		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
-		bool PaintedOnce { get; }
+		/// <summary>
+		/// Gets the clicked item as ToolStripItem.
+		/// </summary>
+		public ToolStripItem Item { get; }
+
+		/// <summary>
+		/// Gets the clicked item as ToolStripMenuItem.
+		/// Returns null if it is not ToolStripMenuItem.
+		/// </summary>
+		public ToolStripMenuItem MenuItem { get => Item as ToolStripMenuItem; }
+
+		internal MTClickArgs(ToolStripItem item) { Item = item; }
+
+		/// <summary>
+		/// Gets item text.
+		/// </summary>
+		public override string ToString()
+		{
+			return Item.ToString();
+		}
 	}
 }

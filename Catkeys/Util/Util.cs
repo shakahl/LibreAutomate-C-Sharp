@@ -20,7 +20,7 @@ using Microsoft.Win32.SafeHandles;
 using System.Resources;
 using System.Globalization;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys.Util
@@ -100,9 +100,9 @@ namespace Catkeys.Util
 		/// <param name="height">Height, pixels.</param>
 		public bool Create(int width, int height)
 		{
-			IntPtr dcs = Api.GetDC(default(Wnd));
+			IntPtr dcs = Api.GetDC(default);
 			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
-			Api.ReleaseDC(default(Wnd), dcs);
+			Api.ReleaseDC(default, dcs);
 			return _bm != Zero;
 		}
 
@@ -157,7 +157,7 @@ namespace Catkeys.Util
 
 		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
 		{
-			var dcScreen = Api.GetDC(default(Wnd));
+			var dcScreen = Api.GetDC(default);
 			int h2 = -Math_.MulDiv(height, Api.GetDeviceCaps(dcScreen, 90), 72);
 			Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
 			if(calculateHeightOnScreen) {
@@ -168,7 +168,7 @@ namespace Catkeys.Util
 				Api.SelectObject(dcMem, of);
 				Api.DeleteDC(dcMem);
 			}
-			Api.ReleaseDC(default(Wnd), dcScreen);
+			Api.ReleaseDC(default, dcScreen);
 		}
 	}
 
@@ -213,7 +213,7 @@ namespace Catkeys.Util
 		/// </summary>
 		public static IntPtr OfCatkeysDll()
 		{
-			return Marshal.GetHINSTANCE(typeof(Misc).Module);
+			return Marshal.GetHINSTANCE(typeof(ModuleHandle).Module);
 		}
 
 		/// <summary>
@@ -251,13 +251,13 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Returns true if Catkeys.dll is installed in the global assembly cache.
 		/// </summary>
-		internal static bool LibIsCatkeysInGAC { get => typeof(Misc).Assembly.GlobalAssemblyCache; }
+		internal static bool LibIsCatkeysInGAC { get => typeof(Assembly_).Assembly.GlobalAssemblyCache; }
 
 		/// <summary>
 		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		internal static bool LibIsCatkeysNgened { get => IsAssemblyNgened(typeof(Misc).Assembly); }
+		internal static bool LibIsCatkeysNgened { get => IsAssemblyNgened(typeof(Assembly_).Assembly); }
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
@@ -275,15 +275,99 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
-	/// Miscellaneous functions (currently none).
+	/// Extends the .NET <see cref="Marshal"/> class.
 	/// </summary>
-	public static class Misc
+	public static class Marshal_
 	{
+		/// <summary>
+		/// Calls <see cref="Marshal.GetDelegateForFunctionPointer"/>.
+		/// </summary>
+		/// <typeparam name="T">Delegate type.</typeparam>
+		/// <param name="f">Unmanaged function address.</param>
+		/// <param name="del">Receives managed delegate of type T.</param>
+		public static void GetDelegate<T>(IntPtr f, out T del) where T : class
+		{
+			del = Marshal.GetDelegateForFunctionPointer(f, typeof(T)) as T;
+		}
 
+#if false //currently not used
+		/// <summary>
+		/// Increments the reference count of COM object's RCW (managed runtime callable wrapper).
+		/// </summary>
+		/// <param name="o">Managed COM object (RCW).</param>
+		/// <remarks>
+		/// This function is the opposite of <see cref="Marshal.ReleaseComObject"/>, which decrements the RCW reference count.
+		/// Call this function when cloning a variable of a type that wraps a managed COM object and calls Marshal.ReleaseComObject when disposing. Without it, after disposing one of the variables, cannot call methods etc of other variable because the RCW then is invalid.
+		/// This function does not increment the reference count of the native COM object.
+		/// </remarks>
+		public static void AddRefComObject<T>(T o) where T: class
+		{
+			//ugly, but .NET does not have a better method for it.
+
+			var u = Marshal.GetIUnknownForObject(o); //gets native COM pointer and calls its AddRef
+			var o2 = Marshal.GetObjectForIUnknown(u); //increments RCW ref count. Calls QueryInterface and Release of the native COM object.
+													  //var o2 = Marshal.GetTypedObjectForIUnknown(u, typeof(T)); //works too, but MSDN info is unclear. In both cases ToString says it's System.__ComObject.
+			Marshal.Release(u); //because GetIUnknownForObject called AddRef
+			Debug.Assert(ReferenceEquals(o, o2));
+		}
+
+		//returns new RCW
+		//internal static object GetUniqueComObject<T>(T o) where T: class
+		//{
+		//	var u = Marshal.GetIUnknownForObject(o);
+		//	var o2 = Marshal.GetUniqueObjectForIUnknown(u); //many QI etc
+		//	Marshal.Release(u);
+		//	Debug.Assert(!ReferenceEquals(o, o2));
+		//	return u2;
+		//}
+#endif
+
+		/// <summary>
+		/// Gets another COM interface through <msdn>IUnknown.QueryInterface</msdn>.
+		/// Returns false if the COM object (iunkFrom) does not support the requested interface or if fails.
+		/// </summary>
+		/// <typeparam name="T">IntPtr or an IntPtr-based type. Must have size of IntPtr (exception if not).</typeparam>
+		/// <param name="iunkFrom">COM object as IUnknown.</param>
+		/// <param name="iTo">Receives the requested COM interface pointer.</param>
+		/// <param name="riid">Interface GUID.</param>
+		public static unsafe bool QueryInterface<T>(IntPtr iunkFrom, out T iTo, ref Guid riid) where T : struct
+		{
+			if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
+			iTo = default;
+			if(0 != Marshal.QueryInterface(iunkFrom, ref riid, out IntPtr ip) || ip == default) return false;
+			iTo = Unsafe.Read<T>(&ip);
+			return true;
+		}
+
+		/// <summary>
+		/// Gets another COM interface through <msdn>IServiceProvider.QueryService</msdn>.
+		/// Returns false if the COM object (iunkFrom) does not support IServiceProvider or the requested interface or if fails.
+		/// </summary>
+		/// <typeparam name="T">IntPtr or an IntPtr-based type. Must have size of IntPtr (exception if not).</typeparam>
+		/// <param name="iunkFrom">COM object as IUnknown.</param>
+		/// <param name="iTo">Receives the requested COM interface pointer.</param>
+		/// <param name="guidService">Service GUID. If it is the same as riid, you can use other overload.</param>
+		/// <param name="riid">Interface GUID.</param>
+		public static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, ref Guid guidService, ref Guid riid) where T:struct
+		{
+			if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
+			iTo = default;
+			if(0 != Api.IUnknown_QueryService(iunkFrom, ref guidService, ref riid, out IntPtr ip) || ip==default) return false;
+			iTo=Unsafe.Read<T>(&ip);
+			return true;
+		}
+
+		/// <summary>
+		/// This overload calls <see cref="QueryService{T}(IntPtr, out T, ref Guid, ref Guid)"/> with guidService = riid.
+		/// </summary>
+		public static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, ref Guid riid) where T : struct
+		{
+			return QueryService(iunkFrom, out iTo, ref riid, ref riid);
+		}
 	}
 
 	/// <summary>
-	/// Miscellaneous functions.
+	/// Functions to work with managed resources.
 	/// </summary>
 	public static class Resources_
 	{
@@ -387,9 +471,9 @@ namespace Catkeys.Util
 			get
 			{
 				if(_baseDPI == 0) {
-					var dc = Api.GetDC(default(Wnd));
+					var dc = Api.GetDC(default);
 					_baseDPI = Api.GetDeviceCaps(dc, 90); //LOGPIXELSY
-					Api.ReleaseDC(default(Wnd), dc);
+					Api.ReleaseDC(default, dc);
 				}
 				return _baseDPI;
 			}
@@ -459,7 +543,7 @@ namespace Catkeys.Util
 		static extern SafeWaitHandle CreateWaitableTimer(Api.SECURITY_ATTRIBUTES lpTimerAttributes, bool bManualReset, string lpTimerName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		static extern bool SetWaitableTimer(SafeWaitHandle hTimer, ref long lpDueTime, int lPeriod = 0, IntPtr pfnCompletionRoutine = default(IntPtr), IntPtr lpArgToCompletionRoutine = default(IntPtr), bool fResume = false);
+		static extern bool SetWaitableTimer(SafeWaitHandle hTimer, ref long lpDueTime, int lPeriod = 0, IntPtr pfnCompletionRoutine = default, IntPtr lpArgToCompletionRoutine = default, bool fResume = false);
 
 		[DllImport("kernel32.dll", EntryPoint = "OpenWaitableTimerW", SetLastError = true)]
 		static extern SafeWaitHandle OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);

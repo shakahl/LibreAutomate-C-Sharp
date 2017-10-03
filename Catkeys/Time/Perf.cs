@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -184,8 +184,10 @@ namespace Catkeys
 					if(n > _nElem) n = _nElem;
 					double freq = 1000000.0 / Stopwatch.Frequency;
 					//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
-					StringBuilder s = new StringBuilder("speed:");
 					bool average = false; int nMeasurements = 1;
+
+					var s = Util.LibStringBuilderCache.Acquire();
+					s.Append("speed:");
 
 					fixed (long* p = _a) fixed (char* c = _aMark) {
 						g1:
@@ -216,7 +218,7 @@ namespace Catkeys
 							goto g1;
 						}
 					}
-					return s.ToString();
+					return s.ToStringCached_();
 				}
 			}
 
@@ -295,6 +297,7 @@ namespace Catkeys
 			get => _SM->Incremental;
 			set { _SM->Incremental = value; }
 		}
+		//CONSIDER: this is confusing: this process starts with Incremental = true if previous process used it and the shared memory survived
 
 		/// <summary>
 		/// Stores current time in the first element of an internal array.

@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys.Util
@@ -189,6 +189,67 @@ namespace Catkeys.Util
 	}
 
 	/// <summary>
+	/// Allocates memory from native heap of this process using heap API.
+	/// Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
+	/// Usually slightly faster than Marshal class functions.
+	/// </summary>
+	public static unsafe class NativeHeap
+	{
+		static IntPtr _processHeap = Api.GetProcessHeap();
+
+		/// <summary>
+		/// Allocates new memory block and returns its address.
+		/// Calls API <msdn>HeapAlloc</msdn>.
+		/// </summary>
+		/// <param name="size">Byte count.</param>
+		/// <param name="zeroInit">Set all bytes = 0. If false (default), the memory is uninitialized, ie random byte values. Slower when true.</param>
+		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or <see cref="ReAlloc"/> if need to resize it without losing data.</remarks>
+		public static void* Alloc(LPARAM size, bool zeroInit = false)
+		{
+			void* r = Api.HeapAlloc(_processHeap, zeroInit ? 8u : 0u, size);
+			if(r == null) throw new OutOfMemoryException();
+			return r;
+
+			//note: don't need GC.AddMemoryPressure.
+			//	Native memory usually is used for temporary buffers etc and is soon released eg with try/finally.
+			//	Marshal.AllocHGlobal does not do it too.
+		}
+
+		/// <summary>
+		/// Reallocates a memory block to make it bigger or smaller.
+		/// Returns its address, which in most cases is different than the old memory block address.
+		/// Preserves data in Math.Min(old size, new size) bytes of old memory (copies from old memory if need).
+		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
+		/// </summary>
+		/// <param name="mem">Old memory address. If null, allocates new memory like Alloc.</param>
+		/// <param name="size">New byte count.</param>
+		/// <param name="zeroInit">When size is growing, set all added bytes = 0. If false (default), the added memory is uninitialized, ie random byte values. Slower when true.</param>
+		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
+		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or ReAlloc if need to resize it without losing data.</remarks>
+		public static void* ReAlloc(void* mem, LPARAM size, bool zeroInit = false)
+		{
+			uint flag = zeroInit ? 8u : 0u;
+			void* r;
+			if(mem == null) r = Api.HeapAlloc(_processHeap, flag, size);
+			else r = Api.HeapReAlloc(_processHeap, flag, mem, size);
+			if(r == null) throw new OutOfMemoryException();
+			return r;
+		}
+
+		/// <summary>
+		/// Frees a memory block.
+		/// Does nothing if mem is null.
+		/// Calls API <msdn>HeapFree</msdn>.
+		/// </summary>
+		public static void Free(void* mem)
+		{
+			if(mem == null) return;
+			Api.HeapFree(_processHeap, 0, mem);
+		}
+	}
+
+	/// <summary>
 	/// Allocates memory buffers that can be used with API functions and not only.
 	/// Can allocate arrays of any value type - char[], byte[] etc.
 	/// </summary>
@@ -295,7 +356,7 @@ namespace Catkeys.Util
 			{
 				if(A == null) return null;
 				fixed (char* p = A) {
-					int n = CharPtr.Length(p, A.Length);
+					int n = LibCharPtr.Length(p, A.Length);
 					return new string(p, 0, n);
 				}
 			}
@@ -310,6 +371,23 @@ namespace Catkeys.Util
 				return new string(A, 0, n);
 			}
 
+			/// <summary>
+			/// The same as <see cref="ToString()"/>, but uses our StringCache.
+			/// </summary>
+			internal string LibToStringCached()
+			{
+				return StringCache.LibAdd(A);
+			}
+
+			/// <summary>
+			/// The same as <see cref="ToString(int)"/>, but uses our StringCache.
+			/// </summary>
+			/// <param name="n">String length.</param>
+			internal string LibToStringCached(int n)
+			{
+				return StringCache.LibAdd(A, n);
+			}
+
 			//currently not used
 			///// <summary>
 			///// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
@@ -319,7 +397,7 @@ namespace Catkeys.Util
 			//{
 			//	if(A == null) return null;
 			//	fixed (char* p = A) {
-			//		int n = CharPtr.Length((byte*)p, A.Length * 2);
+			//		int n = LibCharPtr.Length((byte*)p, A.Length * 2);
 			//		return new string((sbyte*)p, 0, n, enc);
 			//	}
 			//}
@@ -367,8 +445,8 @@ namespace Catkeys.Util
 		//	{
 		//		if(A == null) return null;
 		//		fixed (byte* p = A) {
-		//			int n = CharPtr.Length(p, A.Length * 2);
-		//			return new String((sbyte*)p, 0, n, enc);
+		//			int n = LibCharPtr.Length(p, A.Length * 2);
+		//			return new string((sbyte*)p, 0, n, enc);
 		//		}
 		//	}
 		//}
@@ -441,61 +519,68 @@ namespace Catkeys.Util
 	//}
 
 	/// <summary>
-	/// Allocates memory from native heap of this process using heap API.
-	/// Uses the common heap of this process, API <msdn>GetProcessHeap</msdn>.
-	/// About 20% faster than Marshal class functions, but it depends on allocation size etc.
+	/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
+	/// This is a modified copy of the .NET internal StringBuilderCache class.
 	/// </summary>
-	public static unsafe class NativeHeap
+	internal static class LibStringBuilderCache
 	{
-		static IntPtr _processHeap = Api.GetProcessHeap();
+		/// <summary>
+		/// 2000. Acquire does not use the cache if requested capacity is bigger. Release does not use the cache if StrinBuilder capacity is bigger.
+		/// </summary>
+		public const int MAX_BUILDER_SIZE = 2000;
+
+		[ThreadStatic]
+		private static StringBuilder t_cachedInstance;
 
 		/// <summary>
-		/// Allocates new memory block and returns its address.
-		/// Calls API <msdn>HeapAlloc</msdn>.
+		/// Gets a StringBuilder of the specified capacity.
+		/// When finished using it, call <see cref="ExtensionMethods.ToStringCached_"/>.
 		/// </summary>
-		/// <param name="size">Byte count.</param>
-		/// <param name="zeroInit">Set all bytes = 0. If false (default), the memory is uninitialized, ie random byte values. Slower when true.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
-		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or <see cref="ReAlloc"/> if need to resize it without losing data.</remarks>
-		public static void* Alloc(LPARAM size, bool zeroInit = false)
+		/// <remarks>
+		/// Can be called any number of times. If a StringBuilder of good capacity is in the cache then it will be returned and the cache emptied. Subsequent calls will return a new StringBuilder. A single StringBuilder instance is cached as a [ThreadLocal] field.
+		/// </remarks>
+		public static StringBuilder Acquire(int capacity = 100)
 		{
-			void* r = Api.HeapAlloc(_processHeap, zeroInit ? 8u : 0u, size);
-			if(r == null) throw new OutOfMemoryException();
-			return r;
-
-			//rejected: GC.AddMemoryPressure. Marshal.AllocHGlobal does not do it.
+			if(capacity <= MAX_BUILDER_SIZE) {
+				StringBuilder sb = t_cachedInstance;
+				if(sb != null) {
+					if(capacity <= sb.Capacity) {
+						t_cachedInstance = null;
+						sb.Clear();
+						return sb;
+					}
+				}
+			}
+			return new StringBuilder(capacity);
 		}
 
 		/// <summary>
-		/// Reallocates a memory block to make it bigger or smaller.
-		/// Returns its address, which in most cases is different than the old memory block address.
-		/// Preserves data in Math.Min(old size, new size) bytes of old memory (copies from old memory if need).
-		/// Calls API <msdn>HeapReAlloc</msdn> or <msdn>HeapAlloc</msdn>.
+		/// Releases a StringBuilder acquired with <see cref="Acquire"/> to the cache.
+		/// The same as <see cref="ExtensionMethods.ToStringCached_"/>, but does not call ToString().
 		/// </summary>
-		/// <param name="mem">Old memory address. If null, allocates new memory like Alloc.</param>
-		/// <param name="size">New byte count.</param>
-		/// <param name="zeroInit">When size is growing, set all added bytes = 0. If false (default), the added memory is uninitialized, ie random byte values. Slower when true.</param>
-		/// <exception cref="OutOfMemoryException">Failed. Probably size is too big.</exception>
-		/// <remarks>The memory is unmanaged and will not be freed automatically. Always call <see cref="Free"/> when done or ReAlloc if need to resize it without losing data.</remarks>
-		public static void* ReAlloc(void* mem, LPARAM size, bool zeroInit = false)
+		/// <remarks>
+		/// Places the StringBuilder in the cache if it is not too big. The variable then should not be used.
+		/// Unbalanced Acquire/Release (or Acquire/ToStringCached_) are perfectly acceptable. It will merely cause to create a new StringBuilder next time Acquire is called.
+		/// </remarks>
+		public static void Release(StringBuilder sb)
 		{
-			uint flag = zeroInit ? 8u : 0u;
-			void* r;
-			if(mem == null) r = Api.HeapAlloc(_processHeap, flag, size);
-			else r = Api.HeapReAlloc(_processHeap, flag, mem, size);
-			if(r == null) throw new OutOfMemoryException();
-			return r;
+			if(sb != null && sb.Capacity <= MAX_BUILDER_SIZE) {
+				t_cachedInstance = sb;
+			}
 		}
 
-		/// <summary>
-		/// Frees a memory block.
-		/// Does nothing if mem is null.
-		/// Calls API <msdn>HeapFree</msdn>.
-		/// </summary>
-		public static void Free(void* mem)
-		{
-			if(mem == null) return;
-			Api.HeapFree(_processHeap, 0, mem);
-		}
+		//moved to class NetExtensions, else would need 'using Catkeys.Util;' everywhere.
+		///// <summary>
+		///// Releases this StringBuilder acquired with <see cref="Acquire"/> to the cache and returns its ToString().
+		///// </summary>
+		///// <remarks>
+		///// To release, calls <see cref="Release"/>. More info there.
+		///// </remarks>
+		//public static string ToStringCached_(this StringBuilder t)
+		//{
+		//	string result = t?.ToString();
+		//	Release(t);
+		//	return result;
+		//}
 	}
 }

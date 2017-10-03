@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -336,12 +337,12 @@ namespace G.Controls
 			//if not editor, skip if not <image "..."
 			if(!isMulti) {
 				if(_isEditor) imageStringStartPos = i - 1;
-				else if(i >= 8 && Catkeys.Util.CharPtr.AsciiStartsWith(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else if(i >= 8 && Catkeys.Util.LibCharPtr.AsciiStartsWith(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 
 			//support "image1|image2|..."
-			int i3 = Catkeys.Util.CharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
+			int i3 = Catkeys.Util.LibCharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
@@ -563,7 +564,7 @@ namespace G.Controls
 				textPos = from2;
 			}
 
-			int r = _isEditor ? Catkeys.Util.CharPtr.AsciiFindChar(s, len, (byte)'\"') : Catkeys.Util.CharPtr.AsciiFindString(s, len, "<image \"");
+			int r = _isEditor ? Catkeys.Util.LibCharPtr.AsciiFindChar(s, len, (byte)'\"') : Catkeys.Util.LibCharPtr.AsciiFindString(s, len, "<image \"");
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 

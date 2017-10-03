@@ -19,9 +19,10 @@ using System.Drawing;
 //using System.Linq;
 using System.Collections.Concurrent;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
-#pragma warning disable 282 //C#7 intellisense bug: it thinks that Wnd has multiple fields.
+#pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
 
 namespace Catkeys
 {
@@ -149,7 +150,7 @@ namespace Catkeys
 				/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain identifer. The <see cref="Name"/> property returns it.
 				/// Not thread-safe.
 				/// </remarks>
-				public static WindowClass Superclass(string baseClassName, string className, Native.WNDPROC wndProc, int wndExtra = 0, bool globalClass = false, IntPtr baseModuleHandle = default(IntPtr))
+				public static WindowClass Superclass(string baseClassName, string className, Native.WNDPROC wndProc, int wndExtra = 0, bool globalClass = false, IntPtr baseModuleHandle = default)
 				{
 					var r = new WindowClass();
 					var x = new Api.WNDCLASSEX();
@@ -216,7 +217,7 @@ namespace Catkeys
 				public static LPARAM GetClassLong(Wnd w, int index)
 				{
 					LPARAM R;
-					if(IntPtr.Size == 8) R = _Api.GetClassLong64(w, index); else R = _Api.GetClassLong32(w, index);
+					if(IntPtr.Size == 8) R = Api.GetClassLong64(w, index); else R = Api.GetClassLong32(w, index);
 					return R;
 				}
 
@@ -232,7 +233,7 @@ namespace Catkeys
 				//{
 				//	Native.ClearError();
 				//	LPARAM R;
-				//	if(IntPtr.Size == 8) R = _Api.SetClassLong64(w, index, newValue); else R = _Api.SetClassLong32(w, index, newValue);
+				//	if(IntPtr.Size == 8) R = Api.SetClassLong64(w, index, newValue); else R = Api.SetClassLong32(w, index, newValue);
 				//	if(R == 0 && Native.GetError() != 0) ThrowUseNative();
 				//	return R;
 				//}
@@ -243,7 +244,7 @@ namespace Catkeys
 				/// </summary>
 				/// <param name="className">Class name.</param>
 				/// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
-				public static ushort GetClassAtom(string className, IntPtr moduleHandle = default(IntPtr))
+				public static ushort GetClassAtom(string className, IntPtr moduleHandle = default)
 				{
 					var x = new Api.WNDCLASSEX();
 					x.cbSize = Api.SizeOf(x);
@@ -309,9 +310,9 @@ namespace Catkeys
 				/// <remarks>
 				/// The window procedure does not receive messages until this function returns. It never receives creation messages, eg WM_CREATE.
 				/// </remarks>
-				public static Wnd InterDomainCreateWindow(uint exStyle, string className, string name, uint style, int x, int y, int width, int height, Wnd parent = default(Wnd), LPARAM controlId = default(LPARAM))
+				public static Wnd InterDomainCreateWindow(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default)
 				{
-					if(!_interDomain.TryGetValue(className, out Native.WNDPROC wndProc)) return default(Wnd);
+					if(!_interDomain.TryGetValue(className, out Native.WNDPROC wndProc)) return default;
 					Wnd w = Misc.CreateWindow(exStyle, className, name, style, x, y, width, height, parent, controlId);
 					if(!w.Is0 && wndProc != null) w.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 					return w;
@@ -375,6 +376,9 @@ namespace Catkeys
 					//tested. FlashWindow is easier but does not work for taskbar button, only for caption when no taskbar button.
 				}
 
+				/// <summary>
+				/// Used by <see cref="SetProgressState"/>.
+				/// </summary>
 				/// <tocexclude />
 				public enum ProgressState
 				{
@@ -618,7 +622,9 @@ namespace Catkeys
 					if(_pm == null) return null;
 					if(!IsWinFormsControl(c)) return null;
 					if(!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || R < 1) return null;
-					return _pm.ReadUnicodeString(R);
+					int len = R - 1;
+					if(len == 0) return "";
+					return _pm.LibReadUnicodeStringCached(len);
 				}
 
 				/// <summary>

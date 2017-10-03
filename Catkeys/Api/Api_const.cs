@@ -2,10 +2,46 @@
 
 using System;
 
-namespace Catkeys
+namespace Catkeys.Types
 {
 	static unsafe partial class Api
 	{
+		#region Errors
+
+		internal const int S_OK = 0;
+		internal const int S_FALSE = 1;
+		internal const int ERROR_FILE_NOT_FOUND = 2;
+		internal const int ERROR_PATH_NOT_FOUND = 3;
+		internal const int ERROR_ACCESS_DENIED = 5;
+		internal const int ERROR_INVALID_HANDLE = 6;
+		internal const int ERROR_NOT_SAME_DEVICE = 17;
+		internal const int ERROR_NO_MORE_FILES = 18;
+		internal const int ERROR_NOT_READY = 21;
+		internal const int ERROR_SHARING_VIOLATION = 32;
+		internal const int ERROR_HANDLE_EOF = 38;
+		internal const int ERROR_BAD_NETPATH = 53;
+		internal const int ERROR_BAD_NET_NAME = 67;
+		internal const int ERROR_FILE_EXISTS = 80;
+		internal const int ERROR_INVALID_PARAMETER = 87;
+		internal const int ERROR_INSUFFICIENT_BUFFER = 122;
+		internal const int ERROR_INVALID_NAME = 123;
+		internal const int ERROR_DIR_NOT_EMPTY = 145;
+		internal const int ERROR_ALREADY_EXISTS = 183;
+		internal const int ERROR_DIRECTORY = 267;
+		internal const int ERROR_PRIVILEGE_NOT_HELD = 1314;
+		internal const int ERROR_INVALID_WINDOW_HANDLE = 1400;
+		internal const int ERROR_TIMEOUT = 1460;
+		internal const int E_NOTIMPL = unchecked((int)0x80004001);
+		internal const int E_NOINTERFACE = unchecked((int)0x80004002);
+		internal const int E_FAIL = unchecked((int)0x80004005);
+		internal const int E_INVALIDARG = unchecked((int)0x80070057);
+		internal const int E_ACCESSDENIED = unchecked((int)0x80070005);
+		internal const int E_OUTOFMEMORY = unchecked((int)0x8007000E);
+		internal const int DISP_E_MEMBERNOTFOUND = unchecked((int)0x80020003);
+		internal const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
+
+		#endregion
+
 		#region WM_
 
 		internal const uint WM_NULL = 0;
@@ -453,37 +489,6 @@ namespace Catkeys
 		internal const int VK_APPS = 93;
 		internal const int VK_ADD = 107;
 		internal const int VK_ACCEPT = 30;
-
-		#endregion
-
-		#region Errors
-
-		internal const int S_OK = 0;
-		internal const int S_FALSE = 1;
-		internal const int ERROR_FILE_NOT_FOUND = 2;
-		internal const int ERROR_PATH_NOT_FOUND = 3;
-		internal const int ERROR_ACCESS_DENIED = 5;
-		internal const int ERROR_INVALID_HANDLE = 6;
-		internal const int ERROR_NOT_SAME_DEVICE = 17;
-		internal const int ERROR_NO_MORE_FILES = 18;
-		internal const int ERROR_NOT_READY = 21;
-		internal const int ERROR_SHARING_VIOLATION = 32;
-		internal const int ERROR_HANDLE_EOF = 38;
-		internal const int ERROR_BAD_NETPATH = 53;
-		internal const int ERROR_BAD_NET_NAME = 67;
-		internal const int ERROR_FILE_EXISTS = 80;
-		internal const int ERROR_INVALID_PARAMETER = 87;
-		internal const int ERROR_INSUFFICIENT_BUFFER = 122;
-		internal const int ERROR_INVALID_NAME = 123;
-		internal const int ERROR_DIR_NOT_EMPTY = 145;
-		internal const int ERROR_ALREADY_EXISTS = 183;
-		internal const int ERROR_DIRECTORY = 267;
-		internal const int ERROR_PRIVILEGE_NOT_HELD = 1314;
-		internal const int ERROR_INVALID_WINDOW_HANDLE = 1400;
-		internal const int ERROR_TIMEOUT = 1460;
-		internal const int E_INVALIDARG = unchecked((int)0x80070057);
-		internal const int E_FAIL = unchecked((int)0x80004005);
-		internal const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
 
 		#endregion
 

@@ -17,6 +17,7 @@ using System.Drawing;
 //using System.Linq;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys.Tasks
@@ -229,7 +230,7 @@ namespace Catkeys.Tasks
 			switch(wParam) {
 			case 0x8000: //new process passed command line to this process
 				s = Marshal.PtrToStringUni(lParam);
-				ProcessCommandLine(s.Split('\x19'));
+				ProcessCommandLine(s.Split_("\x19"));
 				break;
 			case 1:
 				s = Marshal.PtrToStringUni(lParam);

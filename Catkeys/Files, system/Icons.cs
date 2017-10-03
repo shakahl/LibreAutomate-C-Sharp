@@ -19,6 +19,7 @@ using System.Drawing;
 using System.Xml.Linq;
 using System.Drawing.Imaging;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -29,45 +30,6 @@ namespace Catkeys
 	//[DebuggerStepThrough]
 	public static class Icons
 	{
-		/// <summary>
-		/// Used with get-icon functions.
-		/// </summary>
-		/// <tocexclude />
-		[Flags]
-		public enum IconFlags
-		{
-			/// <summary>
-			/// The 'file' argument is literal full path. Don't parse "path,index", don't support ".ext" (file type icon), don't make fully-qualified, etc.
-			/// </summary>
-			LiteralPath = 1,
-
-			/// <summary>
-			/// If file is not full path, call <see cref="Files.SearchPath">Files.SearchPath</see>.
-			/// Without this flag searches only in <see cref="Folders.ThisAppImages"/>; with this flag also searches there first.
-			/// </summary>
-			SearchPath = 2,
-
-#if false
-			/// <summary>
-			/// Scale the specified size according to DPI (text size) specified in Control Panel.
-			/// </summary>
-			DpiScale = 4, //rejected. In most cases can use standard-size icons from enum ShellSize, they are DPI-scaled. Or pass size * Util.Dpi.BaseDPI.
-
-			/// Use shell API for all file types, including exe and ico.
-			Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay
-
-			/// <summary>
-			/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
-			/// </summary>
-			DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns Zero.
-
-			/// <summary>
-			/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for Zero and null. This is to make whole process as fast as possible.
-			/// </summary>
-			NeedImage = 128, //rejected because with our menu/toolbar almost always makes slower
-#endif
-		}
-
 		/// <summary>
 		/// Gets file icon.
 		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
@@ -87,7 +49,7 @@ namespace Catkeys
 		/// </param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		/// <param name="flags"></param>
-		public static Bitmap GetFileIconImage(string file, int size, IconFlags flags = 0)
+		public static Bitmap GetFileIconImage(string file, int size, GIFlags flags = 0)
 		{
 			return HandleToImage(GetFileIconHandle(file, size, flags));
 		}
@@ -144,7 +106,7 @@ namespace Catkeys
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		/// <param name="flags"></param>
 		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
-		public static IntPtr GetFileIconHandle(string file, int size, IconFlags flags = 0)
+		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
 			if(Empty(file)) return Zero;
 			size = _NormalizeIconSizeParameter(size);
@@ -171,16 +133,16 @@ namespace Catkeys
 			return _GetShellIcon(true, null, pidl, size);
 		}
 
-		internal static IntPtr _GetFileIcon(string file, int size, IconFlags flags)
+		internal static IntPtr _GetFileIcon(string file, int size, GIFlags flags)
 		{
 			IntPtr R = Zero, pidl = Zero;
 			int index = 0;
 			bool extractFromFile = false, isFileType = false, isURL = false, isShellPath = false, isPath = true;
 			//bool getDefaultIfFails = 0!=(flags&IconFlags.DefaultIfFails);
 
-			bool searchPath = 0 != (flags & IconFlags.SearchPath);
+			bool searchPath = 0 != (flags & GIFlags.SearchPath);
 
-			if(0 == (flags & IconFlags.LiteralPath)) {
+			if(0 == (flags & GIFlags.LiteralPath)) {
 				//is ".ext" or "protocol:"?
 				isFileType = Path_.LibIsExtension(file) || (isURL = Path_.LibIsProtocol(file));
 				if(!isFileType) isURL = Path_.IsUrl(file);
@@ -191,7 +153,7 @@ namespace Catkeys
 
 					if(!searchPath) {
 						if(!Path_.IsFullPath(file)) file = Folders.ThisAppImages + file;
-						file = Path_.LibNormalize(file, Path_.NormalizeFlags.DoNotPrefixLongPath, noExpandEV: true);
+						file = Path_.LibNormalize(file, PNFlags.DoNotPrefixLongPath, noExpandEV: true);
 					}
 				}
 			}
@@ -211,13 +173,13 @@ namespace Catkeys
 					R = GetFileIconHandleRaw(file, index, size);
 					if(R != Zero || extractFromFile) return R;
 					switch(Files.ExistsAs(file, true)) {
-					case Files.ItIs.NotFound:
+					case FileDir.NotFound:
 						return Zero;
-					case Files.ItIs.File:
+					case FileDir.File:
 						var siid = Native.SHSTOCKICONID.SIID_DOCNOASSOC;
 						if(ext >= 1 && ext <= 2) siid = Native.SHSTOCKICONID.SIID_APPLICATION;
 						return GetShellStockIconHandle(siid, size);
-						//case Files.ItIs.Directory: //folder name ends with .ico etc
+						//case FileDir.Directory: //folder name ends with .ico etc
 					}
 				} else if(file.EndsWith_(".lnk", true)) {
 					R = _GetLnkIcon(file, size);
@@ -615,12 +577,12 @@ namespace Catkeys
 			if(s[0] == '\"') s = s.Replace("\"", ""); //can be eg "path",index
 			if(s.Length < 3) return false;
 			if(!Char_.IsAsciiDigit(s[s.Length - 1])) return false;
-			int e, i = s.LastIndexOf(','); if(i < 1) return false;
-			index = s.ToInt32_(i + 1, out e); if(e != s.Length) return false;
+			int i = s.LastIndexOf(','); if(i < 1) return false;
+			index = s.ToInt32_(i + 1, out int e); if(e != s.Length) return false;
 			s = s.Remove(i);
 			return true;
 
-			//note: PathParseIconLocation is buggy. Eg splits "path,5moreText". Or from "path, 5" removes ", 5" and returns 0.
+			//note: PathParseIconLocation has bugs. Eg splits "path,5moreText". Or from "path, 5" removes ", 5" and returns 0.
 		}
 
 		/// <summary>
@@ -716,9 +678,9 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="callback">A callback function delegate.</param>
 			/// <param name="iconSize">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-			/// <param name="flags"><see cref="IconFlags"/></param>
+			/// <param name="flags"><see cref="GIFlags"/></param>
 			/// <param name="objCommon">Something to pass to callback functions.</param>
-			public void GetAllAsync(AsyncCallback callback, int iconSize, IconFlags flags = 0, object objCommon = null)
+			public void GetAllAsync(AsyncCallback callback, int iconSize, GIFlags flags = 0, object objCommon = null)
 			{
 				if(_files.Count == 0) return;
 				var work = new _AsyncWork();
@@ -738,13 +700,13 @@ namespace Catkeys
 				AsyncIcons _host;
 				AsyncCallback _callback;
 				int _iconSize;
-				IconFlags _iconFlags;
+				GIFlags _iconFlags;
 				object _objCommon;
 				int _counter;
 				volatile int _nPending;
 				bool _canceled;
 
-				internal void GetAllAsync(AsyncIcons host, AsyncCallback callback, int iconSize, IconFlags flags, object objCommon)
+				internal void GetAllAsync(AsyncIcons host, AsyncCallback callback, int iconSize, GIFlags flags, object objCommon)
 				{
 					Debug.Assert(_callback == null); //must be called once
 
@@ -1058,5 +1020,46 @@ namespace Catkeys
 				}
 			}
 		}
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// Used with get-icon functions.
+	/// </summary>
+	[Flags]
+	public enum GIFlags
+	{
+		/// <summary>
+		/// The 'file' argument is literal full path. Don't parse "path,index", don't support ".ext" (file type icon), don't make fully-qualified, etc.
+		/// </summary>
+		LiteralPath = 1,
+
+		/// <summary>
+		/// If file is not full path, call <see cref="Files.SearchPath">Files.SearchPath</see>.
+		/// Without this flag searches only in <see cref="Folders.ThisAppImages"/>; with this flag also searches there first.
+		/// </summary>
+		SearchPath = 2,
+
+#if false
+			/// <summary>
+			/// Scale the specified size according to DPI (text size) specified in Control Panel.
+			/// </summary>
+			DpiScale = 4, //rejected. In most cases can use standard-size icons from enum ShellSize, they are DPI-scaled. Or pass size * Util.Dpi.BaseDPI.
+
+			/// Use shell API for all file types, including exe and ico.
+			Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay
+
+			/// <summary>
+			/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
+			/// </summary>
+			DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns Zero.
+
+			/// <summary>
+			/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for Zero and null. This is to make whole process as fast as possible.
+			/// </summary>
+			NeedImage = 128, //rejected because with our menu/toolbar almost always makes slower
+#endif
 	}
 }

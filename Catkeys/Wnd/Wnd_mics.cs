@@ -16,49 +16,20 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
-#pragma warning disable 282 //C#7 intellisense bug: it thinks that Wnd has multiple fields.
+#pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
 
 namespace Catkeys
 {
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// Contains miscellaneous static window-related functions and classes, mostly rarely used or useful only for programmers.
+		/// Contains miscellaneous static window-related functions and classes, rarely used or useful only for programmers.
 		/// </summary>
 		public static partial class Misc
 		{
-			/// <summary>
-			/// Contains static properties that return special window handle values that can be used with some API functions and with some Wnd functions too.
-			/// </summary>
-			/// <tocexclude />
-			public class SpecHwnd
-			{
-				/// <summary>API HWND_TOP (0). Used with SetWindowPos.</summary>
-				public static Wnd HWND_TOP { get => (Wnd)(LPARAM)0; }
-				/// <summary>API HWND_BOTTOM (1). Used with SetWindowPos.</summary>
-				public static Wnd HWND_BOTTOM { get => (Wnd)(LPARAM)1; }
-				/// <summary>API HWND_TOPMOST (-1). Used with SetWindowPos.</summary>
-				public static Wnd HWND_TOPMOST { get => (Wnd)(LPARAM)(-1); }
-				/// <summary>API HWND_NOTOPMOST (-2). Used with SetWindowPos.</summary>
-				public static Wnd HWND_NOTOPMOST { get => (Wnd)(LPARAM)(-2); }
-				/// <summary>API HWND_MESSAGE (-3). Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
-				public static Wnd HWND_MESSAGE { get => (Wnd)(LPARAM)(-3); }
-				/// <summary>API HWND_BROADCAST (0xffff). Used with API SendMessage, Wnd.Send etc.</summary>
-				public static Wnd HWND_BROADCAST { get => (Wnd)(LPARAM)0xffff; }
-			}
-
-			/// <summary>
-			/// Returns true if w contains a non-zero special handle value (see <see cref="SpecHwnd"/>).
-			/// Note that HWND_TOP is 0.
-			/// </summary>
-			public static bool IsSpecHwnd(Wnd w)
-			{
-				int i = (LPARAM)w;
-				return (i <= 1 && i >= -3) || i == 0xffff;
-			}
-
 			/// <summary>
 			/// Calculates window rectangle from client area rectangle and style.
 			/// Calls API <msdn>AdjustWindowRectEx</msdn>.
@@ -118,12 +89,12 @@ namespace Catkeys
 
 			/// <summary>
 			/// Creates native/unmanaged window.
-			/// Calls <msdn>CreateWindowEx</msdn>.
+			/// Calls API <msdn>CreateWindowEx</msdn>.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// For style and exStyle you can use Native.WS_ constants.
 			/// Usually don't need to specify hInstance.
 			/// </summary>
-			public static Wnd CreateWindow(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default(Wnd), LPARAM controlId = default(LPARAM), IntPtr hInstance = default(IntPtr), LPARAM param = default(LPARAM))
+			public static Wnd CreateWindow(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
 				return Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 			}
@@ -133,7 +104,7 @@ namespace Catkeys
 			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
-			public static Wnd CreateWindowAndSetFont(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default(Wnd), LPARAM controlId = default(LPARAM), IntPtr hInstance = default(IntPtr), LPARAM param = default(LPARAM), IntPtr customFontHandle = default(IntPtr))
+			public static Wnd CreateWindowAndSetFont(uint exStyle, string className, string name, uint style, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if(!w.Is0) SetFontHandle(w, (customFontHandle == Zero) ? _msgBoxFont : customFontHandle);
@@ -201,8 +172,7 @@ namespace Catkeys
 					if(hi != Zero) return hi;
 				}
 
-				LPARAM R;
-				bool ok = w.SendTimeout(2000, out R, Api.WM_GETICON, size32);
+				bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, size32);
 				if(R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !size32);
 				if(R == 0) R = WindowClass.GetClassLong(w, size32 ? Native.GCL_HICON : Native.GCL_HICONSM);
 				if(R == 0) R = WindowClass.GetClassLong(w, size32 ? Native.GCL_HICONSM : Native.GCL_HICON);
@@ -275,7 +245,7 @@ namespace Catkeys
 			/// <param name="s">String containing data of any format. Can have '\0' characters.</param>
 			/// <param name="wSender">Optional. A window of this process that sends the message. The receiving window procedure receives it in wParam.</param>
 			/// <seealso cref="Util.SharedMemory"/>
-			public static unsafe bool InterProcessSendData(Wnd w, int stringId, string s, Wnd wSender = default(Wnd))
+			public static unsafe bool InterProcessSendData(Wnd w, int stringId, string s, Wnd wSender = default)
 			{
 				var c = new Api.COPYDATASTRUCT() { dwData = stringId, cbData = s.Length * 2 };
 				fixed (char* p = s) {
@@ -303,25 +273,30 @@ namespace Catkeys
 			/// <summary>
 			/// Removes '&amp;' characters from string.
 			/// Replaces "&amp;&amp;" to "&amp;".
-			/// Returns true if s had '&amp;' characters.
+			/// Returns new string if s has '&amp;' characters, else returns s.
 			/// </summary>
 			/// <remarks>
 			/// Character '&amp;' is used to underline next character in displayed text of dialog controls and menu items. Two '&amp;' are used to display single '&amp;'.
 			/// The underline is displayed when using the keyboard (eg Alt key) to select dialog controls and menu items.
 			/// </remarks>
-			public static bool StringRemoveUnderlineAmpersand(ref string s)
+			public static string StringRemoveUnderlineAmpersand(string s)
 			{
 				if(!Empty(s)) {
-					int i = s.IndexOf('&');
-					if(i >= 0) {
-						i = s.IndexOf_("&&");
-						if(i >= 0) s = s.Replace("&&", "\0");
-						s = s.Replace("&", "");
-						if(i >= 0) s = s.Replace("\0", "&");
-						return true;
+					for(int i = 0; i < s.Length; i++) if(s[i] == '&') goto g1;
+					return s;
+					g1:
+					var b = Util.Buffers.LibChar(s.Length);
+					int j = 0;
+					for(int i = 0; i < s.Length; i++) {
+						if(s[i] == '&') {
+							if(i < s.Length - 1 && s[i + 1] == '&') i++;
+							else continue;
+						}
+						b.A[j++] = s[i];
 					}
+					s = b.LibToStringCached(j);
 				}
-				return false;
+				return s;
 			}
 
 			/// <summary>
@@ -364,31 +339,61 @@ namespace Catkeys
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 			}
 
-			/// <summary><msdn>SUBCLASSPROC</msdn></summary>
-			/// <tocexclude />
-			public delegate LPARAM SUBCLASSPROC(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
-
-			/// <summary><msdn>SetWindowSubclass</msdn></summary>
+			/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#410")]
 			public static extern bool SetWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
 
-			/// <summary><msdn>GetWindowSubclass</msdn></summary>
+			/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
 			public static extern bool GetWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
 
-			/// <summary><msdn>RemoveWindowSubclass</msdn></summary>
+			/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#412")]
 			public static extern bool RemoveWindowSubclass(Wnd hWnd, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
 
-			/// <summary><msdn>DefSubclassProc</msdn></summary>
+			/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#413")]
 			public static extern LPARAM DefSubclassProc(Wnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
 
-			/// <summary><msdn>DefWindowProc</msdn></summary>
+			/// <summary>API <msdn>DefWindowProc</msdn></summary>
 			[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 			public static extern LPARAM DefWindowProc(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
 
 		}
 
+		/// <summary>
+		/// Returns true if w contains a non-zero special handle value (see <see cref="SpecHwnd"/>).
+		/// Note that HWND_TOP is 0.
+		/// </summary>
+		public static bool IsSpecHwnd(Wnd w)
+		{
+			int i = (LPARAM)w;
+			return (i <= 1 && i >= -3) || i == 0xffff;
+		}
 	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// Contains static properties that return special window handle values that can be used with some API functions and with some Wnd functions too.
+	/// </summary>
+	public class SpecHwnd
+	{
+		/// <summary>API HWND_TOP (0). Used with SetWindowPos.</summary>
+		public static Wnd HWND_TOP { get => (Wnd)(LPARAM)0; }
+		/// <summary>API HWND_BOTTOM (1). Used with SetWindowPos.</summary>
+		public static Wnd HWND_BOTTOM { get => (Wnd)(LPARAM)1; }
+		/// <summary>API HWND_TOPMOST (-1). Used with SetWindowPos.</summary>
+		public static Wnd HWND_TOPMOST { get => (Wnd)(LPARAM)(-1); }
+		/// <summary>API HWND_NOTOPMOST (-2). Used with SetWindowPos.</summary>
+		public static Wnd HWND_NOTOPMOST { get => (Wnd)(LPARAM)(-2); }
+		/// <summary>API HWND_MESSAGE (-3). Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
+		public static Wnd HWND_MESSAGE { get => (Wnd)(LPARAM)(-3); }
+		/// <summary>API HWND_BROADCAST (0xffff). Used with API SendMessage, Wnd.Send etc.</summary>
+		public static Wnd HWND_BROADCAST { get => (Wnd)(LPARAM)0xffff; }
+	}
+
+	/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
+	public delegate LPARAM SUBCLASSPROC(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 }

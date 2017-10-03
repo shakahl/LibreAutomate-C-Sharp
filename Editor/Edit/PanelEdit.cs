@@ -18,12 +18,12 @@ using System.Linq;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using G.Controls;
-using static G.Controls.Sci;
-
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
+using G.Controls;
+using static G.Controls.Sci;
 
 partial class PanelEdit :Control
 {
@@ -180,7 +180,7 @@ partial class PanelEdit :Control
 		//Print("<><c 0x8000>one\0two</c>");
 
 
-		//foreach(var f in Files.EnumDirectory(Folders.ProgramFiles, Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+		//foreach(var f in Files.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 		//	if(f.IsDirectory) continue;
 		//	if(0 == f.Name.EndsWith_(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
 		//	//Print(f.FullPath);

@@ -176,19 +176,6 @@ namespace Aga.Controls.Tree.NodeControls
 			}
 		}
 
-		private static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
-		private static Brush GetFrush(Color color)
-		{
-			Brush br;
-			if(_brushes.ContainsKey(color))
-				br = _brushes[color];
-			else {
-				br = new SolidBrush(color);
-				_brushes.Add(color, br);
-			}
-			return br;
-		}
-
 		private void CreateBrushes(TreeNodeAdv node, DrawContext context, string text, out Brush backgroundBrush, out Color textColor, out Font font, ref string label)
 		{
 			textColor = node.Tree.ForeColor;

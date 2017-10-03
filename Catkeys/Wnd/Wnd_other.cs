@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -42,7 +43,7 @@ namespace Catkeys
 				uint col = 0, op = 0, f = 0;
 				if(colorRGB != null) {
 					f |= 1;
-					col = Color_.SwapRedBlue((uint)colorRGB.Value) & 0xffffff;
+					col = Util.Color_.SwapRedBlue((uint)colorRGB.GetValueOrDefault()) & 0xffffff;
 				}
 				if(opacity != null) {
 					f |= 2;
@@ -219,26 +220,6 @@ namespace Catkeys
 				this.Show(true);
 				this.ActivateLL();
 			}
-		}
-
-		/// <summary>
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
-		/// By default x y coordinates are relative to the client area.
-		/// </summary>
-		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
-		public void MouseMove(Coord x, Coord y, bool nonClient = false)
-		{
-			Mouse.Move(this, x, y, nonClient);
-		}
-
-		/// <summary>
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
-		/// By default x y coordinates are relative to the client area.
-		/// </summary>
-		/// <exception cref="Exception">Exceptions of Mouse.Click.</exception>
-		public void MouseClick(Coord x, Coord y, MButton button = MButton.Left, bool nonClient = false)
-		{
-			Mouse.ClickEx(button, this, x, y, nonClient);
 		}
 	}
 }

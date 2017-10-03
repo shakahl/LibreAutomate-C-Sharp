@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -169,7 +169,7 @@ namespace Catkeys
 		{
 			object o = GetVariable(name);
 			if(o == null) {
-				value = default(T);
+				value = default;
 				return false;
 			}
 			value = (T)o;

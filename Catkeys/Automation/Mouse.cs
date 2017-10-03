@@ -16,104 +16,11 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	/// <summary>
-	/// button for 'mouse click' functions.
-	/// There are two groups of values:
-	/// 1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
-	/// 2. Action (Down, Up, DoubleClick). Default: click.
-	/// Multiple values from the same group cannot be combined. For example Left|Right is invalid.
-	/// Values from different groups can be combined. For example Right|Down.
-	/// </summary>
-	[Flags]
-	public enum MButton
-	{
-		/// <summary>
-		/// The left button.
-		/// </summary>
-		Left = 1,
-
-		/// <summary>
-		/// The right button.
-		/// </summary>
-		Right = 2,
-
-		/// <summary>
-		/// The middle button.
-		/// </summary>
-		Middle = 4,
-
-		/// <summary>
-		/// The 4-th button.
-		/// </summary>
-		X1 = 8,
-
-		/// <summary>
-		/// The 5-th button.
-		/// </summary>
-		X2 = 16,
-
-		//rejected: not necessary. Can be confusing.
-		///// <summary>
-		///// Click (press and release).
-		///// This is default. Value 0.
-		///// </summary>
-		//Click = 0,
-
-		/// <summary>(flag) Press and don't release.</summary>
-		Down = 32,
-
-		/// <summary>(flag) Don't press, only release.</summary>
-		Up = 64,
-
-		/// <summary>(flag) Double-click.</summary>
-		DoubleClick = 128,
-	}
-
-	//rejected: now we use bools instead. Unlikely will need more options in the future; then can add overloads with flags.
-	///// <summary>
-	///// Flags for 'mouse move' and 'mouse move and click' functions.
-	///// </summary>
-	//[Flags]
-	//public enum MFlags
-	//{
-	//	/// <summary>
-	//	/// The specified x y coordinates are relative to the top-left corner of the window, not of its client area.
-	//	/// Not used with screen coordinates.
-	//	/// </summary>
-	//	NonClientXY = 1,
-
-	//	/// <summary>
-	//	/// The specified x y coordinates are relative to the work area of the primary screen.
-	//	/// Not used with window coordinates.
-	//	/// </summary>
-	//	WorkAreaXY = 2,
-
-	//	///// <summary>
-	//	///// Make the function less strict (less checking for possibly invalid conditions).
-	//	///// 1. Before moving the mouse pointer, do not wait while a mouse button is pressed by the user or another thread. For example, this waiting prevents an unintended drag-drop, but maybe you want to allow it.
-	//	///// 2. Allow to click in another window. Without this, if the click x y is not in window w or a window of its thread, activates w and throws exception if x y is still not in w.
-	//	///// You can also use Options.Relaxed=true instead of this flag.
-	//	///// </summary>
-	//	//Relaxed = 4,
-	//	//rejected: Use only Options.Relaxed. Rarely used.
-
-	//	///// <summary>
-	//	///// Restore mouse position after move+click.
-	//	///// Not used with the 'move' functions.
-	//	///// </summary>
-	//	//RestoreMouseXY = ,
-	//	//rejected: Better let use code 'Mouse.Restore();'. It is shorter and more clear than ', MFlags.RestoreMouseXY'.
-
-	//	//FromLastXY = ,
-	//	//rejected: To drag-drop, can use 3 statements: Mouse.LeftDown(x1, y1); Mouse.MoveRelative(x2, y2); Mouse.LeftUp().
-	//	//	With this flag 2, but not much shorter:		Mouse.LeftDown(x1, y1); Mouse.LeftUp(x2, y2, MFlags.FromLastXY).
-	//}
-
 	/// <summary>
 	/// Mouse functions.
 	/// </summary>
@@ -637,7 +544,7 @@ namespace Catkeys
 
 		[ThreadStatic] static MouseButtons t_pressedButtons;
 
-		static void _Click(MButton button, Point? pMoved = null, Wnd w = default(Wnd))
+		static void _Click(MButton button, Point? pMoved = null, Wnd w = default)
 		{
 			//Sending a click to a window of own thread often does not work.
 			//Reason 1: often the window on down event enters a message loop that waits for up event. But then this func cannot send the up event because it is in the loop (if it does doevents).
@@ -695,7 +602,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn ClickEx(MButton button = MButton.Left, bool useLastMoveXY = false)
+		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastMoveXY = false)
 		{
 			Point? p = null; if(useLastMoveXY) p = LastMoveXY;
 			_Click(button, p);
@@ -716,7 +623,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn ClickEx(MButton button, Coord x, Coord y, bool workArea = false, object screen = null)
+		public static MRelease ClickEx(MButton button, Coord x, Coord y, bool workArea = false, object screen = null)
 		{
 			var p = Move(x, y, workArea, screen);
 			_Click(button, p);
@@ -739,7 +646,7 @@ namespace Catkeys
 		/// If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <see cref="ScriptOptions.Relaxed">Options.Relaxed</see> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn ClickEx(MButton button, Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static MRelease ClickEx(MButton button, Wnd w, Coord x, Coord y, bool nonClient = false)
 		{
 			var p = Move(w, x, y, nonClient);
 
@@ -754,7 +661,7 @@ namespace Catkeys
 					if(!wTL.IsEnabled) bad = true; //probably an owned modal dialog disabled the window
 					else if(wTL.ThreadId == Wnd.Misc.WndShell.ThreadId) bad = true; //desktop
 					else if(wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare
-					else bad = !wTL.LibActivate(Wnd.LibActivateFlags.NoThrowIfInvalid | Wnd.LibActivateFlags.IgnoreIfNoActivateStyleEtc | Wnd.LibActivateFlags.NoGetWndWindow);
+					else bad = !wTL.LibActivate(Wnd.Lib.ActivateFlags.NoThrowIfInvalid | Wnd.Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc | Wnd.Lib.ActivateFlags.NoGetWndWindow);
 
 					//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.
 					//CONSIDER: activate always, because some controls don't respond when clicked while the window is inactive. But there is a risk to activate a window that does not want to be activated on click, even if we don't activate windows that have noactivate style. Probably better let the script author insert Activate before Click when need.
@@ -899,7 +806,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn LeftDown(bool useLastMoveXY = false)
+		public static MRelease LeftDown(bool useLastMoveXY = false)
 		{
 			return ClickEx(MButton.Left | MButton.Down, useLastMoveXY);
 		}
@@ -914,7 +821,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn LeftDown(Coord x, Coord y)
+		public static MRelease LeftDown(Coord x, Coord y)
 		{
 			return ClickEx(MButton.Left | MButton.Down, x, y);
 		}
@@ -932,7 +839,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. Example: <c>using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(20, 0);</c>. The button is auto-released when the 'using' block ends, even on exception. This can be used to drag-drop or drag-select.
 		/// </remarks>
-		public static _MBtn LeftDown(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static MRelease LeftDown(Wnd w, Coord x, Coord y, bool nonClient = false)
 		{
 			return ClickEx(MButton.Left | MButton.Down, w, x, y, nonClient);
 		}
@@ -981,7 +888,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn RightDown(bool useLastMoveXY = false)
+		public static MRelease RightDown(bool useLastMoveXY = false)
 		{
 			return ClickEx(MButton.Right | MButton.Down, useLastMoveXY);
 		}
@@ -996,7 +903,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn RightDown(Coord x, Coord y)
+		public static MRelease RightDown(Coord x, Coord y)
 		{
 			return ClickEx(MButton.Right | MButton.Down, x, y);
 		}
@@ -1014,7 +921,7 @@ namespace Catkeys
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static _MBtn RightDown(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static MRelease RightDown(Wnd w, Coord x, Coord y, bool nonClient = false)
 		{
 			return ClickEx(MButton.Right | MButton.Down, w, x, y, nonClient);
 		}
@@ -1136,29 +1043,6 @@ namespace Catkeys
 		}
 	}
 
-	/// <summary>Infrastructure.</summary>
-	/// <tocexclude />
-	[EditorBrowsable(EditorBrowsableState.Never), Browsable(false), CLSCompliant(false)]
-	public struct _MBtn :IDisposable
-	{
-		MButton _buttons;
-		///
-		public static implicit operator _MBtn(MButton b) => new _MBtn() { _buttons = b };
-
-		/// <summary>
-		/// Releases mouse buttons pressed by the function that returned the value of this variable.
-		/// </summary>
-		public void Dispose()
-		{
-			if(0 == (_buttons & MButton.Down)) return;
-			if(0 != (_buttons & MButton.Left)) Mouse.ClickEx(MButton.Left | MButton.Up, true);
-			if(0 != (_buttons & MButton.Right)) Mouse.ClickEx(MButton.Right | MButton.Up, true);
-			if(0 != (_buttons & MButton.Middle)) Mouse.ClickEx(MButton.Middle | MButton.Up, true);
-			if(0 != (_buttons & MButton.X1)) Mouse.ClickEx(MButton.X1 | MButton.Up, true);
-			if(0 != (_buttons & MButton.X2)) Mouse.ClickEx(MButton.X2 | MButton.Up, true);
-		}
-	}
-
 #if unfinished
 	public static partial class Mouse
 	{
@@ -1237,4 +1121,185 @@ namespace Catkeys
 		}
 	}
 #endif
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// button parameter type for <see cref="Mouse.ClickEx(MButton, bool)"/> and similar functions.
+	/// There are two groups of values:
+	/// 1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
+	/// 2. Action (Down, Up, DoubleClick). Default: click.
+	/// Multiple values from the same group cannot be combined. For example Left|Right is invalid.
+	/// Values from different groups can be combined. For example Right|Down.
+	/// </summary>
+	[Flags]
+	public enum MButton
+	{
+		/// <summary>
+		/// The left button.
+		/// </summary>
+		Left = 1,
+
+		/// <summary>
+		/// The right button.
+		/// </summary>
+		Right = 2,
+
+		/// <summary>
+		/// The middle button.
+		/// </summary>
+		Middle = 4,
+
+		/// <summary>
+		/// The 4-th button.
+		/// </summary>
+		X1 = 8,
+
+		/// <summary>
+		/// The 5-th button.
+		/// </summary>
+		X2 = 16,
+
+		//rejected: not necessary. Can be confusing.
+		///// <summary>
+		///// Click (press and release).
+		///// This is default. Value 0.
+		///// </summary>
+		//Click = 0,
+
+		/// <summary>(flag) Press and don't release.</summary>
+		Down = 32,
+
+		/// <summary>(flag) Don't press, only release.</summary>
+		Up = 64,
+
+		/// <summary>(flag) Double-click.</summary>
+		DoubleClick = 128,
+	}
+
+	//rejected: now we use bools instead. Unlikely will need more options in the future; then can add overloads with flags.
+	///// <summary>
+	///// Flags for 'mouse move' and 'mouse move and click' functions.
+	///// </summary>
+	//[Flags]
+	//public enum MFlags
+	//{
+	//	/// <summary>
+	//	/// The specified x y coordinates are relative to the top-left corner of the window, not of its client area.
+	//	/// Not used with screen coordinates.
+	//	/// </summary>
+	//	NonClientXY = 1,
+
+	//	/// <summary>
+	//	/// The specified x y coordinates are relative to the work area of the primary screen.
+	//	/// Not used with window coordinates.
+	//	/// </summary>
+	//	WorkAreaXY = 2,
+
+	//	///// <summary>
+	//	///// Make the function less strict (less checking for possibly invalid conditions).
+	//	///// 1. Before moving the mouse pointer, do not wait while a mouse button is pressed by the user or another thread. For example, this waiting prevents an unintended drag-drop, but maybe you want to allow it.
+	//	///// 2. Allow to click in another window. Without this, if the click x y is not in window w or a window of its thread, activates w and throws exception if x y is still not in w.
+	//	///// You can also use Options.Relaxed=true instead of this flag.
+	//	///// </summary>
+	//	//Relaxed = 4,
+	//	//rejected: Use only Options.Relaxed. Rarely used.
+
+	//	///// <summary>
+	//	///// Restore mouse position after move+click.
+	//	///// Not used with the 'move' functions.
+	//	///// </summary>
+	//	//RestoreMouseXY = ,
+	//	//rejected: Better let use code 'Mouse.Restore();'. It is shorter and more clear than ', MFlags.RestoreMouseXY'.
+
+	//	//FromLastXY = ,
+	//	//rejected: To drag-drop, can use 3 statements: Mouse.LeftDown(x1, y1); Mouse.MoveRelative(x2, y2); Mouse.LeftUp().
+	//	//	With this flag 2, but not much shorter:		Mouse.LeftDown(x1, y1); Mouse.LeftUp(x2, y2, MFlags.FromLastXY).
+	//}
+
+	/// <summary>
+	/// The Dispose function releases mouse buttons pressed by the function that returned this variable.
+	/// </summary>
+	/// <tocexclude />
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public struct MRelease :IDisposable
+	{
+		MButton _buttons;
+		///
+		public static implicit operator MRelease(MButton b) => new MRelease() { _buttons = b };
+
+		/// <summary>
+		/// Releases mouse buttons pressed by the function that returned this variable.
+		/// </summary>
+		public void Dispose()
+		{
+			if(0 == (_buttons & MButton.Down)) return;
+			if(0 != (_buttons & MButton.Left)) Mouse.ClickEx(MButton.Left | MButton.Up, true);
+			if(0 != (_buttons & MButton.Right)) Mouse.ClickEx(MButton.Right | MButton.Up, true);
+			if(0 != (_buttons & MButton.Middle)) Mouse.ClickEx(MButton.Middle | MButton.Up, true);
+			if(0 != (_buttons & MButton.X1)) Mouse.ClickEx(MButton.X1 | MButton.Up, true);
+			if(0 != (_buttons & MButton.X2)) Mouse.ClickEx(MButton.X2 | MButton.Up, true);
+		}
+	}
+
+	public static partial class ExtensionMethods
+	{
+		/// <summary>
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
+		/// By default x y coordinates are relative to the client area.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
+		public static void MouseMove(this Wnd t, Coord x, Coord y, bool nonClient = false)
+		{
+			t.ThrowIf0();
+			Mouse.Move(t, x, y, nonClient);
+		}
+
+		/// <summary>
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
+		/// By default x y coordinates are relative to the client area.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
+		public static void MouseClick(this Wnd t, Coord x, Coord y, MButton button = MButton.Left, bool nonClient = false)
+		{
+			t.ThrowIf0();
+			Mouse.ClickEx(button, t, x, y, nonClient);
+		}
+
+		/// <summary>
+		/// Moves the mouse to the found image.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord, bool, object)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the found image. Default - center.</param>
+		/// <param name="y">Y coordinate in the found image. Default - center.</param>
+		/// <exception cref="NotFoundException">Image not found.</exception>
+		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
+		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
+		public static void MouseMove(this SIResult t, Coord x = default, Coord y = default)
+		{
+			if(t == null) throw new NotFoundException("Image not found.");
+			t.LibMouseAction(0, x, y);
+		}
+
+		/// <summary>
+		/// Clicks the found image.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord, bool, object)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the found image. Default - center.</param>
+		/// <param name="y">Y coordinate in the found image. Default - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <exception cref="NotFoundException">Image not found.</exception>
+		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
+		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
+		public static void MouseClick(this SIResult t, Coord x = default, Coord y = default, MButton button = MButton.Left)
+		{
+			if(t == null) throw new NotFoundException("Image not found.");
+			if(button == 0) button = MButton.Left;
+			t.LibMouseAction(button, x, y);
+		}
+
+	}
 }

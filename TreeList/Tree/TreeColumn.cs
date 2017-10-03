@@ -8,6 +8,7 @@ using System.Windows.Forms.VisualStyles;
 using System.Drawing.Imaging;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Aga.Controls.Tree

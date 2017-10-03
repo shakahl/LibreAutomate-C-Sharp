@@ -1,5 +1,3 @@
-//#define ENUMWINDOWS_LESS_GARBAGE
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,51 +18,40 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
-using System.Collections;
 
 namespace Catkeys.Util
 {
-	//CONSIDER: if rarely used, remove and use List or create something better. Now used only in single function.
-
 	/// <summary>
 	/// Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
 	/// To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="NativeHeap"/>.
-	/// Should be explicitly disposed to free the native memory (else it will be freed later by the finalizer).
-	/// Does not support reference types.
+	/// Must be explicitly disposed to free the native memory. Does not have a finalizer because is struct (to avoid garbage).
+	/// Does not support reference types. Does not call Dispose.
 	/// </summary>
 	//[DebuggerStepThrough]
-	internal unsafe class LibArrayBuilder<T> :IDisposable
-#if ENUMWINDOWS_LESS_GARBAGE
-		, IEnumerable<T>
-#endif
-		where T : struct
+	internal unsafe struct LibArrayBuilder<T> :IDisposable where T : struct
 	{
 		void* _p;
-		int _len, _cap, _minCap;
+		int _len, _cap;
 
-		//int _typeSize;
-		int _typeSize { get => Unsafe.SizeOf<T>(); } //optimized to the contant value
+		static int s_minCap;
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="capacity">
-		/// Minimal Capacity to set when adding elements, to avoid frequent reallocations.
-		/// If 0, uses default capacity; it is 500 elements for types not bigger than 32 bytes; it is smaller for bigger types, trying to not exceed 16384 bytes.
-		/// </param>
-		public LibArrayBuilder(int capacity = 0)
+		static int _TypeSize { get => Unsafe.SizeOf<T>(); } //optimized to the constant value, except in static ctor (why?)
+
+		static LibArrayBuilder()
 		{
-			//_typeSize = Unsafe.SizeOf<T>();
+			var r = 16384 / Unsafe.SizeOf<T>(); //above 16384 the memory allocation API become >=2 times slower
+			if(r > 500) r = 500; else if(r < 8) r = 8;
+			s_minCap = r;
 
-			//minimal capacity
-			if(capacity > 0) _minCap = capacity;
-			else {
-				var r = 16384 / _typeSize; //above 16384 the memory allocation API become >=2 times slower
-				if(r > 500) r = 500; else if(r < 8) r = 8;
-				_minCap = r;
-			}
+			//info: 500 is optimal for getting all top-level windows (and invisible) as LibArrayBuilder<Wnd>.
+			//	Normally there are 200-400 windows on my PC, rarely > 500.
+		}
+
+		public void Dispose()
+		{
+			Free();
 		}
 
 		/// <summary>
@@ -73,19 +60,14 @@ namespace Catkeys.Util
 		public void* Ptr { get => _p; }
 
 		/// <summary>
-		/// Gets the size of the type of elements.
-		/// </summary>
-		public int ElementSize { get => _typeSize; }
-
-		///// <summary>
-		///// Gets the number of bytes in the array (Count*ElementSize).
-		///// </summary>
-		//public int ByteCount { get => _typeSize * _len; }
-
-		/// <summary>
 		/// Gets the number of elements.
 		/// </summary>
 		public int Count { get => _len; }
+
+		/// <summary>
+		/// Gets the number of bytes in the array (Count*sizeof(T)).
+		/// </summary>
+		public int ByteCount { get => _len * _TypeSize; }
 
 		/// <summary>
 		/// Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.
@@ -98,7 +80,7 @@ namespace Catkeys.Util
 			{
 				if(value != _cap) {
 					if(value < _len) throw new ArgumentOutOfRangeException();
-					_p = NativeHeap.ReAlloc(_p, value * _typeSize);
+					_p = NativeHeap.ReAlloc(_p, value * _TypeSize);
 					_cap = value;
 				}
 			}
@@ -114,8 +96,8 @@ namespace Catkeys.Util
 		public void* Alloc(int count, bool zeroInit = true)
 		{
 			if(_cap != 0) Free();
-			int cap = Math.Max(count, 8);
-			_p = NativeHeap.Alloc(cap * _typeSize, zeroInit);
+			int cap = Math.Max(count, s_minCap);
+			_p = NativeHeap.Alloc(cap * _TypeSize, zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -133,8 +115,8 @@ namespace Catkeys.Util
 		/// </remarks>
 		public void* ReAlloc(int count, bool zeroInit = true)
 		{
-			int cap = Math.Max(count, 8);
-			_p = NativeHeap.ReAlloc(_p, cap * _typeSize, zeroInit);
+			int cap = Math.Max(count, s_minCap);
+			_p = NativeHeap.ReAlloc(_p, cap * _TypeSize, zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -151,28 +133,13 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Calls Free and GC.SuppressFinalize.
-		/// </summary>
-		public void Dispose()
-		{
-			Free();
-			GC.SuppressFinalize(this);
-		}
-
-		~LibArrayBuilder()
-		{
-			Free();
-			Debug_.Print("not disposed " + nameof(LibArrayBuilder<T>));
-		}
-
-		/// <summary>
 		/// Adds one element.
 		/// Uses ref to avoid copying when T size is big. Does not modify the passed variable.
 		/// </summary>
 		public void AddR(ref T value)
 		{
 			if(_len == _cap) _EnsureCapacity();
-			void* dest = (byte*)_p + _typeSize * _len;
+			void* dest = (byte*)_p + _TypeSize * _len;
 			Unsafe.Copy(dest, ref value);
 			//Unsafe.Write(dest, value);
 			//Unsafe.AsRef<T>(dest) = value;
@@ -189,7 +156,7 @@ namespace Catkeys.Util
 		public void Add(T value)
 		{
 			if(_len == _cap) _EnsureCapacity();
-			void* dest = (byte*)_p + _typeSize * _len;
+			void* dest = (byte*)_p + _TypeSize * _len;
 			Unsafe.Copy(dest, ref value);
 			//Unsafe.Write(dest, value);
 			//Unsafe.AsRef<T>(dest) = value;
@@ -209,19 +176,19 @@ namespace Catkeys.Util
 		public ref T Add()
 		{
 			if(_len == _cap) _EnsureCapacity();
-			void* dest = (byte*)_p + _typeSize * _len;
+			void* dest = (byte*)_p + _TypeSize * _len;
 			ref T r = ref Unsafe.AsRef<T>(dest);
-			r = default(T);
+			r = default;
 			_len++;
 			return ref r;
 		}
 
 		/// <summary>
-		/// Capacity = Math.Max(_cap * 2, _minCap).
+		/// Capacity = Math.Max(_cap * 2, s_minCap).
 		/// </summary>
 		void _EnsureCapacity()
 		{
-			Capacity = Math.Max(_cap * 2, _minCap);
+			Capacity = Math.Max(_cap * 2, s_minCap);
 		}
 
 		/// <summary>
@@ -235,7 +202,7 @@ namespace Catkeys.Util
 			get
 			{
 				if((uint)i >= (uint)_len) _ThrowBadIndex();
-				return ref Unsafe.AsRef<T>((byte*)_p + _typeSize * i);
+				return ref Unsafe.AsRef<T>((byte*)_p + _TypeSize * i);
 			}
 		}
 
@@ -246,55 +213,17 @@ namespace Catkeys.Util
 		}
 
 		/// <summary>
-		/// Copies elements to a new array.
+		/// Copies elements to a new managed array.
 		/// </summary>
 		public T[] ToArray()
 		{
+			if(_len == 0) return s_emptyArray;
 			var r = new T[_len];
 			for(int i = 0, n = _len; i < n; i++)
-				r[i] = Unsafe.Read<T>((byte*)_p + i * _typeSize);
+				r[i] = Unsafe.Read<T>((byte*)_p + i * _TypeSize);
 			return r;
 		}
 
-		/// <summary>
-		/// Copies elements of this and another variable to a new array.
-		/// </summary>
-		public T[] ToArrayAndAppend(LibArrayBuilder<T> append)
-		{
-			var r = new T[_len + append._len];
-			_CopyTo(r, 0);
-			append._CopyTo(r, _len);
-			return r;
-		}
-
-		void _CopyTo(T[] a, int aFirst)
-		{
-			for(int i = 0, n = _len; i < n; i++)
-				a[aFirst++] = Unsafe.Read<T>((byte*)_p + i * _typeSize);
-		}
-
-#if ENUMWINDOWS_LESS_GARBAGE
-		public IEnumerator<T> GetEnumerator() => new Enumerator(this);
-
-		IEnumerator IEnumerable.GetEnumerator() => null; //not used
-
-		public class Enumerator :IEnumerator<T>
-		{
-			LibArrayBuilder<T> _a;
-			int _index;
-
-			internal Enumerator(LibArrayBuilder<T> a) { _a = a; _index = -1; }
-
-			public T Current => _a[_index];
-
-			object IEnumerator.Current => null; //not used
-
-			public void Dispose() { }
-
-			public bool MoveNext() => ++_index < _a.Count;
-
-			public void Reset() => _index = -1;
-		}
-#endif
+		static T[] s_emptyArray=new T[0];
 	}
 }

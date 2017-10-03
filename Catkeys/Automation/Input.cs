@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable 1591 //XML doc. //TODO
@@ -98,7 +98,7 @@ namespace Catkeys
 
 			Api.GetCursorPos(out var p);
 			r = new RECT(p.X, p.Y, 0, 16, true);
-			return default(Wnd);
+			return default;
 
 			//note: in Word, after changing caret pos, gets pos 0 0. After 0.5 s gets correct. After typing always correct.
 			//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.

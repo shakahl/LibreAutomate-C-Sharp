@@ -59,6 +59,7 @@ using System.Drawing;
 using Microsoft.Win32.SafeHandles;
 using System.Collections.Concurrent;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -66,7 +67,7 @@ namespace Catkeys
 	/// <summary>
 	/// Writes text to the output window, console or log file.
 	/// </summary>
-	[DebuggerStepThrough]
+	//[DebuggerStepThrough]
 	public static class Output
 	{
 		//note:
@@ -113,10 +114,8 @@ namespace Catkeys
 				_ClearToLogFile();
 			} else if(IsWritingToConsole) {
 				try { Console.Clear(); } catch { } //exception if redirected, it is documented
-#if DEBUG
-			} else if(DebugWriteToQM2) {
-				_DebugWriteToQM2(null);
-#endif
+			} else if(LibWriteToQM2) {
+				_WriteToQM2(null);
 			} else {
 				_ClearToOutputServer();
 			}
@@ -127,7 +126,11 @@ namespace Catkeys
 		/// <summary>
 		/// Writes string value + "\r\n" to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
 		/// </summary>
-		public static void Write(string value) { Writer.WriteLine(value); }
+		public static void Write(string value)
+		{
+			Writer.WriteLine(value);
+			//note: need this overload. Cannot use Write(object) for strings because string is IEnumerable<T> and we have overload with IEnumerable<T>.
+		}
 
 		/// <summary>
 		/// Writes value?.ToString().
@@ -139,52 +142,37 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Writes array, List&lt;T&gt; or other generic collection as a list of element values.
+		/// Writes array, List, Dictionary or other generic collection as a list of element values.
 		/// Calls <see cref="Write(string)"/>.
 		/// </summary>
 		public static void Write<T>(IEnumerable<T> value, string separator = "\r\n")
 		{
-			if(value == null) { Write(null); return; }
-			Write(string.Join(separator, value));
-		}
-
-		/// <summary>
-		/// Writes non-generic collection as a list of element values.
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void Write(System.Collections.IEnumerable value, string separator = "\r\n")
-		{
-			if(value == null) { Write(null); return; }
-			var b = new StringBuilder();
-			foreach(object o in value) {
-				if(b.Length != 0) b.Append(separator);
-				b.Append(o?.ToString());
-			}
-			Write(b.ToString());
-		}
-
-		/// <summary>
-		/// Writes dictionary as a list of [key, value].
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void Write<K, V>(IDictionary<K, V> value, string separator = "\r\n")
-		{
-			if(value == null) { Write(null); return; }
-			Write(string.Join(separator, value));
+			Write(value == null ? null : string.Join(separator, value));
 		}
 
 		/// <summary>
 		/// Writes multiple argument values using separator ", ".
 		/// Calls <see cref="Write(string)"/>.
 		/// </summary>
-		public static void WriteList(params object[] values) { WriteListSep(", ", values); }
+		public static void WriteList(params object[] values)
+		{
+			WriteListSep(", ", values);
+		}
+		//note: better would be these, but then compiler does not know which overload to use for arrays:
+		//	Write<T>(IEnumerable<T> value)
+		//	Write(params object[] values)
+		//	WriteSep<T>(string separator, IEnumerable<T> value)
+		//	WriteSep(string separator, params object[] values)
 
 		/// <summary>
 		/// Writes multiple argument values using the specified separator.
 		/// Calls <see cref="Write(string)"/>.
 		/// </summary>
-		public static void WriteListSep(string separator, params object[] values) { Write(string.Join(separator, values as IEnumerable<object>)); }
-		//info: the 'as IEnumerable<object>' is a workaround for string.Join(string sep, params object[] a) bug: returns "" if a[0] is null.
+		public static void WriteListSep(string separator, params object[] values)
+		{
+			Write(values as IEnumerable<object>, separator);
+			//info: the 'as IEnumerable<object>' is a workaround for string.Join(string sep, params object[] a) bug: returns "" if a[0] is null.
+		}
 
 		/// <summary>
 		/// Writes an integer in hexadecimal format, like "0x5A".
@@ -193,7 +181,6 @@ namespace Catkeys
 		public static void WriteHex(object value) { Write($"0x{value:X}"); }
 		//never mind: this is slower, but with Write("0x" + value.ToString("X")); we'd need switch or overloads for all 8 integer types.
 
-		//SHOULDDO: review all Output.Warning(...) calls and maybe replace some with Debug_.WarningOpt(...)
 		/// <summary>
 		/// Writes string followed by the stack trace.
 		/// Prepends "Warning: ", except when the string starts with "Warning:", "Note:", "Info:" or "Debug:" (case-insensitive).
@@ -201,8 +188,10 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="text">Warning text.</param>
 		/// <param name="showStackFromThisFrame">If &gt;= 0, appends stack trace, skipping this number of frames.</param>
+		/// <remarks>
+		/// If <see cref="ScriptOptions.Debug">Options.Debug</see> is false, does not show more that 1 warning/second.
+		/// </remarks>
 		/// <seealso cref="ScriptOptions.DisableWarnings"/>
-		/// <seealso cref="Debug_.WarningOpt"/>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void Warning(object text, int showStackFromThisFrame = 0)
 		{
@@ -211,6 +200,12 @@ namespace Catkeys
 
 			var a = Options.LibDisabledWarnings;
 			if(a != null) foreach(var k in a) if(s.Like_(k, true)) return;
+
+			if(!Options.Debug) {
+				var t = Time.Milliseconds;
+				if(t - _warningTime < 1000) return;
+				_warningTime = t;
+			}
 
 			string prefix = "Warning: ";
 			if(0 != s.StartsWith_(true, "Warning:", "Note:", "Info:", "Debug:")) prefix = null;
@@ -222,6 +217,7 @@ namespace Catkeys
 
 			Print(s);
 		}
+		static long _warningTime;
 
 		#endregion
 
@@ -273,9 +269,7 @@ namespace Catkeys
 
 			if(LogFile != null) _WriteToLogFile(value);
 			else if(IsWritingToConsole) Console.WriteLine(value);
-#if DEBUG
-			else if(DebugWriteToQM2) _DebugWriteToQM2(value);
-#endif
+			else if(LibWriteToQM2) _WriteToQM2(value);
 			else _WriteToOutputServer(value);
 		}
 
@@ -432,6 +426,18 @@ namespace Catkeys
 			var loc = s_localServer;
 			if(loc != null) loc.LocalWrite(s, time, caller);
 			else s_client.WriteLine(s, time, caller);
+
+			//TODO: if text is written at a high rate, the server may be too slow to get it. Can accumulate gigabytes and crash.
+			//Example:
+			//this code executes maybe one minute. The server gets all text in one time. Then its StringBuilder's capacity is > 870 MB, and total memory should be several GB.
+			//for(int i = 0; i < 10000000; i++) {
+			//	Output.Write("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+			//}
+			//this code is OK. Server gets text maybe 10 times.
+			//for(int i = 0; i < 1000; i++) {
+			//	Output.Write("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+			//	Time.Sleep(1);
+			//}
 		}
 		static string _domainName = AppDomain.CurrentDomain.FriendlyName; //cache because the property returns new string object everytime. Maybe the name can be changed, but unlikely somebody would know and do it, never mind.
 
@@ -460,15 +466,14 @@ namespace Catkeys
 		}
 #endif
 
-#if DEBUG
 		/// <summary>
 		/// Sets to use QM2 as the output server.
 		/// Eg can be used to debug the Output class itself. Although can instead use console.
 		/// </summary>
-		public static bool DebugWriteToQM2 { get; set; }
+		internal static bool LibWriteToQM2 { get; set; }
 
 		/// <param name="s">If null, clears output.</param>
-		static void _DebugWriteToQM2(string s)
+		static void _WriteToQM2(string s)
 		{
 			if(!_hwndQM2.IsAlive) {
 				_hwndQM2 = Api.FindWindow("QM_Editor", null);
@@ -477,7 +482,6 @@ namespace Catkeys
 			_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
 		}
 		static Wnd _hwndQM2;
-#endif
 
 		/// <summary>
 		/// Calls Api.CreateFile to open file or mailslot.
@@ -534,9 +538,9 @@ namespace Catkeys
 				int n = Convert_.Utf8LengthFromString(s) + 1;
 				fixed (byte* b = Util.Buffers.LibByte(n + 35)) {
 					if(LogFileTimestamp) {
-						Api.SYSTEMTIME t; Api.GetLocalTime(out t);
+						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = Util.CharPtr.Length(b);
+						int nn = Util.LibCharPtr.Length(b);
 						Convert_.Utf8FromString(s, b + nn, n);
 						n += nn;
 						if(s.StartsWith_("<>")) {
@@ -746,6 +750,7 @@ namespace Catkeys
 			/// <summary>
 			/// See <see cref="Message.Type"/>.
 			/// </summary>
+			/// <tocexclude />
 			public enum MessageType
 			{
 				/// <summary>
@@ -765,6 +770,7 @@ namespace Catkeys
 			/// Contains message text and/or related info.
 			/// See <see cref="Messages"/>.
 			/// </summary>
+			/// <tocexclude />
 			public class Message
 			{
 				/// <summary>
@@ -968,7 +974,7 @@ namespace Catkeys
 												int lenCaller = *b++;
 												if(lenCaller > 0) {
 													if(10 + lenCaller * 2 > nextSize) { ok = false; break; }
-													caller = _GetCallerString((char*)b, lenCaller);
+													caller = Util.StringCache.LibAdd((char*)b, lenCaller);
 													b += lenCaller * 2;
 												}
 												int len = (nextSize - (int)(b - b0)) / 2;
@@ -1013,19 +1019,6 @@ namespace Catkeys
 					Debug_.Dialog(ex.Message);
 				}
 			}
-
-			//Optimization to avoid much garbage in some important cases.
-			//If previous caller was the same, returns its cached string object, else creates/caches new string object.
-			string _GetCallerString(char* p, int len)
-			{
-				if(_prevCaller != null && _prevCaller.Length == len) {
-					int i;
-					for(i = 0; i < len; i++) if(p[i] != _prevCaller[i]) break;
-					if(i == len) return _prevCaller;
-				}
-				return _prevCaller = new string(p, 0, len);
-			}
-			string _prevCaller;
 
 			/// <summary>
 			/// Adds s directly to Messages and sets timer.
@@ -1077,8 +1070,7 @@ namespace Catkeys
 				get
 				{
 					if(_mailslotName == null) {
-						Api.ProcessIdToSessionId(Api.GetCurrentProcessId(), out int sessionId);
-						_mailslotName = @"\\.\mailslot\Catkeys.Output\" + sessionId; //session-global namespace
+						_mailslotName = @"\\.\mailslot\Catkeys.Output\" + Process_.GetSessionId().ToString(); //session-global namespace
 					}
 					return _mailslotName;
 				}

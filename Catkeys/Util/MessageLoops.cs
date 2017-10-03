@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys.Util
@@ -38,7 +38,7 @@ namespace Catkeys.Util
 				try {
 					Application.DoEvents(); //info: with Time.DoEvents something does not work, don't remember.
 
-					for(;;) {
+					for(; ; ) {
 						//this would not respond to Thread.Abort
 						//uint k = Api.MsgWaitForMultipleObjectsEx(1, ref _loopEndEvent, Api.INFINITE, Api.QS_ALLINPUT);
 						//this responds to Thread.Abort
@@ -48,7 +48,7 @@ namespace Catkeys.Util
 						Application.DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.
 
-						if(Api.PeekMessage(out var _, default(Wnd), Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
+						if(Api.PeekMessage(out var _, default, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
 					}
 				}
 				finally {
@@ -157,15 +157,15 @@ namespace Catkeys.Util
 		/// <param name="w">Window or control that owns the drag operation.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-		public static bool SimpleDragDrop(Wnd w, MouseButtons mouseButton = MouseButtons.Left, Action<SimpleDragDropCallbackArgs> onMouseKeyMessage = null)
+		public static bool SimpleDragDrop(Wnd w, MouseButtons mouseButton = MouseButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
 			Api.SetCapture(w);
 
 			bool R = false;
-			var x = new SimpleDragDropCallbackArgs();
-			for(;;) {
+			var x = new MsgArgs();
+			for(; ; ) {
 				if(Api.GetCapture() != w) return false;
-				if(Api.GetMessage(out x.Msg, default(Wnd), 0, 0) <= 0) {
+				if(Api.GetMessage(out x.Msg, default, 0, 0) <= 0) {
 					if(x.Msg.message == Api.WM_QUIT) Api.PostQuitMessage(x.Msg.wParam);
 					break;
 				}
@@ -208,16 +208,15 @@ namespace Catkeys.Util
 		/// <param name="c">Window or control that owns the drag operation.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-		public static bool SimpleDragDrop(Control c, MouseButtons mouseButton = MouseButtons.Left, Action<SimpleDragDropCallbackArgs> onMouseKeyMessage = null)
+		public static bool SimpleDragDrop(Control c, MouseButtons mouseButton = MouseButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
 			return SimpleDragDrop((Wnd)c, mouseButton, onMouseKeyMessage);
 		}
 
 		/// <summary>
-		/// <see cref="SimpleDragDrop(Control, MouseButtons, Action{SimpleDragDropCallbackArgs})"/> callback function arguments.
+		/// <see cref="SimpleDragDrop(Control, MouseButtons, Action{MsgArgs})"/> callback function arguments.
 		/// </summary>
-		/// <tocexclude />
-		public class SimpleDragDropCallbackArgs
+		public class MsgArgs
 		{
 			/// <summary>
 			/// Current message retrieved by API <msdn>GetMessage</msdn>.

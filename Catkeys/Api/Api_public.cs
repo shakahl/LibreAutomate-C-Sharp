@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-//using System.Text; //StringBuilder, we don't use it, very slow
 using System.Drawing; //Point, Size
-using System.ComponentModel;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable 1591 //missing XML documentation
 
-namespace Catkeys
+namespace Catkeys.Types
 {
 	/// <summary>
 	/// Windows API types and constants used with public functions (parameters etc) of this library.
@@ -84,14 +82,20 @@ namespace Catkeys
 		public static string GetErrorMessage(int errorCode)
 		{
 			if(errorCode == 0) return null;
+			if(errorCode == 1) return "No error, but the requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
+			string s = "Unknown exception";
 			char* p = null;
 			const uint fl = Api.FORMAT_MESSAGE_FROM_SYSTEM | Api.FORMAT_MESSAGE_ALLOCATE_BUFFER | Api.FORMAT_MESSAGE_IGNORE_INSERTS;
 			int r = Api.FormatMessage(fl, Zero, errorCode, 0, &p, 0, Zero);
-			while(r > 0 && p[r - 1] <= ' ') r--;
-			if(r == 0) return $"Unknown error (0x{errorCode:X}).";
-			if(p[r - 1] != '.') p[r++] = '.';
-			var s = new string(p, 0, r);
-			Api.LocalFree(p);
+			if(p != null) {
+				while(r > 0 && p[r - 1] <= ' ') r--;
+				if(r > 0) {
+					if(p[r - 1] == '.') r--;
+					s = new string(p, 0, r);
+				}
+				Api.LocalFree(p);
+			}
+			s = $"{s} (0x{errorCode:X}).";
 			return s;
 		}
 
@@ -443,6 +447,5 @@ namespace Catkeys
 		public const uint SMTO_NOTIMEOUTIFNOTHUNG = 0x0008;
 		/// <exclude />
 		public const uint SMTO_ERRORONEXIT = 0x0020;
-
 	}
 }

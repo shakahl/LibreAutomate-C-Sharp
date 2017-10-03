@@ -18,7 +18,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -37,27 +37,7 @@ namespace Catkeys
 		{
 			s = Path_.ExpandEnvVar(s);
 			if(!Path_.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
-			return Path_.LibNormalize(s, Path_.NormalizeFlags.DoNotPrefixLongPath, true);
-		}
-
-		//TODO: Shell.RunFlags -> SRFlags
-		/// <summary>
-		/// flags for <see cref="Run"/>.
-		/// </summary>
-		[Flags]
-		public enum RunFlags
-		{
-			/// <summary>
-			/// Show error message box if fails, for example if file not found.
-			/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="TryRun"/>.
-			/// </summary>
-			ShowErrorUI = 1,
-
-			/// <summary>
-			/// If started new process, wait until it exits.
-			/// Uses <see cref="WaitHandle.WaitOne()"/>.
-			/// </summary>
-			WaitForExit = 2,
+			return Path_.LibNormalize(s, PNFlags.DoNotPrefixLongPath, true);
 		}
 
 		/// <summary>
@@ -100,16 +80,16 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Wnd.FindOrRun"/>
-		public static int Run(string s, string args = null, RunFlags flags = 0, RunMoreParams more = null)
+		public static int Run(string s, string args = null, SRFlags flags = 0, SRParams more = null)
 		{
 			//TODO: return RunResult object that contains process id or exit code.
 			//	It also contains other info that helps Wnd.Find and WaitFor.WindowActive etc to find correct window.
 			//	It also could contain unclosed process handle, if a flag is set.
 			//	Pass it to Wnd.Find as programEtc.
 
-			var x = new _Api.SHELLEXECUTEINFO();
+			var x = new Api.SHELLEXECUTEINFO();
 			x.cbSize = Api.SizeOf(x);
-			x.fMask = _Api.SEE_MASK_NOZONECHECKS | _Api.SEE_MASK_NOASYNC | _Api.SEE_MASK_NOCLOSEPROCESS | _Api.SEE_MASK_CONNECTNETDRV | _Api.SEE_MASK_UNICODE;
+			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_NOCLOSEPROCESS | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
 			x.nShow = Api.SW_SHOWNORMAL;
 			if(more != null) {
 				more.ProcessHandle = null;
@@ -123,9 +103,9 @@ namespace Catkeys
 				}
 			}
 
-			if(0 == (flags & RunFlags.ShowErrorUI)) x.fMask |= _Api.SEE_MASK_FLAG_NO_UI;
-			if(x.lpVerb != null) x.fMask |= _Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
-			if(0 == (flags & RunFlags.WaitForExit)) x.fMask |= _Api.SEE_MASK_NO_CONSOLE;
+			if(0 == (flags & SRFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
+			if(x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
+			if(0 == (flags & SRFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
 
 			if(!Empty(args)) x.lpParameters = Path_.ExpandEnvVar(args);
 			s = Path_.ExpandEnvVar(s);
@@ -135,12 +115,12 @@ namespace Catkeys
 				pidl = Pidl.FromString(s); //does not throw
 				if(pidl != null) {
 					x.lpIDList = pidl;
-					x.fMask |= _Api.SEE_MASK_INVOKEIDLIST;
+					x.fMask |= Api.SEE_MASK_INVOKEIDLIST;
 				} else x.lpFile = s;
 			} else {
 				bool isFullPath = Path_.IsFullPath(s);
 				if(isFullPath) {
-					s = Path_.LibNormalize(s, Path_.NormalizeFlags.DoNotExpandDosPath | Path_.NormalizeFlags.DoNotPrefixLongPath, true);
+					s = Path_.LibNormalize(s, PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath, true);
 					s = Path_.UnprefixLongPath(s); //the API supports prefixed path for exe but not for documents
 					if(Files.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(s) && !Files.ExistsAsAny(s)) {
 						s = Files.Misc.DisableRedirection.GetNonRedirectedSystemPath(s);
@@ -161,14 +141,14 @@ namespace Catkeys
 
 			bool ok = false;
 			try {
-				ok = _Api.ShellExecuteEx(ref x);
+				ok = Api.ShellExecuteEx(ref x);
 			}
 			finally {
 				pidl?.Dispose();
 			}
 			if(!ok) throw new CatException(0, $"*run '{s}'");
 
-			bool waitForExit = 0 != (flags & RunFlags.WaitForExit);
+			bool waitForExit = 0 != (flags & SRFlags.WaitForExit);
 			bool callerNeedsHandle = more != null && more.NeedProcessHandle;
 			Process_.LibProcessWaitHandle ph = null;
 			if(x.hProcess != Zero) {
@@ -211,7 +191,7 @@ namespace Catkeys
 		/// <seealso cref="Output.Warning"/>
 		/// <seealso cref="ScriptOptions.DisableWarnings"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static int TryRun(string s, string args = null, RunFlags flags = 0, RunMoreParams more = null)
+		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRParams more = null)
 		{
 			try {
 				return Run(s, args, flags, more);
@@ -220,111 +200,6 @@ namespace Catkeys
 				Output.Warning(e.Message, 1);
 				return int.MinValue;
 			}
-		}
-
-		/// <summary>
-		/// Used to pass more parameters to <see cref="Run"/>.
-		/// </summary>
-		public class RunMoreParams
-		{
-			/// <summary>
-			/// Initial "current directory" for the new process.
-			/// If this is not set (null), the function gets parent directory path of the specified file that is to run, if possible (if its full path is specified or found). It's because some incorrectly designed programs look for their files in "current directory", and fail to start if initial "current directory" is not set to the program's directory.
-			/// If this is "" or invalid or the function cannot find full path, the new process will inherit "current directory" of this process.
-			/// </summary>
-			public string CurrentDirectory;
-
-			/// <summary>
-			/// File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
-			/// Not all menu items will work. Some may have different name than in the menu. Use verb "RunAs" for "Run as administrator".
-			/// </summary>
-			public string Verb;
-
-			/// <summary>
-			/// A window that may be used as owner window of error message box.
-			/// Also, new window should be opened on the same screen. However many programs ignore it.
-			/// </summary>
-			public WndOrControl OwnerWindow;
-
-			/// <summary>
-			/// Preferred window state.
-			/// Many programs ignore it.
-			/// </summary>
-			public ProcessWindowStyle WindowState;
-
-			//no. If need, caller can get window and call EnsureInScreen etc.
-			//public Screen Screen;
-			//this either does not work or I could not find a program that uses default window position (does not save/restore)
-			//if(more.Screen != null) { x._14.hMonitor = (IntPtr)more.Screen.GetHashCode(); x.fMask |= _Api.SEE_MASK_HMONITOR; } //GetHashCode gets HMONITOR
-
-			/// <summary>
-			/// Get process handle, if possible.
-			/// The <see cref="ProcessHandle"/> property will contain it.
-			/// </summary>
-			public bool NeedProcessHandle;
-
-			/// <summary>
-			/// This is an [Out] value.
-			/// When the function returns, if <see cref="NeedProcessHandle"/> was set to true, contains process handle in a <see cref="WaitHandle"/> variable.
-			/// null if did not start new process (eg opened the document in an existing process) or did not get process handle for some other reason.
-			/// Note: WaitHandle is disposable.
-			/// </summary>
-			/// <example>
-			/// <code><![CDATA[
-			/// //this code does the same as Shell.Run(@"notepad.exe", flags: Shell.RunFlags.WaitForExit);
-			/// var p = new Shell.RunMoreParams() { NeedProcessHandle = true };
-			/// Shell.Run(@"notepad.exe", more: p);
-			/// using(var h = p.ProcessHandle) h?.WaitOne();
-			/// ]]></code>
-			/// </example>
-			public WaitHandle ProcessHandle { get; internal set; }
-		}
-
-		internal partial class _Api
-		{
-			internal const uint SEE_MASK_CONNECTNETDRV = 0x80;
-			internal const uint SEE_MASK_NOZONECHECKS = 0x800000;
-			internal const uint SEE_MASK_UNICODE = 0x4000;
-			internal const uint SEE_MASK_FLAG_NO_UI = 0x400;
-			internal const uint SEE_MASK_INVOKEIDLIST = 0xC;
-			internal const uint SEE_MASK_NOCLOSEPROCESS = 0x40;
-			internal const uint SEE_MASK_NOASYNC = 0x100;
-			internal const uint SEE_MASK_NO_CONSOLE = 0x8000;
-			internal const uint SEE_MASK_HMONITOR = 0x200000;
-			internal const uint SEE_MASK_WAITFORINPUTIDLE = 0x2000000;
-
-			internal struct SHELLEXECUTEINFO
-			{
-				public uint cbSize;
-				public uint fMask;
-				public Wnd hwnd;
-				public string lpVerb;
-				public string lpFile;
-				public string lpParameters;
-				public string lpDirectory;
-				public int nShow;
-				public IntPtr hInstApp;
-				public IntPtr lpIDList;
-				public string lpClass;
-				public IntPtr hkeyClass;
-				public uint dwHotKey;
-
-				[StructLayout(LayoutKind.Explicit)]
-				internal struct TYPE_1
-				{
-					[FieldOffset(0)] public IntPtr hIcon;
-					[FieldOffset(0)] public IntPtr hMonitor;
-				}
-				public TYPE_1 _14;
-				public IntPtr hProcess;
-			}
-
-			[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
-			internal static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO pExecInfo);
-
-			[DllImport("shell32.dll", PreserveSig = true)]
-			internal static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, [In] IntPtr[] apidl, uint dwFlags);
-
 		}
 
 		/// <summary>
@@ -339,8 +214,88 @@ namespace Catkeys
 		{
 			using(var pidl = Pidl.FromString(path)) {
 				if(pidl == null) return false;
-				return 0 == _Api.SHOpenFolderAndSelectItems(pidl, 0, null, 0);
+				return 0 == Api.SHOpenFolderAndSelectItems(pidl, 0, null, 0);
 			}
 		}
+	}
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// flags for <see cref="Shell.Run"/>.
+	/// </summary>
+	[Flags]
+	public enum SRFlags
+	{
+		/// <summary>
+		/// Show error message box if fails, for example if file not found.
+		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="Shell.TryRun"/>.
+		/// </summary>
+		ShowErrorUI = 1,
+
+		/// <summary>
+		/// If started new process, wait until it exits.
+		/// Uses <see cref="WaitHandle.WaitOne()"/>.
+		/// </summary>
+		WaitForExit = 2,
+	}
+
+	/// <summary>
+	/// Used to pass more parameters to <see cref="Shell.Run"/>.
+	/// </summary>
+	public class SRParams
+	{
+		/// <summary>
+		/// Initial "current directory" for the new process.
+		/// If this is not set (null), the function gets parent directory path of the specified file that is to run, if possible (if its full path is specified or found). It's because some incorrectly designed programs look for their files in "current directory", and fail to start if initial "current directory" is not set to the program's directory.
+		/// If this is "" or invalid or the function cannot find full path, the new process will inherit "current directory" of this process.
+		/// </summary>
+		public string CurrentDirectory;
+
+		/// <summary>
+		/// File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
+		/// Not all menu items will work. Some may have different name than in the menu. Use verb "RunAs" for "Run as administrator".
+		/// </summary>
+		public string Verb;
+
+		/// <summary>
+		/// A window that may be used as owner window of error message box.
+		/// Also, new window should be opened on the same screen. However many programs ignore it.
+		/// </summary>
+		public WndOrControl OwnerWindow;
+
+		/// <summary>
+		/// Preferred window state.
+		/// Many programs ignore it.
+		/// </summary>
+		public ProcessWindowStyle WindowState;
+
+		//no. If need, caller can get window and call EnsureInScreen etc.
+		//public Screen Screen;
+		//this either does not work or I could not find a program that uses default window position (does not save/restore)
+		//if(more.Screen != null) { x._14.hMonitor = (IntPtr)more.Screen.GetHashCode(); x.fMask |= Api.SEE_MASK_HMONITOR; } //GetHashCode gets HMONITOR
+
+		/// <summary>
+		/// Get process handle, if possible.
+		/// The <see cref="ProcessHandle"/> property will contain it.
+		/// </summary>
+		public bool NeedProcessHandle;
+
+		/// <summary>
+		/// This is an [Out] value.
+		/// When the function returns, if <see cref="NeedProcessHandle"/> was set to true, contains process handle in a <see cref="WaitHandle"/> variable.
+		/// null if did not start new process (eg opened the document in an existing process) or did not get process handle for some other reason.
+		/// Note: WaitHandle is disposable.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// //this code does the same as Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);
+		/// var p = new SRParams() { NeedProcessHandle = true };
+		/// Shell.Run(@"notepad.exe", more: p);
+		/// using(var h = p.ProcessHandle) h?.WaitOne();
+		/// ]]></code>
+		/// </example>
+		public WaitHandle ProcessHandle { get; internal set; }
 	}
 }

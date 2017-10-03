@@ -18,6 +18,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -240,18 +241,11 @@ namespace Catkeys
 			internal static string LibToHexString(IntPtr pidl)
 			{
 				if(pidl == Zero) return null;
-				int n = _Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)
+				int n = Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)
 				if(n < 0) return null;
 				if(n == 0) return ":: "; //shell root - Desktop
 				return ":: " + Convert_.HexEncode((void*)pidl, n, true);
 			}
-		}
-
-		internal partial class _Api
-		{
-			[DllImport("Shell32.dll")]
-			internal static extern int ILGetSize(IntPtr pidl);
-
 		}
 	}
 }

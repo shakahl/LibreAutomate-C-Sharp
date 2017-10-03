@@ -18,7 +18,7 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -29,18 +29,36 @@ namespace Catkeys
 	/// <remarks>
 	/// The PrintX functions write to the same output as <see cref="Output.Write(object)"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Options.Debug) Output.Warning("text");</c> or Debug_ class functions with Opt suffix, eg WarningOpt.
+	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Options.Debug) Output.Warning("text");</c>; see <see cref="Output.Warning"/>, <see cref="ScriptOptions.Debug"/>.
 	/// </remarks>
 	//[DebuggerStepThrough]
 	public static class Debug_
 	{
+		/// <summary>
+		/// Prefix for Debug_.Print, Debug_.PrintIf, Debug_.PrintHex.
+		/// Default is "Debug: ".
+		/// </summary>
+		/// <example>
+		/// Blue text.
+		/// <code><![CDATA[
+		/// Debug_.Prefix = "<><c 0xff0000>"; Debug_.Suffix = "</c>";
+		/// ]]></code>
+		/// </example>
+		public static string Prefix { get; set; } = "Debug: ";
+
+		/// <summary>
+		/// Suffix for Debug_.Print, Debug_.PrintIf, Debug_.PrintHex.
+		/// </summary>
+		/// <seealso cref="Prefix"/>
+		public static string Suffix { get; set; }
+
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
-			Output.Write($"Debug: {cmn} ({Path_.GetFileName(cp)}:{cln}):  {text}");
+			Output.Write($"{Prefix}{cmn} ({Path_.GetFileName(cp)}:{cln}):  {text}{Suffix}");
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write(object)"/> to show some debug info.
+		/// Calls <see cref="Output.Write(object)"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional parameters are not used explicitly.
 		/// </summary>
@@ -51,7 +69,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write(object)"/> if condition is true.
+		/// If condition is true, calls <see cref="Output.Write(object)"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional parameters are not used explicitly.
 		/// </summary>
@@ -59,6 +77,17 @@ namespace Catkeys
 		public static void PrintIf(bool condition, object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
 			if(condition) _Print(text, cp, cln, cmn);
+		}
+
+		/// <summary>
+		/// Calls <see cref="Output.Write(object)"/> to show some integer value in hex format. Also shows current function name/file/line.
+		/// Works only if DEBUG is defined. Read more in class help.
+		/// The 3 optional parameters are not used explicitly.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void PrintHex(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		{
+			_Print($"0x{value:X}", cp, cln, cmn);
 		}
 
 		/// <summary>
@@ -87,7 +116,20 @@ namespace Catkeys
 			TaskDialog.ShowEx("Debug", text?.ToString(), flags: TDFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
 		}
 
-		//rejected. Better use Output.Warning or Debug_.WarningOpt. They show the stack trace and have an option to disable some warnings. Also they support prefix "Note:", "Debug:" etc. Or need the same features for this func.
+		//rejected: use if(Options.Debug) TaskDialog.ShowWarning(...). It adds stack trace.
+		///// <summary>
+		///// If <see cref="ScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="TaskDialog.Show"/> with text and stack trace.
+		///// Read more in class help.
+		///// </summary>
+		//[MethodImpl(MethodImplOptions.NoInlining)]
+		//public static void DialogOpt(string text)
+		//{
+		//	if(!Options.Debug) return;
+		//	var x = new StackTrace(1, true);
+		//	TaskDialog.ShowEx("Debug", text, flags: TDFlags.ExpandDown | TDFlags.Wider, expandedText: x.ToString());
+		//}
+
+		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use Options.Warning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
 		///// If <see cref="ScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="Output.Write(string)"/>.
 		///// Read more in class help.
@@ -97,27 +139,16 @@ namespace Catkeys
 		//	if(Options.Debug) Output.Write("Debug: " + text);
 		//}
 
-		/// <summary>
-		/// If <see cref="ScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="Output.Warning"/>.
-		/// Read more in class help.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void WarningOpt(string text)
-		{
-			if(Options.Debug) Output.Warning(text, 1);
-		}
-
-		/// <summary>
-		/// If <see cref="ScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="TaskDialog.Show"/> with text and stack trace.
-		/// Read more in class help.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void DialogOpt(string text)
-		{
-			if(!Options.Debug) return;
-			var x = new StackTrace(1, true);
-			TaskDialog.ShowEx("Debug", text, flags: TDFlags.ExpandDown | TDFlags.Wider, expandedText: x.ToString());
-		}
+		//rejected: Don't need multiple warning functions. Now Output.Warning does not show more than 1 warning/second if Options.Debug is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
+		///// <summary>
+		///// If <see cref="ScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="Output.Warning"/>.
+		///// Read more in class help.
+		///// </summary>
+		//[MethodImpl(MethodImplOptions.NoInlining)]
+		//public static void WarningOpt(string text)
+		//{
+		//	if(Options.Debug) Output.Warning(text, 1);
+		//}
 
 		/// <summary>
 		/// Checks flags and throws ArgumentException if some flags are invalid. The message includes valid flag names.
@@ -134,7 +165,7 @@ namespace Catkeys
 		internal static void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : struct, IComparable, IFormattable, IConvertible
 #pragma warning restore CS3024 // Constraint type is not CLS-compliant
 		{
-			//FUTURE: if this is really often useful, make it public.
+			//FUTURE: if this is really often useful, make it public. If not used - remove.
 
 			int a = Unsafe.As<T, int>(ref flags);
 			int b = Unsafe.As<T, int>(ref goodFlags);
@@ -164,5 +195,20 @@ namespace Catkeys
 			return Marshal.Release(obj);
 		}
 #endif
+
+		/// <summary>
+		/// Returns true if using Debug configuration of Catkeys.dll.
+		/// </summary>
+		public static bool IsCatkeysDebugConfiguration
+		{
+			get
+			{
+#if DEBUG
+				return true;
+#else
+				return false;
+#endif
+			}
+		}
 	}
 }

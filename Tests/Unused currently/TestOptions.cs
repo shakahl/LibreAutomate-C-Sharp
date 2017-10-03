@@ -118,10 +118,10 @@ partial class Test
 		//Print(Options.MouseClickSleep);
 
 		Print(Options.MouseClickSleep);
-		using(ScriptOptions.Temp()) {
+		using(ScriptOptions.Temp) {
 			Options.MouseClickSleep = 1000;
 			Print(Options.MouseClickSleep);
-			using(ScriptOptions.Temp()) {
+			using(ScriptOptions.Temp) {
 				Options.MouseClickSleep = 1;
 				Print(Options.MouseClickSleep);
 			}

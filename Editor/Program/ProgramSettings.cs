@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 /// <summary>
@@ -44,7 +45,7 @@ class ProgramSettings
 			try {
 				if(Files.ExistsAsAny(_settFile))
 					TaskDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
-				Files.Copy(Folders.ThisApp + @"Default\Settings.xml", _settFile, Files.IfExists.RenameExisting);
+				Files.Copy(Folders.ThisApp + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
 				_x = XElement.Load(_settFile);
 			}
 			catch(Exception ex2) {

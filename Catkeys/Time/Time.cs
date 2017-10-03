@@ -16,7 +16,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -55,7 +55,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup, not including time the system spends in sleep or hibernation.
-		/// The precision is 1-16 milliseconds, depending on the system wait time resolution (see <see cref="SleepPrecision"/>).
+		/// The precision is 1-16 milliseconds.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
@@ -110,7 +110,7 @@ namespace Catkeys
 		/// <exception cref="ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
 		public static void Sleep(int timeMS)
 		{
-			SleepPrecision.LibTempSet1(timeMS);
+			LibSleepPrecision.LibTempSet1(timeMS);
 			if(timeMS < 2000) {
 				Thread.Sleep(timeMS);
 			} else { //fix Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
@@ -143,7 +143,7 @@ namespace Catkeys
 		{
 			if(timeMS == 0) { DoEvents(); return; }
 			if(timeMS < 0 && timeMS != Timeout.Infinite) throw new ArgumentOutOfRangeException();
-			SleepPrecision.LibTempSet1(timeMS);
+			LibSleepPrecision.LibTempSet1(timeMS);
 			for(;;) {
 				long t = 0;
 				int timeSlice = 100; //we call API in loop with small timeout to make it respond to Thread.Abort
@@ -178,7 +178,7 @@ namespace Catkeys
 			if(Application.MessageLoop) { //never mind: loads Forms.dll. It's fast.
 				Application.DoEvents();
 			} else {
-				while(Api.PeekMessage(out var m, default(Wnd), 0, 0, Api.PM_REMOVE)) {
+				while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
 					//Wnd.Misc.PrintMsg(ref m);
 					if(m.message == Api.WM_QUIT) { Api.PostQuitMessage(m.wParam); return; }
 					Api.TranslateMessage(ref m);
@@ -187,6 +187,33 @@ namespace Catkeys
 			}
 
 			//info: Could be bool, return false on WM_QUIT. But probably not useful. It seems that WM_QUIT is not used when closing Form.
+		}
+
+		/// <summary>
+		/// Calls <see cref="Wait"/>.
+		/// This extension method allows to replace code like <c>Wait(5);</c> with <c>5.s();</c>.
+		/// </summary>
+		public static void s(this int timeS)
+		{
+			Wait(timeS);
+		}
+
+		/// <summary>
+		/// Calls <see cref="Wait"/>.
+		/// This extension method allows to replace code like <c>Wait(2.5);</c> with <c>2.5.s();</c>.
+		/// </summary>
+		public static void s(this double timeS)
+		{
+			Wait(timeS);
+		}
+
+		/// <summary>
+		/// Calls <see cref="Sleep"/>.
+		/// This extension method allows to replace code like <c>Time.Sleep(50);</c> with <c>50.ms();</c>.
+		/// </summary>
+		public static void ms(this int timeMS)
+		{
+			Sleep(timeMS);
 		}
 
 #if false
@@ -210,7 +237,7 @@ namespace Catkeys
 				i += 2; t += i; if(t > ms) i -= t - ms;
 				//Print(i);
 				Sleep(i);
-				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = default(Wnd);
+				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = default;
 			}
 		}
 
@@ -226,12 +253,12 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="minMS">Minimal time to wait, ms.</param>
 		/// <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
-		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(default(Wnd), minMS, maxMS); }
+		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(default, minMS, maxMS); }
 
 		/// <summary>
 		/// Waits Script.Speed milliseconds.
 		/// </summary>
-		public static void AutoDelay() { AutoDelay(default(Wnd), 0, 0); }
+		public static void AutoDelay() { AutoDelay(default, 0, 0); }
 #endif
 
 		/// <summary>
@@ -240,7 +267,7 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses API <msdn>timeBeginPeriod</msdn>, which requests a time resolution for various system timers and wait functions. Actually it is the system thread scheduling timer period.
 		/// Normal resolution on Windows 7-10 is 15.625 ms. It means that, for example, <c>Thread.Sleep(1);</c> sleeps not 1 but 1-15 ms. If you set resolution 1, it sleeps 1-2 ms.
-		/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the SleepPrecision variable or when this process ends. See example. See also <see cref="TempSet1"/>.
+		/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the LibSleepPrecision variable or when this process ends. See example. See also <see cref="TempSet1"/>.
 		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
@@ -250,7 +277,7 @@ namespace Catkeys
 		/// <example>
 		/// <code><![CDATA[
 		/// _Test("before");
-		/// using(new Time.SleepPrecision(2)) {
+		/// using(new Time.LibSleepPrecision(2)) {
 		/// 	_Test("in");
 		/// }
 		/// _Test("after");
@@ -264,8 +291,10 @@ namespace Catkeys
 		/// }
 		/// ]]></code>
 		/// </example>
-		public sealed class SleepPrecision :IDisposable
+		internal sealed class LibSleepPrecision :IDisposable
 		{
+			//info: this class could be public, but probably not useful. Time.Sleep automatically sets 1 ms period if need.
+
 			int _period;
 
 			/// <summary>
@@ -276,10 +305,10 @@ namespace Catkeys
 			/// Should be 1. Other values may stuck and later cannot be made smaller due to bugs in OS or some applications; this bug would impact many functions of this library.
 			/// </param>
 			/// <exception cref="ArgumentOutOfRangeException">periodMS &lt;= 0.</exception>
-			public SleepPrecision(int periodMS)
+			public LibSleepPrecision(int periodMS)
 			{
 				if(periodMS <= 0) throw new ArgumentOutOfRangeException();
-				if(timeBeginPeriod((uint)periodMS) != 0) return;
+				if(Api.timeBeginPeriod((uint)periodMS) != 0) return;
 				//Print("set");
 				_period = periodMS;
 
@@ -299,12 +328,12 @@ namespace Catkeys
 			{
 				if(_period == 0) return;
 				//Print("revoke");
-				timeEndPeriod((uint)_period); _period = 0;
+				Api.timeEndPeriod((uint)_period); _period = 0;
 				GC.SuppressFinalize(this);
 			}
 
 			///
-			~SleepPrecision() { Dispose(); }
+			~LibSleepPrecision() { Dispose(); }
 
 			/// <summary>
 			/// Gets current actual system time resolution (period).
@@ -314,7 +343,7 @@ namespace Catkeys
 			{
 				get
 				{
-					if(0 != NtQueryTimerResolution(out _, out _, out var t)) return 0f;
+					if(0 != Api.NtQueryTimerResolution(out _, out _, out var t)) return 0f;
 					return (float)t / 10000;
 				}
 			}
@@ -326,11 +355,11 @@ namespace Catkeys
 			/// <param name="endAfterMS">Revoke after this time, milliseconds.</param>
 			/// <example>
 			/// <code><![CDATA[
-			/// Print(Time.SleepPrecision.Current); //probably 15.625
-			/// Time.SleepPrecision.TempSet1(500);
-			/// Print(Time.SleepPrecision.Current); //1
+			/// Print(Time.LibSleepPrecision.Current); //probably 15.625
+			/// Time.LibSleepPrecision.TempSet1(500);
+			/// Print(Time.LibSleepPrecision.Current); //1
 			/// Thread.Sleep(600);
-			/// Print(Time.SleepPrecision.Current); //probably 15.625 again
+			/// Print(Time.LibSleepPrecision.Current); //probably 15.625 again
 			/// ]]></code>
 			/// </example>
 			public static void TempSet1(int endAfterMS = 1111)
@@ -338,10 +367,10 @@ namespace Catkeys
 				lock("2KgpjPxRck+ouUuRC4uBYg") {
 					s_TS1_EndTime = MillisecondsWithoutComputerSleepTime + endAfterMS;
 					if(s_TS1_Obj == null) {
-						s_TS1_Obj = new SleepPrecision(1); //info: instead could call the API directly, but may need to auto-revoke using the finalizer
-						ThreadPool.QueueUserWorkItem(_ =>
+						s_TS1_Obj = new LibSleepPrecision(1); //info: instead could call the API directly, but may need to auto-revoke using the finalizer
+						ThreadPool.QueueUserWorkItem(endAfterMS2 =>
 						{
-							Thread.Sleep(endAfterMS);
+							Thread.Sleep((int)endAfterMS2); //note: don't use captured variables. It somehow creates new garbage all the time.
 							for(;;) {
 								int t;
 								lock("2KgpjPxRck+ouUuRC4uBYg") {
@@ -354,7 +383,7 @@ namespace Catkeys
 								}
 								Thread.Sleep(t);
 							}
-						});
+						}, endAfterMS);
 						//perf: single QueueUserWorkItem adds 3 threads, >=2 adds 5. But Thread.Start is too slow etc.
 						//QueueUserWorkItem speed first time is similar to Thread.Start, then ~8.
 						//Task.Run and Task.Delay are much much slower first time. Single Delay adds 5 threads.
@@ -362,7 +391,7 @@ namespace Catkeys
 				}
 				//tested: Task Manager shows 0% CPU. If we set/revoke period for each Sleep(1) in loop, shows ~0.5% CPU.
 			}
-			static SleepPrecision s_TS1_Obj;
+			static LibSleepPrecision s_TS1_Obj;
 			static long s_TS1_EndTime;
 
 			/// <summary>
@@ -373,14 +402,6 @@ namespace Catkeys
 			{
 				if(sleepTimeMS < 100 && sleepTimeMS > 0) TempSet1(1111);
 			}
-
-			[DllImport("winmm.dll")]
-			static extern uint timeBeginPeriod(uint uPeriod);
-			[DllImport("winmm.dll")]
-			static extern uint timeEndPeriod(uint uPeriod);
-			[DllImport("ntdll.dll")]
-			static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
-			//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 		}
 	}
 
@@ -439,7 +460,7 @@ namespace Catkeys
 			if(!isNew) {
 				if(!_IsSameThread()) return;
 			}
-			int r = Api.SetTimer(default(Wnd), _id, (uint)intervalMS, _timerProc);
+			int r = Api.SetTimer(default, _id, (uint)intervalMS, _timerProc);
 			if(r == 0) throw new Win32Exception();
 			_id = r;
 			_singlePeriod = singlePeriod;
@@ -476,7 +497,7 @@ namespace Catkeys
 			//Print("Stop: " + _id);
 			if(_id != 0) {
 				if(!_IsSameThread()) return;
-				Api.KillTimer(default(Wnd), _id);
+				Api.KillTimer(default, _id);
 				//tested: despite what MSDN says, KillTimer removes pending WM_TIMER messages from queue. Tested on Win 10 and 7.
 				t_timers.Remove(_id);
 				_id = 0;

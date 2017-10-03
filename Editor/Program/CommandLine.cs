@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using static Program;
 
@@ -58,7 +59,7 @@ static class CommandLine
 			//activate main window
 			if(a.Length == 0) {
 				try {
-					Wnd wMain = Wnd.Misc.FindThreadWindow(w.ThreadId, "Catkeys*", "WindowsForms*", WFFlags.HiddenToo, t => !t.IsPopupWindow);
+					Wnd wMain = Wnd.Find("Catkeys*", "WindowsForms*", WFOwner.ThreadId(w.ThreadId), WFFlags.HiddenToo, t => !t.IsPopupWindow);
 					if(!wMain.Is0) wMain.Activate();
 				}
 				catch { }
@@ -127,7 +128,7 @@ static class CommandLine
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
-			Model.ImportFiles(s.Split('\0'));
+			Model.ImportFiles(s.Split_("\0"));
 			break;
 		default:
 			Debug.Assert(false);

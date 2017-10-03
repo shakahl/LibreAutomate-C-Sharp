@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>.\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;ACC_INTPTR</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -25,17 +25,19 @@
     <CodeAnalysisRuleSet>..\MinimumRecommendedRules - copy.ruleset</CodeAnalysisRuleSet>
     <NoWarn>3001,3002,3003,3009</NoWarn>
     <DocumentationFile>Catkeys.XML</DocumentationFile>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>.\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;ACC_INTPTR</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009</NoWarn>
     <DocumentationFile>Catkeys.XML</DocumentationFile>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -84,13 +86,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Automation\Acc.cs" />
+    <Compile Include="Automation\Acc\Acc_struct.cs" />
+    <Compile Include="Automation\Acc\Acc_iacc.cs" />
+    <Compile Include="Automation\Acc\Acc_types.cs" />
+    <Compile Include="Automation\Acc\Acc_find.cs" />
+    <Compile Include="Automation\Acc\Acc.cs" />
+    <Compile Include="Automation\Acc\Acc.Misc.cs" />
+    <Compile Include="Automation\Acc\Acc_web.cs" />
     <Compile Include="Automation\Auto misc.cs" />
     <Compile Include="Automation\Input.cs" />
-    <Compile Include="Api\Api COM.cs" />
-    <Compile Include="Api\Api public.cs" />
+    <Compile Include="Api\Api_COM.cs" />
+    <Compile Include="Api\Api_public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
     <Compile Include="Automation\ScreenImage.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Other\Screen_.cs" />
+    <Compile Include="String\excluded\StringSegment.cs" />
+    <Compile Include="Util\Color_.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
     <Compile Include="Common\Param types.cs" />
     <Compile Include="Common\ScriptOptions.cs" />
@@ -109,11 +121,8 @@
     <Compile Include="Files, system\Folders.cs" />
     <Compile Include="Menus, dialogs\CatBar.cs" />
     <Compile Include="Menus, dialogs\CatMenu.cs" />
-    <Compile Include="Menus, dialogs\CatToolStrip.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Automation\Mouse.cs" />
-    <Compile Include="Common\NetExt.cs" />
+    <Compile Include="Common\ExtensionMethods.cs" />
     <Compile Include="Common\NoClass.cs" />
     <Compile Include="Other\Char_.cs" />
     <Compile Include="Other\Convert_.cs" />
@@ -124,13 +133,14 @@
     <Compile Include="String\wildcard.cs" />
     <Compile Include="Menus, dialogs\TaskDialog.cs" />
     <Compile Include="String\Csv.cs" />
-    <Compile Include="String\string classes.cs" />
-    <Compile Include="String\String_ex.cs" />
+    <None Include="String\excluded\string classes.cs" />
+    <None Include="String\excluded\String_ex.cs" />
     <Compile Include="Time\Time.cs" />
-    <Compile Include="Time\WaitFor_other.cs" />
+    <Compile Include="Time\WaitFor other.cs" />
     <Compile Include="Util\ArrayBuilder.cs" />
+    <Compile Include="Util\StringCache.cs" />
     <Compile Include="Util\Tables.cs" />
-    <Compile Include="Util\ThreadVar.cs" />
+    <None Include="Util\excluded\ThreadVar.cs" />
     <Compile Include="Wnd\Wnd.cs" />
     <Compile Include="Wnd\Wnd_child.cs" />
     <Compile Include="Wnd\Wnd_fromxy.cs" />
@@ -142,7 +152,7 @@
     <Compile Include="Util\Memory.cs" />
     <Compile Include="Util\MessageLoops.cs" />
     <Compile Include="Util\ThreadPoolSTA.cs" />
-    <Compile Include="Time\WaitFor_Wnd.cs" />
+    <Compile Include="Time\WaitFor Wnd.cs" />
     <Compile Include="Wnd\Wnd_find.cs" />
     <Compile Include="Wnd\Wnd_get.cs" />
     <Compile Include="Wnd\Wnd_mics.cs" />
@@ -152,7 +162,7 @@
     <Compile Include="Other\Script.cs" />
     <Compile Include="String\String_.cs" />
     <Compile Include="Time\Perf.cs" />
-    <Compile Include="Api\Api const.cs" />
+    <Compile Include="Api\Api_const.cs" />
     <EmbeddedResource Include="Properties\dll.manifest" />
     <None Include="packages.config" />
     <Compile Include="Util\Util.cs" />

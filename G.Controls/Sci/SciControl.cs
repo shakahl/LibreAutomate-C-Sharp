@@ -19,6 +19,7 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace G.Controls
@@ -246,7 +247,7 @@ namespace G.Controls
 		/// </summary>
 		public LPARAM Call(int sciMessage, LPARAM wParam)
 		{
-			return Call(sciMessage, wParam, default(LPARAM));
+			return Call(sciMessage, wParam, default);
 		}
 
 		/// <summary>
@@ -255,7 +256,7 @@ namespace G.Controls
 		/// </summary>
 		public LPARAM Call(int sciMessage)
 		{
-			return Call(sciMessage, default(LPARAM), default(LPARAM));
+			return Call(sciMessage, default, default);
 		}
 
 		/// <summary>

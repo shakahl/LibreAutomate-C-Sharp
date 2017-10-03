@@ -20,6 +20,7 @@ using System.Drawing;
 //using System.Xml.XPath;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using Catkeys.Triggers;
 

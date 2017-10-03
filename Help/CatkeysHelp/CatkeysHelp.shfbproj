@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <!-- The configuration and platform will be used to determine which assemblies to include from solution and
 				 project documentation sources -->
@@ -63,100 +63,100 @@
     <BinaryTOC>True</BinaryTOC>
     <ApiFilter>
       <Filter entryType="Namespace" fullName="Catkeys" isExposed="True">
-  <Filter entryType="Class" fullName="Catkeys.Native" filterName="Native" isExposed="True">
-    <Filter entryType="Property" fullName="Catkeys.Native.DWLP_DLGPROC" filterName="DWLP_DLGPROC" isExposed="False" />
-    <Filter entryType="Property" fullName="Catkeys.Native.DWLP_USER" filterName="DWLP_USER" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.DWL_DLGPROC_32" filterName="DWL_DLGPROC_32" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.DWL_DLGPROC_64" filterName="DWL_DLGPROC_64" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.DWL_MSGRESULT" filterName="DWL_MSGRESULT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.DWL_USER_32" filterName="DWL_USER_32" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.DWL_USER_64" filterName="DWL_USER_64" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_CBCLSEXTRA" filterName="GCL_CBCLSEXTRA" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_CBWNDEXTRA" filterName="GCL_CBWNDEXTRA" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_HBRBACKGROUND" filterName="GCL_HBRBACKGROUND" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_HCURSOR" filterName="GCL_HCURSOR" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_HICON" filterName="GCL_HICON" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_HICONSM" filterName="GCL_HICONSM" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_HMODULE" filterName="GCL_HMODULE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_MENUNAME" filterName="GCL_MENUNAME" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_STYLE" filterName="GCL_STYLE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCL_WNDPROC" filterName="GCL_WNDPROC" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GCW_ATOM" filterName="GCW_ATOM" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_EXSTYLE" filterName="GWL_EXSTYLE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_HINSTANCE" filterName="GWL_HINSTANCE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_HWNDPARENT" filterName="GWL_HWNDPARENT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_ID" filterName="GWL_ID" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_STYLE" filterName="GWL_STYLE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_USERDATA" filterName="GWL_USERDATA" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.GWL_WNDPROC" filterName="GWL_WNDPROC" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SMTO_ABORTIFHUNG" filterName="SMTO_ABORTIFHUNG" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SMTO_BLOCK" filterName="SMTO_BLOCK" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SMTO_ERRORONEXIT" filterName="SMTO_ERRORONEXIT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SMTO_NOTIMEOUTIFNOTHUNG" filterName="SMTO_NOTIMEOUTIFNOTHUNG" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_ASYNCWINDOWPOS" filterName="SWP_ASYNCWINDOWPOS" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_DEFERERASE" filterName="SWP_DEFERERASE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_FRAMECHANGED" filterName="SWP_FRAMECHANGED" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_HIDEWINDOW" filterName="SWP_HIDEWINDOW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOACTIVATE" filterName="SWP_NOACTIVATE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOCOPYBITS" filterName="SWP_NOCOPYBITS" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOMOVE" filterName="SWP_NOMOVE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOOWNERZORDER" filterName="SWP_NOOWNERZORDER" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOREDRAW" filterName="SWP_NOREDRAW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOSENDCHANGING" filterName="SWP_NOSENDCHANGING" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOSIZE" filterName="SWP_NOSIZE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOZORDER" filterName="SWP_NOZORDER" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.SWP_SHOWWINDOW" filterName="SWP_SHOWWINDOW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_BORDER" filterName="WS_BORDER" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_CAPTION" filterName="WS_CAPTION" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_CHILD" filterName="WS_CHILD" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_CLIPCHILDREN" filterName="WS_CLIPCHILDREN" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_CLIPSIBLINGS" filterName="WS_CLIPSIBLINGS" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_DISABLED" filterName="WS_DISABLED" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_DLGFRAME" filterName="WS_DLGFRAME" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_ACCEPTFILES" filterName="WS_EX_ACCEPTFILES" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_APPWINDOW" filterName="WS_EX_APPWINDOW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_CLIENTEDGE" filterName="WS_EX_CLIENTEDGE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_COMPOSITED" filterName="WS_EX_COMPOSITED" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_CONTEXTHELP" filterName="WS_EX_CONTEXTHELP" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_CONTROLPARENT" filterName="WS_EX_CONTROLPARENT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_DLGMODALFRAME" filterName="WS_EX_DLGMODALFRAME" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LAYERED" filterName="WS_EX_LAYERED" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LAYOUTRTL" filterName="WS_EX_LAYOUTRTL" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LEFT" filterName="WS_EX_LEFT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LEFTSCROLLBAR" filterName="WS_EX_LEFTSCROLLBAR" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LTRREADING" filterName="WS_EX_LTRREADING" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_MDICHILD" filterName="WS_EX_MDICHILD" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOACTIVATE" filterName="WS_EX_NOACTIVATE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOINHERITLAYOUT" filterName="WS_EX_NOINHERITLAYOUT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOPARENTNOTIFY" filterName="WS_EX_NOPARENTNOTIFY" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOREDIRECTIONBITMAP" filterName="WS_EX_NOREDIRECTIONBITMAP" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_RIGHT" filterName="WS_EX_RIGHT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_RIGHTSCROLLBAR" filterName="WS_EX_RIGHTSCROLLBAR" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_RTLREADING" filterName="WS_EX_RTLREADING" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_STATICEDGE" filterName="WS_EX_STATICEDGE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_TOOLWINDOW" filterName="WS_EX_TOOLWINDOW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_TOPMOST" filterName="WS_EX_TOPMOST" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_TRANSPARENT" filterName="WS_EX_TRANSPARENT" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_WINDOWEDGE" filterName="WS_EX_WINDOWEDGE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_GROUP" filterName="WS_GROUP" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_HSCROLL" filterName="WS_HSCROLL" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_MAXIMIZE" filterName="WS_MAXIMIZE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_MAXIMIZEBOX" filterName="WS_MAXIMIZEBOX" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_MINIMIZE" filterName="WS_MINIMIZE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_MINIMIZEBOX" filterName="WS_MINIMIZEBOX" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_OVERLAPPEDWINDOW" filterName="WS_OVERLAPPEDWINDOW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_POPUP" filterName="WS_POPUP" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_POPUPWINDOW" filterName="WS_POPUPWINDOW" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_SYSMENU" filterName="WS_SYSMENU" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_TABSTOP" filterName="WS_TABSTOP" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_THICKFRAME" filterName="WS_THICKFRAME" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_VISIBLE" filterName="WS_VISIBLE" isExposed="False" />
-    <Filter entryType="Field" fullName="Catkeys.Native.WS_VSCROLL" filterName="WS_VSCROLL" isExposed="False" />
-  </Filter>
-  <Filter entryType="Structure" fullName="Catkeys.Wnd" filterName="Wnd" isExposed="True">
-    <Filter entryType="Method" fullName="Catkeys.Wnd.GetHashCode" filterName="GetHashCode" isExposed="False" />
-  </Filter>
-</Filter>
+        <Filter entryType="Class" fullName="Catkeys.Native" filterName="Native" isExposed="True">
+          <Filter entryType="Property" fullName="Catkeys.Native.DWLP_DLGPROC" filterName="DWLP_DLGPROC" isExposed="False" />
+          <Filter entryType="Property" fullName="Catkeys.Native.DWLP_USER" filterName="DWLP_USER" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.DWL_DLGPROC_32" filterName="DWL_DLGPROC_32" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.DWL_DLGPROC_64" filterName="DWL_DLGPROC_64" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.DWL_MSGRESULT" filterName="DWL_MSGRESULT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.DWL_USER_32" filterName="DWL_USER_32" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.DWL_USER_64" filterName="DWL_USER_64" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_CBCLSEXTRA" filterName="GCL_CBCLSEXTRA" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_CBWNDEXTRA" filterName="GCL_CBWNDEXTRA" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_HBRBACKGROUND" filterName="GCL_HBRBACKGROUND" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_HCURSOR" filterName="GCL_HCURSOR" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_HICON" filterName="GCL_HICON" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_HICONSM" filterName="GCL_HICONSM" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_HMODULE" filterName="GCL_HMODULE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_MENUNAME" filterName="GCL_MENUNAME" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_STYLE" filterName="GCL_STYLE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCL_WNDPROC" filterName="GCL_WNDPROC" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GCW_ATOM" filterName="GCW_ATOM" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_EXSTYLE" filterName="GWL_EXSTYLE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_HINSTANCE" filterName="GWL_HINSTANCE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_HWNDPARENT" filterName="GWL_HWNDPARENT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_ID" filterName="GWL_ID" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_STYLE" filterName="GWL_STYLE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_USERDATA" filterName="GWL_USERDATA" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.GWL_WNDPROC" filterName="GWL_WNDPROC" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SMTO_ABORTIFHUNG" filterName="SMTO_ABORTIFHUNG" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SMTO_BLOCK" filterName="SMTO_BLOCK" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SMTO_ERRORONEXIT" filterName="SMTO_ERRORONEXIT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SMTO_NOTIMEOUTIFNOTHUNG" filterName="SMTO_NOTIMEOUTIFNOTHUNG" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_ASYNCWINDOWPOS" filterName="SWP_ASYNCWINDOWPOS" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_DEFERERASE" filterName="SWP_DEFERERASE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_FRAMECHANGED" filterName="SWP_FRAMECHANGED" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_HIDEWINDOW" filterName="SWP_HIDEWINDOW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOACTIVATE" filterName="SWP_NOACTIVATE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOCOPYBITS" filterName="SWP_NOCOPYBITS" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOMOVE" filterName="SWP_NOMOVE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOOWNERZORDER" filterName="SWP_NOOWNERZORDER" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOREDRAW" filterName="SWP_NOREDRAW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOSENDCHANGING" filterName="SWP_NOSENDCHANGING" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOSIZE" filterName="SWP_NOSIZE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_NOZORDER" filterName="SWP_NOZORDER" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.SWP_SHOWWINDOW" filterName="SWP_SHOWWINDOW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_BORDER" filterName="WS_BORDER" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_CAPTION" filterName="WS_CAPTION" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_CHILD" filterName="WS_CHILD" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_CLIPCHILDREN" filterName="WS_CLIPCHILDREN" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_CLIPSIBLINGS" filterName="WS_CLIPSIBLINGS" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_DISABLED" filterName="WS_DISABLED" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_DLGFRAME" filterName="WS_DLGFRAME" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_ACCEPTFILES" filterName="WS_EX_ACCEPTFILES" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_APPWINDOW" filterName="WS_EX_APPWINDOW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_CLIENTEDGE" filterName="WS_EX_CLIENTEDGE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_COMPOSITED" filterName="WS_EX_COMPOSITED" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_CONTEXTHELP" filterName="WS_EX_CONTEXTHELP" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_CONTROLPARENT" filterName="WS_EX_CONTROLPARENT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_DLGMODALFRAME" filterName="WS_EX_DLGMODALFRAME" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LAYERED" filterName="WS_EX_LAYERED" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LAYOUTRTL" filterName="WS_EX_LAYOUTRTL" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LEFT" filterName="WS_EX_LEFT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LEFTSCROLLBAR" filterName="WS_EX_LEFTSCROLLBAR" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_LTRREADING" filterName="WS_EX_LTRREADING" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_MDICHILD" filterName="WS_EX_MDICHILD" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOACTIVATE" filterName="WS_EX_NOACTIVATE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOINHERITLAYOUT" filterName="WS_EX_NOINHERITLAYOUT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOPARENTNOTIFY" filterName="WS_EX_NOPARENTNOTIFY" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_NOREDIRECTIONBITMAP" filterName="WS_EX_NOREDIRECTIONBITMAP" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_RIGHT" filterName="WS_EX_RIGHT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_RIGHTSCROLLBAR" filterName="WS_EX_RIGHTSCROLLBAR" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_RTLREADING" filterName="WS_EX_RTLREADING" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_STATICEDGE" filterName="WS_EX_STATICEDGE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_TOOLWINDOW" filterName="WS_EX_TOOLWINDOW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_TOPMOST" filterName="WS_EX_TOPMOST" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_TRANSPARENT" filterName="WS_EX_TRANSPARENT" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_EX_WINDOWEDGE" filterName="WS_EX_WINDOWEDGE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_GROUP" filterName="WS_GROUP" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_HSCROLL" filterName="WS_HSCROLL" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_MAXIMIZE" filterName="WS_MAXIMIZE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_MAXIMIZEBOX" filterName="WS_MAXIMIZEBOX" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_MINIMIZE" filterName="WS_MINIMIZE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_MINIMIZEBOX" filterName="WS_MINIMIZEBOX" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_OVERLAPPEDWINDOW" filterName="WS_OVERLAPPEDWINDOW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_POPUP" filterName="WS_POPUP" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_POPUPWINDOW" filterName="WS_POPUPWINDOW" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_SYSMENU" filterName="WS_SYSMENU" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_TABSTOP" filterName="WS_TABSTOP" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_THICKFRAME" filterName="WS_THICKFRAME" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_VISIBLE" filterName="WS_VISIBLE" isExposed="False" />
+          <Filter entryType="Field" fullName="Catkeys.Native.WS_VSCROLL" filterName="WS_VSCROLL" isExposed="False" />
+        </Filter>
+        <Filter entryType="Structure" fullName="Catkeys.Wnd" filterName="Wnd" isExposed="True">
+          <Filter entryType="Method" fullName="Catkeys.Wnd.GetHashCode" filterName="GetHashCode" isExposed="False" />
+        </Filter>
+      </Filter>
     </ApiFilter>
     <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>

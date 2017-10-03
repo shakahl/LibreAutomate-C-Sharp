@@ -18,7 +18,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -349,13 +349,13 @@ namespace Catkeys
 					//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
 					var product = stackalloc char[40];
 					var component = stackalloc char[40];
-					if(0 != _Api.MsiGetShortcutTarget(_lnkPath, product, null, component)) return null;
+					if(0 != Api.MsiGetShortcutTarget(_lnkPath, product, null, component)) return null;
 					//note: for some shortcuts MsiGetShortcutTarget gets empty component. Then MsiGetComponentPath fails.
 					//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
 					//	Could not find a workaround.
 
 					var b = Util.Buffers.LibChar(300, out int na);
-					int hr = _Api.MsiGetComponentPath(product, component, b, ref na);
+					int hr = Api.MsiGetComponentPath(product, component, b, ref na);
 					if(hr < 0) return null; //eg not installed, just advertised
 					R = b.ToString(na);
 					if(R.Length == 0) return null;
@@ -379,40 +379,6 @@ namespace Catkeys
 				return R;
 			}
 			static string _pf;
-
-			static partial class _Api
-			{
-				//[DllImport("msi.dll", EntryPoint = "#217")]
-				//public static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
-
-				//[DllImport("msi.dll", EntryPoint = "#173")]
-				//public static extern int MsiGetComponentPath(char* szProduct, char* szComponent, char* lpPathBuf, ref int pcchBuf);
-
-				[DllImport("msi.dll", EntryPoint = "#217")]
-				public static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
-
-				[DllImport("msi.dll", EntryPoint = "#173")]
-				public static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
-
-				//MsiGetComponentPath returns:
-				//public enum INSTALLSTATE
-				//{
-				//	INSTALLSTATE_NOTUSED = -7,
-				//	INSTALLSTATE_BADCONFIG,
-				//	INSTALLSTATE_INCOMPLETE,
-				//	INSTALLSTATE_SOURCEABSENT,
-				//	INSTALLSTATE_MOREDATA,
-				//	INSTALLSTATE_INVALIDARG,
-				//	INSTALLSTATE_UNKNOWN,
-				//	INSTALLSTATE_BROKEN,
-				//	INSTALLSTATE_ADVERTISED,
-				//	INSTALLSTATE_REMOVED = 1,
-				//	INSTALLSTATE_ABSENT,
-				//	INSTALLSTATE_LOCAL,
-				//	INSTALLSTATE_SOURCE,
-				//	INSTALLSTATE_DEFAULT
-				//}
-			}
 
 			#endregion
 		}

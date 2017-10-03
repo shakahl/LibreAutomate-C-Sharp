@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -16,9 +17,10 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
-#pragma warning disable 282 //C#7 intellisense bug: it thinks that Wnd has multiple fields.
+#pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
 
 namespace Catkeys
 {
@@ -57,7 +59,7 @@ namespace Catkeys
 	/// ]]></code>
 	/// </example>
 	[Serializable]
-	public unsafe partial struct Wnd
+	public unsafe partial struct Wnd :IEquatable<Wnd>
 	{
 #if false
 		/// Why Wnd is struct, not class:
@@ -119,26 +121,36 @@ namespace Catkeys
 		public static bool operator ==(Wnd? w1, Wnd w2) { return false; }
 		[Obsolete("Replace Wnd==Wnd? with Wnd.Equals(Wnd?). Replace Wnd==null with Wnd.Is0.", true)]
 		public static bool operator !=(Wnd? w1, Wnd w2) { return true; }
+#pragma warning restore 1591 //XML doc
 
 		/// <summary>
-		/// Returns true if w!=null and w.Value == this.
+		/// Returns true if w == this.
+		/// </summary>
+		public bool Equals(Wnd w) //IEquatable<Wnd>.Equals, to avoid boxing with eg Dictionary<Wnd, T2>
+		{
+			return w == this;
+
+			//TODO: LPARAM etc must support IEquatable too.
+		}
+
+		/// <summary>
+		/// Returns true if w != null and w.Value == this.
 		/// </summary>
 		public bool Equals(Wnd? w)
 		{
-			return w != null && w.Value == this;
+			return w != null && w.GetValueOrDefault() == this;
 		}
-#pragma warning restore 1591 //XML doc
 
 		/// <summary>
 		/// Returns true if obj is this Wnd.
 		/// </summary>
 		public override bool Equals(object obj)
 		{
-			//return obj is Wnd w && this == w; //compiler creates very slow and big code if 'is ValueType variable'
+			//return obj is Wnd w && this == w; //compiler creates slow and big code if 'is ValueType variable'
 			return obj is Wnd && this == (Wnd)obj;
 		}
 
-		/// <exclude/>
+		///
 		public override int GetHashCode()
 		{
 			return (int)_h;
@@ -147,73 +159,36 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Formats string $"{handle} {ClassName} \"{Name}\"".
-		/// </summary>
-		public override string ToString()
-		{
-			if(Is0) return "0";
-			var cn = ClassName;
-			if(cn == null) return $"{Handle} <invalid handle>";
-			string s = Name; if(s != null) s = s.Limit_(250);
-			return $"{Handle} {cn} \"{s}\"";
-		}
-
-		/// <summary>
 		/// Gets window handle as IntPtr.
 		/// Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c> .
 		/// </summary>
 		public IntPtr Handle { get => new IntPtr(_h); }
 
-		//not useful. Required eg for SortedList, but better use Dictionary. We'll never need a sorted list of window handles.
-		///// <summary>
-		///// Implements IComparable<Wnd>.
-		///// </summary>
-		//public int CompareTo(Wnd other)
-		//{
-		//	return (int)_h-(int)other._h;
-		//}
+		/// <summary>
+		/// Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProcessName}  {Rect}".
+		/// </summary>
+		public override string ToString()
+		{
+			if(Is0) return "0";
+			var cn = ClassName;
+			var sh = Handle.ToString();
+			if(cn == null) return sh + " <invalid handle>";
+			string s = Name;
+			if(s != null) s = s.Limit_(250).Escape_();
+			return $"{sh}  {cn}  \"{s}\"  {ProcessName}  {Rect.ToString()}";
+		}
 
 		#endregion
 
 		#region send/post message
 
-		static unsafe partial class _Api
-		{
-			[DllImport("user32.dll", SetLastError = true)]
-			public static extern LPARAM SendMessage(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
-
-			[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
-			public static extern LPARAM SendMessageS(Wnd hWnd, uint msg, LPARAM wParam, string lParam);
-
-			[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
-			public static extern LPARAM SendMessageCA(Wnd hWnd, uint msg, LPARAM wParam, char[] lParam);
-
-			[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-			public static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
-
-			[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-			public static extern LPARAM SendMessageTimeoutS(Wnd hWnd, uint Msg, LPARAM wParam, string lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
-
-			[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-			public static extern LPARAM SendMessageTimeoutCA(Wnd hWnd, uint Msg, LPARAM wParam, char[] lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
-
-			[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
-			public static extern bool SendNotifyMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
-
-			[DllImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
-			public static extern bool PostMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
-
-			[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
-			internal static extern bool PostThreadMessage(uint idThread, uint Msg, LPARAM wParam, LPARAM lParam);
-		}
-
 		/// <summary>
 		/// Calls API <msdn>SendMessage</msdn>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM Send(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
+		public LPARAM Send(uint message, LPARAM wParam = default, LPARAM lParam = default)
 		{
-			return _Api.SendMessage(this, message, wParam, lParam);
+			return Api.SendMessage(this, message, wParam, lParam);
 		}
 
 		/// <summary>
@@ -222,7 +197,8 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public LPARAM SendS(uint message, LPARAM wParam, string lParam)
 		{
-			return _Api.SendMessageS(this, message, wParam, lParam);
+			fixed (char* p = lParam)
+				return Api.SendMessage(this, message, wParam, p);
 			//info: don't use overload, then eg ambiguous if null.
 		}
 
@@ -232,7 +208,8 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public LPARAM SendS(uint message, LPARAM wParam, char[] lParam)
 		{
-			return _Api.SendMessageCA(this, message, wParam, lParam);
+			fixed (char* p = lParam)
+				return Api.SendMessage(this, message, wParam, p);
 		}
 
 		/// <summary>
@@ -240,10 +217,9 @@ namespace Catkeys
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default, LPARAM lParam = default, uint flags = Native.SMTO_ABORTIFHUNG)
 		{
-			LPARAM R = 0;
-			return 0 != _Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out R);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out LPARAM R);
 		}
 
 		/// <summary>
@@ -251,10 +227,10 @@ namespace Catkeys
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM), uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default, LPARAM lParam = default, uint flags = Native.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			return 0 != _Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
 		}
 
 		/// <summary>
@@ -265,7 +241,8 @@ namespace Catkeys
 		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, uint flags = Native.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			return 0 != _Api.SendMessageTimeoutS(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
+			fixed (char* p = lParam)
+				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, (uint)timeoutMS, out result);
 		}
 
 		/// <summary>
@@ -276,16 +253,17 @@ namespace Catkeys
 		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, char[] lParam, uint flags = Native.SMTO_ABORTIFHUNG)
 		{
 			result = 0;
-			return 0 != _Api.SendMessageTimeoutCA(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
+			fixed (char* p = lParam)
+				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, (uint)timeoutMS, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendNotifyMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendNotify(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
+		public bool SendNotify(uint message, LPARAM wParam = default, LPARAM lParam = default)
 		{
-			return _Api.SendNotifyMessage(this, message, wParam, lParam);
+			return Api.SendNotifyMessage(this, message, wParam, lParam);
 		}
 
 		/// <summary>
@@ -293,9 +271,9 @@ namespace Catkeys
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <seealso cref="Misc.PostThreadMessage(uint, LPARAM, LPARAM)"/>
-		public bool Post(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
+		public bool Post(uint message, LPARAM wParam = default, LPARAM lParam = default)
 		{
-			return _Api.PostMessage(this, message, wParam, lParam);
+			return Api.PostMessage(this, message, wParam, lParam);
 		}
 
 		public static partial class Misc
@@ -305,9 +283,9 @@ namespace Catkeys
 			/// Calls API <msdn>PostMessage</msdn> with default(Wnd). 
 			/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 			/// </summary>
-			public static bool PostThreadMessage(uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
+			public static bool PostThreadMessage(uint message, LPARAM wParam = default, LPARAM lParam = default)
 			{
-				return _Api.PostMessage(default(Wnd), message, wParam, lParam);
+				return Api.PostMessage(default, message, wParam, lParam);
 			}
 
 			/// <summary>
@@ -315,9 +293,9 @@ namespace Catkeys
 			/// Calls API <msdn>PostThreadMessage</msdn>. 
 			/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 			/// </summary>
-			public static bool PostThreadMessage(uint threadId, uint message, LPARAM wParam = default(LPARAM), LPARAM lParam = default(LPARAM))
+			public static bool PostThreadMessage(uint threadId, uint message, LPARAM wParam = default, LPARAM lParam = default)
 			{
-				return _Api.PostThreadMessage(threadId, message, wParam, lParam);
+				return Api.PostThreadMessage(threadId, message, wParam, lParam);
 			}
 		}
 
@@ -503,7 +481,7 @@ namespace Catkeys
 			get
 			{
 				if(!Ver.MinWin8) return 0;
-				int cloaked = 0, hr = Api.DwmGetWindowAttribute(this, 14, out cloaked, 4); //DWMWA_CLOAKED
+				int hr = Api.DwmGetWindowAttribute(this, 14, out int cloaked, 4); //DWMWA_CLOAKED
 				return cloaked;
 			}
 		}
@@ -700,52 +678,142 @@ namespace Catkeys
 
 		#region activate, focus
 
-		/// <summary>
-		/// Activates this window (brings to the foreground).
-		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
-		/// </summary>
-		/// <remarks>
-		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
-		/// Fails (throws exception) if cannot activate this window, except:
-		/// <list type="number">
-		/// <item>If this is a control, activates its top-level parent window.</item>
-		/// <item>If this is <see cref="Misc.WndRoot"/>, just deactivates the currently active window.</item>
-		/// <item>When the target application instead activates another window of the same thread.</item>
-		/// </list>
-		/// </remarks>
-		/// <exception cref="WndException"/>
-		/// <seealso cref="ActivateLL"/>
-		/// <seealso cref="IsActive"/>
-		/// <seealso cref="WndActive"/>
-		/// <seealso cref="Misc.SwitchActiveWindow"/>
-		public void Activate()
-		{
-			LibActivate(0);
-		}
-
-		[Flags]
-		internal enum LibActivateFlags
+		internal static partial class Lib
 		{
 			/// <summary>
-			/// Don't call ThrowIfInvalid at the very start (ie called ensures it is valid).
+			/// No exceptions.
 			/// </summary>
-			NoThrowIfInvalid = 1,
+			internal static bool EnableActivate(bool goingToActivateAWindow)
+			{
+				if(_EnableActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
+
+				_EnableActivate_SendKey(true);
+				if(_EnableActivate_AllowSetFore()) return true;
+				//First time fails if the foreground window is of higher IL. Then sending keys does not work.
+
+				//_EnableActivate_MinRes() makes no active window...
+				if(goingToActivateAWindow) {
+					_EnableActivate_MinRes();
+					return _EnableActivate_AllowSetFore();
+				}
+
+				var wFore = WndActive; bool retry = false;
+				g1: _EnableActivate_MinRes();
+				if(!_EnableActivate_AllowSetFore()) return false;
+				if(!wFore.Is0 && !retry) {
+					Api.SetForegroundWindow(wFore);
+					if(!_EnableActivate_AllowSetFore()) { retry = true; goto g1; } //didn't notice this but let's be safer
+				}
+				return true;
+
+				//Other possible methods:
+				//1. Instead of key can use attachthreadinput. But it is less reliable, eg works first time only, and does not allow our process to activate later easily. Does not work if foreground window is higher IL.
+				//2. Call allowsetforegroundwindow from a hook from the foreground process (or from the shell process, not tested). Too dirty. Need 2 native dlls (32/64-bit). Cannot inject if higher IL.
+
+				//tested: cannot disable the foreground lock timeout with SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT) when this process cannot activate windows.
+			}
 
 			/// <summary>
-			/// Don't call WndWindow (ie caller ensures it's a top-level window, not control).
+			/// Sends a key (VK_0 up). It allows to activate now.
+			/// Later this process can always activate easily (without key etc). It works even with higher IL windows.
+			/// Don't know why is this behavior. Tested on all OS from XP to 10.
+			/// Does not work if the foreground process has higher UAC IL.
 			/// </summary>
-			NoGetWndWindow = 2,
+			static void _EnableActivate_SendKey(bool debugOut)
+			{
+				if(debugOut) Debug_.Print("EnableActivate: need key");
+
+				var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
+				Api.SendInput_Key(ref x);
+				//info: works without waiting.
+			}
 
 			/// <summary>
-			/// Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked.
-			/// Then just calls ZorderTop(), which in most cases does not work (inactive window).
+			/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
+			/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
 			/// </summary>
-			IgnoreIfNoActivateStyleEtc = 4,
+			static void _EnableActivate_MinRes()
+			{
+				Debug_.Print("EnableActivate: need min/res");
+
+				Wnd t = Misc.CreateWindow(Native.WS_EX_TOOLWINDOW, "#32770", null, Native.WS_POPUP | Native.WS_MINIMIZE | Native.WS_VISIBLE);
+				//info: When restoring, the window must be visible, or may not work.
+				try {
+					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
+					t.LibSetWindowPlacement(ref wp); //activates t; fast (no animation)
+					_EnableActivate_SendKey(false); //makes so that later our process can always activate
+					_EnableActivate_AllowSetFore();
+					Api.SetForegroundWindow(Misc.WndRoot); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
+				}
+				finally { Api.DestroyWindow(t); }
+
+				//Another way:
+				//	t.Send(Api.WM_SETHOTKEY, ...);
+				//	Api.SendInputKey(...)
+				//Works but need more testing.
+				//This does not work: t.Send(WM_SYSCOMMAND, SC_HOTKEY);
+			}
 
 			/// <summary>
-			/// Wait for window animations to end. Eg when switching Win10 desktops.
+			/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
 			/// </summary>
-			ForScreenCapture = 8,
+			static bool _EnableActivate_AllowSetFore()
+			{
+				return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId());
+			}
+
+			internal static bool ActivateLL(Wnd w)
+			{
+				if(w.LibIsActiveOrNoActiveAndThisIsWndRoot) return true;
+
+				try {
+					bool canAct = EnableActivate(true);
+
+					if(!Api.SetForegroundWindow(w)) {
+						if(!canAct || !w.IsAlive) return false;
+						//It happens when foreground process called LockSetForegroundWindow.
+						//Although AllowSetForegroundWindow returns true, SetForegroundWindow fails.
+						//It happens only before this process sends keys. Eg after first _EnableActivate_SendKey this never happens again.
+						//If it has higher IL (and this process is User), also need _EnableActivate_MinRes.
+						_EnableActivate_SendKey(true);
+						if(!Api.SetForegroundWindow(w)) {
+							_EnableActivate_MinRes();
+							if(!Api.SetForegroundWindow(w)) return false;
+						}
+					}
+
+					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
+					if(w == Misc.WndRoot) return WndActive.Is0;
+					return Misc.WaitForAnActiveWindow();
+				}
+				//catch(WndException) { return false; }
+				catch { return false; }
+			}
+
+			[Flags]
+			internal enum ActivateFlags
+			{
+				/// <summary>
+				/// Don't call ThrowIfInvalid at the very start (ie called ensures it is valid).
+				/// </summary>
+				NoThrowIfInvalid = 1,
+
+				/// <summary>
+				/// Don't call WndWindow (ie caller ensures it's a top-level window, not control).
+				/// </summary>
+				NoGetWndWindow = 2,
+
+				/// <summary>
+				/// Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked.
+				/// Then just calls ZorderTop(), which in most cases does not work (inactive window).
+				/// </summary>
+				IgnoreIfNoActivateStyleEtc = 4,
+
+				/// <summary>
+				/// Wait for window animations to end. Eg when switching Win10 desktops.
+				/// </summary>
+				ForScreenCapture = 8,
+			}
 		}
 
 		/// <summary>
@@ -754,21 +822,21 @@ namespace Catkeys
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
 		/// <exception cref="WndException"/>
-		internal bool LibActivate(LibActivateFlags flags)
+		internal bool LibActivate(Lib.ActivateFlags flags)
 		{
 			//CONSIDER: use Options.Relaxed
 
-			if(0 != (flags & LibActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(0 != (flags & LibActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
+			if(0 != (flags & Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
+			if(0 != (flags & Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
 			else {
 				var w = WndWindow;
 				if(w != this) {
-					return w.LibActivate((flags | LibActivateFlags.NoGetWndWindow) & ~LibActivateFlags.NoThrowIfInvalid);
+					return w.LibActivate((flags | Lib.ActivateFlags.NoGetWndWindow) & ~Lib.ActivateFlags.NoThrowIfInvalid);
 				}
 			}
 
 			bool R = false, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
-			bool forScreenCapture = 0 != (flags & LibActivateFlags.ForScreenCapture);
+			bool forScreenCapture = 0 != (flags & Lib.ActivateFlags.ForScreenCapture);
 
 			if(IsMinimized) {
 				ShowNotMinimized(true);
@@ -779,7 +847,7 @@ namespace Catkeys
 
 			R = LibIsActiveOrNoActiveAndThisIsWndRoot;
 			if(!R) {
-				if(0 != (flags & LibActivateFlags.IgnoreIfNoActivateStyleEtc)) {
+				if(0 != (flags & Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					uint est = ExStyle;
 					if((est & Native.WS_EX_NOACTIVATE) != 0) noAct = true;
 					else if((est & (Native.WS_EX_TOOLWINDOW | Native.WS_EX_APPWINDOW)) == Native.WS_EX_TOOLWINDOW) noAct = !HasStyle(Native.WS_CAPTION);
@@ -855,7 +923,30 @@ namespace Catkeys
 
 			return true;
 
-			//tested: if the window is hung, activates the ghost window and fails (exception). It's ok.
+			//tested: if the window is hung, activates the ghost window and fails (exception). It's OK.
+		}
+
+		/// <summary>
+		/// Activates this window (brings to the foreground).
+		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
+		/// </summary>
+		/// <remarks>
+		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
+		/// Fails (throws exception) if cannot activate this window, except:
+		/// <list type="number">
+		/// <item>If this is a control, activates its top-level parent window.</item>
+		/// <item>If this is <see cref="Misc.WndRoot"/>, just deactivates the currently active window.</item>
+		/// <item>When the target application instead activates another window of the same thread.</item>
+		/// </list>
+		/// </remarks>
+		/// <exception cref="WndException"/>
+		/// <seealso cref="ActivateLL"/>
+		/// <seealso cref="IsActive"/>
+		/// <seealso cref="WndActive"/>
+		/// <seealso cref="Misc.SwitchActiveWindow"/>
+		public void Activate()
+		{
+			LibActivate(0);
 		}
 
 		/// <summary>
@@ -866,30 +957,7 @@ namespace Catkeys
 		/// </summary>
 		public bool ActivateLL()
 		{
-			if(LibIsActiveOrNoActiveAndThisIsWndRoot) return true;
-
-			try {
-				bool canAct = LibEnableActivate(true);
-
-				if(!Api.SetForegroundWindow(this)) {
-					if(!canAct || !IsAlive) return false;
-					//It happens when foreground process called LockSetForegroundWindow.
-					//Although AllowSetForegroundWindow returns true, SetForegroundWindow fails.
-					//It happens only before this process sends keys. Eg after first _EnableActivate_SendKey this never happens again.
-					//If it has higher IL (and this process is User), also need _EnableActivate_MinRes.
-					_EnableActivate_SendKey(true);
-					if(!Api.SetForegroundWindow(this)) {
-						_EnableActivate_MinRes();
-						if(!Api.SetForegroundWindow(this)) return false;
-					}
-				}
-
-				//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
-				if(this == Misc.WndRoot) return WndActive.Is0;
-				return Misc.WaitForAnActiveWindow();
-			}
-			//catch(WndException) { return false; }
-			catch { return false; }
+			return Lib.ActivateLL(this);
 		}
 
 		public static partial class Misc
@@ -923,88 +991,9 @@ namespace Catkeys
 			/// </summary>
 			public static bool EnableActivate()
 			{
-				return Wnd.LibEnableActivate(false);
+				return Lib.EnableActivate(false);
 			}
 		}
-
-		/// <summary>
-		/// No exceptions.
-		/// </summary>
-		internal static bool LibEnableActivate(bool goingToActivateAWindow)
-		{
-			if(_EnableActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
-
-			_EnableActivate_SendKey(true);
-			if(_EnableActivate_AllowSetFore()) return true;
-			//First time fails if the foreground window is of higher IL. Then sending keys does not work.
-
-			//_EnableActivate_MinRes() makes no active window...
-			if(goingToActivateAWindow) {
-				_EnableActivate_MinRes();
-				return _EnableActivate_AllowSetFore();
-			}
-
-			var wFore = WndActive; bool retry = false;
-			g1: _EnableActivate_MinRes();
-			if(!_EnableActivate_AllowSetFore()) return false;
-			if(!wFore.Is0 && !retry) {
-				Api.SetForegroundWindow(wFore);
-				if(!_EnableActivate_AllowSetFore()) { retry = true; goto g1; } //didn't notice this but let's be safer
-			}
-			return true;
-
-			//Other possible methods:
-			//1. Instead of key can use attachthreadinput. But it is less reliable, eg works first time only, and does not allow our process to activate later easily. Does not work if foreground window is higher IL.
-			//2. Call allowsetforegroundwindow from a hook from the foreground process (or from the shell process, not tested). Too dirty. Need 2 native dlls (32/64-bit). Cannot inject if higher IL.
-
-			//tested: cannot disable the foreground lock timeout with SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT) when this process cannot activate windows.
-		}
-
-		/// <summary>
-		/// Sends a key (VK_0 up). It allows to activate now.
-		/// Later this process can always activate easily (without key etc). It works even with higher IL windows.
-		/// Don't know why is this behavior. Tested on all OS from XP to 10.
-		/// Does not work if the foreground process has higher UAC IL.
-		/// </summary>
-		static void _EnableActivate_SendKey(bool debugOut)
-		{
-			if(debugOut) Debug_.Print("EnableActivate: need key");
-
-			var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
-			Api.SendInput_Key(ref x);
-			//info: works without waiting.
-		}
-
-		/// <summary>
-		/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
-		/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
-		/// </summary>
-		static void _EnableActivate_MinRes()
-		{
-			Debug_.Print("EnableActivate: need min/res");
-
-			Wnd t = Misc.CreateWindow(Native.WS_EX_TOOLWINDOW, "#32770", null, Native.WS_POPUP | Native.WS_MINIMIZE | Native.WS_VISIBLE);
-			//info: When restoring, the window must be visible, or may not work.
-			try {
-				var wp = new Api.WINDOWPLACEMENT(); wp.showCmd = Api.SW_RESTORE;
-				t.LibSetWindowPlacement(ref wp); //activates t; fast (no animation)
-				_EnableActivate_SendKey(false); //makes so that later our process can always activate
-				_EnableActivate_AllowSetFore();
-				Api.SetForegroundWindow(Misc.WndRoot); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
-			}
-			finally { Api.DestroyWindow(t); }
-
-			//Another way:
-			//	t.Send(Api.WM_SETHOTKEY, ...);
-			//	Api.SendInputKey(...)
-			//Works but need more testing.
-			//This does not work: t.Send(WM_SYSCOMMAND, SC_HOTKEY);
-		}
-
-		/// <summary>
-		/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
-		/// </summary>
-		static bool _EnableActivate_AllowSetFore() { return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()); }
 
 		//Too unreliable.
 		///// <summary>
@@ -1037,7 +1026,7 @@ namespace Catkeys
 		{
 			ThrowIfInvalid();
 			Wnd wTL = WndWindow;
-			if(!wTL.IsActive) wTL.LibActivate(LibActivateFlags.NoGetWndWindow);
+			if(!wTL.IsActive) wTL.LibActivate(Lib.ActivateFlags.NoGetWndWindow);
 
 			int th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
@@ -1070,7 +1059,7 @@ namespace Catkeys
 
 			_MinimalWaitNoCheckThread();
 
-			//note: don't use accSelect, it is buggy
+			//note: don't use accSelect, it has bugs
 		}
 
 		/// <summary>
@@ -1131,7 +1120,7 @@ namespace Catkeys
 		bool _GetRect(out RECT r)
 		{
 			if(Api.GetWindowRect(this, out r)) return true;
-			r.SetEmpty();
+			r.Set0();
 			return false;
 		}
 
@@ -1230,7 +1219,7 @@ namespace Catkeys
 		bool _GetClientRect(out RECT r)
 		{
 			if(Api.GetClientRect(this, out r)) return true;
-			r.SetEmpty();
+			r.Set0();
 			return false;
 		}
 
@@ -1264,6 +1253,7 @@ namespace Catkeys
 		{
 			get
 			{
+				//TODO: Native.ClearError. In other places too. Also let _GetRect etc be public.
 				_GetClientRect(out RECT r);
 				return r;
 			}
@@ -1311,8 +1301,8 @@ namespace Catkeys
 		public void SetClientSize(int? width, int? height)
 		{
 			if(LibGetWindowInfo(out var u)) {
-				int W = width != null ? width.Value : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
-				int H = height != null ? height.Value : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
+				int W = width != null ? width.GetValueOrDefault() : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
+				int H = height != null ? height.GetValueOrDefault() : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
 
 				if(ResizeLL(W, H)) return;
 			}
@@ -1365,7 +1355,7 @@ namespace Catkeys
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public unsafe bool MapClientToClientOf(Wnd w, ref RECT r)
+		public bool MapClientToClientOf(Wnd w, ref RECT r)
 		{
 			fixed (void* t = &r) { return _MapWindowPoints(this, w, t, 2); }
 		}
@@ -1374,7 +1364,7 @@ namespace Catkeys
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public unsafe bool MapClientToClientOf(Wnd w, ref Point p)
+		public bool MapClientToClientOf(Wnd w, ref Point p)
 		{
 			fixed (void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
 		}
@@ -1385,7 +1375,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool MapClientToScreen(ref RECT r)
 		{
-			return MapClientToClientOf(default(Wnd), ref r);
+			return MapClientToClientOf(default, ref r);
 		}
 
 		/// <summary>
@@ -1401,21 +1391,21 @@ namespace Catkeys
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public unsafe bool MapScreenToClient(ref RECT r)
+		public bool MapScreenToClient(ref RECT r)
 		{
-			fixed (void* t = &r) { return _MapWindowPoints(default(Wnd), this, t, 2); }
+			fixed (void* t = &r) { return _MapWindowPoints(default, this, t, 2); }
 		}
 
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public unsafe bool MapScreenToClient(ref Point p)
+		public bool MapScreenToClient(ref Point p)
 		{
 			return Api.ScreenToClient(this, ref p);
 		}
 
-		static unsafe bool _MapWindowPoints(Wnd wFrom, Wnd wTo, void* t, int cPoints)
+		static bool _MapWindowPoints(Wnd wFrom, Wnd wTo, void* t, int cPoints)
 		{
 			Native.ClearError();
 			if(Api.MapWindowPoints(wFrom, wTo, t, cPoints) != 0) return true;
@@ -1510,7 +1500,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(!GetRectInClientOf(WndDirectParent, out var r)) r = default(RECT);
+				if(!GetRectInClientOf(WndDirectParent, out var r)) r = default;
 				return r;
 			}
 		}
@@ -1521,7 +1511,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool GetRectNotMinMax(out RECT r)
 		{
-			if(!LibGetWindowPlacement(out var p)) { r = default(RECT); return false; }
+			if(!LibGetWindowPlacement(out var p)) { r = default; return false; }
 			r = p.rcNormalPosition;
 			return true;
 		}
@@ -1534,7 +1524,7 @@ namespace Catkeys
 			get
 			{
 				Api.GetCursorPos(out var p);
-				if(!MapScreenToClient(ref p)) p = default(Point);
+				if(!MapScreenToClient(ref p)) p = default;
 				return p;
 			}
 		}
@@ -1542,12 +1532,13 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this window (its rectangle) contains the specified point in primary screen coordinates.
 		/// </summary>
-		/// <param name="x">X coordinate. Not used if null.</param>
-		/// <param name="y">Y coordinate. Not used if null.</param>
+		/// <param name="x">X coordinate in screen. Not used if null.</param>
+		/// <param name="y">Y coordinate in screen. Not used if null.</param>
 		/// <param name="workArea">The coordinates are relative to the work area.</param>
-		public bool ContainsScreenXY(Coord x, Coord y, bool workArea = false)
+		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
+		public bool ContainsScreenXY(Coord x, Coord y, bool workArea = false, object screen = null)
 		{
-			Point p = Coord.Normalize(x, y, workArea);
+			Point p = Coord.Normalize(x, y, workArea, screen);
 			if(!_GetRect(out RECT r)) return false;
 			if(!r.Contains(x.IsNull ? r.left : p.X, y.IsNull ? r.top : p.Y)) return false;
 			return true;
@@ -1592,7 +1583,7 @@ namespace Catkeys
 		/// Supports <see cref="Native.GetError"/>.
 		/// For swpFlags you can use Native.SWP_ constants.
 		/// </remarks>
-		public bool SetWindowPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default(Wnd))
+		public bool SetWindowPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default)
 		{
 			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags);
 		}
@@ -1676,7 +1667,7 @@ namespace Catkeys
 			if(width.IsNull && height.IsNull) f |= Native.SWP_NOSIZE; else if(width.IsNull) getRect |= 4; else if(height.IsNull) getRect |= 8;
 
 			if(getRect != 0) {
-				RECT r; if(!GetRectInClientOf(w, out r)) ThrowUseNative("*move/resize*");
+				if(!GetRectInClientOf(w, out RECT r)) ThrowUseNative("*move/resize*");
 				if((getRect & 1) != 0) xy.X = r.left;
 				if((getRect & 2) != 0) xy.Y = r.top;
 				if((getRect & 4) != 0) wh.X = r.Width;
@@ -1733,80 +1724,83 @@ namespace Catkeys
 
 		#region MoveInScreen, EnsureInScreen, Screen
 
-		/// <summary>
-		/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen.
-		/// </summary>
-		internal static void LibMoveInScreen(bool bEnsureMethod,
+		internal static partial class Lib
+		{
+			/// <summary>
+			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen.
+			/// </summary>
+			internal static void MoveInScreen(bool bEnsureMethod,
 			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
 			object screen, bool bWorkArea, bool bEnsureInScreen)
-		{
-			Screen scr;
-			if(screen == null) {
-				if(useWindow) scr = Screen_.FromWindow(w);
-				else scr = bEnsureMethod ? Screen.FromRectangle(r) : Screen.PrimaryScreen;
-			} else scr = Screen_.FromObject(screen);
+			{
+				Screen scr;
+				if(screen == null) {
+					if(useWindow) scr = Screen_.FromWindow(w);
+					else scr = bEnsureMethod ? Screen.FromRectangle(r) : Screen.PrimaryScreen;
+				} else scr = Screen_.FromObject(screen);
 
-			RECT rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
+				RECT rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
 
-			if(useWindow) {
-				if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
-			}
-
-			int x, y, wid = r.Width, hei = r.Height;
-			if(bEnsureMethod) {
-				Debug.Assert(bEnsureInScreen == true && left.IsNull && top.IsNull); //left/top unused
-				x = r.left;
-				y = r.top;
-			} else {
-				if(left.IsNull) left = Coord.Center;
-				if(top.IsNull) top = Coord.Center;
-				var p = Coord.NormalizeInRect(left, top, rs);
-				x = p.X; y = p.Y;
-				switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
-				switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
-			}
-
-			if(bEnsureInScreen) {
-				x = Math.Max(Math.Min(x, rs.right - wid), rs.left);
-				y = Math.Max(Math.Min(y, rs.bottom - hei), rs.top);
-				if(r.Width > rs.Width) r.Width = rs.Width;
-				if(r.Height > rs.Height) r.Height = rs.Height;
-			}
-
-			r.Offset(x - r.left, y - r.top);
-
-			if(useWindow) { //move window
-				w.LibGetWindowPlacement(out var wp, "*move*");
-				bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.FromWindow(w));
-				if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
-
-				Wnd hto = default(Wnd); bool visible = w.IsVisible;
-				try {
-					//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
-					//There are several workarounds. The best of them - temporarily set owner window 0.
-					if(!visible) {
-						hto = w.WndOwner;
-						if(!hto.Is0) w.WndOwner = default(Wnd);
-					}
-
-					wp.rcNormalPosition = r;
-					wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
-					w.LibSetWindowPlacement(ref wp, "*move*");
-
-					if(moveMaxWindowToOtherMonitor) {
-						//I found this way of moving max window to other screen by experimenting.
-						//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
-						//Must call SetWindowPos twice, or it may refuse to move at all.
-						//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
-						rs = scr.WorkingArea;
-						if(!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
-					}
-				}
-				finally {
-					if(!hto.Is0) w.WndOwner = hto;
+				if(useWindow) {
+					if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
 				}
 
-				w._MinimalWaitIfOtherThread();
+				int x, y, wid = r.Width, hei = r.Height;
+				if(bEnsureMethod) {
+					Debug.Assert(bEnsureInScreen == true && left.IsNull && top.IsNull); //left/top unused
+					x = r.left;
+					y = r.top;
+				} else {
+					if(left.IsNull) left = Coord.Center;
+					if(top.IsNull) top = Coord.Center;
+					var p = Coord.NormalizeInRect(left, top, rs);
+					x = p.X; y = p.Y;
+					switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
+					switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
+				}
+
+				if(bEnsureInScreen) {
+					x = Math.Max(Math.Min(x, rs.right - wid), rs.left);
+					y = Math.Max(Math.Min(y, rs.bottom - hei), rs.top);
+					if(r.Width > rs.Width) r.Width = rs.Width;
+					if(r.Height > rs.Height) r.Height = rs.Height;
+				}
+
+				r.Offset(x - r.left, y - r.top);
+
+				if(useWindow) { //move window
+					w.LibGetWindowPlacement(out var wp, "*move*");
+					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.FromWindow(w));
+					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
+
+					Wnd hto = default; bool visible = w.IsVisible;
+					try {
+						//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
+						//There are several workarounds. The best of them - temporarily set owner window 0.
+						if(!visible) {
+							hto = w.WndOwner;
+							if(!hto.Is0) w.WndOwner = default;
+						}
+
+						wp.rcNormalPosition = r;
+						wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
+						w.LibSetWindowPlacement(ref wp, "*move*");
+
+						if(moveMaxWindowToOtherMonitor) {
+							//I found this way of moving max window to other screen by experimenting.
+							//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
+							//Must call SetWindowPos twice, or it may refuse to move at all.
+							//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
+							rs = scr.WorkingArea;
+							if(!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
+						}
+					}
+					finally {
+						if(!hto.Is0) w.WndOwner = hto;
+					}
+
+					w._MinimalWaitIfOtherThread();
+				}
 			}
 		}
 
@@ -1827,7 +1821,7 @@ namespace Catkeys
 		public void MoveInScreen(Coord x, Coord y, object screen = null, bool workArea = true, bool ensureInScreen = true)
 		{
 			var r = new RECT();
-			LibMoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
+			Lib.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -1847,7 +1841,7 @@ namespace Catkeys
 		{
 			var r = new RECT();
 			if(screen is int) screen = Screen_.FromIndex((int)screen, noThrow: true); //returns null if invalid
-			LibMoveInScreen(true, null, null, true, this, ref r, screen, workArea, true);
+			Lib.MoveInScreen(true, null, null, true, this, ref r, screen, workArea, true);
 		}
 
 		/// <summary>
@@ -1922,7 +1916,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTop()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_TOP);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_TOP);
 
 			//CONSIDER: find a workaround. Eg in some cases this works: set HWND_TOPMOST then HWND_NOTOPMOST.
 		}
@@ -1930,11 +1924,11 @@ namespace Catkeys
 		//Better don't use workarounds here.
 		//public bool ZorderTop()
 		//{
-		//	Wnd wa = Misc.SpecHwnd.Top;
+		//	Wnd wa = SpecHwnd.Top;
 		//	if(!IsChildWindow) {
 		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
 		//		//Workaround: insert this after the first window, then insert the first window after this.
-		//		wa = Api.GetTopWindow(IsTopmost ? default(Wnd) : this);
+		//		wa = Api.GetTopWindow(IsTopmost ? default : this);
 		//		return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa) && wa.SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, this);
 		//	}
 		//	return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
@@ -1948,7 +1942,7 @@ namespace Catkeys
 		public bool ZorderBottom()
 		{
 			ZorderNoTopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_BOTTOM);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_BOTTOM);
 		}
 
 		/// <summary>
@@ -1960,7 +1954,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTopmost()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_TOPMOST);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_TOPMOST);
 		}
 
 		/// <summary>
@@ -1975,7 +1969,7 @@ namespace Catkeys
 			if(!IsTopmost) return true;
 
 			for(int i = 0; i < 4; i++) {
-				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Misc.SpecHwnd.HWND_NOTOPMOST)) return false;
+				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_NOTOPMOST)) return false;
 				if(i == 0 && !IsTopmost) break;
 				//Print("retry");
 			}
@@ -2121,33 +2115,6 @@ namespace Catkeys
 
 		#region window/class long, control id, prop
 
-		static unsafe partial class _Api
-		{
-			[DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
-			internal static extern int GetWindowLong32(Wnd hWnd, int nIndex);
-
-			[DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
-			internal static extern LPARAM GetWindowLong64(Wnd hWnd, int nIndex);
-
-			[DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
-			internal static extern int SetWindowLong32(Wnd hWnd, int nIndex, int dwNewLong);
-
-			[DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
-			internal static extern LPARAM SetWindowLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
-
-			[DllImport("user32.dll", EntryPoint = "GetClassLongW", SetLastError = true)]
-			internal static extern int GetClassLong32(Wnd hWnd, int nIndex);
-
-			[DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
-			internal static extern LPARAM GetClassLong64(Wnd hWnd, int nIndex);
-
-			[DllImport("user32.dll", EntryPoint = "SetClassLongW", SetLastError = true)]
-			internal static extern int SetClassLong32(Wnd hWnd, int nIndex, int dwNewLong);
-
-			[DllImport("user32.dll", EntryPoint = "SetClassLongPtrW", SetLastError = true)]
-			internal static extern LPARAM SetClassLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
-		}
-
 		/// <summary>
 		/// Calls API GetWindowLong if this process is 32-bit, GetWindowLongPtr if 64-bit.
 		/// </summary>
@@ -2158,7 +2125,7 @@ namespace Catkeys
 		public LPARAM GetWindowLong(int index)
 		{
 			LPARAM R;
-			if(IntPtr.Size == 8) R = _Api.GetWindowLong64(this, index); else R = _Api.GetWindowLong32(this, index);
+			if(IntPtr.Size == 8) R = Api.GetWindowLong64(this, index); else R = Api.GetWindowLong32(this, index);
 			return R;
 		}
 
@@ -2173,7 +2140,7 @@ namespace Catkeys
 		{
 			Native.ClearError();
 			LPARAM R;
-			if(IntPtr.Size == 8) R = _Api.SetWindowLong64(this, index, newValue); else R = _Api.SetWindowLong32(this, index, newValue);
+			if(IntPtr.Size == 8) R = Api.SetWindowLong64(this, index, newValue); else R = Api.SetWindowLong32(this, index, newValue);
 			if(R == 0 && Native.GetError() != 0) ThrowUseNative();
 			return R;
 		}
@@ -2423,30 +2390,19 @@ namespace Catkeys
 
 		#region text, class, program
 
-		static unsafe partial class _Api
-		{
-			[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
-			public static extern int GetClassName(Wnd hWnd, char* lpClassName, int nMaxCount);
-
-			[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
-			public static extern int InternalGetWindowText(Wnd hWnd, [Out] char[] pString, int cchMaxCount);
-		}
-
 		/// <summary>
 		/// Gets class name.
 		/// Returns null if fails, eg if the window is closed. Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public unsafe string ClassName
+		public string ClassName
 		{
 			get
 			{
 				const int stackSize = 260;
-				var b = stackalloc char[stackSize];
-				int n = _Api.GetClassName(this, b, stackSize);
-				if(n > 0) return new string(b, 0, n);
-				return null;
-
-				//tested: same speed with Util.Buffers
+				var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+				int n = Api.GetClassName(this, b, stackSize);
+				if(n == 0) return null;
+				return _String(b, n);
 			}
 		}
 
@@ -2454,7 +2410,7 @@ namespace Catkeys
 		/// Returns true if the class name of this window matches className. Else returns false.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		/// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
+		/// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. Cannot be null.</param>
 		public bool ClassNameIs(string className)
 		{
 			return ClassName.Like_(className, true);
@@ -2464,7 +2420,7 @@ namespace Catkeys
 		/// If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		/// <param name="classNames">Class names. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
+		/// <param name="classNames">Class names. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. The array and strings cannot be null.</param>
 		public int ClassNameIs(params string[] classNames)
 		{
 			string cn = ClassName; if(cn == null) return 0;
@@ -2535,8 +2491,11 @@ namespace Catkeys
 			else if(getText.GetValueOrDefault()) R = _GetTextSlow();
 			else R = _GetTextFast(false);
 
-			if(removeUnderlineAmpersand && !Empty(R) && (Style & Native.WS_CHILD) != 0)
-				Misc.StringRemoveUnderlineAmpersand(ref R);
+			if(removeUnderlineAmpersand
+				&& !Empty(R)
+				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
+				&& HasStyle(Native.WS_CHILD)
+				) R = Misc.StringRemoveUnderlineAmpersand(R);
 
 			return R;
 		}
@@ -2553,11 +2512,11 @@ namespace Catkeys
 			for(int na = 300; ; na *= 2) {
 				var b = Util.Buffers.LibChar(ref na);
 				Native.ClearError();
-				int nr = _Api.InternalGetWindowText(this, b, na);
+				int nr = Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
-					if(nr > 0) return b.ToString(nr);
+					if(nr > 0) return _String(b, nr);
 					if(Native.GetError() != 0) return null;
-					if(useSlowIfEmpty && (Style & Native.WS_CHILD) != 0) return _GetTextSlow();
+					if(useSlowIfEmpty && HasStyle(Native.WS_CHILD)) return _GetTextSlow();
 					return "";
 				}
 			}
@@ -2569,26 +2528,18 @@ namespace Catkeys
 		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="Native.GetError"/>.
 		/// Uses WM_GETTEXT.
 		/// </summary>
-		unsafe string _GetTextSlow()
+		string _GetTextSlow()
 		{
-			int n; LPARAM ln;
-			if(!SendTimeout(5000, out ln, Api.WM_GETTEXTLENGTH)) return null;
-			if((n = ln) < 1) return "";
+			if(!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
+			int n = ln; if(n < 1) return "";
 
-			var s = new string('\0', n);
-			fixed (char* p = s) {
+			var b = Util.Buffers.LibChar(n);
+			fixed (char* p = b.A) {
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
-				p[n] = '\0';
-				int n2 = Util.CharPtr.Length(p); //info: some buggy controls return incorrect nt, eg including '\0'
-				if(n2 < n) {
-					s = s.Remove(n2);
-					//PrintList(n, n2, this); //2 from > 1000 tested controls
-					//Print(s);
-					return s;
-				}
-				//if(ln > n) PrintList(n, ln, this); //3 from > 1000 tested controls (ln == n+1)
-				return s;
+				b.A[n] = '\0';
+				n = Util.LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
+				return _String(b, n);
 			}
 
 			//note: cannot do this optimization:
@@ -2625,15 +2576,11 @@ namespace Catkeys
 		string _GetNameAcc()
 		{
 			if(!IsAlive) return null;
-			string R = null;
-			Api.IAccessible acc = null;
 			try {
-				if(0 != Api.AccessibleObjectFromWindow(this, Api.OBJID_WINDOW, ref Api.IID_IAccessible, out acc)) return null;
-				if(0 != acc.get_accName(0, out R)) return null;
+				return Acc.FromWindow(this).Name;
 			}
-			//catch { } //cannot handle all exceptions, because this code uses sendmessage. But what exceptions should we handle? Probably none.
-			finally { Api.ReleaseComObject(acc); }
-			return R;
+			catch(CatException) { }
+			return null;
 		}
 
 		/// <summary>

@@ -7,6 +7,383 @@
 
 
 
+
+/// <summary>
+/// Gets parent accessible object.
+/// Uses <msdn>IAccessible.get_accParent</msdn>.
+/// </summary>
+/// <param name="disposeThis">Dispose this Acc variable (release the old COM object if need).</param>
+/// <remarks>
+/// Returns null if failed or there is no parent, for example if this is the root accessible object (<see cref="Wnd.Misc.WndRoot"/>). Supports <see cref="Native.GetError"/>.
+/// </remarks>
+public Acc Parent(bool disposeThis = false)
+{
+	if(Is0) throw new ObjectDisposedException(nameof(Acc));
+	bool doNotRelease = false;
+	try {
+		IAccessible a = default;
+		if(_elem != 0) {
+			a = _iacc;
+			if(disposeThis) doNotRelease = true; else a.AddRef();
+		} else {
+			var hr = _iacc.get_accParent(out a);
+			if(hr != 0) {
+				_Hresult(_FuncId.parent_object, hr);
+				return null;
+			}
+		}
+		return new Acc(a);
+	}
+	finally { if(disposeThis) _Dispose(doNotRelease: doNotRelease); }
+
+	//rejected: option to replace fields of this Acc instead of creating new Acc.
+	//	It can create problems. Eg if an EnumX callback does it, the EnumX may spin forever.
+
+	//TODO: just call Navigate
+}
+
+//rejected: many objects don't implement get_accChild. Instead use Navigate, which calls AccessibleChildren. Also rarely used, unlike Parent.
+///// <summary>
+///// Gets a child accessible object.
+///// Uses <msdn>IAccessible.get_accChild</msdn>.
+///// </summary>
+///// <param name="childIndex">1-based index of the child object.</param>
+///// <param name="disposeThis">Dispose this Acc variable (release the old COM object if need).</param>
+///// <remarks>
+///// Returns null if fails, for example if childIndex is invalid. Supports <see cref="Native.GetError"/>.
+///// </remarks>
+//public Acc Child(int childIndex, bool disposeThis = false)
+//{
+//	if(Is0) throw new ObjectDisposedException(nameof(Acc));
+//	bool doNotRelease = false;
+//	try {
+//		int hr;
+//		if(_elem != 0) { hr = Api.E_INVALIDARG; goto ge; }
+//		IAccessible a = default;
+//		hr = _iacc.get_accChild(childIndex, out var idisp);
+//		if(hr == 0) { //child IAccessible
+//			hr = IAccessible.FromIDispatch(idisp, out a); if(hr != 0) goto ge;
+//			childIndex = 0;
+//		} else if(hr == 1) { //simple element of this IAccessible
+//			a = _iacc;
+//			if(disposeThis) doNotRelease = true; else a.AddRef();
+//		} else goto ge;
+//		return new Acc(a, childIndex);
+//		ge:
+//		_CheckHresult(_FuncId.child_object, hr);
+//		return null;
+//	}
+//	finally { if(disposeThis) _Dispose(doNotRelease: doNotRelease); }
+//}
+
+
+
+
+
+
+static void _EnumChildren(IAccessible parent, bool allDescendants, Action<Args> f, Args args, int level)
+{
+#if true //slower
+	using(var c = new _Children2(parent)) {
+		while(c.Next(out var a, out var e)) {
+			try {
+				args.LibSetBeforeCallback(a, e, 0, level);
+				f(args);
+				if(args.stop) return;
+				if(args.skipChildren) continue;
+				if(!allDescendants) continue;
+				if(e != 0) continue;
+				_EnumChildren(a, true, f, args, level + 1);
+				if(args.stop) return;
+			}
+			finally {
+				if(e == 0) a.Dispose();
+				args._iacc = default; //not necessary, but let it throw objectdisposedexception if the callback assigned Args to Acc and will try to use it (must use Args.ToAcc)
+			}
+		}
+	}
+#else
+			using(var c = new _Children(parent)) {
+				for(int i = 0; i < c.count; i++) {
+					if(0 != parent.FromVARIANT(ref c.v[i], out var a, out int e)) continue;
+					try {
+						args.LibSetBeforeCallback(a, e, 0, level);
+						f(args);
+						if(args.stop) return;
+						if(args.skipChildren) continue;
+						if(!allDescendants) continue;
+						if(e != 0) continue;
+						_EnumChildren(a, true, f, args, level + 1);
+						if(args.stop) return;
+					}
+					finally {
+						if(e == 0) a.Dispose();
+						args._iacc = default; //not necessary, but let it throw objectdisposedexception if the callback assigned Args to Acc and will try to use it (must use Args.ToAcc)
+					}
+				}
+			}
+#endif
+}
+
+/// <summary>
+/// Gets direct children of an accessible object as VARIANT array.
+/// Allocates the array, and frees in Dispose.
+/// Uses API <msdn>AccessibleChildren</msdn>.
+/// </summary>
+struct _Children2 :IDisposable
+{
+	IAccessible _parent;
+	IEnumVARIANT _ev;
+	int _n;
+	int _i;
+
+	public _Children2(IAccessible parent) : this()
+	{
+		_parent = parent;
+		int hr = Marshal.QueryInterface(_parent, ref IID_IEnumVARIANT, out var ip);
+		if(hr == 0 && ip != default) {
+			_ev = Unsafe.As<IEnumVARIANT>(Marshal.GetObjectForIUnknown(parent));
+			Marshal.Release(ip);
+			//Print("ok");
+			//_ev.Reset(); //TODO: need this?
+		} else if(0 == parent.get_accChildCount(out int n) && n > 0) { // in Firefox makes 10% slower
+			_n = n;
+		}
+	}
+
+	public void Dispose()
+	{
+		if(_ev != null) {
+			Marshal.ReleaseComObject(_ev);
+			_ev = null;
+		}
+	}
+
+	public bool Next(out IAccessible a, out int e)
+	{
+		a = default; e = 0;
+		if(_ev != null) {
+			if(0 == _ev.Next(1, out var v, out int n) && n == 1) { //slower. Need array, to get multiple.
+				if(0 == _parent.FromVARIANT(ref v, out a, out e)) {
+					if(e == 0) return true;
+					if(0 == _parent.get_accChild(e, out IntPtr di)) {
+						if(0 != IAccessible.FromIDispatch(di, out a)) return false;
+						e = 0;
+					}
+					return true;
+				}
+			}
+		} else if(_i < _n) {
+			if(0 == _parent.get_accChild(++_i, out IntPtr di)) {
+				if(0 == IAccessible.FromIDispatch(di, out a)) return true;
+			}
+		}
+
+		return false;
+	}
+
+	internal static Guid IID_IEnumVARIANT = new Guid(0x00020404, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
+
+	[ComImport, Guid("00020404-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	internal interface IEnumVARIANT
+	{
+		[PreserveSig] int Next(int celt, out VARIANT rgVar, out int pCeltFetched);
+		[PreserveSig] int Skip(int celt);
+		[PreserveSig] int Reset();
+		[PreserveSig] int Clone(out IEnumVARIANT ppEnum);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if true
+public string ClassName
+{
+	get
+	{
+		const int stackSize = 260;
+		var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+		int n = Api.GetClassName(this, b, stackSize);
+		if(n > 0) return _String(b, n);
+		return null;
+	}
+}
+#elif true
+		public string ClassName
+		{
+			get
+			{
+				const int stackSize = 260;
+				var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+				int n = Api.GetClassName(this, b, stackSize);
+				if(n > 0) return new string(b, 0, n);
+				return null;
+			}
+		}
+#elif true
+		//This version uses a simple hwnd-classname cache. More info below #endif.
+		public string ClassName
+		{
+			get
+			{
+				lock(_stringCache) { //slightly slower than concurrent dictionary, but easier and uses less memory
+					if(!_stringCache.TryGetTarget(out var dict)) _stringCache.SetTarget(dict = new Dictionary<Wnd, _StringCacheEntry>());
+
+					bool isCached = dict.TryGetValue(this, out var x);
+					if(isCached && (Time.Milliseconds - x.time < 1500)) {
+						if(IsAlive) return x.className;
+						dict.Remove(this);
+						return null;
+					}
+
+					const int stackSize = 260;
+					var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+					int n = Api.GetClassName(this, b, stackSize);
+					if(n == 0) {
+						if(isCached) dict.Remove(this);
+						return null;
+					}
+
+					var cn = x.className;
+					if(isCached) isCached = Util.CharPtr.Equals(b, n, cn);
+					if(!isCached) cn = new string(b, 0, n);
+
+					dict[this] = new _StringCacheEntry() { className = cn, time = Time.Milliseconds };
+					return cn;
+				}
+			}
+		}
+
+		struct _StringCacheEntry { public string className; public long time; }
+		static WeakReference<Dictionary<Wnd, _StringCacheEntry>> _stringCache = new WeakReference<Dictionary<Wnd, _StringCacheEntry>>(null);
+#elif true
+		//This version uses a hwnd-classname cache that avoids creating duplicate strings.
+		//For example, probably there are only ~80 unique classnames for 320 windows.
+		//Rejected because uses about the same amount of memory.
+		public string ClassName
+		{
+			get
+			{
+				lock(_stringCache) { //slightly slower than concurrent dictionary, but easier and uses less memory
+					if(!_stringCache.TryGetTarget(out var cache)) _stringCache.SetTarget(cache = new _StringCache());
+
+					bool isCached = cache.Dict.TryGetValue(this, out var x);
+					string cn = isCached ? cache.ClassNames[x.className] : null;
+					if(isCached && ((int)(Time.Milliseconds / 1000) - x.time < 3)) {
+						if(IsAlive) return cn;
+						cache.Dict.Remove(this);
+						return null;
+					}
+
+					const int stackSize = 260;
+					var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+					int n = Api.GetClassName(this, b, stackSize);
+					if(n == 0) {
+						if(isCached) cache.Dict.Remove(this);
+						return null;
+					}
+
+					if(isCached) isCached = Util.CharPtr.Equals(b, n, cn);
+					if(!isCached) cn = new string(b, 0, n);
+
+					cache.AddOrUpdate(this, cn, isCached ? x.className : -1);
+					//PrintList(cache.Dict.Count, cache.ClassNames.Count);
+					return cn;
+				}
+			}
+		}
+
+		struct _StringCacheEntry { public int className; public int time; }
+		static WeakReference<_StringCache> _stringCache = new WeakReference<_StringCache>(null);
+
+		class _StringCache
+		{
+			public Dictionary<Wnd, _StringCacheEntry> Dict;
+			public List<string> ClassNames;
+
+			public _StringCache()
+			{
+				Dict = new Dictionary<Wnd, _StringCacheEntry>(100);
+				ClassNames = new List<string>(100);
+			}
+
+			public void AddOrUpdate(Wnd w, string className, int stringIndex)
+			{
+				if(stringIndex < 0) {
+					int len = className.Length; char c0 = className[0];
+					for(int i = 0; i < ClassNames.Count; i++) {
+						var v = ClassNames[i];
+						if(v.Length == len && v[0] == c0 && v == className) { stringIndex = i; break; }
+					}
+					//for ClassNames can instead use Dictionary<int, string> and its ContainsValue. But is slow etc.
+					if(stringIndex < 0) {
+						stringIndex = ClassNames.Count;
+						ClassNames.Add(className);
+					}
+				}
+
+				var x = new _StringCacheEntry() { className = stringIndex, time = (int)(Time.Milliseconds / 1000) };
+				Dict[w] = x;
+			}
+		}
+#elif true
+		//This version uses a simplest hwnd-classname cache that does not make faster.
+		public string ClassName
+		{
+			get
+			{
+				lock(_stringCache) { //slightly slower than concurrent dictionary, but easier and uses less memory
+					if(!_stringCache.TryGetTarget(out var dict)) _stringCache.SetTarget(dict = new Dictionary<Wnd, _StringCacheEntry>());
+					bool isCached = dict.TryGetValue(this, out var x);
+
+					const int stackSize = 260;
+					var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+					int n = Api.GetClassName(this, b, stackSize);
+					if(n == 0) {
+						if(isCached) dict.Remove(this);
+						return null;
+					}
+
+					var cn = x.className;
+					if(isCached && Util.CharPtr.Equals(b, n, cn)) return cn;
+
+					x.className = cn = new string(b, 0, n);
+					dict[this] = x;
+					return cn;
+				}
+			}
+		}
+
+		struct _StringCacheEntry { public string className; }
+		static WeakReference<Dictionary<Wnd, _StringCacheEntry>> _stringCache = new WeakReference<Dictionary<Wnd, _StringCacheEntry>>(null);
+#endif
+//The hwnd-classname cache allows to:
+//	1. Avoid creating megabytes of garbage in seconds when calling frequently (eg while waiting for a window).
+//	2. Get classname much faster when calling frequently.
+//Tested how soon OS recycles window handles when creating-destroying windows in a loop:
+//	Message-only window: ~9 s, ~65000 handles.
+//	Normal hidden popup window: ~5 minutes, ~95000 handles (it seems it depends on the time).
+//There is no API to get window creation time.
+//Tried to measure how long a busy thread is suspended when GC runs. It seems about 250 mcs. Not bad. But the PC is fast, has CPU with 4 logical CPU. Need to test on a 1-CPU PC.
+//rejected: use cache for Name and ProcessName. Maybe in the future, if will notice that GC is a problem.
+//	Name: 1. Can use only the simplest version (without time), which does not make faster. 2. Names usually create less garbage, because most windows are nameless.
+//	ProcessName: 1. Not so easy. 2. Not so often used.
+//On my PC normally there are about 350 top-level windows, 1000 total windows, 180 unique class names.
+//	It means need 16 KB for the array if searching for a control in all windows (hidden too).
+
+
+
+
 //this version can use 1.5 byte for xy. Rejected because more difficult and saves just ~3% of string length.
 //public static string EncodeMultipleRecordedMoves(IEnumerable<uint> moves)
 //{

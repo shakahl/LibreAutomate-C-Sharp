@@ -23,8 +23,8 @@ using System.Linq;
 using System.Xml.Linq;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
-using G.Controls;
 
 namespace G.Controls
 {
@@ -90,7 +90,7 @@ namespace G.Controls
 		{
 			_errorProvider?.Clear();
 			var s = comboColor.Text.Trim();
-			if(Empty(s) || Color_.ColorFromNameOrRGB(s, out var color)) return;
+			if(Empty(s) || Catkeys.Util.Color_.ColorFromNameOrRGB(s, out var color)) return;
 			e.Cancel = true;
 			_SetError(comboColor, "Invalid color name");
 		}

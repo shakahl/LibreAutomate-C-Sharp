@@ -20,6 +20,7 @@ using System.Xml.Linq;
 using System.Collections.Concurrent;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 using Catkeys.Util;
 
@@ -227,6 +228,8 @@ namespace G.Controls
 			if(s == null) return; //0 messages, or the last message is Clear
 			if(sb != null && sb.Length > 0) s = sb.ToString();
 
+			//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
+
 			//_c.ST.AppendText(s, true, true, true); return;
 
 			//limit
@@ -341,7 +344,7 @@ namespace G.Controls
 					var quot = *s;
 					if(quot == '\'' || quot == '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
 					int n = (int)(sEnd - s);
-					int i = (quot == '>') ? CharPtr.AsciiFindChar(s, n, quot) : CharPtr.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
+					int i = (quot == '>') ? LibCharPtr.AsciiFindChar(s, n, quot) : LibCharPtr.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
 					if(i < 0) goto ge;
 					attr = s; s += i + 1; attrLen = i;
 					if(quot != '>') s++;
@@ -385,32 +388,32 @@ namespace G.Controls
 					if(ch == 'Z') style.Eol = true;
 					break;
 				case 6 << 16 | 'h':
-					if(CharPtr.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
+					if(LibCharPtr.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
 					else goto ge;
 					break;
 				case 4 << 16 | 'm':
-					if(CharPtr.AsciiStartsWith(tag + 1, "ono")) style.Mono = true;
+					if(LibCharPtr.AsciiStartsWith(tag + 1, "ono")) style.Mono = true;
 					else goto ge;
 					break;
 				case 4 << 16 | 's':
 					if(attr == null) goto ge;
-					if(CharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoul(attr, null, 0);
+					if(LibCharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoul(attr, null, 0);
 					else goto ge;
 					break;
 				case 5 << 16 | 'i':
 					if(attr == null) goto ge;
-					if(CharPtr.AsciiStartsWith(tag + 1, "mage")) hideTag = noEndTag = true;
+					if(LibCharPtr.AsciiStartsWith(tag + 1, "mage")) hideTag = noEndTag = true;
 					else goto ge;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
-					int i1 = CharPtr.AsciiFindString(s, (int)(sEnd - s), "</_>"); //use </_> because <> is much more often used, eg as operator or our tag ending. Could also support <> if </_> not found, but it is not good.
+					int i1 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</_>"); //use </_> because <> is much more often used, eg as operator or our tag ending. Could also support <> if </_> not found, but it is not good.
 					if(i1 < 0) goto ge;
 					while(i1-- > 0) _Write(*s++, currentStyle);
 					s += 4;
 					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
-					int i2 = CharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>");
+					int i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>");
 					if(i2 < 0) goto ge;
 					if(codes == null) codes = new List<Point>();
 					int iStartCode = (int)(t - s0);
@@ -452,7 +455,7 @@ namespace G.Controls
 				}
 
 				if(linkTag != null) {
-					if(!userTag && !CharPtr.AsciiStartsWith(tag, linkTag)) goto ge;
+					if(!userTag && !LibCharPtr.AsciiStartsWith(tag, linkTag)) goto ge;
 					//if(attr == null) goto ge; //no, use text as attribute
 					style.Hotspot = true;
 					style.Color = 0x80FF;
@@ -689,7 +692,7 @@ namespace G.Controls
 			default:
 				//case "help": case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '_' (others are displayed as text).
-				Debug_.DialogOpt("Tag '" + tag + "' is not implemented.\nUse AddCommonLinkTag or AddLinkTag.");
+				if(Options.Debug) TaskDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse AddCommonLinkTag or AddLinkTag.");
 				break;
 			}
 		}

@@ -33,6 +33,10 @@ Module Module1
 		'Keys("")
 		'Key("")
 		'Input.Key("")
+
+		'Wnd.Find(, "cass")
+		'Wnd.Find(className:="cass")
+
 	End Sub
 
 End Module

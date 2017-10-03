@@ -7,6 +7,7 @@ using System.Reflection;
 using System.ComponentModel;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Aga.Controls.Tree.NodeControls
@@ -94,7 +95,7 @@ namespace Aga.Controls.Tree.NodeControls
 		void _UpdateRowHeight(TreeNodeAdv node, string sOld, string sNew)
 		{
 			if(this.TrimMultiLine || !this.MultilineEdit) return;
-			int n1 = sOld.LineCount_(true), n2 = sNew.LineCount_(true);
+			int n1 = sOld.CountLines_(true), n2 = sNew.CountLines_(true);
 			if(n1 == n2) return;
 			node.Height = null;
 			this.Parent.SmartFullUpdate();

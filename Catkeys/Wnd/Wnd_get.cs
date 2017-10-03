@@ -18,7 +18,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 namespace Catkeys
@@ -75,7 +75,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the window or control that is the direct parent of this control.
 		/// Returns default(Wnd) if this is a top-level window.
-		/// If need top-level parent window, use <see cref="WndWindow"/>.
+		/// If you need the top-level parent window, use <see cref="WndWindow"/> instead.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public Wnd WndDirectParent
@@ -83,7 +83,7 @@ namespace Catkeys
 			get
 			{
 				Wnd R = Api.GetParent(this);
-				if(R.Is0 || R == Api.GetWindow(this, Api.GW_OWNER) || R == _wDesktop) return default(Wnd);
+				if(R.Is0 || R == Api.GetWindow(this, Api.GW_OWNER) || R == _wDesktop) return default;
 				return R;
 				//tested: GetAncestor much slower. IsChild also slower.
 				//About 'R == _wDesktop': it is rare but I have seen that desktop is owner.
@@ -161,7 +161,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public Wnd WndChild(int index)
 		{
-			if(index < 0) return default(Wnd);
+			if(index < 0) return default;
 			Wnd c = Api.GetWindow(this, Api.GW_CHILD);
 			for(; index > 0 && !c.Is0; index--) c = Api.GetWindow(c, Api.GW_HWNDNEXT);
 			return c;
@@ -206,7 +206,7 @@ namespace Catkeys
 			/// Usually it is a topmost window.
 			/// Calls API <msdn>GetTopWindow</msdn>(default(Wnd)).
 			/// </summary>
-			public static Wnd WndTop { get => Api.GetTopWindow(default(Wnd)); }
+			public static Wnd WndTop { get => Api.GetTopWindow(default); }
 
 			/// <summary>
 			/// Gets the first (top) enabled window in the chain of windows owned by w, or w itself if there are no such windows.
@@ -259,15 +259,11 @@ namespace Catkeys
 
 			static Wnd _WndDesktop(out Wnd lvControl)
 			{
-				Wnd wShell = WndShell;
-				lvControl = wShell.Child(className: "SysListView32");
-				if(lvControl.Is0) {
-					foreach(Wnd t in ThreadWindows(wShell.ThreadId, true, also: t => t.ClassNameIs("WorkerW"))) {
-						lvControl = t.Child(className: "SysListView32");
-						if(!lvControl.Is0) return t;
-					}
-				}
-				return default(Wnd);
+				Wnd w = WndShell;
+				var f = new ChildFinder(className: "SysListView32");
+				if(!f.FindIn(w)) w = Wnd.Find(null, "WorkerW", WFOwner.ThreadId(w.ThreadId), also: t => f.FindIn(t));
+				lvControl = f.Result;
+				return w;
 
 				//info:
 				//If no wallpaper, desktop is GetShellWindow, else a visible WorkerW window.
@@ -275,7 +271,7 @@ namespace Catkeys
 			}
 
 
-			//FUTURE: impl these
+			//FUTURE: impl these:
 
 			//public static Wnd CatkeysManager { get { return ; } }
 
@@ -303,7 +299,7 @@ namespace Catkeys
 		/// <seealso cref="Misc.MainWindows"/>
 		public Wnd WndNextMain(bool retryFromTop = false, bool skipMinimized = false, bool allDesktops = false, bool likeAltTab = false)
 		{
-			Wnd lastFound = default(Wnd), w2 = default(Wnd), w = this;
+			Wnd lastFound = default, w2 = default, w = this;
 			if(w.Is0) retryFromTop = false;
 
 			for(;;) {
@@ -376,7 +372,7 @@ namespace Catkeys
 			public static List<Wnd> MainWindows(bool allDesktops = false, bool likeAltTab = false)
 			{
 				List<Wnd> a = new List<Wnd>();
-				for(Wnd w = default(Wnd); ;) {
+				for(Wnd w = default; ;) {
 					w = w.WndNextMain(allDesktops: allDesktops, likeAltTab: likeAltTab);
 					if(w.Is0) break;
 					a.Add(w);
@@ -456,7 +452,7 @@ namespace Catkeys
 			//		Wnd wa = WndActive;
 			//		Wnd w = wa.WndNextMain(retryFromTop: true, skipMinimized: true, likeAltTab: true);
 			//		if(w.Is0 || w == wa) { //0 or 1 non-minimized windows; activate the most recently minimized, which usually is at the Z bottom.
-			//			w = default(Wnd);
+			//			w = default;
 			//			var a = Misc.MainWindows(likeAltTab: true);
 			//			int i = a.Count - 1;
 			//			if(i >= 0 && a[i] != wa) w = a[i];
@@ -465,7 +461,7 @@ namespace Catkeys
 			//		return w;
 			//	}
 			//	catch(WndException) { }
-			//	return default(Wnd);
+			//	return default;
 
 			//	//notes:
 			//	//The order of windows used by Alt+Tab is not the same as the Z order, especially when there are minimized windows.
@@ -485,7 +481,7 @@ namespace Catkeys
 			//		for(int i = 0; i < 2; i++) {
 			//			Wnd w = WndNextMain(wa, retryFromTop: true, skipMinimized: i == 0, likeAltTab: true);
 			//			if(w.Is0 || w == wa) {
-			//				if(i == 0 && w.Is0) wa = default(Wnd); //0 non-minimized windows; activate the first minimized.
+			//				if(i == 0 && w.Is0) wa = default; //0 non-minimized windows; activate the first minimized.
 			//				continue;
 			//			}
 			//			w._Activate();
@@ -493,7 +489,7 @@ namespace Catkeys
 			//		}
 			//	}
 			//	catch(WndException) { }
-			//	return default(Wnd);
+			//	return default;
 			//}
 		}
 	}

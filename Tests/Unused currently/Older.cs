@@ -23,6 +23,7 @@ using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 
 using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
 
@@ -1230,7 +1231,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static void TestSystemTimePeriod()
 	{
 		_Test("before");
-		using(new Time.SleepPrecision(2)) {
+		using(new Time.LibSleepPrecision(2)) {
 			_Test("in");
 		}
 		_Test("after");
@@ -1244,7 +1245,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 			//DebugDialog(Perf.Times);
 		}
 
-		//using(new Time.SleepPrecision(5)) {
+		//using(new Time.LibSleepPrecision(5)) {
 		//	int i = 0;
 		//	Timer_.Every(10, t => { Perf.Next(); if(++i > 10) { Perf.Write(); t.Stop(); } });
 		//	TaskDialog.Show("");
@@ -1518,9 +1519,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static void TestStringEqualsPart()
 	{
 		string s = "**id:text";
-		Print(s.EqualsPart_(2, "id:"));
-		Print(s.EqualsPart_(2, "ID:", true));
-		Print(s.EqualsPart_(2, false, "id:", "text:", "wfName:"));
+		Print(s.EqualsAt_(2, "id:"));
+		Print(s.EqualsAt_(2, "ID:", true));
+		Print(s.EqualsAt_(2, false, "id:", "text:", "wfName:"));
 	}
 
 	static void TestChildAcc()
@@ -1684,7 +1685,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//for(int i = 1; i < 50; i++) WaitEx(i);
 		//return;
 
-		//using(new Time.SleepPrecision(2)) {
+		//using(new Time.LibSleepPrecision(2)) {
 		//	Perf.First();
 		//	for(int i = 1; i < 17; i++) {
 		//		//timeBeginPeriod(5);
@@ -2088,7 +2089,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static void TestAbortThreadAndWaitFunctions()
 	{
 		//var h = Api.CreateEvent(Zero, false, false, null);
-		//using(new Time.SleepPrecision(1)) {
+		//using(new Time.LibSleepPrecision(1)) {
 		//	Perf.First();
 		//	for(int i = 0; i < 5; i++) {
 		//		//SpinMCS(15000);
@@ -2286,7 +2287,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Time.Milliseconds - t1);
 
 		//var a = new List<int>(100);
-		//using(new Time.SleepPrecision(1)) {
+		//using(new Time.LibSleepPrecision(1)) {
 		//	for(int i = 1; i < 50; i++) {
 		//		var t1 = Time.Milliseconds;
 		//		Thread.Sleep(i);
@@ -3171,10 +3172,10 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Files.Test();
 		//Files.Delete(@"d:\no file", true);
 
-		var ifExist = Files.IfExists.Fail;
-		ifExist = Files.IfExists.Delete;
-		//ifExist = Files.IfExists.RenameExisting;
-		//ifExist = Files.IfExists.MergeDirectory;
+		var ifExist = IfExists.Fail;
+		ifExist = IfExists.Delete;
+		//ifExist = IfExists.RenameExisting;
+		//ifExist = IfExists.MergeDirectory;
 
 		//Files.Copy(@"q:\test\copy.txt", @"d:\test\copy.txt", ifExist);
 		//Files.Copy(@"d:\test\z\copy.txt", @"d:\test\copy.txt", ifExist);
@@ -3205,8 +3206,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		string sto = @"D:\Test\to";
 		Files.Delete(sto);
-		//Files.Copy(@"D:\Test\x", sto, ifExist, Files.CopyFlags.IgnoreAccessDeniedErrors);
-		//Files.Copy(@"D:\Test\x", sto, ifExist, Files.CopyFlags.IgnoreAccessDeniedErrors);
+		//Files.Copy(@"D:\Test\x", sto, ifExist, FCFlags.IgnoreAccessDeniedErrors);
+		//Files.Copy(@"D:\Test\x", sto, ifExist, FCFlags.IgnoreAccessDeniedErrors);
 		//Files.Copy(@"Q:\programs", sto, ifExist, filter: t => t.IsDirectory || t.Size < 100 * 1024);
 
 		Perf.NW();
@@ -3313,14 +3314,14 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//dir = @"//Q7c/d$/test";
 		//dir = Folders.SystemX86;
 
-		Files.EDFlags fl = 0;
-		fl |= Files.EDFlags.IgnoreAccessDeniedErrors;
-		fl |= Files.EDFlags.AndSubdirectories;
-		//fl |= Files.EDFlags.AndSymbolicLinkSubdirectories;
-		//fl |= Files.EDFlags.SkipHidden;
-		//fl |= Files.EDFlags.SkipHiddenSystem;
-		//fl |= Files.EDFlags.RawPath;
-		//fl |= Files.EDFlags.DisableRedirection;
+		FEFlags fl = 0;
+		fl |= FEFlags.IgnoreAccessDeniedErrors;
+		fl |= FEFlags.AndSubdirectories;
+		//fl |= FEFlags.AndSymbolicLinkSubdirectories;
+		//fl |= FEFlags.SkipHidden;
+		//fl |= FEFlags.SkipHiddenSystem;
+		//fl |= FEFlags.RawPath;
+		//fl |= FEFlags.DisableRedirection;
 
 		Perf.SpinCPU(200);
 		Perf.First();
@@ -3406,7 +3407,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		////if(Files.FileExists(s)) { Print("exists"); return; }
 		////Print(Native.GetErrorMessage());
 		//////if(Files.GetAttributes(s, out var attr)) PrintHex(attr); else Print("failed") ;
-		////if(Files.GetAttributes(s, out var attr, Files.GAFlags.DoNotThrow)) PrintHex(attr); else Print("failed") ;
+		////if(Files.GetAttributes(s, out var attr, FAFlags.DoNotThrow)) PrintHex(attr); else Print("failed") ;
 
 		////Print(File.Exists(s));
 		////Print(File.GetAttributes(s));
@@ -3424,19 +3425,19 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Files.GetProperties(s, out var x));
 		//PrintList(x.Attributes.ToString("X"), x.Size, x.LastWriteTimeUtc, x.CreationTimeUtc, x.LastAccessTimeUtc);
 
-		foreach(var f in Files.EnumDirectory(@"C:", Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+		foreach(var f in Files.EnumDirectory(@"C:", FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 			string k = f.FullPath;
 
 			var ea = Files.ExistsAs2(k);
 			switch(ea) {
-			case Files.ItIs2.File: case Files.ItIs2.Directory: break;
+			case FileDir2.File: case FileDir2.Directory: break;
 			default:
 				PrintList(ea, k);
 				break;
 			}
 
 			//Print(k); continue;
-			//if(Files.GetProperties(k, out var x, Files.GAFlags.DoNotThrow)) {
+			//if(Files.GetProperties(k, out var x, FAFlags.DoNotThrow)) {
 			//	PrintList(x.Attributes.ToString("X"), x.Size, x.LastWriteTimeUtc, x.CreationTimeUtc, x.LastAccessTimeUtc, k);
 			//} else {
 			//	var es = Native.GetErrorMessage();
@@ -3465,7 +3466,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	Print(f);
 		//}
 
-		//Files.Copy("D:", @"Q:\Test\D", Files.IfExists.Delete);
+		//Files.Copy("D:", @"Q:\Test\D", IfExists.Delete);
 
 		Print("END");
 	}
@@ -3607,10 +3608,10 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		////Print(Path.GetFullPath(s));
 		//Print(Path_.Normalize(s));
-		//Print(Path_.Normalize(s, Path_.NormalizeFlags.DoNotRemoveEndSeparator));
+		//Print(Path_.Normalize(s, PNFlags.DoNotRemoveEndSeparator));
 
-		////Files.GAFlags flags = 0;
-		//////flags|=Files.GAFlags.RawPath;
+		////FAFlags flags = 0;
+		//////flags|=FAFlags.RawPath;
 		////if(Files.GetAttributes(s, out var a, flags)) PrintHex(a); else Print("not found");
 
 		//Print(Files.SearchPath(s));
@@ -3757,15 +3758,15 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		Print(Files.ExistsAs2(s));
 
 		//if(Files.GetAttributes(s, out var v)) Print(v);
-		if(Files.GetAttributes(s, out var v, Files.GAFlags.DoNotThrow)) Print(v);
+		if(Files.GetAttributes(s, out var v, FAFlags.DoNotThrow)) Print(v);
 		if(Files.GetProperties(s, out var p)) {
 			PrintList(p.Size, p.Attributes);
 			PrintList(p.CreationTimeUtc, p.LastWriteTimeUtc, p.LastAccessTimeUtc);
 		}
 
-		//foreach(var f in Files.EnumDirectory(@"C:\", Files.EDFlags.AndSubdirectories | Files.EDFlags.IgnoreAccessDeniedErrors)) {
+		//foreach(var f in Files.EnumDirectory(@"C:\", FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 		//	//if(!Files.ExistsAsAny(f.FullPath)) Print(f);
-		//	if(Files.ExistsAs2(f.FullPath) == Files.ItIs2.AccessDenied) Print(f);
+		//	if(Files.ExistsAs2(f.FullPath) == FileDir2.AccessDenied) Print(f);
 		//}
 		//Print("end");
 	}
@@ -3853,7 +3854,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//s = ":: ";
 		//s = ":: 14001F706806EE260AA0D7449371BEB064C98683";
 		Shell.Run(s);
-		//Shell.Run(@"Q:\app\qm.exe", flags:Shell.RunFlags.SupportExtVerbs, verb:"properties"); Wait(0.1);
+		//Shell.Run(@"Q:\app\qm.exe", flags:SRFlags.SupportExtVerbs, verb:"properties"); Wait(0.1);
 		//TaskDialog.Show();
 
 		s = @"%windir%\etc";
@@ -3988,7 +3989,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
 
 		//int n = 0;
-		//foreach(var v in Files.EnumDirectory(Folders.System, Files.EDFlags.DisableRedirection)) {
+		//foreach(var v in Files.EnumDirectory(Folders.System, FEFlags.DisableRedirection)) {
 		//	n++;
 		//}
 		//Print(n);
@@ -4239,26 +4240,26 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Shell.Run(@"\\?\Q:\Test\x\..\am.txt");
 
 #if false
-		//Shell.Run("notepad.exe", flags: Shell.RunFlags.ReturnProcessHandle, more: new Shell.RunMoreParams() { Verb = "properties" });
+		//Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRParams() { Verb = "properties" });
 		var f = new Form();
 		f.Click += (unu, sed) =>
 		  {
-			  Shell.Run("notepad.exe", flags: Shell.RunFlags.ReturnProcessHandle, more: new Shell.RunMoreParams() { Verb = "properties", OwnerWindow=f });
-			  //try { Shell.Run("no.exe", flags: Shell.RunFlags.ShowErrorUI, more: new Shell.RunMoreParams() { OwnerWindow = f }); } catch(CatException) { }
+			  Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRParams() { Verb = "properties", OwnerWindow=f });
+			  //try { Shell.Run("no.exe", flags: SRFlags.ShowErrorUI, more: new SRParams() { OwnerWindow = f }); } catch(CatException) { }
 
 		  };
 		f.ShowDialog();
 #elif true
 		//Shell.Run(@"Q:\my qm\test_run_dir.exe");
-		//Shell.Run(@"Q:\my qm\test_run_dir.exe", more: new Shell.RunMoreParams() { CurrentDirectory=@"C:\Windows" });
+		//Shell.Run(@"Q:\my qm\test_run_dir.exe", more: new SRParams() { CurrentDirectory=@"C:\Windows" });
 		//Shell.Run(@"Q:\");
-		//Shell.Run(@"notepad.exe", more: new Shell.RunMoreParams() { WindowState = ProcessWindowStyle.Minimized });
+		//Shell.Run(@"notepad.exe", more: new SRParams() { WindowState = ProcessWindowStyle.Minimized });
 
-		//var p = new Shell.RunMoreParams() { NeedProcessHandle = true };
+		//var p = new SRParams() { NeedProcessHandle = true };
 		//Shell.Run(@"notepad.exe", more: p);
 		//using(var h = p.ProcessHandle) h?.WaitOne();
 
-		//Print(Shell.Run(@"notepad.exe", flags: Shell.RunFlags.WaitForExit));
+		//Print(Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit));
 		//Shell.Run(@"mailto:qmgindi@gmail.com");
 
 		//Wnd w = Wnd.Find("Settings");
@@ -4312,9 +4313,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//s = @"Q:\Test\CatkeysHelp.chm - Shortcut";
 		//s = Folders.Virtual.ControlPanel + "1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
 		Print(s);
-		Shell.RunMoreParams more = null;
-		//more = new Shell.RunMoreParams() { Verb = "properties" };
-		more = new Shell.RunMoreParams() { NeedProcessHandle = true };
+		SRParams more = null;
+		//more = new SRParams() { Verb = "properties" };
+		more = new SRParams() { NeedProcessHandle = true };
 		int pid = Shell.Run(s, more: more);
 		Print(pid);
 		using(var h = more?.ProcessHandle) {
@@ -4558,7 +4559,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		c = 0xff;
 		c = 0x8000;
 		int n = -250;
-		PrintHex(Color_.AdjustLuminance(c, n, false));
+		PrintHex(Catkeys.Util.Color_.AdjustLuminance(c, n, false));
 		//PrintHex(Color_.AdjustLuminance2(c, n, false));
 		//PrintHex(Color_.AdjustLuminance(0xE0E0E0, -800, false));
 
@@ -4631,9 +4632,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Path_.Combine(Folders.AdminTools, null));
 		//Print(Path_.Combine(null, Folders.AdminTools));
 		//Print(Path_.Combine(null, null));
-		//Print(Path_.Combine("ignore", "%windir%", Path_.CombineFlags.s2CanBeFullPath));
+		//Print(Path_.Combine("ignore", "%windir%", true));
 		//Print(Path_.Combine(s, "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"));
-		//Print(Path_.Combine(s, "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", Path_.CombineFlags.DoNotPrefixLongPath));
+		//Print(Path_.Combine(s, "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", prefixLongPath: false));
 
 		var s = @"q:\test\delete\file.txt";
 		var s2 = @"q:\test\delete\file2.txt";
@@ -5018,12 +5019,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static unsafe void TestAsciiStartsWithI()
 	{
 		fixed (byte* p = Convert_.Utf8FromString("Test")) {
-			Print(Catkeys.Util.CharPtr.AsciiStartsWith(p, "Tes"));
-			Print(Catkeys.Util.CharPtr.AsciiStartsWith(p, "tes"));
-			Print(Catkeys.Util.CharPtr.AsciiStartsWith(p, "Mes"));
-			Print(Catkeys.Util.CharPtr.AsciiStartsWithI(p, "Tes"));
-			Print(Catkeys.Util.CharPtr.AsciiStartsWithI(p, "tes"));
-			Print(Catkeys.Util.CharPtr.AsciiStartsWithI(p, "Mes"));
+			Print(Catkeys.Util.LibCharPtr.AsciiStartsWith(p, "Tes"));
+			Print(Catkeys.Util.LibCharPtr.AsciiStartsWith(p, "tes"));
+			Print(Catkeys.Util.LibCharPtr.AsciiStartsWith(p, "Mes"));
+			Print(Catkeys.Util.LibCharPtr.AsciiStartsWithI(p, "Tes"));
+			Print(Catkeys.Util.LibCharPtr.AsciiStartsWithI(p, "tes"));
+			Print(Catkeys.Util.LibCharPtr.AsciiStartsWithI(p, "Mes"));
 		}
 	}
 
@@ -5237,14 +5238,41 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		}
 	}
 
+	static void TestTuple()
+	{
+		Print(TupleFunc());
+
+		//Print(TestTupleMemberNames());
+		//(int one, string two) = TestTupleMemberNames();
+		//PrintList(one, two);
+		//(var one, var two) = TestTupleMemberNames2();
+		//PrintList(one, two);
+		//(var one, _) = TestTupleMemberNames2();
+		//PrintList(one);
+	}
+
 	static (int, int) TupleFunc()
 	{
 		return (1, 2);
 	}
 
-	static void TestTuple()
+	static (int i, string s) TestTupleMemberNames()
 	{
-		Print(TupleFunc());
+		return (5, "hh");
+	}
+
+	static Pint TestTupleMemberNames2()
+	{
+		return new Pint(5, 8);
+	}
+
+	class Pint
+	{
+		public int X { get; }
+		public int Y { get; }
+
+		public Pint(int x, int y) { X = x; Y = y; }
+		public void Deconstruct(out int x, out int y) { x = X; y = Y; }
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -5792,11 +5820,11 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		Print(r2.Intersect(r1)); Print(r2);
 	}
 
-	//static Time.SleepPrecision s_tt = new Time.SleepPrecision(1);
+	//static Time.LibSleepPrecision s_tt = new Time.LibSleepPrecision(1);
 
 	public static void _Sleep2(int ms)
 	{
-		using(new Time.SleepPrecision(1)) {
+		using(new Time.LibSleepPrecision(1)) {
 			//Perf.Next();
 			Time.Sleep(ms);
 		}
@@ -5807,12 +5835,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestSystemWaitPeriod()
 	{
-		if(Time.SleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.SleepPrecision.Current);
+		if(Time.LibSleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.LibSleepPrecision.Current);
 
-		//Time.SleepPrecision.TempSet1(60000);
+		//Time.LibSleepPrecision.TempSet1(60000);
 		for(int j = 0; j < 3; j++) {
 #if true
-			Print(Time.SleepPrecision.Current);
+			Print(Time.LibSleepPrecision.Current);
 			Perf.First();
 			for(int i = 0; i < 8; i++) {
 				Time.Sleep(1);
@@ -5821,16 +5849,16 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 				Perf.Next();
 			}
 			Perf.Write();
-			Print(Time.SleepPrecision.Current);
+			Print(Time.LibSleepPrecision.Current);
 			Thread.Sleep(1000);
-			Print(Time.SleepPrecision.Current);
+			Print(Time.LibSleepPrecision.Current);
 			Thread.Sleep(200);
-			Print(Time.SleepPrecision.Current);
+			Print(Time.LibSleepPrecision.Current);
 #else
 
-					//using(new Time.SleepPrecision(1)) {
+					//using(new Time.LibSleepPrecision(1)) {
 					for(var t0 = Time.Milliseconds; Time.Milliseconds < t0 + 5000;) {
-						//using(new Time.SleepPrecision(1)) {
+						//using(new Time.LibSleepPrecision(1)) {
 						//Perf.Next();
 						Time.Sleep(1);
 						//}
@@ -5932,8 +5960,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		var t3 = new Timer_(t => Print("with Timer_ object")); t3.Start(3000, true); //the same as Timer_.After
 		MessageBox.Show("");
 
-		//if(Time.SleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.SleepPrecision.Current);
-		//Time.SleepPrecision.TempSet1();
+		//if(Time.LibSleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.LibSleepPrecision.Current);
+		//Time.LibSleepPrecision.TempSet1();
 		//int i = 0;
 		//Perf.First();
 		//Timer_.Every(10, t => { Perf.Next(); if(i++ == 8) { Perf.Write(); t.Stop(); } });
@@ -5960,9 +5988,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestOptionsExample()
 	{
-		if(Time.SleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.SleepPrecision.Current);
+		if(Time.LibSleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.LibSleepPrecision.Current);
 
-		//using(new Time.SleepPrecision(6)) {
+		//using(new Time.LibSleepPrecision(6)) {
 		Wait(0.5);
 		//Options.MouseClickSleep = 1;
 		//Options.MouseMoveSpeed = 20;
@@ -6364,7 +6392,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Debug_.Dialog("Dialog");
 		//Debug_.DialogOpt("DialogOpt");
 		//Debug_.PrintOpt("PrintOpt");
-		Debug_.WarningOpt("WarningOpt");
+		//Debug_.WarningOpt("WarningOpt");
 	}
 
 	static void TestScreen_()
@@ -6679,11 +6707,11 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestApiTimeBeginPeriodBug()
 	{
-		//using(new Time.SleepPrecision(5)) {
+		//using(new Time.LibSleepPrecision(5)) {
 		//for(int i = 0; i < 30; i++) {
-		//	var v = Time.SleepPrecision.Current;
-		//	using(new Time.SleepPrecision(1)) {
-		//		PrintList(v, Time.SleepPrecision.Current);
+		//	var v = Time.LibSleepPrecision.Current;
+		//	using(new Time.LibSleepPrecision(1)) {
+		//		PrintList(v, Time.LibSleepPrecision.Current);
 		//	}
 		//	Wait(0.25);
 		//}
@@ -7036,8 +7064,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 			string r1 = null, r2 = null, r3 = null, r4 = null;
 
 			//sb.Clear(); sb.AppendFormat("{0}    {1}    {2}", x, y, s); r1 = sb.ToString();
-			//fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, CharPtr.Length(p)); }
-			//fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, CharPtr.Length(p)); }
+			//fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, LibCharPtr.Length(p)); }
+			//fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, LibCharPtr.Length(p)); }
 			//sb.Clear(); sb.Append(x); sb.Append("    "); sb.Append(y); sb.Append("    "); sb.Append(s); r4 = sb.ToString();
 
 			Perf.SpinCPU(100);
@@ -7048,9 +7076,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 				Perf.Next();
 				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.AppendFormat("{0}    {1}    {2}", x, y, s); r1 = sb.ToString(); }
 				Perf.Next();
-				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, Catkeys.Util.CharPtr.Length(p)); } }
+				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, Catkeys.Util.LibCharPtr.Length(p)); } }
 				Perf.Next();
-				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, Catkeys.Util.CharPtr.Length(p)); } }
+				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, Catkeys.Util.LibCharPtr.Length(p)); } }
 				Perf.Next();
 				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.Append(x); sb.Append("    "); sb.Append(y); sb.Append("    "); sb.Append(s); r4 = sb.ToString(); }
 				Perf.Next();

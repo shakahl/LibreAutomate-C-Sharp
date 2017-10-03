@@ -16,15 +16,14 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
+using Catkeys.Types;
 using static Catkeys.NoClass;
 
-namespace Catkeys
+namespace Catkeys.Types
 {
 	/// <summary>
 	/// Specifies whether to set, add or remove flags.
 	/// </summary>
-	/// <tocexclude />
 	public enum SetAddRemove
 	{
 		/// <summary>Set flags = the specified value.</summary>
