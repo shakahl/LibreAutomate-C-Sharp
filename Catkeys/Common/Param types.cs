@@ -295,9 +295,9 @@ namespace Catkeys.Types
 		public unsafe float FractionValue { get { int i = Value; return *(float*)&i; } }
 
 		/// <summary>
-		/// Returns true if Type == None. This is when assigned null or default(Coord).
+		/// Returns true if Type == None (when assigned null or default(Coord)).
 		/// </summary>
-		public bool IsNull { get => Type == CoordType.None; }
+		public bool IsEmpty { get => Type == CoordType.None; }
 
 		Coord(CoordType type, int value) { _v = ((long)type << 32) | (uint)value; }
 		//info: if type and value are constants, compiler knows the final value and does not use the << and | operators in the compiled code.
@@ -319,6 +319,7 @@ namespace Catkeys.Types
 		/// </summary>
 		/// <param name="v">null.</param>
 		public static implicit operator Coord(JustNull v) => new Coord();
+		//TODO: remove. Now we have 'default'.
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -377,8 +378,8 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Converts fractional/reverse coordinates to normal coordinates in a rectangle.
 		/// </summary>
-		/// <param name="x">X coordinate relative to r. If null, returns 0 x.</param>
-		/// <param name="y">Y coordinate relative to r. If null, returns 0 y.</param>
+		/// <param name="x">X coordinate relative to r. If default(Coord), returns 0 x.</param>
+		/// <param name="y">Y coordinate relative to r. If default(Coord), returns 0 y.</param>
 		/// <param name="r">The rectangle.</param>
 		/// <param name="widthHeight">Use only width and height of r. If false, the function adds r offset (left and top).</param>
 		public static Point NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false)
@@ -386,12 +387,13 @@ namespace Catkeys.Types
 			if(widthHeight) r.Offset(-r.left, -r.top);
 			return new Point(x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
 		}
+		//CONSIDER: if default(Coord), use center.
 
 		/// <summary>
 		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
 		/// </summary>
-		/// <param name="x">X coordinate relative to the specified screen (default - primary). If null, returns 0 x.</param>
-		/// <param name="y">Y coordinate relative to the specified screen (default - primary). If null, returns 0 y.</param>
+		/// <param name="x">X coordinate relative to the specified screen (default - primary). If default(Coord), returns 0 x.</param>
+		/// <param name="y">Y coordinate relative to the specified screen (default - primary). If default(Coord), returns 0 y.</param>
 		/// <param name="workArea">x y are relative to the work area, not entire screen.</param>
 		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
@@ -416,8 +418,8 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
 		/// </summary>
-		/// <param name="x">X coordinate relative to the client area of w. If null, returns 0 x.</param>
-		/// <param name="y">Y coordinate relative to the client area of w. If null, returns 0 y.</param>
+		/// <param name="x">X coordinate relative to the client area of w. If default(Coord), returns 0 x.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. If default(Coord), returns 0 y.</param>
 		/// <param name="w">The window.</param>
 		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
 		public static Point NormalizeInWindow(Coord x, Coord y, Wnd w, bool nonClient = false)

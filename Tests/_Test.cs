@@ -66,6 +66,9 @@ using System.Reflection.Emit;
 using System.Net;
 using System.Net.NetworkInformation;
 
+//using System.Windows.Automation;
+using UIAutomationClient;
+
 using Catkeys.Types;
 using Catkeys.Util;
 //using static Test.CatAlias;
@@ -76,6 +79,7 @@ using Catkeys.Util;
 #pragma warning disable 162, 168, 169, 219, 649 //unreachable code, unused var/field
 
 
+[System.Security.SuppressUnmanagedCodeSecurity]
 static unsafe partial class Test
 {
 	//Why .NET creates so many threads?
@@ -98,15 +102,6 @@ static unsafe partial class Test
 	[STAThread]
 	static void Main(string[] args)
 	{
-#if false
-		Console.WriteLine(GetThreadCount());
-#else
-		//TODO: temporarily disabled
-		//avoid loading System.Windows.Forms.dll when debugging, because sometimes want to find where is loaded System.Windows.Forms.dll
-		if(!Debugger.IsAttached) _EnableVisualStylesEtc();
-		//Perf.Next();
-		//Perf.Write();
-
 #if true
 		TestMain();
 #elif true
@@ -137,7 +132,6 @@ static unsafe partial class Test
 		//	t.Start();
 		//}
 		//Wait(10);
-#endif
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -1857,7 +1851,7 @@ static unsafe partial class Test
 		//	foreach(var a in )
 		//}
 
-		Wnd wSkip = Wnd.Find("Quick*").ChildById(2202);
+		Wnd wSkip = Wnd.Find("Quick*").Kid(2202);
 		w = Wnd.Misc.WndRoot;
 		//w = Wnd.Find("app -*");
 		//w = Wnd.Find("* - Notepad");
@@ -1911,7 +1905,7 @@ static unsafe partial class Test
 		var w = parent.WndContainer;
 		if(!w.IsVisible || w.ControlId == 2202) return;
 
-		var k = parent.GetChildren(false); if(k.Length == 0) return;
+		var k = parent.Children(false); if(k.Length == 0) return;
 		bool testFirstLast = false;
 		for(int i = 0; i < k.Length; i++) {
 			Acc a = k[i];
@@ -2018,7 +2012,7 @@ static unsafe partial class Test
 
 		//var w = Wnd.Find("*Sandcastle*");
 		////var a = Acc.Find(w, "web:LINK", "**m|Untitled[]General");
-		//Print(Acc.FromWindow(w).GetChildren(true).Where(o=>!o.IsInvisible));
+		//Print(Acc.FromWindow(w).Children(true).Where(o=>!o.IsInvisible));
 
 		//var w = Wnd.Find("Find");
 		////var a = Acc.Find(w, "class=button:PUSHBUTTON");
@@ -2029,13 +2023,11 @@ static unsafe partial class Test
 		a?.Dispose();
 
 		//Print(TaskDialog.ShowEx(buttons: "One|Two|50 Three|51Four", flags: TDFlags.CommandLinks));
-
-		//TODO: test all usage of Acc in other functions, for example ScreenImage.Find.
 	}
 
 	static void TestAccWeb()
 	{
-		Debug_.Prefix = "<><Z 0xffff>"; Debug_.Suffix = "</Z>";
+		Debug_.TextPrefix = "<><Z 0xffff>"; Debug_.TextSuffix = "</Z>";
 
 		//Print(Ver.Is64BitProcess);
 		//var w = Wnd.Find("*Mozilla Firefox");
@@ -2071,7 +2063,7 @@ static unsafe partial class Test
 		Perf.First();
 		for(int i = 0; i < 5; i++) {
 			//var s = a.HtmlAttribute(attr, interpolated: false);
-			var s = a.HtmlAttribute(attr, AccBrowser.InternetExplorer); //TODO: why IE now so slow? Was normal.
+			var s = a.HtmlAttribute(attr, AccBrowser.InternetExplorer);
 			//var s = a.HtmlAttributes();
 			//var s = a.Html(true);
 			Perf.Next();
@@ -2105,7 +2097,7 @@ static unsafe partial class Test
 		//});
 
 		Perf.First();
-		var t = a.GetChildren(true);
+		var t = a.Children(true);
 		Perf.Next();
 		foreach(var k in t) {
 			//var d = k.HtmlAttributes();
@@ -2141,7 +2133,7 @@ static unsafe partial class Test
 
 	static void TestDebugPrintColor()
 	{
-		Debug_.Prefix = "<><c 0xff0000>"; Debug_.Suffix = "</c>";
+		Debug_.TextPrefix = "<><c 0xff0000>"; Debug_.TextSuffix = "</c>";
 		Debug_.Print("Blue");
 	}
 
@@ -2174,8 +2166,8 @@ static unsafe partial class Test
 	{
 		var w = Wnd.Find("Quick*");
 
-		var cf = new Wnd.ChildFinder("name");
-		var a = Acc.Find(w, cf, "role");
+		//var cf = new Wnd.ChildFinder("name");
+		//var a = Acc.Find(w, "role", controls:cf);
 
 		var af = new Acc.Finder("role");
 		w.Child("name", also: o => af.FindIn(o));
@@ -2184,7 +2176,705 @@ static unsafe partial class Test
 		var k = Acc.Find(w.Child("name"), "role");
 
 		//var a1 = Acc.Find(w, "role", waitS: 5);
-		//var a2 = Acc.Wait(5, w, "role");
+		//var a2 = Acc.WaitFor(5, w, "role");
+	}
+
+	static void TestAccOpenLibreOffice()
+	{
+		//int r = 0;
+		//Api.SystemParametersInfo(Api.SPI_GETSCREENREADER, 0, &r, 0);
+		//Print(r);
+		//Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 0, 0, 0);
+		////Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 1, 0, 0);
+		////Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 0, 0, 0);
+		//Api.SystemParametersInfo(Api.SPI_GETSCREENREADER, 0, &r, 0);
+		//Print(r);
+
+		//return;
+
+		//var w = Wnd.Find("*LibreOffice *", "SALFRAME").OrThrow();
+		var w = Wnd.Find("*OpenOffice *", "SALFRAME").OrThrow();
+		Print(w);
+		//using(var a= Acc.FromWindow(w, AccOBJID.CLIENT)) {
+		//	//Print(a.Children(true));
+		//	Print(a);
+		//	Print(a.ChildCount);
+		//	//Print(a.Navigate("first"));
+		//}
+		//using(var a = Acc.Find(w, "PUSHBUTTON", "Paste*").OrThrow()) {
+		//	Print(a);
+		//}
+		using(var a = Acc.FromWindow(w, AccOBJID.CLIENT)) {
+			a.EnumChildren(true, o =>
+			{
+				//PrintList(o.Level, o.RoleString);
+				Print(o);
+				//100.ms();
+			});
+		}
+		Print("END");
+	}
+
+	static void TestAccVariousApps()
+	{
+		//var w = Wnd.Find("VLC leistuvė", "QWidget").OrThrow();
+		//Print(w);
+		//using(var a = Acc.Find(w, "CHECKBUTTON", "\0 description=Maišymo veiksena").OrThrow()) Print(a);
+
+		//var w = Wnd.Find("Welcome Guide — Atom", "Chrome_WidgetWin_1").OrThrow();
+		//Print(w);
+		//using(var a = Acc.Find(w, "web:PUSHBUTTON", "*Learn Keyboard Shortcuts").OrThrow()) Print(a);
+
+		//Acc.Misc.MaxChildren *= 2;
+		var w = Wnd.Find("Quick*");
+		using(var a = Acc.FromWindow(w)) {
+			a.EnumChildren(true, o =>
+			 {
+				 Print(o);
+			 });
+		}
+	}
+
+	static void TestWndKid()
+	{
+		var w = Wnd.Find("Options");
+		//Print(w.Kid(1103));
+
+		//_PrintMemory();
+		//for(int i = 0; i < 10000; i++) w.Kid(1103);
+		//_PrintMemory();
+		//for(int i = 0; i < 10000; i++) w.Kid(1103);
+		//_PrintMemory();
+		//for(int i = 0; i < 100000; i++) { object k = 5; }
+		//_PrintMemory();
+
+		//Print(Acc.Find(w, "class=button:PUSHBUTTON"));
+		//Print(Acc.Find(w, "id=1103:"));
+		//Print(Acc.Find(w, "class=button:CHECKBUTTON"));
+		//Print(Acc.Find(Wnd.Find("* Internet Explorer"), "ie:LINK"));
+
+		w = Wnd.Find("* Internet Explorer");
+		//w = Wnd.Find("Settings");
+		var f = new Acc.Finder("rrrrr");
+		_PrintMemory();
+		for(int j = 0; j < 1; j++) {
+			Perf.First();
+			for(int i = 0; i < 10; i++) f.FindIn(w);
+			Perf.NW();
+			_PrintMemory();
+		}
+		Print(f.Result);
+	}
+
+	static void TestWinFlags()
+	{
+		//var w = Wnd.Find("Quick*");
+		//Wnd.Lib.WinFlags.Set(w, Wnd.Lib.WFlags.Test);
+		//Print(Wnd.Lib.WinFlags.Get(w));
+
+		//Perf.SpinCPU(100);
+		//var a1 = new Action(() => { Wnd.Lib.WinFlags.Set(w, Wnd.Lib.WFlags.Test); });
+		//var a2 = new Action(() => { Wnd.Lib.WinFlags.Get(w); });
+		//var a3 = new Action(() => { w.Prop.Set("hdhdhdh", 1); });
+		//var a4 = new Action(() => { var k=w.Prop["hdhdhdh"]; });
+		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
+
+		//Print(w.Prop);
+
+	}
+
+	static void TestAccPreferLink()
+	{
+		using(var a = Acc.FromXY(1150, 1469, preferLINK: true)) Print(a);
+	}
+
+	static void TestAccFromXY()
+	{
+		Wnd w;
+		w = Wnd.Find("Quick*", "QM_Editor");
+		//w = Wnd.Find("* Internet Explorer");
+		//w = Wnd.Find("* Mozilla Firefox");
+		w = Wnd.Find("* Google Chrome");
+		//w = Wnd.Find("* OpenOffice*");
+
+		//using(var a = Acc.FromWindow(w, AccOBJID.CLIENT)) {
+		//	Print(a);
+		//	using(var b = a.ChildFromXY(65, 65, screenCoord: false)) {
+		//		Print(b);
+		//	}
+		//}
+		int x, y;
+		//x = 65; y = 65;
+		//x = 277; y = 536;
+		//x = 65; y = -10;
+		//x = -1; y = 0;
+		//x = 94; y = 365;
+		//x = 60; y = 32;
+		//x = 428; y = 337;
+		x = 77; y = 178;
+		//x = 516; y = 39;
+		using(var a = Acc.FromXY(w, x, y)) {
+			//using(var a = Acc.FromXY(1160, 1467)) {
+			//using(var a=Acc.FromXY(w, 65, 65)) {
+			//using(var a=Acc.FromXY(w, 277, 536)) {
+			//using(var a=Acc.FromXY(w, 65, -10)) {
+			//using(var a = Acc.FromXY(w, -1, 0)) {
+			Print(a);
+			//Print(a.Navigate("pa"));
+		}
+	}
+
+	static void TestAccFromFocus()
+	{
+		Wnd w;
+		w = Wnd.Find("Quick*", "QM_Editor");
+		//w = Wnd.Find("* Internet Explorer");
+		//w = Wnd.Find("* Mozilla Firefox");
+		//w = Wnd.Find("* Google Chrome");
+		//w = Wnd.Find("* OpenOffice*");
+		//w = Wnd.Find("Options");
+		//w = Wnd.Find("Settings");
+		//w = Wnd.Find("catkeys - Q*", "WindowsForms*");
+		w.Activate();
+
+		//using(var a = Acc.FromWindow(w, AccOBJID.CLIENT)) {
+		//	Print(a);
+		//	using(var b = a.ChildFromXY(65, 65, screenCoord: false)) {
+		//		Print(b);
+		//	}
+		//}
+		using(var a = Acc.Focused()) {
+			Print(a);
+			//Print(a.Navigate("pa"));
+		}
+	}
+
+	static void TestAccFromEvent()
+	{
+		LibAccHookEVENT ev = LibAccHookEVENT.OBJECT_FOCUS;
+		var hh = SetWinEventHook(ev, ev, default, _testWinEventProc, 0, 0, 0);
+		//Print(hh);
+		TaskDialog.Show();
+		//MessageBox.Show("");
+		//new Form().ShowDialog();
+		//Time.SleepDoEvents(10000);
+		UnhookWinEvent(hh);
+		Print("END");
+	}
+
+	static WINEVENTPROC _testWinEventProc = _TestWinEventProc;
+	static void _TestWinEventProc(IntPtr hHook, LibAccHookEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime)
+	{
+		//Print(w);
+		using(var a = Acc.FromEvent(w, idObject, idChild)) {
+			if(a == null) Print(Native.GetErrorMessage());
+			else Print(a);
+		}
+	}
+
+	internal delegate void WINEVENTPROC(IntPtr hHook, LibAccHookEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime);
+
+	[DllImport("user32.dll")]
+	internal static extern IntPtr SetWinEventHook(LibAccHookEVENT eventMin, LibAccHookEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+	[DllImport("user32.dll")]
+	internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+	static void TestAccFromComObject()
+	{
+		Wnd w = Wnd.Find("* Internet Explorer").Child(null, "Internet Explorer_Server");
+		Print(w);
+		var res = w.Send(WM_HTML_GETOBJECT);
+		var guid =typeof(mshtml.IHTMLDocument2).GUID;
+		if(0 != ObjectFromLresult(res, ref guid, 0, out IntPtr ip)) return;
+
+		var doc = Marshal.GetTypedObjectForIUnknown(ip, typeof(mshtml.IHTMLDocument2)) as mshtml.IHTMLDocument2;
+		var body = doc.body;
+		//Print(body.outerHTML);
+		Print(Acc.FromComObject(body));
+
+		Marshal.ReleaseComObject(body);
+		Marshal.ReleaseComObject(doc);
+		Print(Marshal.Release(ip));
+	}
+	static uint WM_HTML_GETOBJECT = Api.RegisterWindowMessage("WM_HTML_GETOBJECT");
+
+	[DllImport("oleacc.dll", PreserveSig = true)]
+	internal static extern int ObjectFromLresult(LPARAM lResult, ref Guid riid, LPARAM wParam, out IntPtr ppvObject);
+
+	#region UIA
+
+	static void TestUIA_managed()
+	{
+		//System.Windows.Automation is very slow (finds 4-10 times slower). Uses deprecated API (not COM).
+
+		//var w = Wnd.Find("* Internet Explorer").OrThrow();
+		//var w = Wnd.Find("* Google Chrome").OrThrow();
+		var w = Wnd.Find("* Mozilla Firefox").OrThrow();
+
+		//var er = AutomationElement.FromHandle(w.Handle);
+		//Perf.First();
+		//AutomationElement e = null;
+		//for(int i = 0; i < 5; i++) {
+		//	e =er.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "General"));
+		//	Perf.Next();
+		//}
+		//Perf.Write();
+		//Print(e.Current.Name);
+	}
+
+	class Acc3
+	{
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static int Func1()
+		{
+			return 1;
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static CUIAutomation Func2()
+		{
+			return _lazy.Value;
+		}
+
+		//static CUIAutomation _au = new CUIAutomation();
+		//static CUIAutomation _au = _Create();
+		//static Lazy<CUIAutomation> _lazy = new Lazy<CUIAutomation>(_Create, true);
+		static Lazy<CUIAutomation> _lazy = new Lazy<CUIAutomation>(()=> new CUIAutomation(), true);
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static CUIAutomation _Create()
+		{
+			Print("create");
+			return new CUIAutomation();
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void TestUIA_COM()
+	{
+		Perf.Next();
+		//var w = Wnd.Find("* Internet Explorer").OrThrow();
+		var w = Wnd.FindFast(null, "ieframe").OrThrow();
+		//w = w.Child(null, "Internet Explorer_Server").OrThrow();
+		//var w = Wnd.Find("* Google Chrome").OrThrow();
+		//var w = Wnd.Find("* Mozilla Firefox").OrThrow();
+
+		//Print(2);
+		Perf.Next();
+		var m = Acc3.Func1();
+		//Print(3);
+		Perf.Next();
+		Print("Uia");
+		//var x = new CUIAutomation();
+		var x = Acc3.Func2();
+		//Print(4);
+		Perf.Next();
+		var ew = x.ElementFromHandle(w.Handle);
+		Perf.NW();
+		Print(ew.CurrentName);
+		var e =ew.FindFirst(TreeScope.TreeScope_Descendants, x.CreatePropertyCondition(30005, "General"));
+		Print(e.CurrentName);
+		Print(Acc.FromComObject(e));
+		//Print("Acc");
+		//Print(Acc.FromWindow(w).Name);
+		//Print(Acc.Find(w, "LINK", "General").Name);
+
+		////var t=new Thread(() =>
+		////{
+		////	//var x2 = Acc3.Func2();
+		////	var x2 = new CUIAutomation();
+		////	var w2 = Wnd.FindFast(null, "ieframe").OrThrow();
+		////	var e2 = x2.ElementFromHandle(w2.Handle);
+		////	Print(e2.CurrentName);
+		////	Print(Acc.FromWindow(w2).Name);
+		////});
+		////t.Start();
+
+		//Task.Run(() =>
+		//{
+		//	Print("thread Uia");
+		//	var x2 = Acc3.Func2();
+		//	//var x2 = new CUIAutomation();
+		//	var w2 = Wnd.FindFast(null, "ieframe").OrThrow();
+		//	var e2 = x2.ElementFromHandle(w2.Handle);
+		//	Print(e2.CurrentName);
+		//	Print(ew.FindFirst(TreeScope.TreeScope_Descendants, x.CreatePropertyCondition(30005, "General")).CurrentName);
+		//	Print("thread Acc");
+		//	Print(Acc.FromWindow(w2).Name);
+		//	Print(Acc.Find(w, "LINK", "General").Name);
+		//});
+
+		//1.s();
+
+		//for(int j= 0; j < 5; j++) {
+		//	Perf.First();
+		//	var x = new CUIAutomation();
+		//	Perf.Next();
+		//	var ew = x.ElementFromHandle(w.Handle);
+		//	//Print(ew.CurrentName);
+		//	Perf.Next();
+		//	IUIAutomationElement e = null;
+		//	for(int i = 0; i < 1; i++) {
+		//		var cond = x.CreatePropertyCondition(30005, "General"); //UIA_PropertyIds.UIA_NamePropertyId
+		//		e = ew.FindFirst(TreeScope.TreeScope_Descendants, cond);
+		//		Perf.Next();
+		//	}
+		//	Perf.NW();
+		//	Print(e.CurrentName);
+		//}
+	}
+
+	//static void TestWhite()
+	//{
+	//	//White uses the slow and obsolete .NET classes that wrap deprecated API. It seems it's possible to use COM, but not easy.
+	//	//Also does not have an easy way to find descendants.
+
+	//	//var app=TestStack.White.Application.Attach("iexplore");
+	//	var app=TestStack.White.Application.Attach(11168);
+	//	//Print(app.Name);
+	//	//foreach(var t in app.GetWindows()) {
+	//	//	Print(t.Name);
+	//	//}
+
+	//	//var w = app.GetWindow("Quick Macros Forum • Index page - Internet Explorer");
+	//	//Print(w.Name);
+
+	//	//Print(TestStack.White.Desktop.Instance.Windows());
+	//	//var w=TestStack.White.Desktop.Instance.Get<TestStack.White.UIItems.WindowItems.Window>("Quick Macros Forum • Index page - Internet Explorer"); //error
+	//	var w = app.GetWindow("Quick Macros Forum • Index page - Internet Explorer");
+	//	Print(w);
+
+	//	//w.LogStructure();
+	//	//var link = w.GetElement(TestStack.White.UIItems.Finders.SearchCriteria.ByText("General")); //error
+	//	//var link = w.Get(TestStack.White.UIItems.Finders.SearchCriteria.ByText("General")); //fails (does not search descendants)
+	//	//var f=new TestStack.White.AutomationElementSearch.DescendantFinder()
+
+	//	Print("END");
+	//}
+
+	//static void TestFlaUI()
+	//{
+	//	//Reviewed FlaUI code. It does not add something new and probably does not make simpler. Use only as a UIA sample.
+	//}
+
+	static void TestMainWindowsWithUIA()
+	{
+		//Print(Wnd.Misc.MainWindows()); return;
+
+		//MSAA does not filter windows.
+		//using(var desktop = Acc.FromWindow(Wnd.Misc.WndRoot, AccOBJID.CLIENT)) {
+		//	//Print(desktop.Children(false));
+		//	desktop.Find(flags: AFFlags.DirectChild, also: o => { Print(o); return false; });
+		//}
+
+		//var x = new CUIAutomation();
+		////var ca = x.CreateCacheRequest(); Print(x.GetRootElementBuildCache(ca).GetCachedChildren().Length); //0
+		////var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.RawViewCondition);
+		//var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC370)); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
+		//PrintList("window", a.Length);
+		////for(int i = 0; i < a.Length; i++) PrintList(a.GetElement(i).CurrentClassName, a.GetElement(i).CurrentName);
+		//for(int i = 0; i < a.Length; i++) {
+		//	var e =a.GetElement(i);
+		//	Print((Wnd)e.CurrentNativeWindowHandle);
+		//	//PrintList(e.CurrentClassName, e.CurrentName);
+		//}
+		//a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC371)); //UIA_ControlTypePropertyId, UIA_PaneControlTypeId
+		//PrintList("pane", a.Length);
+		//for(int i = 0; i < a.Length; i++) {
+		//	var e = a.GetElement(i);
+		//	Print((Wnd)e.CurrentNativeWindowHandle);
+		//	//PrintList(e.CurrentClassName, e.CurrentName);
+		//}
+
+
+		var k = new List<Wnd>();
+		Perf.First();
+		for(int j=0; j<5; j++) {
+#if false
+			k=Wnd.Misc.MainWindows().ToList();
+#else
+			k.Clear();
+			var x = Acc3.Func2();
+			var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC370)); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
+			for(int i = 0; i < a.Length; i++) k.Add((Wnd)a.GetElement(i).CurrentNativeWindowHandle);
+#endif
+			Perf.Next();
+		}
+		Perf.Write();
+		Print(k);
+	}
+
+	#endregion
+
+	static void TestAccMiscMethods()
+	{
+		//var w = Wnd.FromMouse();
+		//w.MouseClick();
+		//return;
+
+		//var w = Wnd.Find("Options");
+		//w.Activate();
+		Output.Clear();
+		//using(var a = Acc.Find(w, null, "Mouse").OrThrow()) {
+		//using(var a = Acc.Find(w, "CHECKBUTTON", "Mouse").OrThrow()) {
+		//using(var a = Acc.Find(w, nameof(AccROLE.CHECKBUTTON), "Mouse").OrThrow()) {
+		//5.s();
+		for(int i=0; i<1; i++) {
+			Perf.First();
+			//using(var a = Acc.FromMouse(preferLINK: true)) {
+			using(var a = Acc.FromMouse()) {
+				//Print(a);
+				//a.Select(AccSELFLAG.TAKESELECTION);
+				//a.Select(AccSELFLAG.ADDSELECTION);
+				//a.Select(AccSELFLAG.EXTENDSELECTION);
+				//a.Select(AccSELFLAG.REMOVESELECTION);
+				//a.Focus();
+				//Print(a.DefaultAction);
+				//a.DoDefaultAction();
+				//Print(a.Rect);
+				//a.MouseMove();
+				//a.MouseClick();
+				//a.MouseClick(1, 1, MButton.Right);
+
+				Perf.Next();
+				var w1 = a.WndContainer;
+				Perf.Next();
+				using(var ap = a.Navigate("pa")) {
+					Perf.Next();
+					var w2 = ap.WndContainer;
+					Perf.NW();
+
+					//Print(a);
+					//Print(ap);
+					PrintList(!w1.Is0, !w2.Is0);
+				}
+				if(i == 0) Perf.SpinCPU(100);
+			}
+		}
+		//100.ms();
+		//Print(Wnd.WndActive);
+	}
+
+	static void TestAccBstrWithNullChars()
+	{
+		int n = 0;
+		Acc.FromWindow(Wnd.Misc.WndRoot).EnumChildren(true, a =>
+		{
+			var s = a.ToString();
+			n++;
+		});
+		Print(n);
+	}
+
+	static void TestWndFocus()
+	{
+		//var f = new Form();
+		//var b = new Button();
+		//var c = new ComboBox();
+		//c.Location = new Point(0, 100);
+		////c.Enabled = false;
+
+		//f.Controls.Add(b);
+		//f.Controls.Add(c);
+		//f.Click += (unu, sed) =>
+		//{
+		//	//Wnd.Find("Options").ActivateLL();
+		//	//Time.SleepDoEvents(200);
+		//	//Api.SetFocus(default);
+		//	//Print(Api.GetFocus());
+		//	var w = (Wnd)c;
+		//	//c.Dispose();
+		//	//Print(w);
+		//	//w.Focus();
+		//	Native.ClearError();
+		//	bool ok = w.FocusLocal();
+		//	PrintList(ok, ok?"":Native.GetErrorMessage());
+		//	//Print(w.IsFocused);
+		//};
+		//f.ShowDialog();
+
+		var w = Wnd.Find("Options").Kid(3089);
+		//Print(w.FocusLocal());
+		w.Focus();
+	}
+
+	static void TestManifest_disableWindowFiltering()
+	{
+		//var a = Wnd.Misc.AllWindows();
+		//Print(a);
+		//Print(a.Length);
+		Print(Wnd.Find("Search", "Windows.UI.Core.CoreWindow"));
+	}
+
+	//static void TestIAccessible2()
+	//{
+	//	var w = Wnd.Find("* Mozilla Firefox");
+	//	using(var a = Acc.Find(w, "web:")) {
+	//		Print(a);
+	//		int hr = Api.IUnknown_QueryService(a.LibIAccessibleDebug, ref IID_IAccessible, ref IID_IAccessible2, out var ip);
+	//		PrintHex(hr);
+	//		Print(ip);
+	//	}
+	//}
+	//internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
+	//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
+
+	static void TestAccWebPageProp()
+	{
+		//var w = Wnd.Find("* Mozilla Firefox");
+		var w = Wnd.Find("* Google Chrome");
+		//var w = Wnd.Find("* Internet Explorer");
+		//var w = Wnd.Find("FileZilla");
+		//var w = Wnd.Find("Catkeys - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
+		//using(var a = Acc.Find(w, "web:")) {
+		//using(var a = Acc.Find(w, "web:LINK", "\0 a:href=*forum*")) {
+		using(var a = Acc.Find(w, "web:LINK", "Programming", AFFlags.HiddenToo).OrThrow()) {
+		//using(var a = Acc.Find(w, "OUTLINEITEM", "Other Bookmarks", AFFlags.HiddenToo).OrThrow()) { //no scroll
+		//using(var a = Acc.Find(w, "OUTLINEITEM", "Temp", AFFlags.HiddenToo).OrThrow()) { //no scroll
+		//using(var a = Acc.Find(w, "OUTLINEITEM", "Structs.cs", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			Print(a);
+
+			//Print(a.Name);
+			//Print(a.Value);
+
+			//var x = a;
+			////var x = a.Navigate("first");
+			////Print(x.WebPage.URL);
+			//Print(x.Html(true));
+
+			a.ScrollTo(); //works with Firefox, Chrome, IE. Not with .
+		}
+	}
+
+	static void TestAccSelectedChildren()
+	{
+		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
+		//var w = Wnd.Find("Options").OrThrow();
+		//var w = Wnd.Find("*Mozilla Firefox").OrThrow();
+		//var w = Wnd.Find("*Google Chrome").OrThrow();
+		var w = Wnd.Find("*Internet Explorer").OrThrow();
+		//using(var a=Acc.Find(w, "OUTLINE").OrThrow()) {
+		//using(var a=Acc.Find(w, "LIST").OrThrow()) {
+		//using(var a=Acc.Find(w, "LIST", also:o=>++o.Counter==2).OrThrow()) {
+		//using(var a=Acc.Find(w, "web:LIST", "\0 a:name=cars").OrThrow()) {
+		//using(var a=Acc.Find(w, "web:COMBOBOX", "\0 a:name=cars", navig:"first").OrThrow()) {
+		using(var a=Acc.Find(w, "web:ALERT", "\0 a:name=cars", navig:"child3").OrThrow()) { //IE
+			Print(a);
+			Print("---- selected children ----");
+			Print(a.SelectedChildren);
+		}
+	}
+
+	static void TestChromeEnableAcc()
+	{
+		var w = Wnd.Find("* Google Chrome").OrThrow();
+		w.Activate();
+
+		//w.GetWindowAndClientRectInScreen(out var rw, out var r);
+		//Print(Acc.FromXY(w, -1, 0));
+		//Print(Acc.FromXY(w, 1, 1));
+		//Print(Acc.FromXY(w, 88, 178));
+
+		//for(int i = 0; i < 10; i++) {
+		//	1.s();
+		//	using(var a = Acc.FromMouse(preferLINK: true)) {
+		//		Print(a);
+		//	}
+		//}
+
+		Print(Acc.Focused());
+	}
+
+	static void TestJava()
+	{
+		var w = Wnd.Find("Java Control Panel").OrThrow();
+		w.Activate();
+
+		//Print(Acc.Find(w, "java:push button", "Netw*"));
+
+		//using(var a = Acc.FromXY(1440, 1308)) {
+		//	Print(a);
+		//}
+
+		for(int i = 0; i < 10; i++) {
+			1.s();
+			using(var a = Acc.FromMouse(preferLINK: true)) {
+				Print(a);
+			}
+		}
+
+		//Print(Acc.Focused());
+	}
+
+	static void TestAccInOtherFunctions()
+	{
+		//Acc.Find(Wnd.Find("Quick*"), "PUSHBUTTON", "Options*").MouseClick();
+
+		//var w = Wnd.Find("**c|*Firefox").OrThrow();
+		//Print(w);
+		//var a = Acc.Find(w, "div", "Google").OrThrow();
+		////a.MouseMove();
+		//Perf.First();
+		//for(int i = 0; i < 5; i++) {
+		//	var si = ScreenImage.Find(@"Q:\app\Catkeys\Tests\Images\google.bmp", a, SIFlags.WindowDC).OrThrow();
+		//	Perf.Next();
+		//}
+		//Perf.Write();
+		////si.MouseMove();
+
+		//var w = Wnd.Find("Options*").Kid(1571);
+		//Print(w.NameAcc);
+
+		//var w = Wnd.Find("Options*").Child("**accName:Run as", "combo*").OrThrow();
+		//Print(w);
+
+		//var w = Wnd.Find("Options*");
+		//var af = new Acc.Finder("COMBOBOX", "Run as");
+		//Print(w.HasAcc(af));
+
+		//var w = Wnd.Find("Options*").Kid(1099);
+		//w.AsButton.Click(true);
+	}
+
+	static void TestAccTODO()
+	{
+		var w = Wnd.Find("Quick*");
+		Acc a = null;
+		Perf.First();
+		for(int i = 0; i < 9; i++) {
+			a = Acc.Find(w, "LISTITEM", "ngen");
+			Perf.Next();
+		}
+		Perf.Write();
+		Print(a);
+	}
+
+	static void TestAccSkipAndWait()
+	{
+		var w = Wnd.Find("Options");
+		//var a = Acc.Find(w, "CHECKBUTTON", skip:2).OrThrow();
+		//var a = Acc.WaitFor(0, w, "CHECKBUTTON", "Mouse").OrThrow();
+		var f = new Acc.Finder("CHECKBUTTON", "Mouse");
+		Print(f.WaitIn(-2, w));
+		var a = f.Result;
+		Print(a);
+	}
+
+	static void TestAccFromUIA()
+	{
+		var w = Wnd.Find("*Firefox");
+		Print(w);
+		var a = Acc.Find(w, "web:LINK", "Programming").OrThrow();
+		Print(a);
+		var e1 = a.ToUIElement();
+
+		var e = e1 as UIAutomationClient.IUIAutomationElement4;
+
+		Print(e.CurrentName);
+		var a2 = Acc.FromComObject(e);
+		Print(a2);
+
 	}
 
 	[HandleProcessCorruptedStateExceptions]
@@ -2195,6 +2885,7 @@ static unsafe partial class Test
 		//Output.LogFile=@"Q:\Test\catkeys"+IntPtr.Size*8+".log";
 #endif
 		Output.LibWriteToQM2 = true;
+		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
 			Thread.Sleep(100);
@@ -2203,7 +2894,33 @@ static unsafe partial class Test
 		//TaskDialog.Show(Debug_.IsCatkeysDebugConfiguration?"DEBUG":"RELEASE"); return;
 
 		try {
-			TestAccWeb();
+			//TestAccFromUIA();
+			//TestAccSkipAndWait();
+			//TestAccTODO();
+			//TestAccInOtherFunctions();
+			//TestJava();
+			//Acc.TestJava();
+			//TestChromeEnableAcc();
+			//TestAccSelectedChildren();
+			//TestAccWebPageProp();
+			//TestIAccessible2();
+			//TestManifest_disableWindowFiltering();
+			//TestAccMiscMethods();
+			//TestWndFocus();
+			//TestAccBstrWithNullChars();
+			//TestWhite();
+			//TestMainWindowsWithUIA();
+			//TestUIA_COM();
+			//TestAccFromComObject();
+			//TestAccFromEvent();
+			//TestAccFromFocus();
+			//TestAccFromXY();
+			//TestAccPreferLink();
+			//TestWinFlags();
+			//TestWndKid();
+			//TestAccVariousApps();
+			//TestAccOpenLibreOffice();
+			//TestAccWeb();
 			//TestAccExamples();
 			//TestAcc();
 			//TestAccNavigate();

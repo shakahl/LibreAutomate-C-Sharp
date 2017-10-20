@@ -361,7 +361,7 @@ namespace Catkeys
 		{
 			/// <summary>
 			/// Get windows that have taskbar button and/or are included in the Alt+Tab sequence.
-			/// Returns list containing 0 or more window handles as Wnd.
+			/// Returns array containing 0 or more Wnd.
 			/// </summary>
 			/// <param name="allDesktops">See <see cref="WndNextMain"/>.</param>
 			/// <param name="likeAltTab">See <see cref="WndNextMain"/>.</param>
@@ -369,17 +369,25 @@ namespace Catkeys
 			/// The list order does not match the order of buttons in the Windows taskbar. Possibly also does not exactly match the list of Alt+Tab windows.
 			/// </remarks>
 			/// <seealso cref="WndNextMain"/>
-			public static List<Wnd> MainWindows(bool allDesktops = false, bool likeAltTab = false)
+			public static Wnd[] MainWindows(bool allDesktops = false, bool likeAltTab = false)
 			{
-				List<Wnd> a = new List<Wnd>();
+				var a = new List<Wnd>();
 				for(Wnd w = default; ;) {
 					w = w.WndNextMain(allDesktops: allDesktops, likeAltTab: likeAltTab);
 					if(w.Is0) break;
 					a.Add(w);
 				}
-				return a;
+				return a.ToArray();
 
 				//SHOULDDO: instaed of WndNextMain, get all windows and filter like now WndNextMain does.
+
+				//Another way - UI Automation:
+				//	var x = new CUIAutomation();
+				//	var cond = x.CreatePropertyCondition(30003, 0xC370); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
+				//	var a = x.GetRootElement().FindAll(TreeScope.TreeScope_Children, cond);
+				//	for(int i = 0; i < a.Length; i++) PrintList((Wnd)a.GetElement(i).CurrentNativeWindowHandle);
+				//Advantages: 1. Easier to implement. 2. Maybe can filter unwanted windows more reliably, although I did't notice a difference.
+				//Disadvantages: 1. Skips windows of higher integrity level (UAC). 2. Does not have (or I don't know) an option to include cloaked windows, eg those in inactive Win10 virtual desktops. 3. About 1000 times slower, eg 70 ms vs 70 mcs; cold 140 ms.
 			}
 
 			///// <summary>
@@ -387,7 +395,7 @@ namespace Catkeys
 			///// Sorts minimized windows after visible and in reverse order. Like Win10 Alt+Tab.
 			///// Cannot use this. Alt+Tab works differently.
 			///// </summary>
-			//public static List<Wnd> __MainWindows_GetAll()
+			//static List<Wnd> __MainWindows_GetAll()
 			//{
 			//	var a = new List<Wnd>();
 			//	int i = 0;

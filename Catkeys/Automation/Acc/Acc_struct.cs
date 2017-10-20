@@ -49,7 +49,7 @@ namespace Catkeys
 			/// </summary>
 			public int Navigate(List<NavdirN> navig)
 			{
-				for(int i=0;i<navig.Count; i++) {
+				for(int i = 0; i < navig.Count; i++) {
 					int hr = Navigate(navig[i].navDir, navig[i].n);
 					if(hr != 0) return hr;
 				}
@@ -67,7 +67,7 @@ namespace Catkeys
 				int childIndex; if(navDir == AccNAVDIR.CHILD) { childIndex = n; n = 1; } else childIndex = 0;
 				while(n-- > 0) {
 					int hr = _Navigate(out var t, navDir, childIndex);
-					if(!t.a.IsSame(this.a)) Dispose();
+					if(t.a != this.a) Dispose();
 					this = t;
 					if(hr != 0) return hr;
 				}
@@ -86,7 +86,7 @@ namespace Catkeys
 						using(var c = new _Children(this.a, childIndex, exactIndex: true)) {
 							c.GetNext(out ar);
 						}
-						//FUTURE: test, maybe significantly faster with IEnumVARIANT/get_accChild, like in QM2. But with some objects it does not work.
+						//Acc FUTURE: test, maybe significantly faster with IEnumVARIANT/get_accChild, like in QM2. But with some objects it does not work.
 					} else {
 						if(navDir == AccNAVDIR.PARENT) {
 							hr = this.a.get_accParent(out ar.a);
@@ -145,7 +145,7 @@ namespace Catkeys
 										if(!props.Match(t.a, t.elem)) continue;
 										found = true;
 									} else {
-										if(t.a.IsSame(iaccParent)) releaseParent = false;
+										if(t.a == iaccParent) releaseParent = false;
 										ar = t; t.a = default;
 										R = true;
 										break;
@@ -204,6 +204,64 @@ namespace Catkeys
 				"n", "prev", "f", "l", "p", "c"
 				};
 			}
+
+			/// <summary>
+			/// Gets object from point, which can be a child, descendant or this.
+			/// Returns HRESULT if fails or if p is not in this.
+			/// If isThis receives true, does not AddRef. Else does AddRef even if ar.a==this.a.
+			/// </summary>
+			/// <param name="p">Point in screen coordinates.</param>
+			/// <param name="ar">Result.</param>
+			/// <param name="isThis">Receives true if ar is this.</param>
+			/// <param name="directChild"></param>
+			public int DescendantFromPoint(Point p, out _Acc ar, out bool isThis, bool directChild = false)
+			{
+				isThis=false;
+				int hr = this.a.accHitTest(p.X, p.Y, out ar);
+				if(hr != 0) return hr;
+				if(ar.a == this.a){
+					if(ar.elem == this.elem) {
+						isThis = true;
+						return 0;
+					}
+					ar.a.AddRef();
+				} else if(!directChild) {
+					if(0 == ar.DescendantFromPoint(p, out var t, out var isThis2) && !isThis2) {
+						Math_.Swap(ref ar, ref t);
+						t.Dispose();
+					}
+				}
+				return 0;
+			}
+
+			/// <summary>
+			/// Gets focused, which can be a child, descendant or this.
+			/// Returns HRESULT if fails or if nothing is focused in this.
+			/// If isThis receives true, does not AddRef. Else does AddRef even if ar.a==this.a.
+			/// </summary>
+			/// <param name="ar">Result.</param>
+			/// <param name="isThis">Receives true if ar is this.</param>
+			/// <param name="directChild"></param>
+			public int DescendantFocused(out _Acc ar, out bool isThis, bool directChild = false)
+			{
+				isThis=false;
+				int hr = this.a.get_accFocus(out ar);
+				if(hr != 0) return hr;
+				if(ar.a == this.a){
+					if(ar.elem == this.elem) {
+						isThis = true;
+						return 0;
+					}
+					ar.a.AddRef();
+				} else if(!directChild) {
+					if(0 == ar.DescendantFocused(out var t, out var isThis2) && !isThis2) {
+						Math_.Swap(ref ar, ref t);
+						t.Dispose();
+					}
+				}
+				return 0;
+			}
+
 		}
 
 		/// <summary>
@@ -239,6 +297,33 @@ namespace Catkeys
 				if(0 != a.accLocation(elem, out RECT rect2) || rect2 != _rect) return false;
 				if(0 != a.GetRoleString(elem, out string role2) || role2 != _role) return false;
 				return true;
+			}
+		}
+
+		/// <summary>
+		/// Temporarily sets SPI_SETSCREENREADER. Restores in Dispose.
+		/// It enables accessible objects (AO) in OpenOffice, LibreOffice, etc.
+		/// Speed: 10-20 mcs, which is about 20% of accessibleobjectfromwindow.
+		/// Note: LibreOffice AO does not work if this process is 64-bit (why?), although SPI_SETSCREENREADER works.
+		/// </summary>
+		unsafe struct _TempSetScreenReader :IDisposable
+		{
+			bool _restore;
+
+			/// <summary>
+			/// If SPI_GETSCREENREADER says false, sets SPI_SETSCREENREADER = true, and Dispose will set it false.
+			/// Note: Windows does not use a reference counting for this setting.
+			/// </summary>
+			public _TempSetScreenReader(bool unused)
+			{
+				int r = 0;
+				Api.SystemParametersInfo(Api.SPI_GETSCREENREADER, 0, &r, 0);
+				_restore = r == 0 && Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 1, 0, 0);
+			}
+
+			public void Dispose()
+			{
+				if(_restore) _restore = !Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 0, 0, 0);
 			}
 		}
 	}

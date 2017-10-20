@@ -529,7 +529,7 @@ static partial class Test
 		Wnd c;
 		//c = w.ChildByClass("*COMBO*");
 		//Print(c);
-		c = w.ChildById(67022);
+		c = w.Kid(67022);
 		Print(c);
 		c = w.Child("*chm*", "*static*");
 		//c = w.Child(null, "*combo*");
@@ -1319,14 +1319,14 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//var w = Wnd.Find("Quick*");
 		var w = Wnd.Find("* Notepad");
 		Native.ClearError();
-		//var a = w.PropList();
-		//var p = w.GetProp("asd");
-		//var p = w.GetProp("qmshex");
-		//w.SetProp("sett", 5);
-		w.PropRemove("sett");
+		//var a = w.Prop.List();
+		//var p = w.Prop["asd"];
+		//var p = w.Prop["qmshex"];
+		//w.Prop.Set("sett", 5);
+		w.Prop.Remove("sett");
 		PrintList(Native.GetError(), Native.GetErrorMessage());
 		//Print(p);
-		Print(w.PropGet("sett"));
+		Print(w.Prop["sett"]);
 		//Print(a.Count);
 		//Print(a);
 	}
@@ -1442,11 +1442,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void MinimizeAll()
 	{
-		var a = Wnd.Misc.MainWindows();
-		for(int i = 0; i < a.Count; i++) {
-			//for(int i=a.Count-1; i>=0; i--) {
-			a[i].ShowMinimized(true);
-		}
+		foreach(var w in Wnd.Misc.MainWindows()) w.ShowMinimized(true);
 	}
 
 	static void SendAltTab()
@@ -2341,13 +2337,13 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//}
 		//pd.Send.Close();
 
-		var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
+		var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, secondsTimeout: 30);
 		Print(td.DialogWindow);
 		Wait(2); //do something while the dialog is open
 		td.Send.ChangeText2("new text", false);
 		td.Send.Close();
 		Wait(2); //do something while the dialog is open
-		td.ThreadWaitClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
+		td.ThreadWaitForClosed(); Print(td.Result); //wait until the dialog is closed and get result. Optional, just an example.
 
 		//Print(Api.GetCurrentThreadId());
 		//var r=await ShowAsync("fff");
@@ -4240,22 +4236,22 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Shell.Run(@"\\?\Q:\Test\x\..\am.txt");
 
 #if false
-		//Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRParams() { Verb = "properties" });
+		//Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRMoreParams() { Verb = "properties" });
 		var f = new Form();
 		f.Click += (unu, sed) =>
 		  {
-			  Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRParams() { Verb = "properties", OwnerWindow=f });
-			  //try { Shell.Run("no.exe", flags: SRFlags.ShowErrorUI, more: new SRParams() { OwnerWindow = f }); } catch(CatException) { }
+			  Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRMoreParams() { Verb = "properties", OwnerWindow=f });
+			  //try { Shell.Run("no.exe", flags: SRFlags.ShowErrorUI, more: new SRMoreParams() { OwnerWindow = f }); } catch(CatException) { }
 
 		  };
 		f.ShowDialog();
 #elif true
 		//Shell.Run(@"Q:\my qm\test_run_dir.exe");
-		//Shell.Run(@"Q:\my qm\test_run_dir.exe", more: new SRParams() { CurrentDirectory=@"C:\Windows" });
+		//Shell.Run(@"Q:\my qm\test_run_dir.exe", more: new SRMoreParams() { CurrentDirectory=@"C:\Windows" });
 		//Shell.Run(@"Q:\");
-		//Shell.Run(@"notepad.exe", more: new SRParams() { WindowState = ProcessWindowStyle.Minimized });
+		//Shell.Run(@"notepad.exe", more: new SRMoreParams() { WindowState = ProcessWindowStyle.Minimized });
 
-		//var p = new SRParams() { NeedProcessHandle = true };
+		//var p = new SRMoreParams() { NeedProcessHandle = true };
 		//Shell.Run(@"notepad.exe", more: p);
 		//using(var h = p.ProcessHandle) h?.WaitOne();
 
@@ -4313,9 +4309,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//s = @"Q:\Test\CatkeysHelp.chm - Shortcut";
 		//s = Folders.Virtual.ControlPanel + "1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
 		Print(s);
-		SRParams more = null;
-		//more = new SRParams() { Verb = "properties" };
-		more = new SRParams() { NeedProcessHandle = true };
+		SRMoreParams more = null;
+		//more = new SRMoreParams() { Verb = "properties" };
+		more = new SRMoreParams() { NeedProcessHandle = true };
 		int pid = Shell.Run(s, more: more);
 		Print(pid);
 		using(var h = more?.ProcessHandle) {

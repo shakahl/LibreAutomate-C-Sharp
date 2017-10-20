@@ -80,7 +80,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Wnd.FindOrRun"/>
-		public static int Run(string s, string args = null, SRFlags flags = 0, SRParams more = null)
+		public static int Run(string s, string args = null, SRFlags flags = 0, SRMoreParams more = null)
 		{
 			//TODO: return RunResult object that contains process id or exit code.
 			//	It also contains other info that helps Wnd.Find and WaitFor.WindowActive etc to find correct window.
@@ -191,7 +191,7 @@ namespace Catkeys
 		/// <seealso cref="Output.Warning"/>
 		/// <seealso cref="ScriptOptions.DisableWarnings"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRParams more = null)
+		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRMoreParams more = null)
 		{
 			try {
 				return Run(s, args, flags, more);
@@ -242,9 +242,9 @@ namespace Catkeys.Types
 	}
 
 	/// <summary>
-	/// Used to pass more parameters to <see cref="Shell.Run"/>.
+	/// More parameters for <see cref="Shell.Run"/>.
 	/// </summary>
-	public class SRParams
+	public class SRMoreParams
 	{
 		/// <summary>
 		/// Initial "current directory" for the new process.
@@ -291,7 +291,7 @@ namespace Catkeys.Types
 		/// <example>
 		/// <code><![CDATA[
 		/// //this code does the same as Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);
-		/// var p = new SRParams() { NeedProcessHandle = true };
+		/// var p = new SRMoreParams() { NeedProcessHandle = true };
 		/// Shell.Run(@"notepad.exe", more: p);
 		/// using(var h = p.ProcessHandle) h?.WaitOne();
 		/// ]]></code>

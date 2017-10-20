@@ -117,9 +117,21 @@ namespace Catkeys.Types
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
-		public static void ThrowIfFailed(int errorCode, string message = null)
+		public static void ThrowIfHresultNot0(int errorCode, string message = null)
 		{
 			if(errorCode != 0) throw new CatException(errorCode, message);
+		}
+		//TODO: review usage, maybe somewhere us ThrowIfHresultNegative instead
+
+		/// <summary>
+		/// If errorCode is less than 0, throws CatException that includes the code and its message.
+		/// More info: <see cref="FormatMessage"/>.
+		/// </summary>
+		/// <param name="errorCode">Windows API error code or HRESULT.</param>
+		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
+		public static void ThrowIfHresultNegative(int errorCode, string message = null)
+		{
+			if(errorCode < 0) throw new CatException(errorCode, message);
 		}
 	}
 
@@ -228,7 +240,7 @@ namespace Catkeys.Types
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static T OrThrow<T>(this T t) where T : class, ISupportOrThrow
 		{
-			return t ?? throw new NotFoundException();
+			return t ?? throw new NotFoundException("Not found (" + typeof(T).Name + ").");
 		}
 
 		/// <summary>
@@ -239,7 +251,7 @@ namespace Catkeys.Types
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static Wnd OrThrow(this Wnd t)
 		{
-			if(t.Is0) throw new NotFoundException();
+			if(t.Is0) throw new NotFoundException("Not found (window or control).");
 			return t;
 		}
 	}

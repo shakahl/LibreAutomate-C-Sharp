@@ -157,7 +157,7 @@ namespace Catkeys
 					x.cbSize = Api.SizeOf(x);
 					if(0 == Api.GetClassInfoEx(baseModuleHandle, baseClassName, ref x)) throw new Win32Exception();
 
-					Native.WNDPROC wp = (Native.WNDPROC)Marshal.GetDelegateForFunctionPointer(x.lpfnWndProc, typeof(Native.WNDPROC));
+					Util.Marshal_.GetDelegate(x.lpfnWndProc, out Native.WNDPROC wp);
 					int we = x.cbWndExtra;
 
 					r._Register(ref x, className, wndProc, x.cbWndExtra + wndExtra, globalClass ? x.style : x.style & ~Api.CS_GLOBALCLASS);
@@ -544,7 +544,7 @@ namespace Catkeys
 					}
 					catch { }
 
-					WndShell._MinimalWaitIfOtherThread();
+					WndShell.LibMinimalSleepIfOtherThread();
 				}
 			}
 

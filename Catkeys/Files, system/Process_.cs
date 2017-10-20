@@ -86,7 +86,7 @@ namespace Catkeys
 			s = null;
 			for(int na = 300; ; na *= 2) {
 				var b = Util.Buffers.LibChar(ref na);
-				if(QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
+				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
 					if(getFilename) s = _GetFileNameWithoutExe(b, na);
 					else s = b.LibToStringCached(na);
 					return true;
@@ -94,9 +94,6 @@ namespace Catkeys
 				if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) return false;
 			}
 		}
-
-		[DllImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW", SetLastError = true)]
-		static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
 
 #if USE_WTS //simple, safe, but ~2 times slower
 		struct _AllProcesses :IDisposable
@@ -438,16 +435,13 @@ namespace Catkeys
 				if(!processWindow.Is0) {
 					if((desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE)) == 0
 					&& UacInfo.ThisProcess.IsUIAccess
-					) R = GetProcessHandleFromHwnd(processWindow);
+					) R = Api.GetProcessHandleFromHwnd(processWindow);
 
 					if(R != Zero) return true;
 					Api.SetLastError(e);
 				}
 				return false;
 			}
-
-			[DllImport("oleacc.dll")]
-			static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
 			public static implicit operator IntPtr(LibProcessHandle p) { return p._h; }
 		}
@@ -561,7 +555,7 @@ namespace Catkeys
 				if(Mem == Zero) return false;
 				if(Empty(s)) return true;
 				fixed (char* p = s) {
-					return WriteProcessMemory(_hproc, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
+					return Api.WriteProcessMemory(_hproc, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
 				}
 			}
 
@@ -580,7 +574,7 @@ namespace Catkeys
 				if(enc == null) enc = Encoding.Default;
 				var a = enc.GetBytes(s + "\0");
 				fixed (byte* p = a) {
-					return WriteProcessMemory(_hproc, Mem + offsetBytes, p, a.Length, null);
+					return Api.WriteProcessMemory(_hproc, Mem + offsetBytes, p, a.Length, null);
 				}
 			}
 
@@ -590,7 +584,7 @@ namespace Catkeys
 				int na = nChars; if(!ansiString) na *= 2;
 				var b = Util.Buffers.LibChar((na + 1) / 2);
 				fixed (char* p = b.A) {
-					if(!ReadProcessMemory(_hproc, Mem + offsetBytes, p, na, null)) return null;
+					if(!Api.ReadProcessMemory(_hproc, Mem + offsetBytes, p, na, null)) return null;
 					if(findLength) {
 						if(ansiString) nChars = Util.LibCharPtr.Length((byte*)p, nChars);
 						else nChars = Util.LibCharPtr.Length(p, nChars);
@@ -646,7 +640,7 @@ namespace Catkeys
 			public bool Write(void* ptr, int nBytes, int offsetBytes = 0)
 			{
 				if(Mem == Zero) return false;
-				return WriteProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
+				return Api.WriteProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -658,7 +652,7 @@ namespace Catkeys
 			/// <param name="nBytes">Number of bytes to copy.</param>
 			public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
 			{
-				return WriteProcessMemory(_hproc, ptrDestinationInThatProcess, ptr, nBytes, null);
+				return Api.WriteProcessMemory(_hproc, ptrDestinationInThatProcess, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -671,7 +665,7 @@ namespace Catkeys
 			public bool Read(void* ptr, int nBytes, int offsetBytes = 0)
 			{
 				if(Mem == Zero) return false;
-				return ReadProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
+				return Api.ReadProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -683,22 +677,16 @@ namespace Catkeys
 			/// <param name="nBytes">Number of bytes to copy.</param>
 			public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
 			{
-				return ReadProcessMemory(_hproc, ptrSourceInThatProcess, ptr, nBytes, null);
+				return Api.ReadProcessMemory(_hproc, ptrSourceInThatProcess, ptr, nBytes, null);
 			}
 
-			//Cannot get pointer if generic type. Could try Marshal.StructureToPtr etc but I don't like it.
+			//Cannot get pointer if generic type. Could try Marshal.StructureToPtr etc but I don't like it. Didn't test Unsafe.
 			//public bool Write<T>(ref T v, int offsetBytes = 0) where T : struct
 			//{
 			//	int n = Marshal.SizeOf(v.GetType());
 			//	return Write(&v, n, offsetBytes);
 			//	Marshal.StructureToPtr(v, m, false); ...
 			//}
-
-			[DllImport("kernel32.dll")]
-			static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesRead);
-
-			[DllImport("kernel32.dll")]
-			static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
 		}
 
 		/// <summary>

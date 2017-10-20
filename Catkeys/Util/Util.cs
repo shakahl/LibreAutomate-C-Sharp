@@ -287,7 +287,7 @@ namespace Catkeys.Util
 		/// <param name="del">Receives managed delegate of type T.</param>
 		public static void GetDelegate<T>(IntPtr f, out T del) where T : class
 		{
-			del = Marshal.GetDelegateForFunctionPointer(f, typeof(T)) as T;
+			del = Unsafe.As<T>(Marshal.GetDelegateForFunctionPointer(f, typeof(T)));
 		}
 
 #if false //currently not used
@@ -351,6 +351,7 @@ namespace Catkeys.Util
 		public static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, ref Guid guidService, ref Guid riid) where T:struct
 		{
 			if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
+			if(iunkFrom==default) throw new ArgumentNullException();
 			iTo = default;
 			if(0 != Api.IUnknown_QueryService(iunkFrom, ref guidService, ref riid, out IntPtr ip) || ip==default) return false;
 			iTo=Unsafe.Read<T>(&ip);

@@ -272,12 +272,12 @@ namespace Catkeys
 		/// Can start with these prefix strings:
 		/// <list type="bullet">
 		/// <item>
-		/// "**text:" - use control text, which can be editable.
-		/// To get it this function uses <see cref="ControlText"/>. It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
+		/// "**text:" - use <see cref="ControlText"/>.
+		/// It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </item>
 		/// <item>
-		/// "**accName:" - use MSAA IAccessible.Name property.
-		/// To get it this function uses <see cref="NameAcc"/>. It is slower.
+		/// "**accName:" - use <see cref="NameAcc"/>.
+		/// Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// </item>
 		/// <item>
 		/// "**wfName:" - use .NET Windows Forms Control Name property.
@@ -287,7 +287,7 @@ namespace Catkeys
 		/// "**id:" (like "**id:15") - use control id.
 		/// To get it this function uses <see cref="ControlId"/>.
 		/// Cannot be wildcard expression.
-		/// You can instead use <see cref="ChildById"/>, it is faster than <b>Child</b>.</item>
+		/// You can instead use <see cref="Kid"/>, it is faster than <b>Child</b>.</item>
 		/// </list>
 		/// String format (not including the prefix): <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. "" means 'must not have name'.
@@ -303,7 +303,10 @@ namespace Catkeys
 		/// It can evaluate more properties of the control and return true when they match.
 		/// Example: <c>also: t =&gt; t.IsEnabled</c>
 		/// </param>
-		/// <param name="skip">0-based index of matching control. For example, if it is 1, the function skips the first matching control and returns the second.</param>
+		/// <param name="skip">
+		/// 0-based index of matching control.
+		/// For example, if 1, the function skips the first matching control and returns the second.
+		/// </param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
 		/// className is "". To match any, use null.
@@ -361,7 +364,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if this window contains the specified accessible object.
-		/// Calls <see cref="Acc.Finder.FindIn(Wnd)"/>.
+		/// Calls <see cref="Acc.Finder.FindIn(Wnd, Wnd.ChildFinder)"/>.
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <example>
@@ -383,82 +386,36 @@ namespace Catkeys
 		/// Returns default(Wnd) if not found. To check it you can use <see cref="Is0"/> or <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
-		/// <param name="directChild">Must be direct child, not a child of a child and so on.</param>
+		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <remarks>
-		/// Finds hidden controls too. Does not prefer visible controls.
-		/// Faster and more lightweight than <see cref="Child">Child</see>.
-		/// At first calls API <msdn>GetDlgItem</msdn>. It is fast and searches only direct children. If it does not find, and directChild is false, calls API <msdn>EnumChildWindows</msdn>.
-		/// <note>Not all controls have a useful id. If control id is 0 or different in each window instance, this function cannot be used.</note>
+		/// Not all controls have a useful id. If control id is 0 or different in each window instance, this function is not useful.
 		/// </remarks>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public Wnd ChildById(int id, bool directChild = false)
+		public Wnd Kid(int id, WCFlags flags = 0)
 		{
-			Wnd R = Api.GetDlgItem(this, id);
-			if(R.Is0) {
-				ThrowIfInvalid();
-				if(directChild == false) {
-					return new _ChildByIdEnum(id).Find(this);
+			ThrowIfInvalid();
+			if(flags.Has_(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
+
+			var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
+			Api.EnumChildWindows(this, (c, p) =>
+			{
+				ref var x = ref *(_KidEnumData*)p;
+				if(c.ControlId == x.id) {
+					if(x.flags.Has_(WCFlags.DirectChild) && c.WndDirectParentOrOwner != x.wThis) return true;
+					if(c.IsVisible) { x.cVisible = c; return false; }
+					if(x.flags.Has_(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
-			}
-			return R;
+				return true;
+			}, &d);
+			return d.cVisible.Is0 ? d.cHidden : d.cVisible;
 		}
 
-		//Used for API EnumChildWindows lParam instead of lambda, to avoid garbage.
-		struct _ChildByIdEnum
+		struct _KidEnumData
 		{
-			int _id;
-			Wnd _wFound;
-
-			public _ChildByIdEnum(int id)
-			{
-				_id = id;
-				_wFound = default;
-			}
-
-			public Wnd Find(Wnd wParent)
-			{
-				EnumChildWindows(wParent, _wndEnumProc, ref this);
-				return _wFound;
-			}
-
-			delegate int WndEnumProcT(Wnd hwnd, ref _ChildByIdEnum d);
-
-			static int _WndEnumProc(Wnd w, ref _ChildByIdEnum d) => d._WndEnumProc(w);
-			static WndEnumProcT _wndEnumProc = _WndEnumProc;
-
-			int _WndEnumProc(Wnd w)
-			{
-				if(w.ControlId != _id) return 1;
-				_wFound = w; return 0;
-			}
-
-			[DllImport("user32.dll", SetLastError = true)]
-			static extern bool EnumChildWindows(Wnd hWndParent, WndEnumProcT lpEnumFunc, ref _ChildByIdEnum d);
+			public Wnd wThis, cVisible, cHidden;
+			public int id;
+			public WCFlags flags;
 		}
-
-		//Not very useful when we have Child, although in some cases faster.
-		///// <summary>
-		///// Finds child control by its class name.
-		///// By default finds hidden controls too. Does not prefer visible controls.
-		///// More lightweight than <see cref="Child">Child</see>.
-		///// </summary>
-		///// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>.</param>
-		///// <param name="directChild">Must be direct child, not grandchild.</param>
-		///// <param name="onlyVisible">Must be visible.</param>
-		///// <param name="skip">0-based match index. For example, if 1, will get the second matching control.</param>
-		///// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		//public Wnd ChildByClass(string className, bool directChild = false, bool onlyVisible = false, int skip = 0)
-		//{
-		//	ThrowIfInvalid();
-		//	Wnd R = default;
-		//	LibAllChildren(e =>
-		//	{
-		//		if(!e.ClassNameIs(className)) return false;
-		//		if(skip-- > 0) return false;
-		//		R = e; return true;
-		//	}, directChild, onlyVisible);
-		//	return R;
-		//}
 
 		/// <summary>
 		/// Finds all matching child controls.
@@ -535,7 +492,7 @@ namespace Catkeys
 		///// Uses WndChild and WndNext. It is faster than API EnumChildWindows.
 		///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
 		///// </summary>
-		//public static List<Wnd> DirectChildControlsFastUnsafe(string className = null)
+		//public static Wnd[] DirectChildControlsFastUnsafe(string className = null)
 		//{
 		//	var wild = _GetWildcard(className);
 		//	var a = new List<Wnd>();
@@ -543,17 +500,7 @@ namespace Catkeys
 		//		if(wild != null && !c._ClassNameIs(wild)) continue;
 		//		a.Add(c);
 		//	}
-		//	return a;
-		//}
-
-		//Cannot use this because need a callback function. Unless we at first get all and store in an array (similar speed).
-		//public static IEnumerable<Wnd> AllChildren(Wnd hwnd)
-		//{
-		//	Api.EnumChildWindows(hwnd, (t, param)=>
-		//	{
-		//		yield return t; //error, yield cannot be in an anonymous method etc
-		//		return 1;
-		//	}, Zero);
+		//	return a.ToArray();
 		//}
 
 		/// <summary>
@@ -602,12 +549,12 @@ namespace Catkeys
 			{
 				W.ThrowIfInvalid();
 				if(useAcc) {
-					var a = Acc.FromWindow(W, AccOBJID.CLIENT); //tested: fails if objid_window
-					a.DoDefaultAction();
+					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) //throws if failed
+						a.DoDefaultAction();
 				} else {
 					_PostBmClick(); //async if other thread, because may show a dialog.
 				}
-				W._MinimalWaitIfOtherThread();
+				W.LibMinimalSleepIfOtherThread();
 				//FUTURE: sync better
 			}
 
@@ -656,35 +603,36 @@ namespace Catkeys
 				W.ThrowIfInvalid();
 				int id;
 				if(useAcc || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
-					var a = Acc.FromWindow(W, AccOBJID.CLIENT);
-					int k = _GetAccCheckState(ref a);
-					if(k == state) return;
-					if(useAcc) a.DoDefaultAction(); else _PostBmClick();
-					bool clickAgain = false;
-					switch(state) {
-					case 0:
-						if(k == 1) {
-							W._MinimalWaitIfOtherThread();
-							if(GetCheckState(true) == 2) clickAgain = true;
-							else return;
-						}
-						break;
-					case 1:
-						if(k == 2) clickAgain = true;
-						break;
-					case 2:
-						if(k == 0) clickAgain = true;
-						break;
-					}
-					if(clickAgain) {
+					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) {
+						int k = _GetAccCheckState(a);
+						if(k == state) return;
 						if(useAcc) a.DoDefaultAction(); else _PostBmClick();
+						bool clickAgain = false;
+						switch(state) {
+						case 0:
+							if(k == 1) {
+								W.LibMinimalSleepIfOtherThread();
+								if(GetCheckState(true) == 2) clickAgain = true;
+								else return;
+							}
+							break;
+						case 1:
+							if(k == 2) clickAgain = true;
+							break;
+						case 2:
+							if(k == 0) clickAgain = true;
+							break;
+						}
+						if(clickAgain) {
+							if(useAcc) a.DoDefaultAction(); else _PostBmClick();
+						}
 					}
 				} else {
 					if(state == W.Send(BM_GETCHECK)) return;
 					W.Post(BM_SETCHECK, state);
 					W.WndDirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
 				}
-				W._MinimalWaitIfOtherThread();
+				W.LibMinimalSleepIfOtherThread();
 			}
 
 			/// <summary>
@@ -706,8 +654,8 @@ namespace Catkeys
 				if(useAcc || !_IsCheckbox()) {
 					//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.
 					try { //avoid exception in property-get functions
-						var a = Acc.FromWindow(W, AccOBJID.CLIENT, noThrow: true);
-						return _GetAccCheckState(ref a);
+						using(var a = Acc.FromWindow(W, AccOBJID.CLIENT, noThrow: true))
+							return _GetAccCheckState(a);
 					}
 					catch(Exception ex) { Debug_.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
 					return 0;
@@ -716,7 +664,7 @@ namespace Catkeys
 				}
 			}
 
-			int _GetAccCheckState(ref Acc a)
+			int _GetAccCheckState(Acc a)
 			{
 				var state = a.State;
 				if(state.Has_(AccSTATE.INDETERMINATE)) return 2;
@@ -760,10 +708,10 @@ namespace Catkeys
 		/// Finds a child button by id and sends a "click" message. Does not use the mouse.
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
-		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
+		/// <param name="buttonId">Control id of the button. This function calls <see cref="Kid"/> to find the button.</param>
 		/// <param name="useAcc">Use <see cref="Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Kid"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Wnd.Find("Options").ButtonClick(2);
@@ -771,7 +719,7 @@ namespace Catkeys
 		/// </example>
 		public void ButtonClick(int buttonId, bool useAcc = false)
 		{
-			var c = ChildById(buttonId);
+			var c = Kid(buttonId);
 			if(c.Is0) throw new NotFoundException();
 			c.AsButton.Click(useAcc);
 		}
@@ -816,7 +764,7 @@ namespace Catkeys
 			var w = this;
 			if(ClassNameIs("#32768") && Misc.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
 			w.Post(systemMenu ? Api.WM_SYSCOMMAND : Api.WM_COMMAND, itemId);
-			w._MinimalWaitIfOtherThread();
+			w.LibMinimalSleepIfOtherThread();
 		}
 
 		//rejected: use Acc functions instead.

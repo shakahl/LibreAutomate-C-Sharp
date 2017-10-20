@@ -206,7 +206,7 @@ namespace Catkeys
 		/// </summary>
 		public static bool IsInAnyScreen(Point p)
 		{
-			return MonitorFromPoint(p, 0) != Zero; //0 - MONITOR_DEFAULTTONULL
+			return Api.MonitorFromPoint(p, 0) != Zero; //0 - MONITOR_DEFAULTTONULL
 		}
 
 		/// <summary>
@@ -214,7 +214,7 @@ namespace Catkeys
 		/// </summary>
 		public static bool IsInAnyScreen(RECT r)
 		{
-			return MonitorFromRect(ref r, 0) != Zero;
+			return Api.MonitorFromRect(ref r, 0) != Zero;
 		}
 
 		/// <summary>
@@ -222,17 +222,7 @@ namespace Catkeys
 		/// </summary>
 		public static bool IsInAnyScreen(Wnd w)
 		{
-			return MonitorFromWindow(w, 0) != Zero;
+			return Api.MonitorFromWindow(w, 0) != Zero;
 		}
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromPoint(Point pt, uint dwFlags);
-		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromRect(ref RECT lprc, uint dwFlags);
-		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromWindow(Wnd hwnd, uint dwFlags);
-
-		//CONSIDER: add functions to map coordinates from one screen to another screen, or just to primary. Overloads for Coord too.
-		//	But maybe better just use Coord.Normalize. Because to map Coord need more parameters eg workArea anyway.
 	}
 }

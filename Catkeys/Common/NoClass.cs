@@ -110,11 +110,11 @@ namespace Catkeys
 		/// Suspends this thread for the specified amount of time.
 		/// Alias of <see cref="Time.Wait"/>.
 		/// </summary>
-		/// <param name="timeS">
+		/// <param name="seconds">
 		/// The number of seconds to wait.
 		/// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.Wait"/>.
 		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
-		public static void Wait(double timeS) { Time.Wait(timeS); }
+		/// <exception cref="ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		public static void Wait(double seconds) { Time.Wait(seconds); }
 	}
 }

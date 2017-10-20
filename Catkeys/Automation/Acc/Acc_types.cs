@@ -23,7 +23,7 @@ using static Catkeys.NoClass;
 namespace Catkeys.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, string)"/> and similar functions.
+	/// Flags for <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, int, string)"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum AFFlags
@@ -42,7 +42,7 @@ namespace Catkeys.Types
 
 		/// <summary>
 		/// Always search in MENUITEM.
-		/// Without this flag skips MENUITEM descendant objects to improve speed, unless role is MENUITEM or MENUPOPUP. Except when searching in web page or when used path.
+		/// Without this flag skips MENUITEM descendant objects to improve speed, unless role is MENUITEM or MENUPOPUP. Except when used path or when searching in web page or Java window.
 		/// </summary>
 		MenuToo = 4,
 
@@ -72,11 +72,11 @@ namespace Catkeys.Types
 		/// </summary>
 		WebBusy = 64,
 
-		//CONSIDER: SkipAllHiddenAncestors
+		//Acc CONSIDER: SkipAllHiddenAncestors
 	}
 
 	/// <summary>
-	/// Contains data for callback function (<b>also</b>) of <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, string)"/> and similar functions.
+	/// Contains data for callback function (<b>also</b>) of <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, int, string)"/> and similar functions.
 	/// This class is derived from <see cref="Acc"/> and therefore you can use all Acc properties in callback function. Also has several own properties and methods.
 	/// The AFAcc variable passed to the callback function is valid only in the callback function. If you need to get normal Acc variable from it (for example to add to a List), use <see cref="ToAcc"/>.
 	/// </summary>
@@ -92,18 +92,19 @@ namespace Catkeys.Types
 		/// </summary>
 		public int Level { get; private set; }
 
-		/// <summary>
-		/// An int value that is 0 before searching and can be modified in the callback function.
-		/// Can be used to implement 'find n-th matching object' or for any other purpose. See example.
-		/// When searching in multiple controls, Counter is 0 before searching in each control.
-		/// </summary>
-		/// <example>
-		/// Find 4-th LINK in web page.
-		/// <code><![CDATA[
-		/// var a = Acc.Find(w, "web:LINK", also: o => ++o.Counter == 4);
-		/// ]]></code>
-		/// </example>
-		public int Counter { get; set; }
+		//rejected: Instead added 'skip' parameter.
+		///// <summary>
+		///// An int value that is 0 before searching and can be modified in the callback function.
+		///// Can be used to implement 'find n-th matching object' or for any other purpose. See example.
+		///// When searching in multiple controls, Counter is 0 before searching in each control.
+		///// </summary>
+		///// <example>
+		///// Find 4-th LINK in web page.
+		///// <code><![CDATA[
+		///// var a = Acc.Find(w, "web:LINK", also: o => ++o.Counter == 4);
+		///// ]]></code>
+		///// </example>
+		//public int Counter { get; set; }
 
 		/// <summary>
 		/// With <see cref="Acc.EnumChildren"/> - the param argument. With <see cref="Acc.Finder"/> - the Param property. Probably not useful with Acc.Find.
@@ -111,7 +112,7 @@ namespace Catkeys.Types
 		/// </summary>
 		public object Param { get; set; }
 
-		//TODO: IndexInParent, ParentChildCount
+		//Acc FUTURE: IndexInParent, ParentChildCount
 
 		/// <summary>
 		/// The callback function can call this to stop searching. If the callback function then returns false, it means 'not found'. Don't need to call this if returns true.
@@ -130,7 +131,7 @@ namespace Catkeys.Types
 		/// </summary>
 		public Acc ToAcc() { return new Acc(this); }
 
-		//CONSIDER:
+		//Acc CONSIDER:
 		//public new AccSTATE State { get => _haveState ? _state : StateCurrent; }
 		//internal void LibSetState(AccSTATE state) { _state=state; _haveState=true; }
 		//AccSTATE _state; bool _haveState;
@@ -157,16 +158,37 @@ namespace Catkeys.Types
 			_iacc = default;
 		}
 
-		/// <summary>
-		/// Sets Counter = 0.
-		/// </summary>
-		internal void LibResetCounter()
+		///
+		public override string ToString()
 		{
-			Counter = 0;
+			return base.ToString(Level);
 		}
 	}
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member //FUTURE
+	//rejected: Rarely used. Can use Finder directly. Maybe in the future.
+	///// <summary>
+	///// More parameters for <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, int, string, AFMoreParams)"/>.
+	///// </summary>
+	//public class AFMoreParams
+	//{
+	//	/// <summary>
+	//	/// Allows to specify all possible properties of the child window (of <b>w</b>) where the accessible object is.
+	//	/// The function searches for the accessible object in all matching controls until found.
+	//	/// </summary>
+	//	public Wnd.ChildFinder Controls { get; set; }
+
+	//	/// <summary>
+	//	/// See <see cref="Acc.Finder.MaxLevel"/>.
+	//	/// </summary>
+	//	public int MaxLevel { get; set; }
+
+	//	/// <summary>
+	//	/// See <see cref="Acc.Finder.SkipRoles"/>.
+	//	/// </summary>
+	//	public string SkipRoles { get; set; }
+	//}
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 	/// <summary>
 	/// Accessible object ids of window parts and some special objects.
@@ -273,13 +295,13 @@ namespace Catkeys.Types
 	/// Used by <see cref="Acc.State"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.get_accState</msdn> documentation but without prefix "STATE_SYSTEM_".
+	/// Most names are as in API <msdn>IAccessible.get_accState</msdn> documentation but without prefix "STATE_SYSTEM_".
 	/// </remarks>
 	[Flags]
 	public enum AccSTATE
 	{
 		//NORMAL = 0x0,
-		UNAVAILABLE = 0x1,
+		DISABLED = 0x1, //original name UNAVAILABLE
 		SELECTED = 0x2,
 		FOCUSED = 0x4,
 		PRESSED = 0x8,
@@ -311,6 +333,23 @@ namespace Catkeys.Types
 		ALERT_HIGH = 0x10000000,
 		PROTECTED = 0x20000000,
 		HASPOPUP = 0x40000000,
+	}
+
+	/// <summary>
+	/// Accessible object selection flags.
+	/// Used by <see cref="Acc.Select"/>.
+	/// </summary>
+	/// <remarks>
+	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix "SELFLAG_".
+	/// </remarks>
+	[Flags]
+	public enum AccSELFLAG
+	{
+		TAKEFOCUS = 0x1,
+		TAKESELECTION = 0x2,
+		EXTENDSELECTION = 0x4,
+		ADDSELECTION = 0x8,
+		REMOVESELECTION = 0x10,
 	}
 
 	/// <summary>
@@ -359,7 +398,7 @@ namespace Catkeys.Types
 		/// The parent (container) object.
 		/// String name - "parent", "pa" or "p".
 		/// Few objects don't support it.
-		/// Used only with functions of this library.
+		/// Note: Some Chrome versions have this bug: the parent object does not support <see cref="Acc.WndContainer"/>.
 		/// </summary>
 		PARENT = 9,
 
@@ -367,26 +406,8 @@ namespace Catkeys.Types
 		/// A direct child object by 1-based index.
 		/// String name - "child", "ch" or "c".
 		/// Negative index means from end, for example -1 is the last child.
-		/// Used only with functions of this library.
 		/// </summary>
 		CHILD = 10,
-	}
-
-	/// <summary>
-	/// Accessible object selection flags.
-	/// Used by <see cref="Acc.Select"/>.
-	/// </summary>
-	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix "SELFLAG_".
-	/// </remarks>
-	[Flags]
-	public enum AccSELFLAG
-	{
-		TAKEFOCUS = 0x1,
-		TAKESELECTION = 0x2,
-		EXTENDSELECTION = 0x4,
-		ADDSELECTION = 0x8,
-		REMOVESELECTION = 0x10,
 	}
 
 	/// <summary>
@@ -395,7 +416,7 @@ namespace Catkeys.Types
 	/// <remarks>
 	/// The names are as in API documentation but without prefix "EVENT_".
 	/// </remarks>
-	public enum AccEVENT
+	internal enum LibAccHookEVENT
 	{
 		MIN = 0x1,
 		MAX = 0x7FFFFFFF,
@@ -493,7 +514,7 @@ namespace Catkeys.Types
 	/// There are no flags for OUTOFCONTEXT and INCONTEXT. OUTOFCONTEXT is default (0). INCONTEXT cannot be used in managed code.
 	/// </remarks>
 	[Flags]
-	public enum AHFlags
+	internal enum LibAccHookFlags
 	{
 		//OUTOFCONTEXT = 0x0,
 		SKIPOWNTHREAD = 0x1,
@@ -501,13 +522,5 @@ namespace Catkeys.Types
 		//INCONTEXT = 0x4,
 	}
 
-	//currently not used
-	//public enum AccBrowser
-	//{
-	//	Unknown,
-	//	Firefox,
-	//	Chrome,
-	//	InternetExplorer,
-	//}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

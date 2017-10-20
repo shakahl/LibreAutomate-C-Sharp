@@ -18,6 +18,8 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
+using UIA = UIAutomationClient;
+
 using Catkeys.Types;
 using static Catkeys.NoClass;
 
@@ -34,6 +36,8 @@ namespace Catkeys
 	/// Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return default value of that type (null, 0, false); string property getters return "". Various accessible objects in various applications are implemented differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="Native.GetError"/> to get it. If Native.GetError returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 	/// 
 	/// Disposing Acc variables (to release the COM object) is not necessary (GC will do it later), but in libraries it is recommended.
+	/// 
+	/// Supports accessible objects of Java windows if the Java Access Bridge (JAB) is enabled. You can enable/disable it in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe.
 	/// </remarks>
 	public unsafe partial class Acc :IDisposable, ISupportOrThrow
 	{
@@ -42,7 +46,6 @@ namespace Catkeys
 		internal IAccessible _iacc;
 		internal int _elem;
 		internal AccROLE _role; //store role because it is slow to get and used in several places. Does not make real object memory bigger (still 32 bytes).
-								//CONSIDER: cache state too. Add property StateCurrent. But then also need IsInvisibleCurrent etc. Or instead add property StateDoNotCache.
 
 		/// <summary>
 		/// Used only by the AFAcc class which is derived from Acc.
@@ -118,15 +121,17 @@ namespace Catkeys
 		~Acc()
 		{
 			//Debug_.Print("Acc not disposed: " + ToString()); //cannot get props in other thread
-			Debug_.Print("Acc not disposed: " + (_role != 0 ? RoleString : ""));
+			Debug_.Print("Acc not disposed: " + (_role != 0 ? RoleString : ("_Disposed=" + _Disposed.ToString()))); //note: with debugger somehow can be called several times, then Is0 true
 			_Dispose();
 		}
 
-		///// <summary>
-		///// The IAccessible that is managed by this variable.
-		///// This func does not increment ref count etc. It simply returns the field. Don't release it. It will be released by Dispose.
-		///// </summary>
-		//internal IAccessible LibIAccessible { get => _iacc; }
+#if DEBUG
+		/// <summary>
+		/// The IAccessible that is managed by this variable.
+		/// This func does not increment ref count etc. It simply returns the field. Don't release it. It will be released by Dispose.
+		/// </summary>
+		internal IAccessible LibIAccessibleDebug { get => _iacc; }
+#endif
 
 		/// <summary>
 		/// Gets or sets child element id.
@@ -136,74 +141,8 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this variable is disposed.
 		/// </summary>
-		public bool Is0 { get => _iacc.Is0; }
+		bool _Disposed { get => _iacc.Is0; }
 		//note: named not 'IsDisposed' because can be easily confused with IsDisabled.
-
-		/// <summary>
-		/// Gets accessible object from point.
-		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
-		/// </summary>
-		/// <param name="x">X coordinate in screen.</param>
-		/// <param name="y">Y coordinate in screen.</param>
-		/// <param name="workArea">x y are relative to the work area, not entire screen.</param>
-		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
-		/// <param name="noThrow">Don't throw exception if failed. Then returns null.</param>
-		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
-		public static Acc FromPoint(Coord x, Coord y, bool workArea = false, object screen = null, bool noThrow = false)
-		{
-			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
-			return _FromPoint(Coord.Normalize(x, y, workArea, screen), noThrow);
-		}
-
-		/// <summary>
-		/// Gets accessible object from mouse cursor position.
-		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
-		/// </summary>
-		/// <param name="noThrow">Don't throw exception if failed. Then returns null.</param>
-		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
-		public static Acc FromMouse(bool noThrow = false)
-		{
-			return _FromPoint(Mouse.XY, noThrow);
-		}
-
-		static Acc _FromPoint(Point p, bool noThrow)
-		{
-			var hr = _Api.AccessibleObjectFromPoint(p, out var iacc, out var elem);
-			if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
-			if(hr != 0) {
-				if(noThrow) return null;
-				_WndThrow(hr, Wnd.FromXY(p.X, p.Y, WXYFlags.Raw), "*get accessible object from point");
-			}
-			Debug.Assert(elem.vt == Api.VARENUM.VT_I4);
-			int e = (elem.vt == Api.VARENUM.VT_I4 ? elem.ValueInt : 0);
-			return new Acc(iacc, e);
-		}
-
-		//public static Acc FromPoint(Wnd w, Coord x, Coord y, bool nonClient = false, bool noThrow = false)
-		//{
-		//	if(x.IsNull || y.IsNull) throw new ArgumentNullException();
-		//	//var p=Coord.NormalizeInWindow(x, y, w, nonClient);
-		//	//TODO
-		//	return null;
-		//}
-
-		//public static Acc FromImage(SIResult foundImage, Coord x=default, Coord y=default, bool noThrow = false)
-		//{
-		//	//TODO
-		//	return null;
-		//}
-
-		//QI/QS from IAccessible, IUIAutomationElement, IHTMLElement, ISimpleDOMNode or anything that can give IAccessible.
-		//public static Acc FromComObject(IntPtr x, int accChildId = 0)
-		//{
-		//	//TODO
-		//	return null;
-		//}
-		//public static Acc FromComObject(object x, int accChildId = 0)
-		//{
-		//	//TODO
-		//	return null;
-		//}
 
 		/// <summary>
 		/// Gets accessible object of window or control or its standard part - client area, titlebar etc.
@@ -211,32 +150,28 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="objid">Window part id. Default WINDOW (object of w itself). Can be one of enum AccOBJID constants. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
-		/// <param name="noThrow">Don't throw exception if failed. Then returns null.</param>
+		/// <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
 		/// <exception cref="WndException">Invalid window.</exception>
 		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
 		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, bool noThrow = false)
 		{
-			//TODO: review callers, do they are prepared for exceptions.
-
-			//if(!LibFromWindow(out var iacc, w, objid, noThrow)) return null;
-			//return new Acc(iacc);
-
 			var iacc = _FromWindow(w, objid, noThrow); if(iacc.Is0) return null;
 			return new Acc(iacc);
 		}
 
 		static IAccessible _FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, bool noThrow = false)
 		{
-			var hr = _Api.AccessibleObjectFromWindow(w, objid, ref _Api.IID_IAccessible, out var iacc);
-			if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
-			if(hr != 0) {
-				if(noThrow) return default;
-				w.ThrowIfInvalid();
-				_WndThrow(hr, w, "*get accessible object from window");
+			using(new _TempSetScreenReader(false)) {
+				var hr = Api.AccessibleObjectFromWindow(w, objid, ref Api.IID_IAccessible, out var iacc);
+				if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
+				if(hr != 0) {
+					if(noThrow) return default;
+					w.ThrowIfInvalid();
+					_WndThrow(hr, w, "*get accessible object from window");
+				}
+				return iacc;
 			}
-			return iacc;
 		}
-		//TODO: AccessibleObjectFromEvent
 
 		static void _WndThrow(int hr, Wnd w, string es)
 		{
@@ -246,40 +181,331 @@ namespace Catkeys
 			throw new CatException(hr, es);
 		}
 
-		//rejected: rarely used. Problem with libraries. Objects return variety of error codes. Some even after closing the window return S_FALSE and not "RPC server disconnected" etc.
-		///// <summary>
-		///// If set to true, Acc functions (properties and methods) that get object properties throw exception when failed.
-		///// If false (default), when failed they return default value for that type (null if string, 0 if Enum, etc). Then you can use <see cref="Native.GetError"/>; it is HRESULT returned by the API (<msdn>IAccessible</msdn> member function or some other).
-		///// This property is thread-specific.
-		///// </summary>
-		///// <remarks>
-		///// Why the default behavior is to not throw when failed? Because many objects have bugs or unexpected rules and may throw exception when they shouldn't or where you don't expect it. In most cases it's better to just ignore empty properties than to handle exceptions. You'll probably want to set this property to true only when debugging your code, or in some tools that handle and display exceptions, or when working with a known window where you know there cannot be any exceptions in normal conditions.
-		///// Regardless of this property, the functions don't throw exception if the property is unavailable for that object, ie the API returned HRESULT is S_FALSE, DISP_E_MEMBERNOTFOUND or E_NOTIMPL. Then string return value is "", not null.
-		///// Regardless of this property, the functions throw ObjectDisposedException if this variable is disposed.
-		///// The static functions (FromWindow etc) don't use this property. Some of them have a noThrow parameter instead.
-		///// </remarks>
-		//public static bool PropGetThrows { get => t_propGetThrows; set => t_propGetThrows = value; }
-		//[ThreadStatic] static bool t_propGetThrows;
+		/// <summary>
+		/// Gets accessible object from point.
+		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+		/// </summary>
+		/// <param name="x">X coordinate in screen.</param>
+		/// <param name="y">Y coordinate in screen.</param>
+		/// <param name="workArea">x y are relative to the work area, not entire screen.</param>
+		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
+		/// <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
+		/// <param name="preferLINK">
+		/// Get the parent object if it's LINK or PUSHBUTTON and this object is TEXT, STATICTEXT or GRAPHIC.
+		/// Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
+		/// Note: This does not work if the object from point is a LINK's grandchild.
+		/// Note: Some Chrome versions have this bug: the parent object does not support <see cref="WndContainer"/>.
+		/// </param>
+		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		public static Acc FromXY(Coord x, Coord y, bool workArea = false, object screen = null, bool noThrow = false, bool preferLINK = false)
+		{
+			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
+			var p = Coord.Normalize(x, y, workArea, screen);
+			return _FromPoint(p, noThrow, preferLINK);
+		}
 
-		///// <summary>
-		///// If hr is 0, returns 0.
-		///// Else if the property is unavailable (S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL), calls Native.SetError and returns S_FALSE (1). For navigate also if E_INVALIDARG, E_FAIL, E_NOINTERFACE.
-		///// Else if PropGetThrows is true, throws CatException.
-		///// Else calls Native.SetError and returns hr (usually negative).
-		///// </summary>
-		//int _Hresult(_FuncId funcId, int hr)
+		/// <summary>
+		/// Gets accessible object from mouse cursor position.
+		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+		/// </summary>
+		/// <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
+		/// <param name="preferLINK">
+		/// Get the parent object if it's LINK or PUSHBUTTON and this object is TEXT, STATICTEXT or GRAPHIC.
+		/// Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
+		/// Note: This does not work if the object from point is a LINK's grandchild.
+		/// Note: Some Chrome versions have this bug: the parent object does not support <see cref="WndContainer"/>.
+		/// </param>
+		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		public static Acc FromMouse(bool noThrow = false, bool preferLINK = false)
+		{
+			return _FromPoint(Mouse.XY, noThrow, preferLINK);
+		}
+
+		static Acc _FromPoint(Point p, bool noThrow, bool preferLINK)
+		{
+			using(new _TempSetScreenReader(false)) {
+				bool retry = false; g1:
+				var hr = Api.AccessibleObjectFromPoint(p, out var iacc, out var v);
+				if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
+				if(hr != 0) {
+					if(noThrow) return null;
+					_WndThrow(hr, Wnd.FromXY(p.X, p.Y, WXYFlags.Raw), "*get accessible object from point");
+				}
+				Debug.Assert(v.vt == Api.VARENUM.VT_I4 || v.vt == 0);
+				int elem = v.vt == Api.VARENUM.VT_I4 ? v.ValueInt : 0;
+
+				if(!retry && elem == 0 && 0 == iacc.GetWnd(out var w)) {
+					//Chrome
+					var wTL = w.WndWindow; //protection from possible Chrome bugs, eg AOFP may get AO of a child window
+					int chrome = _EnableInChrome(wTL, iacc, false, p);
+					if(chrome != 0) {
+						if(chrome == 2) { iacc.Dispose(); retry = true; goto g1; }
+					}
+					//Java
+					else if(w == wTL && 0 == iacc.GetRole(0, out var role) && role == AccROLE.CLIENT
+						&& 0 == iacc.get_accChildCount(out int cc) && cc == 0) { //if CLIENT of top-level window has 0 children
+						var ja = _Java.AccFromPoint(p, w);
+						if(ja != null) { iacc.Dispose(); return ja; }
+					}
+				}
+
+				if(preferLINK) _FromPoint_GetLink(ref iacc, ref elem);
+				return new Acc(iacc, elem);
+			}
+		}
+
+		/// <summary>
+		/// If iacc is the client area object of Chrome, enables its web content accessible objects.
+		/// Returns: 0 not Chrome, 1 Chrome was already enabled, 2 Chrome enabled now.
+		/// </summary>
+		/// <param name="w">iacc container window/control. Must be top-level (asserts).</param>
+		/// <param name="iacc">object from point, or w CLIENT.</param>
+		/// <param name="isCLIENT">iacc is w CLIENT. If false, p is used to detect whether it is CLIENT.</param>
+		/// <param name="p">Used when iacc is object from point. Then isCLIENT is false.</param>
+		static int _EnableInChrome(Wnd w, IAccessible iacc, bool isCLIENT, Point p = default)
+		{
+			Debug.Assert(!w.IsChildWindow);
+
+			var f = Wnd.Lib.WinFlags.Get(w);
+			if(f.Has_(Wnd.Lib.WFlags.ChromeYes)) return 1;
+			if(f.Has_(Wnd.Lib.WFlags.ChromeNo)) return 0;
+
+			bool yes = false;
+			if(!w.ClassNameIs("Chrome*")) goto gNo;
+			if(!isCLIENT) {
+				if(0 != iacc.GetRole(0, out var role)) return 0;
+				if(!(role == AccROLE.WINDOW || role == AccROLE.CLIENT || role == AccROLE.APPLICATION)) return 0; //in current Chrome it's WINDOW. Normally should be CLIENT or APPLICATION.
+				var rc = w.ClientRectInScreen; if(!rc.Contains(p)) return 0;
+				if(0 != iacc.accLocation(0, out var ra) || ra != rc) return 0;
+				//after all the above checks, iacc still can be not the CLIENT we need
+				iacc = _FromWindow(w, AccOBJID.CLIENT, noThrow: true); if(iacc.Is0) return 0;
+			}
+			var aDOCUMENT = Finder.LibGetChromeDOCUMENT(w, iacc);
+			if(!isCLIENT) iacc.Dispose();
+			if(aDOCUMENT.Is0) goto gNo;
+			aDOCUMENT.Dispose();
+			//Print("enabled");
+			yes = true;
+			gNo:
+			Wnd.Lib.WinFlags.Set(w, f | (yes ? Wnd.Lib.WFlags.ChromeYes : Wnd.Lib.WFlags.ChromeNo));
+			return yes ? 2 : 0;
+		}
+
+		static void _FromPoint_GetLink(ref IAccessible a, ref int elem)
+		{
+			if(0 != a.GetRole(elem, out var role)) return;
+			switch(role) {
+			case AccROLE.TEXT: //Firefox, IE
+			case AccROLE.STATICTEXT: //Chrome
+			case AccROLE.GRAPHIC:
+			case AccROLE.CLIENT: //Chrome: the Bookmarks toolbar buttons have children of role CLIENT
+			case 0: //string role, eg Firefox "span", "h2" etc
+				IAccessible parent;
+				if(elem != 0) parent = a; else if(0 != a.get_accParent(out parent)) return;
+				if(_IsLink(parent)) {
+					if(elem != 0) elem = 0; else { Math_.Swap(ref a, ref parent); parent.Dispose(); }
+				}
+				//rejected: support 2 levels, eg youtube right-side list. Actually there are 2-3 levels, and multiple children of LINK, some of them may be useful for automation.
+				break;
+			}
+
+			bool _IsLink(IAccessible par)
+			{
+				if(0 != par.GetRole(0, out var role2) || !(role2 == AccROLE.LINK || role2 == AccROLE.PUSHBUTTON)) return false;
+				//if(0 != _Api.WindowFromAccessibleObject(par, out var w) || w.Is0) return false; //rejected: Chrome bug workaround. For users in most cases LINK is more important than container window.
+				return true;
+			}
+		}
+
+		/// <summary>
+		/// Gets accessible object from point in window.
+		/// Returns null if the point is not in the window rectangle. Or if failed to get accessible object and noThrow is true.
+		/// </summary>
+		/// <param name="w">Window or control.</param>
+		/// <param name="x">X coordinate relative to the w client area.</param>
+		/// <param name="y">Y coordinate relative to the w client area.</param>
+		/// <param name="noThrow">Don't throw exception when fails to get accessible object from window. Then returns null.</param>
+		/// <exception cref="WndException">Invalid window.</exception>
+		/// <exception cref="CatException">Failed to get accessible object from window. For example, window of a higher UAC integrity level process.</exception>
+		public static Acc FromXY(Wnd w, Coord x, Coord y, bool noThrow = false)
+		{
+			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
+			var p = Coord.NormalizeInWindow(x, y, w); //in client area
+			if(!w.GetWindowAndClientRectInScreen(out RECT rw, out RECT rc)) {
+				if(noThrow) return null;
+				w.ThrowUseNative();
+			}
+			p.Offset(rc.left, rc.top);
+			if(!rw.Contains(p)) return null;
+			bool inClent = rc.Contains(p);
+			var a = FromWindow(w, inClent ? AccOBJID.CLIENT : AccOBJID.WINDOW, noThrow: noThrow);
+			if(a != null) {
+				if(!inClent) {
+				} else if(w.IsChildWindow) {
+				} else if(0 != _EnableInChrome(w, a._iacc, true)) {
+				} else if(0 == a._iacc.get_accChildCount(out int cc) && cc == 0) { //CLIENT of top-level window has 0 children
+					var ja = _Java.AccFromPoint(p, w);
+					if(ja != null) { a.Dispose(); return ja; }
+				}
+				if(0 == a._DescendantFromPoint(p, out var ac) && ac != a) {
+					Math_.Swap(ref a, ref ac);
+					ac.Dispose();
+				}
+			}
+			return a;
+		}
+
+		/// <summary>
+		/// Gets a child or descendant object from point.
+		/// Returns self (this Acc variable, not a copy) if at that point is this object and not a child.
+		/// Returns null if that point is not within boundaries of this object. For non-rectangular objects can return null even if the point is in the bounding rectangle. Also returns null if fails. Supports <see cref="Native.GetError"/>.
+		/// </summary>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
+		/// <param name="screenCoord">x y are screen coordinates. If false (default), x y are relative to the bounding rectangle of this object.</param>
+		/// <param name="directChild">Get direct child. If false (default), gets the topmost descendant object, which often is not a direct child of this object.</param>
+		/// <remarks>
+		/// Uses API <msdn>IAccessible.accHitTest</msdn>.
+		/// Does not work with Java windows.
+		/// </remarks>
+		public Acc ChildFromXY(Coord x, Coord y, bool screenCoord = false, bool directChild = false)
+		{
+			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
+			Point p;
+			if(screenCoord) p = Coord.Normalize(x, y);
+			else if(GetRect(out var r)) {
+				p = Coord.NormalizeInRect(x, y, r);
+				if(!r.Contains(p)) return null;
+			} else return null;
+
+			_Hresult(_FuncId.child_object, _DescendantFromPoint(p, out var ac, directChild));
+			return ac;
+
+			//rejected: parameter disposeThis.
+			//never mind: does not work with Java windows.
+		}
+
+		int _DescendantFromPoint(Point p, out Acc ar, bool directChild = false)
+		{
+			ar = null;
+			int hr = new _Acc(_iacc, _elem).DescendantFromPoint(p, out var ad, out bool isThis, directChild);
+			if(hr == 0) ar = isThis ? this : new Acc(ad.a, ad.elem);
+			return hr;
+		}
+
+		/// <summary>
+		/// Gets the accessible object that has the keyboard focus.
+		/// Returns null if fails.
+		/// </summary>
+		public static Acc Focused()
+		{
+			var w = Wnd.WndFocused;
+			return w.Is0 ? null : _Focused(w);
+		}
+
+		/// <summary>
+		/// Gets the accessible object that has the keyboard focus in the specified window.
+		/// Returns null if the window does not contain the focused object or if fails.
+		/// </summary>
+		/// <param name="w">Window or control.</param>
+		/// <exception cref="WndException">w is default(Wnd).</exception>
+		static Acc _Focused(Wnd w)
+		{
+			//info: At first this func was public. But it does not have sense. Inactive windows never return a focused child.
+			//	Also does not have sense to get the focused object from an Acc.
+
+			//w.ThrowIf0(); //don't need when this func is private
+			var wTL = w.WndWindow;
+			if(!wTL.IsActive) return null; //return quickly, anyway would return null
+			var a = _FromWindow(w, AccOBJID.CLIENT, noThrow: true); //info: CLIENT, because WINDOW is never focused
+			if(a.Is0) return null;
+			bool isThis = false;
+			try {
+				if(w != wTL) {
+				} else if(0 != _EnableInChrome(w, a, true)) {
+				} else if(0 == a.get_accChildCount(out int cc) && cc == 0) { //CLIENT of top-level window has 0 children
+					var ja = _Java.AccFromWindow(w, getFocused: true);
+					if(ja != null) { a.Dispose(); return ja; }
+				}
+				int hr = new _Acc(a, 0).DescendantFocused(out var ad, out isThis);
+				if(hr != 0) return null;
+				if(isThis) return new Acc(a);
+				return new Acc(ad.a, ad.elem);
+			}
+			finally { if(!isThis) a.Dispose(); }
+
+			//SHOULDDO: can fail if recently focused. Noticed with FileZilla Settings dialog controls after IUIAutomationElement.SetFocus. Need to wait/retry.
+		}
+
+		/// <summary>
+		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn>.
+		/// Returns null if failed. Suports <see cref="Native.GetError"/>.
+		/// </summary>
+		/// <param name="w"></param>
+		/// <param name="idObject"></param>
+		/// <param name="idChild"></param>
+		/// <remarks>
+		/// The parameters are of the callback function.
+		/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
+		/// Often fails because the object already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
+		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in a callback function used with API <msdn>SetWinEventHook</msdn> kills this process.
+		/// </remarks>
+		public static Acc FromEvent(Wnd w, int idObject, int idChild)
+		{
+			int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);
+			if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
+			if(hr != 0) { Native.SetError(hr); return null; }
+			int elem = v.vt == Api.VARENUM.VT_I4 ? v.ValueInt : 0;
+			return new Acc(iacc, elem);
+		}
+
+		/// <summary>
+		/// Gets accessible object from a COM object of any type that supports it.
+		/// Returns null if fails.
+		/// </summary>
+		/// <param name="x">Unmanaged COM object.</param>
+		/// <remarks>
+		/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
+		/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
+		/// </remarks>
+		public static Acc FromComObject(IntPtr x)
+		{
+			if(x == default) return null;
+			if(Util.Marshal_.QueryInterface(x, out IAccessible iacc, ref Api.IID_IAccessible)
+				|| Util.Marshal_.QueryService(x, out iacc, ref Api.IID_IAccessible)
+				) return new Acc(iacc);
+			return null;
+		}
+
+		/// <summary>
+		/// Gets accessible object from a COM object of any type that supports it.
+		/// Returns null if fails.
+		/// </summary>
+		/// <param name="x">Managed COM object.</param>
+		/// <remarks>
+		/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
+		/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
+		/// Also partially supports UIAutomationClient.IUIAutomationElement. Works with web page objects, but returns null for many other.
+		/// </remarks>
+		public static Acc FromComObject(object x)
+		{
+			if(x == null) return null;
+			if(x is UIA.IUIAutomationElement e) { //info: IUIAutomationElement2-7 are IUIAutomationElement too
+				var pat = e.GetCurrentPattern(10018) as UIA.IUIAutomationLegacyIAccessiblePattern; //UIA_LegacyIAccessiblePatternId
+				x = pat?.GetIAccessible();
+				if(x == null) return null;
+			}
+
+			var ip = Marshal.GetIUnknownForObject(x);
+			if(ip == default) return null;
+			try { return FromComObject(ip); }
+			finally { Marshal.Release(ip); }
+		}
+
+		//public static Acc FromImage(SIResult foundImage, Coord x=default, Coord y=default, bool noThrow = false)
 		//{
-		//	if(hr == 0) return 0;
-		//	switch(hr) {
-		//	case Api.DISP_E_MEMBERNOTFOUND: case Api.E_NOTIMPL: hr = Api.S_FALSE; break;
-		//	case Api.E_INVALIDARG: case Api.E_FAIL: case Api.E_NOINTERFACE: if(funcId == _FuncId.navigate) hr = Api.S_FALSE; break;
-		//	}
-		//	if(hr != Api.S_FALSE) {
-		//		_DebugPropGet(funcId, hr);
-		//		if(PropGetThrows) throw new CatException(hr, "*get " + funcId.ToString().Replace('_', ' '));
-		//	}
-		//	Native.SetError(hr);
-		//	return hr;
+		//	//Acc FUTURE
+		//	return null;
 		//}
 
 		/// <summary>
@@ -312,7 +538,7 @@ namespace Catkeys
 #if DEBUG
 		void _DebugPropGet(_FuncId funcId, int hr)
 		{
-			if(t_debugNoRecurse || Is0) return;
+			if(t_debugNoRecurse || _Disposed) return;
 			if(hr == Api.E_FAIL && funcId == _FuncId.default_action) return; //many in old VS etc
 			t_debugNoRecurse = true;
 			try {
@@ -325,323 +551,6 @@ namespace Catkeys
 #endif
 
 		/// <summary>
-		/// Gets the container window or control of this accessible object.
-		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns default(Wnd) if failed. Supports <see cref="Native.GetError"/>.
-		/// All objects must support this property, but some have bugs and can return default(Wnd) or a wrong window.
-		/// </remarks>
-		public Wnd WndContainer
-		{
-			get
-			{
-				if(Is0) throw new ObjectDisposedException(nameof(Acc));
-				_Hresult(_FuncId.container_window, _Api.WindowFromAccessibleObject(_iacc, out var w));
-				return w;
-			}
-		}
-
-		/// <summary>
-		/// Gets the top-level window that contains this accessible object.
-		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns default(Wnd) if failed. Supports <see cref="Native.GetError"/>.
-		/// All objects must support this property, but some have bugs and can return default(Wnd).
-		/// </remarks>
-		public Wnd WndWindow { get => WndContainer.WndWindow; }
-
-		/// <summary>
-		/// Gets location of this accessible object in screen.
-		/// Uses <msdn>IAccessible.accLocation</msdn>.
-		/// </summary>
-		/// <param name="r">Receives object rectangle in screen coordinates.</param>
-		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="Native.GetError"/>.
-		/// Most but not all objects support this property.
-		/// </remarks>
-		public bool GetRect(out RECT r)
-		{
-			return 0 == _Hresult(_FuncId.rectangle, _iacc.accLocation(_elem, out r));
-		}
-
-		/// <summary>
-		/// Gets location of this accessible object in the client area of window w.
-		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="Wnd.MapScreenToClient(ref RECT)"/>.
-		/// </summary>
-		/// <param name="r">Receives object rectangle in w client area coordinates.</param>
-		/// <param name="w">Window or control.</param>
-		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="Native.GetError"/>.
-		/// Most but not all objects support this property.
-		/// </remarks>
-		public bool GetRect(out RECT r, Wnd w)
-		{
-			return GetRect(out r) && w.MapScreenToClient(ref r);
-		}
-
-		/// <summary>
-		/// Gets standard non-string role, as enum AccROLE.
-		/// Uses <msdn>IAccessible.get_accRole</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Most objects have a standard role, as enum AccROLE. Some objects have a custom role, normally as string.
-		/// Returns 0 if object's role is string.
-		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
-		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
-		/// </remarks>
-		public AccROLE RoleEnum
-		{
-			get
-			{
-				if(_role == 0) _Hresult(_FuncId.role, _iacc.GetRole(_elem, out _role));
-				return _role;
-			}
-		}
-
-		/// <summary>
-		/// Gets standard or custom role, as string.
-		/// Uses <msdn>IAccessible.get_accRole</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, normally as string, for example in web pages in Firefox and Chrome.
-		/// For standard roles this function returns enum <see cref="AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
-		/// Returns "" if failed. Supports <see cref="Native.GetError"/>.
-		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
-		/// </remarks>
-		public string RoleString
-		{
-			get
-			{
-				_Hresult(_FuncId.role, _iacc.GetRoleString(_elem, out string s, ref _role));
-				return s ?? "";
-			}
-		}
-
-		/// <summary>
-		/// Gets object state (flags).
-		/// Uses <msdn>IAccessible.get_accState</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
-		/// Getting state often is slower than getting role, name or rectangle. But usually not much slower.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// if(a.State.Has_(AccSTATE.INVISIBLE)) Print("invisible");
-		/// if(a.IsInvisible) Print("invisible"); //the same as above
-		/// ]]></code>
-		/// </example>
-		public AccSTATE State
-		{
-			get
-			{
-				_Hresult(_FuncId.state, _iacc.get_accState(_elem, out var state));
-				return state;
-			}
-		}
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.BUSY. Can be used with DOCUMENT object of web browsers. </summary>
-		public bool IsBusy { get => State.Has_(AccSTATE.BUSY); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.CHECKED. </summary>
-		public bool IsChecked { get => State.Has_(AccSTATE.CHECKED); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.UNAVAILABLE. </summary>
-		public bool IsDisabled { get => State.Has_(AccSTATE.UNAVAILABLE); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.FOCUSED. </summary>
-		public bool IsFocused { get => State.Has_(AccSTATE.FOCUSED); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.INVISIBLE. </summary>
-		public bool IsInvisible { get => State.Has_(AccSTATE.INVISIBLE); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.OFFSCREEN. </summary>
-		public bool IsOffscreen { get => State.Has_(AccSTATE.OFFSCREEN); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.PROTECTED. </summary>
-		public bool IsPassword { get => State.Has_(AccSTATE.PROTECTED); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.PRESSED. </summary>
-		public bool IsPressed { get => State.Has_(AccSTATE.PRESSED); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.READONLY. </summary>
-		public bool IsReadonly { get => State.Has_(AccSTATE.READONLY); }
-
-		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.SELECTED. See also <see cref="IsFocused"/>. </summary>
-		public bool IsSelected { get => State.Has_(AccSTATE.SELECTED); }
-
-		/// <summary>
-		/// Gets or sets name.
-		/// Uses <msdn>IAccessible.get_accName</msdn> or <msdn>IAccessible.put_accName</msdn>.
-		/// </summary>
-		/// <exception cref="CatException">Failed to set name.</exception>
-		/// <remarks>
-		/// Object name usually is its read-only text (eg button text or link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
-		/// Most objects don't support 'set'.
-		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public string Name
-		{
-			get
-			{
-				_Hresult(_FuncId.name, _iacc.get_accName(_elem, out var s, _role));
-				return s;
-			}
-			set
-			{
-				CatException.ThrowIfFailed(_iacc.put_accName(_elem, value));
-			}
-		}
-
-		/// <summary>
-		/// Gets or sets value.
-		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
-		/// </summary>
-		/// <exception cref="CatException">Failed to set value.</exception>
-		/// <remarks>
-		/// Object value usually is its editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
-		/// Most objects don't support 'set'.
-		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public string Value
-		{
-			get
-			{
-				_Hresult(_FuncId.value, _iacc.get_accValue(_elem, out var s));
-				return s;
-			}
-			set
-			{
-				CatException.ThrowIfFailed(_iacc.put_accValue(_elem, value));
-			}
-		}
-
-		/// <summary>
-		/// Gets description.
-		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public string Description
-		{
-			get
-			{
-				_Hresult(_FuncId.description, _iacc.get_accDescription(_elem, out var s));
-				return s;
-			}
-		}
-
-		/// <summary>
-		/// Gets help text.
-		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public string Help
-		{
-			get
-			{
-				_Hresult(_FuncId.help_text, _iacc.get_accHelp(_elem, out var s));
-				return s;
-			}
-		}
-
-		/// <summary>
-		/// Gets keyboard shortcut.
-		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public string KeyboardShortcut
-		{
-			get
-			{
-				_Hresult(_FuncId.keyboard_shortcut, _iacc.get_accKeyboardShortcut(_elem, out var s));
-				return s;
-			}
-		}
-
-		/// <summary>
-		/// Gets default action.
-		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public string DefaultAction
-		{
-			get
-			{
-				_Hresult(_FuncId.default_action, _iacc.get_accDefaultAction(_elem, out var s));
-				return s;
-			}
-		}
-
-		/// <summary>
-		/// Queries the accessible object to perform its default action (see <see cref="DefaultAction"/>), eg 'click'.
-		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
-		/// </summary>
-		/// <exception cref="CatException">Failed.</exception>
-		public void DoDefaultAction()
-		{
-			CatException.ThrowIfFailed(_iacc.accDoDefaultAction(_elem));
-		}
-
-		/// <summary>
-		/// Gets another accessible object that is somehow related to this object (child, parent, next, etc). Allows to specify multiple relations.
-		/// </summary>
-		/// <param name="navig">
-		/// String consisting of one or more navigation direction strings separated by space, like "parent next child4 first".
-		/// Navigation string reference and more info: <see cref="AccNAVDIR"/>.
-		/// A string can end with a number, like "child4" or "child,4". It is the n parameter of <see cref="Navigate(AccNAVDIR, int, bool)"/>.
-		/// A custom direction can be specified like "#0x1009".
-		/// </param>
-		/// <param name="disposeThis">Dispose this Acc variable (release the COM object).</param>
-		/// <exception cref="ArgumentException">Invalid navig string.</exception>
-		public Acc Navigate(string navig, bool disposeThis = false)
-		{
-			if(Is0) throw new ObjectDisposedException(nameof(Acc));
-			var na = _Acc.NavdirN.Parse(navig); //ArgumentException
-			var a = new _Acc(_iacc, _elem);
-			if(disposeThis) _Clear(doNotRelease: true); else _iacc.AddRef();
-			if(0 != _Hresult(_FuncId.navigate, a.Navigate(na))) return null;
-			return new Acc(a.a, a.elem);
-		}
-
-		/// <summary>
-		/// Gets another accessible object that is somehow related to this object (child, parent, next, etc).
-		/// Returns null if not found. You can use <see cref="ExtensionMethods.OrThrow{T}"/> (see example).
-		/// </summary>
-		/// <param name="navDir">
-		/// Navigation direction (relation). For example <c>AccNAVDIR.PARENT</c>.
-		/// Custom directions also are supported. For example <c>(AccNAVDIR)0x1009</c>.
-		/// More info is in <see cref="AccNAVDIR"/> documentation.
-		/// </param>
-		/// <param name="n">
-		/// With navDir AccNAVDIR.CHILD it is 1-based child index. Negative index means from end, for example -1 is the last child. Cannot be 0.
-		/// With all other navDir - how many times to get object in the specified direction. For example PARENT 2 will get parent's parent. Cannot be less than 1.
-		/// </param>
-		/// <param name="disposeThis">Dispose this Acc variable (release the COM object).</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid n.</exception>
-		public Acc Navigate(AccNAVDIR navDir, int n = 1, bool disposeThis = false)
-		{
-			if(Is0) throw new ObjectDisposedException(nameof(Acc));
-			if(n == 0 || (n < 0 && navDir != AccNAVDIR.CHILD)) throw new ArgumentOutOfRangeException();
-			var a = new _Acc(_iacc, _elem);
-			if(disposeThis) _Clear(doNotRelease: true); else _iacc.AddRef();
-			if(0 != _Hresult(_FuncId.navigate, a.Navigate(navDir, n))) return null;
-			return new Acc(a.a, a.elem);
-		}
-
-		//rejected: public Acc Parent(bool disposeThis = false) (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
-		//rejected: public Acc Child(int childIndex, bool disposeThis = false) (call get_accChild). Many objects don't implement get_accChild. Can use Navigate, which calls AccessibleChildren. Rarely used, unlike Parent.
-
-		/// <summary>
 		/// Formats string from main properties of this accessible object.
 		/// </summary>
 		/// <remarks>
@@ -649,7 +558,12 @@ namespace Catkeys
 		/// </remarks>
 		public override string ToString()
 		{
-			if(Is0) return "<disposed>";
+			return _ToString();
+		}
+
+		string _ToString()
+		{
+			if(_Disposed) return "<disposed>";
 			StringBuilder s = null;
 			bool isWindow = false;
 			for(int i = 0; i < 8; i++) {
@@ -701,37 +615,9 @@ namespace Catkeys
 		/// <param name="level">Object level in the tree. This function prepends level*2 spaces to the string.</param>
 		public string ToString(int level)
 		{
-			var s = ToString();
+			var s = _ToString(); //note: not ToString because it causes overflow if ToString is of AFAcc
 			if(level > 0) s = s.PadLeft(s.Length + level * 2);
 			return s;
-		}
-
-		static class _Api
-		{
-			internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
-
-			internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
-
-			[DllImport("oleacc.dll", PreserveSig = true)]
-			internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, ref Guid riid, out IAccessible ppvObject);
-
-			[DllImport("oleacc.dll", PreserveSig = true)]
-			internal static extern int WindowFromAccessibleObject(IAccessible iacc, out Wnd phwnd);
-
-			[DllImport("oleacc.dll", PreserveSig = true)]
-			internal static extern int AccessibleObjectFromPoint(Point ptScreen, out IAccessible ppacc, out VARIANT pvarChild);
-
-			[DllImport("oleacc.dll", PreserveSig = true)]
-			internal static extern int AccessibleObjectFromEvent(Wnd hwnd, int dwId, int dwChildId, out IAccessible ppacc, out VARIANT pvarChild);
-
-			[DllImport("oleacc.dll", PreserveSig = true)]
-			internal static extern int AccessibleChildren(IAccessible paccContainer, int iChildStart, int cChildren, VARIANT* rgvarChildren, out int pcObtained);
-
-			//these are not useful. They work only with standard roles/states, and return localized string. We instead use non-localized string[] or Enum.ToString().
-			//[DllImport("oleacc.dll", EntryPoint = "GetRoleTextW")]
-			//internal static extern int GetRoleText(int lRole, [Out] char[] lpszRole, int cchRoleMax);
-			//[DllImport("oleacc.dll", EntryPoint = "GetStateTextW")]
-			//internal static extern int GetStateText(int lStateBit, [Out] char[] lpszState, int cchState);
 		}
 	}
 }

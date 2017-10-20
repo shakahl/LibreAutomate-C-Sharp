@@ -19,6 +19,8 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
+using UIA = UIAutomationClient;
+
 using Catkeys;
 using Catkeys.Types;
 using static Catkeys.NoClass;
@@ -36,7 +38,7 @@ namespace Catkeys
 
 			public _BrowserInterface(Acc a) : this()
 			{
-				//FUTURE: cache ie/ff in AFAcc.
+				//Acc FUTURE: cache ie/ff in AFAcc.
 				//	That is why we have _dispose. If our ie/ff are from the AFAcc, _dispose would be false, because the AFAcc will dispose them.
 
 				var iacc = a._iacc;
@@ -167,7 +169,7 @@ namespace Catkeys
 						}
 						name = Util.StringCache.LibAdd(name, 2, name.Length - 2);
 						if(!k.ie.Is0) k.ie.GetAttribute(name, 2, out s); else k.ff.GetAttribute(name, out s);
-						//FUTURE: with isimpledomnode can get multiple names in single call. Probably faster.
+						//Acc FUTURE: with isimpledomnode can get multiple names in single call. Probably faster.
 					} else {
 						switch(name) {
 						case "name": s = Name; break;
@@ -202,7 +204,8 @@ namespace Catkeys
 		/// <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
 		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="Native.GetError"/>.
-		/// Works with these web browsers: Firefox (must be non-portable), Chrome (if Firefox is installed), Internet Explorer (can be slow), and browsers based on their code. With Chrome slow if there are many descendant HTML elements.
+		/// Works with these web browsers: Firefox (must be non-portable), Chrome (if is installed Firefox of same 32/64 bit), Internet Explorer (can be slow), and browsers based on their code. With Chrome slow if there are many descendant HTML elements. With Firefox and Chrome, this process must be of same 32/64 bit.
+		/// If this is the root of web page (role DOCUMENT or PANE), get web page body HTML.
 		/// </remarks>
 		public string Html(bool outer)
 		{
@@ -216,6 +219,35 @@ namespace Catkeys
 			return s ?? "";
 		}
 
+		/// <summary>
+		/// Scrolls this accessible object into view.
+		/// </summary>
+		/// <exception cref="CatException">Failed to scroll, or the object does not support scrolling (then error "No such interface supported").</exception>
+		/// <remarks>
+		/// Supports web page elements in Internet Explorer, Firefox, Chrome and web browsers/controls based on their code.
+		/// Also supports objects in some other windows, but in most window doesn't.
+		/// </remarks>
+		public void ScrollTo()
+		{
+			int hr = Api.E_NOINTERFACE;
+			if(ISimpleDOMNode.From(_iacc, out var ff)) {
+				hr = ff.scrollTo(0);
+				ff.Dispose();
+			} else {
+				var e= ToUIElement();
+				if(e != null) {
+					if(e.GetCurrentPattern(UIA_PatternIds.UIA_ScrollItemPatternId) is UIA.IUIAutomationScrollItemPattern p) {
+						p.ScrollIntoView();
+						hr = 0;
+					}
+				}
+			}
+			CatException.ThrowIfHresultNot0(hr, "*scroll");
+
+			//tested: from the 3 browsers, only IE supports UI Automation scrolling (IUIAutomationScrollItemPattern).
+		}
+
+		//IHTMLElement
 
 		internal struct IHTMLElement :IDisposable
 		{
@@ -277,7 +309,7 @@ namespace Catkeys
 			{
 				get
 				{
-					if(_iptr == default) throw new ObjectDisposedException(nameof(Acc));
+					if(_iptr == default) throw new ObjectDisposedException(nameof(IHTMLElement));
 					return s_vtbls.GetOrAdd(*(IntPtr*)_iptr, vtbl => new _Vtbl(vtbl));
 				}
 			}
@@ -296,21 +328,19 @@ namespace Catkeys
 					Util.Marshal_.GetDelegate(a[62], out get_outerHTML);
 				}
 
-				internal readonly del.BSTR_int_out_VARIANT getAttribute;
-				internal readonly del.out_BSTR get_className;
-				internal readonly del.out_string get_innerHTML;
-				internal readonly del.out_string get_outerHTML;
+				internal readonly getAttributeT getAttribute;
+				internal readonly LibDelegateTypes.IntPtr_out_BSTR get_className;
+				internal readonly LibDelegateTypes.IntPtr_out_string get_innerHTML;
+				internal readonly LibDelegateTypes.IntPtr_out_string get_outerHTML;
+
+				internal delegate int getAttributeT(IntPtr obj, [MarshalAs(UnmanagedType.BStr)] string name, int flags, out VARIANT value);
 			}
 		}
 
-		class del
-		{
-			internal delegate int BSTR_int_out_VARIANT(IntPtr obj, [MarshalAs(UnmanagedType.BStr)] string name, int flags, out VARIANT value);
-			internal delegate int out_BSTR(IntPtr obj, out BSTR value);
-			internal delegate int out_string(IntPtr obj, [MarshalAs(UnmanagedType.BStr)] out string value);
-
-		}
-
+		/// <summary>
+		/// We use this to get Firefox/Chrome HTML element attributes, HTML etc.
+		/// rejected: find ISimpleDOMNode and convert to Acc, like QM2 FFNode/FindFF. Usually it is not significantly faster, sometimes much slower. For speed use UI Automation instead.
+		/// </summary>
 		internal struct ISimpleDOMNode :IDisposable
 		{
 			IntPtr _iptr;
@@ -318,7 +348,6 @@ namespace Catkeys
 			public static bool From(IAccessible iacc, out ISimpleDOMNode x)
 			{
 				return Util.Marshal_.QueryService(iacc, out x, ref IID_ISimpleDOMNodeService, ref IID_ISimpleDOMNode);
-				//return Util.Marshal_.QueryService(iacc, out x, ref IID_ISimpleDOMNode); //works too, and always worked in QM2, but better use the service GUID as documented
 			}
 
 			internal static Guid IID_ISimpleDOMNode = new Guid("1814ceeb-49e2-407f-af99-fa755a7d2607");
@@ -464,17 +493,33 @@ namespace Catkeys
 						Debug_.PrintIf(x.nodeType != NodeType.Text, "--- not Text: " + x.nodeType);
 						s = x.text;
 					} else {
-						Debug_.PrintIf(x.nodeType != NodeType.Element && x.nodeType != NodeType.Document && x.tag != "br", "--- not Element: " + x.nodeType);
+						bool isDoc = x.nodeType == NodeType.Document;
+						if(isDoc) x.tag = "body"; //"#document"
+						Debug_.PrintIf(x.nodeType != NodeType.Element && !isDoc && x.tag != "br", "--- not Element: " + x.nodeType);
 						//ISimpleDOMNode does not have a method to get outer HTML. Compose it from tag, attributes and inner HTML.
 						var b = Util.LibStringBuilderCache.Acquire();
 						_HtmlAppendHead(b, x.tag);
 						if(x.childCount > 0) {
 							int hr2 = _F.get_innerHTML(_iptr, out var inner);
-							if(hr2 == Api.E_NOTIMPL) { //Chrome does not implement this method. Workaround: compose from descendants.
+							if(hr2 == 0) b.Append(inner);
+							else if(hr2 == Api.E_NOTIMPL) { //Chrome does not implement this method. Workaround: compose from descendants.
 								_ChromeComposeInnerHTML(b, x.childCount);
-								hr2 = 0;
+								hr = 0;
+							} else if(hr2 != 0 && isDoc) { //Firefox does not give HTML for document. Get it from its descendant <BODY>.
+								hr = hr2;
+								var childHTML = _FindChild(x.childCount, NodeType.Element, "HTML", out var cc2);
+								if(!childHTML.Is0) {
+									//get BODY, not whole HTML. Like IE and Chrome.
+									var childBODY = childHTML._FindChild(cc2, NodeType.Element, "BODY", out _);
+									if(!childBODY.Is0) {
+										hr = childBODY.GetOuterHTML(out s);
+										childBODY.Dispose();
+									}
+									childHTML.Dispose();
+								}
+								Util.LibStringBuilderCache.Release(b);
+								return hr;
 							}
-							if(hr2 == 0 && !Empty(inner)) b.Append(inner);
 						}
 						_HtmlAppendTail(b, x.tag);
 						s = b.ToStringCached_();
@@ -483,11 +528,59 @@ namespace Catkeys
 				return hr;
 			}
 
-			public int GetTag(out string s)
+			ISimpleDOMNode _FindChild(int childCount, NodeType nodeType, string tag, out int childChildCount)
 			{
-				int hr = GetNodeInfo(out var x, needText: false);
-				s = hr == 0 ? x.tag : null;
-				return hr;
+				//search in reverse order, because usually what we need is the last child.
+				//	Document often has 2 children: doctype and HTML.
+				//	HTML usually has 2 children: HEAD and BODY.
+				for(int i = childCount; i > 0; i--) {
+					if(0 != _F.get_childAt(_iptr, i - 1, out var child)) continue;
+					if(0 == child.GetNodeInfo(out var info, false)
+						&& info.nodeType == nodeType
+						&& info.tag.Equals_(tag, true)
+						) {
+						childChildCount = info.childCount;
+						return child;
+					}
+					child.Dispose();
+				}
+				childChildCount = 0;
+				return default;
+			}
+
+			//currently not used
+			//public int GetTag(out string s)
+			//{
+			//	int hr = GetNodeInfo(out var x, needText: false);
+			//	s = hr == 0 ? x.tag : null;
+			//	return hr;
+			//}
+
+			//currently not used
+			//public int parentNode(out ISimpleDOMNode parent)
+			//{
+			//	return _F.get_parentNode(_iptr, out parent);
+			//}
+
+			//currently not used
+			///// <summary>
+			///// Gets root node.
+			///// It is root of web page, frame, UI, or an UI part, depending on where this node is.
+			///// Returns this if this is root (then disposeThis is ignored).
+			///// </summary>
+			//public ISimpleDOMNode GetRoot(bool disposeThis)
+			//{
+			//	ISimpleDOMNode r = this;
+			//	for(; 0 == r.parentNode(out var temp) && !temp.Is0; disposeThis = true) {
+			//		if(disposeThis) r.Dispose();
+			//		r._iptr = temp._iptr;
+			//	}
+			//	return r;
+			//}
+
+			public int scrollTo(byte placeTopLeft)
+			{
+				return _F.scrollTo(_iptr, placeTopLeft);
 			}
 
 			static ConcurrentDictionary<LPARAM, _Vtbl> s_vtbls = new ConcurrentDictionary<LPARAM, _Vtbl>();
@@ -496,7 +589,7 @@ namespace Catkeys
 			{
 				get
 				{
-					if(_iptr == default) throw new ObjectDisposedException(nameof(Acc));
+					if(_iptr == default) throw new ObjectDisposedException(nameof(ISimpleDOMNode));
 					return s_vtbls.GetOrAdd(*(IntPtr*)_iptr, vtbl => new _Vtbl(vtbl));
 				}
 			}
@@ -513,6 +606,8 @@ namespace Catkeys
 					Util.Marshal_.GetDelegate(a[4], out get_attributes);
 					Util.Marshal_.GetDelegate(a[5], out get_attribute);
 					//Util.Marshal_.GetDelegate(a[5], out get_attributesForNames);
+					Util.Marshal_.GetDelegate(a[8], out scrollTo);
+					//Util.Marshal_.GetDelegate(a[9], out get_parentNode); //currently not used
 					Util.Marshal_.GetDelegate(a[14], out get_childAt);
 					Util.Marshal_.GetDelegate(a[15], out get_innerHTML);
 				}
@@ -521,14 +616,18 @@ namespace Catkeys
 				internal readonly get_attributesT get_attributes;
 				//internal readonly get_attributesForNamesT get_attributesForNames;
 				internal readonly get_attributeT get_attribute;
+				//internal readonly get_parentNodeT get_parentNode;
+				internal readonly scrollToT scrollTo;
 				internal readonly get_childAtT get_childAt;
-				internal readonly del.out_string get_innerHTML;
+				internal readonly LibDelegateTypes.IntPtr_out_string get_innerHTML;
 
 				//internal delegate int get_attributesT(IntPtr obj, int num, BSTR* names, short* nameSpaceID, BSTR* values, out ushort numHave);
 				internal delegate int get_nodeInfoT(IntPtr obj, out BSTR tag, out short nameSpaceID, out BSTR text, out int nChildren, out int uid, out NodeType nodeType); //no optionals
 				internal delegate int get_attributesT(IntPtr obj, int num, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.BStr), Out] string[] names, [Out] short[] nameSpaceID, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.BStr), Out] string[] values, out int numHave);
 				internal delegate int get_attributeT(IntPtr obj, int _1, [MarshalAs(UnmanagedType.BStr), In] ref string name, out short nameSpaceID, out BSTR value);
 				//internal delegate int get_attributesForNamesT(IntPtr obj, int num, BSTR* names, short* nameSpaceID, BSTR* values);
+				internal delegate int scrollToT(IntPtr obj, byte placeTopLeft);
+				//internal delegate int get_parentNodeT(IntPtr obj, out ISimpleDOMNode parent); //currently not used
 				internal delegate int get_childAtT(IntPtr obj, int childIndex, out ISimpleDOMNode child);
 			}
 		}
@@ -565,7 +664,7 @@ namespace Catkeys
 			{
 				get
 				{
-					if(_iptr == default) throw new ObjectDisposedException(nameof(Acc));
+					if(_iptr == default) throw new ObjectDisposedException(nameof(ISimpleDOMText));
 					return s_vtbls.GetOrAdd(*(IntPtr*)_iptr, vtbl => new _Vtbl(vtbl));
 				}
 			}
@@ -581,10 +680,128 @@ namespace Catkeys
 					Util.Marshal_.GetDelegate(a[3], out get_domText);
 				}
 
-				internal readonly del.out_BSTR get_domText;
+				internal readonly LibDelegateTypes.IntPtr_out_BSTR get_domText;
 			}
 
 			static Guid IID_ISimpleDOMText = new Guid("4e747be5-2052-4265-8af0-8ecad7aad1c0");
 		}
+
+		//ISimpleDOMDocument
+		//rejected. Quite much work. Maybe in the future.
+		//	Would need it only to get web page URL and title.
+		//		Can get it from DOCUMENT/PANE Acc. In all 3 browsers, Name is title, Value is URL.
+		//		The difference is that this gets URL/title of direct parent document, which can be iframe.
+		//	Now implemented only Firefox/Chrome URL.
+		//		internal struct ISimpleDOMDocument :IDisposable
+		//		{
+		//			IntPtr _iptr;
+
+		//			public static bool FromNode(ISimpleDOMNode node, bool disposeNode, out ISimpleDOMDocument text)
+		//			{
+		//				return Util.Marshal_.QueryInterface(node.GetRoot(disposeNode), out text, ref IID_ISimpleDOMDocument);
+		//			}
+
+		//			public void Dispose()
+		//			{
+		//				if(_iptr != default) {
+		//					Marshal.Release(_iptr);
+		//					_iptr = default;
+		//				}
+		//			}
+
+		//			public bool Is0 { get => _iptr == default; }
+
+		//			public int GetURL(out string s)
+		//			{
+		//				int hr = _F.get_URL(_iptr, out var b);
+		//				s = hr == 0 ? b.ToStringAndDispose() : null;
+		//				return hr;
+		//			}
+
+		//			public int GetTitle(out string s)
+		//			{
+		//				int hr = _F.get_title(_iptr, out var b);
+		//				s = hr == 0 ? b.ToStringAndDispose() : null;
+		//				return hr;
+		//			}
+
+		//			static ConcurrentDictionary<LPARAM, _Vtbl> s_vtbls = new ConcurrentDictionary<LPARAM, _Vtbl>();
+
+		//			_Vtbl _F
+		//			{
+		//				get
+		//				{
+		//					if(_iptr == default) throw new ObjectDisposedException(nameof(ISimpleDOMDocument));
+		//					return s_vtbls.GetOrAdd(*(IntPtr*)_iptr, vtbl => new _Vtbl(vtbl));
+		//				}
+		//			}
+
+		//			class _Vtbl
+		//			{
+		//				public _Vtbl(long vtbl)
+		//				{
+		//#if DEBUG
+		//					int n = s_vtbls.Count; if(n > 0) Debug_.Print("many VTBLs: " + (n + 1));
+		//#endif
+		//					var a = (IntPtr*)vtbl;
+		//					Util.Marshal_.GetDelegate(a[3], out get_URL);
+		//					Util.Marshal_.GetDelegate(a[4], out get_title);
+		//				}
+
+		//				internal readonly del.out_BSTR get_URL;
+		//				internal readonly del.out_BSTR get_title;
+		//			}
+
+		//			static Guid IID_ISimpleDOMDocument = new Guid("0D68D6D0-D93D-4d08-A30D-F00DD1F45B24");
+		//		}
+
+		//		public WebPageProperties WebPage
+		//		{
+		//			get
+		//			{
+		//				return WebPageProperties.FromAcc(this);
+		//			}
+		//		}
+
+		//		public class WebPageProperties :IDisposable
+		//		{
+		//			ISimpleDOMDocument _isdd;
+
+		//			internal static WebPageProperties FromAcc(Acc a)
+		//			{
+		//				Native.ClearError();
+		//				int hr = Api.E_FAIL;
+		//				using(var k = new _BrowserInterface(a)) {
+		//					if(!k.ie.Is0) {
+
+		//					} else if(!k.ff.Is0) {
+		//						if(ISimpleDOMDocument.FromNode(k.ff, false, out var doc))
+		//							return new WebPageProperties() { _isdd = doc };
+		//					} else hr = Api.E_NOINTERFACE;
+		//				}
+		//				a._Hresult(_FuncId.html, hr);
+		//				return null;
+		//			}
+
+		//			///
+		//			public void Dispose()
+		//			{
+		//				_isdd.Dispose();
+		//			}
+
+		//			///
+		//			~WebPageProperties() => Dispose();
+
+
+		//			public string URL
+		//			{
+		//				get
+		//				{
+		//					string s = null;
+		//					if(!_isdd.Is0) _isdd.GetURL(out s);
+		//					return s ?? "";
+		//				}
+		//			}
+		//		}
 	}
 }

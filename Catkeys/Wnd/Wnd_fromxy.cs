@@ -42,15 +42,21 @@ namespace Catkeys
 		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <b>RealChildWindowFromPoint</b>. Also does not skip disabled controls. All this is not true with flag Raw.
 		/// This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
-		/// x and y can be Coord.Reverse etc; cannot be null
+		/// x and y can be Coord.Reverse etc; cannot be null.
 		/// </remarks>
 		public static Wnd FromXY(Coord x, Coord y, WXYFlags flags = 0, bool workArea = false, object screen = null)
 		{
-			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
-			return _FromXY(Coord.Normalize(x, y, workArea, screen), flags);
+			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
+			return FromXY(Coord.Normalize(x, y, workArea, screen), flags);
 		}
 
-		static Wnd _FromXY(Point p, WXYFlags flags)
+		/// <summary>
+		/// Gets visible top-level window or control from point.
+		/// More info: <see cref="FromXY(Coord, Coord, WXYFlags, bool, object)"/>.
+		/// </summary>
+		/// <param name="p">X Y in screen coordinates.</param>
+		/// <param name="flags"></param>
+		public static Wnd FromXY(Point p, WXYFlags flags = 0)
 		{
 			bool needW = 0 != (flags & WXYFlags.NeedWindow);
 			bool needC = 0 != (flags & WXYFlags.NeedControl);
@@ -97,11 +103,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets visible top-level window or control from mouse cursor position.
-		/// Calls <see cref="FromXY"/>.
+		/// More info: <see cref="FromXY(Coord, Coord, WXYFlags, bool, object)"/>.
 		/// </summary>
 		public static Wnd FromMouse(WXYFlags flags = 0)
 		{
-			return _FromXY(Mouse.XY, flags);
+			return FromXY(Mouse.XY, flags);
 		}
 
 		#endregion
@@ -122,7 +128,7 @@ namespace Catkeys
 		/// </remarks>
 		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
 		{
-			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
+			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
 			ThrowIfInvalid();
 			Point p = screenXY ? Coord.Normalize(x, y) : Coord.NormalizeInWindow(x, y, this);
 			return _ChildFromXY(p, directChild, screenXY);
@@ -200,7 +206,7 @@ namespace Catkeys
 namespace Catkeys.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Wnd.FromXY"/> and <see cref="Wnd.FromMouse"/>.
+	/// Flags for <see cref="Wnd.FromXY(Coord, Coord, WXYFlags, bool, object)"/> and <see cref="Wnd.FromMouse"/>.
 	/// </summary>
 	[Flags]
 	public enum WXYFlags

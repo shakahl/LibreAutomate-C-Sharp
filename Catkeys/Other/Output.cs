@@ -275,7 +275,6 @@ namespace Catkeys
 
 		/// <summary>
 		/// Let Console.WriteX methods in non-console process write to the same destination as Output.Write etc.
-		/// If value is null - restores default behavior.
 		/// </summary>
 		/// <remarks>
 		/// Console.Write will write line, like Console.WriteLine.
@@ -300,7 +299,6 @@ namespace Catkeys
 
 		/// <summary>
 		/// Let Debug.WriteX and Trace.WriteX methods write to the same destination as Output.Write etc.
-		/// If value is null - restores default behavior.
 		/// </summary>
 		/// <remarks>
 		/// Tip: To write to the output window even in console process, set <c>Output.IgnoreConsole=true;</c> before calling this method first time.

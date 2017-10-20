@@ -310,7 +310,7 @@ namespace Catkeys
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 
 				Wnd w = (Wnd)m.HWnd;
-				uint counter = w.PropGet("PrintMsg"); w.PropSet("PrintMsg", ++counter);
+				uint counter = w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
 				PrintList(counter, m);
 			}
 

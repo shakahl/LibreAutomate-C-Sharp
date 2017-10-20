@@ -189,21 +189,6 @@ namespace Catkeys
 
 		#region MD5 fast
 
-		struct MD5_CTX
-		{
-			long _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11;
-			public long r1, r2;
-			//public fixed byte r[16]; //same speed, maybe slightly slower
-			//[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-			//public byte[] r; //slow like .NET API
-		}
-		[DllImport("ntdll.dll")]
-		static extern void MD5Init(out MD5_CTX context);
-		[DllImport("ntdll.dll")]
-		static extern void MD5Update(ref MD5_CTX context, byte[] data, int dataLen);
-		[DllImport("ntdll.dll")]
-		static extern void MD5Final(ref MD5_CTX context);
-
 		/// <summary>
 		/// Computes MD5 hash of binary data.
 		/// The same as Hash(..., "MD5") but much faster.
@@ -211,9 +196,9 @@ namespace Catkeys
 		public static byte[] HashMD5(byte[] a)
 		{
 			try {
-				MD5Init(out MD5_CTX x);
-				MD5Update(ref x, a, a.Length);
-				MD5Final(ref x);
+				Api.MD5Init(out Api.MD5_CTX x);
+				Api.MD5Update(ref x, a, a.Length);
+				Api.MD5Final(ref x);
 
 				var r = new byte[16];
 				Marshal.Copy((IntPtr)(&x.r1), r, 0, 16);

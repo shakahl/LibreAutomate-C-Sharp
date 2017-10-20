@@ -529,8 +529,7 @@ namespace Catkeys.Util
 		/// </summary>
 		public const int MAX_BUILDER_SIZE = 2000;
 
-		[ThreadStatic]
-		private static StringBuilder t_cachedInstance;
+		[ThreadStatic] private static StringBuilder t_cachedInstance;
 
 		/// <summary>
 		/// Gets a StringBuilder of the specified capacity.

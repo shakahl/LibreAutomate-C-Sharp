@@ -62,7 +62,7 @@ namespace Catkeys
 				_ipf = _isl as Api.IPersistFile;
 				_lnkPath = lnkPath;
 				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || Files.ExistsAsFile(_lnkPath))) {
-					CatException.ThrowIfFailed(_ipf.Load(_lnkPath, mode), "*open");
+					CatException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 					_isOpen = true;
 				}
 			}
@@ -114,7 +114,7 @@ namespace Catkeys
 				if(_changedHotkey && !_isOpen && Files.ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
 
 				Files.CreateDirectoryFor(_lnkPath);
-				CatException.ThrowIfFailed(_ipf.Save(_lnkPath, true), "*save");
+				CatException.ThrowIfHresultNot0(_ipf.Save(_lnkPath, true), "*save");
 			}
 
 			/// <summary>
@@ -126,7 +126,7 @@ namespace Catkeys
 			public string TargetPath
 			{
 				get => _CorrectPath(_GetString(_WhatString.Path, 300), true);
-				set { CatException.ThrowIfFailed(_isl.SetPath(value)); }
+				set { CatException.ThrowIfHresultNot0(_isl.SetPath(value)); }
 			}
 
 			/// <summary>
@@ -148,7 +148,7 @@ namespace Catkeys
 			public Shell.Pidl TargetPidl
 			{
 				get => (0 == _isl.GetIDList(out var pidl)) ? new Shell.Pidl(pidl) : null;
-				set { CatException.ThrowIfFailed(_isl.SetIDList(value)); }
+				set { CatException.ThrowIfHresultNot0(_isl.SetIDList(value)); }
 			}
 
 			/// <summary>
@@ -186,7 +186,7 @@ namespace Catkeys
 				set
 				{
 					var pidl = Shell.Pidl.LibFromString(value, true);
-					try { CatException.ThrowIfFailed(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
+					try { CatException.ThrowIfHresultNot0(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 			}
 
@@ -210,7 +210,7 @@ namespace Catkeys
 			/// <exception cref="CatException"/>
 			public void SetIconLocation(string path, int iconIndex = 0)
 			{
-				CatException.ThrowIfFailed(_isl.SetIconLocation(path, iconIndex));
+				CatException.ThrowIfHresultNot0(_isl.SetIconLocation(path, iconIndex));
 			}
 
 			/// <summary>
@@ -220,7 +220,7 @@ namespace Catkeys
 			public string WorkingDirectory
 			{
 				get => _CorrectPath(_GetString(_WhatString.WorkingDirectory, 300));
-				set { CatException.ThrowIfFailed(_isl.SetWorkingDirectory(value)); }
+				set { CatException.ThrowIfHresultNot0(_isl.SetWorkingDirectory(value)); }
 			}
 
 			/// <summary>
@@ -230,7 +230,7 @@ namespace Catkeys
 			public string Arguments
 			{
 				get => _GetString(_WhatString.Arguments, 1024);
-				set { CatException.ThrowIfFailed(_isl.SetArguments(value)); }
+				set { CatException.ThrowIfHresultNot0(_isl.SetArguments(value)); }
 			}
 
 			/// <summary>
@@ -240,7 +240,7 @@ namespace Catkeys
 			public string Description
 			{
 				get => _GetString(_WhatString.Description, 1024);
-				set { CatException.ThrowIfFailed(_isl.SetDescription(value)); }
+				set { CatException.ThrowIfHresultNot0(_isl.SetDescription(value)); }
 			}
 
 			/// <summary>
@@ -259,7 +259,7 @@ namespace Catkeys
 				set
 				{
 					uint k = (uint)value;
-					CatException.ThrowIfFailed(_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8))));
+					CatException.ThrowIfHresultNot0(_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8))));
 					_changedHotkey = true;
 				}
 			}
@@ -273,7 +273,7 @@ namespace Catkeys
 			public int ShowState
 			{
 				get => (0 == _isl.GetShowCmd(out var R)) ? R : Api.SW_SHOWNORMAL;
-				set { CatException.ThrowIfFailed(_isl.SetShowCmd(value)); }
+				set { CatException.ThrowIfHresultNot0(_isl.SetShowCmd(value)); }
 			}
 
 			//Not implemented wrappers for these IShellLink methods:

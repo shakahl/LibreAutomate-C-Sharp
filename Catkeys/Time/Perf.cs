@@ -259,12 +259,12 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// Repeatedly executes codes (zero or more lambda functions) timeMS milliseconds.
+			/// Repeatedly executes codes (zero or more lambda functions) for the specified number of milliseconds.
 			/// </summary>
-			public void SpinCPU(int timeMS, params Action[] codes)
+			public void SpinCPU(int milliseconds, params Action[] codes)
 			{
 				int n = 0;
-				for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMS * 1000; n++) {
+				for(long t0 = Time.Microseconds; Time.Microseconds - t0 < milliseconds * 1000; n++) {
 					for(int i = 0; i < codes.Length; i++) codes[i]();
 				}
 				//Print(n);
@@ -355,9 +355,9 @@ namespace Catkeys
 		public static void ExecuteMulti(int nTimesAll, int nTimesEach, params Action[] codes) { _SM->ExecuteMulti(nTimesAll, nTimesEach, codes); }
 
 		/// <summary>
-		/// Repeatedly executes codes (zero or more lambda functions) timeMS milliseconds (recommended 100 or more).
+		/// Repeatedly executes codes (zero or more lambda functions) for the specified number of milliseconds (recommended 100 or more).
 		/// Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
 		/// </summary>
-		public static void SpinCPU(int timeMS, params Action[] codes) { _SM->SpinCPU(timeMS, codes); }
+		public static void SpinCPU(int milliseconds, params Action[] codes) { _SM->SpinCPU(milliseconds, codes); }
 	}
 }

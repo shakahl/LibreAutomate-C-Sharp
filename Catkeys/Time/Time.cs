@@ -76,56 +76,56 @@ namespace Catkeys
 		/// Suspends this thread for the specified amount of time.
 		/// The same as <see cref="Sleep"/>, but uses seconds, not milliseconds.
 		/// </summary>
-		/// <param name="timeS">
+		/// <param name="seconds">
 		/// Time to wait, seconds.
 		/// The smallest value is 0.001 (1 ms).
 		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">timeS is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-		/// If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
+		/// If the computer goes to sleep or hibernate during that time, the real time is seconds + the sleep/hibernate time.
 		/// </remarks>
-		public static void Wait(double timeS)
+		public static void Wait(double seconds)
 		{
-			timeS *= 1000.0;
-			if(timeS > int.MaxValue || timeS < 0) throw new ArgumentOutOfRangeException();
-			Sleep((int)timeS);
+			seconds *= 1000.0;
+			if(seconds > int.MaxValue || seconds < 0) throw new ArgumentOutOfRangeException();
+			Sleep((int)seconds);
 		}
 
 		/// <summary>
 		/// Suspends this thread for the specified amount of time.
 		/// The same as <see cref="Wait"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
 		/// </summary>
-		/// <param name="timeMS">
+		/// <param name="milliseconds">
 		/// Time to wait, milliseconds.
 		/// If 0, can wait briefly if another busy thread runs on the same logical CPU, which happens not often on modern multi-core CPU.
 		/// Also can be <see cref="Timeout.Infinite"/>.
 		/// </param>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
-		/// Does not process events and messages, therefore should not be used with big timeMS in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-		/// If the computer goes to sleep or hibernate during that time, the real time is timeS + the sleep/hibernate time.
+		/// Does not process events and messages, therefore should not be used with big milliseconds in threads with windows, timers or COM events. Supports asynchronous procedure calls.
+		/// If the computer goes to sleep or hibernate during that time, the real time is milliseconds + the sleep/hibernate time.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
-		public static void Sleep(int timeMS)
+		/// <exception cref="ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
+		public static void Sleep(int milliseconds)
 		{
-			LibSleepPrecision.LibTempSet1(timeMS);
-			if(timeMS < 2000) {
-				Thread.Sleep(timeMS);
+			LibSleepPrecision.LibTempSet1(milliseconds);
+			if(milliseconds < 2000) {
+				Thread.Sleep(milliseconds);
 			} else { //fix Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
 				g1:
 				long t = MillisecondsWithoutComputerSleepTime;
-				Thread.Sleep(timeMS);
-				t = timeMS - (MillisecondsWithoutComputerSleepTime - t);
-				if(t >= 500) { timeMS = (int)t; goto g1; }
+				Thread.Sleep(milliseconds);
+				t = milliseconds - (MillisecondsWithoutComputerSleepTime - t);
+				if(t >= 500) { milliseconds = (int)t; goto g1; }
 			}
 		}
 
 		/// <summary>
 		/// Partially suspends this thread for the specified amount of time, during which processes events and messages.
 		/// </summary>
-		/// <param name="timeMS">
+		/// <param name="milliseconds">
 		/// The number of milliseconds to wait.
 		/// The smallest value is 1.
 		/// Also can be <see cref="Timeout.Infinite"/>.
@@ -136,19 +136,19 @@ namespace Catkeys
 		/// In threads without windows and timers usually don't need to process posted messages, but in some cases need to process sent messages, some events, hooks etc. Then you can instead use <see cref="Thread.Join(int)"/>, like <c>Thread.CurrentThread.Join(1000);</c>.
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">timeMS is negative and not Timeout.Infinite.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
 		/// <exception cref="Exception">Any exceptions thrown by functions that are executed while waiting (event handlers etc).</exception>
 		/// <seealso cref="Util.MessageLoop"/>
-		public static void SleepDoEvents(int timeMS)
+		public static void SleepDoEvents(int milliseconds)
 		{
-			if(timeMS == 0) { DoEvents(); return; }
-			if(timeMS < 0 && timeMS != Timeout.Infinite) throw new ArgumentOutOfRangeException();
-			LibSleepPrecision.LibTempSet1(timeMS);
+			if(milliseconds == 0) { DoEvents(); return; }
+			if(milliseconds < 0 && milliseconds != Timeout.Infinite) throw new ArgumentOutOfRangeException();
+			LibSleepPrecision.LibTempSet1(milliseconds);
 			for(;;) {
 				long t = 0;
 				int timeSlice = 100; //we call API in loop with small timeout to make it respond to Thread.Abort
-				if(timeMS > 0) {
-					if(timeMS < timeSlice) timeSlice = timeMS;
+				if(milliseconds > 0) {
+					if(milliseconds < timeSlice) timeSlice = milliseconds;
 					t = MillisecondsWithoutComputerSleepTime;
 				}
 
@@ -157,9 +157,9 @@ namespace Catkeys
 				if(k == Api.WAIT_FAILED) throw new Win32Exception(); //unlikely, because not using handles
 				if(k == 0) DoEvents();
 
-				if(timeMS > 0) {
-					timeMS -= (int)(MillisecondsWithoutComputerSleepTime - t);
-					if(timeMS <= 0) break;
+				if(milliseconds > 0) {
+					milliseconds -= (int)(MillisecondsWithoutComputerSleepTime - t);
+					if(milliseconds <= 0) break;
 				}
 			}
 		}
@@ -193,27 +193,27 @@ namespace Catkeys
 		/// Calls <see cref="Wait"/>.
 		/// This extension method allows to replace code like <c>Wait(5);</c> with <c>5.s();</c>.
 		/// </summary>
-		public static void s(this int timeS)
+		public static void s(this int seconds)
 		{
-			Wait(timeS);
+			Wait(seconds);
 		}
 
 		/// <summary>
 		/// Calls <see cref="Wait"/>.
 		/// This extension method allows to replace code like <c>Wait(2.5);</c> with <c>2.5.s();</c>.
 		/// </summary>
-		public static void s(this double timeS)
+		public static void s(this double seconds)
 		{
-			Wait(timeS);
+			Wait(seconds);
 		}
 
 		/// <summary>
 		/// Calls <see cref="Sleep"/>.
 		/// This extension method allows to replace code like <c>Time.Sleep(50);</c> with <c>50.ms();</c>.
 		/// </summary>
-		public static void ms(this int timeMS)
+		public static void ms(this int milliseconds)
 		{
-			Sleep(timeMS);
+			Sleep(milliseconds);
 		}
 
 #if false
@@ -397,7 +397,7 @@ namespace Catkeys
 			/// <summary>
 			/// Calls TempSetMax if sleepTimeMS is 1-99.
 			/// </summary>
-			/// <param name="sleepTimeMS">timeMS of the caller 'sleep' function.</param>
+			/// <param name="sleepTimeMS">milliseconds of the caller 'sleep' function.</param>
 			internal static void LibTempSet1(int sleepTimeMS)
 			{
 				if(sleepTimeMS < 100 && sleepTimeMS > 0) TempSet1(1111);
@@ -524,16 +524,16 @@ namespace Catkeys
 		/// Sets new one-time timer.
 		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
-		/// <param name="timeMS">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
+		/// <param name="milliseconds">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
 		/// <param name="callback">A callback function (delegate), for example lambda.</param>
 		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
 		/// <remarks>
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static Timer_ After(int timeMS, Action<Timer_> callback, object tag = null)
+		public static Timer_ After(int milliseconds, Action<Timer_> callback, object tag = null)
 		{
-			return _Set(timeMS, true, callback, tag);
+			return _Set(milliseconds, true, callback, tag);
 		}
 
 		/// <summary>

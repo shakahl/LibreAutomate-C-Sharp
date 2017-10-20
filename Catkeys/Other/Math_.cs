@@ -110,14 +110,11 @@ namespace Catkeys
 		/// </summary>
 		public static int MulDiv(int number, int numerator, int denominator)
 		{
-			return _MulDiv(number, numerator, denominator);
+			return Api.MulDiv(number, numerator, denominator);
 
 			//could use this, but the API rounds down or up to the nearest integer, but this always rounds down
 			//return (int)(((long)number * numerator) / denominator);
 		}
-
-		[DllImport("kernel32.dll", EntryPoint = "MulDiv")]
-		static extern int _MulDiv(int nNumber, int nNumerator, int nDenominator);
 
 		/// <summary>
 		/// Returns percent of part in whole.
@@ -165,6 +162,14 @@ namespace Catkeys
 			if(value < min) return min;
 			if(value > max) return max;
 			return value;
+		}
+
+		/// <summary>
+		/// Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
+		/// </summary>
+		public static void Swap<T>(ref T a, ref T b)
+		{
+			T t = a; a = b; b = t;
 		}
 
 		/// <summary>

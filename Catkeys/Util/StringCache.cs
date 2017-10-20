@@ -141,7 +141,7 @@ namespace Catkeys.Util
 		{
 			int newSize = HashHelpers.ExpandPrime(_count);
 			if(newSize <= _count) throw new Exception(); //overflow
-				
+
 			_Slot[] newSlots = new _Slot[newSize];
 			if(_slots != null) {
 				Array.Copy(_slots, 0, newSlots, 0, _lastIndex);
@@ -235,8 +235,10 @@ namespace Catkeys.Util
 		/// </summary>
 		/// <param name="p">Unmanaged string.</param>
 		/// <param name="len">p length.</param>
-		internal static string LibAdd(char* p, int len)
+		/// <param name="lenIsMaxLen">Call <c>len = LibCharPtr.Length(p, len)</c>.</param>
+		internal static string LibAdd(char* p, int len, bool lenIsMaxLen = false)
 		{
+			if(lenIsMaxLen) len = LibCharPtr.Length(p, len);
 			lock(_cacheWR) {
 				if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
 				return cache.Add(p, len);
@@ -291,7 +293,7 @@ namespace Catkeys.Util
 			int len = s?.Length ?? 0;
 			if((uint)startIndex > len || count < 0 || startIndex + count > len) throw new ArgumentOutOfRangeException();
 			if(len == 0) return s;
-			fixed (char* p = s) return LibAdd(p+startIndex, count);
+			fixed (char* p = s) return LibAdd(p + startIndex, count);
 		}
 	}
 }

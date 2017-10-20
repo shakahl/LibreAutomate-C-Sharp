@@ -45,14 +45,14 @@ namespace Catkeys
 			/// </summary>
 			internal int MaxPeriod;
 
-			internal LibTimeout(double timeoutS, int initPeriod = 10, int maxPeriod = 200)
+			internal LibTimeout(double secondsTimeout, int initPeriod = 10, int maxPeriod = 200)
 			{
-				if(timeoutS == 0) {
+				if(secondsTimeout == 0) {
 					_timeRemaining = _timePrev = 0;
 					_isTimeout = _throw = false;
 				} else {
 					_timePrev = Time.MillisecondsWithoutComputerSleepTime;
-					_timeRemaining = (long)(timeoutS * 1000.0);
+					_timeRemaining = (long)(secondsTimeout * 1000.0);
 					if(_timeRemaining > 0) _throw = true; else { _throw = false; _timeRemaining = -_timeRemaining; }
 					_isTimeout = true;
 				}
@@ -61,7 +61,7 @@ namespace Catkeys
 
 			/// <summary>
 			/// If the timeout is not expired, returns false.
-			/// Else if constructor->timeoutS was negative, returns true.
+			/// Else if constructor->secondsTimeout was negative, returns true.
 			/// Else throws TimeoutException.
 			/// Also gets current time and updates private fields, if need.
 			/// </summary>
@@ -93,22 +93,22 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits for an user-defined condition.
-		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
 		/// </summary>
-		/// <param name="timeoutS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
 		/// </param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
 		/// <param name="param">Something to pass to the callback function.</param>
 		/// <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
 		/// <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the condition callback function.</exception>
-		public static bool Condition(double timeoutS, Func<object, bool> condition, object param = null, int minPeriod = 10, int maxPeriod = 200)
+		public static bool Condition(double secondsTimeout, Func<object, bool> condition, object param = null, int minPeriod = 10, int maxPeriod = 200)
 		{
 			if(minPeriod < 1 || maxPeriod < minPeriod) throw new ArgumentException();
-			var to = new LibTimeout(timeoutS, minPeriod, maxPeriod);
+			var to = new LibTimeout(secondsTimeout, minPeriod, maxPeriod);
 			for(;;) {
 				if(condition(param)) return true;
 				if(!to.Sleep()) return false;
@@ -117,19 +117,19 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state.
-		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
 		/// </summary>
-		/// <param name="timeoutS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
 		/// </param>
 		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
 		/// <seealso cref="Input.IsModified"/>
-		public static bool NoModifierKeys(double timeoutS = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
+		public static bool NoModifierKeys(double secondsTimeout = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
 		{
-			//return WaitFor.Condition(timeoutS, o => !Input.LibIsModifiers(modifierKeys)); //shorter but creates garbage
-			var to = new LibTimeout(timeoutS);
+			//return WaitFor.Condition(secondsTimeout, o => !Input.LibIsModifiers(modifierKeys)); //shorter but creates garbage
+			var to = new LibTimeout(secondsTimeout);
 			for(;;) {
 				if(!Input.IsModified(modifierKeys)) return true;
 				if(!to.Sleep()) return false;
@@ -138,17 +138,17 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits while some mouse buttons are in pressed state.
-		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
 		/// </summary>
-		/// <param name="timeoutS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
 		/// </param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
 		/// <seealso cref="Mouse.IsPressed(MouseButtons)"/>
-		public static bool NoMouseButtons(double timeoutS = 0.0, MouseButtons buttons= MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		public static bool NoMouseButtons(double secondsTimeout = 0.0, MouseButtons buttons= MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
-			var to = new LibTimeout(timeoutS);
+			var to = new LibTimeout(secondsTimeout);
 			for(;;) {
 				if(!Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
@@ -157,19 +157,19 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
-		/// Returns true. If timeoutS is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
 		/// </summary>
-		/// <param name="timeoutS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeoutS time throws <b>TimeoutException</b>. If &lt;0, after -timeoutS time returns false.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
 		/// </param>
 		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException">timeoutS time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
 		/// <seealso cref="Input.IsModified"/>
-		public static bool NoModifierKeysAndMouseButtons(double timeoutS = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		public static bool NoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
-			var to = new LibTimeout(timeoutS);
+			var to = new LibTimeout(secondsTimeout);
 			for(;;) {
 				if(!Input.IsModified(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;

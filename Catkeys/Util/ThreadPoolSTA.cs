@@ -186,9 +186,9 @@ namespace Catkeys.Util
 				var apState = Application.OleRequired();
 				Debug.Assert(apState == ApartmentState.STA);
 #else
-				int hr = CoGetApartmentType(out var apt, out var aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
-				if(hr == 0 && apt != APTTYPE.APTTYPE_STA) {
-					hr = OleInitialize(Zero);
+				int hr = Api.CoGetApartmentType(out var apt, out var aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
+				if(hr == 0 && apt != Api.APTTYPE.APTTYPE_STA) {
+					hr = Api.OleInitialize(Zero);
 					//Thread.CurrentThread.Priority = ThreadPriority.BelowNormal; //does not make getting/displaying icons better
 					//Api.SetThreadPriority(Api.GetCurrentThread(), -15);
 				}
@@ -334,21 +334,6 @@ namespace Catkeys.Util
 
 		//[DllImport("kernel32.dll")]
 		//static extern bool SetThreadpoolThreadMinimum(IntPtr ptpp, uint cthrdMic);
-
-		enum APTTYPE
-		{
-			APTTYPE_CURRENT = -1,
-			APTTYPE_STA,
-			APTTYPE_MTA,
-			APTTYPE_NA,
-			APTTYPE_MAINSTA
-		}
-
-		[DllImport("ole32.dll", PreserveSig = true)]
-		static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
-
-		[DllImport("ole32.dll", PreserveSig = true)]
-		static extern int OleInitialize(IntPtr pvReserved);
 
 		#endregion
 

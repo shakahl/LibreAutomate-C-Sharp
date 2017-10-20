@@ -88,18 +88,18 @@ namespace Catkeys.Util
 	/// </summary>
 	internal static class LibActCtx
 	{
-		static ACTCTX _actCtx;
+		static Api.ACTCTX _actCtx;
 		static IntPtr _hActCtx;
 		static bool _contextCreationSucceeded;
 
 		static LibActCtx()
 		{
-			_actCtx.cbSize = Api.SizeOf<ACTCTX>();
+			_actCtx.cbSize = Api.SizeOf<Api.ACTCTX>();
 			_actCtx.lpSource = Assembly.GetExecutingAssembly().Location;
 			_actCtx.lpResourceName = (IntPtr)2;
-			_actCtx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID;
+			_actCtx.dwFlags = Api.ACTCTX_FLAG_RESOURCE_NAME_VALID;
 
-			_hActCtx = CreateActCtx(ref _actCtx);
+			_hActCtx = Api.CreateActCtx(ref _actCtx);
 			_contextCreationSucceeded = (_hActCtx != new IntPtr(-1));
 		}
 
@@ -107,7 +107,7 @@ namespace Catkeys.Util
 		{
 			IntPtr current = IntPtr.Zero;
 
-			if(_contextCreationSucceeded && GetCurrentActCtx(out current)) {
+			if(_contextCreationSucceeded && Api.GetCurrentActCtx(out current)) {
 				return current == _hActCtx;
 			}
 			return false;
@@ -119,7 +119,7 @@ namespace Catkeys.Util
 
 			if(_contextCreationSucceeded) {
 				if(!IsContextActive()) {
-					if(!ActivateActCtx(_hActCtx, out R)) R = IntPtr.Zero;
+					if(!Api.ActivateActCtx(_hActCtx, out R)) R = IntPtr.Zero;
 				}
 			}
 
@@ -128,32 +128,7 @@ namespace Catkeys.Util
 
 		internal static void Deactivate(IntPtr userCookie)
 		{
-			if(userCookie != IntPtr.Zero) DeactivateActCtx(0, userCookie);
-		}
-
-		[DllImport("kernel32")]
-		extern static IntPtr CreateActCtx(ref ACTCTX actctx);
-		[DllImport("kernel32")]
-		extern static bool ActivateActCtx(IntPtr hActCtx, out IntPtr lpCookie);
-		[DllImport("kernel32")]
-		extern static bool DeactivateActCtx(int dwFlags, IntPtr lpCookie);
-		[DllImport("kernel32")]
-		extern static bool GetCurrentActCtx(out IntPtr handle);
-
-		const int ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID = 0x004;
-		const int ACTCTX_FLAG_RESOURCE_NAME_VALID = 0x008;
-
-		internal struct ACTCTX
-		{
-			public uint cbSize;
-			public uint dwFlags;
-			public string lpSource;
-			public ushort wProcessorArchitecture;
-			public ushort wLangId;
-			public IntPtr lpAssemblyDirectory;
-			public IntPtr lpResourceName;
-			public IntPtr lpApplicationName;
-			public IntPtr hModule;
+			if(userCookie != IntPtr.Zero) Api.DeactivateActCtx(0, userCookie);
 		}
 	}
 

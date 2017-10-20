@@ -22,11 +22,10 @@ using Catkeys.Types;
 
 #pragma warning disable IDE1006 // Naming Styles
 
-//TODO: test [SuppressUnmanagedCodeSecurity]. Does it really make faster?
-
 namespace Catkeys.Types
 {
 	[DebuggerStepThrough]
+	[System.Security.SuppressUnmanagedCodeSecurity]
 	//[CLSCompliant(false)]
 	internal static unsafe partial class Api
 	{
@@ -498,6 +497,11 @@ namespace Catkeys.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int GetDlgCtrlID(Wnd hWnd);
 
+		internal delegate bool WNDENUMPROC(Wnd w, void* p);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool EnumChildWindows(Wnd hWndParent, WNDENUMPROC lpEnumFunc, void* p);
+
 		[DllImport("user32.dll", EntryPoint = "RegisterWindowMessageW", SetLastError = true)]
 		internal static extern uint RegisterWindowMessage(string lpString);
 
@@ -782,8 +786,8 @@ namespace Catkeys.Types
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
 		internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, LPARAM pvParam, uint fWinIni);
 
-		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-		internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
+		//[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
+		//internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
 
 		#endregion
 
@@ -1039,6 +1043,15 @@ namespace Catkeys.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool BlockInput(bool fBlockIt);
 
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromPoint(Point pt, uint dwFlags);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromRect(ref RECT lprc, uint dwFlags);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromWindow(Wnd hwnd, uint dwFlags);
+
 
 
 
@@ -1147,6 +1160,9 @@ namespace Catkeys.Types
 		[DllImport("kernel32.dll", EntryPoint = "SetDllDirectoryW", SetLastError = true)]
 		internal static extern bool SetDllDirectory(string lpPathName);
 
+		[DllImport("kernel32.dll")]
+		internal static extern int MulDiv(int nNumber, int nNumerator, int nDenominator);
+
 		//[DllImport("kernel32.dll")]
 		//internal static extern long GetTickCount64();
 
@@ -1181,6 +1197,9 @@ namespace Catkeys.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int GetCurrentProcessId();
 
+		[DllImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW", SetLastError = true)]
+		internal static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
@@ -1199,6 +1218,9 @@ namespace Catkeys.Types
 
 		[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true)]
 		internal static extern IntPtr LoadLibrary(string lpLibFileName);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool FreeLibrary(IntPtr hLibModule);
 
 		[DllImport("kernel32.dll", BestFitMapping = false, SetLastError = true)]
 		internal static extern IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string lpProcName);
@@ -1651,9 +1673,45 @@ namespace Catkeys.Types
 		[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryExW", SetLastError = true)]
 		internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
 
-		[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
-		internal static extern bool PathIsDirectoryEmpty(string pszPath);
-		//speed: slightly faster than with EnumDirectory.
+		[DllImport("kernel32.dll", EntryPoint = "GlobalAddAtomW")]
+		internal static extern ushort GlobalAddAtom(string lpString);
+
+		[DllImport("kernel32.dll")]
+		internal static extern ushort GlobalDeleteAtom(ushort nAtom);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesRead);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
+
+		[DllImport("kernel32", SetLastError = true)]
+		internal extern static IntPtr CreateActCtx(ref ACTCTX actctx);
+
+		[DllImport("kernel32", SetLastError = true)]
+		internal extern static bool ActivateActCtx(IntPtr hActCtx, out IntPtr lpCookie);
+
+		[DllImport("kernel32", SetLastError = true)]
+		internal extern static bool DeactivateActCtx(int dwFlags, IntPtr lpCookie);
+
+		[DllImport("kernel32", SetLastError = true)]
+		internal extern static bool GetCurrentActCtx(out IntPtr handle);
+
+		internal const int ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID = 0x004;
+		internal const int ACTCTX_FLAG_RESOURCE_NAME_VALID = 0x008;
+
+		internal struct ACTCTX
+		{
+			public uint cbSize;
+			public uint dwFlags;
+			public string lpSource;
+			public ushort wProcessorArchitecture;
+			public ushort wLangId;
+			public IntPtr lpAssemblyDirectory;
+			public IntPtr lpResourceName;
+			public IntPtr lpApplicationName;
+			public IntPtr hModule;
+		}
 
 
 
@@ -2142,6 +2200,13 @@ namespace Catkeys.Types
 		//internal static extern int IUnknown_QueryService(IntPtr punk, ref Guid guidService, ref Guid riid, void* ppvOut);
 		//internal static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, ref Guid guidService, ref Guid riid, out IntPtr ppvOut);
 
+		[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
+		internal static extern bool PathIsDirectoryEmpty(string pszPath);
+		//speed: slightly faster than with EnumDirectory.
+
+		[DllImport("shlwapi.dll")]
+		internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
+
 		//internal enum ASSOCSTR
 		//{
 		//	ASSOCSTR_COMMAND = 1,
@@ -2180,14 +2245,26 @@ namespace Catkeys.Types
 
 		//COMCTL32
 
+		[DllImport("oleaut32.dll", EntryPoint = "#6")]
+		internal static extern void SysFreeString(char* bstrString);
+
+		[DllImport("oleaut32.dll", EntryPoint = "#7")]
+		internal static extern int SysStringLen(char* pbstr);
+
+		[DllImport("oleaut32.dll", EntryPoint = "#4")]
+		internal static extern BSTR SysAllocStringLen(string strIn, int len);
+
+		[DllImport("oleaut32.dll", EntryPoint = "#2")]
+		internal static extern BSTR SysAllocString(char* psz);
+
+		[DllImport("oleaut32.dll", EntryPoint = "#147", PreserveSig = true)]
+		internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, ref VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
+
 		[DllImport("comctl32.dll")]
 		internal static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, uint flags);
 
 		[DllImport("comctl32.dll")]
 		internal static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
-
-		[DllImport("oleaut32.dll", EntryPoint = "#147", PreserveSig = true)]
-		internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, ref VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
 
 
 
@@ -2212,6 +2289,56 @@ namespace Catkeys.Types
 		[DllImport("ole32.dll", PreserveSig = true)]
 		internal static extern int PropVariantClear(ref PROPVARIANT pvar);
 
+		internal enum APTTYPE
+		{
+			APTTYPE_CURRENT = -1,
+			APTTYPE_STA,
+			APTTYPE_MTA,
+			APTTYPE_NA,
+			APTTYPE_MAINSTA
+		}
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		internal static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		internal static extern int OleInitialize(IntPtr pvReserved);
+
+
+
+
+
+
+
+		//OLEACC
+
+		internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
+
+		internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, ref Guid riid, out Acc.IAccessible ppvObject);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int WindowFromAccessibleObject(Acc.IAccessible iacc, out Wnd phwnd);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int AccessibleObjectFromPoint(Point ptScreen, out Acc.IAccessible ppacc, out VARIANT pvarChild);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, int dwId, int dwChildId, out Acc.IAccessible ppacc, out VARIANT pvarChild);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int AccessibleChildren(Acc.IAccessible paccContainer, int iChildStart, int cChildren, VARIANT* rgvarChildren, out int pcObtained);
+
+		//these are not useful. They work only with standard roles/states, and return localized string. We instead use non-localized string[] or Enum.ToString().
+		//[DllImport("oleacc.dll", EntryPoint = "GetRoleTextW")]
+		//internal static extern int GetRoleText(int lRole, [Out] char[] lpszRole, int cchRoleMax);
+		//[DllImport("oleacc.dll", EntryPoint = "GetStateTextW")]
+		//internal static extern int GetStateText(int lStateBit, [Out] char[] lpszState, int cchState);
+
+		[DllImport("oleacc.dll")]
+		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
 
 
@@ -2407,6 +2534,24 @@ namespace Catkeys.Types
 		internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
+		internal struct MD5_CTX
+		{
+			long _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11;
+			public long r1, r2;
+			//public fixed byte r[16]; //same speed, maybe slightly slower
+			//[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
+			//public byte[] r; //slow like .NET API
+		}
+
+		[DllImport("ntdll.dll")]
+		internal static extern void MD5Init(out MD5_CTX context);
+
+		[DllImport("ntdll.dll")]
+		internal static extern void MD5Update(ref MD5_CTX context, byte[] data, int dataLen);
+
+		[DllImport("ntdll.dll")]
+		internal static extern void MD5Final(ref MD5_CTX context);
+
 
 
 
@@ -2438,9 +2583,7 @@ namespace Catkeys.Types
 		{
 			deleg = null;
 			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default) return false;
-			//deleg = (T)Marshal.GetDelegateForFunctionPointer(fa, typeof(T)); //error
-			Type t = typeof(T);
-			deleg = (T)Convert.ChangeType(Marshal.GetDelegateForFunctionPointer(fa, t), t);
+			deleg = Unsafe.As<T>(Marshal.GetDelegateForFunctionPointer(fa, typeof(T)));
 			return deleg != null;
 		}
 
@@ -2448,9 +2591,7 @@ namespace Catkeys.Types
 		{
 			deleg = null;
 			IntPtr fa = GetProcAddress(hModule, funcName); if(fa == default) return false;
-			//deleg = (T)Marshal.GetDelegateForFunctionPointer(fa, typeof(T)); //error
-			Type t = typeof(T);
-			deleg = (T)Convert.ChangeType(Marshal.GetDelegateForFunctionPointer(fa, t), t);
+			deleg = Unsafe.As<T>(Marshal.GetDelegateForFunctionPointer(fa, typeof(T)));
 			return deleg != null;
 		}
 	}

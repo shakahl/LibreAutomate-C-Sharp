@@ -200,7 +200,7 @@ namespace Catkeys
 		public TaskDialog(
 			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<TDEventArgs> onLinkClick = null
 			) : this()
 		{
 			FlagEndThread = 0 != (flags & TDFlags.EndThread);
@@ -217,7 +217,7 @@ namespace Catkeys
 			_SetCheckboxFromText(checkBox);
 			SetOwnerWindow(owner, 0 != (flags & TDFlags.OwnerCenter));
 			SetXY(x, y, 0 != (flags & TDFlags.RawXY));
-			SetTimeout(timeoutS);
+			SetTimeout(secondsTimeout);
 			SetExpandedText(expandedText, 0 != (flags & TDFlags.ExpandDown));
 			SetFooterText(footerText);
 			SetTitleBarText(title);
@@ -941,7 +941,7 @@ namespace Catkeys
 				if(_enableOwner) _c.hwndParent.Enable(true);
 
 				if(!_HasFlag(TDF_.POSITION_RELATIVE_TO_WINDOW)) {
-					bool isXY = !_x.IsNull || !_y.IsNull;
+					bool isXY = !_x.IsEmpty || !_y.IsEmpty;
 					if(!_rawXY) {
 						object scr = Screen; if(scr == null && _c.hwndParent.Is0) scr = Options.DefaultScreen;
 						if(scr is int) scr = Screen_.FromIndex((int)scr, noThrow: true); //returns null if invalid
@@ -1032,14 +1032,14 @@ namespace Catkeys
 		/// Shows the dialog in new thread and returns without waiting until it is closed.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="ThreadWaitOpen"/>, therefore the dialog is already open when this function returns.
+		/// Calls <see cref="ThreadWaitForOpen"/>, therefore the dialog is already open when this function returns.
 		/// More info: <see cref="ShowNoWaitEx"/>
 		/// </remarks>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public void ShowDialogNoWait()
 		{
 			var t = Task.Run(() => ShowDialog());
-			if(!ThreadWaitOpen()) throw t.Exception ?? new AggregateException();
+			if(!ThreadWaitForOpen()) throw t.Exception ?? new AggregateException();
 		}
 
 		/// <summary>
@@ -1074,7 +1074,7 @@ namespace Catkeys
 		/// If returns true, the dialog is open and you can send messages to it.
 		/// If returns false, the dialog is already closed or failed to show.
 		/// </summary>
-		public bool ThreadWaitOpen()
+		public bool ThreadWaitForOpen()
 		{
 			_AssertIsOtherThread();
 			while(!IsOpen) {
@@ -1088,7 +1088,7 @@ namespace Catkeys
 		/// <summary>
 		/// Can be used by other threads to wait until the dialog is closed.
 		/// </summary>
-		public void ThreadWaitClosed()
+		public void ThreadWaitForClosed()
 		{
 			_AssertIsOtherThread();
 			while(!_isClosed) {
@@ -1420,7 +1420,7 @@ namespace Catkeys
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
 			_editParent.ZorderTop();
-			_editWnd.FocusLL();
+			_editWnd.FocusLocal();
 		}
 
 		void _EditControlOnMessage(TDApi.TDN message)
@@ -1449,10 +1449,10 @@ namespace Catkeys
 			//PrintList(msg, wParam, lParam);
 			switch(msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				_dlg.ChildFast(null, "DirectUIHWND").FocusLL();
+				_dlg.ChildFast(null, "DirectUIHWND").FocusLocal();
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				_dlg.ChildFast(null, "DirectUIHWND").FocusLL();
+				_dlg.ChildFast(null, "DirectUIHWND").FocusLocal();
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);
@@ -1492,7 +1492,7 @@ namespace Catkeys
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="timeoutS">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="TDResult.Timeout"/>.</param>
+		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="TDResult.Timeout"/>.</param>
 		/// <param name="onLinkClick">
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
 		/// Example:
@@ -1508,7 +1508,7 @@ namespace Catkeys
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var r = TaskDialog.ShowEx("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", radioButtons: "1 One|2 Two|3 Three", checkBox: "Check", timeoutS: 30);
+		/// var r = TaskDialog.ShowEx("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", radioButtons: "1 One|2 Two|3 Three", checkBox: "Check", secondsTimeout: 30);
 		/// Print(r);
 		/// switch(r) {
 		/// case 1: Print("OK"); break;
@@ -1521,12 +1521,12 @@ namespace Catkeys
 		public static TDResult ShowEx(
 			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<TDEventArgs> onLinkClick = null
 			)
 		{
 			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
-				defaultButton, x, y, timeoutS, onLinkClick);
+				defaultButton, x, y, secondsTimeout, onLinkClick);
 			return d.ShowDialog();
 		}
 
@@ -1661,7 +1661,7 @@ namespace Catkeys
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
+		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
 		/// <param name="onButtonClick">
@@ -1698,7 +1698,7 @@ namespace Catkeys
 			TDEdit editType = TDEdit.Text, object editText = null,
 			TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
-			Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null,
+			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<TDEventArgs> onLinkClick = null,
 			string buttons = "1 OK|2 Cancel", Action<TDEventArgs> onButtonClick = null
 			)
 		{
@@ -1706,7 +1706,7 @@ namespace Catkeys
 
 			var d = new TaskDialog(text1, text2, buttons, 0, flags, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
-				0, x, y, timeoutS, onLinkClick);
+				0, x, y, secondsTimeout, onLinkClick);
 
 			d.SetEditControl((editType == TDEdit.None) ? TDEdit.Text : editType, editText);
 			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
@@ -1809,14 +1809,14 @@ namespace Catkeys
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="timeoutS">If not 0, auto-close the dialog after this time, number of seconds.</param>
+		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <remarks>
 		/// This function allows you to use most of the task dialog features, but not all. Alternatively you can create a TaskDialog class instance, set properties and call ShowDialog.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// int r = TaskDialog.ShowListEx("One|Two|Three", "Example", y: -1, timeoutS: 15);
+		/// int r = TaskDialog.ShowListEx("One|Two|Three", "Example", y: -1, secondsTimeout: 15);
 		/// if(r <= 0) return; //X/Esc or timeout
 		/// Print(r);
 		/// ]]></code>
@@ -1825,13 +1825,13 @@ namespace Catkeys
 		public static TDResult ShowListEx(
 			object list, string text1 = null, string text2 = null, TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0,
+			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<TDEventArgs> onLinkClick = null
 			)
 		{
 			var d = new TaskDialog(text1, text2, null, 0, flags, owner,
 				expandedText, footerText, title, null, checkBox,
-				defaultButton, x, y, timeoutS, onLinkClick);
+				defaultButton, x, y, secondsTimeout, onLinkClick);
 
 			d.SetButtons(null, true, list);
 			d.FlagXCancel = true;
@@ -1872,7 +1872,7 @@ namespace Catkeys
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in new thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
 		/// Most parameters are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
@@ -1894,14 +1894,14 @@ namespace Catkeys
 		public static TaskDialog ShowProgressEx(bool marquee,
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<TDEventArgs> onLinkClick = null
 		)
 		{
 			if(Empty(buttons)) buttons = "0 Cancel";
 
 			var d = new TaskDialog(text1, text2, buttons, 0, flags, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
-				0, x, y, timeoutS, onLinkClick);
+				0, x, y, secondsTimeout, onLinkClick);
 
 			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
 
@@ -1915,7 +1915,7 @@ namespace Catkeys
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
 		/// All parameters except marquee are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
@@ -1950,7 +1950,7 @@ namespace Catkeys
 		/// <summary>
 		/// Shows task dialog like <see cref="ShowEx"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
 		/// Parameters are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <remarks>
@@ -1960,7 +1960,7 @@ namespace Catkeys
 		/// <code><![CDATA[
 		/// TaskDialog.ShowNoWait("Simple example");
 		/// 
-		/// var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, timeoutS: 30);
+		/// var td = TaskDialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, secondsTimeout: 30);
 		/// Wait(2); //do something while the dialog is open
 		/// td.Send.ChangeText2("new text", false);
 		/// Wait(2); //do something while the dialog is open
@@ -1971,12 +1971,12 @@ namespace Catkeys
 		public static TaskDialog ShowNoWaitEx(
 			string text1 = null, string text2 = null, string buttons = null, TDIcon icon = 0, TDFlags flags = 0, WndOrControl owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int timeoutS = 0, Action<TDEventArgs> onLinkClick = null
+			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<TDEventArgs> onLinkClick = null
 			)
 		{
 			var d = new TaskDialog(text1, text2, buttons, icon, flags, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
-				defaultButton, x, y, timeoutS, onLinkClick);
+				defaultButton, x, y, secondsTimeout, onLinkClick);
 			d.ShowDialogNoWait();
 			return d;
 		}
@@ -1984,7 +1984,7 @@ namespace Catkeys
 		/// <summary>
 		/// Shows task dialog like <see cref="Show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="ShowNoWaitEx">example</see>).
+		/// Returns <see cref="TaskDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="ShowNoWaitEx">example</see>).
 		/// Parameters are the same as with <see cref="Show"/>.
 		/// </summary>
 		/// <remarks>

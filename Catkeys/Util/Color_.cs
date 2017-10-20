@@ -137,11 +137,8 @@ namespace Catkeys.Util
 		/// <param name="totalRange">If true, n is in the whole luminance range (from minimal to maximal possible). If false, n is in the range from current luminance of the color to the maximal (if n positive) or minimal (if n negative) luminance.</param>
 		public static uint AdjustLuminance(uint colorRGB, int n, bool totalRange = false)
 		{
-			return ColorAdjustLuma(colorRGB & 0xffffff, n, !totalRange) | (colorRGB & 0xFF000000);
+			return Api.ColorAdjustLuma(colorRGB & 0xffffff, n, !totalRange) | (colorRGB & 0xFF000000);
 			//return SwapRedBlue(ColorAdjustLuma(SwapRedBlue(colorRGB & 0xffffff), n, !totalRange)) | (colorRGB & 0xFF000000); //the same
 		}
-
-		[DllImport("shlwapi.dll")]
-		static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);
 	}
 }

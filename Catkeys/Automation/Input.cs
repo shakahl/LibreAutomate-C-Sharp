@@ -56,9 +56,9 @@ namespace Catkeys
 		/// <param name="modifierKeys">Check only these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
 		/// <exception cref="ArgumentException">modifierKeys contains non-modifier keys.</exception>
 		/// <seealso cref="WaitFor.NoModifierKeys"/>
-		public static bool IsModified(Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
+		public static bool IsModified(Keys modifierKeys = Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
 		{
-			bool badKeys = modifierKeys!=(modifierKeys & (Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows));
+			bool badKeys = modifierKeys != (modifierKeys & (Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows));
 			Debug.Assert(!badKeys); if(badKeys) throw new ArgumentException();
 			if(0 != (modifierKeys & Keys.Control) && IsCtrl) return true;
 			if(0 != (modifierKeys & Keys.Shift) && IsShift) return true;
@@ -107,29 +107,32 @@ namespace Catkeys
 
 		public static void Key(params string[] keys)
 		{
-			//better name would be Keys, but it conflicts with the .NET Forms Keys enum that is used in this class and everywhere.
-			//	The WPF Key enum is rarely used.
-			//	Anyway, in scripts everybody will use the alias K().
 
-			//idea: params object[] keys. Then the last parameter can be eg ScriptOptions.
+		}
+		//better name would be Keys, but it conflicts with the .NET Forms Keys enum that is used in this class and everywhere.
+		//	The WPF Key enum is rarely used.
+		//	Anyway, in scripts everybody will use the alias K().
 
-			if(keys == null) return;
+		//idea: params object[] keys. Then the last parameter can be eg ScriptOptions.
+
+		//maybe better this, not params? More clear how to use it.
+		public static void Key(string keys, string text = null, string keys2 = null, string text2 = null, string keys3 = null, string text3 = null, string keys4 = null, string text4 = null)
+		{
+
 		}
 
 		public static void Text(params string[] text)
 		{
-			if(text == null) return;
+
 		}
 		//note:
 		//	Don't use the hybrid option in Catkeys. In many apps sending keys for text snippets etc is too slow, better to paste always.
 		//	Then probably don't need Text(). In that rare cases when need, can use Keys("", "text");
 
-		//public static void Text(ScriptOptions options, params string[] text_keys_text_keys_andSoOn)
+		//public static void Text(ScriptOptions options, params string[] text)
 		//{
-		//	var keys = text_keys_text_keys_andSoOn;
-		//	if(keys == null) return;
+		//
 		//}
-
 
 		//public class KeysToSend
 		//{
@@ -151,6 +154,18 @@ namespace Catkeys
 		public static void Paste(string text)
 		{
 			if(text == null) return;
+		}
+
+
+		public static void KeyAndPaste(params string[] keys)
+		{
+
+		}
+
+
+		public static void PasteAndKey(params string[] keys)
+		{
+
 		}
 
 

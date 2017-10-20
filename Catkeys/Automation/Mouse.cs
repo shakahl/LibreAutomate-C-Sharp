@@ -159,7 +159,7 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) to position x y in screen.
+		/// Moves the cursor (mouse pointer) to the position x y in screen.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
 		/// <param name="x">X coordinate relative to screen.</param>
@@ -176,20 +176,21 @@ namespace Catkeys
 		/// </remarks>
 		public static Point Move(Coord x, Coord y, bool workArea = false, object screen = null)
 		{
-			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
 			LibWaitWhileButtonsPressed();
+			if(x.IsEmpty) x = Coord.Center;
+			if(y.IsEmpty) y = Coord.Center;
 			var p = Coord.Normalize(x, y, workArea, screen);
 			_Move(p, fast: false);
 			return p;
 		}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) to position x y relative to window w.
+		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="WndException">
 		/// Invalid window.
@@ -201,14 +202,15 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses <see cref="ScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>, <see cref="ScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7)), <see cref="ScriptOptions.Relaxed">Options.Relaxed</see>.
 		/// </remarks>
-		public static Point Move(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static Point Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
-			if(x.IsNull || y.IsNull) throw new ArgumentNullException();
 			LibWaitWhileButtonsPressed();
 			w.ThrowIfInvalid();
 			var wTL = w.WndWindow;
 			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
 			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _SleepExact(500); } //never mind: if w is a control...
+			if(x.IsEmpty) x = Coord.Center;
+			if(y.IsEmpty) y = Coord.Center;
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient);
 			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();
 			_Move(p, fast: false);
@@ -636,8 +638,8 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="button">Button and action.</param>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
@@ -646,7 +648,7 @@ namespace Catkeys
 		/// If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <see cref="ScriptOptions.Relaxed">Options.Relaxed</see> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static MRelease ClickEx(MButton button, Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static MRelease ClickEx(MButton button, Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			var p = Move(w, x, y, nonClient);
 
@@ -673,7 +675,7 @@ namespace Catkeys
 
 				bool _CheckWindowFromPoint()
 				{
-					var wfp = Api.WindowFromPoint(p).WndWindow;
+					var wfp = Wnd.FromXY(p, WXYFlags.NeedWindow);
 					if(wfp == wTL) return true;
 					//forgive if same thread and no caption. Eg a tooltip that disappears and relays the click to its owner window. But not if wTL is disabled.
 					if(wTL.IsEnabled && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(Native.WS_CAPTION)) return true;
@@ -714,12 +716,12 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="CatException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void Click(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static void Click(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Left, w, x, y, nonClient);
 		}
@@ -751,12 +753,12 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="CatException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void RightClick(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static void RightClick(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Right, w, x, y, nonClient);
 		}
@@ -788,12 +790,12 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="CatException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void DoubleClick(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static void DoubleClick(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Left | MButton.DoubleClick, w, x, y, nonClient);
 		}
@@ -831,15 +833,15 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="CatException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. Example: <c>using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(20, 0);</c>. The button is auto-released when the 'using' block ends, even on exception. This can be used to drag-drop or drag-select.
 		/// </remarks>
-		public static MRelease LeftDown(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static MRelease LeftDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			return ClickEx(MButton.Left | MButton.Down, w, x, y, nonClient);
 		}
@@ -871,11 +873,11 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void LeftUp(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static void LeftUp(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Left | MButton.Up, w, x, y, nonClient);
 		}
@@ -913,15 +915,15 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="CatException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static MRelease RightDown(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static MRelease RightDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			return ClickEx(MButton.Right | MButton.Down, w, x, y, nonClient);
 		}
@@ -953,11 +955,11 @@ namespace Catkeys
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w.</param>
+		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void RightUp(Wnd w, Coord x, Coord y, bool nonClient = false)
+		public static void RightUp(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Right | MButton.Up, w, x, y, nonClient);
 		}
@@ -1053,7 +1055,7 @@ namespace Catkeys
 		public static class Message
 		{
 			//not useful
-			//public static void Move(Wnd w, Coord x, Coord y, bool nonClient = false, int waitMS=0)
+			//public static void Move(Wnd w, Coord x=default, Coord y=default, bool nonClient = false, int waitMS=0)
 			//{
 
 			//}
@@ -1071,7 +1073,7 @@ namespace Catkeys
 			/// Does not move the mouse cursor, therefore does not work if the window gets cursor position not from the message.
 			/// Does not activate the window (unless the window activates itself).
 			/// </remarks>
-			public static void Click(Wnd w, Coord x, Coord y, MButton button = MButton.Left, bool nonClient = false, bool isCtrl=false, bool isShift=false/*, int waitMS = 0*/)
+			public static void Click(Wnd w, Coord x=default, Coord y=default, MButton button = MButton.Left, bool nonClient = false, bool isCtrl=false, bool isShift=false/*, int waitMS = 0*/)
 			{
 
 			}
@@ -1245,27 +1247,90 @@ namespace Catkeys.Types
 
 	public static partial class ExtensionMethods
 	{
+		#region Wnd
+
 		/// <summary>
+		/// Moves the cursor (mouse pointer) to the position x y relative to this window.
 		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
-		/// By default x y coordinates are relative to the client area.
+		/// By default x y coordinates are relative to the client area; default - center.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
-		public static void MouseMove(this Wnd t, Coord x, Coord y, bool nonClient = false)
+		public static void MouseMove(this Wnd t, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			t.ThrowIf0();
 			Mouse.Move(t, x, y, nonClient);
 		}
 
 		/// <summary>
+		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
 		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
-		/// By default x y coordinates are relative to the client area.
+		/// By default x y coordinates are relative to the client area; default - center. Default action - left click.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
-		public static void MouseClick(this Wnd t, Coord x, Coord y, MButton button = MButton.Left, bool nonClient = false)
+		public static void MouseClick(this Wnd t, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
 		{
 			t.ThrowIf0();
 			Mouse.ClickEx(button, t, x, y, nonClient);
 		}
+
+		#endregion
+
+		#region Acc
+
+		/// <summary>
+		/// Moves the cursor (mouse pointer) to this accessible object.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
+		/// <exception cref="CatException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
+		public static void MouseMove(this Acc t, Coord x = default, Coord y = default)
+		{
+			_AccMouseAction(t, false, x, y, default);
+		}
+
+		/// <summary>
+		/// Clicks this accessible object.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
+		/// <exception cref="CatException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
+		public static void MouseClick(this Acc t, Coord x = default, Coord y = default, MButton button = MButton.Left)
+		{
+			_AccMouseAction(t, true, x, y, button);
+		}
+
+		static void _AccMouseAction(Acc t, bool click, Coord x, Coord y, MButton button)
+		{
+			if(t == null) throw new NotFoundException("Accessible object not found.");
+			var w = t.WndContainer; //info: not necessary, but with window the mouse functions are more reliable, eg will not click another window if it is over our window
+
+			//never mind: if w.Is0 and the action is 'click', get AO from point and fail if it is not t. But need to compare AO properties. Rare.
+
+			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new CatException(0, "*get rectangle");
+			if(x.IsEmpty) x = Coord.Center;
+			if(y.IsEmpty) y = Coord.Center;
+			var p = Coord.NormalizeInRect(x, y, r);
+			if(w.Is0) {
+				if(button == 0) Mouse.Move(p.X, p.Y);
+				else Mouse.ClickEx(button, p.X, p.Y);
+			} else {
+				if(button == 0) Mouse.Move(w, p.X, p.Y);
+				else Mouse.ClickEx(button, w, p.X, p.Y);
+			}
+		}
+
+		#endregion
+
+		#region SIResult
 
 		/// <summary>
 		/// Moves the mouse to the found image.
@@ -1274,7 +1339,7 @@ namespace Catkeys.Types
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
-		/// <exception cref="NotFoundException">Image not found.</exception>
+		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
 		public static void MouseMove(this SIResult t, Coord x = default, Coord y = default)
@@ -1291,7 +1356,7 @@ namespace Catkeys.Types
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="NotFoundException">Image not found.</exception>
+		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
 		public static void MouseClick(this SIResult t, Coord x = default, Coord y = default, MButton button = MButton.Left)
@@ -1300,6 +1365,8 @@ namespace Catkeys.Types
 			if(button == 0) button = MButton.Left;
 			t.LibMouseAction(button, x, y);
 		}
+
+		#endregion
 
 	}
 }

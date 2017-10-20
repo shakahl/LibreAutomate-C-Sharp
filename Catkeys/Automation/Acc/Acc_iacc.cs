@@ -23,6 +23,7 @@ using Catkeys.Types;
 using static Catkeys.NoClass;
 
 #pragma warning disable IDE1006 // Naming Styles
+#pragma warning disable CS0660, CS0661 // Type defines operator == or operator != but does not override Object.Equals(object o), GetHashCode
 
 namespace Catkeys
 {
@@ -48,7 +49,8 @@ namespace Catkeys
 
 			public bool Is0 { get => _iptr == default; }
 
-			public bool IsSame(IAccessible other) => _iptr == other._iptr;
+			public static bool operator ==(IAccessible a, IAccessible b) => a._iptr == b._iptr;
+			public static bool operator !=(IAccessible a, IAccessible b) => a._iptr != b._iptr;
 
 			public int AddRef()
 			{
@@ -71,6 +73,7 @@ namespace Catkeys
 
 			public static implicit operator IntPtr(IAccessible a) => a._iptr;
 
+#if true //Acc FUTURE: maybe enable this workaround if Chrome will not fix it. Reported, but it seems they are not interested.
 			public int get_accParent(out IAccessible iacc)
 			{
 				iacc = default;
@@ -79,9 +82,128 @@ namespace Catkeys
 				return hr;
 			}
 
+			public int GetWnd(out Wnd w)
+			{
+				w = default;
+				Debug.Assert(!Is0);
+
+				int hr = Api.WindowFromAccessibleObject(this, out w);
+
+				return hr;
+			}
+#else
+			/// <summary>
+			/// Manages an IAccessible/Wnd dictionary that is used by GetWnd and get_accParent for the Chrome bug workaround.
+			/// In Chrome versions 61-? is broken get_accParent in web pages.
+			///		It gets parent AO (except of DOCUMENT), but if we need container window of that AO, windowfromaccessibleobject (WFAO) fails.
+			///		It's probably because DOCUMENT's get_accParent is broken. It seems WFAO walks ancestors by calling get_accParent until finds WINDOW.
+			///		WFAO fails only for AO that are retrieved with get_accParent (or derived from it using navigation etc).
+			///			Probably because MSAA caches HWNDs. We can guess it from the speed difference.
+			///			WFAO usually is quite fast, but very slow if the AO was returned by get_accParent etc, because their HWNDs are not cached.
+			///	We use this dictionary not only with Chrome. It makes GetWnd much faster with these get_accParent-returned AOs.
+			///	This workaround is only for AO retrieved with get_accParent directly. If we then navigate to another object (next, child etc), WFAO fails for them. Never mind, too much work to track all.
+			///	WFAO does not fail for AO retrieved using navigation when the navigation start AO's HWND is cached.
+			/// Tried to get HWND from these interfaces, but Chrome does not give them: IUIAutomationElement, IOleWindow, IAccIdentity, IAccessible2.
+			///		IAccessible2.windowHandle works, but need to register IAccessible2Proxy.dll or inject into Chrome process. Too much work.
+			///		Besides windowHandle, IAccessible2 does not have anything useful that we could not get with other interfaces.
+			///	UI Automation works well. But cannot be used for this workaround (cannot get IUIAutomationElement from IAccessible).
+			/// </summary>
+			class _ChromeParentBugWorkaround
+			{
+				//Acc CONSIDER: to use less memory, instead of Dictionary<LPARAM, Wnd> use Dictionary<Wnd, List<LPARAM>>
+
+				Dictionary<LPARAM, Wnd> _d = new Dictionary<LPARAM, Wnd>();
+				//long _time;
+				//Acc FUTURE: sometimes remove disposed AO, eg once in 1 minute or when GC runs.
+				//	For each dictionary key call AddRef/Release to get ref count. Remove if 1.
+
+				public void Add(IntPtr iacc, Wnd w)
+				{
+					if(!w.IsAlive) { _RemoveWnd(w); return; }
+					Marshal.AddRef(iacc);
+					_d[iacc] = w;
+
+					Debug_.PrintIf(_d.Count > 100, "big dictionary IAccessible/Wnd. Count: " + _d.Count.ToString());
+				}
+
+				public bool TryGet(IntPtr iacc, out Wnd w)
+				{
+					if(!_d.TryGetValue(iacc, out w)) return false;
+					if(w.IsAlive) return true;
+					_RemoveWnd(w);
+					w = default;
+					return false;
+				}
+
+				void _RemoveWnd(Wnd w)
+				{
+					var a = new Util.LibArrayBuilder<LPARAM>();
+					foreach(var x in _d) if(x.Value == w) a.Add(x.Key);
+					for(int i = a.Count - 1; i >= 0; i--) _d.Remove(a[i]);
+				}
+
+				~_ChromeParentBugWorkaround() //called when GC runs after this thread ended
+				{
+					foreach(var x in _d) Marshal.Release(x.Key);
+				}
+			}
+
+			[ThreadStatic] static _ChromeParentBugWorkaround t_iaccWnd; //Acc FUTURE: try to make non-[ThreadStatic] if possible
+
+			public int get_accParent(out IAccessible iacc)
+			{
+				iacc = default;
+
+				//Chrome bug workaround: part 1.
+#if DEBUG
+				var t0 = Time.Microseconds;
+				GetWnd(out Wnd w); //in browsers usually about 10 times faster (when uncached) than get_accParent. In many windows fast.
+				var td = Time.Microseconds - t0;
+				Debug_.PrintIf(td >= 1000, "slow GetWnd in Chrome bug workaround. Time: " + td.ToString());
+#else
+				GetWnd(out Wnd w);
+#endif
+
+				var hr = _F.get_accParent(_iptr, out var idisp);
+				if(hr == 0) {
+					hr = FromIDispatch(idisp, out iacc);
+
+					//Chrome bug workaround: part 2.
+					if(hr == 0 && !w.Is0 && !w.IsChildWindow && 0 == GetRole(0, out var role) && role != AccROLE.WINDOW) {
+						//note: here we cannot call GetWnd to make sure that window of iacc == w, because it is very slow in any app, and in Chrome fails.
+						//	If our parent window is top-level and our role is not WINDOW, logically window of iacc must be the same as ours.
+						//	If out role is WINDOW, iacc window could be the root desktop.
+
+						//PrintList("get_accParent: add", iacc._iptr);
+						var d = t_iaccWnd;
+						if(d == null) t_iaccWnd = d = new _ChromeParentBugWorkaround();
+						d.Add(iacc, w);
+					}
+				}
+				return hr;
+			}
+
+			public int GetWnd(out Wnd w)
+			{
+				w = default;
+				Debug.Assert(!Is0);
+
+				//Chrome bug workaround: part 3.
+				if(t_iaccWnd?.TryGet(_iptr, out w) ?? false) {
+					//PrintList("GetWnd: cached", _iptr);
+					return 0;
+				}
+				//PrintList("GetWnd: uncached", _iptr);
+
+				int hr = _WindowFromAccessibleObject(this, out w);
+
+				return hr;
+			}
+#endif
+
 			public int get_accChildCount(out int pcountChildren)
 			{
-				int hr =_F.get_accChildCount(_iptr, out pcountChildren);
+				int hr = _F.get_accChildCount(_iptr, out pcountChildren);
 				if(hr != 0) pcountChildren = 0;
 				return hr;
 			}
@@ -95,7 +217,7 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// Gets name or "", and possibly applies workarounds to some MSAA bugs.
+			/// Gets name or "".
 			/// </summary>
 			/// <param name="elem"></param>
 			/// <param name="s"></param>
@@ -143,6 +265,9 @@ namespace Catkeys
 				}
 				v.Dispose();
 				return 0;
+
+				//rejected: try to map string roles to enum roles.
+				//	tested: Chrome standard roles are enum.
 			}
 
 			/// <summary>
@@ -228,8 +353,27 @@ namespace Catkeys
 			}
 
 			/// <summary>
+			/// Gets object from point (screen coordinates), which can be a child (topmost) or self.
+			/// If neither a child or this is at that point, sets a.iacc=0 and a.elem=0. Returns 1 (S_FALSE). Note: the point can be in objects's bounding rectangle but the object is not rectangular.
+			/// Else if at that point is this, sets a.iacc=this and a.elem=0. Does not AddRef.
+			/// Else if at that point is a simple element, sets a.iacc=this and a.elem!=0. Does not AddRef.
+			/// Else sets a.iacc=child and a.elem=0. Will need to release a.iacc.
+			/// </summary>
+			public int accHitTest(int xLeft, int yTop, out _Acc a)
+			{
+				a = default;
+				int hr = _F.accHitTest(_iptr, xLeft, yTop, out var v);
+				if(hr == 0) {
+					if(v.vt == 0) hr = 1;
+					else if(v.vt == Api.VARENUM.VT_I4 && v.value == 0) a.a = this;
+					else hr = FromVARIANT(ref v, out a, true);
+				}
+				return hr;
+			}
+
+			/// <summary>
 			/// Gets focused object, which can be a child or this.
-			/// If neither a child or this is focused, sets a.iacc=0 and a.elem=0.
+			/// If neither a child or this is focused, sets a.iacc=0 and a.elem=0. Returns 1 (S_FALSE).
 			/// Else if focused is this, sets a.iacc=this and a.elem=0. Does not AddRef.
 			/// Else if focused is a simple element, sets a.iacc=this and a.elem!=0. Does not AddRef.
 			/// Else sets a.iacc=child and a.elem=0. Will need to release a.iacc.
@@ -238,16 +382,35 @@ namespace Catkeys
 			{
 				a = default;
 				int hr = _F.get_accFocus(_iptr, out var v);
-				if(hr == 0 && v.vt != Api.VARENUM.VT_EMPTY) {
-					if(v.vt == Api.VARENUM.VT_I4 && v.value == 0) a.a = this;
+				if(hr == 0) {
+					if(v.vt == 0) hr = 1;
+					else if(v.vt == Api.VARENUM.VT_I4 && v.value == 0) a.a = this;
 					else hr = FromVARIANT(ref v, out a, true);
 				}
 				return hr;
 			}
 
-			public int get_accSelection(out VARIANT pvarChildren)
+			public Acc[] get_accSelection()
 			{
-				return _F.get_accSelection(_iptr, out pvarChildren);
+				if(0 != _F.get_accSelection(_iptr, out var v)) v.Dispose();
+				if(v.vt != 0) {
+					if(v.vt == Api.VARENUM.VT_UNKNOWN) {
+						var t = new List<Acc>();
+						if(Api.IEnumVARIANT.From(v.value, out var e)) {
+							while(0 == e.Next(1, out var vv, out int n) && n == 1) {
+								if(0 == FromVARIANT(ref vv, out var a, true))
+									t.Add(new Acc(a.a, a.elem, addRef: a.elem != 0));
+							}
+							e.Dispose();
+						}
+						v.Dispose();
+						return t.ToArray();
+					} else {
+						if(0 == FromVARIANT(ref v, out var a, true))
+							return new Acc[] { new Acc(a.a, a.elem, addRef: a.elem != 0) };
+					}
+				}
+				return new Acc[0];
 			}
 
 			public int get_accDefaultAction(int elem, out string s)
@@ -285,7 +448,7 @@ namespace Catkeys
 				Debug.Assert(!(varStart != 0 && (navDir == AccNAVDIR.FIRSTCHILD || navDir == AccNAVDIR.LASTCHILD)));
 
 				int hr = _F.accNavigate(_iptr, (int)navDir, varStart, out var v);
-				if(hr == 0 && v.vt != Api.VARENUM.VT_EMPTY) {
+				if(hr == 0 && v.vt != 0) {
 					if(varStart == 0 && v.vt == Api.VARENUM.VT_I4 && v.value != 0 && navDir >= AccNAVDIR.UP && navDir <= AccNAVDIR.PREVIOUS) {
 						hr = get_accParent(out var iaccParent);
 						if(hr == 0) {
@@ -302,25 +465,7 @@ namespace Catkeys
 				return hr;
 			}
 
-			/// <summary>
-			/// Gets object from point (screen coordinates), which can be a child (topmost) or self.
-			/// If neither a child or this is at that point, sets a.iacc=0 and a.elem=0. Returns 0 or 1 (S_FALSE). Eg can return 0 if the point is in objects's bounding rectangle but the object is not rectangular.
-			/// Else if at that point is this, sets a.iacc=this and a.elem=0. Does not AddRef.
-			/// Else if at that point is a simple element, sets a.iacc=this and a.elem!=0. Does not AddRef.
-			/// Else sets a.iacc=child and a.elem=0. Will need to release a.iacc.
-			/// </summary>
-			public int accHitTest(int xLeft, int yTop, out _Acc a)
-			{
-				a = default;
-				int hr = _F.accHitTest(_iptr, xLeft, yTop, out var v);
-				if(hr == 0 && v.vt != Api.VARENUM.VT_EMPTY) {
-					if(v.vt == Api.VARENUM.VT_I4 && v.value == 0) a.a = this;
-					else hr = FromVARIANT(ref v, out a, true);
-				}
-				return hr;
-			}
-
-			public int accDoDefaultAction(int elem)
+			public int accDoDefaultAction(VARIANT elem) //info: VT_BSTR used by DoJavaAction
 			{
 				return _F.accDoDefaultAction(_iptr, elem);
 			}
@@ -353,9 +498,10 @@ namespace Catkeys
 				{
 #if DEBUG
 					//tested: 2 IAccessible VTBLs are used for all AO. Tested on Win 10 and 7. Enumerated all AO in all windows.
+					//	Plus one of our IJAccessible.
 					//	If in the future will notice more but not too many, just edit 'if(n>x)'.
 					//	But note, it can be because of invalid object, eg used after fully releasing.
-					int n = s_vtbls.Count; if(n > 1) Debug_.Print("many VTBLs: " + (n + 1));
+					int n = s_vtbls.Count; if(n > 2) Debug_.Print("many VTBLs: " + (n + 1));
 #endif
 					var a = (IntPtr*)vtbl;
 					Util.Marshal_.GetDelegate(a[7], out get_accParent);
@@ -470,7 +616,7 @@ namespace Catkeys
 			{
 				iacc = default;
 				if(idisp == default) return Api.E_FAIL;
-				int hr = Marshal.QueryInterface(idisp, ref _Api.IID_IAccessible, out IntPtr ip);
+				int hr = Marshal.QueryInterface(idisp, ref Api.IID_IAccessible, out IntPtr ip);
 				Marshal.Release(idisp);
 				if(hr == 0 && ip == default) hr = Api.E_FAIL;
 				if(hr == 0) iacc = new IAccessible(ip);
@@ -480,6 +626,11 @@ namespace Catkeys
 			public string ToString(int elem, int level = 0)
 			{
 				using(var a = new Acc(this, elem, addRef: true)) return a.ToString(level);
+			}
+
+			public override string ToString()
+			{
+				return ToString(0);
 			}
 
 			void _WorkaroundGetToolbarButtonName(int elem, AccROLE role, out string R)
@@ -492,11 +643,10 @@ namespace Catkeys
 				//TTM_GETTEXTW (received by the tooltips window)
 				//WM_NOTIFY (missing when bug)
 
-				//TODO: test again finally
+				//tested: UI Automation does not have this bug.
 
 				//rejected: try workaround even when role is unknown. Now returns immediately.
 				//	Usually we get role before name, so it should be known in most cases.
-				//	CONSIDER: document this.
 				//	Some comments below are not updated after this rejection.
 
 				R = null;
@@ -511,7 +661,7 @@ namespace Catkeys
 				}
 
 				//is it a standard toolbar control in a 32-bit process?
-				if(0 != _Api.WindowFromAccessibleObject(this, out var w)) return; //fast
+				if(0 != GetWnd(out var w)) return; //usually fast for these roles
 				if(!w.ClassNameIs("*ToolbarWindow32*")) return; //fast
 				if(w.Is64Bit) return; //slower
 				if(w.Send(Api.WM_GETOBJECT, 0, (int)AccOBJID.QUERYCLASSNAMEIDX) != 65536 + 12) return; //slow but not too much. //note: RealGetWindowClass does not work
@@ -624,7 +774,7 @@ namespace Catkeys
 		/// </summary>
 		static int _BstrToString(int hr, BSTR b, out string s)
 		{
-			if(hr == 0) s = b.ToStringAndDispose()??"";
+			if(hr == 0) s = b.ToStringAndDispose() ?? "";
 			else {
 				if(!b.Is0) b.Dispose(); //rare, but noticed few cases
 				s = "";

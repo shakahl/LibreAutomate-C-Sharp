@@ -538,10 +538,10 @@ namespace Catkeys
 			}
 		}
 
-		[DllImport("Shell32.dll")]
+		[DllImport("shell32.dll")]
 		static extern int SHGetKnownFolderPath(ref KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out string ppszPath);
 
-		[DllImport("Shell32.dll")]
+		[DllImport("shell32.dll")]
 		static extern int SHGetKnownFolderIDList(ref KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
 
 		[Flags]

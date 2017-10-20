@@ -142,11 +142,6 @@ namespace Catkeys.Types
 		}
 
 		/// <summary>
-		/// Sets all fields = 0.
-		/// </summary>
-		public void Set0() { left = right = top = bottom = 0; }
-
-		/// <summary>
 		/// Returns true if all fields == 0.
 		/// </summary>
 		public bool Is0 { get => left == 0 && top == 0 && right == 0 && bottom == 0; }
@@ -265,7 +260,7 @@ namespace Catkeys.Types
 #pragma warning restore 660, 661
 
 	[DebuggerStepThrough]
-	internal struct VARIANT :IDisposable
+	internal unsafe struct VARIANT :IDisposable
 	{
 		public Api.VARENUM vt; //ushort
 		ushort _u1;
@@ -281,6 +276,7 @@ namespace Catkeys.Types
 		public static implicit operator VARIANT(string x) { return new VARIANT(x); }
 
 		public int ValueInt { get { Debug.Assert(vt == Api.VARENUM.VT_I4); return value; } }
+		public BSTR ValueBstr { get { Debug.Assert(vt == Api.VARENUM.VT_BSTR); return BSTR.AttachBSTR((char*)value); } }
 
 		/// <summary>
 		/// Calls VariantClear.
@@ -308,15 +304,15 @@ namespace Catkeys.Types
 		string _ToString(bool noCache)
 		{
 			switch(vt) {
-			case Api.VARENUM.VT_BSTR: return value == default ? null : ((BSTR)value).ToString();
+			case Api.VARENUM.VT_BSTR: return value == default ? null : ValueBstr.ToString();
 			case Api.VARENUM.VT_I4: return value.ToString();
-			case Api.VARENUM.VT_EMPTY: case Api.VARENUM.VT_NULL: return null;
+			case 0: case Api.VARENUM.VT_NULL: return null;
 			}
 			VARIANT v2 = default;
 			uint lcid = 0x409; //invariant
 			switch(vt & (Api.VARENUM)0xff) { case Api.VARENUM.VT_DATE: case Api.VARENUM.VT_DISPATCH: lcid = 0x400; break; } //LOCALE_USER_DEFAULT
 			if(0 != Api.VariantChangeTypeEx(ref v2, ref this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
-			return v2.value == default ? null : ((BSTR)v2.value).ToStringAndDispose(noCache);
+			return v2.value == default ? null : v2.ValueBstr.ToStringAndDispose(noCache);
 		}
 
 		/// <summary>
@@ -346,8 +342,14 @@ namespace Catkeys.Types
 		//	return Util.StringCache.LibAdd(p, SysStringLen(p));
 		//}
 
-		//public static implicit operator BSTR(string s) { fixed (char* p = s) return new BSTR(p); }
-		public static explicit operator BSTR(LPARAM p) => new BSTR((char*)p);
+		public static explicit operator BSTR(string s) => new BSTR((char*)Marshal.StringToBSTR(s));
+		public static explicit operator LPARAM(BSTR b) => b._p;
+
+		public static BSTR AttachBSTR(char* bstr) => new BSTR(bstr);
+
+		public static BSTR CopyFrom(char* anyString) => anyString == null ? default : Api.SysAllocString(anyString);
+
+		public static BSTR Alloc(int len) => Api.SysAllocStringLen(null, len);
 
 		public char* Ptr { get => _p; }
 
@@ -355,6 +357,8 @@ namespace Catkeys.Types
 		/// Returns true if the string is null.
 		/// </summary>
 		public bool Is0 { get => _p == null; }
+
+		public int Length { get => _p == null ? 0 : Api.SysStringLen(_p); }
 
 		/// <summary>
 		/// Converts to string.
@@ -373,7 +377,12 @@ namespace Catkeys.Types
 		public string ToStringAndDispose(bool noCache = false)
 		{
 			var p = _p; if(p == null) return null;
-			int len = SysStringLen(p); if(len == 0) return "";
+			int len = Api.SysStringLen(p); if(len == 0) return "";
+
+			//rejected:
+			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
+			//int len2 = Util.LibCharPtr.Length(p, len); Debug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
+
 			string r = noCache ? Marshal.PtrToStringUni((IntPtr)p, len) : Util.StringCache.LibAdd(p, len);
 			Dispose();
 			return r;
@@ -384,15 +393,9 @@ namespace Catkeys.Types
 			var t = _p;
 			if(t != null) {
 				_p = null;
-				SysFreeString(t);
+				Api.SysFreeString(t);
 			}
 		}
-
-		[DllImport("oleaut32.dll", EntryPoint = "#6")]
-		internal static extern void SysFreeString(char* bstrString);
-
-		[DllImport("oleaut32.dll", EntryPoint = "#7")]
-		internal static extern int SysStringLen(char* pbstr);
 	}
 
 }

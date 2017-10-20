@@ -82,7 +82,7 @@ namespace Catkeys.Types
 		public static string GetErrorMessage(int errorCode)
 		{
 			if(errorCode == 0) return null;
-			if(errorCode == 1) return "No error, but the requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
+			if(errorCode == 1) return "The requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
 			string s = "Unknown exception";
 			char* p = null;
 			const uint fl = Api.FORMAT_MESSAGE_FROM_SYSTEM | Api.FORMAT_MESSAGE_ALLOCATE_BUFFER | Api.FORMAT_MESSAGE_IGNORE_INSERTS;

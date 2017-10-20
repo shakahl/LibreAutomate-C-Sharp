@@ -24,30 +24,17 @@ namespace Catkeys
 	public unsafe partial struct Wnd
 	{
 		/// <summary>
-		/// 
-		/// </summary>
-		static string _String(char* p, int len)
-		{
-			return Util.StringCache.LibAdd(p, len);
-		}
-
-		static string _String(char[] p, int len)
-		{
-			return Util.StringCache.LibAdd(p, len);
-		}
-
-		/// <summary>
 		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
 		/// </summary>
-		void _MinimalWaitIfOtherThread()
+		internal void LibMinimalSleepIfOtherThread()
 		{
-			if(!IsOfThisThread) _MinimalWaitNoCheckThread();
+			if(!IsOfThisThread) LibMinimalSleepNoCheckThread();
 		}
 
 		/// <summary>
 		/// Thread.Sleep(15); SendTimeout(1000, 0);
 		/// </summary>
-		void _MinimalWaitNoCheckThread()
+		internal void LibMinimalSleepNoCheckThread()
 		{
 			Debug.Assert(!IsOfThisThread);
 			//Perf.First();
@@ -122,7 +109,7 @@ namespace Catkeys
 
 			name = w.GetText(false, false); if(Empty(name)) return default;
 
-			for(;;) {
+			for(; ; ) {
 				c = Api.FindWindowEx(default, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
 				if(c.Is0) break;
 				if(c.IsCloaked) return c; //else probably it is an unrelated window
@@ -143,5 +130,54 @@ namespace Catkeys
 		//	string s = w.GetText(false, false); if(Empty(s)) return default;
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
 		//}
+
+		internal static partial class Lib
+		{
+			[Flags]
+			internal enum WFlags
+			{
+				ChromeYes = 1,
+				ChromeNo = 2,
+				JavaYes = 4,
+				JavaNo = 8,
+			}
+
+			/// <summary>
+			/// Calls API SetProp/GetProp to set/get window flags <see cref="WFlags"/>.
+			/// </summary>
+			internal class WinFlags
+			{
+				ushort _atom; //atom is much faster than string
+				static WinFlags s_atom = new WinFlags();
+
+				private WinFlags() => _atom = Api.GlobalAddAtom("catkeys_WFlags");
+
+				~WinFlags() => Api.GlobalDeleteAtom(_atom);
+
+				internal static bool Set(Wnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
+				{
+					if(setAddRem != SetAddRemove.Set) {
+						var f = Get(w);
+						switch(setAddRem) {
+						case SetAddRemove.Add: f |= flags; break;
+						case SetAddRemove.Remove: f &= ~flags; break;
+						case SetAddRemove.Xor: f ^= flags; break;
+						}
+						flags = f;
+					}
+					return w.Prop.Set(s_atom._atom, (int)flags);
+				}
+
+				internal static WFlags Get(Wnd w)
+				{
+					return (WFlags)(int)w.Prop[s_atom._atom];
+				}
+
+				internal static WFlags Remove(Wnd w)
+				{
+					return (WFlags)(int)w.Prop.Remove(s_atom._atom);
+				}
+			}
+		}
 	}
 }

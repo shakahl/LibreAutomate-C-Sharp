@@ -87,6 +87,8 @@ namespace Catkeys
 
 			Util.LibArrayBuilder<Wnd> _AllWindows()
 			{
+				//FUTURE: optimization: if className not wildcard etc, at first find atom. If not found, don't search. If found, compare atom, not class name string.
+
 				var f = _threadId != 0 ? Lib.EnumWindowsAPI.EnumThreadWindows : Lib.EnumWindowsAPI.EnumWindows;
 				return Lib.EnumWindows2(f, 0 == (_flags & WFFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
 			}
@@ -523,15 +525,22 @@ namespace Catkeys
 			}
 
 			/// <summary>
+			/// For EnumWindows2.
+			/// </summary>
+			internal delegate bool EnumCallback(Wnd w, object param);
+
+			/// <summary>
 			/// This version creates much less garbage (the garbage would be the returned managed array).
 			/// The caller must dispose the returned LibArrayBuilder.
 			/// </summary>
 			internal static Util.LibArrayBuilder<Wnd> EnumWindows2(EnumWindowsAPI api,
-				bool onlyVisible, bool sortFirstVisible, Wnd wParent = default, bool directChild = false, int threadId = 0)
+				bool onlyVisible, bool sortFirstVisible, Wnd wParent = default, bool directChild = false, int threadId = 0,
+				EnumCallback predicate = null, object param = default)
 			{
-				using(var d = new _WndEnum(api, onlyVisible, directChild, wParent)) {
+				using(var d = new _WndEnum(api, onlyVisible, directChild, wParent, predicate, param)) {
 					d.Enumerate(threadId);
 
+					//CONSIDER: sort not only visible first, but also non-popup, non-toolwindow. Eg now finds a QM toolbar instead of Firefox.
 					if(sortFirstVisible && !onlyVisible) {
 						if(t_sort == null) t_sort = new WeakReference<List<Wnd>>(null);
 						if(!t_sort.TryGetTarget(out var aVisible)) t_sort.SetTarget(aVisible = new List<Wnd>(250));
@@ -562,8 +571,10 @@ namespace Catkeys
 				Wnd _wParent;
 				EnumWindowsAPI _api;
 				bool _onlyVisible, _directChild, _disposeArray;
+				EnumCallback _predicate;
+				object _param;
 
-				public _WndEnum(EnumWindowsAPI api, bool onlyVisible, bool directChild, Wnd wParent)
+				public _WndEnum(EnumWindowsAPI api, bool onlyVisible, bool directChild, Wnd wParent, EnumCallback predicate, object param)
 				{
 					a = default;
 					_disposeArray = true;
@@ -571,6 +582,8 @@ namespace Catkeys
 					_onlyVisible = onlyVisible;
 					_directChild = directChild;
 					_wParent = wParent;
+					_predicate = predicate;
+					_param = param;
 				}
 
 				public void Dispose()
@@ -591,6 +604,7 @@ namespace Catkeys
 					if(_api == EnumWindowsAPI.EnumChildWindows) {
 						if(_directChild && Api.GetParent(w) != _wParent) return 1;
 					} else if(!_wParent.Is0 && w.WndOwner != _wParent) return 1;
+					if(_predicate != null && !_predicate(w, _param)) return 1;
 					a.Add(w);
 					return 1;
 				}
@@ -610,6 +624,16 @@ namespace Catkeys
 						break;
 					}
 					return ok;
+
+					//note: need this in exe manifest. Else EnumWindows skips "immersive" windows if this process is not admin/uiAccess.
+					/*
+  <asmv3:application>
+    ...
+    <asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">
+      <disableWindowFiltering>true</disableWindowFiltering>
+    </asmv3:windowsSettings>
+  </asmv3:application>
+					*/
 				}
 
 				[DllImport("user32.dll", SetLastError = true)]

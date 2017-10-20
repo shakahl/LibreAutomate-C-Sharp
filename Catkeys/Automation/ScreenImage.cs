@@ -215,29 +215,33 @@ namespace Catkeys
 				return f.Result;
 			}
 		}
+		//TODO: colorDiff should be double 0 to 1, not int 0 to 255.
+		//TODO: (if not already done): an easier way to find window/control/Acc/etc that contains image.
+		//TODO: should have a public Finder, like Wnd and Acc.
+		//FUTURE: test OpenCV - an open source library for computer vision.
 
 		internal enum _Action { Find, Wait, WaitNot, WaitChanged }
 
 		/// <summary>
 		/// Waits for the specified image(s) or color(s) on the screen.
 		/// Returns <see cref="SIResult"/> object containing the rectangle of the found image.
-		/// On timeout returns false if timeS is negative (else exception).
+		/// On timeout returns false if secondsTimeout is negative (else exception).
 		/// </summary>
-		/// <param name="timeS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeS time throws <b>TimeoutException</b>. If &lt;0, after -timeS time returns null.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns null.
 		/// </param>
 		/// <param name="image"></param>
 		/// <param name="area"></param>
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
 		/// <param name="also"></param>
-		/// <exception cref="TimeoutException">Timeout. Thrown only when timeS is greater than 0.</exception>
+		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="Find"/>.
 		/// </remarks>
-		public static SIResult Wait(double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
+		public static SIResult WaitFor(double secondsTimeout, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
 		{
-			var r = _Wait(_Action.Wait, timeS, image, area, flags, colorDiff, also);
+			var r = _Wait(_Action.Wait, secondsTimeout, image, area, flags, colorDiff, also);
 			return r.ok ? r.result : null;
 
 			//tested: does not create garbage while waiting.
@@ -245,10 +249,10 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the specified image(s) or color(s) is NOT found on the screen.
-		/// Returns true. On timeout returns false if timeS is negative (else exception).
+		/// Returns true. On timeout returns false if secondsTimeout is negative (else exception).
 		/// </summary>
-		/// <param name="timeS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeS time throws <b>TimeoutException</b>. If &lt;0, after -timeS time returns false.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
 		/// </param>
 		/// <param name="image"></param>
 		/// <param name="area"></param>
@@ -258,17 +262,17 @@ namespace Catkeys
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="Find"/>.
 		/// </remarks>
-		public static bool WaitNot(double timeS, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
+		public static bool WaitNot(double secondsTimeout, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
 		{
-			return _Wait(_Action.WaitNot, timeS, image, area, flags, colorDiff, also).ok;
+			return _Wait(_Action.WaitNot, secondsTimeout, image, area, flags, colorDiff, also).ok;
 		}
 
 		/// <summary>
 		/// Waits until something visually changes in a screen area.
-		/// Returns true. On timeout returns false if timeS is negative (else exception).
+		/// Returns true. On timeout returns false if secondsTimeout is negative (else exception).
 		/// </summary>
-		/// <param name="timeS">
-		/// The maximal time to wait, in seconds. If 0, waits indefinitely. If &gt;0, after timeS time throws <b>TimeoutException</b>. If &lt;0, after -timeS time returns false.
+		/// <param name="secondsTimeout">
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
 		/// </param>
 		/// <param name="area"></param>
 		/// <param name="flags"></param>
@@ -276,15 +280,15 @@ namespace Catkeys
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="WaitNot"/> and <see cref="Find"/>. Instead of <b>image</b> parameter, this function captures the screen area image at the beginning.
 		/// </remarks>
-		public static bool WaitChanged(double timeS, SIArea area, SIFlags flags = 0, int colorDiff = 0)
+		public static bool WaitChanged(double secondsTimeout, SIArea area, SIFlags flags = 0, int colorDiff = 0)
 		{
-			return _Wait(_Action.WaitChanged, timeS, null, area, flags, colorDiff, null).ok;
+			return _Wait(_Action.WaitChanged, secondsTimeout, null, area, flags, colorDiff, null).ok;
 		}
 
-		static (bool ok, SIResult result) _Wait(_Action action, double timeS, object image, SIArea area, SIFlags flags, int colorDiff, Func<SIResult, bool> also)
+		static (bool ok, SIResult result) _Wait(_Action action, double secondsTimeout, object image, SIArea area, SIFlags flags, int colorDiff, Func<SIResult, bool> also)
 		{
 			using(var f = new _Finder(action, image, area, flags, colorDiff, also)) {
-				var ok = WaitFor.Condition(timeS, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
+				var ok = Catkeys.WaitFor.Condition(secondsTimeout, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
 				return (ok, f.Result);
 			}
 		}
@@ -425,7 +429,7 @@ namespace Catkeys
 					_area.W.ThrowIfInvalid();
 					break;
 				case SIArea.AType.Acc:
-					if(_area.A.Is0) throw new ArgumentNullException(nameof(area));
+					if(_area.A == null) throw new ArgumentNullException(nameof(area));
 					_area.W = _area.A.WndContainer;
 					break;
 				case SIArea.AType.Bitmap:
@@ -491,7 +495,7 @@ namespace Catkeys
 					break;
 				default: //Screen
 					r = _area.R;
-					if(!Screen_.IsInAnyScreen(r)) r.Set0();
+					if(!Screen_.IsInAnyScreen(r)) r = default;
 					_area.HasRect = false;
 					_resultOffset.X = r.left; _resultOffset.Y = r.top;
 					break;
@@ -1052,7 +1056,7 @@ namespace Catkeys.Types
 
 		internal void LibClear()
 		{
-			Rect.Set0();
+			Rect = default;
 			ListIndex = 0;
 			MatchIndex = 0;
 		}
@@ -1070,8 +1074,8 @@ namespace Catkeys.Types
 			//	if(area.W.IsCloaked) area.W.ActivateLL();
 			//}
 
-			if(x.IsNull) x = Coord.Center;
-			if(y.IsNull) y = Coord.Center;
+			if(x.IsEmpty) x = Coord.Center;
+			if(y.IsEmpty) y = Coord.Center;
 			var p = Coord.NormalizeInRect(x, y, Rect);
 
 			if(area.Type == SIArea.AType.Screen) {
@@ -1079,7 +1083,7 @@ namespace Catkeys.Types
 				else Mouse.ClickEx(button, p.X, p.Y);
 			} else {
 				if(area.Type == SIArea.AType.Acc) {
-					if(!area.A.GetRect(out var r, area.W)) throw new CatException("*get rectangle");
+					if(!area.A.GetRect(out var r, area.W)) throw new CatException(0, "*get rectangle");
 					p.Offset(r.left, r.top);
 				}
 				if(button == 0) Mouse.Move(area.W, p.X, p.Y);

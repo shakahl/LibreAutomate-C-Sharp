@@ -89,10 +89,10 @@ namespace Catkeys
 		{
 			//UNFINISHED
 			/// <summary>
-			/// Converts keys string to List.
+			/// Converts keys string to Keys[] array.
 			/// </summary>
 			/// <param name="s"></param>
-			public static List<Keys> ReadKeyString(string s)
+			public static Keys[] ReadKeyString(string s)
 			{
 				if(s == null) return null;
 				var a = new List<Keys>();
@@ -130,7 +130,7 @@ namespace Catkeys
 					}
 				}
 
-				return a;
+				return a.ToArray();
 			}
 
 			/// <summary>

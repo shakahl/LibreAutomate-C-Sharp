@@ -41,20 +41,21 @@ namespace Catkeys
 		/// <example>
 		/// Blue text.
 		/// <code><![CDATA[
-		/// Debug_.Prefix = "<><c 0xff0000>"; Debug_.Suffix = "</c>";
+		/// Debug_.TextPrefix = "<><c 0xff0000>"; Debug_.TextSuffix = "</c>";
 		/// ]]></code>
 		/// </example>
-		public static string Prefix { get; set; } = "Debug: ";
+		public static string TextPrefix { get; set; } = "Debug: ";
+		//info: named not Prefix, because intellisense selects it when we want Print, it is annoying
 
 		/// <summary>
 		/// Suffix for Debug_.Print, Debug_.PrintIf, Debug_.PrintHex.
 		/// </summary>
-		/// <seealso cref="Prefix"/>
-		public static string Suffix { get; set; }
+		/// <seealso cref="TextPrefix"/>
+		public static string TextSuffix { get; set; }
 
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
-			Output.Write($"{Prefix}{cmn} ({Path_.GetFileName(cp)}:{cln}):  {text}{Suffix}");
+			Output.Write($"{TextPrefix}{cmn} ({Path_.GetFileName(cp)}:{cln}):  {text}{TextSuffix}");
 		}
 
 		/// <summary>

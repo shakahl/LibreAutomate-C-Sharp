@@ -6,3 +6,4 @@
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0017:Simplify object initialization")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles")]
+//[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("", "AD0002")] //does not work

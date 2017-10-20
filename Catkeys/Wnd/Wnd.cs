@@ -342,6 +342,16 @@ namespace Catkeys
 		}
 
 		/// <summary>
+		/// Throws <see cref="WndException"/> that uses mainMessage and the specified Windows API error code.
+		/// Also the message depends on whether the window handle is 0/invalid.
+		/// </summary>
+		/// <exception cref="WndException"></exception>
+		public void ThrowUseNative(int errorCode, string mainMessage)
+		{
+			throw new WndException(this, errorCode, mainMessage);
+		}
+
+		/// <summary>
 		/// Throws <see cref="WndException"/> that uses mainMessage and does not use the last Windows API error.
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
@@ -410,7 +420,7 @@ namespace Catkeys
 		public void Show(bool show)
 		{
 			if(!ShowLL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
-			_MinimalWaitIfOtherThread();
+			LibMinimalSleepIfOtherThread();
 		}
 
 		/// <summary>
@@ -642,7 +652,7 @@ namespace Catkeys
 				}
 			}
 
-			_MinimalWaitIfOtherThread();
+			LibMinimalSleepIfOtherThread();
 		}
 
 		/// <summary>
@@ -784,6 +794,7 @@ namespace Catkeys
 
 					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
 					if(w == Misc.WndRoot) return WndActive.Is0;
+					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
 					return Misc.WaitForAnActiveWindow();
 				}
 				//catch(WndException) { return false; }
@@ -826,8 +837,8 @@ namespace Catkeys
 		{
 			//CONSIDER: use Options.Relaxed
 
-			if(0 != (flags & Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(0 != (flags & Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
+			if(!flags.Has_(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
+			if(flags.Has_(Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
 			else {
 				var w = WndWindow;
 				if(w != this) {
@@ -861,8 +872,8 @@ namespace Catkeys
 					bool ok = ActivateLL();
 
 					if(!ofThisThread) {
-						_MinimalWaitNoCheckThread();
-						_MinimalWaitNoCheckThread();
+						LibMinimalSleepNoCheckThread();
+						LibMinimalSleepNoCheckThread();
 					}
 
 					if(ok) {
@@ -878,7 +889,7 @@ namespace Catkeys
 								} else {
 									R = Api.SetForegroundWindow(Misc.WndRoot) && ActivateLL() && WndActive.ThreadId == tid;
 									if(R && !ofThisThread) {
-										_MinimalWaitNoCheckThread();
+										LibMinimalSleepNoCheckThread();
 										R = WndActive.ThreadId == tid;
 									}
 								}
@@ -908,10 +919,10 @@ namespace Catkeys
 					for(int i = 0; i < 50; i++) { Thread.Sleep(30); if(R = !IsCloaked) break; }
 					if(R) {
 						if(forScreenCapture) Thread.Sleep(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
-						_MinimalWaitNoCheckThread();
+						LibMinimalSleepNoCheckThread();
 						R = IsActive;
 						if(!R && ActivateLL()) {
-							_MinimalWaitNoCheckThread();
+							LibMinimalSleepNoCheckThread();
 							R = IsActive;
 						}
 					}
@@ -919,7 +930,7 @@ namespace Catkeys
 			}
 
 			if(!R) ThrowNoNative("*activate*");
-			if(forScreenCapture) _MinimalWaitIfOtherThread();
+			if(forScreenCapture) LibMinimalSleepIfOtherThread();
 
 			return true;
 
@@ -1011,14 +1022,14 @@ namespace Catkeys
 		/// <summary>
 		/// Sets the keyboard input focus to this control or window.
 		/// Also activetes its top-level parent window (see <see cref="Activate()"/>).
-		/// Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="FocusLL"/>.
+		/// Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="FocusLocal"/>.
 		/// </summary>
 		/// <remarks>
 		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then does not throw exception.
 		/// </remarks>
 		/// <exception cref="WndException">
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
-		/// Fails to set focus when the target process is admin and this process is normal.
+		/// Fails to set focus when the target process is admin and this process isn't.
 		/// </exception>
 		/// <seealso cref="WndFocused"/>
 		/// <seealso cref="IsFocused"/>
@@ -1030,52 +1041,44 @@ namespace Catkeys
 
 			int th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
 			if(th1 == th2) {
-				Api.SetFocus(this);
-				if(this != WndFocusedLL) ThrowUseNative("*set focus");
+				if(!FocusLocal()) {
+					if(!IsEnabled) goto gDisabled;
+					goto gFailed;
+				}
 				return;
 			}
 
 			if(IsFocused) return;
-			if(!IsEnabled) { //SetFocus would fail
-				ThrowIfInvalid();
-				ThrowNoNative("*set focus. Disabled");
-			}
+			if(!IsEnabled) goto gDisabled;
 
 			bool ok = false;
 			if(Api.AttachThreadInput(th1, th2, true))
 				try {
 					for(int i = 0; i < 5; i++) {
+						if(i > 0) Thread.Sleep(30);
 						Native.ClearError();
-						Api.SetFocus(this);
-						Wnd f = WndFocused;
-						if(f == this || f.IsChildOf(this)) { ok = true; break; }
-						//Print(i);
-						Thread.Sleep(30);
+						if(FocusLocal()) {
+							Wnd f = WndFocused;
+							if(f == this || f.IsChildOf(this)) { ok = true; break; }
+						}
 					}
 				}
 				finally { Api.AttachThreadInput(th1, th2, false); }
 
-			if(!ok) ThrowUseNative("*set focus");
+			if(!ok) goto gFailed;
 
-			_MinimalWaitNoCheckThread();
-
-			//note: don't use accSelect, it has bugs
-		}
-
-		/// <summary>
-		/// Sets the keyboard input focus to this control or window.
-		/// Does nothing if it belongs to another thread or its top-level parent window isn't the active window.
-		/// Calls API <msdn>SetFocus</msdn>.
-		/// </summary>
-		/// <seealso cref="WndFocusedLL"/>
-		public void FocusLL()
-		{
-			Api.SetFocus(this);
+			LibMinimalSleepNoCheckThread();
+			return;
+			gDisabled: //SetFocus fails if disabled
+			ThrowIfInvalid();
+			ThrowNoNative("*set focus. Disabled");
+			gFailed:
+			ThrowUseNative("*set focus");
 		}
 
 		/// <summary>
 		/// Gets the control or window that has the keyboard input focus.
-		/// It can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="WndFocusedLL"/>.
+		/// It can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="WndFocusedLocal"/>.
 		/// Calls API <msdn>GetGUIThreadInfo</msdn>.
 		/// </summary>
 		/// <seealso cref="Focus"/>
@@ -1090,19 +1093,47 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets the control or window of this thread that has the keyboard input focus.
-		/// Calls API <msdn>GetFocus</msdn>.
-		/// </summary>
-		/// <seealso cref="FocusLL"/>
-		public static Wnd WndFocusedLL { get => Api.GetFocus(); }
-
-		/// <summary>
 		/// Returns true if this is the control or window that has the keyboard input focus.
-		/// Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="WndFocusedLL"/>.
+		/// Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="IsFocusedLocal"/>.
 		/// Calls <see cref="WndFocused"/>.
 		/// </summary>
 		/// <seealso cref="Focus"/>
 		public bool IsFocused { get => !this.Is0 && this == WndFocused; }
+
+		/// <summary>
+		/// Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to this control or window, which must be of this thread.
+		/// Fails if it belongs to another thread or is invalid or disabled.
+		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// </summary>
+		/// <remarks>
+		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then returns true.
+		/// </remarks>
+		/// <seealso cref="WndFocusedLocal"/>
+		/// <seealso cref="IsFocusedLocal"/>
+		public bool FocusLocal()
+		{
+			if(this.Is0) { Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE); return false; }
+			var w = Api.GetFocus(); if(w == this) return true;
+			if(!Api.SetFocus(this).Is0) return true;
+			if(w.Is0) return !Api.GetFocus().Is0;
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the control or window of this thread that has the keyboard input focus.
+		/// Calls API <msdn>GetFocus</msdn>.
+		/// </summary>
+		/// <seealso cref="FocusLocal"/>
+		/// <seealso cref="IsFocusedLocal"/>
+		public static Wnd WndFocusedLocal { get => Api.GetFocus(); }
+
+		/// <summary>
+		/// Returns true if this is the control or window of this thread that has the keyboard input focus.
+		/// Calls API <msdn>GetFocus</msdn>.
+		/// </summary>
+		/// <seealso cref="FocusLocal"/>
+		/// <seealso cref="WndFocusedLocal"/>
+		public bool IsFocusedLocal { get => !this.Is0 && this == Api.GetFocus(); }
 
 		#endregion
 
@@ -1110,33 +1141,33 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets rectangle (position and size) in screen coordinates.
-		/// The same as the Rect property.
+		/// The same as the <see cref="Rect"/> property.
 		/// </summary>
 		/// <param name="r">Receives the rectangle. Will be empty if failed.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		bool _GetRect(out RECT r)
+		public bool GetRect(out RECT r)
 		{
 			if(Api.GetWindowRect(this, out r)) return true;
-			r.Set0();
+			r = default;
 			return false;
 		}
 
 		/// <summary>
 		/// Gets width and height.
-		/// The same as the Size property.
+		/// The same as the <see cref="Size"/> property.
 		/// </summary>
 		/// <param name="z">Receives width and height. Will be empty if failed.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		bool _GetSize(out Size z)
+		public bool GetSize(out Size z)
 		{
 			if(Api.GetWindowRect(this, out RECT r)) { z = new Size(r.Width, r.Height); return true; }
-			z = new Size();
+			z = default;
 			return false;
 		}
 
@@ -1144,31 +1175,30 @@ namespace Catkeys
 		/// Gets rectangle (position and size) in screen coordinates.
 		/// </summary>
 		/// <remarks>
-		/// Calls API <msdn>GetWindowRect</msdn>. Returns empty RECT if fails (eg window closed).
-		/// Supports <see cref="Native.GetError"/>.
+		/// Calls <see cref="GetRect"/>. Returns empty RECT if fails (eg window closed).
 		/// </remarks>
 		public RECT Rect
 		{
 			get
 			{
-				_GetRect(out RECT r);
+				GetRect(out RECT r);
 				return r;
 			}
 		}
-		//TODO: Need a function to get the visible part of window rect, without the transparent border on Win10. There is API, but don't remember.
+		//TODO: Need a function to get the visible part of window rect, without the transparent border on Win10. There is API, but don't remember, maybe in DWM.
 
 		/// <summary>
 		/// Gets width and height.
 		/// </summary>
 		/// <remarks>
-		/// Calls API <msdn>GetWindowRect</msdn>. Returns empty Size if fails (eg window closed).
+		/// Calls <see cref="GetSize"/>. Returns empty Size if fails (eg window closed).
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		public Size Size
 		{
 			get
 			{
-				_GetSize(out Size z);
+				GetSize(out Size z);
 				return z;
 			}
 		}
@@ -1176,31 +1206,34 @@ namespace Catkeys
 		/// <summary>
 		/// Gets horizontal position in screen coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
 		public int X
 		{
 			get => Rect.left;
 		}
+
 		/// <summary>
 		/// Gets vertical position in screen coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
 		public int Y
 		{
 			get => Rect.top;
 		}
+
 		/// <summary>
 		/// Gets width.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
 		public int Width
 		{
 			get => Rect.Width;
 		}
+
 		/// <summary>
 		/// Gets height.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
 		public int Height
 		{
 			get => Rect.Height;
@@ -1208,35 +1241,35 @@ namespace Catkeys
 
 		/// <summary>
 		/// Gets client area rectangle.
-		/// The same as the ClientRect property.
-		/// The same as _GetClientSize, just the parameter type is different.
+		/// The same as the <see cref="ClientRect"/> property.
+		/// The same as <see cref="GetClientSize"/>, just the parameter type is different.
 		/// </summary>
 		/// <param name="r">Receives the rectangle. Will be empty if failed.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		bool _GetClientRect(out RECT r)
+		public bool GetClientRect(out RECT r)
 		{
 			if(Api.GetClientRect(this, out r)) return true;
-			r.Set0();
+			r = default;
 			return false;
 		}
 
 		/// <summary>
 		/// Gets client area width and height.
-		/// The same as the ClientSize property.
-		/// The same as _GetClientRect, just the parameter type is different.
+		/// The same as the <see cref="ClientSize"/> property.
+		/// The same as <see cref="GetClientRect"/>, just the parameter type is different.
 		/// </summary>
 		/// <param name="z">Receives width and height. Will be empty if failed.</param>
 		/// <remarks>
 		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		bool _GetClientSize(out Size z)
+		public bool GetClientSize(out Size z)
 		{
 			if(Api.GetClientRect(this, out RECT r)) { z = new Size(r.right, r.bottom); return true; }
-			z = new Size();
+			z = default;
 			return false;
 		}
 
@@ -1246,15 +1279,13 @@ namespace Catkeys
 		/// </summary>
 		/// <remarks>
 		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
-		/// Calls <msdn>GetClientRect</msdn>. Returns empty rectangle if fails (eg window closed).
-		/// Supports <see cref="Native.GetError"/>.
+		/// Calls <see cref="GetClientRect"/>. Returns empty rectangle if fails (eg window closed).
 		/// </remarks>
 		public RECT ClientRect
 		{
 			get
 			{
-				//TODO: Native.ClearError. In other places too. Also let _GetRect etc be public.
-				_GetClientRect(out RECT r);
+				GetClientRect(out RECT r);
 				return r;
 			}
 		}
@@ -1263,29 +1294,30 @@ namespace Catkeys
 		/// The same as <see cref="ClientRect"/>, just the return type is different.
 		/// </summary>
 		/// <remarks>
-		/// Calls <msdn>GetClientRect</msdn>. Returns empty Size value if fails (eg window closed).
-		/// Supports <see cref="Native.GetError"/>.
+		/// Calls <see cref="GetClientSize"/>. Returns empty Size value if fails (eg window closed).
 		/// </remarks>
 		public Size ClientSize
 		{
 			get
 			{
-				_GetClientSize(out Size z);
+				GetClientSize(out Size z);
 				return z;
 			}
 		}
+
 		/// <summary>
 		/// Gets client area width.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
 		public int ClientWidth
 		{
 			get => ClientSize.Width;
 		}
+
 		/// <summary>
 		/// Gets client area height.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
 		public int ClientHeight
 		{
 			get => ClientSize.Height;
@@ -1319,7 +1351,7 @@ namespace Catkeys
 		{
 			//initially this was public, but probably don't need.
 
-			wi = new Api.WINDOWINFO(); wi.cbSize = Api.SizeOf(wi);
+			wi = default; wi.cbSize = Api.SizeOf(wi);
 			return Api.GetWindowInfo(this, ref wi);
 		}
 
@@ -1332,16 +1364,16 @@ namespace Catkeys
 		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
 		{
 			if(LibGetWindowInfo(out var u)) { rWindow = u.rcWindow; rClient = u.rcClient; return true; }
-			rWindow = new RECT(); rClient = new RECT();
+			rWindow = default; rClient = default;
 			return false;
 		}
 
 		/// <summary>
 		/// Gets client area rectangle in screen coordinates.
-		/// Returns empty rectangle if fails (eg window closed).
-		/// Use <see cref="GetWindowAndClientRectInScreen">GetWindowAndClientRectInScreen</see> instead when you need a bool return value.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>
+		/// Calls <see cref="GetWindowAndClientRectInScreen"/>. Returns empty rectangle if fails (eg window closed).
+		/// </remarks>
 		public RECT ClientRectInScreen
 		{
 			get
@@ -1462,7 +1494,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool MapWindowToScreen(ref Point p)
 		{
-			if(!_GetRect(out var rw)) return false;
+			if(!GetRect(out var rw)) return false;
 			p.X += rw.left; p.Y += rw.top;
 			return true;
 		}
@@ -1473,7 +1505,7 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool MapWindowToScreen(ref RECT r)
 		{
-			if(!_GetRect(out var rw)) return false;
+			if(!GetRect(out var rw)) return false;
 			r.Offset(rw.left, rw.top);
 			return true;
 		}
@@ -1487,15 +1519,16 @@ namespace Catkeys
 		/// <seealso cref="RectInParent"/>
 		public bool GetRectInClientOf(Wnd w, out RECT r)
 		{
-			if(w.Is0) return _GetRect(out r);
-			return _GetRect(out r) && w.MapScreenToClient(ref r);
+			if(w.Is0) return GetRect(out r);
+			return GetRect(out r) && w.MapScreenToClient(ref r);
 		}
 
 		/// <summary>
 		/// Gets or sets child window rectangle in parent window's client area.
-		/// Calls <see cref="GetRectInClientOf">GetRectInClientOf</see>. Returns empty rectangle if fails (eg window closed).
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>
+		/// Calls <see cref="GetRectInClientOf">GetRectInClientOf</see>. Returns empty rectangle if fails (eg window closed).
+		/// </remarks>
 		public RECT RectInParent
 		{
 			get
@@ -1539,8 +1572,8 @@ namespace Catkeys
 		public bool ContainsScreenXY(Coord x, Coord y, bool workArea = false, object screen = null)
 		{
 			Point p = Coord.Normalize(x, y, workArea, screen);
-			if(!_GetRect(out RECT r)) return false;
-			if(!r.Contains(x.IsNull ? r.left : p.X, y.IsNull ? r.top : p.Y)) return false;
+			if(!GetRect(out RECT r)) return false;
+			if(!r.Contains(x.IsEmpty ? r.left : p.X, y.IsEmpty ? r.top : p.Y)) return false;
 			return true;
 
 			//note: we don't use name ContainsXY and 2 overloads, mostly because of possible incorrect usage. Also now easier to read the code.
@@ -1560,7 +1593,7 @@ namespace Catkeys
 			if(!parent.IsAlive) return false;
 			Point p = Coord.NormalizeInWindow(x, y, parent);
 			if(!GetRectInClientOf(parent, out RECT r)) return false;
-			if(!r.Contains(x.IsNull ? r.left : p.X, y.IsNull ? r.top : p.Y)) return false;
+			if(!r.Contains(x.IsEmpty ? r.left : p.X, y.IsEmpty ? r.top : p.Y)) return false;
 			return true;
 		}
 
@@ -1663,8 +1696,8 @@ namespace Catkeys
 			}
 
 			uint f = 0, getRect = 0;
-			if(x.IsNull && y.IsNull) f |= Native.SWP_NOMOVE; else if(x.IsNull) getRect |= 1; else if(y.IsNull) getRect |= 2;
-			if(width.IsNull && height.IsNull) f |= Native.SWP_NOSIZE; else if(width.IsNull) getRect |= 4; else if(height.IsNull) getRect |= 8;
+			if(x.IsEmpty && y.IsEmpty) f |= Native.SWP_NOMOVE; else if(x.IsEmpty) getRect |= 1; else if(y.IsEmpty) getRect |= 2;
+			if(width.IsEmpty && height.IsEmpty) f |= Native.SWP_NOSIZE; else if(width.IsEmpty) getRect |= 4; else if(height.IsEmpty) getRect |= 8;
 
 			if(getRect != 0) {
 				if(!GetRectInClientOf(w, out RECT r)) ThrowUseNative("*move/resize*");
@@ -1682,7 +1715,7 @@ namespace Catkeys
 
 			if(!MoveLL(xy.X, xy.Y, wh.X, wh.Y, f)) ThrowUseNative("*move/resize*");
 
-			_MinimalWaitIfOtherThread();
+			LibMinimalSleepIfOtherThread();
 		}
 
 		/// <summary>
@@ -1747,12 +1780,12 @@ namespace Catkeys
 
 				int x, y, wid = r.Width, hei = r.Height;
 				if(bEnsureMethod) {
-					Debug.Assert(bEnsureInScreen == true && left.IsNull && top.IsNull); //left/top unused
+					Debug.Assert(bEnsureInScreen == true && left.IsEmpty && top.IsEmpty); //left/top unused
 					x = r.left;
 					y = r.top;
 				} else {
-					if(left.IsNull) left = Coord.Center;
-					if(top.IsNull) top = Coord.Center;
+					if(left.IsEmpty) left = Coord.Center;
+					if(top.IsEmpty) top = Coord.Center;
 					var p = Coord.NormalizeInRect(left, top, rs);
 					x = p.X; y = p.Y;
 					switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
@@ -1799,7 +1832,7 @@ namespace Catkeys
 						if(!hto.Is0) w.WndOwner = hto;
 					}
 
-					w._MinimalWaitIfOtherThread();
+					w.LibMinimalSleepIfOtherThread();
 				}
 			}
 		}
@@ -1820,7 +1853,7 @@ namespace Catkeys
 		/// <seealso cref="RECT.MoveInScreen"/>
 		public void MoveInScreen(Coord x, Coord y, object screen = null, bool workArea = true, bool ensureInScreen = true)
 		{
-			var r = new RECT();
+			RECT r = default;
 			Lib.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
 		}
 
@@ -1839,7 +1872,7 @@ namespace Catkeys
 		/// <seealso cref="RECT.EnsureInScreen"/>
 		public void EnsureInScreen(object screen = null, bool workArea = true)
 		{
-			var r = new RECT();
+			RECT r = default;
 			if(screen is int) screen = Screen_.FromIndex((int)screen, noThrow: true); //returns null if invalid
 			Lib.MoveInScreen(true, null, null, true, this, ref r, screen, workArea, true);
 		}
@@ -2157,81 +2190,18 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetProp</msdn> and returns its return value.
+		/// Returns an object that manages window properties using API <msdn>SetProp</msdn> and co.
 		/// </summary>
-		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM PropGet(string name)
-		{
-			return Api.GetProp(this, name);
-		}
-		/// <summary>
-		/// Calls API <msdn>GetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="atom">Property name atom in the global atom table.</param>
-		public LPARAM PropGet(ushort atom)
-		{
-			return Api.GetProp(this, atom);
-			//note: cannot use GetLastError, it returns 0 when using atom that exists somewhere else.
-		}
-
-		/// <summary>
-		/// Calls API <msdn>SetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-		/// <param name="value">Property value. Can be a handle or an integer value.</param>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool PropSet(string name, LPARAM value)
-		{
-			return Api.SetProp(this, name, value);
-		}
-		/// <summary>
-		/// Calls API <msdn>SetProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="atom">Property name atom in the global atom table.</param>
-		/// <param name="value">Property value. Can be a handle or an integer value.</param>
-		public bool PropSet(ushort atom, LPARAM value)
-		{
-			return Api.SetProp(this, atom, value);
-		}
-
-		/// <summary>
-		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM PropRemove(string name)
-		{
-			return Api.RemoveProp(this, name);
-		}
-		/// <summary>
-		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
-		/// </summary>
-		/// <param name="atom">Property name atom in the global atom table.</param>
-		public LPARAM PropRemove(ushort atom)
-		{
-			return Api.RemoveProp(this, atom);
-		}
-
-		/// <summary>
-		/// Gets list of window properties (see <see cref="PropGet(string)">PropGet</see>, PropSet, PropRemove).
-		/// Calls API <msdn>EnumPropsEx</msdn>.
-		/// </summary>
-		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied (UAC). Supports <see cref="Native.GetError"/>.
-		/// </remarks>
-		public Dictionary<string, LPARAM> PropList()
-		{
-			var a = new Dictionary<string, LPARAM>();
-			Api.EnumPropsEx(this, (w, name, data, p) =>
-			{
-				string s;
-				if((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
-				a.Add(s, data);
-				return true;
-			}, Zero);
-			return a;
-		}
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = Wnd.Find("* Explorer");
+		/// w.Prop.Set("example", 5);
+		/// Print(w.Prop["example"]);
+		/// Print(w.Prop); //shows all w properties
+		/// w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
+		/// ]]></code>
+		/// </example>
+		public WProp Prop { get => new WProp(this); }
 
 		#endregion
 
@@ -2402,7 +2372,7 @@ namespace Catkeys
 				var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
 				int n = Api.GetClassName(this, b, stackSize);
 				if(n == 0) return null;
-				return _String(b, n);
+				return Util.StringCache.LibAdd(b, n);
 			}
 		}
 
@@ -2514,7 +2484,7 @@ namespace Catkeys
 				Native.ClearError();
 				int nr = Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
-					if(nr > 0) return _String(b, nr);
+					if(nr > 0) return Util.StringCache.LibAdd(b, nr);
 					if(Native.GetError() != 0) return null;
 					if(useSlowIfEmpty && HasStyle(Native.WS_CHILD)) return _GetTextSlow();
 					return "";
@@ -2539,7 +2509,7 @@ namespace Catkeys
 				if(ln < 1) return "";
 				b.A[n] = '\0';
 				n = Util.LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
-				return _String(b, n);
+				return Util.StringCache.LibAdd(b, n);
 			}
 
 			//note: cannot do this optimization:
@@ -2569,19 +2539,10 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets MSAA IAccessible.Name property.
+		/// Gets <see cref="Acc.Name"/> of the root accessible object (WINDOW) of this window or control.
+		/// Returns "" if the object has no name or failed to get it. Returns null if this window is invalid.
 		/// </summary>
-		public string NameAcc { get => _GetNameAcc(); }
-
-		string _GetNameAcc()
-		{
-			if(!IsAlive) return null;
-			try {
-				return Acc.FromWindow(this).Name;
-			}
-			catch(CatException) { }
-			return null;
-		}
+		public string NameAcc { get => Acc.LibNameOfWindow(this); }
 
 		/// <summary>
 		/// Gets Control.Name property of a .NET Windows Forms control.
@@ -2687,20 +2648,20 @@ namespace Catkeys
 					}
 				}
 			}
-			_MinimalWaitNoCheckThread();
+			LibMinimalSleepNoCheckThread();
 			Misc.WaitForAnActiveWindow();
 
 			return !IsAlive;
 		}
 
-		//bool _IsBusy(int timeMS)
+		//bool _IsBusy(int milliseconds)
 		//{
 		//	//Need to measure time. Cannot use just 2 ms timeout and ST return value because of the system timer default period 15.6 ms etc.
 		//	var t = Time.Microseconds;
-		//	SendTimeout(5 + timeMS, 0, flags: 0);
+		//	SendTimeout(5 + milliseconds, 0, flags: 0);
 		//	var d = Time.Microseconds - t;
 		//	//Print(d);
-		//	return (d >= timeMS * 1000L);
+		//	return (d >= milliseconds * 1000L);
 		//}
 
 		//Rarely used. It is easy, and there is example in Close() help: Wnd.FindAll("* Notepad", "Notepad").ForEach(t => t.Close());
@@ -2723,4 +2684,114 @@ namespace Catkeys
 
 	}
 
+}
+
+namespace Catkeys.Types
+{
+	/// <summary>
+	/// Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
+	/// </summary>
+	public struct WProp
+	{
+		Wnd _w;
+
+		internal WProp(Wnd w) => _w = w;
+
+		/// <summary>
+		/// Gets a window property.
+		/// Calls API <msdn>GetProp</msdn> and returns its return value.
+		/// </summary>
+		/// <param name="name">Property name.</param>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public LPARAM this[string name] { get => Api.GetProp(_w, name); }
+
+		/// <summary>
+		/// Gets a window property.
+		/// Calls API <msdn>GetProp</msdn> and returns its return value.
+		/// </summary>
+		/// <param name="atom">Property name atom in the global atom table.</param>
+		/// <remarks>
+		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+		/// </remarks>
+		public LPARAM this[ushort atom] { get => Api.GetProp(_w, atom); }
+
+		/// <summary>
+		/// Sets a window property.
+		/// Calls API <msdn>SetProp</msdn> and returns its return value.
+		/// </summary>
+		/// <param name="name">Property name.</param>
+		/// <param name="value">Property value.</param>
+		/// <remarks>
+		/// Supports <see cref="Native.GetError"/>.
+		/// 
+		/// Later call <see cref="Remove(string)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
+		/// </remarks>
+		public bool Set(string name, LPARAM value)
+		{
+			return Api.SetProp(_w, name, value);
+		}
+
+		/// <summary>
+		/// Sets a window property.
+		/// Calls API <msdn>SetProp</msdn> and returns its return value.
+		/// </summary>
+		/// <param name="atom">Property name atom in the global atom table.</param>
+		/// <param name="value">Property value.</param>
+		/// <remarks>
+		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
+		/// </remarks>
+		public bool Set(ushort atom, LPARAM value)
+		{
+			return Api.SetProp(_w, atom, value);
+		}
+
+		/// <summary>
+		/// Removes a window property.
+		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
+		/// </summary>
+		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public LPARAM Remove(string name)
+		{
+			return Api.RemoveProp(_w, name);
+		}
+
+		/// <summary>
+		/// Removes a window property.
+		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
+		/// </summary>
+		/// <param name="atom">Property name atom in the global atom table.</param>
+		public LPARAM Remove(ushort atom)
+		{
+			return Api.RemoveProp(_w, atom);
+		}
+
+		/// <summary>
+		/// Gets list of window properties.
+		/// Uses API <msdn>EnumPropsEx</msdn>.
+		/// </summary>
+		/// <remarks>
+		/// Returns 0-length list if fails. Fails if invalid window or access denied (UAC). Supports <see cref="Native.GetError"/>.
+		/// </remarks>
+		public Dictionary<string, LPARAM> GetList()
+		{
+			var a = new Dictionary<string, LPARAM>();
+			Api.EnumPropsEx(_w, (w, name, data, p) =>
+			{
+				string s;
+				if((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
+				a.Add(s, data);
+				return true;
+			}, Zero);
+			return a;
+		}
+
+		/// <summary>
+		/// Calls <see cref="GetList"/> and converts to string.
+		/// </summary>
+		public override string ToString()
+		{
+			return string.Join("\r\n", GetList());
+		}
+	}
 }
