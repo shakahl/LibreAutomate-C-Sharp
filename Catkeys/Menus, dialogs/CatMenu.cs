@@ -33,10 +33,10 @@ namespace Catkeys
 		/// Gets ContextMenuStrip that is used to show the main drop-down menu.
 		/// You can use all its properties, methods and events. You can assign it to a control or toolstrip's drop-down button etc.
 		/// </summary>
-		public ContextMenuStrip CMS { get => _cm; }
+		public ContextMenuStrip CMS => _cm;
 
 		/// <summary>Infrastructure.</summary>
-		protected override ToolStrip MainToolStrip { get => _cm; }
+		protected override ToolStrip MainToolStrip => _cm;
 		//Our base uses this.
 
 		///
@@ -64,7 +64,7 @@ namespace Catkeys
 		}
 
 		///
-		public bool IsDisposed { get => _cm.IsDisposed; }
+		public bool IsDisposed => _cm.IsDisposed;
 
 		void _CheckDisposed()
 		{
@@ -382,7 +382,7 @@ namespace Catkeys
 
 		Stack<ToolStripDropDownMenu> _submenuStack = new Stack<ToolStripDropDownMenu>();
 
-		bool _AddingSubmenuItems { get => _submenuStack.Count > 0; }
+		bool _AddingSubmenuItems => _submenuStack.Count > 0;
 
 		/// <summary>
 		/// Gets ToolStripDropDownMenu of the main menu or submenu where currently m.Add(...), m[...]=, m.Separator() and m.Submenu(...) would add new item.
@@ -408,7 +408,7 @@ namespace Catkeys
 		/// <remarks>
 		/// You can instead use LastItem, which gets ToolStripItem, which is the base class of all supported item types; cast it to a derived type if need.
 		/// </remarks>
-		public ToolStripMenuItem LastMenuItem { get => LastItem as ToolStripMenuItem; }
+		public ToolStripMenuItem LastMenuItem => LastItem as ToolStripMenuItem;
 
 		#endregion
 
@@ -533,7 +533,7 @@ namespace Catkeys
 		/// </summary>
 		public static bool DefaultActivateMenuWindow { get; set; }
 
-		uint _ExStyle { get => ActivateMenuWindow ? Native.WS_EX_TOOLWINDOW | Native.WS_EX_TOPMOST : Native.WS_EX_TOOLWINDOW | Native.WS_EX_TOPMOST | Native.WS_EX_NOACTIVATE; }
+		uint _ExStyle => ActivateMenuWindow ? Native.WS_EX_TOOLWINDOW | Native.WS_EX_TOPMOST : Native.WS_EX_TOOLWINDOW | Native.WS_EX_TOPMOST | Native.WS_EX_NOACTIVATE;
 
 		#endregion
 
@@ -627,10 +627,10 @@ namespace Catkeys
 				_paintedOnce = true;
 			}
 
-			//ToolStrip _ICatToolStrip.ToolStrip { get => this; }
+			//ToolStrip _ICatToolStrip.ToolStrip => this;
 
 			bool _paintedOnce;
-			bool _ICatToolStrip.PaintedOnce { get => _paintedOnce; }
+			bool _ICatToolStrip.PaintedOnce => _paintedOnce;
 
 			protected override void OnBackColorChanged(EventArgs e)
 			{
@@ -749,10 +749,10 @@ namespace Catkeys
 				_paintedOnce = true;
 			}
 
-			//ToolStrip _ICatToolStrip.ToolStrip { get => this; }
+			//ToolStrip _ICatToolStrip.ToolStrip => this;
 
 			bool _paintedOnce;
-			bool _ICatToolStrip.PaintedOnce { get => _paintedOnce; }
+			bool _ICatToolStrip.PaintedOnce => _paintedOnce;
 		}
 
 		#region wndproc
@@ -1280,7 +1280,7 @@ namespace Catkeys.Types
 		/// Gets the clicked item as ToolStripMenuItem.
 		/// Returns null if it is not ToolStripMenuItem.
 		/// </summary>
-		public ToolStripMenuItem MenuItem { get => Item as ToolStripMenuItem; }
+		public ToolStripMenuItem MenuItem => Item as ToolStripMenuItem;
 
 		internal MTClickArgs(ToolStripItem item) { Item = item; }
 

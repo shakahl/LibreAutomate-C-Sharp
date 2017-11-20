@@ -55,7 +55,7 @@ namespace Catkeys.Types
 				}
 			}
 
-			public bool Is0 { get => _iptr == default; }
+			public bool Is0 => _iptr == default;
 
 			public static implicit operator IntPtr(IEnumVARIANT x) => x._iptr;
 

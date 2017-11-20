@@ -35,12 +35,12 @@ namespace Catkeys
 		/// <summary>
 		/// Gets cursor (mouse pointer) X coordinate (Mouse.XY.X).
 		/// </summary>
-		public static int X { get => XY.X; }
+		public static int X => XY.X;
 
 		/// <summary>
 		/// Gets cursor (mouse pointer) Y coordinate (Mouse.XY.Y).
 		/// </summary>
-		public static int Y { get => XY.Y; }
+		public static int Y => XY.Y;
 
 		static void _Move(Point p, bool fast)
 		{
@@ -164,8 +164,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="x">X coordinate relative to screen.</param>
 		/// <param name="y">Y coordinate relative to screen.</param>
-		/// <param name="workArea">x y are relative to the work area of screen.</param>
-		/// <param name="screen">x y are relative to (but not limited to) this screen. See <see cref="Screen_.FromObject(object)"/>.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
 		/// <exception cref="ArgumentOutOfRangeException">
 		/// 1. The specified x y is not in screen (any screen). No exception if Options.Relaxed is true (then moves to a screen edge).
 		/// 2. Invalid screen index.
@@ -174,12 +173,10 @@ namespace Catkeys
 		/// <remarks>
 		/// Uses <see cref="ScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>, <see cref="ScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7)), <see cref="ScriptOptions.Relaxed">Options.Relaxed</see>.
 		/// </remarks>
-		public static Point Move(Coord x, Coord y, bool workArea = false, object screen = null)
+		public static Point Move(Coord x, Coord y, CoordOptions co = null)
 		{
 			LibWaitWhileButtonsPressed();
-			if(x.IsEmpty) x = Coord.Center;
-			if(y.IsEmpty) y = Coord.Center;
-			var p = Coord.Normalize(x, y, workArea, screen);
+			var p = Coord.Normalize(x, y, co);
 			_Move(p, fast: false);
 			return p;
 		}
@@ -209,9 +206,7 @@ namespace Catkeys
 			var wTL = w.WndWindow;
 			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
 			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _SleepExact(500); } //never mind: if w is a control...
-			if(x.IsEmpty) x = Coord.Center;
-			if(y.IsEmpty) y = Coord.Center;
-			var p = Coord.NormalizeInWindow(x, y, w, nonClient);
+			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
 			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();
 			_Move(p, fast: false);
 			return p;
@@ -613,21 +608,20 @@ namespace Catkeys
 
 		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at position x y in screen.
-		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord, bool, object)"/>. More info there.
+		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord, CoordOptions)"/>.
 		/// </summary>
 		/// <param name="button">Button and action.</param>
 		/// <param name="x">X coordinate relative to screen.</param>
 		/// <param name="y">Y coordinate relative to screen.</param>
-		/// <param name="workArea">x y are relative to the work area of screen.</param>
-		/// <param name="screen">x y are relative to (but not limited to) this screen. See <see cref="Screen_.FromObject(object)"/>.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
-		public static MRelease ClickEx(MButton button, Coord x, Coord y, bool workArea = false, object screen = null)
+		public static MRelease ClickEx(MButton button, Coord x, Coord y, CoordOptions co = null)
 		{
-			var p = Move(x, y, workArea, screen);
+			var p = Move(x, y, co);
 			_Click(button, p);
 			return button;
 		}
@@ -699,11 +693,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Left click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		public static void Click(Coord x, Coord y)
 		{
 			//note: most Click functions don't have a workArea and screen parameter. It is rarely used. For reliability better use the overloads that use window coordinates.
@@ -738,11 +732,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Right click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		public static void RightClick(Coord x, Coord y)
 		{
 			ClickEx(MButton.Right, x, y);
@@ -775,11 +769,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Double left click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		public static void DoubleClick(Coord x, Coord y)
 		{
 			ClickEx(MButton.Left | MButton.DoubleClick, x, y);
@@ -815,11 +809,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Left down (press and don't release) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
@@ -858,11 +852,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Left up (release pressed button) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		public static void LeftUp(Coord x, Coord y)
 		{
 			ClickEx(MButton.Left | MButton.Up, x, y);
@@ -897,11 +891,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Right down (press and don't release) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
@@ -940,11 +934,11 @@ namespace Catkeys
 
 		/// <summary>
 		/// Right up (release pressed button) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, bool, object)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, bool, object)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		public static void RightUp(Coord x, Coord y)
 		{
 			ClickEx(MButton.Right | MButton.Up, x, y);
@@ -1316,9 +1310,7 @@ namespace Catkeys.Types
 			//never mind: if w.Is0 and the action is 'click', get AO from point and fail if it is not t. But need to compare AO properties. Rare.
 
 			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new CatException(0, "*get rectangle");
-			if(x.IsEmpty) x = Coord.Center;
-			if(y.IsEmpty) y = Coord.Center;
-			var p = Coord.NormalizeInRect(x, y, r);
+			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 			if(w.Is0) {
 				if(button == 0) Mouse.Move(p.X, p.Y);
 				else Mouse.ClickEx(button, p.X, p.Y);
@@ -1334,7 +1326,7 @@ namespace Catkeys.Types
 
 		/// <summary>
 		/// Moves the mouse to the found image.
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord, bool, object)"/>.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord, CoordOptions)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
@@ -1350,7 +1342,7 @@ namespace Catkeys.Types
 
 		/// <summary>
 		/// Clicks the found image.
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord, bool, object)"/>.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord, CoordOptions)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>

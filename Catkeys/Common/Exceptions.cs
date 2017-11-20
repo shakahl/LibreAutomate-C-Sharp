@@ -74,7 +74,7 @@ namespace Catkeys.Types
 		public int NativeErrorCode { get; protected set; }
 
 		/// <summary> Gets error message. </summary>
-		public override string Message { get => FormattedMessage ?? FormatMessage(); }
+		public override string Message => FormattedMessage ?? FormatMessage();
 
 		/// <summary> String created by FormatMessage(), which should be called by the Message override if null. Initially null. </summary>
 		protected string FormattedMessage;

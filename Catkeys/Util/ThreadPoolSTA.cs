@@ -263,7 +263,7 @@ namespace Catkeys.Util
 		{
 			public IntPtr _pool;
 		}
-		static ProcessVariables* _ProcVar { get => &LibProcessMemory.Ptr->threadPool; }
+		static ProcessVariables* _ProcVar => &LibProcessMemory.Ptr->threadPool;
 
 		//Each appdomain has its own TP_CALLBACK_ENVIRON_V3 with its own cleanup group and shared thread pool.
 		static TP_CALLBACK_ENVIRON_V3 _env;

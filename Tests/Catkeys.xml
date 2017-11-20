@@ -307,7 +307,7 @@
             Negative index means from end, for example -1 is the last child.
             </summary>
         </member>
-        <member name="T:Catkeys.Types.LibAccHookEVENT">
+        <member name="T:Catkeys.Types.AccEVENT">
             <summary>
             Event constants for API <msdn>SetWinEventHook</msdn>.
             </summary>
@@ -756,6 +756,166 @@
             When the image argument specifies multiple images, this is the 0-based index of the found image in the list.
             </summary>
         </member>
+        <member name="T:Catkeys.Types.ACondition">
+            <summary>
+            Builds ICondition (<msdn>IUIAutomationCondition</msdn>) from one or more properties, where all properties must match.
+            </summary>
+            <example>
+            <code><![CDATA[
+            Wnd w = Wnd.Find("Options").OrThrow();
+            var ew = AElement.Factory.ElementFromHandle(w);
+            var e = ew.FindFirst(UIA.TreeScope.Descendants, new ACondition().Name("Apply").Type(UIA.TypeId.Button).Enabled(true).Condition);
+            Print(e.Name);
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Catkeys.Types.ACondition.Condition">
+            <summary>
+            Gets or sets current ICondition (<msdn>IUIAutomationCondition</msdn>). It contains all added conditions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)">
+            <summary>
+            Adds a condition as an ICondition object.
+            Algorithm: <c>Condition = Condition AND cond</c>.
+            </summary>
+            <remarks>
+            If this variable is empty, sets Condition = cond. Else calls <msdn>IUIAutomation.CreateAndCondition</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)">
+            <summary>
+            Adds NOT condition of an ICondition object.
+            Algorithm: <c>Condition = Condition AND NOT cond</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreateNotCondition</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddOrIC(UIA.ICondition[])">
+            <summary>
+            Adds OR condition from 2 or more conditions.
+            Algorithm: <c>Condition = Condition AND (conditions[0] OR conditions[1] OR ...)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddNotOrIC(UIA.ICondition[])">
+            <summary>
+            Adds NOT OR condition from 2 or more conditions.
+            Algorithm: <c>Condition = Condition AND NOT (conditions[0] OR conditions[1] OR ...)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreateOrConditionFromArray</msdn>, <msdn>IUIAutomation.CreateNotCondition</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)">
+            <summary>
+            Adds a property condition.
+            Algorithm: <c>Condition = Condition AND (property == value)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddNot(UIA.PropertyId,System.Object,System.Boolean)">
+            <summary>
+            Adds NOT condition of a property.
+            Algorithm: <c>Condition = Condition AND (property != value)</c>.
+            </summary>
+            <param name="propertyId"></param>
+            <param name="value"></param>
+            <param name="ignoreCase">When string, case-insensitive.</param>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn> and <see cref="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddOr(UIA.PropertyId,System.Object[])">
+            <summary>
+            Adds OR condition from 2 or more values of a property.
+            Algorithm: <c>Condition = Condition AND ((property == values[0]) OR (property == values[1]) OR ...)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddOr(System.Boolean,UIA.PropertyId,System.Object[])">
+            <summary>
+            Adds OR condition from 2 or more values of a property.
+            Algorithm: <c>Condition = Condition AND ((property == values[0]) OR (property == values[1]) OR ...)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddNotOr(UIA.PropertyId,System.Object[])">
+            <summary>
+            Adds NOT OR condition from 2 or more values of a property.
+            Algorithm: <c>Condition = Condition AND NOT ((property == values[0]) OR (property == values[1]) OR ...)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.AddNotOr(System.Boolean,UIA.PropertyId,System.Object[])">
+            <summary>
+            Adds NOT OR condition from 2 or more values of a property.
+            Algorithm: <c>Condition = Condition AND NOT ((property == values[0]) OR (property == values[1]) OR ...)</c>.
+            </summary>
+            <remarks>
+            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)"/>.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.Name(System.String,System.Boolean)">
+            <summary>
+            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.Name.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.Type(UIA.TypeId)">
+            <summary>
+            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.ControlType.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.Rect(Catkeys.Types.RECT)">
+            <summary>
+            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.BoundingRectangle.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.Offscreen(System.Boolean)">
+            <summary>
+            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.IsOffscreen.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.Enabled(System.Boolean)">
+            <summary>
+            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.IsEnabled.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.ACondition.LARole(Catkeys.Types.AccROLE)">
+            <summary>
+            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.LegacyIAccessibleRole.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Types.EFFlags">
+            <summary>
+            Flags for <see cref="M:Catkeys.AElement.Find(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/>
+            </summary>
+        </member>
+        <member name="T:Catkeys.Types.LibTempSetScreenReader">
+            <summary>
+            Temporarily sets SPI_SETSCREENREADER. Restores in Dispose.
+            It enables accessible objects and UI automation elements (AO/AE) in OpenOffice.
+            Speed: 10-20 mcs, which is about 20% of accessibleobjectfromwindow.
+            Note: LibreOffice AE does not work. AO does not work if this process is 64-bit (why?). Although SPI_SETSCREENREADER works.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.LibTempSetScreenReader.#ctor(System.Boolean)">
+            <summary>
+            If SPI_GETSCREENREADER says false, sets SPI_SETSCREENREADER = true, and Dispose will set it false.
+            Note: Windows does not use a reference counting for this setting.
+            </summary>
+        </member>
         <member name="T:Catkeys.Types.Separators">
             <summary>
             Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
@@ -1082,51 +1242,73 @@
         </member>
         <member name="P:Catkeys.Types.Coord.Center">
             <summary>
-            Returns <see cref="M:Catkeys.Types.Coord.Fraction(System.Double)"/>(0.5).
+            Returns <see cref="M:Catkeys.Types.Coord.Fraction(System.Double)">Fraction</see>(0.5).
             </summary>
         </member>
         <member name="P:Catkeys.Types.Coord.Max">
             <summary>
-            Returns <see cref="M:Catkeys.Types.Coord.Reverse(System.Int32)"/>(0).
+            Returns <see cref="M:Catkeys.Types.Coord.Reverse(System.Int32)">Reverse</see>(0).
             This point will be outside of the rectangle. See also <see cref="P:Catkeys.Types.Coord.MaxInside"/>.
             </summary>
         </member>
         <member name="P:Catkeys.Types.Coord.MaxInside">
             <summary>
-            Returns <see cref="M:Catkeys.Types.Coord.Reverse(System.Int32)"/>(1).
+            Returns <see cref="M:Catkeys.Types.Coord.Reverse(System.Int32)">Reverse</see>(1).
             This point will be inside of the rectangle, at the very right or bottom, assuming that the rectangle is not empty.
             </summary>
         </member>
-        <member name="M:Catkeys.Types.Coord.NormalizeInRect(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.RECT,System.Boolean)">
+        <member name="M:Catkeys.Types.Coord.NormalizeInRect(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.RECT,System.Boolean,System.Boolean)">
             <summary>
             Converts fractional/reverse coordinates to normal coordinates in a rectangle.
             </summary>
-            <param name="x">X coordinate relative to r. If default(Coord), returns 0 x.</param>
-            <param name="y">Y coordinate relative to r. If default(Coord), returns 0 y.</param>
+            <param name="x">X coordinate relative to r.</param>
+            <param name="y">Y coordinate relative to r.</param>
             <param name="r">The rectangle.</param>
             <param name="widthHeight">Use only width and height of r. If false, the function adds r offset (left and top).</param>
+            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
         </member>
-        <member name="M:Catkeys.Types.Coord.Normalize(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object,System.Boolean)">
-            <summary>
-            Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
-            </summary>
-            <param name="x">X coordinate relative to the specified screen (default - primary). If default(Coord), returns 0 x.</param>
-            <param name="y">Y coordinate relative to the specified screen (default - primary). If default(Coord), returns 0 y.</param>
-            <param name="workArea">x y are relative to the work area, not entire screen.</param>
-            <param name="screen">Screen of x y. If null, primary screen. See <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.</param>
-            <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
-        </member>
-        <member name="M:Catkeys.Types.Coord.NormalizeInWindow(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Wnd,System.Boolean)">
+        <member name="M:Catkeys.Types.Coord.NormalizeInWindow(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Wnd,System.Boolean,System.Boolean)">
             <summary>
             Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
             </summary>
-            <param name="x">X coordinate relative to the client area of w. If default(Coord), returns 0 x.</param>
-            <param name="y">Y coordinate relative to the client area of w. If default(Coord), returns 0 y.</param>
+            <param name="x">X coordinate relative to the client area of w.</param>
+            <param name="y">Y coordinate relative to the client area of w.</param>
             <param name="w">The window.</param>
             <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
+            <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+        </member>
+        <member name="M:Catkeys.Types.Coord.Normalize(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions,System.Boolean)">
+            <summary>
+            Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+            </summary>
+            <param name="x">X coordinate relative to the specified screen (default - primary).</param>
+            <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
+            <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
+            <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
         </member>
         <member name="M:Catkeys.Types.Coord.ToString">
+            
+        </member>
+        <member name="T:Catkeys.Types.CoordOptions">
+            <summary>
+            Screen and other options for functions that accept coordinates as <see cref="T:Catkeys.Types.Coord"/>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Types.CoordOptions.Screen">
+            <summary>
+            Screen index or anything that can be converted to <see cref="P:Catkeys.Types.CoordOptions.Screen"/> with <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Types.CoordOptions.WorkArea">
+            <summary>
+            If true, coordinates are relative to the work area, not to whole screen.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.CoordOptions.#ctor">
+            
+        </member>
+        <member name="M:Catkeys.Types.CoordOptions.#ctor(System.Boolean,System.Object)">
             
         </member>
         <member name="T:Catkeys.Types.WndOrControl">
@@ -1482,7 +1664,7 @@
         <member name="M:Catkeys.Types.ExtensionMethods.MouseMove(Catkeys.Types.SIResult,Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Moves the mouse to the found image.
-            Calls <see cref="M:Catkeys.Mouse.Move(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/> or <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.
+            Calls <see cref="M:Catkeys.Mouse.Move(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/> or <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.
             </summary>
             <param name="t"></param>
             <param name="x">X coordinate in the found image. Default - center.</param>
@@ -1494,7 +1676,7 @@
         <member name="M:Catkeys.Types.ExtensionMethods.MouseClick(Catkeys.Types.SIResult,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.MButton)">
             <summary>
             Clicks the found image.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/> or <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/> or <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.
             </summary>
             <param name="t"></param>
             <param name="x">X coordinate in the found image. Default - center.</param>
@@ -2070,10 +2252,16 @@
             Match() calls <see cref="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)"/>.
             </summary>
         </member>
-        <member name="F:Catkeys.Types.Wildex.WildType.Regex">
+        <member name="F:Catkeys.Types.Wildex.WildType.RegexNet">
             <summary>
-            Regular expression (option r).
+            .NET egular expression (option r).
             Match() calls <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.Wildex.WildType.RegexPcre">
+            <summary>
+            PCRE regular expression (option p).
+            Match() calls <see cref="M:Catkeys.Regex_.Match(System.String,Catkeys.Types.RMFlags)"/>.
             </summary>
         </member>
         <member name="F:Catkeys.Types.Wildex.WildType.Multi">
@@ -2089,10 +2277,16 @@
             null if TextType is Regex or Multi.
             </summary>
         </member>
-        <member name="P:Catkeys.Types.Wildex.Regex">
+        <member name="P:Catkeys.Types.Wildex.RegexNet">
             <summary>
             Gets the Regex object created from regular expression string.
-            null if TextType is not Regex (no option r).
+            null if TextType is not RegexNet (no option r).
+            </summary>
+        </member>
+        <member name="P:Catkeys.Types.Wildex.RegexPcre">
+            <summary>
+            Gets the Regex object created from regular expression string.
+            null if TextType is not RegexPcre (no option p).
             </summary>
         </member>
         <member name="P:Catkeys.Types.Wildex.MultiArray">
@@ -2124,6 +2318,60 @@
             Returns true if string contains wildcard characters: '*', '?'.
             </summary>
             <param name="s">Can be null.</param>
+        </member>
+        <member name="T:Catkeys.Types.WildexStruct">
+            <summary>
+            A slim version of <see cref="T:Catkeys.Types.Wildex"/>.
+            </summary>
+            <remarks>
+            Has all the same capabilities as Wildex, but is just a struct of single pointer size.
+            The pointer is Object that can be of one of these types:
+            <see cref="T:Catkeys.Types.Wildex"/> - if the assigned string was with wildcard expression options, like "**c|text". To compare it with other strings, <see cref="M:Catkeys.Types.WildexStruct.Match(System.String)"/> calls <see cref="M:Catkeys.Types.Wildex.Match(System.String)"/>.
+            <see cref="T:System.String"/> - if the assigned string was without wildcard expression options, like "text". To compare it with other strings, <see cref="M:Catkeys.Types.WildexStruct.Match(System.String)"/> calls <see cref="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)"/> with <b>ignoreCase</b> true.
+            null - if was not assigned a non-null string.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Types.WildexStruct.#ctor(System.String)">
+            <param name="wildcardExpression">
+            <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
+            Cannot be null (throws exception).
+            "" will match "".
+            </param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <exception cref="T:System.ArgumentException">Invalid **options| or regular expression.</exception>
+        </member>
+        <member name="M:Catkeys.Types.WildexStruct.op_Implicit(System.String)~Catkeys.Types.WildexStruct">
+            <summary>
+            Creates new WildexStruct from wildcard expression string.
+            If the string is null, returns empty variable. Then it's <see cref="P:Catkeys.Types.WildexStruct.HasValue"/> property is false, <see cref="P:Catkeys.Types.WildexStruct.Value"/> property is null, and <see cref="M:Catkeys.Types.WildexStruct.Match(System.String)"/> must not ne called.
+            </summary>
+            <param name="wildcardExpression">
+            <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
+            </param>
+        </member>
+        <member name="M:Catkeys.Types.WildexStruct.Match(System.String)">
+            <summary>
+            Compares a string with the <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> used to create this variable.
+            Returns true if they match.
+            </summary>
+            <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
+        </member>
+        <member name="P:Catkeys.Types.WildexStruct.HasValue">
+            <summary>
+            Returns true if assigned a non-null string.
+            This variable contains either the string or <see cref="T:Catkeys.Types.Wildex"/>.
+            If this property is false, don't call <see cref="M:Catkeys.Types.WildexStruct.Match(System.String)"/>, it will throw exception.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Types.WildexStruct.Value">
+            <summary>
+            Returns Wildex if the assigned string was with wildcard expression options, like "**c|text".
+            Returns String if the assigned string was without wildcard expression options, like "text".
+            Returns null if was not assigned a non-null string.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.WildexStruct.ToString">
+            
         </member>
         <member name="T:Catkeys.Types.TDIcon">
             <summary>
@@ -2392,7 +2640,7 @@
         </member>
         <member name="T:Catkeys.Types.WXYFlags">
             <summary>
-            Flags for <see cref="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,System.Boolean,System.Object)"/> and <see cref="M:Catkeys.Wnd.FromMouse(Catkeys.Types.WXYFlags)"/>.
+            Flags for <see cref="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,Catkeys.Types.CoordOptions)"/> and <see cref="M:Catkeys.Wnd.FromMouse(Catkeys.Types.WXYFlags)"/>.
             </summary>
         </member>
         <member name="F:Catkeys.Types.WXYFlags.NeedWindow">
@@ -3112,20 +3360,6 @@
             Init must be called (asserts).
             </summary>
         </member>
-        <member name="T:Catkeys.Acc._TempSetScreenReader">
-            <summary>
-            Temporarily sets SPI_SETSCREENREADER. Restores in Dispose.
-            It enables accessible objects (AO) in OpenOffice, LibreOffice, etc.
-            Speed: 10-20 mcs, which is about 20% of accessibleobjectfromwindow.
-            Note: LibreOffice AO does not work if this process is 64-bit (why?), although SPI_SETSCREENREADER works.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._TempSetScreenReader.#ctor(System.Boolean)">
-            <summary>
-            If SPI_GETSCREENREADER says false, sets SPI_SETSCREENREADER = true, and Dispose will set it false.
-            Note: Windows does not use a reference counting for this setting.
-            </summary>
-        </member>
         <member name="M:Catkeys.Acc.IAccessible.get_accName(System.Int32,System.String@,Catkeys.Types.AccROLE)">
             <summary>
             Gets name or "".
@@ -3548,6 +3782,16 @@
             For example, if role is "A/B[4]", the array is _PathPart[2] { { "A", 0 }, { "B", 4 } }. 
             </summary>
         </member>
+        <member name="P:Catkeys.Acc.MaxChildren">
+            <summary>
+            When searching for an accessible object, if an intermediate object has more than this number of direct children, skip them and their descendants.
+            </summary>
+            <remarks>
+            This property is thread-specific. It is used by Acc.Find, Acc.Children, Acc.EnumChildren and similar functions.
+            Valid values are 1000 to 1000000. Default 10000.
+            Getting and comparing large number of children is very slow. In extreme cases your app may hang or crash if there was no limit. For example OpenOffice Calc TABLE has one billion children.
+            </remarks>
+        </member>
         <member name="M:Catkeys.Acc.#ctor">
             <summary>
             Used only by the AFAcc class which is derived from Acc.
@@ -3587,12 +3831,6 @@
         <member name="M:Catkeys.Acc.Finalize">
             
         </member>
-        <member name="P:Catkeys.Acc.LibIAccessibleDebug">
-            <summary>
-            The IAccessible that is managed by this variable.
-            This func does not increment ref count etc. It simply returns the field. Don't release it. It will be released by Dispose.
-            </summary>
-        </member>
         <member name="P:Catkeys.Acc.Elem">
             <summary>
             Gets or sets child element id.
@@ -3614,21 +3852,18 @@
             <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
-        <member name="M:Catkeys.Acc.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object,System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Acc.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions,System.Boolean,System.Boolean)">
             <summary>
             Gets accessible object from point.
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </summary>
             <param name="x">X coordinate in screen.</param>
             <param name="y">Y coordinate in screen.</param>
-            <param name="workArea">x y are relative to the work area, not entire screen.</param>
-            <param name="screen">Screen of x y. If null, primary screen. See <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.</param>
+            <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
             <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
             <param name="preferLINK">
-            Get the parent object if it's LINK or PUSHBUTTON and this object is TEXT, STATICTEXT or GRAPHIC.
+            Get the direct parent object if it's LINK or PUSHBUTTON.
             Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
-            Note: This does not work if the object from point is a LINK's grandchild.
-            Note: Some Chrome versions have this bug: the parent object does not support <see cref="P:Catkeys.Acc.WndContainer"/>.
             </param>
             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
@@ -3639,10 +3874,7 @@
             </summary>
             <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
             <param name="preferLINK">
-            Get the parent object if it's LINK or PUSHBUTTON and this object is TEXT, STATICTEXT or GRAPHIC.
-            Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
-            Note: This does not work if the object from point is a LINK's grandchild.
-            Note: Some Chrome versions have this bug: the parent object does not support <see cref="P:Catkeys.Acc.WndContainer"/>.
+            Get the parent object if it's LINK or PUSHBUTTON. More info: <see cref="M:Catkeys.Acc.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions,System.Boolean,System.Boolean)"/>.
             </param>
             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
@@ -3732,7 +3964,7 @@
             <remarks>
             The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
             For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
-            Also partially supports UIAutomationClient.IUIAutomationElement. Works with web page objects, but returns null for many other.
+            Also partially supports UIA.IElement. Works with web page objects, but returns null for many other.
             </remarks>
         </member>
         <member name="T:Catkeys.Acc._FuncId">
@@ -3760,27 +3992,6 @@
             This <see cref="M:Catkeys.Acc.ToString"/> overload indents the string depending on level.
             </summary>
             <param name="level">Object level in the tree. This function prepends level*2 spaces to the string.</param>
-        </member>
-        <member name="T:Catkeys.Acc.Misc">
-            <summary>
-            Contains miscellaneous static Acc-related functions, rarely used or useful only for programmers.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Acc.Misc.MaxChildren">
-            <summary>
-            When searching for an accessible object, if an intermediate object has more than this number of direct children, skip them and their descendants. This property is used by Acc.Find, Acc.Children, Acc.EnumChildren and similar functions.
-            Valid values are 1000 to 1000000. Default 10000. Getting and comparing such large number of children is very slow. In extreme cases your app may hang or crash if there was no limit. For example OpenOffice Calc TABLE has one billion children.
-            This property is thread-specific.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.ToUIElement">
-            <summary>
-            Gets COM interface of UI Automation element corresponding to this accessible object.
-            Returns null if cannot get.
-            </summary>
-            <remarks>
-            Works with Firefox, Internet Explorer and some other windows. Does not work with Chrome and most other windows.
-            </remarks>
         </member>
         <member name="M:Catkeys.Acc.HtmlAttribute(System.String,System.Boolean)">
             <summary>
@@ -4168,6 +4379,76 @@
             Parameters and other info is the same as with <see cref="M:Catkeys.ScreenImage.WaitNot(System.Double,System.Object,Catkeys.Types.SIArea,Catkeys.Types.SIFlags,System.Int32,System.Func{Catkeys.Types.SIResult,System.Boolean})"/> and <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.Types.SIArea,Catkeys.Types.SIFlags,System.Int32,System.Func{Catkeys.Types.SIResult,System.Boolean})"/>. Instead of <b>image</b> parameter, this function captures the screen area image at the beginning.
             </remarks>
         </member>
+        <member name="T:Catkeys.AElement">
+            <summary>
+            UI Automation element.
+            </summary>
+        </member>
+        <member name="P:Catkeys.AElement.Factory">
+            <summary>
+            Gets the UIA.IUIAutomation object that is used by static functions of this class.
+            The object is [ThreadStatic].
+            </summary>
+        </member>
+        <member name="M:Catkeys.AElement.FromWindow(Catkeys.Wnd)">
+            <summary>
+            Gets UI Automation element of a window.
+            </summary>
+            <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
+        </member>
+        <member name="M:Catkeys.AElement.FromAcc(Catkeys.Acc,System.Nullable{System.Boolean})">
+            <summary>
+            Gets UI Automation element corresponding to an accessible object.
+            Returns null if fails.
+            </summary>
+            <param name="ao">Accessible object.</param>
+            <param name="find">
+            If false, uses IUIAutomation.ElementFromIAccessible. It fails for most objects. Also, the returned element may be useless, for example searching its descendants can be 60 times slower than usually.
+            If true, finds element that matches ao rectangle and other properties. It is slow, but usually succeeds.
+            If null (default), uses the first method, then the second method if the first fails.
+            </param>
+        </member>
+        <member name="M:Catkeys.AElement._ChromeEnable(Catkeys.Wnd,UIA.IElement)">
+            <summary>
+            Enables UI Automation in Chrome/Opera web page.
+            </summary>
+            <param name="w">The main window.</param>
+            <param name="ew">Element of the main window.</param>
+        </member>
+        <member name="P:Catkeys.AElement.WebPageFinder">
+            <summary>
+            Gets or sets a custom function to find the root element of the current web page in a window.
+            </summary>
+            <remarks>
+            The function is called by <see cref="M:Catkeys.AElement.WebFind(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/> and <see cref="M:Catkeys.AElement.FindCurrentWebPage(Catkeys.Wnd)"/>.
+            If null, is used default finder.
+            You can use a custom finder when the default finder does not work. It can happen after updating your web browser or if your web browser is not recognized by the default finder.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.AElement.FindCurrentWebPage(Catkeys.Wnd)">
+            <summary>
+            Finds the root element of the current web page (tab) in window w.
+            </summary>
+            <param name="w">Window containing web page. Or web browser control, class name "Internet Explorer_Server".</param>
+            <remarks>
+            Supports Firefox, Chrome, Internet Explorer (IE), Edge and apps that use their code to display web page - Opera, Thunderbird, etc.
+            The element type is Document (in Firefox, Chrome, Opera, Thunderbird) or Pane (in IE, Edge and IE-based web browser controls).
+            
+            This function is used by <see cref="M:Catkeys.AElement.WebFind(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/>. It allows to avoid searching in the non-web part of the window and in inactive tabs (currently it is actual in Firefox and Thunderbird).
+            
+            May stop working with new versions of these apps, until this library will be updated to fix it. See also <see cref="P:Catkeys.AElement.WebPageFinder"/>.
+            Web page elements in Chrome and Opera are disabled by default. This function tries to enable. It may fail in new versions of these app.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.AElement.WebFind(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)">
+            <summary>
+            Finds an element in the active web page in window w.
+            </summary>
+            <remarks>
+            The same as <see cref="M:Catkeys.AElement.Find(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/>, but searches only in the active page (tab) and not in other parts of the window.
+            To find the web page, uses <see cref="M:Catkeys.AElement.FindCurrentWebPage(Catkeys.Wnd)"/>. More info there.
+            </remarks>
+        </member>
         <member name="T:Catkeys.Screen_">
             <summary>
             Extends the .NET class Screen.
@@ -4224,20 +4505,22 @@
             <param name="screen">
             Depends on type:
             <list type="bullet">
-            <item>null: primary screen.</item>
-            <item>Screen: a <see cref="T:System.Windows.Forms.Screen"/> object. If invalid, gets primary screen.</item>
-            <item>int: 1-based non-primary screen index (see <see cref="M:Catkeys.Screen_.FromIndex(System.Int32,System.Boolean)"/>), or Screen_.Primary (0), Screen_.OfMouse (-1), Screen_.OfActiveWindow (-2).</item>
-            <item>Wnd: a window (see <see cref="M:Catkeys.Screen_.FromWindow(Catkeys.Wnd)"/>). If invalid, gets primary screen.</item>
-            <item>Control: a .NET form or control (see <see cref="M:System.Windows.Forms.Screen.FromControl(System.Windows.Forms.Control)"/>). If invalid, gets primary screen.</item>
-            <item>Point: a point (see <see cref="M:System.Windows.Forms.Screen.FromPoint(System.Drawing.Point)"/>).</item>
-            <item>Rectangle, RECT: a rectangle (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
+            <item>null - gets primary screen.</item>
+            <item><see cref="T:System.Windows.Forms.Screen"/> - returns it if valid. If invalid, gets primary screen.</item>
+            <item>int - 1-based non-primary screen index (see <see cref="M:Catkeys.Screen_.FromIndex(System.Int32,System.Boolean)"/>), or Screen_.Primary (0), Screen_.OfMouse (-1), Screen_.OfActiveWindow (-2).</item>
+            <item><see cref="T:Catkeys.Wnd"/> - gets screen of this window or control (see <see cref="M:Catkeys.Screen_.FromWindow(Catkeys.Wnd)"/>). If invalid, gets primary screen.</item>
+            <item><see cref="T:System.Windows.Forms.Control"/> - gets screen of this .NET form or control (see <see cref="M:System.Windows.Forms.Screen.FromControl(System.Windows.Forms.Control)"/>). If invalid, gets primary screen.</item>
+            <item><see cref="T:System.Drawing.Point"/> - gets screen of this point (see <see cref="M:System.Windows.Forms.Screen.FromPoint(System.Drawing.Point)"/>).</item>
+            <item><see cref="T:System.Drawing.Rectangle"/>, <see cref="T:Catkeys.Types.RECT"/> - gets screen of this rectangle (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
+            <item><see cref="T:Catkeys.Acc"/> - gets screen of this accessible object (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
+            <item><see cref="T:UIA.IElement"/> - gets screen of this UI Automation element (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
             </list>
             </param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
             <exception cref="T:System.ArgumentException">Bad object type (not one from the above list).</exception>
             <remarks>
             If something fails (except if invalid index), gets primary screen.
-            As screen index is used index in the array returned by <see cref="P:System.Windows.Forms.Screen.AllScreens"/> + 1. It is not the screen index that you can see in Control Panel.
+            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
             </remarks>
         </member>
         <member name="P:Catkeys.Screen_.Width">
@@ -4254,6 +4537,14 @@
             <summary>
             Gets primary screen rectangle.
             </summary>
+        </member>
+        <member name="M:Catkeys.Screen_.GetRect(System.Object,System.Boolean)">
+            <summary>
+            Gets screen rectangle.
+            </summary>
+            <param name="screen">Screen index etc, see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>. If null - primary screen.</param>
+            <param name="workArea">Get work area rectangle.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
         </member>
         <member name="P:Catkeys.Screen_.WorkArea">
             <summary>
@@ -4274,6 +4565,37 @@
             <summary>
             Returns true if rectangle of window w intersects with some screen.
             </summary>
+        </member>
+        <member name="T:Catkeys.Regex_">
+            <summary>
+            PCRE regular expressions.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Regex_.Finalize">
+            
+        </member>
+        <member name="M:Catkeys.Regex_.#ctor(System.String,Catkeys.Types.RXFlags)">
+            <summary>
+            Compiles regular expression string.
+            </summary>
+            <param name="rx"></param>
+            <param name="flags"></param>
+        </member>
+        <member name="M:Catkeys.Regex_.Match(System.String,Catkeys.Types.RMFlags)">
+            <summary>
+            Returns true if string s matches this regular expression.
+            </summary>
+            <param name="s"></param>
+            <param name="flags"></param>
+        </member>
+        <member name="M:Catkeys.Regex_.Match(System.String,System.Int32,System.Int32,Catkeys.Types.RMFlags)">
+            <summary>
+            Returns true if the specified part of string s matches this regular expression.
+            </summary>
+            <param name="s"></param>
+            <param name="start">Start index of the s part.</param>
+            <param name="length">Length of the s part.</param>
+            <param name="flags"></param>
         </member>
         <member name="T:Catkeys.StringSegment">
             <summary>
@@ -5439,7 +5761,7 @@
             Multiple appdomains share the same tables.
             </summary>
         </member>
-        <member name="P:Catkeys.Util.LibTables.LowerCase">
+        <member name="F:Catkeys.Util.LibTables._lowerCaseTable">
             <summary>
             Gets native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
             Auto-creates when called first time. The memory is shared by appdomains.
@@ -8480,15 +8802,14 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)">
+        <member name="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)">
             <summary>
             Moves the cursor (mouse pointer) to the position x y in screen.
             Returns the final cursor position in primary screen coordinates.
             </summary>
             <param name="x">X coordinate relative to screen.</param>
             <param name="y">Y coordinate relative to screen.</param>
-            <param name="workArea">x y are relative to the work area of screen.</param>
-            <param name="screen">x y are relative to (but not limited to) this screen. See <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.</param>
+            <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">
             1. The specified x y is not in screen (any screen). No exception if Options.Relaxed is true (then moves to a screen edge).
             2. Invalid screen index.
@@ -8609,18 +8930,17 @@
             The return value can be used to auto-release pressed button. See example with <see cref="M:Catkeys.Mouse.LeftDown(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)">
+        <member name="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)">
             <summary>
             Clicks, double-clicks, presses or releases a mouse button at position x y in screen.
-            To move the mouse cursor, calls <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            To move the mouse cursor, calls <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.
             </summary>
             <param name="button">Button and action.</param>
             <param name="x">X coordinate relative to screen.</param>
             <param name="y">Y coordinate relative to screen.</param>
-            <param name="workArea">x y are relative to the work area of screen.</param>
-            <param name="screen">x y are relative to (but not limited to) this screen. See <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.</param>
+            <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
             <remarks>
             The return value can be used to auto-release pressed button. See example with <see cref="M:Catkeys.Mouse.LeftDown(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>.
             </remarks>
@@ -8653,11 +8973,11 @@
         <member name="M:Catkeys.Mouse.Click(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Left click at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
         </member>
         <member name="M:Catkeys.Mouse.Click(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
             <summary>
@@ -8681,11 +9001,11 @@
         <member name="M:Catkeys.Mouse.RightClick(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Right click at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
         </member>
         <member name="M:Catkeys.Mouse.RightClick(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
             <summary>
@@ -8709,11 +9029,11 @@
         <member name="M:Catkeys.Mouse.DoubleClick(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Double left click at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
         </member>
         <member name="M:Catkeys.Mouse.DoubleClick(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
             <summary>
@@ -8740,11 +9060,11 @@
         <member name="M:Catkeys.Mouse.LeftDown(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Left down (press and don't release) at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
             <remarks>
             The return value can be used to auto-release pressed button. See example with <see cref="M:Catkeys.Mouse.LeftDown(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>.
             </remarks>
@@ -8774,11 +9094,11 @@
         <member name="M:Catkeys.Mouse.LeftUp(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Left up (release pressed button) at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
         </member>
         <member name="M:Catkeys.Mouse.LeftUp(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
             <summary>
@@ -8804,11 +9124,11 @@
         <member name="M:Catkeys.Mouse.RightDown(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Right down (press and don't release) at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
             <remarks>
             The return value can be used to auto-release pressed button. See example with <see cref="M:Catkeys.Mouse.LeftDown(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>.
             </remarks>
@@ -8838,11 +9158,11 @@
         <member name="M:Catkeys.Mouse.RightUp(Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
             Right up (release pressed button) at position x y.
-            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>. More info there.
+            Calls <see cref="M:Catkeys.Mouse.ClickEx(Catkeys.Types.MButton,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Mouse.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>.</exception>
         </member>
         <member name="M:Catkeys.Mouse.RightUp(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
             <summary>
@@ -9502,7 +9822,7 @@
             class TestOutputWriter :TextWriter
             {
             	public override void WriteLine(string value) { Output.WriteDirectly("redir: " + value); }
-            	public override Encoding Encoding { get => Encoding.Unicode; }
+            	public override Encoding Encoding => Encoding.Unicode;
             }
             ]]></code>
             </example>
@@ -9923,8 +10243,24 @@
         </member>
         <member name="P:Catkeys.Process_.Memory.Mem">
             <summary>
-            Address of memory allocated in that process. Invalid in this process.
+            Address of memory allocated in that process.
             </summary>
+            <remarks>
+            The address is invalid in this process.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Process_.Memory.SetMem(System.IntPtr,System.Boolean)">
+            <summary>
+            Sets an address of memory in that process that is to be used by the read and write functions.
+            </summary>
+            <param name="mem">A memory address in that process.</param>
+            <param name="freeWhenDisposing">
+            Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
+            If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="M:Catkeys.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)"/> and <see cref="M:Catkeys.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)"/>.</param>
+            <exception cref="T:System.InvalidOperationException">This variable already has Mem, unless it was set by this function with <b>freeWhenDisposing</b> = false.</exception>
+            <remarks>
+            This function can be used if this variable was created with <b>nBytes</b> = 0. Else exception. Also exception if this function previously called with <b>freeWhenDisposing</b> = true.
+            </remarks>
         </member>
         <member name="M:Catkeys.Process_.Memory.#ctor(Catkeys.Wnd,System.Int32)">
             <summary>
@@ -10006,6 +10342,7 @@
             <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
             <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
             <param name="nBytes">Number of bytes to copy.</param>
+            <seealso cref="M:Catkeys.Process_.Memory.SetMem(System.IntPtr,System.Boolean)"/>
         </member>
         <member name="M:Catkeys.Process_.Memory.Read(System.Void*,System.Int32,System.Int32)">
             <summary>
@@ -10024,6 +10361,7 @@
             <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
             <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
             <param name="nBytes">Number of bytes to copy.</param>
+            <seealso cref="M:Catkeys.Process_.Memory.SetMem(System.IntPtr,System.Boolean)"/>
         </member>
         <member name="T:Catkeys.Process_.UacInfo">
             <summary>
@@ -13177,14 +13515,13 @@
             Returns mouse pointer position relative to the client area of this window.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ContainsScreenXY(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Object)">
+        <member name="M:Catkeys.Wnd.ContainsScreenXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)">
             <summary>
             Returns true if this window (its rectangle) contains the specified point in primary screen coordinates.
             </summary>
             <param name="x">X coordinate in screen. Not used if null.</param>
             <param name="y">Y coordinate in screen. Not used if null.</param>
-            <param name="workArea">The coordinates are relative to the work area.</param>
-            <param name="screen">Screen of x y. If null, primary screen. See <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.</param>
+            <param name="co">Allows to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area.</param>
         </member>
         <member name="M:Catkeys.Wnd.ContainsWindowXY(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord)">
             <summary>
@@ -13216,7 +13553,7 @@
             Moves and resizes.
             </summary>
             <remarks>
-            See also <see cref="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP_ flags.
+            See also <see cref="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP_ flags.
             This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
             Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             
@@ -13229,7 +13566,7 @@
             Moves.
             </summary>
             <remarks>
-            See also <see cref="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+            See also <see cref="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
             This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOSIZE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
             Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             
@@ -13242,13 +13579,13 @@
             Resizes.
             </summary>
             <remarks>
-            See also <see cref="M:Catkeys.Wnd.Resize(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+            See also <see cref="M:Catkeys.Wnd.Resize(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
             This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
             Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             </remarks>
             <seealso cref="M:Catkeys.Wnd.SetWindowPos(System.UInt32,System.Int32,System.Int32,System.Int32,System.Int32,Catkeys.Wnd)"/>
         </member>
-        <member name="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
+        <member name="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)">
             <summary>
             Moves and/or resizes.
             With windows of current thread usually it's better to use <see cref="M:Catkeys.Wnd.MoveLL(System.Int32,System.Int32,System.Int32,System.Int32,System.UInt32)"/>.
@@ -13257,14 +13594,14 @@
             <param name="y">Top. If null, does not move in Y axis.</param>
             <param name="width">Width. If null, does not change width.</param>
             <param name="height">Height. If null, does not change height.</param>
-            <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+            <param name="co">Allows to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
             For top-level windows use screen coordinates. For controls - direct parent client coordinates.
             </remarks>
             <exception cref="T:Catkeys.Types.WndException"/>
         </member>
-        <member name="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
+        <member name="M:Catkeys.Wnd.Move(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)">
             <summary>
             Moves.
             Calls Move(x, y, null, null, workArea).
@@ -13272,14 +13609,14 @@
             </summary>
             <param name="x">Left. If null, does not move in X axis.</param>
             <param name="y">Top. If null, does not move in Y axis.</param>
-            <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+            <param name="co">Allows to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area. Not used when this is a child window.</param>
             <exception cref="T:Catkeys.Types.WndException"/>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
             For top-level windows use screen coordinates. For controls - direct parent client coordinates.
             </remarks>
         </member>
-        <member name="M:Catkeys.Wnd.Resize(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
+        <member name="M:Catkeys.Wnd.Resize(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions)">
             <summary>
             Resizes.
             Calls Move(null, null, width, height, workArea).
@@ -13287,7 +13624,7 @@
             </summary>
             <param name="width">Width. If null, does not change width.</param>
             <param name="height">Height. If null, does not change height.</param>
-            <param name="workArea">If false, reverse and fractional width/height are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+            <param name="co">Allows to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
             <exception cref="T:Catkeys.Types.WndException"/>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
@@ -14113,7 +14450,7 @@
             This variable is the window that contains the menu bar or system menu. Or the drop-down menu window (class "#32768") that contains the menu item.
             </remarks>
         </member>
-        <member name="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,System.Boolean,System.Object)">
+        <member name="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,Catkeys.Types.CoordOptions)">
             <summary>
             Gets visible top-level window or control from point.
             By default the coordinates are relative to the primary screen.
@@ -14121,8 +14458,7 @@
             <param name="x">X coordinate in screen.</param>
             <param name="y">Y coordinate in screen.</param>
             <param name="flags"></param>
-            <param name="workArea">x y are relative to the work area, not entire screen.</param>
-            <param name="screen">Screen of x y. If null, primary screen. See <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>.</param>
+            <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
             <remarks>
             Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
             This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <b>RealChildWindowFromPoint</b>. Also does not skip disabled controls. All this is not true with flag Raw.
@@ -14133,7 +14469,7 @@
         <member name="M:Catkeys.Wnd.FromXY(System.Drawing.Point,Catkeys.Types.WXYFlags)">
             <summary>
             Gets visible top-level window or control from point.
-            More info: <see cref="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,System.Boolean,System.Object)"/>.
+            More info: <see cref="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,Catkeys.Types.CoordOptions)"/>.
             </summary>
             <param name="p">X Y in screen coordinates.</param>
             <param name="flags"></param>
@@ -14141,7 +14477,7 @@
         <member name="M:Catkeys.Wnd.FromMouse(Catkeys.Types.WXYFlags)">
             <summary>
             Gets visible top-level window or control from mouse cursor position.
-            More info: <see cref="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,System.Boolean,System.Object)"/>.
+            More info: <see cref="M:Catkeys.Wnd.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.WXYFlags,Catkeys.Types.CoordOptions)"/>.
             </summary>
         </member>
         <member name="M:Catkeys.Wnd.ChildFromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Boolean)">
@@ -15304,6 +15640,62 @@
             Repeatedly executes codes (zero or more lambda functions) for the specified number of milliseconds (recommended 100 or more).
             Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
             </summary>
+        </member>
+        <member name="T:UIA.NamespaceDoc">
+            <summary>
+            UI Automation client COM interfaces and related types.
+            </summary>
+            <remarks>
+            Documented in MSDN Library. The most important interfaces are <msdn>IUIAutomation</msdn> and <msdn>IUIAutomationElement</msdn> (here IElement).
+            
+            To make programming easier, changed these declarations:
+            1. Interface name prefix "IUIAutomation" replaced with "I". For example, IUIAutomationElement here is IElement.
+            2. Removed prefix "Current" from property names. For example, CurrentName here is Name.
+            3. All constants moved to enums, and removed prefixes and suffixes. For example, UIA_NamePropertyId here is PropertyId.Name. Function parameter types also changed from int to enum.
+            </remarks>
+        </member>
+        <member name="T:UIA.CUIAutomation">
+            <summary>
+            This class is used to create COM objects of <see cref="T:UIA.IUIAutomation"/> type, like <c>var u = new UIA.CUIAutomation() as UIA.IUIAutomation;</c>
+            </summary>
+        </member>
+        <member name="T:UIA.CUIAutomation8">
+            <summary>
+            This class is used to create COM objects of IUIAutomationX types, like <c>var u = new UIA.CUIAutomation8() as UIA.IUIAutomation2;</c>
+            </summary>
+            <remarks>
+            Unavailable on Windows 7. Use <see cref="T:UIA.CUIAutomation"/>/<see cref="T:UIA.IUIAutomation"/> instead.
+            </remarks>
+        </member>
+        <member name="T:UIA.IUIAutomation">
+            <summary>
+            Provides UI Automation services - gets <see cref="T:UIA.IElement"/> of root/window/point/focus, creates find conditions and other objects, registers event handlers, etc.
+            </summary>
+            <remarks>
+            Use this code to create COM object: <c>var u = new UIA.CUIAutomation() as UIA.IUIAutomation;</c>
+            There are several other IUIAutomationX interfaces, added in Windows 8 and later. To create them use <see cref="T:UIA.CUIAutomation8"/> class.
+            </remarks>
+        </member>
+        <member name="T:UIA.IElement">
+            <summary>
+            UI Automation element. The main interface of UI Automation.
+            </summary>
+            <remarks>
+            COM objects are created using <see cref="T:UIA.IUIAutomation"/> or found using methods like FindFirst. See example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            Wnd w = Wnd.Find("Options").OrThrow();
+            var u = new UIA.CUIAutomation() as UIA.IUIAutomation;
+            var ew = u.ElementFromHandle(w);
+            Print(ew.Name);
+            var cond = u.CreatePropertyCondition(UIA.PropertyId.Name, "Run at startup");
+            cond = u.CreateAndCondition(cond, u.CreatePropertyCondition(UIA.PropertyId.IsOffscreen, false));
+            var e = ew.FindFirst(UIA.TreeScope.Descendants, cond);
+            Print(e?.Name);
+            e?.SetFocus();
+            ]]></code>
+            </example>
         </member>
         <member name="T:System.ITupleInternal">
             <summary>

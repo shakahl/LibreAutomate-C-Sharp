@@ -63,7 +63,7 @@ namespace Catkeys
 		/// Uses <see cref="WndDirectParent"/>.
 		/// Another way is <c>w.HasStyle(Native.WS_CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
 		/// </remarks>
-		public bool IsChildWindow { get => !WndDirectParent.Is0; }
+		public bool IsChildWindow => !WndDirectParent.Is0;
 
 		/// <summary>
 		/// Returns true if this is a direct or indirect child (descendant) of window w.
@@ -99,7 +99,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetParent</msdn>. Faster than <see cref="WndDirectParent"/>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd WndDirectParentOrOwner { get => Api.GetParent(this); }
+		public Wnd WndDirectParentOrOwner => Api.GetParent(this);
 
 		/// <summary>
 		/// Gets the window of the same type that is highest in the Z order.
@@ -108,7 +108,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd WndFirstSibling { get => Api.GetWindow(this, Api.GW_HWNDFIRST); }
+		public Wnd WndFirstSibling => Api.GetWindow(this, Api.GW_HWNDFIRST);
 
 		/// <summary>
 		/// Gets the window of the same type that is lowest in the Z order.
@@ -117,7 +117,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd WndLastSibling { get => Api.GetWindow(this, Api.GW_HWNDLAST); }
+		public Wnd WndLastSibling => Api.GetWindow(this, Api.GW_HWNDLAST);
 
 		/// <summary>
 		/// Gets the window of the same type that is next (below this) in the Z order.
@@ -126,7 +126,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDNEXT).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd WndNext { get => Api.GetWindow(this, Api.GW_HWNDNEXT); }
+		public Wnd WndNext => Api.GetWindow(this, Api.GW_HWNDNEXT);
 
 		/// <summary>
 		/// Gets the window of the same type that is previous (above this) in the Z order.
@@ -135,7 +135,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDPREV).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd WndPrev { get => Api.GetWindow(this, Api.GW_HWNDPREV); }
+		public Wnd WndPrev => Api.GetWindow(this, Api.GW_HWNDPREV);
 
 		/// <summary>
 		/// Gets the child control at the top of the Z order.
@@ -144,7 +144,7 @@ namespace Catkeys
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_CHILD).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd WndFirstChild { get => Api.GetWindow(this, Api.GW_CHILD); }
+		public Wnd WndFirstChild => Api.GetWindow(this, Api.GW_CHILD);
 
 		/// <summary>
 		/// Gets the child control at the bottom of the Z order.
@@ -172,12 +172,12 @@ namespace Catkeys
 		/// Calls API <msdn>GetForegroundWindow</msdn>.
 		/// Returns default(Wnd) if there is no active window; more info: <see cref="Misc.WaitForAnActiveWindow"/>.
 		/// </summary>
-		public static Wnd WndActive { get => Api.GetForegroundWindow(); }
+		public static Wnd WndActive => Api.GetForegroundWindow();
 
 		/// <summary>
 		/// Returns true if this window is the active (foreground) window.
 		/// </summary>
-		public bool IsActive { get => !Is0 && this == Api.GetForegroundWindow(); }
+		public bool IsActive => !Is0 && this == Api.GetForegroundWindow();
 
 		/// <summary>
 		/// Returns true if this window is the active (foreground) window.
@@ -199,14 +199,14 @@ namespace Catkeys
 			/// Gets the active window of this thread.
 			/// Calls API <msdn>GetActiveWindow</msdn>.
 			/// </summary>
-			public static Wnd WndActiveOfThisThread { get => Api.GetActiveWindow(); }
+			public static Wnd WndActiveOfThisThread => Api.GetActiveWindow();
 
 			/// <summary>
 			/// Gets the very first top-level window in the Z order.
 			/// Usually it is a topmost window.
 			/// Calls API <msdn>GetTopWindow</msdn>(default(Wnd)).
 			/// </summary>
-			public static Wnd WndTop { get => Api.GetTopWindow(default); }
+			public static Wnd WndTop => Api.GetTopWindow(default);
 
 			/// <summary>
 			/// Gets the first (top) enabled window in the chain of windows owned by w, or w itself if there are no such windows.
@@ -234,14 +234,14 @@ namespace Catkeys
 			/// Calls API <msdn>GetDesktopWindow</msdn>.
 			/// <note>It is not the visible desktop window (see <see cref="WndDesktop"/>)</note>.
 			/// </summary>
-			public static Wnd WndRoot { get => _wDesktop; }
+			public static Wnd WndRoot => _wDesktop;
 
 			/// <summary>
 			/// Gets a window of the shell process (usually process "explorer", class name "Progman").
 			/// Calls API <msdn>GetShellWindow</msdn>.
 			/// <note>In most cases it is not the window that contains desktop icons (see <see cref="WndDesktop"/>). But it belongs to the same thread.</note>
 			/// </summary>
-			public static Wnd WndShell { get => Api.GetShellWindow(); }
+			public static Wnd WndShell => Api.GetShellWindow();
 
 			/// <summary>
 			/// Gets the desktop window.
@@ -249,7 +249,7 @@ namespace Catkeys
 			/// <note>It is not the same as API <msdn>GetDesktopWindow</msdn> (see <see cref="WndRoot"/>)</note>.
 			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
 			/// </summary>
-			public static Wnd WndDesktop { get => _WndDesktop(out var lv); }
+			public static Wnd WndDesktop => _WndDesktop(out var lv);
 
 			/// <summary>
 			/// Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="WndDesktop"/>.

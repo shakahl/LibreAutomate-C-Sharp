@@ -47,7 +47,7 @@ namespace Catkeys
 				}
 			}
 
-			public bool Is0 { get => _iptr == default; }
+			public bool Is0 => _iptr == default;
 
 			public static bool operator ==(IAccessible a, IAccessible b) => a._iptr == b._iptr;
 			public static bool operator !=(IAccessible a, IAccessible b) => a._iptr != b._iptr;
@@ -73,15 +73,6 @@ namespace Catkeys
 
 			public static implicit operator IntPtr(IAccessible a) => a._iptr;
 
-#if true //Acc FUTURE: maybe enable this workaround if Chrome will not fix it. Reported, but it seems they are not interested.
-			public int get_accParent(out IAccessible iacc)
-			{
-				iacc = default;
-				var hr = _F.get_accParent(_iptr, out var idisp);
-				if(hr == 0) hr = FromIDispatch(idisp, out iacc);
-				return hr;
-			}
-
 			public int GetWnd(out Wnd w)
 			{
 				w = default;
@@ -91,115 +82,15 @@ namespace Catkeys
 
 				return hr;
 			}
-#else
-			/// <summary>
-			/// Manages an IAccessible/Wnd dictionary that is used by GetWnd and get_accParent for the Chrome bug workaround.
-			/// In Chrome versions 61-? is broken get_accParent in web pages.
-			///		It gets parent AO (except of DOCUMENT), but if we need container window of that AO, windowfromaccessibleobject (WFAO) fails.
-			///		It's probably because DOCUMENT's get_accParent is broken. It seems WFAO walks ancestors by calling get_accParent until finds WINDOW.
-			///		WFAO fails only for AO that are retrieved with get_accParent (or derived from it using navigation etc).
-			///			Probably because MSAA caches HWNDs. We can guess it from the speed difference.
-			///			WFAO usually is quite fast, but very slow if the AO was returned by get_accParent etc, because their HWNDs are not cached.
-			///	We use this dictionary not only with Chrome. It makes GetWnd much faster with these get_accParent-returned AOs.
-			///	This workaround is only for AO retrieved with get_accParent directly. If we then navigate to another object (next, child etc), WFAO fails for them. Never mind, too much work to track all.
-			///	WFAO does not fail for AO retrieved using navigation when the navigation start AO's HWND is cached.
-			/// Tried to get HWND from these interfaces, but Chrome does not give them: IUIAutomationElement, IOleWindow, IAccIdentity, IAccessible2.
-			///		IAccessible2.windowHandle works, but need to register IAccessible2Proxy.dll or inject into Chrome process. Too much work.
-			///		Besides windowHandle, IAccessible2 does not have anything useful that we could not get with other interfaces.
-			///	UI Automation works well. But cannot be used for this workaround (cannot get IUIAutomationElement from IAccessible).
-			/// </summary>
-			class _ChromeParentBugWorkaround
-			{
-				//Acc CONSIDER: to use less memory, instead of Dictionary<LPARAM, Wnd> use Dictionary<Wnd, List<LPARAM>>
 
-				Dictionary<LPARAM, Wnd> _d = new Dictionary<LPARAM, Wnd>();
-				//long _time;
-				//Acc FUTURE: sometimes remove disposed AO, eg once in 1 minute or when GC runs.
-				//	For each dictionary key call AddRef/Release to get ref count. Remove if 1.
-
-				public void Add(IntPtr iacc, Wnd w)
-				{
-					if(!w.IsAlive) { _RemoveWnd(w); return; }
-					Marshal.AddRef(iacc);
-					_d[iacc] = w;
-
-					Debug_.PrintIf(_d.Count > 100, "big dictionary IAccessible/Wnd. Count: " + _d.Count.ToString());
-				}
-
-				public bool TryGet(IntPtr iacc, out Wnd w)
-				{
-					if(!_d.TryGetValue(iacc, out w)) return false;
-					if(w.IsAlive) return true;
-					_RemoveWnd(w);
-					w = default;
-					return false;
-				}
-
-				void _RemoveWnd(Wnd w)
-				{
-					var a = new Util.LibArrayBuilder<LPARAM>();
-					foreach(var x in _d) if(x.Value == w) a.Add(x.Key);
-					for(int i = a.Count - 1; i >= 0; i--) _d.Remove(a[i]);
-				}
-
-				~_ChromeParentBugWorkaround() //called when GC runs after this thread ended
-				{
-					foreach(var x in _d) Marshal.Release(x.Key);
-				}
-			}
-
-			[ThreadStatic] static _ChromeParentBugWorkaround t_iaccWnd; //Acc FUTURE: try to make non-[ThreadStatic] if possible
-
+			//TODO: test with new Chrome version where this bug fixed: https://bugs.chromium.org/p/chromium/issues/detail?id=773208
 			public int get_accParent(out IAccessible iacc)
 			{
 				iacc = default;
-
-				//Chrome bug workaround: part 1.
-#if DEBUG
-				var t0 = Time.Microseconds;
-				GetWnd(out Wnd w); //in browsers usually about 10 times faster (when uncached) than get_accParent. In many windows fast.
-				var td = Time.Microseconds - t0;
-				Debug_.PrintIf(td >= 1000, "slow GetWnd in Chrome bug workaround. Time: " + td.ToString());
-#else
-				GetWnd(out Wnd w);
-#endif
-
 				var hr = _F.get_accParent(_iptr, out var idisp);
-				if(hr == 0) {
-					hr = FromIDispatch(idisp, out iacc);
-
-					//Chrome bug workaround: part 2.
-					if(hr == 0 && !w.Is0 && !w.IsChildWindow && 0 == GetRole(0, out var role) && role != AccROLE.WINDOW) {
-						//note: here we cannot call GetWnd to make sure that window of iacc == w, because it is very slow in any app, and in Chrome fails.
-						//	If our parent window is top-level and our role is not WINDOW, logically window of iacc must be the same as ours.
-						//	If out role is WINDOW, iacc window could be the root desktop.
-
-						//PrintList("get_accParent: add", iacc._iptr);
-						var d = t_iaccWnd;
-						if(d == null) t_iaccWnd = d = new _ChromeParentBugWorkaround();
-						d.Add(iacc, w);
-					}
-				}
+				if(hr == 0) hr = FromIDispatch(idisp, out iacc);
 				return hr;
 			}
-
-			public int GetWnd(out Wnd w)
-			{
-				w = default;
-				Debug.Assert(!Is0);
-
-				//Chrome bug workaround: part 3.
-				if(t_iaccWnd?.TryGet(_iptr, out w) ?? false) {
-					//PrintList("GetWnd: cached", _iptr);
-					return 0;
-				}
-				//PrintList("GetWnd: uncached", _iptr);
-
-				int hr = _WindowFromAccessibleObject(this, out w);
-
-				return hr;
-			}
-#endif
 
 			public int get_accChildCount(out int pcountChildren)
 			{
@@ -432,7 +323,7 @@ namespace Catkeys
 			public int accLocation(int elem, out RECT r)
 			{
 				int hr = _F.accLocation(_iptr, out var x, out var y, out var wid, out var hei, elem);
-				r = hr == 0 ? new RECT(x, y, wid, hei, true) : new RECT();
+				r = hr == 0 ? new RECT(x, y, wid, hei, true) : default;
 				return hr;
 			}
 
@@ -633,6 +524,8 @@ namespace Catkeys
 				return ToString(0);
 			}
 
+			//TODO: no bug if the AO retrieved by our in-proc dll. Probably standard out-proc AO are not proxy.
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void _WorkaroundGetToolbarButtonName(int elem, AccROLE role, out string R)
 			{
 				//get_accName bug: 64-bit process cannot get standard toolbar button name from 32-bit process if it is tooltip text. Tested on Win 10 and 7.

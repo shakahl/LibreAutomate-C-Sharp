@@ -29,25 +29,25 @@ namespace Catkeys
 		/// Returns true if Alt key is pressed.
 		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
-		public static bool IsAlt { get => Api.GetKeyState(Api.VK_MENU) < 0; }
+		public static bool IsAlt => Api.GetKeyState(Api.VK_MENU) < 0;
 
 		/// <summary>
 		/// Returns true if Ctrl key is pressed.
 		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
-		public static bool IsCtrl { get => Api.GetKeyState(Api.VK_CONTROL) < 0; }
+		public static bool IsCtrl => Api.GetKeyState(Api.VK_CONTROL) < 0;
 
 		/// <summary>
 		/// Returns true if Shift key is pressed.
 		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
-		public static bool IsShift { get => Api.GetKeyState(Api.VK_SHIFT) < 0; }
+		public static bool IsShift => Api.GetKeyState(Api.VK_SHIFT) < 0;
 
 		/// <summary>
 		/// Returns true if Win key is pressed (left or right).
 		/// See also: <see cref="Control.ModifierKeys"/> (gets Ctrl, Shift and Alt).
 		/// </summary>
-		public static bool IsWin { get => Api.GetKeyState(Api.VK_LWIN) < 0 || Api.GetKeyState(Api.VK_RWIN) < 0; }
+		public static bool IsWin => Api.GetKeyState(Api.VK_LWIN) < 0 || Api.GetKeyState(Api.VK_RWIN) < 0;
 
 		/// <summary>
 		/// Returns true if one or more of the specified modifier keys are pressed.
@@ -70,17 +70,17 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if the Caps Lock key is in the locked statue.
 		/// </summary>
-		public static bool IsCapsLock { get => (Api.GetKeyState(Api.VK_CAPITAL) & 1) != 0; }
+		public static bool IsCapsLock => (Api.GetKeyState(Api.VK_CAPITAL) & 1) != 0;
 
 		/// <summary>
 		/// Returns true if the Num Lock key is in the locked statue.
 		/// </summary>
-		public static bool IsNumLock { get => (Api.GetKeyState(Api.VK_NUMLOCK) & 1) != 0; }
+		public static bool IsNumLock => (Api.GetKeyState(Api.VK_NUMLOCK) & 1) != 0;
 
 		/// <summary>
 		/// Returns true if the Scroll Lock key is in the locked statue.
 		/// </summary>
-		public static bool IsScrollLock { get => (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0; }
+		public static bool IsScrollLock => (Api.GetKeyState(Api.VK_SCROLL) & 1) != 0;
 
 		/// <summary>
 		/// Gets current text cursor (caret) rectangle in screen coordinates.
@@ -138,7 +138,7 @@ namespace Catkeys
 		//{
 		//	List<int> _a;
 
-		//	public int Length { get => _a.Count; }
+		//	public int Length => _a.Count;
 
 		//	public KeysToSend Tab { get { _a.Add(9); return this; } }
 		//	public KeysToSend Enter { get { _a.Add(13); return this; } }
@@ -149,7 +149,7 @@ namespace Catkeys
 
 		//}
 
-		//public static KeysToSend K { get => new KeysToSend(); }
+		//public static KeysToSend K => new KeysToSend();
 
 		public static void Paste(string text)
 		{

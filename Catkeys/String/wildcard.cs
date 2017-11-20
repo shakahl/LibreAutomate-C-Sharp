@@ -21,7 +21,7 @@ using static Catkeys.NoClass;
 
 namespace Catkeys
 {
-	public static partial class String_
+	public static unsafe partial class String_
 	{
 		#region Like_
 
@@ -53,7 +53,15 @@ namespace Catkeys
 		/// </example>
 		/// <seealso cref="Wildex"/>
 		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>
-		public static unsafe bool Like_(this string t, string pattern, bool ignoreCase = false)
+#if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
+		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
+		{
+			if(t == null) return false;
+			fixed (char* pt = t, pw = pattern)
+				return Cpp.Cpp_StringLike(pt, t.Length, pw, pattern.Length, ignoreCase);
+		}
+#else
+		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
 		{
 			if(t == null) return false;
 			int patLen = pattern.Length;
@@ -62,7 +70,7 @@ namespace Catkeys
 			if(t.Length == 0) return false;
 
 			fixed (char* str = t, pat = pattern) {
-				return __WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.LibTables.LowerCase : null);
+				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.LibTables.LowerCase : null);
 			}
 
 			//info:
@@ -70,7 +78,7 @@ namespace Catkeys
 			//	supports more wildcard characters etc, depends on current culture, is 6-250 times slower, has bugs.
 		}
 
-		static unsafe bool __WildcardCmp(char* s, char* w, int lenS, int lenW, char* table)
+		static bool _WildcardCmp(char* s, char* w, int lenS, int lenW, char* table)
 		{
 			char* se = s + lenS, we = w + lenW;
 
@@ -129,6 +137,7 @@ namespace Catkeys
 			//	Then similar speed as string.IndexOf(ordinal) and API <msdn>FindStringOrdinal</msdn>.
 			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
 		}
+#endif
 
 		/// <summary>
 		/// Calls <see cref="Like_(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
@@ -179,7 +188,6 @@ namespace Catkeys.Types
 	public class Wildex
 	{
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
-		//	//TODO: test again. Maybe in the past tested in 32-bit process. Also try to use single int field instead of _type, _ignoreCase and _not.
 
 		object _obj; //string, Regex or Wildex[]. Tested: getting string etc with '_obj as string' is fast.
 		WildType _type;
@@ -204,7 +212,8 @@ namespace Catkeys.Types
 				for(int i = 2; i < w.Length; i++) {
 					switch(w[i]) {
 					case 't': _type = WildType.Text; break;
-					case 'r': _type = WildType.Regex; break;
+					case 'r': _type = WildType.RegexNet; break;
+					case 'p': _type = WildType.RegexPcre; break;
 					case 'm': _type = WildType.Multi; break;
 					case 'c': _ignoreCase = false; break;
 					case 'n': _not = true; break;
@@ -216,12 +225,15 @@ namespace Catkeys.Types
 				throw new ArgumentException("invalid **options|");
 				g1:
 				switch(_type) {
-				case WildType.Regex:
+				case WildType.RegexNet:
 					var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
 					_obj = new Regex(w, ro);
 					return;
+				case WildType.RegexPcre:
+					_obj = new Regex_(w);
+					return;
 				case WildType.Multi:
-					var a = w.Split(_splitMulti, StringSplitOptions.None); //TODO: use Split_. But currently it does not support string separators. Maybe better use eg ` instead of [].
+					var a = w.Split(_splitMulti, StringSplitOptions.None); //TODO: use Split_. But currently it does not support string separators. Or use code like in the cpp version. Maybe better use eg ` instead of [].
 					var multi = new Wildex[a.Length];
 					for(int i = 0; i < a.Length; i++) multi[i] = new Wildex(a[i]);
 					_obj = multi;
@@ -268,11 +280,13 @@ namespace Catkeys.Types
 				break;
 			case WildType.Text:
 				var t = _obj as string;
-				if(t.Length == 0) R = s.Length == 0;
-				else R = s.Equals_(t, _ignoreCase);
+				R = s.Equals_(t, _ignoreCase);
 				break;
-			case WildType.Regex:
+			case WildType.RegexNet:
 				R = (_obj as Regex).IsMatch(s);
+				break;
+			case WildType.RegexPcre:
+				R = (_obj as Regex_).Match(s);
 				break;
 			case WildType.Multi:
 				var multi = _obj as Wildex[];
@@ -315,10 +329,16 @@ namespace Catkeys.Types
 			Wildcard,
 
 			/// <summary>
-			/// Regular expression (option r).
+			/// .NET egular expression (option r).
 			/// Match() calls <see cref="Regex.IsMatch(string)"/>.
 			/// </summary>
-			Regex,
+			RegexNet,
+
+			/// <summary>
+			/// PCRE regular expression (option p).
+			/// Match() calls <see cref="Regex_.Match"/>.
+			/// </summary>
+			RegexPcre,
 
 			/// <summary>
 			/// Multiple parts (option m).
@@ -332,34 +352,40 @@ namespace Catkeys.Types
 		/// Gets the wildcard or simple text.
 		/// null if TextType is Regex or Multi.
 		/// </summary>
-		public string Text { get => _obj as string; }
+		public string Text => _obj as string;
 
 		/// <summary>
 		/// Gets the Regex object created from regular expression string.
-		/// null if TextType is not Regex (no option r).
+		/// null if TextType is not RegexNet (no option r).
 		/// </summary>
-		public Regex Regex { get => _obj as Regex; }
+		public Regex RegexNet => _obj as Regex;
+
+		/// <summary>
+		/// Gets the Regex object created from regular expression string.
+		/// null if TextType is not RegexPcre (no option p).
+		/// </summary>
+		public Regex RegexPcre => _obj as Regex;
 
 		/// <summary>
 		/// Array of Wildex variables, one for each part in multi-part text.
 		/// null if TextType is not Multi (no option m).
 		/// </summary>
-		public Wildex[] MultiArray { get => _obj as Wildex[]; }
+		public Wildex[] MultiArray => _obj as Wildex[];
 
 		/// <summary>
 		/// Gets the type of text (wildcard, regex, etc).
 		/// </summary>
-		public WildType TextType { get => _type; }
+		public WildType TextType => _type;
 
 		/// <summary>
 		/// Is case-insensitive?
 		/// </summary>
-		public bool IgnoreCase { get => _ignoreCase; }
+		public bool IgnoreCase => _ignoreCase;
 
 		/// <summary>
 		/// Has option n?
 		/// </summary>
-		public bool Not { get => _not; }
+		public bool Not => _not;
 
 		///
 		public override string ToString()
@@ -379,6 +405,83 @@ namespace Catkeys.Types
 				if(c == '*' || c == '?') goto yes;
 			}
 			return false; yes: return true;
+		}
+	}
+
+	//TODO: use or remove
+	/// <summary>
+	/// A slim version of <see cref="Wildex"/>.
+	/// </summary>
+	/// <remarks>
+	/// Has all the same capabilities as Wildex, but is just a struct of single pointer size.
+	/// The pointer is Object that can be of one of these types:
+	/// <see cref="Wildex"/> - if the assigned string was with wildcard expression options, like "**c|text". To compare it with other strings, <see cref="Match"/> calls <see cref="Wildex.Match"/>.
+	/// <see cref="String"/> - if the assigned string was without wildcard expression options, like "text". To compare it with other strings, <see cref="Match"/> calls <see cref="String_.Like_(string, string, bool)"/> with <b>ignoreCase</b> true.
+	/// null - if was not assigned a non-null string.
+	/// </remarks>
+	public struct WildexStruct
+	{
+		object _obj;
+
+		/// <param name="wildcardExpression">
+		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
+		/// Cannot be null (throws exception).
+		/// "" will match "".
+		/// </param>
+		/// <exception cref="ArgumentNullException"></exception>
+		/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
+		public WildexStruct(string wildcardExpression)
+		{
+			var w = wildcardExpression;
+			if(w == null) throw new ArgumentNullException();
+			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') _obj = new Wildex(w);
+			else _obj = w;
+		}
+
+		/// <summary>
+		/// Creates new WildexStruct from wildcard expression string.
+		/// If the string is null, returns empty variable. Then it's <see cref="HasValue"/> property is false, <see cref="Value"/> property is null, and <see cref="Match"/> must not ne called.
+		/// </summary>
+		/// <param name="wildcardExpression">
+		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
+		/// </param>
+		public static implicit operator WildexStruct(string wildcardExpression)
+		{
+			if(wildcardExpression == null) return default;
+			return new WildexStruct(wildcardExpression);
+		}
+
+		/// <summary>
+		/// Compares a string with the <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> used to create this variable.
+		/// Returns true if they match.
+		/// </summary>
+		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
+		public bool Match(string s)
+		{
+			if(s == null) return false;
+			if(_obj is string t) return s.Like_(t, true);
+			if(_obj is Wildex x) return x.Match(s);
+			throw new InvalidOperationException("Empty " + nameof(WildexStruct));
+		}
+
+		/// <summary>
+		/// Returns true if assigned a non-null string.
+		/// This variable contains either the string or <see cref="Wildex"/>.
+		/// If this property is false, don't call <see cref="Match"/>, it will throw exception.
+		/// </summary>
+		public bool HasValue => _obj != null;
+
+		/// <summary>
+		/// Returns Wildex if the assigned string was with wildcard expression options, like "**c|text".
+		/// Returns String if the assigned string was without wildcard expression options, like "text".
+		/// Returns null if was not assigned a non-null string.
+		/// </summary>
+		public object Value => _obj;
+
+		///
+		public override string ToString()
+		{
+			return _obj?.ToString();
 		}
 	}
 }

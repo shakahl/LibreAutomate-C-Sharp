@@ -80,6 +80,8 @@ namespace Catkeys.Types
 		public static bool operator ==(LPARAM a, LPARAM b) { return a._v == b._v; }
 		public static bool operator !=(LPARAM a, LPARAM b) { return a._v != b._v; }
 
+		//TODO: need to overload operator < etc, because now gives unexpected results.
+
 		public override string ToString() => ((IntPtr)_v).ToString();
 
 		public override int GetHashCode() => (int)_v;
@@ -144,12 +146,12 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Returns true if all fields == 0.
 		/// </summary>
-		public bool Is0 { get => left == 0 && top == 0 && right == 0 && bottom == 0; }
+		public bool Is0 => left == 0 && top == 0 && right == 0 && bottom == 0;
 
 		/// <summary>
 		/// Returns true if the rectangle is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
 		/// </summary>
-		public bool IsEmpty { get => right <= left || bottom <= top; }
+		public bool IsEmpty => right <= left || bottom <= top;
 
 		/// <summary>
 		/// Gets or sets width.
@@ -351,14 +353,14 @@ namespace Catkeys.Types
 
 		public static BSTR Alloc(int len) => Api.SysAllocStringLen(null, len);
 
-		public char* Ptr { get => _p; }
+		public char* Ptr => _p;
 
 		/// <summary>
 		/// Returns true if the string is null.
 		/// </summary>
-		public bool Is0 { get => _p == null; }
+		public bool Is0 => _p == null;
 
-		public int Length { get => _p == null ? 0 : Api.SysStringLen(_p); }
+		public int Length => _p == null ? 0 : Api.SysStringLen(_p);
 
 		/// <summary>
 		/// Converts to string.

@@ -42,7 +42,7 @@
     </table>
 
     <alert>
-     <para>There are no escape sequences for * and ? characters. To match literal * or ? character, usually can be used the ? wildcard character. Or you can use regular expression instead.</para>
+     <para>There are no escape sequences for * and ? characters. To match literal * or ? character, usually can be used the ? wildcard character. Or you can use regular expression.</para>
     </alert>
 
     <para>
@@ -68,7 +68,17 @@
       </entry>
       <entry>
        <para>
-        Regular expression. See <codeEntityReference qualifyHint="false">T:System.Text.RegularExpressions.Regex</codeEntityReference>.
+        .NET regular expression. See <codeEntityReference qualifyHint="false">T:System.Text.RegularExpressions.Regex</codeEntityReference>.
+       </para>
+      </entry>
+     </row>
+     <row>
+      <entry>
+       <para>p</para>
+      </entry>
+      <entry>
+       <para>
+        PCRE regular expression. See <codeEntityReference qualifyHint="false">T:Catkeys.Regex_</codeEntityReference>.
        </para>
       </entry>
      </row>
@@ -81,7 +91,7 @@
        <para>
         Example: <literal>"**rc|regex, match case"</literal>
        </para>
-       <para>Info: case-sensitive regular expression is about 4 times faster.</para>
+       <para>Info: case-sensitive r regular expression (.NET) is much faster.</para>
       </entry>
      </row>
      <row>

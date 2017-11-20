@@ -57,7 +57,7 @@ namespace Catkeys
 		/// All row arrays have Length equal to <see cref="ColumnCount"/>, and it must remain so; you can change Length, but then need to call <c>ColumnCount=newLength</c>.
 		/// </summary>
 		/// <example><code>x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));</code></example>
-		public List<string[]> Data { get => _a; }
+		public List<string[]> Data => _a;
 
 		/// <summary>
 		/// Sets or gets the field separator character used when parsing and composing CSV text.

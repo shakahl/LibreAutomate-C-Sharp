@@ -77,7 +77,7 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this is a console process.
 		/// </summary>
-		public static bool IsConsoleProcess { get => _isConsole; }
+		public static bool IsConsoleProcess => _isConsole;
 		static readonly bool _isConsole = Console.OpenStandardInput(1) != Stream.Null;
 
 		/// <summary>
@@ -243,7 +243,7 @@ namespace Catkeys
 		/// class TestOutputWriter :TextWriter
 		/// {
 		/// 	public override void WriteLine(string value) { Output.WriteDirectly("redir: " + value); }
-		/// 	public override Encoding Encoding { get => Encoding.Unicode; }
+		/// 	public override Encoding Encoding => Encoding.Unicode;
 		/// }
 		/// ]]></code>
 		/// </example>
@@ -255,7 +255,7 @@ namespace Catkeys
 		class _OutputWriter :TextWriter
 		{
 			public override void WriteLine(string value) { WriteDirectly(value); }
-			public override Encoding Encoding { get => Encoding.Unicode; }
+			public override Encoding Encoding => Encoding.Unicode;
 		}
 
 		/// <summary>
@@ -1078,7 +1078,7 @@ namespace Catkeys
 			/// <summary>
 			/// Gets waitable timer name like "timer.Catkeys.Output".
 			/// </summary>
-			internal static string LibTimerName { get => "timer.Catkeys.Output"; }
+			internal static string LibTimerName => "timer.Catkeys.Output";
 
 			/// <summary>
 			/// Shared memory variables. Used with global server only.
@@ -1092,7 +1092,7 @@ namespace Catkeys
 				public byte NeedCaller;
 #endif
 			}
-			internal static LibSharedMemoryData* _SM { get => &Util.LibSharedMemory.Ptr->outp; }
+			internal static LibSharedMemoryData* _SM => &Util.LibSharedMemory.Ptr->outp;
 		}
 	}
 }

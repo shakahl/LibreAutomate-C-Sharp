@@ -49,7 +49,7 @@ namespace Catkeys
 				/// Actual class name that must be used to create windows.
 				/// It is not exactly the same as passed to Create() etc. It has a suffix containing current appdomain identifer.
 				/// </summary>
-				public string Name { get => _className; }
+				public string Name => _className;
 
 				/// <summary>
 				/// Base class extra memory size.

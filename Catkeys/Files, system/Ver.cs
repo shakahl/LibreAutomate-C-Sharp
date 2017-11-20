@@ -72,7 +72,7 @@ namespace Catkeys
 		/// Win7 (0x601), Win8 (0x602), Win8_1 (0x603), Win10 (0xA00).
 		/// Example: <c>if(Ver.WinVer >= Ver.Win8) ...</c>
 		/// </summary>
-		public static int WinVer { get => _winver; }
+		public static int WinVer => _winver;
 
 		/// <summary>
 		/// Classic Windows version major+minor values that can be used with <see cref="WinVer"/>.
@@ -83,34 +83,34 @@ namespace Catkeys
 		/// <summary>
 		/// true if Windows 8.0 or later.
 		/// </summary>
-		public static bool MinWin8 { get => _minWin8; }
+		public static bool MinWin8 => _minWin8;
 
 		/// <summary>
 		/// true if Windows 8.1 or later.
 		/// </summary>
-		public static bool MinWin8_1 { get => _minWin8_1; }
+		public static bool MinWin8_1 => _minWin8_1;
 
 		/// <summary>
 		/// true if Windows 10 or later.
 		/// </summary>
-		public static bool MinWin10 { get => _minWin10; }
+		public static bool MinWin10 => _minWin10;
 
 		/// <summary>
 		/// true if this process is 64-bit, false if 32-bit.
 		/// The same as <see cref="Environment.Is64BitProcess"/>.
 		/// </summary>
-		public static bool Is64BitProcess { get => Environment.Is64BitProcess; }
+		public static bool Is64BitProcess => Environment.Is64BitProcess;
 		//Environment.Is64BitProcess is fast, just returns true or false depending on #if
 
 		/// <summary>
 		/// true if Windows is 64-bit, false if 32-bit.
 		/// The same as <see cref="Environment.Is64BitOperatingSystem"/>, but fast. The .NET function is slow in 32-bit process; they forgot to optimize it.
 		/// </summary>
-		public static bool Is64BitOS { get => _is64BitOS; }
+		public static bool Is64BitOS => _is64BitOS;
 
 		/// <summary>
 		/// Returns true if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.
 		/// </summary>
-		public static bool Is32BitProcessOn64BitOS { get => _isWow64; }
+		public static bool Is32BitProcessOn64BitOS => _isWow64;
 	}
 }

@@ -309,9 +309,9 @@ namespace Catkeys.Types
 		public const int DWL_USER_64 = 16;
 
 		/// <exclude />
-		public static int DWLP_DLGPROC { get => IntPtr.Size; }
+		public static int DWLP_DLGPROC => IntPtr.Size;
 		/// <exclude />
-		public static int DWLP_USER { get => IntPtr.Size * 2; }
+		public static int DWLP_USER => IntPtr.Size * 2;
 
 		//GCW_
 

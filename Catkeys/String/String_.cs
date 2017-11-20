@@ -29,18 +29,50 @@ namespace Catkeys
 	/// Most of these extension methods throw NullReferenceException if called for a string variable that is null.
 	/// </summary>
 	//[DebuggerStepThrough]
-	public static partial class String_
+	public static unsafe partial class String_
 	{
 		/// <summary>
 		/// Calls <see cref="String.Equals(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
 		/// </summary>
 		public static bool Equals_(this string t, string value, bool ignoreCase = false)
 		{
-			return ignoreCase ? t.Equals(value, StringComparison.OrdinalIgnoreCase) : t.Equals(value);
-			//speed: t.Equals(value) is faster than t.Equals(value, StringComparison.Ordinal)
+			return ignoreCase ? _EqualsI2(t, value) : t.Equals(value);
 		}
-		//CONSIDER: allow null t, like Like_. Maybe only for Equals_, not StartsWith_ etc.
-		//	Or for all; then can easier use eg in Acc.Find 'also', like 'also: o => o.Value.StartsWith_("x")', because now need 'also: o => o.Value?.StartsWith_("x") ?? false' to make it safe.
+
+		static bool _EqualsI2(string t, string s)
+		{
+			if(t == null) throw new NullReferenceException();
+			if(s == null || t.Length != s.Length) return false;
+			fixed (char* a = t, b = s) return _EqualsI(a, b, t.Length);
+			//fixed (char* a = t, b = s) return 0 != Cpp.Cpp_StringEqualsI(a, b, t.Length); //faster with long strings, but much slower with short
+		}
+
+		static bool _EqualsI(char* a, char* b, int len)
+		{
+			if(len != 0) {
+				//optimization: at first compare case-sensitive, as much as possible.
+				//	never mind: in 32-bit process this is not the fastest code (too few registers). But makes much faster anyway.
+				//	tested: strings don't have to be aligned at 4 or 8.
+				while(len >= 12) {
+					if(*(long*)a != *(long*)b) break;
+					if(*(long*)(a + 4) != *(long*)(b + 4)) break;
+					if(*(long*)(a + 8) != *(long*)(b + 8)) break;
+					a += 12; b += 12; len -= 12;
+				}
+
+				var table = Util.LibTables.LowerCase;
+
+				for(int i = 0; i < len; i++) {
+					int c1 = a[i], c2 = b[i];
+					if(c1 != c2 && table[c1] != table[c2]) goto gFalse;
+				}
+			}
+			//throw new Exception(); //used to debug, because breakpoints somehow don't work here
+			return true;
+			gFalse: return false;
+
+			//TODO: use this in all functions, especially where now uses String.Compare, it is slow.
+		}
 
 		/// <summary>
 		/// Calls <see cref="Equals_(string, string, bool)"/> for each string specified in the argument list until it returns true.

@@ -37,7 +37,7 @@ namespace Catkeys.Util
 
 		static int s_minCap;
 
-		static int _TypeSize { get => Unsafe.SizeOf<T>(); } //optimized to the constant value, except in static ctor (why?)
+		static int _TypeSize => Unsafe.SizeOf<T>(); //optimized to the constant value, except in static ctor (why?)
 
 		static LibArrayBuilder()
 		{
@@ -57,17 +57,17 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Gets array memory address (address of element 0).
 		/// </summary>
-		public void* Ptr { get => _p; }
+		public void* Ptr => _p;
 
 		/// <summary>
 		/// Gets the number of elements.
 		/// </summary>
-		public int Count { get => _len; }
+		public int Count => _len;
 
 		/// <summary>
 		/// Gets the number of bytes in the array (Count*sizeof(T)).
 		/// </summary>
-		public int ByteCount { get => _len * _TypeSize; }
+		public int ByteCount => _len * _TypeSize;
 
 		/// <summary>
 		/// Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.

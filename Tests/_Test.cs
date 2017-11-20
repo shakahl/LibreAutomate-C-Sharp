@@ -66,9 +66,6 @@ using System.Reflection.Emit;
 using System.Net;
 using System.Net.NetworkInformation;
 
-//using System.Windows.Automation;
-using UIAutomationClient;
-
 using Catkeys.Types;
 using Catkeys.Util;
 //using static Test.CatAlias;
@@ -1153,6 +1150,35 @@ static unsafe partial class Test
 	}
 
 	#endregion
+
+	static void TestCoord()
+	{
+		var w = Wnd.Find("Quick*");
+		w.Activate();
+		//w.Move(100, 100);
+		//w.Move(100, 100, new CoordOptions(false, 1));
+		//w.Move(300, Coord.Center);
+		//w.Move(100, 100, new CoordOptions(false, 1));
+		w.Move(100, 100, Coord.Reverse(200), Coord.Reverse(200), new CoordOptions(false, 1));
+		//w.Resize(100, Coord.Center);
+		//w.Resize(500, Coord.Max, new CoordOptions(false, w));
+		//w.Move(0.5f, 1);
+		//Mouse.Move(w, 100, 100);
+		//Mouse.Move(w);
+		//Mouse.Move(100, 100, new CoordOptions(false, 1));
+		//Mouse.Move(500, Coord.MaxInside, new CoordOptions(true));
+		//var a = Acc.FromXY(100, 100);
+		//var a1 = Acc.Find(w, "MENUITEM", "Help");
+		//var e1 = AElement.FromAcc(a1);
+		//Print(e1.Name);
+		//var e2 = (UIA.IElement2)e1;
+		//Print(e2.Name);
+		//Mouse.Move(10, 10, new CoordOptions(false, e2));
+		//var a = Acc.FromXY(100, 100, new CoordOptions(false, w));
+		//Print(a);
+
+		//Print(Screen_.GetRect(1, true));
+	}
 
 	static void TestAcc()
 	{
@@ -2285,7 +2311,13 @@ static unsafe partial class Test
 
 	static void TestAccPreferLink()
 	{
-		using(var a = Acc.FromXY(1150, 1469, preferLINK: true)) Print(a);
+		//using(var a = Acc.FromXY(1150, 1469, preferLINK: true)) Print(a);
+		for(int i = 0; i < 30; i++) {
+			1.s();
+			using(var a = Acc.FromMouse(preferLINK: true)) {
+				Print(a);
+			}
+		}
 	}
 
 	static void TestAccFromXY()
@@ -2351,7 +2383,7 @@ static unsafe partial class Test
 
 	static void TestAccFromEvent()
 	{
-		LibAccHookEVENT ev = LibAccHookEVENT.OBJECT_FOCUS;
+		AccEVENT ev = AccEVENT.OBJECT_FOCUS;
 		var hh = SetWinEventHook(ev, ev, default, _testWinEventProc, 0, 0, 0);
 		//Print(hh);
 		TaskDialog.Show();
@@ -2363,7 +2395,7 @@ static unsafe partial class Test
 	}
 
 	static WINEVENTPROC _testWinEventProc = _TestWinEventProc;
-	static void _TestWinEventProc(IntPtr hHook, LibAccHookEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime)
+	static void _TestWinEventProc(IntPtr hHook, AccEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime)
 	{
 		//Print(w);
 		using(var a = Acc.FromEvent(w, idObject, idChild)) {
@@ -2372,10 +2404,10 @@ static unsafe partial class Test
 		}
 	}
 
-	internal delegate void WINEVENTPROC(IntPtr hHook, LibAccHookEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime);
+	internal delegate void WINEVENTPROC(IntPtr hHook, AccEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime);
 
 	[DllImport("user32.dll")]
-	internal static extern IntPtr SetWinEventHook(LibAccHookEVENT eventMin, LibAccHookEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+	internal static extern IntPtr SetWinEventHook(AccEVENT eventMin, AccEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
 
 	[DllImport("user32.dll")]
 	internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
@@ -2385,10 +2417,10 @@ static unsafe partial class Test
 		Wnd w = Wnd.Find("* Internet Explorer").Child(null, "Internet Explorer_Server");
 		Print(w);
 		var res = w.Send(WM_HTML_GETOBJECT);
-		var guid =typeof(mshtml.IHTMLDocument2).GUID;
+		var guid = typeof(MSHTML.IHTMLDocument2).GUID;
 		if(0 != ObjectFromLresult(res, ref guid, 0, out IntPtr ip)) return;
 
-		var doc = Marshal.GetTypedObjectForIUnknown(ip, typeof(mshtml.IHTMLDocument2)) as mshtml.IHTMLDocument2;
+		var doc = Marshal.GetTypedObjectForIUnknown(ip, typeof(MSHTML.IHTMLDocument2)) as MSHTML.IHTMLDocument2;
 		var body = doc.body;
 		//Print(body.outerHTML);
 		Print(Acc.FromComObject(body));
@@ -2402,128 +2434,128 @@ static unsafe partial class Test
 	[DllImport("oleacc.dll", PreserveSig = true)]
 	internal static extern int ObjectFromLresult(LPARAM lResult, ref Guid riid, LPARAM wParam, out IntPtr ppvObject);
 
-	#region UIA
+	#region UIA old
 
-	static void TestUIA_managed()
-	{
-		//System.Windows.Automation is very slow (finds 4-10 times slower). Uses deprecated API (not COM).
+	//static void TestUIA_managed()
+	//{
+	//	//System.Windows.Automation is very slow (finds 4-10 times slower). Uses deprecated API (not COM).
 
-		//var w = Wnd.Find("* Internet Explorer").OrThrow();
-		//var w = Wnd.Find("* Google Chrome").OrThrow();
-		var w = Wnd.Find("* Mozilla Firefox").OrThrow();
+	//	//var w = Wnd.Find("* Internet Explorer").OrThrow();
+	//	//var w = Wnd.Find("* Google Chrome").OrThrow();
+	//	var w = Wnd.Find("* Mozilla Firefox").OrThrow();
 
-		//var er = AutomationElement.FromHandle(w.Handle);
-		//Perf.First();
-		//AutomationElement e = null;
-		//for(int i = 0; i < 5; i++) {
-		//	e =er.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "General"));
-		//	Perf.Next();
-		//}
-		//Perf.Write();
-		//Print(e.Current.Name);
-	}
+	//	//var er = AutomationElement.FromHandle(w.Handle);
+	//	//Perf.First();
+	//	//AutomationElement e = null;
+	//	//for(int i = 0; i < 5; i++) {
+	//	//	e =er.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "General"));
+	//	//	Perf.Next();
+	//	//}
+	//	//Perf.Write();
+	//	//Print(e.Current.Name);
+	//}
 
-	class Acc3
-	{
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static int Func1()
-		{
-			return 1;
-		}
+	//class Acc3
+	//{
+	//	[MethodImpl(MethodImplOptions.NoInlining)]
+	//	public static int Func1()
+	//	{
+	//		return 1;
+	//	}
 
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static CUIAutomation Func2()
-		{
-			return _lazy.Value;
-		}
+	//	[MethodImpl(MethodImplOptions.NoInlining)]
+	//	public static UIA.IUIAutomation Func2()
+	//	{
+	//		return _lazy.Value;
+	//	}
 
-		//static CUIAutomation _au = new CUIAutomation();
-		//static CUIAutomation _au = _Create();
-		//static Lazy<CUIAutomation> _lazy = new Lazy<CUIAutomation>(_Create, true);
-		static Lazy<CUIAutomation> _lazy = new Lazy<CUIAutomation>(()=> new CUIAutomation(), true);
+	//	//static CUIAutomation _au = new CUIAutomation();
+	//	//static CUIAutomation _au = _Create();
+	//	//static Lazy<CUIAutomation> _lazy = new Lazy<CUIAutomation>(_Create, true);
+	//	static Lazy<UIA.IUIAutomation> _lazy = new Lazy<UIA.IUIAutomation>(()=> new UIA.CUIAutomation() as UIA.IUIAutomation, true);
 
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		static CUIAutomation _Create()
-		{
-			Print("create");
-			return new CUIAutomation();
-		}
-	}
+	//	[MethodImpl(MethodImplOptions.NoInlining)]
+	//	static UIA.IUIAutomation _Create()
+	//	{
+	//		Print("create");
+	//		return new UIA.CUIAutomation() as UIA.IUIAutomation;
+	//	}
+	//}
 
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void TestUIA_COM()
-	{
-		Perf.Next();
-		//var w = Wnd.Find("* Internet Explorer").OrThrow();
-		var w = Wnd.FindFast(null, "ieframe").OrThrow();
-		//w = w.Child(null, "Internet Explorer_Server").OrThrow();
-		//var w = Wnd.Find("* Google Chrome").OrThrow();
-		//var w = Wnd.Find("* Mozilla Firefox").OrThrow();
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//static void TestUIA_COM()
+	//{
+	//	Perf.Next();
+	//	//var w = Wnd.Find("* Internet Explorer").OrThrow();
+	//	var w = Wnd.FindFast(null, "ieframe").OrThrow();
+	//	//w = w.Child(null, "Internet Explorer_Server").OrThrow();
+	//	//var w = Wnd.Find("* Google Chrome").OrThrow();
+	//	//var w = Wnd.Find("* Mozilla Firefox").OrThrow();
 
-		//Print(2);
-		Perf.Next();
-		var m = Acc3.Func1();
-		//Print(3);
-		Perf.Next();
-		Print("Uia");
-		//var x = new CUIAutomation();
-		var x = Acc3.Func2();
-		//Print(4);
-		Perf.Next();
-		var ew = x.ElementFromHandle(w.Handle);
-		Perf.NW();
-		Print(ew.CurrentName);
-		var e =ew.FindFirst(TreeScope.TreeScope_Descendants, x.CreatePropertyCondition(30005, "General"));
-		Print(e.CurrentName);
-		Print(Acc.FromComObject(e));
-		//Print("Acc");
-		//Print(Acc.FromWindow(w).Name);
-		//Print(Acc.Find(w, "LINK", "General").Name);
+	//	//Print(2);
+	//	Perf.Next();
+	//	var m = Acc3.Func1();
+	//	//Print(3);
+	//	Perf.Next();
+	//	Print("Uia");
+	//	//var x = new CUIAutomation();
+	//	var x = Acc3.Func2();
+	//	//Print(4);
+	//	Perf.Next();
+	//	var ew = x.ElementFromHandle(w);
+	//	Perf.NW();
+	//	Print(ew.Name);
+	//	var e =ew.FindFirst(UIA.TreeScope.Descendants, x.CreatePropertyCondition(UIA.PropertyId.Name, "General"));
+	//	Print(e.Name);
+	//	Print(Acc.FromComObject(e));
+	//	//Print("Acc");
+	//	//Print(Acc.FromWindow(w).Name);
+	//	//Print(Acc.Find(w, "LINK", "General").Name);
 
-		////var t=new Thread(() =>
-		////{
-		////	//var x2 = Acc3.Func2();
-		////	var x2 = new CUIAutomation();
-		////	var w2 = Wnd.FindFast(null, "ieframe").OrThrow();
-		////	var e2 = x2.ElementFromHandle(w2.Handle);
-		////	Print(e2.CurrentName);
-		////	Print(Acc.FromWindow(w2).Name);
-		////});
-		////t.Start();
+	//	////var t=new Thread(() =>
+	//	////{
+	//	////	//var x2 = Acc3.Func2();
+	//	////	var x2 = new CUIAutomation();
+	//	////	var w2 = Wnd.FindFast(null, "ieframe").OrThrow();
+	//	////	var e2 = x2.ElementFromHandle(w2.Handle);
+	//	////	Print(e2.Name);
+	//	////	Print(Acc.FromWindow(w2).Name);
+	//	////});
+	//	////t.Start();
 
-		//Task.Run(() =>
-		//{
-		//	Print("thread Uia");
-		//	var x2 = Acc3.Func2();
-		//	//var x2 = new CUIAutomation();
-		//	var w2 = Wnd.FindFast(null, "ieframe").OrThrow();
-		//	var e2 = x2.ElementFromHandle(w2.Handle);
-		//	Print(e2.CurrentName);
-		//	Print(ew.FindFirst(TreeScope.TreeScope_Descendants, x.CreatePropertyCondition(30005, "General")).CurrentName);
-		//	Print("thread Acc");
-		//	Print(Acc.FromWindow(w2).Name);
-		//	Print(Acc.Find(w, "LINK", "General").Name);
-		//});
+	//	//Task.Run(() =>
+	//	//{
+	//	//	Print("thread Uia");
+	//	//	var x2 = Acc3.Func2();
+	//	//	//var x2 = new CUIAutomation();
+	//	//	var w2 = Wnd.FindFast(null, "ieframe").OrThrow();
+	//	//	var e2 = x2.ElementFromHandle(w2.Handle);
+	//	//	Print(e2.Name);
+	//	//	Print(ew.FindFirst(TreeScope.TreeScope_Descendants, x.CreatePropertyCondition(30005, "General")).Name);
+	//	//	Print("thread Acc");
+	//	//	Print(Acc.FromWindow(w2).Name);
+	//	//	Print(Acc.Find(w, "LINK", "General").Name);
+	//	//});
 
-		//1.s();
+	//	//1.s();
 
-		//for(int j= 0; j < 5; j++) {
-		//	Perf.First();
-		//	var x = new CUIAutomation();
-		//	Perf.Next();
-		//	var ew = x.ElementFromHandle(w.Handle);
-		//	//Print(ew.CurrentName);
-		//	Perf.Next();
-		//	IUIAutomationElement e = null;
-		//	for(int i = 0; i < 1; i++) {
-		//		var cond = x.CreatePropertyCondition(30005, "General"); //UIA_PropertyIds.UIA_NamePropertyId
-		//		e = ew.FindFirst(TreeScope.TreeScope_Descendants, cond);
-		//		Perf.Next();
-		//	}
-		//	Perf.NW();
-		//	Print(e.CurrentName);
-		//}
-	}
+	//	//for(int j= 0; j < 5; j++) {
+	//	//	Perf.First();
+	//	//	var x = new CUIAutomation();
+	//	//	Perf.Next();
+	//	//	var ew = x.ElementFromHandle(w.Handle);
+	//	//	//Print(ew.Name);
+	//	//	Perf.Next();
+	//	//	IUIAutomationElement e = null;
+	//	//	for(int i = 0; i < 1; i++) {
+	//	//		var cond = x.CreatePropertyCondition(30005, "General"); //UIA_PropertyIds.UIA_NamePropertyId
+	//	//		e = ew.FindFirst(TreeScope.TreeScope_Descendants, cond);
+	//	//		Perf.Next();
+	//	//	}
+	//	//	Perf.NW();
+	//	//	Print(e.Name);
+	//	//}
+	//}
 
 	//static void TestWhite()
 	//{
@@ -2558,52 +2590,52 @@ static unsafe partial class Test
 	//	//Reviewed FlaUI code. It does not add something new and probably does not make simpler. Use only as a UIA sample.
 	//}
 
-	static void TestMainWindowsWithUIA()
-	{
-		//Print(Wnd.Misc.MainWindows()); return;
+	//	static void TestMainWindowsWithUIA()
+	//	{
+	//		//Print(Wnd.Misc.MainWindows()); return;
 
-		//MSAA does not filter windows.
-		//using(var desktop = Acc.FromWindow(Wnd.Misc.WndRoot, AccOBJID.CLIENT)) {
-		//	//Print(desktop.Children(false));
-		//	desktop.Find(flags: AFFlags.DirectChild, also: o => { Print(o); return false; });
-		//}
+	//		//MSAA does not filter windows.
+	//		//using(var desktop = Acc.FromWindow(Wnd.Misc.WndRoot, AccOBJID.CLIENT)) {
+	//		//	//Print(desktop.Children(false));
+	//		//	desktop.Find(flags: AFFlags.DirectChild, also: o => { Print(o); return false; });
+	//		//}
 
-		//var x = new CUIAutomation();
-		////var ca = x.CreateCacheRequest(); Print(x.GetRootElementBuildCache(ca).GetCachedChildren().Length); //0
-		////var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.RawViewCondition);
-		//var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC370)); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
-		//PrintList("window", a.Length);
-		////for(int i = 0; i < a.Length; i++) PrintList(a.GetElement(i).CurrentClassName, a.GetElement(i).CurrentName);
-		//for(int i = 0; i < a.Length; i++) {
-		//	var e =a.GetElement(i);
-		//	Print((Wnd)e.CurrentNativeWindowHandle);
-		//	//PrintList(e.CurrentClassName, e.CurrentName);
-		//}
-		//a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC371)); //UIA_ControlTypePropertyId, UIA_PaneControlTypeId
-		//PrintList("pane", a.Length);
-		//for(int i = 0; i < a.Length; i++) {
-		//	var e = a.GetElement(i);
-		//	Print((Wnd)e.CurrentNativeWindowHandle);
-		//	//PrintList(e.CurrentClassName, e.CurrentName);
-		//}
+	//		//var x = new CUIAutomation();
+	//		////var ca = x.CreateCacheRequest(); Print(x.GetRootElementBuildCache(ca).GetCachedChildren().Length); //0
+	//		////var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.RawViewCondition);
+	//		//var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC370)); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
+	//		//PrintList("window", a.Length);
+	//		////for(int i = 0; i < a.Length; i++) PrintList(a.GetElement(i).ClassName, a.GetElement(i).Name);
+	//		//for(int i = 0; i < a.Length; i++) {
+	//		//	var e =a.GetElement(i);
+	//		//	Print((Wnd)e.NativeWindowHandle);
+	//		//	//PrintList(e.ClassName, e.Name);
+	//		//}
+	//		//a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC371)); //UIA_ControlTypePropertyId, UIA_PaneControlTypeId
+	//		//PrintList("pane", a.Length);
+	//		//for(int i = 0; i < a.Length; i++) {
+	//		//	var e = a.GetElement(i);
+	//		//	Print((Wnd)e.NativeWindowHandle);
+	//		//	//PrintList(e.ClassName, e.Name);
+	//		//}
 
 
-		var k = new List<Wnd>();
-		Perf.First();
-		for(int j=0; j<5; j++) {
-#if false
-			k=Wnd.Misc.MainWindows().ToList();
-#else
-			k.Clear();
-			var x = Acc3.Func2();
-			var a=x.GetRootElement().FindAll(TreeScope.TreeScope_Children, x.CreatePropertyCondition(30003, 0xC370)); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
-			for(int i = 0; i < a.Length; i++) k.Add((Wnd)a.GetElement(i).CurrentNativeWindowHandle);
-#endif
-			Perf.Next();
-		}
-		Perf.Write();
-		Print(k);
-	}
+	//		var k = new List<Wnd>();
+	//		Perf.First();
+	//		for(int j=0; j<5; j++) {
+	//#if false
+	//			k=Wnd.Misc.MainWindows().ToList();
+	//#else
+	//			k.Clear();
+	//			var x = Acc3.Func2();
+	//			var a=x.GetRootElement().FindAll(UIA.TreeScope.Children, x.CreatePropertyCondition(UIA.PropertyId.TypeId, UIA.TypeId.Window));
+	//			for(int i = 0; i < a.Length; i++) k.Add(a.GetElement(i).NativeWindowHandle);
+	//#endif
+	//			Perf.Next();
+	//		}
+	//		Perf.Write();
+	//		Print(k);
+	//	}
 
 	#endregion
 
@@ -2620,7 +2652,7 @@ static unsafe partial class Test
 		//using(var a = Acc.Find(w, "CHECKBUTTON", "Mouse").OrThrow()) {
 		//using(var a = Acc.Find(w, nameof(AccROLE.CHECKBUTTON), "Mouse").OrThrow()) {
 		//5.s();
-		for(int i=0; i<1; i++) {
+		for(int i = 0; i < 1; i++) {
 			Perf.First();
 			//using(var a = Acc.FromMouse(preferLINK: true)) {
 			using(var a = Acc.FromMouse()) {
@@ -2730,9 +2762,9 @@ static unsafe partial class Test
 		//using(var a = Acc.Find(w, "web:")) {
 		//using(var a = Acc.Find(w, "web:LINK", "\0 a:href=*forum*")) {
 		using(var a = Acc.Find(w, "web:LINK", "Programming", AFFlags.HiddenToo).OrThrow()) {
-		//using(var a = Acc.Find(w, "OUTLINEITEM", "Other Bookmarks", AFFlags.HiddenToo).OrThrow()) { //no scroll
-		//using(var a = Acc.Find(w, "OUTLINEITEM", "Temp", AFFlags.HiddenToo).OrThrow()) { //no scroll
-		//using(var a = Acc.Find(w, "OUTLINEITEM", "Structs.cs", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			//using(var a = Acc.Find(w, "OUTLINEITEM", "Other Bookmarks", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			//using(var a = Acc.Find(w, "OUTLINEITEM", "Temp", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			//using(var a = Acc.Find(w, "OUTLINEITEM", "Structs.cs", AFFlags.HiddenToo).OrThrow()) { //no scroll
 			Print(a);
 
 			//Print(a.Name);
@@ -2759,7 +2791,7 @@ static unsafe partial class Test
 		//using(var a=Acc.Find(w, "LIST", also:o=>++o.Counter==2).OrThrow()) {
 		//using(var a=Acc.Find(w, "web:LIST", "\0 a:name=cars").OrThrow()) {
 		//using(var a=Acc.Find(w, "web:COMBOBOX", "\0 a:name=cars", navig:"first").OrThrow()) {
-		using(var a=Acc.Find(w, "web:ALERT", "\0 a:name=cars", navig:"child3").OrThrow()) { //IE
+		using(var a = Acc.Find(w, "web:ALERT", "\0 a:name=cars", navig: "child3").OrThrow()) { //IE
 			Print(a);
 			Print("---- selected children ----");
 			Print(a.SelectedChildren);
@@ -2867,14 +2899,770 @@ static unsafe partial class Test
 		Print(w);
 		var a = Acc.Find(w, "web:LINK", "Programming").OrThrow();
 		Print(a);
-		var e1 = a.ToUIElement();
+		var e1 = AElement.FromAcc(a);
 
-		var e = e1 as UIAutomationClient.IUIAutomationElement4;
+		var e = e1 as UIA.IElement4;
 
-		Print(e.CurrentName);
+		Print(e.Name);
 		var a2 = Acc.FromComObject(e);
 		Print(a2);
 
+	}
+
+	static void TestUiaSpeed()
+	{
+		Wnd w = Wnd.Find("*a Firefox").OrThrow();
+		for(int i = 0; i < 5; i++) {
+			Perf.First();
+			var a = Acc.Find(w, "LINK", "Untitled").OrThrow();
+			Perf.NW();
+			Print(a.Name);
+			a.Dispose();
+			1.s();
+		}
+	}
+
+	static void TestUia2()
+	{
+		//ComMemberType mt = 0;
+		//var m = Marshal.GetMethodInfoForComSlot(typeof(U2.IUIAutomationProxyFactoryEntry), 5, ref mt);
+		//Print(m);
+		//Print(mt);
+
+
+		//Wnd w = Wnd.Find("* Firefox").OrThrow();
+		//Perf.First();
+		//var u = new UIA.CUIAutomation8() as UIA.IUIAutomation2;
+		//Perf.Next();
+		//var ew = u.ElementFromHandle(w);
+		//Perf.Next();
+		//string s1 = ew.Name, s2 = null;
+		//for(int i = 0; i < 5; i++) {
+		//	var cond = u.CreatePropertyCondition(UIA.PropertyId.Name, "Untitled");
+		//	var e = ew.FindFirst(UIA.TreeScope.Descendants, cond);
+		//	Perf.Next();
+		//	s2 = e.Name;
+		//}
+		//Perf.Write();
+		//Print(s1);
+		//Print(s2);
+
+		//Wnd w = Wnd.Find("*- Notepad").OrThrow();
+		//var ew = AElement.Factory.ElementFromHandle(w);
+		//var e = ew.FindFirst(UIA.TreeScope.Descendants, new ACondition().Name("Edit").Type(UIA.TypeId.MenuItem).Offscreen(false).Condition);
+		//Print(e.Name);
+	}
+
+	static void TestAElementFromAcc()
+	{
+		var w = Wnd.Find("* Google Chrome", "Chrome*").OrThrow();
+		var a = Acc.Find(w, "web:LINK", "General").OrThrow();
+		Print(a);
+		var e1 = AElement.FromAcc(a, true);
+		Print(AElement.LibToString_(e1));
+	}
+
+	static void TestAElementFind()
+	{
+		//var w = WaitFor.WindowActive(15, "* Internet Explorer", "Windows.UI.Core.CoreWindow");
+		////var w = Wnd.Find("* Internet Explorer", "Windows.UI.Core.CoreWindow").OrThrow();
+		//Print(w);
+		////w.Activate();
+		//1.s();
+
+		//Acc.Find()
+		var w = Wnd.Find("* Mozilla Firefox").OrThrow();
+		//var w = Wnd.Find("* Google Chrome", "Chrome*").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").Child(null, Api.s_IES).OrThrow();
+		//var w = Wnd.Find("* Microsoft Edge").OrThrow();
+		//var w = Wnd.Find("* Opera").OrThrow();
+		//var w = Wnd.Find("Options").OrThrow();
+		//var w = Wnd.Find("*- OpenOffice Writer").OrThrow();
+		Print(w);
+		//w.Activate(); 100.ms();
+
+		//var ew = AElement.FromWindow(w);
+		//var a = ew.FindAll(UIA.TreeScope.Descendants, new ACondition().Type(UIA.TypeId.Hyperlink).Name("RSS").Condition);
+		//Print(a.Length);
+
+		//UIA.IElement e = null;
+		//for(int i = 0; i < 5; i++) {
+		//	//if(i > 0) {
+		//	//	e = null;
+		//	//	GC.Collect();
+		//	//	GC.WaitForPendingFinalizers();
+		//	//	100.ms();
+		//	//}
+		//	Perf.First();
+		//	e = AElement.FindCurrentWebPage(w);
+		//	Perf.NW();
+		//	100.ms();
+		//}
+		//PrintList(e != null, e?.Name);
+
+		AElement.s_testMethod = AElement.TestMethod.Find;
+		//AElement.s_testMethod = AElement.TestMethod.FindAll;
+		//AElement.s_testMethod = AElement.TestMethod.FindAllCache;
+		//AElement.s_testMethod = AElement.TestMethod.Walker;
+		//AElement.s_testMethod = AElement.TestMethod.WalkerCache;
+		UIA.IElement e = null;
+		//Acc e = null;
+		for(int i = 0; i < 7; i++) {
+			100.ms();
+			Perf.First();
+			//e = Acc.Find(w, "LINK", "Untitled"); //FF 300, Chr 230
+			//e = Acc.Find(w, "web:LINK", "Untitled"); //FF 190, Chr 230
+			//e = Acc.Find(w, "web:LINK", "Untitled-"); //FF 230, Chr 300
+
+			//e = AElement.Find(w, "Untitled");
+			//e = AElement.Find(w, "Untitled", UIA.TypeId.Hyperlink); //FF 260, Chr 60
+			//e = AElement.Find(w, "Untitled-", UIA.TypeId.Hyperlink); //FF 390, Chr 130
+			e = AElement.WebFind(w, "Untitled", UIA.TypeId.Hyperlink); //FF 100, Chr 60
+			//e = AElement.WebFind(w, "SHOW MORE", UIA.TypeId.Button); //FF 100, Chr 60
+																	   //e = AElement.WebFind(w, "Untitled-", UIA.TypeId.Hyperlink); //FF 110, Chr 70
+
+			//e = AElement.WebFind(w, "partial", UIA.TypeId.Hyperlink);
+			//e = AElement.WebFind(w, "Sheppy", UIA.TypeId.Hyperlink);
+			//e = AElement.Find(w, "Advanced search", UIA.TypeId.Hyperlink);
+			//e = AElement.WebFind(w, "Advanced search", UIA.TypeId.Hyperlink);
+			//e = AElement.Find(w, null, UIA.TypeId.Pane);
+			//e = AElement.Find(w, "Debug...");
+			//e = AElement.Find(w, "Debug...", UIA.TypeId.Button);
+			//e = AElement.Find(w, "Bold");
+			Perf.NW();
+			PrintList(e != null, e?.Name);
+			//if(e != null) break;
+		}
+
+		//Wnd.Find(null, "QM_Editor").Activate();
+
+		new ACondition().Add(UIA.PropertyId.AutomationId, "hhhh").AddOr(UIA.PropertyId.ClassName, "cn1", "cn2");
+	}
+
+	static void TestAElementFromPoint()
+	{
+		for(; !Input.IsCtrl; 1.s()) {
+			UIA.IElement e = null;
+			try { e = AElement.FromMouse(true); } catch(Exception ex) { Print(ex); }
+
+			//var p = Mouse.XY;
+			//var w = Wnd.FromXY(p, WXYFlags.NeedWindow);
+			//var e = AElement.FromPoint(w, p);
+
+			Print(e.LibToString_());
+		}
+	}
+
+	static void TestDllInProc()
+	{
+		var w = Wnd.Find(null, "MozillaWindowClass").OrThrow();
+		//var w = Wnd.Find("* Google Chrome", "Chrome*").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").Child(null, Api.s_IES).OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").Child(null, "TabWindowClass").OrThrow().WndDirectParent;
+		//var w = Wnd.Find("* Internet Explorer").Child(null, "Shell DocObject View").OrThrow();
+		//var w = Wnd.Find("* Microsoft Edge").OrThrow();
+		//var w = Wnd.Find("* Microsoft Edge").Child(null, "Windows.UI.Core.CoreWindow").OrThrow();
+		//var w = Wnd.Find("* Microsoft Edge").Child(null, "ApplicationFrameInputSinkWindow").OrThrow();
+		//var w = Wnd.Find("* Opera").OrThrow();
+		//var w = Wnd.Find("Options").OrThrow();
+		//var w = Wnd.Find("ipc_server").OrThrow();
+		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
+		//var w = Wnd.Find(null, "QM_Editor").Kid(2051).OrThrow();
+		//var w = Wnd.Find("QM Dialog").OrThrow();
+		//var w = Wnd.Find("Catkeys - Q*").OrThrow();
+		//var w = Wnd.Find("Calculator").OrThrow();
+		//var w = Wnd.Find("Calculator").Child(null, "Windows.UI.Core.CoreWindow").OrThrow();
+		//var w = Wnd.Find("ILSpy").OrThrow();
+		//var w = Wnd.Find("Java *").OrThrow();
+		//var w = Wnd.Find("* Sandcastle *").OrThrow();
+		//var w = Wnd.Find("* C# Converter *").OrThrow();
+		//var w = Wnd.Find("* OpenOffice *").OrThrow();
+		//var w = Wnd.Find("* - Notepad").OrThrow();
+		//var w = Wnd.Find("* - Paint").OrThrow();
+		//var w = Wnd.Find("* Help Viewer *").OrThrow();
+		//var w = Wnd.Find("*Visual Studio ").OrThrow();
+		//var w = Wnd.Find("app -*").OrThrow();
+		//var w = Wnd.Find(null, "QM_Editor").Kid(2053).OrThrow();
+		//var w = Wnd.Find("FileZilla").Kid(-31801).OrThrow();
+		Print(w);
+		//Print(w.ProcessId);
+
+		//var a1=Acc.Find(w, "LINK", "Untitled");
+		//Print(a1);
+		//return;
+
+		try {
+			//using(var aParent = Acc.FromWindow(w)) {
+
+			var k = new List<Acc>();
+			Cpp.AccCallbackT callback = (ref Cpp.Cpp_Acc r) =>
+			 {
+#if true
+				 var a = new Acc(r.iacc, r.elem);
+				 r.iacc = default;
+				 //Print(a);
+				 //Print(a.RoleString);
+				 k.Add(a);
+#else
+		using(var a = new Acc(r.iacc, r.elem)) {
+			r.iacc = default;
+			//Print(a);
+		}
+#endif
+				 return 0;
+			 };
+
+			for(int i = 0; i < 7; i++) {
+				k.Clear();
+				100.ms();
+				Perf.First();
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "LINK", "Untitled", 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "GROUPING", "Extensions", 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "PUSHBUTTON", "Infobar Container", 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "LINK", null, 0, callback, 0, out var r);
+				var hr = Cpp.Cpp_AccFind(true, w, default, null, null, 0, callback, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, aParent._iacc, "LINK", "Untitled", 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFromWindow(true, w, 0, out var r);
+				//var hr = Cpp.Cpp_AccFromWindow(true, w, (int)AccOBJID.CLIENT, out var r);
+				//var hr = Cpp.Cpp_AccFromPoint(true, Mouse.XY, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "PUSHBUTTON", null, 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, null, "New macro    Ctrl+N", 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, null, "Record    Ctrl+K", 0, null, 0, out var r);
+				Perf.NW();
+				Print(hr);
+				if(hr != 0) continue;
+				//continue;
+				//var aa = Acc.Find(w, "PUSHBUTTON");
+				using(var a = new Acc(r.iacc, r.elem)) {
+				//using(var a=aa) {
+					Print(a);
+					//111.ms();
+					//string s = null;
+					//Perf.First();
+					//for(int j=0; j<7; j++) {
+					//	s = a.Name;
+					//	Perf.Next();
+					//}
+					//Perf.Write();
+					//Print(s);
+					////speed:
+					////found out-proc: 2260  1139  1072  1721  1640  932  678
+					////found in-proc: 1219  482  478  473  489  472  478
+
+					//var e = AElement.FromAcc(a, false);
+					//Print(e != null);
+				}
+			}
+
+			Print(k.Count);
+			//Print(k);
+			//foreach(var v in k) {
+			//	Print($"{(IntPtr)v._iacc} {v._elem},  {v.ToString()}");
+			//}
+			//}
+		}
+		finally { Cpp.Cpp_Unload(); }
+	}
+
+	static void TestDllInProcManyWindows()
+	{
+		try {
+			var aw = Wnd.Misc.AllWindows(true);
+			foreach(var w in aw) {
+				if(!w.ClassNameIs("Mozilla*")) continue;
+				Print($"<><c 0xFF8000>{w}</c>");
+				//continue;
+				var a = new List<Acc>();
+				Perf.First();
+				Cpp.Cpp_AccFind(true, w, default, "LINK", null, 0, null, 0, out _);
+				Perf.Next();
+				var hr = Cpp.Cpp_AccFind(true, w, default, "LINK", null, 0, (ref Cpp.Cpp_Acc r) =>
+				{
+					a.Add(new Acc(r.iacc, r.elem));
+					r.iacc = default;
+					return 0;
+				}, 0, out _);
+				Perf.Next();
+				if(hr != 1) { Print($"<><c 0xFF>{hr}</c>"); if(a.Count==0) continue; }
+				Print(a.Count);
+				Print(a);
+				Perf.NW();
+			}
+		}
+		finally { Cpp.Cpp_Unload(); }
+		Print("END");
+	}
+
+
+	static void TestCppLike()
+	{
+		string s = "one two three four five--one two three four five--one two three four five--one two three four five--one two three four five--";
+		//Print(s.Like_("*three*"));
+		s = "one";
+
+		string w = " one two three four five";
+		w = "one two *--*four *";
+		w = " one";
+		w = w.Substring(1);
+		Print(s.Like_(w));
+
+		var x1 = new Regex(w);
+		var x2 = new Regex_(w);
+
+		//100.ms();
+		Perf.SpinCPU(200);
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 10000;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { s.Like_("*three*"); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s.Like_(w); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s.Equals_(w); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s.Like_(w, true); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s.Equals_(w, true); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { x1.IsMatch(s); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { x2.Match(s); }
+			Perf.NW();
+		}
+
+	}
+
+	static void TestPcre()
+	{
+		string s, p;
+		s = "one two three";
+		p = @"(?i) (t|h).";
+
+		for(int i = 0; i < 5; i++) {
+			100.ms();
+#if true
+			Cpp.Cpp_TestPCRE(s, p);
+
+#else
+			Perf.First();
+			var rx = new Regex(p, RegexOptions.CultureInvariant);
+			Perf.Next();
+			for(int j = 0; j < 1000; j++) {
+				rx.IsMatch(s);
+				//Regex.IsMatch(s, p, RegexOptions.CultureInvariant);
+			}
+			Perf.NW();
+#endif
+		}
+	}
+
+	//slower than DllImport
+	//[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	//[System.Security.SuppressUnmanagedCodeSecurity]
+	//delegate bool Cpp_StringEqualsT(char* s, LPARAM lenS, char* w, LPARAM lenW, bool ignoreCase = false);
+	//static Cpp_StringEqualsT Cpp_StringEqualsF = Cpp.Cpp_StringEquals;
+
+	static void TestCppWildex()
+	{
+		string s, w;
+		//s = "one two three";
+		s = "one two three ąčę";
+		//s = "one * three";
+
+		//w = "**c|one two three";
+		//w = s;
+		//w = "one";
+		//w = "one*";
+		//w = "ONE TWO THREE";
+		//w = "**c|ONE TWO THREE";
+		//w = "one * three";
+		//w = "**t|one * three";
+		w = @"**r|^one \w+ threE$";
+		//w = @"**p|^one \w+ threE$";
+		//w = @"**rc|^one \w+ three$";
+		//w = @"**rc|^one \w+ three ąčę$";
+		//w = @"**r|^one \w+ three ąčĘ$";
+		//w = @"**r|^one \w+ three \w+$";
+		//w = @"**r|^one \w+ three ...$";
+		//w = @"**r|(*UCP)^one \w+ three \w+$";
+		//w = @"**n|one";
+		//w = @"**n|one*";
+		//w = @"**m|one*";
+		//w = @"**m|kuku[]one*";
+		w = @"**m|ku[]**p|ku[]one*";
+
+		//		for(int i = 0; i < 1; i++) {
+		//			100.ms();
+		//#if true
+		//				Cpp.Cpp_TestWildex(s, w);
+		//#else
+		//			var x = new Wildex2(w);
+		//			Print(x.Match(s));
+		//#endif
+		//		}
+
+		s = "modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Auisuidu - hdjshhdsjhdj jdskjdks Auisuidu - hdjshhdsjhdj jdskjdkM ė";
+		w = "**c|modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Auisuidu - hdjshhdsjhdj jdskjdks Auisuidu - hdjshhdsjhdj jdskjdkM ė";
+
+		s = "short678";
+		w = "**c|short678";
+
+		w = w.Substring(4);
+		//w = w.ToUpper_();
+
+		Wildex x = w;
+
+		bool ignoreCase = true;
+		fixed (char* p1 = s, p2 = w) {
+			//PrintHex((long)p);
+			Print(ignoreCase ? w.Equals(s, StringComparison.OrdinalIgnoreCase) : w.Equals(s));
+			//Print(Cpp.Cpp_StringEquals(p1, s.Length, p2, w.Length, ignoreCase));
+			//Print(Cpp.Cpp_StringEquals(p1 + 1, s.Length - 1, p2 + 1, w.Length - 1, ignoreCase));
+			//Print(Cpp_StringEqualsF(p1, s.Length, p2, w.Length, ignoreCase));
+			Print(w.Equals_(s, ignoreCase));
+			Print(x.Match(s));
+
+			Perf.SpinCPU(200);
+			//200.ms();
+			for(int i1 = 0; i1 < 5; i1++) {
+				int n2 = 10000;
+				Perf.First();
+				for(int i2 = 0; i2 < n2; i2++) { /*x.Match(s);*/ }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { bool yes = ignoreCase ? w.Equals(s, StringComparison.OrdinalIgnoreCase) : w.Equals(s); }
+				//Perf.Next();
+				//for(int i2 = 0; i2 < n2; i2++) { bool yes = Cpp.Cpp_StringEquals(p1, s.Length, p2, w.Length, ignoreCase); }
+				//Perf.Next();
+				//for(int i2 = 0; i2 < n2; i2++) { bool yes = Cpp.Cpp_StringEquals(p1+1, s.Length-1, p2+1, w.Length-1, ignoreCase); }
+				//Perf.Next();
+				//for(int i2 = 0; i2 < n2; i2++) { bool yes = Cpp_StringEqualsF(p1, s.Length, p2, w.Length, ignoreCase); }
+				Perf.Next();
+				for(int i2 = 0; i2 < n2; i2++) { bool yes = w.Equals_(s, ignoreCase); }
+				//Perf.Next();
+				//for(int i2 = 0; i2 < n2; i2++) { bool yes = x.Match(s); }
+				Perf.NW();
+			}
+
+		}
+		return;
+
+		//var x = new Wildex(w);
+		////Print(x.Match(s));
+
+		//Print(w.Equals_(s, true));
+		////Print(w.Equals(s, StringComparison.OrdinalIgnoreCase));
+		//return;
+
+		//Perf.SpinCPU(200);
+		////200.ms();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { /*x.Match(s);*/ }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { bool yes = w.Equals_(s, true); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { bool yes = w.Equals(s, StringComparison.OrdinalIgnoreCase); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.NW();
+		//}
+
+	}
+
+	//[StructLayout(LayoutKind.Sequential)]
+	//class Wildex2
+	//{
+	//	LPARAM _1, _2, _3;
+
+	//	~Wildex2() => Cpp.Cpp_WildexDtor(this);
+
+	//	public Wildex2(string w)
+	//	{
+	//		char* es = null;
+	//		if(!Cpp.Cpp_WildexParse(this, w, w.Length, &es))
+	//			throw new CatException(new string(es));
+	//	}
+
+	//	public bool Match(string s)
+	//	{
+	//		if(s == null) return false;
+	//		return Cpp.Cpp_WildexMatch(this, s, s.Length);
+	//	}
+
+	//	public bool HasValue => _1 != default;
+	//}
+
+	static void TestWildexStruct()
+	{
+		var x = new WildexStruct("**r|gg");
+		Print(x.Value);
+		//x.Value = "k";
+		Print(x.Match("gg"));
+	}
+
+	static void TestCppRegex()
+	{
+		string s, w;
+		//s = "one two three";
+		//s = "one two three ishdalkhi ajdsaiudpahfauhfiahfhhus gausgusahi usfhaisaisgfiagasgfiugaiufgiahruihaiuhuia";
+		//s = "one two three ąčę";
+		//s = "k";
+		s = @"kk one 125 three";
+
+		w = s;
+		w = @"one (two|\d+) three";
+		//w = "a ) b";
+		//w = @^one \w+ threE$";
+		//w = @"^one \w+ three$";
+		//w = @"^one \w+ three ąčę$";
+		//w = @"^one \w+ three ąčĘ$";
+		//w = @"^one \w+ three \w+$";
+		//w = @"^one \w+ three ...$";
+		//w = @"(*UCP)^one \w+ three \w+$";
+
+		//var x = new Regex_(w, RXFlags.EXTRA_MATCH_WORD);
+		//Print(x.Match(s));
+
+		//var xn = new Regex(w);
+		//Print(xn.IsMatch(s));
+
+		//Perf.SpinCPU(100);
+		//100.ms();
+		//var a1 = new Action(() => { xn = new Regex(w); });
+		//var a2 = new Action(() => { x = new Cpp.Cpp_Regex(w); });
+		////var a1 = new Action(() => { xn.IsMatch(s); });
+		////var a2 = new Action(() => { x.Match(s); });
+		//var a3 = new Action(() => { });
+		//var a4 = new Action(() => { });
+		//Perf.ExecuteMulti(5, 100, a1, a2, a3, a4);
+
+
+		//MessageBox.Show("ddd");
+		//Perf.First();
+		//for(int i = 0; i < 100; i++) {
+		//	//if((i % 10) == 0) Print(i);
+		//	var x = new Cpp.Cpp_Regex(w);
+		//	if((i % 1000) == 0) {
+		//		//_PrintMemory();
+		//		1.ms();
+		//	}
+		//}
+		//Perf.NW();
+		//Print("END");
+
+		Print(Wnd.Find(@"**p|\QQuick\E \bMacros\b"));
+	}
+
+	//static Cpp.ICppTest s_icpptest;
+
+	//static void TestUnmanagedCallSpeed()
+	//{
+	//	string s="aa", w="nn";
+
+	//	s_icpptest = Cpp.Cpp_Interface();
+
+	//	fixed (char* p1 = s, p2 = w) {
+
+	//		Perf.SpinCPU(100);
+	//		for(int i1 = 0; i1 < 5; i1++) {
+	//			int n2 = 1000;
+	//			Perf.First();
+	//			for(int i2 = 0; i2 < n2; i2++) { var x = _TestAdd(s, w); }
+	//			Perf.Next();
+	//			for(int i2 = 0; i2 < n2; i2++) { var x = _TestAdd(s, w); }
+	//			Perf.NW();
+	//		}
+	//	}
+	//}
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//static byte _TestAdd(string a, string b)
+	//{
+	//	fixed (char* pa = a, pb = b)
+	//		return _TestAdd2(pa, pb);
+	//		//return Cpp.Cpp_TestAdd2(pa, pb);
+	//		//return s_icpptest.One(pa, pb);
+	//}
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//static byte _TestAdd2(char* a, char* b)
+	//{
+	//	return (byte)(a == b ? 1 : 0);
+	//}
+
+
+	static void TestIPC()
+	{
+		//var w = Wnd.Find("* Mozilla Firefox").OrThrow();
+		//var w = Wnd.Find("* Google Chrome", "Chrome*").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").Child(null, Api.s_IES).OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").Child(null, "TabWindowClass").OrThrow();
+		//var w = Wnd.Find("* Internet Explorer").Child(null, "Shell DocObject View").OrThrow();
+		//var w = Wnd.Find("* Microsoft Edge").OrThrow();
+		//var w = Wnd.Find("* Opera").OrThrow();
+		//var w = Wnd.Find("Options").OrThrow();
+		//var w = Wnd.Find("*- OpenOffice Writer").OrThrow();
+		//var w = Wnd.Find("Keys").OrThrow();
+		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
+		var w = Wnd.Misc.FindMessageWindow(null, "QM_testIPC").OrThrow();
+		//var w = Wnd.Find("QM Dialog").OrThrow();
+		//var w = Wnd.Find("Catkeys - Q*").OrThrow();
+		//var w = Wnd.Find("Calculator").OrThrow();
+		//var w = Wnd.Find("ILSpy").OrThrow();
+		//var w = Wnd.Find("Java *").OrThrow();
+		//var w = Wnd.Find("* Sandcastle *").OrThrow();
+		//var w = Wnd.Find("* C# Converter *").OrThrow();
+		//var w = Wnd.Find("* OpenOffice *").OrThrow();
+		//w = w.WndDirectParent;
+		//Print(w);
+
+		//Cpp.Cpp_Test();
+
+		//var hp = Api.GetCurrentProcess();
+		////using(var pm=new Process_.Memory(w, 0)) {
+		////var hp = pm.ProcessHandle;
+		//const int KB = 1024;
+		//const int MB = 1024 * 1024;
+		//for(uint i = 64 * KB; i < 0x7fffffff; i += 64 * KB) {
+		//	var m = Api.VirtualAllocEx(hp, (IntPtr)i, 4000);
+		//	//var m2 = Api.VirtualAllocEx(hp, (IntPtr)i, 4000);
+		//	PrintHex(m);
+		//	//PrintList(m.ToInt64().ToString("X"), m2.ToInt64().ToString("X"));
+		//	Api.VirtualFreeEx(hp, m);
+		//	//if(m2 != default) Api.VirtualFreeEx(hp, m2);
+		//}
+
+		//for(int i = 0; i < 5; i++) {
+		//	100.ms();
+		//	Perf.First();
+		//	var m = AllocInThisProcessForOtherProcess(64 * 1024, false);
+		//	Perf.Next();
+		//	Api.VirtualFreeEx(Api.GetCurrentProcess(), m);
+		//	Perf.NW();
+		//	PrintHex(m.ToInt64());
+		//}
+
+		for(int i = 0; i < 10; i++) {
+			100.ms();
+			Perf.First();
+#if false
+			var k = Wnd.Misc.WindowClass.InterDomainCreateMessageWindow("class_test589");
+			Perf.Next();
+			try {
+				var c = (char*)NativeHeap.Alloc(6);
+				c[0] = 'A'; c[1] = 'B'; c[2] = '\0';
+				Api.COPYDATASTRUCT x;
+				x.dwData = 0;
+				x.cbData = 6;
+				x.lpData = (IntPtr)c;
+				w.Send(Api.WM_COPYDATA, (LPARAM)k, &x);
+				NativeHeap.Free(c);
+				Perf.Next();
+
+				for(; ; ) {
+					var o = Api.MsgWaitForMultipleObjectsEx(0, null, 1000);
+					//Print(o);
+					break;
+				}
+				//Api.PeekMessage(out var ms, default, 0, 0, Api.PM_REMOVE);
+				Perf.Next();
+			}
+			finally { Api.DestroyWindow(k); }
+#elif true
+			var c = (char*)NativeHeap.Alloc(6);
+			c[0] = 'A'; c[1] = 'B'; c[2] = '\0';
+			Api.COPYDATASTRUCT x;
+			x.dwData = 0;
+			x.cbData = 6;
+			x.lpData = (IntPtr)c;
+			w.Send(Api.WM_COPYDATA, 0, &x);
+			NativeHeap.Free(c);
+			Perf.Next();
+			if(0 != Api.WaitForSingleObject(s_event.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new CatException(0, "*wait for event");
+			Perf.Next();
+
+#elif true
+			if(0 != Api.WaitForSingleObject(s_mutex.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new CatException(0, "*wait for mutex");
+			try {
+				Perf.Next();
+				var c = (char*)s_sm;
+				c[0] = 'A'; c[1] = 'B'; c[2] = '\0';
+				Perf.Next();
+				w.SendNotify(Api.WM_APP + 2, 0, 0);
+				Perf.Next();
+				if(0 != Api.WaitForSingleObject(s_event.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new CatException(0, "*wait for event");
+				Perf.Next();
+				//Print(new string(c, 0, 2));
+			}
+			finally { s_mutex.ReleaseMutex(); }
+#else
+			using(var hpTarget = Process_.LibProcessHandle.FromWnd(w, Api.PROCESS_DUP_HANDLE)) {
+				Perf.Next();
+				//Print(hpTarget.Handle);
+				var hpThis = Api.GetCurrentProcess();
+				if(!DuplicateHandle(hpThis, hpThis, hpTarget, out var hpDup, 0, false, DUPLICATE_SAME_ACCESS)) throw new CatException(0, "*DuplicateHandle");
+				Perf.Next();
+				bool is64 = Api.IsWow64Process(hpTarget, out var is32bit) && !is32bit;
+				Perf.Next();
+				//Print(is64);
+				var mem = AllocInThisProcessForOtherProcess(64 * 1024, is64);
+				Perf.Next();
+				try {
+					if(mem == default) throw new CatException(0, "*allocate memory");
+
+					var c = (char*)mem;
+					c[0] = 'A'; c[1] = 'B'; c[2] = '\0';
+
+					Perf.Next();
+					w.Send(Api.WM_APP + 1, hpDup, mem);
+					Perf.Next();
+
+					//Print(new string(c, 0, 2));
+				}
+				finally { Api.VirtualFreeEx(hpThis, mem); Api.CloseHandle(hpDup); }
+			}
+#endif
+			Perf.NW();
+		}
+	}
+	[DllImport("kernel32.dll")]
+	internal static extern bool DuplicateHandle(IntPtr hSourceProcessHandle, IntPtr hSourceHandle, IntPtr hTargetProcessHandle, out IntPtr lpTargetHandle, uint dwDesiredAccess, bool bInheritHandle, uint dwOptions);
+	internal const uint DUPLICATE_SAME_ACCESS = 0x2;
+
+	static void* s_sm = SharedMemory.CreateOrGet("sm_test589", 1 * 1024 * 1024, out _);
+	static Mutex s_mutex = new Mutex(false, "mutex_test589");
+	static EventWaitHandle s_event = new EventWaitHandle(false, EventResetMode.AutoReset, "event_test589");
+
+	static ushort s_wcIPC = Wnd.Misc.WindowClass.InterDomainRegister("class_test589", _WndProcIPC);
+
+	static LPARAM _WndProcIPC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	{
+		//Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
+		if(msg == Api.WM_COPYDATA) {
+
+			//w.Post(0);
+		}
+
+		return Api.DefWindowProc(w, msg, wParam, lParam);
+	}
+
+	static IntPtr AllocInThisProcessForOtherProcess(int size, bool otherProcessIs64bit)
+	{
+		var hp = Api.GetCurrentProcess();
+
+		if(otherProcessIs64bit || !Ver.Is64BitProcess)
+			return Api.VirtualAllocEx(hp, default, size);
+
+		const int KB = 1024;
+		for(long i = 64 * KB; i < 0x80000000 - size; i += 64 * KB) {
+			var m = Api.VirtualAllocEx(hp, (IntPtr)i, size);
+			if(m != default) return m;
+		}
+		return default;
 	}
 
 	[HandleProcessCorruptedStateExceptions]
@@ -2894,6 +3682,25 @@ static unsafe partial class Test
 		//TaskDialog.Show(Debug_.IsCatkeysDebugConfiguration?"DEBUG":"RELEASE"); return;
 
 		try {
+			//TestIPC();
+			TestDllInProc();
+			//TestDllInProcManyWindows();
+
+			//TestUnmanagedCallSpeed();
+			//Cpp.Cpp_TestSimpleStringBuilder();
+			//TestCppRegex();
+			//TestWildexStruct();
+			//TestCppWildex();
+			//TestPcre();
+			//TestCppLike();
+			//Cpp_TestClrHost();
+			//Cpp.Cpp_Test();
+
+			//TestAElementFromPoint();
+			//TestAElementFind();
+			//TestUia2();
+			//TestUiaSpeed();
+
 			//TestAccFromUIA();
 			//TestAccSkipAndWait();
 			//TestAccTODO();

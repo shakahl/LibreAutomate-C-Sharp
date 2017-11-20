@@ -38,7 +38,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+				LibThrowIfDisposed();
 				_Hresult(_FuncId.container_window, _iacc.GetWnd(out var w));
 				return w;
 			}
@@ -52,7 +52,7 @@ namespace Catkeys
 		/// Returns default(Wnd) if failed. Supports <see cref="Native.GetError"/>.
 		/// All objects must support this property, but some have bugs and can return default(Wnd).
 		/// </remarks>
-		public Wnd WndTopLevel { get => WndContainer.WndWindow; }
+		public Wnd WndTopLevel => WndContainer.WndWindow;
 		//note: named not WndWindow, to avoid using accidentally instead of WndContainer.
 
 		/// <summary>
@@ -156,34 +156,34 @@ namespace Catkeys
 		}
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.BUSY. Can be used with DOCUMENT object of web browsers. </summary>
-		public bool IsBusy { get => State.Has_(AccSTATE.BUSY); }
+		public bool IsBusy => State.Has_(AccSTATE.BUSY);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.CHECKED. </summary>
-		public bool IsChecked { get => State.Has_(AccSTATE.CHECKED); }
+		public bool IsChecked => State.Has_(AccSTATE.CHECKED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.UNAVAILABLE. </summary>
-		public bool IsDisabled { get => State.Has_(AccSTATE.DISABLED); }
+		public bool IsDisabled => State.Has_(AccSTATE.DISABLED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.FOCUSED. </summary>
-		public bool IsFocused { get => State.Has_(AccSTATE.FOCUSED); }
+		public bool IsFocused => State.Has_(AccSTATE.FOCUSED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.INVISIBLE. </summary>
-		public bool IsInvisible { get => State.Has_(AccSTATE.INVISIBLE); }
+		public bool IsInvisible => State.Has_(AccSTATE.INVISIBLE);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.OFFSCREEN. </summary>
-		public bool IsOffscreen { get => State.Has_(AccSTATE.OFFSCREEN); }
+		public bool IsOffscreen => State.Has_(AccSTATE.OFFSCREEN);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.PROTECTED. </summary>
-		public bool IsPassword { get => State.Has_(AccSTATE.PROTECTED); }
+		public bool IsPassword => State.Has_(AccSTATE.PROTECTED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.PRESSED. </summary>
-		public bool IsPressed { get => State.Has_(AccSTATE.PRESSED); }
+		public bool IsPressed => State.Has_(AccSTATE.PRESSED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.READONLY. </summary>
-		public bool IsReadonly { get => State.Has_(AccSTATE.READONLY); }
+		public bool IsReadonly => State.Has_(AccSTATE.READONLY);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has AccSTATE.SELECTED. See also <see cref="IsFocused"/>. </summary>
-		public bool IsSelected { get => State.Has_(AccSTATE.SELECTED); }
+		public bool IsSelected => State.Has_(AccSTATE.SELECTED);
 
 		/// <summary>
 		/// Gets or sets name.
@@ -335,7 +335,7 @@ namespace Catkeys
 		/// <exception cref="ArgumentException">Invalid navig string.</exception>
 		public Acc Navigate(string navig, bool disposeThis = false)
 		{
-			if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+			LibThrowIfDisposed();
 			var na = _Acc.NavdirN.Parse(navig); //ArgumentException
 			var a = new _Acc(_iacc, _elem);
 			if(disposeThis) _Dispose(doNotRelease: true); else _iacc.AddRef();
@@ -362,7 +362,7 @@ namespace Catkeys
 		/// <exception cref="ArgumentOutOfRangeException">Invalid n.</exception>
 		public Acc Navigate(AccNAVDIR navDir, int n = 1, bool disposeThis = false)
 		{
-			if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+			LibThrowIfDisposed();
 			if(n == 0 || (n < 0 && navDir != AccNAVDIR.CHILD)) throw new ArgumentOutOfRangeException();
 			var a = new _Acc(_iacc, _elem);
 			if(disposeThis) _Dispose(doNotRelease: true); else _iacc.AddRef();
@@ -483,7 +483,7 @@ namespace Catkeys
 			//		Tested, does not help: LockSetForegroundWindow, AttachThreadInput.
 			//	Works well with web browsers, WinForms.
 			//	With WPF initially almost does not work. After using a navigation key (Tab etc) starts to work well.
-			//tested: IUIAutomationElement.SetFocus:
+			//tested: UIA.IElement.SetFocus:
 			//	In most cases works well with standard controls, all web browsers, WinForms.
 			//	With WPF same as Acc.
 			//	Bug: If standard control is disabled, deactivates parent window and draws focus rectangle on the control.
@@ -512,7 +512,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+				LibThrowIfDisposed();
 				if(_elem != 0) return new Acc[0];
 				return _iacc.get_accSelection();
 			}

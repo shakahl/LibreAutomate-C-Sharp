@@ -39,7 +39,7 @@ namespace Catkeys
 		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
 		/// MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
 		/// </remarks>
-		public static long Microseconds { get => (long)(Stopwatch.GetTimestamp() * _freqMCS); }
+		public static long Microseconds => (long)(Stopwatch.GetTimestamp() * _freqMCS);
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup.
@@ -50,8 +50,8 @@ namespace Catkeys
 		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
 		/// Unlike Environment.TickCount, this function is more precise and returns a 64-bit value that will not roll over in 100 years.
 		/// </remarks>
-		public static long Milliseconds { get => (long)(Stopwatch.GetTimestamp() * _freqMS); }
-		//public static long Milliseconds { get => Api.GetTickCount64(); } //15 ms precision. On current OS and hardware, QueryPerformanceCounter is reliable and almost as fast.
+		public static long Milliseconds => (long)(Stopwatch.GetTimestamp() * _freqMS);
+		//public static long Milliseconds => Api.GetTickCount64(); //15 ms precision. On current OS and hardware, QueryPerformanceCounter is reliable and almost as fast.
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup, not including time the system spends in sleep or hibernation.
@@ -139,7 +139,7 @@ namespace Catkeys
 		/// <exception cref="ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
 		/// <exception cref="Exception">Any exceptions thrown by functions that are executed while waiting (event handlers etc).</exception>
 		/// <seealso cref="Util.MessageLoop"/>
-		public static void SleepDoEvents(int milliseconds)
+		public static unsafe void SleepDoEvents(int milliseconds)
 		{
 			if(milliseconds == 0) { DoEvents(); return; }
 			if(milliseconds < 0 && milliseconds != Timeout.Infinite) throw new ArgumentOutOfRangeException();

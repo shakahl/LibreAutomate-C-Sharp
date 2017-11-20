@@ -150,7 +150,7 @@ namespace Catkeys
 					for(p = b; p->NextEntryOffset != 0; p = (SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
 						r->processID = (int)p->UniqueProcessId;
 						r->sessionID = (int)p->SessionId;
-						int len = p->NameLength/2;
+						int len = p->NameLength / 2;
 						r->processNameLen = len;
 						if(len > 0) {
 							//copy name to _p memory because it's in the huge buffer that will be released in this func
@@ -379,7 +379,7 @@ namespace Catkeys
 			IntPtr _h;
 
 			///
-			public IntPtr Handle { get => _h; }
+			public IntPtr Handle => _h;
 
 			///
 			public bool Is0 { get { return _h == Zero; } }
@@ -483,7 +483,12 @@ namespace Catkeys
 			void _Dispose()
 			{
 				if(_hproc.Is0) return;
-				if(Mem != Zero) { Api.VirtualFreeEx(_hproc, Mem); Mem = Zero; }
+				if(Mem != Zero) {
+					var mem = Mem; Mem = default;
+					if(!_doNotFree) {
+						if(!Api.VirtualFreeEx(_hproc, mem)) Output.Warning("Failed to free process memory. " + Native.GetErrorMessage());
+					}
+				}
 				_hproc.Dispose();
 			}
 
@@ -493,12 +498,34 @@ namespace Catkeys
 			/// Process handle.
 			/// Opened with access PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE.
 			/// </summary>
-			public IntPtr ProcessHandle { get => _hproc; }
+			public IntPtr ProcessHandle => _hproc;
 
 			/// <summary>
-			/// Address of memory allocated in that process. Invalid in this process.
+			/// Address of memory allocated in that process.
 			/// </summary>
+			/// <remarks>
+			/// The address is invalid in this process.
+			/// </remarks>
 			public IntPtr Mem { get; private set; }
+
+			/// <summary>
+			/// Sets an address of memory in that process that is to be used by the read and write functions.
+			/// </summary>
+			/// <param name="mem">A memory address in that process.</param>
+			/// <param name="freeWhenDisposing">
+			/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
+			/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
+			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <b>freeWhenDisposing</b> = false.</exception>
+			/// <remarks>
+			/// This function can be used if this variable was created with <b>nBytes</b> = 0. Else exception. Also exception if this function previously called with <b>freeWhenDisposing</b> = true.
+			/// </remarks>
+			public void SetMem(IntPtr mem, bool freeWhenDisposing)
+			{
+				if(Mem != default && !_doNotFree) throw new InvalidOperationException();
+				_doNotFree = !freeWhenDisposing;
+				Mem = mem;
+			}
+			bool _doNotFree;
 
 			void _Alloc(int pid, Wnd w, int nBytes)
 			{
@@ -650,6 +677,7 @@ namespace Catkeys
 			/// <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
 			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 			/// <param name="nBytes">Number of bytes to copy.</param>
+			/// <seealso cref="SetMem"/>
 			public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
 			{
 				return Api.WriteProcessMemory(_hproc, ptrDestinationInThatProcess, ptr, nBytes, null);
@@ -675,6 +703,7 @@ namespace Catkeys
 			/// <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
 			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
 			/// <param name="nBytes">Number of bytes to copy.</param>
+			/// <seealso cref="SetMem"/>
 			public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
 			{
 				return Api.ReadProcessMemory(_hproc, ptrSourceInThatProcess, ptr, nBytes, null);
@@ -717,7 +746,7 @@ namespace Catkeys
 			/// <summary>
 			/// Access token handle.
 			/// </summary>
-			public IntPtr TokenHandle { get => _htoken; }
+			public IntPtr TokenHandle => _htoken;
 
 			/// <summary>
 			/// Gets true if the last called property function failed.
@@ -754,8 +783,7 @@ namespace Catkeys
 				get
 				{
 					if(_haveElevation == 0) {
-						unsafe
-						{
+						unsafe {
 							ElevationType elev;
 							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out var siz)) _haveElevation = 2;
 							else {
@@ -782,8 +810,7 @@ namespace Catkeys
 				get
 				{
 					if(_haveIsUIAccess == 0) {
-						unsafe
-						{
+						unsafe {
 							uint uia;
 							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
 							else {
@@ -855,8 +882,7 @@ namespace Catkeys
 			IL _GetIntegrityLevel(bool andUIAccess)
 			{
 				if(_haveIntegrityLevel == 0) {
-					unsafe
-					{
+					unsafe {
 						Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
 						if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 						else {
@@ -1038,26 +1064,26 @@ namespace Catkeys
 		/// <summary>
 		/// Calls API <msdn>GetCurrentThreadId</msdn>.
 		/// </summary>
-		public static int CurrentThreadId { get => Api.GetCurrentThreadId(); }
+		public static int CurrentThreadId => Api.GetCurrentThreadId();
 
 		/// <summary>
 		/// Calls API <msdn>GetCurrentProcessId</msdn>.
 		/// </summary>
-		public static int CurrentProcessId { get => Api.GetCurrentProcessId(); }
+		public static int CurrentProcessId => Api.GetCurrentProcessId();
 
 		/// <summary>
 		/// Returns current thread handle.
 		/// Calls API <msdn>GetCurrentThread</msdn>.
 		/// Don't need to close the handle.
 		/// </summary>
-		public static IntPtr CurrentThreadHandle { get => Api.GetCurrentThread(); }
+		public static IntPtr CurrentThreadHandle => Api.GetCurrentThread();
 
 		/// <summary>
 		/// Returns current process handle.
 		/// Calls API <msdn>GetCurrentProcess</msdn>.
 		/// Don't need to close the handle.
 		/// </summary>
-		public static IntPtr CurrentProcessHandle { get => Api.GetCurrentProcess(); }
+		public static IntPtr CurrentProcessHandle => Api.GetCurrentProcess();
 
 		/// <summary>
 		/// Gets process id from handle.

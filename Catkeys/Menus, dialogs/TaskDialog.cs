@@ -1106,7 +1106,7 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if the dialog is open and your code can send messages to it.
 		/// </summary>
-		public bool IsOpen { get => !_dlg.Is0; }
+		public bool IsOpen => !_dlg.Is0;
 
 		void _SetClosed()
 		{
@@ -1126,7 +1126,7 @@ namespace Catkeys
 		/// Gets dialog window handle as Wnd.
 		/// Returns default(Wnd) if the dialog is not open.
 		/// </summary>
-		public Wnd DialogWindow { get => _dlg; }
+		public Wnd DialogWindow => _dlg;
 
 		/// <summary>
 		/// Allows to modify dialog controls while it is open, and close the dialog.
@@ -1320,7 +1320,7 @@ namespace Catkeys
 
 		#region Edit control
 
-		bool _IsEdit { get => _editType != TDEdit.None; }
+		bool _IsEdit => _editType != TDEdit.None;
 
 		void _EditControlInitBeforeShowDialog()
 		{
@@ -1439,7 +1439,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets edit control handle as Wnd.
 		/// </summary>
-		public Wnd EditControl { get => _editWnd; }
+		public Wnd EditControl => _editWnd;
 		Wnd _editWnd, _editParent;
 		Util.LibNativeFont _editFont;
 
@@ -2182,13 +2182,13 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Clicked button id. Use in ButtonClicked event handler.
 		/// </summary>
-		public int Button { get => wParam; }
+		public int Button => wParam;
 
 		/// <summary>
 		/// Dialog timer time in milliseconds. Use in Timer event handler.
 		/// The event handler can set returnValue=1 to reset this.
 		/// </summary>
-		public int TimerTimeMS { get => wParam; }
+		public int TimerTimeMS => wParam;
 
 		/// <summary>
 		/// Your ButtonClicked event handler function can use this to prevent closing the dialog.

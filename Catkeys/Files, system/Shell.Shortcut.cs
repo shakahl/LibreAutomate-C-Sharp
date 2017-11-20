@@ -53,7 +53,7 @@ namespace Catkeys
 			/// <summary>
 			/// Returns the internally used IShellLink COM interface.
 			/// </summary>
-			internal Api.IShellLink IShellLink { get => _isl; }
+			internal Api.IShellLink IShellLink => _isl;
 			//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
 
 			Shortcut(string lnkPath, uint mode)

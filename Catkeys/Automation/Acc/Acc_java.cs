@@ -288,7 +288,7 @@ namespace Catkeys
 				s_inited = 0;
 			}
 
-			static bool _NoJab { get => s_inited < 0; }
+			static bool _NoJab => s_inited < 0;
 
 			/// <summary>
 			/// Returns true if w process has a JAB hidden dialog ("Access Bridge status", "#32770").

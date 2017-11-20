@@ -236,8 +236,6 @@ namespace Catkeys
 				return r;
 			}
 
-			const string c_IES = "Internet Explorer_Server";
-
 			/// <summary>
 			/// Finds the specified accessible object in window w.
 			/// Returns true if found. The <see cref="Result"/> property will be the found object (null if not found).
@@ -277,7 +275,7 @@ namespace Catkeys
 						//	To detect it, we look for an "Internet Explorer_Server" control.
 						//	We search for the accessible object in all found controls.
 						//	If it is Firefox or Chrome, this makes slightly slower, maybe 1%.
-						if(_FindInChildControls(c_IES, AccOBJID.CLIENT)) return true; //info: the hierarchy is WINDOW/CLIENT/PANE, therefore PANE will be at level 0
+						if(_FindInChildControls(Api.s_IES, AccOBJID.CLIENT)) return true; //info: the hierarchy is WINDOW/CLIENT/PANE, therefore PANE will be at level 0
 						if(controlsFound) return false; //IE, but object not found
 					}
 					using(var iacc = _FindDocument(w)) {
@@ -486,7 +484,7 @@ namespace Catkeys
 					break;
 				case AccROLE.PANE:
 					if(_flags.Has_(AFFlags.SkipWeb)) {
-						if(0 == a.GetWnd(out var w) && w.ClassNameIs(c_IES)) return true;
+						if(0 == a.GetWnd(out var w) && w.ClassNameIs(Api.s_IES)) return true;
 					}
 					break;
 				}
@@ -864,7 +862,7 @@ namespace Catkeys
 		{
 			get
 			{
-				if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+				LibThrowIfDisposed();
 				Native.ClearError();
 				if(_elem != 0) return 0;
 				_Hresult(_FuncId.child_count, _iacc.get_accChildCount(out var v));
@@ -883,7 +881,7 @@ namespace Catkeys
 		/// <param name="param">Something to pass to the function as <see cref="AFAcc.Param"/>.</param>
 		public void EnumChildren(bool allDescendants, Action<AFAcc> f, object param = null)
 		{
-			if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+			LibThrowIfDisposed();
 			if(_elem != 0) return;
 			_EnumChildren(_iacc, allDescendants, f, new AFAcc() { Param = param }, 0);
 		}
@@ -974,7 +972,7 @@ namespace Catkeys
 					_parent.get_accChildCount(out n); //note: some objects return 0 or 1, ie less than AccessibleChildren, and HRESULT is usually 0. Noticed this only in IE, when c_acBufferSize<10.
 					if(n != nStack) { //yes, more children
 						for(int i = nStack; i > 0;) v[--i].Dispose();
-						if(n > Misc.MaxChildren) { //protection from AO such as LibreOffice Calc TABLE that has 1073741824 children. Default 10000.
+						if(n > Acc.MaxChildren) { //protection from AO such as LibreOffice Calc TABLE that has 1073741824 children. Default 10000.
 							n = 0;
 						} else {
 							if(n < nStack) n = 1000; //get_accChildCount returned error or incorrect value
@@ -1030,7 +1028,8 @@ namespace Catkeys
 				} else { //_startAtIndex is in _count range
 					int i = _startAtIndex + _i;
 					if(i < 0 || i >= _count) return false; //no more
-														   //calculate next i
+					
+					//calculate next i
 					if(_i >= 0) {
 						_i = -(_i + 1);
 						if(_startAtIndex + _i < 0) _i = -_i;
@@ -1073,6 +1072,21 @@ namespace Catkeys
 			public int startIndex;
 			public bool exactIndex;
 		}
+
+		/// <summary>
+		/// When searching for an accessible object, if an intermediate object has more than this number of direct children, skip them and their descendants.
+		/// </summary>
+		/// <remarks>
+		/// This property is thread-specific. It is used by Acc.Find, Acc.Children, Acc.EnumChildren and similar functions.
+		/// Valid values are 1000 to 1000000. Default 10000.
+		/// Getting and comparing large number of children is very slow. In extreme cases your app may hang or crash if there was no limit. For example OpenOffice Calc TABLE has one billion children.
+		/// </remarks>
+		public static int MaxChildren
+		{
+			get { int n = t_maxChildren; if(n == 0) t_maxChildren = n = 10_000; return n; }
+			set { t_maxChildren = Math_.MinMax(value, 1000, 1_000_000); }
+		}
+		[ThreadStatic] static int t_maxChildren;
 	}
 
 }

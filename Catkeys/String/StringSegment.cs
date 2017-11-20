@@ -68,7 +68,7 @@ namespace Catkeys
 		/// Gets the string buffer of this StringSegment.
 		/// See also <see cref="Value"/>.
 		/// </summary>
-		public string Buffer { get => _buffer; }
+		public string Buffer => _buffer;
 
 		/// <summary>
 		/// Gets or sets the start index within the buffer of this StringSegment.
@@ -727,7 +727,7 @@ namespace Catkeys.Types
 
 		/// <tocexclude />
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public StringSegment Current { get => new StringSegment(_s, _start, _end - _start); }
+		public StringSegment Current => new StringSegment(_s, _start, _end - _start);
 
 		/// <tocexclude />
 		[EditorBrowsable(EditorBrowsableState.Never)]

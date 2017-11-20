@@ -92,7 +92,7 @@ namespace Catkeys
 		/// Gets ScriptOptions object of this thread.
 		/// Alias of <see cref="ScriptOptions.Options"/>.
 		/// </summary>
-		public static ScriptOptions Options { get => ScriptOptions.Options; }
+		public static ScriptOptions Options => ScriptOptions.Options;
 
 		///
 		public static void Key(params string[] keys) { Input.Key(keys); }

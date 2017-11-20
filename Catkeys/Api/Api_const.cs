@@ -804,5 +804,12 @@ namespace Catkeys.Types
 		}
 
 		#endregion
+
+		#region strings
+
+		internal const string s_IES = "Internet Explorer_Server";
+
+
+		#endregion
 	}
 }

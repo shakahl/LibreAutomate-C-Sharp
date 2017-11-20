@@ -61,7 +61,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets string[] stored in this StringList.
 		/// </summary>
-		public string[] Arr { get => _a; }
+		public string[] Arr => _a;
 	}
 #endif
 }

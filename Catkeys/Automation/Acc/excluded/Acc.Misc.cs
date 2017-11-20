@@ -30,6 +30,7 @@ namespace Catkeys
 		/// </summary>
 		public static class Misc
 		{
+			//now this file is excluded. This function moved to Acc.
 			/// <summary>
 			/// When searching for an accessible object, if an intermediate object has more than this number of direct children, skip them and their descendants. This property is used by Acc.Find, Acc.Children, Acc.EnumChildren and similar functions.
 			/// Valid values are 1000 to 1000000. Default 10000. Getting and comparing such large number of children is very slow. In extreme cases your app may hang or crash if there was no limit. For example OpenOffice Calc TABLE has one billion children.

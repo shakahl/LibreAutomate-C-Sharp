@@ -18,8 +18,6 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using UIA = UIAutomationClient;
-
 using Catkeys.Types;
 using static Catkeys.NoClass;
 
@@ -121,17 +119,10 @@ namespace Catkeys
 		~Acc()
 		{
 			//Debug_.Print("Acc not disposed: " + ToString()); //cannot get props in other thread
-			Debug_.Print("Acc not disposed: " + (_role != 0 ? RoleString : ("_Disposed=" + _Disposed.ToString()))); //note: with debugger somehow can be called several times, then Is0 true
+			//TODO: reenable
+			//Debug_.Print("Acc not disposed: " + (_role != 0 ? RoleString : ("_Disposed=" + _Disposed.ToString()))); //note: with debugger somehow can be called several times, then Is0 true
 			_Dispose();
 		}
-
-#if DEBUG
-		/// <summary>
-		/// The IAccessible that is managed by this variable.
-		/// This func does not increment ref count etc. It simply returns the field. Don't release it. It will be released by Dispose.
-		/// </summary>
-		internal IAccessible LibIAccessibleDebug { get => _iacc; }
-#endif
 
 		/// <summary>
 		/// Gets or sets child element id.
@@ -141,8 +132,13 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this variable is disposed.
 		/// </summary>
-		bool _Disposed { get => _iacc.Is0; }
+		bool _Disposed => _iacc.Is0;
 		//note: named not 'IsDisposed' because can be easily confused with IsDisabled.
+
+		internal void LibThrowIfDisposed()
+		{
+			if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+		}
 
 		/// <summary>
 		/// Gets accessible object of window or control or its standard part - client area, titlebar etc.
@@ -161,7 +157,7 @@ namespace Catkeys
 
 		static IAccessible _FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, bool noThrow = false)
 		{
-			using(new _TempSetScreenReader(false)) {
+			using(new LibTempSetScreenReader(false)) {
 				var hr = Api.AccessibleObjectFromWindow(w, objid, ref Api.IID_IAccessible, out var iacc);
 				if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
 				if(hr != 0) {
@@ -187,21 +183,19 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="x">X coordinate in screen.</param>
 		/// <param name="y">Y coordinate in screen.</param>
-		/// <param name="workArea">x y are relative to the work area, not entire screen.</param>
-		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
 		/// <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
 		/// <param name="preferLINK">
-		/// Get the parent object if it's LINK or PUSHBUTTON and this object is TEXT, STATICTEXT or GRAPHIC.
+		/// Get the direct parent object if it's LINK or PUSHBUTTON.
 		/// Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
-		/// Note: This does not work if the object from point is a LINK's grandchild.
-		/// Note: Some Chrome versions have this bug: the parent object does not support <see cref="WndContainer"/>.
 		/// </param>
 		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
-		public static Acc FromXY(Coord x, Coord y, bool workArea = false, object screen = null, bool noThrow = false, bool preferLINK = false)
+		public static Acc FromXY(Coord x, Coord y, CoordOptions co = null, bool noThrow = false, bool preferLINK = false)
 		{
-			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
-			var p = Coord.Normalize(x, y, workArea, screen);
+			var p = Coord.Normalize(x, y, co);
 			return _FromPoint(p, noThrow, preferLINK);
+
+			//CONSIDER: instead of preferLINK add a function or Navigate(PARENTLINK).
 		}
 
 		/// <summary>
@@ -210,10 +204,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
 		/// <param name="preferLINK">
-		/// Get the parent object if it's LINK or PUSHBUTTON and this object is TEXT, STATICTEXT or GRAPHIC.
-		/// Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
-		/// Note: This does not work if the object from point is a LINK's grandchild.
-		/// Note: Some Chrome versions have this bug: the parent object does not support <see cref="WndContainer"/>.
+		/// Get the parent object if it's LINK or PUSHBUTTON. More info: <see cref="FromXY(Coord, Coord, CoordOptions, bool, bool)"/>.
 		/// </param>
 		/// <exception cref="CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
 		public static Acc FromMouse(bool noThrow = false, bool preferLINK = false)
@@ -223,7 +214,7 @@ namespace Catkeys
 
 		static Acc _FromPoint(Point p, bool noThrow, bool preferLINK)
 		{
-			using(new _TempSetScreenReader(false)) {
+			using(new LibTempSetScreenReader(false)) {
 				bool retry = false; g1:
 				var hr = Api.AccessibleObjectFromPoint(p, out var iacc, out var v);
 				if(hr == 0 && iacc.Is0) hr = Api.E_FAIL;
@@ -293,26 +284,21 @@ namespace Catkeys
 
 		static void _FromPoint_GetLink(ref IAccessible a, ref int elem)
 		{
-			if(0 != a.GetRole(elem, out var role)) return;
-			switch(role) {
-			case AccROLE.TEXT: //Firefox, IE
-			case AccROLE.STATICTEXT: //Chrome
-			case AccROLE.GRAPHIC:
-			case AccROLE.CLIENT: //Chrome: the Bookmarks toolbar buttons have children of role CLIENT
-			case 0: //string role, eg Firefox "span", "h2" etc
-				IAccessible parent;
-				if(elem != 0) parent = a; else if(0 != a.get_accParent(out parent)) return;
-				if(_IsLink(parent)) {
-					if(elem != 0) elem = 0; else { Math_.Swap(ref a, ref parent); parent.Dispose(); }
-				}
-				//rejected: support 2 levels, eg youtube right-side list. Actually there are 2-3 levels, and multiple children of LINK, some of them may be useful for automation.
-				break;
+			IAccessible parent;
+			if(elem != 0) parent = a; else if(0 != a.get_accParent(out parent)) return;
+			if(_IsLink(parent)) {
+				if(elem != 0) elem = 0; else Math_.Swap(ref a, ref parent);
 			}
+			if(parent != a) parent.Dispose();
+			//note: ignore role. Because it can be anything, not only TEXT, STATICTEXT, GRAPHIC.
+			//rejected: support 2 levels, eg youtube right-side list.
+			//	Can be even more levels, and multiple children of LINK, some of them may be useful for automation.
+			//	Often they have default action "jump" and value=URL.
+			//	Then also usually have state LINKED. But many objects don't have this state.
 
 			bool _IsLink(IAccessible par)
 			{
 				if(0 != par.GetRole(0, out var role2) || !(role2 == AccROLE.LINK || role2 == AccROLE.PUSHBUTTON)) return false;
-				//if(0 != _Api.WindowFromAccessibleObject(par, out var w) || w.Is0) return false; //rejected: Chrome bug workaround. For users in most cases LINK is more important than container window.
 				return true;
 			}
 		}
@@ -329,8 +315,7 @@ namespace Catkeys
 		/// <exception cref="CatException">Failed to get accessible object from window. For example, window of a higher UAC integrity level process.</exception>
 		public static Acc FromXY(Wnd w, Coord x, Coord y, bool noThrow = false)
 		{
-			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
-			var p = Coord.NormalizeInWindow(x, y, w); //in client area
+			var p = Coord.NormalizeInWindow(x, y, w);
 			if(!w.GetWindowAndClientRectInScreen(out RECT rw, out RECT rc)) {
 				if(noThrow) return null;
 				w.ThrowUseNative();
@@ -370,7 +355,6 @@ namespace Catkeys
 		/// </remarks>
 		public Acc ChildFromXY(Coord x, Coord y, bool screenCoord = false, bool directChild = false)
 		{
-			if(x.IsEmpty || y.IsEmpty) throw new ArgumentNullException();
 			Point p;
 			if(screenCoord) p = Coord.Normalize(x, y);
 			else if(GetRect(out var r)) {
@@ -434,7 +418,7 @@ namespace Catkeys
 			}
 			finally { if(!isThis) a.Dispose(); }
 
-			//SHOULDDO: can fail if recently focused. Noticed with FileZilla Settings dialog controls after IUIAutomationElement.SetFocus. Need to wait/retry.
+			//SHOULDDO: can fail if recently focused. Noticed with FileZilla Settings dialog controls after UIA.IElement.SetFocus. Need to wait/retry.
 		}
 
 		/// <summary>
@@ -485,13 +469,13 @@ namespace Catkeys
 		/// <remarks>
 		/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
 		/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
-		/// Also partially supports UIAutomationClient.IUIAutomationElement. Works with web page objects, but returns null for many other.
+		/// Also partially supports UIA.IElement. Works with web page objects, but returns null for many other.
 		/// </remarks>
 		public static Acc FromComObject(object x)
 		{
 			if(x == null) return null;
-			if(x is UIA.IUIAutomationElement e) { //info: IUIAutomationElement2-7 are IUIAutomationElement too
-				var pat = e.GetCurrentPattern(10018) as UIA.IUIAutomationLegacyIAccessiblePattern; //UIA_LegacyIAccessiblePatternId
+			if(x is UIA.IElement e) { //info: IElement2-7 are IElement too
+				var pat = e.GetCurrentPattern(UIA.PatternId.LegacyIAccessible) as UIA.ILegacyIAccessiblePattern;
 				x = pat?.GetIAccessible();
 				if(x == null) return null;
 			}

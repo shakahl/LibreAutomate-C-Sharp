@@ -271,7 +271,7 @@ namespace Catkeys
 			}
 		}
 
-		static Inst* _SM { get => &Util.LibSharedMemory.Ptr->perf; }
+		static Inst* _SM => &Util.LibSharedMemory.Ptr->perf;
 
 		/// <summary>
 		/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
@@ -337,12 +337,12 @@ namespace Catkeys
 		/// Formats a string from time values collected by calling First() and Next().
 		/// The string contains the number of microseconds of each code execution between calling First() and each Next().
 		/// </summary>
-		public static string Times { get => _SM->Times; }
+		public static string Times => _SM->Times;
 
 		/// <summary>
 		/// Gets the number of microseconds between First() and the last Next().
 		/// </summary>
-		public static long TimeTotal { get => _SM->TimeTotal; }
+		public static long TimeTotal => _SM->TimeTotal;
 
 		/// <summary>
 		/// Executes code (lambda) nTimes times, and then calls Next().

@@ -246,7 +246,7 @@ namespace Catkeys.Util
 		}
 		static WeakReference<StringCache> _cacheWR = new WeakReference<StringCache>(null);
 
-		//internal static int LibDebugStringCount { get => _cacheWR.TryGetTarget(out var v) ? v.Count : 0; }
+		//internal static int LibDebugStringCount => _cacheWR.TryGetTarget(out var v) ? v.Count : 0;
 
 		/// <summary>
 		/// Gets string cached in a weak-referenced internal static LibStringCache object.

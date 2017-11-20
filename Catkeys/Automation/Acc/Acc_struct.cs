@@ -299,32 +299,5 @@ namespace Catkeys
 				return true;
 			}
 		}
-
-		/// <summary>
-		/// Temporarily sets SPI_SETSCREENREADER. Restores in Dispose.
-		/// It enables accessible objects (AO) in OpenOffice, LibreOffice, etc.
-		/// Speed: 10-20 mcs, which is about 20% of accessibleobjectfromwindow.
-		/// Note: LibreOffice AO does not work if this process is 64-bit (why?), although SPI_SETSCREENREADER works.
-		/// </summary>
-		unsafe struct _TempSetScreenReader :IDisposable
-		{
-			bool _restore;
-
-			/// <summary>
-			/// If SPI_GETSCREENREADER says false, sets SPI_SETSCREENREADER = true, and Dispose will set it false.
-			/// Note: Windows does not use a reference counting for this setting.
-			/// </summary>
-			public _TempSetScreenReader(bool unused)
-			{
-				int r = 0;
-				Api.SystemParametersInfo(Api.SPI_GETSCREENREADER, 0, &r, 0);
-				_restore = r == 0 && Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 1, 0, 0);
-			}
-
-			public void Dispose()
-			{
-				if(_restore) _restore = !Api.SystemParametersInfo(Api.SPI_SETSCREENREADER, 0, 0, 0);
-			}
-		}
 	}
 }

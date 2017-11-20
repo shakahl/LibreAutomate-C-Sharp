@@ -132,10 +132,10 @@ namespace Catkeys.Types
 		public Acc ToAcc() { return new Acc(this); }
 
 		//Acc CONSIDER:
-		//public new AccSTATE State { get => _haveState ? _state : StateCurrent; }
+		//public new AccSTATE State  _haveState ? _state : StateCurrent;
 		//internal void LibSetState(AccSTATE state) { _state=state; _haveState=true; }
 		//AccSTATE _state; bool _haveState;
-		//public AccSTATE StateCurrent { get => { _state = base.State; _haveState=true; return _state; } }
+		//public AccSTATE StateCurrent => { _state = base.State; _haveState=true; return _state; }
 
 		/// <summary>
 		/// Sets/clears fields/properties before calling the callback.
@@ -416,7 +416,7 @@ namespace Catkeys.Types
 	/// <remarks>
 	/// The names are as in API documentation but without prefix "EVENT_".
 	/// </remarks>
-	internal enum LibAccHookEVENT
+	public enum AccEVENT
 	{
 		MIN = 0x1,
 		MAX = 0x7FFFFFFF,

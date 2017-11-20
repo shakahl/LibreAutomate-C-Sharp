@@ -7,6 +7,325 @@
 
 
 
+#pragma code_seg(push, r1, ".remote_thread")
+#pragma optimize("", off)
+DWORD WINAPI _InjectDllThreadProc(LPVOID lpParameter)
+{
+
+	return 0;
+}
+
+bool _InjectDll(HWND w, out HWND& wa, DWORD tid, DWORD pid)
+{
+	//auto hh = SetWindowsHookExW(WH_CALLWNDPROC, HookCallWndProc, s_moduleHandle, tid); if(hh == 0) return false;
+	//wa = (HWND)SendMessage(w, 0, c_injectWparam, 0);
+	//UnhookWindowsHookEx(hh);
+	//if(wa) return true;
+
+	//problem: hook does not work with Windows.UI.Core.CoreWindow.
+	//	SetWindowsHookEx succeeds, but the hook proc is never called, and the dll is not injected.
+	//	But SendMessage works, eg WM_CLOSE closes the app.
+	//	The CreateRemoteThread(LoadLibrary) method fails too. LoadLibrary returns 0.
+	//	Maybe because our dll is not signed?
+
+
+	bool ok = false;
+	const DWORD desiredAccess = PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ;
+	HANDLE hp = OpenProcess(desiredAccess, false, pid); if(!hp) return false;
+	//SIZE_T memSize = (LPBYTE)_InjectDll - (LPBYTE)_InjectDllThreadProc, sizeWritten; //note: this will not work in Debug, because the function address is indirect
+	//Print(memSize);
+	//assert(memSize > 0 && memSize < 4096);
+	SIZE_T memSize = 300, sizeWritten;
+	WCHAR b[300]; GetModuleFileNameW(s_moduleHandle, b, 300);
+	LPVOID mem = VirtualAllocEx(hp, null, max(memSize, 4096), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	if(mem) {
+		Print("VirtualAllocEx ok");
+		//if(WriteProcessMemory(hp, mem, _InjectDllThreadProc, memSize, &sizeWritten) && sizeWritten == memSize) {
+		if(WriteProcessMemory(hp, mem, b, memSize, &sizeWritten) && sizeWritten == memSize) {
+			Print("WriteProcessMemory ok");
+
+			HANDLE ht = CreateRemoteThread(hp, null, 64 * 1024, (LPTHREAD_START_ROUTINE)LoadLibraryW, mem, 0, null);
+			if(hp) {
+				Print("CreateRemoteThread ok");
+
+				//ok=true;
+				WaitForSingleObject(ht, INFINITE);
+				DWORD ec = 0; if(GetExitCodeThread(ht, &ec)) Printx((int)ec);
+
+				CloseHandle(ht);
+			}
+		}
+	}
+
+	CloseHandle(hp);
+
+	return ok;
+}
+#pragma optimize("", on)
+#pragma code_seg(pop, r1)
+
+
+
+
+
+/// <summary>
+/// Manages an IAccessible/Wnd dictionary that is used by GetWnd and get_accParent for the Chrome bug workaround.
+/// In Chrome versions 61-? is broken get_accParent in web pages.
+///		It gets parent AO (except of DOCUMENT), but if we need container window of that AO, windowfromaccessibleobject (WFAO) fails.
+///		It's probably because DOCUMENT's get_accParent is broken. It seems WFAO walks ancestors by calling get_accParent until finds WINDOW.
+///		WFAO fails only for AO that are retrieved with get_accParent (or derived from it using navigation etc).
+///			Probably because MSAA caches HWNDs. We can guess it from the speed difference.
+///			WFAO usually is quite fast, but very slow if the AO was returned by get_accParent etc, because their HWNDs are not cached.
+///	We use this dictionary not only with Chrome. It makes GetWnd much faster with these get_accParent-returned AOs.
+///	This workaround is only for AO retrieved with get_accParent directly. If we then navigate to another object (next, child etc), WFAO fails for them. Never mind, too much work to track all.
+///	WFAO does not fail for AO retrieved using navigation when the navigation start AO's HWND is cached.
+/// Tried to get HWND from these interfaces, but Chrome does not give them: UIA.IElement, IOleWindow, IAccIdentity, IAccessible2.
+///		IAccessible2.windowHandle works, but need to register IAccessible2Proxy.dll or inject into Chrome process. Too much work.
+///		Besides windowHandle, IAccessible2 does not have anything useful that we could not get with other interfaces.
+///	UI Automation works well. But cannot be used for this workaround (cannot get UIA.IElement from IAccessible).
+/// </summary>
+class _ChromeParentBugWorkaround
+{
+	//Acc CONSIDER: to use less memory, instead of Dictionary<LPARAM, Wnd> use Dictionary<Wnd, List<LPARAM>>
+
+	Dictionary<LPARAM, Wnd> _d = new Dictionary<LPARAM, Wnd>();
+	//long _time;
+	//Acc FUTURE: sometimes remove disposed AO, eg once in 1 minute or when GC runs.
+	//	For each dictionary key call AddRef/Release to get ref count. Remove if 1.
+
+	public void Add(IntPtr iacc, Wnd w)
+	{
+		if(!w.IsAlive) { _RemoveWnd(w); return; }
+		Marshal.AddRef(iacc);
+		_d[iacc] = w;
+
+		Debug_.PrintIf(_d.Count > 100, "big dictionary IAccessible/Wnd. Count: " + _d.Count.ToString());
+	}
+
+	public bool TryGet(IntPtr iacc, out Wnd w)
+	{
+		if(!_d.TryGetValue(iacc, out w)) return false;
+		if(w.IsAlive) return true;
+		_RemoveWnd(w);
+		w = default;
+		return false;
+	}
+
+	void _RemoveWnd(Wnd w)
+	{
+		var a = new Util.LibArrayBuilder<LPARAM>();
+		foreach(var x in _d) if(x.Value == w) a.Add(x.Key);
+		for(int i = a.Count - 1; i >= 0; i--) _d.Remove(a[i]);
+	}
+
+	~_ChromeParentBugWorkaround() //called when GC runs after this thread ended
+	{
+		foreach(var x in _d) Marshal.Release(x.Key);
+	}
+}
+
+[ThreadStatic] static _ChromeParentBugWorkaround t_iaccWnd; //Acc FUTURE: try to make non-[ThreadStatic] if possible
+
+public int get_accParent(out IAccessible iacc)
+{
+	iacc = default;
+
+	//Chrome bug workaround: part 1.
+#if DEBUG
+				var t0 = Time.Microseconds;
+				GetWnd(out Wnd w); //in browsers usually about 10 times faster (when uncached) than get_accParent. In many windows fast.
+				var td = Time.Microseconds - t0;
+				Debug_.PrintIf(td >= 1000, "slow GetWnd in Chrome bug workaround. Time: " + td.ToString());
+#else
+	GetWnd(out Wnd w);
+#endif
+
+	var hr = _F.get_accParent(_iptr, out var idisp);
+	if(hr == 0) {
+		hr = FromIDispatch(idisp, out iacc);
+
+		//Chrome bug workaround: part 2.
+		if(hr == 0 && !w.Is0 && !w.IsChildWindow && 0 == GetRole(0, out var role) && role != AccROLE.WINDOW) {
+			//note: here we cannot call GetWnd to make sure that window of iacc == w, because it is very slow in any app, and in Chrome fails.
+			//	If our parent window is top-level and our role is not WINDOW, logically window of iacc must be the same as ours.
+			//	If out role is WINDOW, iacc window could be the root desktop.
+
+			//PrintList("get_accParent: add", iacc._iptr);
+			var d = t_iaccWnd;
+			if(d == null) t_iaccWnd = d = new _ChromeParentBugWorkaround();
+			d.Add(iacc, w);
+		}
+	}
+	return hr;
+}
+
+public int GetWnd(out Wnd w)
+{
+	w = default;
+	Debug.Assert(!Is0);
+
+	//Chrome bug workaround: part 3.
+	if(t_iaccWnd?.TryGet(_iptr, out w) ?? false) {
+		//PrintList("GetWnd: cached", _iptr);
+		return 0;
+	}
+	//PrintList("GetWnd: uncached", _iptr);
+
+	int hr = _WindowFromAccessibleObject(this, out w);
+
+	return hr;
+}
+
+
+
+
+
+
+
+delegate int CsFuncT(IntPtr x);
+
+static CsFuncT _TestClrHost2 = TestClrHost2;
+static int TestClrHost2(IntPtr x)
+{
+	//TaskDialog.Show(""+x);
+
+	var w = Wnd.Find("* Google Chrome", "Chrome*").OrThrow();
+	//var w = Wnd.Find("Keys").OrThrow();
+	using(var a = Acc.Find(w, null, "Untitled")) {
+		//TaskDialog.Show(a.ToString());
+		if(a != null) {
+			var r = LresultFromObject(ref Api.IID_IAccessible, 0, a._iacc);
+			return r;
+		}
+	}
+
+	return 0;
+}
+[DllImport("oleacc.dll")]
+internal static extern LPARAM LresultFromObject(ref Guid riid, LPARAM wParam, IAccessible punk);
+
+static int TestClrHost(string s)
+{
+	var p = (IntPtr*)s.ToInt64_();
+	*p = Marshal.GetFunctionPointerForDelegate(_TestClrHost2);
+
+	//Print(s);
+	//TaskDialog.Show("CLR host", s);
+	return 1;
+}
+
+
+
+
+
+
+
+///// <summary>
+///// Gets or sets the cache request object that is used by functions of this class.
+///// The object is [ThreadStatic].
+///// </summary>
+//public static UIA.ICacheRequest Cache
+//{
+//	get => t_cache;
+//	set => t_cache = value;
+//}
+//[ThreadStatic] static UIA.ICacheRequest t_cache;
+
+//static bool _FC(out UIA.IUIAutomation f, out UIA.ICacheRequest c)
+//{
+//	f = Factory;
+//	c = t_cache;
+//	return c != null;
+//}
+
+////public static UIA.IElement Root { get { var f = Factory; var c = Cache; return c == null ? f.GetRootElement() : f.GetRootElementBuildCache(c); } }
+//public static UIA.IElement Root { get => _FC(out var f, out var c) ? f.GetRootElementBuildCache(c) : f.GetRootElement(); }
+
+
+
+
+
+
+//rejected: either too unreliable or too slow. The problem is that children of some elements are not in element's rect.
+//struct _DescendantFromPointFinder
+//{
+//	Point _p;
+//	long _sizeFound;
+//	public UIA.IElement eFound;
+//	UIA.ICondition _cond;
+
+//	//tested: with tree walker slower.
+//	//tested: with rectangle cache slower.
+
+//	public _DescendantFromPointFinder(Point pScreen, bool chromeWorkaround = false) : this()
+//	{
+//		_p = pScreen;
+//		var f = Factory;
+//		_cond = t_condRaw; //not t_condVisible, because offscreen elements can have visible children, for example offscreen TreeItem
+//						   //if(chromeWorkaround) _cond = f.CreateAndCondition(_cond, f.CreateNotCondition(f.CreatePropertyConditionEx(UIA.PropertyId.ClassName, "Intermediate D3D Window", UIA.PropertyConditionFlags.IgnoreCase)));
+//		if(chromeWorkaround) _cond = f.CreateNotCondition(f.CreatePropertyConditionEx(UIA.PropertyId.ClassName, "Intermediate D3D Window", UIA.PropertyConditionFlags.IgnoreCase));
+//		//SHOULDDO: skip tooltip, dialog, floating pane...
+//	}
+
+//	public void Find(UIA.IElement eParent, int level = 0, RECT rParent=default)
+//	{
+//		if(level == 0) {
+//			var r = eParent.BoundingRectangle;
+//			if(!r.Contains(_p)) return;
+//			eFound = eParent; _sizeFound = r.Width * r.Height;
+//		}
+
+//		var a = eParent.FindAll(UIA.TreeScope.Children, _cond);
+//		for(int i = 0, n = a.Length; i < n; i++) {
+//			var e = a.GetElement(i);
+//			var r = e.BoundingRectangle;
+//			if(!r.Contains(_p)) {
+//				//children of some elements are not in element's rect...
+//				goto g1; //will walk whole tree, too slow
+//				//switch(e.ControlType) {
+//				//case UIA.TypeId.TreeItem: //example: standard tree view controls, VS Solution Explorer
+//				//case UIA.TypeId.TabItem: //example: VS Solution Explorer
+//				//	goto g1;
+//				//}
+//				//continue;
+//			}
+//			var size = r.Width * r.Height;
+//			if(size <= _sizeFound) {
+//				if(size < _sizeFound || (eFound==eParent && r==rParent)) {
+//					_sizeFound = size;
+//					eFound = e;
+//				}
+//			}
+//			g1:
+//			//PrintList(level, e.LibToString_());
+//			Find(e, level + 1, r);
+//		}
+//	}
+//}
+
+//public static UIA.IElement FromPoint(Wnd w, Point pScreen)
+//{
+//	return _DescendantFromPoint(Factory.ElementFromHandle(w), pScreen);
+//}
+
+//public static UIA.IElement FromPoint(UIA.IElement e, Point pScreen)
+//{
+//	return _DescendantFromPoint(e, pScreen);
+//}
+
+//static UIA.IElement _DescendantFromPoint(UIA.IElement eParent, Point pScreen, bool chromeWorkaround = false)
+//{
+//	var x = new _DescendantFromPointFinder(pScreen, chromeWorkaround);
+//	x.Find(eParent);
+//	return x.eFound;
+//}
+
+
+
+
+
+
+
 
 /// <summary>
 /// Gets parent accessible object.

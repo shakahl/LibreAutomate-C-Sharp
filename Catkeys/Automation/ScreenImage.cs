@@ -406,7 +406,7 @@ namespace Catkeys
 				if(_images != null) foreach(var v in _images) v.Dispose();
 			}
 
-			public SIResult Result { get => _result; }
+			public SIResult Result => _result;
 
 			internal _Finder(_Action action, object image, SIArea area, SIFlags flags, int colorDiff, Func<SIResult, bool> also)
 			{
@@ -481,7 +481,7 @@ namespace Catkeys
 
 				//Get area rectangle.
 				RECT r;
-				_resultOffset = new Point();
+				_resultOffset = default;
 				switch(_area.Type) {
 				case SIArea.AType.Wnd:
 					r = windowDC ? _area.W.ClientRect : _area.W.ClientRectInScreen;
@@ -1074,9 +1074,7 @@ namespace Catkeys.Types
 			//	if(area.W.IsCloaked) area.W.ActivateLL();
 			//}
 
-			if(x.IsEmpty) x = Coord.Center;
-			if(y.IsEmpty) y = Coord.Center;
-			var p = Coord.NormalizeInRect(x, y, Rect);
+			var p = Coord.NormalizeInRect(x, y, Rect, centerIfEmpty: true);
 
 			if(area.Type == SIArea.AType.Screen) {
 				if(button == 0) Mouse.Move(p.X, p.Y);

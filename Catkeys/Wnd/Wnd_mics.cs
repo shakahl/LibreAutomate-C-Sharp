@@ -53,7 +53,7 @@ namespace Catkeys
 			/// <param name="exStyle">Native.WS_EX_ styles.</param>
 			public static int BorderWidth(uint style, uint exStyle)
 			{
-				var r = new RECT();
+				RECT r = default;
 				Api.AdjustWindowRectEx(ref r, style, false, exStyle);
 				return r.right;
 			}
@@ -381,17 +381,17 @@ namespace Catkeys.Types
 	public class SpecHwnd
 	{
 		/// <summary>API HWND_TOP (0). Used with SetWindowPos.</summary>
-		public static Wnd HWND_TOP { get => (Wnd)(LPARAM)0; }
+		public static Wnd HWND_TOP => (Wnd)(LPARAM)0;
 		/// <summary>API HWND_BOTTOM (1). Used with SetWindowPos.</summary>
-		public static Wnd HWND_BOTTOM { get => (Wnd)(LPARAM)1; }
+		public static Wnd HWND_BOTTOM => (Wnd)(LPARAM)1;
 		/// <summary>API HWND_TOPMOST (-1). Used with SetWindowPos.</summary>
-		public static Wnd HWND_TOPMOST { get => (Wnd)(LPARAM)(-1); }
+		public static Wnd HWND_TOPMOST => (Wnd)(LPARAM)(-1);
 		/// <summary>API HWND_NOTOPMOST (-2). Used with SetWindowPos.</summary>
-		public static Wnd HWND_NOTOPMOST { get => (Wnd)(LPARAM)(-2); }
+		public static Wnd HWND_NOTOPMOST => (Wnd)(LPARAM)(-2);
 		/// <summary>API HWND_MESSAGE (-3). Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
-		public static Wnd HWND_MESSAGE { get => (Wnd)(LPARAM)(-3); }
+		public static Wnd HWND_MESSAGE => (Wnd)(LPARAM)(-3);
 		/// <summary>API HWND_BROADCAST (0xffff). Used with API SendMessage, Wnd.Send etc.</summary>
-		public static Wnd HWND_BROADCAST { get => (Wnd)(LPARAM)0xffff; }
+		public static Wnd HWND_BROADCAST => (Wnd)(LPARAM)0xffff;
 	}
 
 	/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>

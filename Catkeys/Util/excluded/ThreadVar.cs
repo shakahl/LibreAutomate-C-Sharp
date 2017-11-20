@@ -30,7 +30,7 @@ namespace Catkeys//.Util
 		{
 			public int FlsIndex;
 		}
-		static ProcessVariables* _ProcVar { get => &Util.LibProcessMemory.Ptr->thread_; }
+		static ProcessVariables* _ProcVar => &Util.LibProcessMemory.Ptr->thread_;
 
 		public static event EventHandler Exit
 		{
@@ -142,7 +142,7 @@ namespace Catkeys//.Util
 			_initFunc = initFunc;
 		}
 
-		public bool IsValueCreated { get => _value != null; }
+		public bool IsValueCreated => _value != null;
 
 		public T Value
 		{

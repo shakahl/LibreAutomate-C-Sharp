@@ -162,7 +162,7 @@ namespace Catkeys
 		/// Gets window handle as IntPtr.
 		/// Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c> .
 		/// </summary>
-		public IntPtr Handle { get => new IntPtr(_h); }
+		public IntPtr Handle => new IntPtr(_h);
 
 		/// <summary>
 		/// Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProcessName}  {Rect}".
@@ -371,7 +371,7 @@ namespace Catkeys
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="IsAlive"/>
-		public bool Is0 { get => _h == null; }
+		public bool Is0 => _h == null;
 
 		/// <summary>
 		/// Returns true if the <see cref="Wnd">handle</see> identifies an existing window.
@@ -383,7 +383,7 @@ namespace Catkeys
 		/// Although a Wnd variable holds a window handle, which is like a reference to a window, it does not prevent closing that window and making the handle invalid. After closing the window, the OS can even assign the same handle value to a new window, although normally it can happen only after long time.
 		/// <note>Use this carefully with windows of other applications or threads. The window can be closed at any moment, even when your thread is still in this function.</note>
 		/// </remarks>
-		public bool IsAlive { get => !Is0 && Api.IsWindow(this); }
+		public bool IsAlive => !Is0 && Api.IsWindow(this);
 
 		#endregion
 
@@ -1098,7 +1098,7 @@ namespace Catkeys
 		/// Calls <see cref="WndFocused"/>.
 		/// </summary>
 		/// <seealso cref="Focus"/>
-		public bool IsFocused { get => !this.Is0 && this == WndFocused; }
+		public bool IsFocused => !this.Is0 && this == WndFocused;
 
 		/// <summary>
 		/// Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to this control or window, which must be of this thread.
@@ -1125,7 +1125,7 @@ namespace Catkeys
 		/// </summary>
 		/// <seealso cref="FocusLocal"/>
 		/// <seealso cref="IsFocusedLocal"/>
-		public static Wnd WndFocusedLocal { get => Api.GetFocus(); }
+		public static Wnd WndFocusedLocal => Api.GetFocus();
 
 		/// <summary>
 		/// Returns true if this is the control or window of this thread that has the keyboard input focus.
@@ -1133,7 +1133,7 @@ namespace Catkeys
 		/// </summary>
 		/// <seealso cref="FocusLocal"/>
 		/// <seealso cref="WndFocusedLocal"/>
-		public bool IsFocusedLocal { get => !this.Is0 && this == Api.GetFocus(); }
+		public bool IsFocusedLocal => !this.Is0 && this == Api.GetFocus();
 
 		#endregion
 
@@ -1567,11 +1567,10 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="x">X coordinate in screen. Not used if null.</param>
 		/// <param name="y">Y coordinate in screen. Not used if null.</param>
-		/// <param name="workArea">The coordinates are relative to the work area.</param>
-		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
-		public bool ContainsScreenXY(Coord x, Coord y, bool workArea = false, object screen = null)
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area.</param>
+		public bool ContainsScreenXY(Coord x, Coord y, CoordOptions co = null)
 		{
-			Point p = Coord.Normalize(x, y, workArea, screen);
+			Point p = Coord.Normalize(x, y, co);
 			if(!GetRect(out RECT r)) return false;
 			if(!r.Contains(x.IsEmpty ? r.left : p.X, y.IsEmpty ? r.top : p.Y)) return false;
 			return true;
@@ -1625,7 +1624,7 @@ namespace Catkeys
 		/// Moves and resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP_ flags.
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP_ flags.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="Native.GetError"/>.
 		/// 
@@ -1641,7 +1640,7 @@ namespace Catkeys
 		/// Moves.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Move(Coord, Coord, CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOSIZE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="Native.GetError"/>.
 		/// 
@@ -1657,7 +1656,7 @@ namespace Catkeys
 		/// Resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Resize(Coord, Coord, bool)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Resize(Coord, Coord, CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
@@ -1675,13 +1674,13 @@ namespace Catkeys
 		/// <param name="y">Top. If null, does not move in Y axis.</param>
 		/// <param name="width">Width. If null, does not change width.</param>
 		/// <param name="height">Height. If null, does not change height.</param>
-		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <exception cref="WndException"/>
-		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false)
+		public void Move(Coord x, Coord y, Coord width, Coord height, CoordOptions co = null)
 		{
 			ThrowIfInvalid();
 
@@ -1691,8 +1690,8 @@ namespace Catkeys
 				xy = Coord.NormalizeInWindow(x, y, w);
 				wh = Coord.NormalizeInWindow(width, height, w);
 			} else {
-				xy = Coord.Normalize(x, y, workArea);
-				wh = Coord.Normalize(width, height, workArea, widthHeight: true);
+				xy = Coord.Normalize(x, y, co);
+				wh = Coord.Normalize(width, height, co, widthHeight: true);
 			}
 
 			uint f = 0, getRect = 0;
@@ -1725,15 +1724,15 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="x">Left. If null, does not move in X axis.</param>
 		/// <param name="y">Top. If null, does not move in Y axis.</param>
-		/// <param name="workArea">If false, the coordinates are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
-		public void Move(Coord x, Coord y, bool workArea = false)
+		public void Move(Coord x, Coord y, CoordOptions co = null)
 		{
-			Move(x, y, null, null, workArea);
+			Move(x, y, null, null, co);
 		}
 
 		/// <summary>
@@ -1743,14 +1742,14 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="width">Width. If null, does not change width.</param>
 		/// <param name="height">Height. If null, does not change height.</param>
-		/// <param name="workArea">If false, reverse and fractional width/height are relative to the primary screen, else to its work area. Not used when this is a child window.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// </remarks>
-		public void Resize(Coord width, Coord height, bool workArea = false)
+		public void Resize(Coord width, Coord height, CoordOptions co = null)
 		{
-			Move(null, null, width, height, workArea);
+			Move(null, null, width, height, co);
 		}
 
 		#endregion
@@ -1784,9 +1783,7 @@ namespace Catkeys
 					x = r.left;
 					y = r.top;
 				} else {
-					if(left.IsEmpty) left = Coord.Center;
-					if(top.IsEmpty) top = Coord.Center;
-					var p = Coord.NormalizeInRect(left, top, rs);
+					var p = Coord.NormalizeInRect(left, top, rs, centerIfEmpty: true);
 					x = p.X; y = p.Y;
 					switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
 					switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
@@ -2034,7 +2031,7 @@ namespace Catkeys
 		/// <summary>
 		/// Returns true if this is a topmost (always-on-top) window.
 		/// </summary>
-		public bool IsTopmost { get => HasExStyle(Native.WS_EX_TOPMOST); }
+		public bool IsTopmost => HasExStyle(Native.WS_EX_TOPMOST);
 
 		/// <summary>
 		/// Returns true if this window is above window w in the Z order.
@@ -2142,7 +2139,7 @@ namespace Catkeys
 		/// Returns true if has Native.WS_POPUP style.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsPopupWindow { get => HasStyle(Native.WS_POPUP); }
+		public bool IsPopupWindow => HasStyle(Native.WS_POPUP);
 
 		#endregion
 
@@ -2201,7 +2198,7 @@ namespace Catkeys
 		/// w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
 		/// ]]></code>
 		/// </example>
-		public WProp Prop { get => new WProp(this); }
+		public WProp Prop => new WProp(this);
 
 		#endregion
 
@@ -2223,7 +2220,7 @@ namespace Catkeys
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
-		public int ThreadId { get => GetThreadProcessId(out var pid); }
+		public int ThreadId => GetThreadProcessId(out var pid);
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns process id.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
@@ -2234,20 +2231,20 @@ namespace Catkeys
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
-		public bool IsOfThisThread { get => Api.GetCurrentThreadId() == ThreadId; }
+		public bool IsOfThisThread => Api.GetCurrentThreadId() == ThreadId;
 		/// <summary>
 		/// Returns true if this window belongs to the current process, false if to another process.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
-		public bool IsOfThisProcess { get => Api.GetCurrentProcessId() == ProcessId; }
+		public bool IsOfThisProcess => Api.GetCurrentProcessId() == ProcessId;
 
 		/// <summary>
 		/// Returns true if the window is a Unicode window, false if ANSI.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsWindowUnicode</msdn>.
 		/// </summary>
-		public bool IsUnicode { get => Api.IsWindowUnicode(this); }
+		public bool IsUnicode => Api.IsWindowUnicode(this);
 
 		/// <summary>
 		/// Returns true if the window is of a 64-bit process, false if of a 32-bit process.
@@ -2283,7 +2280,7 @@ namespace Catkeys
 		/// Calls API <msdn>IsHungAppWindow</msdn>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsHung { get => Api.IsHungAppWindow(this); }
+		public bool IsHung => Api.IsHungAppWindow(this);
 
 		/// <summary>
 		/// Returns true if the window is a ghost window that the system creates over a hung (not responding) window to allow the user to minimally interact with it.
@@ -2299,7 +2296,7 @@ namespace Catkeys
 		/// Returns true if this is a console window (class name "ConsoleWindowClass").
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsConsole { get => ClassNameIs("ConsoleWindowClass"); }
+		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
 
 		/// <summary>
 		/// Returns true if UAC would not allow to automate the window.
@@ -2542,7 +2539,7 @@ namespace Catkeys
 		/// Gets <see cref="Acc.Name"/> of the root accessible object (WINDOW) of this window or control.
 		/// Returns "" if the object has no name or failed to get it. Returns null if this window is invalid.
 		/// </summary>
-		public string NameAcc { get => Acc.LibNameOfWindow(this); }
+		public string NameAcc => Acc.LibNameOfWindow(this);
 
 		/// <summary>
 		/// Gets Control.Name property of a .NET Windows Forms control.
@@ -2551,21 +2548,21 @@ namespace Catkeys
 		/// <note>This is slow when getting names of multiple controls in a window. Instead create a <see cref="Misc.WinFormsControlNames"/> instance and call its <see cref="Misc.WinFormsControlNames.GetControlName"/> method for each control.</note>
 		/// </summary>
 		/// <seealso cref="Misc.WinFormsControlNames.IsWinFormsControl"/>
-		public string NameWinForms { get => Misc.WinFormsControlNames.GetSingleControlName(this); }
+		public string NameWinForms => Misc.WinFormsControlNames.GetSingleControlName(this);
 
 		/// <summary>
 		/// Gets filename (without ".exe") of process executable file.
 		/// Return null if fails.
 		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName">Process_.GetProcessName</see>.
 		/// </summary>
-		public string ProcessName { get => Process_.GetProcessName(ProcessId); }
+		public string ProcessName => Process_.GetProcessName(ProcessId);
 
 		/// <summary>
 		/// Gets full path of process executable file.
 		/// Return null if fails.
 		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName">Process_.GetProcessName</see>.
 		/// </summary>
-		public string ProcessPath { get => Process_.GetProcessName(ProcessId, true); }
+		public string ProcessPath => Process_.GetProcessName(ProcessId, true);
 
 		#endregion
 
@@ -2703,7 +2700,7 @@ namespace Catkeys.Types
 		/// </summary>
 		/// <param name="name">Property name.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM this[string name] { get => Api.GetProp(_w, name); }
+		public LPARAM this[string name] => Api.GetProp(_w, name);
 
 		/// <summary>
 		/// Gets a window property.
@@ -2713,7 +2710,7 @@ namespace Catkeys.Types
 		/// <remarks>
 		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
 		/// </remarks>
-		public LPARAM this[ushort atom] { get => Api.GetProp(_w, atom); }
+		public LPARAM this[ushort atom] => Api.GetProp(_w, atom);
 
 		/// <summary>
 		/// Sets a window property.

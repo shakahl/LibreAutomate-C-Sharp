@@ -668,7 +668,7 @@ namespace Catkeys
 			/// Gets the number of items added with Add().
 			/// GetAllAsync() sets it = 0.
 			/// </summary>
-			public int Count { get => _files.Count; }
+			public int Count => _files.Count;
 
 			/// <summary>
 			/// Starts getting icons of files added with Add().

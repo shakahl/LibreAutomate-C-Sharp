@@ -38,7 +38,7 @@ namespace Catkeys
 			/// Example: "Alt+(F O) ...".
 			/// Example: "Ctrl+" ... Mouse.Click() //Ctrl auto-released here.
 			/// </summary>
-			public static Keys Plus { get => (Keys)0x1000000; }
+			public static Keys Plus => (Keys)0x1000000;
 			/// <summary>
 			/// * operator.
 			/// 1. Repeats the preceding key.
@@ -46,7 +46,7 @@ namespace Catkeys
 			/// 2. Just presses (without releasing) or just releases.
 			/// Example: "Ctrl*down" ... "Ctrl*up".
 			/// </summary>
-			public static Keys Star { get => (Keys)0x2000000; }
+			public static Keys Star => (Keys)0x2000000;
 			/// <summary>
 			/// ( operator.
 			/// 1. Encloses function arguments.
@@ -55,30 +55,30 @@ namespace Catkeys
 			/// Example: "Alt+(F O) ...".
 			/// Example: "Ctrl+(" ... Mouse.Click(); Mouse.Click(); ... ")" //Ctrl released here.
 			/// </summary>
-			public static Keys ParenStart { get => (Keys)0x3000000; }
+			public static Keys ParenStart => (Keys)0x3000000;
 			/// <summary>
 			/// ) operator.
 			/// Releases keys pressed with operator +, when auto-releasing was turned off with operator (. See <see cref="ParenStart"/>.
 			/// </summary>
-			public static Keys ParenEnd { get => (Keys)0x4000000; }
+			public static Keys ParenEnd => (Keys)0x4000000;
 			/// <summary>
 			/// VK(vk, sc=0, ext=0)
 			/// Sends key specified as virtual-key code and/or scan code.
 			/// vk - virtual-key code.
 			/// sc - optional scan code.
 			/// ext - optional flags: 1 extended key. </summary>
-			public static Keys VK { get => (Keys)0x5000000; }
+			public static Keys VK => (Keys)0x5000000;
 			/// <summary>
 			/// CHAR(c)
 			/// Sends a character using VK_PACKET.
 			/// c - Unicode character code.
 			/// </summary>
-			public static Keys CHAR { get => (Keys)0x6000000; }
+			public static Keys CHAR => (Keys)0x6000000;
 			/// <summary>
 			/// SLEEP(t)
 			/// Waits.
 			/// t - number of milliseconds, eg 100. </summary>
-			public static Keys SLEEP { get => (Keys)0x8000000; }
+			public static Keys SLEEP => (Keys)0x8000000;
 
 		}
 

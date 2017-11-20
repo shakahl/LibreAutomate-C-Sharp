@@ -23,7 +23,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <CodeAnalysisRuleSet>..\MinimumRecommendedRules - copy.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>3001,3002,3003,3009</NoWarn>
+    <NoWarn>3001,3002,3003,3009,419</NoWarn>
     <DocumentationFile>Catkeys.XML</DocumentationFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -35,29 +35,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>3001,3002,3003,3009</NoWarn>
+    <NoWarn>3001,3002,3003,3009,419</NoWarn>
     <DocumentationFile>Catkeys.XML</DocumentationFile>
     <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -87,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\Api_COM_wrap.cs" />
+    <Compile Include="Api\Cpp.cs" />
     <Compile Include="Automation\Acc\Acc_func.cs" />
     <Compile Include="Automation\Acc\Acc_java.cs" />
     <Compile Include="Automation\Acc\Acc_struct.cs" />
@@ -94,8 +75,7 @@
     <Compile Include="Automation\Acc\Acc_types.cs" />
     <Compile Include="Automation\Acc\Acc_find.cs" />
     <Compile Include="Automation\Acc\Acc.cs" />
-    <Compile Include="Automation\Acc\Acc.Misc.cs" />
-    <Compile Include="Automation\Acc\Acc_uia.cs" />
+    <None Include="Automation\Acc\excluded\Acc.Misc.cs" />
     <Compile Include="Automation\Acc\Acc_web.cs" />
     <Compile Include="Automation\Auto misc.cs" />
     <Compile Include="Automation\Input.cs" />
@@ -103,8 +83,14 @@
     <Compile Include="Api\Api_public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
     <Compile Include="Automation\ScreenImage.cs" />
+    <Compile Include="Automation\Uia\ACondition.cs" />
+    <Compile Include="Automation\Uia\AElement.cs" />
+    <Compile Include="Automation\Uia\AE_find.cs" />
+    <Compile Include="Automation\Uia\Uia_api.cs" />
+    <Compile Include="Automation\Uia\Uia_api2.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\Screen_.cs" />
+    <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\Color_.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
@@ -176,17 +162,7 @@
   <ItemGroup>
     <None Include="Properties\CatkeysSN.pfx" />
   </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="UIAutomationClient">
-      <Guid>{944DE083-8FB8-45CF-BCB7-C477ACB2F897}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

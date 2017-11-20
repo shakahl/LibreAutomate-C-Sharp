@@ -9,6 +9,13 @@ using System.Runtime.InteropServices;
 
 namespace System
 {
+	//excluded in SHFB project.
+	///// <tocexclude />
+	//internal class NamespaceDoc
+	//{
+	//	//SHFB uses this for namespace documentation.
+	//}
+
 	#region catkeys
 
 	//We cannot access some System utils, so add them here.
@@ -2078,6 +2085,12 @@ namespace System
 
 namespace System.Runtime.CompilerServices
 {
+	///// <tocexclude />
+	//internal class NamespaceDoc
+	//{
+	//	//SHFB uses this for namespace documentation.
+	//}
+
 	/// <summary>
 	/// Indicates that the use of <see cref="System.ValueTuple"/> on a member is meant to be treated as a tuple with element names.
 	/// </summary>

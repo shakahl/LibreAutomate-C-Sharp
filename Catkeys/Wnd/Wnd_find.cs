@@ -685,7 +685,7 @@ namespace Catkeys
 				}
 			}
 
-			internal ListType Type { get => _t; }
+			internal ListType Type => _t;
 
 			internal bool Next(out Wnd w)
 			{
@@ -733,6 +733,9 @@ namespace Catkeys.Types
 
 		/// <summary>Skip cloaked windows. These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows Store apps on Windows 8.</summary>
 		SkipCloaked = 2,
+		//TODO: skip by default. Use flag CloakedToo.
+		//	Because eg if we want to find "* Chrome", it finds Windows.UI.Core.CoreWindow  "Jump List for Google Chrome".
+		//	Or at least sort toolwindow last.
 
 		//rejected: Not very useful, 3 times slower, creates much more garbage, and not always can get full path.
 		///// <summary>The 'programEtc' argument is full path. Need this flag because the function cannot auto-detect it when using wildcard, regex etc.</summary>
@@ -774,10 +777,10 @@ namespace Catkeys.Types
 		public static WFOwner ProcessId(int processId) => processId;
 
 		/// <summary>Sets process id of this process.</summary>
-		public static WFOwner ThisProcess { get => Api.GetCurrentProcessId(); }
+		public static WFOwner ThisProcess => Api.GetCurrentProcessId();
 
 		/// <summary>Sets thread id of this thread.</summary>
-		public static WFOwner ThisThread { get => ThreadId(Api.GetCurrentThreadId()); }
+		public static WFOwner ThisThread => ThreadId(Api.GetCurrentThreadId());
 
 		/// <summary>Sets thread id.</summary>
 		/// <exception cref="ArgumentException">threadId is 0.</exception>

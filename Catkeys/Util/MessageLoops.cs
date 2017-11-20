@@ -31,7 +31,7 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Runs a message loop.
 		/// </summary>
-		public void Loop()
+		public unsafe void Loop()
 		{
 			using(new Util.LibEnsureWindowsFormsSynchronizationContext(true)) {
 				_loopEndEvent = Api.CreateEvent(Zero, true, false, null);
@@ -42,7 +42,8 @@ namespace Catkeys.Util
 						//this would not respond to Thread.Abort
 						//uint k = Api.MsgWaitForMultipleObjectsEx(1, ref _loopEndEvent, Api.INFINITE, Api.QS_ALLINPUT);
 						//this responds to Thread.Abort
-						uint k = Api.MsgWaitForMultipleObjectsEx(1, ref _loopEndEvent, 100, Api.QS_ALLINPUT);
+						var ev =_loopEndEvent;
+						uint k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT);
 						if(k == Api.WAIT_TIMEOUT) continue;
 
 						Application.DoEvents();

@@ -279,7 +279,7 @@ namespace Catkeys
 		/// Print(Options.MouseClickSleep);
 		/// ]]></code>
 		/// </example>
-		public static SORestore Temp { get => new SORestore(ref t_opt); }
+		public static SORestore Temp => new SORestore(ref t_opt);
 	}
 }
 

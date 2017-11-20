@@ -116,7 +116,7 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Gets pointer to the shared memory.
 		/// </summary>
-		public static LibSharedMemory* Ptr { get => _sm; }
+		public static LibSharedMemory* Ptr => _sm;
 	}
 
 	/// <summary>
@@ -341,7 +341,7 @@ namespace Catkeys.Util
 			/// The array that is stored in this variable.
 			/// </summary>
 			public char[] A;
-			//public int N { get => A.Length; }
+			//public int N => A.Length;
 
 			///
 			public static implicit operator char[] (CharBuffer v) => v.A;

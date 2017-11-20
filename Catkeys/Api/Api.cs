@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 //using System.Text; //StringBuilder, we don't use it, very slow
 using System.Drawing; //Point, Size
 using Microsoft.Win32.SafeHandles;
-using Catkeys.Types;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
 
@@ -965,10 +964,7 @@ namespace Catkeys.Types
 		internal const uint MWMO_INPUTAVAILABLE = 0x4;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, IntPtr[] pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, ref IntPtr pHandle, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
+		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, IntPtr* pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, uint vk);
@@ -1820,7 +1816,7 @@ namespace Catkeys.Types
 			/// </summary>
 			public SECURITY_ATTRIBUTES()
 			{
-				nLength = IntPtr.Size + 8;
+				nLength = IntPtr.Size * 3;
 				if(!ConvertStringSecurityDescriptorToSecurityDescriptor("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)", 1, out lpSecurityDescriptor)) throw new CatException(0, "SECURITY_ATTRIBUTES");
 			}
 
@@ -2340,6 +2336,8 @@ namespace Catkeys.Types
 		[DllImport("oleacc.dll")]
 		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int ObjectFromLresult(LPARAM lResult, ref Guid riid, LPARAM wParam, out Acc.IAccessible ppvObject);
 
 
 

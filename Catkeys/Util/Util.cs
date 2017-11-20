@@ -44,12 +44,12 @@ namespace Catkeys.Util
 		/// <summary>
 		/// DC handle.
 		/// </summary>
-		public IntPtr Hdc { get => _dc; }
+		public IntPtr Hdc => _dc;
 
 		/// <summary>
 		/// Bitmap handle.
 		/// </summary>
-		public IntPtr Hbitmap { get => _bm; }
+		public IntPtr Hbitmap => _bm;
 
 		///
 		public MemoryBitmap() { }
@@ -251,13 +251,13 @@ namespace Catkeys.Util
 		/// <summary>
 		/// Returns true if Catkeys.dll is installed in the global assembly cache.
 		/// </summary>
-		internal static bool LibIsCatkeysInGAC { get => typeof(Assembly_).Assembly.GlobalAssemblyCache; }
+		internal static bool LibIsCatkeysInGAC => typeof(Assembly_).Assembly.GlobalAssemblyCache;
 
 		/// <summary>
 		/// Returns true if Catkeys.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		internal static bool LibIsCatkeysNgened { get => IsAssemblyNgened(typeof(Assembly_).Assembly); }
+		internal static bool LibIsCatkeysNgened => IsAssemblyNgened(typeof(Assembly_).Assembly);
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>

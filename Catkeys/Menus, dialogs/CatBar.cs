@@ -36,10 +36,10 @@ namespace Catkeys
 		/// <summary>
 		/// Gets ToolStrip.
 		/// </summary>
-		public ToolStrip Ex { get => _ts; }
+		public ToolStrip Ex => _ts;
 
 		/// <summary>Infrastructure.</summary>
-		protected override ToolStrip MainToolStrip { get => _ts; }
+		protected override ToolStrip MainToolStrip => _ts;
 
 		public CatBar()
 		{
@@ -146,7 +146,7 @@ namespace Catkeys
 		/// <remarks>
 		/// You can instead use LastItem, which gets ToolStripItem, which is the base class of all supported item types; cast it to a derived type if need.
 		/// </remarks>
-		public ToolStripButton LastButton { get => LastItem as ToolStripButton; }
+		public ToolStripButton LastButton => LastItem as ToolStripButton;
 
 		void _Init()
 		{
@@ -196,7 +196,7 @@ namespace Catkeys
 		/// <summary>
 		/// Gets the main toolbar window.
 		/// </summary>
-		public Wnd MainWnd { get => _w; }
+		public Wnd MainWnd => _w;
 
 #pragma warning disable 649
 		struct _CREATESTRUCT
@@ -404,10 +404,10 @@ namespace Catkeys
 				_paintedOnce = true;
 			}
 
-			//ToolStrip _ICatToolStrip.ToolStrip { get => this; }
+			//ToolStrip _ICatToolStrip.ToolStrip => this;
 
 			bool _paintedOnce;
-			bool _ICatToolStrip.PaintedOnce { get => _paintedOnce; }
+			bool _ICatToolStrip.PaintedOnce => _paintedOnce;
 		}
 
 	}

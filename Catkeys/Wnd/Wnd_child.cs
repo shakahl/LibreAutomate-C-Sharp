@@ -702,7 +702,7 @@ namespace Catkeys
 		/// <summary>
 		/// Casts this to <see cref="WButton"/>.
 		/// </summary>
-		public WButton AsButton { get => (WButton)this; }
+		public WButton AsButton => (WButton)this;
 
 		/// <summary>
 		/// Finds a child button by id and sends a "click" message. Does not use the mouse.

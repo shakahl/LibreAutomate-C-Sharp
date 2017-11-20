@@ -19,8 +19,6 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using UIA = UIAutomationClient;
-
 using Catkeys;
 using Catkeys.Types;
 using static Catkeys.NoClass;
@@ -234,9 +232,9 @@ namespace Catkeys
 				hr = ff.scrollTo(0);
 				ff.Dispose();
 			} else {
-				var e= ToUIElement();
+				var e = AElement.FromAcc(this);
 				if(e != null) {
-					if(e.GetCurrentPattern(UIA_PatternIds.UIA_ScrollItemPatternId) is UIA.IUIAutomationScrollItemPattern p) {
+					if(e.GetCurrentPattern(UIA.PatternId.ScrollItem) is UIA.IScrollItemPattern p) {
 						p.ScrollIntoView();
 						hr = 0;
 					}
@@ -268,7 +266,7 @@ namespace Catkeys
 				}
 			}
 
-			public bool Is0 { get => _iptr == default; }
+			public bool Is0 => _iptr == default;
 
 			public static implicit operator IntPtr(IHTMLElement a) => a._iptr;
 
@@ -361,7 +359,7 @@ namespace Catkeys
 				}
 			}
 
-			public bool Is0 { get => _iptr == default; }
+			public bool Is0 => _iptr == default;
 
 			public static implicit operator IntPtr(ISimpleDOMNode a) => a._iptr;
 
@@ -709,7 +707,7 @@ namespace Catkeys
 		//				}
 		//			}
 
-		//			public bool Is0 { get => _iptr == default; }
+		//			public bool Is0 => _iptr == default;
 
 		//			public int GetURL(out string s)
 		//			{

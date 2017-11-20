@@ -133,40 +133,37 @@ namespace Catkeys
 		/// <param name="screen">
 		/// Depends on type:
 		/// <list type="bullet">
-		/// <item>null: primary screen.</item>
-		/// <item>Screen: a <see cref="Screen"/> object. If invalid, gets primary screen.</item>
-		/// <item>int: 1-based non-primary screen index (see <see cref="FromIndex"/>), or Screen_.Primary (0), Screen_.OfMouse (-1), Screen_.OfActiveWindow (-2).</item>
-		/// <item>Wnd: a window (see <see cref="FromWindow"/>). If invalid, gets primary screen.</item>
-		/// <item>Control: a .NET form or control (see <see cref="Screen.FromControl"/>). If invalid, gets primary screen.</item>
-		/// <item>Point: a point (see <see cref="Screen.FromPoint"/>).</item>
-		/// <item>Rectangle, RECT: a rectangle (see <see cref="Screen.FromRectangle"/>).</item>
+		/// <item>null - gets primary screen.</item>
+		/// <item><see cref="Screen"/> - returns it if valid. If invalid, gets primary screen.</item>
+		/// <item>int - 1-based non-primary screen index (see <see cref="FromIndex"/>), or Screen_.Primary (0), Screen_.OfMouse (-1), Screen_.OfActiveWindow (-2).</item>
+		/// <item><see cref="Wnd"/> - gets screen of this window or control (see <see cref="FromWindow"/>). If invalid, gets primary screen.</item>
+		/// <item><see cref="Control"/> - gets screen of this .NET form or control (see <see cref="Screen.FromControl"/>). If invalid, gets primary screen.</item>
+		/// <item><see cref="Point"/> - gets screen of this point (see <see cref="Screen.FromPoint"/>).</item>
+		/// <item><see cref="Rectangle"/>, <see cref="RECT"/> - gets screen of this rectangle (see <see cref="Screen.FromRectangle"/>).</item>
+		/// <item><see cref="Acc"/> - gets screen of this accessible object (see <see cref="Screen.FromRectangle"/>).</item>
+		/// <item><see cref="UIA.IElement"/> - gets screen of this UI Automation element (see <see cref="Screen.FromRectangle"/>).</item>
 		/// </list>
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <exception cref="ArgumentException">Bad object type (not one from the above list).</exception>
 		/// <remarks>
 		/// If something fails (except if invalid index), gets primary screen.
-		/// As screen index is used index in the array returned by <see cref="Screen.AllScreens"/> + 1. It is not the screen index that you can see in Control Panel.
+		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
 		/// </remarks>
 		public static Screen FromObject(object screen)
 		{
-			//CONSIDER: don't use this. Now it is used to get 'screen' parameters of object type.
-			//	Such parameters are unsafe and unclear to read the code.
-			//		Eg instead of Mouse.Move(x, y, false, 1) better to write Mouse.Move(x, y, false, Screen_.FromIndex(1)).
-			//		Although can write Mouse.Move(x, y, screen: 1), but most people will not use it.
-			//	But in some cases better object.
-			//		Eg then can use Screen_.FromMouse etc for TaskDialog.Options.DefaultScreen. If it was a Screen object, even if retrieved from index, it can become invalid after changing display settings.
-
 			Screen R = null;
 			switch(screen) {
 			case null: break;
-			case Screen s: R = s; break;
+			case Screen scr: R = scr; break;
 			case int index: return FromIndex(index);
-			case Wnd wnd: return FromWindow(wnd);
+			case Wnd w: return FromWindow(w);
 			case Control c: R = Screen.FromControl(c); break;
 			case Point p: return Screen.FromPoint(p);
-			case Rectangle rr: return Screen.FromRectangle(rr);
-			case RECT r: return Screen.FromRectangle(r);
+			case Rectangle r1: return Screen.FromRectangle(r1);
+			case RECT r2: return Screen.FromRectangle(r2);
+			case Acc acc: return Screen.FromRectangle(acc.Rect);
+			case UIA.IElement e: return Screen.FromRectangle(e.BoundingRectangle);
 			default: throw new ArgumentException("Bad object type.");
 			}
 			if(R != null && !R.Bounds.IsEmpty) return R;
@@ -176,17 +173,32 @@ namespace Catkeys
 		/// <summary>
 		/// Gets primary screen width.
 		/// </summary>
-		public static int Width { get => Api.GetSystemMetrics(Api.SM_CXSCREEN); }
+		public static int Width => Api.GetSystemMetrics(Api.SM_CXSCREEN);
 		/// <summary>
 		/// Gets primary screen height.
 		/// </summary>
-		public static int Height { get => Api.GetSystemMetrics(Api.SM_CYSCREEN); }
-		//public static int Width { get => Screen.PrimaryScreen.Bounds.Width; } //faster (gets cached value), but very slow first time, eg 15 ms
+		public static int Height => Api.GetSystemMetrics(Api.SM_CYSCREEN);
+		//public static int Width => Screen.PrimaryScreen.Bounds.Width; //faster (gets cached value), but very slow first time, eg 15 ms
 
 		/// <summary>
 		/// Gets primary screen rectangle.
 		/// </summary>
 		public static RECT Rect => new RECT(0, 0, Width, Height, false);
+
+		/// <summary>
+		/// Gets screen rectangle.
+		/// </summary>
+		/// <param name="screen">Screen index etc, see <see cref="FromObject"/>. If null - primary screen.</param>
+		/// <param name="workArea">Get work area rectangle.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
+		public static RECT GetRect(object screen = null, bool workArea = false)
+		{
+			RECT r;
+			Screen scr = screen == null ? null : FromObject(screen);
+			if(scr != null) r = workArea ? scr.WorkingArea : scr.Bounds;
+			else r = workArea ? WorkArea : Rect;
+			return r;
+		}
 
 		/// <summary>
 		/// Gets primary screen work area.

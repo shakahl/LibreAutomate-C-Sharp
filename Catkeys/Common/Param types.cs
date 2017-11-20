@@ -282,12 +282,12 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Value type.
 		/// </summary>
-		public CoordType Type { get => (CoordType)(_v >> 32); }
+		public CoordType Type => (CoordType)(_v >> 32);
 
 		/// <summary>
 		/// Non-fraction value.
 		/// </summary>
-		public int Value { get => (int)_v; }
+		public int Value => (int)_v;
 
 		/// <summary>
 		/// Fraction value.
@@ -297,7 +297,7 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Returns true if Type == None (when assigned null or default(Coord)).
 		/// </summary>
-		public bool IsEmpty { get => Type == CoordType.None; }
+		public bool IsEmpty => Type == CoordType.None;
 
 		Coord(CoordType type, int value) { _v = ((long)type << 32) | (uint)value; }
 		//info: if type and value are constants, compiler knows the final value and does not use the << and | operators in the compiled code.
@@ -341,21 +341,21 @@ namespace Catkeys.Types
 		}
 
 		/// <summary>
-		/// Returns <see cref="Fraction"/>(0.5).
+		/// Returns <see cref="Fraction">Fraction</see>(0.5).
 		/// </summary>
-		public static Coord Center { get => Fraction(0.5); }
+		public static Coord Center => Fraction(0.5);
 
 		/// <summary>
-		/// Returns <see cref="Reverse"/>(0).
+		/// Returns <see cref="Reverse">Reverse</see>(0).
 		/// This point will be outside of the rectangle. See also <see cref="MaxInside"/>.
 		/// </summary>
-		public static Coord Max { get => Reverse(0); }
+		public static Coord Max => Reverse(0);
 
 		/// <summary>
-		/// Returns <see cref="Reverse"/>(1).
+		/// Returns <see cref="Reverse">Reverse</see>(1).
 		/// This point will be inside of the rectangle, at the very right or bottom, assuming that the rectangle is not empty.
 		/// </summary>
-		public static Coord MaxInside { get => Reverse(1); }
+		public static Coord MaxInside => Reverse(1);
 
 		//rejected: this could be used like Coord.Max + 1. Too limited usage.
 		//public static Coord operator +(Coord c, int i) { return ...; }
@@ -378,37 +378,45 @@ namespace Catkeys.Types
 		/// <summary>
 		/// Converts fractional/reverse coordinates to normal coordinates in a rectangle.
 		/// </summary>
-		/// <param name="x">X coordinate relative to r. If default(Coord), returns 0 x.</param>
-		/// <param name="y">Y coordinate relative to r. If default(Coord), returns 0 y.</param>
+		/// <param name="x">X coordinate relative to r.</param>
+		/// <param name="y">Y coordinate relative to r.</param>
 		/// <param name="r">The rectangle.</param>
 		/// <param name="widthHeight">Use only width and height of r. If false, the function adds r offset (left and top).</param>
-		public static Point NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false)
+		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
+		public static Point NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false)
 		{
 			if(widthHeight) r.Offset(-r.left, -r.top);
+			else if(centerIfEmpty) {
+				if(x.IsEmpty) x = Center;
+				if(y.IsEmpty) y = Center;
+			}
 			return new Point(x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
 		}
-		//CONSIDER: if default(Coord), use center.
 
 		/// <summary>
-		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
+		/// Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
 		/// </summary>
-		/// <param name="x">X coordinate relative to the specified screen (default - primary). If default(Coord), returns 0 x.</param>
-		/// <param name="y">Y coordinate relative to the specified screen (default - primary). If default(Coord), returns 0 y.</param>
-		/// <param name="workArea">x y are relative to the work area, not entire screen.</param>
-		/// <param name="screen">Screen of x y. If null, primary screen. See <see cref="Screen_.FromObject"/>.</param>
-		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
-		public static Point Normalize(Coord x, Coord y, bool workArea = false, object screen = null, bool widthHeight = false)
+		/// <param name="x">X coordinate relative to the client area of w.</param>
+		/// <param name="y">Y coordinate relative to the client area of w.</param>
+		/// <param name="w">The window.</param>
+		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
+		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+		public static Point NormalizeInWindow(Coord x, Coord y, Wnd w, bool nonClient = false, bool centerIfEmpty = false)
 		{
-			var p = new Point();
-			if(x.Type != CoordType.None || y.Type != CoordType.None) {
-				Screen s = (screen == null) ? null : Screen_.FromObject(screen);
+			//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
+
+			if(centerIfEmpty) {
+				if(x.IsEmpty) x = Center;
+				if(y.IsEmpty) y = Center;
+			}
+			Point p = default;
+			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
-				if(workArea || s != null || _NeedRect(x, y)) {
-					if(s != null) r = workArea ? s.WorkingArea : s.Bounds;
-					else r = workArea ? Screen_.WorkArea : Screen_.Rect;
-					if(widthHeight) r.Offset(-r.left, -r.top);
-				} else r = new RECT();
+				if(nonClient) {
+					w.GetRectInClientOf(w, out r);
+				} else if(_NeedRect(x, y)) {
+					r = w.ClientRect;
+				} else r = default;
 				p.X = x._Normalize(r.left, r.right);
 				p.Y = y._Normalize(r.top, r.bottom);
 			}
@@ -416,24 +424,24 @@ namespace Catkeys.Types
 		}
 
 		/// <summary>
-		/// Returns normal coordinates relative to the client area of a window. Converts fractional/reverse coordinates etc.
+		/// Returns normal coordinates relative to the primary screen. Converts fractional/reverse coordinates etc.
 		/// </summary>
-		/// <param name="x">X coordinate relative to the client area of w. If default(Coord), returns 0 x.</param>
-		/// <param name="y">Y coordinate relative to the client area of w. If default(Coord), returns 0 y.</param>
-		/// <param name="w">The window.</param>
-		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
-		public static Point NormalizeInWindow(Coord x, Coord y, Wnd w, bool nonClient = false)
+		/// <param name="x">X coordinate relative to the specified screen (default - primary).</param>
+		/// <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
+		public static Point Normalize(Coord x, Coord y, CoordOptions co = null, bool widthHeight = false)
 		{
-			//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
-
-			var p = new Point();
-			if(x.Type != CoordType.None || y.Type != CoordType.None) {
+			Point p = default;
+			if(!x.IsEmpty || !y.IsEmpty) {
+				object scr = co?.Screen;
+				bool workArea = co?.WorkArea ?? false;
 				RECT r;
-				if(nonClient) {
-					w.GetRectInClientOf(w, out r);
-				} else if(_NeedRect(x, y)) {
-					r = w.ClientRect;
-				} else r = new RECT();
+				if(workArea || scr != null || _NeedRect(x, y)) {
+					r = Screen_.GetRect(scr, workArea);
+					if(widthHeight) r.Offset(-r.left, -r.top);
+				} else r = default;
 				p.X = x._Normalize(r.left, r.right);
 				p.Y = y._Normalize(r.top, r.bottom);
 			}
@@ -450,6 +458,37 @@ namespace Catkeys.Types
 			default: return "null";
 			}
 		}
+	}
+
+	/// <summary>
+	/// Screen and other options for functions that accept coordinates as <see cref="Coord"/>.
+	/// </summary>
+	public class CoordOptions
+	{
+		/// <summary>
+		/// Screen index or anything that can be converted to <see cref="Screen"/> with <see cref="Screen_.FromObject"/>.
+		/// </summary>
+		public object Screen { get; set; }
+
+		/// <summary>
+		/// If true, coordinates are relative to the work area, not to whole screen.
+		/// </summary>
+		public bool WorkArea { get; set; }
+
+		//rejected: too much options, rarely used.
+		//public RECT? Rect { get; set; }
+
+		///
+		public CoordOptions() { }
+
+		///
+		public CoordOptions(bool workArea, object screen = null)
+		{
+			WorkArea = workArea;
+			Screen = screen;
+		}
+
+		//CONSIDER: implicit conversion operators.
 	}
 
 	/// <summary>
@@ -485,7 +524,7 @@ namespace Catkeys.Types
 		/// <summary>
 		/// true if assigned null or nothing.
 		/// </summary>
-		public bool IsNull { get => _o == null; }
+		public bool IsNull => _o == null;
 	}
 
 #if false //currently not used. Created for TaskDialog.ShowList, but used object instead.

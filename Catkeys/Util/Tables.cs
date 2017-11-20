@@ -32,21 +32,21 @@ namespace Catkeys.Util
 	{
 		internal struct ProcessVariables
 		{
-			char* _caseTable; //char[0x10000] containing lower-case versions of the first 0x10000 characters
+			//char* _caseTable; //char[0x10000] containing lower-case versions of the first 0x10000 characters
 			byte* _base64Table;
 			byte* _hexTable;
 
-			internal char* CaseTable()
-			{
-				if(_caseTable == null) {
-					var t = (char*)Api.VirtualAlloc(Zero, 0x20000); //faster than NativeHeap.Alloc when need big memory, especially when need to zero it
-					if(t == null) throw new OutOfMemoryException();
-					for(int i = 0; i < 0x10000; i++) t[i] = (char)i;
-					Api.CharLowerBuff(t, 0x10000);
-					if(_caseTable == null) _caseTable = t; else Api.VirtualFree((IntPtr)t); //another thread can outrun us
-				} //speed: 350
-				return _caseTable;
-			}
+			//internal char* CaseTable()
+			//{
+			//	if(_caseTable == null) {
+			//		var t = (char*)Api.VirtualAlloc(Zero, 0x20000); //faster than NativeHeap.Alloc when need big memory, especially when need to zero it
+			//		if(t == null) throw new OutOfMemoryException();
+			//		for(int i = 0; i < 0x10000; i++) t[i] = (char)i;
+			//		Api.CharLowerBuff(t, 0x10000);
+			//		if(_caseTable == null) _caseTable = t; else Api.VirtualFree((IntPtr)t); //another thread can outrun us
+			//	} //speed: 350
+			//	return _caseTable;
+			//}
 
 			internal byte* Base64Table()
 			{
@@ -88,26 +88,31 @@ namespace Catkeys.Util
 		//info: this pattern of accessing a table is fastest. Optimized code accesses the table directly,
 		//	like 'movzx eax,byte ptr [eax+0E073C0h]', where 0E073C0h is table address and eax is index.
 		//	Even if we at first store it in a local variable, which is needed because not in all cases the code will be optimized in such way.
+		//TODO: review speed of functions that use Base64, Hex. Should use register, like now LowerCase.
+		//TODO: store all tables in cpp dll memory, like the lcase table.
+		//	Now uses NativeHeap.Alloc and never frees. Memory leak if would inject and then unload that appdomain.
+		//	Also could statically initialize.
+		//TODO: for all process memory (inter-domain) use cpp dll memory.
 
 		/// <summary>
 		/// Gets native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
 		/// Auto-creates when called first time. The memory is shared by appdomains.
 		/// </summary>
-		internal static char* LowerCase { get; } = _LowerCaseTable;
-		static char* _LowerCaseTable { get => LibProcessMemory.Ptr->tables.CaseTable(); }
+		static char* _lowerCaseTable = Cpp.Cpp_LowercaseTable();
+		internal static char* LowerCase => _lowerCaseTable;
 
 		/// <summary>
 		/// Gets table for <see cref="Convert_.Base64Decode(char*, int, void*, int)"/> and co.
 		/// Auto-creates when called first time. The memory is shared by appdomains.
 		/// </summary>
 		internal static byte* Base64 { get; } = _Base64Table;
-		static byte* _Base64Table { get => LibProcessMemory.Ptr->tables.Base64Table(); }
+		static byte* _Base64Table => LibProcessMemory.Ptr->tables.Base64Table();
 
 		/// <summary>
 		/// Gets table for <see cref="Convert_.HexDecode(string, void*, int, int)"/> and co.
 		/// Auto-creates when called first time. The memory is shared by appdomains.
 		/// </summary>
 		internal static byte* Hex { get; } = _HexTable;
-		static byte* _HexTable { get => LibProcessMemory.Ptr->tables.HexTable(); }
+		static byte* _HexTable => LibProcessMemory.Ptr->tables.HexTable();
 	}
 }
