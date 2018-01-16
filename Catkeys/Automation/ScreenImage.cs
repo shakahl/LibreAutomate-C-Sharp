@@ -215,7 +215,7 @@ namespace Catkeys
 				return f.Result;
 			}
 		}
-		//TODO: colorDiff should be double 0 to 1, not int 0 to 255.
+
 		//TODO: (if not already done): an easier way to find window/control/Acc/etc that contains image.
 		//TODO: should have a public Finder, like Wnd and Acc.
 		//FUTURE: test OpenCV - an open source library for computer vision.
@@ -239,7 +239,7 @@ namespace Catkeys
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="Find"/>.
 		/// </remarks>
-		public static SIResult WaitFor(double secondsTimeout, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
+		public static SIResult Wait(double secondsTimeout, object image, SIArea area, SIFlags flags = 0, int colorDiff = 0, Func<SIResult, bool> also = null)
 		{
 			var r = _Wait(_Action.Wait, secondsTimeout, image, area, flags, colorDiff, also);
 			return r.ok ? r.result : null;
@@ -288,7 +288,7 @@ namespace Catkeys
 		static (bool ok, SIResult result) _Wait(_Action action, double secondsTimeout, object image, SIArea area, SIFlags flags, int colorDiff, Func<SIResult, bool> also)
 		{
 			using(var f = new _Finder(action, image, area, flags, colorDiff, also)) {
-				var ok = Catkeys.WaitFor.Condition(secondsTimeout, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
+				var ok = WaitFor.Condition(secondsTimeout, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
 				return (ok, f.Result);
 			}
 		}

@@ -65,7 +65,7 @@ namespace Catkeys
 	{
 		/// <summary>
 		/// Waits until the specified window exists and (optionally) is visible. Or the opposite, if <b>not</b> is true.
-		/// Returns window handle. If secondsTimeout is negative, on timeout returns default(Wnd) (else exception).
+		/// Returns window handle. If secondsTimeout is negative, after -secondsTimeout time returns default(Wnd) (else exception).
 		/// All undocumented parameters etc are the same as <see cref="Wnd.Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">
@@ -152,7 +152,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the specified window exists and is the active window. Or the opposite, if <b>not</b> is true.
-		/// Returns window handle. If secondsTimeout is negative, on timeout returns default(Wnd) (else exception).
+		/// Returns window handle. If secondsTimeout is negative, after -secondsTimeout time returns default(Wnd) (else exception).
 		/// All undocumented parameters etc are the same as <see cref="Wnd.Find"/>.
 		/// If you have a window's Wnd, use <see cref="WindowActive(Wnd, double, bool)"/> instead.
 		/// </summary>
@@ -214,7 +214,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the window is the active window. Or the opposite, if <b>not</b> is true.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// Uses <see cref="Wnd.IsActive"/>.
 		/// </summary>
 		/// <param name="w">A window or control.</param>
@@ -232,8 +232,8 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the window is visible. Or the opposite, if <b>not</b> is true.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
-		/// Uses <see cref="Wnd.IsVisible"/>.
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+		/// Uses <see cref="Wnd.IsVisibleEx"/>.
 		/// For 'exists and is visible' use <see cref="WindowExists(double, string, string, WFOwner, WFFlags, Func{Wnd, bool}, bool)"/>. With default flags it waits for visible window and ignores invisible windows.
 		/// </summary>
 		/// <param name="w">A window or control.</param>
@@ -245,13 +245,13 @@ namespace Catkeys
 		/// <exception cref="WndException">w is default(Wnd)/invalid or the window was closed while waiting.</exception>
 		public static bool WindowVisible(Wnd w, double secondsTimeout = 0.0, bool not = false)
 		{
-			if(not) return WindowCondition(w, t => !t.IsVisible, secondsTimeout, true);
-			return WindowCondition(w, t => t.IsVisible, secondsTimeout);
+			if(not) return WindowCondition(w, t => !t.IsVisibleEx, secondsTimeout, true);
+			return WindowCondition(w, t => t.IsVisibleEx, secondsTimeout);
 		}
 
 		/// <summary>
 		/// Waits until the window is enabled (not disabled). Or the opposite, if <b>not</b> is true.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// Uses <see cref="Wnd.IsEnabled"/>.
 		/// </summary>
 		/// <param name="w">A window or control.</param>
@@ -269,7 +269,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the window handle is invalid.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// Uses <see cref="Wnd.IsAlive"/>.
 		/// </summary>
 		/// <param name="w">A window or control. Can be default(Wnd)/invalid.</param>
@@ -284,13 +284,13 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits until the specified control (child window) is found in the window. Or the opposite, if <b>not</b> is true.
-		/// Returns the control. If secondsTimeout is negative, on timeout returns default(Wnd) (else exception).
+		/// Returns the control. If secondsTimeout is negative, after -secondsTimeout time returns default(Wnd) (else exception).
 		/// Uses <see cref="Wnd.IsEnabled"/>.
 		/// </summary>
 		/// <param name="w">Direct or indirect parent window.</param>
 		/// <param name="control">Control properties.</param>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns default(Wnd).
 		/// </param>
 		/// <param name="not">
 		/// Do the opposite - wait until the control not found, or until the window closed (no exception if closed/default(Wnd)/invalid).
@@ -309,14 +309,14 @@ namespace Catkeys
 		/// </example>
 		public static Wnd WindowChildExists(Wnd w, Wnd.ChildFinder control, double secondsTimeout = 0.0, bool not = false)
 		{
-			if(not) WindowCondition(w, t => !control.FindIn(t), secondsTimeout, true); //shoulddo: optimize. Never mind, rarely used. Another branch cannot be optimized.
-			else WindowCondition(w, t => control.FindIn(t), secondsTimeout);
+			if(not) WindowCondition(w, t => !control.Find(t), secondsTimeout, true); //shoulddo: optimize. Never mind, rarely used. Another branch cannot be optimized.
+			else WindowCondition(w, t => control.Find(t), secondsTimeout);
 			return control.Result;
 		}
 
 		/// <summary>
 		/// Waits for an user-defined condition of an existing window.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.

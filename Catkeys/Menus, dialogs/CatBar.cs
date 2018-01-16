@@ -389,7 +389,7 @@ namespace Catkeys
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//var perf = new Perf.Inst(true);
+				//var perf = Perf.StartNew();
 
 				//ThreadPriority tp = 0;
 				//if(!_paintedOnce) { //this could make the first paint faster if CPU is without hyperthreading

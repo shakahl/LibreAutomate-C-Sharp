@@ -1,275 +1,109 @@
 #pragma once
+
+//This file is used internally.
+//	In the future it also could be used by C++ projects. Currently the C++ declarations are not added.
+//	Currently this dll is used only by a C# project.
+
+#ifdef Cpp_EXPORTS
 #include "stdafx.h"
-
-#define PRINT_ALWAYS 1 //TODO
-#if _DEBUG || PRINT_ALWAYS
-
-void Print(STR s);
-void Printf(STR frm, ...);
-
-inline void Print(LPCSTR s) { Printf(L"%S", s); }
-inline void Print(const std::wstring& s) { Print(s.c_str()); }
-inline void Print(int i) { Printf(L"%i", i); }
-inline void Print(unsigned int i) { Print((int)i); }
-inline void Print(long i) { Print((int)i); }
-inline void Print(unsigned long i) { Print((int)i); }
-inline void Print(__int64 i) { Printf(L"%I64i", i); }
-inline void Print(unsigned __int64 i) { Print((__int64)i); }
-inline void Print(void* i) { Printf(sizeof(void*) == 8 ? L"%I64i" : L"%i", i); }
-
-inline void Printx(int i) { Printf(L"0x%X", i); }
-inline void Printx(__int64 i) { Printf(L"0x%I64X", i); }
-
-#define PRINT(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  %i", x)
-#define PRINTX(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  0x%X", x)
-#define PRINTF(formatString, ...) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  " formatString, __VA_ARGS__)
-
-inline void PrintComRefCount(IUnknown* u) {
-	if(u) {
-		u->AddRef();
-		int i = u->Release();
-		Printf(L"%p  %i", u, i);
-	} else Print(L"null");
-}
-
+#define EXPORT extern "C" __declspec(dllexport)
 #else
-#define Print __noop
-#define Printf __noop
-#define Printx __noop
-#define PRINT __noop
-#define PRINTX __noop
-#define PRINTF __noop
-#define PrintComRefCount __noop
+#define EXPORT extern "C" __declspec(dllimport)
 #endif
 
-#if _DEBUG || PRINT_ALWAYS
-
-struct Perf_Inst
-{
-//private: //somehow then this does not work: '#pragma data_seg (".shared")'
-	int _counter;
-	bool _incremental;
-	int _nMeasurements; //used with incremental to display n measurements and average times
-	__int64 _time0;
-	static const int _nElem = 16;
-	__int64 _a[_nElem];
-	wchar_t _aMark[_nElem];
-
-public:
-	void First();
-	void Next(char cMark = '\0');
-	void Write();
-
-	void NW(char cMark = '\0') { Next(cMark); Write(); }
-
-	void SetIncremental(bool yes)
-	{
-		if(_incremental = yes) {
-			for(int i = 0; i < _nElem; i++) _a[i] = 0;
-			_nMeasurements = 0;
-		}
-	}
+//Cpp_Acc::MISC::flags.
+enum class eAccMiscFlags : BYTE {
+	InProc = 1, //retrieved inproc
+	UIA = 2,
+	Java = 4,
 };
+ENABLE_BITMASK_OPERATORS(eAccMiscFlags);
 
-extern Perf_Inst Perf;
-
-#endif
-
-
-#define ZEROTHIS memset(this, 0, sizeof(*this))
-
-#include "cpp_string.h"
-
-
-bool IsOS64Bit();
-bool IsProcess64Bit(DWORD pid, out bool& is);
-
-inline bool IsThisProcess64Bit()
-{
-#ifdef _WIN64
-	return true;
-#else
-	return false;
-#endif
-}
-
-//SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
-//can instead use CSecurityAttributes/CSecurityDesc, but this added before including ATL, and don't want to change now.
-class SecurityAttributes
-{
-	DWORD nLength;
-	LPVOID lpSecurityDescriptor;
-	BOOL bInheritHandle;
-public:
-	
-	SecurityAttributes()
-	{
-		nLength = sizeof(SecurityAttributes);
-		bInheritHandle = false;
-		lpSecurityDescriptor = null;
-		BOOL ok = ConvertStringSecurityDescriptorToSecurityDescriptorW(L"D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)", 1, &lpSecurityDescriptor, null);
-		assert(ok);
-	}
-
-	~SecurityAttributes()
-	{
-		LocalFree(lpSecurityDescriptor);
-	}
-
-	//SECURITY_ATTRIBUTES* operator&() {
-	//	return (SECURITY_ATTRIBUTES*)this;
-	//}
-
-	static SECURITY_ATTRIBUTES* Common()
-	{
-		static SecurityAttributes s_sa;
-		return (SECURITY_ATTRIBUTES*)&s_sa;
-	}
-};
-
-//can instead use CHandle, but this is easier to use, eg has operator KernelHandle=HANDLE, and knows about INVALID_HANDLE_VALUE.
-class KernelHandle
-{
-protected:
-	HANDLE _h;
-
-public:
-	KernelHandle() noexcept { _h = 0; }
-
-	KernelHandle(HANDLE h) noexcept {
-		_h = h == INVALID_HANDLE_VALUE ? 0 : h;
-	}
-
-	~KernelHandle() {
-		if(_h) CloseHandle(_h);
-	}
-
-	operator HANDLE() { return _h; }
-	HANDLE* operator &() { return &_h; }
-
-	void operator=(HANDLE h) {
-		if(_h) CloseHandle(_h);
-		_h = h == (HANDLE)(-1) ? 0 : h;
-	}
-
-	bool Is0() {
-		return _h == 0;
-	}
-
-	//HANDLE Detach() {
-	//	auto r = _h; _h = 0;
-	//	return r;
-	//}
-};
-
-class AutoReleaseMutex
-{
-	HANDLE _mutex;
-public:
-	AutoReleaseMutex(HANDLE mutex) noexcept {
-		_mutex = mutex;
-	}
-
-	~AutoReleaseMutex() {
-		if(_mutex) ReleaseMutex(_mutex);
-	}
-
-	void ReleaseNow() {
-		if(_mutex) ReleaseMutex(_mutex);
-		_mutex = 0;
-	}
-};
-
-//can instead use CAtlFileMappingBase from atlfile.h, but this added before including ATL, and don't want to change now.
-class SharedMemory
-{
-	HANDLE _hmapfile;
-	LPBYTE _mem;
-public:
-	SharedMemory() { _hmapfile = 0; _mem = 0; }
-	~SharedMemory() { Close(); }
-
-	bool Create(STR name, DWORD size)
-	{
-		Close();
-		_hmapfile = CreateFileMappingW((HANDLE)(-1), SecurityAttributes::Common(), PAGE_READWRITE, 0, size, name);
-		if(!_hmapfile) return false;
-		_mem = (LPBYTE)MapViewOfFile(_hmapfile, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-		return _mem != null;
-	}
-
-	bool Open(STR name)
-	{
-		Close();
-		_hmapfile = OpenFileMappingW(FILE_MAP_ALL_ACCESS, 0, name);
-		if(!_hmapfile) return false;
-		_mem = (LPBYTE)MapViewOfFile(_hmapfile, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-		return _mem != null;
-	}
-
-	void Close()
-	{
-		if(_mem) { UnmapViewOfFile(_mem); _mem = 0; }
-		if(_hmapfile) { CloseHandle(_hmapfile); _hmapfile = 0; }
-	}
-
-	LPBYTE Mem() { return _mem; }
-
-	bool Is0() { return _mem == null; }
-};
-
-//TODO: currently not used, remove if don't need
-template<class T>
-class AutoResetVariable
-{
-	T* _b;
-public:
-	AutoResetVariable(T* b, T value) { _b = b; *b = value; }
-	~AutoResetVariable() { *_b = 0; }
-};
-
-const int c_accVersion = 1;
-
-struct _AccFindParams
-{
-	int size;
-	int hwnd; //not HWND, because it must be of same size in 32 and 64 bit process
-private:
-	int _roleLen; //with '\0', or 0 if null
-	int _nameLen; //with '\0', or 0 if null
-public:
-	int flags;
-	bool findAll;
-	int skip;
-
-	STR Role() { return _roleLen ? (STR)(this + 1) : null; }
-	STR Name() { return _nameLen ? (STR)(this + 1) + _roleLen : null; }
-
-	static int CalcMemSize(int roleLen, int nameLen) { return sizeof(_AccFindParams) + (roleLen + nameLen) * 2; }
-	void SetRole(STR role, int roleLen) { _roleLen = roleLen; if(roleLen) memcpy((void*)Role(), role, roleLen * 2); }
-	void SetName(STR name, int nameLen) { _nameLen = nameLen; if(nameLen) memcpy((void*)Name(), name, nameLen * 2); }
-};
-
+//IAccessible* and child element id.
+//Has only ctors. Does not have a dtor (does not Release etc), operator=, etc.
 struct Cpp_Acc
 {
-	IAccessible* iacc;
+	IAccessible* acc;
 	long elem;
+	struct MISC {
+		eAccMiscFlags flags;
+		BYTE role; //for optimization. 0 if not set or failed to get or VT_BSTR or does not fit in BYTE.
+		WORD level; //for ToString. 0 if not set.
+	} misc;
 
-	Cpp_Acc() {
-		iacc = null;
-		elem = 0;
-	}
+	Cpp_Acc() noexcept { Zero(); }
 
-	Cpp_Acc(IAccessible* iacc_, long elem_) {
-		iacc = iacc_;
+	//Does not AddRef.
+	Cpp_Acc(IAccessible* acc_, int elem_, eAccMiscFlags flags_ = (eAccMiscFlags)0) noexcept
+	{
+		acc = acc_;
 		elem = elem_;
+		*(DWORD*)&misc = (DWORD)flags_;
 	}
+
+#ifdef Cpp_EXPORTS
+	void Zero() { memset(this, 0, sizeof(*this)); }
+	void SetRole();
+	void SetRole(DWORD role) { misc.role = (BYTE)(role <= 0xff ? role : 0); }
+	void SetLevel(DWORD level) { misc.level = (WORD)(level <= 0xffff ? level : 0xffff); }
+#endif
 };
 
-class AccCallback
+//Flags for Cpp_AccFind.
+//The same as C# AFFlags. Documented there.
+//[Flags]
+enum class eAF
 {
-public:
-	virtual bool IsClientStillWaiting(bool fullCheck) = 0;
-	virtual void WriteResult(IAccessible* iacc, long elem) = 0;
-	virtual void Finished() = 0;
+	Reverse = 1,
+	HiddenToo = 2,
+	MenuToo = 4,
+	SkipLists = 8,
+	SkipWeb = 16,
+	NotInProc=0x100,
+	UIA=0x200,
 };
+ENABLE_BITMASK_OPERATORS(eAF);
+
+//Parameters for Cpp_AccFind.
+struct Cpp_AccParams {
+	STR role, name, prop;
+	int roleLength, nameLength, propLength;
+	eAF flags;
+	int skip;
+	WCHAR resultProp;
+
+	Cpp_AccParams() noexcept { memset(this, 0, sizeof(*this)); }
+};
+
+//Cpp_AccFind callback function type.
+//Must Release a.iacc. Preferably later, in spare time. Can do it in another thread.
+using Cpp_AccCallbackT = BOOL(__stdcall*)(Cpp_Acc a);
+
+enum class eError
+{
+	NotFound = 0x1001, //AO not found. With FindAll - no errors. This is actually not an error.
+	InvalidParameter = 0x1002, //invalid parameter, for example wildcard expression (or regular expression in it)
+	WindowClosed = 0x1003, //the specified window handle is invalid or the window was destroyed while injecting
+	WaitChromeDisabled = 0x1004, //need to wait while enabling Chrome AOs
+#ifdef Cpp_EXPORTS
+	Inject = 0x1100, //failed to inject this dll into the target process
+	WindowOfThisThread = 0x1101, //the specified window belongs to the caller thread
+	UseNotInProc = 0x1102, //window class name is Windows.UI.Core.CoreWindow etc
+#endif
+};
+
+//Our custom OBJID for Cpp_AccFromWindow.
+#define OBJID_JAVA -100
+#define OBJID_UIA -101
+
+//Our custom NAVDIR_ for Cpp_AccNavigate.
+#define NAVDIR_PARENT 9
+#define NAVDIR_CHILD 10
+
+//FUTURE: declare exports (when stable), like:
+//EXPORT HRESULT Cpp_AccFind(...);
+
+#ifdef Cpp_EXPORTS
+#include "util.h"
+#include "internal.h"
+#endif

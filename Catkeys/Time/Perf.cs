@@ -65,12 +65,6 @@ namespace Catkeys
 
 			static bool _canWrite;
 
-			/// <param name="callFirst">Call <see cref="First()"/>.</param>
-			public Inst(bool callFirst) : this()
-			{
-				if(callFirst) First();
-			}
-
 			//BE CAREFUL: this struct is in shared memory. Max allowed size is 256-32. Currently used 184.
 
 			volatile int _counter;
@@ -144,6 +138,7 @@ namespace Catkeys
 			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
 			public void Next(char cMark = '\0')
 			{
+				//TODO: for mark use string, not char
 				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
 				int n = _counter; if(n >= _nElem) return;
 				_counter++;
@@ -359,5 +354,15 @@ namespace Catkeys
 		/// Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
 		/// </summary>
 		public static void SpinCPU(int milliseconds, params Action[] codes) { _SM->SpinCPU(milliseconds, codes); }
+
+		/// <summary>
+		/// Creates/returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.
+		/// </summary>
+		public static Inst StartNew()
+		{
+			var R = new Inst();
+			R.First();
+			return R;
+		}
 	}
 }

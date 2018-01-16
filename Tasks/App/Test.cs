@@ -186,7 +186,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//		Perf.Next();
 		//		Perf.NW();
 		//#else
-		//		var perf = new Perf.Inst(true);
+		//		var perf = Perf.StartNew();
 		//		perf.Next();
 		//		perf.NW();
 		//#endif

@@ -42,7 +42,7 @@ namespace Aga.Controls.Tree
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
-			//var p = new Perf.Inst(true);
+			//var p = Perf.StartNew();
 
 			DrawContext context = new DrawContext();
 			context.Graphics = e.Graphics;

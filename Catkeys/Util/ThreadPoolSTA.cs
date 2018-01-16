@@ -245,7 +245,7 @@ namespace Catkeys.Util
 		static void _CurrentDomain_DomainExit(object sender, EventArgs e)
 		{
 			_isAppDomainDying = true;
-			//var perf = new Perf.Inst(true);
+			//var perf = Perf.StartNew();
 			CloseThreadpoolCleanupGroupMembers(_env.CleanupGroup, true, Zero);
 			CloseThreadpoolCleanupGroup(_env.CleanupGroup);
 			//perf.NW();

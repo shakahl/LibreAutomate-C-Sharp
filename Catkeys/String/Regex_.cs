@@ -47,11 +47,8 @@ namespace Catkeys
 		/// <param name="flags"></param>
 		public Regex_(string rx, RXFlags flags = RXFlags.UTF)
 		{
-			char* errStr = null;
-			if(!Cpp.Cpp_RegexParse(this, rx, rx.Length, flags, &errStr)) {
-				var es = new string(errStr);
-				Cpp.Cpp_Free(errStr);
-				throw new ArgumentException(es);
+			if(!Cpp.Cpp_RegexParse(this, rx, rx.Length, flags, out var errStr)) {
+				throw new ArgumentException(errStr);
 			}
 			int size = Cpp.Cpp_RegexSize(this);
 			GC.AddMemoryPressure(size);

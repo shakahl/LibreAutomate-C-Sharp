@@ -338,6 +338,7 @@ namespace Catkeys.Util
 			iTo = Unsafe.Read<T>(&ip);
 			return true;
 		}
+		//TODO: remove. Now not useful because we use only iTo IntPtr.
 
 		/// <summary>
 		/// Gets another COM interface through <msdn>IServiceProvider.QueryService</msdn>.

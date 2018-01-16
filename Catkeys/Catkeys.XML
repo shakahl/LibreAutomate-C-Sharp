@@ -4,6 +4,187 @@
         <name>Catkeys</name>
     </assembly>
     <members>
+        <member name="M:Catkeys.Types.Cpp.Cpp_AccFromWindow(System.Int32,Catkeys.Wnd,Catkeys.Types.AccOBJID,Catkeys.Types.Cpp.Cpp_Acc@,Catkeys.Types.BSTR@)">
+            <summary>
+            flags: 1 inproc, 2 get only name.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Types.AFFlags">
+            <summary>
+            Flags for <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/> and similar functions.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.Reverse">
+            <summary>
+            Search in reverse order. It can make faster.
+            When using control class name, controls are searched not in reverse order. Only accessible objects in them are searched in reverse order.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.HiddenToo">
+            <summary>
+            The accessible object can be invisible.
+            Without this flag skips objects that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+            Regardless of this flag, always skips invisible standard objects of nonclient area: TITLEBAR, MENUBAR, SCROLLBAR, GRIP.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.MenuToo">
+            <summary>
+            Always search in MENUITEM.
+            Without this flag skips MENUITEM descendant objects (for speed), unless role is MENUITEM or MENUPOPUP or searching in web page.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.SkipLists">
+            <summary>
+            Skip descendant objects of OUTLINE (tree view) and LIST.
+            Objects of these roles often contain large number of descendants, which makes finding other objects much slower.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.SkipWeb">
+            <summary>
+            Skip objects in web pages and DOCUMENT.
+            Objects of these roles often contain large number of descendants, which makes finding other objects much slower.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.NotInProc">
+            <summary>
+            Search without loading dll into the target process.
+            Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
+            Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher UAC integrity level.
+            Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> and search in it. 3. Use <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)"/>.
+            Don't need this flag when searching in Acc (then it is inherited from the Acc variable).
+            See also: <see cref="P:Catkeys.Acc.NotInProc"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AFFlags.UIA">
+            <summary>
+            Use UI Automation API.
+            Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements.
+            Examples of such windows: Microsoft Edge web browser (web page), JavaFX applications.
+            Objects found with this flag never have HtmlX properties, but can have <see cref="P:Catkeys.Acc.UiaAutomationId"/>.
+            This flag can be used with most other windows too.
+            Don't use this flag when searching in Acc (then it is inherited from the Acc variable).
+            </summary>
+        </member>
+        <member name="T:Catkeys.Types.AWFlags">
+            <summary>
+            Flags for <see cref="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,Catkeys.Types.AWFlags)"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AWFlags.NoThrow">
+            <summary>Don't throw exception when fails. Then returns null.</summary>
+        </member>
+        <member name="F:Catkeys.Types.AWFlags.InProc">
+            <summary>
+            Load dll into the target process.
+            More info: <see cref="F:Catkeys.Types.AFFlags.NotInProc"/>.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Types.AXYFlags">
+            <summary>
+            Flags for <see cref="M:Catkeys.Acc.FromXY(System.Drawing.Point,Catkeys.Types.AXYFlags)"/>.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AXYFlags.UIA">
+            <summary>
+            Use UI Automation API.
+            Need this flag with some windows that don't support accessible objects but support UI Automation elements.
+            When this flag is not specified, the function detects most such windows and uses UI Automation API, but the detection is not perfect.
+            More info: <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            This flag can be used with most other windows too.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AXYFlags.PreferLink">
+            <summary>
+            Get the direct parent object if it's LINK or PUSHBUTTON.
+            Usually links have one or more children of type TEXT, STATICTEXT, GRAPHIC or other.
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AXYFlags.NoThrow">
+            <summary>Don't throw exception when fails. Then returns null.</summary>
+        </member>
+        <member name="T:Catkeys.Types.AccOBJID">
+            <summary>
+            Accessible object ids of window parts and some special objects.
+            Used with <see cref="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,Catkeys.Types.AWFlags)"/>
+            </summary>
+            <remarks>
+            The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_". Except Java and UIA.
+            </remarks>
+        </member>
+        <member name="F:Catkeys.Types.AccOBJID.Java">
+            <summary>
+            The root Java object. Can be used when the window's class name starts with "SunAwt".
+            </summary>
+        </member>
+        <member name="F:Catkeys.Types.AccOBJID.UIA">
+            <summary>
+            Use UI Automation API.
+            More info: <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            </summary>
+        </member>
+        <member name="T:Catkeys.Types.AccROLE">
+            <summary>
+            Standard roles of accessible objects.
+            Used with <see cref="P:Catkeys.Acc.RoleInt"/>
+            </summary>
+            <remarks>
+            The names are as in API <msdn>IAccessible.get_accRole</msdn> documentation but without prefix "ROLE_SYSTEM_".
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Types.AccSTATE">
+            <summary>
+            Accessible object state flags.
+            Used by <see cref="P:Catkeys.Acc.State"/>.
+            </summary>
+            <remarks>
+            Most names are as in API <msdn>IAccessible.get_accState</msdn> documentation but without prefix "STATE_SYSTEM_".
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Types.AccSELFLAG">
+            <summary>
+            Accessible object selection flags.
+            Used by <see cref="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)"/>.
+            </summary>
+            <remarks>
+            The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix "SELFLAG_".
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Types.AccEVENT">
+            <summary>
+            Event constants for API <msdn>SetWinEventHook</msdn>.
+            </summary>
+            <remarks>
+            The names are as in API documentation but without prefix "EVENT_".
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Types.LibAccHookFlags">
+            <summary>
+            Flags for API <msdn>SetWinEventHook</msdn>.
+            </summary>
+            <remarks>
+            The names are as in API documentation but without prefix "WINEVENT_".
+            There are no flags for OUTOFCONTEXT and INCONTEXT. OUTOFCONTEXT is default (0). INCONTEXT cannot be used in managed code.
+            </remarks>
+        </member>
+        <member name="T:Catkeys.Types.BIUnblock">
+            <summary>Infrastructure.</summary>
+            <tocexclude />
+        </member>
+        <member name="M:Catkeys.Types.BIUnblock.Start(Catkeys.Types.BIUnblock.What)">
+            <summary>
+            Starts blocking input.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.BIUnblock.Stop">
+            <summary>
+            Stops blocking input.
+            </summary>
+        </member>
+        <member name="M:Catkeys.Types.BIUnblock.Dispose">
+            <summary>
+            Calls Stop.
+            </summary>
+        </member>
         <member name="M:Catkeys.Types.Api.PROPVARIANT.Dispose">
             <summary>
             Calls PropVariantClear.
@@ -119,228 +300,6 @@
         <member name="M:Catkeys.Types.Api.strtoi64(System.Char*,System.Int32)">
             <summary>
             This overload does not have parameter 'out char* endPtr'.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Types.AFFlags">
-            <summary>
-            Flags for <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/> and similar functions.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.DirectChild">
-            <summary>
-            The accessible object must be direct child, not a descendant at any other level.
-            This can be useful when searching in Acc. When searching in Wnd, these are children of the WINDOW object; if using control class name - of control's WINDOW object.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.HiddenToo">
-            <summary>
-            The accessible object can be invisible.
-            Without this flag skips objects that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PANE, PROPERTYPAGE, GROUPING, ALERT, MENUBAR, TITLEBAR, SCROLLBAR.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.MenuToo">
-            <summary>
-            Always search in MENUITEM.
-            Without this flag skips MENUITEM descendant objects to improve speed, unless role is MENUITEM or MENUPOPUP. Except when used path or when searching in web page or Java window.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.Reverse">
-            <summary>
-            Search in reverse order. It can make faster.
-            When using control class name, controls are searched not in reverse order. Only accessible objects in them are searched in reverse order.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.SkipLists">
-            <summary>
-            Skip descendant objects of OUTLINE (tree view), LIST, TITLEBAR and SCROLLBAR.
-            Objects of OUTLINE and LIST sometimes contain large number of items, which makes finding other objects much slower.
-            See also <see cref="P:Catkeys.Acc.Finder.SkipRoles"/>.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.SkipWeb">
-            <summary>
-            Skip objects in web pages and DOCUMENT.
-            Objects of these roles often contain large number of descendants, which makes finding other objects much slower.
-            See also <see cref="P:Catkeys.Acc.Finder.SkipRoles"/>.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AFFlags.WebBusy">
-            <summary>
-            This flag can be used with role prefix "web:" or "firefox:", when searching in Firefox.
-            It disables waiting while DOCUMENT has BUSY state. This waiting is to improve reliability. However some web pages have busy state always, and it makes the function very slow.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Types.AFAcc">
-            <summary>
-            Contains data for callback function (<b>also</b>) of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/> and similar functions.
-            This class is derived from <see cref="T:Catkeys.Acc"/> and therefore you can use all Acc properties in callback function. Also has several own properties and methods.
-            The AFAcc variable passed to the callback function is valid only in the callback function. If you need to get normal Acc variable from it (for example to add to a List), use <see cref="M:Catkeys.Types.AFAcc.ToAcc"/>.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Types.AFAcc.Level">
-            <summary>
-            0-based level of this accessible object in the tree of accessible objects.
-            Direct children have level 0, their children have level 1, and so on.
-            When searching in a window or control, at level 0 are direct children of the WINDOW object of the window or control. The WINDOW object itself is not included in the search; if you need it, instead use <see cref="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,System.Boolean)"/>.
-            When searching in Acc, at level 0 are its direct children.
-            When searching in web page (role has prefix "web:" etc), at level 0 is the root object (DOCUMENT in Firefox/Chrome, PANE in Internet Explorer).
-            When using control class name, at level 0 are direct children of WINDOW objects of matching controls.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Types.AFAcc.Param">
-            <summary>
-            With <see cref="M:Catkeys.Acc.EnumChildren(System.Boolean,System.Action{Catkeys.Types.AFAcc},System.Object)"/> - the param argument. With <see cref="T:Catkeys.Acc.Finder"/> - the Param property. Probably not useful with Acc.Find.
-            The callback function can use it for any purpose.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.AFAcc.Stop">
-            <summary>
-            The callback function can call this to stop searching. If the callback function then returns false, it means 'not found'. Don't need to call this if returns true.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.AFAcc.SkipChildren">
-            <summary>
-            The callback function can call this to skip (don't search) descendants of current accessible object.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.AFAcc.ToAcc">
-            <summary>
-            Creates new Acc variable from this AFAcc variable. It is a reference to the same accessible object.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.AFAcc.LibSet(Catkeys.Acc.IAccessible,System.Int32,Catkeys.Types.AccROLE,System.Int32)">
-            <summary>
-            Sets/clears fields/properties before calling the callback.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.AFAcc.LibResetIacc">
-            <summary>
-            Sets _iacc = default.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.AFAcc.ToString">
-            
-        </member>
-        <member name="T:Catkeys.Types.AccOBJID">
-            <summary>
-            Accessible object ids of window parts and some special objects.
-            Used with <see cref="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,System.Boolean)"/>
-            </summary>
-            <remarks>
-            The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_".
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Types.AccROLE">
-            <summary>
-            Standard roles of accessible objects.
-            Used with <see cref="P:Catkeys.Acc.RoleEnum"/>
-            </summary>
-            <remarks>
-            The names are as in API <msdn>IAccessible.get_accRole</msdn> documentation but without prefix "ROLE_SYSTEM_".
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Types.AccSTATE">
-            <summary>
-            Accessible object state flags.
-            Used by <see cref="P:Catkeys.Acc.State"/>.
-            </summary>
-            <remarks>
-            Most names are as in API <msdn>IAccessible.get_accState</msdn> documentation but without prefix "STATE_SYSTEM_".
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Types.AccSELFLAG">
-            <summary>
-            Accessible object selection flags.
-            Used by <see cref="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)"/>.
-            </summary>
-            <remarks>
-            The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix "SELFLAG_".
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Types.AccNAVDIR">
-            <summary>
-            Accessible object navigation direction.
-            Used by <see cref="M:Catkeys.Acc.Navigate(Catkeys.Types.AccNAVDIR,System.Int32,System.Boolean)"/>.
-            </summary>
-            <remarks>
-            The names are as in API <msdn>IAccessible.accNavigate</msdn> documentation but without prefix "NAVDIR_".
-            Many objects don't support NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD. Some objects skip invisible siblings. When unavailable, functions of this library try a workaround, which works well with FIRSTCHILD and LASTCHILD, but with NEXT and PREVIOUS it is slow and not always succeeds. Instead you can use PARENT/CHILD.
-            UP, DOWN, LEFT and RIGHT - spatial navigation in the same container object. Rarely supported or useful. String names - "#1", "#2", "#3", "#4".
-            </remarks>
-        </member>
-        <member name="F:Catkeys.Types.AccNAVDIR.NEXT">
-            <summary>
-            Next sibling object in the same parent (container) object.
-            String name - "next", "ne" or "n".
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AccNAVDIR.PREVIOUS">
-            <summary>
-            Previous sibling object in the same parent (container) object.
-            String name - "previous", "pr" or "prev".
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AccNAVDIR.FIRSTCHILD">
-            <summary>
-            First direct child object.
-            String name - "first", "fi" or "f".
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AccNAVDIR.LASTCHILD">
-            <summary>
-            Last direct child object.
-            String name - "last", "la" or "l".
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AccNAVDIR.PARENT">
-            <summary>
-            The parent (container) object.
-            String name - "parent", "pa" or "p".
-            Few objects don't support it.
-            Note: Some Chrome versions have this bug: the parent object does not support <see cref="P:Catkeys.Acc.WndContainer"/>.
-            </summary>
-        </member>
-        <member name="F:Catkeys.Types.AccNAVDIR.CHILD">
-            <summary>
-            A direct child object by 1-based index.
-            String name - "child", "ch" or "c".
-            Negative index means from end, for example -1 is the last child.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Types.AccEVENT">
-            <summary>
-            Event constants for API <msdn>SetWinEventHook</msdn>.
-            </summary>
-            <remarks>
-            The names are as in API documentation but without prefix "EVENT_".
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Types.LibAccHookFlags">
-            <summary>
-            Flags for API <msdn>SetWinEventHook</msdn>.
-            </summary>
-            <remarks>
-            The names are as in API documentation but without prefix "WINEVENT_".
-            There are no flags for OUTOFCONTEXT and INCONTEXT. OUTOFCONTEXT is default (0). INCONTEXT cannot be used in managed code.
-            </remarks>
-        </member>
-        <member name="T:Catkeys.Types.BIUnblock">
-            <summary>Infrastructure.</summary>
-            <tocexclude />
-        </member>
-        <member name="M:Catkeys.Types.BIUnblock.Start(Catkeys.Types.BIUnblock.What)">
-            <summary>
-            Starts blocking input.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.BIUnblock.Stop">
-            <summary>
-            Stops blocking input.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.BIUnblock.Dispose">
-            <summary>
-            Calls Stop.
             </summary>
         </member>
         <member name="T:Catkeys.Types.Native">
@@ -754,166 +713,6 @@
         <member name="P:Catkeys.Types.SIResult.ListIndex">
             <summary>
             When the image argument specifies multiple images, this is the 0-based index of the found image in the list.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Types.ACondition">
-            <summary>
-            Builds ICondition (<msdn>IUIAutomationCondition</msdn>) from one or more properties, where all properties must match.
-            </summary>
-            <example>
-            <code><![CDATA[
-            Wnd w = Wnd.Find("Options").OrThrow();
-            var ew = AElement.Factory.ElementFromHandle(w);
-            var e = ew.FindFirst(UIA.TreeScope.Descendants, new ACondition().Name("Apply").Type(UIA.TypeId.Button).Enabled(true).Condition);
-            Print(e.Name);
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Catkeys.Types.ACondition.Condition">
-            <summary>
-            Gets or sets current ICondition (<msdn>IUIAutomationCondition</msdn>). It contains all added conditions.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)">
-            <summary>
-            Adds a condition as an ICondition object.
-            Algorithm: <c>Condition = Condition AND cond</c>.
-            </summary>
-            <remarks>
-            If this variable is empty, sets Condition = cond. Else calls <msdn>IUIAutomation.CreateAndCondition</msdn>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)">
-            <summary>
-            Adds NOT condition of an ICondition object.
-            Algorithm: <c>Condition = Condition AND NOT cond</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreateNotCondition</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddOrIC(UIA.ICondition[])">
-            <summary>
-            Adds OR condition from 2 or more conditions.
-            Algorithm: <c>Condition = Condition AND (conditions[0] OR conditions[1] OR ...)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddNotOrIC(UIA.ICondition[])">
-            <summary>
-            Adds NOT OR condition from 2 or more conditions.
-            Algorithm: <c>Condition = Condition AND NOT (conditions[0] OR conditions[1] OR ...)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreateOrConditionFromArray</msdn>, <msdn>IUIAutomation.CreateNotCondition</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)">
-            <summary>
-            Adds a property condition.
-            Algorithm: <c>Condition = Condition AND (property == value)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddNot(UIA.PropertyId,System.Object,System.Boolean)">
-            <summary>
-            Adds NOT condition of a property.
-            Algorithm: <c>Condition = Condition AND (property != value)</c>.
-            </summary>
-            <param name="propertyId"></param>
-            <param name="value"></param>
-            <param name="ignoreCase">When string, case-insensitive.</param>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn> and <see cref="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddOr(UIA.PropertyId,System.Object[])">
-            <summary>
-            Adds OR condition from 2 or more values of a property.
-            Algorithm: <c>Condition = Condition AND ((property == values[0]) OR (property == values[1]) OR ...)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddOr(System.Boolean,UIA.PropertyId,System.Object[])">
-            <summary>
-            Adds OR condition from 2 or more values of a property.
-            Algorithm: <c>Condition = Condition AND ((property == values[0]) OR (property == values[1]) OR ...)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddNotOr(UIA.PropertyId,System.Object[])">
-            <summary>
-            Adds NOT OR condition from 2 or more values of a property.
-            Algorithm: <c>Condition = Condition AND NOT ((property == values[0]) OR (property == values[1]) OR ...)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.AddNotOr(System.Boolean,UIA.PropertyId,System.Object[])">
-            <summary>
-            Adds NOT OR condition from 2 or more values of a property.
-            Algorithm: <c>Condition = Condition AND NOT ((property == values[0]) OR (property == values[1]) OR ...)</c>.
-            </summary>
-            <remarks>
-            Calls <msdn>IUIAutomation.CreatePropertyConditionEx</msdn>, <msdn>IUIAutomation.CreateOrConditionFromArray</msdn> and <see cref="M:Catkeys.Types.ACondition.AddNotIC(UIA.ICondition)"/>.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.Name(System.String,System.Boolean)">
-            <summary>
-            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.Name.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.Type(UIA.TypeId)">
-            <summary>
-            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.ControlType.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.Rect(Catkeys.Types.RECT)">
-            <summary>
-            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.BoundingRectangle.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.Offscreen(System.Boolean)">
-            <summary>
-            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.IsOffscreen.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.Enabled(System.Boolean)">
-            <summary>
-            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.IsEnabled.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.ACondition.LARole(Catkeys.Types.AccROLE)">
-            <summary>
-            Calls <see cref="M:Catkeys.Types.ACondition.Add(UIA.PropertyId,System.Object,System.Boolean)"/> with UIA.PropertyId.LegacyIAccessibleRole.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Types.EFFlags">
-            <summary>
-            Flags for <see cref="M:Catkeys.AElement.Find(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/>
-            </summary>
-        </member>
-        <member name="T:Catkeys.Types.LibTempSetScreenReader">
-            <summary>
-            Temporarily sets SPI_SETSCREENREADER. Restores in Dispose.
-            It enables accessible objects and UI automation elements (AO/AE) in OpenOffice.
-            Speed: 10-20 mcs, which is about 20% of accessibleobjectfromwindow.
-            Note: LibreOffice AE does not work. AO does not work if this process is 64-bit (why?). Although SPI_SETSCREENREADER works.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Types.LibTempSetScreenReader.#ctor(System.Boolean)">
-            <summary>
-            If SPI_GETSCREENREADER says false, sets SPI_SETSCREENREADER = true, and Dispose will set it false.
-            Note: Windows does not use a reference counting for this setting.
             </summary>
         </member>
         <member name="T:Catkeys.Types.Separators">
@@ -1939,6 +1738,16 @@
             Gets or sets height.
             </summary>
         </member>
+        <member name="P:Catkeys.Types.RECT.CenterX">
+            <summary>
+            Gets horizontal center.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Types.RECT.CenterY">
+            <summary>
+            Gets vertical center.
+            </summary>
+        </member>
         <member name="M:Catkeys.Types.RECT.Contains(System.Int32,System.Int32)">
             <summary>
             Returns true if this rectangle contains the specified point.
@@ -2047,6 +1856,11 @@
         <member name="P:Catkeys.Types.BSTR.Is0">
             <summary>
             Returns true if the string is null.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Types.BSTR.Item(System.Int32)">
+            <summary>
+            Unsafe.
             </summary>
         </member>
         <member name="M:Catkeys.Types.BSTR.ToString">
@@ -2670,10 +2484,12 @@
             </summary>
         </member>
         <member name="F:Catkeys.Types.WFFlags.HiddenToo">
-            <summary>Can find hidden windows. Use this carefully, always use className, not just name, because there are many hidden tooltip windows etc that could match the name.</summary>
+            <summary>Can find hidden windows. See <see cref="P:Catkeys.Wnd.IsVisibleEx"/>.</summary>
+            <remarks>Use this carefully. Always use className, not just name, because there are many hidden tooltip windows etc that could match the name.</remarks>
         </member>
         <member name="F:Catkeys.Types.WFFlags.SkipCloaked">
-            <summary>Skip cloaked windows. These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows Store apps on Windows 8.</summary>
+            <summary>Skip cloaked windows. See <see cref="P:Catkeys.Wnd.IsCloaked"/>.</summary>
+            <remarks>These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.IsCloaked detects). For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.</remarks>
         </member>
         <member name="T:Catkeys.Types.WFOwner">
             <summary>
@@ -2978,16 +2794,105 @@
             Accessible object.
             </summary>
             <remarks>
-            Accessible objects are various user interface (UI) objects in windows and controls. For example buttons, links, list items. This class can find them, get properties, click, etc. Especially useful with web pages, because there are no controls. And many other windows don't use controls but support accessible objects. But not all UI objects are accessible objects.
+            Accessible objects (AO) are various user interface (UI) objects in windows and controls. For example buttons, links, list items. This class can find them, get properties, click, etc. Especially useful with web pages, because there are no controls. And many other windows don't use controls but support AO. But not all UI objects are AO.
             
-            An Acc instance holds an accessible object COM pointer (<msdn>IAccessible</msdn>) and a child element id (int). Most Acc functions wrap IAccessible interface functions or/and related API.
+            An Acc instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most Acc functions wrap IAccessible interface functions or/and related API.
             
-            Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return default value of that type (null, 0, false); string property getters return "". Various accessible objects in various applications are implemented differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="M:Catkeys.Types.Native.GetError"/> to get it. If Native.GetError returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+            Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="M:Catkeys.Types.Native.GetError"/> to get it. If Native.GetError returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
             
-            Disposing Acc variables (to release the COM object) is not necessary (GC will do it later), but in libraries it is recommended.
+            You can dispose Acc variables to release the COM object, but it is not necessary (GC will do it later).
             
-            Supports accessible objects of Java windows if the Java Access Bridge (JAB) is enabled. You can enable/disable it in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe.
+            An Acc variable cannot be used in multiple threads. Only Dispose can be called in any thread.
+            
+            AOs are implemented and live in their applications. This class just communicates with them.
+            
+            Many applications have various problems with their AOs: bugs, incorrect/nonstandard/partial implementation, or initially disabled. This class implements workarounds for known problems, where possible.
+            
+            Known problematic applications:
+            <list type="bullet">
+            <item>
+            Chrome web browser. Also Opera and other apps that use Chrome code; window class name is like "Chrome_WidgetWin_1".
+            
+            Web page AOs initially are disabled (missing). Workarounds:
+            Functions Find, Wait and FindAll enable it if used role prefix "web:" or "chrome:". Functions FromXY, FromMouse and Focused enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong AO. Note: this auto-enabing may fail with future Chrome versions.
+            Other ways to enable Chrome AOs: 1. Start Chrome with command line --force-renderer-accessibility. 2. In the future the script editor will have an option to enable Chrome AOs when it starts.
+            
+            Some new web browser versions add new features or bugs that break something. AOs are especially vulnerable, because they are considered second-class citizens.
+            </item>
+            <item>
+            Firefox web browser.
+            
+            By default, Find is slow. Also for this reason Wait consumes much CPU.
+            To make faster (~100 times), need to disable the Firefox multiprocess feature: open URL about:config and set browser.tabs.remote.force-enable = false. Note: Firefox may reset it when upgrading or reinstalling. Note: future Firefox versions may remove this setting; then, if you want speed, use another web browser.
+            
+            Ocassionally Firefox briefly turns off its accessible objects. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.
+            
+            Some new web browser versions add new features or bugs that break something. AOs are especially vulnerable, because they are considered second-class citizens.
+            </item>
+            <item>
+            Edge web browser, JavaFX and other applications that don't have true accessible objects but have UI Automation elements.
+            
+            To find AOs in these applications, need flag <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            </item>
+            <item>
+            Java applications that use AWT/Swing (window class name starts with "SunAwt").
+            
+            Not supported on 32-bit OS.
+            
+            Must be enabled Java Access Bridge (JAB).
+            You can enable/disable it in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java applications.
+            
+            Your process must have the same 32/64 bitness as the installed Java. To remove this limitation, install Java 32-bit and 64-bit (they coexist).
+            </item>
+            <item>
+            OpenOffice.
+            
+            Often crashes after using accessible objects, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.
+            </item>
+            <item>
+            LibreOffice.
+            
+            AOs are unavailable unless this process is 32-bit (when LibreOffice is 64-bit). Also need flag <see cref="P:Catkeys.Acc.NotInProc"/>.
+            </item>
+            <item>
+            In some windows, AO of some controls are not connected to AO of parent control. Then Find cannot find them if searches in whole window.
+            
+            Workaround: search only in that control. For example, use role prefix "class=...:" or id=...:". If it's a web browser control - prefix "web:". Or find the control with <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> and search in it. Or use <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)"/>.
+            </item>
+            <item>
+            AOs of many standard Windows controls have bugs when they are retrieved without loading dll into the target process (see <see cref="F:Catkeys.Types.AFFlags.NotInProc"/>).
+            Known bugs: 1. Toolbar buttons don't have Name in some cases. 2. <see cref="M:Catkeys.Acc.Focus(System.Boolean)"/> and <see cref="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)"/> often don't work properly.
+            
+            Workaround: don't use <see cref="F:Catkeys.Types.AFFlags.NotInProc"/>, or use <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            </item>
+            <item>
+            Function Find is much slower when cannot load dll into the target process. More info: <see cref="F:Catkeys.Types.AFFlags.NotInProc"/>. Function Wait then consumes much more CPU.
+            </item>
+            <item>
+            If the process has different 32/64 bitness than this process, to load the dll is launched rundll32.exe, which makes slower by about 50 ms first time.
+            </item>
+            <item>
+            Currently this library does not support auto-scaled windows when using high DPI (text size 125%, 150% or more).
+            If the target process is auto-scaled and this process isn't (or vice versa, or they have a different scaling factor), most coordinate-related functions don't work properly. For example, they get wrong AO rectangles.
+            </item>
+            </list>
             </remarks>
+            <example>
+            Click link "Example" in Chrome.
+            <code><![CDATA[
+            var w = Wnd.Find("* Chrome").OrThrow();
+            var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
+            a.DoAction();
+            ]]></code>
+            Click a link, wait for new web page, click a link in it.
+            <code><![CDATA[
+            var w = Wnd.Find("* Chrome").OrThrow();
+            var a = Acc.Wait(1, w, "web:LINK", "Link 1").OrThrow();
+            a.DoActionAndWaitForNewWebPage();
+            a = Acc.Wait(10, w, "web:LINK", "Link 2").OrThrow();
+            a.DoActionAndWaitForNewWebPage();
+            ]]></code>
+            </example>
         </member>
         <member name="P:Catkeys.Acc.WndContainer">
             <summary>
@@ -3042,25 +2947,24 @@
             Most but not all objects support this property.
             </remarks>
         </member>
-        <member name="P:Catkeys.Acc.RoleEnum">
+        <member name="P:Catkeys.Acc.RoleInt">
             <summary>
             Gets standard non-string role, as enum AccROLE.
             Uses <msdn>IAccessible.get_accRole</msdn>.
             </summary>
             <remarks>
-            Most objects have a standard role, as enum AccROLE. Some objects have a custom role, normally as string.
-            Returns 0 if object's role is string.
-            Returns 0 if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            Most objects have a standard role, as enum <see cref="T:Catkeys.Types.AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
+            Returns 0 if role is string or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
             </remarks>
         </member>
-        <member name="P:Catkeys.Acc.RoleString">
+        <member name="P:Catkeys.Acc.Role">
             <summary>
             Gets standard or custom role, as string.
             Uses <msdn>IAccessible.get_accRole</msdn>.
             </summary>
             <remarks>
-            Most objects have a standard role, as enum <see cref="T:Catkeys.Types.AccROLE"/>. Some objects have a custom role, normally as string, for example in web pages in Firefox and Chrome.
+            Most objects have a standard role, as enum <see cref="T:Catkeys.Types.AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
             For standard roles this function returns enum <see cref="T:Catkeys.Types.AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
             Returns "" if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
@@ -3073,60 +2977,66 @@
             </summary>
             <remarks>
             Returns 0 if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
-            Getting state often is slower than getting role, name or rectangle. But usually not much slower.
             </remarks>
             <example>
             <code><![CDATA[
-            if(a.State.Has_(AccSTATE.INVISIBLE)) Print("invisible");
-            if(a.IsInvisible) Print("invisible"); //the same as above
+            if(a.State.Has_(AccSTATE.INVISIBLE)) Print("has state INVISIBLE");
+            if(a.IsInvisible) Print("invisible");
             ]]></code>
             </example>
         </member>
-        <member name="P:Catkeys.Acc.IsBusy">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.BUSY. Can be used with DOCUMENT object of web browsers. </summary>
-        </member>
         <member name="P:Catkeys.Acc.IsChecked">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.CHECKED. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state CHECKED. </summary>
         </member>
         <member name="P:Catkeys.Acc.IsDisabled">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.UNAVAILABLE. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state UNAVAILABLE. </summary>
+            <remarks>Does not check whether this object is in a disabled parent/ancestor object.</remarks>
         </member>
         <member name="P:Catkeys.Acc.IsFocused">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.FOCUSED. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state FOCUSED. </summary>
         </member>
         <member name="P:Catkeys.Acc.IsInvisible">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.INVISIBLE. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state INVISIBLE and does not have state OFFSCREEN. </summary>
+            <remarks>
+            If the object has both INVISIBLE and OFFSCREEN states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most objects returns false (is visible), but for objects that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+            Does not check whether this object is in an invisible parent/ancestor object.
+            </remarks>
         </member>
         <member name="P:Catkeys.Acc.IsOffscreen">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.OFFSCREEN. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state OFFSCREEN. </summary>
         </member>
         <member name="P:Catkeys.Acc.IsPassword">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.PROTECTED. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state PROTECTED. </summary>
+            <remarks>This state is used for password fields.</remarks>
         </member>
         <member name="P:Catkeys.Acc.IsPressed">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.PRESSED. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state PRESSED. </summary>
         </member>
         <member name="P:Catkeys.Acc.IsReadonly">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.READONLY. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state READONLY. </summary>
         </member>
         <member name="P:Catkeys.Acc.IsSelected">
-            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has AccSTATE.SELECTED. See also <see cref="P:Catkeys.Acc.IsFocused"/>. </summary>
+            <summary> Calls <see cref="P:Catkeys.Acc.State"/> and returns true if has state SELECTED. </summary>
+        </member>
+        <member name="M:Catkeys.Acc._BstrToString(System.Int32,Catkeys.Types.BSTR)">
+            <summary>
+            Converts BSTR to string and disposes the BSTR.
+            If hr is not 0, returns "" (never null).
+            </summary>
         </member>
         <member name="P:Catkeys.Acc.Name">
             <summary>
-            Gets or sets name.
-            Uses <msdn>IAccessible.get_accName</msdn> or <msdn>IAccessible.put_accName</msdn>.
+            Gets name.
+            Uses <msdn>IAccessible.get_accName</msdn>.
             </summary>
-            <exception cref="T:Catkeys.Types.CatException">Failed to set name.</exception>
             <remarks>
-            Object name usually is its read-only text (eg button text or link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
-            Most objects don't support 'set'.
-            The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
+            Returns "" if name is unavailable or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             </remarks>
         </member>
         <member name="M:Catkeys.Acc.LibNameOfWindow(Catkeys.Wnd)">
             <summary>
-            Gets accessible name of window/control w.
+            Gets <see cref="P:Catkeys.Acc.Name"/> of window/control w.
             Returns null if w invalid. Returns "" if failed to get name.
             </summary>
         </member>
@@ -3138,8 +3048,8 @@
             <exception cref="T:Catkeys.Types.CatException">Failed to set value.</exception>
             <remarks>
             Object value usually is its editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
-            Most objects don't support 'set'.
             The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            Most objects don't support 'set'.
             </remarks>
         </member>
         <member name="P:Catkeys.Acc.Description">
@@ -3160,6 +3070,15 @@
             Returns "" if this property is unavailable or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             </remarks>
         </member>
+        <member name="P:Catkeys.Acc.UiaAutomationId">
+            <summary>
+            Gets UI Automation element AutomationId property.
+            </summary>
+            <remarks>
+            Only objects found with flag <see cref="F:Catkeys.Types.AFFlags.UIA"/> can have this property.
+            Returns "" if this property is unavailable or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            </remarks>
+        </member>
         <member name="P:Catkeys.Acc.KeyboardShortcut">
             <summary>
             Gets keyboard shortcut.
@@ -3176,64 +3095,75 @@
             </summary>
             <remarks>
             Returns "" if this property is unavailable or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
-            This function may have problems with Java windows. Then instead use <see cref="M:Catkeys.Acc.DoJavaAction(System.String)"/>.
+            If this is a Java accessible object, returns all actions that can be used with <see cref="M:Catkeys.Acc.DoJavaAction(System.String)"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="M:Catkeys.Acc.DoAction"/>.
             </remarks>
         </member>
-        <member name="P:Catkeys.Acc.JavaActions">
+        <member name="M:Catkeys.Acc.DoAction">
             <summary>
-            Gets list of actions that can be used with <see cref="M:Catkeys.Acc.DoJavaAction(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.Navigate(System.String,System.Boolean)">
-            <summary>
-            Gets another accessible object that is somehow related to this object (child, parent, next, etc). Allows to specify multiple relations.
-            </summary>
-            <param name="navig">
-            String consisting of one or more navigation direction strings separated by space, like "parent next child4 first".
-            Navigation string reference and more info: <see cref="T:Catkeys.Types.AccNAVDIR"/>.
-            A string can end with a number, like "child4" or "child,4". It is the n parameter of <see cref="M:Catkeys.Acc.Navigate(Catkeys.Types.AccNAVDIR,System.Int32,System.Boolean)"/>.
-            A custom direction can be specified like "#0x1009".
-            </param>
-            <param name="disposeThis">Dispose this Acc variable (release the COM object).</param>
-            <exception cref="T:System.ArgumentException">Invalid navig string.</exception>
-        </member>
-        <member name="M:Catkeys.Acc.Navigate(Catkeys.Types.AccNAVDIR,System.Int32,System.Boolean)">
-            <summary>
-            Gets another accessible object that is somehow related to this object (child, parent, next, etc).
-            Returns null if not found. You can use <see cref="M:Catkeys.Types.ExtensionMethods.OrThrow``1(``0)"/> (see example).
-            </summary>
-            <param name="navDir">
-            Navigation direction (relation). For example <c>AccNAVDIR.PARENT</c>.
-            Custom directions also are supported. For example <c>(AccNAVDIR)0x1009</c>.
-            More info is in <see cref="T:Catkeys.Types.AccNAVDIR"/> documentation.
-            </param>
-            <param name="n">
-            With navDir AccNAVDIR.CHILD it is 1-based child index. Negative index means from end, for example -1 is the last child. Cannot be 0.
-            With all other navDir - how many times to get object in the specified direction. For example PARENT 2 will get parent's parent. Cannot be less than 1.
-            </param>
-            <param name="disposeThis">Dispose this Acc variable (release the COM object).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid n.</exception>
-        </member>
-        <member name="M:Catkeys.Acc.DoDefaultAction">
-            <summary>
-            Asks the accessible object to perform its default action (see <see cref="P:Catkeys.Acc.DefaultAction"/>), for example 'click'.
+            Performs the object's default action (see <see cref="P:Catkeys.Acc.DefaultAction"/>). Usually it is 'click', 'press' or similar.
             Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
             </summary>
             <exception cref="T:Catkeys.Types.CatException">Failed.</exception>
             <remarks>
-            Fails if the object does not have a default action. Then you can use <see cref="M:Catkeys.Types.ExtensionMethods.MouseClick(Catkeys.Acc,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.MButton)"/> or try <see cref="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)"/>, <see cref="M:Catkeys.Acc.Focus(System.Boolean)"/>.
-            If the action takes long time, for example shows a dialog, this function normally just starts the action and returns immediately. It allows the caller to automate the dialog. If it does not return immediately, you can use another thread to automate the dialog.
+            Fails if the object does not have a default action. Then you can use <see cref="M:Catkeys.Types.ExtensionMethods.MouseClick(Catkeys.Acc,Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.MButton)"/>, or try <see cref="M:Catkeys.Acc.VirtualClick"/>, <see cref="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)"/>, <see cref="M:Catkeys.Acc.Focus(System.Boolean)"/> and keyboard functions.
+            The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="M:Catkeys.Acc.DoJavaAction(System.String)"/> or one of the above functions (MouseClick etc).
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Acc.VirtualClick">
+            <summary>
+            Posts mouse-left-click message to the container window, using coordinates of this object.
+            </summary>
+            <exception cref="T:Catkeys.Types.CatException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
+            <remarks>
+            Does not move the mouse.
+            Does not wait until the target application finishes processing the message.
+            Works not with all objects.
+            Use (try) this function when the object does not support <see cref="M:Catkeys.Acc.DoAction"/>. When both don't work, use MouseClick.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Acc.VirtualRightClick">
+            <summary>
+            Posts mouse-right-click message to the container window, using coordinates of this object.
+            </summary>
+            <exception cref="T:Catkeys.Types.CatException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
+            <remarks>
+            Does not move the mouse.
+            Does not wait until the target application finishes processing the message.
+            Works not with all objects. When does not work, use MouseClick.
             </remarks>
         </member>
         <member name="M:Catkeys.Acc.DoJavaAction(System.String)">
             <summary>
-            Asks the Java accessible object to perform one of its actions.
+            Performs one of actions supported by this Java accessible object.
             </summary>
-            <param name="action">Action name. See <see cref="P:Catkeys.Acc.JavaActions"/>. If null (default), posts Space key message to the object.</param>
+            <param name="action">
+            Action name. See <see cref="P:Catkeys.Acc.DefaultAction"/>.
+            If null (default), performs default action (like <see cref="M:Catkeys.Acc.DoAction"/>) or posts Space key message. More info in Remarks.</param>
             <exception cref="T:Catkeys.Types.CatException">Failed.</exception>
             <remarks>
-            Supports accessible objects of Java windows only if the Java Access Bridge (JAB) is enabled. You can enable/disable it in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe.
-            JAB has this bug: if it is a button click action that opens a modal dialog, DoDefaultAction/DoJavaAction do not return until the dialog is closed. It waits max 8 s. During that time the caller must wait and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the object is focusable, this function tries a workaround: it makes the object (button etc) focused and posts Space key message, which should press the button, and it does not wait.
+            Read more about Java accessible objects in <see cref="T:Catkeys.Acc">class help</see>.
+            
+            Problem: if the action opens a dialog, DoAction/DoJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the object is focusable, this function tries a workaround: it makes the object (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
+            </remarks>
+        </member>
+        <member name="M:Catkeys.Acc.DoActionAndWaitForNewWebPage(System.Double,System.Action{Catkeys.Acc})">
+            <summary>
+            Calls <see cref="M:Catkeys.Acc.DoAction"/> or <paramref name="action"/> and waits until window name changes and web page name changes.
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+            </summary>
+            <param name="secondsTimeout">
+            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+            Default 60 seconds.
+            </param>
+            <param name="action">If used, calls it instead of <see cref="M:Catkeys.Acc.DoAction"/>.</param>
+            <exception cref="T:System.TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+            <exception cref="T:Catkeys.Types.CatException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
+            <exception cref="T:Catkeys.Types.WndException">The window was closed while waiting.</exception>
+            <exception cref="T:System.Exception">Exceptions thrown by <see cref="M:Catkeys.Acc.DoAction"/> or by the <paramref name="action"/> function.</exception>
+            <remarks>
+            This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for object' function from finding a matching object in the old page, which would be bad.
+            This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
+            This function cannot be used when the new page has the same title as current page. Then it waits until secondsTimeout time or forever. The same if the action does not open a web page.
             </remarks>
         </member>
         <member name="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)">
@@ -3242,17 +3172,18 @@
             </summary>
             <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>AccSELFLAG.TAKEFOCUS | AccSELFLAG.TAKESELECTION</c>.</param>
             <exception cref="T:Catkeys.Types.CatException">Failed.</exception>
+            <exception cref="T:Catkeys.Types.WndException">Failed to activate the window (<see cref="M:Catkeys.Wnd.Activate"/>) or focus the control (<see cref="M:Catkeys.Wnd.Focus"/>).</exception>
             <remarks>
             Uses <msdn>IAccessible.accSelect</msdn>.
             Not all objects support it. Most objects support not all flags. It depends on object <see cref="T:Catkeys.Types.AccSTATE">states</see> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
-            Many object have bugs, especially with flag TAKEFOCUS. For example standard Windows controls often deactivate the window etc.
+            Many object have bugs, especially with flag TAKEFOCUS. More bugs when the object found with flag NotInProc.
             </remarks>
         </member>
         <member name="M:Catkeys.Acc.Focus(System.Boolean)">
             <summary>
             Makes this object focused for keyboard input.
             </summary>
-            <param name="andSelect">Focus and select. Adds flag TAKESELECTION. Note: it is for selecting a list item, not for selecting text in a text box.</param>
+            <param name="andSelect">Add flag TAKESELECTION. Note: it is for selecting a list item, not for selecting text in a text box.</param>
             <remarks>
             Calls <see cref="M:Catkeys.Acc.Select(Catkeys.Types.AccSELFLAG)"/> with flag TAKEFOCUS and optionally TAKESELECTION.
             Not all objects support this action and not all work correctly. More info in Select documentation.
@@ -3261,422 +3192,402 @@
         <member name="P:Catkeys.Acc.SelectedChildren">
             <summary>
             Gets selected direct child items.
-            Returns empty array if there are no selected items of if failed.
+            Returns empty array if there are no selected items of if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="T:Catkeys.Acc._Java._JApi">
+        <member name="M:Catkeys.Acc.GetMultipleProperties(System.String)">
             <summary>
-            Loads Java Access Bridge (JAB) dll and functions. Allows to call the functions.
-            Need this because 64-bit and 32-bit versions of the dll have different names, and [DllImport] does not support it.
+            Gets multiple properties.
             </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Java._IsJavaWindow(Catkeys.Wnd)">
-            <summary>
-            Returns true if w process has a JAB hidden dialog ("Access Bridge status", "#32770").
-            It can be a Java window or other window that uses JAB (eg JavaMonkey; but not a window of this process).
-            </summary>
+            <param name="props">
+            Which properties to get. Each character specifies a property:
+            'R' - <see cref="P:Catkeys.Acc.Role"/>.
+            'n' - <see cref="P:Catkeys.Acc.Name"/>.
+            'v' - <see cref="P:Catkeys.Acc.Value"/>.
+            'd' - <see cref="P:Catkeys.Acc.Description"/>.
+            'h' - <see cref="P:Catkeys.Acc.Help"/>.
+            'a' - <see cref="P:Catkeys.Acc.DefaultAction"/>.
+            'k' - <see cref="P:Catkeys.Acc.KeyboardShortcut"/>.
+            'u' - <see cref="P:Catkeys.Acc.UiaAutomationId"/>.
+            's' - <see cref="P:Catkeys.Acc.State"/>.
+            'r' - <see cref="P:Catkeys.Acc.Rect"/>.
+            'w' - <see cref="P:Catkeys.Acc.WndContainer"/>.
+            'o' - <see cref="M:Catkeys.Acc.Html(System.Boolean)"/> outer.
+            'i' - <see cref="M:Catkeys.Acc.Html(System.Boolean)"/> inner.
+            '@' - <see cref="M:Catkeys.Acc.HtmlAttributes"/>.
+            </param>
+            <exception cref="T:System.ArgumentException">Unknown property character.</exception>
             <remarks>
-            speed: faster than AccessibleObjectFromWindow/AccessibleObjectFromPoint.
-            Call once for a top-level window, don't call for controls.
+            Returns an array of props length. Element values are property values, or ""/empty (not null) if failed to get. Element types are as of the corresponding Acc properties.
+            
+            Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this accessible object was found with flag <see cref="F:Catkeys.Types.AFFlags.NotInProc"/> etc.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            var w = Wnd.Find("* Google Chrome").OrThrow();
+            var a = Acc.Find(w, "LINK").OrThrow();
+            foreach(var v in a.GetMultipleProperties("rnvdhaksRwoi@")) { //all properties
+            	if(v is Dictionary<string, string> d) Print(d); //HTML attributes
+            	else Print(v);
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.Acc.Navigate(System.String,System.Double,System.Boolean)">
+            <summary>
+            Gets an adjacent or related accessible object (AO) - next, child, parent, etc.
+            Returns null if not found.
+            </summary>
+            <param name="navig">
+            String consisting of one or more navigation direction strings separated by space, like "parent next child4 first".
+            <list type="bullet">
+            <item>"next" - next sibling AO in the same parent AO.</item>
+            <item>"previous" - previous sibling AO in the same parent AO.</item>
+            <item>"first" - first child AO.</item>
+            <item>"last" - last child AO.</item>
+            <item>"parent" or "pa" - parent (container) AO.</item>
+            <item>"child" - child AO by 1-based index. Example: "child3" (3-th child). Negative index means from end, for example -1 is the last child.</item>
+            <item>"#N" - N is a numeric value to pass to <msdn>IAccessible.accNavigate</msdn> as navDir. Can be any standard or custom value supported by the AO.</item>
+            </list>
+            Can be only 2 letters, like "pr" for "previous".
+            A string like "next3" or "next,3" is the same as "next next next". Except for "child".
+            
+            For "next", "previous", "firstchild", "lastchild", "#N" is used <msdn>IAccessible.accNavigate</msdn>. Not all AOs support it. Some AOs skip invisible siblings. Instead you can use "parent childN" or "childN".
+            For "parent" is used <msdn>IAccessible.get_accParent</msdn>. Few AOs don't support. Some AOs return a different parent than in the AO tree.
+            For "child" is used API <msdn>AccessibleChildren</msdn>.
+            </param>
+            <param name="secondsToWait">Wait for the wanted AO max this number of seconds. If negative, waits forever.</param>
+            <param name="disposeThis">Dispose this Acc variable (release the COM object). Even when fails.</param>
+            <exception cref="T:System.ArgumentException">Invalid navig string.</exception>
+            <example>
+            <code><![CDATA[
+            a = a.Navigate("parent next ch3", true).OrThrow();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.Acc.Html(System.Boolean)">
+            <summary>
+            Gets HTML.
+            </summary>
+            <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
+            <remarks>
+            Returns "" if this is not a HTML element or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
+            If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
             </remarks>
         </member>
-        <member name="M:Catkeys.Acc._Java.AccFromPoint(System.Drawing.Point,Catkeys.Wnd)">
+        <member name="M:Catkeys.Acc.HtmlAttribute(System.String)">
             <summary>
-            Gets Java accessible object from point.
+            Gets a HTML attribute.
             </summary>
-            <param name="p">Point in screen coordinates.</param>
-            <param name="w">Window containing the point. If default(Wnd), calls Api.WindowFromPoint.</param>
+            <param name="name">Attribute name, for example "href", "id", "class". Full, case-sensitive.</param>
+            <remarks>
+            Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
+            </remarks>
+            <exception cref="T:System.ArgumentException">name is null/""/invalid.</exception>
         </member>
-        <member name="T:Catkeys.Acc._Acc">
+        <member name="M:Catkeys.Acc.HtmlAttributes">
             <summary>
-            Simple IAccessible/childId pair.
+            Gets all HTML attributes.
             </summary>
+            <remarks>
+            Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
+            </remarks>
         </member>
-        <member name="M:Catkeys.Acc._Acc.Navigate(System.Collections.Generic.List{Catkeys.Acc._Acc.NavdirN})">
+        <member name="M:Catkeys.Acc.ScrollTo">
             <summary>
-            Navigates to another object and replaces fields of this _Acc.
-            Returns HRESULT.
-            This will be empty/disposed if returns not 0. Else the caller must finally dispose this new _Acc.
-            navig must be valid, for example created by NavigN.Parse. This function does not check it.
+            Scrolls this accessible object into view.
             </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Acc.Navigate(Catkeys.Types.AccNAVDIR,System.Int32)">
-            <summary>
-            Navigates to another object and replaces fields of this _Acc.
-            Returns HRESULT.
-            This will be empty/disposed if returns not 0. Else the caller must finally dispose this new _Acc.
-            n is child index if CHILD (cannot be 0), else it is the number of navigations (cannot be less than 1). This function does not check it.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Acc._NavigateAlt(Catkeys.Acc._Acc@,Catkeys.Types.AccNAVDIR)">
-            <summary>
-            For objects that don't support accNavigate, tries a workaround if navDir is FIRSTCHILD, LASTCHILD, NEXT or PREVIOUS.
-            Many objects don't support it, eg WPF, SPLITBUTTON, Explorer listview. MSDN says it's deprecated. Also, many objects skip invisible siblings.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Acc.NavdirN.Parse(System.String)">
-            <summary>
-            Converts navig string to List{_NavdirN}.
-            Throws ArgumentException if navig is invalid, eg contains unknown strings or invalid n.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Acc.DescendantFromPoint(System.Drawing.Point,Catkeys.Acc._Acc@,System.Boolean@,System.Boolean)">
-            <summary>
-            Gets object from point, which can be a child, descendant or this.
-            Returns HRESULT if fails or if p is not in this.
-            If isThis receives true, does not AddRef. Else does AddRef even if ar.a==this.a.
-            </summary>
-            <param name="p">Point in screen coordinates.</param>
-            <param name="ar">Result.</param>
-            <param name="isThis">Receives true if ar is this.</param>
-            <param name="directChild"></param>
-        </member>
-        <member name="M:Catkeys.Acc._Acc.DescendantFocused(Catkeys.Acc._Acc@,System.Boolean@,System.Boolean)">
-            <summary>
-            Gets focused, which can be a child, descendant or this.
-            Returns HRESULT if fails or if nothing is focused in this.
-            If isThis receives true, does not AddRef. Else does AddRef even if ar.a==this.a.
-            </summary>
-            <param name="ar">Result.</param>
-            <param name="isThis">Receives true if ar is this.</param>
-            <param name="directChild"></param>
-        </member>
-        <member name="T:Catkeys.Acc._AccProps">
-            <summary>
-            Compares an object with other objects using some properties - rectangle, role.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._AccProps.Init(Catkeys.Acc.IAccessible,System.Int32)">
-            <summary>
-            Gets properties of the object that will be compared with other objects.
-            Does nothing if already done (can be called multiple times).
-            Returns false if failed to get properties.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._AccProps.Match(Catkeys.Acc.IAccessible,System.Int32)">
-            <summary>
-            Compares properties of another object with properties of the Init object.
-            Returns true if they match.
-            Init must be called (asserts).
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.get_accName(System.Int32,System.String@,Catkeys.Types.AccROLE)">
-            <summary>
-            Gets name or "".
-            </summary>
-            <param name="elem"></param>
-            <param name="s"></param>
-            <param name="role">If not 0, used by _WorkaroundGetToolbarButtonName.</param>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.GetRole(System.Int32,Catkeys.Types.AccROLE@)">
-            <summary>
-            Gets numeric (standard) role.
-            Returns HRESULT.
-            </summary>
-            <param name="elem"></param>
-            <param name="role">Receives numeric role. Receives 0 if role is string or failed.</param>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.GetRole(System.Int32,Catkeys.Types.AccROLE@,System.String@)">
-            <summary>
-            Gets numeric (standard) or string (custom) role.
-            Returns HRESULT.
-            </summary>
-            <param name="elem"></param>
-            <param name="roleEnum">Receives numeric role. Receives 0 if role is string or failed.</param>
-            <param name="roleString">Receives string role. Receives null if role is numeric or failed.</param>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.GetRoleString(System.Int32,System.String@)">
-            <summary>
-            Gets standard or custom role as string.
-            Returns HRESULT.
-            </summary>
-            <param name="elem"></param>
-            <param name="role">Receives standard role name or custom role string or non-standard role numeric value as string. Receives null if failed.</param>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.GetRoleString(System.Int32,System.String@,Catkeys.Types.AccROLE@)">
-            <summary>
-            Gets standard or custom role as string.
-            Returns HRESULT.
-            </summary>
-            <param name="elem"></param>
-            <param name="role">Receives standard role name or custom role string or non-standard role numeric value as string. Receives null if failed.</param>
-            <param name="roleEnum">If 0, calls get_accRole and sets roleEnum = numeric role or 0. Else just maps roleEnum to string.</param>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.accHitTest(System.Int32,System.Int32,Catkeys.Acc._Acc@)">
-            <summary>
-            Gets object from point (screen coordinates), which can be a child (topmost) or self.
-            If neither a child or this is at that point, sets a.iacc=0 and a.elem=0. Returns 1 (S_FALSE). Note: the point can be in objects's bounding rectangle but the object is not rectangular.
-            Else if at that point is this, sets a.iacc=this and a.elem=0. Does not AddRef.
-            Else if at that point is a simple element, sets a.iacc=this and a.elem!=0. Does not AddRef.
-            Else sets a.iacc=child and a.elem=0. Will need to release a.iacc.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.get_accFocus(Catkeys.Acc._Acc@)">
-            <summary>
-            Gets focused object, which can be a child or this.
-            If neither a child or this is focused, sets a.iacc=0 and a.elem=0. Returns 1 (S_FALSE).
-            Else if focused is this, sets a.iacc=this and a.elem=0. Does not AddRef.
-            Else if focused is a simple element, sets a.iacc=this and a.elem!=0. Does not AddRef.
-            Else sets a.iacc=child and a.elem=0. Will need to release a.iacc.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.accNavigate(Catkeys.Types.AccNAVDIR,System.Int32,Catkeys.Acc._Acc@)">
-            <summary>
-            Calls accNavigate(out VARIANT) and gets IAccessible/elem from VARIANT using standard pattern which may involve get_accParent/get_accChild.
-            Unlike the higher-level function Acc.Navigate: Does not support PARENT and CHILD. Does not apply a workaround when fails.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.FromVARIANT(Catkeys.Types.VARIANT@,Catkeys.Acc._Acc@,System.Boolean)">
-            <summary>
-            Creates child IAccessible/elem from VARIANT.
-            If VT_DISPATCH, gets IAccessible and releases the IDispatch. Sets a.elem=0.
-            If VT_I4, sets non-zero a.elem and sets a.a=this. Does not AddRef.
-            Clears the VARIANT (releases IDispatch etc, sets vt=0).
-            Returns HRESULT.
-            If vt is not VT_DISPATCH/VT_I4 or value is 0, asserts and returns E_FAIL.
-            </summary>
-            <param name="v">The input VARIANT. This function disposes it.</param>
-            <param name="a">
-            a.a - result IAccessible. If VT_DISPATCH, it is a child of this. If VT_I4, it is this.
-            a.elem - if VT_I4, receives non-zero child id, else 0.
-            </param>
-            <param name="tryGetObjectFromId">If VT_I4, try to call get_accChild. If it succeeds, sets a.elem = 0.</param>
-        </member>
-        <member name="M:Catkeys.Acc.IAccessible.FromIDispatch(System.IntPtr,Catkeys.Acc.IAccessible@)">
-            <summary>
-            Calls QueryInterface to get IAccessible from IDispatch idisp. Releases idisp.
-            Returns HRESULT.
-            </summary>
-            <param name="idisp">IDispatch as IntPtr. If == default, returns Api.E_FAIL.</param>
-            <param name="iacc">Result.</param>
-        </member>
-        <member name="M:Catkeys.Acc._BstrToString(System.Int32,Catkeys.Types.BSTR,System.String@)">
-            <summary>
-            Converts BSTR to string and disposes the BSTR.
-            Normalizes HRESULT: if DISP_E_MEMBERNOTFOUND or E_NOTIMPL, makes S_FALSE.
-            If hr is not 0, sets s = "" (never null).
-            </summary>
+            <exception cref="T:Catkeys.Types.CatException">Failed to scroll, or the object does not support scrolling.</exception>
+            <remarks>
+            This function works with these objects:
+            <list type="bullet">
+            <item>Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="F:Catkeys.Types.AFFlags.NotInProc"/>.</item>
+            <item>Objects in Edge browser, standard treeview and listview controls, some other. With Find use flag <see cref="F:Catkeys.Types.AFFlags.UIA"/>.</item>
+            </list>
+            </remarks>
         </member>
         <member name="T:Catkeys.Acc.Finder">
             <summary>
-            Contains accessible object properties and is used to find the object.
-            Can be used instead of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>.
-            Also can be used to find window that contains certain accessible object, like in the example.
+            Contains accessible object (AO) properties and is used to find the AO.
+            Can be used instead of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
             </summary>
             <example>
-            Find window that contains certain accessible object, and get the object too.
+            Find window that contains certain AO, and get the AO too.
             <code><![CDATA[
-            var f = new Acc.Finder("PUSHBUTTON", "Apply"); //object properties
-            Wnd w = Wnd.Find(className: "#32770", also: t => f.FindIn(t));
+            var f = new Acc.Finder("PUSHBUTTON", "Apply"); //AO properties
+            Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
             Print(w);
             Print(f.Result);
             ]]></code>
             </example>
         </member>
-        <member name="P:Catkeys.Acc.Finder.MaxLevel">
-            <summary>
-            Maximal level in the object tree at which the object can be found.
-            The default value is 1000. It prevents stack overflow when an object has a bug and returns itself when queried a child.
-            A smaller level can make faster, because objects at higher levels are not searched. An alternative is to use path.
-            </summary>
-        </member>
-        <member name="P:Catkeys.Acc.Finder.SkipRoles">
-            <summary>
-            Sets array of roles that are not in path to the object you want to find.
-            When searching, objects that have one of these roles will be skipped together with descendants. It can make faster.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.Finder.#ctor(System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)">
-            <summary>
-            See <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>.
-            </summary>
-            <param name="role"></param>
-            <param name="name"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <param name="skip"></param>
-            <param name="navig"></param>
-            <exception cref="T:System.ArgumentException">Invalid role, name or navig.</exception>
-        </member>
         <member name="P:Catkeys.Acc.Finder.Result">
             <summary>
-            The found object (after calling FindIn).
+            The found accessible object.
+            null if not found. null if ResultGetProperty is used.
             </summary>
         </member>
-        <member name="M:Catkeys.Acc.Finder._Reset(System.Boolean)">
+        <member name="P:Catkeys.Acc.Finder.ResultProperty">
             <summary>
-            Resets all result/temporary fields/properties to their default values.
-            Optionally disposes Result.
+            The requested propery of the found accessible object, depending on <see cref="P:Catkeys.Acc.Finder.ResultGetProperty"/>.
+            null if not found. null if ResultGetProperty is not used. null if failed to get the property.
+            </summary>
+            <remarks>
+            The type depends on the property. Most properties are String. Others: <see cref="P:Catkeys.Acc.Rect"/>, <see cref="P:Catkeys.Acc.State"/>, <see cref="P:Catkeys.Acc.WndContainer"/>, <see cref="M:Catkeys.Acc.HtmlAttributes"/>.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Acc.Finder.ResultGetProperty">
+            <summary>
+            Set this when you need only some property of the accessible object (name, etc) and not the object itself.
+            The value is a character, the same as with <see cref="M:Catkeys.Acc.GetMultipleProperties(System.String)"/>, for example 'n' for Name.
+            </summary>
+            <exception cref="T:System.ArgumentException">Parameter <b>also</b> was used.</exception>
+        </member>
+        <member name="M:Catkeys.Acc.Finder.#ctor(System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)">
+            <summary>
+            Allows to specify accessible object properties, like with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
             </summary>
         </member>
-        <member name="M:Catkeys.Acc.Finder._ResetAndDetachResultIAccessible">
+        <member name="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)">
             <summary>
-            Resets like _Reset, but returns Result._iacc instead of releasing it.
-            If Result is null, returns default.
+            Finds accessible object (AO) in the specified control of window w.
+            Returns true if found. The <see cref="P:Catkeys.Acc.Finder.Result"/> property will be the found AO.
             </summary>
+            <param name="w">Window that contains the control.</param>
+            <param name="controls">Control properties. This functions searches in all matching controls.</param>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd)"/>.</exception>
+            <remarks>
+            Alternatively you can specify control class name or id in role. How this function is different: 1. Allows to specify more control properties. 2. Works better/faster when the control is of a different process or thread than the parent window.
+            </remarks>
         </member>
-        <member name="M:Catkeys.Acc.Finder.FindIn(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)">
+        <member name="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd)">
             <summary>
-            Finds the specified accessible object in window w.
-            Returns true if found. The <see cref="P:Catkeys.Acc.Finder.Result"/> property will be the found object (null if not found).
-            Used by <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>. More info there.
+            Finds accessible object (AO) in window w, like <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
+            Returns true if found. The <see cref="P:Catkeys.Acc.Finder.Result"/> property will be the found AO.
             </summary>
-            <param name="w">Window or control that contains the object.</param>
-            <param name="controls">Allows to specify all possible properties of the child window (of w) where the accessible object is. If used (not null), this functions searches for the accessible object in all matching controls until found.</param>
-            <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
-        </member>
-        <member name="M:Catkeys.Acc.Finder.FindIn(Catkeys.Acc)">
-            <summary>
-            Finds the specified accessible object in an accessible object, like <see cref="M:Catkeys.Acc.Find(System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>.
-            Returns true if found.
-            The <see cref="P:Catkeys.Acc.Finder.Result"/> property will be the found object (null if not found).
-            </summary>
-            <param name="parent">Direct or indirect parent accessible object.</param>
-            <exception cref="T:System.ArgumentException">role with prefix ("web:" etc).</exception>
-        </member>
-        <member name="M:Catkeys.Acc.Finder.LibGetChromeDOCUMENT(Catkeys.Wnd,Catkeys.Acc.IAccessible)">
-            <summary>
-            Finds Chrome DOCUMENT and enables its accessible objects if need.
-            </summary>
-            <param name="w"></param>
-            <param name="aCLENT">w CLIENT</param>
-        </member>
-        <member name="M:Catkeys.Acc.Finder.WaitIn(System.Double,Catkeys.Wnd,Catkeys.Wnd.ChildFinder)">
-            <summary>
-            Finds the specified accessible object in window w.
-            The same as <see cref="M:Catkeys.Acc.Finder.FindIn(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)"/>, but waits until the object is found or the given time expires.
-            Returns true if found. If secondsTimeout is negative, on timeout returns false (else exception).
-            </summary>
-            <param name="secondsTimeout">
-            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
-            </param>
-            <param name="w">Window or control that contains the object.</param>
-            <param name="controls">Allows to specify all possible properties of the child window (of w) where the accessible object is. If used (not null), this functions searches for the accessible object in all matching controls until found.</param>
-            <exception cref="T:System.TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
-            <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
-        </member>
-        <member name="M:Catkeys.Acc.Finder.WaitIn(System.Double,Catkeys.Acc)">
-            <summary>
-            Finds the specified accessible object in an accessible object.
-            The same as <see cref="M:Catkeys.Acc.Finder.FindIn(Catkeys.Acc)"/>, but waits until the object is found or the given time expires.
-            Returns true if found. If secondsTimeout is negative, on timeout returns false (else exception).
-            </summary>
-            <param name="secondsTimeout">
-            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
-            </param>
-            <param name="parent">Direct or indirect parent accessible object.</param>
-            <exception cref="T:System.ArgumentException">role with prefix ("web:" etc).</exception>
-        </member>
-        <member name="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)">
-            <summary>
-            Finds accessible object in window.
-            Returns null if not found. You can use <see cref="M:Catkeys.Types.ExtensionMethods.OrThrow``1(``0)"/> (see example).
-            </summary>
-            <param name="w">Window or control that contains the object.</param>
-            <param name="role">
-            Accessible object role, like "LINK". See <see cref="P:Catkeys.Acc.RoleString"/>, <see cref="T:Catkeys.Types.AccROLE"/>.
-            Or path consisting of roles, like "ROLE/ROLE/ROLE". More info in Remarks.
-            Case-sensitive, not wildcard. Use null to match any role. Cannot be "".
-            </param>
-            <param name="name">
-            Accessible object name (<see cref="P:Catkeys.Acc.Name"/>).
-            String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-            null means 'can be any'. "" means 'must not have name'.
-            Or can be a '\0'-separated list of properties and/or HTML attributes, like "name=xxx\0 a:href=yyy" or "\0 a:href=yyy". The list is passed to <see cref="M:Catkeys.Acc.Match(System.Object[])"/>. The values are wildcard expressions.
-            </param>
-            <param name="flags"></param>
-            <param name="also">
-            Lambda etc callback function to call for each matching accessible object. Let it return true if this is the object you want.
-            The parameter is of type <see cref="T:Catkeys.Types.AFAcc"/> which has all Acc properties and several own.
-            Example, the object must not be disabled: <c>also: o => !o.IsDisabled</c>
-            Example, the object must have certain Value: <c>also: o => o.Value == "http://www.example.com/x.php"</c>
-            Example, the object's Value must match a wildcard: <c>also: o => o.Value.Like_("start*end")</c>
-            Example, the object must be at certain level in the object tree: <c>also: o => o.Level == 2</c>
-            Example, the object must contain x y: <c>o => o.GetRect(out var r, o.WndWindow) &amp;&amp; r.Contains(266, 33)</c>
-            </param>
-            <param name="skip">
-            0-based index of matching object.
-            For example, if 1, the function skips the first matching object and returns the second.
-            </param>
-            <param name="navig">
-            A navigation string that can be used to get another object related to the found object, like with <see cref="M:Catkeys.Acc.Navigate(System.String,System.Boolean)"/>.
-            This is applied when all other parameters match (including <paramref name="also"/> and <paramref name="skip"/>).
-            </param>
-            <exception cref="T:Catkeys.Types.WndException">Invalid w.</exception>
+            <param name="w">Window or control that contains the AO.</param>
             <exception cref="T:System.ArgumentException">
             role is "" or invalid.
             name is invalid wildcard expression ("**options|" or regular expression).
-            Parts of '\0'-separated name string have invalid format or unknown property names.
-            navig is invalid.
+            prop has invalid format or contains unknown property names or invalid wildcard expressions.
+            Using flag <see cref="F:Catkeys.Types.AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
             </exception>
-            <remarks>
-            Standard role names are as in the <see cref="T:Catkeys.Types.AccROLE"/> enum. Also can be used custom roles, such as "div" in Firefox.
-            When searching in window, role or path can have one of these prefixes:
-            <list type="bullet">
-            <item>
-            "class=X:" - search only in visible child controls whose class name is X (see <see cref="P:Catkeys.Wnd.ClassName"/>).
-            Case-insensitive wildcard, see <see cref="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)"/>.
-            </item>
-            <item>
-            "id=X:" - search only in visible child controls whose id is X (see <see cref="P:Catkeys.Wnd.ControlId"/>).
-            </item>
-            <item>
-            "web:" - search only in the visible web page, not in whole window. Examples: "web:LINK", "web:DOCUMENT/LIST/LISTITEM/LINK". It usually makes faster.
-            Supports Firefox, Chrome, Internet Explorer (IE) and apps based on their code. With other windows, searches in the first found visible DOCUMENT object.
-            <note type="note">Chrome web page accessible objects normally are disabled (DOCUMENT does not have children). Use prefix "web:" or "chrome:" to enable them.</note>
-            </item>
-            <item>"firefox:" - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used "web:" instead.</item>
-            <item>"chrome:" - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used "web:" instead.</item>
-            <item>"java:" - find Java accessible object.</item>
-            </list>
-            This function walks the tree of accessible objects of the window or control, until it finds a matching object. To make faster, you can use path to the object. Examples:
-            <list type="bullet">
-            <item>"web:DOCUMENT/div/LIST/LISTITEM/LINK" - find LINK using its full path in web page.</item>
-            <item>"web:/div/LIST//LINK" - the empty parts mean 'any role'. For example don't need to specify DOCUMENT because in web pages the first part is always DOCUMENT (Firefox, Chrome) or PANE (IE).</item>
-            <item>"web:/div/LIST[4]/LISTITEM[-1]/LINK" - the 4 is 1-based index of div child from which to start searching (4-th, then 3-th, 5-th and so on). It can make faster. Negative means 'index from end', for example use -1 to search in reverse order. Flag Reverse is not applied to path parts with indexes. If index is invalid, will use the nearest valid index.</item>
-            <item>"web:/div/LIST[4!]/LISTITEM[-1!]/LINK" - like the above, but the LIST must be exactly 4-th child (don't search 3-th, 5-th etc) and the LISTITEM must be the last child. This can be useful when waiting (uses less CPU), however useless if object indices in the window or web page change often.</item>
-            <item>"web://[4]/[-1!]/[2]" - index without role.</item>
-            <item>"CLIENT/WINDOW/OUTLINE/OUTLINEITEM[-1]" - path in window or control. The first path part is a direct child object of the WINDOW object of the window/control. The WINDOW object itself is not included in the search; if you need it, instead use <see cref="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,System.Boolean)"/>.</item>
-            </list>
-            Tip: Instead of literal role string you can use nameof. Example: <c>nameof(AccROLE.CHECKBUTTON)</c>.
-            
-            This function uses a <see cref="T:Catkeys.Acc.Finder"/>. You can use it directly, it has some more options (see example).
-            
-            Finding accessible objects can be much slower if this process is 64-bit and that process is 32-bit or vice versa.
-            Finding accessible objects of some applications works well only if this process is 32-bit or only if 64-bit. For example LibreOffice.
-            </remarks>
-            <example>
-            Try to find link "Example" in web page. Return if not found.
-            <code><![CDATA[
-            var a = Acc.Find(w, "web:LINK", "Example");
-            if(a == null) { Print("not found"); return; }
-            ]]></code>
-            Try to find link "Example" in web page. Throw NotFoundException if not found.
-            <code><![CDATA[
-            var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
-            ]]></code>
-            Use a Finder.
-            <code><![CDATA[
-            var f = new Acc.Finder("PUSHBUTTON", "Example");
-            f.SkipRoles = new string[] { "OUTLINE", "PANE" };
-            if(!f.FindIn(w)) { Print("not found"); return; }
-            Acc a = f.Result;
-            ]]></code>
-            </example>
-            <seealso cref="T:Catkeys.Acc.Finder"/>
+            <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
+            <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
-        <member name="M:Catkeys.Acc.Find(System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)">
+        <member name="M:Catkeys.Acc.Finder.Find(Catkeys.Acc)">
             <summary>
-            Finds a descendant accessible object of this accessible object.
-            Parameters and other info are as with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>.
+            Finds accessible object (AO) in another AO, like <see cref="M:Catkeys.Acc.Find(System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
+            Returns true if found. The <see cref="P:Catkeys.Acc.Finder.Result"/> property will be the found AO.
             </summary>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Finder.#ctor(System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/> and <see cref="M:Catkeys.Acc.Finder.FindIn(Catkeys.Acc)"/>.</exception>
+            <param name="a">Direct or indirect parent AO.</param>
+            <exception cref="T:System.ArgumentNullException">a is null.</exception>
+            <exception cref="T:System.ArgumentException">
+            role is "" or invalid or has a prefix ("web:" etc).
+            name is invalid wildcard expression ("**options|" or regular expression).
+            prop has invalid format or contains unknown property names or invalid wildcard expressions.
+            <see cref="P:Catkeys.Acc.SimpleElementId"/> is not 0.
+            Using flag <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            </exception>
+            <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
-        <member name="M:Catkeys.Acc.WaitFor(System.Double,Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)">
+        <member name="M:Catkeys.Acc.Finder.Wait(System.Double,Catkeys.Wnd)">
             <summary>
-            Finds an accessible object in window.
-            The same as <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>, but waits until the object is found or the given time expires.
-            Returns the object. If secondsTimeout is negative, on timeout returns null (else exception).
+            Finds accessible object (AO) in window w.
+            The same as <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd)"/>, but waits until the AO is found or the given time expires.
+            Returns true if found. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+            </summary>
+            <param name="secondsTimeout">
+            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+            </param>
+            <param name="w">Window or control that contains the AO.</param>
+            <exception cref="T:System.TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd)"/>.</exception>
+        </member>
+        <member name="M:Catkeys.Acc.Finder.Wait(System.Double,Catkeys.Acc)">
+            <summary>
+            Finds accessible object (AO) in another AO.
+            The same as <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Acc)"/>, but waits until the AO is found or the given time expires.
+            Returns true if found. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+            </summary>
+            <param name="secondsTimeout">
+            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+            </param>
+            <param name="a">Direct or indirect parent AO.</param>
+            <exception cref="T:System.TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Acc)"/>.</exception>
+        </member>
+        <member name="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)">
+             <summary>
+             Finds accessible object (AO) in window.
+             Returns the found AO. Returns null if not found. You can use <see cref="M:Catkeys.Types.ExtensionMethods.OrThrow``1(``0)"/> (see example).
+             </summary>
+             <param name="w">Window or control that contains the AO.</param>
+             <param name="role">
+             AO role, like "LINK". Or path, like "ROLE/ROLE/ROLE".
+             See <see cref="P:Catkeys.Acc.Role"/>. Can be used standard roles (see <see cref="T:Catkeys.Types.AccROLE"/>) and custom roles (like "div" in Firefox).
+             Case-sensitive, not wildcard. Use null to match any role. Cannot be "".
+             
+             When searching in window, role or path can have one of these prefixes:
+             <list type="bullet">
+             <item>
+             "class=X:" - search only in visible child controls whose class name is X (see <see cref="P:Catkeys.Wnd.ClassName"/>).
+             Case-insensitive wildcard, see <see cref="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)"/>.
+             </item>
+             <item>
+             "id=X:" - search only in visible child controls whose id is X (see <see cref="P:Catkeys.Wnd.ControlId"/>).
+             See also: <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)"/>.
+             </item>
+             <item>
+             "web:" - search only in the visible web page, not in whole window. It can make faster.
+             Examples: "web:LINK", "web:/LIST/LISTITEM/LINK".
+             Supports Firefox, Chrome, Internet Explorer (IE) and apps that use their code. With other windows, searches in the first found visible AO that has DOCUMENT role.
+             <note type="note">Chrome web page accessible objects normally are disabled (don't exist). Use prefix "web:" or "chrome:" to enable.</note>
+             The opposite option is <see cref="F:Catkeys.Types.AFFlags.SkipWeb"/>.
+             </item>
+             <item>"firefox:" - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used "web:" instead.</item>
+             <item>"chrome:" - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used "web:" instead.</item>
+             </list>
+            
+             You can use path to the AO. It consists of roles separated by "/". Examples:
+             <list type="bullet">
+             <item>"web:DOCUMENT/div/LIST/LISTITEM/LINK" - find LINK using its full path in web page.</item>
+             <item>"web:/div/LIST//LINK" - the empty parts mean 'any role'. For example don't need to specify DOCUMENT because in web pages the first part is always DOCUMENT (Firefox, Chrome) or PANE (IE).</item>
+             <item>"web:/div/LIST[4]/LISTITEM[-1]/LINK" - the 4 is 1-based index of div child from which to start searching (4-th, then 3-th, 5-th and so on). It can make faster. Negative means 'index from end', for example use -1 to search in reverse order. Flag Reverse is not applied to path parts with indexes. If index is invalid, will use the nearest valid index.</item>
+             <item>"web:/div/LIST[4!]/LISTITEM[-1!]/LINK" - like the above, but the LIST must be exactly 4-th child (don't search 3-th, 5-th etc) and the LISTITEM must be the last child. This can be useful when waiting (uses less CPU), however useless if AO indices in the window or web page change often.</item>
+             <item>"web://[4]/[-1!]/[2]" - index without role.</item>
+             <item>"CLIENT/WINDOW/OUTLINE/OUTLINEITEM[-1]" - path in window or control. The first path part is a direct child AO of the WINDOW AO of the window/control. The WINDOW AO itself is not included in the search; if you need it, instead use <see cref="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,Catkeys.Types.AWFlags)"/>.</item>
+             </list>
+             
+             Tip: Instead of literal role string you can use nameof. Example: <c>nameof(AccROLE.CHECKBUTTON)</c>.
+             </param>
+             <param name="name">
+             AO name (<see cref="P:Catkeys.Acc.Name"/>).
+             String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+             null means 'can be any'. "" means 'must not have name'.
+             </param>
+             <param name="prop">
+             Other properties of the AO.
+             Format: one or more "name=value", separated with "\0" or "\0 ", like "description=xxx\0 @href=yyy". Names must match case. Values of string properties are wildcard expressions.
+             Properties:
+             <list type="bullet">
+             <item>
+             "value" - <see cref="P:Catkeys.Acc.Value"/>.
+             </item>
+             <item>
+             "description" - <see cref="P:Catkeys.Acc.Description"/>.
+             </item>
+             <item>
+             "help" - <see cref="P:Catkeys.Acc.Help"/>.
+             </item>
+             <item>
+             "action" - <see cref="P:Catkeys.Acc.DefaultAction"/>.
+             </item>
+             <item>
+             "key" - <see cref="P:Catkeys.Acc.KeyboardShortcut"/>.
+             </item>
+             <item>
+             "elem" - <see cref="P:Catkeys.Acc.SimpleElementId"/>.
+             </item>
+             <item>
+             "state" - <see cref="P:Catkeys.Acc.State"/>. List of states that the AO must have or not have.
+             Example: "state=CHECKED, FOCUSABLE, !DISABLED".
+             Example: "state=0x100010, !0x1".
+             Will find AO that has all states without "!" prefix and does not have any of states with "!" prefix.
+             </item>
+             <item>
+             "rect" - <see cref="P:Catkeys.Acc.Rect"/>. Can be specified left, top, width and/or height, using <see cref="M:Catkeys.Types.RECT.ToString"/> format.
+             Example: "rect={L=1155 T=1182 W=132 H=13}".
+             Example: "rect={W=132 T=1182}".
+             The coordinates are relative to the primary screen.
+             </item>
+             <item>
+             "uiaAutomationId" - <see cref="P:Catkeys.Acc.UiaAutomationId"/>.
+             </item>
+             <item>
+             "level" - level (see <see cref="P:Catkeys.Acc.Level"/>) at which the AO can be found. Can be exact level, or minimal and maximal level separated by space.
+             The default value is 0 1000.
+             Alternatively you can use path in role, like "////LINK".
+             </item>
+             <item>
+             "maxChildren" - when searching, skip children and descendants of AO that have more than this number of direct children.
+             The default value is 10000. It prevents slowness, hanging or crashing when an AO in the object tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
+             </item>
+             <item>
+             "skipRoles" - when searching, skip objects (and their descendants) that have these roles. It can make faster.
+             Example: "skipRoles=OUTLINE,LIST,TOOLBAR".
+             See also: <see cref="F:Catkeys.Types.AFFlags.SkipLists"/>, <see cref="F:Catkeys.Types.AFFlags.SkipWeb"/>, <see cref="F:Catkeys.Types.AFFlags.MenuToo"/>.
+             </item>
+             <item>
+             "@attr" - <see cref="M:Catkeys.Acc.HtmlAttribute(System.String)"/>. Here "attr" is any attribute name.
+             Example: "@id=example".
+             </item>
+             </list>
+             </param>
+             <param name="flags"></param>
+             <param name="also">
+             Lambda etc callback function to call for each matching AO. Let it return true if this is the wanted AO.
+             Example, the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndWindow) &amp;&amp; r.Contains(266, 33)</c>
+             </param>
+             <param name="skip">
+             0-based index of matching AO.
+             For example, if 1, the function skips the first matching AO and returns the second.
+             </param>
+             <exception cref="T:System.ArgumentException">
+             role is "" or invalid.
+             name is invalid wildcard expression ("**options|" or regular expression).
+             prop has invalid format or contains unknown property names or invalid wildcard expressions.
+             Using flag <see cref="F:Catkeys.Types.AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
+             </exception>
+             <exception cref="T:Catkeys.Types.WndException">Invalid w.</exception>
+             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
+             <remarks>
+             This function walks the tree of accessible objects of the window or control, until it finds a matching AO.
+             Uses <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd)"/>. You can use it directly (see example).
+             In wildcard expressions supports PCRE regular expressions (prefix "**p|") but not .NET regular expressions (prefix "**r|"). They are similar.
+             More info in <see cref="T:Catkeys.Acc">class help</see>.
+             </remarks>
+             <example>
+             Try to find link "Example" in web page. Return if not found.
+             <code><![CDATA[
+             var a = Acc.Find(w, "web:LINK", "Example");
+             if(a == null) { Print("not found"); return; }
+             ]]></code>
+             Try to find link "Example" in web page. Throw NotFoundException if not found.
+             <code><![CDATA[
+             var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
+             ]]></code>
+             Use a Finder.
+             <code><![CDATA[
+             var f = new Acc.Finder("PUSHBUTTON", "Example");
+             if(!f.Find(w)) { Print("not found"); return; }
+             Acc a = f.Result;
+             ]]></code>
+             </example>
+        </member>
+        <member name="M:Catkeys.Acc.Find(System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)">
+            <summary>
+            Finds a descendant accessible object (AO) of this AO.
+            Returns the found AO. Returns null if not found.
+            Parameters etc are as with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
+            </summary>
+            <exception cref="T:System.ArgumentException">
+            role is "" or invalid or has a prefix ("web:" etc).
+            name is invalid wildcard expression ("**options|" or regular expression).
+            prop has invalid format or contains unknown property names or invalid wildcard expressions.
+            <see cref="P:Catkeys.Acc.SimpleElementId"/> is not 0.
+            Using flag <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            </exception>
+            <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
+        </member>
+        <member name="M:Catkeys.Acc.Wait(System.Double,Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)">
+            <summary>
+            Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
+            Returns the found AO. If secondsTimeout is negative, after -secondsTimeout time returns null (else exception).
+            Parameters etc are as with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns null.
@@ -3684,143 +3595,86 @@
             <param name="w"></param>
             <param name="role"></param>
             <param name="name"></param>
+            <param name="prop"></param>
             <param name="flags"></param>
             <param name="also"></param>
             <param name="skip"></param>
-            <param name="navig"></param>
             <exception cref="T:System.TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.</exception>
         </member>
-        <member name="M:Catkeys.Acc.WaitFor(System.Double,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)">
+        <member name="M:Catkeys.Acc.Wait(System.Double,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)">
             <summary>
-            Finds a descendant accessible object of this accessible object.
-            The same as <see cref="M:Catkeys.Acc.Find(System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/>, but waits until the object is found or the given time expires.
+            Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
+            Returns the found AO. If secondsTimeout is negative, after -secondsTimeout time returns null (else exception).
+            Parameters etc are as with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns null.
             </param>
             <param name="role"></param>
             <param name="name"></param>
+            <param name="prop"></param>
             <param name="flags"></param>
             <param name="also"></param>
             <param name="skip"></param>
-            <param name="navig"></param>
             <exception cref="T:System.TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Finder.#ctor(System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Types.AFAcc,System.Boolean},System.Int32,System.String)"/> and <see cref="M:Catkeys.Acc.Finder.FindIn(Catkeys.Acc)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Find(System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.</exception>
+        </member>
+        <member name="M:Catkeys.Acc.FindAll(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean})">
+            <summary>
+            Finds all matching accessible objects in window.
+            Returns array of 0 or more elements.
+            Parameters etc are as with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
+            </summary>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.</exception>
+            <example>
+            Get all taskbar buttons (Windows 10).
+            <code><![CDATA[
+            var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
+            foreach(var a in Acc.FindAll(w, "PUSHBUTTON", prop: "level=7")) Print(a);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Catkeys.Acc.FindAll(System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean})">
+            <summary>
+            Finds all matching descendant accessible objects (AO) of this AO.
+            Returns array of 0 or more elements.
+            Parameters etc are as with <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
+            </summary>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Acc.Find(System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.</exception>
+            <example>
+            Get all taskbar buttons (Windows 10).
+            <code><![CDATA[
+            var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
+            var atb = Acc.Find(w, "TOOLBAR", "Running applications").OrThrow();
+            foreach(var a in atb.FindAll("PUSHBUTTON", prop: "level=0")) Print(a);
+            ]]></code>
+            </example>
         </member>
         <member name="P:Catkeys.Acc.ChildCount">
             <summary>
             Gets the number of direct child objects.
             Uses <msdn>IAccessible.get_accChildCount</msdn>.
             </summary>
-            <remarks>
-            Some objects (maybe 0.1%) return an incorrect number. A more reliable alternative is <see cref="M:Catkeys.Acc.Children(System.Boolean)"/>, but usually it is much slower.
-            </remarks>
         </member>
-        <member name="M:Catkeys.Acc.EnumChildren(System.Boolean,System.Action{Catkeys.Types.AFAcc},System.Object)">
-            <summary>
-            Calls a callback function for each child or descendant accessible object.
-            </summary>
-            <param name="allDescendants">If true, all descendants, else only direct children.</param>
-            <param name="f">
-            Lambda etc callback function to call for each accessible object.
-            Its parameter is of type <see cref="T:Catkeys.Types.AFAcc"/> which has all Acc properties and some other data and methods.
-            </param>
-            <param name="param">Something to pass to the function as <see cref="P:Catkeys.Types.AFAcc.Param"/>.</param>
-        </member>
-        <member name="M:Catkeys.Acc._EnumChildren(Catkeys.Acc.IAccessible,System.Boolean,System.Action{Catkeys.Types.AFAcc},Catkeys.Types.AFAcc,System.Int32)">
-            <summary>
-            Calls f for all children or descendants.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.LibGetChildren(System.Boolean,System.Collections.Generic.List{Catkeys.Acc},System.Boolean)">
-            <summary>
-            Gets all child or descendant accessible objects.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.Children(System.Boolean)">
-            <summary>
-            Gets all child or descendant accessible objects.
-            </summary>
-            <param name="allDescendants">If true, all descendants, else only direct children.</param>
-        </member>
-        <member name="T:Catkeys.Acc._Children">
-            <summary>
-            Gets direct children of an accessible object.
-            Uses API <msdn>AccessibleChildren</msdn>.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Children.#ctor(Catkeys.Acc.IAccessible,System.Int32,System.Boolean,System.Boolean)">
-            <param name="parent"></param>
-            <param name="startAtIndex">
-            Can be 1-based child index from which to start searching (in both directions). If negative, it is index from the end.
-            If 0, starts from the start or end, depending on the reverse parameter. If not 0, the reverse parameter is ignored.
-            </param>
-            <param name="exactIndex">Get object at startAtIndex and not at any other index. Not used when startIndex is 0.</param>
-            <param name="reverse">When startIndex is 0, get objects in reverse order (starting from the end).</param>
-        </member>
-        <member name="M:Catkeys.Acc._Children.GetNext(Catkeys.Acc._Acc@)">
-            <summary>
-            Gets next child.
-            Returns false if there are no more children.
-            First time also gets all children into an internal array. The constructor does not do it.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Children.FinallyInLoop(Catkeys.Acc._Acc)">
-            <summary>
-            Finally call this after GetNext, to release a.a if a.elem == 0.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Children.Dispose">
-            <summary>
-            Clears and frees the internal array.
-            </summary>
-        </member>
-        <member name="T:Catkeys.Acc._PathPart">
-            <summary>
-            When role is path, stores a path part as role string and optional start index.
-            For example, if role is "A/B[4]", the array is _PathPart[2] { { "A", 0 }, { "B", 4 } }. 
-            </summary>
-        </member>
-        <member name="P:Catkeys.Acc.MaxChildren">
-            <summary>
-            When searching for an accessible object, if an intermediate object has more than this number of direct children, skip them and their descendants.
-            </summary>
-            <remarks>
-            This property is thread-specific. It is used by Acc.Find, Acc.Children, Acc.EnumChildren and similar functions.
-            Valid values are 1000 to 1000000. Default 10000.
-            Getting and comparing large number of children is very slow. In extreme cases your app may hang or crash if there was no limit. For example OpenOffice Calc TABLE has one billion children.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.#ctor">
-            <summary>
-            Used only by the AFAcc class which is derived from Acc.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc.#ctor(Catkeys.Acc.IAccessible,System.Int32,Catkeys.Types.AccROLE,System.Boolean)">
+        <member name="M:Catkeys.Acc.#ctor(System.IntPtr,System.Int32,System.Boolean)">
             <summary>
             Creates Acc from IAccessible and child id.
             By default does not AddRef.
             iacc must not be Is0.
-            role can be 0, it possibly will be set later.
             </summary>
         </member>
-        <member name="M:Catkeys.Acc.#ctor(Catkeys.Acc)">
+        <member name="M:Catkeys.Acc.#ctor(Catkeys.Types.Cpp.Cpp_Acc,System.Boolean)">
             <summary>
-            Clones Acc a.
-            Calls _iacc.AddRef.
+            Creates Acc from Cpp_Acc.
+            By default does not AddRef.
+            x.acc must not be Is0.
             </summary>
         </member>
-        <member name="M:Catkeys.Acc._Set(Catkeys.Acc.IAccessible,System.Int32,Catkeys.Types.AccROLE,System.Boolean)">
+        <member name="M:Catkeys.Acc._Set(System.IntPtr,System.Int32,Catkeys.Acc._Misc,System.Boolean)">
             <summary>
             Sets fields.
             _iacc must be Is0.
-            </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Clear(System.Boolean)">
-            <summary>
-            Clears all fields and optionally calls _iacc.Release().
-            The same as _Dispose, but does not call GC.SuppressFinalize.
             </summary>
         </member>
         <member name="M:Catkeys.Acc.Dispose">
@@ -3831,28 +3685,58 @@
         <member name="M:Catkeys.Acc.Finalize">
             
         </member>
-        <member name="P:Catkeys.Acc.Elem">
+        <member name="P:Catkeys.Acc.SimpleElementId">
             <summary>
-            Gets or sets child element id.
+            Gets or changes simple element id, also known as child id.
             </summary>
+            <remarks>
+            Most accessible objects (AO) are not simple elements. Then this property is 0.
+            Often (but not always) this property is the 1-based item index in parent AO. For example LISTITEM in LIST.
+            The 'set' function sometimes can be used as a fast alternative to <see cref="M:Catkeys.Acc.Navigate(System.String,System.Double,System.Boolean)"/>. It modifies only this variable. It does not check whether the value is valid.
+            Simple elements cannot have child AOs.
+            </remarks>
+        </member>
+        <member name="P:Catkeys.Acc.NotInProc">
+            <summary>
+            Returns true if this accessible object was found without loading dll into the target process.
+            More info: <see cref="F:Catkeys.Types.AFFlags.NotInProc"/>.
+            </summary>
+        </member>
+        <member name="P:Catkeys.Acc.Level">
+            <summary>
+            Gets or sets indentation level for <see cref="M:Catkeys.Acc.ToString"/>.
+            </summary>
+            <remarks>
+            When Find or similar function finds an accessible object, it sets this property of the Acc variable.
+            When searching in a window or control, at level 0 are direct children of the WINDOW object of the window or control. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix "web:" etc), at level 0 is the web page object (role DOCUMENT or PANE).
+            </remarks>
         </member>
         <member name="P:Catkeys.Acc._Disposed">
             <summary>
             Returns true if this variable is disposed.
             </summary>
         </member>
-        <member name="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,System.Boolean)">
+        <member name="M:Catkeys.Acc.FromWindow(Catkeys.Wnd,Catkeys.Types.AccOBJID,Catkeys.Types.AWFlags)">
             <summary>
             Gets accessible object of window or control or its standard part - client area, titlebar etc.
             Uses API <msdn>AccessibleObjectFromWindow</msdn>.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="objid">Window part id. Default WINDOW (object of w itself). Can be one of enum AccOBJID constants. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
-            <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
+            <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
+            <param name="flags"></param>
             <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
-        <member name="M:Catkeys.Acc.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions,System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Acc.FromXY(System.Drawing.Point,Catkeys.Types.AXYFlags)">
+            <summary>
+            Gets accessible object from point.
+            Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+            </summary>
+            <param name="p">Coordinates in screen.</param>
+            <param name="flags"></param>
+            <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
+        </member>
+        <member name="M:Catkeys.Acc.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions,Catkeys.Types.AXYFlags)">
             <summary>
             Gets accessible object from point.
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
@@ -3860,74 +3744,27 @@
             <param name="x">X coordinate in screen.</param>
             <param name="y">Y coordinate in screen.</param>
             <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
-            <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
-            <param name="preferLINK">
-            Get the direct parent object if it's LINK or PUSHBUTTON.
-            Usually links have one or more children of type TEXT, GRAPHIC or other, and they are rarely used for automation.
-            </param>
+            <param name="flags"></param>
             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
-        <member name="M:Catkeys.Acc.FromMouse(System.Boolean,System.Boolean)">
+        <member name="M:Catkeys.Acc.FromMouse(Catkeys.Types.AXYFlags)">
             <summary>
-            Gets accessible object from mouse cursor position.
+            Gets accessible object from mouse cursor (pointer) position.
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </summary>
-            <param name="noThrow">Don't throw exception when fails. Then returns null.</param>
-            <param name="preferLINK">
-            Get the parent object if it's LINK or PUSHBUTTON. More info: <see cref="M:Catkeys.Acc.FromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,Catkeys.Types.CoordOptions,System.Boolean,System.Boolean)"/>.
-            </param>
+            <param name="flags"></param>
             <exception cref="T:Catkeys.Types.CatException">Failed. For example, window of a higher UAC integrity level process.</exception>
         </member>
-        <member name="M:Catkeys.Acc._EnableInChrome(Catkeys.Wnd,Catkeys.Acc.IAccessible,System.Boolean,System.Drawing.Point)">
-            <summary>
-            If iacc is the client area object of Chrome, enables its web content accessible objects.
-            Returns: 0 not Chrome, 1 Chrome was already enabled, 2 Chrome enabled now.
-            </summary>
-            <param name="w">iacc container window/control. Must be top-level (asserts).</param>
-            <param name="iacc">object from point, or w CLIENT.</param>
-            <param name="isCLIENT">iacc is w CLIENT. If false, p is used to detect whether it is CLIENT.</param>
-            <param name="p">Used when iacc is object from point. Then isCLIENT is false.</param>
-        </member>
-        <member name="M:Catkeys.Acc.FromXY(Catkeys.Wnd,Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean)">
-            <summary>
-            Gets accessible object from point in window.
-            Returns null if the point is not in the window rectangle. Or if failed to get accessible object and noThrow is true.
-            </summary>
-            <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to the w client area.</param>
-            <param name="y">Y coordinate relative to the w client area.</param>
-            <param name="noThrow">Don't throw exception when fails to get accessible object from window. Then returns null.</param>
-            <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
-            <exception cref="T:Catkeys.Types.CatException">Failed to get accessible object from window. For example, window of a higher UAC integrity level process.</exception>
-        </member>
-        <member name="M:Catkeys.Acc.ChildFromXY(Catkeys.Types.Coord,Catkeys.Types.Coord,System.Boolean,System.Boolean)">
-            <summary>
-            Gets a child or descendant object from point.
-            Returns self (this Acc variable, not a copy) if at that point is this object and not a child.
-            Returns null if that point is not within boundaries of this object. For non-rectangular objects can return null even if the point is in the bounding rectangle. Also returns null if fails. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-            <param name="screenCoord">x y are screen coordinates. If false (default), x y are relative to the bounding rectangle of this object.</param>
-            <param name="directChild">Get direct child. If false (default), gets the topmost descendant object, which often is not a direct child of this object.</param>
-            <remarks>
-            Uses API <msdn>IAccessible.accHitTest</msdn>.
-            Does not work with Java windows.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.Focused">
+        <member name="M:Catkeys.Acc.Focused(System.Boolean)">
             <summary>
             Gets the accessible object that has the keyboard focus.
             Returns null if fails.
             </summary>
-        </member>
-        <member name="M:Catkeys.Acc._Focused(Catkeys.Wnd)">
-            <summary>
-            Gets the accessible object that has the keyboard focus in the specified window.
-            Returns null if the window does not contain the focused object or if fails.
-            </summary>
-            <param name="w">Window or control.</param>
-            <exception cref="T:Catkeys.Types.WndException">w is default(Wnd).</exception>
+            <param name="useUIAutomation">
+            Use UI Automation API.
+            Need this with windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
+            More info: <see cref="F:Catkeys.Types.AFFlags.UIA"/>.
+            </param>
         </member>
         <member name="M:Catkeys.Acc.FromEvent(Catkeys.Wnd,System.Int32,System.Int32)">
             <summary>
@@ -3944,29 +3781,6 @@
             Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in a callback function used with API <msdn>SetWinEventHook</msdn> kills this process.
             </remarks>
         </member>
-        <member name="M:Catkeys.Acc.FromComObject(System.IntPtr)">
-            <summary>
-            Gets accessible object from a COM object of any type that supports it.
-            Returns null if fails.
-            </summary>
-            <param name="x">Unmanaged COM object.</param>
-            <remarks>
-            The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
-            For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.FromComObject(System.Object)">
-            <summary>
-            Gets accessible object from a COM object of any type that supports it.
-            Returns null if fails.
-            </summary>
-            <param name="x">Managed COM object.</param>
-            <remarks>
-            The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
-            For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
-            Also partially supports UIA.IElement. Works with web page objects, but returns null for many other.
-            </remarks>
-        </member>
         <member name="T:Catkeys.Acc._FuncId">
             <summary>
             Used only for debug.
@@ -3976,7 +3790,8 @@
             <summary>
             Calls Native.SetError and returns hr.
             In Debug config also outputs error in red.
-            If hr looks like not an error but just the property or action is unavailable, changes it to S_FALSE and does not show error. These are: S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL, for navigate also E_INVALIDARG, E_FAIL, E_NOINTERFACE.
+            If hr looks like not an error but just the property or action is unavailable, changes it to S_FALSE and does not show error. These are: S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL.
+            _FuncId also can be char, like (_FuncId)'n' for name.
             </summary>
         </member>
         <member name="M:Catkeys.Acc.ToString">
@@ -3984,88 +3799,41 @@
             Formats string from main properties of this accessible object.
             </summary>
             <remarks>
-            The string starts with role. If fails to get role, the string is "failed: error message".
+            The string starts with role. Other properties have format like x="value", where x is a property character like with <see cref="M:Catkeys.Acc.GetMultipleProperties(System.String)"/>; character e is <see cref="P:Catkeys.Acc.SimpleElementId"/>. HTML attributes have format @name="value". In string values are used C# escape sequences, for example \r\n for new line.
+            Indentation depends on <see cref="P:Catkeys.Acc.Level"/>.
             </remarks>
+            <example>
+            Displays all visible accessible objects in Chrome web page.
+            <code><![CDATA[
+            Output.Clear();
+            var w = Wnd.Find("*- Google Chrome").OrThrow();
+            Acc.Find(w, "web:", also: o => { Print(o); return false; }); //Print calls ToString
+            ]]></code>
+            </example>
+            <seealso cref="M:Catkeys.Acc.PrintAll(Catkeys.Wnd,System.String,Catkeys.Types.AFFlags,System.String)"/>
         </member>
-        <member name="M:Catkeys.Acc.ToString(System.Int32)">
+        <member name="M:Catkeys.Acc.PrintAll(Catkeys.Wnd,System.String,Catkeys.Types.AFFlags,System.String)">
             <summary>
-            This <see cref="M:Catkeys.Acc.ToString"/> overload indents the string depending on level.
+            Displays properties of all found accessible objects of window w.
             </summary>
-            <param name="level">Object level in the tree. This function prepends level*2 spaces to the string.</param>
-        </member>
-        <member name="M:Catkeys.Acc.HtmlAttribute(System.String,System.Boolean)">
-            <summary>
-            Gets a HTML attribute or "".
-            </summary>
-            <param name="name">Attribute name, for example "href", "id", "class".  Full, case-sensitive.</param>
-            <param name="interpolated">Used only with Internet Explorer. If true, can get modified value, for example full URL instead of relative. If false (default), gets value as it is in HTML.</param>
             <remarks>
-            Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
-            Works with these web browsers: Firefox (must be non-portable), Chrome (if Firefox is installed), Internet Explorer (slow), and browsers based on their code.
+            Uses <see cref="M:Catkeys.Acc.ToString"/>.
+            Catches exceptions. On exception prints $"!exception! exceptionType exceptionMessage".
+            Parameters are the same as of <see cref="M:Catkeys.Acc.Find(Catkeys.Wnd,System.String,System.String,System.String,Catkeys.Types.AFFlags,System.Func{Catkeys.Acc,System.Boolean},System.Int32)"/>.
+            By default skips invisible objects and objects in menus. Use flags to include them.
+            Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix "web:" or "chrome:" to enable. See example.
             </remarks>
-            <exception cref="T:System.ArgumentException">name is null/"".</exception>
-        </member>
-        <member name="M:Catkeys.Acc.HtmlAttributes(System.Boolean)">
-            <summary>
-            Gets all HTML attributes.
-            </summary>
-            <param name="interpolated">Used only with Internet Explorer. If true, can get modified value, for example full URL instead of relative. If false (default), gets value as it is in HTML.</param>
-            <remarks>
-            Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
-            Works with these web browsers: Firefox (must be non-portable), Chrome (if Firefox is installed), Internet Explorer (slow), and browsers based on their code.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.Match(System.Object[])">
-            <summary>
-            Compares values of specified properties with specified strings. Also supports HTML attributes.
-            Returns true if all match, false if at least one doesn't.
-            </summary>
-            <param name="nameValuePairs">
-            List of name/value pairs of properties and/or HTML attributes.
-            Names must be of type string. Full, case-sensitive.
-            Supported property names: "name" (<see cref="P:Catkeys.Acc.Name"/>), "value" (<see cref="P:Catkeys.Acc.Value"/>), "description" (<see cref="P:Catkeys.Acc.Description"/>).
-            Names of HTML attributes must be with "a:" prefix, like "a:href". Supported are all attributes.
-            Values can be of type string, <see cref="T:System.Text.RegularExpressions.Regex"/> or <see cref="T:Catkeys.Types.Wildex"/>. Other types are converted to string. Strings are compared as case-insensitive wildcard (see <see cref="M:Catkeys.String_.Like_(System.String,System.String,System.Boolean)"/>. If fails to get a property or attribute (eg this HTML element does not have the attribute), its value is considered "".
-            Example (1 property): <c>"value", "*example*"</c>
-            Example (2 attributes): <c>"a:class", "example", "a:href", "*/example.php*"</c>
-            </param>
-            <exception cref="T:System.ArgumentException">Odd number of arguments. A name is null, "" or not string. A name is not one of supported property names and does not have "a:" prefix.</exception>
-            <remarks>
-            Also returns false if cannot get HTML attributes (when an attribute is specified), for example if this is not a HTML element. Then <see cref="M:Catkeys.Types.Native.GetError"/> will return error code E_NOINTERFACE (0x80004002).
-            Can get attributes from these web browsers: Firefox (must be non-portable), Chrome (if Firefox is installed), Internet Explorer (slow), and browsers based on their code.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.Html(System.Boolean)">
-            <summary>
-            Gets HTML or "".
-            </summary>
-            <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
-            <remarks>
-            Returns "" if this is not a HTML element or if failed. Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
-            Works with these web browsers: Firefox (must be non-portable), Chrome (if is installed Firefox of same 32/64 bit), Internet Explorer (can be slow), and browsers based on their code. With Chrome slow if there are many descendant HTML elements. With Firefox and Chrome, this process must be of same 32/64 bit.
-            If this is the root of web page (role DOCUMENT or PANE), get web page body HTML.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.ScrollTo">
-            <summary>
-            Scrolls this accessible object into view.
-            </summary>
-            <exception cref="T:Catkeys.Types.CatException">Failed to scroll, or the object does not support scrolling (then error "No such interface supported").</exception>
-            <remarks>
-            Supports web page elements in Internet Explorer, Firefox, Chrome and web browsers/controls based on their code.
-            Also supports objects in some other windows, but in most window doesn't.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.Acc.IHTMLElement.GetAttribute(System.String,System.Int32,System.String@)">
-            <param name="name">If "class", calls get_className, else getAttribute.</param>
-            <param name="flags">0 interpolated, 1 match case (don't use), 2 raw.</param>
-            <param name="s"></param>
-        </member>
-        <member name="T:Catkeys.Acc.ISimpleDOMNode">
-            <summary>
-            We use this to get Firefox/Chrome HTML element attributes, HTML etc.
-            rejected: find ISimpleDOMNode and convert to Acc, like QM2 FFNode/FindFF. Usually it is not significantly faster, sometimes much slower. For speed use UI Automation instead.
-            </summary>
+            <example>
+            Displays visible accessible objects in Chrome web page.
+            <code><![CDATA[
+            Output.Clear();
+            var w = Wnd.Find("*- Google Chrome").OrThrow();
+            Print("---- all ----");
+            Acc.PrintAll(w, "web:");
+            Print("---- links ----");
+            Acc.PrintAll(w, "web:LINK");
+            ]]></code>
+            </example>
         </member>
         <member name="T:Catkeys.Input">
             <summary>
@@ -4328,7 +4096,7 @@
             Throws ArgumentException if image or area is a bottom-up Bitmap object (see <see cref="P:System.Drawing.Imaging.BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by Image.FromHbitmap; instead use <see cref="M:Catkeys.ScreenImage.BitmapFromHbitmap(System.IntPtr)"/>.
             </remarks>
         </member>
-        <member name="M:Catkeys.ScreenImage.WaitFor(System.Double,System.Object,Catkeys.Types.SIArea,Catkeys.Types.SIFlags,System.Int32,System.Func{Catkeys.Types.SIResult,System.Boolean})">
+        <member name="M:Catkeys.ScreenImage.Wait(System.Double,System.Object,Catkeys.Types.SIArea,Catkeys.Types.SIFlags,System.Int32,System.Func{Catkeys.Types.SIResult,System.Boolean})">
             <summary>
             Waits for the specified image(s) or color(s) on the screen.
             Returns <see cref="T:Catkeys.Types.SIResult"/> object containing the rectangle of the found image.
@@ -4377,76 +4145,6 @@
             <param name="colorDiff"></param>
             <remarks>
             Parameters and other info is the same as with <see cref="M:Catkeys.ScreenImage.WaitNot(System.Double,System.Object,Catkeys.Types.SIArea,Catkeys.Types.SIFlags,System.Int32,System.Func{Catkeys.Types.SIResult,System.Boolean})"/> and <see cref="M:Catkeys.ScreenImage.Find(System.Object,Catkeys.Types.SIArea,Catkeys.Types.SIFlags,System.Int32,System.Func{Catkeys.Types.SIResult,System.Boolean})"/>. Instead of <b>image</b> parameter, this function captures the screen area image at the beginning.
-            </remarks>
-        </member>
-        <member name="T:Catkeys.AElement">
-            <summary>
-            UI Automation element.
-            </summary>
-        </member>
-        <member name="P:Catkeys.AElement.Factory">
-            <summary>
-            Gets the UIA.IUIAutomation object that is used by static functions of this class.
-            The object is [ThreadStatic].
-            </summary>
-        </member>
-        <member name="M:Catkeys.AElement.FromWindow(Catkeys.Wnd)">
-            <summary>
-            Gets UI Automation element of a window.
-            </summary>
-            <exception cref="T:Catkeys.Types.WndException">Invalid window.</exception>
-        </member>
-        <member name="M:Catkeys.AElement.FromAcc(Catkeys.Acc,System.Nullable{System.Boolean})">
-            <summary>
-            Gets UI Automation element corresponding to an accessible object.
-            Returns null if fails.
-            </summary>
-            <param name="ao">Accessible object.</param>
-            <param name="find">
-            If false, uses IUIAutomation.ElementFromIAccessible. It fails for most objects. Also, the returned element may be useless, for example searching its descendants can be 60 times slower than usually.
-            If true, finds element that matches ao rectangle and other properties. It is slow, but usually succeeds.
-            If null (default), uses the first method, then the second method if the first fails.
-            </param>
-        </member>
-        <member name="M:Catkeys.AElement._ChromeEnable(Catkeys.Wnd,UIA.IElement)">
-            <summary>
-            Enables UI Automation in Chrome/Opera web page.
-            </summary>
-            <param name="w">The main window.</param>
-            <param name="ew">Element of the main window.</param>
-        </member>
-        <member name="P:Catkeys.AElement.WebPageFinder">
-            <summary>
-            Gets or sets a custom function to find the root element of the current web page in a window.
-            </summary>
-            <remarks>
-            The function is called by <see cref="M:Catkeys.AElement.WebFind(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/> and <see cref="M:Catkeys.AElement.FindCurrentWebPage(Catkeys.Wnd)"/>.
-            If null, is used default finder.
-            You can use a custom finder when the default finder does not work. It can happen after updating your web browser or if your web browser is not recognized by the default finder.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.AElement.FindCurrentWebPage(Catkeys.Wnd)">
-            <summary>
-            Finds the root element of the current web page (tab) in window w.
-            </summary>
-            <param name="w">Window containing web page. Or web browser control, class name "Internet Explorer_Server".</param>
-            <remarks>
-            Supports Firefox, Chrome, Internet Explorer (IE), Edge and apps that use their code to display web page - Opera, Thunderbird, etc.
-            The element type is Document (in Firefox, Chrome, Opera, Thunderbird) or Pane (in IE, Edge and IE-based web browser controls).
-            
-            This function is used by <see cref="M:Catkeys.AElement.WebFind(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/>. It allows to avoid searching in the non-web part of the window and in inactive tabs (currently it is actual in Firefox and Thunderbird).
-            
-            May stop working with new versions of these apps, until this library will be updated to fix it. See also <see cref="P:Catkeys.AElement.WebPageFinder"/>.
-            Web page elements in Chrome and Opera are disabled by default. This function tries to enable. It may fail in new versions of these app.
-            </remarks>
-        </member>
-        <member name="M:Catkeys.AElement.WebFind(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)">
-            <summary>
-            Finds an element in the active web page in window w.
-            </summary>
-            <remarks>
-            The same as <see cref="M:Catkeys.AElement.Find(Catkeys.Wnd,System.String,UIA.TypeId,System.Object,System.Int32,System.Func{UIA.IElement,System.Boolean},System.Int32,System.String)"/>, but searches only in the active page (tab) and not in other parts of the window.
-            To find the web page, uses <see cref="M:Catkeys.AElement.FindCurrentWebPage(Catkeys.Wnd)"/>. More info there.
             </remarks>
         </member>
         <member name="T:Catkeys.Screen_">
@@ -4513,7 +4211,6 @@
             <item><see cref="T:System.Drawing.Point"/> - gets screen of this point (see <see cref="M:System.Windows.Forms.Screen.FromPoint(System.Drawing.Point)"/>).</item>
             <item><see cref="T:System.Drawing.Rectangle"/>, <see cref="T:Catkeys.Types.RECT"/> - gets screen of this rectangle (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
             <item><see cref="T:Catkeys.Acc"/> - gets screen of this accessible object (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
-            <item><see cref="T:UIA.IElement"/> - gets screen of this UI Automation element (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
             </list>
             </param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
@@ -11813,14 +11510,21 @@
             See how it is used eg in <see cref="M:Catkeys.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)"/>.
             </summary>
         </member>
-        <member name="F:Catkeys.WaitFor.LibTimeout.Period">
+        <member name="P:Catkeys.WaitFor.LibTimeout.Period">
             <summary>
-            Current period. Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
+            Current period, milliseconds.
+            Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
             </summary>
         </member>
-        <member name="F:Catkeys.WaitFor.LibTimeout.MaxPeriod">
+        <member name="P:Catkeys.WaitFor.LibTimeout.MaxPeriod">
             <summary>
-            Maximal period. It is constructor->maxPeriod (default 200).
+            Maximal period, milliseconds.
+            It is constructor->maxPeriod (default 500).
+            </summary>
+        </member>
+        <member name="P:Catkeys.WaitFor.LibTimeout.TimeRemaining">
+            <summary>
+            Remaining time, milliseconds.
             </summary>
         </member>
         <member name="M:Catkeys.WaitFor.LibTimeout.IsTimeout">
@@ -11840,7 +11544,7 @@
         <member name="M:Catkeys.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)">
             <summary>
             Waits for an user-defined condition.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -11856,7 +11560,7 @@
         <member name="M:Catkeys.WaitFor.NoModifierKeys(System.Double,System.Windows.Forms.Keys)">
             <summary>
             Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -11869,7 +11573,7 @@
         <member name="M:Catkeys.WaitFor.NoMouseButtons(System.Double,System.Windows.Forms.MouseButtons)">
             <summary>
             Waits while some mouse buttons are in pressed state.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -11881,7 +11585,7 @@
         <member name="M:Catkeys.WaitFor.NoModifierKeysAndMouseButtons(System.Double,System.Windows.Forms.Keys,System.Windows.Forms.MouseButtons)">
             <summary>
             Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -11895,7 +11599,7 @@
         <member name="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,Catkeys.Types.WFOwner,Catkeys.Types.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)">
             <summary>
             Waits until the specified window exists and (optionally) is visible. Or the opposite, if <b>not</b> is true.
-            Returns window handle. If secondsTimeout is negative, on timeout returns default(Wnd) (else exception).
+            Returns window handle. If secondsTimeout is negative, after -secondsTimeout time returns default(Wnd) (else exception).
             All undocumented parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,Catkeys.Types.WFOwner,Catkeys.Types.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
             </summary>
             <param name="secondsTimeout">
@@ -11946,7 +11650,7 @@
         <member name="M:Catkeys.WaitFor.WindowActive(System.Double,System.String,System.String,Catkeys.Types.WFOwner,Catkeys.Types.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)">
              <summary>
              Waits until the specified window exists and is the active window. Or the opposite, if <b>not</b> is true.
-             Returns window handle. If secondsTimeout is negative, on timeout returns default(Wnd) (else exception).
+             Returns window handle. If secondsTimeout is negative, after -secondsTimeout time returns default(Wnd) (else exception).
              All undocumented parameters etc are the same as <see cref="M:Catkeys.Wnd.Find(System.String,System.String,Catkeys.Types.WFOwner,Catkeys.Types.WFFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
              If you have a window's Wnd, use <see cref="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd,System.Double,System.Boolean)"/> instead.
              </summary>
@@ -11986,7 +11690,7 @@
         <member name="M:Catkeys.WaitFor.WindowActive(Catkeys.Wnd,System.Double,System.Boolean)">
             <summary>
             Waits until the window is the active window. Or the opposite, if <b>not</b> is true.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             Uses <see cref="P:Catkeys.Wnd.IsActive"/>.
             </summary>
             <param name="w">A window or control.</param>
@@ -12000,8 +11704,8 @@
         <member name="M:Catkeys.WaitFor.WindowVisible(Catkeys.Wnd,System.Double,System.Boolean)">
             <summary>
             Waits until the window is visible. Or the opposite, if <b>not</b> is true.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
-            Uses <see cref="P:Catkeys.Wnd.IsVisible"/>.
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+            Uses <see cref="P:Catkeys.Wnd.IsVisibleEx"/>.
             For 'exists and is visible' use <see cref="M:Catkeys.WaitFor.WindowExists(System.Double,System.String,System.String,Catkeys.Types.WFOwner,Catkeys.Types.WFFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Boolean)"/>. With default flags it waits for visible window and ignores invisible windows.
             </summary>
             <param name="w">A window or control.</param>
@@ -12015,7 +11719,7 @@
         <member name="M:Catkeys.WaitFor.WindowEnabled(Catkeys.Wnd,System.Double,System.Boolean)">
             <summary>
             Waits until the window is enabled (not disabled). Or the opposite, if <b>not</b> is true.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             Uses <see cref="P:Catkeys.Wnd.IsEnabled"/>.
             </summary>
             <param name="w">A window or control.</param>
@@ -12029,7 +11733,7 @@
         <member name="M:Catkeys.WaitFor.WindowClosed(Catkeys.Wnd,System.Double)">
             <summary>
             Waits until the window handle is invalid.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             Uses <see cref="P:Catkeys.Wnd.IsAlive"/>.
             </summary>
             <param name="w">A window or control. Can be default(Wnd)/invalid.</param>
@@ -12041,13 +11745,13 @@
         <member name="M:Catkeys.WaitFor.WindowChildExists(Catkeys.Wnd,Catkeys.Wnd.ChildFinder,System.Double,System.Boolean)">
             <summary>
             Waits until the specified control (child window) is found in the window. Or the opposite, if <b>not</b> is true.
-            Returns the control. If secondsTimeout is negative, on timeout returns default(Wnd) (else exception).
+            Returns the control. If secondsTimeout is negative, after -secondsTimeout time returns default(Wnd) (else exception).
             Uses <see cref="P:Catkeys.Wnd.IsEnabled"/>.
             </summary>
             <param name="w">Direct or indirect parent window.</param>
             <param name="control">Control properties.</param>
             <param name="secondsTimeout">
-            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+            The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns default(Wnd).
             </param>
             <param name="not">
             Do the opposite - wait until the control not found, or until the window closed (no exception if closed/default(Wnd)/invalid).
@@ -12068,7 +11772,7 @@
         <member name="M:Catkeys.WaitFor.WindowCondition(Catkeys.Wnd,System.Func{Catkeys.Wnd,System.Boolean},System.Double,System.Boolean)">
             <summary>
             Waits for an user-defined condition of an existing window.
-            Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+            Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -12956,19 +12660,45 @@
         </member>
         <member name="P:Catkeys.Wnd.IsVisible">
             <summary>
-            Gets the visible state.
             Returns true if the window is visible.
             Returns false if is invisible or is a child of invisible parent.
             Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
             </summary>
             <remarks>
-            Calls API <msdn>IsWindowVisible</msdn>.
-            <note>This function is unaware about <see cref="P:Catkeys.Wnd.IsCloaked">cloaked</see> windows. If need, use code <c>if(w.IsVisible &amp;&amp; !w.IsCloaked)</c>.</note>
-            <note>This function is unaware about transparent windows, zero-size windows, zero-window-region windows, off-screen windows and windows that are completely covered by other windows.</note>
+            Calls API <msdn>IsWindowVisible</msdn>. Does not call <see cref="P:Catkeys.Wnd.IsCloaked"/>.
+            
+            Even when this function returns true, the window may be actually invisible. It can be cloaked, on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
             </remarks>
+            <seealso cref="P:Catkeys.Wnd.IsVisibleEx"/>
             <seealso cref="P:Catkeys.Wnd.IsCloaked"/>
+            <seealso cref="P:Catkeys.Wnd.IsVisibleAndNotCloaked"/>
             <seealso cref="M:Catkeys.Wnd.Show(System.Boolean)"/>
             <seealso cref="M:Catkeys.Wnd.Activate"/>
+        </member>
+        <member name="P:Catkeys.Wnd.IsVisibleEx">
+            <summary>
+            Returns true if the window is visible.
+            Returns false if is invisible or is a child of invisible parent.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Catkeys.Types.Native.GetError"/>.
+            </summary>
+            <remarks>
+            Returns false if API <msdn>IsWindowVisible</msdn> returns false.
+            Also returns false if <see cref="P:Catkeys.Wnd.IsCloaked"/> returns true, but only for some popup windows that usually are useless and could cause problems if considered visible.
+            Else returns true.
+            
+            Even when this function returns true, the window may be actually invisible. It can be cloaked (excepth the above case), on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
+            </remarks>
+            <seealso cref="P:Catkeys.Wnd.IsVisible"/>
+            <seealso cref="P:Catkeys.Wnd.IsCloaked"/>
+            <seealso cref="P:Catkeys.Wnd.IsVisibleAndNotCloaked"/>
+            <seealso cref="M:Catkeys.Wnd.Show(System.Boolean)"/>
+            <seealso cref="M:Catkeys.Wnd.Activate"/>
+        </member>
+        <member name="P:Catkeys.Wnd.IsVisibleAndNotCloaked">
+            <summary>
+            Returns true if <see cref="P:Catkeys.Wnd.IsVisible"/> returns true and <see cref="P:Catkeys.Wnd.IsCloaked"/> returns false.
+            </summary>
+            <seealso cref="P:Catkeys.Wnd.IsVisibleEx"/>
         </member>
         <member name="M:Catkeys.Wnd.Show(System.Boolean)">
             <summary>
@@ -14020,8 +13750,8 @@
         </member>
         <member name="P:Catkeys.Wnd.NameAcc">
             <summary>
-            Gets <see cref="P:Catkeys.Acc.Name"/> of the root accessible object (WINDOW) of this window or control.
-            Returns "" if the object has no name or failed to get it. Returns null if this window is invalid.
+            Gets <see cref="P:Catkeys.Acc.Name"/> of the accessible object (role WINDOW) of this window or control.
+            Returns "" if the object has no name or failed to get it. Returns null if invalid window handle.
             </summary>
         </member>
         <member name="P:Catkeys.Wnd.NameWinForms">
@@ -14082,7 +13812,7 @@
             Find window that contains certain control, and get the control too.
             <code><![CDATA[
             var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
-            Wnd w = Wnd.Find(className: "#32770", also: t => f.FindIn(t));
+            Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
             Print(w);
             Print(f.Result);
             ]]></code>
@@ -14102,7 +13832,7 @@
             The found control.
             </summary>
         </member>
-        <member name="M:Catkeys.Wnd.ChildFinder.FindIn(Catkeys.Wnd)">
+        <member name="M:Catkeys.Wnd.ChildFinder.Find(Catkeys.Wnd)">
             <summary>
             Finds the specified child control, like <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
             Returns true if found.
@@ -14120,7 +13850,7 @@
             <param name="a">List of controls, for example returned by <see cref="M:Catkeys.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
             <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
         </member>
-        <member name="M:Catkeys.Wnd.ChildFinder.FindAllIn(Catkeys.Wnd)">
+        <member name="M:Catkeys.Wnd.ChildFinder.FindAll(Catkeys.Wnd)">
             <summary>
             Finds all matching child controls, like <see cref="M:Catkeys.Wnd.ChildAll(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean})"/>.
             Returns array containing 0 or more control handles as Wnd.
@@ -14209,7 +13939,7 @@
             Returns true if this window contains the specified control.
             Calls <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.
             <note type="note">
-            Using this function many times with same parameters is inefficient. Instead create new <see cref="T:Catkeys.Wnd.ChildFinder"/> and call <see cref="M:Catkeys.Wnd.ChildFinder.FindIn(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.HasChild(Catkeys.Wnd.ChildFinder)"/>. See example.
+            Using this function many times with same parameters is inefficient. Instead create new <see cref="T:Catkeys.Wnd.ChildFinder"/> and call <see cref="M:Catkeys.Wnd.ChildFinder.Find(Catkeys.Wnd)"/> or <see cref="M:Catkeys.Wnd.HasChild(Catkeys.Wnd.ChildFinder)"/>. See example.
             </note>
             </summary>
             <exception cref="T:Catkeys.Types.WndException"/>
@@ -14227,7 +13957,7 @@
         <member name="M:Catkeys.Wnd.HasChild(Catkeys.Wnd.ChildFinder)">
             <summary>
             Returns true if this window contains the specified control.
-            Calls <see cref="M:Catkeys.Wnd.ChildFinder.FindIn(Catkeys.Wnd)"/>.
+            Calls <see cref="M:Catkeys.Wnd.ChildFinder.Find(Catkeys.Wnd)"/>.
             </summary>
             <exception cref="T:Catkeys.Types.WndException"/>
             <example>
@@ -14243,7 +13973,7 @@
         <member name="M:Catkeys.Wnd.HasAcc(Catkeys.Acc.Finder)">
             <summary>
             Returns true if this window contains the specified accessible object.
-            Calls <see cref="M:Catkeys.Acc.Finder.FindIn(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)"/>.
+            Calls <see cref="M:Catkeys.Acc.Finder.Find(Catkeys.Wnd,Catkeys.Wnd.ChildFinder)"/>.
             </summary>
             <exception cref="T:Catkeys.Types.WndException"/>
             <example>
@@ -14345,7 +14075,7 @@
             <summary>
             Sends a "click" message to this button control. Does not use the mouse.
             </summary>
-            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Catkeys.Types.WndException">This window is invalid.</exception>
             <exception cref="T:Catkeys.Types.CatException">Failed.</exception>
             <remarks>
@@ -14377,7 +14107,7 @@
             Sets checkbox state. Does not use the mouse.
             </summary>
             <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid state.</exception>
             <exception cref="T:Catkeys.Types.WndException">This window is invalid.</exception>
             <exception cref="T:Catkeys.Types.CatException">Failed.</exception>
@@ -14411,7 +14141,7 @@
             Calls <see cref="M:Catkeys.Wnd.WButton.Click(System.Boolean)"/>.
             </summary>
             <param name="buttonId">Control id of the button. This function calls <see cref="M:Catkeys.Wnd.Kid(System.Int32,Catkeys.Types.WCFlags)"/> to find the button.</param>
-            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Catkeys.Types.NotFoundException">Button not found.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Kid(System.Int32,Catkeys.Types.WCFlags)"/> and <see cref="M:Catkeys.Wnd.WButton.Click(System.Boolean)"/>.</exception>
             <example>
@@ -14427,7 +14157,7 @@
             </summary>
             <param name="buttonName">Button name. This function calls <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> to find the button.</param>
             <param name="className">Button class name to pass to <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/>.</param>
-            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+            <param name="useAcc">Use <see cref="M:Catkeys.Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Catkeys.Types.NotFoundException">Button not found.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Catkeys.Wnd.Child(System.String,System.String,Catkeys.Types.WCFlags,System.Func{Catkeys.Wnd,System.Boolean},System.Int32)"/> and <see cref="M:Catkeys.Wnd.WButton.Click(System.Boolean)"/>.</exception>
             <example>
@@ -14460,7 +14190,7 @@
             <param name="flags"></param>
             <param name="co">Can be used to specify screen (see <see cref="M:Catkeys.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
             <remarks>
-            Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
+            Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
             This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <b>RealChildWindowFromPoint</b>. Also does not skip disabled controls. All this is not true with flag Raw.
             This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
             x and y can be Coord.Reverse etc; cannot be null.
@@ -14600,7 +14330,7 @@
         </member>
         <member name="P:Catkeys.Wnd.Finder.Result">
             <summary>
-            The found window (after calling <see cref="M:Catkeys.Wnd.Finder.Find"/> or <see cref="M:Catkeys.Wnd.Finder.FindInList(System.Collections.Generic.IEnumerable{Catkeys.Wnd})"/>).
+            The found window.
             </summary>
         </member>
         <member name="M:Catkeys.Wnd.Finder.Find">
@@ -15472,9 +15202,6 @@
             Stores data int the variable, not in shared memory like Perf class.
             </summary>
         </member>
-        <member name="M:Catkeys.Perf.Inst.#ctor(System.Boolean)">
-            <param name="callFirst">Call <see cref="M:Catkeys.Perf.Inst.First"/>.</param>
-        </member>
         <member name="P:Catkeys.Perf.Inst.Incremental">
             <summary>
             If true, times of each new First/Next/Next... measurement are added to previous measurement times.
@@ -15641,61 +15368,10 @@
             Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
             </summary>
         </member>
-        <member name="T:UIA.NamespaceDoc">
+        <member name="M:Catkeys.Perf.StartNew">
             <summary>
-            UI Automation client COM interfaces and related types.
+            Creates/returns new <see cref="T:Catkeys.Perf.Inst"/> variable and calls its <see cref="M:Catkeys.Perf.Inst.First"/>.
             </summary>
-            <remarks>
-            Documented in MSDN Library. The most important interfaces are <msdn>IUIAutomation</msdn> and <msdn>IUIAutomationElement</msdn> (here IElement).
-            
-            To make programming easier, changed these declarations:
-            1. Interface name prefix "IUIAutomation" replaced with "I". For example, IUIAutomationElement here is IElement.
-            2. Removed prefix "Current" from property names. For example, CurrentName here is Name.
-            3. All constants moved to enums, and removed prefixes and suffixes. For example, UIA_NamePropertyId here is PropertyId.Name. Function parameter types also changed from int to enum.
-            </remarks>
-        </member>
-        <member name="T:UIA.CUIAutomation">
-            <summary>
-            This class is used to create COM objects of <see cref="T:UIA.IUIAutomation"/> type, like <c>var u = new UIA.CUIAutomation() as UIA.IUIAutomation;</c>
-            </summary>
-        </member>
-        <member name="T:UIA.CUIAutomation8">
-            <summary>
-            This class is used to create COM objects of IUIAutomationX types, like <c>var u = new UIA.CUIAutomation8() as UIA.IUIAutomation2;</c>
-            </summary>
-            <remarks>
-            Unavailable on Windows 7. Use <see cref="T:UIA.CUIAutomation"/>/<see cref="T:UIA.IUIAutomation"/> instead.
-            </remarks>
-        </member>
-        <member name="T:UIA.IUIAutomation">
-            <summary>
-            Provides UI Automation services - gets <see cref="T:UIA.IElement"/> of root/window/point/focus, creates find conditions and other objects, registers event handlers, etc.
-            </summary>
-            <remarks>
-            Use this code to create COM object: <c>var u = new UIA.CUIAutomation() as UIA.IUIAutomation;</c>
-            There are several other IUIAutomationX interfaces, added in Windows 8 and later. To create them use <see cref="T:UIA.CUIAutomation8"/> class.
-            </remarks>
-        </member>
-        <member name="T:UIA.IElement">
-            <summary>
-            UI Automation element. The main interface of UI Automation.
-            </summary>
-            <remarks>
-            COM objects are created using <see cref="T:UIA.IUIAutomation"/> or found using methods like FindFirst. See example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            Wnd w = Wnd.Find("Options").OrThrow();
-            var u = new UIA.CUIAutomation() as UIA.IUIAutomation;
-            var ew = u.ElementFromHandle(w);
-            Print(ew.Name);
-            var cond = u.CreatePropertyCondition(UIA.PropertyId.Name, "Run at startup");
-            cond = u.CreateAndCondition(cond, u.CreatePropertyCondition(UIA.PropertyId.IsOffscreen, false));
-            var e = ew.FindFirst(UIA.TreeScope.Descendants, cond);
-            Print(e?.Name);
-            e?.SetFocus();
-            ]]></code>
-            </example>
         </member>
         <member name="T:System.ITupleInternal">
             <summary>

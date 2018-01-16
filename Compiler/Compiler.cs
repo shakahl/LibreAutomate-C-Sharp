@@ -201,7 +201,7 @@ public static class Test
 		//			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Catkeys.dll" };
 		//			//var sRef = new string[] { typeof(object).Assembly.Location };
 
-		//			var perf = new Perf.Inst(true);
+		//			var perf = Perf.StartNew();
 		//			var references = new List<PortableExecutableReference>();
 		//			foreach(var s in sRef) {
 		//				references.Add(MetadataReference.CreateFromFile(s));

@@ -13,7 +13,9 @@ void Print(STR s)
 	if(!IsWindow(s_QM2)) {
 		s_QM2 = FindWindow(L"QM_Editor", 0); if(!s_QM2) return;
 	}
-	SendMessage(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""));
+	//SendMessageW(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""));
+	DWORD_PTR res;
+	SendMessageTimeoutW(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""), SMTO_BLOCK|SMTO_ABORTIFHUNG, 5000, &res);
 #else
 	_cputws(s);
 	_cputws(L"\r\n");
@@ -38,11 +40,6 @@ void Printf(STR frm, ...)
 
 
 #if _DEBUG || PRINT_ALWAYS
-
-//class SharedMemory
-//{
-//
-//};
 
 void Perf_Inst::First()
 {
@@ -69,7 +66,7 @@ void Perf_Inst::Write()
 	__int64 f; QueryPerformanceFrequency((LARGE_INTEGER*)&f); double freq = 1000000.0 / f;
 	bool average = false; int nMeasurements = 1;
 
-	SimpleStringBuilder s;
+	str::StringBuilder s;
 	s << L"speed:";
 g1:
 	double t = 0.0, tPrev = 0.0;
@@ -77,7 +74,7 @@ g1:
 		s << L"  ";
 		if(_aMark[i] != '\0') {
 			s << _aMark[i];
-			s << L'=';
+			s << '=';
 		}
 		t = freq * _a[i];
 		double d = t - tPrev;
@@ -90,7 +87,7 @@ g1:
 		s << L"  (";
 		if(average) t /= nMeasurements;
 		s << (__int64)t;
-		s << L")";
+		s << ')';
 	}
 
 	if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
@@ -99,13 +96,11 @@ g1:
 		goto g1;
 	}
 
-	Print(s.str());
+	Print(s);
 }
 
-#pragma comment(linker, "/SECTION:.shared,RWS")
-#pragma data_seg (".shared")
-Perf_Inst Perf = {};
-#pragma data_seg()
+#pragma section(".shared", read,write,shared)
+__declspec(allocate(".shared")) Perf_Inst Perf;
 
 #endif
 
@@ -134,3 +129,137 @@ bool IsProcess64Bit(DWORD pid, out bool& is)
 	is = !is32;
 	return true;
 }
+
+namespace wnd
+{
+bool ClassName(HWND w, out Bstr& s)
+{
+	WCHAR b[260];
+	int n = GetClassNameW(w, b, 260);
+	if(n == 0) {
+		if(s) s.Empty();
+		return false;
+	}
+	s.Assign(b, n);
+	return true;
+}
+
+int ClassNameIs(HWND w, std::initializer_list<STR> a)
+{
+	WCHAR b[260];
+	int n = GetClassNameW(w, b, 260);
+	if(n == 0) return 0;
+	int i = 1;
+	for(const STR* p = a.begin(); p < a.end(); p++, i++) if(str::Like(b, n, *p, wcslen(*p), true)) return i;
+	return 0;
+}
+
+bool Name(HWND w, out Bstr& s)
+{
+	bool R = false;
+	if(w) {
+		Buffer<WCHAR, 1000> m;
+		for(int na = 1000; na <= 10'000'000; na *= 10) {
+			int nr = InternalGetWindowText(w, m.Alloc(na), na);
+			if(nr < na - 1) {
+				if(nr > 0) {
+					s.Assign(m, nr);
+					return true;
+				}
+				R = GetLastError() != 0;
+				break;
+			}
+		}
+	}
+	if(s) s.Empty();
+	return R;
+}
+
+void PrintWnd(HWND w)
+{
+	Bstr sc, sn;
+	if(!w) {
+		Print(L"<0 HWND>");
+	} else if(!ClassName(w, out sc)) {
+		Print(L"<invalid HWND>");
+	} else {
+		Name(w, out sn);
+		RECT r = {}; GetWindowRect(w, &r);
+		STR inv = IsWindowVisible(w) ? L"" : L" invisible";
+		Printf(L"%i %s \"%s\" {L=%i T=%i W=%i H=%i}%s",
+			(int)(LPARAM)w, sc, sn, r.left, r.top, r.right-r.left, r.bottom-r.top, inv);
+	}
+}
+
+BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback)
+{
+	return ::EnumChildWindows(w, [](HWND c, LPARAM p) { return (BOOL)(*(WNDENUMPROCL*)p)(c); }, (LPARAM)&callback);
+}
+
+//className - wildcard.
+HWND FindChildByClassName(HWND w, STR className, bool visible)
+{
+	HWND R = 0;
+	wnd::EnumChildWindows(w, [&R, className, visible](HWND c)
+	{
+		if(visible && !IsWindowVisible(c)) return 1;
+		if(!wnd::ClassNameIs(c, className)) return 1;
+		R = c;
+		return 0;
+	});
+	return R;
+}
+}
+
+//Gets pointer to other interface through iserviceprovider.
+//Use guidService if it is different than iid.
+bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guidService/*=null*/)
+{
+	*iTo = null;
+	if(!guidService) guidService = &iid;
+	IServiceProviderPtr sp;
+	return 0==iFrom->QueryInterface(&sp) && 0==sp->QueryService(*guidService, iid, iTo) && *iTo;
+}
+
+//void DoEvents()
+//{
+//	MSG m;
+//	while(PeekMessageW(&m, 0, 0, 0, PM_REMOVE)) {
+//		//while(PeekMessageW(&m, 0, 0, 0, PM_REMOVE| PM_QS_SENDMESSAGE)) { //does not work
+//		//Print(m.message);
+//		//Bstr s; if(wnd::ClassName(m.hwnd, s)) Print(s);
+//		if(m.message == WM_QUIT) { PostQuitMessage((int)m.wParam); return; }
+//		TranslateMessage(&m);
+//		DispatchMessageW(&m);
+//	}
+//}
+//
+////void DoEvents2()
+////{
+////	DWORD signaledIndex;
+////	auto hr = CoWaitForMultipleHandles(0, 0, 0, null, &signaledIndex); //fails, invalid parameter
+////	Printx(hr);
+////}
+//
+//void SleepDoEvents(int milliseconds)
+//{
+//	if(milliseconds == 0) { DoEvents(); return; }
+//	for(;;) {
+//		ULONGLONG t = 0;
+//		int timeSlice = 100; //we call API in loop with small timeout to make it respond to Thread.Abort
+//		if(milliseconds > 0) {
+//			if(milliseconds < timeSlice) timeSlice = milliseconds;
+//			t = GetTickCount64();
+//		}
+//
+//		DWORD k = MsgWaitForMultipleObjectsEx(0, null, timeSlice, QS_ALLINPUT, MWMO_ALERTABLE);
+//		//info: k can be 0 (message etc), WAIT_TIMEOUT, WAIT_IO_COMPLETION, WAIT_FAILED.
+//		if(k == WAIT_FAILED) return; //unlikely, because not using handles
+//		if(k == 0) DoEvents();
+//
+//		if(milliseconds > 0) {
+//			milliseconds -= (int)(GetTickCount64() - t);
+//			if(milliseconds <= 0) break;
+//		}
+//	}
+//}

@@ -15,7 +15,7 @@ bool ElementFromWindow(IUIAutomationPtr f, HWND w, IUIAutomationElementPtr& e)
 class UiaFinder
 {
 	IUIAutomationPtr _f;
-	CComBSTR _name;
+	Bstr _name;
 	IUIAutomationConditionPtr _condRaw;
 public:
 	IUIAutomationElementPtr eFound;
@@ -65,7 +65,7 @@ private:
 			IUIAutomationElementPtr e;
 			if (a->GetElement(i, &e)) return 6;
 
-			CComBSTR b;
+			Bstr b;
 			if (0 == e->get_CurrentName(&b)) {
 				//Printf(L"%i %s", level, (STR)b);
 				if (b == _name) {
@@ -91,7 +91,7 @@ LRESULT TestUia(HWND w)
 	if (err) return err;
 
 	if (x.eFound) {
-		CComBSTR b;
+		Bstr b;
 		if (x.eFound->get_CurrentName(&b)) return 50;
 		Print(b);
 	}
@@ -104,7 +104,7 @@ LRESULT TestUia(HWND w)
 {
 	//Print(L"TestUia");
 
-	//TODO: CoInitialize if need.
+	//_TODO: CoInitialize if need.
 
 	//IUIAutomationPtr f(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER);
 	IUIAutomationPtr f;

@@ -66,28 +66,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Api\Api_COM_wrap.cs" />
     <Compile Include="Api\Cpp.cs" />
     <Compile Include="Automation\Acc\Acc_func.cs" />
-    <Compile Include="Automation\Acc\Acc_java.cs" />
-    <Compile Include="Automation\Acc\Acc_struct.cs" />
-    <Compile Include="Automation\Acc\Acc_iacc.cs" />
     <Compile Include="Automation\Acc\Acc_types.cs" />
     <Compile Include="Automation\Acc\Acc_find.cs" />
     <Compile Include="Automation\Acc\Acc.cs" />
-    <None Include="Automation\Acc\excluded\Acc.Misc.cs" />
-    <Compile Include="Automation\Acc\Acc_web.cs" />
     <Compile Include="Automation\Auto misc.cs" />
     <Compile Include="Automation\Input.cs" />
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
     <Compile Include="Automation\ScreenImage.cs" />
-    <Compile Include="Automation\Uia\ACondition.cs" />
-    <Compile Include="Automation\Uia\AElement.cs" />
-    <Compile Include="Automation\Uia\AE_find.cs" />
-    <Compile Include="Automation\Uia\Uia_api.cs" />
-    <Compile Include="Automation\Uia\Uia_api2.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\Screen_.cs" />
     <Compile Include="String\Regex_.cs" />

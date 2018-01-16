@@ -119,7 +119,7 @@ static class EResources
 		lock(_cache) {
 			object R = _cache[name];
 			if(R != null) return R;
-			//var p = new Perf.Inst(true);
+			//var p = Perf.StartNew();
 			R = Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture);
 			//p.NW();
 			Debug.Assert(R != null);

@@ -35,7 +35,7 @@ static class Strips
 
 	public static void Init()
 	{
-		//var p = new Perf.Inst(true);
+		//var p = Perf.StartNew();
 
 		//map command handler names/delegates etc
 		_cmd = new CmdHandlers();
@@ -75,7 +75,7 @@ static class Strips
 
 #if DEBUG
 		//all commands have menu items?
-		//var p = new Perf.Inst(true);
+		//var p = Perf.StartNew();
 		foreach(var k in _cmd.Dict.Keys) {
 			//Print(k);
 			if(_strips.Xml.Descendant_(k) == null) Output.Warning("no menu item for command " + k);

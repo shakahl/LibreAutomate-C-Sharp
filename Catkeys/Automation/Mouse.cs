@@ -77,15 +77,8 @@ namespace Catkeys
 			}
 			if(!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
-				if(Wnd.WndActive.IsUacAccessDenied) {
-					//it's a mystery for users. API SendInput fails even if the point is not in the window.
-					//rejected:
-					//if(!retry && Wnd.Misc.WndRoot.ActivateLL()) {
-					//	Output.Warning("Active window of admin process (UAC). Now deactivated. To avoid it, run this app as admin or uiAccess.");
-					//	retry = true; goto g1;
-					//}
-					es += ". Active window of admin process (UAC). Run this app as admin or uiAccess";
-				}
+				Wnd.WndActive.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
+				//rejected: Wnd.Misc.WndRoot.ActivateLL()
 				throw new CatException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -204,7 +197,7 @@ namespace Catkeys
 			LibWaitWhileButtonsPressed();
 			w.ThrowIfInvalid();
 			var wTL = w.WndWindow;
-			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
+			if(!wTL.IsVisibleEx) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
 			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _SleepExact(500); } //never mind: if w is a control...
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
 			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();

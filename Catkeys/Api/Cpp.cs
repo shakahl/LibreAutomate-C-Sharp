@@ -33,70 +33,119 @@ namespace Catkeys.Types
 			throw new CatException(0, "*load AuCpp.dll");
 		}
 
-		//tested: calling DllImport functions is 4-5 times slower than C# functions.
-		//tested: calling COM functions is 4-5 times slower than DllImport functions.
-		//This is when passing strings, either with default marshaling or with 'fixed'.
-		//Without 'fixed', calling DllImport functions is only 50% slower than C#. Did not test COM.
+		//speed:
+		//	Calling DllImport functions is 4-5 times slower than C# functions.
+		//	Calling COM functions is 2-10 times slower than DllImport functions.
+		//	Tested with int and string parameters, with default marshaling and with 'fixed'.
+		//	If only int parameters, DllImport is only 50% slower than C#. But COM slow anyway.
+		//	Strings passed to COM methods by default are converted to BSTR, and a new BSTR is allocated/freed.
 
 		internal struct Cpp_Acc
 		{
-			public Acc.IAccessible iacc;
+			public IntPtr acc;
 			public int elem;
+			public Acc._Misc misc;
+
+			public Cpp_Acc(IntPtr iacc, int elem_) { acc = iacc; elem = elem_; misc = default; }
+			public Cpp_Acc(Acc a) { acc = a._iacc; elem = a._elem; misc = a._misc; }
+			public static implicit operator Cpp_Acc(Acc a) =>new Cpp_Acc(a);
 		}
 
-		//internal struct Cpp_AccFindResults
-		//{
-		//	public int countOrError;
+		internal delegate int AccCallbackT(Cpp_Acc a);
 
-		//}
+		internal struct Cpp_AccParams
+		{
+			string _role, _name, _prop;
+			int _roleLength, _nameLength, _propLength;
+			public AFFlags flags;
+			public int skip;
+			char resultProp; //Acc.Finder.RProp
 
-		//internal struct Cpp_AccTemp
-		//{
-		//	public int iacc;
-		//	public int elem;
-		//}
-
-		//internal struct Cpp_AccFindTempResults
-		//{
-		//	public int version;
-		//	public int memorySize;
-		//	public int countOrError;
-		//	public Cpp_AccTemp a;
-		//}
-
-		internal delegate int AccCallbackT(ref Cpp_Acc a);
+			public Cpp_AccParams(string role, string name, string prop, AFFlags flags, int skip, char resultProp) :this()
+			{
+				if(role != null) { _role = role; _roleLength = role.Length; }
+				if(name != null) { _name = name; _nameLength = name.Length; }
+				if(prop != null) { _prop = prop; _propLength = prop.Length; }
+				this.flags = flags;
+				this.skip = skip;
+				this.resultProp = resultProp;
+			}
+		}
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFind([MarshalAs(UnmanagedType.I1)] bool inject, Wnd w, Acc.IAccessible iaccparent, string role, string name, AFFlags flags, AccCallbackT also, int skip, out Cpp_Acc aResult);
+		internal static extern EError Cpp_AccFind(Wnd w, Cpp_Acc* aParent, [In] ref Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+
+		internal enum EError
+		{
+			NotFound = 0x1001, //AO not found. With FindAll - no errors. This is actually not an error.
+			InvalidParameter = 0x1002, //invalid parameter, for example wildcard expression (or regular expression in it)
+			WindowClosed = 0x1003, //the specified window handle is invalid or the window was destroyed while injecting
+			WaitChromeDisabled = 0x1004, //need to wait while enabling Chrome AOs finished
+		}
+
+		internal static bool IsCppError(int hr)
+		{
+			return hr >= (int)EError.NotFound && hr <= (int)EError.WaitChromeDisabled;
+		}
+
+		/// <summary>
+		/// flags: 1 inproc, 2 get only name.
+		/// </summary>
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccFromWindow(int flags, Wnd w, AccOBJID objId, out Cpp_Acc aResult, out BSTR sResult);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccNavigate(Cpp_Acc aFrom, string navig, out Cpp_Acc aResult);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetProp(Cpp_Acc a, char prop, out BSTR sResult);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccWeb(Cpp_Acc a, string what, out BSTR sResult);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetRect(Cpp_Acc a, out RECT r);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetRole(Cpp_Acc a, out AccROLE roleInt, out BSTR roleStr);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetInt(Cpp_Acc a, char what, out int R);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccAction(Cpp_Acc a, char action, [MarshalAs(UnmanagedType.BStr)] string param = null);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccSelect(Cpp_Acc a, AccSELFLAG flagsSelect);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetSelection(Cpp_Acc a, out BSTR sResult);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetProps(Cpp_Acc a, string props, out BSTR sResult);
+
+		//flags: 1 get UIA, 2 prefer LINK.
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccFromPoint(Point p, AXYFlags flags, out Cpp_Acc aResult);
+
+		//flags: 1 get UIA.
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetFocused(Wnd w, int flags, out Cpp_Acc aResult);
+
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Unload();
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_Free(void* p);
 
 		// STRING
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern char* Cpp_LowercaseTable();
 
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.I1)]
-		//internal static extern bool Cpp_StringLike(char* s, LPARAM lenS, char* w, LPARAM lenW, [MarshalAs(UnmanagedType.I1)] bool ignoreCase = false);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.I1)]
-		//internal static extern bool Cpp_StringEquals(char* s, LPARAM lenS, char* w, LPARAM lenW, [MarshalAs(UnmanagedType.I1)] bool ignoreCase = false);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.I1)]
-		//internal static extern bool Cpp_StringEqualsI(char* a, char* b, int len);
-
 		// PCRE
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		internal static extern bool Cpp_RegexParse(Regex_ x, string rx, LPARAM len, RXFlags flags = 0, char** errStr = null);
+		internal static extern bool Cpp_RegexParse(Regex_ x, string rx, LPARAM len, RXFlags flags, [MarshalAs(UnmanagedType.BStr)] out string errStr);
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -115,44 +164,18 @@ namespace Catkeys.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Test();
 
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_TestPCRE(string s, string p, uint flags = 0);
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_TestWildex(string s, string p);
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_TestSimpleStringBuilder();
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int Cpp_TestInt(int a, int b, int c);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern void Cpp_TestClrHost();
-
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.I1)]
-		//internal static extern bool Cpp_WildexParse([In, Out] Wildex2 x, string w, LPARAM lenW, char** errStr = null);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//[return: MarshalAs(UnmanagedType.I1)]
-		//internal static extern bool Cpp_WildexMatch(Wildex2 x, string s, LPARAM lenS);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern void Cpp_WildexDtor(Wildex2 x);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int Cpp_TestAdd(int a, int b);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern byte Cpp_TestAdd2(char* a, char* b);
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern byte Cpp_TestAdd3(char* a, char* b, LPARAM len);
-
+		//internal static extern int Cpp_TestString(string a, int b, int c);
 
 		//[ComImport, Guid("3426CF3C-F7C2-4322-A292-463DB8729B54"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		//internal interface ICppTest
 		//{
-		//	[PreserveSig] byte One(char* a, char* b);
+		//	[PreserveSig] int TestInt(int a, int b, int c);
+		//	[PreserveSig] int TestString([MarshalAs(UnmanagedType.LPWStr)] string a, int b, int c);
+		//	[PreserveSig] int TestBSTR(string a, int b, int c);
 		//}
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

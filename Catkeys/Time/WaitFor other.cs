@@ -33,28 +33,35 @@ namespace Catkeys
 		internal struct LibTimeout
 		{
 			long _timeRemaining, _timePrev;
-			bool _isTimeout, _throw;
+			bool _hasTimeout, _throw;
 
 			/// <summary>
-			/// Current period. Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
+			/// Current period, milliseconds.
+			/// Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
 			/// </summary>
-			internal int Period;
+			public int Period { get; set; }
 
 			/// <summary>
-			/// Maximal period. It is constructor->maxPeriod (default 200).
+			/// Maximal period, milliseconds.
+			/// It is constructor->maxPeriod (default 500).
 			/// </summary>
-			internal int MaxPeriod;
+			public int MaxPeriod { get; set; }
 
-			internal LibTimeout(double secondsTimeout, int initPeriod = 10, int maxPeriod = 200)
+			/// <summary>
+			/// Remaining time, milliseconds.
+			/// </summary>
+			public long TimeRemaining { get => _timeRemaining; set => _timeRemaining = value; }
+
+			public LibTimeout(double secondsTimeout, int initPeriod = 10, int maxPeriod = 500)
 			{
 				if(secondsTimeout == 0) {
 					_timeRemaining = _timePrev = 0;
-					_isTimeout = _throw = false;
+					_hasTimeout = _throw = false;
 				} else {
 					_timePrev = Time.MillisecondsWithoutComputerSleepTime;
 					_timeRemaining = (long)(secondsTimeout * 1000.0);
 					if(_timeRemaining > 0) _throw = true; else { _throw = false; _timeRemaining = -_timeRemaining; }
-					_isTimeout = true;
+					_hasTimeout = true;
 				}
 				Period = initPeriod; MaxPeriod = maxPeriod;
 			}
@@ -65,14 +72,14 @@ namespace Catkeys
 			/// Else throws TimeoutException.
 			/// Also gets current time and updates private fields, if need.
 			/// </summary>
-			internal bool IsTimeout()
+			public bool IsTimeout()
 			{
-				if(!_isTimeout) return false;
+				if(!_hasTimeout) return false;
 				var t = Time.MillisecondsWithoutComputerSleepTime;
 				_timeRemaining -= t - _timePrev;
 				_timePrev = t;
 				if(_timeRemaining > 0) return false;
-				if(_throw) throw new TimeoutException("Wait timeout.");
+				if(_throw) throw new TimeoutException();
 				return true;
 			}
 
@@ -80,20 +87,18 @@ namespace Catkeys
 			/// If IsTimeout(), returns false.
 			/// Else sleeps for Period milliseconds, increments Period if it is less than MaxPeriod, and returns true.
 			/// </summary>
-			internal bool Sleep()
+			public bool Sleep()
 			{
 				if(IsTimeout()) return false;
 				Thread.Sleep(Period);
 				if(Period < MaxPeriod) Period++;
 				return true;
-
-				//CONSIDER: show warning if after some time there are messages in the queue. Use Api.GetQueueStatus. But be careful, eg maybe the script repeatedly sleeps for 10 ms and then calls doevent.
 			}
 		}
 
 		/// <summary>
 		/// Waits for an user-defined condition.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -117,7 +122,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -138,7 +143,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits while some mouse buttons are in pressed state.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
@@ -157,7 +162,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
-		/// Returns true. If secondsTimeout is negative, on timeout returns false (else exception).
+		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.

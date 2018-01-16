@@ -141,7 +141,6 @@ namespace Catkeys
 		/// <item><see cref="Point"/> - gets screen of this point (see <see cref="Screen.FromPoint"/>).</item>
 		/// <item><see cref="Rectangle"/>, <see cref="RECT"/> - gets screen of this rectangle (see <see cref="Screen.FromRectangle"/>).</item>
 		/// <item><see cref="Acc"/> - gets screen of this accessible object (see <see cref="Screen.FromRectangle"/>).</item>
-		/// <item><see cref="UIA.IElement"/> - gets screen of this UI Automation element (see <see cref="Screen.FromRectangle"/>).</item>
 		/// </list>
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
@@ -163,7 +162,8 @@ namespace Catkeys
 			case Rectangle r1: return Screen.FromRectangle(r1);
 			case RECT r2: return Screen.FromRectangle(r2);
 			case Acc acc: return Screen.FromRectangle(acc.Rect);
-			case UIA.IElement e: return Screen.FromRectangle(e.BoundingRectangle);
+		///// <item><see cref="UIA.IElement"/> - gets screen of this UI Automation element (see <see cref="Screen.FromRectangle"/>).</item>
+			//case UIA.IElement e: return Screen.FromRectangle(e.BoundingRectangle);
 			default: throw new ArgumentException("Bad object type.");
 			}
 			if(R != null && !R.Bounds.IsEmpty) return R;

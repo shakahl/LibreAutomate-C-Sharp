@@ -70,7 +70,7 @@ namespace Catkeys
 			}
 
 			/// <summary>
-			/// The found window (after calling <see cref="Find"/> or <see cref="FindInList"/>).
+			/// The found window.
 			/// </summary>
 			public Wnd Result { get; internal set; }
 
@@ -160,7 +160,7 @@ namespace Catkeys
 					//program >=2500
 
 					if(mustBeVisible) {
-						if(!w.IsVisible) continue;
+						if(!w.IsVisibleEx) continue;
 					}
 
 					if(isOwner) {
@@ -547,7 +547,7 @@ namespace Catkeys
 						else aVisible.Clear();
 						int n = d.a.Count;
 						for(int i = 0; i < n; i++) {
-							var w = d.a[i]; if(!w.IsVisible) continue;
+							var w = d.a[i]; if(!(api == EnumWindowsAPI.EnumChildWindows ? w.IsVisible : w.IsVisibleEx)) continue;
 							aVisible.Add(w);
 							d.a[i] = default;
 						}
@@ -600,10 +600,13 @@ namespace Catkeys
 
 				int _WndEnumProc(Wnd w)
 				{
-					if(_onlyVisible && !w.IsVisible) return 1;
 					if(_api == EnumWindowsAPI.EnumChildWindows) {
+						if(_onlyVisible && !w.IsVisible) return 1;
 						if(_directChild && Api.GetParent(w) != _wParent) return 1;
-					} else if(!_wParent.Is0 && w.WndOwner != _wParent) return 1;
+					} else {
+						if(_onlyVisible && !w.IsVisibleEx) return 1;
+						if(!_wParent.Is0 && w.WndOwner != _wParent) return 1;
+					}
 					if(_predicate != null && !_predicate(w, _param)) return 1;
 					a.Add(w);
 					return 1;
@@ -728,14 +731,13 @@ namespace Catkeys.Types
 	[Flags]
 	public enum WFFlags
 	{
-		/// <summary>Can find hidden windows. Use this carefully, always use className, not just name, because there are many hidden tooltip windows etc that could match the name.</summary>
+		/// <summary>Can find hidden windows. See <see cref="Wnd.IsVisibleEx"/>.</summary>
+		/// <remarks>Use this carefully. Always use className, not just name, because there are many hidden tooltip windows etc that could match the name.</remarks>
 		HiddenToo = 1,
 
-		/// <summary>Skip cloaked windows. These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.Cloaked detects). For example, windows on inactive Windows 10 virtual desktops, hidden Windows Store apps on Windows 8.</summary>
+		/// <summary>Skip cloaked windows. See <see cref="Wnd.IsCloaked"/>.</summary>
+		/// <remarks>These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.IsCloaked detects). For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.</remarks>
 		SkipCloaked = 2,
-		//TODO: skip by default. Use flag CloakedToo.
-		//	Because eg if we want to find "* Chrome", it finds Windows.UI.Core.CoreWindow  "Jump List for Google Chrome".
-		//	Or at least sort toolwindow last.
 
 		//rejected: Not very useful, 3 times slower, creates much more garbage, and not always can get full path.
 		///// <summary>The 'programEtc' argument is full path. Need this flag because the function cannot auto-detect it when using wildcard, regex etc.</summary>

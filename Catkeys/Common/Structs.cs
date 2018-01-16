@@ -164,6 +164,16 @@ namespace Catkeys.Types
 		public int Height { get => bottom - top; set { bottom = top + value; } }
 
 		/// <summary>
+		/// Gets horizontal center.
+		/// </summary>
+		public int CenterX => (int)(((long)left + right) / 2);
+
+		/// <summary>
+		/// Gets vertical center.
+		/// </summary>
+		public int CenterY => (int)(((long)top + bottom) / 2);
+
+		/// <summary>
 		/// Returns true if this rectangle contains the specified point.
 		/// </summary>
 		public bool Contains(int x, int y) { return x >= left && x < right && y >= top && y < bottom; }
@@ -256,7 +266,13 @@ namespace Catkeys.Types
 			Wnd.Lib.MoveInScreen(true, null, null, false, default, ref this, screen, workArea, true);
 		}
 
-		public override string ToString() { return $"{{L={left} T={top} R={right} B={bottom}  Width={Width} Height={Height}}}"; }
+		public override string ToString() {
+			return $"{{L={left} T={top} W={Width} H={Height}}}";
+			//note: don't change the format. Some functions parse it.
+
+			//don't need R B. Rarely useful, just makes more difficult to read W H.
+			//return $"{{L={left} T={top} R={right} B={bottom}  W={Width} H={Height}}}";
+		}
 #pragma warning restore 1591 //XML doc
 	}
 #pragma warning restore 660, 661
@@ -361,6 +377,11 @@ namespace Catkeys.Types
 		public bool Is0 => _p == null;
 
 		public int Length => _p == null ? 0 : Api.SysStringLen(_p);
+
+		/// <summary>
+		/// Unsafe.
+		/// </summary>
+		public char this[int i] => _p[i];
 
 		/// <summary>
 		/// Converts to string.

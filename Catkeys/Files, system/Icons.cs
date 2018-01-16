@@ -76,7 +76,7 @@ namespace Catkeys
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 
 			if(hi == Zero) return null;
-			//var perf = new Perf.Inst(true);
+			//var perf = Perf.StartNew();
 			Icon ic = Icon.FromHandle(hi);
 			Bitmap im = null;
 			try { im = ic.ToBitmap(); } catch(Exception e) { Debug_.Print(e.Message); }
@@ -112,7 +112,7 @@ namespace Catkeys
 			size = _NormalizeIconSizeParameter(size);
 			file = Path_.ExpandEnvVar(file);
 
-			//var perf = new Perf.Inst(true);
+			//var perf = Perf.StartNew();
 			IntPtr R = _GetFileIcon(file, size, flags);
 			//perf.Next(); PrintList(perf.Times, file);
 			//Print($"<><c 0xff0000>{file}</c>");
@@ -747,7 +747,7 @@ namespace Catkeys
 						//But don't make the threshold too low, because then may need to wait unnecessarily, and it makes slower.
 						if(Interlocked.Increment(ref _nPending) >= 900) {
 							//Print(_nPending);
-							//var perf = new Perf.Inst(true);
+							//var perf = Perf.StartNew();
 							Thread.Sleep(10);
 							//while(_nPending >= 900) Thread.Sleep(10);
 							//perf.NW();

@@ -261,7 +261,7 @@ namespace Catkeys
 			{
 				Wnd w = WndShell;
 				var f = new ChildFinder(className: "SysListView32");
-				if(!f.FindIn(w)) w = Wnd.Find(null, "WorkerW", WFOwner.ThreadId(w.ThreadId), also: t => f.FindIn(t));
+				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", WFOwner.ThreadId(w.ThreadId), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;
 

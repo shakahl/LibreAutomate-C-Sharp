@@ -1159,8 +1159,8 @@ namespace Catkeys.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int MulDiv(int nNumber, int nNumerator, int nDenominator);
 
-		//[DllImport("kernel32.dll")]
-		//internal static extern long GetTickCount64();
+		[DllImport("kernel32.dll")]
+		internal static extern long GetTickCount64();
 
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryUnbiasedInterruptTime(out long UnbiasedTime);
@@ -2312,34 +2312,28 @@ namespace Catkeys.Types
 
 		internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
 
-		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, ref Guid riid, out Acc.IAccessible ppvObject);
+		//[DllImport("oleacc.dll", PreserveSig = true)]
+		//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, ref Guid riid, out IntPtr ppvObject);
+
+		//[DllImport("oleacc.dll", PreserveSig = true)]
+		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out Wnd phwnd);
+
+		//[DllImport("oleacc.dll", PreserveSig = true)]
+		//internal static extern int AccessibleObjectFromPoint(Point ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int WindowFromAccessibleObject(Acc.IAccessible iacc, out Wnd phwnd);
-
-		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromPoint(Point ptScreen, out Acc.IAccessible ppacc, out VARIANT pvarChild);
-
-		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, int dwId, int dwChildId, out Acc.IAccessible ppacc, out VARIANT pvarChild);
-
-		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleChildren(Acc.IAccessible paccContainer, int iChildStart, int cChildren, VARIANT* rgvarChildren, out int pcObtained);
-
-		//these are not useful. They work only with standard roles/states, and return localized string. We instead use non-localized string[] or Enum.ToString().
-		//[DllImport("oleacc.dll", EntryPoint = "GetRoleTextW")]
-		//internal static extern int GetRoleText(int lRole, [Out] char[] lpszRole, int cchRoleMax);
-		//[DllImport("oleacc.dll", EntryPoint = "GetStateTextW")]
-		//internal static extern int GetStateText(int lStateBit, [Out] char[] lpszState, int cchState);
+		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, int dwId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll")]
 		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
-		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int ObjectFromLresult(LPARAM lResult, ref Guid riid, LPARAM wParam, out Acc.IAccessible ppvObject);
+		internal delegate void WINEVENTPROC(IntPtr hWinEventHook, AccEVENT event_, Wnd hwnd, int idObject, int idChild, int idEventThread, int dwmsEventTime);
 
+		[DllImport("user32.dll")]
+		internal static extern IntPtr SetWinEventHook(AccEVENT eventMin, AccEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, int idProcess, int idThread, LibAccHookFlags dwFlags);
 
+		[DllImport("user32.dll")]
+		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
 
 

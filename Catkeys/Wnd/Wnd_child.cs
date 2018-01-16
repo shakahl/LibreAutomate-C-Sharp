@@ -34,7 +34,7 @@ namespace Catkeys
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
 		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(className: "#32770", also: t => f.FindIn(t));
+		/// Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -97,7 +97,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 			/// <exception cref="WndException">Invalid wParent.</exception>
-			public bool FindIn(Wnd wParent)
+			public bool Find(Wnd wParent)
 			{
 				using(var k = new _WndList(_AllChildren(wParent)))
 					return _FindInList(wParent, k) >= 0;
@@ -132,7 +132,7 @@ namespace Catkeys
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 			/// <exception cref="WndException">Invalid wParent.</exception>
-			public Wnd[] FindAllIn(Wnd wParent)
+			public Wnd[] FindAll(Wnd wParent)
 			{
 				return _FindAll(new _WndList(_AllChildren(wParent)), wParent);
 			}
@@ -316,7 +316,7 @@ namespace Catkeys
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, className, flags, also, skip);
-			f.FindIn(this);
+			f.Find(this);
 			return f.Result;
 		}
 
@@ -324,7 +324,7 @@ namespace Catkeys
 		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="Child"/>.
 		/// <note type="note">
-		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="ChildFinder"/> and call <see cref="ChildFinder.FindIn"/> or <see cref="HasChild(ChildFinder)"/>. See example.
+		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="ChildFinder"/> and call <see cref="ChildFinder.Find"/> or <see cref="HasChild(ChildFinder)"/>. See example.
 		/// </note>
 		/// </summary>
 		/// <exception cref="WndException"/>
@@ -345,7 +345,7 @@ namespace Catkeys
 
 		/// <summary>
 		/// Returns true if this window contains the specified control.
-		/// Calls <see cref="ChildFinder.FindIn"/>.
+		/// Calls <see cref="ChildFinder.Find"/>.
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <example>
@@ -359,12 +359,12 @@ namespace Catkeys
 		/// </example>
 		public bool HasChild(ChildFinder f)
 		{
-			return f.FindIn(this);
+			return f.Find(this);
 		}
 
 		/// <summary>
 		/// Returns true if this window contains the specified accessible object.
-		/// Calls <see cref="Acc.Finder.FindIn(Wnd, Wnd.ChildFinder)"/>.
+		/// Calls <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <example>
@@ -378,7 +378,7 @@ namespace Catkeys
 		/// </example>
 		public bool HasAcc(Acc.Finder f)
 		{
-			return f.FindIn(this);
+			return f.Find(this);
 		}
 
 		/// <summary>
@@ -431,7 +431,7 @@ namespace Catkeys
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, className, flags, also);
-			var a = f.FindAllIn(this);
+			var a = f.FindAll(this);
 			//CONSIDER: add property LastChildParams, like LastFind.
 			return a;
 		}
@@ -533,7 +533,7 @@ namespace Catkeys
 			/// <summary>
 			/// Sends a "click" message to this button control. Does not use the mouse.
 			/// </summary>
-			/// <param name="useAcc">Use <see cref="Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+			/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="WndException">This window is invalid.</exception>
 			/// <exception cref="CatException">Failed.</exception>
 			/// <remarks>
@@ -550,7 +550,7 @@ namespace Catkeys
 				W.ThrowIfInvalid();
 				if(useAcc) {
 					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) //throws if failed
-						a.DoDefaultAction();
+						a.DoAction();
 				} else {
 					_PostBmClick(); //async if other thread, because may show a dialog.
 				}
@@ -588,7 +588,7 @@ namespace Catkeys
 			/// Sets checkbox state. Does not use the mouse.
 			/// </summary>
 			/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-			/// <param name="useAcc">Use <see cref="Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+			/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 			/// <exception cref="WndException">This window is invalid.</exception>
 			/// <exception cref="CatException">Failed.</exception>
@@ -603,10 +603,10 @@ namespace Catkeys
 				W.ThrowIfInvalid();
 				int id;
 				if(useAcc || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
-					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) {
+					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) { //throws if failed
 						int k = _GetAccCheckState(a);
 						if(k == state) return;
-						if(useAcc) a.DoDefaultAction(); else _PostBmClick();
+						if(useAcc) a.DoAction(); else _PostBmClick();
 						bool clickAgain = false;
 						switch(state) {
 						case 0:
@@ -624,7 +624,7 @@ namespace Catkeys
 							break;
 						}
 						if(clickAgain) {
-							if(useAcc) a.DoDefaultAction(); else _PostBmClick();
+							if(useAcc) a.DoAction(); else _PostBmClick();
 						}
 					}
 				} else {
@@ -654,8 +654,10 @@ namespace Catkeys
 				if(useAcc || !_IsCheckbox()) {
 					//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.
 					try { //avoid exception in property-get functions
-						using(var a = Acc.FromWindow(W, AccOBJID.CLIENT, noThrow: true))
+						using(var a = Acc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow)) {
+							if(a == null) return 0;
 							return _GetAccCheckState(a);
+						}
 					}
 					catch(Exception ex) { Debug_.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
 					return 0;
@@ -709,7 +711,7 @@ namespace Catkeys
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonId">Control id of the button. This function calls <see cref="Kid"/> to find the button.</param>
-		/// <param name="useAcc">Use <see cref="Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Kid"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
@@ -730,7 +732,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="className">Button class name to pass to <see cref="Child"/>.</param>
-		/// <param name="useAcc">Use <see cref="Acc.DoDefaultAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>

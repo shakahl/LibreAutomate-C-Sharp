@@ -38,7 +38,7 @@ partial class PanelFiles :Control
 
 	public PanelFiles()
 	{
-		//var p = new Perf.Inst(true);
+		//var p = Perf.StartNew();
 		_c = new TreeViewAdv();
 		//_c.SuspendLayout();
 		//p.Next();

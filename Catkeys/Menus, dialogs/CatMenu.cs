@@ -564,7 +564,7 @@ namespace Catkeys
 				//Wnd.Misc.PrintMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
 
 				if(_cat._WndProc_Before(true, this, ref m)) return;
-				//var t = new Perf.Inst(true);
+				//var t = Perf.StartNew();
 				base.WndProc(ref m);
 				//t.Next(); if(t.TimeTotal >= 100) { PrintList(t.Times, m); }
 				_cat._WndProc_After(true, this, ref m);
@@ -617,7 +617,7 @@ namespace Catkeys
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//var perf = new Perf.Inst(true);
+				//var perf = Perf.StartNew();
 
 				//DebugPrintFunc();
 				base.OnPaint(e);
@@ -1131,7 +1131,7 @@ namespace Catkeys.Types
 			if(il != null && il.Images.ContainsKey(s)) {
 				item.ImageKey = s;
 			} else {
-				//var perf = new Perf.Inst(true);
+				//var perf = Perf.StartNew();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
 				if(_AsyncIcons == null) _AsyncIcons = new Icons.AsyncIcons(); //used by submenus too

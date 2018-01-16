@@ -736,6 +736,15 @@ namespace Catkeys.Types
 		internal const int MA_NOACTIVATEANDEAT = 4;
 		#endregion
 
+		#region MK_
+
+		internal const uint MK_LBUTTON = 0x1;
+		internal const uint MK_RBUTTON = 0x2;
+		internal const uint MK_SHIFT = 0x4;
+		internal const uint MK_CONTROL = 0x8;
+		internal const uint MK_MBUTTON = 0x10;
+
+		#endregion
 
 
 		internal const uint INFINITE = 0xFFFFFFFF;
@@ -807,7 +816,7 @@ namespace Catkeys.Types
 
 		#region strings
 
-		internal const string s_IES = "Internet Explorer_Server";
+		internal const string string_IES = "Internet Explorer_Server";
 
 
 		#endregion

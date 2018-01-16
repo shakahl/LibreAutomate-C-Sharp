@@ -390,23 +390,65 @@ namespace Catkeys
 		#region visible, enabled, cloaked
 
 		/// <summary>
-		/// Gets the visible state.
 		/// Returns true if the window is visible.
 		/// Returns false if is invisible or is a child of invisible parent.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <remarks>
-		/// Calls API <msdn>IsWindowVisible</msdn>.
-		/// <note>This function is unaware about <see cref="IsCloaked">cloaked</see> windows. If need, use code <c>if(w.IsVisible &amp;&amp; !w.IsCloaked)</c>.</note>
-		/// <note>This function is unaware about transparent windows, zero-size windows, zero-window-region windows, off-screen windows and windows that are completely covered by other windows.</note>
+		/// Calls API <msdn>IsWindowVisible</msdn>. Does not call <see cref="IsCloaked"/>.
+		/// 
+		/// Even when this function returns true, the window may be actually invisible. It can be cloaked, on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
 		/// </remarks>
+		/// <seealso cref="IsVisibleEx"/>
 		/// <seealso cref="IsCloaked"/>
+		/// <seealso cref="IsVisibleAndNotCloaked"/>
 		/// <seealso cref="Show"/>
 		/// <seealso cref="Activate()"/>
-		public bool IsVisible
+		public bool IsVisible => Api.IsWindowVisible(this);
+
+		/// <summary>
+		/// Returns true if the window is visible.
+		/// Returns false if is invisible or is a child of invisible parent.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
+		/// </summary>
+		/// <remarks>
+		/// Returns false if API <msdn>IsWindowVisible</msdn> returns false.
+		/// Also returns false if <see cref="IsCloaked"/> returns true, but only for some popup windows that usually are useless and could cause problems if considered visible.
+		/// Else returns true.
+		/// 
+		/// Even when this function returns true, the window may be actually invisible. It can be cloaked (excepth the above case), on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
+		/// </remarks>
+		/// <seealso cref="IsVisible"/>
+		/// <seealso cref="IsCloaked"/>
+		/// <seealso cref="IsVisibleAndNotCloaked"/>
+		/// <seealso cref="Show"/>
+		/// <seealso cref="Activate()"/>
+		public bool IsVisibleEx
 		{
-			get => Api.IsWindowVisible(this);
+			get
+			{
+				if(!Api.IsWindowVisible(this)) return false;
+
+				var style = Style;
+				if((style & (Native.WS_POPUP | Native.WS_CHILD)) == Native.WS_POPUP) {
+					if((style & Native.WS_CAPTION) != Native.WS_CAPTION) return !IsCloaked;
+
+					//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
+					if(Ver.MinWin10 && HasExStyle(Native.WS_EX_NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
+						var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
+						//PrintList(isGhost, this);
+						return !isGhost;
+					}
+				}
+				return true;
+			}
 		}
+
+		/// <summary>
+		/// Returns true if <see cref="IsVisible"/> returns true and <see cref="IsCloaked"/> returns false.
+		/// </summary>
+		/// <seealso cref="IsVisibleEx"/>
+		public bool IsVisibleAndNotCloaked => IsVisible && !IsCloaked;
 
 		/// <summary>
 		/// Shows (if hidden) or hides this window.
@@ -2298,6 +2340,14 @@ namespace Catkeys
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
 
+		internal void LibUacCheckAndThrow(string prefix = null)
+		{
+			if(!Is0 && IsUacAccessDenied) {
+				if(prefix == null) prefix = "Failed. The"; else if(prefix.EndsWith_(".")) prefix += " The"; //this is to support prefix used by Mouse.Move: "The active"
+				throw new CatException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
+			}
+		}
+
 		/// <summary>
 		/// Returns true if UAC would not allow to automate the window.
 		/// It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
@@ -2307,28 +2357,11 @@ namespace Catkeys
 		{
 			get
 			{
-				//with this is faster when don't need other code, but possibly less reliable, and without this is fast enough
-				//if(Process_.UacInfo.IsUacDisabled) return false;
-				//var t = Process_.UacInfo.ThisProcess;
-				//if(t.IsUIAccess) return false;
-
 				Native.ClearError();
 				Api.RemoveProp(this, 0);
 				return Native.GetError() == Api.ERROR_ACCESS_DENIED; //documented
 			}
 		}
-		//public bool IsUacAccessDenied
-		//{
-		//	get
-		//	{
-		//		if(Process_.UacInfo.IsUacDisabled) return false;
-		//		var t = Process_.UacInfo.ThisProcess;
-		//		if(t.IsUIAccess) return false;
-		//		var u = Process_.UacInfo.GetOfProcess(ProcessId); if(u == null) return true;
-		//		if(t.IntegrityLevel < u.IntegrityLevel) return true;
-		//		return false;
-		//	}
-		//}
 
 		//These are not useful. Use IsAccessDenied or class Process_.UacInfo.
 		///// <summary>
@@ -2536,8 +2569,8 @@ namespace Catkeys
 		}
 
 		/// <summary>
-		/// Gets <see cref="Acc.Name"/> of the root accessible object (WINDOW) of this window or control.
-		/// Returns "" if the object has no name or failed to get it. Returns null if this window is invalid.
+		/// Gets <see cref="Acc.Name"/> of the accessible object (role WINDOW) of this window or control.
+		/// Returns "" if the object has no name or failed to get it. Returns null if invalid window handle.
 		/// </summary>
 		public string NameAcc => Acc.LibNameOfWindow(this);
 

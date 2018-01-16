@@ -23,170 +23,105 @@ using static Catkeys.NoClass;
 namespace Catkeys.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, int, string)"/> and similar functions.
+	/// Flags for <see cref="Acc.Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int)"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum AFFlags
 	{
 		/// <summary>
-		/// The accessible object must be direct child, not a descendant at any other level.
-		/// This can be useful when searching in Acc. When searching in Wnd, these are children of the WINDOW object; if using control class name - of control's WINDOW object.
+		/// Search in reverse order. It can make faster.
+		/// When using control class name, controls are searched not in reverse order. Only accessible objects in them are searched in reverse order.
 		/// </summary>
-		DirectChild = 1,
+		Reverse = 1,
 
 		/// <summary>
 		/// The accessible object can be invisible.
-		/// Without this flag skips objects that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PANE, PROPERTYPAGE, GROUPING, ALERT, MENUBAR, TITLEBAR, SCROLLBAR.
+		/// Without this flag skips objects that are invisible (have state INVISIBLE) or are descendants of invisible WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
+		/// Regardless of this flag, always skips invisible standard objects of nonclient area: TITLEBAR, MENUBAR, SCROLLBAR, GRIP.
 		/// </summary>
 		HiddenToo = 2,
 
 		/// <summary>
 		/// Always search in MENUITEM.
-		/// Without this flag skips MENUITEM descendant objects to improve speed, unless role is MENUITEM or MENUPOPUP. Except when used path or when searching in web page or Java window.
+		/// Without this flag skips MENUITEM descendant objects (for speed), unless role is MENUITEM or MENUPOPUP or searching in web page.
 		/// </summary>
 		MenuToo = 4,
 
 		/// <summary>
-		/// Search in reverse order. It can make faster.
-		/// When using control class name, controls are searched not in reverse order. Only accessible objects in them are searched in reverse order.
+		/// Skip descendant objects of OUTLINE (tree view) and LIST.
+		/// Objects of these roles often contain large number of descendants, which makes finding other objects much slower.
 		/// </summary>
-		Reverse = 8,
-
-		/// <summary>
-		/// Skip descendant objects of OUTLINE (tree view), LIST, TITLEBAR and SCROLLBAR.
-		/// Objects of OUTLINE and LIST sometimes contain large number of items, which makes finding other objects much slower.
-		/// See also <see cref="Acc.Finder.SkipRoles"/>.
-		/// </summary>
-		SkipLists = 16,
+		SkipLists = 8,
 
 		/// <summary>
 		/// Skip objects in web pages and DOCUMENT.
 		/// Objects of these roles often contain large number of descendants, which makes finding other objects much slower.
-		/// See also <see cref="Acc.Finder.SkipRoles"/>.
 		/// </summary>
-		SkipWeb = 32,
+		SkipWeb = 16,
 
 		/// <summary>
-		/// This flag can be used with role prefix "web:" or "firefox:", when searching in Firefox.
-		/// It disables waiting while DOCUMENT has BUSY state. This waiting is to improve reliability. However some web pages have busy state always, and it makes the function very slow.
+		/// Search without loading dll into the target process.
+		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
+		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher UAC integrity level.
+		/// Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="Wnd.Child"/> and search in it. 3. Use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
+		/// Don't need this flag when searching in Acc (then it is inherited from the Acc variable).
+		/// See also: <see cref="Acc.NotInProc"/>.
 		/// </summary>
-		WebBusy = 64,
+		NotInProc = 0x100,
 
-		//Acc CONSIDER: SkipAllHiddenAncestors
+		/// <summary>
+		/// Use UI Automation API.
+		/// Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements.
+		/// Examples of such windows: Microsoft Edge web browser (web page), JavaFX applications.
+		/// Objects found with this flag never have HtmlX properties, but can have <see cref="Acc.UiaAutomationId"/>.
+		/// This flag can be used with most other windows too.
+		/// Don't use this flag when searching in Acc (then it is inherited from the Acc variable).
+		/// </summary>
+		UIA = 0x200,
 	}
 
 	/// <summary>
-	/// Contains data for callback function (<b>also</b>) of <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, int, string)"/> and similar functions.
-	/// This class is derived from <see cref="Acc"/> and therefore you can use all Acc properties in callback function. Also has several own properties and methods.
-	/// The AFAcc variable passed to the callback function is valid only in the callback function. If you need to get normal Acc variable from it (for example to add to a List), use <see cref="ToAcc"/>.
+	/// Flags for <see cref="Acc.FromWindow"/>.
 	/// </summary>
-	public class AFAcc :Acc
+	[Flags]
+	public enum AWFlags
 	{
-		/// <summary>
-		/// 0-based level of this accessible object in the tree of accessible objects.
-		/// Direct children have level 0, their children have level 1, and so on.
-		/// When searching in a window or control, at level 0 are direct children of the WINDOW object of the window or control. The WINDOW object itself is not included in the search; if you need it, instead use <see cref="Acc.FromWindow"/>.
-		/// When searching in Acc, at level 0 are its direct children.
-		/// When searching in web page (role has prefix "web:" etc), at level 0 is the root object (DOCUMENT in Firefox/Chrome, PANE in Internet Explorer).
-		/// When using control class name, at level 0 are direct children of WINDOW objects of matching controls.
-		/// </summary>
-		public int Level { get; private set; }
-
-		//rejected: Instead added 'skip' parameter.
-		///// <summary>
-		///// An int value that is 0 before searching and can be modified in the callback function.
-		///// Can be used to implement 'find n-th matching object' or for any other purpose. See example.
-		///// When searching in multiple controls, Counter is 0 before searching in each control.
-		///// </summary>
-		///// <example>
-		///// Find 4-th LINK in web page.
-		///// <code><![CDATA[
-		///// var a = Acc.Find(w, "web:LINK", also: o => ++o.Counter == 4);
-		///// ]]></code>
-		///// </example>
-		//public int Counter { get; set; }
+		/// <summary>Don't throw exception when fails. Then returns null.</summary>
+		NoThrow = 1,
 
 		/// <summary>
-		/// With <see cref="Acc.EnumChildren"/> - the param argument. With <see cref="Acc.Finder"/> - the Param property. Probably not useful with Acc.Find.
-		/// The callback function can use it for any purpose.
+		/// Load dll into the target process.
+		/// More info: <see cref="AFFlags.NotInProc"/>.
 		/// </summary>
-		public object Param { get; set; }
-
-		//Acc FUTURE: IndexInParent, ParentChildCount
-
-		/// <summary>
-		/// The callback function can call this to stop searching. If the callback function then returns false, it means 'not found'. Don't need to call this if returns true.
-		/// </summary>
-		public void Stop() { stop = true; }
-		internal bool stop;
-
-		/// <summary>
-		/// The callback function can call this to skip (don't search) descendants of current accessible object.
-		/// </summary>
-		public void SkipChildren() { skipChildren = true; }
-		internal bool skipChildren;
-
-		/// <summary>
-		/// Creates new Acc variable from this AFAcc variable. It is a reference to the same accessible object.
-		/// </summary>
-		public Acc ToAcc() { return new Acc(this); }
-
-		//Acc CONSIDER:
-		//public new AccSTATE State  _haveState ? _state : StateCurrent;
-		//internal void LibSetState(AccSTATE state) { _state=state; _haveState=true; }
-		//AccSTATE _state; bool _haveState;
-		//public AccSTATE StateCurrent => { _state = base.State; _haveState=true; return _state; }
-
-		/// <summary>
-		/// Sets/clears fields/properties before calling the callback.
-		/// </summary>
-		internal void LibSet(IAccessible iacc, int elem, AccROLE role, int level)
-		{
-			_iacc = iacc; //info: this class will not release it. Finalizer disabled, Dispose not called.
-			_elem = elem;
-			_role = role;
-			Level = level;
-			stop = false;
-			skipChildren = false;
-		}
-
-		/// <summary>
-		/// Sets _iacc = default.
-		/// </summary>
-		internal void LibResetIacc()
-		{
-			_iacc = default;
-		}
-
-		///
-		public override string ToString()
-		{
-			return base.ToString(Level);
-		}
+		InProc = 2,
 	}
 
-	//rejected: Rarely used. Can use Finder directly. Maybe in the future.
-	///// <summary>
-	///// More parameters for <see cref="Acc.Find(Wnd, string, string, AFFlags, Func{AFAcc, bool}, int, string, AFMoreParams)"/>.
-	///// </summary>
-	//public class AFMoreParams
-	//{
-	//	/// <summary>
-	//	/// Allows to specify all possible properties of the child window (of <b>w</b>) where the accessible object is.
-	//	/// The function searches for the accessible object in all matching controls until found.
-	//	/// </summary>
-	//	public Wnd.ChildFinder Controls { get; set; }
+	/// <summary>
+	/// Flags for <see cref="Acc.FromXY"/>.
+	/// </summary>
+	[Flags]
+	public enum AXYFlags
+	{
+		/// <summary>
+		/// Use UI Automation API.
+		/// Need this flag with some windows that don't support accessible objects but support UI Automation elements.
+		/// When this flag is not specified, the function detects most such windows and uses UI Automation API, but the detection is not perfect.
+		/// More info: <see cref="AFFlags.UIA"/>.
+		/// This flag can be used with most other windows too.
+		/// </summary>
+		UIA = 1,
 
-	//	/// <summary>
-	//	/// See <see cref="Acc.Finder.MaxLevel"/>.
-	//	/// </summary>
-	//	public int MaxLevel { get; set; }
+		/// <summary>
+		/// Get the direct parent object if it's LINK or PUSHBUTTON.
+		/// Usually links have one or more children of type TEXT, STATICTEXT, GRAPHIC or other.
+		/// </summary>
+		PreferLink = 2,
 
-	//	/// <summary>
-	//	/// See <see cref="Acc.Finder.SkipRoles"/>.
-	//	/// </summary>
-	//	public string SkipRoles { get; set; }
-	//}
+		/// <summary>Don't throw exception when fails. Then returns null.</summary>
+		NoThrow = 4,
+
+		//note: don't change values. They are passed to the cpp function.
+	}
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
@@ -195,7 +130,7 @@ namespace Catkeys.Types
 	/// Used with <see cref="Acc.FromWindow"/>
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_".
+	/// The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_". Except Java and UIA.
 	/// </remarks>
 	public enum AccOBJID
 	{
@@ -213,11 +148,24 @@ namespace Catkeys.Types
 		SOUND = -11,
 		QUERYCLASSNAMEIDX = -12,
 		NATIVEOM = -16,
+
+		//ours
+
+		/// <summary>
+		/// The root Java object. Can be used when the window's class name starts with "SunAwt".
+		/// </summary>
+		Java = -100,
+
+		/// <summary>
+		/// Use UI Automation API.
+		/// More info: <see cref="AFFlags.UIA"/>.
+		/// </summary>
+		UIA = -101,
 	}
 
 	/// <summary>
 	/// Standard roles of accessible objects.
-	/// Used with <see cref="Acc.RoleEnum"/>
+	/// Used with <see cref="Acc.RoleInt"/>
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>IAccessible.get_accRole</msdn> documentation but without prefix "ROLE_SYSTEM_".
@@ -353,64 +301,6 @@ namespace Catkeys.Types
 	}
 
 	/// <summary>
-	/// Accessible object navigation direction.
-	/// Used by <see cref="Acc.Navigate(AccNAVDIR, int, bool)"/>.
-	/// </summary>
-	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.accNavigate</msdn> documentation but without prefix "NAVDIR_".
-	/// Many objects don't support NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD. Some objects skip invisible siblings. When unavailable, functions of this library try a workaround, which works well with FIRSTCHILD and LASTCHILD, but with NEXT and PREVIOUS it is slow and not always succeeds. Instead you can use PARENT/CHILD.
-	/// UP, DOWN, LEFT and RIGHT - spatial navigation in the same container object. Rarely supported or useful. String names - "#1", "#2", "#3", "#4".
-	/// </remarks>
-	public enum AccNAVDIR
-	{
-		UP = 1,
-		DOWN = 2,
-		LEFT = 3,
-		RIGHT = 4,
-
-		/// <summary>
-		/// Next sibling object in the same parent (container) object.
-		/// String name - "next", "ne" or "n".
-		/// </summary>
-		NEXT = 5,
-
-		/// <summary>
-		/// Previous sibling object in the same parent (container) object.
-		/// String name - "previous", "pr" or "prev".
-		/// </summary>
-		PREVIOUS = 6,
-
-		/// <summary>
-		/// First direct child object.
-		/// String name - "first", "fi" or "f".
-		/// </summary>
-		FIRSTCHILD = 7,
-
-		/// <summary>
-		/// Last direct child object.
-		/// String name - "last", "la" or "l".
-		/// </summary>
-		LASTCHILD = 8,
-
-		//ours
-
-		/// <summary>
-		/// The parent (container) object.
-		/// String name - "parent", "pa" or "p".
-		/// Few objects don't support it.
-		/// Note: Some Chrome versions have this bug: the parent object does not support <see cref="Acc.WndContainer"/>.
-		/// </summary>
-		PARENT = 9,
-
-		/// <summary>
-		/// A direct child object by 1-based index.
-		/// String name - "child", "ch" or "c".
-		/// Negative index means from end, for example -1 is the last child.
-		/// </summary>
-		CHILD = 10,
-	}
-
-	/// <summary>
 	/// Event constants for API <msdn>SetWinEventHook</msdn>.
 	/// </summary>
 	/// <remarks>
@@ -420,6 +310,7 @@ namespace Catkeys.Types
 	{
 		MIN = 0x1,
 		MAX = 0x7FFFFFFF,
+
 		SYSTEM_SOUND = 0x1,
 		SYSTEM_ALERT = 0x2,
 		SYSTEM_FOREGROUND = 0x3,
@@ -450,12 +341,15 @@ namespace Catkeys.Types
 		SYSTEM_SWITCHER_CANCELLED = 0x27,
 		SYSTEM_IME_KEY_NOTIFICATION = 0x29,
 		SYSTEM_END = 0xFF,
+
 		OEM_DEFINED_START = 0x101,
 		OEM_DEFINED_END = 0x1FF,
+
 		UIA_EVENTID_START = 0x4E00,
 		UIA_EVENTID_END = 0x4EFF,
 		UIA_PROPID_START = 0x7500,
 		UIA_PROPID_END = 0x75FF,
+
 		CONSOLE_CARET = 0x4001,
 		CONSOLE_UPDATE_REGION = 0x4002,
 		CONSOLE_UPDATE_SIMPLE = 0x4003,
@@ -464,6 +358,7 @@ namespace Catkeys.Types
 		CONSOLE_START_APPLICATION = 0x4006,
 		CONSOLE_END_APPLICATION = 0x4007,
 		CONSOLE_END = 0x40FF,
+
 		OBJECT_CREATE = 0x8000,
 		OBJECT_DESTROY = 0x8001,
 		OBJECT_SHOW = 0x8002,
@@ -502,8 +397,44 @@ namespace Catkeys.Types
 		OBJECT_IME_CHANGE = 0x8029,
 		OBJECT_TEXTEDIT_CONVERSIONTARGETCHANGED = 0x8030,
 		OBJECT_END = 0x80FF,
+
 		AIA_START = 0xA000,
 		AIA_END = 0xAFFF,
+
+		IA2_ACTION_CHANGED = 0x101,
+		IA2_ACTIVE_DESCENDANT_CHANGED = 0x102,
+		IA2_DOCUMENT_ATTRIBUTE_CHANGED = 0x103,
+		IA2_DOCUMENT_CONTENT_CHANGED = 0x104,
+		IA2_DOCUMENT_LOAD_COMPLETE = 0x105,
+		IA2_DOCUMENT_LOAD_STOPPED = 0x106,
+		IA2_DOCUMENT_RELOAD = 0x107,
+		IA2_HYPERLINK_END_INDEX_CHANGED = 0x108,
+		IA2_HYPERLINK_NUMBER_OF_ANCHORS_CHANGED = 0x109,
+		IA2_HYPERLINK_SELECTED_LINK_CHANGED = 0x10a,
+		IA2_HYPERTEXT_LINK_ACTIVATED = 0x10b,
+		IA2_HYPERTEXT_LINK_SELECTED = 0x10c,
+		IA2_HYPERLINK_START_INDEX_CHANGED = 0x10d,
+		IA2_HYPERTEXT_CHANGED = 0x10e,
+		IA2_HYPERTEXT_NLINKS_CHANGED = 0x10f,
+		IA2_OBJECT_ATTRIBUTE_CHANGED = 0x110,
+		IA2_PAGE_CHANGED = 0x111,
+		IA2_SECTION_CHANGED = 0x112,
+		IA2_TABLE_CAPTION_CHANGED = 0x113,
+		IA2_TABLE_COLUMN_DESCRIPTION_CHANGED = 0x114,
+		IA2_TABLE_COLUMN_HEADER_CHANGED = 0x115,
+		IA2_TABLE_MODEL_CHANGED = 0x116,
+		IA2_TABLE_ROW_DESCRIPTION_CHANGED = 0x117,
+		IA2_TABLE_ROW_HEADER_CHANGED = 0x118,
+		IA2_TABLE_SUMMARY_CHANGED = 0x119,
+		IA2_TEXT_ATTRIBUTE_CHANGED = 0x11a,
+		IA2_TEXT_CARET_MOVED = 0x11b,
+		IA2_TEXT_CHANGED = 0x11c,
+		IA2_TEXT_COLUMN_CHANGED = 0x11d,
+		IA2_TEXT_INSERTED = 0x11e,
+		IA2_TEXT_REMOVED = 0x11f,
+		IA2_TEXT_UPDATED = 0x120,
+		IA2_TEXT_SELECTION_CHANGED = 0x121,
+		IA2_VISIBLE_DATA_CHANGED = 0x122,
 	}
 
 	/// <summary>

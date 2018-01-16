@@ -136,10 +136,9 @@ namespace Catkeys
 			[Flags]
 			internal enum WFlags
 			{
+				//TODO: remove if unused. Now used by AElement.
 				ChromeYes = 1,
 				ChromeNo = 2,
-				JavaYes = 4,
-				JavaNo = 8,
 			}
 
 			/// <summary>
@@ -152,7 +151,8 @@ namespace Catkeys
 
 				private WinFlags() => _atom = Api.GlobalAddAtom("catkeys_WFlags");
 
-				~WinFlags() => Api.GlobalDeleteAtom(_atom);
+				//~WinFlags() => Api.GlobalDeleteAtom(_atom); //don't. Deletes even if currently used by a window prop, making the prop useless.
+				//TODO: can be simplified, because now don't need finalizer
 
 				internal static bool Set(Wnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
 				{
