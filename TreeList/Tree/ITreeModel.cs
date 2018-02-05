@@ -7,7 +7,7 @@ namespace Aga.Controls.Tree
 {
 	public interface ITreeModel
 	{
-		//Catkeys:
+		//au:
 		IEnumerable GetChildren(object nodeTag);
 		bool IsLeaf(object nodeTag);
 		//IEnumerable GetChildren(TreePath treePath);

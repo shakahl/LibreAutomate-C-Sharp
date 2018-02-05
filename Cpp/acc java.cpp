@@ -184,8 +184,7 @@ public:
 
 	STDMETHODIMP get_accHelp(VARIANT varChild, out BSTR* pszHelp)
 	{
-		*pszHelp = SysAllocString(L"JAccessible"); //this is how tools can recognize our Java objects. Don't change.
-		return 0;
+		return E_NOTIMPL;
 	}
 
 	STDMETHODIMP get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild, long* pidTopic)
@@ -494,7 +493,7 @@ DWORD WINAPI _JabThread(LPVOID param)
 		if(nmsg == 0 && i > 0) break; //non-Java windows that use JAB (probably as client) don't post back the message
 		Sleep(1);
 	}
-	assert(i == 1); //just to test reliability in stress conditions. Never was not 1.
+	assert(i <= 2); //just to test reliability in stress conditions. When testing, was 1 almost always, once 2.
 
 	s_inited = 1;
 	SetEvent(param);

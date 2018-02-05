@@ -1,9 +1,9 @@
 ﻿//Algorithm of comiling a script.
 
-//CatkeysTasks looks whether compiler is loaded. If not:
-//	Creates thread, which executes Compiler.dll in "Compiler" appdomain. Waits until it is finished initializing.
+//Au.Tasks looks whether compiler is loaded. If not:
+//	Creates thread, which executes Au.Compiler.dll in "Au.Compiler" appdomain. Waits until it is finished initializing.
 //	Compiler creates a message-only window for communication. Then sets event to notify the main thread to stop waiting.
-//CatkeysTasks sends message to compiler window with the cs file, dll file and options.
+//Au.Tasks sends message to the compiler window with the cs file, dll file and options.
 //Compiler compiles the cs file to the dll file. Returns a success/error code. On error, shows error in editor.
 
 using System;
@@ -29,22 +29,24 @@ using Microsoft.CodeAnalysis.CSharp;
 //using System.Reflection.Metadata;
 //using Microsoft.CodeAnalysis.CSharp.Scripting;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
-namespace Compiler
+namespace Au.Compiler
 {
 	public class Compiler
 	{
-		static Wnd.Misc.WindowClass _wndClassCompiler = Wnd.Misc.WindowClass.Register("Catkeys_Compiler", _WndProcCompiler);
+		const string _msgClass = "Au.Compiler";
 
 		public static void Main()
 		{
-			Wnd w = Wnd.Misc.CreateMessageWindow(_wndClassCompiler.Name);
+			Wnd.Misc.MyWindow.RegisterClass(_msgClass);
+			var mw = new MsgWindow();
+			mw.CreateMessageWindow(_msgClass);
 
 			var dom = AppDomain.CurrentDomain;
-			dom.SetData("hwndCompiler", w.Handle);
+			dom.SetData("hwndCompiler", mw.Handle.Handle);
 			Api.SetEvent((IntPtr)dom.GetData("eventInited"));
 
 			//message loop (not Application.Run() because then loads slower etc)
@@ -52,31 +54,34 @@ namespace Compiler
 			while(Api.GetMessage(out m, default, 0, 0) > 0) { Api.DispatchMessage(ref m); }
 		}
 
-		unsafe static LPARAM _WndProcCompiler(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
+		class MsgWindow :Wnd.Misc.MyWindow
 		{
-			switch(msg) {
-			case Api.WM_USER:
-				var r = _Compile();
-				//if(r == 0) { _Compile(); _Compile(); _Compile(); }
-				Perf.NW();
-				return r;
+			public override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+			{
+				switch(message) {
+				case Api.WM_USER:
+					var r = _Compile();
+					//if(r == 0) { _Compile(); _Compile(); _Compile(); }
+					Perf.NW();
+					return r;
 
-				//_TestScript();
-				//_TestScript();
-				//_TestScript();
-				//_TestScript();
-				//Perf.NW();
-				//return 0;
+					//_TestScript();
+					//_TestScript();
+					//_TestScript();
+					//_TestScript();
+					//Perf.NW();
+					//return 0;
+				}
+
+				var R= base.WndProc(w, message, wParam, lParam);
+
+				switch(message) {
+				case Api.WM_NCDESTROY:
+					Api.PostQuitMessage(0);
+					break;
+				}
+				return R;
 			}
-
-			LPARAM R = Api.DefWindowProc(hWnd, msg, wParam, lParam);
-
-			switch(msg) {
-			case Api.WM_NCDESTROY:
-				Api.PostQuitMessage(0);
-				break;
-			}
-			return R;
 		}
 
 #if true
@@ -96,8 +101,8 @@ namespace Compiler
 			//var source = File.ReadAllText(csFile);
 			var source = @"
 using System;
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
 public static class Test
 {
@@ -110,7 +115,7 @@ public static class Test
 	}
 ";
 
-			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Catkeys.dll" };
+			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
 			//var sRef = new string[] { typeof(object).Assembly.Location };
 
 			var references = new List<PortableExecutableReference>();
@@ -198,7 +203,7 @@ public static class Test
 		////}
 		////";
 
-		//			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Catkeys.dll" };
+		//			var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
 		//			//var sRef = new string[] { typeof(object).Assembly.Location };
 
 		//			var perf = Perf.StartNew();
@@ -280,7 +285,7 @@ public static class Test
 			string[] g = new string[] {
 				"/nologo", "/noconfig",
 				"/out:" + dllFile, "/target:winexe",
-				$"/r:{Folders.ThisApp}\\Catkeys.dll",
+				$"/r:{Folders.ThisApp}\\Au.dll",
 				//"/r:System.dll", "/r:System.Core.dll", "/r:System.Windows.Forms.dll",
 				csFile
 			};

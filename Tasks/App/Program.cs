@@ -16,11 +16,11 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
-namespace Catkeys.Tasks
+namespace Au.Tasks
 {
 	static class Program
 	{
@@ -51,7 +51,7 @@ namespace Catkeys.Tasks
 			var mutex = new Mutex(true, "{8AE35071-A3F5-423A-8F67-7C3AC0FFC8E3}", out bool isOwner);
 			if(!isOwner) {
 				if(args.Length > 0) {
-					var w = Wnd.FindFast(null, "CatkeysTasks");
+					var w = Wnd.FindFast(null, "Au.Tasks");
 					w.SendS(Api.WM_SETTEXT, 0x8000, string.Join("\x19", args));
 				}
 				return;
@@ -73,10 +73,10 @@ namespace Catkeys.Tasks
 			Output.Clear();
 
 			try {
-				Wnd.Misc.WndClass.InterDomainRegister("CatkeysTasks", WndProcAppsManager);
-				_wMain = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "CatkeysTasks",
+				Wnd.Misc.WndClass.InterDomainRegister("Au.Tasks", WndProcAppsManager);
+				_wMain = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "Au.Tasks",
 					//null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message);
-					"Catkeys Tasks", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 400, 300, 400, 200, Wnd0);
+					"QM# Tasks", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 400, 300, 400, 200, Wnd0);
 
 				Perf.First();
 				//_TrayIcon(true); //13 ms
@@ -111,7 +111,7 @@ namespace Catkeys.Tasks
 				_trayIcon = new NotifyIcon();
 				//_trayIcon.Icon = Properties.Resources.trayIcon; //28 ms first time
 				_trayIcon.Icon = Icon.FromHandle(Icons.GetAppIconHandle((int)Icons.ShellSize.SysSmall));
-				_trayIcon.Text = "Catkeys Tasks";
+				_trayIcon.Text = "QM# Tasks";
 				_trayIcon.MouseClick += _trayIcon_MouseClick;
 				_trayIcon.Visible = true;
 				//Perf.NW();
@@ -145,7 +145,7 @@ namespace Catkeys.Tasks
 				//x.hIcon = Properties.Resources.trayIcon.Handle; //27-28 ms (later in this appdomain - 0.25 ms)
 				x.hIcon = Icons.GetAppIconHandle((int)Icons.ShellSize.SysSmall);
 				x.uCallbackMessage = Api.WM_USER + 3;
-				x.szTip = "Catkeys Tasks";
+				x.szTip = "QM# Tasks";
 				//Perf.Next();
 				Api.Shell_NotifyIcon(Api.NIM_ADD, ref x);
 				//Perf.NW();
@@ -189,7 +189,7 @@ namespace Catkeys.Tasks
 
 		static void _TrayIcon_Menu()
 		{
-			var m = new CatMenu();
+			var m = new AuMenu();
 			m["one"] = o => Print("one");
 
 			m.Show();
@@ -273,7 +273,7 @@ namespace Catkeys.Tasks
 				}
 			}
 			catch {
-				Print($"CatkeysTasks: Failed to parse command line at '{a[i < a.Length ? i : a.Length - 1]}'.");
+				Print($"Au.Tasks: Failed to parse command line at '{a[i < a.Length ? i : a.Length - 1]}'.");
 				return;
 			}
 
@@ -286,7 +286,7 @@ namespace Catkeys.Tasks
 		static void CompileScript(string csFile)
 		{
 			Perf.First();
-			string outDir = Folders.LocalAppData + @"Catkeys\ScriptDll\";
+			string outDir = Folders.LocalAppData + @"Au\ScriptDll\";
 			Files.CreateDirectory(outDir);
 			string outFile = outDir + Path_.GetFileNameWithoutExtension(csFile) + ".exe";
 			//PrintList(csFile, dllFile);
@@ -339,7 +339,7 @@ namespace Catkeys.Tasks
 		{
 			_compilerDomain = AppDomain.CreateDomain("Compiler");
 			_compilerDomain.SetData("eventInited", ev);
-			_compilerDomain.ExecuteAssembly(Folders.ThisApp + "Catkeys.Compiler.exe");
+			_compilerDomain.ExecuteAssembly(Folders.ThisApp + "Au.Compiler.exe");
 			AppDomain.Unload(_compilerDomain);
 		}
 	}

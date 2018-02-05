@@ -18,11 +18,11 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
-namespace Catkeys
+namespace Au
 {
 	public static partial class AElement
 	{
@@ -182,7 +182,7 @@ namespace Catkeys
 		/// </summary>
 		/// <param name="w">Window containing web page. Or web browser control, class name "Internet Explorer_Server".</param>
 		/// <exception cref="WndException">This window is invalid.</exception>
-		/// <exception cref="CatException">Failed.</exception> //TODO: everywhere
+		/// <exception cref="AuException">Failed.</exception> //TODO: everywhere
 		/// <remarks>
 		/// Supports Firefox, Chrome, Internet Explorer (IE), Edge and apps that use their code to display web page - Opera, Thunderbird, etc.
 		/// The element type is Document (in Firefox, Chrome, Opera, Thunderbird) or Pane (in IE, Edge and IE-based web browser controls).

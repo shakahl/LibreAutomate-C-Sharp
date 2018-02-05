@@ -16,10 +16,10 @@ using System.Runtime.ExceptionServices;
 //using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
-namespace Catkeys.Triggers
+namespace Au.Triggers
 {
 public static class Trigger
 {

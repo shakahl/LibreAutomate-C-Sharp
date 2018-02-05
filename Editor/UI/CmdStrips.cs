@@ -17,16 +17,16 @@ using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
-using G.Controls;
+using Au.Controls;
 
 static class Strips
 {
 	public static MenuStrip Menubar;
-	public static CatToolStrip tbFile, tbEdit, tbRun, tbTools, tbHelp, tbCustom1, tbCustom2; //toolbars
+	public static AuToolStrip tbFile, tbEdit, tbRun, tbTools, tbHelp, tbCustom1, tbCustom2; //toolbars
 	public static ToolStripDropDownMenu ddFile, ddFileNew, ddEdit, ddOutput, ddStatusBar; //drop-down menus
 	public static ToolStripSpringTextBox cHelpFind; //controls on toolbars
 

@@ -21,9 +21,9 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 using System.Collections;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
 
 
@@ -31,7 +31,7 @@ using static Program;
 partial class FilesModel
 {
 #endif
-	class _FormNewCollection :G.Controls.Form_
+	class _FormNewCollection :Au.Controls.Form_
 	{
 		public _FormNewCollection()
 		{

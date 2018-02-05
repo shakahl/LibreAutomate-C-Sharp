@@ -4,8 +4,61 @@
 #include "stdafx.h"
 #include "cpp.h"
 
+
 #if _DEBUG
 //#if 1
+
+
+//#define IID_IThreadExitEvent __uuidof(IThreadExitEvent)
+//__interface  __declspec(uuid("57017F56-E7CA-4A7B-A8F8-2AE36077F50D"))
+//	IThreadExitEvent :IUnknown
+//{
+//	STDMETHODIMP Unsubscribe();
+//};
+//
+//class ThreadExitEvent :public IThreadExitEvent
+//{
+//	long _cRef;
+//	FARPROC _callback;
+//	STD_IUNKNOWN_METHODS(IThreadExitEvent)
+//public:
+//	ThreadExitEvent(FARPROC callback) {
+//		_cRef = 1;
+//		_callback = callback;
+//	}
+//
+//	~ThreadExitEvent() {
+//		if(_callback == null) return;
+//		Print(GetCurrentThreadId());
+//		_callback();
+//	}
+//
+//	STDMETHODIMP Unsubscribe() {
+//		_callback = null;
+//		return 0;
+//	}
+//};
+//
+//extern "C" __declspec(dllexport)
+//IThreadExitEvent* Cpp_ThreadExitEvent(FARPROC callback)
+//{
+//	return new ThreadExitEvent(callback);
+//}
+//
+//FARPROC s_callback;
+//
+//extern "C" __declspec(dllexport)
+//void Cpp_ThreadExitEvent2(FARPROC callback)
+//{
+//	s_callback = callback;
+//}
+//
+//void OnThreadExit()
+//{
+//	Print(GetCurrentThreadId());
+//	if(s_callback) s_callback();
+//}
+
 
 //#include <atlstr.h>
 //#include <atlfile.h>
@@ -198,15 +251,6 @@ int Cpp_TestString(STR a)
 	return 1;
 }
 
-
-#define STD_IUNKNOWN_METHODS_SIMPLE(iface) \
-STDMETHODIMP QueryInterface(REFIID iid, void** ppv)\
-{\
-	if(iid == IID_IUnknown || iid == IID_##iface) { *ppv = this; return S_OK; }\
-	else { *ppv = 0; return E_NOINTERFACE; }\
-}\
-STDMETHODIMP_(ULONG) AddRef() { return 1; }\
-STDMETHODIMP_(ULONG) Release() { return 1; }
 
 #define IID_ICppTest __uuidof(ICppTest)
 __interface  __declspec(uuid("3426CF3C-F7C2-4322-A292-463DB8729B54"))
@@ -546,7 +590,7 @@ EXPORT void Cpp_Test()
 	//for(int i = 0; i < 5; i++) {
 	//	Sleep(100);
 	//	Perf.First();
-	//	IStreamPtr x;
+	//	Smart<IStream> x;
 	//	CreateStreamOnHGlobal(0, true, &x);
 	//	for(int j = 0; j < 100000; j++) if(x->Write("abcdefgh", 8, null)) { Print("failed"); return; }
 
@@ -578,7 +622,7 @@ EXPORT void Cpp_Test()
 
 	//STR s_testSTR = L"thames";
 
-	//Print(str::Switch(s_testSTR, 6, { L"moo", L"te", L"thames", L"skipRoles" }));
+	//Print(str::Switch(s_testSTR, 6, { L"moo", L"te", L"thames", L"notin" }));
 
 	////Print(wnd::ClassNameIs(w, { L"moo", L"qm_*itor", L"khy" }));
 
@@ -688,23 +732,21 @@ EXPORT void Cpp_Test()
 	//Bstr s;
 }
 
-#include "IAccessible2.h"
-
-_COM_SMARTPTR_TYPEDEF(IAccessible2, __uuidof(IAccessible2));
-
-void InProcAccTest(IAccessible* a)
-{
-	//Print(L"TEST");
-	IAccessible2Ptr a2;
-	if(!QueryService(a, &a2, &IID_IAccessible)) { Print("QS failed"); return; }
-
-	//AccessibleStates states;
-	//if(a2->get_states(&states)) { Print("get_states failed"); return; }
-	//Printx(states);
-
-	//long n;
-	//if(a2->get_nExtendedStates(&n)) { Print("get_nExtendedStates failed"); return; } //fails
-	//Print(n);
-}
+//#include "IAccessible2.h"
+//
+//void InProcAccTest(IAccessible* a)
+//{
+//	//Print(L"TEST");
+//	Smart<IAccessible2> a2;
+//	if(!QueryService(a, &a2, &IID_IAccessible)) { Print("QS failed"); return; }
+//
+//	//AccessibleStates states;
+//	//if(a2->get_states(&states)) { Print("get_states failed"); return; }
+//	//Printx(states);
+//
+//	//long n;
+//	//if(a2->get_nExtendedStates(&n)) { Print("get_nExtendedStates failed"); return; } //fails
+//	//Print(n);
+//}
 
 #endif //#if _DEBUG

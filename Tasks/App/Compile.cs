@@ -16,15 +16,15 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 #if MONO
 using Mono.CSharp;
 #endif
 
-namespace Catkeys.Tasks
+namespace Au.Tasks
 {
 	class Compile
 	{
@@ -52,7 +52,7 @@ namespace Catkeys.Tasks
 			Perf.Next();
 			//domain.ExecuteAssembly(Paths.CombineApp("Compiler.exe")); //25 ms (5 ms after updating Win 10 to 10576 and performing WinDefender quick scan)
 			domain.DoCallBack(_DomainCallback); //22 ms (1 ms after updating||scanning), but need more testing later
-												//domain.CreateInstance(typeof(Compile).Assembly.FullName, "Catkeys.Compiler"); //too
+												//domain.CreateInstance(typeof(Compile).Assembly.FullName, "Au.Compiler"); //too
 												//Perf.Next();
 												//domain.DoCallBack(_DomainCallback);
 												//Perf.Next();
@@ -73,7 +73,7 @@ namespace Catkeys.Tasks
 		}
 
 		//class Compiler :MarshalByRefObject
-		//{ //note CreateInstance(... "Catkeys.Compiler") fails if this is a child class of Compile, even if both classes are public
+		//{ //note CreateInstance(... "Au.Compiler") fails if this is a child class of Compile, even if both classes are public
 		//	public Compiler()
 		//	{
 		//		Print(AppDomain.CurrentDomain.FriendlyName);

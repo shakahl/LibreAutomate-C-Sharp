@@ -6,9 +6,9 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.ComponentModel;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree.NodeControls
 {
@@ -30,7 +30,7 @@ namespace Aga.Controls.Tree.NodeControls
 				int width = Math.Max(size.Width + Font.Height, MinTextBoxWidth); // reserve a place for new typed character
 				z = new Size(width, size.Height);
 			}
-			if(MultilineEdit) z.Height = Math.Max(z.Height, Catkeys.Util.Dpi.ScaleInt(100));
+			if(MultilineEdit) z.Height = Math.Max(z.Height, Au.Util.Dpi.ScaleInt(100));
 			return z;
 		}
 

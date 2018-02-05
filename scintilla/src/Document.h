@@ -431,7 +431,7 @@ public:
 	StyledText MarginStyledText(int line) const;
 	void MarginSetStyle(int line, int style);
 	void MarginSetStyles(int line, const unsigned char *styles);
-	int MarginStyledTextNext(int line, int style); //Catkeys: new function
+	int MarginStyledTextNext(int line, int style); //Au: new function
 	void MarginSetText(int line, const char *text);
 	void MarginClearAll();
 

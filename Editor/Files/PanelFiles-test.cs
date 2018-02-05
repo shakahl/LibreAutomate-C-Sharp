@@ -18,9 +18,9 @@ using System.Linq;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -37,7 +37,7 @@ partial class PanelFiles
 		//var name = "msvcrt";
 		//var name = "Declarations";
 		//var name = "Backup";
-		var name = "Catkeys fileS.cs";
+		var name = "QM# fileS.cs";
 
 		//var n = _c.AllNodes.ElementAt(2);
 		var f = _model.FindFileOrFolder(name);
@@ -47,7 +47,7 @@ partial class PanelFiles
 		var n = f?.TreeNodeAdv;
 		//Print(n?.Tag);
 
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m["SelectedNode"] = o => _c.SelectedNode = n;
 		m["IsSelected=true"] = o => n.IsSelected = true; //adds to selection
 		m["ClearSelection"] = o => _c.ClearSelection();

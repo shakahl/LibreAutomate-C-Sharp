@@ -22,22 +22,14 @@ using System.Xml.XPath;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 
 //using System.IO.MemoryMappedFiles;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
-
-//using Catkeys.Triggers;
-
-
-//using Cat = Catkeys.Input;
-//using Meow = Catkeys.Show;
-
-//using static Catkeys.Show;
 
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -65,8 +57,6 @@ using Microsoft.Win32.SafeHandles;
 
 using System.IO.Compression;
 using System.Reflection.Emit;
-
-//using static Test.CatAlias;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 
@@ -213,8 +203,8 @@ static partial class Test
 	#endregion
 
 
-	//using l = Catkeys;
-	//using static Catkeys.NoClass;
+	//using l = Au;
+	//using static Au.NoClass;
 	////
 	//using System.Collections.Generic;
 	//using SysText = System.Text;
@@ -236,7 +226,7 @@ static partial class Test
 	//using SysCompon = System.ComponentModel;
 	//using SysExcept = System.Runtime.ExceptionServices; //only HandleProcessCorruptedStateExceptionsAttribute
 
-	public static class CatAlias
+	public static class AuAlias
 	{
 		public static int speed { get => Options.MouseClickSleep; set => Options.MouseClickSleep = value; }
 	}
@@ -244,10 +234,10 @@ static partial class Test
 	static unsafe void TestSharedMemory()
 	{
 		try {
-			var m1 = (int*)Catkeys.Util.SharedMemory.CreateOrGet("test", 1000, out var _);
+			var m1 = (int*)Au.Util.SharedMemory.CreateOrGet("test", 1000, out var _);
 			Print((long)m1);
 			*m1 = 7;
-			//var m2 = (int*)Catkeys.Util.SharedMemory.CreateOrGet("test", 1000000);
+			//var m2 = (int*)Au.Util.SharedMemory.CreateOrGet("test", 1000000);
 			//Print((long)m2);
 			//Print(*m2);
 
@@ -607,7 +597,7 @@ static partial class Test
 		var (a, b) = TestReturnTuple();
 		PrintList(a, b);
 
-		//var v = Catkeys.Util.AppDomain_.GetDefaultDomain();
+		//var v = Au.Util.AppDomain_.GetDefaultDomain();
 #endif
 
 #if binary_literals_and_digit_separators
@@ -709,7 +699,7 @@ static partial class Test
 		//d.ShowDialog();
 
 		//var ad = AppDomain.CreateDomain("test");
-		//ad.ExecuteAssembly(@"Q:\app\Catkeys\Test Projects\Test\Test.exe");
+		//ad.ExecuteAssembly(@"Q:\app\Au\Test Projects\Test\Test.exe");
 
 		//TaskDialog.Options.DefaultTitle = "DEFAULT";
 		//TaskDialog.Options.RtlLayout = true;
@@ -1349,14 +1339,14 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		try {
 			bool b = w.IsEnabled;
 			if(Native.GetError() != 0) {
-				//throw new CatException();
-				//throw new CatException("Messssage");
-				//throw new CatException(5);
-				//throw new CatException(5, "Messssage");
-				throw new CatException("Messsssage", new FileNotFoundException());
+				//throw new AuException();
+				//throw new AuException("Messssage");
+				//throw new AuException(5);
+				//throw new AuException(5, "Messssage");
+				throw new AuException("Messsssage", new FileNotFoundException());
 			}
 		}
-		catch(CatException e) {
+		catch(AuException e) {
 			PrintList(e.NativeErrorCode, e.Message);
 		}
 	}
@@ -1418,27 +1408,27 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	}
 
-	static LPARAM WndProc33(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
-		return Api.DefWindowProc(w, msg, wParam, lParam);
-	}
+	//static LPARAM WndProc33(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//{
+	//	Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
+	//	return Api.DefWindowProc(w, msg, wParam, lParam);
+	//}
 
-	static void TestCreateWindow()
-	{
-		//var wc = Wnd.Misc.WindowClass.Register("TTTTest", WndProc33);
-		//Wnd w = Wnd.Misc.CreateWindow(0, wc.Name, "Name", Native.WS_POPUPWINDOW | Native.WS_VISIBLE|Native.WS_CAPTION, 500, 100, 300, 200);
+	//static void TestCreateWindow()
+	//{
+	//	//var wc = Wnd.Misc.MyWindowClass.Register("TTTTest", WndProc33);
+	//	//Wnd w = Wnd.Misc.CreateWindow(0, wc.Name, "Name", Native.WS_POPUPWINDOW | Native.WS_VISIBLE|Native.WS_CAPTION, 500, 100, 300, 200);
 
-		Wnd.Misc.WindowClass.InterDomainRegister("TTTTest", WndProc33);
-		Wnd w = Wnd.Misc.WindowClass.InterDomainCreateWindow(0, "TTTTest", "Name", Native.WS_POPUPWINDOW | Native.WS_VISIBLE | Native.WS_CAPTION, 500, 100, 300, 200);
+	//	Wnd.Misc.MyWindowClass.InterDomainRegister("TTTTest", WndProc33);
+	//	Wnd w = Wnd.Misc.MyWindowClass.InterDomainCreateWindow("TTTTest", "Name", Native.WS_POPUPWINDOW | Native.WS_VISIBLE | Native.WS_CAPTION, 0, 500, 100, 300, 200);
 
-		var ic = Icons.GetFileIconHandle(@"q:\app\paste.ico", 16);
-		Wnd.Misc.SetIconHandle(w, ic);
-		Wnd c = Wnd.Misc.CreateWindowAndSetFont(0, "Edit", "Text", Native.WS_CHILD | Native.WS_VISIBLE, 10, 10, 100, 20, w, 3);
-		TaskDialog.ShowInput(out string s, "td", editText: "TaskDialog");
-		Wnd.Misc.DestroyWindow(w);
-		Icons.DestroyIconHandle(ic);
-	}
+	//	var ic = Icons.GetFileIconHandle(@"q:\app\paste.ico", 16);
+	//	Wnd.Misc.SetIconHandle(w, ic);
+	//	Wnd c = Wnd.Misc.CreateWindowAndSetFont("Edit", "Text", Native.WS_CHILD | Native.WS_VISIBLE, 0, 10, 10, 100, 20, w, 3);
+	//	TaskDialog.ShowInput(out string s, "td", editText: "TaskDialog");
+	//	Wnd.Misc.DestroyWindow(w);
+	//	Icons.DestroyIconHandle(ic);
+	//}
 
 	static void MinimizeAll()
 	{
@@ -1629,7 +1619,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Wnd.FindAll("* Thunderbird").ForEach(t => { t.Activate(); Print(t.Close()); Print(Wnd.WndActive); });
 		//Wnd.FindAll(className:"QM_toolbar").ForEach(t => { Print(t.Close()); });
 		//Wnd.Misc.MainWindows(likeAltTab:true).ForEach(t => {
-		//	if(0!=t.Name.Like_(false, "Catkeys -*", "Quick Macros -*", "Process Expl*")) return;
+		//	if(0!=t.Name.Like_(false, "QM# -*", "Quick Macros -*", "Process Expl*")) return;
 		//	Print(t);
 		//	t.Activate();
 		//	long t1 = Time.Milliseconds;
@@ -1669,7 +1659,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(w);
 		//w.Activate();
 
-		//var c = Wnd.Misc.WindowClass.InterDomainRegister("ffoo", null);
+		//var c = Wnd.Misc.MyWindowClass.InterDomainRegister("ffoo", null);
 		////Wnd w = Wnd.Misc.CreateMessageWindow("#32770");
 		//Wnd w = Wnd.Misc.CreateMessageWindow("ffoo");
 		//Print(w);
@@ -2104,7 +2094,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Api.CloseHandle(h);
 		//return;
 
-		Catkeys.Util.AppDomain_.Exit += (unu, ded) => { Print("exit"); };
+		Au.Util.AppDomain_.Exit += (unu, ded) => { Print("exit"); };
 
 		new Thread(o =>
 		{
@@ -2143,7 +2133,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 			//Task.Delay(5000);
 
-			//var m=new Catkeys.Util.MessageLoop();
+			//var m=new Au.Util.MessageLoop();
 			//Timer_.After(1000, t => { Print("timer"); m.Stop(); });
 			//m.Loop();
 
@@ -2495,7 +2485,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		f.Width = 1000;
 		f.Click += (unu, sed) =>
 		{
-			var file = @"Q:\app\Catkeys\Editor\Resources\il_tb_24.png";
+			var file = @"Q:\app\Au\Editor\Resources\il_tb_24.png";
 			Perf.First();
 			var img = (Bitmap)Image.FromFile(file);
 			int size = img.Height;
@@ -2535,64 +2525,64 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		{
 			var files = new string[]
 			{
-@"Q:\app\Catkeys\Editor\Resources\TB\WriteBackPartition.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XMLDocumentTypeDefinitionFile.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XMLFile.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XMLSchema.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XMLTransformation.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XnaLogo.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XPath.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XSLTTemplate.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\XSLTTransformFile.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\ZoomIn.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\VSDatasetInternalInfoFile.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\VSShell.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\VSTAAbout.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\VSThemeEditor.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\Watch.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WCF.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WCFDataService.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WeakHierarchy.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\Web.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebAdmin.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebConfiguration.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebConsole.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebCustomControl.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebCustomControlASCX.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebMethodAction.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebPart.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebPhone.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebService.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebSetupProject.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebTest.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WebUserControl.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WeightMember.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WeightMemberFormula.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WF.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WFC.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WFService.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WindowsForm.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WindowsLogo_Cyan.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WindowsService.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WindowsServiceStop.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WindowsServiceWarning.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WinformToolboxControl.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WMIConnection.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WorkAsSomeoneElse.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WorkflowAssociationForm.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WorkflowInitiationForm.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WorkItemQuery.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFApplication.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFCustomControl.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFDesigner.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFFlowDocument.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFLibrary.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFPage.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFPage_gray.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFPageFunction.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFResourceDictionary.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFToolboxControl.png",
-@"Q:\app\Catkeys\Editor\Resources\TB\WPFUserControl.png"
+@"Q:\app\Au\Editor\Resources\TB\WriteBackPartition.png",
+@"Q:\app\Au\Editor\Resources\TB\XMLDocumentTypeDefinitionFile.png",
+@"Q:\app\Au\Editor\Resources\TB\XMLFile.png",
+@"Q:\app\Au\Editor\Resources\TB\XMLSchema.png",
+@"Q:\app\Au\Editor\Resources\TB\XMLTransformation.png",
+@"Q:\app\Au\Editor\Resources\TB\XnaLogo.png",
+@"Q:\app\Au\Editor\Resources\TB\XPath.png",
+@"Q:\app\Au\Editor\Resources\TB\XSLTTemplate.png",
+@"Q:\app\Au\Editor\Resources\TB\XSLTTransformFile.png",
+@"Q:\app\Au\Editor\Resources\TB\ZoomIn.png",
+@"Q:\app\Au\Editor\Resources\TB\VSDatasetInternalInfoFile.png",
+@"Q:\app\Au\Editor\Resources\TB\VSShell.png",
+@"Q:\app\Au\Editor\Resources\TB\VSTAAbout.png",
+@"Q:\app\Au\Editor\Resources\TB\VSThemeEditor.png",
+@"Q:\app\Au\Editor\Resources\TB\Watch.png",
+@"Q:\app\Au\Editor\Resources\TB\WCF.png",
+@"Q:\app\Au\Editor\Resources\TB\WCFDataService.png",
+@"Q:\app\Au\Editor\Resources\TB\WeakHierarchy.png",
+@"Q:\app\Au\Editor\Resources\TB\Web.png",
+@"Q:\app\Au\Editor\Resources\TB\WebAdmin.png",
+@"Q:\app\Au\Editor\Resources\TB\WebConfiguration.png",
+@"Q:\app\Au\Editor\Resources\TB\WebConsole.png",
+@"Q:\app\Au\Editor\Resources\TB\WebCustomControl.png",
+@"Q:\app\Au\Editor\Resources\TB\WebCustomControlASCX.png",
+@"Q:\app\Au\Editor\Resources\TB\WebMethodAction.png",
+@"Q:\app\Au\Editor\Resources\TB\WebPart.png",
+@"Q:\app\Au\Editor\Resources\TB\WebPhone.png",
+@"Q:\app\Au\Editor\Resources\TB\WebService.png",
+@"Q:\app\Au\Editor\Resources\TB\WebSetupProject.png",
+@"Q:\app\Au\Editor\Resources\TB\WebTest.png",
+@"Q:\app\Au\Editor\Resources\TB\WebUserControl.png",
+@"Q:\app\Au\Editor\Resources\TB\WeightMember.png",
+@"Q:\app\Au\Editor\Resources\TB\WeightMemberFormula.png",
+@"Q:\app\Au\Editor\Resources\TB\WF.png",
+@"Q:\app\Au\Editor\Resources\TB\WFC.png",
+@"Q:\app\Au\Editor\Resources\TB\WFService.png",
+@"Q:\app\Au\Editor\Resources\TB\WindowsForm.png",
+@"Q:\app\Au\Editor\Resources\TB\WindowsLogo_Cyan.png",
+@"Q:\app\Au\Editor\Resources\TB\WindowsService.png",
+@"Q:\app\Au\Editor\Resources\TB\WindowsServiceStop.png",
+@"Q:\app\Au\Editor\Resources\TB\WindowsServiceWarning.png",
+@"Q:\app\Au\Editor\Resources\TB\WinformToolboxControl.png",
+@"Q:\app\Au\Editor\Resources\TB\WMIConnection.png",
+@"Q:\app\Au\Editor\Resources\TB\WorkAsSomeoneElse.png",
+@"Q:\app\Au\Editor\Resources\TB\WorkflowAssociationForm.png",
+@"Q:\app\Au\Editor\Resources\TB\WorkflowInitiationForm.png",
+@"Q:\app\Au\Editor\Resources\TB\WorkItemQuery.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFApplication.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFCustomControl.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFDesigner.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFFlowDocument.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFLibrary.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFPage.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFPage_gray.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFPageFunction.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFResourceDictionary.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFToolboxControl.png",
+@"Q:\app\Au\Editor\Resources\TB\WPFUserControl.png"
 			};
 
 			Perf.First();
@@ -2751,7 +2741,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 @"Q:\app\dialog.ico",
 		   };
 
-		var destDir = @"Q:\app\Catkeys\Editor\Resources\png icons";
+		var destDir = @"Q:\app\Au\Editor\Resources\png icons";
 		Files.CreateDirectory(destDir);
 		foreach(var s in a) {
 			using(var im = Icons.GetFileIconImage(s, 16)) {
@@ -2782,7 +2772,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static void TestXDocument()
 	{
 		Perf.First();
-		var x = XElement.Load(@"Q:\app\catkeys\editor\default\Panels.xml");
+		var x = XElement.Load(@"Q:\app\Au\editor\default\Panels.xml");
 		Perf.Next();
 		//var n =x.Elements().Count();
 		var v1 = x.Descendants("panel").FirstOrDefault(el => el.Attribute("name")?.Value == "Output");
@@ -2939,22 +2929,22 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Process.Start(f);
 	}
 
-	static void TestCatExceptioNewOverload()
+	static void TestAuExceptioNewOverload()
 	{
 		Wnd w = Wnd.Find("ILSpy");
 		Api.SetLastError(10);
 		try {
 			try {
-				throw new CatException(1, "Inner");
+				throw new AuException(1, "Inner");
 			}
 			catch(Exception e) {
-				//throw new CatException("Outer", e);
-				//throw new CatException(5, "Outer", e);
+				//throw new AuException("Outer", e);
+				//throw new AuException(5, "Outer", e);
 				//throw new WndException(w, "Outer", e);
 				throw new WndException(w, 5, "Outer", e);
 			}
 		}
-		catch(CatException e) {
+		catch(AuException e) {
 			PrintList(e.NativeErrorCode, e.Message);
 		}
 	}
@@ -3021,7 +3011,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(w);
 		//var h = Wnd.Misc.GetIconHandle(w);
 		//Print(h);
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m["test", Icons.HandleToImage(h)] = null;
 		//m.Show();
 
@@ -3105,12 +3095,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		//return;
 
-		//if(!Files.GetFileId(@"q:\test", out var k)) throw new CatException(0, "failed");
-		////if(!Files.GetFileId(@"q:\test\test.cs", out var k)) throw new CatException(0, "failed");
-		////if(!Files.GetFileId(@"q:\test\no.cs", out var k)) throw new CatException(0, "failed");
+		//if(!Files.GetFileId(@"q:\test", out var k)) throw new AuException(0, "failed");
+		////if(!Files.GetFileId(@"q:\test\test.cs", out var k)) throw new AuException(0, "failed");
+		////if(!Files.GetFileId(@"q:\test\no.cs", out var k)) throw new AuException(0, "failed");
 		//PrintList(k.VolumeSerialNumber, k.FileIndex);
 
-		//if(!Files.GetFileId(@"//Q7c/q/test", out var k2)) throw new CatException(0, "failed");
+		//if(!Files.GetFileId(@"//Q7c/q/test", out var k2)) throw new AuException(0, "failed");
 		//PrintList(k2.VolumeSerialNumber, k2.FileIndex);
 		//Print(k2 == k);
 		//Print(k.Equals(k2));
@@ -3163,7 +3153,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//if(MoveFileEx(@"d:\test\z\sub", @"d:\test", 3)) return; //Access is denied
 		//if(MoveFileEx(@"q:\test\z", @"d:\test\z", 2)) return; //Access is denied
 		//var ec = Native.GetError();
-		//throw new CatException(ec, "*move");
+		//throw new AuException(ec, "*move");
 
 		//Files.Test();
 		//Files.Delete(@"d:\no file", true);
@@ -3561,7 +3551,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	//static unsafe string GetFullPath7(string s)
 	//{
-	//	var b = Catkeys.Util.LibCharBuffer.LibCommon;
+	//	var b = Au.Util.LibCharBuffer.LibCommon;
 	//	int na = s.Length + 10;
 	//	int nr = GetFullPathName(s, na, b.Alloc(na), null);
 	//	if(nr > 0 && nr < na) s = b.ToString(nr);
@@ -3614,7 +3604,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 		//return;
 
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m[@"C:\", @"C:\"] = null;
 		//m[@"C:", @"C:"] = null;
 		//m[@"\\?\C:\", @"\\?\C:\"] = null;
@@ -3952,7 +3942,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		s5 = @"mailto:support@quickmacros.com";
 		s6 = ":: 14001F706806EE260AA0D7449371BEB064C98683";
 
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m[s1, s1] = o => Shell.Run(o.ToString());
 		m[s2, s2] = o => Shell.Run(o.ToString());
 		m[s3, s3] = o => Shell.Run(o.ToString());
@@ -4032,20 +4022,20 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestTemp()
 	{
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m.IconFlags = Icons.IconFlags.SearchPath;
 		//m["one", @"Q:\app\copy.ico"] = null;
-		//m["one", @"CatkeysTasks.csproj"] = null;
+		//m["one", @"Au.Tasks.csproj"] = null;
 		//Folders.ThisAppImages = @"q:\app";
 		//m["one", @"paste.ico"] = null;
 		//m["one", @"notepad.exe"] = null;
 		//m.Show();
 
-		//Print(Files.SearchPath(@"Q:\app\.\catkeys"));
+		//Print(Files.SearchPath(@"Q:\app\.\Au"));
 		//Print(Files.SearchPath(@"notepad.exe"));
 		//Print(Files.SearchPath(@"qm.exe"));
-		//Print(Files.SearchPath(@"catkeys\.\", @"q:\app\.\"));
-		//Print(Files.SearchPath(@"catkeys.dll"));
+		//Print(Files.SearchPath(@"Au\.\", @"q:\app\.\"));
+		//Print(Files.SearchPath(@"Au.dll"));
 
 		//Environment.SetEnvironmentVariable("temp", "not full path");
 		//string s = @"%temp%\mm";
@@ -4056,18 +4046,18 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//static unsafe void TestNativeMemoryList()
 	//{
-	//	//using(var a = new Catkeys.Util.LibArrayBuilder(8, 0)) { }
-	//	//using(var a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024)) { }
-	//	//var a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024);
+	//	//using(var a = new Au.Util.LibArrayBuilder(8, 0)) { }
+	//	//using(var a = new Au.Util.LibArrayBuilder.Specialized._Wnd(1024)) { }
+	//	//var a = new Au.Util.LibArrayBuilder.Specialized._Wnd(1024);
 
-	//	//using(var a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024)) {
+	//	//using(var a = new Au.Util.LibArrayBuilder.Specialized._Wnd(1024)) {
 	//	//	a.Add(Wnd.Find("Quick*"));
 	//	//	a.Add(Wnd.Find("app*"));
 
 	//	//	Print(a.ToArray());
 	//	//}
 
-	//	using(Catkeys.Util.LibArrayBuilder.Specialized._Wnd a = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024), aa = new Catkeys.Util.LibArrayBuilder.Specialized._Wnd(1024)) {
+	//	using(Au.Util.LibArrayBuilder.Specialized._Wnd a = new Au.Util.LibArrayBuilder.Specialized._Wnd(1024), aa = new Au.Util.LibArrayBuilder.Specialized._Wnd(1024)) {
 	//		a.Add(Wnd.Find("Quick*"));
 	//		a.Add(Wnd.Find("app*"));
 
@@ -4077,8 +4067,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//		Print(a.ToArray(aa));
 	//	}
 
-	//	//using(var a = new Catkeys.Util.LibArrayBuilder<int>()) {
-	//	//using(var a = new Catkeys.Util.LibArrayBuilder(4, 0)) {
+	//	//using(var a = new Au.Util.LibArrayBuilder<int>()) {
+	//	//using(var a = new Au.Util.LibArrayBuilder(4, 0)) {
 
 	//	//	var p0 = a.Alloc(4);
 	//	//	//Print((LPARAM)p0);
@@ -4110,7 +4100,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//	//	Print(b.ToList());
 	//	//}
 
-	//	//using(var a = new Catkeys.Util.LibArrayBuilder(8, 0)) {
+	//	//using(var a = new Au.Util.LibArrayBuilder(8, 0)) {
 
 	//	//	var p0 = a.Alloc(4);
 	//	//	//Print((LPARAM)p0);
@@ -4136,23 +4126,23 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 
 	//	//Perf.Next();
-	//	//var a1 = new Catkeys.Util.LibArrayBuilder<int>();
+	//	//var a1 = new Au.Util.LibArrayBuilder<int>();
 	//	//Perf.Next();
-	//	//var a2 = new Catkeys.Util.LibArrayBuilder<Point>();
+	//	//var a2 = new Au.Util.LibArrayBuilder<Point>();
 	//	//Perf.Next();
-	//	//var a3 = new Catkeys.Util.LibArrayBuilder<RECT>();
+	//	//var a3 = new Au.Util.LibArrayBuilder<RECT>();
 	//	//Perf.Next();
-	//	//var a4 = new Catkeys.Util.LibArrayBuilder<Wnd>();
+	//	//var a4 = new Au.Util.LibArrayBuilder<Wnd>();
 	//	//Perf.Next();
-	//	//var a5 = new Catkeys.Util.LibArrayBuilder<byte>();
+	//	//var a5 = new Au.Util.LibArrayBuilder<byte>();
 	//	//Perf.Next();
-	//	//var a6 = new Catkeys.Util.LibArrayBuilder<double>();
+	//	//var a6 = new Au.Util.LibArrayBuilder<double>();
 	//	//Perf.Next();
-	//	//var a7 = new Catkeys.Util.LibArrayBuilder<Rectangle>();
+	//	//var a7 = new Au.Util.LibArrayBuilder<Rectangle>();
 	//	//Perf.Next();
-	//	//var a8 = new Catkeys.Util.LibArrayBuilder<Point>();
+	//	//var a8 = new Au.Util.LibArrayBuilder<Point>();
 	//	//Perf.Next();
-	//	//var a9 = new Catkeys.Util.LibArrayBuilder<char>();
+	//	//var a9 = new Au.Util.LibArrayBuilder<char>();
 	//	//Perf.Next();
 	//	//Perf.NW();
 
@@ -4185,10 +4175,10 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//	//Perf.SpinCPU(100);
 	//	//var a1 = new Action(() => { var a = Marshal.AllocHGlobal(n1); Marshal.FreeHGlobal(a); });
 	//	//var a2 = new Action(() => { var a = Marshal.AllocCoTaskMem(n1); Marshal.FreeCoTaskMem(a); });
-	//	//var a3 = new Action(() => { var a = Catkeys.Util.NativeHeap.Alloc(n1); Catkeys.Util.NativeHeap.Free(a); });
+	//	//var a3 = new Action(() => { var a = Au.Util.NativeHeap.Alloc(n1); Au.Util.NativeHeap.Free(a); });
 	//	////var a1 = new Action(() => { var a = Marshal.AllocHGlobal(n1); a = Marshal.ReAllocHGlobal(a, (IntPtr)n2); Marshal.FreeHGlobal(a); });
 	//	////var a2 = new Action(() => { var a = Marshal.AllocCoTaskMem(n1); a = Marshal.ReAllocCoTaskMem(a, n2); Marshal.FreeCoTaskMem(a); });
-	//	////var a3 = new Action(() => { var a = Catkeys.Util.NativeHeap.Alloc(n1); a = Catkeys.Util.NativeHeap.ReAlloc(a, n2); Catkeys.Util.NativeHeap.Free(a); });
+	//	////var a3 = new Action(() => { var a = Au.Util.NativeHeap.Alloc(n1); a = Au.Util.NativeHeap.ReAlloc(a, n2); Au.Util.NativeHeap.Free(a); });
 	//	//var a4 = new Action(() => { var a = Api.VirtualAlloc(Zero, n1, 0x3000, 4); Api.VirtualFree(a); });
 	//	//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
 
@@ -4241,7 +4231,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		f.Click += (unu, sed) =>
 		  {
 			  Shell.Run("notepad.exe", flags: SRFlags.ReturnProcessHandle, more: new SRMoreParams() { Verb = "properties", OwnerWindow=f });
-			  //try { Shell.Run("no.exe", flags: SRFlags.ShowErrorUI, more: new SRMoreParams() { OwnerWindow = f }); } catch(CatException) { }
+			  //try { Shell.Run("no.exe", flags: SRFlags.ShowErrorUI, more: new SRMoreParams() { OwnerWindow = f }); } catch(AuException) { }
 
 		  };
 		f.ShowDialog();
@@ -4305,8 +4295,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		string s;
 		s = @"notepad.exe";
 		//s =@"Q:\Test\am.txt";
-		//s = @"Q:\Test\CatkeysHelp.chm";
-		//s = @"Q:\Test\CatkeysHelp.chm - Shortcut";
+		//s = @"Q:\Test\Au.Help.chm";
+		//s = @"Q:\Test\Au.Help.chm - Shortcut";
 		//s = Folders.Virtual.ControlPanel + "1E00715800000000000000000000661AA9A87D3A24448D2404E180695C7A";
 		Print(s);
 		SRMoreParams more = null;
@@ -4555,7 +4545,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		c = 0xff;
 		c = 0x8000;
 		int n = -250;
-		PrintHex(Catkeys.Util.Color_.AdjustLuminance(c, n, false));
+		//PrintHex(Au.Util.Color_.AdjustLuminance(c, n, false));
 		//PrintHex(Color_.AdjustLuminance2(c, n, false));
 		//PrintHex(Color_.AdjustLuminance(0xE0E0E0, -800, false));
 
@@ -4616,8 +4606,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Perf.NW();
 
 
-		///var s = @"Q:\app\catkeys\Editor\Test\ok\files\iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
-		//var s = @"Q:\app\catkeys\Editor\Test\ok\files\short";
+		///var s = @"Q:\app\Au\Editor\Test\ok\files\iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
+		//var s = @"Q:\app\Au\Editor\Test\ok\files\short";
 		//Files.CreateDirectory(s);
 
 		//Files.CopyTo(s, s);
@@ -4725,13 +4715,13 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 			//Print(Convert.FromBase64String(_big).Length);
 			//TestDictionary();
 		}
-		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(AuException ex) { PrintList(ex.NativeErrorCode, ex); }
 		catch(ArgumentException ex) { PrintList(ex); }
 		catch(Win32Exception ex) { PrintList(ex.NativeErrorCode, ex); }
 		catch(Exception ex) when(!(ex is ThreadAbortException)) { PrintList(ex.GetType(), ex); }
 		//catch(Exception ex) { }
 		//Why try/catch creates 3 more threads? Does not do it if there is only catch(Exception ex). Only if STA thread.
-		catch(CatException ex) { PrintList(ex.NativeErrorCode, ex); }
+		catch(AuException ex) { PrintList(ex.NativeErrorCode, ex); }
 		catch(ArgumentException ex) { PrintList(ex); }
 		catch(Win32Exception ex) { PrintList(ex.NativeErrorCode, ex); }
 		catch(Exception ex) when(!(ex is Thre
@@ -4768,10 +4758,10 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Convert_.Utf8Length(s));
 		//Print(Convert_.Utf8FromString(s));
 
-		//using(var b = new Catkeys.Util.MemoryBufferOnStackOrHeap()) {
+		//using(var b = new Au.Util.MemoryBufferOnStackOrHeap()) {
 		//	var p = b.Allocate(200);
 		//	Print((LPARAM)p);
-		//	//for(int i = 0; i < Catkeys.Util.MemoryBufferOnStackOrHeap.StackSize; i++) Print(p[i]);
+		//	//for(int i = 0; i < Au.Util.MemoryBufferOnStackOrHeap.StackSize; i++) Print(p[i]);
 		//}
 
 		//for(int j=0; j<2; j++) {
@@ -4863,7 +4853,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//static unsafe void TestStackallocSpeed1()
 	//{
-	//	//var m = new Catkeys.Util.MemoryBufferOnStackOrHeap();
+	//	//var m = new Au.Util.MemoryBufferOnStackOrHeap();
 	//	//var p =m.Allocate(10);
 	//	//Convert_.Utf8FromString("", p, 10);
 	//}
@@ -4879,7 +4869,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//static unsafe void TestStackallocSpeed3()
 	//{
 	//	var p = (byte*)_mmm;
-	//	if(p == null) { p = (byte*)Catkeys.Util.NativeHeap.Alloc(1000); _mmm = p; }
+	//	if(p == null) { p = (byte*)Au.Util.NativeHeap.Alloc(1000); _mmm = p; }
 	//	Convert_.Utf8FromString("", p, 10);
 	//}
 
@@ -4888,15 +4878,15 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//static unsafe void TestStackallocSpeed4()
 	//{
-	//	var p = (byte*)Catkeys.Util.NativeHeap.Alloc(1000);
+	//	var p = (byte*)Au.Util.NativeHeap.Alloc(1000);
 	//	Convert_.Utf8FromString("", p, 10);
-	//	Catkeys.Util.NativeHeap.Free(p);
+	//	Au.Util.NativeHeap.Free(p);
 	//}
 
 	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//static unsafe void TestStackallocSpeed()
 	//{
-	//	//var m = new Catkeys.Util.MemoryBufferOnStackOrHeap();
+	//	//var m = new Au.Util.MemoryBufferOnStackOrHeap();
 	//	//var p =m.Allocate(1000);
 	//	//Convert_.Utf8FromString("string", p, 1000);
 	//	//SA1();
@@ -4926,8 +4916,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	{
 		var f = new Form();
 
-		G.Controls.SciControl.SciLexerDllPath = Ver.Is64BitProcess ? @"Q:\app\catkeys\Editor\SciLexer64.dll" : @"Q:\app\catkeys\Editor\SciLexer32.dll";
-		var x = new G.Controls.SciControl();
+		Au.Controls.SciControl.SciLexerDllPath = Ver.Is64BitProcess ? @"Q:\app\Au\Editor\SciLexer64.dll" : @"Q:\app\Au\Editor\SciLexer32.dll";
+		var x = new Au.Controls.SciControl();
 		x.Width = 200;
 		x.Height = 100;
 		f.Controls.Add(x);
@@ -5015,12 +5005,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	static unsafe void TestAsciiStartsWithI()
 	{
 		fixed (byte* p = Convert_.Utf8FromString("Test")) {
-			Print(Catkeys.Util.LibCharPtr.AsciiStartsWith(p, "Tes"));
-			Print(Catkeys.Util.LibCharPtr.AsciiStartsWith(p, "tes"));
-			Print(Catkeys.Util.LibCharPtr.AsciiStartsWith(p, "Mes"));
-			Print(Catkeys.Util.LibCharPtr.AsciiStartsWithI(p, "Tes"));
-			Print(Catkeys.Util.LibCharPtr.AsciiStartsWithI(p, "tes"));
-			Print(Catkeys.Util.LibCharPtr.AsciiStartsWithI(p, "Mes"));
+			Print(Au.Util.LibCharPtr.AsciiStartsWith(p, "Tes"));
+			Print(Au.Util.LibCharPtr.AsciiStartsWith(p, "tes"));
+			Print(Au.Util.LibCharPtr.AsciiStartsWith(p, "Mes"));
+			Print(Au.Util.LibCharPtr.AsciiStartsWithI(p, "Tes"));
+			Print(Au.Util.LibCharPtr.AsciiStartsWithI(p, "tes"));
+			Print(Au.Util.LibCharPtr.AsciiStartsWithI(p, "Mes"));
 		}
 	}
 
@@ -5308,7 +5298,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestOutputDestinations()
 	{
-		var s = @"Q:\Test\CatLog.txt";
+		var s = @"Q:\Test\AuLog.txt";
 		//Files.Delete(s);
 		Output.LogFile = s;
 		Output.LogFileTimestamp = true;
@@ -5629,7 +5619,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestWTimer()
 	{
-		using(var t = Catkeys.Util.WaitableTimer.Create()) {
+		using(var t = Au.Util.WaitableTimer.Create()) {
 			//int v = 0;
 
 			Task.Run(() =>
@@ -5712,9 +5702,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		Perf.Write(); //first time ~10 ms, then ~5 mcs
 	}
 
-	static void TestCatMenuRun()
+	static void TestAuMenuRun()
 	{
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m["nnn", Folders.System + "notepad.exe"] = o => Shell.Run(Folders.System + "notepad.exe");
 		m.Run(Folders.System + "notepad.exe", "nnn");
 		m.Run2(Folders.System + "notepad.exe", "nnn");
@@ -5723,12 +5713,12 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		m.Show();
 	}
 
-	public static void Run(this CatMenu m, string path, string label = null)
+	public static void Run(this AuMenu m, string path, string label = null)
 	{
 		m[label ?? path, path] = o => Shell.TryRun(path);
 	}
 
-	public static void Run2(this CatMenu m, string path, string label = null)
+	public static void Run2(this AuMenu m, string path, string label = null)
 	{
 		//in this version, the delegate does not capture variables, therefore will not be created new delegate for each menu item
 
@@ -5831,7 +5821,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestSystemWaitPeriod()
 	{
-		if(Time.LibSleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.LibSleepPrecision.Current);
+		if(Time.LibSleepPrecision.Current < 15) throw new AuException("small system time resolution: " + Time.LibSleepPrecision.Current);
 
 		//Time.LibSleepPrecision.TempSet1(60000);
 		for(int j = 0; j < 3; j++) {
@@ -5956,7 +5946,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		var t3 = new Timer_(t => Print("with Timer_ object")); t3.Start(3000, true); //the same as Timer_.After
 		MessageBox.Show("");
 
-		//if(Time.LibSleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.LibSleepPrecision.Current);
+		//if(Time.LibSleepPrecision.Current < 15) throw new AuException("small system time resolution: " + Time.LibSleepPrecision.Current);
 		//Time.LibSleepPrecision.TempSet1();
 		//int i = 0;
 		//Perf.First();
@@ -5984,7 +5974,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestOptionsExample()
 	{
-		if(Time.LibSleepPrecision.Current < 15) throw new CatException("small system time resolution: " + Time.LibSleepPrecision.Current);
+		if(Time.LibSleepPrecision.Current < 15) throw new AuException("small system time resolution: " + Time.LibSleepPrecision.Current);
 
 		//using(new Time.LibSleepPrecision(6)) {
 		Wait(0.5);
@@ -6107,8 +6097,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	var o1 = Options;
 		//	Task.Run(() =>
 		//	{
-		//		using(ScriptOptions.Temp()) {
-		//			ScriptOptions.Options = o1;
+		//		using(AuScriptOptions.Temp()) {
+		//			AuScriptOptions.Options = o1;
 		//			Mouse.RightClick(w, 50, 50);
 		//			//Mouse.Click(w, Coord.Fraction(0.9), -10);
 		//			//Mouse.RightClick(w, Coord.Fraction(0.4), -10);
@@ -6139,7 +6129,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestDisableWarnings()
 	{
-		ScriptOptions.Default.DisableWarnings("tes*");
+		AuScriptOptions.Default.DisableWarnings("tes*");
 		using(Options.DisableWarnings("*.NET*")) {
 			Output.Warning("Test.");
 			Output.Warning("nondisabled.");
@@ -6770,7 +6760,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 			//Application.ThreadExit += (unu, sed) => { Print("Application.ThreadExit"); }; //no
 			SetThreadEndCallback(null);
 			Wait(0.1);
-			//throw new CatException();
+			//throw new AuException();
 			//FlsFree(s_flsIndex);
 		}
 
@@ -6787,7 +6777,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 				if(s_flsIndex == null) s_flsIndex = FlsAlloc(_flsCallback);
 			}
 		}
-		if(s_flsIndex == -1) throw new CatException();
+		if(s_flsIndex == -1) throw new AuException();
 		//Print(s_flsIndex);
 		FlsSetValue(s_flsIndex.GetValueOrDefault(), (IntPtr)5);
 		FlsSetValue(s_flsIndex.GetValueOrDefault(), (IntPtr)6);
@@ -6846,7 +6836,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void TestArrayBuilder()
 	{
-		//var a = new Catkeys.Util.LibArrayBuilder<long>();
+		//var a = new Au.Util.LibArrayBuilder<long>();
 		//a.Add() = 8;
 		//var v=a[i];
 		//Print(v==8 ? "8" : "no");
@@ -6858,7 +6848,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	}
 	//static void TestArrayBuilder()
 	//{
-	//	var a = new Catkeys.Util.LibArrayBuilder<long>();
+	//	var a = new Au.Util.LibArrayBuilder<long>();
 	//	a.Add() = 8;
 	//	PrintList(a.Count, a.Capacity);
 	//	var v=a[0];
@@ -6871,7 +6861,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	//	//Print(a[2]);
 
 	//	var r = new RECT(1, 2, 3, 4, false);
-	//	var aa = new Catkeys.Util.LibArrayBuilder<RECT>();
+	//	var aa = new Au.Util.LibArrayBuilder<RECT>();
 	//	//aa.Add(ref r);
 	//	aa.AddV(r);
 	//	Print(aa[0]);
@@ -6880,7 +6870,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 
 	static void TestWeakReference()
 	{
-		//var k = Catkeys.Util.LibCharBuffer.LibCommon;
+		//var k = Au.Util.LibCharBuffer.LibCommon;
 
 		//for(int i = 0; i < 3; i++) {
 		//	var w = Wnd.Find("* Notepad");
@@ -6889,7 +6879,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	Wait(0.5);
 		//}
 
-		//var a = Catkeys.Util.LibBuffer.Get(100, ref t_ca);
+		//var a = Au.Util.LibBuffer.Get(100, ref t_ca);
 		//Print(a.Length);
 
 		//Perf.First();
@@ -6911,7 +6901,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//	Perf.First();
 		//	for(int i2 = 0; i2 < n2; i2++) { var a = new char[300]; }
 		//	Perf.Next();
-		//	for(int i2 = 0; i2 < n2; i2++) { var a = Catkeys.Util.LibBuffer.Get(300, ref t_ca); }
+		//	for(int i2 = 0; i2 < n2; i2++) { var a = Au.Util.LibBuffer.Get(300, ref t_ca); }
 		//	Perf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { }
 		//	Perf.Next();
@@ -6929,7 +6919,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//		Perf.Next();
 		//		var a = new char[3000];
 		//		Perf.Next();
-		//		var a2 = Catkeys.Util.LibBuffer.Get(3000, ref t_ca);
+		//		var a2 = Au.Util.LibBuffer.Get(3000, ref t_ca);
 		//		Perf.Next();
 		//	}
 		//	Perf.Write(); Perf.Incremental = false;
@@ -6950,8 +6940,8 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Perf.SpinCPU(100);
 		//var a1 = new Action(() => { s = w.ClassName; });
 		//var a2 = new Action(() => { s = w.Name; });
-		//var a3 = new Action(() => { var b = Catkeys.Util.LibCharBuffer.LibCommon.Alloc(300); });
-		//var a4 = new Action(() => { var b = Catkeys.Util.LibBuffers.LibChar(300); });
+		//var a3 = new Action(() => { var b = Au.Util.LibCharBuffer.LibCommon.Alloc(300); });
+		//var a4 = new Action(() => { var b = Au.Util.LibBuffers.LibChar(300); });
 		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
 
 		//Wnd w = Wnd.FindFast("Calculator", null);
@@ -6985,7 +6975,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		//Print(Path_.ExpandEnvVar("%temp%"));
 		//Print(Path_.LibGetEnvVar("temp"));
 		//Print(Path_.LibEnvVarExists("temp"));
-		//Print(Path_.Normalize(@"Q:\app\catkeys\..\icons"));
+		//Print(Path_.Normalize(@"Q:\app\Au\..\icons"));
 		//Print(Path_.Normalize(@"c:\progra~1"));
 
 		//Print(Convert_.HexDecode("4041"));
@@ -7024,7 +7014,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		[ThreadStatic] static WeakReference<char[]> t_char;
 
 		//a helper method
-		static Catkeys.Util.Buffers.CharBuffer _GetCharBuffer(ref int n) { var r = Catkeys.Util.Buffers.Get(n, ref t_char); n = r.Length - 1; return r; }
+		static Au.Util.Buffers.CharBuffer _GetCharBuffer(ref int n) { var r = Au.Util.Buffers.Get(n, ref t_char); n = r.Length - 1; return r; }
 
 		//we'll use this API in this example
 		[DllImport("user32.dll", EntryPoint = "GetWindowTextW")]
@@ -7072,9 +7062,9 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 				Perf.Next();
 				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.AppendFormat("{0}    {1}    {2}", x, y, s); r1 = sb.ToString(); }
 				Perf.Next();
-				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, Catkeys.Util.LibCharPtr.Length(p)); } }
+				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { Api.wsprintfW(p, "%i    %i    %s", __arglist(x, y, s)); r2 = new string(ca, 0, Au.Util.LibCharPtr.Length(p)); } }
 				Perf.Next();
-				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, Catkeys.Util.LibCharPtr.Length(p)); } }
+				for(int i2 = 0; i2 < n2; i2++) { fixed (char* p = ca) { _snwprintf(p, 1000, "%i    %i    %s", __arglist(x, y, s)); r3 = new string(ca, 0, Au.Util.LibCharPtr.Length(p)); } }
 				Perf.Next();
 				for(int i2 = 0; i2 < n2; i2++) { sb.Clear(); sb.Append(x); sb.Append("    "); sb.Append(y); sb.Append("    "); sb.Append(s); r4 = sb.ToString(); }
 				Perf.Next();
@@ -7179,11 +7169,11 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		s_recptime = Time.Milliseconds;
 		s_recMoves = new List<uint>();
 
-		var hh = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, _testRecordMouseMove_Proc, Catkeys.Util.ModuleHandle.OfProcessExe(), 0);
+		var hh = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, _testRecordMouseMove_Proc, Au.Util.ModuleHandle.OfProcessExe(), 0);
 		Thread.CurrentThread.Join(7000);
 		Api.UnhookWindowsHookEx(hh);
 
-		var s = Catkeys.Util.Recording.MouseToString(s_recMoves, s_withSleepTimes);
+		var s = Au.Util.Recording.MouseToString(s_recMoves, s_withSleepTimes);
 		Print(s);
 
 		Wait(1);

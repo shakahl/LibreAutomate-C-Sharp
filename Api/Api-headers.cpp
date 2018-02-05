@@ -1,5 +1,5 @@
 //we'll remove everything at the start of the intermediate file (added by clang) until this
-#define CATKEYS
+#define AU
 
 //#define TEST_PREPROCESSING
 #ifdef TEST_PREPROCESSING
@@ -152,7 +152,7 @@ typedef struct _iobuf { char *_ptr; int _cnt; char *_base; int _flag; int _file;
 #endif
 
 
-#undef CATKEYS
+#undef AU
 #undef _MSC_VER
 #undef _MSC_FULL_VER
 #undef _MSC_EXTENSIONS

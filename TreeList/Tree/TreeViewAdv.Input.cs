@@ -8,9 +8,9 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Diagnostics;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree
 {
@@ -439,7 +439,7 @@ namespace Aga.Controls.Tree
 		{
 			if(/*UseColumns ||*/ !DisplayDraggingNodes)
 				return;
-			//Catkeys: why return if UseColumns?
+			//au: why return if UseColumns?
 
 			TreeNodeAdv[] nodes = data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[];
 			if(nodes != null && nodes.Length > 0) {

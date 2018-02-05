@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ScriptClass</RootNamespace>
     <AssemblyName>ScriptClass</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,13 +51,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Catkeys\Catkeys.csproj">
+    <ProjectReference Include="..\..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
-      <Name>Catkeys</Name>
+      <Name>Au</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Triggers\Catkeys.Triggers.csproj">
+    <ProjectReference Include="..\..\Triggers\Au.Triggers.csproj">
       <Project>{c8ced7d2-876d-48be-9a2a-142864271c25}</Project>
-      <Name>Catkeys.Triggers</Name>
+      <Name>Au.Triggers</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

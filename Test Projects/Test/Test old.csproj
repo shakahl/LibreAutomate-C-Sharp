@@ -39,7 +39,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
-    <ApplicationManifest>Properties\Catkeys.manifest</ApplicationManifest>
+    <ApplicationManifest>Properties\Au.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -63,13 +63,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Properties\Catkeys.manifest" />
+    <None Include="Properties\Au.manifest" />
     <None Include="Properties\uiAccess.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Catkeys\Catkeys.csproj">
+    <ProjectReference Include="..\..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
-      <Name>Catkeys</Name>
+      <Name>Au</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

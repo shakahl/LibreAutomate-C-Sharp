@@ -3115,7 +3115,7 @@ namespace SQLite
 			Serialized = 3
 		}
 
-		//Catkeys: load native sqlite dll 64 or 32 bit.
+		//Au: load native sqlite dll 64 or 32 bit.
 		static SQLite3()
 		{
 			if(IntPtr.Zero == LoadLibrary((IntPtr.Size == 8 ? @"x64\" : @"x32\") + LibraryPath)) throw new DllNotFoundException(LibraryPath);

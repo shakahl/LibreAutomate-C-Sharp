@@ -17,13 +17,11 @@ using System.Drawing;
 //using System.Reflection;
 //using System.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
-
-//TODO: test: if we add all 'using' in Catkeys namespace, maybe don't need to add in each file.
 
 public partial class Test
 {
@@ -35,21 +33,21 @@ public partial class Test
 		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
 		Api.DestroyIcon(hi);
 		//il.Images.Add(SystemIcons.Exclamation); //distorted
-		//il.Images.Add(Catkeys.Tasks.Properties.Resources.qm_running); //distorted, as well as with ToBitmap(), because the resource manager adds big icon
+		//il.Images.Add(Au.Tasks.Properties.Resources.qm_running); //distorted, as well as with ToBitmap(), because the resource manager adds big icon
 		il.Images.Add(new Icon(SystemIcons.Exclamation, 16, 16)); //distorted, the same
 		return il;
 	}
 
-	static void TestCatMenuBig(Control c = null)
+	static void TestAuMenuBig(Control c = null)
 	{
 		//Wait(1);
 		var il = _TestCreateImageList();
 
-		//CatMenu.DefaultActivateMenuWindow = true;
-		//CatMenu.DefaultMouseClosingDistance = 30;
+		//AuMenu.DefaultActivateMenuWindow = true;
+		//AuMenu.DefaultMouseClosingDistance = 30;
 
 		Perf.First();
-		var m = new CatMenu();
+		var m = new AuMenu();
 
 		Perf.Next();
 		m.CMS.ImageList = il;
@@ -301,7 +299,7 @@ public partial class Test
 		}
 	}
 
-	static void TestCatMenuIcons()
+	static void TestAuMenuIcons()
 	{
 		//Print(Api.GetCurrentThreadId());
 
@@ -321,7 +319,7 @@ public partial class Test
 		//	}
 		//} else {
 		//	folder = @"q:\app";
-		//	//folder =@"q:\app\catkeys\tasks";
+		//	//folder =@"q:\app\Au\tasks";
 		//	var oneExt = new HashSet<string>();
 		//	foreach(var f in Directory.EnumerateFiles(folder)) {
 		//		//Print(f);
@@ -334,7 +332,7 @@ public partial class Test
 
 		Perf.First();
 
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m.MouseClosingDistance = 50;
 		//m.ActivateMenuWindow = true;
 		//m.IconDirectory = @"q:\app";
@@ -393,8 +391,8 @@ public partial class Test
 		m["CLSID", "::{21EC2020-3AEA-1069-A2DD-08002B30309D}"] = o => Print(o);
 		m["ProgId", "Word.Document.8"] = o => Print(o);
 		m["lnk", @"C:\Users\G\Desktop\QM in PF.lnk"] = o => Print(o);
-		m[".. exe", @"q:\app\catkeys\..\qm.exe"] = null;
-		m[".. cpp", @"q:\app\catkeys\..\app.cpp"] = null;
+		m[".. exe", @"q:\app\Au\..\qm.exe"] = null;
+		m[".. cpp", @"q:\app\Au\..\app.cpp"] = null;
 		m["txtfile:", @"txtfile:"] = null;
 		m[".cat", @".cat"] = null;
 		m[".cat", @".cat"] = null;
@@ -431,11 +429,11 @@ public partial class Test
 		//using(m) { }
 	}
 
-	static void TestCatMenuSimplest(Control c = null)
+	static void TestAuMenuSimplest(Control c = null)
 	{
 		Perf.First();
 
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m["One"] = o => Print(o);
 		m["Two"] = o => Print(o);
 		using(m.Submenu("Submenu")) {
@@ -450,7 +448,7 @@ public partial class Test
 		m["Eight"] = o => Print(o);
 		m.Show();
 
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m["One"] = o => Print(o);
 		//m["Two"] = o => Print(o);
 		//m.Submenu("Submenu 1", m1 =>
@@ -469,7 +467,7 @@ public partial class Test
 		//m["Eight"] = o => Print(o);
 		//m.Show();
 
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m.Add("One", o => Print(o), @"icon file path");
 		//m.Add("Two", o => { Print(o.MenuItem.Checked); });
 		//m.LastMenuItem.Checked = true;
@@ -489,7 +487,7 @@ public partial class Test
 		//m.Show();
 
 #if false
-		var b = new CatBar();
+		var b = new AuToolbar();
 		b["One"] = o => Print(o);
 
 		using(b.DropDownButton("Drop")) {
@@ -509,7 +507,7 @@ public partial class Test
 
 		b["ToolStripDropDownButton"] = o =>
 		{
-			var m = new CatMenu();
+			var m = new AuMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			m.Show(o.Item);
@@ -517,7 +515,7 @@ public partial class Test
 
 		b["ToolStripDropDownButton"] = null;  //test ShowDropDown
 		{
-			var m = new CatMenu();
+			var m = new AuMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			m.Show(o.Item);
@@ -526,7 +524,7 @@ public partial class Test
 
 		b["ToolStripSplitButton"] = o =>
 		{
-			var m = new CatMenu();
+			var m = new AuMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			m.Show(b.LastItem);
@@ -538,7 +536,7 @@ public partial class Test
 
 		b["ToolStripSplitButton"] = o => Print(o);
 		{
-			var m = new CatMenu();
+			var m = new AuMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			(b.LastItem as ToolStripSplitButton).DropDown = m.CMS;
@@ -557,17 +555,17 @@ public partial class Test
 			//{
 			//	//Print(e.Button); //no right-click event if a context menu assigned
 			//	//if(e.Button == MouseButtons.Right) Wnd.FindFast("QM_Editor").ActivateLL();
-			//	//TestCatMenu(sender as Form);
-			//	Timer_.After(100, o => TestCatMenu(sender as Form));
+			//	//TestAuMenu(sender as Form);
+			//	Timer_.After(100, o => TestAuMenu(sender as Form));
 			//};
 
-			TestCatMenu(this);
+			TestAuMenu(this);
 
-			TestCatMenuWithToolStrip();
+			TestAuMenuWithToolStrip();
 
 			//test as Control's context menu
 #if false
-			var m = new CatMenu();
+			var m = new AuMenu();
 
 			//return;
 			m["One f"] = o => Print(o);
@@ -580,7 +578,7 @@ public partial class Test
 #endif
 		}
 
-		void TestCatMenuWithToolStrip()
+		void TestAuMenuWithToolStrip()
 		{
 			var ts = new ToolStrip();
 			var ddb = new ToolStripDropDownButton("DD");
@@ -590,7 +588,7 @@ public partial class Test
 			{
 				if(ddb.HasDropDownItems) return;
 				Print("adding items");
-				var m = new CatMenu();
+				var m = new AuMenu();
 				ddb.DropDown = m.CMS;
 				m["One"] = o => Print(o);
 				using(m.Submenu("Sub")) {
@@ -602,7 +600,7 @@ public partial class Test
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(_outMsg) Catkeys.Util.LibDebug_.PrintMsg(ref m);
+			//if(_outMsg) Au.Util.LibDebug_.PrintMsg(ref m);
 
 			base.WndProc(ref m);
 		}
@@ -611,7 +609,7 @@ public partial class Test
 
 	}
 
-	static void TestCatMenuWithForm()
+	static void TestAuMenuWithForm()
 	{
 		Perf.First();
 		new Form1().ShowDialog();
@@ -712,7 +710,7 @@ public partial class Test
 
 			protected override void WndProc(ref Message m)
 			{
-				//Catkeys.Util.LibDebug_.PrintMsg(ref m);
+				//Au.Util.LibDebug_.PrintMsg(ref m);
 
 				base.WndProc(ref m);
 
@@ -734,9 +732,9 @@ public partial class Test
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	static void TestCatMenuDtors()
+	static void TestAuMenuDtors()
 	{
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m["One"] = o => Print(o);
 		using(m.Submenu("sub")) {
 			m["Two"] = o => Print(o);
@@ -793,7 +791,7 @@ public partial class Test
 	}
 
 //	[MethodImpl(MethodImplOptions.NoInlining)]
-//	static void TestCatMenuDtors2()
+//	static void TestAuMenuDtors2()
 //	{
 //		var t = new ContextMenuStrip();
 //		t.Items.Add("test");
@@ -809,9 +807,9 @@ public partial class Test
 
 	//Util.MessageLoop _loop = new Util.MessageLoop();
 
-	static void TestCatMenuCommonAddCallback()
+	static void TestAuMenuCommonAddCallback()
 	{
-		var m = new CatMenu();
+		var m = new AuMenu();
 
 		m.ItemAdded += x => { Print(x.Text); if(x.Text.Length > 3) x.BackColor = Color.Azure; };
 
@@ -830,16 +828,16 @@ public partial class Test
 		m.Show();
 	}
 
-	static void TestCatMenu(Control c = null)
+	static void TestAuMenu(Control c = null)
 	{
 		//if(c == null) Thread.Sleep(200);
 		//c = null;
 		for(int i = 0; i < 1; i++) {
-			//TestCatMenuBig(c);
-			//TestCatMenuSimplest(c);
-			//TestCatMenuDtors();
-			TestCatMenuIcons();
-			//TestCatMenuCommonAddCallback();
+			//TestAuMenuBig(c);
+			//TestAuMenuSimplest(c);
+			//TestAuMenuDtors();
+			TestAuMenuIcons();
+			//TestAuMenuCommonAddCallback();
 
 			//TestWpfContextMenu();
 
@@ -858,460 +856,460 @@ public partial class Test
 
 
 
-	#region test old toolbar
+	//#region test old toolbar
 
-	static void TestOldToolbar()
-	{
-		Perf.First();
-		var f = new CatBar1();
-		//f.Icon = null;
-		f.Height = 50; f.Width = 1200;
-
-
-		var t = new ToolBar();
-		//t.SuspendLayout();
-		//t.Size = new Size(250, 25);
-		t.Divider = false;
-		t.ButtonClick += T_ButtonClick;
-		Perf.Next();
-
-		var b = new ToolBarButton("Text");
-		t.Buttons.Add(b);
-		Perf.Next();
-
-		for(int i = 0; i < 30; i++) {
-			//t.Buttons.Add("Text");
-			b = new ToolBarButton("Text");
-			t.Buttons.Add(b);
-		}
-		Perf.Next();
-
-		f.Controls.Add(t);
-		//t.ResumeLayout();
-		Perf.Next();
-		//f.Show();
-		//f.Visible = true;
-		Wnd w = (Wnd)f;
-		w.Show(true);
-		//w.ActivateLL();
-		Perf.Next();
-
-		//Application.Run();
-		_mlTb.Loop();
-		f.Close();
-		f.Dispose();
-	}
-
-	private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
-	{
-		Debug_.PrintFunc();
-		_mlTb.Stop();
-	}
-
-	static Catkeys.Util.MessageLoop _mlTb = new Catkeys.Util.MessageLoop();
-
-	#endregion
-
-	#region test toolbar strip
-
-	public class CatBar1 :Form
-	{
-		protected override CreateParams CreateParams
-		{
-			get
-			{
-				var p = base.CreateParams;
-				p.Style = unchecked((int)Native.WS_POPUP);
-				p.ExStyle = (int)(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST);
-				//p.Height = 50; p.Width = 1200;
-				p.X = 400; p.Y = 200;
-				//p.ClassName = _tbWndClass.Name;
-				return p;
-			}
-		}
-	}
-
-	static LPARAM _WndprocCatBar(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		//Print(msg);
-		//switch(msg) {
-		//case Api.WM_DESTROY:
-		//	break;
-		//}
-
-		return Api.DefWindowProc(w, msg, wParam, lParam);
-	}
-	static Wnd.Misc.WindowClass _tbWndClass;
-
-	static void TestToolbarStrip()
-	{
-		if(_tbWndClass == null) {
-			_tbWndClass = Wnd.Misc.WindowClass.Register("CatBar1", _WndprocCatBar, 0, Api.CS_GLOBALCLASS);
-		}
-
-		Perf.First();
-		var f = new CatBar1();
-		//f.SuspendLayout();
-		//f.Icon = null;
-		f.Height = 50; f.Width = 1200; //faster here than in CreateParams
-
-		Perf.Next();
-		var t = new ToolStrip();
-		t.SuspendLayout();
-		Perf.Next();
-
-		var b = new ToolStripButton("Text");
-		b.Click += B_Click1;
-		t.Items.Add(b);
-		Perf.Next();
-
-		for(int i = 0; i < 30; i++) {
-			//t.Items.Add("Text");
-			b = new ToolStripButton("Text");
-			t.Items.Add(b);
-		}
-		Perf.Next();
-
-		f.Controls.Add(t);
-		t.ResumeLayout();
-		Perf.Next();
-		//Wnd w = (Wnd)f; w.Show(true); //slightly faster, but then need 2 clicks to make a button to respond
-		f.Show(); //does not activate if WS_EX_NOACTIVATE
-		Perf.Next();
-
-		//Application.Run();
-		_mlTb.Loop();
-		f.Close();
-		f.Dispose();
-	}
-
-	private static void B_Click1(object sender, EventArgs e)
-	{
-		Debug_.PrintFunc();
-		_mlTb.Stop();
-	}
-
-	#endregion
-
-	#region test toolbar strip in native window
-
-	static LPARAM _WndprocCatBar2(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		//Print(msg);
-		switch(msg) {
-		case Api.WM_DESTROY:
-			_mlTb.Stop();
-			break;
-		}
-
-		LPARAM R = Api.DefWindowProc(w, msg, wParam, lParam);
-
-		switch(msg) {
-		case Api.WM_PAINT:
-			//Print("painted");
-			//if(_tbStrip2 != null) {
-			//	ToolStrip2 t = _tbStrip2; _tbStrip2 = null;
-			//	if(!t.Focused) t.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting.
-			//}
-			break;
-		}
-
-		return R;
-	}
-
-	static Wnd.Misc.WindowClass _tbWndClass2;
-
-	class ToolStrip2 :ToolStrip
-	{
-		IntPtr _hwndParent;
-
-		public ToolStrip2(IntPtr hwndParent) { _hwndParent = hwndParent; }
-
-		protected override CreateParams CreateParams
-		{
-			get
-			{
-				var p = base.CreateParams;
-				p.Parent = _hwndParent;
-				return p;
-			}
-		}
-	}
-
-	static void TestToolbarStripInNativeWindow()
-	{
-		Perf.First();
-		if(_tbWndClass2 == null) {
-			_tbWndClass2 = Wnd.Misc.WindowClass.Register("CatBar2", _WndprocCatBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
-			Perf.Next();
-		}
-
-		//bool topMost = true;
-		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass2.Name, null,
-			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
-		Perf.Next();
-
-#if true
-		//var t = new ToolStrip();
-		var t = new ToolStrip2(w.Handle);
-		t.SuspendLayout();
-		t.SetBounds(0, 0, 1100, 40);
-		Perf.Next();
-
-		var b = new ToolStripButton("Text");
-		b.Click += B_Click1;
-		t.Items.Add(b);
-		Perf.Next();
-
-		for(int i = 0; i < 30; i++) {
-			//t.Items.Add("Text");
-			b = new ToolStripButton("Text");
-			t.Items.Add(b);
-		}
-		Perf.Next();
-
-		//Wnd wt = (Wnd)t.Handle;
-		//Print(wt);
-		//Print(wt.WndDirectParent);
-		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
-		//Print(wt.WndDirectParentOrOwner);
-
-		t.ResumeLayout();
-		t.CreateControl();
-		//Wnd wt = (Wnd)t.Handle;
-
-		Perf.Next();
-#endif
-		w.Show(true);
-		//w.ActivateLL();
-		//Perf.Next();
-		//Wnd wt = (Wnd)t.Handle;
-		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
-		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
-		//t.Select();
-		//Perf.Next();
-		//t.Focus();
-		Perf.Next();
-		_mlTb.Loop();
-		Api.DestroyWindow(w);
-		//if(!t.IsDisposed) t.Dispose();
-	}
-
-	#endregion
-
-	#region test old toolbar in native window
-
-	static LPARAM _WndprocCatBar3(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		//Print(msg);
-		switch(msg) {
-		case Api.WM_DESTROY:
-			_mlTb.Stop();
-			break;
-		}
-
-		return Api.DefWindowProc(w, msg, wParam, lParam);
-	}
-
-	static Wnd.Misc.WindowClass _tbWndClass3;
-
-	class ToolBar2 :ToolBar
-	{
-		IntPtr _hwndParent;
-
-		public ToolBar2(IntPtr hwndParent) { _hwndParent = hwndParent; }
-
-		protected override CreateParams CreateParams
-		{
-			get
-			{
-				var p = base.CreateParams;
-				p.Parent = _hwndParent;
-				return p;
-			}
-		}
-	}
-
-	static void TestOldToolbarInNativeWindow()
-	{
-		if(_tbWndClass3 == null) {
-			_tbWndClass3 = Wnd.Misc.WindowClass.Register("CatBar3", _WndprocCatBar2, 0, Api.CS_GLOBALCLASS);
-		}
-
-		Perf.First();
-		//bool topMost = true;
-		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass3.Name, null,
-			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
-		Perf.Next();
+	//static void TestOldToolbar()
+	//{
+	//	Perf.First();
+	//	var f = new AuBar1();
+	//	//f.Icon = null;
+	//	f.Height = 50; f.Width = 1200;
 
 
-		var t = new ToolBar2(w.Handle);
-		//t.SuspendLayout();
-		t.Size = new Size(1100, 40);
-		t.Divider = false;
-		t.ButtonClick += T_ButtonClick;
-		Perf.Next();
+	//	var t = new ToolBar();
+	//	//t.SuspendLayout();
+	//	//t.Size = new Size(250, 25);
+	//	t.Divider = false;
+	//	t.ButtonClick += T_ButtonClick;
+	//	Perf.Next();
 
-		var b = new ToolBarButton("Text");
-		t.Buttons.Add(b);
-		Perf.Next();
+	//	var b = new ToolBarButton("Text");
+	//	t.Buttons.Add(b);
+	//	Perf.Next();
 
-		for(int i = 0; i < 30; i++) {
-			//t.Buttons.Add("Text");
-			b = new ToolBarButton("Text");
-			t.Buttons.Add(b);
-		}
-		Perf.Next();
+	//	for(int i = 0; i < 30; i++) {
+	//		//t.Buttons.Add("Text");
+	//		b = new ToolBarButton("Text");
+	//		t.Buttons.Add(b);
+	//	}
+	//	Perf.Next();
 
-		//t.ResumeLayout();
-		t.CreateControl();
-		//Wnd wt = (Wnd)t.Handle;
+	//	f.Controls.Add(t);
+	//	//t.ResumeLayout();
+	//	Perf.Next();
+	//	//f.Show();
+	//	//f.Visible = true;
+	//	Wnd w = (Wnd)f;
+	//	w.Show(true);
+	//	//w.ActivateLL();
+	//	Perf.Next();
 
-		Perf.Next();
-		w.Show(true);
-		//w.ActivateLL();
-		Perf.Next();
-		_mlTb.Loop();
-		Api.DestroyWindow(w);
-	}
+	//	//Application.Run();
+	//	_mlTb.Loop();
+	//	f.Close();
+	//	f.Dispose();
+	//}
 
-	#endregion
+	//private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
+	//{
+	//	Debug_.PrintFunc();
+	//	_mlTb.Stop();
+	//}
+
+	//static Au.Util.MessageLoop _mlTb = new Au.Util.MessageLoop();
+
+	//#endregion
+
+	//#region test toolbar strip
+
+	//public class AuBar1 :Form
+	//{
+	//	protected override CreateParams CreateParams
+	//	{
+	//		get
+	//		{
+	//			var p = base.CreateParams;
+	//			p.Style = unchecked((int)Native.WS_POPUP);
+	//			p.ExStyle = (int)(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST);
+	//			//p.Height = 50; p.Width = 1200;
+	//			p.X = 400; p.Y = 200;
+	//			//p.ClassName = _tbWndClass.Name;
+	//			return p;
+	//		}
+	//	}
+	//}
+
+	//static LPARAM _WndprocAuBar(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//{
+	//	//Print(msg);
+	//	//switch(msg) {
+	//	//case Api.WM_DESTROY:
+	//	//	break;
+	//	//}
+
+	//	return Api.DefWindowProc(w, msg, wParam, lParam);
+	//}
+	//static Wnd.Misc.MyWindowClass _tbWndClass;
+
+	//static void TestToolbarStrip()
+	//{
+	//	if(_tbWndClass == null) {
+	//		_tbWndClass = Wnd.Misc.MyWindowClass.Register("AuBar1", _WndprocAuBar, 0, Api.CS_GLOBALCLASS);
+	//	}
+
+	//	Perf.First();
+	//	var f = new AuBar1();
+	//	//f.SuspendLayout();
+	//	//f.Icon = null;
+	//	f.Height = 50; f.Width = 1200; //faster here than in CreateParams
+
+	//	Perf.Next();
+	//	var t = new ToolStrip();
+	//	t.SuspendLayout();
+	//	Perf.Next();
+
+	//	var b = new ToolStripButton("Text");
+	//	b.Click += B_Click1;
+	//	t.Items.Add(b);
+	//	Perf.Next();
+
+	//	for(int i = 0; i < 30; i++) {
+	//		//t.Items.Add("Text");
+	//		b = new ToolStripButton("Text");
+	//		t.Items.Add(b);
+	//	}
+	//	Perf.Next();
+
+	//	f.Controls.Add(t);
+	//	t.ResumeLayout();
+	//	Perf.Next();
+	//	//Wnd w = (Wnd)f; w.Show(true); //slightly faster, but then need 2 clicks to make a button to respond
+	//	f.Show(); //does not activate if WS_EX_NOACTIVATE
+	//	Perf.Next();
+
+	//	//Application.Run();
+	//	_mlTb.Loop();
+	//	f.Close();
+	//	f.Dispose();
+	//}
+
+	//private static void B_Click1(object sender, EventArgs e)
+	//{
+	//	Debug_.PrintFunc();
+	//	_mlTb.Stop();
+	//}
+
+	//#endregion
+
+//	#region test toolbar strip in native window
+
+//	static LPARAM _WndprocAuBar2(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+//	{
+//		//Print(msg);
+//		switch(msg) {
+//		case Api.WM_DESTROY:
+//			_mlTb.Stop();
+//			break;
+//		}
+
+//		LPARAM R = Api.DefWindowProc(w, msg, wParam, lParam);
+
+//		switch(msg) {
+//		case Api.WM_PAINT:
+//			//Print("painted");
+//			//if(_tbStrip2 != null) {
+//			//	ToolStrip2 t = _tbStrip2; _tbStrip2 = null;
+//			//	if(!t.Focused) t.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting.
+//			//}
+//			break;
+//		}
+
+//		return R;
+//	}
+
+//	static Wnd.Misc.MyWindowClass _tbWndClass2;
+
+//	class ToolStrip2 :ToolStrip
+//	{
+//		IntPtr _hwndParent;
+
+//		public ToolStrip2(IntPtr hwndParent) { _hwndParent = hwndParent; }
+
+//		protected override CreateParams CreateParams
+//		{
+//			get
+//			{
+//				var p = base.CreateParams;
+//				p.Parent = _hwndParent;
+//				return p;
+//			}
+//		}
+//	}
+
+//	static void TestToolbarStripInNativeWindow()
+//	{
+//		Perf.First();
+//		if(_tbWndClass2 == null) {
+//			_tbWndClass2 = Wnd.Misc.MyWindowClass.Register("AuBar2", _WndprocAuBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
+//			Perf.Next();
+//		}
+
+//		//bool topMost = true;
+//		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass2.Name, null,
+//			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
+//		Perf.Next();
+
+//#if true
+//		//var t = new ToolStrip();
+//		var t = new ToolStrip2(w.Handle);
+//		t.SuspendLayout();
+//		t.SetBounds(0, 0, 1100, 40);
+//		Perf.Next();
+
+//		var b = new ToolStripButton("Text");
+//		b.Click += B_Click1;
+//		t.Items.Add(b);
+//		Perf.Next();
+
+//		for(int i = 0; i < 30; i++) {
+//			//t.Items.Add("Text");
+//			b = new ToolStripButton("Text");
+//			t.Items.Add(b);
+//		}
+//		Perf.Next();
+
+//		//Wnd wt = (Wnd)t.Handle;
+//		//Print(wt);
+//		//Print(wt.WndDirectParent);
+//		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
+//		//Print(wt.WndDirectParentOrOwner);
+
+//		t.ResumeLayout();
+//		t.CreateControl();
+//		//Wnd wt = (Wnd)t.Handle;
+
+//		Perf.Next();
+//#endif
+//		w.Show(true);
+//		//w.ActivateLL();
+//		//Perf.Next();
+//		//Wnd wt = (Wnd)t.Handle;
+//		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
+//		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
+//		//t.Select();
+//		//Perf.Next();
+//		//t.Focus();
+//		Perf.Next();
+//		_mlTb.Loop();
+//		Api.DestroyWindow(w);
+//		//if(!t.IsDisposed) t.Dispose();
+//	}
+
+//	#endregion
+
+	//#region test old toolbar in native window
+
+	//static LPARAM _WndprocAuBar3(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//{
+	//	//Print(msg);
+	//	switch(msg) {
+	//	case Api.WM_DESTROY:
+	//		_mlTb.Stop();
+	//		break;
+	//	}
+
+	//	return Api.DefWindowProc(w, msg, wParam, lParam);
+	//}
+
+	//static Wnd.Misc.MyWindowClass _tbWndClass3;
+
+	//class ToolBar2 :ToolBar
+	//{
+	//	IntPtr _hwndParent;
+
+	//	public ToolBar2(IntPtr hwndParent) { _hwndParent = hwndParent; }
+
+	//	protected override CreateParams CreateParams
+	//	{
+	//		get
+	//		{
+	//			var p = base.CreateParams;
+	//			p.Parent = _hwndParent;
+	//			return p;
+	//		}
+	//	}
+	//}
+
+	//static void TestOldToolbarInNativeWindow()
+	//{
+	//	if(_tbWndClass3 == null) {
+	//		_tbWndClass3 = Wnd.Misc.MyWindowClass.Register("AuBar3", _WndprocAuBar2, 0, Api.CS_GLOBALCLASS);
+	//	}
+
+	//	Perf.First();
+	//	//bool topMost = true;
+	//	Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass3.Name, null,
+	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
+	//	Perf.Next();
+
+
+	//	var t = new ToolBar2(w.Handle);
+	//	//t.SuspendLayout();
+	//	t.Size = new Size(1100, 40);
+	//	t.Divider = false;
+	//	t.ButtonClick += T_ButtonClick;
+	//	Perf.Next();
+
+	//	var b = new ToolBarButton("Text");
+	//	t.Buttons.Add(b);
+	//	Perf.Next();
+
+	//	for(int i = 0; i < 30; i++) {
+	//		//t.Buttons.Add("Text");
+	//		b = new ToolBarButton("Text");
+	//		t.Buttons.Add(b);
+	//	}
+	//	Perf.Next();
+
+	//	//t.ResumeLayout();
+	//	t.CreateControl();
+	//	//Wnd wt = (Wnd)t.Handle;
+
+	//	Perf.Next();
+	//	w.Show(true);
+	//	//w.ActivateLL();
+	//	Perf.Next();
+	//	_mlTb.Loop();
+	//	Api.DestroyWindow(w);
+	//}
+
+	//#endregion
 
 	#region test native window speed
 
-	static LPARAM _WndprocNW(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		//Print(msg);
-		switch(msg) {
-		case Api.WM_DESTROY:
-			_mlTb.Stop();
-			break;
-		}
+	//static LPARAM _WndprocNW(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//{
+	//	//Print(msg);
+	//	switch(msg) {
+	//	case Api.WM_DESTROY:
+	//		_mlTb.Stop();
+	//		break;
+	//	}
 
-		LPARAM R = Api.DefWindowProc(w, msg, wParam, lParam);
+	//	LPARAM R = Api.DefWindowProc(w, msg, wParam, lParam);
 
-		return R;
-	}
+	//	return R;
+	//}
 
-	static Wnd.Misc.WindowClass _WndClassNW;
+	//static Wnd.Misc.MyWindowClass _WndClassNW;
 
-	static void TestNativeWindow()
-	{
-		Perf.First();
-		if(_WndClassNW == null) {
-			_WndClassNW = Wnd.Misc.WindowClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
-			Perf.Next();
-		}
+	//static void TestNativeWindow()
+	//{
+	//	Perf.First();
+	//	if(_WndClassNW == null) {
+	//		_WndClassNW = Wnd.Misc.MyWindowClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
+	//		Perf.Next();
+	//	}
 
-		//bool topMost = true;
-		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _WndClassNW.Name, null,
-			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
-		Perf.Next();
-		w.Show(true);
-		//w.ActivateLL();
-		//Perf.Next();
-		//Wnd wt = (Wnd)t.Handle;
-		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
-		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
-		//t.Select();
-		//Perf.Next();
-		//t.Focus();
-		Perf.Next();
-		_mlTb.Loop();
-		Api.DestroyWindow(w);
-		//if(!t.IsDisposed) t.Dispose();
-	}
+	//	//bool topMost = true;
+	//	Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _WndClassNW.Name, null,
+	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
+	//	Perf.Next();
+	//	w.Show(true);
+	//	//w.ActivateLL();
+	//	//Perf.Next();
+	//	//Wnd wt = (Wnd)t.Handle;
+	//	//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
+	//	//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
+	//	//t.Select();
+	//	//Perf.Next();
+	//	//t.Focus();
+	//	Perf.Next();
+	//	_mlTb.Loop();
+	//	Api.DestroyWindow(w);
+	//	//if(!t.IsDisposed) t.Dispose();
+	//}
 
 	#endregion
 
 
-	static void TestCatBar()
-	{
-		//var il = _TestCreateImageList();
+//	static void TestAuBar()
+//	{
+//		//var il = _TestCreateImageList();
 
-		Perf.First();
-		var m = new CatBar();
-		//m.ImageList = il;
-		Perf.Next();
+//		Perf.First();
+//		var m = new AuToolbar();
+//		//m.ImageList = il;
+//		Perf.Next();
 
-		m.Ex.SetBounds(100, 100, 400, 100);
+//		m.Ex.SetBounds(100, 100, 400, 100);
 
-		m["Close"] = o => { Print(o); _mlTb.Stop(); };
-		Perf.Next();
-#if true
-		for(int i = 0; i < 30; i++) {
-			m.Add("Text", null);
-		}
-#else
-		m.Separator();
-		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
-		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
-		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
-		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
-		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
-		m.LastItem.ForeColor = Color.OrangeRed;
-		//m["Icon resource", 1] = o => Print(o);
-		m["Imagelist icon name", "k0"] = o => Print(o);
-		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Print(o);
-		m.Separator();
-		m.Add(new ToolStripTextBox());
-#endif
-		Perf.Next();
+//		m["Close"] = o => { Print(o); _mlTb.Stop(); };
+//		Perf.Next();
+//#if true
+//		for(int i = 0; i < 30; i++) {
+//			m.Add("Text", null);
+//		}
+//#else
+//		m.Separator();
+//		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
+//		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
+//		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
+//		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
+//		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
+//		m.LastItem.ForeColor = Color.OrangeRed;
+//		//m["Icon resource", 1] = o => Print(o);
+//		m["Imagelist icon name", "k0"] = o => Print(o);
+//		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Print(o);
+//		m.Separator();
+//		m.Add(new ToolStripTextBox());
+//#endif
+//		Perf.Next();
 
-		//Print(w);
-		m.Visible = true;
-		Perf.Next();
-		_mlTb.Loop();
-		m.Close();
-	}
+//		//Print(w);
+//		m.Visible = true;
+//		Perf.Next();
+//		_mlTb.Loop();
+//		m.Close();
+//	}
 
-	static void TestToolbar()
-	{
-		//Debug_.PrintFunc();
-		for(int i = 0; i < 1; i++) { TestCatBar(); /*Thread.Sleep(500);*/ }
+//	static void TestToolbar()
+//	{
+//		//Debug_.PrintFunc();
+//		for(int i = 0; i < 1; i++) { TestAuBar(); /*Thread.Sleep(500);*/ }
 
-		//for(int i=0; i<1; i++) TestOldToolbar();
-		//for(int i=0; i<1; i++) TestOldToolbarInNativeWindow();
-		//for(int i=0; i<1; i++) TestToolbarStrip();
-		//for(int i=0; i<1; i++) TestToolbarStripInNativeWindow();
-		//for(int i=0; i<4; i++) TestNativeWindow();
+//		//for(int i=0; i<1; i++) TestOldToolbar();
+//		//for(int i=0; i<1; i++) TestOldToolbarInNativeWindow();
+//		//for(int i=0; i<1; i++) TestToolbarStrip();
+//		//for(int i=0; i<1; i++) TestToolbarStripInNativeWindow();
+//		//for(int i=0; i<4; i++) TestNativeWindow();
 
-		//TestWpfToolbar();
-		//TestWpfToolbar();
-		//var t = new Thread(() => { TestWpfToolbar(); });
-		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
-		//t.Start();
-		//t.Join();
-	}
+//		//TestWpfToolbar();
+//		//TestWpfToolbar();
+//		//var t = new Thread(() => { TestWpfToolbar(); });
+//		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
+//		//t.Start();
+//		//t.Join();
+//	}
 
 
-	static void TestMenuTB()
-	{
+//	static void TestMenuTB()
+//	{
 
-		//MessageBox.Show("");
-		//TaskDialog.Show("");
+//		//MessageBox.Show("");
+//		//TaskDialog.Show("");
 
-		//Thread.Sleep(500);
-		TestToolbar();
-		//TestCatMenu();
-		//TestCatMenuWithForm();
-		//Thread.Sleep(500);
-		//TestWpfContextMenu();
-		//Thread.Sleep(500);
-		//TestWpfContextMenu();
+//		//Thread.Sleep(500);
+//		TestToolbar();
+//		//TestAuMenu();
+//		//TestAuMenuWithForm();
+//		//Thread.Sleep(500);
+//		//TestWpfContextMenu();
+//		//Thread.Sleep(500);
+//		//TestWpfContextMenu();
 
-		//var t = new Thread(() => { TestWpfContextMenu(); });
-		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
-		//t.Start();
-		//t.Join();
+//		//var t = new Thread(() => { TestWpfContextMenu(); });
+//		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
+//		//t.Start();
+//		//t.Join();
 
-		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
-		//TaskDialog.Show(""); //active, OK
+//		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
+//		//TaskDialog.Show(""); //active, OK
 
-		//Form f=new Form();
-		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK
-		//f.ShowDialog();
-	}
+//		//Form f=new Form();
+//		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK
+//		//f.ShowDialog();
+//	}
 }
 
 

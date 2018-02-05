@@ -421,7 +421,7 @@ void ViewStyle::ResetDefaultStyle() {
 		SC_WEIGHT_NORMAL, false, false, false, Style::caseMixed, true, true, false);
 }
 
-//Catkeys: added from and to. Replaced whole function.
+//Au: added from and to. Replaced whole function.
 //info: to is not included.
 void ViewStyle::ClearStyles(int from, int to) {
 	int n = styles.size();

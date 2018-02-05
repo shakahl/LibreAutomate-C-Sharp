@@ -33,7 +33,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationManifest>Catkeys.manifest</ApplicationManifest>
+    <ApplicationManifest>Au.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -78,7 +78,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <None Include="Catkeys.manifest" />
+    <None Include="Au.manifest" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -94,9 +94,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Catkeys\Catkeys.csproj">
+    <ProjectReference Include="..\..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
-      <Name>Catkeys</Name>
+      <Name>Au</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

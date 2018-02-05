@@ -20,19 +20,19 @@ class AccFinder
 	AccFindCallback* _callback; //receives found AO
 	STR _role; //null if used path or if the role parameter is null
 	_PathPart* _path; //null if no path
-	Bstr _controlClass; //used when role has prefix "class=x:". Then _flags2 has eAF2::InControls.
+	Bstr _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
-	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 a:id=YYY".
-	STR* _skipRoles; //roles to skip (and descendants) when searching. Specified in the prop parameter.
+	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
+	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
 	Bstr _roleStrings, _propStrings; //a copy of the input role/prop string when eg need to parse (modify) the string
 	int _pathCount; //_path array element count
 	int _propCount; //_prop array element count
-	int _skipRolesCount; //_skipRoles array element count
-	int _controlId; //used when role has prefix "id=x:". Then _flags2 has eAF2::InControls, and _controlClass is null.
+	int _notinCount; //_notin array element count
+	int _controlId; //used when the prop parameter has "id=x". Then _flags2 has eAF2::InControls, and _controlClass is null.
 	int _minLevel, _maxLevel; //min and max level to search in the object subtree. Specified in the prop parameter. Default 0 1000.
-	int _maxChildren; //skip objects that have more children. Specified in the prop parameter. Default 10000.
+	int _maxCC; //skip descendants of AOs that have more children. Specified in the prop parameter. Default 10000.
 	int _stateYes, _stateNo; //the AO must have all _stateYes flags and none of _stateNo flags. Specified in the prop parameter.
-	int _elem; //child element id. Specified in the prop parameter. _flags2 has IsElem.
+	int _elem; //simple element id. Specified in the prop parameter. _flags2 has IsElem.
 	RECT _rect; //AO location. Specified in the prop parameter. _flags2 has IsRect.
 	eAF _flags; //user
 	eAF2 _flags2; //internal
@@ -57,32 +57,19 @@ class AccFinder
 		if(roleLen == 0) return _Error(L"role cannot be \"\".");
 
 		//is prefix?
-		int iColon = -1, iEq = -1;
+		int iColon = -1;
 		for(int i = 0; i < roleLen; i++) {
 			auto c = role[i];
 			if(c == ':') { iColon = i; break; }
-			if(c == '=' && iEq < 0) iEq = i + 1;
 		}
 		if(iColon > 0) {
-			int iCE = iEq < 0 ? iColon : iEq;
-			int prefix = str::Switch(role, iCE, { L"class=", L"id=", L"web", L"firefox", L"chrome" });
+			int prefix = str::Switch(role, iColon, { L"web", L"firefox", L"chrome" });
 			if(prefix > 0) {
-				if(iColon == iEq) goto ge;
 				switch(prefix) {
-				case 1:
-					_controlClass.Assign(role + 6, iColon - iEq);
-					break;
-				case 2:
-					LPWSTR se;
-					_controlId = wcstol(role + 3, &se, 0);
-					if(se != role + iColon) goto ge;
-					break;
-				case 3: _flags2 |= eAF2::InWebPage; break; //auto-detect by window class name, or Cpp_AccFind already found IES and added InIES
-				case 4: _flags2 |= eAF2::InFirefoxPage | eAF2::InWebPage; break;
-				case 5: _flags2 |= eAF2::InChromePage | eAF2::InWebPage; break;
+				case 1: _flags2 |= eAF2::InWebPage; break; //auto-detect by window class name. Or Cpp_AccFind already found IES and added InIES.
+				case 2: _flags2 |= eAF2::InFirefoxPage | eAF2::InWebPage; break;
+				case 3: _flags2 |= eAF2::InChromePage | eAF2::InWebPage; break;
 				}
-				if(prefix <= 2) _flags2 |= eAF2::InControls;
-				_flags2 |= eAF2::RoleHasPrefix;
 				if(++iColon == roleLen) return true;
 				role += iColon; roleLen -= iColon;
 			}
@@ -127,20 +114,20 @@ class AccFinder
 		return _Error(L"Invalid role.");
 	}
 
-	void _ParseSkipRoles(LPWSTR s, LPWSTR eos)
+	void _ParseNotin(LPWSTR s, LPWSTR eos)
 	{
-		_skipRolesCount = (int)std::count(s, eos, ',') + 1;
-		_skipRoles = new STR[_skipRolesCount];
+		_notinCount = (int)std::count(s, eos, ',') + 1;
+		_notin = new STR[_notinCount];
 		int i = 0;
 		for(LPWSTR start = s; s <= eos; ) {
 			if(*s == ',' || s == eos) {
-				_skipRoles[i++] = start;
+				_notin[i++] = start;
 				*s++ = 0; if(*s == ' ') s++;
 				start = s;
 			} else s++;
 		}
 
-		//Print(_skipRolesCount); for(i = 0; i < _skipRolesCount; i++) Print(_skipRoles[i]);
+		//Print(_notinCount); for(i = 0; i < _notinCount; i++) Print(_notin[i]);
 	}
 
 	bool _ParseState(LPWSTR s, LPWSTR eos)
@@ -150,7 +137,9 @@ class AccFinder
 				bool not; if(*start == '!') { start++; not = true; } else not = false;
 				int state;
 				if(s > start && *start >= '0' && *start <= '9') {
-					state = wcstol(start, null, 0);
+					LPWSTR se;
+					state = (int)wcstoul(start, &se, 0);
+					if(se != s) return false;
 				} else {
 					state = ao::StateFromString(start, s - start);
 					if(state == 0) return _Error(L"Unknown state name.");
@@ -203,13 +192,15 @@ class AccFinder
 					bool addToProp = true;
 					if(na[0] != '@') { //HTML attribute names have prefix "@"
 						int i = str::Switch(na, va - 1 - na, {
-							L"value", L"description", L"help", L"action", L"key", L"uiaAutomationId", //string props
-							L"state", L"level", L"maxChildren", L"skipRoles", L"rect", L"elem",
-						});
+							L"value", L"description", L"help", L"action", L"key", L"uiaid", //string props
+							L"state", L"level", L"maxcc", L"notin", L"rect", L"elem",
+							L"class", L"id", //control
+							});
 
-						if(i == 0) return _Error(L"Unknown property. For HTML attributes use prefix @.");
+						if(i == 0) return _Error(L"Unknown name in prop. For HTML attributes use prefix @.");
 						const int nStrProp = 6;
 						if(i > nStrProp) {
+							int len = (int)(s - va); if(len==0) goto ge;
 							addToProp = false;
 							switch(i - nStrProp) {
 							case 1:
@@ -218,7 +209,7 @@ class AccFinder
 							case 2:
 								if(_path != null) return _Error(L"Path and level.");
 								_minLevel = wcstol(va, &s2, 0);
-								if(s2 == va || _minLevel<0) goto ge;
+								if(s2 == va || _minLevel < 0) goto ge;
 								if(s2 == s) _maxLevel = _minLevel;
 								else if(s2 < s && *s2 == ' ') {
 									_maxLevel = wcstol(++s2, &s3, 0);
@@ -226,11 +217,11 @@ class AccFinder
 								} else goto ge;
 								break;
 							case 3:
-								_maxChildren = wcstol(va, &s2, 0);
-								if(_maxChildren <= 0 || s2 != s) goto ge;
+								_maxCC = wcstol(va, &s2, 0);
+								if(_maxCC <= 0 || s2 != s) goto ge;
 								break;
 							case 4:
-								_ParseSkipRoles(va, s);
+								_ParseNotin(va, s);
 								break;
 							case 5:
 								if(!_ParseRect(va, s)) return false;
@@ -239,6 +230,16 @@ class AccFinder
 								_elem = wcstol(va, &s2, 0);
 								if(s2 != s) goto ge;
 								_flags2 |= eAF2::IsElem;
+								break;
+							case 7:
+								_controlClass.Assign(va, len);
+								_flags2 |= eAF2::InControls;
+								break;
+							case 8:
+								_controlId = wcstol(va, &s2, 0);
+								//TODO: instead of wcstol/wcstoul use 64-bit function. Everywhere. Because eg wcstol returns 0x7fffffff for "0xFFFFFFFF".
+								if(s2 != s) goto ge;
+								_flags2 |= eAF2::InControls;
 								break;
 							}
 						}
@@ -269,14 +270,14 @@ public:
 		ZEROTHIS;
 		_errStr = errStr;
 		_maxLevel = 1000;
-		_maxChildren = 10000;
+		_maxCC = 10000;
 	}
 
 	~AccFinder()
 	{
 		delete[] _path;
 		delete[] _prop;
-		delete[] _skipRoles;
+		delete[] _notin;
 	}
 
 	bool SetParams(const Cpp_AccParams& ap, eAF2 flags2)
@@ -297,12 +298,12 @@ public:
 		_callback = callback;
 
 		if(a) {
-			if(!!(_flags2&eAF2::RoleHasPrefix)) return _ErrorHR(L"role cannot have a prefix when searching in Acc.");
+			if(!!(_flags2&(eAF2::InWebPage | eAF2::InControls))) return _ErrorHR(L"Don't use role prefix or class/id when searching in Acc.");
 			assert(!(_flags&eAF::UIA));
 
 			_FindInAcc(ref *a, 0);
 		} else if(!!(_flags2 & eAF2::InWebPage)) {
-			if(!!(_flags&eAF::UIA)) return _ErrorHR(L"Cannot use flag UIA when searching in web page.");
+			if(!!(_flags&eAF::UIA)) return _ErrorHR(L"Don't use role prefix with flag UIA.");
 
 			if(!!(_flags2 & eAF2::InIES)) { //info: Cpp_AccFind finds IES control and adds this flag
 				_FindInWnd(w);
@@ -367,11 +368,11 @@ private:
 			if(_path[level].exactIndex) exactIndex = true;
 		}
 
-		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags&eAF::Reverse), _maxChildren);
+		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags&eAF::Reverse), _maxCC);
 		if(c.Count() == 0) {
 			if(_w) {
 				//Java?
-				if(level == 1 && aParent.misc.role == ROLE_SYSTEM_CLIENT && !(_flags2&eAF2::InControls) && !(GetWindowLongW(_w, GWL_STYLE)&WS_CHILD)) {
+				if(level == 1 && aParent.misc.role == ROLE_SYSTEM_CLIENT && !(GetWindowLongW(_w, GWL_STYLE)&WS_CHILD)) {
 					if(wnd::ClassNameIs(_w, L"SunAwt*")) {
 						AccDtorIfElem0 aw(AccJavaFromWindow(_w), 0, eAccMiscFlags::Java);
 						if(aw.acc) {
@@ -406,14 +407,12 @@ private:
 
 		bool skipChildren = a.elem != 0 || level >= _maxLevel;
 		bool hiddenToo = !!(_flags&eAF::HiddenToo);
-		STR roleNeeded = _path != null ? _path[level].role : _role;
 		_AccState state(ref a);
 
 		_variant_t varRole;
 		int role = a.get_accRole(out varRole);
 		a.SetRole(role);
 		a.SetLevel(level);
-		STR roleString = null;
 
 		//a.PrintAcc();
 
@@ -423,19 +422,28 @@ private:
 			return fdr;
 		}
 
-		//skip AO of user-specified roles
-		if(_skipRoles) {
+		//skip children of AO of user-specified roles
+		STR roleString = null;
+		if(_notin && !skipChildren) {
 			roleString = ao::RoleToString(ref varRole);
-			for(int i = 0; i < _skipRolesCount; i++) if(!wcscmp(_skipRoles[i], roleString)) return _eMatchResult::SkipChildren;
+			for(int i = 0; i < _notinCount; i++) if(!wcscmp(_notin[i], roleString)) {
+				skipChildren = true;
+				break;
+			}
 		}
 
 		if(level < _minLevel) goto gr;
 
+		//If eAF::Mark, the caller is getting all AO using callback, and wants us to add eAccMiscFlags::Marked to AOs that match role, rect, name and state.
+		int mark = !!(_flags&eAF::Mark) ? 1 : 0; //if some of these props does not match, we'll set this = -1, to avoid comparing other props
+
+		STR roleNeeded = _path != null ? _path[level].role : _role;
 		if(roleNeeded != null) {
 			if(!roleString) roleString = ao::RoleToString(ref varRole);
 			if(wcscmp(roleNeeded, roleString)) {
-				if(_path != null) return _eMatchResult::SkipChildren;
-				goto gr;
+				if(mark) mark = -1;
+				else if(_path != null) return _eMatchResult::SkipChildren;
+				else goto gr;
 			}
 		}
 		if(_path != null) {
@@ -445,7 +453,11 @@ private:
 
 		if(!!(_flags2&eAF2::IsElem) && a.elem != _elem) goto gr;
 
-		if(_name.Is() && !a.MatchStringProp(L"name", ref _name)) goto gr;
+		if(mark > 0 && !_MatchRect(ref a)) mark = -1;
+
+		if(_name.Is() && mark >= 0 && !a.MatchStringProp(L"name", ref _name)) {
+			if(mark) mark = -1; else goto gr;
+		}
 
 		if(!hiddenToo) {
 			switch(state.IsInvisible()) {
@@ -456,20 +468,14 @@ private:
 			}
 		}
 
-		if(!!(_stateYes | _stateNo)) {
+		if(!!(_stateYes | _stateNo) && mark >= 0) {
 			auto k = state.State();
-			if((k&_stateYes) != _stateYes) goto gr;
-			if(!!(k&_stateNo)) goto gr;
+			if((k&_stateYes) != _stateYes || !!(k&_stateNo)) {
+				if(mark) mark = -1; else goto gr;
+			}
 		}
 
-		if(!!(_flags2&eAF2::IsRect)) {
-			long L, T, W, H;
-			if(0 != a.acc->accLocation(&L, &T, &W, &H, ao::VE(a.elem))) goto gr;
-			if(!!(_flags2&eAF2::IsRectL) && L != _rect.left) goto gr;
-			if(!!(_flags2&eAF2::IsRectT) && T != _rect.top) goto gr;
-			if(!!(_flags2&eAF2::IsRectW) && W != _rect.right) goto gr;
-			if(!!(_flags2&eAF2::IsRectH) && H != _rect.bottom) goto gr;
-		}
+		if(!mark && !_MatchRect(ref a))  goto gr;
 
 		if(_propCount) {
 			bool hasHTML = false;
@@ -482,6 +488,8 @@ private:
 				if(a.elem || !AccMatchHtmlAttributes(a.acc, _prop, _propCount)) goto gr;
 			}
 		}
+
+		if(mark > 0) a.misc.flags |= eAccMiscFlags::Marked;
 
 		switch((*_callback)(a)) {
 		case eAccFindCallbackResult::Continue: goto gr;
@@ -498,6 +506,7 @@ private:
 			//skip children of invisible AO that often have many descendants (eg DOCUMENT, WINDOW)
 			if(!skipChildren && !hiddenToo && _IsRoleToSkipIfInvisible(role)) skipChildren = state.IsInvisible();
 		}
+
 		return skipChildren ? _eMatchResult::SkipChildren : _eMatchResult::Continue;
 	}
 
@@ -539,7 +548,7 @@ private:
 		}
 		return false;
 		//note: don't add CLIENT. It is often used as default role. Although in some windows it can make faster.
-		//note: don't add PANE. Too often used for various purposes. Bug in Edge: active non-first tab is PANE, state INVISIBLE|OFFSCREEN.
+		//note: don't add PANE. Too often used for various purposes. Bug in Edge: the active non-first tab is PANE, state INVISIBLE|OFFSCREEN.
 
 		//problem: some frameworks mark visible offscreen objects as invisible. Eg IE, WPF, Windows controls. Not Firefox, Chrome.
 		//	Can be even parent marked as invisible when child not. Then we'll not find child if parent's role is one of above.
@@ -554,21 +563,21 @@ private:
 			if(!(_flags&eAF::MenuToo))
 				if(!str::Switch(roleNeeded, { L"MENUITEM", L"MENUPOPUP" })) return true;
 			break;
-		case ROLE_SYSTEM_OUTLINE:
-		case ROLE_SYSTEM_LIST:
-			if(!!(_flags&eAF::SkipLists)) return true;
-			break;
-		case ROLE_SYSTEM_DOCUMENT:
-			if(!!(_flags&eAF::SkipWeb)) return true;
-			break;
-		case ROLE_SYSTEM_PANE:
-			if(!!(_flags&eAF::SkipWeb)) {
-				HWND w;
-				if(0 == WindowFromAccessibleObject(a, out &w) && wnd::ClassNameIs(w, c_IES)) return true;
-			}
-			break;
 		}
 		return false;
+	}
+
+	bool _MatchRect(ref AccDtorIfElem0& a)
+	{
+		if(!!(_flags2&eAF2::IsRect)) {
+			long L, T, W, H;
+			if(0 != a.acc->accLocation(&L, &T, &W, &H, ao::VE(a.elem))) L = T = W = H = 0;
+			if(!!(_flags2&eAF2::IsRectL) && L != _rect.left) return false;
+			if(!!(_flags2&eAF2::IsRectT) && T != _rect.top) return false;
+			if(!!(_flags2&eAF2::IsRectW) && W != _rect.right) return false;
+			if(!!(_flags2&eAF2::IsRectH) && H != _rect.bottom) return false;
+		}
+		return true;
 	}
 
 	//Finds DOCUMENT of Firefox, Chrome or some other program.
@@ -617,7 +626,7 @@ private:
 	{
 		AccFinder f;
 		f._findDOCUMENT = &ar.acc;
-		f._flags2 = flags2&(eAF2::InChromePage | eAF2::InFirefoxPage);
+		f._flags2 = flags2 & (eAF2::InChromePage | eAF2::InFirefoxPage);
 		f._maxLevel = 10; //DOCUMENT is at level 3 in current version
 		Cpp_Acc a(ap, 0);
 		if(0 != f.Find(0, &a, null)) return (HRESULT)eError::NotFound;
@@ -717,10 +726,10 @@ HRESULT GetChromeDOCUMENT(HWND w, IAccessible* aCLIENT, out IAccessible** ar)
 
 namespace inproc
 {
-HRESULT AccEnableChrome(MarshalParams_AccElem* p)
+HRESULT AccEnableChrome2(MarshalParams_AccElem* p)
 {
 	HWND w = (HWND)(LPARAM)p->elem;
-	IAccessiblePtr aCLIENT;
+	Smart<IAccessible> aCLIENT;
 	HRESULT hr = AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, (void**)&aCLIENT);
 	if(hr) return hr;
 	AccDtorIfElem0 a;

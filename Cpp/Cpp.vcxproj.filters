@@ -25,6 +25,9 @@
     <Filter Include="Header Files\inactive">
       <UniqueIdentifier>{062f0cb8-52f1-4605-83c6-de88a08c42ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Acc">
+      <UniqueIdentifier>{2173271c-7256-4ff0-8dd2-a9016fd326db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp">
@@ -35,9 +38,6 @@
     </ClCompile>
     <ClCompile Include="rejected.cpp">
       <Filter>Source Files\excluded</Filter>
-    </ClCompile>
-    <ClCompile Include="acc find.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="in-proc.cpp">
       <Filter>Source Files</Filter>
@@ -52,22 +52,25 @@
       <Filter>Source Files\util</Filter>
     </ClCompile>
     <ClCompile Include="acc bridge.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Acc</Filter>
     </ClCompile>
-    <ClCompile Include="acc web.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="acc get.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="acc java.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="acc find.cpp">
+      <Filter>Source Files\Acc</Filter>
     </ClCompile>
     <ClCompile Include="acc func.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc get.cpp">
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc java.cpp">
+      <Filter>Source Files\Acc</Filter>
     </ClCompile>
     <ClCompile Include="acc uia.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="acc web.cpp">
+      <Filter>Source Files\Acc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -80,9 +83,6 @@
     <ClInclude Include="internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="acc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="str.h">
       <Filter>Source Files\util</Filter>
     </ClInclude>
@@ -90,7 +90,10 @@
       <Filter>Source Files\util</Filter>
     </ClInclude>
     <ClInclude Include="JAB.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\Acc</Filter>
+    </ClInclude>
+    <ClInclude Include="acc.h">
+      <Filter>Source Files\Acc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

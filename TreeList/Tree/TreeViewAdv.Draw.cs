@@ -5,9 +5,9 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Aga.Controls.Tree.NodeControls;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree
 {
@@ -30,8 +30,10 @@ namespace Aga.Controls.Tree
 				}
 			}
 
-			if(res > 0)
-				column.Width = res;
+			if(res > 0) {
+				if(column.Index == 0) res += 6;
+				column.Width = res + 4;
+			}
 		}
 
 		private void CreateLinePen()

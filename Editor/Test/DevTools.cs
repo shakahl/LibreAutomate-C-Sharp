@@ -16,9 +16,9 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace ETest
 {
@@ -34,7 +34,7 @@ namespace ETest
 @"Q:\app\folder_open.ico",
 				};
 
-			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Catkeys\Editor\Resources\il_tv.png", 16);
+			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Au\Editor\Resources\il_tv.png", 16);
 		}
 
 		public static void CreatePngImagelistFileFromIconFiles_il_tb()
@@ -81,7 +81,7 @@ namespace ETest
 @"Q:\app\dialog.ico",
 				};
 
-			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Catkeys\Editor\Resources\il_tb_16.png", 16);
+			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Au\Editor\Resources\il_tb_16.png", 16);
 		}
 
 		static void _CreatePngImagelistFileFromIconFiles(string[] iconFiles, string pngFile, int imageSize)
@@ -163,9 +163,9 @@ namespace ETest
 @"Q:\Downloads\VS2015 Image Library\2015_VSIcon\VSTAAbout\VSTAAbout.ico",
 			   };
 
-			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Catkeys\Editor\Resources\il_tb_20.png", 20);
-			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Catkeys\Editor\Resources\il_tb_24.png", 24);
-			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Catkeys\Editor\Resources\il_tb_32.png", 32);
+			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Au\Editor\Resources\il_tb_20.png", 20);
+			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Au\Editor\Resources\il_tb_24.png", 24);
+			_CreatePngImagelistFileFromIconFiles(a, @"Q:\app\Au\Editor\Resources\il_tb_32.png", 32);
 		}
 
 	}

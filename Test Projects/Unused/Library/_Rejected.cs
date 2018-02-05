@@ -8,6 +8,198 @@
 
 
 
+///// <summary>
+///// Registers and unregisters a window class.
+///// Example: <c>static Wnd.Misc.MyWindowClass _myClass = Wnd.Misc.MyWindowClass.Register("MyClass", _MyWndProc); ... Wnd w = Wnd.Misc.CreateWindow(0, _myClass.Name, ...);</c>.
+///// </summary>
+//public class MyWindowClass
+//{
+//	private MyWindowClass() { } //disable '=new MyWindowClass()'
+
+//	///
+//	~MyWindowClass()
+//	{
+//		Unregister();
+//	}
+
+//	/// <summary>
+//	/// Class atom.
+//	/// </summary>
+//	public ushort Atom { get; private set; }
+
+//	/// <summary>
+//	/// Actual class name that must be used to create windows.
+//	/// It is not exactly the same as passed to Create() etc. It has a suffix containing current appdomain identifer.
+//	/// </summary>
+//	public string Name => _className;
+
+//	/// <summary>
+//	/// Base class extra memory size.
+//	/// </summary>
+//	public int BaseClassWndExtra { get; private set; }
+
+//	/// <summary>
+//	/// Base class window procedure to pass to API <msdn>CallWindowProc</msdn> in your window procedure.
+//	/// </summary>
+//	public Native.WNDPROC BaseClassWndProc { get; private set; }
+
+//	IntPtr _hinst; //need for Unregister()
+//	Native.WNDPROC _wndProc; //to keep reference to the caller's delegate to prevent garbage collection
+//	string _className; //for warning text in Unregister()
+
+//	/// <summary>
+//	/// Registers new window class.
+//	/// Returns new MyWindowClass variable.
+//	/// Calls API <msdn>RegisterClassEx</msdn>.
+//	/// </summary>
+//	/// <param name="className">Class name.</param>
+//	/// <param name="wndProc">Window procedure delegate. This variable will keep a reference to it to prevent garbage-collecting.</param>
+//	/// <param name="wndExtra">Size of extra window memory which can be accessed with Wnd.SetWindowLong/GetWindowLong with >=0 offset.</param>
+//	/// <param name="style">Class style.</param>
+//	/// <param name="ex">
+//	/// Can be used to specify API <msdn>WNDCLASSEX</msdn> fields not specified in parameters.
+//	/// If not used, the function sets: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; others = 0/null/Zero.
+//	/// </param>
+//	/// <exception cref="Win32Exception">Failed, for example if the class already exists.</exception>
+//	/// <remarks>
+//	/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain id. The <see cref="Name"/> property returns it.
+//	/// If style does not have CS_GLOBALCLASS and ex is null or its hInstance field is not set, for hInstance uses exe module handle.
+//	/// Not thread-safe.
+//	/// </remarks>
+//	public static MyWindowClass Register(string className, Native.WNDPROC wndProc, int wndExtra = 0, uint style = 0, WndClassEx ex = null)
+//	{
+//		//var x = (ex != null) ? new Api.WNDCLASSEX(ex) : new Api.WNDCLASSEX(true);
+//		var x = new Api.WNDCLASSEX(true); //TODO
+
+//		var r = new MyWindowClass();
+//		r._Register(ref x, className, wndProc, wndExtra, style);
+//		return r;
+
+//		//hInstance=Api.GetModuleHandle(null); //tested: RegisterClassEx uses this if hInstance is Zero, even for app-local classes
+
+//		//tested:
+//		//For app-global classes, CreateWindowEx and GetClassInfo ignore their hInst argument (always succeed).
+//		//For app-local classes, CreateWindowEx and GetClassInfo fail if their hInst argument does not match. However CreateWindowEx always succeeds if its hInst argument is Zero.
+//	}
+
+//	unsafe void _Register(ref Api.WNDCLASSEX x, string className, Native.WNDPROC wndProc, int wndExtra, uint style)
+//	{
+//		//Add appdomain id to the class name. It solves 2 problems:
+//		//	1. Multiple domains cannot register exactly the same class name because they cannot use a common procedure.
+//		//	2. In Release build compiler completely removes code 'static Wnd.Misc.MyWindowClass _myClass = Wnd.Misc.MyWindowClass.Register("MyClass", _MyWndProc);' if _MyWndProc is not referenced elsewhere. Then the class is not registered when we create window. Now programmers must use _myClass.Name with CreateWindowEx etc, and it prevents removing the code.
+//		className = className + "." + AppDomain.CurrentDomain.Id;
+//		//Print(className);
+
+//		fixed (char* pCN = className) {
+//			x.cbSize = Api.SizeOf(x);
+//			x.lpszClassName = pCN;
+//			x.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
+//			x.cbWndExtra = wndExtra;
+//			x.style = style;
+//			if(x.hInstance == Zero && (style & Api.CS_GLOBALCLASS) == 0) x.hInstance = Api.GetModuleHandle(null);
+
+//			Atom = Api.RegisterClassEx(ref x);
+//			if(Atom == 0) throw new Win32Exception();
+
+//			_hinst = x.hInstance; //if was set in ex, will need this for Unregister()
+//			_wndProc = wndProc; //keep the delegate from GC
+//			_className = className;
+//		}
+//	}
+
+//	/// <summary>
+//	/// Registers new window class that extends an existing class.
+//	/// Returns new MyWindowClass variable.
+//	/// Calls API <msdn>GetClassInfoEx</msdn> and API <msdn>RegisterClassEx</msdn>.
+//	/// </summary>
+//	/// <param name="baseClassName">Existing class name.</param>
+//	/// <param name="className">New class name.</param>
+//	/// <param name="wndProc">Window procedure delegate. This variable will keep a reference to it to prevent garbage-collecting.</param>
+//	/// <param name="wndExtra">Size of extra window memory not including extra memory of base class. Can be accessed with SetMyLong/GetMyLong.</param>
+//	/// <param name="globalClass">If false, the function removes CS_GLOBALCLASS style.</param>
+//	/// <param name="baseModuleHandle">If the base class is global (CS_GLOBALCLASS style), don't use this parameter, else pass the module handle of the exe or dll that registered the base class.</param>
+//	/// <exception cref="Win32Exception">Failed, for example if the class already exists or class baseClassName does not exist.</exception>
+//	/// <remarks>
+//	/// The actual class name is like "MyClass.2", where "MyClass" is className and "2" is current appdomain identifer. The <see cref="Name"/> property returns it.
+//	/// Not thread-safe.
+//	/// </remarks>
+//	public static MyWindowClass Superclass(string baseClassName, string className, Native.WNDPROC wndProc, int wndExtra = 0, bool globalClass = false, IntPtr baseModuleHandle = default)
+//	{
+//		var r = new MyWindowClass();
+//		var x = new Api.WNDCLASSEX();
+//		x.cbSize = Api.SizeOf(x);
+//		if(0 == Api.GetClassInfoEx(baseModuleHandle, baseClassName, ref x)) throw new Win32Exception();
+
+//		Api.GetDelegate(x.lpfnWndProc, out Native.WNDPROC wp);
+//		int we = x.cbWndExtra;
+
+//		r._Register(ref x, className, wndProc, x.cbWndExtra + wndExtra, globalClass ? x.style : x.style & ~Api.CS_GLOBALCLASS);
+
+//		r.BaseClassWndProc = wp;
+//		r.BaseClassWndExtra = we;
+//		return r;
+//	}
+
+//	/// <summary>
+//	/// Unregisters the window class if registered with Register() or Superclass().
+//	/// Called implicitly when garbage-collecting this object.
+//	/// </summary>
+//	public void Unregister()
+//	{
+//		if(Atom != 0) {
+//			bool ok = Api.UnregisterClass(Atom, _hinst);
+//			if(!ok) Output.Warning($"Failed to unregister window class '{_className}'. {Native.GetErrorMessage()}.");
+//			Atom = 0;
+//			_hinst = Zero;
+//			BaseClassWndProc = null;
+//			BaseClassWndExtra = 0;
+//		}
+//	}
+
+//	/// <summary>
+//	/// Calls <see cref="SetWindowLong"/> and returns its return value.
+//	/// </summary>
+//	/// <param name="w">Window.</param>
+//	/// <param name="value">Value.</param>
+//	/// <param name="offset">Offset in extra memory, not including the size of extra memory of base class.</param>
+//	/// <exception cref="WndException"/>
+//	public LPARAM SetMyLong(Wnd w, LPARAM value, int offset = 0)
+//	{
+//		return w.SetWindowLong(BaseClassWndExtra + offset, value);
+//	}
+
+//	/// <summary>
+//	/// Calls <see cref="GetWindowLong"/> and returns its return value.
+//	/// </summary>
+//	/// <param name="w">Window.</param>
+//	/// <param name="offset">Offset in extra memory, not including the size of extra memory of base class.</param>
+//	public LPARAM GetMyLong(Wnd w, int offset = 0)
+//	{
+//		return w.GetWindowLong(BaseClassWndExtra + offset);
+//	}
+
+//	/// <summary>
+//	/// Rarely used API <msdn>WNDCLASSEX</msdn> fields. Used with some MyWindowClass functions.
+//	/// </summary>
+//	/// <tocexclude />
+//	public class WndClassEx
+//	{
+//#pragma warning disable 1591 //XML doc
+//		public int cbClsExtra;
+//		public IntPtr hInstance;
+//		public IntPtr hIcon;
+//		public IntPtr hCursor;
+//		public IntPtr hbrBackground;
+//		public IntPtr hIconSm;
+//#pragma warning restore 1591 //XML doc
+//	}
+//}
+
+
+
+
+
+
 //rejected: not useful. If will need some day, move most of the code to cpp.
 ///// <summary>
 ///// Gets accessible object from point in window.
@@ -18,7 +210,7 @@
 ///// <param name="y">Y coordinate relative to the w client area.</param>
 ///// <param name="noThrow">Don't throw exception when fails to get accessible object from window. Then returns null.</param>
 ///// <exception cref="WndException">Invalid window.</exception>
-///// <exception cref="CatException">Failed to get accessible object from window. For example, window of a higher UAC integrity level process.</exception>
+///// <exception cref="AuException">Failed to get accessible object from window. For example, window of a higher UAC integrity level process.</exception>
 //public static Acc FromXY(Wnd w, Coord x, Coord y, bool noThrow = false)
 //{
 //	var p = Coord.NormalizeInWindow(x, y, w);
@@ -1073,7 +1265,7 @@ public static class MessageDialog
 		p.dwStyle |= (uint)buttons | (uint)icon | (uint)flags;
 
 		int R = MessageBoxIndirect(ref p);
-		if(R == 0) throw new CatException();
+		if(R == 0) throw new AuException();
 
 		_Util.DoEventsAndWaitForAnActiveWindow();
 

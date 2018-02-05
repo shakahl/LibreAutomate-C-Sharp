@@ -18,9 +18,9 @@ using System.Linq;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
 
 using Aga.Controls.Tree;
@@ -31,7 +31,7 @@ partial class ThisIsNotAFormFile { }
 //[DebuggerStepThrough]
 partial class PanelFiles :Control
 {
-	//idea: when file clicked, open it and show CatMenu of its functions (if > 1).
+	//idea: when file clicked, open it and show AuMenu of its functions (if > 1).
 
 	TreeViewAdv _c;
 	FilesModel _model;
@@ -301,7 +301,7 @@ partial class PanelFiles :Control
 
 		oldModel?.Dispose();
 		Program.Model = _model = m;
-		MainForm.Text = "Catkeys - " + collDir;
+		MainForm.Text = "QM# - " + collDir;
 
 		//CONSIDER: unexpand path
 		if(Settings.Set("collection", collDir)) {

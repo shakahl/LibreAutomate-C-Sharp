@@ -562,7 +562,7 @@ public:
 	void SetUnicodeMode(bool unicodeMode_) override;
 	void SetDBCSMode(int codePage_) override;
 
-	void* get_hdc() { return hdc; } //Catkeys
+	void* get_hdc() { return hdc; } //Au
 };
 
 SurfaceGDI::SurfaceGDI() :
@@ -1127,7 +1127,7 @@ public:
 	void SetUnicodeMode(bool unicodeMode_) override;
 	void SetDBCSMode(int codePage_) override;
 
-	void* get_hdc() { return 0; } //Catkeys
+	void* get_hdc() { return 0; } //Au
 };
 
 SurfaceD2D::SurfaceD2D() :

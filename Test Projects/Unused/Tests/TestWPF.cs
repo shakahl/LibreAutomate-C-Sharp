@@ -15,9 +15,9 @@ using System.ComponentModel;
 //using System.Reflection;
 //using System.Linq;
 
-using Catkeys;
-using static Catkeys.NoClass;
-using Catkeys.Triggers;
+using Au;
+using static Au.NoClass;
+using Au.Triggers;
 
 using System.Windows;
 using System.Windows.Controls;

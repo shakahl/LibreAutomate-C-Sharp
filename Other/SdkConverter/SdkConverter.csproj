@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SdkConverter</RootNamespace>
     <AssemblyName>SdkConverter</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -40,13 +41,13 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationManifest>Catkeys.manifest</ApplicationManifest>
+    <ApplicationManifest>Au.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Au.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -71,16 +72,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Catkeys.manifest" />
-    <None Include="CatkeysSN.pfx" />
+    <None Include="Au.manifest" />
+    <None Include="Au.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\Header.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Catkeys\Catkeys.csproj">
+    <ProjectReference Include="..\..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
-      <Name>Catkeys</Name>
+      <Name>Au</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

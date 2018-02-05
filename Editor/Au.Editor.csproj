@@ -1,0 +1,234 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{466DE975-A615-4871-98BA-07C13E192953}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Project</RootNamespace>
+    <AssemblyName>Au.Editor</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>.\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;TEST</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3001,3002,3003,3009,162,649,169</NoWarn>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>.\</OutputPath>
+    <DefineConstants>TRACE;TEST</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <Prefer32Bit>true</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3001,3002,3003,3009</NoWarn>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>Properties\Au.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.4.0\lib\netstandard1.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Files\Save.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="UI\CmdHandlers.cs" />
+    <Compile Include="Edit\PanelEdit.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Files\_FormNewCollection.cs" />
+    <Compile Include="Program\CommandLine.cs" />
+    <Compile Include="Program\ProgramSettings.cs" />
+    <None Include="Default\files\Script 1.cs" />
+    <Compile Include="Files\FileNode-file.cs" />
+    <Compile Include="Files\FileNode.cs" />
+    <Compile Include="Files\FilesModel.cs" />
+    <Compile Include="Tools\PanelFind.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\PanelOpen.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\PanelOutput.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\PanelRecent.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\PanelRunning.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Tools\PanelStatus.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Util\EApi.cs" />
+    <Compile Include="Util\EUtil.cs" />
+    <Compile Include="Files\PanelFiles-test.cs" />
+    <Compile Include="Test\TestEditor.cs" />
+    <None Include="packages.config" />
+    <None Include="Properties\Au.pfx" />
+    <Compile Include="Files\PanelFiles.cs" />
+    <Compile Include="UI\EForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Program\Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\CmdStrips.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Test\DevTools.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Resources\Au.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Au\Au.csproj">
+      <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
+      <Name>Au</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Controls\Au.Controls.csproj">
+      <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
+      <Name>Au.Controls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tools\Au.Tools.csproj">
+      <Project>{11859729-3aab-41ae-9f28-571a11f1f029}</Project>
+      <Name>Au.Tools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TreeList\TreeList.csproj">
+      <Project>{e73bb233-d88b-44a7-a98f-d71ee158381d}</Project>
+      <Name>TreeList</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Run\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\scintilla\win32\Release\bin\SciLexer32.dll">
+      <Link>SciLexer32.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\scintilla\win32\x64\Release\bin\SciLexer64.dll">
+      <Link>SciLexer64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Default\files.xml" />
+    <Content Include="Default\Panels.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Default\Settings.xml" />
+    <Content Include="Default\Strips.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <None Include="Resources\png icons\active_items.png" />
+    <None Include="Resources\png icons\annotations.png" />
+    <None Include="Resources\png icons\back.png" />
+    <None Include="Resources\png icons\back2.png" />
+    <None Include="Resources\png icons\clone dialog.png" />
+    <None Include="Resources\png icons\compile.png" />
+    <None Include="Resources\png icons\copy.png" />
+    <None Include="Resources\png icons\cut.png" />
+    <None Include="Resources\png icons\deb cursor.png" />
+    <None Include="Resources\png icons\deb end.png" />
+    <None Include="Resources\png icons\deb into.png" />
+    <None Include="Resources\png icons\deb next.png" />
+    <None Include="Resources\png icons\deb out.png" />
+    <None Include="Resources\png icons\deb run.png" />
+    <None Include="Resources\png icons\delete.png" />
+    <None Include="Resources\png icons\dialog.png" />
+    <None Include="Resources\png icons\droparrow.png" />
+    <None Include="Resources\png icons\find.png" />
+    <None Include="Resources\png icons\floating.png" />
+    <None Include="Resources\png icons\help.png" />
+    <None Include="Resources\png icons\icons.png" />
+    <None Include="Resources\png icons\images.png" />
+    <None Include="Resources\png icons\mm.png" />
+    <None Include="Resources\png icons\new.png" />
+    <None Include="Resources\png icons\open.png" />
+    <None Include="Resources\png icons\options.png" />
+    <None Include="Resources\png icons\output.png" />
+    <None Include="Resources\png icons\paste.png" />
+    <None Include="Resources\png icons\properties.png" />
+    <None Include="Resources\png icons\record.png" />
+    <None Include="Resources\png icons\redo.png" />
+    <None Include="Resources\png icons\resources.png" />
+    <None Include="Resources\png icons\run.png" />
+    <None Include="Resources\png icons\save.png" />
+    <None Include="Resources\png icons\tags.png" />
+    <None Include="Resources\png icons\tip.png" />
+    <None Include="Resources\png icons\tip_book.png" />
+    <None Include="Resources\png icons\undo.png" />
+    <None Include="Resources\Folder_16x.png" />
+    <None Include="Resources\FolderOpen_16x.png" />
+    <None Include="Resources\CS_16x.png" />
+    <None Include="Resources\NewSolutionFolder_16x.png" />
+    <Content Include="Unused\unused1.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>REM $(TargetDir)kill Au.Editor.exe</PreBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

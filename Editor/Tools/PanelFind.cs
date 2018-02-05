@@ -18,9 +18,9 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 class PanelFind :Control
 {

@@ -22,20 +22,12 @@ using System.Xml.XPath;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
 //using System.IO.MemoryMappedFiles;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
-
-//using Catkeys.Triggers;
-
-
-//using Cat = Catkeys.Input;
-//using Meow = Catkeys.Show;
-
-//using static Catkeys.Show;
 
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -66,8 +58,10 @@ using System.Reflection.Emit;
 using System.Net;
 using System.Net.NetworkInformation;
 
-using Catkeys.Types;
-using Catkeys.Util;
+using Au.Types;
+using Au.Util;
+
+using System.Dynamic;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
@@ -80,11 +74,11 @@ static unsafe partial class Test
 {
 	//Why .NET creates so many threads?
 	//Even simplest app has 6 threads.
-	//9 threads if there is 'static Catkeys SOMESTRUCT _var;' and [STAThread]. Why???
+	//9 threads if there is 'static Au SOMESTRUCT _var;' and [STAThread]. Why???
 	//	Not if it's a class (even if '= new Class()'). Not if it's a non-library struct. Not if it's a .NET struct.
 	//	Not if app is ngened (but lib can be non-ngened).
 	//		But why only if STAThread? And why only if it's a struct (and not class) of a User.dll (and not eg of this assembly)?
-	//		Tested with a simplest dll, not only with Catkeys.dll.
+	//		Tested with a simplest dll, not only with Au.dll.
 	//	Also can depend on other things, eg handling some exception types, using Output.Clear etc. Only if [STAThread].
 	//	With or without [STAThread], 1 call to Task.Run makes 12 (from 6 or 9), >=2 Task.Run makes 14.
 	//The above numbers (6 and 9) are on Win10. On Win7 (virtual PC) the numbers are 4 and 7. Older .NET framework version.
@@ -98,6 +92,7 @@ static unsafe partial class Test
 	[STAThread]
 	static void Main(string[] args)
 	{
+		_EnableVisualStylesEtc();
 #if true
 		TestMain();
 #elif true
@@ -201,7 +196,7 @@ static unsafe partial class Test
 		//Wnd w = Wnd.Find("FileZilla");
 		//Wnd w = Wnd.Find("ILspy");
 		//Wnd w = Wnd.Find("app -*");
-		//Wnd w = Wnd.Find("Catkeys -*");
+		//Wnd w = Wnd.Find("QM# -*");
 		//Wnd w = Wnd.Find("WinDbg*");
 		//Wnd w = Wnd.Misc.WndRoot;
 		//w.Activate(); Wait(.2);
@@ -225,7 +220,6 @@ static unsafe partial class Test
 			//var a =Acc.deb; for(int j = 0; j < a.Length; j++) PrintList(j, a[j]);
 #else
 			//var a = Acc.Find(w, "LINK", "Bug Reports");
-			//var a = Acc.Find(w, "LINK", "Bug Reports", AFFlags.SkipLists);
 			//var a = Acc.Find(w, "web:LINK", "Bug Reports");
 			//var a = Acc.Find(w, "web:LINK", "Bug Reports", AFFlags.Reverse);
 			//var a = Acc.Find(w, "web:DOCUMENT");
@@ -242,7 +236,6 @@ static unsafe partial class Test
 
 			//var a = Acc.Find(w, "LINK", "Programming", AFFlags.HiddenToo); //1126 (depends on hidden tabs)
 			//var a = Acc.Find(w, "LINK", "Programming"); //225
-			//var a = Acc.Find(w, "LINK", "Programming", AFFlags.SkipLists); //184
 			//var a = Acc.Find(w, "web:LINK", "Programming"); //120
 			//var a = Acc.Find(w, "web:DOCUMENT/div/div/div/div/LIST/LISTITEM/LIST/LISTITEM/LINK", "Programming"); //74
 			//var a = Acc.Find(w, "web:DOCUMENT/div/div[4]/div[5]/div/LIST[3]/LISTITEM[2]/LIST/LISTITEM/LINK", "Programming"); //47
@@ -252,17 +245,13 @@ static unsafe partial class Test
 
 			//var a = Acc.Find(w, "PUSHBUTTON", "Resources    Alt+F6"); //6.4 s
 			//var a = Acc.Find(w, "class=ToolbarWindow32:PUSHBUTTON", "Resources    Alt+F6"); //120
-			//var a = Acc.Find(w, "PUSHBUTTON", "Resources    Alt+F6", AFFlags.SkipLists); //193
 			//var a = Acc.Find(w, "CLIENT/WINDOW/TOOLBAR/PUSHBUTTON", "Resources    Alt+F6"); //139
 
 			//var f = new Acc.Finder("web:LINK", "Bug Reports");
 
 			//f.FindIn(w); var a = f.Result;
 
-			//var a = Acc.Find(w, "TEXT", "Address and*", AFFlags.SkipWeb);
 			//var a = Acc.Find(w, "TEXT", "Address and*", AFFlags.Reverse);
-			//var a = Acc.Find(w, "PUSHBUTTON", "Resources *", AFFlags.SkipLists);
-			//var a = Acc.Find(w, "/////PUSHBUTTON", "Undo *", AFFlags.Reverse| AFFlags.SkipLists);
 
 			//var a = Acc.Find(w, "web:LINK", "Programming", AFFlags.NoThrow);
 			var a = Acc.Find(w, "web:DOCUMENT/div/div[4!]/div[5!]/div/LIST[3]/LISTITEM[2]/LIST/LISTITEM/LINK", "Programming"); //47
@@ -271,7 +260,6 @@ static unsafe partial class Test
 			////int n = 0;
 			//AFFlags fl = 0;
 			////fl |=AFFlags.HiddenToo;
-			////fl |= AFFlags.SkipLists;
 			//var a = Acc.Find(w, "web:", null, fl, also: o =>
 			// {
 			//	 //n++;
@@ -290,7 +278,7 @@ static unsafe partial class Test
 			//	 // Perf.Write();
 			//	 //Print(o.ToString(o.Level));
 
-			//	 //if(++o.Counter == 10) throw new CatException("TEST");
+			//	 //if(++o.Counter == 10) throw new AuException("TEST");
 
 			//	 return false;
 			// });
@@ -364,7 +352,7 @@ static unsafe partial class Test
 	//	//w = Wnd.Find("Quick*").ChildById(2053);
 	//	//w = (Wnd)(IntPtr)5965264;
 
-	//	//w = Wnd.Find("Catkeys - Q*");
+	//	//w = Wnd.Find("QM# - Q*");
 
 	//	//var a = Acc.Find(w, "TOOLBAR", "Help");
 	//	//Print(a);
@@ -722,7 +710,7 @@ static unsafe partial class Test
 		//w = Wnd.Find("Options");
 		//w = Wnd.Find("Java *");
 		//w = Wnd.Find("Settings");
-		//w = Wnd.Find("catkeys - Q*", "WindowsForms*");
+		//w = Wnd.Find("QM# - Q*", "WindowsForms*");
 		w.Activate();
 
 		//using(var a = Acc.FromWindow(w, AccOBJID.CLIENT)) {
@@ -845,7 +833,7 @@ static unsafe partial class Test
 		var w = Wnd.Find("* Google Chrome");
 		//var w = Wnd.Find("* Internet Explorer");
 		//var w = Wnd.Find("FileZilla");
-		//var w = Wnd.Find("Catkeys - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
+		//var w = Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
 		//using(var a = Acc.Find(w, "web:")) {
 		//using(var a = Acc.Find(w, "web:LINK", "\0 a:href=*forum*")) {
 		using(var a = Acc.Find(w, "web:LINK", "Programming", null, AFFlags.HiddenToo).OrThrow()) {
@@ -936,7 +924,7 @@ static unsafe partial class Test
 		////a.MouseMove();
 		//Perf.First();
 		//for(int i = 0; i < 5; i++) {
-		//	var si = ScreenImage.Find(@"Q:\app\Catkeys\Tests\Images\google.bmp", a, SIFlags.WindowDC).OrThrow();
+		//	var si = ScreenImage.Find(@"Q:\app\Au\Tests\Images\google.bmp", a, SIFlags.WindowDC).OrThrow();
 		//	Perf.Next();
 		//}
 		//Perf.Write();
@@ -1340,7 +1328,7 @@ static unsafe partial class Test
 	//	{
 	//		char* es = null;
 	//		if(!Cpp.Cpp_WildexParse(this, w, w.Length, &es))
-	//			throw new CatException(new string(es));
+	//			throw new AuException(new string(es));
 	//	}
 
 	//	public bool Match(string s)
@@ -1441,7 +1429,7 @@ static unsafe partial class Test
 		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
 		//var w = Wnd.Find(null, "QM_Editor").Kid(2051).OrThrow();
 		//var w = Wnd.Find("QM Dialog").OrThrow();
-		//var w = Wnd.Find("Catkeys - Q*").OrThrow();
+		//var w = Wnd.Find("QM# - Q*").OrThrow();
 		//var w = Wnd.Find("Calculator").OrThrow();
 		//var w = Wnd.Find("Calculator").Child(null, "Windows.UI.Core.CoreWindow").OrThrow();
 		//var w = Wnd.Find("ILSpy").OrThrow();
@@ -1563,8 +1551,8 @@ static unsafe partial class Test
 			//p.name = "**g|Untitled";
 			//p.prop = "value=XXX\0  a:href=YYY\0\r\n description=DDD";
 			//p.prop = "maxLevel=15";
-			//p.prop = "skipRoles=ONE,TWO,THREE";
-			//p.prop = "skipRoles=PUSHBUTTON,MENUBAR,STATICTEXT";
+			//p.prop = "notin=ONE,TWO,THREE";
+			//p.prop = "notin=PUSHBUTTON,MENUBAR,STATICTEXT";
 			//p.name = "Select";
 			//p.prop = "value=test\r";
 			//p.prop = "description=Used*";
@@ -1801,7 +1789,7 @@ static unsafe partial class Test
 		PrintList(1, a);
 		_ClickWait(w, a, "*Finance*", "Trending Now");
 
-		//Acc.Find(w, null, "Back", AFFlags.SkipWeb).DoAction();
+		//Acc.Find(w, null, "Back", prop: "notin=DOCUMENT").DoAction();
 		//return;
 
 		Perf.First();
@@ -1828,7 +1816,7 @@ static unsafe partial class Test
 		//	back.DoAction();
 		//	0.1.s();
 		//}
-		Acc.Find(w, null, "Back", null, AFFlags.SkipWeb).VirtualRightClick();
+		Acc.Find(w, null, "Back", "notin=DOCUMENT").VirtualRightClick();
 		var wBackMenu = WaitFor.WindowExists(10, null, menuClass, also: o => o.HasStyle(Native.WS_POPUP));
 		//Print(wBackMenu);
 		a = Acc.Wait(10, wBackMenu, "MENUITEM", "Yahoo");
@@ -1895,7 +1883,7 @@ static unsafe partial class Test
 		//flags |= AFFlags.NotInProc;
 
 		//var a = Acc.Find(w, "CHECKBUTTON", flags: flags);
-		//var a = Acc.Find(w, "CHECKBUTTON", prop: "state=CHECKED, !DISABLED\0 skipRoles=ONE,,TWO", flags: flags);
+		//var a = Acc.Find(w, "CHECKBUTTON", prop: "state=CHECKED, !DISABLED\0 notin=ONE,,TWO", flags: flags);
 		var a = Acc.Find(w, "CHECKBUTTON", prop: "state=CHECKED,FOCUSABLE, !FOCUSED\0", flags: flags);
 		//var a = Acc.Find(w, "TEXT", prop: "state=PROTECTED", flags: flags);
 
@@ -1945,7 +1933,7 @@ static unsafe partial class Test
 		////var a = Acc.Find(w, "web:LINK", "Test").OrThrow();
 		//var a = Acc.Find(w, "web:TEXT", "Test").OrThrow();
 
-		//var w = Wnd.Find("Catkeys - Q:*").OrThrow();
+		//var w = Wnd.Find("QM# - Q:*").OrThrow();
 		////var a = Acc.Find(w, "LISTITEM", "Test*").OrThrow();
 		////var a = Acc.Find(w, "PAGETAB", "Find").OrThrow();
 		//var a = Acc.Find(w, "CLIENT", "Panels").OrThrow();
@@ -2280,12 +2268,29 @@ static unsafe partial class Test
 
 	static void TestAccFromPoint()
 	{
+		//var w = Wnd.FromMouse();
+		//var a = Acc.FromWindow(w);
+		//Print(a);
+		//Print(a.MiscFlags);
+
 		//2.s();
-		var a = Acc.FromMouse(AXYFlags.PreferLink);
-		//var a = Acc.FromXY(1270, 1290);
+		Acc a = null;
+		AXYFlags flags = 0;
+		flags |= AXYFlags.PreferLink;
+		//flags |= AXYFlags.UIA;
+		if(Input.IsScrollLock) flags |= AXYFlags.NotInProc;
+
+		Perf.First();
+		for(int i = 0; i < 5; i++) {
+			//a = Acc.FromXY(1270, 1290);
+			a = Acc.FromMouse(flags);
+			Perf.Next();
+		}
+		Perf.Write();
 		//Print(a!=null);
 		Print(a);
-		a?.Dispose();
+		Print(a._misc.flags);
+		a.Dispose();
 	}
 
 	static void TestAccChildCount()
@@ -2308,7 +2313,7 @@ static unsafe partial class Test
 		//w = Wnd.Find("Options");
 		w = Wnd.Find("Java *");
 		//w = Wnd.Find("Settings");
-		//w = Wnd.Find("catkeys - Q*", "WindowsForms*");
+		//w = Wnd.Find("QM# - Q*", "WindowsForms*");
 
 		Print(w);
 		//Acc.PrintAll(w, flags: AFFlags.NotInProc);
@@ -2337,9 +2342,9 @@ static unsafe partial class Test
 		//Mouse.Move(1000, 1500);
 
 		//var a = Acc.FromWindow(w);
-		var a = Acc.FromWindow(w, flags: AWFlags.InProc);
+		var a = Acc.FromWindow(w, flags: AWFlags.NotInProc);
 		Print(a);
-		Print(!a.NotInProc);
+		Print(a.MiscFlags);
 
 		//foreach(var c in w.AllChildren()) {
 		//	Print(c);
@@ -2403,7 +2408,6 @@ static unsafe partial class Test
 		Acc.PrintAll(w);
 		//Acc.PrintAll(w, "web:LINK");
 		//Print(Acc.Find(w, "web:LINK"));
-		//Acc.PrintAll(w, flags: AFFlags.SkipWeb);
 		//var a = Acc.Find(w, "root pane").OrThrow();
 		//Print(a);
 		//Print(a.Navigate("pa"));
@@ -2444,20 +2448,21 @@ static unsafe partial class Test
 		//UIA.IElement e = null;
 		for(int i = 0; i < 1; i++) {
 			//a= Acc.Find(w, "LINK", flags: flags).OrThrow();
-			//a= Acc.Find(w, "LINK", "Bug Reports", flags: flags).OrThrow();
+			a = Acc.Find(w, "LINK", "Bug Reports", flags: flags).OrThrow();
 			//a= Acc.Find(w, "LINK", "Board index", flags: flags).OrThrow();
 			//a= Acc.Find(w, prop:"help=YouTube Home", flags: flags).OrThrow();
 			//a= Acc.Find(w, "LINK", "HBox", flags: flags).OrThrow();
-			//a= Acc.Find(w, prop: "uiaAutomationId=JavaFX403", flags: flags).OrThrow();
+			//a= Acc.Find(w, prop: "uiaid=JavaFX403", flags: flags).OrThrow();
 			//a = Acc.Find(w, "LISTITEM", flags: flags).OrThrow();
 			//a= Acc.Find(w, "PUSHBUTTON", prop: "elem=12", flags: flags).OrThrow();
 			//a= Acc.Find(w, name:"About...", flags: flags).OrThrow();
 			//a= Acc.Find(w, "filler", flags: flags).OrThrow();
 			//a= Acc.Find(w, name: "Orientation", flags: flags).OrThrow();
+			//a= Acc.Find(w, prop:"uiaid=sb_form_q", flags: flags).OrThrow();
 
 			//a = Acc.FromMouse();
 			//a = Acc.FromMouse(AXYFlags.UIAutomation| AXYFlags.PreferLink);
-			a = Acc.Focused(true);
+			//a = Acc.Focused(true);
 
 			//e = AElement.Find(w, "Bug Reports", UIA.TypeId.Hyperlink);
 			//e = AElement.Find(w, "\"Psichologo komentaras\": Apie meditaciją biure", UIA.TypeId.Hyperlink);
@@ -2495,7 +2500,10 @@ static unsafe partial class Test
 		//Print(a);
 		//Print(a._misc.flags);
 
-		//Print(a.UiaAutomationId);
+		//Print(a.WndContainer);
+		//Print(a.WndTopLevel);
+
+		//Print(a.UiaId);
 		//Print(a.GetMultipleProperties("u"));
 
 		//Print(a.ChildCount);
@@ -2586,7 +2594,7 @@ static unsafe partial class Test
 
 		//var w = Wnd.Find("Quick Macros Forum - Mozilla Firefox", "Moz*").OrThrow();
 		//var w = Wnd.Find("Quick Macros Forum - Google Chrome", "Chrome*").OrThrow();
-		//var w = Wnd.Find("Catkeys - Microsoft Visual Studio ").OrThrow();
+		//var w = Wnd.Find("Au - Microsoft Visual Studio ").OrThrow();
 		//var w = Wnd.Find("FileZilla").OrThrow();
 		var w = Wnd.Find("Quick*").OrThrow();
 		//var w = Wnd.Find("* Edge").OrThrow();
@@ -2602,24 +2610,24 @@ static unsafe partial class Test
 		//var a = Acc.Find(w, "OUTLINEITEM").OrThrow();
 		//var a = Acc.Find(w, "LINK", "Bug*", flags: AFFlags.UIAutomation).OrThrow();
 		Perf.First();
-		var a = Acc.FromWindow(w, 0, AWFlags.InProc);
+		var a = Acc.FromWindow(w);
 		Perf.NW();
 
 		Print(a);
 		Print(a._misc.flags);
 
 		//a.ScrollTo();
-		//Print(a.UiaAutomationId);
+		//Print(a.UiaId);
 	}
 
 	static void TestAccRoleString()
 	{
-		//var w = Wnd.Find("* Chrome").OrThrow();
+		var w = Wnd.Find("* Chrome").OrThrow();
 		////var w = Wnd.Find("* Edge").OrThrow();
 		////var w = Wnd.Find("Ensemble").OrThrow();
 		////var w = Wnd.Find("Java *").OrThrow();
 		//var w = Wnd.Find("* OpenOffice *").OrThrow();
-		var w = Wnd.Find("Task Scheduler").OrThrow();
+		//var w = Wnd.Find("Task Scheduler").OrThrow();
 		Print(w);
 
 		AFFlags flags = 0;
@@ -2646,7 +2654,7 @@ static unsafe partial class Test
 
 		//var a = Acc.Find(w, flags: AFFlags.UIA);
 		//var a = Acc.Find(w, "PUSHBUTTON", flags: AFFlags.UIA| AFFlags.NotInProc|AFFlags.HiddenToo| AFFlags.MenuToo);
-		var a = Acc.Find(w, "PUSHBUTTON", flags: AFFlags.NotInProc| AFFlags.MenuToo);
+		var a = Acc.Find(w, "PUSHBUTTON", flags: AFFlags.NotInProc | AFFlags.MenuToo);
 
 		//var a = Acc.FromWindow(w, AccOBJID.UIA, flags: AWFlags.InProc);
 		////var a = Acc.FromWindow(w, AccOBJID.UIA);
@@ -2655,40 +2663,567 @@ static unsafe partial class Test
 		//a.Dispose();
 	}
 
+	//ref struct Re2
+	//{
+	//	public int i, j;
+
+	//	public void Met()
+	//	{
+	//		var p = &j;
+
+	//	}
+	//}
+
+	//static void TestInParam(in RECT r, ref Re2 k)
+	//{
+	//	Print(r);
+	//	var p = &k;
+	//	Print(p);
+	//}
+
+	static void TestCSharp72()
+	{
+		//Span<char> span = default;
+		//RECT r=default;
+		//Re2 k = default;
+		//TestInParam(r, ref k);
+	}
+
+	public static int LevenshteinDistance(string s, string t)
+	{
+		int n = s.Length;
+		int m = t.Length;
+		int[,] d = new int[n + 1, m + 1];
+
+		// Step 1
+		if(n == 0) {
+			return m;
+		}
+
+		if(m == 0) {
+			return n;
+		}
+
+		// Step 2
+		for(int i = 0; i <= n; d[i, 0] = i++) {
+		}
+
+		for(int j = 0; j <= m; d[0, j] = j++) {
+		}
+
+		// Step 3
+		for(int i = 1; i <= n; i++) {
+			//Step 4
+			for(int j = 1; j <= m; j++) {
+				// Step 5
+				int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+
+				// Step 6
+				d[i, j] = Math.Min(
+					Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+					d[i - 1, j - 1] + cost);
+			}
+		}
+		// Step 7
+		return d[n, m];
+	}
+
+	static void TestLevenshteinDistance()
+	{
+		Print(LevenshteinDistance("kitten", "sitting"));
+		0.1.s();
+		int n = 0;
+		Perf.SpinCPU(100);
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 1000;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { n += LevenshteinDistance("kitten", "sitting"); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.NW();
+		}
+		Print(n);
+	}
+
+	static void TestNewColorTypes()
+	{
+		//var c = new ColorInt(0xff, false);
+		//c = new ColorInt(Color.Blue);
+		//c = Color.Blue;
+		//c=0xff;
+		////Print(ColorInt.FromString("orange", out c));
+		////Print(ColorInt.FromString("0xFF", out c));
+		////Print(ColorInt.FromString("0x123456", out c));
+		////Print(ColorInt.FromString("0x1234567", out c));
+		////Print(ColorInt.FromString("#123456", out c));
+		////Print(ColorInt.FromString("#1234567", out c));
+		////Print(ColorInt.FromString("#w", out c));
+		////Print(ColorInt.FromString("0x", out c));
+		////Print(ColorInt.FromString("0xm", out c));
+		////Print(ColorInt.FromString("0xA", out c));
+		////Print(ColorInt.FromString("melyna", out c));
+		////c=ColorInt.FromBGR(0xff, false);
+		////c=ColorInt.FromBGR(0x80ff, true);
+		////Print(c);
+		////PrintHex(c.ToBGR());
+		//////Print(c.AdjustLuminance(500));
+		//////Print(c.AdjustLuminance(-500));
+		////Print(c.Brightness0to255());
+
+		//var k = c;
+		//bool b1 = (c == k);
+		//bool b2 = (c == 0xff);
+		//bool b3 = (c == unchecked((int)0xff0000ff));
+		//bool b4 = (c == Color.Blue);
+		////bool b5 = (Color.Blue==c); //error
+
+		//PrintList(b1, b2, b3, b4);
+
+		//var w = Wnd.Find("* Notepad").OrThrow();
+		//w.SetTransparency(true, null, 0xF0F0F0);
+		////w.SetTransparency(true, null, Color.Black);
+
+		////int c = 0x0000ff; //blue
+		////ColorInt c = 0x0000ff;
+		////Color c = Color.FromArgb(0x0000ff);
+		//int[] c = { 0x8000, 0x0000ff };
+		////string[] c = { "one", "two" };
+		//ScreenImage.Find(c, Wnd.Find("Quick *")).MouseMove();
+
+
+	}
+
+	//static void TestNativeWindow()
+	//{
+	//	var w = new NatWin();
+	//	var c = new CreateParams() { Caption = "test", Height = 100, Width = 100, X = 100, Y = 100 };
+	//	c.Style = unchecked((int)(Native.WS_POPUPWINDOW|Native.WS_VISIBLE));
+	//	c.ExStyle = (int)Native.WS_EX_TOPMOST;
+
+	//	w.CreateHandle(c);
+
+	//	TaskDialog.Show("test");
+
+	//	w.DestroyHandle();
+	//}
+
+	//public class NatWin :NativeWindow
+	//{
+	//	protected override void WndProc(ref Message m)
+	//	{
+	//		Print(m);
+	//		base.WndProc(ref m);
+	//	}
+	//}
+
+	//class ThreadExitEvent
+	//{
+	//	public ThreadExitEvent()
+	//	{
+	//		Print(Api.GetCurrentThreadId());
+	//	}
+	//	~ThreadExitEvent()
+	//	{
+	//		Print(Api.GetCurrentThreadId());
+	//	}
+	//}
+
+	//static void TestThreadExitEvent()
+	//{
+	//	Print(Api.GetCurrentThreadId());
+
+	//	t_ttt = 9;
+
+	//	var k = Cpp.Cpp_ThreadExitEvent(Marshal.GetFunctionPointerForDelegate(_onThreadExit));
+	//	//var k = Cpp.Cpp_ThreadExitEvent(Marshal.GetFunctionPointerForDelegate(new Action(()=> { Print($"t_ttt={t_ttt}"); })));
+	//	//Cpp.Cpp_ThreadExitEvent2(Marshal.GetFunctionPointerForDelegate(_onThreadExit));
+
+	//	//var h = GCHandle.Alloc(k, GCHandleType.Pinned);
+
+	//	//Marshal.ReleaseComObject(k);
+	//	Print("END");
+	//}
+
+	//static Action _onThreadExit = _OnThreadExit;
+	//static void _OnThreadExit()
+	//{
+	//	Print($"t_ttt={t_ttt}");
+	//}
+
+	//[ThreadStatic] static int t_ttt;
+	//[ThreadStatic] static ThreadExitEvent t_tee;
+
+
+	//class FormTEE : Form
+	//{
+	//	protected override void WndProc(ref Message m)
+	//	{
+	//		Print(m);
+	//		base.WndProc(ref m);
+	//	}
+	//}
+
+	//static void TestThreadExitEvent2()
+	//{
+	//	var f = new FormTEE();
+	//	f.Show();
+	//	TaskDialog.Show("test");
+	//}
+
+	//static void _DomainCallback()
+	//{
+	//	Output.LibWriteToQM2 = true;
+
+	//	var d =AppDomain.CurrentDomain;
+	//	PrintList(d.Id, d.FriendlyName);
+	//}
+
+	//static void TestNativeCallbackInMultipleAppDomains()
+	//{
+	//	for(int i = 0; i < 3; i++) {
+	//		var t = new Thread((o) =>
+	//		  {
+	//			  var d = AppDomain.CreateDomain("ad" + o);
+	//			  d.DoCallBack(_DomainCallback);
+	//			  AppDomain.Unload(d);
+	//		  });
+	//		t.Start(i);
+	//	}
+	//	1.s();
+	//}
+
+	//static LPARAM _WndProc1(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//{
+	//	Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
+
+	//	var R = Wnd.Misc.DefWindowProc(w, msg, wParam, lParam);
+
+	//	return R;
+	//}
+
+	//static void TestRegisterWndclassWithCbtHook()
+	//{
+	//	var atom = Wnd.Misc.MyWindowClass.InterDomainRegister("aa test", _WndProc1);
+	//	var style =Native.WS_OVERLAPPEDWINDOW |Native.WS_VISIBLE;
+	//	var w = Wnd.Misc.MyWindowClass.InterDomainCreateWindow("aa test", "Test1", style, 0, 200, 200, 200, 200);
+	//	TaskDialog.Show("--");
+	//	Wnd.Misc.DestroyWindow(w);
+	//}
+
+	class MyWindow2 :Wnd.Misc.MyWindow
+	{
+		public override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+		{
+			Wnd.Misc.PrintMsg(w, message, wParam, lParam);
+
+			//switch(message) {
+			//case Api.WM_NCCREATE:
+
+			//	return 0;
+			//}
+
+			return base.WndProc(w, message, wParam, lParam);
+		}
+	}
+
+	static void TestMyWindow()
+	{
+		//var e = new Wnd.Misc.MyWindow.WndClassEx() { };
+		var e = new Wnd.Misc.MyWindow.WndClassEx() { hbrBackground = (IntPtr)(Api.COLOR_INFOBK + 1) };
+
+		Wnd.Misc.MyWindow.RegisterClass("MyWindow", ex: e);
+		var style = Native.WS_OVERLAPPEDWINDOW | Native.WS_VISIBLE;
+
+		var x = new MyWindow2();
+		if(!x.Create("MyWindow", "MyWindow", style, 0, 200, 200, 200, 200)) { Print("failed"); return; }
+		Timer_.After(1000, t => { GC.Collect(); });
+		TaskDialog.Show("--");
+		x.Destroy();
+
+		//var b = new AuToolbar();
+		//b["one"] = o => Print(o);
+		//b.Visible = true;
+		//TaskDialog.Show("--");
+	}
+
+	static void TestOnScreenRect()
+	{
+		var r = new RECT(100, 100, 100, 100, true);
+		var x = new OnScreenRect();
+		x.Rect = r;
+		//x.Color = 0xFF0000; //red
+		x.Color = Color.Orange;
+		x.Thickness = 2;
+		//x.Opacity = 0.3;
+		x.Show(true);
+
+		//for(int i = 0; i < 6; i++) {
+		//	0.3.s();
+		//	//x.Visible = !x.Visible;
+		//	//r = x.Rect; r.Offset(20, 20); x.Rect = r;
+		//	//x.Thickness += 1;
+		//	//x.Opacity += 0.1;
+		//	x.Color = x.Color.AdjustLuminance(-100);
+		//}
+		Timer_.Every(300, t =>
+		{
+			//x.Visible = !x.Visible;
+			//r = x.Rect; r.Offset(20, 20); x.Rect = r;
+			x.Opacity += 0.03;
+		});
+		TaskDialog.Show("test");
+		//var f = new Form(); f.ShowDialog();
+		//2.s();
+		//x.Dispose();
+	}
+
+	public class AccEtc
+	{
+		string _s;
+		public string value, description, help, action, key, uiaid, attributes, notin;
+		public object state, level, rect, elem, maxcc;
+
+		public AccEtc() { }
+
+		public AccEtc(
+			string value, string description, string help, string action, string key, string uiaid, string attributes,
+			string notin, object state, object level, object rect, object elem, object maxcc)
+		{
+
+		}
+
+		public static implicit operator AccEtc(string s) => new AccEtc() { _s = s };
+		public static implicit operator string(AccEtc x)
+		{
+			string s = x._s;
+			if(s == null) {
+				var b = new StringBuilder();
+				_Add(x.value);
+				_Add(x.description);
+				_Add(x.help);
+				_Add(x.action);
+				_Add(x.key);
+				_Add(x.uiaid);
+				_Add(x.attributes);
+				_Add(x.notin);
+				_Add(x.state);
+				_Add(x.level);
+				_Add(x.rect);
+				_Add(x.elem);
+				_Add(x.maxcc);
+
+				void _Add(object t)
+				{
+					if(t == null) return;
+					if(b.Length != 0) b.Append("\0 ");
+					b.Append(t);
+				}
+
+				s = b.ToString();
+			}
+			return s;
+		}
+	}
+
+	static void TestAccPropFormat()
+	{
+		//var w1 = Wnd.Find("* Chrome").OrThrow();
+		//var a1 = Acc.Find(w1, "web:PUSHBUTTON", "Search").OrThrow().Navigate("pa").OrThrow();
+		//Print(a1 != null);
+		//return;
+
+		//Print("one" + @"\two" + $"{3}" + $@"f{0}\ur"); return;
+		//Print(@"one" + "\0" + @"two"); return;
+		//Print(@"one\n" + @"two"); return;
+		//Print(new string[] { @"one", @"two" });
+
+		//AccFind(default, "role", more: "ffff", more: "gggg");
+
+		//RECT r = new RECT(1, 2, 3, 4, true);
+		//Tyyp(r);
+		////Tyyp(in r);
+		//Tyyp();
+
+		//Kuu("one=ONE\0 two=TWO\0 three=THREE");
+		//Kuu(one: "ONE", two: "TWO", three: "THREE");
+		Wnd ww = default;
+		Acc.Find(ww, "role", prop: "one=ONE\0 two=TWO\0 three=THREE");
+		Acc.Find(ww, "role", prop: "one=ONE\n two=TWO\n three=`TH\r\nREE`");
+		Acc.Find(ww, "role", prop: "one=ONE\n" + @"two=TWO\n" + "three=`TH\r\nREE`");
+		Acc.Find(ww, "role", prop: "one=ONE\0" + @"two=TWO" + "\0" + "three=`TH\r\nREE`");
+		Acc.Find(ww, "role", prop: new AccEtc() { value = "ONE", uiaid = "TWO", state = "STATE" });
+		Acc.Find(ww, "role", prop: @"
+one=ONE
+two=TWO
+three=`TH
+REE`");
+	}
+
+	static void TestDynamicExpandoObject()
+	{
+		dynamic d = new ExpandoObject();
+		d.Moo = 5;
+		Print(d.Moo);
+	}
+
+	static void _TestTupleParams((int one, string two) prop = default, int more = 0)
+	{
+		PrintList(prop.one, prop.two, more);
+	}
+
+	static void TestTupleParams()
+	{
+		//_TestTupleParams(more: 3);
+		_TestTupleParams((1, "two"));
+		_TestTupleParams((one: 8, two: "two"));
+		//_TestTupleParams((two: "two", one: 8)); //error
+		//_TestTupleParams((two: "two")); //error
+	}
+
+	static void TestAccThrowOperator()
+	{
+		////Wnd.Find("Quick Macros Forum - Google Chrome-", "Chrome_WidgetWin_1").MouseMove();
+		////Print((+Wnd.Find("Quick Macros Forum - Google Chrome-", "Chrome_WidgetWin_1")).ThreadId);
+		//Print(Wnd.Find("Quick Macros Forum - Google Chrome-", "Chrome_WidgetWin_1").OrThrow().ThreadId);
+		//return;
+
+		//var w = Wnd.Find("Quick Macros Forum - Google Chrome", "Chrome_WidgetWin_1").OrThrow();
+		////Acc a = null;
+		////a = Acc.Find(w, "web:LINK", "Example"); //if not found, sets a = null
+		////a = -Acc.Find(w, "web:LINK", "Example"); //if not found, throws exception
+
+		////a = Acc.Find(w, "web:LINK") + "next";
+		////a = -Acc.Find(w, "web:UUU") + "next";
+		////a = (-Acc.Find(w, "web:UUU")).Navigate("next");
+		////a = -(-Acc.Find(w, "web:LINK")).Navigate("next100");
+		////a = Acc.Find(w, "web:LINK")["next"];
+		////a = -Acc.Find(w, "web:LINK")["ne100"];
+		////a = -(-Acc.Find(w, "web:UUU"))["ne100"];
+		////a = Acc.Find(w, "web:UUU").OrThrow()["ne100"];
+		////a = Acc.Find(w, "web:LINK").OrThrow()["ne"].OrThrow();
+		////a = Acc.Find(w, "web:LINK")?["ne"];
+		//////a = (Acc.Find(w, "web:LINK-")?["ne"]).OrThrow();
+		////a = (Acc.Find(w, "web:LINK")?["ne100"]).OrThrow();
+		//////a = Acc.Find(w, "web:UUU")["ne100"];
+		////a = -Acc.Find(w, "web:LINK")?["ne100"];
+		////var a = +Acc.Find(w, "web:LINK")?["ne"];
+		////var a = +Acc.Find(w, "web:LINK-").SimpleElementId;
+		//Acc.Find(w, "web:LINK", "Portal-").MouseMove();
+
+		////a = Acc.Find(w, "web:UUU").OrThrow();
+		////Print(a);
+
+		//var w1 = Wnd.Find("Example").OrThrow();
+		//var w2 = +Wnd.Find("Example"); //the same
+
+		//var w3 = Wnd.Find("Example").OrThrow().Child("Example").OrThrow();
+		//var w4 = Wnd.Find("Example").Child("Example").OrThrow();
+
+		//var w5 = Wnd.Find("Example").Child("Example");
+
+		//var w = Wnd.Find("Example").OrThrow();
+
+		//var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
+		//var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
+
+		//var a3 = (Acc.Find(w, "web:LINK", "Example")?.Navigate("example")).OrThrow();
+		//var a4 = +Acc.Find(w, "web:LINK", "Example")?.Navigate("example"); //the same
+
+		//var a5 = (Acc.Wait(3, w, "Example")?.Navigate("example")).OrThrow();
+		//var a6 = +Acc.Wait(3, w, "Example")?.Navigate("example");
+
+		//var w = Wnd.Find("Example").OrThrow();
+		//var r1 = ScreenImage.Find("example", w).OrThrow();
+		//var r2 = +ScreenImage.Find("example", w); //the same
+	}
+
+	static void TestAccEdgeNoUIA()
+	{
+		for(int i = 0; i < 5; i++) {
+
+			Perf.First();
+#if true
+			var w = Wnd.Find("* Edge", "Applic*").OrThrow();
+			//w = w.Child(null, "Windows.UI.Core.CoreWindow").OrThrow(); //same speed etc
+			var a = Acc.Find(w, "LINK", "Bug*", flags: AFFlags.UIA).OrThrow();
+#else //30% faster
+			var w = Wnd.Find("Microsoft Edge", "Windows.UI.Core.CoreWindow", flags: WFFlags.HiddenToo).OrThrow();
+			//w = w.Child("CoreInput", "Windows.UI.Core.CoreComponentInputSource").OrThrow(); //same speed etc
+			var a = Acc.Find(w, "LINK", "Bug*", flags: AFFlags.HiddenToo).OrThrow();
+#endif
+			Perf.NW();
+			Print(a);
+			Print(a.MiscFlags);
+			//Print(a.WndContainer);
+		}
+	}
+
+	static void TestAccForm()
+	{
+#if true
+		var w = Wnd.Find("* Chrome").OrThrow();
+		var a = Acc.Find(w, "web:PUSHBUTTON", "Search").OrThrow();
+		//var a = Acc.Find(w, "web:CELL", "Posts").OrThrow();
+
+		//var w = Wnd.Find("* Firefox").OrThrow();
+		//var a = Acc.Find(w, "web:TEXT", "Search the Web").OrThrow();
+
+		//var w = Wnd.Find("Quick *").OrThrow();
+		//var a = Acc.Find(w, "PUSHBUTTON", "Properties*").OrThrow();
+
+		//foreach(var k in Wnd.Misc.AllWindows(false)) {
+		//	//if(!k.ClassNameIs("Windows.UI.Core.CoreWindow")) continue;
+		//	//if(!k.IsVisible || k.IsVisibleEx) continue;
+		//	if(!k.IsCloaked) continue;
+		//	var s = k.Name; if(Empty(s) || s=="Default IME" || s== "MSCTFIME UI") continue;
+		//	Print(k);
+		//	//PrintList(k.IsVisible, k.IsCloaked);
+		//	//continue;
+		//	foreach(var c in k.AllChildren()) {
+		//		Print($"\t{c.ToString()}");
+		//	}
+		//}
+		//return;
+
+		//var w = Wnd.Find("Microsoft Edge", "Windows.UI.Core.CoreWindow", flags: WFFlags.HiddenToo).OrThrow();
+		//var a = Acc.Find(w, "PANE", flags: AFFlags.HiddenToo).OrThrow();
+
+		//a = a.Navigate("pr");
+		Perf.First();
+		var f = new Au.Tools.Form_Acc(a);
+#else
+		Perf.First();
+		var f = new Acc_form();
+#endif
+		f.ShowDialog();
+		//TaskDialog.Show("-");
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
 #if DEBUG
 		//Output.IgnoreConsole = true;
-		//Output.LogFile=@"Q:\Test\catkeys"+IntPtr.Size*8+".log";
+		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
 #endif
 		Output.LibWriteToQM2 = true;
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
-			Thread.Sleep(100);
+			//100.ms();
 		}
 
 		try {
 
 			try {
-				TestAccEverything();
-				//var t = new Thread(() =>
-				//  {
-				//	  TestAccEverything();
-				//  });
-				////Print(t.GetApartmentState());
-				//t.Start();
-				//500.ms();
 
-				//TestAccRoleString();
-				//TestAccFindGetProp();
-				//TestAccScrollTo();
-				//TestAccFromWindowJavaUIA();
-				//TestAccFindNavig();
-				//TestAccToUIElem();
-				//TestAccUia();
+				TestAccForm();
+				//TestAccThrowOperator();
 			}
 			finally {
 				Cpp.Cpp_Unload();
@@ -2699,7 +3234,7 @@ static unsafe partial class Test
 
 		/*
 
-		using static CatAlias;
+		using static AuAlias;
 
 		say(...); //Output.Write(...); //or print
 		key(...); //Input.Keys(...);

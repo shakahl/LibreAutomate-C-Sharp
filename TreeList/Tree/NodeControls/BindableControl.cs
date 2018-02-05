@@ -67,14 +67,12 @@ namespace Aga.Controls.Tree.NodeControls
 		#region Properties
 
 		private string _propertyName;
-		[DefaultValue(""), Category("Data")]
+		[DefaultValue(null), Category("Data")]
 		public string DataPropertyName
 		{
 			get { return _propertyName; }
 			set
 			{
-				if(_propertyName == null)
-					_propertyName = string.Empty;
 				_propertyName = value;
 			}
 		}

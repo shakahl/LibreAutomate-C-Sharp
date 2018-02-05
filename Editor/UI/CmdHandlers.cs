@@ -16,11 +16,11 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
-using G.Controls;
+using Au.Controls;
 
 class CmdHandlers :IGStripManagerCallbacks
 {

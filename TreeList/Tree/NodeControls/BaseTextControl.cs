@@ -167,7 +167,7 @@ namespace Aga.Controls.Tree.NodeControls
 				pen.Dispose();
 			}
 
-			//Catkeys: TextRenderer.DrawText bug workaround: use DrawString, or backColor.
+			//au: TextRenderer.DrawText bug workaround: use DrawString, or backColor.
 			if(context.IsMemoryBitmap) {
 				//using(var brush = new SolidBrush(textColor)) context.Graphics.DrawString(label, font, brush, bounds);
 				TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, node.Tree.BackColor, _formatFlags);

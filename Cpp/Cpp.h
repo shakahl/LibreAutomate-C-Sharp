@@ -16,6 +16,9 @@ enum class eAccMiscFlags : BYTE {
 	InProc = 1, //retrieved inproc
 	UIA = 2,
 	Java = 4,
+	Marked = 128,
+
+	InheritMask= InProc|UIA|Java,
 };
 ENABLE_BITMASK_OPERATORS(eAccMiscFlags);
 
@@ -57,10 +60,9 @@ enum class eAF
 	Reverse = 1,
 	HiddenToo = 2,
 	MenuToo = 4,
-	SkipLists = 8,
-	SkipWeb = 16,
 	NotInProc=0x100,
 	UIA=0x200,
+	Mark = 0x10000,
 };
 ENABLE_BITMASK_OPERATORS(eAF);
 

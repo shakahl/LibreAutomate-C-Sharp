@@ -38,19 +38,69 @@ void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem)
 }
 } //namespace
 
-//flags: 1 get UIA, 2 prefer LINK.
+HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
+{
+	Smart<IAccessible> iacc; long elem = 0;
+	eAccMiscFlags miscFlags = (eAccMiscFlags)0;
+	int role = 0;
+
+	if(flags & 1) { //UIA
+		HRESULT hr = AccUiaFromPoint(p, &iacc);
+		if(hr) return hr;
+		miscFlags |= eAccMiscFlags::UIA;
+	} else {
+		VARIANT v;
+		HRESULT hr = AccessibleObjectFromPoint(p, &iacc, &v);
+		if(hr == 0 && !iacc) hr = E_FAIL;
+		if(hr != 0) return hr;
+		assert(v.vt == VT_I4 || v.vt == 0);
+		elem = v.vt == VT_I4 ? v.lVal : 0;
+
+		role = ao::get_accRole(iacc);
+		//Perf.Next();
+
+		//UIA?
+		if(elem == 0 && specWnd == 0 && (role == ROLE_SYSTEM_CLIENT || role == ROLE_SYSTEM_PANE)) { //info: Edge web page is PANE
+			Smart<IAccessible> auia; long x, y, wid1, hei1, wid2, hei2;
+			if(0 == AccUiaFromPoint(p, &auia)) { //speed outproc: similar to AOFP
+
+				//Perf.Next();
+				//if auia is smaller than iacc, use auia. Dirty, but in most cases works well.
+				ao::VE ve;
+				if(0 == iacc->accLocation(&x, &y, &wid1, &hei1, ve) && 0 == auia->accLocation(&x, &y, &wid2, &hei2, ve)) {
+					__int64 sq1 = (__int64)wid1*hei1, sq2 = (__int64)wid2*hei2;
+					if(sq2 < sq1 && sq2>0) {
+						iacc.Swap(ref auia);
+						miscFlags |= eAccMiscFlags::UIA;
+					}
+					//Perf.NW();
+				}
+			}
+
+			//FUTURE: if Edge, try to get non-UIA: at first get UIA, then get its WndContainer (it is cloaked), then get from it using the hard way.
+		}
+	}
+
+	if(flags & 2) _FromPoint_GetLink(ref iacc.p, ref elem);
+
+	aResult.acc = iacc.Detach(); aResult.elem = elem; aResult.misc.flags = miscFlags;
+	aResult.SetRole(role);
+	return 0;
+}
+
+namespace outproc
+{
+//flags: 1 get UIA, 2 prefer LINK, 4 not inproc.
 EXPORT HRESULT Cpp_AccFromPoint(POINT p, int flags, out Cpp_Acc& aResult)
 {
 	//Perf.First();
 	aResult.Zero();
 
-	IAccessiblePtr iacc; long elem = 0;
-
+	//note: WindowFromPoint skips disabled windows etc. But in this case it's OK. Even works better with Chrome.
 	HWND wFP = WindowFromPoint(p), wTL = GetAncestor(wFP, GA_ROOT);
 	if(!wTL) return 1; //let the caller retry
 
-	bool screenReader = false;
-	eAccMiscFlags miscFlags = (eAccMiscFlags)0;
+	ao::TempSetScreenReader tsr;
 	int specWnd = _IsSpecWnd(wTL, wTL != wFP);
 	if(specWnd) {
 		if(specWnd == 2) { //Java
@@ -58,9 +108,9 @@ EXPORT HRESULT Cpp_AccFromPoint(POINT p, int flags, out Cpp_Acc& aResult)
 			if(GetWindowInfo(wTL, &wi) && PtInRect(&wi.rcClient, p)) {
 				auto ja = AccJavaFromPoint(p, wTL);
 				if(ja != null) {
-					iacc.Attach(ja);
-					miscFlags |= eAccMiscFlags::Java;
-					flags &= ~2;
+					aResult.acc = ja;
+					aResult.misc.flags = eAccMiscFlags::Java;
+					return 0;
 				}
 			}
 		} else if(!(WinFlags::Get(wTL)&eWinFlags::AccEnableMask)) {
@@ -72,7 +122,7 @@ EXPORT HRESULT Cpp_AccFromPoint(POINT p, int flags, out Cpp_Acc& aResult)
 				//	This func doesn't know what AO must be there, and cannot wait.
 				//	Instead, where need such reliability, the caller script can eg wait for certain AO (role LINK etc) at that point.
 			} else { //OpenOffice
-				screenReader = true;
+				tsr.Set(wTL);
 				//OpenOffice bug: crashes on exit if AccessibleObjectFromPoint or AccessibleObjectFromWindow called with SPI_GETSCREENREADER.
 				//	Could not find a workaround.
 				//	Inspect.exe too.
@@ -81,59 +131,38 @@ EXPORT HRESULT Cpp_AccFromPoint(POINT p, int flags, out Cpp_Acc& aResult)
 				//	Tested only with Writer.
 				//	tested: inproc does not help.
 			}
-		}
+		} else specWnd = 0;
 	}
 
-	int role = 0;
-	if(!iacc) {
-		ao::TempSetScreenReader tsr; if(screenReader) tsr.Set(wTL);
-		if(flags & 1) { //UIA
-			HRESULT hr = AccUiaFromPoint(p, &iacc);
-			if(hr) return hr;
-			miscFlags |= eAccMiscFlags::UIA;
-		} else {
-			VARIANT v;
-			HRESULT hr = AccessibleObjectFromPoint(p, &iacc, &v);
-			if(hr == 0 && !iacc) hr = E_FAIL;
-			if(hr != 0) return hr;
-			assert(v.vt == VT_I4 || v.vt == 0);
-			elem = v.vt == VT_I4 ? v.lVal : 0;
-
-			//CONSIDER: inproc. Because now the AO has the bugs (toolbar button name, focus).
-			//	Also maybe faster eg with Firefox. Although now not too slow.
-
-			//UIA?
-			if(elem == 0 && specWnd == 0) {
-				//Perf.Next();
-				role = ao::get_accRole(iacc);
-				if(role == ROLE_SYSTEM_CLIENT || role == ROLE_SYSTEM_PANE) { //info: Edge web page is PANE
-					//Perf.Next();
-					IAccessiblePtr auia; long x, y, wid1, hei1, wid2, hei2;
-					if(0 == AccUiaFromPoint(p, &auia)) { //speed: similar to AOFP
-						//Perf.Next();
-						//if auia is smaller than iacc, use auia. Dirty, but in most cases works well.
-						ao::VE ve;
-						if(0 == iacc->accLocation(&x, &y, &wid1, &hei1, ve) && 0 == auia->accLocation(&x, &y, &wid2, &hei2, ve)) {
-							__int64 sq1 = (__int64)wid1*hei1, sq2 = (__int64)wid2*hei2;
-							if(sq2 < sq1 && sq2>0) {
-								iacc.Release();
-								iacc = auia.Detach();
-								miscFlags |= eAccMiscFlags::UIA;
-							}
-							//Perf.NW();
-						}
-					}
-				}
-			}
-		}
+	HRESULT R;
+g1:
+	if(flags & 4) {
+		R = AccFromPoint(p, flags, specWnd, out aResult);
+		return R;
 	}
 
-	if(flags & 2) _FromPoint_GetLink(ref (IAccessible*&)iacc, ref elem);
+	Cpp_Acc aAgent;
+	R = InjectDllAndGetAgent(wFP, out aAgent.acc);
+	if(R) {
+		switch((eError)R) {
+		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
+		default: return R;
+		}
+		flags |= 4; goto g1;
+	}
 
-	aResult.acc = iacc.Detach(); aResult.elem = elem; aResult.misc.flags = miscFlags;
-	aResult.SetRole(role);
-	return 0;
+	InProcCall c;
+	auto x = (MarshalParams_AccFromPoint*)c.AllocParams(&aAgent, InProcAction::IPA_AccFromPoint, sizeof(MarshalParams_AccFromPoint));
+	x->p = p;
+	x->flags = flags;
+	x->specWnd = specWnd;
+	if(R = c.Call()) return R;
+	//Perf.Next();
+	R = c.ReadResultAcc(ref aResult);
+	//Perf.NW();
+	return R;
 }
+} //namespace outproc
 
 //w - must be the focused control or window.
 //flags: 1 get UIA.
@@ -173,7 +202,7 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 
 		//Edge bug: gets wrong element. Without this flag works well.
 	} else {
-		IAccessiblePtr aw;
+		Smart<IAccessible> aw;
 		HRESULT hr = ao::AccFromWindow(w, OBJID_CLIENT, &aw, screenReader); if(hr) return hr;
 
 		AccRaw a1(aw, 0), a2; bool isThis;
@@ -184,9 +213,9 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 		} else {
 			aResult = a2;
 
-			//surprise: works with Edge too.
-			//	The AO is in w, which is not in the main Edge window. It is in another process.
-			//	It means that Edge has AOs, but they are not in the main Edge window, therefore Find and FromXY don't see them.
+			//works with Edge too.
+			//	The AO is in w, which is not in the main Edge window. It is in another process. It is cloaked.
+			//	Edge actually has AOs, but they are not in the main Edge window, therefore Find and FromXY don't see them. But Finds finds them if using w.
 
 			//never mind: cannot get focused AO of other UIA-only windows, eg Java FX.
 		}

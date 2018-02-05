@@ -4,9 +4,9 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace WinForms
 {

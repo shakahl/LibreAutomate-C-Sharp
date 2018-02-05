@@ -2152,7 +2152,7 @@ StyledText Document::MarginStyledText(int line) const {
 		pla->MultipleStyles(line), pla->Style(line), pla->Styles(line));
 }
 
-//Catkeys: new function
+//Au: new function
 int Document::MarginStyledTextNext(int line, int style) {
 	if (line<0) return 0;
 	LineAnnotation *pla = static_cast<LineAnnotation *>(perLineData[ldMargin]);

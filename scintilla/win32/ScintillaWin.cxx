@@ -1377,7 +1377,7 @@ sptr_t ScintillaWin::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam
 			//	Platform::IsKeyDown(VK_CONTROL),
 			//	Platform::IsKeyDown(VK_MENU));
 
-			//Catkeys: we need to not set focus in some cases. In other cases we set focus in WndProc of our superclass.
+			//Au: we need to not set focus in some cases. In other cases we set focus in WndProc of our superclass.
 			//::SetFocus(MainHWND());
 
 			ButtonDown(Point::FromLong(static_cast<long>(lParam)), ::GetMessageTime(),
@@ -1751,17 +1751,17 @@ sptr_t ScintillaWin::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam
 			return EncodedFromUTF8(reinterpret_cast<char*>(wParam),
 			        reinterpret_cast<char*>(lParam));
 
-			//Catkeys: can use callback function instead of WM_NOTIFY.
+			//Au: can use callback function instead of WM_NOTIFY.
 		case SCI_SETNOTIFYCALLBACK:
 			cbNotify = (Sci_NotifyCallback)lParam; cbNotifyParam = (void*)wParam;
 			break;
 
-			//Catkeys: to draw in annotation eg image instead of text.
+			//Au: to draw in annotation eg image instead of text.
 		case SCI_SETANNOTATIONDRAWCALLBACK:
 			cbAnnotationDraw = (Sci_AnnotationDrawCallback)lParam; cbAnnotationDrawParam = (void*)wParam;
 			break;
 
-			//Catkeys
+			//Au
 		case SCI_ISXINMARGIN:
 			return PointInSelMargin(Point(wParam, lParam));
 
@@ -1974,7 +1974,7 @@ bool ScintillaWin::ModifyScrollBars(int nMax, int nPage) {
 }
 
 void ScintillaWin::NotifyChange() {
-	//Catkeys: don't need it. WinForms also would reflect it.
+	//Au: don't need it. WinForms also would reflect it.
 
 	//::SendMessage(::GetParent(MainHWND()), WM_COMMAND,
 	//        MAKELONG(GetCtrlID(), SCEN_CHANGE),
@@ -1982,7 +1982,7 @@ void ScintillaWin::NotifyChange() {
 }
 
 void ScintillaWin::NotifyFocus(bool focus) {
-	//Catkeys: don't need it. WinForms also would reflect it.
+	//Au: don't need it. WinForms also would reflect it.
 
 	//::SendMessage(::GetParent(MainHWND()), WM_COMMAND,
 	//        MAKELONG(GetCtrlID(), focus ? SCEN_SETFOCUS : SCEN_KILLFOCUS),
@@ -2002,7 +2002,7 @@ int ScintillaWin::GetCtrlID() {
 void ScintillaWin::NotifyParent(SCNotification scn) {
 	scn.nmhdr.hwndFrom = MainHWND();
 	scn.nmhdr.idFrom = GetCtrlID();
-	if (cbNotify) (cbNotify)(cbNotifyParam, scn); else //Catkeys: can use callback function instead of WM_NOTIFY.
+	if (cbNotify) (cbNotify)(cbNotifyParam, scn); else //Au: can use callback function instead of WM_NOTIFY.
 		::SendMessage(::GetParent(MainHWND()), WM_NOTIFY,
 	              GetCtrlID(), reinterpret_cast<LPARAM>(&scn));
 }

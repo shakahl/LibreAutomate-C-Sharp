@@ -16,9 +16,9 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 #pragma warning disable 649 //member not used
 

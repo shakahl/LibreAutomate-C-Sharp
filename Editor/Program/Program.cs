@@ -20,9 +20,9 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Runtime;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 static class Program
 {

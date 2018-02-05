@@ -19,10 +19,10 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
-using Catkeys.Triggers;
+using Au;
+using Au.Types;
+using static Au.NoClass;
+using Au.Triggers;
 
 //[Script.Options(reuseAppdomain=true, ...)]
 class ScriptClass :Script

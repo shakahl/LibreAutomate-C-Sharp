@@ -6,7 +6,7 @@ namespace Aga.Controls.Tree
 {
 	public abstract class TreeModelBase :ITreeModel
 	{
-		//Catkeys:
+		//au:
 		public abstract System.Collections.IEnumerable GetChildren(object nodeTag);
 		public abstract bool IsLeaf(object nodeTag);
 		//public abstract System.Collections.IEnumerable GetChildren(TreePath treePath);

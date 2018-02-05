@@ -56,8 +56,8 @@ public:
 
 	Document *pdoc;
 
-	Sci_NotifyCallback cbNotify; void* cbNotifyParam; //Catkeys: can use callback function instead of WM_NOTIFY.
-	Sci_AnnotationDrawCallback cbAnnotationDraw; void* cbAnnotationDrawParam; //Catkeys: to draw in annotation eg image instead of text.
+	Sci_NotifyCallback cbNotify; void* cbNotifyParam; //Au: can use callback function instead of WM_NOTIFY.
+	Sci_AnnotationDrawCallback cbAnnotationDraw; void* cbAnnotationDrawParam; //Au: to draw in annotation eg image instead of text.
 
 	EditModel();
 	virtual ~EditModel();

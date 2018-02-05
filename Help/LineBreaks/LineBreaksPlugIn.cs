@@ -16,8 +16,9 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Xml;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 using System.Linq;
 using System.Xml.XPath;
@@ -173,7 +174,9 @@ namespace LineBreaks
 
 		void _Process(XmlNode members)
 		{
+			Output.LibWriteToQM2 = true;
 			Output.Clear();
+			//Debugger.Launch(); if(Debugger.IsAttached) Debugger.Break();
 
 			var doc = members.OwnerDocument;
 

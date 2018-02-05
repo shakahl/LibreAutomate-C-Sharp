@@ -18,10 +18,10 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
-namespace Catkeys.Util
+namespace Au.Util
 {
 	//[DebuggerStepThrough]
 	public class BitList

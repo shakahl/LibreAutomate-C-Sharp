@@ -2,18 +2,6 @@
 #include "cpp.h"
 #include "acc.h"
 
-_COM_SMARTPTR_TYPEDEF(IUIAutomation, __uuidof(IUIAutomation));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationElement, __uuidof(IUIAutomationElement));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationCondition, __uuidof(IUIAutomationCondition));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationElementArray, __uuidof(IUIAutomationElementArray));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationLegacyIAccessiblePattern, __uuidof(IUIAutomationLegacyIAccessiblePattern));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationInvokePattern, __uuidof(IUIAutomationInvokePattern));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationValuePattern, __uuidof(IUIAutomationValuePattern));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationSelectionItemPattern, __uuidof(IUIAutomationSelectionItemPattern));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationSelectionPattern, __uuidof(IUIAutomationSelectionPattern));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationScrollItemPattern, __uuidof(IUIAutomationScrollItemPattern));
-_COM_SMARTPTR_TYPEDEF(IUIAutomationTreeWalker, __uuidof(IUIAutomationTreeWalker));
-
 namespace uia
 {
 #ifdef _DEBUG
@@ -28,16 +16,16 @@ void PrintGuid(const GUID& g)
 
 struct ThreadVar
 {
-	IUIAutomationPtr uia;
-	IUIAutomationConditionPtr rawCond;
-	IUIAutomationTreeWalkerPtr rawWalk;
+	Smart<IUIAutomation> uia;
+	Smart<IUIAutomationCondition> rawCond;
+	Smart<IUIAutomationTreeWalker> rawWalk;
 };
 thread_local ThreadVar t_var;
 
 IUIAutomation* UIA()
 {
 	ThreadVar& tv = t_var;
-	if(!tv.uia) tv.uia.CreateInstance(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER);
+	if(!tv.uia) tv.uia.CoCreateInstance(__uuidof(CUIAutomation), null, CLSCTX_INPROC_SERVER);
 	return tv.uia;
 }
 
@@ -63,15 +51,15 @@ class UIAccessible : public IAccessible//, IServiceProvider
 {
 	long _cRef;
 	DWORD _timeOfChildren;
-	IUIAutomationElementPtr _ae;
-	IUIAutomationElementArrayPtr _children;
+	Smart<IUIAutomationElement> _ae;
+	Smart<IUIAutomationElementArray> _children;
 
 public:
 #pragma region ctor, dtor
 	UIAccessible(IUIAutomationElement* ae) : _ae(ae, false)
 	{
 		//PRINTS(__FUNCTIONW__);
-		//_ae->AddRef(); Printf(L"+ %p ref=%i tid=%i", _ae.GetInterfacePtr(), _ae->Release(), GetCurrentThreadId());
+		//_ae->AddRef(); Printf(L"+ %p ref=%i tid=%i", _ae.p, _ae->Release(), GetCurrentThreadId());
 
 		_cRef = 1;
 		_timeOfChildren = 0;
@@ -80,7 +68,7 @@ public:
 	//~UIAccessible()
 	//{
 	//	//PRINTS(__FUNCTIONW__);
-	//	auto p = _ae.GetInterfacePtr(); Printf(L"- %p ref=%i tid=%i", p, _ae.Detach()->Release(), GetCurrentThreadId());
+	//	auto p = _ae.p; Printf(L"- %p ref=%i tid=%i", p, _ae.Detach()->Release(), GetCurrentThreadId());
 	//	//note: intermediate elements still have refcount 1, because they are referenced by parent's IUIAutomationElementArray.
 	//}
 #pragma endregion
@@ -157,8 +145,9 @@ public:
 		*pcountChildren = 0;
 		HRESULT hr;
 		if(!_children || GetTickCount()- _timeOfChildren>40) {
+			if(_children) _children.Release();
 			hr = _ae->FindAll(TreeScope::TreeScope_Children, CondAll(), &_children);
-			//Printf(L"0x%X %p", hr, _children.GetInterfacePtr());
+			//Printf(L"0x%X %p", hr, _children.p);
 			if(hr != 0 || !_children) return hr; //msdn lies: "NULL is returned if no matching element is found"
 			_timeOfChildren = GetTickCount();
 		}
@@ -276,7 +265,7 @@ public:
 
 	STDMETHODIMP get_accHelp(VARIANT varChild, out BSTR* pszHelp)
 	{
-		if(varChild.vt == VT_I1) { //prop uiaAutomationId
+		if(varChild.vt == VT_I1) { //prop uiaid
 			switch(varChild.cVal) {
 			case 'u': return _ae->get_CurrentAutomationId(pszHelp);
 			}
@@ -304,7 +293,7 @@ public:
 	{
 		long _cRef;
 		int _next, _count;
-		IUIAutomationElementArrayPtr _a;
+		Smart<IUIAutomationElementArray> _a;
 
 	public:
 		UIAccessibleSelectedChildren(IUIAutomationElementArray* a, int count) : _a(a, false)
@@ -370,11 +359,11 @@ public:
 
 	STDMETHODIMP get_accSelection(out VARIANT* pvarChildren)
 	{
-		IUIAutomationSelectionPatternPtr p;
+		Smart<IUIAutomationSelectionPattern> p;
 		HRESULT hr = _ae->GetCurrentPatternAs(UIA_SelectionPatternId, IID_PPV_ARGS(&p));
 		if(hr == 0 && !p) hr = 1;
 		if(hr == 0) {
-			IUIAutomationElementArrayPtr a;
+			Smart<IUIAutomationElementArray> a;
 			hr = p->GetCurrentSelection(&a);
 			if(hr == 0) {
 				pvarChildren->vt = 0;
@@ -406,7 +395,7 @@ public:
 		if(flagsSelect&SELFLAG_EXTENDSELECTION) return E_INVALIDARG;
 		HRESULT hr = 0;
 		if(flagsSelect&(SELFLAG_TAKESELECTION | SELFLAG_ADDSELECTION | SELFLAG_REMOVESELECTION)) {
-			IUIAutomationSelectionItemPatternPtr p;
+			Smart<IUIAutomationSelectionItemPattern> p;
 			hr = _ae->GetCurrentPatternAs(UIA_SelectionItemPatternId, IID_PPV_ARGS(&p));
 			if(hr == 0 && !p) hr = 1;
 			if(hr == 0) {
@@ -482,13 +471,13 @@ public:
 		HRESULT hr;
 
 		if(varChild.vt == VT_I1 && varChild.cVal == 's') { //scroll to
-			IUIAutomationScrollItemPatternPtr p;
+			Smart<IUIAutomationScrollItemPattern> p;
 			hr = _ae->GetCurrentPatternAs(UIA_ScrollItemPatternId, IID_PPV_ARGS(&p));
 			if(hr == 0 && !p) hr = 1;
 			if(hr == 0) hr = p->ScrollIntoView();
 		} else {
 			if(_InvalidVarChildParam(ref varChild)) return E_INVALIDARG;
-			IUIAutomationInvokePatternPtr p;
+			Smart<IUIAutomationInvokePattern> p;
 			hr = _ae->GetCurrentPatternAs(UIA_InvokePatternId, IID_PPV_ARGS(&p));
 			if(hr == 0 && !p) hr = 1;
 			if(hr == 0) hr = p->Invoke();
@@ -505,7 +494,7 @@ public:
 	STDMETHODIMP put_accValue(VARIANT varChild, BSTR szValue)
 	{
 		if(_InvalidVarChildParam(ref varChild)) return E_INVALIDARG;
-		IUIAutomationValuePatternPtr p;
+		Smart<IUIAutomationValuePattern> p;
 		HRESULT hr = _ae->GetCurrentPatternAs(UIA_ValuePatternId, IID_PPV_ARGS(&p));
 		if(hr == 0 && !p) hr = 1;
 		if(hr == 0) hr = p->SetValue(szValue);
@@ -524,7 +513,7 @@ private:
 	HRESULT _GetProp(const VARIANT& varChild, WCHAR prop, void* R)
 	{
 		if(_InvalidVarChildParam(ref varChild)) return E_INVALIDARG;
-		IUIAutomationLegacyIAccessiblePatternPtr p;
+		Smart<IUIAutomationLegacyIAccessiblePattern> p;
 		//Perf.First();
 		HRESULT hr = _ae->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&p));
 		if(hr == 0 && !p) hr = 1;
@@ -547,7 +536,7 @@ private:
 	HWND _GetHWND()
 	{
 		//PRINTS(__FUNCTIONW__);
-		for(auto e = _ae; ;) {
+		for(IUIAutomationElement* e = _ae; ;) {
 			UIA_HWND w = 0;
 			HRESULT hr = e->get_CurrentNativeWindowHandle(&w);
 			if(hr || w) {
@@ -573,13 +562,13 @@ private:
 		if(hr) return 0;
 		if(w) return (HWND)w;
 
-		IUIAutomationConditionPtr cond;
+		Smart<IUIAutomationCondition> cond;
 		if(0 != UIA()->CreatePropertyCondition(UIA_ControlTypePropertyId, ao::VE(UIA_WindowControlTypeId), &cond)) return 0;
-		IUIAutomationTreeWalkerPtr walker;
+		Smart<IUIAutomationTreeWalker> walker;
 		if(0 != UIA()->CreateTreeWalker(cond, &walker)) return 0;
 		Perf.Next();
 
-		IUIAutomationElementPtr p;
+		Smart<IUIAutomationElement> p;
 		hr = walker->GetParentElement(_ae, &p); //why so slow?
 		if(hr == 0 && !p) hr = 1;
 		Perf.Next();

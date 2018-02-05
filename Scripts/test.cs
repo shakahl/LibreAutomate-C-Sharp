@@ -1,8 +1,9 @@
 using System;
 //using System.Runtime.InteropServices;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 public static class Test
 {

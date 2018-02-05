@@ -187,7 +187,7 @@ HRESULT Navig_Step(int navDir, int childIndex, AccRaw af, out AccRaw& ar)
 	}
 	assert((hr != 0) == (ar.acc == null));
 	if(hr == 0) {
-		ar.misc.flags = af.misc.flags; //InProc, UIA, Java
+		ar.misc.flags = af.misc.flags&eAccMiscFlags::InheritMask; //UIA, Java
 	}
 	return hr;
 }
@@ -261,6 +261,12 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 	HRESULT hr = 0;
 
 	switch(prop) {
+	case 'o': case 'i': case '@':
+		if(a.elem || (a.misc.flags & (eAccMiscFlags::InProc | eAccMiscFlags::UIA | eAccMiscFlags::Java)) != eAccMiscFlags::InProc) return 1;
+		break;
+	}
+
+	switch(prop) {
 	case 'R':
 		hr = acc->get_accRole(ve, &v); if(hr != 0) break;
 		role = ao::RoleToString(ref v);
@@ -270,7 +276,10 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 	case 'v': hr = acc->get_accValue(ve, &sResult); break;
 	case 'd': hr = acc->get_accDescription(ve, &sResult); break;
 	case 'h': hr = acc->get_accHelp(ve, &sResult); break;
-	case 'u': ve.vt = VT_I1; ve.cVal = 'u'; hr = acc->get_accHelp(ve, &sResult); break; //uiaAutomationId
+	case 'u': //uiaid
+		if(!(a.misc.flags&eAccMiscFlags::UIA)) return 1;
+		ve.vt = VT_I1; ve.cVal = 'u'; hr = acc->get_accHelp(ve, &sResult);
+		break;
 	case 'a': hr = acc->get_accDefaultAction(ve, &sResult); break;
 	case 'k': hr = acc->get_accKeyboardShortcut(ve, &sResult); break;
 	case 's':
@@ -282,6 +291,7 @@ HRESULT AccGetProp(Cpp_Acc a, WCHAR prop, out BSTR& sResult)
 		if(hr == 0) sResult = SysAllocStringByteLen((LPCSTR)&rect, 16);
 		break;
 	case 'c':
+		if(a.elem) return 1;
 		hr = acc->get_accChildCount(out &cc);
 		if(hr == 0) sResult = SysAllocStringByteLen((LPCSTR)&cc, 4);
 		break;
@@ -410,7 +420,7 @@ void AGS_Add(Cpp_Acc a, ref VARIANT& v, ref CSimpleArray<AccRaw>& t) {
 	AccRaw r;
 	if(0 == r.FromVARIANT(a.acc, ref v, true)) {
 		if(r.elem) r.acc->AddRef();
-		r.misc.flags = a.misc.flags;
+		r.misc.flags = a.misc.flags&eAccMiscFlags::InheritMask;
 		t.Add(r);
 	}
 }
@@ -427,7 +437,7 @@ EXPORT HRESULT Cpp_AccGetSelection(Cpp_Acc a, out BSTR& sResult)
 	if(hr == 0 && v.vt != 0) {
 		CSimpleArray<AccRaw> t;
 		if(v.vt == VT_UNKNOWN) {
-			IEnumVARIANTPtr e;
+			Smart<IEnumVARIANT> e;
 			if(0 == v.punkVal->QueryInterface(&e)) {
 				for(;;) {
 					_variant_t vv; ULONG n;

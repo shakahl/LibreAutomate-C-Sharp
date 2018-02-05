@@ -140,7 +140,7 @@ void LineMarkers::InsertLine(int line) {
 void LineMarkers::RemoveLine(int line) {
 	// Retain the markers from the deleted line by oring them into the previous line
 	if (markers.Length()) {
-		//Catkeys: remove this feature
+		//Au: remove this feature
 		//if (line > 0) {
 		//	MergeMarkers(line - 1);
 		//}

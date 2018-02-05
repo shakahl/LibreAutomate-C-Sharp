@@ -44,7 +44,8 @@ inline void PrintComRefCount(IUnknown* u) {
 #define Print __noop
 #define Printf __noop
 #define Printx __noop
-#define PRINT __noop
+#define PRINTI __noop
+#define PRINTS __noop
 #define PRINTX __noop
 #define PRINTF __noop
 #define PRINTF_IF __noop
@@ -102,6 +103,65 @@ inline bool IsThisProcess64Bit()
 	return false;
 #endif
 }
+
+
+//Standard IUnknown implementation with thread-unsafe refcounting.
+#define STD_IUNKNOWN_METHODS(iface) \
+STDMETHODIMP QueryInterface(REFIID iid, void** ppv)\
+{\
+	if(iid == IID_IUnknown || iid == IID_##iface) { _cRef++; *ppv = this; return S_OK; }\
+	else { *ppv = nullptr; return E_NOINTERFACE; }\
+}\
+STDMETHODIMP_(ULONG) AddRef()\
+{\
+	return ++_cRef;\
+}\
+STDMETHODIMP_(ULONG) Release()\
+{\
+	long ret=--_cRef;\
+	if(!ret) delete this;\
+	return ret;\
+}
+
+
+//Standard IUnknown implementation without refcounting.
+#define STD_IUNKNOWN_METHODS_SIMPLE(iface) \
+STDMETHODIMP QueryInterface(REFIID iid, void** ppv)\
+{\
+	if(iid == IID_IUnknown || iid == IID_##iface) { *ppv = this; return S_OK; }\
+	else { *ppv = nullptr; return E_NOINTERFACE; }\
+}\
+STDMETHODIMP_(ULONG) AddRef() { return 1; }\
+STDMETHODIMP_(ULONG) Release() { return 1; }
+
+
+//Smart pointer that extends CComPtr.
+//I don't use _com_ptr_t because: 1. Can throw. 2. Intellisense bug after upgrading VS: shows many false errors.
+template <class T>
+class Smart : public CComPtr<T>
+{
+public:
+	Smart() throw()
+	{
+	}
+	Smart(_Inout_opt_ T* lp, bool addRef) throw()
+	{
+		p = lp;
+		if(addRef) p->AddRef();
+	}
+	Smart(_Inout_ const Smart<T>& lp) throw() : CComPtr<T>(lp.p)
+	{
+	}
+
+	void Swap(CComPtrBase& other)
+	{
+		T* pTemp = p;
+		p = other.p;
+		other.p = pTemp;
+	}
+
+};
+
 
 //SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
 //can instead use CSecurityAttributes/CSecurityDesc, but this added before including ATL, and don't want to change now.

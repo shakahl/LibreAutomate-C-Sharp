@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Drawing;
 
-using Catkeys.Types;
+using Au.Types;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
@@ -59,7 +59,7 @@ namespace UIA
 
 		IElement GetRootElement();
 
-		IElement ElementFromHandle(Catkeys.Wnd hwnd);
+		IElement ElementFromHandle(Au.Wnd hwnd);
 
 		IElement ElementFromPoint(Point pt);
 
@@ -67,7 +67,7 @@ namespace UIA
 
 		IElement GetRootElementBuildCache(ICacheRequest cacheRequest);
 
-		IElement ElementFromHandleBuildCache(Catkeys.Wnd hwnd, ICacheRequest cacheRequest);
+		IElement ElementFromHandleBuildCache(Au.Wnd hwnd, ICacheRequest cacheRequest);
 
 		IElement ElementFromPointBuildCache(Point pt, ICacheRequest cacheRequest);
 
@@ -175,7 +175,7 @@ namespace UIA
 
 		new IElement GetRootElement();
 
-		new IElement ElementFromHandle(Catkeys.Wnd hwnd);
+		new IElement ElementFromHandle(Au.Wnd hwnd);
 
 		new IElement ElementFromPoint(Point pt);
 
@@ -183,7 +183,7 @@ namespace UIA
 
 		new IElement GetRootElementBuildCache(ICacheRequest cacheRequest);
 
-		new IElement ElementFromHandleBuildCache(Catkeys.Wnd hwnd, ICacheRequest cacheRequest);
+		new IElement ElementFromHandleBuildCache(Au.Wnd hwnd, ICacheRequest cacheRequest);
 
 		new IElement ElementFromPointBuildCache(Point pt, ICacheRequest cacheRequest);
 
@@ -297,7 +297,7 @@ namespace UIA
 
 		new IElement GetRootElement();
 
-		new IElement ElementFromHandle(Catkeys.Wnd hwnd);
+		new IElement ElementFromHandle(Au.Wnd hwnd);
 
 		new IElement ElementFromPoint(Point pt);
 
@@ -305,7 +305,7 @@ namespace UIA
 
 		new IElement GetRootElementBuildCache(ICacheRequest cacheRequest);
 
-		new IElement ElementFromHandleBuildCache(Catkeys.Wnd hwnd, ICacheRequest cacheRequest);
+		new IElement ElementFromHandleBuildCache(Au.Wnd hwnd, ICacheRequest cacheRequest);
 
 		new IElement ElementFromPointBuildCache(Point pt, ICacheRequest cacheRequest);
 
@@ -423,7 +423,7 @@ namespace UIA
 
 		new IElement GetRootElement();
 
-		new IElement ElementFromHandle(Catkeys.Wnd hwnd);
+		new IElement ElementFromHandle(Au.Wnd hwnd);
 
 		new IElement ElementFromPoint(Point pt);
 
@@ -431,7 +431,7 @@ namespace UIA
 
 		new IElement GetRootElementBuildCache(ICacheRequest cacheRequest);
 
-		new IElement ElementFromHandleBuildCache(Catkeys.Wnd hwnd, ICacheRequest cacheRequest);
+		new IElement ElementFromHandleBuildCache(Au.Wnd hwnd, ICacheRequest cacheRequest);
 
 		new IElement ElementFromPointBuildCache(Point pt, ICacheRequest cacheRequest);
 
@@ -553,7 +553,7 @@ namespace UIA
 
 		new IElement GetRootElement();
 
-		new IElement ElementFromHandle(Catkeys.Wnd hwnd);
+		new IElement ElementFromHandle(Au.Wnd hwnd);
 
 		new IElement ElementFromPoint(Point pt);
 
@@ -561,7 +561,7 @@ namespace UIA
 
 		new IElement GetRootElementBuildCache(ICacheRequest cacheRequest);
 
-		new IElement ElementFromHandleBuildCache(Catkeys.Wnd hwnd, ICacheRequest cacheRequest);
+		new IElement ElementFromHandleBuildCache(Au.Wnd hwnd, ICacheRequest cacheRequest);
 
 		new IElement ElementFromPointBuildCache(Point pt, ICacheRequest cacheRequest);
 
@@ -902,7 +902,7 @@ namespace UIA
 
 		bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		Catkeys.Wnd NativeWindowHandle { get; }
+		Au.Wnd NativeWindowHandle { get; }
 
 		string ItemType { get; }
 
@@ -966,7 +966,7 @@ namespace UIA
 
 		bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		Catkeys.Wnd CachedNativeWindowHandle { get; }
+		Au.Wnd CachedNativeWindowHandle { get; }
 
 		string CachedItemType { get; }
 
@@ -1072,7 +1072,7 @@ namespace UIA
 
 		new bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd NativeWindowHandle { get; }
+		new Au.Wnd NativeWindowHandle { get; }
 
 		new string ItemType { get; }
 
@@ -1136,7 +1136,7 @@ namespace UIA
 
 		new bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd CachedNativeWindowHandle { get; }
+		new Au.Wnd CachedNativeWindowHandle { get; }
 
 		new string CachedItemType { get; }
 
@@ -1254,7 +1254,7 @@ namespace UIA
 
 		new bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd NativeWindowHandle { get; }
+		new Au.Wnd NativeWindowHandle { get; }
 
 		new string ItemType { get; }
 
@@ -1318,7 +1318,7 @@ namespace UIA
 
 		new bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd CachedNativeWindowHandle { get; }
+		new Au.Wnd CachedNativeWindowHandle { get; }
 
 		new string CachedItemType { get; }
 
@@ -1442,7 +1442,7 @@ namespace UIA
 
 		new bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd NativeWindowHandle { get; }
+		new Au.Wnd NativeWindowHandle { get; }
 
 		new string ItemType { get; }
 
@@ -1506,7 +1506,7 @@ namespace UIA
 
 		new bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd CachedNativeWindowHandle { get; }
+		new Au.Wnd CachedNativeWindowHandle { get; }
 
 		new string CachedItemType { get; }
 
@@ -1650,7 +1650,7 @@ namespace UIA
 
 		new bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd NativeWindowHandle { get; }
+		new Au.Wnd NativeWindowHandle { get; }
 
 		new string ItemType { get; }
 
@@ -1714,7 +1714,7 @@ namespace UIA
 
 		new bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd CachedNativeWindowHandle { get; }
+		new Au.Wnd CachedNativeWindowHandle { get; }
 
 		new string CachedItemType { get; }
 
@@ -1866,7 +1866,7 @@ namespace UIA
 
 		new bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd NativeWindowHandle { get; }
+		new Au.Wnd NativeWindowHandle { get; }
 
 		new string ItemType { get; }
 
@@ -1930,7 +1930,7 @@ namespace UIA
 
 		new bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd CachedNativeWindowHandle { get; }
+		new Au.Wnd CachedNativeWindowHandle { get; }
 
 		new string CachedItemType { get; }
 
@@ -2086,7 +2086,7 @@ namespace UIA
 
 		new bool IsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd NativeWindowHandle { get; }
+		new Au.Wnd NativeWindowHandle { get; }
 
 		new string ItemType { get; }
 
@@ -2150,7 +2150,7 @@ namespace UIA
 
 		new bool CachedIsPassword { [return: MarshalAs(UnmanagedType.Bool)] get; }
 
-		new Catkeys.Wnd CachedNativeWindowHandle { get; }
+		new Au.Wnd CachedNativeWindowHandle { get; }
 
 		new string CachedItemType { get; }
 
@@ -2477,7 +2477,7 @@ namespace UIA
 	[ComImport]
 	public interface IProxyFactory
 	{
-		IRawElementProviderSimple CreateProvider(Catkeys.Wnd hwnd, AccOBJID idObject, int idChild);
+		IRawElementProviderSimple CreateProvider(Au.Wnd hwnd, AccOBJID idObject, int idChild);
 
 		string ProxyFactoryId { get; }
 	}

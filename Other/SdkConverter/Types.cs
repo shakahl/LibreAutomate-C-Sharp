@@ -9,8 +9,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace SdkConverter
 {

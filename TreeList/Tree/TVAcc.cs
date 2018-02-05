@@ -20,9 +20,9 @@ using System.Linq;
 
 using Aga.Controls.Tree.NodeControls;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree
 {
@@ -156,7 +156,7 @@ namespace Aga.Controls.Tree
 			get
 			{
 				var tva = _tn.Tree;
-				var s = Catkeys.Util.LibStringBuilderCache.Acquire();
+				var s = Au.Util.LibStringBuilderCache.Acquire();
 				s.Append(_tn.IsLeaf ? "item" : "folder");
 				bool start = false;
 				foreach(var c in tva.NodeControls) {
@@ -286,7 +286,7 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-				var s = Catkeys.Util.LibStringBuilderCache.Acquire();
+				var s = Au.Util.LibStringBuilderCache.Acquire();
 				foreach(var col in _tva.Columns) {
 					if(!col.IsVisible) continue;
 					if(s.Length > 0) s.Append(" | ");

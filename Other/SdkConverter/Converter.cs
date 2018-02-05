@@ -11,8 +11,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace SdkConverter
 {
@@ -27,14 +28,14 @@ namespace SdkConverter
 #if TEST_SMALL
 			x = new Converter();
 			x.Convert(
-				//@"Q:\app\Catkeys\Other\SdkConverter\Data\Header.h",
-				@"Q:\app\Catkeys\Other\SdkPreprocess\Cpp.cpp",
-				@"Q:\app\Catkeys\Api\Api.cs", false);
+				//@"Q:\app\Au\Other\SdkConverter\Data\Header.h",
+				@"Q:\app\Au\Other\SdkPreprocess\Cpp.cpp",
+				@"Q:\app\Au\Api\Api.cs", false);
 #else
 			x = new Converter();
-			x.Convert(@"Q:\app\Catkeys\Api\Api-preprocessed-64.cpp", @"Q:\app\Catkeys\Api\Api-64.cs", false);
+			x.Convert(@"Q:\app\Au\Api\Api-preprocessed-64.cpp", @"Q:\app\Au\Api\Api-64.cs", false);
 			x = new Converter();
-			x.Convert(@"Q:\app\Catkeys\Api\Api-preprocessed-32.cpp", @"Q:\app\Catkeys\Api\Api-32.cs", true);
+			x.Convert(@"Q:\app\Au\Api\Api-preprocessed-32.cpp", @"Q:\app\Au\Api\Api-32.cs", true);
 #endif
 		}
 	}
@@ -174,12 +175,12 @@ internal static unsafe class API
 			//#if !TEST_SMALL
 			catch(ConverterException e) {
 				Print(e);
-				Wnd.FindRaw("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+				Wnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 				throw;
 			}
 			catch(Exception e) {
 				Print(e);
-				Wnd.FindRaw("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
+				Wnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 				throw;
 			}
 			//#endif
@@ -508,7 +509,7 @@ internal static unsafe class API
 		{
 			//get dll function names extracted from SDK lib files and system dlls
 			_funcDllMap = new Dictionary<string, string>();
-			string[] a = File.ReadAllLines(@"Q:\app\Catkeys\Api\DllMap.txt");
+			string[] a = File.ReadAllLines(@"Q:\app\Au\Api\DllMap.txt");
 			foreach(var s in a) {
 				int i = s.IndexOf(' ');
 				_funcDllMap.Add(s.Substring(0, i), s.Substring(i + 1));
@@ -516,7 +517,7 @@ internal static unsafe class API
 
 			//get GUIDs extracted from SDK lib files
 			_guids = new Dictionary<string, string>();
-			foreach(var s in File.ReadAllLines(@"Q:\app\Catkeys\Api\GuidMap.txt")) {
+			foreach(var s in File.ReadAllLines(@"Q:\app\Au\Api\GuidMap.txt")) {
 				//Print(s);
 				int i = s.IndexOf(' ');
 				string sn = s.Substring(0, i), sd = s.Substring(i + 1), sOld;

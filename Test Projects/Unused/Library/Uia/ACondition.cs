@@ -18,10 +18,10 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
-namespace Catkeys.Types
+namespace Au.Types
 {
 	/// <summary>
 	/// Builds ICondition (<msdn>IUIAutomationCondition</msdn>) from one or more properties, where all properties must match.

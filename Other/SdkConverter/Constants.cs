@@ -14,8 +14,9 @@ using System.ComponentModel; //Win32Exception
 //using System.Reflection;
 //using System.Linq;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace SdkConverter
 {

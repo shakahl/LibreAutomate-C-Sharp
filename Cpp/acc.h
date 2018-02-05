@@ -452,10 +452,10 @@ class AccChildren
 	eAccMiscFlags _miscFlags;
 
 public:
-	AccChildren(const Cpp_Acc& parent, int startAtIndex = 0, bool exactIndex = false, bool reverse = false, int maxChildren = 10000)
+	AccChildren(const Cpp_Acc& parent, int startAtIndex = 0, bool exactIndex = false, bool reverse = false, int maxcc = 10000)
 	{
 		_parent = parent.acc;
-		_miscFlags = parent.misc.flags;
+		_miscFlags = parent.misc.flags&eAccMiscFlags::InheritMask;
 		_v = null;
 		_count = -1;
 		_i = 0;
@@ -475,7 +475,7 @@ public:
 			_parent->get_accChildCount(&n); //note: some objects return 0 or 1, ie < n, and hr is usually 0. Noticed this only in IE, when c_nStack<10.
 			if(n != c_nStack) { //yes, more children
 				for(int i = c_nStack; i > 0;) VariantClear(&v[--i]);
-				if(n > maxChildren) { //protection from AO such as LibreOffice Calc TABLE that has 1073741824 children. Default 10000.
+				if(n > maxcc) { //protection from AO such as LibreOffice Calc TABLE that has 1073741824 children. Default 10000.
 					n = 0;
 				} else {
 					if(n < c_nStack) n = 1000; //get_accChildCount returned error or incorrect value
@@ -570,7 +570,7 @@ private:
 			} else {
 				//With top-level windows don't use style/GetWindowLongW(w, GWL_ID)/GetMenu. Can be custom MENUBAR etc. Here the speed is not so important.
 				for(int i = 0; i < 3; i++) {
-					IAccessiblePtr iacc; long state;
+					Smart<IAccessible> iacc; long state;
 					if(0 != v[i].pdispVal->QueryInterface(&iacc)) continue;
 					if(0 != ao::get_accState(out state, iacc) || !(state&STATE_SYSTEM_INVISIBLE)) bits |= 1 << i;
 				}

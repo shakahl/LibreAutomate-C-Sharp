@@ -7,9 +7,9 @@ using System.Drawing;
 using System.Windows.Forms.VisualStyles;
 using System.Drawing.Imaging;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree
 {
@@ -260,7 +260,7 @@ namespace Aga.Controls.Tree
 				DrawSortMark(gr, bounds, x);
 			}
 
-			//Catkeys: TextRenderer.DrawText bug workaround: use DrawString.
+			//au: TextRenderer.DrawText bug workaround: use DrawString.
 			var f = (textSize.Width < maxTextSize.Width) ? _baseHeaderFlags | TextFormatFlags.Left : _headerFlags;
 			if(memoryBitmap)
 				gr.DrawString(Header, font, SystemBrushes.ControlText, innerBounds);
@@ -298,7 +298,7 @@ namespace Aga.Controls.Tree
 					//var renderer = new VisualStyleRenderer(VisualStyleElement.Header.Item.Normal);
 					//renderer.DrawBackground(gr, bounds);
 
-					//Catkeys:
+					//au:
 					gr.FillRectangle(SystemBrushes.Control, bounds);
 					var c = SystemColors.Control; if(c == Color.Black) c = Color.Gray;
 					using(var pen = new Pen(Color.FromArgb(c.R * 5 / 6, c.G * 5 / 6, c.B * 5 / 6))) {

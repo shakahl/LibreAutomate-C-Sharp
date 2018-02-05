@@ -42,6 +42,7 @@
     <Compile Include="Library\Uia\AE_find.cs" />
     <Compile Include="Library\Uia\Uia_api.cs" />
     <Compile Include="Library\Uia\Uia_api2.cs" />
+    <None Include="Library\ValueTuple.cs" />
     <None Include="Tests\TestWPF.cs" />
     <None Include="Library\_Rejected.cs" />
   </ItemGroup>

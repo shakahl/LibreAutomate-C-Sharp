@@ -18,8 +18,8 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
 namespace WinForms
 {

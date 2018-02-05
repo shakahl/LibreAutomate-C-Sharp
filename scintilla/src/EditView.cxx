@@ -1230,7 +1230,7 @@ void EditView::DrawAnnotation(Surface *surface, const EditModel &model, const Vi
 			lineInAnnotation++;
 		}
 
-		//Catkeys: call callback function, if it was set with SCI_SETANNOTATIONDRAWCALLBACK. Step 0 - get image width.
+		//Au: call callback function, if it was set with SCI_SETANNOTATIONDRAWCALLBACK. Step 0 - get image width.
 		Sci_AnnotationDrawCallbackData c;
 		int imageWidth = 0;
 		if (model.cbAnnotationDraw)
@@ -1255,7 +1255,7 @@ void EditView::DrawAnnotation(Surface *surface, const EditModel &model, const Vi
 			rcText.left += vsDraw.spaceWidth;
 		}
 
-		//Catkeys: call callback function, if it was set with SCI_SETANNOTATIONDRAWCALLBACK. Step 1 - draw image in this line.
+		//Au: call callback function, if it was set with SCI_SETANNOTATIONDRAWCALLBACK. Step 1 - draw image in this line.
 		if (imageWidth)
 		{
 			if (!AnnotationBoxedOrIndented(vsDraw.annotationVisible)) rcText.left = (XYPOSITION)(xStart + indent);

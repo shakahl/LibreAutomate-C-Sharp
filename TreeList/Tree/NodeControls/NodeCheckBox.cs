@@ -12,7 +12,7 @@ namespace Aga.Controls.Tree.NodeControls
 {
 	public class NodeCheckBox :InteractiveControl
 	{
-		public static int ImageSize { get { return Catkeys.Util.Dpi.ScaleInt(13); } }
+		public static int ImageSize { get { return Au.Util.Dpi.ScaleInt(13); } }
 
 		private Bitmap _check;
 		private Bitmap _uncheck;
@@ -31,7 +31,6 @@ namespace Aga.Controls.Tree.NodeControls
 		#endregion
 
 		public NodeCheckBox()
-			: this(string.Empty)
 		{
 		}
 
@@ -159,7 +158,7 @@ namespace Aga.Controls.Tree.NodeControls
 			}
 		}
 
-		//Catkeys: TreePathEventArgs -> TreeViewAdvEventArgs
+		//au: TreePathEventArgs -> TreeViewAdvEventArgs
 		public event EventHandler<TreeViewAdvEventArgs> CheckStateChanged;
 		protected void OnCheckStateChanged(TreeNodeAdv node)
 		{

@@ -84,7 +84,7 @@
 		/// Infrastructure. Allows to assign null.
 		/// </summary>
 		/// <param name="v">null.</param>
-		public static implicit operator Coord(CatkeysPrivate.TypesNull1 v) => new Coord();
+		public static implicit operator Coord(JustNull1 v) => new Coord();
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -390,7 +390,7 @@
 		/// Infrastructure. Allows to assign null.
 		/// </summary>
 		/// <param name="v">null.</param>
-		public static implicit operator Coord(CatkeysPrivate.TypesNull1 v) => new Coord();
+		public static implicit operator Coord(JustNull1 v) => new Coord();
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -551,7 +551,7 @@
 		/// Infrastructure. Allows to assign null.
 		/// </summary>
 		/// <param name="v">null.</param>
-		public static implicit operator Coord(CatkeysPrivate.TypesNull1 v) => new Coord();
+		public static implicit operator Coord(JustNull1 v) => new Coord();
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -1013,12 +1013,12 @@ bbb"", b3
 
 		//d.SetIcon(TDIcon.Warning);
 		//d.SetIcon(new System.Drawing.Icon(@"Q:\app\copy.ico", 32, 32)); //OK
-		//d.SetIcon(Catkeys.Tasks.Properties.Resources.output); //OK
-		//d.SetIcon(new System.Drawing.Icon(Catkeys.Tasks.Properties.Resources.output, 16, 16)); //OK
+		//d.SetIcon(Au.Tasks.Properties.Resources.output); //OK
+		//d.SetIcon(new System.Drawing.Icon(Au.Tasks.Properties.Resources.output, 16, 16)); //OK
 		//d.SetIcon(new System.Drawing.Icon("Resources/output.ico")); //OK
 		//d.SetIcon(new System.Drawing.Icon("Resources/output.ico", 16, 16)); //OK
 		//d.SetIcon(new System.Drawing.Icon(typeof(Test), "output.ico")); //exception
-		//Print(Catkeys.Tasks.Properties.Resources.output.Width);
+		//Print(Au.Tasks.Properties.Resources.output.Width);
 		//d.SetIcon(new System.Drawing.Icon(TaskDialog.Resources.AppIconHandle32));
 		//d.SetIcon(TDIcon.App);
 
@@ -1049,8 +1049,8 @@ bbb"", b3
 
 		//d.SetFooterText("Footer text.", TDIcon.Warning);
 		//d.SetFooterText("Footer.");
-		//d.SetFooterText("Footer.", Catkeys.Tasks.Properties.Resources.output); //icon 32x32, srinked
-		//d.SetFooterText("Footer.", new System.Drawing.Icon(Catkeys.Tasks.Properties.Resources.output, 16, 16)); //icon OK
+		//d.SetFooterText("Footer.", Au.Tasks.Properties.Resources.output); //icon 32x32, srinked
+		//d.SetFooterText("Footer.", new System.Drawing.Icon(Au.Tasks.Properties.Resources.output, 16, 16)); //icon OK
 		//d.SetFooterText("Footer text.", new System.Drawing.Icon(@"q:\app\wait.ico", 16, 16));
 
 		//d.Width=700;
@@ -1578,7 +1578,7 @@ bbb"", b3
 			//x = new Process_.Memory(w, 0);
 
 		}
-		catch(CatException e) { Print(e); return; }
+		catch(AuException e) { Print(e); return; }
 
 		//Print(1);
 		//Print(x.WriteUnicodeString("Unicode"));
@@ -1698,7 +1698,7 @@ bbb"", b3
 		//w = Wnd.Find(null, "QM_*", prop: new Wnd.WinProp() { childClass = "*Edit", childName = "sea" });
 		//w = Wnd.Find("Free YouTube Downloader", "*.Window.*");
 		//w = Wnd.Find("Keyboard Layout*", "*.Window.*");
-		//w = Wnd.Find("Catkeys -*");
+		//w = Wnd.Find("QM# -*");
 		//w = Wnd.Find("", prop: new Wnd.WinProp() { x=Screen_.Width-1, y=Screen_.Height-10 });
 		//w = Wnd.Find("", prop: new Wnd.WinProp() { x=0.5, y=1.1 });
 		//w = Wnd.FromXY(1532, 1224, null);
@@ -1737,7 +1737,7 @@ bbb"", b3
 		//	Wnd w = Wnd.Find("Keyboard*");
 		//	Wnd c = w.Child("", prop: new Wnd.ChildEtc() { wfName = "ckControl" });
 		//	Print(c);
-		//} catch(CatException e) {
+		//} catch(AuException e) {
 		//	Print(e);
 		//}
 		//c = w.Child(null, "SysTreeView32", prop:new Wnd.ChildEtc() { x=1 });
@@ -2242,7 +2242,7 @@ bbb"", b3
 	{
 		bool ok;
 
-		//Print(Registry_.CatkeysKey);
+		//Print(Registry_.AuKey);
 
 		//Print(Registry_.CanOpen(@"SOFTWARE\Microsoft"));
 		//Print(Registry_.CanOpen(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft"));
@@ -2513,7 +2513,7 @@ bbb"", b3
 		//	Print(s);
 	}
 
-	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 	static extern void TestSimple();
 
 	[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
@@ -2542,7 +2542,7 @@ bbb"", b3
 		int TestNext(ref sbyte p);
 	};
 
-	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 	static extern ITest CreateTestInterface();
 
 	static void TestInterfaceMethodOverload()
@@ -2556,7 +2556,7 @@ bbb"", b3
 		Print("fin");
 	}
 
-	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 	//static extern void CreateTestInterface2(out ITest t);
 	//static extern void CreateTestInterface2(out IntPtr t); //with Marshal.GetTypedObjectForIUnknown is missing 1 Release
 	static extern void CreateTestInterface2([MarshalAs(UnmanagedType.IUnknown)] out object t); //the same number of QI etc as with 'out ITest t'
@@ -2644,7 +2644,7 @@ bbb"", b3
 		s = @"q:\app\qm.exe,-133";
 		s = @"q:\app\app.cpp";
 		s = @".dll";
-		s = "CatkeysTasks.exe";
+		s = "Au.Tasks.exe";
 		s = @"Properties\app.config";
 		s = "http://ddd.com";
 		s = @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App";
@@ -2824,15 +2824,15 @@ bbb"", b3
 	static Wnd.Misc.WindowClass _wndRC, _wndRCSuper;
 	static void TestWndRegisterClass()
 	{
-		_wndRC = Wnd.Misc.WindowClass.Register("Cat_Test", Cat_Test_WndProc, IntPtr.Size/*, Api.CS_GLOBALCLASS*/);
+		_wndRC = Wnd.Misc.WindowClass.Register("Au_Test", Au_Test_WndProc, IntPtr.Size/*, Api.CS_GLOBALCLASS*/);
 		Wnd w = Api.CreateWindowEx(0, _wndRC.Name, _wndRC.Name, Native.WS_OVERLAPPEDWINDOW | Native.WS_VISIBLE, 300, 100, 300, 200, Wnd0, 0, Zero, 0);
 		if(w.Is0) return;
 
-		_wndRCSuper = Wnd.Misc.WindowClass.Superclass("Edit", "Edit_Super", Cat_Test_WndProcSuper, IntPtr.Size);
+		_wndRCSuper = Wnd.Misc.WindowClass.Superclass("Edit", "Edit_Super", Au_Test_WndProcSuper, IntPtr.Size);
 		Wnd w2 = Api.CreateWindowEx(0, _wndRCSuper.Name, _wndRCSuper.Name, Native.WS_CHILD | Native.WS_VISIBLE, 0, 0, 200, 30, w, 3, Zero, 0);
 		if(w2.Is0) return;
 
-		//Print(Wnd.WindowClass.GetClassAtom("Cat_Test", Api.GetModuleHandle(null)));
+		//Print(Wnd.WindowClass.GetClassAtom("Au_Test", Api.GetModuleHandle(null)));
 
 		//Api.SetTimer(w, 1, 1000, null);
 
@@ -2848,7 +2848,7 @@ bbb"", b3
 			Api.DispatchMessage(ref m);
 		}
 	}
-	static LPARAM Cat_Test_WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	static LPARAM Au_Test_WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
 		switch(msg) {
 		case Api.WM_DESTROY:
@@ -2864,7 +2864,7 @@ bbb"", b3
 
 		return Api.DefWindowProc(w, msg, wParam, lParam);
 	}
-	static LPARAM Cat_Test_WndProcSuper(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	static LPARAM Au_Test_WndProcSuper(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	{
 		switch(msg) {
 		case Api.WM_DESTROY:
@@ -3258,7 +3258,7 @@ bbb"", b3
 		//Perf.ExecuteMulti(5, 1000, a1, a2, a3, a4);
 
 
-		string s = @"Q:\app\catkeys\tasks\CatkeysTasks.exe";
+		string s = @"Q:\app\Au\tasks\AuTasks.exe";
 		string hash;
 		Perf.First();
 		hash = Convert_.HashMD5Hex(s);
@@ -3496,7 +3496,7 @@ bbb"", b3
 
 	static void TestExpandPath()
 	{
-		string s1 = @"Q:\app\Catkeys\Tasks\System.Collections.Immutable.dll";
+		string s1 = @"Q:\app\Au\Tasks\System.Collections.Immutable.dll";
 		string s2 = @"%ProgramFiles%\Quick Macros 2\qm.exe";
 
 		string r1 = null, r2 = null, r3 = null, r4 = null;
@@ -3951,7 +3951,7 @@ bbb"", b3
 
 	static void _TestThreadPoolSTA()
 	{
-		Catkeys.Util.ThreadPoolSTA.SubmitCallback(null, o =>
+		Au.Util.ThreadPoolSTA.SubmitCallback(null, o =>
 		{
 			PrintList("worker", Api.GetCurrentThreadId());
 			//Thread.Sleep(_random.Next(1, 10));
@@ -3968,7 +3968,7 @@ bbb"", b3
 
 	static void _TestThreadPoolSTA2()
 	{
-		var work = Catkeys.Util.ThreadPoolSTA.CreateWork(null, o =>
+		var work = Au.Util.ThreadPoolSTA.CreateWork(null, o =>
 		{
 			PrintList("worker", Api.GetCurrentThreadId());
 			//Thread.Sleep(_random.Next(1, 10));
@@ -4158,7 +4158,7 @@ bbb"", b3
 		}
 	}
 
-	static void TestCsvCatkeys()
+	static void TestCsvAu()
 	{
 		//		string s = @"A1,B1,C1
 		//A2,B2,C2
@@ -4285,7 +4285,7 @@ A,""B """"Q"""" Z"",C
 		Print(2);
 	}
 
-	static Catkeys.Util.MessageLoop _loop = new Catkeys.Util.MessageLoop();
+	static Au.Util.MessageLoop _loop = new Au.Util.MessageLoop();
 	//static MyAppContext _appContext=new MyAppContext();
 
 	private static void Application_ThreadExit1(object sender, EventArgs e)
@@ -4413,7 +4413,7 @@ A,""B """"Q"""" Z"",C
 		F.ShowDialog();
 		//Print(2);
 
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m["aaaaaaaaa"] = null;
 		//m.Show();
 		//TaskDialog.ShowEx("", timeoutS: 1);
@@ -4423,7 +4423,7 @@ A,""B """"Q"""" Z"",C
 		//PrintList("end", _n);
 	}
 
-	static Catkeys.Util.MessageLoop _loop2 = new Catkeys.Util.MessageLoop();
+	static Au.Util.MessageLoop _loop2 = new Au.Util.MessageLoop();
 
 	static int _n;
 	static Random _random = new Random();
@@ -4512,7 +4512,7 @@ A,""B """"Q"""" Z"",C
 			//folder = @"q:\app"; pattern = "*.ico";
 			//folder = @"q:\app"; pattern = "*.cur";
 			//folder = @"c:\windows\cursors"; pattern = "*.ani";
-			//folder =@"q:\app\catkeys\tasks";
+			//folder =@"q:\app\Au\tasks";
 			//folder = @"c:\program files (x86)";
 			//folder = @"c:\program files";
 			//folder = @"c:\programdata";
@@ -4625,7 +4625,7 @@ A,""B """"Q"""" Z"",C
 		//size = Icons.GetShellIconSize(Icons.ShellSize.Jumbo);
 
 #if true
-		var m = new CatBar();
+		var m = new AuBar();
 		if(size > 0) m.Ex.ImageScalingSize = new Size(size, size);
 		//m.IconFlags = Icons.IconFlags.Shell;
 
@@ -4659,7 +4659,7 @@ A,""B """"Q"""" Z"",C
 		//Print("exit");
 #elif true
 		for(int c = 0; c < 1; c++) {
-			var m = new CatMenu();
+			var m = new AuMenu();
 			//if(size > 0) m.CMS.ImageScalingSize = new Size(size, size);
 			if(size > 0) m.IconSize = size;
 			//m.ActivateMenuWindow = true;
@@ -4680,7 +4680,7 @@ A,""B """"Q"""" Z"",C
 			m.Show();
 		}
 #elif false
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m.CMS.ImageScalingSize = new Size(size, size);
 
 		Perf.First();
@@ -4703,7 +4703,7 @@ A,""B """"Q"""" Z"",C
 		var ai = new IntPtr[a.Count];
 		Print(a.Count);
 
-		var m = new CatMenu();
+		var m = new AuMenu();
 		m.CMS.ImageScalingSize = new Size(size, size);
 
 		try {
@@ -4735,7 +4735,7 @@ A,""B """"Q"""" Z"",C
 
 #endregion test icons
 
-	static void TestCatkeysListFileCSV()
+	static void TestAuListFileCSV()
 	{
 		int size = 0, nRows = 0;
 		List<string> k = null;
@@ -4758,7 +4758,7 @@ A,""B """"Q"""" Z"",C
 		Print($"{size / 1024.0:F3} KB, {nRows} rows");
 	}
 
-	static void TestCatkeysListFileXML()
+	static void TestAuListFileXML()
 	{
 		int size = 0, nRows = 0;
 		List<string> k = null;
@@ -5816,7 +5816,7 @@ A,""B """"Q"""" Z"",C
 		F.ShowDialog();
 		//Print(2);
 
-		//var m = new CatMenu();
+		//var m = new AuMenu();
 		//m["aaaaaaaaa"] = null;
 		//m.Show();
 		//ShowRen.ShowEx("", timeoutS: 1);
@@ -6327,14 +6327,14 @@ A,""B """"Q"""" Z"",C
 		[DllImport("kernel32.dll")]
 		public static extern bool ReleaseMutex(IntPtr hMutex);
 
-		static InterDomainHandle _mutexLibMem = new InterDomainHandle(CreateMutex(Zero, false, "Catkeys_LibMem"), "Catkeys_LibMem");
+		static InterDomainHandle _mutexLibMem = new InterDomainHandle(CreateMutex(Zero, false, "Au_LibMem"), "Au_LibMem");
 
 		public static unsafe IntPtr GetProcMem()
 		{
 			//Unfinished. Need to either use unique name (+ process id and start time) or check that the address is valid, because the environment variable may be inherited from an ancestor process.
 
 			Perf.Next();
-			string name = "Catkeys_LibMem";
+			string name = "Au_LibMem";
 			//Print(name);
 			string s;
 			s = Environment.GetEnvironmentVariable(name);
@@ -6361,13 +6361,13 @@ A,""B """"Q"""" Z"",C
 		{
 			Perf.Next();
 			var p = Process.GetCurrentProcess();
-			string name = $"Catkeys_{p.Id}_{p.StartTime.ToBinary()}"; //p.StartTime.ToBinary is the slowest part
+			string name = $"Au_{p.Id}_{p.StartTime.ToBinary()}"; //p.StartTime.ToBinary is the slowest part
 			Perf.Next();
 			//Print(name);
 			string s = Environment.GetEnvironmentVariable(name);
 			//if(s != null) return (IntPtr)s.ToInt64_();
 			if(s != null) return (IntPtr)Convert.ToInt64(s);
-			//using(var x=new Mutex(false, "Cat"
+			//using(var x=new Mutex(false, "Au"
 			const int Size = 0x10000;
 			IntPtr r = Api.VirtualAlloc(Zero, Size, 0x3000, 0x40); //much faster when need to zero memory
 			Environment.SetEnvironmentVariable(name, r.ToString());
@@ -6397,7 +6397,7 @@ A,""B """"Q"""" Z"",C
 		/// <summary>
 		/// Creates or opens shared memory on demand in a thread-safe and process-safe way.
 		/// </summary>
-		static NativeSharedMemory _sm = new NativeSharedMemory("Catkeys_M_" + Api.GetCurrentProcessId(), Size);
+		static NativeSharedMemory _sm = new NativeSharedMemory("Au_M_" + Api.GetCurrentProcessId(), Size);
 
 		/// <summary>
 		/// Gets pointer to the shared memory.
@@ -6422,7 +6422,7 @@ A,""B """"Q"""" Z"",C
 
 			static TestSharedMemoryInterDomain()
 			{
-				_mm = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateOrOpen("Catkeys_M_" + Api.GetCurrentProcessId(), Size);
+				_mm = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateOrOpen("Au_M_" + Api.GetCurrentProcessId(), Size);
 				_acc = _mm.CreateViewAccessor();
 				byte* p = null;
 				_acc.SafeMemoryMappedViewHandle.AcquirePointer(ref p);
@@ -6628,12 +6628,12 @@ A,""B """"Q"""" Z"",C
 
 
 
-	static void TestCatMenuSpeed(Control c = null)
+	static void TestAuMenuSpeed(Control c = null)
 	{
 		var speed = new Perf.Inst();
 		speed.First();
 		Perf.First();
-		var m = c != null ? new CatMenu(new Container()) : new CatMenu();
+		var m = c != null ? new AuMenu(new Container()) : new AuMenu();
 		Perf.Next();
 		m["One"] = o => Print("one");
 		Perf.Next();
@@ -6661,10 +6661,10 @@ A,""B """"Q"""" Z"",C
 		}
 	}
 
-	static void TestCatMenuArray(Control c = null)
+	static void TestAuMenuArray(Control c = null)
 	{
 		Perf.First();
-		var m = c != null ? new CatMenu(new Container()) : new CatMenu();
+		var m = c != null ? new AuMenu(new Container()) : new AuMenu();
 		Perf.Next();
 		var a = new ToolStripItem[30];
 		for(int i = 0; i < a.Length; i++) a[i] = new ToolStripMenuItem("text");
@@ -6687,26 +6687,26 @@ A,""B """"Q"""" Z"",C
 
 
 
-	public class CatBar :NativeWindow
+	public class AuBar :NativeWindow
 	{
-		static Wnd.Misc.WndClass _WndClass = Wnd.Misc.WndClass.Register("CatBar", _WndProc, 0, Api.CS_GLOBALCLASS);
+		static Wnd.Misc.WndClass _WndClass = Wnd.Misc.WndClass.Register("AuBar", _WndProc, 0, Api.CS_GLOBALCLASS);
 		//static Wnd.Misc.WndClass _WndClass;
 		Wnd _w;
 
-		public static CatBar Create()
+		public static AuBar Create()
 		{
 			//if(_WndClass == null) { //to test class registration speed
-			//	_WndClass = Wnd.Misc.WndClass.Register("CatBar", _WndProc, 0, Api.CS_GLOBALCLASS);
+			//	_WndClass = Wnd.Misc.WndClass.Register("AuBar", _WndProc, 0, Api.CS_GLOBALCLASS);
 			//	Perf.Next();
 			//}
 
-			var c = new CatBar();
+			var c = new AuBar();
 			Perf.Next();
 			uint exStyle = Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST;
 			uint style = Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU;
 
-			//var p = new CreateParams() { ClassName= "CatBar", ExStyle = (int)exStyle, Style = (int)style, X = 400, Y = 200, Width = 1200, Height = 80 };
-			//c.CreateHandle(p); //registers class like "WindowsForms10.CatBar.app.0.3ee7db9_r6_ad2". Then would be two classes.
+			//var p = new CreateParams() { ClassName= "AuBar", ExStyle = (int)exStyle, Style = (int)style, X = 400, Y = 200, Width = 1200, Height = 80 };
+			//c.CreateHandle(p); //registers class like "WindowsForms10.AuBar.app.0.3ee7db9_r6_ad2". Then would be two classes.
 
 			c._w = Api.CreateWindowEx(exStyle, _WndClass.Name, null, style, 400, 200, 1200, 80, Wnd0, 0, Zero, 0);
 			if(c._w.Is0) throw new Win32Exception();
@@ -6833,7 +6833,7 @@ A,""B """"Q"""" Z"",C
 
 ////TODO: instead could simply allocate unmanaged memory with Marshal methods and pass to domains with childDomain.SetData
 //_sm = new OurSharedMemory();
-//_sm.Create("Catkeys_SM_Tasks", 1024 * 1024);
+//_sm.Create("Au_SM_Tasks", 1024 * 1024);
 
 //if(true) //compiler
 //{
@@ -6931,14 +6931,14 @@ A,""B """"Q"""" Z"",C
 //	long t1 = Stopwatch.GetTimestamp();
 
 //	_sm = new OurSharedMemory();
-//	_sm.Open("Catkeys_SM_Tasks");
+//	_sm.Open("Au_SM_Tasks");
 
 //	_sm.x->perf.AddTicksNext(t1);
 //	_sm.x->perf.Next();
 
 //	//=AppDomain.CurrentDomain.GetData("hPipe")
 
-//	_wndClassCompiler = Wnd.Misc.WndClass.Register("Catkeys_Compiler", _WndProcCompiler);
+//	_wndClassCompiler = Wnd.Misc.WndClass.Register("Au_Compiler", _WndProcCompiler);
 
 //	_sm.x->perf.Next();
 
@@ -7559,7 +7559,7 @@ A,""B """"Q"""" Z"",C
 
 //Print(1);
 //Input.Key("Ctrl+K");
-//Cat.Key("Ctrl+K");
+//Au.Key("Ctrl+K");
 
 //ShowRen.MessageDialog("dddd");
 //Meow.MessageDialog("dddd");
@@ -7686,7 +7686,7 @@ A,""B """"Q"""" Z"",C
 //import System
 ////import System.Runtime.InteropServices
 //import Moo
-//import Catkeys.Winapi
+//import Au.Winapi
 
 ////[DllImport(""user32.dll"")]
 ////def MessageBox(hWnd as int, text as string, caption as string, type as int) as int:

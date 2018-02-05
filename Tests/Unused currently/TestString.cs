@@ -13,12 +13,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
-using Catkeys;
-using static Catkeys.NoClass;
-
-//using static System.StringComparison; //ok
-//using static Catkeys.Winapi.api; //ok
-//using static W = Catkeys.Winapi.api;
+using Au;
+using static Au.NoClass;
 
 using System.Windows.Input;
 

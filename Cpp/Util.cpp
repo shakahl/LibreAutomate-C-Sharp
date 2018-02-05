@@ -175,6 +175,7 @@ bool Name(HWND w, out Bstr& s)
 	return R;
 }
 
+#if _DEBUG || PRINT_ALWAYS
 void PrintWnd(HWND w)
 {
 	Bstr sc, sn;
@@ -190,6 +191,7 @@ void PrintWnd(HWND w)
 			(int)(LPARAM)w, sc, sn, r.left, r.top, r.right-r.left, r.bottom-r.top, inv);
 	}
 }
+#endif
 
 BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback)
 {
@@ -217,7 +219,7 @@ bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guid
 {
 	*iTo = null;
 	if(!guidService) guidService = &iid;
-	IServiceProviderPtr sp;
+	Smart<IServiceProvider> sp;
 	return 0==iFrom->QueryInterface(&sp) && 0==sp->QueryService(*guidService, iid, iTo) && *iTo;
 }
 

@@ -3,21 +3,13 @@
 #include "acc.h"
 
 HRESULT AccFind(AccFindCallback& callback, HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, eAF2 flags2, out BSTR& errStr);
+HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult);
 HRESULT AccNavigate(Cpp_Acc aFrom, STR navig, out Cpp_Acc& aResult);
 HRESULT AccGetProp(Cpp_Acc a, WCHAR what, out BSTR& sResult);
 
 namespace {
 
 #pragma region marshal
-
-//Used for marshaling 'get window AO' (IPA_AccFromWindow) parameters when calling the get_accHelpTopic hook function.
-struct MarshalParams_AccFromWindow
-{
-	MarshalParams_Header hdr;
-	int hwnd; //not HWND, because it must be of same size in 32 and 64 bit process
-	DWORD objid;
-	DWORD flags; //2 - get name instead of AO
-};
 
 //Used for marshaling 'find AO' (IPA_AccFind) parameters when calling the get_accHelpTopic hook function.
 //A flat variable-size memory structure (strings follow the fixed-size part).
@@ -92,7 +84,7 @@ enum class eAccResult {
 };
 ENABLE_BITMASK_OPERATORS(eAccResult);
 
-bool WriteAccToStream(ref IStreamPtr& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
+bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
 {
 	if(stream == null) CreateStreamOnHGlobal(0, true, &stream);
 
@@ -136,11 +128,12 @@ bool WriteAccToStream(ref IStreamPtr& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
 
 namespace inproc
 {
+
 //Called from the hook to find or get AO.
-//Common for 'find AO', 'AO from window' and other actions that return AO.
+//Common for Cpp_AccFind, Cpp_AccFromWindow and other functions that return AO.
 HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResult)
 {
-	IStreamPtr stream;
+	Smart<IStream> stream;
 	auto action = h->action;
 	if(action == InProcAction::IPA_AccNavigate) {
 		auto p = (MarshalParams_AccElem*)h;
@@ -155,18 +148,24 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		if(aResult.acc != iacc) aResult.acc->Release();
 	} else if(action == InProcAction::IPA_AccFromWindow) {
 		auto p = (MarshalParams_AccFromWindow*)h;
-		IAccessiblePtr iacc;
+		Smart<IAccessible> a;
 
-		HRESULT hr = ao::AccFromWindowSR((HWND)(LPARAM)p->hwnd, p->objid, &iacc);
+		HRESULT hr = ao::AccFromWindowSR((HWND)(LPARAM)p->hwnd, p->objid, &a);
 		if(hr) return hr;
 
 		if(p->flags & 2) { //get name
-			return iacc->get_accName(ao::VE(), out &sResult);
+			return a->get_accName(ao::VE(), out &sResult);
 		}
 
-		Cpp_Acc aResult(iacc, 0);
+		Cpp_Acc aResult(a, 0);
 		aResult.SetRole();
 
+		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
+	} else if(action == InProcAction::IPA_AccFromPoint) {
+		auto x = (MarshalParams_AccFromPoint*)h;
+		Cpp_Acc aResult;
+		HRESULT hr = AccFromPoint(x->p, x->flags, x->specWnd, out aResult);
+		if(hr) return hr;
 		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
 	} else { //IPA_AccFind
 		Cpp_AccParams ap;
@@ -269,7 +268,7 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 
 //Gets AO of window (calls AccessibleObjectFromWindow).
 //flags:
-//	1 - inproc (call it in the target process). Else (or if cannot inject) calls directly; then the returned AO will not be suitable for in-proc search.
+//	1 - not inproc. If used this flag, or if failed to inject dll, the returned AO will not be suitable for in-proc search.
 //	2 - get name instead. Results: aResult = empty, sResult = name.
 EXPORT HRESULT Cpp_AccFromWindow(DWORD flags, HWND w, DWORD objid, out Cpp_Acc& aResult, out BSTR& sResult)
 {
@@ -288,14 +287,13 @@ EXPORT HRESULT Cpp_AccFromWindow(DWORD flags, HWND w, DWORD objid, out Cpp_Acc& 
 		//never mind: inproc. Maybe in the future.
 	}
 
-	HRESULT R; bool isOfThisThread = false;
+	HRESULT R;
 g1:
-	if(!(flags & 1)) {
+	if(flags & 1) { //not inproc
 		R = ao::AccFromWindowSR(w, objid, &aResult.acc);
 		if(R == 0 && flags & 2) {
 			R = aResult.acc->get_accName(ao::VE(), out &sResult);
 			aResult.acc->Release(); aResult.acc = null;
-			if(isOfThisThread) aResult.misc.flags |= eAccMiscFlags::InProc;
 		}
 		return R;
 	}
@@ -304,12 +302,10 @@ g1:
 	Cpp_Acc aAgent;
 	if(R = InjectDllAndGetAgent(w, out aAgent.acc)) {
 		switch((eError)R) {
-		case eError::WindowOfThisThread: isOfThisThread = true;
-		case eError::UseNotInProc: break;
-		case eError::Inject: break;
+		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
 		default: return R;
 		}
-		flags &= ~1; goto g1;
+		flags |= 1; goto g1;
 	}
 	//Perf.Next();
 
@@ -365,15 +361,12 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 		}
 	}
 
-	bool isOfThisThread = false;
 	Cpp_Acc aAgent;
 	if(inProc && useWnd) {
 		IAccessible* iagent=null;
 		if(R = InjectDllAndGetAgent(w, out iagent)) {
 			switch((eError)R) {
-			case eError::WindowOfThisThread: isOfThisThread = true;
-			case eError::UseNotInProc: break;
-			case eError::Inject: break;
+			case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
 			default: return R;
 			}
 			inProc = false;
@@ -413,13 +406,11 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 		}
 		//Perf.Next();
 	} else {
-		if(!isOfThisThread) flags2 |= eAF2::NotInProc;
+		flags2 |= eAF2::NotInProc;
 		bool found = false;
 		R = AccFind(
-			[&found, &aResult, &sResult, &ap, skip = ap.skip, also, isOfThisThread](Cpp_Acc a) mutable
+			[&found, &aResult, &sResult, &ap, skip = ap.skip, also](Cpp_Acc a) mutable
 		{
-			if(isOfThisThread) a.misc.flags |= eAccMiscFlags::InProc;
-
 			if(also) {
 				a.acc->AddRef(); //of proxy (fast)
 				if(!also(a)) return eAccFindCallbackResult::Continue;

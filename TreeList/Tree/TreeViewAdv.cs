@@ -10,9 +10,9 @@ using System.Collections;
 
 using Aga.Controls.Tree.NodeControls;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree
 {
@@ -23,7 +23,7 @@ namespace Aga.Controls.Tree
 	/// <see cref="CheckBox"/>, Icon, Label... Drag and Drop highlighting. Load on
 	/// demand of nodes. Incremental search of nodes.
 	/// </summary>
-	public partial class TreeViewAdv :G.Controls.ScrollableControl_
+	public partial class TreeViewAdv :Au.Controls.ScrollableControl_
 	{
 		private const int LeftMargin = 7;
 		internal const int ItemDragSensivity = 4;
@@ -210,7 +210,7 @@ namespace Aga.Controls.Tree
 			_toolTip = new ToolTip();
 
 			_measureContext = new DrawContext();
-			//_measureContext.Font = Font; //Catkeys: will set in OnFontChanged
+			//_measureContext.Font = Font; //au: will set in OnFontChanged
 			_measureContext.Graphics = Graphics.FromImage(new Bitmap(1, 1));
 
 			Input = new NormalInputState(this);
@@ -378,7 +378,12 @@ namespace Aga.Controls.Tree
 			base.OnSizeChanged(e);
 		}
 
-		private void UpdateScrollBars()
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			UpdateScrollBars();
+		}
+
+		public void UpdateScrollBars()
 		{
 			if(!IsHandleCreated) return;
 			for(int i = 2; i >= 0; i--) {
@@ -433,7 +438,7 @@ namespace Aga.Controls.Tree
 		{
 			base.OnFontChanged(e);
 			_measureContext.Font = Font;
-			//Catkeys.Output.Write(Font);
+			//Au.Output.Write(Font);
 			_columnHeaderHeight = 0;
 			FullUpdate();
 		}

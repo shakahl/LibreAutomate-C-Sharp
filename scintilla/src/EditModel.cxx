@@ -70,7 +70,7 @@ EditModel::EditModel() {
 	hoverIndicatorPos = invalidPosition;
 	wrapWidth = LineLayout::wrapWidthInfinite;
 
-	//Catkeys
+	//Au
 	cbNotify = 0; cbNotifyParam = 0;
 	cbAnnotationDraw = 0; cbAnnotationDrawParam = 0;
 

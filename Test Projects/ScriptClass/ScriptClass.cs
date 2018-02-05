@@ -8,14 +8,13 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-using Catkeys;
-using static Catkeys.NoClass;
-using Catkeys.Automation;
-using static Catkeys.Automation.NoClass;
-//using static Catkeys.Automation.Input;
-//using Catkeys.Triggers;
-//using Util = Catkeys.Util;
-//using Catkeys.Winapi;
+using Au;
+using Au.Types;
+using static Au.NoClass;
+//using static Au.Input;
+//using Au.Triggers;
+//using Util = Au.Util;
+//using Au.Winapi;
 
 //public class Macro
 //{
@@ -77,7 +76,7 @@ class ScriptClass :Script
 		//var rm = new System.Resources.ResourceManager("", asm);
 		//Console.WriteLine(rm);
 
-		Out(asm!=null);
+		Print(asm!=null);
 
 		//Console.WriteLine(a4);
 		//MessageBox.Show("script");

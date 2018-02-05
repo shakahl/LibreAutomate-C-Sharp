@@ -56,13 +56,13 @@ namespace Aga.Controls.Tree
 			get
 			{
 				if(!UseColumns) return 0;
-				//Catkeys: was fixed height, did not depend on DPI and even on font.
+				//au: was fixed height, did not depend on DPI and even on font.
 				if(_columnHeaderHeight == 0) {
 					//_columnHeaderHeight = this.FontHeight + 4;
 					Size z = TextRenderer.MeasureText("A", Font);
 					//Size z = TextRenderer.MeasureText(_measureContext.Graphics, "A", Font); //unexpected: much slower
 					_columnHeaderHeight = z.Height * 6 / 5 + 2;
-					//Catkeys.Output.WriteList(z.Height, _columnHeaderHeight);
+					//Au.Output.WriteList(z.Height, _columnHeaderHeight);
 				}
 				return _columnHeaderHeight;
 			}

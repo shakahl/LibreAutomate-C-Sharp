@@ -1,0 +1,1312 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Au.Controls</name>
+    </assembly>
+    <members>
+        <member name="T:Au.Controls.AuToolStrip">
+            <summary>
+            Adds to ToolStrip:
+            1. User can click a button when the parent form is not the active window.
+            2. A click does not activate the parent form if it has WS_EX_NOACTIVATE style.
+            3. Can show tooltips when parent form is not the active window. To enable it, the form's ShowWithoutActivation override must return true (it is called when need to show a tooltip).
+            </summary>
+        </member>
+        <member name="T:Au.Controls.AuMenuStrip">
+            <summary>
+            Adds to MenuStrip:
+            1. User can click an item when the parent form is not the active window.
+            2. A click does not activate the parent form if it has WS_EX_NOACTIVATE style.
+            3. Fixes some MenuStrip bugs.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ParamGrid.ValueEditor">
+            <summary>
+            The editor of values.
+            For example, can be used to subscribe to its Control.Validating event.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAutoSizeColumns">
+            <summary>
+            Call this after adding all rows.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAutoSizeRows">
+            <summary>
+            Call this after adding all rows.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.ParamGrid.ValueChanged">
+            <summary>
+            When changed text of a value cell or state of a checkbox cell.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAddRequired(System.String,System.String,System.String,System.String,System.Int32)">
+            <summary>
+            Adds required parameter.
+            </summary>
+            <param name="key">Row Tag property. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/>.</param>
+            <param name="name"></param>
+            <param name="value"></param>
+            <param name="tt"></param>
+            <param name="insertAt"></param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAddOptional(System.String,System.String,System.String,System.Boolean,System.String,System.Int32)">
+            <summary>
+            Adds required parameter.
+            </summary>
+            <param name="key">Row Tag property. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/>.</param>
+            <param name="name"></param>
+            <param name="value"></param>
+            <param name="check"></param>
+            <param name="tt"></param>
+            <param name="insertAt"></param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAddFlag(System.String,System.String,System.Boolean,System.String,System.Int32)">
+            <summary>
+            Adds required parameter.
+            </summary>
+            <param name="key">Row Tag property. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/>.</param>
+            <param name="name"></param>
+            <param name="check"></param>
+            <param name="tt"></param>
+            <param name="insertAt"></param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAddHeaderRow(System.String,System.Int32)">
+            <summary>
+            Adds a header row. It is readonly and spans all columns.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZIsChecked(System.Int32)">
+            <summary>
+            Returns true if the row is checked or required.
+            </summary>
+            <param name="row">Row index. If negative, asserts and returns false.</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZIsChecked(System.String)">
+            <summary>
+            Returns true if the row is checked or required.
+            </summary>
+            <param name="rowKey">Row key. If not found, asserts and returns false.</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZCheck(System.Int32,System.Boolean)">
+            <summary>
+            Checks or unchecks.
+            Use only for flags and optionals, not for required.
+            </summary>
+            <param name="row">Row index. If negative, asserts and returns.</param>
+            <param name="check"></param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZCheck(System.String,System.Boolean)">
+            <summary>
+            Checks or unchecks.
+            Use only for flags and optionals, not for required.
+            </summary>
+            <param name="rowKey">Row key. If not found, asserts and returns.</param>
+            <param name="check"></param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetValue(System.Int32,System.String@,System.Boolean)">
+            <summary>
+            If the row is checked or required, gets its value and returns true.
+            </summary>
+            <param name="row">Row index. If negative, asserts and returns false.</param>
+            <param name="value"></param>
+            <param name="falseIfEmpty">Return false if the value is empty (null).</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)">
+            <summary>
+            If the row is checked or required, gets its value and returns true.
+            </summary>
+            <param name="rowKey">Row key. If not found, asserts returns false.</param>
+            <param name="value"></param>
+            <param name="falseIfEmpty">Return false if the value is empty (null).</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetValueIfExists(System.String,System.String@,System.Boolean)">
+            <summary>
+            If the row exists and is checked or required, gets its value and returns true.
+            </summary>
+            <param name="rowKey">Row key. If not found, returns false.</param>
+            <param name="value"></param>
+            <param name="falseIfEmpty">Return false if the value is empty (null).</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetCellText(System.Int32,System.Int32)">
+            <summary>
+            Gets cell value or checkbox label.
+            </summary>
+            <param name="row">Row index. If negative, asserts and returns null.</param>
+            <param name="column">Column index.</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetCellText(System.String,System.Int32)">
+            <summary>
+            Gets cell value or checkbox label.
+            </summary>
+            <param name="rowKey">Row key. If not found, asserts and returns null.</param>
+            <param name="column">Column index.</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZFindRow(System.String)">
+            <summary>
+            Finds row by row key and returns row index.
+            Returns -1 if not found.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetRowKey(System.Int32)">
+            <summary>
+            Gets row key.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.Clear">
+            <summary>
+            Removes all rows.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.SciText">
+            <summary>
+            Functions to work with Scintilla control text, code, etc.
+            A SciText object is created by SciControl which is the SC property.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.StyleMeasureStringWidth(System.Int32,System.String)">
+            <summary>
+            Measures string width.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.StyleClearAll">
+            <summary>
+            Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
+            Then also sets some special styles, eg STYLE_HIDDEN.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.StyleClearRange(System.Int32,System.Int32)">
+            <summary>
+            Calls SCI_STYLECLEARALL(styleFrom, styleToNotIncluding), which sets range of styles to be the same as STYLE_DEFAULT.
+            If styleToNotIncluding is 0, clears all starting from styleFrom.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.GetStyleAt(System.Int32)">
+            <summary>
+            Gets style at position.
+            Uses SCI_GETSTYLEAT.
+            Returns 0 if pos is invalid.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciText.SC">
+            <summary>
+            The host SciControl.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message to the control.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.Call(System.Int32,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.Call(System.Int32)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.SetString(System.Int32,Au.Types.LPARAM,System.String)">
+            <summary>
+            Calls a Scintilla message that sets a string which is passed using lParam.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.SetStringString(System.Int32,System.String)">
+            <summary>
+            Calls a Scintilla message and passes two strings using wParam and lParam.
+            wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.GetString(System.Int32,Au.Types.LPARAM,System.Int32)">
+            <summary>
+            Calls a Scintilla message that gets a string.
+            Don't call this function from another thread.
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="bufferSize">
+            How much bytes to allocate for Scintilla to store the text.
+            If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
+            If 0, returns "" and does not call the message.
+            If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
+            The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
+            </param>
+        </member>
+        <member name="M:Au.Controls.SciText.GetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)">
+            <summary>
+            The same as <see cref="M:Au.Controls.SciText.GetString(System.Int32,Au.Types.LPARAM,System.Int32)"/>, but always uses utf8Length bytes of the result (does not find length).
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="utf8Length">
+            Known length (bytes) of the result UTF8 string, without the terminating '\0' character.
+            If 0, returns "" and does not call the message.
+            Cannot be negative.
+            </param>
+            <remarks>
+            This function can get binary string (with '\0' characters).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.SciText.ClearText">
+            <summary>
+            Removes all text.
+            Uses SCI_CLEARALL.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.SetText(System.String,System.Boolean)">
+            <summary>
+            Replaces all text.
+            </summary>
+            <param name="s">Text.</param>
+            <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.AppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Appends text and optionally "\r\n".
+            Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
+            </summary>
+            <param name="s"></param>
+            <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
+            <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
+            <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LibAddText(System.Boolean,System.Byte*,System.Int32)">
+            <summary>
+            Appends UTF8 text of specified length.
+            Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">
+            <summary>
+            Sets UTF8 text.
+            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.GetText">
+            <summary>
+            Gets all text.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciText.TextLengthBytes">
+            <summary>
+            Gets text length. It is the number of bytes, not characters.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32)">
+            <summary>
+            Gets line index from character position.
+            </summary>
+            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineStart(System.Int32)">
+            <summary>
+            Gets line start position from line index.
+            </summary>
+            <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineEnd(System.Int32,System.Boolean)">
+            <summary>
+            Gets line end position from line index.
+            </summary>
+            <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
+            <param name="withRN">Include \r\n.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineStartFromPosition(System.Int32)">
+            <summary>
+            Gets line start position from any position.
+            </summary>
+            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineEndFromPosition(System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Gets line end position from any position.
+            </summary>
+            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
+            <param name="withRN">Include \r\n.</param>
+            <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineText(System.Int32)">
+            <summary>
+            Gets line text.
+            </summary>
+            <param name="line">0-based line index. If invalid, returns "".</param>
+        </member>
+        <member name="M:Au.Controls.SciText.RangeText(System.Int32,System.Int32)">
+            <summary>
+            Gets range text.
+            </summary>
+            <param name="from">If less than 0, uses 0.</param>
+            <param name="to">If less than 0, uses TextLengthBytes.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineHeight(System.Int32)">
+            <summary>
+            Gets line height.
+            Currently all lines are the same height.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciText.LineCount">
+            <summary>
+            Gets the number of lines.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.AnnotationText(System.Int32)">
+            <summary>
+            Gets annotation text of line.
+            Returns "" if the line does not contain annotation or is invalid line index.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.LibAnnotationText(System.Int32)">
+            <summary>
+            Gets raw annotation text which can contain image info.
+            AnnotationText gets text without image info.
+            Returns "" if the line does not contain annotation or is invalid line index.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.AnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets annotation text of line.
+            Does nothing if invalid line index.
+            If s is null or "", removes annotation.
+            Preserves existing image info.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.LibAnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets raw annotation text which can contain image info.
+            If s is null or "", removes annotation.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.RangeToFullLines(System.Int32@,System.Int32@,System.Boolean)">
+            <summary>
+            Moves 'from' to the start of its line, and 'to' to the end of its line.
+            Does not change 'to' if it is at a line start.
+            </summary>
+            <param name="from"></param>
+            <param name="to"></param>
+            <param name="withRN">Include "\r\n".</param>
+        </member>
+        <member name="M:Au.Controls.SciText.DeleteRange(System.Int32,System.Int32)">
+            <summary>
+            SCI_DELETERANGE.
+            </summary>
+            <param name="pos"></param>
+            <param name="length"></param>
+        </member>
+        <member name="M:Au.Controls.SciText.InsertText(System.Int32,System.String)">
+            <summary>
+            SCI_INSERTTEXT.
+            Does not parse tags.
+            </summary>
+            <param name="pos"></param>
+            <param name="s"></param>
+        </member>
+        <member name="T:Au.Controls.SciControl">
+            <summary>
+            This .NET control wraps native Scintilla control.
+            This is not an universal Scintilla wrapper class. Designed just for purposes of this library and related software.
+            Responsible for creating and initializing the control. Also used to set/change control properties.
+            The ST property returns a SciText object that can be used to work with text, code styling etc.
+            </summary>
+            <remarks>
+            Why don't use ScintillaNET:
+            1. Delays to update for the newest Scintilla version.
+            2. Possibly will be abandoned some day.
+            3. Adds yet another layer of bugs, and I found one.
+            4. I don't like some things how it is implemented. Eg aggressively uses "clamping", creates much garbage, eg new Line object for each line-related Scintilla message call.
+            5. For me it does not make much easier because I used Scintilla in QM2 (C++) and am familiar with its API (which is well documented). When using ScintillaNET, I often search its source code just to find which function calls the API I need. Now I can simply convert much of QM2 code to C#.
+            6. I use modified Scintilla. Would need to synchronize some modifications with ScintillaNET. For example I use a callback function instead of WM_NOTIFY/WM_REFLECT.
+            </remarks>
+        </member>
+        <member name="P:Au.Controls.SciControl.ST">
+            <summary>
+            Gets the SciText object that contains most Scintilla-related functions.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciControl.#ctor">
+            
+        </member>
+        <member name="M:Au.Controls.SciControl.OnSciNotify(Au.Controls.Sci.SCNotification@)">
+            <summary>
+            Raises the SciNotify event.
+            </summary>
+            <param name="n"></param>
+        </member>
+        <member name="E:Au.Controls.SciControl.SciNotify">
+            <summary>
+            Occurs when any Scintilla notification is received.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciControl.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message to the control.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciControl.Call(System.Int32,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciControl.Call(System.Int32)">
+            <summary>
+            Calls a Scintilla message.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.SciLexerDllPath">
+            <summary>
+            Scintilla dll path.
+            Default is Folders.ThisApp + "SciLexer" + (Ver.Is64BitProcess ? "64" : "32") + ".dll". If you want to change it, call this before creating first control.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.InitBorderStyle">
+            <summary>
+            Border style.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.InitUseDefaultContextMenu">
+            <summary>
+            Use the default Scintilla's context menu.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.InitReadOnlyAlways">
+            <summary>
+            This control is used just to display text, not to edit.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.SciControl.ImagesStyle">
+            <summary>
+            See <see cref="P:Au.Controls.SciControl.InitImagesStyle"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.ImagesStyle.NoImages">
+            <summary>Don't show images. The Images property is null.</summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.ImagesStyle.ImageTag">
+            <summary>Display only images specified in tags like &lt;image "image file path"&gt;, including icons of non-image file types.</summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.ImagesStyle.AnyString">
+            <summary>Display images specified in any string like "image file path", and only of image file types. Then limits image height to 10 lines.</summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.InitImagesStyle">
+            <summary>
+            Whether and how to show images.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.SciControl.TagsStyle">
+            <summary>
+            See <see cref="P:Au.Controls.SciControl.InitImagesStyle"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.TagsStyle.NoTags">
+            <summary>Don't support tags. The Images property is null.</summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.TagsStyle.AutoWithPrefix">
+            <summary>Let Text, ST.SetText and ST.AppendText parse tags when the text has prefix "&lt;&gt;".</summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.TagsStyle.AutoAlways">
+            <summary>Let Text, ST.SetText and ST.AppendText parse tags always.</summary>
+        </member>
+        <member name="F:Au.Controls.SciControl.TagsStyle.User">
+            <summary>Tags are parsed only when calling Tags.AddText.</summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.InitTagsStyle">
+            <summary>
+            Whether and when supports tags.
+            Must be set before creating control handle.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.WrapLines">
+            <summary>
+            Word-wrap.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciControl.Text">
+            <summary>
+            Gets or sets all text.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciTags._ClearUserStyles">
+            <summary>
+            Clears user-defined (through tags) styles.
+            Max number of user styles is NUM_STYLES_EX (216). Need to clear old styles before new styles can be defined.
+            This func is usually called after clearing control text.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.Output.Server,System.Action{Au.Output.Server.Message})">
+            <summary>
+            Displays <see cref="T:Au.Output.Server"/> messages that are currently int its queue.
+            </summary>
+            <param name="os">The Output.Server instance.</param>
+            <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.Messages.</param>
+            <remarks>
+            Removes messages from the queue.
+            Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
+            Messages with tags must have prefix "&lt;&gt;".
+            Limits text length to about 4 MB (removes oldest text when exceeded).
+            </remarks>
+            <seealso cref="M:Au.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
+        </member>
+        <member name="M:Au.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Sets or appends styled text.
+            </summary>
+            <param name="text">Text with tags (optionally).</param>
+            <param name="appendLine">Append. Also appends "\r\n". Sets caret and scrolls to the end. If false, replaces control text.</param>
+            <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
+        </member>
+        <member name="M:Au.Controls.SciTags.LibOnLinkClick(System.Int32,System.Boolean)">
+            <summary>
+            Called on SCN_HOTSPOTRELEASECLICK.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})">
+            <summary>
+            Adds (registers) a user-defined link tag for this control.
+            </summary>
+            <param name="name">
+            Tag name, like "_myTag".
+            Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+            Or can be one of predefined link tags, if you want to override it. For example "help", which is not implemented by the control.
+            If already exists, replaces the delegate.
+            </param>
+            <param name="a">
+            A delegate to a callback function (probably you'll use a lambda) that is called on link click.
+            It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
+            The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
+            </param>
+            <seealso cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>
+        </member>
+        <member name="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})">
+            <summary>
+            Adds (registers) a user-defined link tag for all controls.
+            </summary>
+            <param name="name">
+            Tag name, like "_myTag".
+            Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+            Or can be one of predefined link tags, if you want to override it. For example "help", which is not implemented by the control.
+            If already exists, replaces the delegate.
+            </param>
+            <param name="a">
+            A delegate to a callback function (probably you'll use a lambda) that is called on link click.
+            It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
+            The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
+            </param>
+            <seealso cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GNode">
+            <summary>
+            Base of GSplit, GContentNode (GPanel and GTab) and GDummyNode.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.GNode.IsDocked">
+            <summary>
+            Returns true if is docked in main window or in a floating tab.
+            <seealso cref="M:Au.Controls.GDockPanel.GContentNode.IsDockedOn(System.Windows.Forms.Control)"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GContentNode">
+            <summary>
+            Base of GPanel and GTab.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GContentNode.HitTestCaption(System.Windows.Forms.Control,System.Int32,System.Int32)">
+            <summary>
+            Returns true if x/y is in caption and this is visible and is a child of parent.
+            For tabbed GPanel returns true only if x/y is in its tab button, unless there are no visible siblings.
+            For GTab returns true even if on a tab button.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GContentNode.Show(System.Boolean)">
+            <summary>
+            Shows in the most recent visible state. Activates tab group panel.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GContentNode.Hide">
+            <summary>
+            Hides, does not close.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GContentNode.DockBy(Au.Controls.GDockPanel.GContentNode,Au.Controls.GDockPanel.GDockHow)">
+            <summary>
+            Docks this GPanel or GTab in an existing or new GTab or GSplit.
+            If need, creates new GTab or GSplit in gcTarget place and adds gcTarget and this to it. Else reorders if need.
+            This can be a new GPanel, with null ParentSplit and ParentTab, dock state not Docked.
+            </summary>
+            <param name="gcTarget">New sibling GPanel (side can be any) or sibling GTab (when side is SplitX) or parent GTab (when side is TabX).</param>
+            <param name="side">Specifies whether to add on a GTab or GSplit, and at which side of gcTarget.</param>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GFloat">
+            <summary>
+            Floating parent form of a GPanel.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.GFloat.ShowWithoutActivation">
+            <summary>
+            1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GFloat._DockIndicator">
+            <summary>
+            Calculates and shows transparent rectangles where the floating panel can be docked when dragging it.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GFloat._DockIndicator._OnFloatMoved(System.Drawing.Point,Au.Types.RECT@,Au.Types.RECT@)">
+            <summary>
+            Everything is in _manager client area.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GFloat._DockIndicator._CalcDockRectPart(Au.Types.RECT,System.Drawing.Point)">
+            <summary>
+            Returns the left, top, right or bottom half of r, depending on where p is in it.
+            Sets _target.side.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GFloat._DockIndicator._CalcNewTabButtonRectInFullCaption(Au.Controls.GDockPanel.GPanel,Au.Types.RECT,System.Drawing.Point)">
+            <summary>
+            Returns a half of r (gp full caption, not just tab button), depending on where p is (even if not in r).
+            Sets _target.side.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GFloat.DockTarget">
+            <summary>
+            GFloat.Drag() and _DockIndicator.OnFloatDropped() return this if can be docked.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.GDockPanel.GFloat.DockTarget.gc">
+            <summary>
+            The target.
+            Note: when dockAsTab is true, it currently may be tabbed or not; if tabbed, may be docked or not.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.GDockPanel.GFloat.DockTarget.side">
+            <summary>Specifies whether to add on a GTab or GSplit, and at which side of gc.</summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GPanel">
+            <summary>
+            Contains single Control.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GPanel.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement,Au.Controls.GDockPanel.GTab)">
+            <summary>
+            This ctor is used at startup, when adding from XML.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.GPanel.Visible">
+            <summary>
+            note: this is not just !IsHidden. Returns false if in a hidden tab group even if IsHidden is false.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GPanel._IsVisible(System.Boolean)">
+            <summary>
+            Returns true if this isn't hidden and isn't in a hidden tab group.
+            </summary>
+            <param name="andContentVisible">And isn't an inactive tab.</param>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.Content">
+            <summary>
+            The child Control.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.Text">
+            <summary>
+            Panel caption text. Also tab button text.
+            If null or not set, uses control's Name property.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.ToolTipText">
+            <summary>
+            Tooltip text.
+            If null or not set, uses Text (default - control's Name property).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.Image">
+            <summary>
+            Image to display on tab button if it is too small for text.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.IPanel.Init(System.String,System.Drawing.Image)">
+            <summary>
+            Sets commonly used properties. Can be used to avoid several function calls (Image, ToolTipText).
+            </summary>
+            <param name="toolTip">Tooltip text.</param>
+            <param name="image">Image to display on tab button if it is too small for text.</param>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.Visible">
+            <summary>
+            The 'get' function returns true if the panel or its tab button is visible. Returns false if it is hidden or its parent tab group is hidden.
+            The 'set' function makes the panel visible, in the most recent state (docked or floating). Activates its tab button if need.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.ReallyVisible">
+            <summary>
+            Returns true if the panel is visible.
+            Returns false if it is hidden or its parent tab group is hidden or it is an inactive tab.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.IPanel.Floating">
+            <summary>
+            The 'get' function returns true if the panel is floating and not hidden.
+            The 'set' function: if true, makes this panel floating and visible if it is currently docked or hidden; if false, makes it docked if it is currently floating and visible.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.IPanel.Focus">
+            <summary>
+            Make the panel visible (like <see cref="P:Au.Controls.GDockPanel.IPanel.Visible"/>) and focus its control.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.Create(System.String,System.String,System.Windows.Forms.Control[])">
+            <summary>
+            Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
+            Adjusts control properties and positions everything according to the XML.
+            </summary>
+            <param name="xmlFileDefault">XML file containing default panel/toolbar layout.</param>
+            <param name="xmlFileCustomized">XML file containing customized panel/toolbar layout. It will be created or updated when saving customizations.</param>
+            <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
+        </member>
+        <member name="P:Au.Controls.GDockPanel._HitTestData.ParentTab">
+            <summary>
+            If hit test on a tabbed GPanel, returns its parent GTab, else null.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel._HitTestData.ContentNode">
+            <summary>
+            If hit test on a GContentNode, returns it, else null.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel._HitTest(System.Windows.Forms.Control,System.Int32,System.Int32,Au.Controls.GDockPanel._HitTestData@)">
+            <summary>
+            If hit-test on a splitter, sets ht.gs and returns _HitTestResult.Splitter.
+            Else if on a GPanel caption or GPanel tab button, sets gp and returns _HitTestResult.Caption.
+            Else (if on a GTab caption but not a  GPanel tab button) sets gt and returns _HitTestResult.Caption.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GetPanel(System.Windows.Forms.Control)">
+            <summary>
+            Gets control's host panel interface.
+            Returns null if not found.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GetPanel(System.String)">
+            <summary>
+            Gets panel interface by name.
+            Returns null if not found.
+            </summary>
+            <param name="name">Panel name, which is its control's Name property.</param>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.AddShowPanelsToMenu(System.Windows.Forms.ToolStripDropDown,System.Boolean,System.Boolean)">
+            <summary>
+            Adds menu items for all panels or toolbars, except the doc panel, to a menu.
+            On menu item click will show that panel.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GDockPanel.ResetLayoutAfterRestart">
+            <summary>
+            When disposing this, delete the user's saved layout file. Then next time will use the default file.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.EnableDisableAllFloatingWindows(System.Boolean)">
+            <summary>
+            Call this in main window's WndProc override on WM_ENABLE.
+            </summary>
+            <param name="enable">Enable or disable.</param>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GDockPanelEventArgs">
+            <summary>
+            Used with many GDockPanel events and othe callbacks.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GDockPanelEventArgs.#ctor(System.Object)">
+            <summary>ctor.</summary>
+            <param name="gPanel">Must be GPanel. We use object because C# compiler does not allow to use GPanel (less accessible).</param>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GDockPanelEventHandler`1">
+            <summary>
+            Used with many GDockPanel events and other callbacks.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.GDockPanel.PanelContextMenu">
+            <summary>
+            Before showing the context menu when the user right-clicks a panel tab button or caption.
+            The event handler can add/remove/etc menu items.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.DockedToolStripRenderer">
+            <summary>
+            Removes rounded edges of the ToolStrip to which is assigned.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GSplit">
+            <summary>
+            Contains 2 GNode (GPanel, GTab, GSplit or GDummyNode) and a splitter.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement)">
+            <summary>
+            This ctor is used at startup, when adding from XML.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,Au.Controls.GDockPanel.GNode,Au.Controls.GDockPanel.GNode,System.Boolean)">
+            <summary>
+            This ctor is used when a floating GContentNode dropped on a docked GContentNode.
+            child1 or child2 must be docked, but not both.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.OnChildRemoved(Au.Controls.GDockPanel.GNode)">
+            <summary>
+            Puts gn sibling in parent split of this, in place of this.
+            Makes this invalid and removes from _aSplit.
+            Does not update layout.
+            </summary>
+            <param name="gn">One of children. The caller is removing it from this.</param>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.ReplaceChild(Au.Controls.GDockPanel.GNode,Au.Controls.GDockPanel.GNode)">
+            <summary>
+            Replaces child gnOld with gnNew.
+            Sets gnNew.ParentSplit = this.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.RepositionChild(Au.Controls.GDockPanel.GNode,System.Boolean,System.Boolean)">
+            <summary>
+            Changes IsVerticalSplit, Child1 and Child2 if need.
+            Does not update layout.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.DragSplitter">
+            <summary>
+            Called on mouse left button down on splitter.
+            Returns when the drag operation ends.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.Paint(System.Drawing.Graphics)">
+            <summary>
+            Called from GDockPanel.OnPaint, for its _firstSplit.
+            Paints all descendants.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.SetChildFixedSize(Au.Controls.GDockPanel.GNode,System.Boolean,System.Boolean)">
+            <summary>
+            Sets a child (of this, or of an ancestor if need) to have fixed width or height.
+            Used for context menu.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GSplit.IsChildFixedSize(Au.Controls.GDockPanel.GNode,System.Boolean)">
+            <summary>
+            Gets whether a child (of this, or of an ancestor if need) has fixed width or height.
+            Used for context menu.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GTab">
+            <summary>
+            Contains multiple GPanel.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GTab.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement)">
+            <summary>
+            This ctor is used at startup, when adding from XML.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GTab.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,Au.Controls.GDockPanel.GPanel,Au.Controls.GDockPanel.GPanel)">
+            <summary>
+            This ctor is used when a floating GPanel dropped on a docked non-tabbed GPanel caption.
+            item1 or item2 must be docked, but not both.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GTab._CalcButtonsBounds(System.Drawing.Graphics)">
+            <summary>
+            Returns buttons width.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GTab.SetActiveItem(Au.Controls.GDockPanel.GPanel,System.Boolean)">
+            <summary>
+            Sets ActiveItem, shows its contents, hides previous ActiveItem contents, invalidate caption, calls DockedDocumentPanelActivated event.
+            </summary>
+            <param name="gp">Can be null to deactivate all.</param>
+            <param name="focusControl"></param>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GTab.OnItemRemoved(Au.Controls.GDockPanel.GPanel)">
+            <summary>
+            Removes a child panel from Items.
+            If single item left, moves it to this parent and invalidates/removes this.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GDockPanel.GTab.AddOrReorderItem(Au.Controls.GDockPanel.GPanel,Au.Controls.GDockPanel.GPanel,System.Boolean)">
+            <summary>
+            If gp is child of this, moves it to the place before or after target (a child of this).
+            Else just inserts gp there.
+            If target is null, adds to the end (does nothing if gp is child).
+            Does not update layout.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GAccContainer">
+            <summary>
+            Used by GDockPanel and GFloat.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.GDockPanel.GAccNode">
+            <summary>
+            AccessibleObject of GNode.
+            We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.Sci.SCNotification.Text">
+            <summary>
+            Converts textUTF8 to C# string.
+            Returns null if textUTF8 is null.
+            Don't call this property multiple times for the same notification. Store the return value in a variable and use it.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.SciImages">
+            <summary>
+            Gets image file paths etc from Scintilla control text and displays the images below that lines.
+            </summary>
+            <remarks>
+            Draws images in annotation areas.
+            Supports text annotations too, below images and in no-image lines. But it is limited:
+            1. To set/get it use <see cref="M:Au.Controls.SciText.AnnotationText(System.Int32,System.String)"/>, not direct Scintilla API.
+            2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
+            3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
+            4. Setting annotation styles is currently not supported.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.SciImages._ThreadSharedData.CompactCache">
+            <summary>
+            If cache is large (at least MaxCacheSize and 4 images), removes about 3/4 of older cached images.
+            Will auto-reload from files etc when need.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciImages.#ctor(Au.Controls.SciControl,System.Boolean)">
+            <summary>
+            Prepares this variable and the Scintilla control to display images.
+            Calls SCI_ANNOTATIONSETVISIBLE(ANNOTATION_STANDARD). Need it because will draw images in annotation areas.
+            </summary>
+            <param name="c">The control.</param>
+            <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
+        </member>
+        <member name="M:Au.Controls.SciImages.ClearCache">
+            <summary>
+            Removes all cached images.
+            Will auto-reload from files etc when need.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciImages.CompactCache">
+            <summary>
+            If cache is large (at least MaxCacheSize and 4 images), removes about 3/4 of older cached images.
+            Will auto-reload from files etc when need.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciImages.MaxCacheSize">
+            <summary>
+            Maximal size of the image cache.
+            Default 4 MB.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciImages._SetImagesForTextRange(System.Int32,System.Byte*,System.Int32,System.Boolean,System.Int32)">
+            <summary>
+            Sets image annotations for one or more lines of text.
+            </summary>
+            <param name="firstLine">First line index.</param>
+            <param name="text">Text that starts at line firstLine.</param>
+            <param name="length">Text length.</param>
+            <param name="allText">Added all text (not edited or appended).</param>
+            <param name="textPos">Position where the text starts.</param>
+        </member>
+        <member name="M:Au.Controls.SciImages._ParseAnnotText(System.Byte*,System.Int32,System.Int32@)">
+            <summary>
+            Parses annotation text.
+            If it starts with image info string ("\x3NNN\n\n..."), returns its length. Else returns 0.
+            </summary>
+            <param name="s">Annotation text. Can start with image info string or not.</param>
+            <param name="length">s length.</param>
+            <param name="imageInfo">The NNN part of image info, or 0.</param>
+        </member>
+        <member name="M:Au.Controls.SciImages.LibAnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets annotation text, preserving existing image info.
+            </summary>
+            <param name="line"></param>
+            <param name="s">New text without image info.</param>
+        </member>
+        <member name="M:Au.Controls.SciImages.LibAnnotationText(System.Int32)">
+            <summary>
+            Gets annotation text without image info.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciImages._GetTextRange(System.Int32,System.Int32)">
+            <summary>
+            Copies text range to BufferForText.
+            If cannot get from-to length text, asserts and returns null.
+            Does not validate arguments.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciImages.Visible">
+            <summary>
+            Hides/shows all images, or changes the display style of annotation areas.
+            Default is ANNOTATION_STANDARD (images visible).
+            When hiding, it just removes images, does not hide text annotations (SCI_ANNOTATIONGETVISIBLE remains unchanged).
+            </summary>
+        </member>
+        <member name="F:Au.Controls.GStripManagerPropertiesDialog.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GStripManagerPropertiesDialog.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Au.Controls.GStripManagerPropertiesDialog.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.IGStripManagerCallbacks">
+            <summary>
+            <see cref="T:Au.Controls.GStripManager"/> uses this interface to get properties of menu/toolbar items that it cannot get from XML (Click event handlers, images etc).
+            Also used to notify about some events.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.IGStripManagerCallbacks.GetImage(System.String)">
+            <summary>
+            Gets menu/toolbar item image.
+            </summary>
+            <param name="imageName">XML i attribute.</param>
+        </member>
+        <member name="M:Au.Controls.IGStripManagerCallbacks.GetClickHandler(System.String)">
+            <summary>
+            Gets menu/toolbar item Click event handler.
+            Returns null if the item is not a command, for example if it is a submenu-item or control-item.
+            Called before creating the ToolStripItem.
+            </summary>
+            <param name="itemName">Menu/toolbar item name (XML tag).</param>
+        </member>
+        <member name="M:Au.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)">
+            <summary>
+            Called before adding an item to a toolbar or menu/submenu.
+            </summary>
+            <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator. Its Tag property is XElement.</param>
+            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which will be added this item. Its Tag property is XElement.</param>
+        </member>
+        <member name="P:Au.Controls.GStripManager.MenuBar">
+            <summary>
+            Menu bar.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GStripManager.Toolbars">
+            <summary>
+            Toolbars.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.GStripManager.Submenus">
+            <summary>
+            Submenus.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GStripManager.#ctor(System.Windows.Forms.Form,Au.Controls.IGStripManagerCallbacks)">
+            <param name="form">Form used as owner of dialog boxes.</param>
+            <param name="callbacks"></param>
+        </member>
+        <member name="M:Au.Controls.GStripManager.BuildAll(System.String,System.String,System.Windows.Forms.ToolStripRenderer)">
+            <summary>
+            Opens XML file and creates toolbars/menus/submenus from XML tags.
+            </summary>
+            <param name="xmlFile">XML file containing menus/toolbars without user customizations.</param>
+            <param name="xmlFileCustom">XML file containing user customizations. It will be created or updated when saving customizations.</param>
+            <param name="tsRenderer"></param>
+        </member>
+        <member name="M:Au.Controls.GStripManager._AddChildItems(System.Xml.Linq.XElement,System.Windows.Forms.ToolStrip,System.Boolean)">
+            <summary>
+            Adds toolbar buttons or menu bar items.
+            Call this for each top-level toolstrip (toolbar or menu bar).
+            </summary>
+            <param name="xParent">XML element of the toolbar or menu bar.</param>
+            <param name="owner">The toolbar or menu bar.</param>
+            <param name="isMenu">true if menu, false if toolbar.</param>
+        </member>
+        <member name="M:Au.Controls.GStripManager._AddChildItem(System.Xml.Linq.XElement,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Int32)">
+            <summary>
+            Adds item to owner.
+            Before it calls <see cref="M:Au.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)"/>.
+            </summary>
+            <param name="x">item's element. This function assigns item to its annotation. Caller must assign x to item.Tag before calling this function.</param>
+            <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator.</param>
+            <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which to add this item.</param>
+            <param name="insertAt">If not negative, inserts at this index. If negative, adds to the end.</param>
+        </member>
+        <member name="M:Au.Controls.GStripManager._CreateChildItem(System.Xml.Linq.XElement,System.Boolean)">
+            <summary>
+            Creates a menu or toolbar item.
+            </summary>
+            <param name="x">XML element containing item properties.</param>
+            <param name="isMenu">false if toolbar item, true if menu item (also if menu bar item).</param>
+        </member>
+        <member name="M:Au.Controls.GStripManager._GetDefaultItemText(System.Xml.Linq.XElement)">
+            <summary>
+            If x has attribute t, gets its value.
+            Else gets its name and converts to text, eg "File_OneTwo" to "One Two".
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GStripManager._MergeCustom(System.Xml.Linq.XElement,System.Xml.Linq.XElement@,System.String,System.Boolean)">
+            <summary>
+            Merges custom attributes into default menubar or toolbar XML.
+            Reorders toolbar buttons if need.
+            </summary>
+            <param name="xCustom">Root element of customizations file.</param>
+            <param name="xtsDef">Default menustrip or toolstrip. For custom toolbars the function can replace it.</param>
+            <param name="name">xtsDef name, just to avoid getting it again.</param>
+            <param name="isMenu"></param>
+        </member>
+        <member name="M:Au.Controls.GStripManager._DiffCustom">
+            <summary>
+            Extracts differences between _xmlFileDefault and _xStrips and saves to _xmlFileCustom.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GStripManager._OnMouseUp(System.Object,System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Toolbar button MouseUp handler. Implements context menu that allows to customize.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GStripManager._Strips_Customize(System.UInt32,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Object)">
+            <summary>
+            Implements toolbar button customization.
+            </summary>
+            <param name="action">1 copy, 2 move, 3 remove, 4 separator, 5 hide/unhide, 6 properties.</param>
+            <param name="item">Button.</param>
+            <param name="tsTo">Destination toolbar, or null if don't need.</param>
+            <param name="etc">
+            With action 2 (move) can be the target button as ToolStripItem; if null, moves to the end.
+            With action 6 (properties) - GSMProp.
+            </param>
+        </member>
+        <member name="M:Au.Controls.GStripManager._OnMouseDown(System.Object,System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Toolbar button MouseDown handler. Implements toolbar button reordering with Alt+drag.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GStripManager.Find(System.String)">
+            <summary>
+            Gets menu items and toolbar buttons that have the specified name (XML tag).
+            If not found, returns empty List.
+            </summary>
+            <param name="name">XML tag.</param>
+        </member>
+        <member name="T:Au.Controls.Form_">
+            <summary>
+            Can be used as base class for forms when you want to use correct dialog font and correct auto-scaling when high DPI.
+            </summary>
+            <remarks>
+            Sets these properties:
+            Font = SystemFonts.MessageBoxFont; //usually Segoe UI, 9pt //default font of Form is MS Sans Serif, 8.25pt
+            AutoScaleMode = AutoScaleMode.Font;
+            
+            Form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', its OK.
+            note:
+            	Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font).
+            	Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form.
+            </remarks>
+        </member>
+        <member name="T:Au.Controls.ScrollableControl_">
+            <summary>
+            Allows to set/get scroll info and receive scroll notifications.
+            This class exists because .NET ScrollableControl does not work when AutoScroll is false.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.BitmapFileInfo.biHeader">
+            <summary>
+            Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.ImageUtil.ImageType">
+            <summary>
+            Image type as detected by <see cref="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.None">
+            <summary>The string isn't image.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.EmbeddedCompressedBmp">
+            <summary>Compressed and Base64-encoded bitmap file data with "~:" prefix. See <see cref="M:Au.Controls.ImageUtil.ImageToString(System.String)"/>.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.EmbeddedPngGifJpg">
+            <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.Resource">
+            <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.Bmp">
+            <summary>.bmp file.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.PngGifJpg">
+            <summary>.png, .gif or .jpg file.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.Ico">
+            <summary>.ico file.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.Cur">
+            <summary>.cur or .ani file.</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.IconLib">
+            <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
+        </member>
+        <member name="F:Au.Controls.ImageUtil.ImageType.ShellIcon">
+            <summary>None of other image types, when anyFile is true.</summary>
+        </member>
+        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Byte*,System.Int32)">
+            <summary>
+            Gets image type from string.
+            </summary>
+            <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+            <param name="s"></param>
+            <param name="length">If -1, calls LibCharPtr.Length(s).</param>
+        </member>
+        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)">
+            <summary>
+            Gets image type from string.
+            </summary>
+            <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+            <param name="s"></param>
+        </member>
+        <member name="M:Au.Controls.ImageUtil.BmpFileDataFromString(System.String,Au.Controls.ImageUtil.ImageType,System.Boolean)">
+            <summary>
+            Loads image and returns its data in .bmp file format.
+            </summary>
+            <param name="s">Depends on t. File path or resource name without prefix or embedded image data without prefix.</param>
+            <param name="t">Image type and string format.</param>
+            <param name="searchPath">Use <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/></param>
+            <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages.</remarks>
+        </member>
+        <member name="M:Au.Controls.ImageUtil.BmpFileDataToString(System.Byte[])">
+            <summary>
+            Compresses in-memory .bmp file data (<see cref="M:Au.Convert_.Compress(System.Byte[])"/>) and Base64-encodes.
+            Returns string with "~:" prefix.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ImageUtil.ImageToString(System.String)">
+            <summary>
+            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library.
+            Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
+            Supports all <see cref="T:Au.Controls.ImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
+            Returns null if path is not a valid image string or the file does not exist or failed to load.
+            </summary>
+            <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages and standard directories.</remarks>
+        </member>
+    </members>
+</doc>

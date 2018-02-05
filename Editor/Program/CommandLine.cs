@@ -18,9 +18,9 @@ using System.Drawing;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
 
 static class CommandLine
@@ -59,7 +59,7 @@ static class CommandLine
 			//activate main window
 			if(a.Length == 0) {
 				try {
-					Wnd wMain = Wnd.Find("Catkeys*", "WindowsForms*", WFOwner.ThreadId(w.ThreadId), WFFlags.HiddenToo, t => !t.IsPopupWindow);
+					Wnd wMain = Wnd.Find("QM#*", "WindowsForms*", WFOwner.ThreadId(w.ThreadId), WFFlags.HiddenToo, t => !t.IsPopupWindow);
 					if(!wMain.Is0) wMain.Activate();
 				}
 				catch { }
@@ -77,8 +77,9 @@ static class CommandLine
 		}
 
 		Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA();
-		Wnd.Misc.WindowClass.InterDomainRegister(_msgClass, _WndProc);
-		_msgWnd = Wnd.Misc.WindowClass.InterDomainCreateMessageWindow(_msgClass);
+		Wnd.Misc.MyWindow.RegisterClass(_msgClass);
+		_msgWnd = new MsgWindow();
+		_msgWnd.CreateMessageWindow(_msgClass);
 		return false;
 	}
 
@@ -99,19 +100,22 @@ static class CommandLine
 	static string _importCollection;
 	static string[] _importFiles;
 
-	const string _msgClass = "CatEdit.Command";
-	static Wnd _msgWnd;
+	const string _msgClass = "Au.Editor.Command";
+	static MsgWindow _msgWnd;
 
-	static LPARAM _WndProc(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	class MsgWindow :Wnd.Misc.MyWindow
 	{
-		switch(msg) {
-		case Api.WM_COPYDATA:
-			try { return _WmCopyData(wParam, lParam); }
-			catch(Exception ex) { Print(ex.Message); }
-			return false;
-		}
+		public override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+		{
+			switch(message) {
+			case Api.WM_COPYDATA:
+				try { return _WmCopyData(wParam, lParam); }
+				catch(Exception ex) { Print(ex.Message); }
+				return 0;
+			}
 
-		return Wnd.Misc.DefWindowProc(w, msg, wParam, lParam);
+			return base.WndProc(w, message, wParam, lParam);
+		}
 	}
 
 	static bool _WmCopyData(LPARAM wParam, LPARAM lParam)

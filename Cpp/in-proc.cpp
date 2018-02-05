@@ -29,7 +29,7 @@
 //	Also, I expected to make 'find all' much faster, because then can search and send/unmarshal results at the same time on different CPU cores. But it made faster only by 15%. Also, calling the final callback function before finishing searching is not a good idea, because then the finder must DoEvents because the callback would probably call object's methods.
 
 //Cannot inject dll into some processes, including:
-//	Windows Store apps (including the Edge web browser, which does not support MSAA anyway);
+//	Windows Store apps (including the Edge web browser);
 //	Console (not useful anyway);
 //	Protected processes (eg antivirus);
 //	Processes of higher UAC integrity level (unless this process is uiAccess);
@@ -44,9 +44,9 @@
 #include "stdafx.h"
 #include "cpp.h"
 
-#ifdef _DEBUG
-void InProcAccTest(IAccessible* a);
-#endif
+//#ifdef _DEBUG
+//void InProcAccTest(IAccessible* a);
+//#endif
 
 HMODULE s_moduleHandle; //module handle of this dll
 
@@ -94,7 +94,7 @@ HRESULT AccWeb(IAccessible* iacc, STR what, out BSTR& sResult);
 namespace inproc
 {
 HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResult);
-HRESULT AccEnableChrome(MarshalParams_AccElem* p);
+HRESULT AccEnableChrome2(MarshalParams_AccElem* p);
 
 //Our hook of get_accHelpTopic.
 HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sResult, VARIANT vParams, long* pMagic)
@@ -110,13 +110,14 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 				sResult = null;
 				HRESULT hr = 0;
 				switch(h->action) {
-#ifdef _DEBUG
-				case InProcAction::IPA_AccTest:
-					InProcAccTest(iacc);
-					break;
-#endif
+//#ifdef _DEBUG
+//				case InProcAction::IPA_AccTest:
+//					InProcAccTest(iacc);
+//					break;
+//#endif
 				case InProcAction::IPA_AccFind:
 				case InProcAction::IPA_AccFromWindow:
+				case InProcAction::IPA_AccFromPoint:
 				case InProcAction::IPA_AccNavigate:
 					hr = AccFindOrGet(h, iacc, sResult);
 					break;
@@ -130,7 +131,7 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 					hr = AccWeb(iacc, (STR)(h + 1), sResult);
 					break;
 				case InProcAction::IPA_AccEnableChrome:
-					hr = AccEnableChrome(p);
+					hr = AccEnableChrome2(p);
 					break;
 				}
 				return hr;
@@ -154,11 +155,11 @@ HookIAccessible s_hookIAcc;
 //Gets wAgent AO, hooks its IAccessible interface, calls CoMarshalInterface, writes the data to the window extra memory (SetWindowLong).
 IStream* MarshalAgentIAccessible(HWND wAgent) {
 	//Perf.First();
-	IAccessiblePtr iacc;
+	Smart<IAccessible> iacc;
 	if(AccessibleObjectFromWindow(wAgent, OBJID_WINDOW, IID_IAccessible, (void**)&iacc)) return null;
 	if(!s_hookIAcc.Hook(iacc)) return null;
 
-	IStreamPtr stream;
+	Smart<IStream> stream;
 	CreateStreamOnHGlobal(0, true, &stream);
 	if(CoMarshalInterface(stream, IID_IAccessible, iacc, MSHCTX_LOCAL, null, MSHLFLAGS_TABLESTRONG)) return null;
 
@@ -192,7 +193,7 @@ bool UnmarshalAgentIAccessible(HWND wAgent, out IAccessible*& iacc) {
 	HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, streamSize); if(hg == 0) return false;
 	LPVOID mem = GlobalLock(hg); memcpy(mem, b, streamSize); GlobalUnlock(mem);
 
-	IStreamPtr stream;
+	Smart<IStream> stream;
 	CreateStreamOnHGlobal(hg, true, &stream);
 	if(CoUnmarshalInterface(stream, IID_IAccessible, (void**)&iacc)) return false;
 

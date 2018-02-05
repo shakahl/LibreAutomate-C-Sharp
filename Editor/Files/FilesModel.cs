@@ -19,9 +19,9 @@ using System.Xml.Linq;
 //using System.Xml.XPath;
 using System.Collections;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -127,7 +127,7 @@ partial class FilesModel :ITreeModel
 
 		bool leaf = node.IsLeaf;
 #if true
-		//var p = new Catkeys.Perf.Inst(true);
+		//var p = new Perf.Inst(true);
 		if(leaf) {
 			bool isPath = f.IsLink(out string s);
 			if(!(isPath ? s : f.Name).EndsWith_(".cs", true)) {
@@ -458,7 +458,7 @@ partial class FilesModel :ITreeModel
 			if(_currentFile == null) TV.ClearSelection(); else _currentFile.SelectSingle();
 		}
 	}
-	Catkeys.Util.MessageLoop _msgLoop = new Catkeys.Util.MessageLoop();
+	Au.Util.MessageLoop _msgLoop = new Au.Util.MessageLoop();
 
 	private void _TV_Expanded(object sender, TreeViewAdvEventArgs e)
 	{

@@ -6,10 +6,9 @@ using System.Data;
 using System.Threading.Tasks;
 using System.Windows;
 
-using Catkeys;
-using static Catkeys.NoClass;
-using Util = Catkeys.Util;
-using Catkeys.Winapi;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Wpf
 {

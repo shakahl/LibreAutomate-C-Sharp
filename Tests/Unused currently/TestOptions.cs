@@ -7,13 +7,13 @@ using System.Threading;
 using System.Reflection;
 using System.Diagnostics;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
 
 class ScriptClass :Script
 {
-	//static ScriptClass() { ScriptOptions.Default.speed=50; }
+	//static ScriptClass() { AuScriptOptions.Default.speed=50; }
 
 	//[STAThread]
 	//static void Main()
@@ -36,7 +36,7 @@ class ScriptClass :Script
 	{
 		//DebugPrintFunc();
 		//Print(unu);
-		//ScriptOptions.ThreadDefault.speed=50;
+		//AuScriptOptions.ThreadDefault.speed=50;
 
 		Print(Options.MouseClickSleep);
 		Options.MouseClickSleep = 10;
@@ -83,12 +83,12 @@ class AnotherClass
 	{
 		Print(Options.MouseClickSleep);
 
-		var o = new ScriptOptions();
+		var o = new AuScriptOptions();
 		Print(o.MouseClickSleep);
-		Moo(new ScriptOptions() { MouseClickSleep = 6, MouseMoveSpeed = 100 });
+		Moo(new AuScriptOptions() { MouseClickSleep = 6, MouseMoveSpeed = 100 });
 	}
 
-	public static void Moo(ScriptOptions o)
+	public static void Moo(AuScriptOptions o)
 	{
 		Print(o.MouseClickSleep);
 	}
@@ -101,14 +101,14 @@ partial class Test
 		//ScriptClass.TestMain();
 
 		//Print(Options.MouseClickSleep);
-		//using(ScriptOptions.Temp()) {
+		//using(AuScriptOptions.Temp()) {
 		//	Options.MouseClickSleep = 1000;
 		//	Print(Options.MouseClickSleep);
 		//}
 		//Print(Options.MouseClickSleep);
 
 		//Print(Options.MouseClickSleep);
-		//using(var r=ScriptOptions.Temp()) {
+		//using(var r=AuScriptOptions.Temp()) {
 		//	Options.MouseClickSleep = 1000;
 		//	Print(Options.MouseClickSleep);
 		//	r.Dispose();
@@ -118,10 +118,10 @@ partial class Test
 		//Print(Options.MouseClickSleep);
 
 		Print(Options.MouseClickSleep);
-		using(ScriptOptions.Temp) {
+		using(AuScriptOptions.Temp) {
 			Options.MouseClickSleep = 1000;
 			Print(Options.MouseClickSleep);
-			using(ScriptOptions.Temp) {
+			using(AuScriptOptions.Temp) {
 				Options.MouseClickSleep = 1;
 				Print(Options.MouseClickSleep);
 			}

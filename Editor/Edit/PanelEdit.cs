@@ -18,12 +18,12 @@ using System.Linq;
 using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
-using G.Controls;
-using static G.Controls.Sci;
+using Au.Controls;
+using static Au.Controls.Sci;
 
 partial class PanelEdit :Control
 {
@@ -300,7 +300,7 @@ partial class PanelEdit :Control
 				ST.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in in int interface internal is lock long namespace new null object operator out out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield");
 				//ST.SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
 				//ST.SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
-				//ST.SetString(SCI_SETKEYWORDS, 3, "Catkeys"); //types. Not using here.
+				//ST.SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
 				//ST.SetString(SCI_SETKEYWORDS, 4, "DEBUG TRACE"); //if used with #if, lexer knows which #if/#else branch to style. Not using here (see "lexer.cpp.track.preprocessor").
 				ST.SetString(SCI_SETKEYWORDS, 5, "TO" + "DO SHOULD" + "DO CON" + "SIDER FU" + "TURE B" + "UG");
 				break;

@@ -2728,7 +2728,7 @@ void Editor::NotifyModified(Document *, DocModification mh, void *) {
 		if (mh.modificationType & SC_MOD_CHANGEANNOTATION) {
 			int lineDoc = pdoc->LineFromPosition(mh.position);
 			if (vs.annotationVisible) {
-				//Catkeys: fixed the not-updating scrollbars bug, as Scintilla's author suggested. //FUTURE: see how he will fix it
+				//Au: fixed the not-updating scrollbars bug, as Scintilla's author suggested. //FUTURE: see how he will fix it
 				//cs.SetHeight(lineDoc, cs.GetHeight(lineDoc) + mh.annotationLinesAdded);
 				if (cs.SetHeight(lineDoc, cs.GetHeight(lineDoc) + mh.annotationLinesAdded)) {
 					SetScrollBars();
@@ -5427,7 +5427,7 @@ void Editor::SetAnnotationVisible(int visible) {
 					cs.SetHeight(line, cs.GetHeight(line) + annotationLines * dir);
 				}
 			}
-			SetScrollBars(); //Catkeys
+			SetScrollBars(); //Au
 		}
 		Redraw();
 	}
@@ -6825,8 +6825,8 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 	case SCI_GETPOSITIONCACHE:
 		return view.posCache.GetSize();
 
-		//Catkeys: sometimes need to update eg vertical scrollbar after adding annotations etc, because scintilla does not do it. Call async.
-		//Catkeys: for annotations I instead added a fix in other place, as Scintilla's author suggested and probably will fix it in a future version.
+		//Au: sometimes need to update eg vertical scrollbar after adding annotations etc, because scintilla does not do it. Call async.
+		//Au: for annotations I instead added a fix in other place, as Scintilla's author suggested and probably will fix it in a future version.
 	//case SCI_UPDATESCROLLBARS:
 	//	SetScrollBars();
 	//	break;
@@ -7158,7 +7158,7 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 		return vs.ms.size();
 
 	case SCI_STYLECLEARALL:
-		vs.ClearStyles(wParam, lParam); //Catkeys: added wParam, lParam (from/to)
+		vs.ClearStyles(wParam, lParam); //Au: added wParam, lParam (from/to)
 		InvalidateStyleRedraw();
 		break;
 
@@ -8044,7 +8044,7 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 		return st.style;
 	}
 
-	case SCI_MARGINSTYLENEXT: //Catkeys: fast find next line that has certain style in text margin
+	case SCI_MARGINSTYLENEXT: //Au: fast find next line that has certain style in text margin
 		return pdoc->MarginStyledTextNext((int)wParam, (int)lParam);
 
 	case SCI_MARGINSETSTYLES:

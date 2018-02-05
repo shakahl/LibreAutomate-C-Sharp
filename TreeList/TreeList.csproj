@@ -18,13 +18,13 @@
     <SccProvider>
     </SccProvider>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>CatkeysSN.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Au.pfx</AssemblyOriginatorKeyFile>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -61,7 +61,7 @@
     <Compile Include="Tree\TVAcc.cs">
       <SubType>Component</SubType>
     </Compile>
-    <None Include="CatkeysSN.pfx" />
+    <None Include="Au.pfx" />
     <None Include="removed\GifDecoder.cs" />
     <None Include="removed\PerformanceAnalyzer.cs" />
     <Compile Include="ResourceHelper.cs" />
@@ -213,13 +213,13 @@
     <Content Include="Resources\DVSplit.cur" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Catkeys\Catkeys.csproj">
+    <ProjectReference Include="..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
-      <Name>Catkeys</Name>
+      <Name>Au</Name>
     </ProjectReference>
-    <ProjectReference Include="..\G.Controls\G.Controls.csproj">
+    <ProjectReference Include="..\Controls\Au.Controls.csproj">
       <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
-      <Name>G.Controls</Name>
+      <Name>Au.Controls</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -4,11 +4,11 @@ Imports System.Drawing
 Imports K = System.Windows.Forms.Keys
 'Imports System.Windows.Forms.Keys
 
-Imports Catkeys
-Imports Catkeys.NoClass
-'Imports Catkeys.Automation.Input
+Imports Au
+Imports Au.NoClass
+'Imports Au.Input
 
-Imports Catkeys.TaskDialog
+Imports Au.TaskDialog
 
 
 Module Module1

@@ -89,7 +89,7 @@ namespace Aga.Controls.Tree.NodeControls
 			if (Parent.UseColumns)
 				return context.Bounds.Size;
 			else
-				return new Size(Catkeys.Util.Dpi.ScaleInt(EditorWidth), context.Bounds.Height);
+				return new Size(Au.Util.Dpi.ScaleInt(EditorWidth), context.Bounds.Height);
 		}
 
 		protected override Control CreateEditor(TreeNodeAdv node)

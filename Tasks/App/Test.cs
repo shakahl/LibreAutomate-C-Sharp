@@ -21,16 +21,10 @@ using System.Drawing;
 
 using K = System.Windows.Forms.Keys;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
-using Catkeys.Triggers;
-
-
-//using Cat = Catkeys.Input;
-//using Meow = Catkeys.Show;
-
-//using static Catkeys.Show;
+using Au;
+using Au.Types;
+using static Au.NoClass;
+using Au.Triggers;
 
 using System.Xml.Serialization;
 
@@ -48,7 +42,7 @@ using System.Globalization;
 
 public partial class Test
 {
-	//this would be executed if using code 'domain.CreateInstance("CatkeysTasks", "Test");'
+	//this would be executed if using code 'domain.CreateInstance("Au.Tasks", "Test");'
 	public unsafe Test()
 	{
 	}
@@ -57,7 +51,7 @@ public partial class Test
 	{
 		Output.Clear();
 
-		//AppDomain.CurrentDomain.SetData("test7", "Catkeys-");
+		//AppDomain.CurrentDomain.SetData("test7", "Au-");
 		//Perf.First();
 		//InterDomainVariables.SetVariable("-", "");
 		//InterDomainVariables.Init();
@@ -71,7 +65,7 @@ public partial class Test
 				try {
 					domain = AppDomain.CreateDomain(domainName);
 
-					domain.SetData("Catkeys_DefaultDomain", AppDomain.CurrentDomain);
+					domain.SetData("Au_DefaultDomain", AppDomain.CurrentDomain);
 
 					//AppDomainSetup domainSetup = new AppDomainSetup() {
 					//	ApplicationBase = AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
@@ -83,7 +77,7 @@ public partial class Test
 
 					//domain.DoCallBack(TestX);
 
-					//domain.CreateInstance("CatkeysTasks", "Test");
+					//domain.CreateInstance("Au.Tasks", "Test");
 
 				}
 				catch(Exception e) {
@@ -111,17 +105,17 @@ System.IndexOutOfRangeException: Index was outside the bounds of the array.
    at System.Windows.Forms.Application.ThreadContext.ExitCommon(Boolean disposing)
    at System.Windows.Forms.Application.ExitInternal()
    at System.Windows.Forms.Application.Exit(CancelEventArgs e)
-   at Test.<>c.<TestInNewAppDomain>b__1_1() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+   at Test.<>c.<TestInNewAppDomain>b__1_1() in Q:\app\Au\Tasks\App\Test.cs:line 106
    at System.AppDomain.DoCallBack(CrossAppDomainDelegate callBackDelegate)
-   at Test.<>c__DisplayClass1_0.<TestInNewAppDomain>b__0() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+   at Test.<>c__DisplayClass1_0.<TestInNewAppDomain>b__0() in Q:\app\Au\Tasks\App\Test.cs:line 106
 
 System.NullReferenceException: Object reference not set to an instance of an object.
    at System.Windows.Forms.Application.ThreadContext.ExitCommon(Boolean disposing)
    at System.Windows.Forms.Application.ExitInternal()
    at System.Windows.Forms.Application.Exit(CancelEventArgs e)
-   at Test.<>c.<TestInNewAppDomain>b__1_1() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+   at Test.<>c.<TestInNewAppDomain>b__1_1() in Q:\app\Au\Tasks\App\Test.cs:line 106
    at System.AppDomain.DoCallBack(CrossAppDomainDelegate callBackDelegate)
-   at Test.<>c__DisplayClass1_0.<TestInNewAppDomain>b__0() in Q:\app\Catkeys\Tasks\App\Test.cs:line 106
+   at Test.<>c__DisplayClass1_0.<TestInNewAppDomain>b__0() in Q:\app\Au\Tasks\App\Test.cs:line 106
 
 							*/
 
@@ -201,13 +195,13 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 
 		//Wait(1); return;
 
-		//TestCatBar();
+		//TestAuBar();
 
 		//LibWorkarounds.WaitCursorWhenShowingMenuEtc();
 		//Perf.First();
-		//var m = new CatMenu(); m["test"] = null; m.Show();
-		//var m = new CatMenu(); m["test"] = null; m.Show(Mouse.X+10, Mouse.Y+10);
-		//var m = new CatMenu(); m["test"] = null; m.Show(Mouse.X-10, Mouse.Y-10);
+		//var m = new AuMenu(); m["test"] = null; m.Show();
+		//var m = new AuMenu(); m["test"] = null; m.Show(Mouse.X+10, Mouse.Y+10);
+		//var m = new AuMenu(); m["test"] = null; m.Show(Mouse.X-10, Mouse.Y-10);
 		//var m = new ContextMenu(); m.MenuItems.Add("test"); m.Show();
 		//MessageBox(Wnd0, "txt", "cap", 0);
 		//Wnd.Misc.AllowActivate();
@@ -222,14 +216,14 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//TODO: test wait cursor with TaskDialog.Show
 	}
 
-	static Catkeys.Util.MessageLoop _mlTb = new Catkeys.Util.MessageLoop();
+	static Au.Util.MessageLoop _mlTb = new Au.Util.MessageLoop();
 
-	static void TestCatBar()
+	static void TestAuBar()
 	{
 		//var il = _TestCreateImageList();
 
 		Perf.First();
-		var m = new CatBar();
+		var m = new AuToolbar();
 		//m.CMS.ImageList = il;
 		Perf.Next();
 

@@ -20,11 +20,11 @@ using System.Drawing;
 //using System.Xml.Linq;
 //using System.Xml.XPath;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 using static Program;
-using G.Controls;
+using Au.Controls;
 
 class PanelStatus :Control
 {
@@ -122,7 +122,7 @@ class PanelStatus :Control
 		if(noChange) return;
 		_p = p;
 
-		var sb = Catkeys.Util.LibStringBuilderCache.Acquire(1000);
+		var sb = Au.Util.LibStringBuilderCache.Acquire(1000);
 
 		sb.Append(p.X);
 		sb.Append("\n");

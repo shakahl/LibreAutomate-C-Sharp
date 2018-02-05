@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-//using Catkeys;
+//using Au;
 [module: DefaultCharSet(CharSet.Unicode)]
 
 namespace Simple
@@ -51,8 +51,8 @@ namespace Simple
 			return n;
 		}
 
-		//static Catkeys.POINT _mmm;
-		static Catkeys.ScriptOptions _opt=new Catkeys.ScriptOptions(null);
+		//static Au.POINT _mmm;
+		static Au.AuScriptOptions _opt=new Au.AuScriptOptions(null);
 
 
 		//		[DebuggerStepThrough]

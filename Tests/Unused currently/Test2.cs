@@ -22,20 +22,12 @@ using System.Xml.XPath;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
 //using System.IO.MemoryMappedFiles;
 //using System.Runtime.Serialization;
 //using System.Runtime.Serialization.Formatters.Binary;
-
-//using Catkeys.Triggers;
-
-
-//using Cat = Catkeys.Input;
-//using Meow = Catkeys.Show;
-
-//using static Catkeys.Show;
 
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -66,8 +58,8 @@ using System.Reflection.Emit;
 using System.Net;
 using System.Net.NetworkInformation;
 
-using Catkeys.Types;
-using Catkeys.Util;
+using Au.Types;
+using Au.Util;
 
 static unsafe partial class Test
 {
@@ -75,13 +67,13 @@ static unsafe partial class Test
 
 	static void TestScreenImage()
 	{
-		//var b = new Catkeys.Util.MemoryBitmap(-1, -1);
-		//var b = new Catkeys.Util.MemoryBitmap(60000, 10000);
+		//var b = new Au.Util.MemoryBitmap(-1, -1);
+		//var b = new Au.Util.MemoryBitmap(60000, 10000);
 		//PrintList(b.Hdc, b.Hbitmap);
 
 		//Wnd.Find("app -*").Activate();Sleep(100);
 		//var w = Wnd.Find("app -*");
-		//var w = Wnd.Find("Catkeys -*");
+		//var w = Wnd.Find("QM# -*");
 
 		//var s1 = Folders.Temp + "test.bmp";
 		//var s2 = Folders.Temp + "test.png";
@@ -165,7 +157,7 @@ static unsafe partial class Test
 		w.ThrowIf0();
 		area = w;
 		//w.GetWindowAndClientRectInScreen(out var r1, out var r2); Print(r1); Print(r2); return;
-		//CatException.ThrowIfFailed(Api.AccessibleObjectFromWindow(w, Api.OBJID_WINDOW, ref Api.IID_IAccessible, out var iacc));
+		//AuException.ThrowIfFailed(Api.AccessibleObjectFromWindow(w, Api.OBJID_WINDOW, ref Api.IID_IAccessible, out var iacc));
 		//var acc = new Acc() { a = iacc, elem = 0 };
 		//area=acc;
 		SIFlags f = 0;
@@ -371,7 +363,7 @@ static unsafe partial class Test
 
 		//Mouse.
 
-		//var s = G.Controls.ImageUtil.ImageToString(Folders.ThisAppImages + "qm info.bmp");
+		//var s = Au.Controls.ImageUtil.ImageToString(Folders.ThisAppImages + "qm info.bmp");
 		//Print(s);
 
 		//ScreenImage.Find(
@@ -399,7 +391,7 @@ static unsafe partial class Test
 			if(f.IsDirectory) continue;
 			var path = f.FullPath;
 			Print(path);
-			Print(G.Controls.ImageUtil.ImageToString(path));
+			Print(Au.Controls.ImageUtil.ImageToString(path));
 		}
 	}
 
@@ -449,7 +441,7 @@ static unsafe partial class Test
 		//var w = WaitFor.WindowExists(20, className: "Notepad", flags: WFFlags.HiddenToo); Print(w); return;
 		//var w = WaitFor.WindowExists(20, programEtc: "Notepad", flags: WFFlags.HiddenToo); Print(w); return;
 		//var w = Wnd.Find(programEtc:"qm", flags: WFFlags.HiddenToo); Print(w); return;
-		//var w = Wnd.Find("Catkeys *", "WindowsForms*"); //w=w.Child("**wfName:Edit"); Print(w); return;
+		//var w = Wnd.Find("QM# *", "WindowsForms*"); //w=w.Child("**wfName:Edit"); Print(w); return;
 		//foreach(var v in w.AllChildren()) PrintList(v.ClassName, v.NameWinForms);
 		//return;
 
@@ -602,32 +594,32 @@ static unsafe partial class Test
 		}
 	}
 
-	static void TestHwndReusing()
-	{
-		string cn1, cn2;
-		cn1 = "jooooo1";
-		cn2 = "jooooo2";
-		Wnd.Misc.WindowClass.InterDomainRegister(cn1, null);
-		Wnd.Misc.WindowClass.InterDomainRegister(cn2, null);
+	//static void TestHwndReusing()
+	//{
+	//	string cn1, cn2;
+	//	cn1 = "jooooo1";
+	//	cn2 = "jooooo2";
+	//	Wnd.Misc.MyWindowClass.InterDomainRegister(cn1, null);
+	//	Wnd.Misc.MyWindowClass.InterDomainRegister(cn2, null);
 
-		var d = new HashSet<Wnd>();
-		Perf.First();
-		for(int i = 1; ; i++) {
-			var cn = ((i & 1) != 0) ? cn1 : cn2;
-			//var w = Wnd.Misc.CreateWindow(0, "#32770", null, Native.WS_POPUP); //75000, 4 minutes
-			////var w = Wnd.Misc.CreateMessageWindow("#32770"); //65000, 12 seconds
-			//var w = Wnd.Misc.WindowClass.InterDomainCreateWindow(0, cn, null, Native.WS_POPUP); //75000, 4 minutes
-			var w = Wnd.Misc.WindowClass.InterDomainCreateMessageWindow(cn); //65000, 9 seconds
-			if(w.Is0) throw new Exception();
-			Wnd.Misc.DestroyWindow(w);
-			if(d.Contains(w)) break;
-			d.Add(w);
-			if(i % 1000 == 0) Print(i);
-			Time.Sleep(1);
-		}
-		Perf.NW();
-		Print(d.Count);
-	}
+	//	var d = new HashSet<Wnd>();
+	//	Perf.First();
+	//	for(int i = 1; ; i++) {
+	//		var cn = ((i & 1) != 0) ? cn1 : cn2;
+	//		//var w = Wnd.Misc.CreateWindow(0, "#32770", null, Native.WS_POPUP); //75000, 4 minutes
+	//		////var w = Wnd.Misc.CreateMessageWindow("#32770"); //65000, 12 seconds
+	//		//var w = Wnd.Misc.MyWindowClass.InterDomainCreateWindow(0, cn, null, Native.WS_POPUP); //75000, 4 minutes
+	//		var w = Wnd.Misc.MyWindowClass.InterDomainCreateMessageWindow(cn); //65000, 9 seconds
+	//		if(w.Is0) throw new Exception();
+	//		Wnd.Misc.DestroyWindow(w);
+	//		if(d.Contains(w)) break;
+	//		d.Add(w);
+	//		if(i % 1000 == 0) Print(i);
+	//		Time.Sleep(1);
+	//	}
+	//	Perf.NW();
+	//	Print(d.Count);
+	//}
 
 	static void TestWindowClass()
 	{
@@ -751,7 +743,7 @@ static unsafe partial class Test
 			for(int i2 = 0; i2 < a.Length; i2++) {
 				var v = a[i2]; fixed (char* p = v) {
 					lock(_stringCache) {
-						if(!_stringCacheWR.TryGetTarget(out var cache)) _stringCacheWR.SetTarget(cache = new Catkeys.Util.StringCache());
+						if(!_stringCacheWR.TryGetTarget(out var cache)) _stringCacheWR.SetTarget(cache = new Au.Util.StringCache());
 						var s = cache.Add(p, v.Length);
 					}
 				}
@@ -826,14 +818,14 @@ static unsafe partial class Test
 	}
 
 
-	static Catkeys.Util.StringCache _stringCache = new Catkeys.Util.StringCache();
-	static WeakReference<Catkeys.Util.StringCache> _stringCacheWR = new WeakReference<Catkeys.Util.StringCache>(null);
+	static Au.Util.StringCache _stringCache = new Au.Util.StringCache();
+	static WeakReference<Au.Util.StringCache> _stringCacheWR = new WeakReference<Au.Util.StringCache>(null);
 
 	static void TestCharPtrEndWith()
 	{
 		var s = "notepad.exe";
 		fixed (char* p = s) {
-			Print(Catkeys.Util.LibCharPtr.EndsWith(p, s.Length, ".Exe", true));
+			Print(Au.Util.LibCharPtr.EndsWith(p, s.Length, ".Exe", true));
 		}
 	}
 
@@ -962,18 +954,18 @@ static unsafe partial class Test
 		int TestNext(ref sbyte p);
 	};
 
-	[DllImport(@"Q:\app\Catkeys\Dll\64bit\AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Dll\64bit\AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 	static extern ITest CreateTestInterface();
 
-	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 	static extern void CreateTestInterface2(out ITest t);
 	//static extern void CreateTestInterface2(out IntPtr t); //with Marshal.GetTypedObjectForIUnknown is missing 1 Release
 	//static extern void CreateTestInterface2([MarshalAs(UnmanagedType.IUnknown)] out object t); //the same number of QI etc as with 'out ITest t'
 
-	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "CreateTestInterface2", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", EntryPoint = "CreateTestInterface2", CallingConvention = CallingConvention.Cdecl)]
 	static extern void CreateTestInterface3(out IntPtr t); //with Marshal.GetTypedObjectForIUnknown is missing 1 Release
 
-	[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 	static extern void DllTestAcc();
 
 	[ComImport, Guid("00000000-0000-0000-C000-000000000046")]
@@ -1503,11 +1495,10 @@ static unsafe partial class Test
 		//Print( ScreenImage.WaitNot(-2, Folders.ThisAppImages + "qm info.png", w, SIFlags.WindowDC));
 		//Print( ScreenImage.WaitChanged(-2, w, SIFlags.WindowDC));
 
-		//var w = Wnd.Find("Catkeys - Q*");
-		//var a = Acc.Find(w, "LISTITEM", "test.cs", AFFlags.SkipWeb);
+		//var w = Wnd.Find("QM# - Q*");
 		//var w = Wnd.Find("*Internet Explorer");
 		//Perf.First();
-		//var a = Acc.Find(w, "PUSHBUTTON", "Home", AFFlags.Reverse| AFFlags.SkipWeb);
+		//var a = Acc.Find(w, "PUSHBUTTON", "Home", AFFlags.Reverse);
 		//Perf.NW();
 		//Print(a);
 	}
@@ -1923,7 +1914,7 @@ static unsafe partial class Test
 		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
 		var w = Wnd.Misc.FindMessageWindow(null, "QM_testIPC").OrThrow();
 		//var w = Wnd.Find("QM Dialog").OrThrow();
-		//var w = Wnd.Find("Catkeys - Q*").OrThrow();
+		//var w = Wnd.Find("QM# - Q*").OrThrow();
 		//var w = Wnd.Find("Calculator").OrThrow();
 		//var w = Wnd.Find("ILSpy").OrThrow();
 		//var w = Wnd.Find("Java *").OrThrow();
@@ -1995,11 +1986,11 @@ static unsafe partial class Test
 			w.Send(Api.WM_COPYDATA, 0, &x);
 			NativeHeap.Free(c);
 			Perf.Next();
-			if(0 != Api.WaitForSingleObject(s_event.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new CatException(0, "*wait for event");
+			if(0 != Api.WaitForSingleObject(s_event.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new AuException(0, "*wait for event");
 			Perf.Next();
 
 #elif true
-			if(0 != Api.WaitForSingleObject(s_mutex.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new CatException(0, "*wait for mutex");
+			if(0 != Api.WaitForSingleObject(s_mutex.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new AuException(0, "*wait for mutex");
 			try {
 				Perf.Next();
 				var c = (char*)s_sm;
@@ -2007,7 +1998,7 @@ static unsafe partial class Test
 				Perf.Next();
 				w.SendNotify(Api.WM_APP + 2, 0, 0);
 				Perf.Next();
-				if(0 != Api.WaitForSingleObject(s_event.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new CatException(0, "*wait for event");
+				if(0 != Api.WaitForSingleObject(s_event.SafeWaitHandle.DangerousGetHandle(), 10000)) throw new AuException(0, "*wait for event");
 				Perf.Next();
 				//Print(new string(c, 0, 2));
 			}
@@ -2017,7 +2008,7 @@ static unsafe partial class Test
 				Perf.Next();
 				//Print(hpTarget.Handle);
 				var hpThis = Api.GetCurrentProcess();
-				if(!DuplicateHandle(hpThis, hpThis, hpTarget, out var hpDup, 0, false, DUPLICATE_SAME_ACCESS)) throw new CatException(0, "*DuplicateHandle");
+				if(!DuplicateHandle(hpThis, hpThis, hpTarget, out var hpDup, 0, false, DUPLICATE_SAME_ACCESS)) throw new AuException(0, "*DuplicateHandle");
 				Perf.Next();
 				bool is64 = Api.IsWow64Process(hpTarget, out var is32bit) && !is32bit;
 				Perf.Next();
@@ -2025,7 +2016,7 @@ static unsafe partial class Test
 				var mem = AllocInThisProcessForOtherProcess(64 * 1024, is64);
 				Perf.Next();
 				try {
-					if(mem == default) throw new CatException(0, "*allocate memory");
+					if(mem == default) throw new AuException(0, "*allocate memory");
 
 					var c = (char*)mem;
 					c[0] = 'A'; c[1] = 'B'; c[2] = '\0';
@@ -2050,18 +2041,18 @@ static unsafe partial class Test
 	static Mutex s_mutex = new Mutex(false, "mutex_test589");
 	static EventWaitHandle s_event = new EventWaitHandle(false, EventResetMode.AutoReset, "event_test589");
 
-	static ushort s_wcIPC = Wnd.Misc.WindowClass.InterDomainRegister("class_test589", _WndProcIPC);
+	//static ushort s_wcIPC = Wnd.Misc.MyWindowClass.InterDomainRegister("class_test589", _WndProcIPC);
 
-	static LPARAM _WndProcIPC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-	{
-		//Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
-		if(msg == Api.WM_COPYDATA) {
+	//static LPARAM _WndProcIPC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//{
+	//	//Wnd.Misc.PrintMsg(w, msg, wParam, lParam);
+	//	if(msg == Api.WM_COPYDATA) {
 
-			//w.Post(0);
-		}
+	//		//w.Post(0);
+	//	}
 
-		return Api.DefWindowProc(w, msg, wParam, lParam);
-	}
+	//	return Api.DefWindowProc(w, msg, wParam, lParam);
+	//}
 
 	static IntPtr AllocInThisProcessForOtherProcess(int size, bool otherProcessIs64bit)
 	{

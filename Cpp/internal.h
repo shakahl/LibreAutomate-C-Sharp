@@ -3,23 +3,21 @@
 #pragma once
 #include "stdafx.h"
 
-_COM_SMARTPTR_TYPEDEF(IAccessible, __uuidof(IAccessible));
 
 //Internal flags used by 'find AO' functions.
 enum class eAF2
 {
 	//these are from role prefix
-	InWebPage = 1, //"web:", any browser
+	InWebPage = 1, //"web:", "firefox:" or "chrome:"
 	InFirefoxPage = 2, //"firefox:"
 	InChromePage = 4, //"chrome:"
 	InIES = 8, //"web:", IE web browser control
-	InControls = 0x40, //"class=x:" or "id=x:"
-	RoleHasPrefix = 0x80,
 
 	NotInProc = 0x100, //from eAF::NotInProc
 	FindAll = 0x200,
 
 	//these are from prop parameter
+	InControls = 0x40, //"class=x" or "id=x"
 	IsRectL = 0x1000,
 	IsRectT = 0x2000,
 	IsRectW = 0x4000,
@@ -55,6 +53,7 @@ enum InProcAction : char {
 #endif
 	IPA_AccFind = 1,
 	IPA_AccFromWindow,
+	IPA_AccFromPoint,
 	IPA_AccNavigate,
 	IPA_AccGetProps,
 	IPA_AccGetWindow,
@@ -69,6 +68,24 @@ struct MarshalParams_Header {
 	eAccMiscFlags miscFlags;
 };
 
+//Used for marshaling parameters of Cpp_AccFromWindow when calling the get_accHelpTopic hook function.
+struct MarshalParams_AccFromWindow
+{
+	MarshalParams_Header hdr;
+	int hwnd; //not HWND, because it must be of same size in 32 and 64 bit process
+	DWORD objid;
+	DWORD flags; //2 - get name instead of AO
+};
+
+//Used for marshaling parameters of Cpp_AccFromPoint when calling the get_accHelpTopic hook function.
+struct MarshalParams_AccFromPoint
+{
+	MarshalParams_Header hdr;
+	POINT p;
+	int flags, specWnd;
+};
+
+//Used for marshaling parameters of Cpp_AccNavigate etc when calling the get_accHelpTopic hook function.
 struct MarshalParams_AccElem
 {
 	MarshalParams_Header hdr;
@@ -85,7 +102,7 @@ class InProcCall {
 	IAccessible* _a;
 	_variant_t _vParams;
 	Bstr _br;
-	IStreamPtr _stream;
+	Smart<IStream> _stream;
 	DWORD _resultSize;
 public:
 	//Allocates memory to pass parameters.

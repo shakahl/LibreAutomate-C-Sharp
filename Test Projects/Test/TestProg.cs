@@ -19,8 +19,8 @@ using System.Linq;
 //using System.Configuration;
 using System.Xml;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using static Au.NoClass;
 
 public class Program
 {
@@ -49,7 +49,7 @@ public class Program
 		Perf.First(100);
 
 		if(_compilerMethod == null) {
-			Assembly a = Assembly.LoadFile(@"Q:\app\Catkeys\Test Projects\Test\csc.exe");
+			Assembly a = Assembly.LoadFile(@"Q:\app\Au\Test Projects\Test\csc.exe");
 
 			_compilerMethod = a.EntryPoint;
 
@@ -57,7 +57,7 @@ public class Program
 		}
 
 		var dom = AppDomain.CurrentDomain;
-		string csFile = @"Q:\Test\test.cs", dllFile = @"C:\Users\G\AppData\Local\Catkeys\ScriptDll\form.dll";
+		string csFile = @"Q:\Test\test.cs", dllFile = @"C:\Users\G\AppData\Local\Au\ScriptDll\form.dll";
 
 		string[] g = new string[] {
 				"/nologo", "/noconfig",
@@ -94,7 +94,7 @@ public class Program
 		//System.Runtime.ProfileOptimization.StartProfile("Startup.Profile"); //does not make jitting the C# compiler assemblies faster
 		//Perf.Next();
 
-		Assembly a = Assembly.LoadFile(@"Q:\app\Catkeys\Test Projects\Test\csc.exe");
+		Assembly a = Assembly.LoadFile(@"Q:\app\Au\Test Projects\Test\csc.exe");
 		MethodInfo m = a.EntryPoint;
 		string[] g = new string[] { null, "/nologo", "/noconfig", @"Q:\Test\test.cs" };
 		object[] p = new object[1] { g };

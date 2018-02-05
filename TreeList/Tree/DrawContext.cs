@@ -57,7 +57,7 @@ namespace Aga.Controls.Tree
 			set { _enabled = value; }
 		}
 
-		//Catkeys:
+		//au:
 		public bool IsMemoryBitmap { get; set; }
 	}
 }

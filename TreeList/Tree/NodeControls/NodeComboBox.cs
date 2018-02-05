@@ -7,9 +7,9 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Drawing.Design;
 
-using Catkeys;
-using Catkeys.Types;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree.NodeControls
 {
@@ -36,8 +36,8 @@ namespace Aga.Controls.Tree.NodeControls
 
 		protected override Size CalculateEditorSize(EditorContext context)
 		{
-			var width = Parent.UseColumns ? context.Bounds.Size.Width : Catkeys.Util.Dpi.ScaleInt(EditorWidth);
-			var height = (context.Editor is CheckedListBox c) ? (Catkeys.Util.Dpi.ScaleInt(c.PreferredHeight) + c.Items.Count * 2) : context.Bounds.Height;
+			var width = Parent.UseColumns ? context.Bounds.Size.Width : Au.Util.Dpi.ScaleInt(EditorWidth);
+			var height = (context.Editor is CheckedListBox c) ? (Au.Util.Dpi.ScaleInt(c.PreferredHeight) + c.Items.Count * 2) : context.Bounds.Height;
 			return new Size(width, height);
 		}
 

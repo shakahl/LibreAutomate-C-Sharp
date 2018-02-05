@@ -58,8 +58,8 @@ void TestClrHost(OUT int& r)
 
 		WCHAR b[24];
 		hr = s_pClrRuntimeHost->ExecuteInDefaultAppDomain(
-			L"Q:\\app\\Catkeys\\Tests\\Catkeys.dll",
-			L"Catkeys.Acc",
+			L"Q:\\app\\Au\\Tests\\Au.dll",
+			L"Au.Acc",
 			L"TestClrHost",
 			_i64tow((__int64)&s_csFunc, b, 10),
 			&pReturnValue);
@@ -110,8 +110,8 @@ void TestClrHost(OUT int& r)
 //	Perf.Next();
 //	for(size_t i = 0; i < 5; i++) {
 //		hr = s_pClrRuntimeHost->ExecuteInDefaultAppDomain(
-//			L"Q:\\app\\Catkeys\\Tests\\Catkeys.dll",
-//			L"Catkeys.Acc",
+//			L"Q:\\app\\Au\\Tests\\Au.dll",
+//			L"Au.Acc",
 //			L"TestClrHost",
 //			L"TEST",
 //			&pReturnValue);

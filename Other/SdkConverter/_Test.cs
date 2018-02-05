@@ -17,8 +17,9 @@ using System.ComponentModel; //Win32Exception
 //using System.Reflection;
 //using System.Linq;
 
-using Catkeys;
-using static Catkeys.NoClass;
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 #pragma warning disable 169
 
@@ -91,13 +92,13 @@ namespace SdkConverter
 		public static extern IntPtr CharUpper([In] StringBuilder lpsz);
 
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestUnmanaged1(ref SRKH k, ref Guid g);
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestUnmanaged2([In] ref SRKH k, [In] ref Guid g);
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestUnmanaged3(out SRKH k, out Guid g);
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", EntryPoint = "TestUnmanaged", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestUnmanaged4([In, Out] ref SRKH k, [In, Out] ref Guid g);
 
 		struct SRKH
@@ -105,7 +106,7 @@ namespace SdkConverter
 			long q, w, e, r, t, y, u, i, o, p, a, s, d, f, g, h, j, k;
 		}
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestStructBlit(ref POINT p);
 
 		struct STSTR
@@ -114,7 +115,7 @@ namespace SdkConverter
 			public string s;
 		};
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestStructString(ref STSTR p); //if struct, default is [In,Out], even if has non-blittable members. Can apply [In] to prevent copying non-blittable types back.
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -124,13 +125,13 @@ namespace SdkConverter
 			public string s;
 		};
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", EntryPoint = "TestStructString", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", EntryPoint = "TestStructString", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestStructString2(STSTR2 p); //if class, default is [In], except for StringBuilder
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestArray(int[] a);
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void TestArrayStr([In, Out]string[] a);
 
 		[ComImport, Guid("3AB5235E-2768-47A2-909A-B5852A9D1868"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -143,10 +144,10 @@ namespace SdkConverter
 			int Test2([MarshalAs(UnmanagedType.LPArray)] int[] p);
 		};
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ITest CreateTestInterface();
 
-		[DllImport(@"Q:\app\Catkeys\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport(@"Q:\app\Au\Test Projects\UnmanagedDll.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ITest TestSimple();
 
 #endif
