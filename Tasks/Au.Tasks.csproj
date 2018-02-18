@@ -33,7 +33,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>.\</OutputPath>
+    <OutputPath>..\_\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -45,7 +45,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>.\</OutputPath>
+    <OutputPath>..\_\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -118,10 +118,6 @@
     <ProjectReference Include="..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Au</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Compiler\Au.Compiler.csproj">
-      <Project>{fa2b1c48-26c0-4af9-82e8-b3e192fb4be2}</Project>
-      <Name>Au.Compiler</Name>
     </ProjectReference>
     <ProjectReference Include="..\Triggers\Au.Triggers.csproj">
       <Project>{c8ced7d2-876d-48be-9a2a-142864271c25}</Project>

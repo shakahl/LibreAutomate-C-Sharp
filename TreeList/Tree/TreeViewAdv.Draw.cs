@@ -98,6 +98,9 @@ namespace Aga.Controls.Tree
 			if(DragMode && _dragBitmap != null)
 				e.Graphics.DrawImage(_dragBitmap, PointToClient(MousePosition));
 			//p.NW();
+
+			//au:
+			base.OnPaint(e);
 		}
 
 		private void DrawRow(PaintEventArgs e, ref DrawContext context, int row, Rectangle rowRect)

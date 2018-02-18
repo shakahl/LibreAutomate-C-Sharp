@@ -372,31 +372,32 @@ namespace Au
 		///		Has startIndex parameter that allows to get number from middle, like "text123text".
 		///		Gets the end of the number part.
 		///		No exception when cannot convert.
-		///		Supports hexadecimal format, like "0x1E" or "0x1e".
+		///		Supports hexadecimal format, like "0x1A", case-insensitive.
 		///		Much faster.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+		/// <param name="isHex">The number in string is hexadecimal without a prefix, like "1A".</param>
 		/// <remarks>
 		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
 		/// The number can be with "-" or "+", like "-5", but not like "- 5".
 		/// Fails if the number is greater than +- uint.MaxValue (0xffffffff).
 		/// The return value becomes negative if the number is greater than int.MaxValue, for example "0xffffffff" is -1, but it becomes correct if assigned to uint (need cast).
-		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
+		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
-		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex)
+		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex, bool isHex = false)
 		{
-			return (int)_ToInt(t, startIndex, out numberEndIndex, false);
+			return (int)_ToInt(t, startIndex, out numberEndIndex, false, isHex);
 		}
 
 		/// <summary>
 		/// This overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static int ToInt32_(this string t, int startIndex = 0)
+		public static int ToInt32_(this string t, int startIndex, bool isHex = false)
 		{
-			return (int)_ToInt(t, startIndex, out var i, false);
+			return (int)_ToInt(t, startIndex, out _, false, isHex);
 		}
 
 		/// <summary>
@@ -404,7 +405,7 @@ namespace Au
 		/// </summary>
 		public static int ToInt32_(this string t)
 		{
-			return (int)_ToInt(t, 0, out var i, false);
+			return (int)_ToInt(t, 0, out _, false, false);
 		}
 
 		/// <summary>
@@ -416,31 +417,32 @@ namespace Au
 		///		Has startIndex parameter that allows to get number from middle, like "text123text".
 		///		Gets the end of the number part.
 		///		No exception when cannot convert.
-		///		Supports hexadecimal format, like "0x1E" or "0x1e".
+		///		Supports hexadecimal format, like "0x1A", case-insensitive.
 		///		Much faster.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+		/// <param name="isHex">The number in string is hexadecimal without a prefix, like "1A".</param>
 		/// <remarks>
 		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
 		/// The number can be with "-" or "+", like "-5", but not like "- 5".
 		/// Fails if the number is greater than +- ulong.MaxValue (0xffffffffffffffff).
 		/// The return value becomes negative if the number is greater than long.MaxValue, for example "0xffffffffffffffff" is -1, but it becomes correct if assigned to ulong (need cast).
-		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=1.
+		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
-		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex)
+		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex, bool isHex = false)
 		{
-			return _ToInt(t, startIndex, out numberEndIndex, true);
+			return _ToInt(t, startIndex, out numberEndIndex, true, isHex);
 		}
 
 		/// <summary>
 		/// This overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static long ToInt64_(this string t, int startIndex = 0)
+		public static long ToInt64_(this string t, int startIndex, bool isHex = false)
 		{
-			return _ToInt(t, startIndex, out var i, true);
+			return _ToInt(t, startIndex, out _, true, isHex);
 		}
 
 		/// <summary>
@@ -448,10 +450,10 @@ namespace Au
 		/// </summary>
 		public static long ToInt64_(this string t)
 		{
-			return _ToInt(t, 0, out var i, true);
+			return _ToInt(t, 0, out _, true, false);
 		}
 
-		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong)
+		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, bool isHex)
 		{
 			numberEndIndex = 0;
 			int len = t == null ? 0 : t.Length;
@@ -478,8 +480,7 @@ namespace Au
 			long R = 0; //result
 
 			//is hex?
-			bool isHex = false;
-			if(c == '0' && i <= len - 3) {
+			if(!isHex && c == '0' && i <= len - 3) {
 				c = t[++i];
 				if(c == 'x' || c == 'X') { i++; isHex = true; } else i--;
 			}
@@ -532,15 +533,16 @@ namespace Au
 		/// <summary>
 		/// If this string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
 		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-		/// Everything else is the same as with <see cref="ToInt32_(string, int, out int)"/>.
+		/// Everything else is the same as with <see cref="ToInt32_(string, int, out int, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="num">Receives the number. Receives 0 if no number.</param>
 		/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0)
+		/// <param name="isHex">The number in string is hexadecimal without a prefix, like "1A".</param>
+		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0, bool isHex = false)
 		{
-			num = ToInt32_(t, startIndex, out int end);
+			num = ToInt32_(t, startIndex, out int end, isHex);
 			if(end == 0) {
 				tail = null;
 				return false;

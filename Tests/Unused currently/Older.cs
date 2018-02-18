@@ -1518,33 +1518,33 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 		Print(c.NameAcc);
 	}
 
-	static void TestWndNextMainWindow()
-	{
-		int f = TaskDialog.ShowList("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
-		if(f == 0) return;
-		Wnd w = Wnd.Misc.WndTop;
-		int n = 0;
-		while(!w.Is0) {
-			Print(w);
-			switch(f) {
-			case 1:
-				w = w.WndNextMain();
-				break;
-			case 2:
-				w = w.WndNextMain(allDesktops: true);
-				break;
-			case 3:
-				w = w.WndNextMain(likeAltTab: true);
-				break;
-			case 4:
-				w = w.WndNextMain(retryFromTop: true); if(++n > 20) return;
-				break;
-			case 5:
-				w = w.WndNextMain(skipMinimized: true);
-				break;
-			}
-		}
-	}
+	//static void TestWndNextMainWindow()
+	//{
+	//	int f = TaskDialog.ShowList("1 default|2 allDesktops|3 likeAltTab|4 retryFromTop|5 skipMinimized");
+	//	if(f == 0) return;
+	//	Wnd w = Wnd.Misc.WndTop;
+	//	int n = 0;
+	//	while(!w.Is0) {
+	//		Print(w);
+	//		switch(f) {
+	//		case 1:
+	//			w = w.WndNextMain();
+	//			break;
+	//		case 2:
+	//			w = w.WndNextMain(allDesktops: true);
+	//			break;
+	//		case 3:
+	//			w = w.WndNextMain(likeAltTab: true);
+	//			break;
+	//		case 4:
+	//			w = w.WndNextMain(retryFromTop: true); if(++n > 20) return;
+	//			break;
+	//		case 5:
+	//			w = w.WndNextMain(skipMinimized: true);
+	//			break;
+	//		}
+	//	}
+	//}
 
 	static unsafe void TestBytesToHexString()
 	{
@@ -4916,8 +4916,7 @@ i=mes(F"<>{_error.description}{_s}" "Test - error" "!")
 	{
 		var f = new Form();
 
-		Au.Controls.SciControl.SciLexerDllPath = Ver.Is64BitProcess ? @"Q:\app\Au\Editor\SciLexer64.dll" : @"Q:\app\Au\Editor\SciLexer32.dll";
-		var x = new Au.Controls.SciControl();
+		var x = new Au.Controls.AuScintilla();
 		x.Width = 200;
 		x.Height = 100;
 		f.Controls.Add(x);

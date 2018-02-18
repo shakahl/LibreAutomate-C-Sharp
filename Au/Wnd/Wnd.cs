@@ -25,14 +25,14 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// A variable of Wnd type represents a native window or control. It contains native window handle, also known as HWND.
+	/// A variable of Wnd type represents a window or control. It is a window handle, also known as HWND.
 	/// Wnd functions can be used with windows and controls of any process/thread.
 	/// Wnd functions also can be used with .NET Form and Control instances, like <c>Wnd w=(Wnd)netControl; w.Method(...);</c> or <c>((Wnd)netControl).Method(...);</c>.
 	/// </summary>
 	/// <remarks>
 	/// There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
 	/// 
-	/// More functions are in the nested classes - Wnd.Misc, Wnd.Misc.Desktop etc. They are used rarely, mostly in programming, not in automation scripts.
+	/// More functions are in the nested classes - <see cref="Misc"/>, <see cref="Misc.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
 	/// 
 	/// What happens when a Wnd function fails:
 	/// <list type="bullet">
@@ -43,9 +43,9 @@ namespace Au
 	/// <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
 	/// </list>
 	/// 
-	/// Many functions fail if the window's process has higher <see cref="Process_.UacInfo">UAC integrity level</see> (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: Activate, ActivateLL, ShowMinimized, ShowNotMinimized, ShowNotMinMax, Close.
+	/// Many functions fail if the window's process has a higher <see cref="Process_.UacInfo">UAC integrity level</see> (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: Activate, ActivateLL, ShowMinimized, ShowNotMinimized, ShowNotMinMax, Close.
 	/// 
-	/// The Wnd type can be used with native Windows API functions wihout casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
+	/// The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
 	/// 
 	/// See also: MSDN article <msdn>Window Features</msdn>.
 	/// </remarks>

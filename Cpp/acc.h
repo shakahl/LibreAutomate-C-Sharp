@@ -160,7 +160,7 @@ static void PrintAcc(IAccessible* acc, long elem = 0, int level = 0)
 	STR sr = hr ? L"<failed>" : ao::RoleToString(ref varRole);
 	Bstr bn; STR sn = L""; if(0 == acc->get_accName(ao::VE(elem), &bn) && bn) sn = bn;
 
-	Printf(L"%*s%s  \"%s\"", level, L"", sr, sn);
+	Printf(L"<><c 0x80>%*s%s  \"%s\"</c>", level, L"", sr, sn);
 }
 #endif
 
@@ -469,7 +469,7 @@ public:
 		VARIANT v[c_nStack];
 		long n = 0;
 		int hr = AccessibleChildren(_parent, 0, c_nStack, v, &n);
-		if(hr < 0) { PRINTX(hr); n = 0; } //never noticed
+		if(hr < 0) { PRINTHEX(hr); n = 0; } //never noticed
 
 		if(n == c_nStack) { //more children?
 			_parent->get_accChildCount(&n); //note: some objects return 0 or 1, ie < n, and hr is usually 0. Noticed this only in IE, when c_nStack<10.
@@ -481,7 +481,7 @@ public:
 					if(n < c_nStack) n = 1000; //get_accChildCount returned error or incorrect value
 					_v = (VARIANT*)malloc(n * sizeof(VARIANT));
 					hr = AccessibleChildren(_parent, 0, n, _v, &n); //note: iChildStart must be 0, else not always gets all children
-					if(hr < 0) { PRINTX(hr); n = 0; }
+					if(hr < 0) { PRINTHEX(hr); n = 0; }
 				}
 			}
 		} else if(!(parent.misc.flags&(eAccMiscFlags::UIA | eAccMiscFlags::Java))) {
@@ -576,7 +576,7 @@ private:
 				}
 			}
 
-			//wnd::PrintWnd(w); Printx((int)bits);
+			//wnd::PrintWnd(w); PrintHex((int)bits);
 
 			int iMoveTo = 0;
 			for(int i = 0; i < 7; i++) {

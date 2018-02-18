@@ -2406,73 +2406,59 @@ namespace Au.Types
 
 		#region msvcrt
 
-		[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int strtoi(char* s, out char* endPtr, int numberBase = 0);
+		//don't use, because for eg "0xffffffff" returns int.Max instead of -1.
+		//[DllImport("msvcrt.dll", EntryPoint = "wcstol", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int strtoi(char* s, char** endPtr = null, int radix = 0);
 
-		internal static uint strtoui(char* s, out char* endPtr, int numberBase = 0)
-		{
-			long k = strtoi64(s, out endPtr, numberBase);
-			return k < -int.MaxValue ? 0u : (k > uint.MaxValue ? uint.MaxValue : (uint)k);
-		}
-		//note: don't use the u API because they return 1 if the value is too big and the string contains '-'.
+		//don't use the u API because they return 1 if the value is too big and the string contains '-'.
 		//[DllImport("msvcrt.dll", EntryPoint = "wcstoul", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern uint strtoui(char* s, out char* endPtr, int _base = 0);
-		[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern ulong strtoui64(char* s, out char* endPtr, int _base = 0);
+		//internal static extern uint strtoui(char* s, char** endPtr = null, int radix = 0);
 
-		/// <summary>
-		/// This overload has different parameter types.
-		/// </summary>
 		[DllImport("msvcrt.dll", EntryPoint = "_wcstoi64", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern long strtoi64(char* s, out char* endPtr, int numberBase = 0);
+		internal static extern long strtoi64(char* s, char** endPtr = null, int radix = 0);
 		//info: ntdll also has wcstol, wcstoul, _wcstoui64, but not _wcstoi64.
 
+		//[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern ulong strtoui64(char* s, char** endPtr = null, int radix = 0);
+
+		[DllImport("msvcrt.dll", EntryPoint = "_strtoi64", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern long strtoi64(byte* s, byte** endPtr = null, int radix = 0);
+
+		//not used
+		//[DllImport("msvcrt.dll", EntryPoint = "_strtoui64", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern long strtoui64(byte* s, byte** endPtr = null, int radix = 0);
+
+		//This is used when working with char*. With C# strings use String_.ToInt32 etc.
+		internal static int strtoi(char* s, char** endPtr = null, int radix = 0)
+		{
+			return (int)strtoi64(s, endPtr, radix);
+		}
+
+		//This is used with UTF-8 text.
+		internal static int strtoi(byte* s, byte** endPtr = null, int radix = 0)
+		{
+			return (int)strtoi64(s, endPtr, radix);
+		}
+
+#if false //not used, because we have String_.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value.
 		/// Returns 0 if the string is null, "" or does not begin with a number; then numberEndIndex will be = startIndex.
-		/// Returns int.MaxValue or int.MinValue if the value is not in int range; then numberEndIndex will also include all number characters that follow the valid part.
 		/// </summary>
 		/// <param name="s">String.</param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="numberBase">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
+		/// <param name="radix">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is invalid.</exception>
-		internal static int strtoi(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
+		internal static int strtoi(string s, int startIndex, out int numberEndIndex, int radix = 0)
 		{
 			int R = 0, len = s == null ? 0 : s.Length - startIndex;
 			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
 			if(len != 0)
 				fixed (char* p = s) {
 					char* t = p + startIndex, e = t;
-					R = strtoi(t, out e, numberBase);
-					len = (int)(e - t);
-				}
-			numberEndIndex = startIndex + len;
-			return R;
-		}
-
-		/// <summary>
-		/// Converts part of string to uint.
-		/// Returns the uint value.
-		/// Returns 0 if the string is null, "" or does not begin with a number; then numberEndIndex will be = startIndex.
-		/// Returns uint.MaxValue (0xffffffff) or uint.MinValue (0) if the value is not in uint range; then numberEndIndex will also include all number characters that follow the valid part.
-		/// Supports negative number values -1 to -int.MaxValue, for example converts string "-1" to 0xffffffff.
-		/// </summary>
-		/// <param name="s">String.</param>
-		/// <param name="startIndex">Offset in string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="numberBase">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
-		/// <exception cref="ArgumentOutOfRangeException">startIndex is invalid.</exception>
-		internal static uint strtoui(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
-		{
-			uint R = 0;
-			int len = s == null ? 0 : s.Length - startIndex;
-			if(len < 0) throw new ArgumentOutOfRangeException("startIndex");
-			if(len != 0)
-				fixed (char* p = s) {
-					char* t = p + startIndex, e = t;
-					R = strtoui(t, out e, numberBase);
+					R = strtoi(t, &e, radix);
 					len = (int)(e - t);
 				}
 			numberEndIndex = startIndex + len;
@@ -2483,14 +2469,13 @@ namespace Au.Types
 		/// Converts part of string to long.
 		/// Returns the long value.
 		/// Returns 0 if the string is null, "" or does not begin with a number; then numberEndIndex will be = startIndex.
-		/// Returns long.MaxValue or long.MinValue if the value is not in long range; then numberEndIndex will also include all number characters that follow the valid part.
 		/// </summary>
 		/// <param name="s">String.</param>
 		/// <param name="startIndex">Offset in string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends.</param>
-		/// <param name="numberBase">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
+		/// <param name="radix">If 0, parses the string as hexadecimal number if begins with "0x", as octal if begins with "0", else as decimal. Else it can be 2 to 36. Examples: 10 - parse as decimal (don't support "0x" etc); 16 - as hexadecimal (eg returns 26 if string is "1A" or "0x1A"); 2 - as binary (eg returns 5 if string is "101").</param>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is invalid.</exception>
-		internal static long strtoi64(string s, int startIndex, out int numberEndIndex, int numberBase = 0)
+		internal static long strtoi64(string s, int startIndex, out int numberEndIndex, int radix = 0)
 		{
 			long R = 0;
 			int len = s == null ? 0 : s.Length - startIndex;
@@ -2498,64 +2483,23 @@ namespace Au.Types
 			if(len != 0)
 				fixed (char* p = s) {
 					char* t = p + startIndex, e = t;
-					R = strtoi64(t, out e, numberBase);
+					R = strtoi64(t, &e, radix);
 					len = (int)(e - t);
 				}
 			numberEndIndex = startIndex + len;
 			return R;
 		}
 
-		/// <summary>
-		/// This overload does not have parameter 'out int numberEndIndex'.
-		/// </summary>
-		internal static int strtoi(string s, int startIndex = 0, int numberBase = 0)
+		internal static int strtoi(string s, int startIndex = 0, int radix = 0)
 		{
-			return strtoi(s, startIndex, out int len, numberBase);
+			return strtoi(s, startIndex, out _, radix);
 		}
 
-		/// <summary>
-		/// This overload does not have parameter 'out int numberEndIndex'.
-		/// </summary>
-		internal static uint strtoui(string s, int startIndex = 0, int numberBase = 0)
+		internal static long strtoi64(string s, int startIndex = 0, int radix = 0)
 		{
-			return strtoui(s, startIndex, out int len, numberBase);
+			return strtoi64(s, startIndex, out _, radix);
 		}
-
-		/// <summary>
-		/// This overload does not have parameter 'out int numberEndIndex'.
-		/// </summary>
-		internal static long strtoi64(string s, int startIndex = 0, int numberBase = 0)
-		{
-			return strtoi64(s, startIndex, out int len, numberBase);
-		}
-
-		/// <summary>
-		/// This overload does not have parameter 'out char* endPtr'.
-		/// </summary>
-		internal static int strtoi(char* s, int numberBase = 0)
-		{
-			return strtoi(s, out char* endPtr, numberBase);
-		}
-
-		/// <summary>
-		/// This overload does not have parameter 'out char* endPtr'.
-		/// </summary>
-		internal static uint strtoui(char* s, int numberBase = 0)
-		{
-			return strtoui(s, out char* endPtr, numberBase);
-		}
-
-		/// <summary>
-		/// This overload does not have parameter 'out char* endPtr'.
-		/// </summary>
-		internal static long strtoi64(char* s, int numberBase = 0)
-		{
-			return strtoi64(s, out char* endPtr, numberBase);
-		}
-
-		//info: using strtoul with int return value because strtol eg returns 0x7FFFFFFF for "0xFFFFFFFF".
-		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int strtoul(byte* s, byte** endPtr, int radix);
+#endif
 
 		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern char* _ltoa(int value, byte* s, int radix);
@@ -2572,9 +2516,9 @@ namespace Au.Types
 
 
 
-		#endregion
+#endregion
 
-		#region dwmapi
+#region dwmapi
 
 		[DllImport("dwmapi.dll")]
 		internal static extern int DwmGetWindowAttribute(Wnd hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
@@ -2585,9 +2529,9 @@ namespace Au.Types
 
 
 
-		#endregion
+#endregion
 
-		#region ntdll
+#region ntdll
 
 		[DllImport("ntdll.dll")]
 		internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
@@ -2614,18 +2558,20 @@ namespace Au.Types
 
 
 
-		#endregion
+#endregion
 
-		#region other
+#region other
 
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
+
 
 		[DllImport("msi.dll", EntryPoint = "#217")]
 		internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
 
 		[DllImport("msi.dll", EntryPoint = "#173")]
 		internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
+
 
 		[DllImport("winmm.dll")]
 		internal static extern uint timeBeginPeriod(uint uPeriod);
@@ -2634,9 +2580,12 @@ namespace Au.Types
 		internal static extern uint timeEndPeriod(uint uPeriod);
 
 
+		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
+		internal static extern Wnd HtmlHelp(Wnd hwndCaller, string pszFile, uint uCommand, LPARAM dwData);
 
 
-		#endregion
+
+#endregion
 
 	}
 }

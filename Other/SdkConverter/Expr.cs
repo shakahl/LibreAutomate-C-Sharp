@@ -625,10 +625,10 @@ namespace SdkConverter
 
 			char* s = T(i), se;
 			if(*s == '0') {
-				if(s[1] == 'x' || s[1] == 'X') { value = Api.strtoui64(s, out se); isHex = true; } //hex
-				else if(s[1] == 'b' || s[1] == 'B') { value = Api.strtoui64(s + 2, out se, 2); isHex = true; } //binary constant like 0b10101010
-				else value = Api.strtoui64(s, out se, 8); //oct
-			} else value = Api.strtoui64(s, out se);
+				if(s[1] == 'x' || s[1] == 'X') { value = Api.strtoui64(s, &se); isHex = true; } //hex
+				else if(s[1] == 'b' || s[1] == 'B') { value = Api.strtoui64(s + 2, &se, 2); isHex = true; } //binary constant like 0b10101010
+				else value = Api.strtoui64(s, &se, 8); //oct
+			} else value = Api.strtoui64(s, &se);
 
 			bool isUnsigned = false, isLong = false;
 

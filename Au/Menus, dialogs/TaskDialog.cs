@@ -21,6 +21,8 @@ using static Au.NoClass;
 
 #pragma warning disable 649 //unused fields in API structs
 
+//TODO: flag OwnerCenter should be default.
+
 namespace Au
 {
 	/// <summary>

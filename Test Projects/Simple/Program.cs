@@ -1,13 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+//using System.Windows.Forms;
+using System.Drawing;
+//using System.Linq;
+using System.Xml.Linq;
+//using System.Xml.XPath;
 
-//using Au;
-[module: DefaultCharSet(CharSet.Unicode)]
+using Au;
+using Au.Types;
+using static Au.NoClass;
 
 namespace Simple
 {
@@ -16,7 +29,20 @@ namespace Simple
 		[STAThread]
 		static void Main(string[] args)
 		{
-			Console.WriteLine(GetThreadCount());
+			//Print(Directory.GetCurrentDirectory());
+			//Console.WriteLine(Console.OutputEncoding);
+			Console.OutputEncoding = Encoding.UTF8;
+			//Console.OutputEncoding = Encoding.GetEncoding(1257); //baltic
+			for(int i = 0; i < 3; i++) {
+				Console.WriteLine($"{i}. out č ɛ");
+				Console.Error.WriteLine($"{i}. err č ɛ");
+				//Console.WriteLine($"{i}. out č");
+				//Console.Error.WriteLine($"{i}. err č");
+			}
+
+			//Console.WriteLine(GetThreadCount());
+
+			//Console.ReadKey();
 		}
 
 		internal struct THREADENTRY32

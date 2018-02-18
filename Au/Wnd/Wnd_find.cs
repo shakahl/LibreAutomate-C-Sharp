@@ -269,7 +269,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. To check it you can use <see cref="Is0"/> or <see cref="operator +(Wnd)"/> or <see cref="ExtensionMethods.OrThrow(Wnd)"/>. See examples.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>. See examples.
 		/// </summary>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
@@ -457,7 +457,7 @@ namespace Au
 			{
 				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumWindows, onlyVisible, sortFirstVisible);
 
-				//rejected: add a flag to skip tooltips, IME, MSCTFIME UI.
+				//rejected: add a flag to skip tooltips, IME, etc.
 			}
 
 			/// <summary>

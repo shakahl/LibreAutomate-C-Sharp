@@ -45,19 +45,20 @@ namespace Au
 		/// By default returns process id. If used flag WaitForExit, returns process exit code.
 		/// Returns 0 if did not start new process or did not get process handle, usually because opened the document in an existing process.
 		/// </summary>
-		/// <param name="s">
+		/// <param name="file">
 		/// What to run. Can be:
 		/// Full path of a file or folder. Examples: <c>@"C:\folder\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
 		/// Filename of a file or folder, like <c>"notepad.exe"</c>. The function calls <see cref="Files.SearchPath"/>.
+		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
 		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-		/// Shell object's parsing name, like <c>"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-		/// To run a Windows Store App, use <c>"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.Misc.GetWindowsStoreAppId"/> or Google.
+		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.Misc.GetWindowsStoreAppId"/> or Google.
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="Path_.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">
-		/// Command line arguments to pass to the program.
+		/// Command line arguments.
 		/// This function expands environment variables if starts with "%" or "\"%".
 		/// </param>
 		/// <param name="flags"></param>
@@ -80,7 +81,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Wnd.FindOrRun"/>
-		public static int Run(string s, string args = null, SRFlags flags = 0, SRMoreParams more = null)
+		public static int Run(string file, string args = null, SRFlags flags = 0, SRMoreParams more = null)
 		{
 			//TODO: return RunResult object that contains process id or exit code.
 			//	It also contains other info that helps Wnd.Find and WaitFor.WindowActive etc to find correct window.
@@ -107,35 +108,20 @@ namespace Au
 			if(x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
 			if(0 == (flags & SRFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
 
-			if(!Empty(args)) x.lpParameters = Path_.ExpandEnvVar(args);
-			s = Path_.ExpandEnvVar(s);
-			if(Empty(s)) throw new ArgumentException();
+			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
 			Pidl pidl = null;
-			if(Path_.LibIsShellPath(s)) { //":: HexEncodedITEMIDLIST" or "::{CLSID}..." (we convert it too because the API somehow does not support many)
-				pidl = Pidl.FromString(s); //does not throw
+			if(isShellPath) { //":: HexEncodedITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
+				pidl = Pidl.FromString(file); //does not throw
 				if(pidl != null) {
 					x.lpIDList = pidl;
 					x.fMask |= Api.SEE_MASK_INVOKEIDLIST;
-				} else x.lpFile = s;
+				} else x.lpFile = file;
 			} else {
-				bool isFullPath = Path_.IsFullPath(s);
-				if(isFullPath) {
-					s = Path_.LibNormalize(s, PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath, true);
-					s = Path_.UnprefixLongPath(s); //the API supports prefixed path for exe but not for documents
-					if(Files.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(s) && !Files.ExistsAsAny(s)) {
-						s = Files.Misc.DisableRedirection.GetNonRedirectedSystemPath(s);
-					}
-				} else if(!Path_.IsUrl(s)) {
-					var s2 = Files.SearchPath(s); //API would search everywhere except in app folder
-					if(s2 != null) {
-						s = s2;
-						isFullPath = true;
-					}
-				}
-				x.lpFile = s;
+				x.lpFile = file;
 
-				if(x.lpDirectory == null && isFullPath) x.lpDirectory = Path_.GetDirectoryPath(s);
+				if(x.lpDirectory == null && isFullPath) x.lpDirectory = Path_.GetDirectoryPath(file);
 			}
+			if(!Empty(args)) x.lpParameters = Path_.ExpandEnvVar(args);
 
 			Wnd.Misc.EnableActivate();
 
@@ -146,7 +132,7 @@ namespace Au
 			finally {
 				pidl?.Dispose();
 			}
-			if(!ok) throw new AuException(0, $"*run '{s}'");
+			if(!ok) throw new AuException(0, $"*run '{file}'");
 
 			bool waitForExit = 0 != (flags & SRFlags.WaitForExit);
 			bool callerNeedsHandle = more != null && more.NeedProcessHandle;
@@ -200,6 +186,113 @@ namespace Au
 				Output.Warning(e.Message, 1);
 				return int.MinValue;
 			}
+		}
+
+		//Used by Run and RunConsole.
+		static string _NormalizeFile(bool runConsole, string file, out bool isFullPath, out bool isShellPath)
+		{
+			isShellPath = isFullPath = false;
+			file = Path_.ExpandEnvVar(file);
+			if(Empty(file)) throw new ArgumentException();
+			if(runConsole || !(isShellPath = Path_.LibIsShellPath(file))) {
+				if(isFullPath = Path_.IsFullPath(file)) {
+					var fl = runConsole ? PNFlags.DoNotExpandDosPath : PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath;
+					file = Path_.LibNormalize(file, fl, true);
+
+					//ShellExecuteEx supports long path prefix for exe but not for documents.
+					//Process.Run supports long path prefix, except when the exe is .NET.
+					if(!runConsole) file = Path_.UnprefixLongPath(file);
+
+					if(Files.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !Files.ExistsAsAny(file)) {
+						file = Files.Misc.DisableRedirection.GetNonRedirectedSystemPath(file);
+					}
+				} else if(!Path_.IsUrl(file)) {
+					//ShellExecuteEx searches everywhere except in app folder.
+					//Process.Run prefers current directory.
+					var s2 = Files.SearchPath(file);
+					if(s2 != null) {
+						file = s2;
+						isFullPath = true;
+					}
+				}
+			}
+			return file;
+		}
+
+		/// <summary>
+		/// Runs a console program, waits until its process ends, and gets its output text.
+		/// Returns the process exit code. Usually a non-0 value means error.
+		/// </summary>
+		/// <param name="output">
+		/// Receives the output text.
+		/// Console programs have two output text streams - standard output and standard error. This function gets both, and the error text is always after the output text.
+		/// </param>
+		/// <param name="file">
+		/// Path or name of an .exe or .bat file. Can be:
+		/// Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
+		/// Filename, like <c>"x.exe"</c>. The function calls <see cref="Files.SearchPath"/>.
+		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="Path_.ExpandEnvVar"/>.
+		/// </param>
+		/// <param name="args">
+		/// Command line arguments.
+		/// This function expands environment variables if starts with "%" or "\"%".
+		/// </param>
+		/// <param name="curDir">Working directory. Default - <see cref="Directory.GetCurrentDirectory"/> of this process.</param>
+		/// <param name="textEncoding">Text encoding used to convert console's ANSI text to C# Unicode text.</param>
+		/// <exception cref="Win32Exception">Failed, for example file not found.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Process.Start()"/>, <see cref="Process.WaitForExit"/>, <see cref="StreamReader.ReadToEnd"/>.</exception>
+		/// <remarks>
+		/// Does not show the console window.
+		/// Uses <see cref="Process.Start()"/>. Does not use Windows shell API.
+		/// See also <see cref="Run"/>.
+		/// </remarks>
+		public static int RunConsole(out string output, string file, string args = null, string curDir = null, Encoding textEncoding = null)
+		{
+			output = null;
+			using(var p = new Process()) {
+				p.StartInfo.FileName = _NormalizeFile(true, file, out _, out _);
+				if(args != null) p.StartInfo.Arguments = Path_.ExpandEnvVar(args);
+				if(curDir != null) p.StartInfo.WorkingDirectory = Path_.ExpandEnvVar(curDir);
+				if(textEncoding != null) {
+					p.StartInfo.StandardOutputEncoding = textEncoding;
+					p.StartInfo.StandardErrorEncoding = textEncoding;
+				}
+
+				p.StartInfo.UseShellExecute = false;
+				p.StartInfo.CreateNoWindow = true;
+				p.StartInfo.RedirectStandardOutput = true;
+				p.StartInfo.RedirectStandardError = true;
+
+				p.Start();
+
+				string so = p.StandardOutput.ReadToEnd();
+				string se = p.StandardError.ReadToEnd();
+				if(!Empty(se)) {
+					if(Empty(so)) so = se;
+					else so = so + "\r\n" + se;
+				}
+
+				p.WaitForExit(); //FUTURE: can support timeout
+
+				output = so;
+				return p.ExitCode;
+			}
+		}
+
+		/// <summary>
+		/// Runs a console program (hidden), waits until its process ends, and prints its output text.
+		/// Calls <see cref="RunConsole(out string, string, string, string, Encoding)"/> and <see cref="Print(string)"/>.
+		/// </summary>
+		/// <param name="file"></param>
+		/// <param name="args"></param>
+		/// <param name="directory"></param>
+		/// <param name="textEncoding"></param>
+		public static int RunConsole(string file, string args = null, string directory = null, Encoding textEncoding = null)
+		{
+			int ec = RunConsole(out var s, file, args, directory, textEncoding);
+			if(!Empty(s)) Print(s);
+			return ec;
 		}
 
 		/// <summary>

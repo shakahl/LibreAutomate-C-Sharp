@@ -154,6 +154,20 @@ int ClassNameIs(HWND w, std::initializer_list<STR> a)
 	return 0;
 }
 
+bool ClassNameIs(HWND w, STR s)
+{
+	WCHAR b[260];
+	int n = GetClassNameW(w, b, 260);
+	return n > 0 && str::Like(b, n, s, wcslen(s), true);
+}
+
+bool ClassNameIs(HWND w, const str::Wildex& s)
+{
+	WCHAR b[260];
+	int n = GetClassNameW(w, b, 260);
+	return n > 0 && s.Match(b, n);
+}
+
 bool Name(HWND w, out Bstr& s)
 {
 	bool R = false;
@@ -240,7 +254,7 @@ bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guid
 ////{
 ////	DWORD signaledIndex;
 ////	auto hr = CoWaitForMultipleHandles(0, 0, 0, null, &signaledIndex); //fails, invalid parameter
-////	Printx(hr);
+////	PrintHex(hr);
 ////}
 //
 //void SleepDoEvents(int milliseconds)

@@ -21,6 +21,8 @@ using System.Xml.Linq;
 using Au.Types;
 using static Au.NoClass;
 
+#pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
+
 namespace Au
 {
 	public unsafe partial class Acc
@@ -292,22 +294,24 @@ namespace Au
 		/// <param name="role">
 		/// AO role, like "LINK". Or path, like "ROLE/ROLE/ROLE".
 		/// See <see cref="Role"/>. Can be used standard roles (see <see cref="AccROLE"/>) and custom roles (like "div" in Firefox).
+		/// This parameter is string. If you want to use AccROLE: <c>nameof(AccROLE.CHECKBUTTON)</c>.
 		/// Case-sensitive, not wildcard. Use null to match any role. Cannot be "".
 		/// 
-		/// When searching in window, role or path can have one of these prefixes:
+		/// Role or path can have a prefix:
 		/// <list type="bullet">
 		/// <item>
-		/// "web:" - search only in the visible web page, not in whole window. It can make faster.
+		/// "web:" - search only in the visible web page, not in whole window.
 		/// Examples: "web:LINK", "web:/LIST/LISTITEM/LINK".
 		/// Supports Firefox, Chrome, Internet Explorer (IE) and apps that use their code. With other windows, searches in the first found visible AO that has DOCUMENT role.
 		/// <note type="note">Chrome web page accessible objects normally are disabled (don't exist). Use prefix "web:" or "chrome:" to enable.</note>
-		/// <note type="tip">To search only NOT in web pages, use <paramref name="prop"/> "notin=DOCUMENT" (Chrome, Firefox) or "notin=PANE" (IE).</note>
+		/// Tip: To search only NOT in web pages, use <paramref name="prop"/> "notin=DOCUMENT" (Chrome, Firefox) or "notin=PANE" (IE).
 		/// </item>
 		/// <item>"firefox:" - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used "web:" instead.</item>
 		/// <item>"chrome:" - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used "web:" instead.</item>
 		/// </list>
+		/// Cannot use prefix when <paramref name="prop"/> contains "id" or "class". Also with flag <see cref="AFFlags.UIA"/>. Also when searching in Acc (<see cref="Find(string, string, string, AFFlags, Func{Acc, bool}, int)"/>).
 		///
-		/// You can use path to the AO. It consists of roles separated by "/". Examples:
+		/// Can be used path consisting of roles separated by "/". Examples:
 		/// <list type="bullet">
 		/// <item>"web:DOCUMENT/div/LIST/LISTITEM/LINK" - find LINK using its full path in web page.</item>
 		/// <item>"web:/div/LIST//LINK" - the empty parts mean 'any role'. For example don't need to specify DOCUMENT because in web pages the first part is always DOCUMENT (Firefox, Chrome) or PANE (IE).</item>
@@ -316,8 +320,6 @@ namespace Au
 		/// <item>"web://[4]/[-1!]/[2]" - index without role.</item>
 		/// <item>"CLIENT/WINDOW/OUTLINE/OUTLINEITEM[-1]" - path in window or control. The first path part is a direct child AO of the WINDOW AO of the window/control. The WINDOW AO itself is not included in the search; if you need it, instead use <see cref="FromWindow"/>.</item>
 		/// </list>
-		/// 
-		/// Tip: Instead of literal role string you can use nameof. Example: <c>nameof(AccROLE.CHECKBUTTON)</c>.
 		/// </param>
 		/// <param name="name">
 		/// AO name (<see cref="Name"/>).
@@ -330,11 +332,10 @@ namespace Au
 		/// 
 		/// <list type="bullet">
 		/// <item>
-		/// "class" - search only in visible child controls that have this class name (see <see cref="Wnd.ClassName"/>).
-		/// Case-insensitive wildcard, see <see cref="String_.Like_(string, string, bool)"/>.
+		/// "class" - search only in child controls that have this class name (see <see cref="Wnd.ClassName"/>).
 		/// </item>
 		/// <item>
-		/// "id" - search only in visible child controls that have this id (see <see cref="Wnd.ControlId"/>).
+		/// "id" - search only in child controls that have this id (see <see cref="Wnd.ControlId"/>).
 		/// See also: <see cref="Finder.Find(Wnd, Wnd.ChildFinder)"/>.
 		/// </item>
 		/// <item>
@@ -412,20 +413,22 @@ namespace Au
 		/// This function walks the tree of accessible objects of the window, control or web page, until it finds a matching AO.
 		/// Uses <see cref="Finder.Find(Wnd)"/>. You can use it directly (see example).
 		/// In wildcard expressions supports PCRE regular expressions (prefix "**p|") but not .NET regular expressions (prefix "**r|"). They are similar.
+		/// To find web page AOs usually it's better to use <see cref="Wait(double, Wnd, string, string, string, AFFlags, Func{Acc, bool}, int)"/> instead, it's more reliable.
 		/// More info in <see cref="Acc">class help</see>.
 		/// </remarks>
 		/// <example>
+		/// Find link "Example" in web page, and click. Throw NotFoundException if not found.
+		/// <code><![CDATA[
+		/// var w = +Wnd.Find("* Chrome");
+		/// var a = +Acc.Find(w, "web:LINK", "Example");
+		/// a.DoAction();
+		/// ]]></code>
 		/// Try to find link "Example" in web page. Return if not found.
 		/// <code><![CDATA[
 		/// var w = +Wnd.Find("* Chrome");
 		/// var a = Acc.Find(w, "web:LINK", "Example");
 		/// if(a == null) { Print("not found"); return; }
-		/// ]]></code>
-		/// Try to find link "Example" in web page. Throw NotFoundException if not found.
-		/// <code><![CDATA[
-		/// var w = +Wnd.Find("* Chrome");
-		/// var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
-		/// var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
+		/// a.DoAction();
 		/// ]]></code>
 		/// Use a Finder.
 		/// <code><![CDATA[
@@ -433,6 +436,7 @@ namespace Au
 		/// var f = new Acc.Finder("PUSHBUTTON", "Example");
 		/// if(!f.Find(w)) { Print("not found"); return; }
 		/// Acc a = f.Result;
+		/// a.DoAction();
 		/// ]]></code>
 		/// </example>
 		public static Acc Find(Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null, int skip = 0)
@@ -450,7 +454,7 @@ namespace Au
 		/// <exception cref="ArgumentException">
 		/// role is "" or invalid or has a prefix ("web:" etc).
 		/// name is invalid wildcard expression ("**options|" or regular expression).
-		/// prop has invalid format or contains unknown property names or invalid wildcard expressions.
+		/// prop has invalid format or contains unknown property names or invalid wildcard expressions or "class", "id".
 		/// <see cref="SimpleElementId"/> is not 0.
 		/// Using flag <see cref="AFFlags.UIA"/>.
 		/// </exception>

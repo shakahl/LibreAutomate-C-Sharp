@@ -134,7 +134,7 @@ class PanelOutput :Control
 		base.OnParentChanged(e);
 	}
 
-	class SciOutput :SciControl
+	class SciOutput :AuScintilla
 	{
 		public SciOutput()
 		{

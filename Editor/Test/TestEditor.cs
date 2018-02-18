@@ -28,10 +28,15 @@ partial class ThisIsNotAFormFile { }
 //[DebuggerStepThrough]
 partial class EForm
 {
-	void TestEditor()
+	internal void TestEditor()
 	{
-		Panels.Status.SetText("same thread\r\nline2\r\nline3");
-		Task.Run(() => { Wait(2); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
+		var f = new Au.Tools.Form_Acc();
+		f.Show(this);
+
+
+
+		//Panels.Status.SetText("same thread\r\nline2\r\nline3");
+		//Task.Run(() => { Wait(2); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
 	}
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()

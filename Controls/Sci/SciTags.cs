@@ -56,9 +56,10 @@ DIFFERENT SYNTAX:
 		New: <dialog "big text|small text">
 
 OTHER CHANGES:
-	Supports user-defined link tags. Need to provide delegates of functions that implement them.
+	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
 	These link tags are not implemented by this class, but you can provide delegates of functions that implement them:
-		<help>, <open>, <script> (QM2 <macro>).
+		<open>, <script> (QM2 <macro>).
+	<help> by default calls Au.Util.Help.AuHelp, which opens a topic in "Au Help.chm". Use like <help topicFileNameWithoutHtm>Link text</help>. You can override it with SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
 	<code> attributes are not used. Currently supports only C# code; for it uses the C++ lexer.
 
 CHANGES IN <image>:
@@ -73,6 +74,7 @@ namespace Au.Controls
 {
 	using static Sci;
 
+	//TODO: document all tags.
 	public unsafe class SciTags
 	{
 		const int STYLE_FIRST_EX = STYLE_LASTPREDEFINED + 1;
@@ -112,12 +114,12 @@ namespace Au.Controls
 			public bool IsEmpty { get => u1 == 0 & u2 == 0; }
 		}
 
-		SciControl _c;
+		AuScintilla _c;
 		SciText _t;
 		List<_TagStyle> _styles = new List<_TagStyle>();
 		List<short> _stack = new List<short>();
 
-		internal SciTags(SciControl c)
+		internal SciTags(AuScintilla c)
 		{
 			_c = c;
 			_t = c.ST;
@@ -169,7 +171,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Displays <see cref="Output.Server"/> messages that are currently int its queue.
+		/// Displays <see cref="Output.Server"/> messages that are currently in its queue.
 		/// </summary>
 		/// <param name="os">The Output.Server instance.</param>
 		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.Messages.</param>
@@ -378,7 +380,7 @@ namespace Au.Controls
 				case 1 << 16 | 'Z':
 					if(attr == null) goto ge;
 					int color;
-					if(Char_.IsAsciiDigit(*attr)) color = Api.strtoul(attr, null, 0);
+					if(Char_.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
 					else {
 						var c = Color.FromName(new string((sbyte*)attr, 0, attrLen));
 						if(c.A == 0) break; //invalid color name
@@ -397,7 +399,7 @@ namespace Au.Controls
 					break;
 				case 4 << 16 | 's':
 					if(attr == null) goto ge;
-					if(LibCharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoul(attr, null, 0);
+					if(LibCharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoi(attr);
 					else goto ge;
 					break;
 				case 5 << 16 | 'i':
@@ -526,8 +528,8 @@ namespace Au.Controls
 				//info: tested various ways to add code coloured by a lexer, and only this way works. And it is good. Fast etc.
 				//	At first need to add non-styled text (SCI_COLOURISE does not work if the text is already styled).
 				//	Then set lexer and call SCI_COLOURISE for each code range.
+				//	Then remove lexer, but don't clear style, keywords etc.
 				//	Then call SCI_STARTSTYLING/SCI_SETSTYLINGEX for each non-code range.
-				//	It seems that don't need to reset lexer to SCLEX_NULL.
 				//	In any case, adding text is much slower than styling it. Appending is faster than adding, but only when don't need to scroll.
 				//	Scrolling is very slow. //CONSIDER: try to scroll async (SCI_GOTOPOS); but no, will not need it when output will be buffered.
 				//	//FUTURE: see maybe it's possible to get styling from lexers without attaching them to Scintilla control. Creating a hidden control for it is not good, eg because setting text is much slower.
@@ -539,7 +541,7 @@ namespace Au.Controls
 					_c.Call(SCI_COLOURISE, codes[i].X + prevLen, codes[i].Y + prevLen);
 				}
 				//Perf.Next();
-				//_SetLexer(LexLanguage.SCLEX_NULL);
+				_SetLexer(LexLanguage.SCLEX_NULL);
 				//Perf.Next();
 
 				for(int i = 0; i < codes.Count; i++) {
@@ -569,7 +571,7 @@ namespace Au.Controls
 		{
 			if(lang == _currentLexer) return;
 			_currentLexer = lang;
-			_t.StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
+			if(lang != LexLanguage.SCLEX_NULL) _t.StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
 			_c.Call(SCI_SETLEXER, (int)lang);
 
 			//for(int i=0; i< STYLE_DEFAULT; i++) { //creates problems
@@ -620,7 +622,7 @@ namespace Au.Controls
 				//Global classes and typedefs
 				//Preprocessor definitions
 				//Task marker and error marker keywords
-				_t.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in in int interface internal is lock long namespace new null object operator out out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield __arglist __makeref __reftype __refvalue");
+				_t.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield __arglist __makeref __reftype __refvalue");
 				//_t.SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
 				//_t.SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
 				//_t.SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
@@ -689,10 +691,13 @@ namespace Au.Controls
 			case "print":
 				Print(attr);
 				break;
+			case "help":
+				Util.Help.AuHelp(attr);
+				break;
 			default:
-				//case "help": case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
+				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '_' (others are displayed as text).
-				if(Options.Debug) TaskDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse AddCommonLinkTag or AddLinkTag.");
+				if(Options.Debug) TaskDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
 		}
@@ -706,7 +711,7 @@ namespace Au.Controls
 		/// <param name="name">
 		/// Tag name, like "_myTag".
 		/// Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
-		/// Or can be one of predefined link tags, if you want to override it. For example "help", which is not implemented by the control.
+		/// Or can be one of predefined link tags, if you want to override or implement it (some are not implemented by the control).
 		/// If already exists, replaces the delegate.
 		/// </param>
 		/// <param name="a">
@@ -726,7 +731,7 @@ namespace Au.Controls
 		/// <param name="name">
 		/// Tag name, like "_myTag".
 		/// Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
-		/// Or can be one of predefined link tags, if you want to override it. For example "help", which is not implemented by the control.
+		/// Or can be one of predefined link tags, if you want to override or implement it (some are not implemented by the control).
 		/// If already exists, replaces the delegate.
 		/// </param>
 		/// <param name="a">

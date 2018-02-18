@@ -453,13 +453,13 @@ ICppTest* Cpp_Interface()
 //	IAccessible* a = 0; VARIANT vc = {};
 //	HRESULT hr = AccessibleObjectFromPoint(p, &a, &vc);
 //	if (hr != 0) {
-//		Printx(hr); return;
+//		PrintHex(hr); return;
 //	}
 //	try {
 //		BSTR s = 0;
 //		hr = a->get_accName(vc, &s);
 //		if (hr != 0) {
-//			Printx(hr); return;
+//			PrintHex(hr); return;
 //		}
 //
 //		Print(s);
@@ -559,6 +559,35 @@ public:
 
 EXPORT void Cpp_Test()
 {
+	//CHandle hRead, hWrite;
+	//if(!CreatePipe(&hRead.m_h, &hWrite.m_h, null, 0)) return;
+	//Printf(L"%p %p", hRead.m_h, hWrite.m_h);
+
+
+	//HWND w = FindWindowW(L"QM_Editor", null);
+	//wnd::PrintWnd(w);
+	////Print(wnd::ClassNameIs(w, L"QM_Editor"));
+	////Print(wnd::ClassNameIs(w, L"QM_Edito"));
+	////Print(wnd::ClassNameIs(w, L"QM_*"));
+	////Print(wnd::ClassNameIs(w, L"-QM_*"));
+
+	//str::Wildex x;
+	////STR s = L"**k|kkk";
+	////STR s = L"**p|(kkk";
+	//STR s = L"QM_Editor";
+	//s=L"**t|QM_Editor";
+	////s=L"**p|.+r$";
+	//s=L"**m|moo[]QM_Editor";
+	//s=L"**n|QM_Editor-";
+	//s=L"**m|*_Editor";
+	//s=L"**m|moo[]**p|.+r$";
+	//s=L"**m|moo[]**p|.+r$[]**n|*i*";
+	//Bstr es;
+	//if(!x.Parse(s, wcslen(s), true, &es)) {
+	//	Print(es); return;
+	//}
+	//Print(wnd::ClassNameIs(w, x));
+	//Print(x.Match(L"QM_Editor", 9));
 
 	//str::StringBuilder t;
 	////STR s = L"TEST";
@@ -714,7 +743,7 @@ EXPORT void Cpp_Test()
 	//	Print(_a.GetNext(ref pos));
 	//}
 
-	//PRINTX(10);
+	//PRINTHEX(10);
 	//PRINTF(L"%s %i", L"MOO", 10);
 
 	////Print(IsOS64Bit());
@@ -742,7 +771,7 @@ EXPORT void Cpp_Test()
 //
 //	//AccessibleStates states;
 //	//if(a2->get_states(&states)) { Print("get_states failed"); return; }
-//	//Printx(states);
+//	//PrintHex(states);
 //
 //	//long n;
 //	//if(a2->get_nExtendedStates(&n)) { Print("get_nExtendedStates failed"); return; } //fails

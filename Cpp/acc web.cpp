@@ -129,7 +129,7 @@ public:
 		//	IAccessible2_2* ia2=null;
 		//	if(0==_x->QueryInterface(&ia2)) {
 		//		_variant_t v;
-		//		Printx(ia2->get_attribute(bn, &v)); //E_NOTIMPL
+		//		PrintHex(ia2->get_attribute(bn, &v)); //E_NOTIMPL
 		//		ia2->Release();
 		//	}
 		//}

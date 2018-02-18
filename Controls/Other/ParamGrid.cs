@@ -78,7 +78,7 @@ namespace Au.Controls
 
 			this.Controller.AddController(new _CellController());
 			this.Controller.AddController(SG.Cells.Controllers.Resizable.ResizeWidth); //we resize width and height automatically, but the user may want to resize width. This is like in VS.
-			_controllerTooltip0 = new SG.Cells.Controllers.ToolTipText() { IsBalloon = true };
+			_controllerTooltip0 = new SG.Cells.Controllers.ToolTipText() /*{ IsBalloon = true }*/;
 			_controllerTooltip1 = new SG.Cells.Controllers.ToolTipText();
 		}
 
@@ -195,7 +195,7 @@ namespace Au.Controls
 					if(sender.IsEditing()) grid.ZCheck(pos.Row, true); //note: this alone would interfere with the user clicking the checkbox of this row. OnMouseDown prevents it.
 				}
 
-				grid.OnValueChanged(sender);
+				grid.ZOnValueChanged(sender);
 			}
 
 			//rejected: start editing on mouse enter. Probably more bad than good.
@@ -214,6 +214,51 @@ namespace Au.Controls
 			//		//}
 			//	}
 			//}
+
+			public override void OnEditStarted(SG.CellContext sender, EventArgs e)
+			{
+				_ShowEditInfo(sender, true);
+				base.OnEditStarted(sender, e);
+			}
+
+			public override void OnEditEnded(SG.CellContext sender, EventArgs e)
+			{
+				_ShowEditInfo(sender, false);
+				base.OnEditEnded(sender, e);
+			}
+
+			void _ShowEditInfo(SG.CellContext sender, bool show)
+			{
+				var t = sender.Cell as EditCell;
+				if(t?.Info != null) {
+					var grid = sender.Grid as ParamGrid;
+					grid.ZOnShowEditInfo(sender, show?t.Info:null);
+				}
+			}
+
+			//public override void OnFocusEntered(SG.CellContext sender, EventArgs e)
+			//{
+			//	Debug_.PrintFunc();
+			//	base.OnFocusEntered(sender, e);
+			//}
+
+			//public override void OnFocusLeft(SG.CellContext sender, EventArgs e)
+			//{
+			//	Debug_.PrintFunc();
+			//	base.OnFocusLeft(sender, e);
+			//}
+
+			//public override void OnMouseEnter(SG.CellContext sender, EventArgs e)
+			//{
+			//	Debug_.PrintFunc();
+			//	base.OnMouseEnter(sender, e);
+			//}
+
+			//public override void OnMouseLeave(SG.CellContext sender, EventArgs e)
+			//{
+			//	Debug_.PrintFunc();
+			//	base.OnMouseLeave(sender, e);
+			//}
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
@@ -225,27 +270,69 @@ namespace Au.Controls
 			base.OnMouseDown(e);
 		}
 
-		protected virtual void OnValueChanged(SG.CellContext sender)
+		protected virtual void ZOnValueChanged(SG.CellContext sender)
 		{
-			ValueChanged?.Invoke(sender);
+			ZValueChanged?.Invoke(sender);
 		}
 
 		/// <summary>
 		/// When changed text of a value cell or state of a checkbox cell.
 		/// </summary>
-		public event Action<SG.CellContext> ValueChanged;
+		public event Action<SG.CellContext> ZValueChanged;
 
-		int _AddRow(string key, string name, string value, bool check, bool required, bool isFlag, string tt, int insertAt)
+		protected virtual void ZOnShowEditInfo(SG.CellContext sender, string info)
+		{
+			ZShowEditInfo?.Invoke(sender, info);
+		}
+
+		/// <summary>
+		/// When started and ended editing a cell that has info.
+		/// When ended, the string is null.
+		/// </summary>
+		public event Action<SG.CellContext, string> ZShowEditInfo;
+
+		public class EditCell :SG.Cells.Cell
+		{
+			public EditCell(string value) : base(value, typeof(string)) { }
+
+			public string Info { get; set; }
+		}
+
+		/// <summary>
+		/// Row type.
+		/// </summary>
+		public enum RowType
+		{
+			/// <summary>Checkbox and editable cell.</summary>
+			Optional,
+			/// <summary>Label and editable cell.</summary>
+			Required,
+			/// <summary>Only checkbox.</summary>
+			Flag,
+			/// <summary>Only label.</summary>
+			Header,
+		}
+
+		int _AddRow(string key, string name, string value, bool check, RowType type, string tt, string info, int insertAt)
 		{
 			int r = insertAt < 0 ? this.RowsCount : insertAt;
 			this.Rows.Insert(r);
-			SG.Cells.Cell c, t;
-			if(required) {
+			SG.Cells.Cell c;
+			if(type == RowType.Required) {
 				c = new SG.Cells.Cell(name);
 				if(_viewReadonly == null) {
 					_viewReadonly = new SG.Cells.Views.Cell() { BackColor = Form.DefaultBackColor }; //default white
 				}
 				c.View = _viewReadonly;
+			} else if(type == RowType.Header) {
+				c = new SG.Cells.Cell(name);
+				if(_viewHeaderRow == null) {
+					_viewHeaderRow = new SG.Cells.Views.Cell() { TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter };
+					_viewHeaderRow.Padding = new DevAge.Drawing.Padding(1);
+					_viewHeaderRow.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.Silver, Color.WhiteSmoke, 90);
+				}
+				c.View = _viewHeaderRow;
+				c.AddController(SG.Cells.Controllers.Unselectable.Default);
 			} else {
 				c = new SG.Cells.CheckBox(name, check);
 
@@ -261,10 +348,10 @@ namespace Au.Controls
 			this[r, 0] = c;
 			int nc = this.ColumnsCount;
 			if(nc > 1) {
-				if(isFlag) {
+				if(type== RowType.Flag || type==RowType.Header) {
 					c.ColumnSpan = nc;
 				} else {
-					t = new SG.Cells.Cell(value, typeof(string)) { Editor = _editor };
+					EditCell t = new EditCell(value) { Editor = _editor, Info=info };
 					t.AddController(_controllerTooltip1);
 					this[r, 1] = t;
 				}
@@ -282,11 +369,12 @@ namespace Au.Controls
 		/// <param name="key">Row Tag property. Used by <see cref="ZGetValue(string, out string, bool)"/>.</param>
 		/// <param name="name"></param>
 		/// <param name="value"></param>
-		/// <param name="tt"></param>
+		/// <param name="tt">Tooltip text.</param>
+		/// <param name="info"><see cref="ZShowEditInfo"/> text.</param>
 		/// <param name="insertAt"></param>
-		public int ZAddRequired(string key, string name, string value = null, string tt = null, int insertAt = -1)
+		public int ZAddRequired(string key, string name, string value = null, string tt = null, string info = null, int insertAt = -1)
 		{
-			return _AddRow(key, name, value, check: true, required: true, isFlag: false, tt: tt, insertAt: insertAt);
+			return _AddRow(key, name, value, check: true, type: RowType.Required, tt, info, insertAt);
 		}
 
 		/// <summary>
@@ -296,11 +384,12 @@ namespace Au.Controls
 		/// <param name="name"></param>
 		/// <param name="value"></param>
 		/// <param name="check"></param>
-		/// <param name="tt"></param>
+		/// <param name="tt">Tooltip text.</param>
+		/// <param name="info"><see cref="ZShowEditInfo"/> text.</param>
 		/// <param name="insertAt"></param>
-		public int ZAddOptional(string key, string name, string value = null, bool check = false, string tt = null, int insertAt = -1)
+		public int ZAddOptional(string key, string name, string value = null, bool check = false, string tt = null, string info = null, int insertAt = -1)
 		{
-			return _AddRow(key, name, value, check, required: false, isFlag: false, tt: tt, insertAt: insertAt);
+			return _AddRow(key, name, value, check, type: RowType.Optional, tt, info, insertAt);
 		}
 
 		/// <summary>
@@ -309,11 +398,11 @@ namespace Au.Controls
 		/// <param name="key">Row Tag property. Used by <see cref="ZGetValue(string, out string, bool)"/>.</param>
 		/// <param name="name"></param>
 		/// <param name="check"></param>
-		/// <param name="tt"></param>
+		/// <param name="tt">Tooltip text.</param>
 		/// <param name="insertAt"></param>
 		public int ZAddFlag(string key, string name, bool check = false, string tt = null, int insertAt = -1)
 		{
-			return _AddRow(key, name, null, check, required: false, isFlag: true, tt: tt, insertAt: insertAt);
+			return _AddRow(key, name, null, check, type: RowType.Flag, tt, null, insertAt);
 		}
 
 		/// <summary>
@@ -321,18 +410,7 @@ namespace Au.Controls
 		/// </summary>
 		public int ZAddHeaderRow(string text, int insertAt = -1)
 		{
-			int r = insertAt < 0 ? this.RowsCount : insertAt;
-			this.Rows.Insert(r);
-			SG.Cells.Cell c = new SG.Cells.Cell(text) { ColumnSpan = this.ColumnsCount };
-			if(_viewHeaderRow == null) {
-				_viewHeaderRow = new SG.Cells.Views.Cell() { TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter };
-				_viewHeaderRow.Padding = new DevAge.Drawing.Padding(1);
-				_viewHeaderRow.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.Silver, Color.WhiteSmoke, 90);
-			}
-			c.View = _viewHeaderRow;
-			c.AddController(SG.Cells.Controllers.Unselectable.Default);
-			this[r, 0] = c;
-			return r;
+			return _AddRow(null, text, null, false, type: RowType.Header, null, null, insertAt);
 		}
 
 		/// <summary>

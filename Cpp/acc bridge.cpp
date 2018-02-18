@@ -76,7 +76,6 @@ public:
 //[Flags]
 enum class eAccResult {
 	Elem = 1,
-	Flags = 2,
 	Role = 4,
 	Level = 8,
 	UsePrevAcc = 0x10,
@@ -97,8 +96,22 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 		if(a.misc.level != 0) has |= eAccResult::Level;
 	}
 	if(a.elem != 0) has |= eAccResult::Elem;
-	if(!!(a.misc.flags)) has |= eAccResult::Flags;
 	if(a.misc.role != 0) has |= eAccResult::Role;
+
+	//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
+	//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
+	//	Workaround: don't add InProc flag. With all known such apps it does not make faster anyway.
+	//	Known apps: 1. Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
+	//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
+	//	Other workarounds:
+	//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
+	//		Not tested: wrap the AO in our AO (like we do with Java and UIA). Has no sense, just would make slower.
+	IMarshal* m = null;
+	if(0 == a.acc->QueryInterface(&m)) {
+		m->Release();
+		a.misc.flags &= ~eAccMiscFlags::InProc;
+		//PRINTS(L"custom IMarshal. Using NotInProc.");
+	} else a.misc.flags |= eAccMiscFlags::InProc;
 
 	if(stream->Write(&has, 1, null)) return false;
 
@@ -110,8 +123,7 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 	if(!!(has&eAccResult::Elem))
 		if(stream->Write(&a.elem, 4, null)) return false;
 
-	if(!!(has&eAccResult::Flags))
-		if(stream->Write(&a.misc.flags, 1, null)) return false;
+	if(stream->Write(&a.misc.flags, 1, null)) return false;
 
 	if(!!(has&eAccResult::Role))
 		if(stream->Write(&a.misc.role, 1, null)) return false;
@@ -251,8 +263,7 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 	if(!(has&eAccResult::Elem)) a.elem = 0;
 	else if(_stream->Read(&a.elem, 4, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
-	if(!(has&eAccResult::Flags)) a.misc.flags = (eAccMiscFlags)0;
-	else if(_stream->Read(&a.misc.flags, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
+	if(_stream->Read(&a.misc.flags, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
 	if(!(has&eAccResult::Role)) a.misc.role = 0;
 	else if(_stream->Read(&a.misc.role, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
@@ -262,7 +273,6 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 		else if(_stream->Read(&a.misc.level, 2, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 	}
 
-	a.misc.flags |= eAccMiscFlags::InProc;
 	return 0;
 }
 
@@ -363,7 +373,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 
 	Cpp_Acc aAgent;
 	if(inProc && useWnd) {
-		IAccessible* iagent=null;
+		IAccessible* iagent = null;
 		if(R = InjectDllAndGetAgent(w, out iagent)) {
 			switch((eError)R) {
 			case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;

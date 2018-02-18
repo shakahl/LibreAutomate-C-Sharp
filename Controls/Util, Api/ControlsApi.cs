@@ -7,8 +7,6 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
-[module: DefaultCharSet(CharSet.Unicode)]
-
 namespace Au.Controls
 {
 	internal static class Api2

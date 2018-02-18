@@ -20,7 +20,7 @@ class AccFinder
 	AccFindCallback* _callback; //receives found AO
 	STR _role; //null if used path or if the role parameter is null
 	_PathPart* _path; //null if no path
-	Bstr _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
+	str::Wildex _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
 	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
 	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
@@ -90,7 +90,7 @@ class AccFinder
 					}
 					if(c == '[') {
 						auto s0 = s + 1;
-						e.startIndex = wcstol(s0, &s, 0);
+						e.startIndex = strtoi(s0, &s);
 						if(s == s0) goto ge;
 						if(*s == '!') { s++; e.exactIndex = true; }
 						if(*s++ != ']') goto ge;
@@ -138,7 +138,7 @@ class AccFinder
 				int state;
 				if(s > start && *start >= '0' && *start <= '9') {
 					LPWSTR se;
-					state = (int)wcstoul(start, &se, 0);
+					state = strtoi(start, &se);
 					if(se != s) return false;
 				} else {
 					state = ao::StateFromString(start, s - start);
@@ -159,7 +159,7 @@ class AccFinder
 		for(; s < eos; s++) {
 			LPWSTR s1 = s++, s2;
 			if(*s++ != '=') goto ge;
-			int t = wcstol(s, &s2, 0);
+			int t = strtoi(s, &s2);
 			if(s2 == s) goto ge; s = s2;
 			switch(*s1) {
 			case 'L': _rect.left = t; _flags2 |= eAF2::IsRectL; break;
@@ -208,16 +208,16 @@ class AccFinder
 								break;
 							case 2:
 								if(_path != null) return _Error(L"Path and level.");
-								_minLevel = wcstol(va, &s2, 0);
+								_minLevel = strtoi(va, &s2);
 								if(s2 == va || _minLevel < 0) goto ge;
 								if(s2 == s) _maxLevel = _minLevel;
 								else if(s2 < s && *s2 == ' ') {
-									_maxLevel = wcstol(++s2, &s3, 0);
+									_maxLevel = strtoi(++s2, &s3);
 									if(s3 != s || _maxLevel < _minLevel) goto ge;
 								} else goto ge;
 								break;
 							case 3:
-								_maxCC = wcstol(va, &s2, 0);
+								_maxCC = strtoi(va, &s2);
 								if(_maxCC <= 0 || s2 != s) goto ge;
 								break;
 							case 4:
@@ -227,17 +227,16 @@ class AccFinder
 								if(!_ParseRect(va, s)) return false;
 								break;
 							case 6:
-								_elem = wcstol(va, &s2, 0);
+								_elem = strtoi(va, &s2);
 								if(s2 != s) goto ge;
 								_flags2 |= eAF2::IsElem;
 								break;
 							case 7:
-								_controlClass.Assign(va, len);
+								if(!_controlClass.Parse(va, len, true, _errStr)) return false;
 								_flags2 |= eAF2::InControls;
 								break;
 							case 8:
-								_controlId = wcstol(va, &s2, 0);
-								//TODO: instead of wcstol/wcstoul use 64-bit function. Everywhere. Because eg wcstol returns 0x7fffffff for "0xFFFFFFFF".
+								_controlId = strtoi(va, &s2);
 								if(s2 != s) goto ge;
 								_flags2 |= eAF2::InControls;
 								break;
@@ -287,7 +286,12 @@ public:
 		if(!_ParseRole(ap.role, ap.roleLength)) return false;
 		if(ap.name != null && !_name.Parse(ap.name, ap.nameLength, true, _errStr)) return false;
 		if(!_ParseProp(ap.prop, ap.propLength)) return false;
-		if(!!(_flags2&eAF2::InWebPage)) _flags |= eAF::MenuToo;
+
+		if(!!(_flags2&eAF2::InWebPage)) {
+			_flags |= eAF::MenuToo;
+			if(!!(_flags&eAF::UIA)) return _Error(L"Don't use UI Automation to search in web page.");
+			if(!!(_flags2&eAF2::InControls)) return _Error(L"Don't use class/id to search in web page.");
+		}
 
 		return true;
 	}
@@ -298,13 +302,12 @@ public:
 		_callback = callback;
 
 		if(a) {
-			if(!!(_flags2&(eAF2::InWebPage | eAF2::InControls))) return _ErrorHR(L"Don't use role prefix or class/id when searching in Acc.");
+			if(!!(_flags2&eAF2::InWebPage)) return _ErrorHR(L"Don't use role prefix when searching in Acc.");
+			if(!!(_flags2&eAF2::InControls)) return _ErrorHR(L"Don't use class/id when searching in Acc.");
 			assert(!(_flags&eAF::UIA));
 
 			_FindInAcc(ref *a, 0);
 		} else if(!!(_flags2 & eAF2::InWebPage)) {
-			if(!!(_flags&eAF::UIA)) return _ErrorHR(L"Don't use role prefix with flag UIA.");
-
 			if(!!(_flags2 & eAF2::InIES)) { //info: Cpp_AccFind finds IES control and adds this flag
 				_FindInWnd(w);
 				//info: the hierarchy is WINDOW/CLIENT/PANE, therefore PANE will be at level 0
@@ -324,7 +327,7 @@ public:
 			wnd::EnumChildWindows(w, [this](HWND c)
 			{
 				if(!(_flags&eAF::HiddenToo) && !IsWindowVisible(c)) return true;
-				if(_controlClass) {
+				if(_controlClass.Is()) {
 					if(!wnd::ClassNameIs(c, _controlClass)) return true;
 				} else {
 					if(GetDlgCtrlID(c) != _controlId) return true;
@@ -572,6 +575,12 @@ private:
 		if(!!(_flags2&eAF2::IsRect)) {
 			long L, T, W, H;
 			if(0 != a.acc->accLocation(&L, &T, &W, &H, ao::VE(a.elem))) L = T = W = H = 0;
+
+			//note: _rect is raw AO rect, relative to the screen, not to the window/control/page. Its right/bottom actually are width/height.
+			//	It is useful when you want to find AO in the object tree when you already have its another IAccessible eg retrieved from point.
+			//	For example, it is used by the "Find accessible object" tool, to select the captured AO in the tree.
+			//	Do not try to make it relative to window etc. Don't need to encourage users to use unreliable ways to find AO.
+
 			if(!!(_flags2&eAF2::IsRectL) && L != _rect.left) return false;
 			if(!!(_flags2&eAF2::IsRectT) && T != _rect.top) return false;
 			if(!!(_flags2&eAF2::IsRectW) && W != _rect.right) return false;

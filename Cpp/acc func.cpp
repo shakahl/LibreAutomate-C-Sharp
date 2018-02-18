@@ -27,7 +27,7 @@ NavdirAndCount* Navig_Parse(STR s, out int& n)
 		if(*s == ' ' || s == eos) {
 			int navDir, count; STR s2, s3;
 			if(*start == '#') { //custom, or by numeric value
-				navDir = wcstol(++start, (LPWSTR*)&s2, 0);
+				navDir = strtoi(++start, (LPWSTR*)&s2);
 				if(s2 == start) goto ge;
 			} else {
 				//find the end of the name part, because it can be followed by a number, like "child3" or ne,3"
@@ -38,7 +38,7 @@ NavdirAndCount* Navig_Parse(STR s, out int& n)
 			}
 			if(s2 < s) {
 				if(*s2 == ',') s2++;
-				count = wcstol(s2, (LPWSTR*)&s3, 0);
+				count = strtoi(s2, (LPWSTR*)&s3);
 				if(s3 != s || count == 0 || (count < 0 && navDir != NAVDIR_CHILD)) goto ge;
 			} else count = 1;
 			NavdirAndCount x = { navDir, count };

@@ -14,7 +14,7 @@
     <Name>Au.Controls Help</Name>
     <!-- SHFB properties -->
     <FrameworkVersion>.NET Framework 4.6.2</FrameworkVersion>
-    <OutputPath>.\Help\</OutputPath>
+    <OutputPath>..\..\_\</OutputPath>
     <HtmlHelpName>Au Controls Help</HtmlHelpName>
     <Language>en-US</Language>
     <HelpFileVersion>1.0.0.0</HelpFileVersion>
@@ -44,6 +44,8 @@
     <KeepLogFile>False</KeepLogFile>
     <DisableCodeBlockComponent>False</DisableCodeBlockComponent>
     <CleanIntermediates>True</CleanIntermediates>
+    <WarnOnMissingSourceContext>False</WarnOnMissingSourceContext>
+    <WorkingPath>Working\</WorkingPath>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->

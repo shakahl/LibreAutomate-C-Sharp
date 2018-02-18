@@ -20,15 +20,15 @@ inline void Print(__int64 i) { Printf(L"%I64i", i); }
 inline void Print(unsigned __int64 i) { Print((__int64)i); }
 inline void Print(void* i) { Printf(sizeof(void*) == 8 ? L"%I64i" : L"%i", i); }
 
-inline void Printx(int i) { Printf(L"0x%X", i); }
-inline void Printx(unsigned int i) { Printx((int)i); }
-inline void Printx(long i) { Printx((int)i); }
-inline void Printx(unsigned long i) { Printx((int)i); }
-inline void Printx(__int64 i) { Printf(L"0x%I64X", i); }
+inline void PrintHex(int i) { Printf(L"0x%X", i); }
+inline void PrintHex(unsigned int i) { PrintHex((int)i); }
+inline void PrintHex(long i) { PrintHex((int)i); }
+inline void PrintHex(unsigned long i) { PrintHex((int)i); }
+inline void PrintHex(__int64 i) { Printf(L"0x%I64X", i); }
 
 #define PRINTI(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  %i", x)
 #define PRINTS(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  %s", x)
-#define PRINTX(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  0x%X", x)
+#define PRINTHEX(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  0x%X", x)
 #define PRINTF(formatString, ...) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  " formatString, __VA_ARGS__)
 #define PRINTF_IF(condition, formatString, ...) { if(condition) PRINTF(formatString, __VA_ARGS__); }
 
@@ -43,10 +43,10 @@ inline void PrintComRefCount(IUnknown* u) {
 #else
 #define Print __noop
 #define Printf __noop
-#define Printx __noop
+#define PrintHex __noop
 #define PRINTI __noop
 #define PRINTS __noop
-#define PRINTX __noop
+#define PRINTHEX __noop
 #define PRINTF __noop
 #define PRINTF_IF __noop
 #define PrintComRefCount __noop
@@ -307,7 +307,8 @@ namespace wnd
 {
 bool ClassName(HWND w, out Bstr& s);
 int ClassNameIs(HWND w, std::initializer_list<STR> a);
-inline bool ClassNameIs(HWND w, STR s) { return 0 != ClassNameIs(w, { s }); }
+bool ClassNameIs(HWND w, STR s);
+bool ClassNameIs(HWND w, const str::Wildex& s);
 bool Name(HWND w, out Bstr& s);
 
 using WNDENUMPROCL = const std::function <bool(HWND c)>;

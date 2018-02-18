@@ -7,6 +7,12 @@
 #define CMP5(s, c)	(CMP4(s, c) && (s)[4]==c[4])
 #define CMP6(s, c)	(CMP5(s, c) && (s)[5]==c[5])
 
+//Calls _wcstoi64 and casts to int.
+//Use instead of wcstol to avoid its overflow problem. Eg for "0xFFFFFFFF" it returns INT_MAX; this func returns -1.
+inline int strtoi(STR s, LPWSTR* end = nullptr, int radix = 0) {
+	return (int)_wcstoi64(s, end, radix);
+}
+
 //Fast memory buffer.
 //Depending on required size, uses memory in fixed-size memory in this variable (eg on stack) or allocates from heap.
 //Does not call ctor/dtor.
@@ -214,6 +220,8 @@ public:
 //More info in the C# version.
 class Regex
 {
+	Regex(Regex&& x) = delete; //disable copying
+
 	pcre2_code_16* _code;
 	pcre2_match_data_16* _md;
 public:
@@ -281,10 +289,11 @@ public:
 //More info in the C# version and help file.
 class Wildex
 {
+	Wildex(Wildex&& x) = delete; //disable copying
+public:
 	/// <summary>
 	/// The type of text (wildcard expression) used when creating the Wildex variable.
 	/// </summary>
-public:
 	enum class WildType :byte
 	{
 		/// Simple text (option t, or no *? characters and no t r p options).
@@ -305,13 +314,13 @@ public:
 private:
 	union {
 		LPWSTR _text;
+		Regex* _regex;
 		Wildex* _multi_array;
 	};
 	union {
-		size_t _text_length;
-		size_t _multi_count;
+		int _text_length;
+		int _multi_count;
 	};
-	static_assert(sizeof(LPWSTR) + sizeof(size_t) == sizeof(Regex));
 	WildType _type;
 	bool _ignoreCase;
 	bool _not;
@@ -322,6 +331,7 @@ public:
 	~Wildex();
 	bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString = false, out BSTR* errStr = null);
 	bool Match(STR s, size_t lenS) const;
+	//Returns true if not null.
 	bool Is() const { return _text != null; }
 
 	static bool HasWildcards(STR s, size_t lenS);

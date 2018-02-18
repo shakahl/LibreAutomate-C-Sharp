@@ -264,7 +264,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. To check it you can use <see cref="Is0"/> or <see cref="operator +(Wnd)"/> or <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -383,7 +383,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. To check it you can use <see cref="Is0"/> or <see cref="operator +(Wnd)"/> or <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
@@ -438,7 +438,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. To check it you can use <see cref="Is0"/> or <see cref="operator +(Wnd)"/> or <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child">Child</see>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.

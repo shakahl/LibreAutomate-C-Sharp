@@ -28,7 +28,7 @@ using Au.Controls;
 
 class PanelStatus :Control
 {
-	SciControl _c;
+	AuScintilla _c;
 	Point _p;
 #if MOUSE_INFO_FAST_RESPONSE
 	Timer_ _timer;
@@ -42,7 +42,7 @@ class PanelStatus :Control
 		this.Size = new Size(0, z.Height + 3);
 		this.Dock = DockStyle.Bottom;
 
-		_c = new SciControl();
+		_c = new AuScintilla();
 		_c.Dock = DockStyle.Fill;
 		_c.AccessibleName = "Status bar";
 		_c.AccessibleRole = AccessibleRole.StatusBar;
@@ -51,7 +51,7 @@ class PanelStatus :Control
 		_c.WrapLines = true;
 		_c.HandleCreated += _c_HandleCreated;
 
-		_c.InitTagsStyle = SciControl.TagsStyle.AutoWithPrefix;
+		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoWithPrefix;
 
 		this.Controls.Add(_c);
 

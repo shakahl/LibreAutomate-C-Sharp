@@ -27,6 +27,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion(AssemblyInfo.ProductVersion)]
 [assembly: AssemblyInformationalVersion(AssemblyInfo.ProductVersion)]
 
+[module: DefaultCharSet(CharSet.Unicode)]
+
 // This defines constants that can be used here and in the custom presentation style export attribute
 internal static partial class AssemblyInfo
 {

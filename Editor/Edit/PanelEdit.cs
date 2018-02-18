@@ -194,7 +194,7 @@ partial class PanelEdit :Control
 
 
 
-	class SciCode :SciControl
+	class SciCode :AuScintilla
 	{
 		public readonly FileNode FN;
 
@@ -297,7 +297,7 @@ partial class PanelEdit :Control
 				//Global classes and typedefs
 				//Preprocessor definitions
 				//Task marker and error marker keywords
-				ST.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in in int interface internal is lock long namespace new null object operator out out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield");
+				ST.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield");
 				//ST.SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
 				//ST.SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
 				//ST.SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.

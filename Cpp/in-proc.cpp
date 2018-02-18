@@ -99,6 +99,7 @@ HRESULT AccEnableChrome2(MarshalParams_AccElem* p);
 //Our hook of get_accHelpTopic.
 HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sResult, VARIANT vParams, long* pMagic)
 {
+	//Print("Hook_get_accHelpTopic"); //TODO
 	if(vParams.vt == VT_BSTR) {
 		//try {
 		auto size = SysStringByteLen(vParams.bstrVal);
@@ -110,11 +111,11 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 				sResult = null;
 				HRESULT hr = 0;
 				switch(h->action) {
-//#ifdef _DEBUG
-//				case InProcAction::IPA_AccTest:
-//					InProcAccTest(iacc);
-//					break;
-//#endif
+					//#ifdef _DEBUG
+					//				case InProcAction::IPA_AccTest:
+					//					InProcAccTest(iacc);
+					//					break;
+					//#endif
 				case InProcAction::IPA_AccFind:
 				case InProcAction::IPA_AccFromWindow:
 				case InProcAction::IPA_AccFromPoint:
@@ -229,7 +230,7 @@ LRESULT WINAPI AgentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE: {
 		if(!(t_agentStream = MarshalAgentIAccessible(hwnd))) return -1; //-1 destroys the window
 	} break;
-	} //else Printx(msg);
+	} //else PrintHex(msg);
 
 	auto R = DefWindowProcW(hwnd, msg, wParam, lParam);
 
@@ -240,7 +241,7 @@ LRESULT WINAPI AgentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		if(t_agentStream) {
 			//release marshal data, because marshaled with MSHLFLAGS_TABLESTRONG
-			HRESULT hr = CoReleaseMarshalData(t_agentStream); if(hr) PRINTX(hr);
+			HRESULT hr = CoReleaseMarshalData(t_agentStream); if(hr) PRINTHEX(hr);
 			t_agentStream->Release(); t_agentStream = null;
 		}
 		t_agentWnd = 0;
@@ -291,7 +292,7 @@ LRESULT WINAPI HookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 		ReplyMessage((LRESULT)wAgent);
 		return 1;
 		//tested: not faster if we unhook before creating window
-	} //else Printx(m.message);
+	} //else PrintHex(m.message);
 
 	return CallNextHookEx(0, nCode, wParam, lParam);
 }
@@ -307,7 +308,7 @@ namespace outproc
 bool InjectDll(HWND w, out HWND& wAgent, DWORD tid, DWORD pid)
 {
 	auto hh = SetWindowsHookExW(WH_CALLWNDPROC, inproc::HookCallWndProc, s_moduleHandle, tid);
-	if(hh == 0) PRINTX(GetLastError());
+	if(hh == 0) PRINTHEX(GetLastError());
 	if(hh == 0) return false;
 	wAgent = (HWND)SendMessageW(w, 0, c_magic, 0);
 	UnhookWindowsHookEx(hh);
@@ -335,10 +336,10 @@ EXPORT void WINAPI Cpp_RunDllW(HWND hwnd, HINSTANCE hinst, STR lpszCmdLine, int 
 {
 	//Printf(L"Cpp_RunDllW, %i, %s", IsThisProcess64Bit(), lpszCmdLine);
 	LPWSTR s2;
-	HWND w = (HWND)(LPARAM)wcstol(lpszCmdLine, &s2, 10), wAgent;
+	HWND w = (HWND)(LPARAM)strtoi(lpszCmdLine, &s2), wAgent;
 	DWORD pid, tid = GetWindowThreadProcessId(w, &pid); if(tid == 0) return;
 	if(!InjectDll(w, out wAgent, tid, pid)) return;
-	HANDLE ev = (HANDLE)(LPARAM)wcstol(s2, null, 10);
+	HANDLE ev = (HANDLE)(LPARAM)strtoi(s2);
 	SetEvent(ev);
 }
 
@@ -355,7 +356,7 @@ bool RunDll(HWND w)
 	static const STR bits = L"64";
 #endif
 
-	SECURITY_ATTRIBUTES sa = {}; sa.bInheritHandle = true;
+	SECURITY_ATTRIBUTES sa = { }; sa.bInheritHandle = true;
 	CHandle ev(CreateEventW(&sa, false, false, null)); //not necessary. Makes faster by 5 ms.
 
 	str::StringBuilder b; LPWSTR t; int n;
@@ -392,9 +393,22 @@ public:
 		ZEROTHIS;
 	}
 
-	~HwndTidCache() {
-		if(_iaccAgent) _iaccAgent->Release();
-	}
+	//~HwndTidCache() {
+	//	if(_iaccAgent) _iaccAgent->Release();
+	//	//if(_iaccAgent) {
+	//	//	Print(1);
+	//	//	_iaccAgent->Release();
+	//	//	Print(2);
+	//	//}
+	//}
+	//FUTURE: release _iaccAgent. Now the dtor is disabled because of this problem:
+	//	Release hangs.
+	//	Conditions:
+	//		Win7 (tested only on the virtual PC).
+	//		.NET primary STA thread. Only when primary, only when STA.
+	//	Possible reasons (I guess):
+	//		.NET uninitializes COM before the dtor.
+	//		The dtor is called while unloading this dll.
 
 	bool Get(DWORD tid, out HWND& w, out IAccessible** iaccAgent = null)
 	{
@@ -438,7 +452,7 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	HWND wFailed; if(t_failedCache.Get(tid, out wFailed)) return (HRESULT)eError::Inject;
 
 	if(tid == GetCurrentThreadId()) return (HRESULT)eError::WindowOfThisThread;
-	if(wnd::ClassNameIs(w, { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
+	if(wnd::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
 		return (HRESULT)eError::UseNotInProc;
 
 	static CHandle s_mutex(CreateMutexW(SecurityAttributes::Common(), false, L"AuCpp_MutexGAW"));

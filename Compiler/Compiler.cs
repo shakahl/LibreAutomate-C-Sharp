@@ -21,7 +21,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
-//using System.Drawing;
+using System.Drawing;
 //using System.Linq;
 
 using Microsoft.CodeAnalysis;
@@ -125,7 +125,7 @@ public static class Test
 
 			var tree = CSharpSyntaxTree.ParseText(source);
 
-			CSharpCompilationOptions options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
+			var options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
 
 			var compilation = CSharpCompilation.Create("A", new[] { tree }, references, options);
 

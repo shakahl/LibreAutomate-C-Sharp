@@ -15,7 +15,7 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
+//using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -63,7 +63,9 @@ using Au.Util;
 
 using System.Dynamic;
 
-[module: DefaultCharSet(CharSet.Unicode)]
+//using Microsoft.CodeAnalysis;
+//using Microsoft.CodeAnalysis.CSharp;
+
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 #pragma warning disable 162, 168, 169, 219, 649 //unreachable code, unused var/field
@@ -3162,18 +3164,298 @@ REE`");
 		}
 	}
 
+	static void TestStrtoiOverflow()
+	{
+		//if(!ColorInt.FromString("0xFF", out var c)) return;
+		//if(!ColorInt.FromString("#FF", out var c)) return;
+		//Print(c);
+
+		//Print("0x1A".ToInt32_());
+		//Print("1A".ToInt32_());
+		//Print("0x1A".ToInt32_(0, true));
+		//Print("1A".ToInt32_(0, true));
+		//Print("0x1A".ToInt32_(0, out _, true));
+		//Print("1A".ToInt32_(0, out _, true));
+
+		string s = "0x10";
+		s = "0xffffffff";
+		s = "0x80000000";
+		s = "-0xffffffff";
+		//s = "0xffffffffffffffff";
+		//Print(s.ToInt32_());
+		//Print(s.ToInt64_());
+		//Print("-----");
+		//Print(Api.strtoi(s));
+		//Print(Api.strtoi64(s));
+		//Print(Api.strtoui64(s));
+
+		//Print(0xffffffffU);
+		//Print(-0xffffffffU);
+
+		fixed(char* p = s) {
+			PrintHex(Api.strtoi(p));
+		}
+	}
+
+	//	static void TestCompiler()
+	//	{
+	//		var source =
+	//			@"
+	//using System;
+	//using Catkeys;
+	//using Catkeys.Types;
+	//using static Catkeys.NoClass;
+
+	//public class Test
+	//{
+	//public static void Main()
+	//{
+	//Print(1);
+	//}
+	//}
+	//";
+
+
+
+	//		var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
+	//		//var sRef = new string[] { typeof(object).Assembly.Location };
+
+	//		var references = new List<PortableExecutableReference>();
+	//		foreach(var s in sRef) {
+	//			references.Add(MetadataReference.CreateFromFile(s));
+	//		}
+
+	//		var tree = CSharpSyntaxTree.ParseText(source);
+
+	//		var options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
+
+	//		var compilation = CSharpCompilation.Create("A", new[] { tree }, references, options);
+
+	//		var ms = new MemoryStream();
+
+	//		//Emitting to file is available through an extension method in the Microsoft.CodeAnalysis namespace
+	//		var emitResult = compilation.Emit(ms);
+
+	//		//If our compilation failed, we can discover exactly why.
+	//		if(!emitResult.Success) {
+	//			foreach(var diagnostic in emitResult.Diagnostics) {
+	//				Print(diagnostic.ToString());
+	//			}
+	//			return;
+	//		}
+
+	//	}
+
+	static void TestUnsafe()
+	{
+		int x = 5, y = 0;
+		Unsafe.Copy(ref y, &x);
+		Print(y);
+	}
+
+	static void TestAccFirefoxNoSuchInterface()
+	{
+		//var w = +Wnd.Find("Quick Macros Forum - Mozilla Firefox", "MozillaWindowClass");
+		////var w = +Wnd.Find("* Chrome");
+		//AFFlags f = 0;
+		////f |= AFFlags.NotInProc;
+
+		////for(int i = 0; i < 10; i++) {
+		////	//var aa=Acc.Find(w, "web:", null, null, f);
+		////	//var aa=Acc.Wait(0.1, w, "web:", null, null, f);
+		////	var aa=Acc.Find(w, "LINK", null, null, f, skip: 1);
+		////	if(aa == null) Print("no"); else Print(aa);
+		////}
+		////return;
+
+		//////Acc.PrintAll(w, flags: f);
+		////Acc.PrintAll(w, "web:", flags: f);
+		////return;
+
+		//var a = +Acc.Find(w, "web:LINK", "Bug Reports", null, f);
+		//Print(a.MiscFlags);
+		//Print(a);
+		////Print(a.Role);
+		////Print(a.Name);
+		////Print(a.State);
+		////Print(a.Rect);
+		////Print(a.WndContainer);
+
+		//var w = +Wnd.Find("Settings", "ApplicationFrameWindow");
+		//var a = +Acc.Find(w, "LISTITEM", "Devices", "class=Windows.UI.Core.CoreWindow");
+
+		var w = +Wnd.Find("Microsoft Edge", "Windows.UI.Core.CoreWindow", flags: WFFlags.HiddenToo);
+		Acc.PrintAll(w, flags: AFFlags.UIA);
+		var a = +Acc.Find(w, "TEXT", "this exact word or phrase:", flags: AFFlags.UIA);
+		Print(a);
+		Print(a.MiscFlags);
+	}
+
+	static void TestRunConsole()
+	{
+		//Shell.Run("notepad.exe");
+		//Shell.Run("http://www.quickmacros.com");
+		//Shell.Run(@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App");
+		//Shell.Run(@"%Folders.System%\notepad.exe");
+
+		//return;
+
+		Directory.SetCurrentDirectory(@"C:\");
+		string cl = null;
+		var enc = Encoding.UTF8;
+		//Print(Directory.GetCurrentDirectory());
+		//var con = @"Q:\app\Au\Test Projects\Simple\bin\Debug\Simple.exe";
+		//var con = @"..\Test Projects\Simple\bin\Debug\Simple.exe";
+		//var con = @"%Folders.ThisApp%\..\Test Projects\Simple\bin\Debug\Simple.exe";
+		//var con = @"Simple.exe";
+		//var con = @"Test\Simple.exe";
+		var con = @".\Test\Simple.exe";
+		//var con = @"ping.exe"; cl = "/?";
+		//var con = Folders.System + @"ping.exe"; cl = "/?";
+		//con = @"\\?\" + con;
+		//var con = @"http://www.quickmacros.com";
+
+		int ec = Shell.RunConsole(out var s, con, cl, null, enc);
+		Print(s);
+	}
+
+	static void TestMainWindows2()
+	{
+		//var a =Wnd.Misc.MainWindows(likeAltTab:true);
+		//Print("---");
+		//Print(a);
+
+		//Print(Wnd.WndActive);
+		//Wnd.Misc.SwitchActiveWindow();
+		//Print(Wnd.WndActive);
+
+		//Print(Api.GetDesktopWindow());
+		//Print("----");
+		//var a =Wnd.Misc.AllWindows();
+
+		////Perf.SpinCPU(100);
+		////for(int i1 = 0; i1 < 5; i1++) {
+		////	int n2 = 1000;
+		////	Perf.First();
+		////	for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = Wnd.Misc.WndRootOwnerOrThis(w); } }
+		////	Perf.Next();
+		////	for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = w.WndOwner; } }
+		////	Perf.Next();
+		////	//for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = Wnd.Misc.WndRootOwnerOrThis2(w); } }
+		////	//Perf.Next();
+		////	for(int i2 = 0; i2 < n2; i2++) { }
+		////	Perf.NW();
+		////}
+
+		//foreach(var w in a) {
+		//	var ro = Wnd.Misc.WndRootOwnerOrThis(w);
+		//	//if(ro== Api.GetDesktopWindow()) {
+		//	//if(ro!= w) {
+		//	//	Print("----");
+		//	//	Print(w);
+		//	//	Print(ro);
+		//	//	Print(w.WndOwner);
+		//	//	Print(w.WndDirectParentOrOwner );
+		//	//}
+		//	//Print();
+		//	var ro2 = Wnd.Misc.WndRootOwnerOrThis(w, true);
+		//	if(ro2 != ro) {
+		//		Print("----");
+		//		Print(w);
+		//		Print(ro);
+		//		Print(ro2);
+		//	}
+		//}
+
+		//var w = Wnd.Find("Options");
+		//Print(w);
+		//Print(Wnd.Misc.WndLastActiveOwnedOrThis(w));
+		//Print(Wnd.Misc.WndLastActiveOwnedOrThis(w, true));
+
+		//Print(Wnd.Misc.MainWindows());
+		////Print(Wnd.Misc.WndNextMain());
+		//var w = +Wnd.Find("* Chrome");
+		//Print(Wnd.Misc.WndNextMain(w, retryFromTop: true));
+		Print(Wnd.Misc.SwitchActiveWindow());
+		Print(Wnd.WndActive);
+	}
+
+	static void TestAccProcessDoesNotExit()
+	{
+		//Print(Api.GetCurrentThreadId());
+
+		//var a = Acc.FromXY(20, 20);
+		//var a = Acc.FromXY(20, 20, flags: AXYFlags.NotInProc);
+
+		Wnd w = Wnd.Find("*Notepad");
+		//return;
+
+		//AFFlags f = 0;
+		////f |= AFFlags.NotInProc;
+		//var a = Acc.Find(w, "TEXT", flags: f);
+		var a = Acc.Find(w, "NOTFOUND");
+		if(a == null) return;
+
+		Print(a);
+		a.Dispose();
+
+		//Perf.SpinCPU(100);
+		//for(int i = 0; i < 10; i++) {
+		//	var a = Acc.Find(w, "TEXT");
+		//	Print(a);
+		//	200.ms();
+		//}
+	}
+
+	//static void TestAccProcessDoesNotExit3()
+	//{
+	//	//Wnd w = Wnd.Find("*Notepad");
+	//	//var x=new
+
+	//	var t = new Thread(() =>
+	//	  {
+	//		  TestAccProcessDoesNotExit();
+	//	  });
+	//	t.SetApartmentState(ApartmentState.STA);
+	//	t.IsBackground = false;
+	//	t.Start();
+	//	TaskDialog.Show();
+	//}
+
+	//static void TestIpcWithWmCopydataAndAnonymousPipe()
+	//{
+	//	Cpp.Cpp_Test();
+	//}
+
 	static void TestAccForm()
 	{
-#if true
+		Acc a = null;
+#if false
+		//Cpp.Cpp_Test(); return;
+
 		var w = Wnd.Find("* Chrome").OrThrow();
-		var a = Acc.Find(w, "web:PUSHBUTTON", "Search").OrThrow();
-		//var a = Acc.Find(w, "web:CELL", "Posts").OrThrow();
+		a = Acc.Find(w, "web:PUSHBUTTON", "Search").OrThrow();
+		//a = Acc.Find(w, "web:PUSHBUTTON", "Search", "class=moo").OrThrow();
+
+
+		//Print(a);
+		//return;
+		//Print(a.MiscFlags);
+
+		//Print(w);
+		//Print(a);
+
+		//Print(Ver.Is64BitProcess);
+		//Print(w.Is64Bit);
+		//return;
+
+		//a = Acc.Find(w, "web:CELL", "Posts").OrThrow();
 
 		//var w = Wnd.Find("* Firefox").OrThrow();
-		//var a = Acc.Find(w, "web:TEXT", "Search the Web").OrThrow();
+		//a = Acc.Find(w, "web:TEXT", "Search the Web").OrThrow();
 
 		//var w = Wnd.Find("Quick *").OrThrow();
-		//var a = Acc.Find(w, "PUSHBUTTON", "Properties*").OrThrow();
+		//a = Acc.Find(w, "PUSHBUTTON", "Properties*").OrThrow();
 
 		//foreach(var k in Wnd.Misc.AllWindows(false)) {
 		//	//if(!k.ClassNameIs("Windows.UI.Core.CoreWindow")) continue;
@@ -3190,16 +3472,19 @@ REE`");
 		//return;
 
 		//var w = Wnd.Find("Microsoft Edge", "Windows.UI.Core.CoreWindow", flags: WFFlags.HiddenToo).OrThrow();
-		//var a = Acc.Find(w, "PANE", flags: AFFlags.HiddenToo).OrThrow();
+		//a = Acc.Find(w, "PANE", flags: AFFlags.HiddenToo).OrThrow();
 
 		//a = a.Navigate("pr");
+#endif
+
+		//Task.Run(() => { for(int i = 0; i < 10; i++) { 2.s(); GC.Collect(); } });
+
 		Perf.First();
 		var f = new Au.Tools.Form_Acc(a);
-#else
-		Perf.First();
-		var f = new Acc_form();
-#endif
 		f.ShowDialog();
+		//Application.Run(f);
+		f.Close();
+		f.Dispose();
 		//TaskDialog.Show("-");
 	}
 
@@ -3207,6 +3492,8 @@ REE`");
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
+		//MessageBox.Show(""); return;
+
 #if DEBUG
 		//Output.IgnoreConsole = true;
 		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
@@ -3215,14 +3502,23 @@ REE`");
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
-			//100.ms();
+			100.ms();
 		}
 
 		try {
 
+			//TestMainWindows2();
+			//TestRunConsole();
+			//TestStrtoiOverflow();
+			//TestCompiler();
+			//return;
+
 			try {
 
 				TestAccForm();
+				//TestIpcWithWmCopydataAndAnonymousPipe();
+				//TestAccProcessDoesNotExit();
+				//TestAccFirefoxNoSuchInterface();
 				//TestAccThrowOperator();
 			}
 			finally {

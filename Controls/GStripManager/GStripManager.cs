@@ -101,7 +101,7 @@ namespace Au.Controls
 
 			_xmlFileDefault = xmlFile;
 			_xmlFileCustom = xmlFileCustom;
-			_xStrips = XElement.Load(xmlFile);
+			_xStrips = XElement.Load(xmlFile); //TODO: now silent unhandled exception if not found
 			XElement xCustom = null;
 			if(Files.ExistsAsFile(_xmlFileCustom)) {
 				try { xCustom = XElement.Load(_xmlFileCustom); }

@@ -203,6 +203,8 @@ public static class Panels
 		m.GetPanel(Files).Init("All scripts and other files of current collection");
 		m.GetPanel(Running).Init("Running scripts");
 		m.GetPanel(Recent).Init("Recent running scripts");
+#if TEST
 		m.GetPanel(c).Init("New panel", EResources.GetImageUseCache("paste"));
+#endif
 	}
 }

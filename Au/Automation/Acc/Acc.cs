@@ -57,10 +57,11 @@ namespace Au
 	/// <item>
 	/// Firefox web browser.
 	/// 
-	/// By default, Find is slow. Also for this reason Wait consumes much CPU.
-	/// To make faster (~100 times), need to disable the Firefox multiprocess feature: open URL about:config and set browser.tabs.remote.force-enable = false. Note: Firefox may reset it when upgrading or reinstalling. Note: future Firefox versions may remove this setting; then, if you want speed, use another web browser.
+	/// By default, the Find function is 50-100 times slower than it could be. Also for this reason the Wait function consumes much CPU. And HTML attributes may be unavailable. See <see cref="AFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: open URL about:config, find browser.tabs.remote.autostart, set it = false, restart Firefox. If there is no such option, right-click and create it, as Boolean. If there are more than one similar options, set them all = false. Note: Firefox may reset it when upgrading or reinstalling, or even remove it in the future. If this does not work, google how to disable Firefox multiprocess.
 	/// 
-	/// Ocassionally Firefox briefly turns off its accessible objects. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.
+	/// When Firefox starts, its web page AOs are unavailable. It creates them only when somebody asks (eg function Find), but does it lazily, and Find at first fails. Workaround: use Wait, not Find.
+	/// 
+	/// Ocassionally Firefox briefly turns off its web page AOs. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.
 	/// 
 	/// Some new web browser versions add new features or bugs that break something. AOs are especially vulnerable, because they are considered second-class citizens.
 	/// </item>
@@ -75,14 +76,14 @@ namespace Au
 	/// Not supported on 32-bit OS.
 	/// 
 	/// Must be enabled Java Access Bridge (JAB).
-	/// You can enable/disable it in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java applications.
+	/// If JAB is disabled or does not work, the "Find accessible object" tool shows an "enable" link when you try to capture something in a Java window. The link calls Au.Tools.Form_Acc.Java.EnableDisableJabUI. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java AOs.
 	/// 
 	/// Your process must have the same 32/64 bitness as the installed Java. To remove this limitation, install Java 32-bit and 64-bit (they coexist).
 	/// </item>
 	/// <item>
 	/// OpenOffice.
 	/// 
-	/// Often crashes after using accessible objects, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.
+	/// Often crashes after using AOs, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.
 	/// </item>
 	/// <item>
 	/// LibreOffice.
@@ -92,7 +93,7 @@ namespace Au
 	/// <item>
 	/// In some windows, AO of some controls are not connected to AO of parent control. Then Find cannot find them if searches in whole window.
 	/// 
-	/// Workaround: search only in that control. For example, use role prefix "class=...:" or id=...:". If it's a web browser control - prefix "web:". Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
+	/// Workaround: search only in that control. For example, use prop "class" or id". If it's a web browser control, use role prefix "web:". Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
 	/// </item>
 	/// <item>
 	/// AOs of many standard Windows controls have bugs when they are retrieved without loading dll into the target process (see <see cref="AFFlags.NotInProc"/>).
@@ -516,7 +517,7 @@ namespace Au
 				s.Append(",  @"); s.Append(kv.Key); s.Append('='); s.Append('\"');
 				s.Append(kv.Value.Limit_(250).Escape_()); s.Append('\"');
 			}
-			_Add('w', k.WndContainer.ClassName);
+			_Add('w', k.WndContainer.ClassName??"");
 
 			void _Add(char name, string value, char q1 = '\"', char q2 = '\"')
 			{

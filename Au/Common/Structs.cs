@@ -334,7 +334,7 @@ namespace Au.Types
 				if(len < 3) return false;
 				if(len <= 8) c.color |= unchecked((int)0xFF000000);
 			} else if(s[0] == '#') {
-				c.color = Api.strtoi(s, 1, out int end, 16);
+				c.color = s.ToInt32_(1, out int end, true);
 				if(end < 2) return false;
 				if(end <= 7) c.color |= unchecked((int)0xFF000000);
 			} else {

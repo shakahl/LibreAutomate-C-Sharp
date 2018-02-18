@@ -12,3 +12,5 @@ using System.Security.Permissions;
 [assembly: AssemblyDescription("http://sourceforge.net/projects/treeviewadv/")]
 
 [assembly: AssemblyVersion("1.7.0.0")]
+
+[module: DefaultCharSet(CharSet.Unicode)]

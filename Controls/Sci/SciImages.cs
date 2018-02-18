@@ -46,7 +46,7 @@ namespace Au.Controls
 			public int width, height;
 		}
 
-		SciControl _c;
+		AuScintilla _c;
 		SciText _t;
 		IntPtr _callbackPtr;
 		bool _isEditor;
@@ -105,7 +105,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="c">The control.</param>
 		/// <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
-		internal SciImages(SciControl c, bool isEditor = false)
+		internal SciImages(AuScintilla c, bool isEditor = false)
 		{
 			if(t_data == null) t_data = new _ThreadSharedData();
 			_c = c;
@@ -258,7 +258,7 @@ namespace Au.Controls
 			imageInfo = 0;
 			if(s == null || length < 4 || s[0] != '\x3') return 0;
 			byte* s2;
-			int k = Api.strtoul(s + 1, &s2, 16);
+			int k = Api.strtoi(s + 1, &s2, 16);
 			int len = (int)(s2 - s); if(len < 4) return 0;
 			int n = k & 0xff;
 			len += (n - 1);
@@ -414,7 +414,7 @@ namespace Au.Controls
 			//Image info is at the start. Format "\x3XXX", where XXX is a hex number that contains image width and number of lines.
 			byte* s = c.text;
 			if(c.textLen < 4 || s[0] != '\x3') return 0;
-			int k = Api.strtoul(++s, null, 16); if(k < 256) return 0;
+			int k = Api.strtoi(++s, null, 16); if(k < 256) return 0;
 			int nLines = k & 0xff, width = k >> 8;
 
 			if(c.step == 0) return width + 1; //just get width

@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>.\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -29,7 +29,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>.\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -65,9 +65,12 @@
     <Compile Include="Other\ParamGrid.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Sci\AuInfoBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Sci\SciStyles.cs" />
     <Compile Include="Sci\SciText.cs" />
-    <Compile Include="Sci\SciControl.cs">
+    <Compile Include="Sci\AuScintilla.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Sci\SciTags.cs" />

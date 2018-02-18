@@ -183,27 +183,22 @@ Wildex::~Wildex()
 {
 	if(_text != null) {
 		switch(_type) {
-		case WildType::RegexPcre:
-			((Regex*)&_text)->~Regex();
-			break;
-		case WildType::Multi: {
-			for(size_t i = 0; i < _multi_count; i++) _multi_array[i].~Wildex();
-			free(_multi_array);
-		} break;
-		default:
-			if(_freeText) free(_text);
+		case WildType::RegexPcre: delete _regex; break;
+		case WildType::Multi: delete[] _multi_array; break;
+		default: if(_freeText) free(_text);
 		}
 		_text = null;
 	}
 }
 
-//Parses wildcard string and initializes this variable.
+//Parses wildcard expression and initializes this variable.
 //On error sets errStr (if not null) and returns false.
+//doNotCopyString - don't allocate/free own copy of w. The caller keeps w valid while using this variable.
+//Call once (asserts).
 bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString/* = false*/, out BSTR* errStr/* = null*/)
 {
-	void** g = (void**)&_text;
-	assert(_text == null);
 	//if(w == null) return false;
+	assert(_text == null); //_text = null; _not = _freeText = false;
 	_type = WildType::Wildcard;
 	_ignoreCase = true;
 	STR es = L"Invalid **options| in wildcard expression.";
@@ -227,23 +222,20 @@ bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString/* = false*/, out BST
 	g1:
 		switch(_type) {
 		case WildType::RegexPcre: {
+			_regex = new Regex();
 			__int64 f = _ignoreCase ? PCRE2_CASELESS : 0;
-			if(!((Regex*)&_text)->Parse(w, lenW, f | PCRE2_UTF, out errStr)) return false;
+			if(!_regex->Parse(w, lenW, f | PCRE2_UTF, out errStr)) return false;
 		} goto gr;
 		case WildType::Multi: {
-			size_t count = 1;
-			auto eos = w + lenW - 1;
+			int count = 1; auto eos = w + lenW - 1;
 			for(auto t = w; t < eos; t++) if(t[0] == '[' && t[1] == ']') count++;
-			auto a = (Wildex*)calloc(count, sizeof(Wildex));
+			_multi_array = new Wildex[_multi_count = count];
 
-			for(size_t i = 0; i < count; i++, w += 2) {
+			for(int i = 0; i < count; i++, w += 2) {
 				STR wi = w;
 				if(i == count - 1) w = eos + 1; else { for(; w < eos; w++) if(w[0] == '[' && w[1] == ']') break; }
-				if(!a[i].Parse(wi, w - wi, true, out errStr)) return false;
+				if(!_multi_array[i].Parse(wi, w - wi, true, out errStr)) return false;
 			}
-
-			_multi_array = a;
-			_multi_count = count;
 		} goto gr;
 		}
 	}
@@ -254,7 +246,7 @@ bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString/* = false*/, out BST
 		_text = (LPWSTR)malloc((lenW + 1) * 2); memcpy(_text, w, lenW * 2); _text[lenW] = 0;
 		_freeText = true;
 	}
-	_text_length = lenW;
+	_text_length = (int)lenW;
 gr:
 	return true;
 }
@@ -272,24 +264,24 @@ bool Wildex::Match(STR s, size_t lenS) const
 		R = Equals(s, lenS, _text, _text_length, _ignoreCase);
 		break;
 	case WildType::RegexPcre:
-		R = ((Regex*)&_text)->Match(s, lenS);
+		R = _regex->Match(s, lenS);
 		break;
 	case WildType::Multi:
 		//[n] parts: all must match (with their option n applied)
 		int nNot = 0;
-		for(size_t i = 0; i < _multi_count; i++) {
-			auto v = _multi_array + i;
-			if(v->_not) {
-				if(!v->Match(s, lenS)) return _not; //!v->Match(s) means 'matches if without option n applied'
+		for(int i = 0; i < _multi_count; i++) {
+			Wildex& w = _multi_array[i];
+			if(w._not) {
+				if(!w.Match(s, lenS)) return _not; //!v->Match(s) means 'matches if without option n applied'
 				nNot++;
 			}
 		}
 		if(nNot == _multi_count) return !_not; //there are no parts without option n
 
 		//non-[n] parts: at least one must match
-		for(size_t i = 0; i < _multi_count; i++) {
-			auto v = _multi_array + i;
-			if(!v->_not && v->Match(s, lenS)) return !_not;
+		for(int i = 0; i < _multi_count; i++) {
+			Wildex& w = _multi_array[i];
+			if(!w._not && w.Match(s, lenS)) return !_not;
 		}
 		break;
 	}

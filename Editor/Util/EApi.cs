@@ -22,8 +22,6 @@ using static Au.NoClass;
 
 #pragma warning disable 649 //member not used
 
-[module: DefaultCharSet(CharSet.Unicode)]
-
 static class EApi
 {
 

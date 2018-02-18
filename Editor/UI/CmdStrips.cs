@@ -87,7 +87,7 @@ static class Strips
 #if TEST
 		tbCustom2.Items.Add("Test", null, (unu, sed) =>
 		{
-			//TestEditor();
+			MainForm.TestEditor();
 			//Panels.Files.Test();
 			//Panels.Code.Test();
 			//Model.LoadState();

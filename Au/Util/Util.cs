@@ -612,4 +612,22 @@ namespace Au.Util
 			return SetWaitableTimer(this.SafeWaitHandle, ref t, period, Zero, Zero, false);
 		}
 	}
+
+	/// <summary>
+	/// Static functions to open a help topic etc.
+	/// </summary>
+	public static class Help
+	{
+		/// <summary>
+		/// Opens file "Au Help.chm" and a help topic in it.
+		/// The file must be in <see cref="Folders.ThisApp"/>.
+		/// </summary>
+		/// <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
+		public static void AuHelp(string topic)
+		{
+			var s = Folders.ThisApp + "Au Help.chm::/html/" + topic + ".htm";
+			Api.HtmlHelp(Api.GetDesktopWindow(), s, 0, 0); //HH_DISPLAY_TOPIC
+		}
+
+	}
 }

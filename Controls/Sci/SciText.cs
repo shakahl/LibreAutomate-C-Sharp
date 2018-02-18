@@ -28,14 +28,14 @@ namespace Au.Controls
 
 	/// <summary>
 	/// Functions to work with Scintilla control text, code, etc.
-	/// A SciText object is created by SciControl which is the SC property.
+	/// A SciText object is created by AuScintilla which is the SC property.
 	/// </summary>
 	public unsafe partial class SciText
 	{
 		/// <summary>
-		/// The host SciControl.
+		/// The host AuScintilla.
 		/// </summary>
-		public SciControl SC { get; private set; }
+		public AuScintilla SC { get; private set; }
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
@@ -45,7 +45,7 @@ namespace Au.Controls
 		//internal static Au.Util.Buffers.ByteBuffer LibByte(int n, out int nHave) { var r = Au.Util.Buffers.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
-		internal SciText(SciControl sc)
+		internal SciText(AuScintilla sc)
 		{
 			SC = sc;
 		}
@@ -173,9 +173,9 @@ namespace Au.Controls
 		{
 			if(Empty(s)) return false;
 			switch(SC.InitTagsStyle) {
-			case SciControl.TagsStyle.AutoAlways:
+			case AuScintilla.TagsStyle.AutoAlways:
 				return s.IndexOf('<') >= 0;
-			case SciControl.TagsStyle.AutoWithPrefix:
+			case AuScintilla.TagsStyle.AutoWithPrefix:
 				return s.StartsWith_("<>");
 			}
 			return false;
@@ -201,7 +201,7 @@ namespace Au.Controls
 		{
 			if(!ignoreTags && _CanParseTags(s)) {
 				ClearText();
-				SC.Tags.AddText(s, false, SC.InitTagsStyle == SciControl.TagsStyle.AutoWithPrefix);
+				SC.Tags.AddText(s, false, SC.InitTagsStyle == AuScintilla.TagsStyle.AutoWithPrefix);
 			} else {
 				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
 				SetString(SCI_SETTEXT, 0, s);
@@ -220,7 +220,7 @@ namespace Au.Controls
 		public void AppendText(string s, bool andRN, bool scroll, bool ignoreTags = false)
 		{
 			if(!ignoreTags && _CanParseTags(s)) {
-				SC.Tags.AddText(s, true, SC.InitTagsStyle == SciControl.TagsStyle.AutoWithPrefix);
+				SC.Tags.AddText(s, true, SC.InitTagsStyle == AuScintilla.TagsStyle.AutoWithPrefix);
 				return;
 			}
 
