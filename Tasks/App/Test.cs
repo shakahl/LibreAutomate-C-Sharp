@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -126,13 +125,13 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 				}
 			}
 			);
-			t.SetApartmentState(ApartmentState.STA); //must be STA, or something will not work, eg some COM components, MSAA in TaskDialog.
+			t.SetApartmentState(ApartmentState.STA); //must be STA, or something will not work, eg some COM components, MSAA in AuDialog.
 			t.Start();
 			t.Join();
 		}
 
 		//Print(InterDomainVariables.Get2("test"));
-		//TaskDialog.Show("after all");
+		//AuDialog.Show("after all");
 		//Print("exit default domain");
 	}
 
@@ -193,7 +192,7 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//To hide the 'wait' cursor when the primary thread of a new process is going to wait:
 		//Wnd0.Post(0); Native.MSG k; Api.PeekMessage(out k, Wnd0, 0, 0, 1);
 
-		//Wait(1); return;
+		//1.s(); return;
 
 		//TestAuBar();
 
@@ -211,9 +210,9 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 		//Thread.Sleep(3000);
 		//f.ShowDialog();
 
-		//var w = Api.CreateWindowEx(0, "#32770", null, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 300, 300, 300, Wnd0, 0, Zero, 0);
+		//var w = Api.CreateWindowEx(0, "#32770", null, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 300, 300, 300, Wnd0, 0, default, 0);
 
-		//TODO: test wait cursor with TaskDialog.Show
+		//TODO: test wait cursor with AuDialog.Show
 	}
 
 	static Au.Util.MessageLoop _mlTb = new Au.Util.MessageLoop();

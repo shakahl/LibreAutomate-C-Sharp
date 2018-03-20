@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -36,12 +35,12 @@ partial class EForm
 
 
 		//Panels.Status.SetText("same thread\r\nline2\r\nline3");
-		//Task.Run(() => { Wait(2); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
+		//Task.Run(() => { 2.s(); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
 	}
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
-		var hh = Api.SetWindowsHookEx(Api.WH_CBT, _cbtHookProc, Zero, Api.GetCurrentThreadId());
+		var hh = Api.SetWindowsHookEx(Api.WH_CBT, _cbtHookProc, default, Api.GetCurrentThreadId());
 		Application.ApplicationExit += (unu, sed) => Api.UnhookWindowsHookEx(hh); //without it at exit crashes, and process exits with a delay
 	}
 
@@ -54,7 +53,7 @@ partial class EForm
 			Print(w);
 		}
 
-		return Api.CallNextHookEx(Zero, code, wParam, lParam);
+		return Api.CallNextHookEx(default, code, wParam, lParam);
 	}
 }
 #endif

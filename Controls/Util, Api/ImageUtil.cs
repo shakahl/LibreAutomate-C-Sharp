@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -232,7 +231,7 @@ namespace Au.Controls
 		/// <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
-			//PrintList(t, s);
+			//Print(t, s);
 			try {
 				switch(t) {
 				case ImageType.Bmp:
@@ -307,19 +306,19 @@ namespace Au.Controls
 
 			IntPtr hi; int siz;
 			if(isCursor) {
-				hi = Api.LoadImage(Zero, s, Api.IMAGE_CURSOR, 0, 0, Api.LR_LOADFROMFILE | Api.LR_DEFAULTSIZE);
+				hi = Api.LoadImage(default, s, Api.IMAGE_CURSOR, 0, 0, Api.LR_LOADFROMFILE | Api.LR_DEFAULTSIZE);
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
 			} else {
 				hi = Icons.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
 				siz = 16;
 			}
-			if(hi == Zero) return null;
+			if(hi == default) return null;
 			try {
 				using(var m = new MemoryBitmap(siz, siz)) {
 					var r = new RECT(0, 0, siz, siz, false);
 					Api.FillRect(m.Hdc, ref r, GetStockObject(0)); //WHITE_BRUSH
-					if(!DrawIconEx(m.Hdc, 0, 0, hi, siz, siz, 0, Zero, 3)) return null; //DI_NORMAL
+					if(!DrawIconEx(m.Hdc, 0, 0, hi, siz, siz, 0, default, 3)) return null; //DI_NORMAL
 
 					int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
 					var a = new byte[headersSize + siz * siz * 3];
@@ -381,10 +380,10 @@ namespace Au.Controls
 	{
 		if(!GetIconInfo(hi, out var ii)) return 0;
 		try {
-			var hb = (ii.hbmColor != Zero) ? ii.hbmColor : ii.hbmMask;
+			var hb = (ii.hbmColor != default) ? ii.hbmColor : ii.hbmMask;
 			BITMAP b;
 			if(0 == Api.GetObject(hb, sizeof(BITMAP), &b)) return 0;
-			PrintList(b.bmWidth, b.bmHeight, b.bmBits);
+			Print(b.bmWidth, b.bmHeight, b.bmBits);
 			return b.bmWidth;
 		}
 		finally {
@@ -405,7 +404,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library.
+		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="WinImage.Find"/>.
 		/// Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
 		/// Supports all <see cref="ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
 		/// Returns null if path is not a valid image string or the file does not exist or failed to load.

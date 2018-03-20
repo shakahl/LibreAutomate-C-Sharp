@@ -55,7 +55,7 @@ namespace Au.Types
 		/// Native.ClearError();
 		/// bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
 		/// int e = Native.GetError();
-		/// if(e != 0) { PrintList(e, Native.GetErrorMessage(e)); return; } //1400, Invalid window handle
+		/// if(e != 0) { Print(e, Native.GetErrorMessage(e)); return; } //1400, Invalid window handle
 		/// Print(enabled);
 		/// ]]></code>
 		/// </example>
@@ -86,7 +86,7 @@ namespace Au.Types
 			string s = "Unknown exception";
 			char* p = null;
 			const uint fl = Api.FORMAT_MESSAGE_FROM_SYSTEM | Api.FORMAT_MESSAGE_ALLOCATE_BUFFER | Api.FORMAT_MESSAGE_IGNORE_INSERTS;
-			int r = Api.FormatMessage(fl, Zero, errorCode, 0, &p, 0, Zero);
+			int r = Api.FormatMessage(fl, default, errorCode, 0, &p, 0, default);
 			if(p != null) {
 				while(r > 0 && p[r - 1] <= ' ') r--;
 				if(r > 0) {

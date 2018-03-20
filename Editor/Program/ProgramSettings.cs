@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -44,12 +43,12 @@ class ProgramSettings
 		catch(Exception ex1) {
 			try {
 				if(Files.ExistsAsAny(_settFile))
-					TaskDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
+					AuDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
 				Files.Copy(Folders.ThisApp + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
 				_x = XElement.Load(_settFile);
 			}
 			catch(Exception ex2) {
-				TaskDialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);
+				AuDialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);
 				Environment.Exit(1);
 			}
 		}
@@ -90,6 +89,8 @@ class ProgramSettings
 			return true;
 		}
 	}
+
+	//CONSIDER: use dynamic.
 
 	/// <summary>
 	/// Gets a setting of type string.

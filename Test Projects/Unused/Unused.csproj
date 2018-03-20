@@ -37,19 +37,18 @@
   <ItemGroup>
     <Compile Include="Library\Api_COM_wrap.cs" />
     <Compile Include="Library\BitList.cs" />
+    <Compile Include="Library\Ftp upload with progress.cs" />
     <Compile Include="Library\Uia\ACondition.cs" />
     <Compile Include="Library\Uia\AElement.cs" />
     <Compile Include="Library\Uia\AE_find.cs" />
     <Compile Include="Library\Uia\Uia_api.cs" />
     <Compile Include="Library\Uia\Uia_api2.cs" />
     <None Include="Library\ValueTuple.cs" />
-    <None Include="Tests\TestWPF.cs" />
     <None Include="Library\_Rejected.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Cpp\InProc1.cpp" />
     <Content Include="Cpp\InProc2.cpp" />
-    <Content Include="Tests\_TestOld.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -8,13 +8,12 @@ Imports Au
 Imports Au.NoClass
 'Imports Au.Input
 
-Imports Au.TaskDialog
-
 
 Module Module1
 
 	Sub Main()
 
+		Key("Tab")
 
 		'Console.WriteLine("test")
 		''Util.Tesst.Koo()

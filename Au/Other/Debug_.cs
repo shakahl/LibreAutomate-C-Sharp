@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -27,9 +26,9 @@ namespace Au
 	/// Functions useful to debug code.
 	/// </summary>
 	/// <remarks>
-	/// The PrintX functions write to the same output as <see cref="Output.Write(object)"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
+	/// The Debug_.PrintX functions write to the same output as <see cref="Output.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Options.Debug) Output.Warning("text");</c>; see <see cref="Output.Warning"/>, <see cref="AuScriptOptions.Debug"/>.
+	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Options.Debug) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, <see cref="AuScriptOptions.Debug"/>.
 	/// </remarks>
 	//[DebuggerStepThrough]
 	public static class Debug_
@@ -59,7 +58,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write(object)"/> to show some debug info. Also shows current function name/file/line.
+		/// Calls <see cref="Output.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional parameters are not used explicitly.
 		/// </summary>
@@ -70,7 +69,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// If condition is true, calls <see cref="Output.Write(object)"/> to show some debug info. Also shows current function name/file/line.
+		/// If condition is true, calls <see cref="Output.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional parameters are not used explicitly.
 		/// </summary>
@@ -81,7 +80,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write(object)"/> to show some integer value in hex format. Also shows current function name/file/line.
+		/// Calls <see cref="Output.Write"/> to show some integer value in hex format. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional parameters are not used explicitly.
 		/// </summary>
@@ -92,34 +91,27 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write(object)"/> with current function name.
+		/// Calls <see cref="Output.Write"/> with current function name.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The optional parameter is not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void PrintFunc([CallerMemberName] string name = null) { Output.Write(name); }
 
-		//rejected: rarely used
-		///// <summary>
-		///// Gets current function name.
-		///// The optional parameter is not used explicitly.
-		///// </summary>
-		//public static string FuncName([CallerMemberName] string name = null) { return name; }
-
 		/// <summary>
-		/// Calls <see cref="TaskDialog.Show"/> to show some debug info.
+		/// Calls <see cref="AuDialog.Show"/> to show some debug info.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional parameters are not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
-			TaskDialog.ShowEx("Debug", text?.ToString(), flags: TDFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
+			AuDialog.ShowEx("Debug", text?.ToString(), flags: DFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
 		}
 
-		//rejected: use if(Options.Debug) TaskDialog.ShowWarning(...). It adds stack trace.
+		//rejected: use if(Options.Debug) AuDialog.ShowWarning(...). It adds stack trace.
 		///// <summary>
-		///// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="TaskDialog.Show"/> with text and stack trace.
+		///// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="AuDialog.Show"/> with text and stack trace.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -127,10 +119,10 @@ namespace Au
 		//{
 		//	if(!Options.Debug) return;
 		//	var x = new StackTrace(1, true);
-		//	TaskDialog.ShowEx("Debug", text, flags: TDFlags.ExpandDown | TDFlags.Wider, expandedText: x.ToString());
+		//	AuDialog.ShowEx("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
 		//}
 
-		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use Options.Warning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
+		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use PrintWarning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
 		///// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="Output.Write(string)"/>.
 		///// Read more in class help.
@@ -140,15 +132,15 @@ namespace Au
 		//	if(Options.Debug) Output.Write("Debug: " + text);
 		//}
 
-		//rejected: Don't need multiple warning functions. Now Output.Warning does not show more than 1 warning/second if Options.Debug is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
+		//rejected: Don't need multiple warning functions. Now PrintWarning does not show more than 1 warning/second if Options.Debug is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
 		///// <summary>
-		///// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="Output.Warning"/>.
+		///// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is true, calls <see cref="PrintWarning"/>.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
 		//public static void WarningOpt(string text)
 		//{
-		//	if(Options.Debug) Output.Warning(text, 1);
+		//	if(Options.Debug) PrintWarning(text, 1);
 		//}
 
 		/// <summary>
@@ -185,7 +177,7 @@ namespace Au
 				s.Append(t.GetEnumName(i));
 			}
 			s.Append('.');
-			//Output.Warning(s.ToString(), 1);
+			//PrintWarning(s.ToString(), 1);
 			throw new ArgumentException(s.ToString());
 		}
 
@@ -210,6 +202,18 @@ namespace Au
 				return false;
 #endif
 			}
+		}
+
+		/// <summary>
+		/// Prints managed memory size. Uses GC.GetTotalMemory.
+		/// Works in Release too.
+		/// </summary>
+		static long s_mem0;
+		internal static void LibPrintMemory()
+		{
+			var mem = GC.GetTotalMemory(false);
+			if(s_mem0 == 0) s_mem0 = mem;
+			Print(((mem - s_mem0) / 1024d / 1024d).ToString_("F3"));
 		}
 	}
 }

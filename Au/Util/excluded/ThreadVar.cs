@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -54,7 +53,7 @@ namespace Au//.Util
 				//	When the callback is called, they are cleared. probably CLR does it in its DllMain thread detach handler.
 
 				//if(_exit == null) _exit = new List<EventHandler>();
-				//PrintList("Exit", Api.GetCurrentThreadId(), Thread.GetDomainID()/*, _exit!=null*/);
+				//Print("Exit", Api.GetCurrentThreadId(), Thread.GetDomainID()/*, _exit!=null*/);
 				//_exit.Add(value);
 				//_exit2.Value.Add(value);
 
@@ -94,7 +93,7 @@ namespace Au//.Util
 		//always runs in default domain
 		static void _FlsCallback(IntPtr param)
 		{
-			//PrintList("_FlsCallback", Api.GetCurrentThreadId());
+			//Print("_FlsCallback", Api.GetCurrentThreadId());
 
 			var domain = GCHandle.FromIntPtr(param).Target as AppDomain;
 			if(domain.IsDefaultAppDomain()) _OnExit(); else domain.DoCallBack(_OnExit);
@@ -102,7 +101,7 @@ namespace Au//.Util
 
 		static void _OnExit()
 		{
-			PrintList("_OnExit", Api.GetCurrentThreadId(), Thread.GetDomainID()/*, _exit!=null, _exit2.IsValueCreated*/);
+			Print("_OnExit", Api.GetCurrentThreadId(), Thread.GetDomainID()/*, _exit!=null, _exit2.IsValueCreated*/);
 
 			//_Exit?.Invoke(null, null);
 

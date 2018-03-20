@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -164,7 +163,7 @@ namespace Au.Controls
 					//		if(text[imStrStart + 1] == '~') { imStrStart += 3; imStrEnd--; } else hide = false;
 					//	} else {
 					//		if(imStrEnd < iTo && text[imStrEnd] == '>') imStrEnd++;
-					//		//PrintList(imStrStart, imStrEnd);
+					//		//Print(imStrStart, imStrEnd);
 					//	}
 					//	if(hide) {
 					//		int len = imStrEnd - imStrStart;
@@ -185,7 +184,7 @@ namespace Au.Controls
 				//calculate n annotation lines from image height
 				int lineHeight = _t.LineHeight(iLine); if(lineHeight <= 0) continue;
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
-				//PrintList(lineHeight, maxHeight, nAnnotLines);
+				//Print(lineHeight, maxHeight, nAnnotLines);
 
 				fixed (byte* b0 = Au.Util.Buffers.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
 					var b = b0;
@@ -354,11 +353,11 @@ namespace Au.Controls
 			//is already loaded?
 			long hash = Convert_.HashFnv1_64(s + i, i2 - i);
 			var im = d.FindImage(hash);
-			//PrintList(im != null, new string((sbyte*)s, i, i2 - i));
+			//Print(im != null, new string((sbyte*)s, i, i2 - i));
 			if(im != null) return im;
 
 			//var test = s.Substring(i, i2 - i);
-			//PrintList(test, EImageUtil.ImageToString(test));
+			//Print(test, EImageUtil.ImageToString(test));
 
 			switch(imType) {
 			case ImageUtil.ImageType.EmbeddedCompressedBmp: i += 2; break; //~:
@@ -431,7 +430,7 @@ namespace Au.Controls
 			bool hasImages = false;
 			var hdc = c.hdc;
 			RECT r = c.rect;
-			IntPtr pen = Zero, oldPen = Zero;
+			IntPtr pen = default, oldPen = default;
 			try {
 				//Handle exceptions because SetDIBitsToDevice may read more than need, like CreateDIBitmap, although I never noticed this.
 
@@ -481,7 +480,7 @@ namespace Au.Controls
 					}
 
 					//draw frame
-					if(pen == Zero) oldPen = Api.SelectObject(hdc, pen = CreatePen(0, 1, 0x60C060)); //quite fast. Caching in a static or ThreadStatic var is difficult.
+					if(pen == default) oldPen = Api.SelectObject(hdc, pen = CreatePen(0, 1, 0x60C060)); //quite fast. Caching in a static or ThreadStatic var is difficult.
 					int xx = x + q.width;
 					if(isFirstLine != 0) y--;
 					if(yy > y) {
@@ -495,7 +494,7 @@ namespace Au.Controls
 				}
 			}
 			catch(Exception ex) { Debug_.Print(ex.Message); }
-			finally { if(pen != Zero) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
+			finally { if(pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 			//Perf.NW();
 
 			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
@@ -553,7 +552,7 @@ namespace Au.Controls
 				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
 				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPosition(to);
 				len = to2 - from2;
-				//PrintList(inserted, from, to, from2, to2, len);
+				//Print(inserted, from, to, from2, to2, len);
 				if(len < 10) return;
 				if(from2 == from && to2 == to) {
 					s = n.textUTF8;
@@ -568,7 +567,7 @@ namespace Au.Controls
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 
-			//PrintList(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
+			//Print(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
 			this._SetImagesForTextRange(firstLine, s, len, allText, textPos);
 		}
 

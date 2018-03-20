@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -49,6 +48,7 @@ namespace Au
 		int _GetWnd(out Wnd w)
 		{
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
+			GC.KeepAlive(this);
 			w = (Wnd)(LPARAM)i;
 			return hr;
 		}
@@ -86,7 +86,9 @@ namespace Au
 		public bool GetRect(out RECT r)
 		{
 			LibThrowIfDisposed();
-			return 0 == _Hresult(_FuncId.rectangle, Cpp.Cpp_AccGetRect(this, out r));
+			var hr = _Hresult(_FuncId.rectangle, Cpp.Cpp_AccGetRect(this, out r));
+			GC.KeepAlive(this);
+			return hr == 0;
 		}
 
 		/// <summary>
@@ -149,7 +151,7 @@ namespace Au
 			}
 		}
 
-		static string[] s_roles = { "0", "TITLEBAR", "MENUBAR", "SCROLLBAR", "GRIP", "SOUND", "CURSOR", "CARET", "ALERT", "WINDOW", "CLIENT", "MENUPOPUP", "MENUITEM", "TOOLTIP", "APPLICATION", "DOCUMENT", "PANE", "CHART", "DIALOG", "BORDER", "GROUPING", "SEPARATOR", "TOOLBAR", "STATUSBAR", "TABLE", "COLUMNHEADER", "ROWHEADER", "COLUMN", "ROW", "CELL", "LINK", "HELPBALLOON", "CHARACTER", "LIST", "LISTITEM", "OUTLINE", "OUTLINEITEM", "PAGETAB", "PROPERTYPAGE", "INDICATOR", "GRAPHIC", "STATICTEXT", "TEXT", "PUSHBUTTON", "CHECKBUTTON", "RADIOBUTTON", "COMBOBOX", "DROPLIST", "PROGRESSBAR", "DIAL", "HOTKEYFIELD", "SLIDER", "SPINBUTTON", "DIAGRAM", "ANIMATION", "EQUATION", "BUTTONDROPDOWN", "BUTTONMENU", "BUTTONDROPDOWNGRID", "WHITESPACE", "PAGETABLIST", "CLOCK", "SPLITBUTTON", "IPADDRESS", "OUTLINEBUTTON" };
+		static string[] s_roles = { "0", "TITLEBAR", "MENUBAR", "SCROLLBAR", "GRIP", "SOUND", "CURSOR", "CARET", "ALERT", "WINDOW", "CLIENT", "MENUPOPUP", "MENUITEM", "TOOLTIP", "APPLICATION", "DOCUMENT", "PANE", "CHART", "DIALOG", "BORDER", "GROUPING", "SEPARATOR", "TOOLBAR", "STATUSBAR", "TABLE", "COLUMNHEADER", "ROWHEADER", "COLUMN", "ROW", "CELL", "LINK", "HELPBALLOON", "CHARACTER", "LIST", "LISTITEM", "TREE", "TREEITEM", "PAGETAB", "PROPERTYPAGE", "INDICATOR", "IMAGE", "STATICTEXT", "TEXT", "BUTTON", "CHECKBOX", "RADIOBUTTON", "COMBOBOX", "DROPLIST", "PROGRESSBAR", "DIAL", "HOTKEYFIELD", "SLIDER", "SPINBUTTON", "DIAGRAM", "ANIMATION", "EQUATION", "BUTTONDROPDOWN", "BUTTONMENU", "BUTTONDROPDOWNGRID", "WHITESPACE", "PAGETABLIST", "CLOCK", "SPLITBUTTON", "IPADDRESS", "TREEBUTTON" };
 
 		//Returns HRESULT.
 		int _GetRole(out AccROLE roleInt, out string roleStr, bool dontNeedStr)
@@ -157,6 +159,7 @@ namespace Au
 			roleStr = null;
 			if(_misc.role != 0) { roleInt = (AccROLE)_misc.role; return 0; }
 			var hr = Cpp.Cpp_AccGetRole(this, out roleInt, out var b);
+			GC.KeepAlive(this);
 			if(hr == 0) {
 				if(b.Is0) _misc.SetRole(roleInt);
 				else if(dontNeedStr) b.Dispose();
@@ -168,6 +171,7 @@ namespace Au
 		int _GetState(out AccSTATE state)
 		{
 			int hr = Cpp.Cpp_AccGetInt(this, 's', out int i);
+			GC.KeepAlive(this);
 			state = (AccSTATE)i;
 			return hr;
 		}
@@ -259,6 +263,7 @@ namespace Au
 		{
 			LibThrowIfDisposed();
 			int hr = Cpp.Cpp_AccGetProp(this, prop, out var b);
+			GC.KeepAlive(this);
 			var s = _BstrToString(hr, b);
 			_Hresult((_FuncId)prop, hr);
 			return s;
@@ -312,6 +317,7 @@ namespace Au
 			{
 				LibThrowIfDisposed();
 				AuException.ThrowIfHresultNot0(Cpp.Cpp_AccAction(this, 'v', value));
+				GC.KeepAlive(this);
 			}
 		}
 
@@ -389,6 +395,7 @@ namespace Au
 		{
 			LibThrowIfDisposed();
 			var hr = Cpp.Cpp_AccAction(this, 'a');
+			GC.KeepAlive(this);
 			if(hr != 0) AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
@@ -475,6 +482,7 @@ namespace Au
 				&& 0 == Cpp.Cpp_AccSelect(this, AccSELFLAG.TAKEFOCUS)
 				&& 0 == _GetState(out state) && state.Has_(AccSTATE.FOCUSED) //avoid sending keys to another control
 				) {
+				GC.KeepAlive(this);
 				w.Post(Api.WM_KEYDOWN, Api.VK_SPACE, 0);
 				w.Post(Api.WM_KEYUP, Api.VK_SPACE, 0);
 				//tested: works even if the window is inactive.
@@ -483,27 +491,28 @@ namespace Au
 			}
 
 			var hr = Cpp.Cpp_AccAction(this, 'a', action);
+			GC.KeepAlive(this);
 			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //probably don't need, because JAB doAccessibleActions is sync, which is bad.
 		}
 
 		/// <summary>
 		/// Calls <see cref="DoAction"/> or <paramref name="action"/> and waits until window name changes and web page name changes.
-		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>
-		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="WndException">The window was closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the <paramref name="action"/> function.</exception>
 		/// <remarks>
 		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for object' function from finding a matching object in the old page, which would be bad.
 		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
-		/// This function cannot be used when the new page has the same title as current page. Then it waits until secondsTimeout time or forever. The same if the action does not open a web page.
+		/// This function cannot be used when the new page has the same title as current page. Then it waits until <paramref name="secondsTimeout"/> time or forever. The same if the action does not open a web page.
 		/// </remarks>
 		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<Acc> action = null)
 		{
@@ -595,7 +604,7 @@ namespace Au
 								if(hr != 0) isFrame = false;
 								else if(roleStr != null) isFrame = roleStr.EndsWith_("frame", true);
 								else isFrame = !(role == AccROLE.WINDOW || role == AccROLE.CLIENT);
-								//PrintList(role, roleStr);
+								//Print(role, roleStr);
 								if(isFrame) return;
 								//browser    main        frame     iframe
 								//Firefox    "browser"   "frame"   "iframe"
@@ -621,7 +630,7 @@ namespace Au
 						}
 					}
 
-					//PrintList(di, ev, a);
+					//Print(di, ev, a);
 					eventNotify.Set();
 					eventNotify = null;
 				}
@@ -672,6 +681,7 @@ namespace Au
 
 			for(int i = 0; i < 2; i++) {
 				var hr = Cpp.Cpp_AccSelect(this, how);
+				GC.KeepAlive(this);
 				if(hr == 0) break;
 				if(hr == 1) continue; //some objects return S_FALSE even if did what asked. Eg combobox (focuses the child Edit), slider. Or may need to retry, eg when trying to focus a listitem in a non-focused listbox.
 				if(hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This object does not support this state");
@@ -727,9 +737,10 @@ namespace Au
 			get
 			{
 				LibThrowIfDisposed();
-				if(_elem != 0) { Native.ClearError(); return new Acc[0]; }
+				if(_elem != 0) { Native.ClearError(); return Array.Empty<Acc>(); }
 				//return _iacc.get_accSelection();
-				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return new Acc[0];
+				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<Acc>();
+				GC.KeepAlive(this);
 				var p = (Cpp.Cpp_Acc*)b.Ptr; int n = b.Length / sizeof(Cpp.Cpp_Acc);
 				var r = new Acc[n];
 				for(int i = 0; i < n; i++) r[i] = new Acc(p[i]);
@@ -771,10 +782,11 @@ namespace Au
 		{
 			//TODO: use cached role
 
-			result=default;
+			result = default;
 			LibThrowIfDisposed();
 			if(props.Length == 0) return true;
 			int hr = Cpp.Cpp_AccGetProps(this, props, out var b);
+			GC.KeepAlive(this);
 			if(hr != 0) {
 				if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Unknown property character.");
 				Native.SetError(hr);
@@ -789,9 +801,9 @@ namespace Au
 					case 'r': result.Rect = len > 0 ? *(RECT*)p : default; break;
 					case 's': result.State = len > 0 ? *(AccSTATE*)p : default; break;
 					case 'w': result.WndContainer = len > 0 ? (Wnd)(LPARAM)(*(int*)p) : default; break;
-					case '@': result.HtmlAttributes=_AttributesToDictionary(p, len); break;
+					case '@': result.HtmlAttributes = _AttributesToDictionary(p, len); break;
 					default:
-						var s=(len == 0) ? "" : new string(p, 0, len);
+						var s = (len == 0) ? "" : new string(p, 0, len);
 						switch(props[i]) {
 						case 'R': result.Role = s; break;
 						case 'n': result.Name = s; break;
@@ -853,7 +865,6 @@ namespace Au
 		/// For "child" is used API <msdn>AccessibleChildren</msdn>.
 		/// </param>
 		/// <param name="secondsToWait">Wait for the wanted AO max this number of seconds. If negative, waits forever.</param>
-		/// <param name="disposeThis">Dispose this Acc variable (release the COM object). Even when fails.</param>
 		/// <exception cref="ArgumentException">Invalid navig string.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -861,7 +872,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="this[string, double]"/>
-		public Acc Navigate(string navig, double secondsToWait = 0, bool disposeThis = false)
+		public Acc Navigate(string navig, double secondsToWait = 0)
 		{
 			LibThrowIfDisposed();
 			int hr; var ca = new Cpp.Cpp_Acc();
@@ -872,7 +883,7 @@ namespace Au
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 				while(hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}
-			if(disposeThis) _Dispose(doNotRelease: ca.acc == _iacc);
+			GC.KeepAlive(this);
 			if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Invalid navig string.");
 			Native.SetError(hr);
 			return hr == 0 ? new Acc(ca) : null;
@@ -888,7 +899,7 @@ namespace Au
 			get => Navigate(navig, secondsToWait);
 		}
 
-		//rejected: public Acc Parent(bool disposeThis = false) (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
+		//rejected: public Acc Parent() (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
 
 		/// <summary>
 		/// Gets HTML.
@@ -903,6 +914,7 @@ namespace Au
 		{
 			LibThrowIfDisposed();
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, outer ? "'o" : "'i", out BSTR s));
+			GC.KeepAlive(this);
 			return _BstrToString(hr, s);
 		}
 
@@ -920,6 +932,7 @@ namespace Au
 			LibThrowIfDisposed();
 			if(Empty(name) || name[0] == '\'') throw new ArgumentException("Invalid name.");
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, name, out BSTR s));
+			GC.KeepAlive(this);
 			return _BstrToString(hr, s);
 		}
 
@@ -934,6 +947,7 @@ namespace Au
 		{
 			LibThrowIfDisposed();
 			int hr = Cpp.Cpp_AccWeb(this, "'a", out BSTR s);
+			GC.KeepAlive(this);
 			_Hresult(_FuncId.html, hr);
 			if(hr != 0) return new Dictionary<string, string>();
 			using(s) return _AttributesToDictionary(s.Ptr, s.Length);
@@ -957,6 +971,7 @@ namespace Au
 			int hr;
 			if(_misc.flags.Has_(AccMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');
 			else hr = Cpp.Cpp_AccWeb(this, "'s", out _);
+			GC.KeepAlive(this);
 
 			AuException.ThrowIfHresultNot0(hr, "*scroll");
 

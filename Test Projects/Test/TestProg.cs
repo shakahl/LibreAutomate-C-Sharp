@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -20,6 +19,7 @@ using System.Linq;
 using System.Xml;
 
 using Au;
+using Au.Types;
 using static Au.NoClass;
 
 public class Program
@@ -27,7 +27,7 @@ public class Program
 	[STAThread]
 	static void Main(string[] args)
 	{
-		TaskDialog.Show("text", icon: TDIcon.App);
+		AuDialog.Show("text", icon: DIcon.App);
 
 		//PrintList(Application.ExecutablePath, Folders.ThisApp, Folders.ThisProcess);
 

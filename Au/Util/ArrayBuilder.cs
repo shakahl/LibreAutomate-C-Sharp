@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -217,13 +216,11 @@ namespace Au.Util
 		/// </summary>
 		public T[] ToArray()
 		{
-			if(_len == 0) return s_emptyArray;
+			if(_len == 0) return Array.Empty<T>();
 			var r = new T[_len];
 			for(int i = 0, n = _len; i < n; i++)
 				r[i] = Unsafe.Read<T>((byte*)_p + i * _TypeSize);
 			return r;
 		}
-
-		static T[] s_emptyArray=new T[0];
 	}
 }

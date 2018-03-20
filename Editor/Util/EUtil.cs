@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -127,7 +126,7 @@ static class EResources
 			return R;
 		}
 	}
-	static Hashtable _cache = new Hashtable();
+	static Hashtable _cache = new Hashtable(); //CONSIDER: WeakReference<Hashtable>
 
 	/// <summary>
 	/// Gets a Bitmap resource from project resources or cache.

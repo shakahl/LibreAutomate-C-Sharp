@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -98,16 +97,16 @@ namespace Au
 
 		/// <summary>
 		/// Waits for an user-defined condition.
-		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// </param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
 		/// <param name="param">Something to pass to the callback function.</param>
 		/// <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
 		/// <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
-		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the condition callback function.</exception>
 		public static bool Condition(double secondsTimeout, Func<object, bool> condition, object param = null, int minPeriod = 10, int maxPeriod = 200)
@@ -122,13 +121,13 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state.
-		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// </param>
 		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
-		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
 		/// <seealso cref="Input.IsModified"/>
 		public static bool NoModifierKeys(double secondsTimeout = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
@@ -143,13 +142,13 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some mouse buttons are in pressed state.
-		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// </param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 		/// <seealso cref="Mouse.IsPressed(MouseButtons)"/>
 		public static bool NoMouseButtons(double secondsTimeout = 0.0, MouseButtons buttons= MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
@@ -162,14 +161,14 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
-		/// Returns true. If secondsTimeout is negative, after -secondsTimeout time returns false (else exception).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after secondsTimeout time throws <b>TimeoutException</b>. If &lt;0, after -secondsTimeout time returns false.
+		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// </param>
 		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException">secondsTimeout time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
 		/// <seealso cref="Input.IsModified"/>
 		public static bool NoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)

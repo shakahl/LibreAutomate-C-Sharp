@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -185,7 +184,7 @@ namespace Au.Controls
 
 			internal GAccNode(GNode gn)
 			{
-				//PrintList("GAccNode ctor", gn.AccName);
+				//Print("GAccNode ctor", gn.AccName);
 				_gn = gn;
 			}
 

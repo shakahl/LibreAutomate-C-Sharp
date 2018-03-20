@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -105,7 +104,7 @@ namespace Au.Controls
 			XElement xCustom = null;
 			if(Files.ExistsAsFile(_xmlFileCustom)) {
 				try { xCustom = XElement.Load(_xmlFileCustom); }
-				catch(Exception e) { PrintList("Failed to load XML file", _xmlFileCustom, e.Message); }
+				catch(Exception e) { Print("Failed to load XML file", _xmlFileCustom, e.Message); }
 			}
 
 			Size imageScalingSize = Au.Util.Dpi.SmallIconSize; //if high DPI, auto scale images
@@ -476,7 +475,7 @@ namespace Au.Controls
 				xStripsCustom.Save(_xmlFileCustom);
 			}
 			catch(Exception e) {
-				PrintList("Failed to save XML file", _xmlFileCustom, e.Message);
+				Print("Failed to save XML file", _xmlFileCustom, e.Message);
 			}
 #endif
 
@@ -523,20 +522,20 @@ namespace Au.Controls
 			}
 			if(!isMenu) {
 				m.Separator();
-				m["How to customize..."] = o => TaskDialog.ShowInfo("Customizing toolbars and menus",
+				m["How to customize..."] = o => AuDialog.ShowInfo("Customizing toolbars and menus",
 					"There are several standard toolbars and two custom toolbars (initially empty). Standard toolbar buttons cannot be added and removed, but can be hidden and reordered. Menu items cannot be added, removed, hidden and reordered." +
 					"\n\nYou can find most customization options in two context menus. Right-clicking a button or menu item shows its context menu. Right-clicking before the first button shows toolbar's context menu. You can Alt+drag toolbar buttons to reorder them on the same toolbar. You can Alt+drag toolbars to dock them somewhere else. Use splitters to resize. Right click a splitter to change its thickness."
-					, flags: TDFlags.Wider);
+					);
 				string folder = Path_.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
 				m["How to backup, restore, reset..."] = o =>
 				{
-					TaskDialog.ShowEx("How to backup, restore or reset customizations",
+					AuDialog.ShowEx("How to backup, restore or reset customizations",
 					"All customizations are saved in XML files in folder\n" +
 					link +
 					"\n\nTo backup:  copy the file." +
 					"\nTo restore:  exit this application and replace the file with the backup file." +
 					"\nTo reset:  exit this application and delete the file."
-					, icon: TDIcon.Info, flags: TDFlags.Wider, onLinkClick: h => { Process.Start(h.LinkHref); });
+					, icon: DIcon.Info, onLinkClick: h => { Process.Start(h.LinkHref); });
 				};
 			}
 
@@ -650,7 +649,7 @@ namespace Au.Controls
 			ToolStripItem target = null; bool isOutside = false;
 			var ts = item.Owner;
 			bool isCustom = ts == _tsCustom1 || ts == _tsCustom2;
-			//PrintList(item, ts, isCustom);
+			//Print(item, ts, isCustom);
 			if(!Au.Util.DragDrop.SimpleDragDrop(ts, MouseButtons.Left, k =>
 			{
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;

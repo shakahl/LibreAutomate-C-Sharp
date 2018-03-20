@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -38,15 +37,6 @@ namespace Au.Types
 	public static partial class ExtensionMethods
 	{
 		#region Control
-
-		/// <summary>
-		/// Gets window handle as <see cref="Wnd"/>.
-		/// The same as the explicit cast Control-to-Wnd.
-		/// </summary>
-		public static Wnd Wnd_(this Control t)
-		{
-			return (Wnd)t;
-		}
 
 		/// <summary>
 		/// If control handle still not created, creates handle.
@@ -381,18 +371,6 @@ namespace Au.Types
 
 		#region internal
 
-		/// <summary>
-		/// Releases this StringBuilder acquired with <see cref="Util.LibStringBuilderCache.Acquire"/> to the cache and returns its ToString().
-		/// </summary>
-		/// <remarks>
-		/// To release, calls <see cref="Util.LibStringBuilderCache.Release"/>. More info there.
-		/// </remarks>
-		internal static string ToStringCached_(this StringBuilder t)
-		{
-			string result = t?.ToString();
-			Util.LibStringBuilderCache.Release(t);
-			return result;
-		}
 
 		#endregion
 	}

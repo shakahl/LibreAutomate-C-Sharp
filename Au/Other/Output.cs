@@ -42,7 +42,6 @@ How local output server/client is implemented:
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -91,7 +90,7 @@ namespace Au
 				if(!IsConsoleProcess || IgnoreConsole || LogFile != null) return false;
 				if(!_isVisibleConsole.HasValue) {
 					Api.GetStartupInfo(out var x);
-					_isVisibleConsole = x.hStdOutput != Zero || 0 == (x.dwFlags & 1) || 0 != x.wShowWindow; //redirected stdout, or visible console window
+					_isVisibleConsole = x.hStdOutput != default || 0 == (x.dwFlags & 1) || 0 != x.wShowWindow; //redirected stdout, or visible console window
 				}
 				return _isVisibleConsole.GetValueOrDefault();
 			}
@@ -121,105 +120,19 @@ namespace Au
 			}
 		}
 
-		#region Write overloads etc
-
 		/// <summary>
-		/// Writes string value + "\r\n" to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
+		/// Writes string + "\r\n" to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
 		/// </summary>
+		/// <seealso cref="Print(string)"/>
+		/// <seealso cref="Print(object)"/>
+		/// <seealso cref="Print{T}(IEnumerable{T})"/>
+		/// <seealso cref="Print(object, object, object[])"/>
+		/// <seealso cref="PrintListEx{T}(IEnumerable{T}, string, int)"/>
+		/// <seealso cref="PrintHex(object)"/>
 		public static void Write(string value)
 		{
 			Writer.WriteLine(value);
-			//note: need this overload. Cannot use Write(object) for strings because string is IEnumerable<T> and we have overload with IEnumerable<T>.
 		}
-
-		/// <summary>
-		/// Writes value?.ToString().
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void Write(object value)
-		{
-			Write(value?.ToString());
-		}
-
-		/// <summary>
-		/// Writes array, List, Dictionary or other generic collection as a list of element values.
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void Write<T>(IEnumerable<T> value, string separator = "\r\n")
-		{
-			Write(value == null ? null : string.Join(separator, value));
-		}
-
-		/// <summary>
-		/// Writes multiple argument values using separator ", ".
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void WriteList(params object[] values)
-		{
-			WriteListSep(", ", values);
-		}
-		//note: better would be these, but then compiler does not know which overload to use for arrays:
-		//	Write<T>(IEnumerable<T> value)
-		//	Write(params object[] values)
-		//	WriteSep<T>(string separator, IEnumerable<T> value)
-		//	WriteSep(string separator, params object[] values)
-
-		/// <summary>
-		/// Writes multiple argument values using the specified separator.
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void WriteListSep(string separator, params object[] values)
-		{
-			Write(values as IEnumerable<object>, separator);
-			//info: the 'as IEnumerable<object>' is a workaround for string.Join(string sep, params object[] a) bug: returns "" if a[0] is null.
-		}
-
-		/// <summary>
-		/// Writes an integer in hexadecimal format, like "0x5A".
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		public static void WriteHex(object value) { Write($"0x{value:X}"); }
-		//never mind: this is slower, but with Write("0x" + value.ToString("X")); we'd need switch or overloads for all 8 integer types.
-
-		/// <summary>
-		/// Writes string followed by the stack trace.
-		/// Prepends "Warning: ", except when the string starts with "Warning:", "Note:", "Info:" or "Debug:" (case-insensitive).
-		/// Calls <see cref="Write(string)"/>.
-		/// </summary>
-		/// <param name="text">Warning text.</param>
-		/// <param name="showStackFromThisFrame">If &gt;= 0, appends stack trace, skipping this number of frames.</param>
-		/// <remarks>
-		/// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is false, does not show more that 1 warning/second.
-		/// </remarks>
-		/// <seealso cref="AuScriptOptions.DisableWarnings"/>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void Warning(object text, int showStackFromThisFrame = 0)
-		{
-			string s = text?.ToString();
-			if(s == null) s = "";
-
-			var a = Options.LibDisabledWarnings;
-			if(a != null) foreach(var k in a) if(s.Like_(k, true)) return;
-
-			if(!Options.Debug) {
-				var t = Time.Milliseconds;
-				if(t - _warningTime < 1000) return;
-				_warningTime = t;
-			}
-
-			string prefix = "Warning: ";
-			if(0 != s.StartsWith_(true, "Warning:", "Note:", "Info:", "Debug:")) prefix = null;
-
-			if(showStackFromThisFrame >= 0) {
-				var x = new StackTrace(showStackFromThisFrame + 1, true);
-				s = prefix + s + "\r\n" + x.ToString();
-			} else s = prefix + s;
-
-			Print(s);
-		}
-		static long _warningTime;
-
-		#endregion
 
 		/// <summary>
 		/// Gets or sets object that actually writes text when is called Output.Write, Print and similar functions.
@@ -372,7 +285,7 @@ namespace Au
 						}
 						var logf = _logFile;
 						_logFile = null;
-						Warning($"Failed to create or open log file '{logf}'. {Native.GetErrorMessage(e)}");
+						PrintWarning($"Failed to create or open log file '{logf}'. {Native.GetErrorMessage(e)}");
 						WriteDirectly(s);
 						return;
 					}
@@ -555,7 +468,7 @@ namespace Au
 				if(!ok) {
 					string emsg = Native.GetErrorMessage();
 					LogFile = null;
-					Warning($"Failed to write to log file '{_name}'. {emsg}");
+					PrintWarning($"Failed to write to log file '{_name}'. {emsg}");
 					WriteDirectly(s);
 					//Debug.Assert(false);
 				}
@@ -734,7 +647,7 @@ namespace Au
 		///			//test Print and Clear, before and after creating window
 		/// 		Output.IgnoreConsole = true;
 		/// 		Print("test before setting notifications");
-		/// 		Task.Run(() => { Wait(1); Print("test after"); Wait(1); Output.Clear(); Wait(1); Print("test after Clear"); });
+		/// 		Task.Run(() => { 1.s(); Print("test after"); 1.s(); Output.Clear(); 1.s(); Print("test after Clear"); });
 		/// 
 		/// 		var f = new OutputFormExample();
 		/// 		f.ShowDialog();

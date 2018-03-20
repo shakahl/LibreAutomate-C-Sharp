@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -46,7 +45,7 @@ namespace Au.Controls
 				_xmlFile = null;
 			}
 
-			//PrintList(disposing, IsHandleCreated);
+			//Print(disposing, IsHandleCreated);
 			base.Dispose(disposing);
 			_paintTools?.Dispose(); _paintTools = null;
 			_toolTip?.Dispose(); _toolTip = null;
@@ -128,12 +127,12 @@ namespace Au.Controls
 					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\tError: {e.Message} ({e.GetType()})";
 					if(usesDefaultXML) {
 						_xmlFile = null;
-						TaskDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");
+						AuDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");
 						Environment.Exit(1);
 					} else {
 						//probably in this version there are less panels, most likely when downgraded. Or the file is corrupt.
 						if(xmlVersion != asmVersion) outInfo = "Info: this application version resets the panel/toolbar layout, sorry.";
-						else Output.Warning(sErr);
+						else PrintWarning(sErr);
 					}
 					_aSplit.Clear(); _aTab.Clear(); _aPanel.Clear();
 				}
@@ -189,7 +188,7 @@ namespace Au.Controls
 			catch {
 				//Print(e);
 				//these don't work, maybe because now is closing app. Never mind, unlikely to fail, and not very important.
-				//TaskDialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, TDFlags.Wider, expandedText: e.ToString());
+				//AuDialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, DFlags.Wider, expandedText: e.ToString());
 				//MessageBox.Show("aaaa");
 			}
 		}
@@ -500,7 +499,7 @@ namespace Au.Controls
 			(m.Items.Add("Reset...", null, (unu, sed) =>
 			{
 				if(ResetLayoutAfterRestart) ResetLayoutAfterRestart = false;
-				else ResetLayoutAfterRestart = TaskDialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
+				else ResetLayoutAfterRestart = AuDialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
 			}) as ToolStripMenuItem).Checked = ResetLayoutAfterRestart;
 
 			m.ResumeLayout();

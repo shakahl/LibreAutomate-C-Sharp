@@ -1,0 +1,1203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="GENERATOR" content="VSdocman - documentation generator; http://www.helixoft.com" />
+	<title>WinImage Class</title>
+
+	<link rel="stylesheet" type="text/css" href="msdn2017/msdn2017.css"></link>
+	<script src="msdn2017/msdn2017.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shCore_helixoft.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushVb.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushFSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCpp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushJScript.js" type="text/javascript"></script>
+	<link href="SyntaxHighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="SyntaxHighlighter/styles/shThemeMsdnLW.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript">
+		SyntaxHighlighter.all();
+	</script>				
+
+	<script type="text/javascript">
+<!--
+if (self.name != "vbdocright") {
+	if (location.search != "?toc=no") {
+		var filename = location.pathname.replace(/\\/g, "/");
+		filename = filename.substring(filename.lastIndexOf('/')+1);
+		location.replace("index.html#" + filename);
+	} 
+}
+
+function replaceTitleAndUrl(win, title, url) {
+	if(history.replaceState) {
+		win.history.replaceState(null, title, url);
+	} else {
+		win.document.title = document.title;
+		win.location.replace(url);
+	}
+}
+//-->
+	</script>	
+</head>
+
+<body style="direction: ltr;">
+	<script type="text/javascript">
+		try {
+			if (location.search != "?toc=no") {
+				parent.document.title = document.title;
+				var filename = location.pathname.replace(/\\/g, "/");
+				filename = filename.substring(filename.lastIndexOf('/')+1);
+				if (window.parent.location.search == null || window.parent.location.search != "?" + filename) {
+					if (window.parent.location.hash == null || window.parent.location.hash != "#" + filename) {
+						replaceTitleAndUrl(window.parent, document.title, "index.html#" + filename);
+					}
+				}
+			}
+		} catch (ex) {}
+	</script>
+	<div id="topic">
+<!--HEADER START-->
+  <div id="header">
+  	<div id="runningHeaderText">Au Reference</div>
+  	<h1 class="title">WinImage Class</h1>
+  	<div id="headerLinks">
+
+	<a href="#seeAlsoSection">See Also</a>
+
+		</div>
+		<hr />
+	</div>
+<!--HEADER END-->
+    
+		<div id="mainSection">
+      <div id="mainBody">
+        <p />
+       
+        Captures, finds and clicks images and colors in windows.
+An image is any visible rectangular part of window. A color is any visible pixel of window.
+A WinImage variable holds results of <a target="_top" href="topic_00000000000002A4.html" onclick="this.target='';return true;">Find</a> and similar functions (rectangle etc).
+
+
+        <p /><strong>Namespace:</strong>
+<a href="topic_00000000000000DB.html">Au</a>
+
+
+
+
+        <br /><strong>Assembly:</strong> Au (in Au.dll)
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Syntax</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="syntaxSection" class="section">	
+	
+	
+	<div id="syntaxCodeBlocks">
+		<div class="codeSnippetContainer">		
+			<div class="codeSnippetTabs">
+				<div class="codeSnippetTabLeftCornerActive">
+				</div>
+				<div class="codeSnippetTab csFirstTab csActiveTab codeVB">
+					<a>VB</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Csharp');">C#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeFsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Fsharp');">F#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCpp">
+					<a href="javascript: CodeSnippet_SetLanguage('Cpp');">C++</a>
+				</div>
+				<div class="codeSnippetTab csLastTab csNaTab codeJScript">
+					<a href="javascript: CodeSnippet_SetLanguage('JScript');">JScript</a>
+				</div>
+				<div class="codeSnippetTabRightCorner">
+				</div>
+				<div style="clear:both;">
+				</div>
+			</div>
+	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode codeVB">
+					<pre xml:space="preserve" class="brush: vb">Public Class WinImage</pre>			
+				</div>
+				<div class="codeSnippetCode codeNA">
+					<pre xml:space="preserve">This language is not supported or no code example is available.</pre>			
+				</div>
+			</div>
+		</div>
+		
+		<div class="codeSnippetContainer">
+			<div class="codeSnippetTabs">
+				<div class="codeSnippetTabLeftCorner">
+				</div>
+				<div class="codeSnippetTab csFirstTab csNaTab codeVB">
+					<a>VB</a>
+				</div>
+				<div class="codeSnippetTab csActiveTab codeCsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Csharp');">C#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeFsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Fsharp');">F#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCpp">
+					<a href="javascript: CodeSnippet_SetLanguage('Cpp');">C++</a>
+				</div>
+				<div class="codeSnippetTab csLastTab csNaTab codeJScript">
+					<a href="javascript: CodeSnippet_SetLanguage('JScript');">JScript</a>
+				</div>
+				<div class="codeSnippetTabRightCorner">
+				</div>
+				<div style="clear:both;">
+				</div>
+			</div>
+	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode codeCsharp">
+					<pre xml:space="preserve" class="brush: csharp">public class WinImage</pre>			
+				</div>
+				<div class="codeSnippetCode codeNA">
+					<pre xml:space="preserve">This language is not supported or no code example is available.</pre>			
+				</div>
+			</div>
+		</div>
+
+
+		
+		
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	</div>
+</div>
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Properties</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="PropertiesSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A3.html">ListIndex</a>
+
+	</td>
+	<td>
+
+When the image argument specifies multiple images, this is the 0-based index of the found image in the list.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A2.html">MatchIndex</a>
+
+	</td>
+	<td>
+
+When there are multiple matching images, this is the 0-based index of current matching image.
+Can be used in callback function to create action &quot;skip n matching images&quot;. Example: <code>also: t =&gt; t.MatchIndex==1</code>.
+When the <i>image</i> argument specifies multiple images, this will start from 0 for each image.
+
+	</td>
+</tr>
+	
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="MethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029E.html">BitmapFromHbitmap(IntPtr)</a>
+
+	</td>
+	<td>
+
+Creates Bitmap from a GDI bitmap.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029C.html">Capture(RECT)</a>
+
+	</td>
+	<td>
+
+Copies a rectangle of screen pixels to a new Bitmap object.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029D.html">Capture(Wnd, RECT)</a>
+
+	</td>
+	<td>
+
+Copies a rectangle of window client area pixels to a new Bitmap object.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/bsc2ak47.aspx">Equals(Object)</a>
+
+	</td>
+	<td>
+
+Determines whether the specified object is equal to the current object.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.finalize.aspx">Finalize</a>
+
+	</td>
+	<td>
+
+Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A4.html">Find(WIArea, object, WIFlags, int, Func&lt;WinImageBoolean&gt;)</a>
+
+	</td>
+	<td>
+
+Finds image(s) or color(s) displayed in window or other area.
+Returns <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a> object containing the rectangle of the found image.
+Returns null if not found. To throw exception you can use operator +: <code>var r = +WinImage.Find(...);</code>
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.gethashcode.aspx">GetHashCode</a>
+
+	</td>
+	<td>
+
+Serves as the default hash function.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.gettype.aspx">GetType</a>
+
+	</td>
+	<td>
+
+Gets the <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.type.aspx">Type</a> of the current instance.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029F.html">LoadImage(string)</a>
+
+	</td>
+	<td>
+
+Loads image from file, string or resource.
+<a target="_top" href="topic_00000000000002A4.html" onclick="this.target='';return true;">Find</a> uses this function when <i>image</i> argument type is string. More info there.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.memberwiseclone.aspx">MemberwiseClone</a>
+
+	</td>
+	<td>
+
+Creates a shallow copy of the current <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.tostring.aspx">ToString</a>
+
+	</td>
+	<td>
+
+Returns a string that represents the current object.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A5.html">Wait(double, WIArea, object, WIFlags, int, Func&lt;WinImageBoolean&gt;)</a>
+
+	</td>
+	<td>
+
+Waits for image(s) or color(s) displayed in window or other area.
+Returns <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a> object containing the rectangle of the found image.
+On timeout returns false if <i>secondsTimeout</i> is negative (else exception).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A7.html">WaitChanged(double, WIArea, WIFlags, int)</a>
+
+	</td>
+	<td>
+
+Waits until something visually changes in window or other area.
+Returns true. On timeout returns false if <i>secondsTimeout</i> is negative (else exception).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A6.html">WaitNot(double, WIArea, object, WIFlags, int, Func&lt;WinImageBoolean&gt;)</a>
+
+	</td>
+	<td>
+
+Waits until image(s) or color(s) is NOT displayed in window or other area.
+Returns true. On timeout returns false if <i>secondsTimeout</i> is negative (else exception).
+
+	</td>
+</tr>
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Operators</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="OperatorsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002A0.html">UnaryPlus</a>
+
+	</td>
+	<td>
+
+If x is not null, returns x, else throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>.
+Alternatively you can use <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(WinImage)</a>. Examples are there.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Extension Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="ExtensionMethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000298.html">MouseClick(this Acc, Coord, Coord, MButton)</a>
+
+	</td>
+	<td>
+
+Clicks this accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029A.html">MouseClick(this WinImage, Coord, Coord, MButton)</a>
+
+	</td>
+	<td>
+
+Clicks the found image.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a> or <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Coord,Coord,CoordOptions)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000296.html">MouseClick(this Wnd, Coord, Coord, MButton, bool)</a>
+
+	</td>
+	<td>
+
+Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a>.
+By default x y coordinates are relative to the client area; default - center. Default action - left click.
+
+	</td>
+</tr>
+		
+	
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000297.html">MouseMove(this Acc, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Moves the cursor (mouse pointer) to this accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000299.html">MouseMove(this WinImage, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Moves the mouse to the found image.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a> or <a target="_top" href=".html" onclick="this.target='';return true;">Move(Coord,Coord,CoordOptions)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000295.html">MouseMove(this Wnd, Coord, Coord, bool)</a>
+
+	</td>
+	<td>
+
+Moves the cursor (mouse pointer) to the position x y relative to this window.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a>.
+By default x y coordinates are relative to the client area; default - center.
+
+	</td>
+</tr>
+		
+	
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D6.html">OrThrow(this Acc)</a>
+
+	</td>
+	<td>
+
+If this is null, throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D7.html">OrThrow(this WinImage)</a>
+
+	</td>
+	<td>
+
+If this is null, throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D5.html">OrThrow(this Wnd)</a>
+
+	</td>
+	<td>
+
+If this is default(Wnd), throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+		
+	
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+  
+
+<!-- Classes -->
+
+<!-- Classes End -->
+
+<!-- Standard Modules -->
+
+<!-- Standard Modules End -->
+
+  
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Fields</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="FieldsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+	<tr class="
+	
+	
+	">
+	  <td>
+		    <img alt="Public field" title="Public field" src="msdn2017/pubfield.png"></img>
+	    
+	
+	    
+	  </td>
+	  <td>
+	    <a href="topic_00000000000002A1.html">Rect</a>
+	  </td>
+	  <td>
+	
+	Location of the found image.
+Relative to the window/control client area (if area type is Wnd), accessible object (if Acc), image (if Bitmap) or screen (if RECT).
+More info: <a target="_top" href="topic_00000000000002A4.html" onclick="this.target='';return true;">Find</a>.
+	
+		</td>
+	</tr>
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Inheritance Hierarchy</a></span>
+		<div><hr /></div>
+	</div>
+
+<div id="inheritanceHierarchySection" class="section">
+
+<div style="padding-left:0em;"><a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">System.Object</a>
+</div>
+
+
+
+<div style="padding-left:1em;">Au.WinImage</div>
+
+				
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Applies to</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="frameworksSection" class="section">	
+  <h4 class="subHeading">.NET Framework</h4>Supported in: 4.5, 4.5.1, 4.5.2, 4.6, 4.6.1, 4.6.2, 4.7, 4.7.1<br />
+
+
+
+
+
+
+
+
+
+
+	
+	
+	</div>					
+</div>
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">See Also</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="seeAlsoSection" class="section">	
+		<div>
+	<a href="topic_00000000000000DB.html">Au Namespace</a><br />
+
+
+	
+
+		</div>
+	</div>					
+</div>
+			</div>
+			</div>
+      <div id="footer">
+      	<p><span style="color: #FF0000;">Generated with unregistered version of <a target="_top" href="http://www.helixoft.com/vsdocman/overview.html">VSdocman</a></span>&nbsp;<br />Your own footer text will only be shown in registered version.</p>
+      </div>
+    </div>
+  	<script type="text/javascript">
+<!--
+	try {
+		parent.frames["vbdocswitch"].expandLinkInToc(location.href);
+	} catch (ex) {}
+//-->
+		</script>	
+  </body>
+</html>
+

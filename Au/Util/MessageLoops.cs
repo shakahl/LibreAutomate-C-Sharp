@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -34,7 +33,7 @@ namespace Au.Util
 		public unsafe void Loop()
 		{
 			using(new Util.LibEnsureWindowsFormsSynchronizationContext(true)) {
-				_loopEndEvent = Api.CreateEvent(Zero, true, false, null);
+				_loopEndEvent = Api.CreateEvent(default, true, false, null);
 				try {
 					Application.DoEvents(); //info: with Time.DoEvents something does not work, don't remember.
 
@@ -54,7 +53,7 @@ namespace Au.Util
 				}
 				finally {
 					Api.CloseHandle(_loopEndEvent);
-					_loopEndEvent = Zero;
+					_loopEndEvent = default;
 				}
 			}
 		}
@@ -64,7 +63,7 @@ namespace Au.Util
 		/// </summary>
 		public void Stop()
 		{
-			if(_loopEndEvent != Zero) {
+			if(_loopEndEvent != default) {
 				Api.SetEvent(_loopEndEvent);
 			}
 		}

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -31,29 +30,24 @@ namespace Au
 	/// 
 	/// 
 	/// 
-	/// This library has functions
 	/// 
 	/// 
 	/// Usually function options are specified using either function parameters or class properties.
-	/// As you know, many functions allow to adjust their behavior through some kind of options (aka settings, flags, parameters). There are two common ways to pass options to a function: 1. Function parameters, like <c>Class.Func(other parameters, option1, option2);</c> 2. Class properties, like <c>var x=new Class(); x.Option1=1; x.Option2=2; x.Func(parameters);</c>.
+	/// Many functions allow to adjust their behavior through some kind of options (aka settings, flags, parameters). There are two common ways to pass options to a function: 1. Function parameters, like <c>Class.Func(other parameters, option1, option2);</c> 2. Class properties, like <c>var x=new Class(); x.Option1=1; x.Option2=2; x.Func(parameters);</c>.
 	/// 
 	/// </remarks>
 	//[DebuggerStepThrough]
 	public class AuScriptOptions
 	{
-		//infor: struct is used to copy easier, like _o = o._o;
+		//info: struct is used to copy easier, like _o = o._o;
 		struct _Options
 		{
 			public ushort
 				MouseClickSleep,
-				MouseMoveSpeed,
-				KeySleep,
-				KeySpeed;
+				MouseMoveSpeed
+				;
 			public bool //info: could instead use enum flags. Then smaller object memory, but bigger source code and calling code.
 				Relaxed
-				//MouseBlockUserInput,
-				//KeyBlockUserInput,
-				//WaitMsg
 				;
 			public byte Debug; //0 non-init, 1 false, 2 true
 		}
@@ -67,7 +61,6 @@ namespace Au
 		{
 			if(o == null) {
 				_o.MouseClickSleep = 50;
-				_o.KeySleep = 50;
 			} else {
 				_o = o._o;
 				if(o.LibDisabledWarnings != null) LibDisabledWarnings = new List<string>(o.LibDisabledWarnings);
@@ -135,32 +128,6 @@ namespace Au
 			set { if((uint)value > 60000) throw new ArgumentOutOfRangeException(null, "0-60000"); _o.MouseMoveSpeed = (ushort)value; }
 		}
 
-
-		/// <summary>
-		/// Wait milliseconds at the end of Input.Key() and other functions that generate keyboard events.
-		/// Default: 50. Valid values: 0 - 60000 (1 minute).
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int KeySleep
-		{
-			get => _o.KeySleep;
-			set { if((uint)value > 60000) throw new ArgumentOutOfRangeException(null, "0-60000"); _o.KeySleep = (ushort)value; }
-		}
-
-		/// <summary>
-		/// Wait milliseconds after each key down and up event in Input.Key() and other functions that generate keyboard events.
-		/// Default: 0. Valid values: 0 - 60000.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		/// <remarks>
-		/// If 0 (default), just sleeps briefly after some keys.
-		/// </remarks>
-		public int KeySpeed
-		{
-			get => _o.KeySpeed;
-			set { if((uint)value > 60000) throw new ArgumentOutOfRangeException(null, "0-60000"); _o.KeySpeed = (ushort)value; }
-		}
-
 		/// <summary>
 		/// Make some functions less strict (less checking for possibly invalid conditions).
 		/// Default: false.
@@ -186,26 +153,6 @@ namespace Au
 		/// </list>
 		/// </remarks>
 		public bool Relaxed { get => _o.Relaxed; set => _o.Relaxed = value; }
-
-		//rejected, at least for now. Better let block input explicitly.
-		///// <summary>
-		///// Block user mouse and keyboard input in <see cref="Mouse"/> class functions (when sending mouse movements and clicks).
-		///// </summary>
-		///// <remarks>
-		///// Uses API <msdn>BlockInput</msdn>. Unblocks when the called function ends or when the user presses Ctrl+Alt+Delete.
-		///// </remarks>
-		//public bool MouseBlockUserInput { get => _o.MouseBlockUserInput; set => _o.MouseBlockUserInput = value; }
-
-		///// <summary>
-		///// Block user mouse and keyboard input in <see cref="Input"/> class functions (when sending keys).
-		///// </summary>
-		///// <remarks>
-		///// Uses API <msdn>BlockInput</msdn>. Unblocks when the called function ends or when the user presses Ctrl+Alt+Delete.
-		///// </remarks>
-		//public bool KeyBlockUserInput { get => _o.KeyBlockUserInput; set => _o.KeyBlockUserInput = value; }
-
-		//public bool WaitMsg { get => _o.WaitMsg; set => _o.WaitMsg = value; }
-		//TODO: implement or remove.
 
 		/// <summary>
 		/// If true, some library functions may display some debug info that is not displayed if this is false.
@@ -237,7 +184,7 @@ namespace Au
 		/// </summary>
 		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="String_.Like_(string, string, bool)"/>.</param>
 		/// <remarks>
-		/// Adds the strings to an internal list. When <see cref="Output.Warning"/> is called, it looks in the list. If it finds the warning in the list, it does not show the warning.
+		/// Adds the strings to an internal list. When <see cref="PrintWarning"/> is called, it looks in the list. If it finds the warning in the list, it does not show the warning.
 		/// It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
 		/// </remarks>
 		/// <example>

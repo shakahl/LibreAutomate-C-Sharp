@@ -1,0 +1,1459 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="GENERATOR" content="VSdocman - documentation generator; http://www.helixoft.com" />
+	<title>Acc Methods</title>
+
+	<link rel="stylesheet" type="text/css" href="msdn2017/msdn2017.css"></link>
+	<script src="msdn2017/msdn2017.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shCore_helixoft.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushVb.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushFSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCpp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushJScript.js" type="text/javascript"></script>
+	<link href="SyntaxHighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="SyntaxHighlighter/styles/shThemeMsdnLW.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript">
+		SyntaxHighlighter.all();
+	</script>				
+
+	<script type="text/javascript">
+<!--
+if (self.name != "vbdocright") {
+	if (location.search != "?toc=no") {
+		var filename = location.pathname.replace(/\\/g, "/");
+		filename = filename.substring(filename.lastIndexOf('/')+1);
+		location.replace("index.html#" + filename);
+	} 
+}
+
+function replaceTitleAndUrl(win, title, url) {
+	if(history.replaceState) {
+		win.history.replaceState(null, title, url);
+	} else {
+		win.document.title = document.title;
+		win.location.replace(url);
+	}
+}
+//-->
+	</script>	
+</head>
+
+<body style="direction: ltr;">
+	<script type="text/javascript">
+		try {
+			if (location.search != "?toc=no") {
+				parent.document.title = document.title;
+				var filename = location.pathname.replace(/\\/g, "/");
+				filename = filename.substring(filename.lastIndexOf('/')+1);
+				if (window.parent.location.search == null || window.parent.location.search != "?" + filename) {
+					if (window.parent.location.hash == null || window.parent.location.hash != "#" + filename) {
+						replaceTitleAndUrl(window.parent, document.title, "index.html#" + filename);
+					}
+				}
+			}
+		} catch (ex) {}
+	</script>
+	<div id="topic">
+<!--HEADER START-->
+  <div id="header">
+  	<div id="runningHeaderText">Au Reference</div>
+  	<h1 class="title">Acc Methods</h1>
+  	<div id="headerLinks">
+              <a href="topic_00000000000000DC.html">Acc Class</a>
+            &nbsp;<a href="#seeAlsoSection">See Also</a>
+		</div>
+		<hr />
+	</div>
+<!--HEADER END-->
+    
+		<div id="mainSection">
+      <div id="mainBody">
+        <p />
+        <p>
+          The following tables list the members exposed by the  
+              <a href="topic_00000000000000DC.html">Acc</a>
+             type.
+        </p>
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="MethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+			<tr class="
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000DD.html">Dispose(bool)</a>
+
+	</td>
+	<td>
+
+
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000DE.html">Dispose()</a>
+
+	</td>
+	<td>
+
+Releases IAccessible COM object and clears this variable.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000114.html">DoAction()</a>
+
+	</td>
+	<td>
+
+Performs the object's default action (see <a target="_top" href="topic_0000000000000113.html" onclick="this.target='';return true;">DefaultAction</a>). Usually it is 'click', 'press' or similar.
+Uses &lt;msdn&gt;IAccessible.accDoDefaultAction&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000118.html">DoActionAndWaitForNewWebPage(out double, Action&lt;Acc&gt;)</a>
+
+	</td>
+	<td>
+
+Calls <a target="_top" href="topic_0000000000000114.html" onclick="this.target='';return true;">DoAction</a> or <i>action</i> and waits until window name changes and web page name changes.
+Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000117.html">DoJavaAction(string)</a>
+
+	</td>
+	<td>
+
+Performs one of actions supported by this Java accessible object.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/bsc2ak47.aspx">Equals(Object)</a>
+
+	</td>
+	<td>
+
+Determines whether the specified object is equal to the current object.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.finalize.aspx">Finalize</a>
+
+	</td>
+	<td>
+
+Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000F6.html">Find(string, string, string, AFFlags, Func&lt;AccBoolean&gt;, int)</a>
+
+	</td>
+	<td>
+
+Finds a descendant accessible object (AO) of this AO.
+Returns the found AO. Returns null if not found.
+Parameters etc are as with <a target="_top" href=".html" onclick="this.target='';return true;">Find(Wnd,string,string,string,AFFlags,Func&lt;Acc, bool&gt;, int, ChildFinder)</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000F5.html">Find(Wnd, string, string, string, AFFlags, Func&lt;AccBoolean&gt;, int, ChildFinder)</a>
+
+	</td>
+	<td>
+
+Finds accessible object (AO) in window.
+Returns the found AO. Returns null if not found. See examples.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000FA.html">FindAll(string, string, string, AFFlags, Func&lt;AccBoolean&gt;)</a>
+
+	</td>
+	<td>
+
+Finds all matching descendant accessible objects (AO) of this AO.
+Returns array of 0 or more elements.
+Parameters etc are as with <a target="_top" href=".html" onclick="this.target='';return true;">Find(Wnd,string,string,string,AFFlags,Func&lt;Acc, bool&gt;, int, ChildFinder)</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000F9.html">FindAll(Wnd, string, string, string, AFFlags, Func&lt;AccBoolean&gt;)</a>
+
+	</td>
+	<td>
+
+Finds all matching accessible objects in window.
+Returns array of 0 or more elements.
+Parameters etc are as with <a target="_top" href=".html" onclick="this.target='';return true;">Find(Wnd,string,string,string,AFFlags,Func&lt;Acc, bool&gt;, int, ChildFinder)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000011A.html">Focus(bool)</a>
+
+	</td>
+	<td>
+
+Makes this object focused for keyboard input.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E7.html">Focused(bool)</a>
+
+	</td>
+	<td>
+
+Gets the accessible object that has the keyboard focus.
+Returns null if fails.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E8.html">FromEvent(Wnd, int, int)</a>
+
+	</td>
+	<td>
+
+Gets the accessible object that generated the event that is currently being processed by the callback function used with API &lt;msdn&gt;SetWinEventHook&lt;/msdn&gt;.
+Returns null if failed. Suports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E6.html">FromMouse(AXYFlags)</a>
+
+	</td>
+	<td>
+
+Gets accessible object from mouse cursor (pointer) position.
+Uses API &lt;msdn&gt;AccessibleObjectFromPoint&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E3.html">FromWindow(Wnd, AccOBJID, AWFlags)</a>
+
+	</td>
+	<td>
+
+Gets accessible object of window or control or its standard part - client area, titlebar etc.
+Uses API &lt;msdn&gt;AccessibleObjectFromWindow&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E5.html">FromXY(Coord, Coord, CoordOptions, AXYFlags)</a>
+
+	</td>
+	<td>
+
+Gets accessible object from point.
+Uses API &lt;msdn&gt;AccessibleObjectFromPoint&lt;/msdn&gt;.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E4.html">FromXY(Point, AXYFlags)</a>
+
+	</td>
+	<td>
+
+Gets accessible object from point.
+Uses API &lt;msdn&gt;AccessibleObjectFromPoint&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.gethashcode.aspx">GetHashCode</a>
+
+	</td>
+	<td>
+
+Serves as the default hash function.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000011C.html">GetProperties(string, out AccProperties)</a>
+
+	</td>
+	<td>
+
+Gets multiple properties.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000FF.html">GetRect(out RECT)</a>
+
+	</td>
+	<td>
+
+Gets location of this accessible object in screen.
+Uses &lt;msdn&gt;IAccessible.accLocation&lt;/msdn&gt;.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000100.html">GetRect(out RECT, Wnd)</a>
+
+	</td>
+	<td>
+
+Gets location of this accessible object in the client area of window w.
+Uses &lt;msdn&gt;IAccessible.accLocation&lt;/msdn&gt; and <a target="_top" href=".html" onclick="this.target='';return true;">MapScreenToClient(refRECT)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.gettype.aspx">GetType</a>
+
+	</td>
+	<td>
+
+Gets the <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.type.aspx">Type</a> of the current instance.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000011F.html">Html(bool)</a>
+
+	</td>
+	<td>
+
+Gets HTML.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000120.html">HtmlAttribute(string)</a>
+
+	</td>
+	<td>
+
+Gets a HTML attribute.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000121.html">HtmlAttributes()</a>
+
+	</td>
+	<td>
+
+Gets all HTML attributes.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.memberwiseclone.aspx">MemberwiseClone</a>
+
+	</td>
+	<td>
+
+Creates a shallow copy of the current <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000011D.html">Navigate(string, double)</a>
+
+	</td>
+	<td>
+
+Gets an adjacent or related accessible object (AO) - next, child, parent, etc.
+Returns null if not found.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000EA.html">PrintAll(Wnd, string, AFFlags, string)</a>
+
+	</td>
+	<td>
+
+Displays properties of all found accessible objects of window w.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000122.html">ScrollTo()</a>
+
+	</td>
+	<td>
+
+Scrolls this accessible object into view.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000119.html">Select(AccSELFLAG)</a>
+
+	</td>
+	<td>
+
+Selects or deselects.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000E9.html">ToString()</a>
+
+	</td>
+	<td>
+
+Formats string from main properties of this accessible object.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000115.html">VirtualClick()</a>
+
+	</td>
+	<td>
+
+Posts mouse-left-click message to the container window, using coordinates of this object.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000116.html">VirtualRightClick()</a>
+
+	</td>
+	<td>
+
+Posts mouse-right-click message to the container window, using coordinates of this object.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000F8.html">Wait(double, string, string, string, AFFlags, Func&lt;AccBoolean&gt;, int)</a>
+
+	</td>
+	<td>
+
+Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
+Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.
+Parameters etc are as with <a target="_top" href=".html" onclick="this.target='';return true;">Find(Wnd,string,string,string,AFFlags,Func&lt;Acc, bool&gt;, int, ChildFinder)</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000F7.html">Wait(double, Wnd, string, string, string, AFFlags, Func&lt;AccBoolean&gt;, int)</a>
+
+	</td>
+	<td>
+
+Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
+Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.
+Parameters etc are as with <a target="_top" href=".html" onclick="this.target='';return true;">Find(Wnd,string,string,string,AFFlags,Func&lt;Acc, bool&gt;, int, ChildFinder)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Operators</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="OperatorsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000000DF.html">UnaryPlus</a>
+
+	</td>
+	<td>
+
+If x is not null, returns x, else throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>.
+Alternatively you can use <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Acc)</a>. Examples are there.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Extension Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="ExtensionMethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000298.html">MouseClick(this Acc, Coord, Coord, MButton)</a>
+
+	</td>
+	<td>
+
+Clicks this accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029A.html">MouseClick(this WinImage, Coord, Coord, MButton)</a>
+
+	</td>
+	<td>
+
+Clicks the found image.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a> or <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Coord,Coord,CoordOptions)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000296.html">MouseClick(this Wnd, Coord, Coord, MButton, bool)</a>
+
+	</td>
+	<td>
+
+Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a>.
+By default x y coordinates are relative to the client area; default - center. Default action - left click.
+
+	</td>
+</tr>
+		
+	
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000297.html">MouseMove(this Acc, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Moves the cursor (mouse pointer) to this accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000299.html">MouseMove(this WinImage, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Moves the mouse to the found image.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a> or <a target="_top" href=".html" onclick="this.target='';return true;">Move(Coord,Coord,CoordOptions)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000295.html">MouseMove(this Wnd, Coord, Coord, bool)</a>
+
+	</td>
+	<td>
+
+Moves the cursor (mouse pointer) to the position x y relative to this window.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a>.
+By default x y coordinates are relative to the client area; default - center.
+
+	</td>
+</tr>
+		
+	
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D6.html">OrThrow(this Acc)</a>
+
+	</td>
+	<td>
+
+If this is null, throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D7.html">OrThrow(this WinImage)</a>
+
+	</td>
+	<td>
+
+If this is null, throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D5.html">OrThrow(this Wnd)</a>
+
+	</td>
+	<td>
+
+If this is default(Wnd), throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+		
+	
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">See Also</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="seeAlsoSection" class="section">	
+		<div>
+			<a href="topic_00000000000000DC.html">Acc Class</a><br />
+	<a href="topic_00000000000000DB.html">Au Namespace</a><br />
+
+
+			
+
+		</div>
+	</div>					
+</div>
+			</div>
+			</div>
+      <div id="footer">
+      	<p><span style="color: #FF0000;">Generated with unregistered version of <a target="_top" href="http://www.helixoft.com/vsdocman/overview.html">VSdocman</a></span>&nbsp;<br />Your own footer text will only be shown in registered version.</p>
+      </div>
+    </div>
+  	<script type="text/javascript">
+<!--
+	try {
+		parent.frames["vbdocswitch"].expandLinkInToc(location.href);
+	} catch (ex) {}
+//-->
+		</script>	
+  </body>
+</html>
+

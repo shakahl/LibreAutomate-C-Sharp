@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -26,7 +25,8 @@ namespace Au.Types
 	/// Types of function parameters and return values, base classes, exceptions.
 	/// Class NetExtensions contains extension methods for various .NET classes.
 	/// </summary>
-	internal class NamespaceDoc
+	[CompilerGenerated()]
+	class NamespaceDoc
 	{
 		//SHFB uses this for namespace documentation.
 	}
@@ -35,6 +35,7 @@ namespace Au.Types
 	/// <tocexclude />
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class JustNull { }
+
 	/// <summary>Infrastructure.</summary>
 	/// <tocexclude />
 	[EditorBrowsable(EditorBrowsableState.Never)]
@@ -63,8 +64,8 @@ namespace Au.Types
 	/// static void Example1(Types<string, IEnumerable<string>> x)
 	/// {
 	/// 	switch(x.type) {
-	/// 	case 1: PrintList("string", x.v1); break;
-	/// 	case 2: PrintList("IEnumerable<string>", x.v2); break;
+	/// 	case 1: Print("string", x.v1); break;
+	/// 	case 2: Print("IEnumerable<string>", x.v2); break;
 	/// 	default: throw new ArgumentException(); //0 if has default value, eg assigned default(Types<string, IEnumerable<string>>), unlikely
 	/// 	}
 	/// }
@@ -74,8 +75,8 @@ namespace Au.Types
 	/// 	var p = optionalParam.GetValueOrDefault();
 	/// 	switch(p.type) {
 	/// 	case 0: Print("null"); break;
-	/// 	case 1: PrintList("int", p.v1); break;
-	/// 	case 2: PrintList("double", p.v2); break;
+	/// 	case 1: Print("int", p.v1); break;
+	/// 	case 2: Print("double", p.v2); break;
 	/// 	}
 	/// }
 	/// 
@@ -492,42 +493,50 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Contains a value of one of two types - Wnd or Control.
-	/// Has implicit conversion operators: from Wnd and from Control. Also can be assigned null.
-	/// Often used for function parameters that support both these types. You can pass Control or Wnd variables to such functions directly.
+	/// Dialog owner window handle.
+	/// Used for function parameters where the function needs a window handle as <see cref="Wnd"/> but also allows to pass a variable of any of these types directly: System.Windows.Forms.Control (Form or any control class), System.Windows.Window (WPF window), IntPtr (window handle).
 	/// </summary>
 	[DebuggerStepThrough]
-	public struct WndOrControl
+	public struct DOwner
 	{
 		object _o;
+		DOwner(object o) { _o = o; }
 
 		/// <summary> Assignment of a value of type Wnd. </summary>
-		public static implicit operator WndOrControl(Wnd w) { return new WndOrControl() { _o = w }; }
-		/// <summary> Assignment of a value of type Control. </summary>
-		public static implicit operator WndOrControl(Control c) { return new WndOrControl() { _o = c }; }
+		public static implicit operator DOwner(Wnd w) => new DOwner(w);
+		/// <summary> Assignment of a value of type Wnd. </summary>
+		public static implicit operator DOwner(IntPtr hwnd) => new DOwner((Wnd)hwnd);
+		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
+		public static implicit operator DOwner(Control c) => new DOwner(c);
+		/// <summary> Assignment of a value of type System.Windows.Window (WPF window). </summary>
+		public static implicit operator DOwner(System.Windows.Window w) => new DOwner(new System.Windows.Interop.WindowInteropHelper(w));
 
 		/// <summary>
 		/// Gets the window or control handle as Wnd.
-		/// Returns default(Wnd) if null or nothing was assigned.
+		/// Returns default(Wnd) if not assigned.
 		/// </summary>
 		public Wnd Wnd
 		{
-			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms.dll when don't need
+			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms dll when don't need
 			get
 			{
 				if(_o == null) return default;
+				if(_o is Wnd) return (Wnd)_o;
 				if(_o is Control c) return (Wnd)c;
-				return (Wnd)_o;
+				return _Wpf();
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
+		Wnd _Wpf() => (Wnd)((System.Windows.Interop.WindowInteropHelper)_o).Handle;
+
 		/// <summary>
-		/// true if assigned null or nothing.
+		/// true if not assigned.
 		/// </summary>
-		public bool IsNull => _o == null;
+		public bool IsEmpty => _o == null;
 	}
 
-#if false //currently not used. Created for TaskDialog.ShowList, but used object instead.
+#if false //currently not used
 	/// <summary>
 	/// Contains a value of one of two types - string or IEnumerable&lt;string&gt;.
 	/// Has implicit conversion operators: from string and from IEnumerable&lt;string&gt;.

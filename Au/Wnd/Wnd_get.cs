@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -292,7 +291,7 @@ namespace Au
 			{
 				Wnd w = WndShell;
 				var f = new ChildFinder(className: "SysListView32");
-				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", WFOwner.ThreadId(w.ThreadId), also: t => f.Find(t));
+				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", "tid=" + w.ThreadId.ToString(), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;
 
@@ -377,7 +376,7 @@ namespace Au
 				//	var x = new CUIAutomation();
 				//	var cond = x.CreatePropertyCondition(30003, 0xC370); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
 				//	var a = x.GetRootElement().FindAll(TreeScope.TreeScope_Children, cond);
-				//	for(int i = 0; i < a.Length; i++) PrintList((Wnd)a.GetElement(i).CurrentNativeWindowHandle);
+				//	for(int i = 0; i < a.Length; i++) Print((Wnd)a.GetElement(i).CurrentNativeWindowHandle);
 				//Advantages: 1. Maybe can filter unwanted windows more reliably, although I did't notice a difference.
 				//Disadvantages: 1. Skips windows of higher integrity level (UAC). 2. Cannot include cloaked windows, eg those in inactive Win10 virtual desktops. 3. About 1000 times slower, eg 70 ms vs 70 mcs; cold 140 ms.
 			}

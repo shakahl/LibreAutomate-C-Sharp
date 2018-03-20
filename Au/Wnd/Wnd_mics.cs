@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -107,7 +106,7 @@ namespace Au
 			public static Wnd CreateWindowAndSetFont(string className, string name = null, uint style = 0, uint exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
-				if(!w.Is0) SetFontHandle(w, (customFontHandle == Zero) ? _msgBoxFont : customFontHandle);
+				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? _msgBoxFont : customFontHandle);
 				return w;
 			}
 			static Util.LibNativeFont _msgBoxFont = new Util.LibNativeFont(SystemFonts.MessageBoxFont.ToHfont());
@@ -187,7 +186,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets icon that is displayed in window title bar and in its taskbar button.
-			/// Returns icon handle if successful, else Zero. Later call <see cref="Icons.DestroyIconHandle"/> or <see cref="Icons.HandleToImage"/>.
+			/// Returns icon handle if successful, else default(IntPtr). Later call <see cref="Icons.DestroyIconHandle"/> or <see cref="Icons.HandleToImage"/>.
 			/// </summary>
 			/// <param name="w"></param>
 			/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
@@ -203,7 +202,7 @@ namespace Au
 				//support Windows Store apps
 				if(1 == _GetWindowsStoreAppId(w, out var appId, true)) {
 					IntPtr hi = Icons.GetFileIconHandle(appId, size);
-					if(hi != Zero) return hi;
+					if(hi != default) return hi;
 				}
 
 				bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, size32);
@@ -214,7 +213,7 @@ namespace Au
 
 				//Copy, because will DestroyIcon, also it resizes if need.
 				if(R != 0) return Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
-				return Zero;
+				return default;
 			}
 
 			/// <summary>
@@ -355,7 +354,7 @@ namespace Au
 
 				Wnd w = (Wnd)m.HWnd;
 				uint counter = w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
-				PrintList(counter, m);
+				Print(counter.ToString(), m.ToString());
 			}
 
 			/// <summary>
@@ -378,10 +377,11 @@ namespace Au
 			/// </summary>
 			/// <param name="m"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(ref Native.MSG m, params uint[] ignore)
+			public static void PrintMsg(in Native.MSG m, params uint[] ignore)
 			{
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 			}
+			//TODO: in whole library replace ref with in where need.
 
 			/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#410")]

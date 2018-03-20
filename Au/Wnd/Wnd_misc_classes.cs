@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -258,28 +257,17 @@ namespace Au
 			/// Usually each control has a unique name. It is useful to identify controls without a classic name/text.
 			/// Control id of these controls is not constant and cannot be used.
 			/// </summary>
-			public class WinFormsControlNames :IDisposable
+			public sealed class WinFormsControlNames :IDisposable
 			{
 				Process_.Memory _pm;
 				Wnd _w;
 
-				#region IDisposable Support
-
-				void _Dispose()
-				{
-					if(_pm != null) { _pm.Dispose(); _pm = null; }
-				}
-
-				///
-				~WinFormsControlNames() { _Dispose(); }
 				///
 				public void Dispose()
 				{
-					_Dispose();
+					if(_pm != null) { _pm.Dispose(); _pm = null; }
 					GC.SuppressFinalize(this);
 				}
-
-				#endregion
 
 				static readonly uint WM_GETCONTROLNAME = Api.RegisterWindowMessage("WM_GETCONTROLNAME");
 

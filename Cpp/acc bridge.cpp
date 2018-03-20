@@ -195,7 +195,7 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 			if(!findAll && skip-- > 0) return eAccFindCallbackResult::Continue;
 
 			if(resultProp) {
-				AccGetProp(a, resultProp, out sResult);
+				if(resultProp != '-') AccGetProp(a, resultProp, out sResult);
 			} else {
 				if(!stream) CreateStreamOnHGlobal(0, true, &stream);
 
@@ -347,7 +347,7 @@ g1:
 //	It is empty if this func returns not 0 or if used ap.resultProp.
 //sResult - error string or a property of the found AO.
 //	When this func returns eError::InvalidParameter, it is error string.
-//	When this func returns 0 and used ap.resultProp, it is the property (string, or binary struct).
+//	When this func returns 0 and used ap.resultProp, it is the property (string, or binary struct); null if '-'.
 //	Else null.
 EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cpp_AccCallbackT also, out Cpp_Acc& aResult, out BSTR& sResult)
 {
@@ -396,8 +396,8 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 		if(R = c.Call()) {
 			if(R == (HRESULT)eError::InvalidParameter) sResult = c.DetachResultBSTR();
 		} else if(!findAll) {
-			if(ap.resultProp) sResult = c.DetachResultBSTR();
-			else R = c.ReadResultAcc(ref aResult);
+			if(!ap.resultProp) R = c.ReadResultAcc(ref aResult);
+			else if(ap.resultProp != '-') sResult = c.DetachResultBSTR();
 		} else {
 			Cpp_Acc a;
 			int skip = ap.skip;
@@ -430,7 +430,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 			found = true;
 
 			if(ap.resultProp) {
-				AccGetProp(a, ap.resultProp, out sResult);
+				if(ap.resultProp != '-') AccGetProp(a, ap.resultProp, out sResult);
 			} else {
 				aResult = a;
 				a.acc->AddRef();

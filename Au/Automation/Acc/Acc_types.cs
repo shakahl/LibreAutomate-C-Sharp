@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -23,14 +22,14 @@ using static Au.NoClass;
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Acc.Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int)"/> and similar functions.
+	/// Flags for <see cref="Acc.Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum AFFlags
 	{
 		/// <summary>
 		/// Search in reverse order. It can make faster.
-		/// When using control class name, controls are searched not in reverse order. Only accessible objects in them are searched in reverse order.
+		/// When control class or id is specified in the <i>prop</i> argument, controls are searched not in reverse order. Only accessible objects in them are searched in reverse order.
 		/// </summary>
 		Reverse = 1,
 
@@ -48,6 +47,14 @@ namespace Au.Types
 		MenuToo = 4,
 
 		/// <summary>
+		/// Search only in the client area of the window or control.
+		/// Skips the title bar, standard menubars and scrollbars. Searches only in the client area root object (but will not find the object itself).
+		/// When control class or id is specified in the <i>prop</i> argument, this flag is applied to these controls. Not applied to other controls.
+		/// Don't use this flag when searching in Acc or web page (role prefix "web:" etc) or with flag UIA.
+		/// </summary>
+		ClientArea = 8,
+
+		/// <summary>
 		/// Search without loading dll into the target process.
 		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
 		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher UAC integrity level, Firefox web page if its multiprocess feature is not disabled.
@@ -63,15 +70,29 @@ namespace Au.Types
 		/// Examples of such windows: Microsoft Edge web browser (web page), JavaFX applications.
 		/// Objects found with this flag never have HtmlX properties, but can have <see cref="Acc.UiaId"/>.
 		/// This flag can be used with most other windows too.
-		/// Don't use this flag when searching in Acc (then it is inherited from the Acc variable).
+		/// Don't use this flag when searching in Acc (then it is inherited from the Acc variable) or web page (role prefix "web:" etc).
 		/// See also: <see cref="Acc.MiscFlags"/>.
 		/// </summary>
 		UIA = 0x200,
 
+		//Internal. See LibEnum.AFFlags_Mark.
+		//Mark = 0x10000,
+	}
+
+	/// <summary>
+	/// A workaround to add internal members to public enums.
+	/// </summary>
+	internal static partial class LibEnum
+	{
 		/// <summary>
-		/// Used internally.
+		/// Used by tools like "Find accessible object", together with AccMiscFlags_Marked.
 		/// </summary>
-		Mark = 0x10000,
+		internal static AFFlags AFFlags_Mark = (AFFlags)0x10000;
+
+		/// <summary>
+		/// Used by tools like "Find accessible object", together with AFFlags_Mark.
+		/// </summary>
+		internal static AccMiscFlags AccMiscFlags_Marked = (AccMiscFlags)128;
 	}
 
 	/// <summary>
@@ -106,8 +127,8 @@ namespace Au.Types
 		UIA = 1,
 
 		/// <summary>
-		/// Get the direct parent object if it's LINK or PUSHBUTTON.
-		/// Usually links have one or more children of type TEXT, STATICTEXT, GRAPHIC or other.
+		/// Get the direct parent object if it's LINK or BUTTON.
+		/// Usually links have one or more children of type TEXT, STATICTEXT, IMAGE or other.
 		/// </summary>
 		PreferLink = 2,
 
@@ -147,10 +168,8 @@ namespace Au.Types
 		/// </summary>
 		Java = 4,
 
-		/// <summary>
-		/// Used internally.
-		/// </summary>
-		Marked = 128,
+		//Internal. See LibEnum.AccMiscFlags_Marked.
+		//Marked = 128,
 	}
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -198,7 +217,7 @@ namespace Au.Types
 	/// Used with <see cref="Acc.RoleInt"/>
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>IAccessible.get_accRole</msdn> documentation but without prefix "ROLE_SYSTEM_".
+	/// Most names are as in API <msdn>IAccessible.get_accRole</msdn> documentation but without prefix "ROLE_SYSTEM_". These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON,
 	/// </remarks>
 	public enum AccROLE
 	{
@@ -236,16 +255,16 @@ namespace Au.Types
 		CHARACTER = 0x20,
 		LIST = 0x21,
 		LISTITEM = 0x22,
-		OUTLINE = 0x23,
-		OUTLINEITEM = 0x24,
+		TREE = 0x23, //OUTLINE
+		TREEITEM = 0x24, //OUTLINEITEM
 		PAGETAB = 0x25,
 		PROPERTYPAGE = 0x26,
 		INDICATOR = 0x27,
-		GRAPHIC = 0x28,
+		IMAGE = 0x28, //GRAPHIC
 		STATICTEXT = 0x29,
 		TEXT = 0x2A,
-		PUSHBUTTON = 0x2B,
-		CHECKBUTTON = 0x2C,
+		BUTTON = 0x2B, //PUSHBUTTON
+		CHECKBOX = 0x2C, //CHECKBUTTON
 		RADIOBUTTON = 0x2D,
 		COMBOBOX = 0x2E,
 		DROPLIST = 0x2F,
@@ -265,7 +284,7 @@ namespace Au.Types
 		CLOCK = 0x3D,
 		SPLITBUTTON = 0x3E,
 		IPADDRESS = 0x3F,
-		OUTLINEBUTTON = 0x40,
+		TREEBUTTON = 0x40, //OUTLINEBUTTON
 	}
 
 	/// <summary>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -43,7 +42,7 @@ static class CommandLine
 
 			} else { //one or more files
 				if(a.Length == 1 && FilesModel.IsCollectionDirectory(s)) {
-					switch(cmd = TaskDialog.ShowEx("Collection", s, "1 Import|2 Open|0 Cancel", flags: TDFlags.Wider, footerText: FilesModel.GetSecurityInfo(true))) {
+					switch(cmd = AuDialog.ShowEx("Collection", s, "1 Import|2 Open|0 Cancel", footerText: FilesModel.GetSecurityInfo(true))) {
 					case 1: _importCollection = s; break;
 					case 2: CollectionDirectory = s; break;
 					}
@@ -59,7 +58,7 @@ static class CommandLine
 			//activate main window
 			if(a.Length == 0) {
 				try {
-					Wnd wMain = Wnd.Find("QM#*", "WindowsForms*", WFOwner.ThreadId(w.ThreadId), WFFlags.HiddenToo, t => !t.IsPopupWindow);
+					Wnd wMain = Wnd.Find("QM#*", "WindowsForms*", "tid=" + w.ThreadId.ToString(), WFFlags.HiddenToo, t => !t.IsPopupWindow);
 					if(!wMain.Is0) wMain.Activate();
 				}
 				catch { }

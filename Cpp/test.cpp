@@ -164,7 +164,7 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 	auto len = wcslen(s);
 
 	for(int i = 0; i < 1000; i++) {
-		rc = pcre2_match(re, s, len, 0, 0, m, null);
+		rc = pcre2_match(re, s, len, 0, 0, m, null, null);
 		if(rc <= 0) {
 			Print(rc);
 			return;
@@ -366,7 +366,7 @@ ICppTest* Cpp_Interface()
 //		//Print(L"dtor");
 //	}
 //
-//	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject) {
+//	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvObject) {
 //		//wchar_t* name = L"?"; //info: QM2 has DebugGetInterfaceName
 //		//if (riid == __uuidof(ITest)) name = L"ITest"; //called
 //		//else if (riid == __uuidof(IUnknown)) name = L"IUnknown"; //called
@@ -572,16 +572,16 @@ EXPORT void Cpp_Test()
 	////Print(wnd::ClassNameIs(w, L"-QM_*"));
 
 	//str::Wildex x;
-	////STR s = L"**k|kkk";
-	////STR s = L"**p|(kkk";
+	////STR s = L"**k kkk";
+	////STR s = L"**r (kkk";
 	//STR s = L"QM_Editor";
-	//s=L"**t|QM_Editor";
-	////s=L"**p|.+r$";
-	//s=L"**m|moo[]QM_Editor";
-	//s=L"**n|QM_Editor-";
-	//s=L"**m|*_Editor";
-	//s=L"**m|moo[]**p|.+r$";
-	//s=L"**m|moo[]**p|.+r$[]**n|*i*";
+	//s=L"**t QM_Editor";
+	////s=L"**r .+r$";
+	//s=L"**m moo||QM_Editor";
+	//s=L"**n QM_Editor-";
+	//s=L"**m *_Editor";
+	//s=L"**m moo||**r .+r$";
+	//s=L"**m moo||**r .+r$||**n *i*";
 	//Bstr es;
 	//if(!x.Parse(s, wcslen(s), true, &es)) {
 	//	Print(es); return;

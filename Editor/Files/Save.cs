@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -160,7 +159,7 @@ partial class FilesModel
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
-			TaskDialog.ShowError("Failed to save", CollectionFile, expandedText: ex.Message);
+			AuDialog.ShowError("Failed to save", CollectionFile, expandedText: ex.Message);
 			return false;
 		}
 	}
@@ -184,7 +183,7 @@ partial class FilesModel
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
-			TaskDialog.ShowError("Failed to save file states", StateFile, expandedText: ex.Message);
+			AuDialog.ShowError("Failed to save file states", StateFile, expandedText: ex.Message);
 			return false;
 		}
 	}

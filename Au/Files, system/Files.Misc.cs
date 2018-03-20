@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -152,7 +151,7 @@ namespace Au
 				var ok1 = GetFileId(path1, out var fid1);
 				var ok2 = GetFileId(path2, out var fid2);
 				if(ok1 && ok2) return fid1 == fid2;
-				Output.Warning("GetFileId failed"); //CONSIDER: throw
+				PrintWarning("GetFileId failed"); //CONSIDER: throw
 				return false;
 			}
 

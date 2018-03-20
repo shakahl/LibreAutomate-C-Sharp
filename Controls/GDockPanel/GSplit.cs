@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -193,7 +192,7 @@ namespace Au.Controls
 
 					//apply minimal child width or height, because may contain toolbars
 					int min1 = _MinimalChildWidthOrHeight(Child1), min2 = _MinimalChildWidthOrHeight(Child2);
-					//PrintList(min1, min2);
+					//Print(min1, min2);
 					if(swap) {
 						if(min1 > w1) { w1 = Math.Min(min1, wFull); w2 = wNoSplitter - w1; }
 						if(min2 > w2) { w2 = Math.Min(min2, wFull); w1 = wNoSplitter - w2; } //min2 has priority

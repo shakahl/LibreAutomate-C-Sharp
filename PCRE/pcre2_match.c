@@ -6162,10 +6162,12 @@ Returns:          > 0 => success; value is the number of ovector pairs filled
                  < -2 => some kind of unexpected problem
 */
 
+//au: added pcre2_match parameter: , int(*callout)(pcre2_callout_block *, void *)
+
 PCRE2_EXP_DEFN int PCRE2_CALL_CONVENTION
 pcre2_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length,
   PCRE2_SIZE start_offset, uint32_t options, pcre2_match_data *match_data,
-  pcre2_match_context *mcontext)
+  pcre2_match_context *mcontext, int(*callout)(pcre2_callout_block *, void *))
 {
 int rc;
 const uint8_t *start_bits = NULL;
@@ -6358,8 +6360,10 @@ bumpalong_limit =  (mcontext->offset_limit == PCRE2_UNSET)?
 
 /* Fill in the remaining fields in the match block. */
 
-mb->callout = mcontext->callout;
-mb->callout_data = mcontext->callout_data;
+//au: use callout parameter instead of match context
+mb->callout = callout;
+//mb->callout = mcontext->callout;
+//mb->callout_data = mcontext->callout_data;
 
 mb->start_subject = subject;
 mb->start_offset = start_offset;

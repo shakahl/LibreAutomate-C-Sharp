@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -355,7 +354,7 @@ namespace Au
 			_DisableDeviceNotReadyMessageBox();
 
 			var d = new Api.WIN32_FIND_DATA();
-			IntPtr hfind = Zero;
+			IntPtr hfind = default;
 			var stack = new Stack<_EDStackEntry>();
 			bool isFirst = true;
 			FileAttributes attr = 0;
@@ -370,15 +369,15 @@ namespace Au
 						isFirst = false;
 						var path2 = ((path.Length <= Path_.MaxDirectoryPathLength - 2) ? path : Path_.PrefixLongPath(path)) + @"\*";
 #if TEST_FINDFIRSTFILEEX
-						hfind = Api.FindFirstFileEx(path2, Api.FINDEX_INFO_LEVELS.FindExInfoBasic, out d, 0, Zero, 0);
+						hfind = Api.FindFirstFileEx(path2, Api.FINDEX_INFO_LEVELS.FindExInfoBasic, out d, 0, default, 0);
 						//speed: FindFirstFileEx 0-2 % slower. FindExInfoBasic makes 0-2% faster. FIND_FIRST_EX_LARGE_FETCH makes 1-50% slower.
 #else
 						hfind = Api.FindFirstFile(path2, out d);
 #endif
 						if(hfind == (IntPtr)(-1)) {
-							hfind = Zero;
+							hfind = default;
 							var ec = Native.GetError();
-							//PrintList(ec, Native.GetErrorMessage(ec), path);
+							//Print(ec, Native.GetErrorMessage(ec), path);
 							bool itsOK = false;
 							switch(ec) {
 							case Api.ERROR_FILE_NOT_FOUND:
@@ -418,11 +417,11 @@ namespace Au
 						if(!Api.FindNextFile(hfind, out d)) {
 							Debug.Assert(Native.GetError() == Api.ERROR_NO_MORE_FILES);
 							Api.FindClose(hfind);
-							hfind = Zero;
+							hfind = default;
 						}
 					}
 
-					if(hfind == Zero) {
+					if(hfind == default) {
 						if(stack.Count == 0) break;
 						var t = stack.Pop();
 						hfind = t.hfind; path = t.path;
@@ -461,12 +460,12 @@ namespace Au
 					if(!isDir || (flags & FEFlags.AndSubdirectories) == 0 || r._skip) continue;
 					if((attr & FileAttributes.ReparsePoint) != 0 && (flags & FEFlags.AndSymbolicLinkSubdirectories) == 0) continue;
 					stack.Push(new _EDStackEntry() { hfind = hfind, path = path });
-					hfind = Zero; path = fullPath;
+					hfind = default; path = fullPath;
 					isFirst = true;
 				}
 			}
 			finally {
-				if(hfind != Zero) Api.FindClose(hfind);
+				if(hfind != default) Api.FindClose(hfind);
 				while(stack.Count > 0) Api.FindClose(stack.Pop().hfind);
 
 				redir.Revert();
@@ -571,9 +570,9 @@ namespace Au
 						}
 					} else {
 						if(type1 == FileDir2.SymLinkDirectory)
-							ok = Api.CreateDirectoryEx(path1, path2, Zero);
+							ok = Api.CreateDirectoryEx(path1, path2, default);
 						else
-							ok = Api.CopyFileEx(path1, path2, null, Zero, null, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
+							ok = Api.CopyFileEx(path1, path2, null, default, null, Api.COPY_FILE_FAIL_IF_EXISTS | Api.COPY_FILE_COPY_SYMLINK);
 					}
 				}
 
@@ -585,13 +584,13 @@ namespace Au
 					}
 					catch(Exception ex) {
 						if(!path1.EndsWith_(':')) //moving drive contents. Deleted contents but cannot delete drive.
-							Output.Warning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
+							PrintWarning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
 						//throw new AuException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
 					}
 				}
 			}
 			finally {
-				//TaskDialog.Show();
+				//AuDialog.Show();
 				del.Finally(ok);
 			}
 		}
@@ -609,15 +608,15 @@ namespace Au
 			bool ok = false;
 			string s1 = null, s2 = null;
 			if(!merge) {
-				if(!path1.EndsWith_(@":\")) ok = Api.CreateDirectoryEx(path1, path2, Zero);
-				if(!ok) ok = Api.CreateDirectory(path2, Zero);
+				if(!path1.EndsWith_(@":\")) ok = Api.CreateDirectoryEx(path1, path2, default);
+				if(!ok) ok = Api.CreateDirectory(path2, default);
 				if(!ok) goto ge;
 			}
 
 			//foreach(var f in EnumDirectory(path1, edFlags, filter)) { //no, see comments above
 			foreach(var f in a) {
 				s1 = f.FullPath; s2 = Path_.PrefixLongPathIfNeed(path2 + f.Name);
-				//PrintList(s1, s2);
+				//Print(s1, s2);
 				//continue;
 				if(f.IsDirectory) {
 					if(merge) switch(ExistsAs(s2, true)) {
@@ -625,8 +624,8 @@ namespace Au
 						case FileDir.File: _DeleteLL(s2, false); break;
 						}
 
-					ok = Api.CreateDirectoryEx(s1, s2, Zero);
-					if(!ok && 0 == (f.Attributes & FileAttributes.ReparsePoint)) ok = Api.CreateDirectory(s2, Zero);
+					ok = Api.CreateDirectoryEx(s1, s2, default);
+					if(!ok && 0 == (f.Attributes & FileAttributes.ReparsePoint)) ok = Api.CreateDirectory(s2, default);
 				} else {
 					if(merge && GetAttributes(s2, out var attr, FAFlags.DoNotThrow | FAFlags.UseRawPath)) {
 						const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
@@ -635,7 +634,7 @@ namespace Au
 					}
 
 					uint fl = Api.COPY_FILE_COPY_SYMLINK; if(!merge) fl |= Api.COPY_FILE_FAIL_IF_EXISTS;
-					ok = Api.CopyFileEx(s1, s2, null, Zero, null, fl);
+					ok = Api.CopyFileEx(s1, s2, null, default, null, fl);
 				}
 				if(!ok) {
 					if(0 != (f.Attributes & FileAttributes.ReparsePoint)) {
@@ -920,7 +919,7 @@ namespace Au
 
 		static int _DeleteLL(string path, bool dir)
 		{
-			//PrintList(dir, path);
+			//Print(dir, path);
 			if(dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 			var ec = Native.GetError();
 			if(ec == Api.ERROR_ACCESS_DENIED) {
@@ -1053,8 +1052,8 @@ namespace Au
 				int retry = 0;
 				g1:
 				bool ok = (templateDirectory == null || stack.Count > 0)
-					? Api.CreateDirectory(s, Zero)
-					: Api.CreateDirectoryEx(templateDirectory, s, Zero);
+					? Api.CreateDirectory(s, default)
+					: Api.CreateDirectoryEx(templateDirectory, s, default);
 				if(!ok) {
 					int ec = Native.GetError();
 					if(ec == Api.ERROR_ALREADY_EXISTS) continue;

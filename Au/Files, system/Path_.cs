@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -129,7 +128,7 @@ namespace Au
 				case '%':
 #if true
 					if(!ExpandEnvVar(s).StartsWith_('%'))
-						Output.Warning("Path starts with %environmentVariable%. Use Path_.IsFullPathExpandEnvVar instead.");
+						PrintWarning("Path starts with %environmentVariable%. Use Path_.IsFullPathExpandEnvVar instead.");
 #else
 					s = ExpandEnvVar(s); //quite fast. 70% slower than just LibEnvVarExists, but reliable.
 					return !s.StartsWith_('%') && IsFullPath(s);
@@ -555,7 +554,7 @@ namespace Au
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return "-";
 			name = name.RegexReplace_(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if(name.RegexIs_(_rxInvalidFN2)) name = "@" + name;
+			if(name.RegexIsMatch_(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -570,7 +569,7 @@ namespace Au
 		public static bool IsInvalidFileName(string name)
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return true;
-			return name.RegexIs_(_rxInvalidFN1) || name.RegexIs_(_rxInvalidFN2);
+			return name.RegexIsMatch_(_rxInvalidFN1) || name.RegexIsMatch_(_rxInvalidFN2);
 		}
 
 		/// <summary>

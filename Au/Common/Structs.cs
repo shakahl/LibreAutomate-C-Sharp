@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -334,7 +333,7 @@ namespace Au.Types
 				if(len < 3) return false;
 				if(len <= 8) c.color |= unchecked((int)0xFF000000);
 			} else if(s[0] == '#') {
-				c.color = s.ToInt32_(1, out int end, true);
+				c.color = s.ToInt32_(1, out int end, STIFlags.IsHexWithout0x);
 				if(end < 2) return false;
 				if(end <= 7) c.color |= unchecked((int)0xFF000000);
 			} else {

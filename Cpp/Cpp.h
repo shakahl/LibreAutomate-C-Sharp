@@ -60,6 +60,7 @@ enum class eAF
 	Reverse = 1,
 	HiddenToo = 2,
 	MenuToo = 4,
+	ClientArea = 8,
 	NotInProc=0x100,
 	UIA=0x200,
 	Mark = 0x10000,

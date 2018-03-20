@@ -14,7 +14,7 @@
     <Name>Au Help</Name>
     <!-- SHFB properties -->
     <FrameworkVersion>.NET Framework 4.6.2</FrameworkVersion>
-    <OutputPath>..\..\_\</OutputPath>
+    <OutputPath>..\..\_\Help\</OutputPath>
     <HtmlHelpName>Au Help</HtmlHelpName>
     <Language>en-US</Language>
     <TransformComponentArguments>
@@ -44,8 +44,7 @@
     <VisibleItems>InheritedMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\..\_\Au.dll" />
-      <DocumentationSource sourceFile="..\..\_\Au.xml" />
+      <DocumentationSource sourceFile="..\..\Au\Au.csproj" />
     </DocumentationSources>
     <WarnOnMissingSourceContext>False</WarnOnMissingSourceContext>
     <ComponentPath>..\Plugins\</ComponentPath>

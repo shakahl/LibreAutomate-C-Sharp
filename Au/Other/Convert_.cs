@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -625,7 +624,7 @@ namespace Au
 		/// Compresses data using <see cref="DeflateStream"/>.
 		/// </summary>
 		/// <param name="data"></param>
-		/// <exception cref="Exception">Exceptions thrown by DeflateStream.</exception>
+		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
 		public static byte[] Compress(byte[] data)
 		{
 			using(MemoryStream memoryStream = new MemoryStream()) {
@@ -643,7 +642,7 @@ namespace Au
 		/// <param name="compressedData">Compressed data.</param>
 		/// <param name="index">Start index of compressed data in the compressedData array.</param>
 		/// <param name="count">Length of compressed data in the compressedData array.</param>
-		/// <exception cref="Exception">Exceptions thrown by DeflateStream.</exception>
+		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
 		public static byte[] Decompress(byte[] compressedData, int index = 0, int count = -1)
 		{
 			using(var stream = new MemoryStream()) {
@@ -660,7 +659,7 @@ namespace Au
 		/// <param name="compressedData">Compressed data.</param>
 		/// <param name="index">Start index of compressed data in the compressedData array.</param>
 		/// <param name="count">Length of compressed data in the compressedData array.</param>
-		/// <exception cref="Exception">Exceptions thrown by DeflateStream.</exception>
+		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
 		/// <example>
 		/// This code is used by the other Decompress overload.
 		/// <code><![CDATA[
@@ -694,7 +693,7 @@ namespace Au
 		public static int Utf8LengthFromString(string s)
 		{
 			if(Empty(s)) return 0;
-			return Api.WideCharToMultiByte(Api.CP_UTF8, 0, s, s.Length, null, 0, Zero, null);
+			return Api.WideCharToMultiByte(Api.CP_UTF8, 0, s, s.Length, null, 0, default, null);
 		}
 
 		/// <summary>
@@ -713,7 +712,7 @@ namespace Au
 		public static int Utf8FromString(string s, byte* buffer, int bufLen)
 		{
 			if(buffer == null || bufLen <= 0) return 0; //use Utf8ToStringLength for it
-			int n = Empty(s) ? 0 : Api.WideCharToMultiByte(Api.CP_UTF8, 0, s, s.Length, buffer, bufLen, Zero, null);
+			int n = Empty(s) ? 0 : Api.WideCharToMultiByte(Api.CP_UTF8, 0, s, s.Length, buffer, bufLen, default, null);
 			buffer[Math.Min(n, bufLen - 1)] = 0;
 			return n;
 		}

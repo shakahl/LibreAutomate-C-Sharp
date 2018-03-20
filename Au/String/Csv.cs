@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -22,15 +21,17 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Parses and composes CSV text. Stores CSV table data in memory as a List of string arrays.
+	/// Parses and composes CSV text. Stores CSV table data in memory as a <b>List</b> of string arrays.
+	/// </summary>
+	/// <remarks>
 	/// CSV is a text format used to store a single table of data in human-readable/editable way.
 	/// It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
-	/// There is no strictly defined CSV standard. CsvTable uses these rules:
+	/// There is no strictly defined CSV standard. <b>CsvTable</b> uses these rules:
 	///		Fields containg <see cref="Separator"/> characters (default ','), <see cref="Quote"/> characters (default '"') and multiple lines must be enclosed in <see cref="Quote"/> characters. Example: "ab, cd".
 	///		Each Quote character in such fields must be escaped (replaced) with two <see cref="Quote"/> characters. Example: "ab ""cd"" ef".
 	///		Fields that start or end with ASCII space or tab characters must be enclosed in <see cref="Quote"/> characters, unless <see cref="TrimSpaces"/> is false. Example: " ab ".
 	///		Rows in CSV text can have different field count.
-	/// </summary>
+	/// </remarks>
 	[DebuggerStepThrough]
 	public class CsvTable
 	{
@@ -41,21 +42,25 @@ namespace Au
 
 		/// <summary>
 		/// Initializes a new <see cref="CsvTable"/> instance and parses CSV text, the same as <see cref="FromString"/>.
-		/// Uses default <see cref="Separator"/>, <see cref="Quote"/> and <see cref="TrimSpaces"/> values (',', '"', true).
 		/// </summary>
 		/// <param name="csv">CSV text.</param>
 		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <remarks>
+		/// Uses default <see cref="Separator"/>, <see cref="Quote"/> and <see cref="TrimSpaces"/> values (',', '"', true).
+		/// </remarks>
 		public CsvTable(string csv)
 		{
 			_Parse(csv);
 		}
 
 		/// <summary>
-		/// Gets the internal List containing rows as string arrays.
-		/// It's not a copy; changing it will change the data of this CsvTable variable.
-		/// You can do anything with the List. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
-		/// All row arrays have Length equal to <see cref="ColumnCount"/>, and it must remain so; you can change Length, but then need to call <c>ColumnCount=newLength</c>.
+		/// Gets the internal <b>List</b> containing rows as string arrays.
 		/// </summary>
+		/// <remarks>
+		/// It's not a copy; changing it will change the data of this <see cref="CsvTable"/> variable.
+		/// You can do anything with the <b>List</b>. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
+		/// All row arrays have <b>Length</b> equal to <see cref="ColumnCount"/>, and it must remain so; you can change <b>Length</b>, but then need to call <c>ColumnCount=newLength</c>.
+		/// </remarks>
 		/// <example><code>x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));</code></example>
 		public List<string[]> Data => _a;
 
@@ -78,14 +83,16 @@ namespace Au
 		public bool TrimSpaces { get; set; } = true;
 
 		/// <summary>
-		/// Parses CSV text and stores all data in internal List of string arrays.
-		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"'), <see cref="TrimSpaces"/> (initially true).
+		/// Parses CSV text and stores all data in internal <b>List</b> of string arrays.
 		/// </summary>
 		/// <param name="csv">
 		/// CSV text.
 		///	If rows in CSV text have different field count, the longest row sets the <see cref="ColumnCount"/> property and all row array lenghts; array elements of missing CSV fields will be null.
 		/// </param>
 		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <remarks>
+		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"'), <see cref="TrimSpaces"/> (initially true).
+		/// </remarks>
 		public void FromString(string csv)
 		{
 			_Parse(csv);
@@ -160,50 +167,51 @@ namespace Au
 					}
 				}
 
-				//Make all rows equal length and set _columnCount.
+				//Make all rows of equal length and set _columnCount.
 				ColumnCount = nCol;
 
-				//PrintList(RowCount, ColumnCount);
+				//Print(RowCount, ColumnCount);
 			} //fixed
 		}
 
 		/// <summary>
-		/// Composes CSV text from the internal List of string arrays.
-		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"').
+		/// Composes CSV text from the internal <b>List</b> of string arrays.
 		/// </summary>
+		/// <remarks>
+		/// Depends on these properties: <see cref="Separator"/> (initially ','), <see cref="Quote"/> (initially '"').
+		/// </remarks>
 		public override string ToString()
 		{
 			if(RowCount == 0 || ColumnCount == 0) return null;
 
-			var s = Util.LibStringBuilderCache.Acquire();
-			char quote = Quote;
-			string sQuote1 = null, sQuote2 = null;
+			using(new Util.LibStringBuilder(out var b)) {
+				char quote = Quote;
+				string sQuote1 = null, sQuote2 = null;
 
-			for(int r = 0; r < _a.Count; r++) {
-				for(int c = 0; c < _columnCount; c++) {
-					var field = _a[r][c];
-					if(!Empty(field)) {
-						bool hasQuote = field.IndexOf(quote) >= 0;
-						if(hasQuote || field.IndexOf(Separator) >= 0 || field[0] == ' ' || field[field.Length - 1] == ' ') {
-							if(hasQuote) {
-								if(sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
-								field = field.Replace(sQuote1, sQuote2);
-							}
-							s.Append(quote);
-							s.Append(field);
-							s.Append(quote);
-						} else s.Append(field);
+				for(int r = 0; r < _a.Count; r++) {
+					for(int c = 0; c < _columnCount; c++) {
+						var field = _a[r][c];
+						if(!Empty(field)) {
+							bool hasQuote = field.IndexOf(quote) >= 0;
+							if(hasQuote || field.IndexOf(Separator) >= 0 || field[0] == ' ' || field[field.Length - 1] == ' ') {
+								if(hasQuote) {
+									if(sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
+									field = field.Replace(sQuote1, sQuote2);
+								}
+								b.Append(quote).Append(field).Append(quote);
+							} else b.Append(field);
+						}
+						if(c < _columnCount - 1) b.Append(Separator);
 					}
-					if(c < _columnCount - 1) s.Append(Separator);
+					b.AppendLine();
 				}
-				s.AppendLine();
+				return b.ToString();
 			}
-			return s.ToStringCached_();
 		}
 
 		/// <summary>
 		/// Gets or sets row count.
-		/// The 'get' function simply returns the Count property of the internal List of string arrays.
+		/// The 'get' function returns the <b>Count</b> property of the internal <b>List</b> of string arrays.
 		/// The 'set' function can add new rows or remove rows at the end.
 		/// </summary>
 		public int RowCount
@@ -223,7 +231,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets column count.
-		/// The 'get' function returns the length of all string arrays in the internal List.
+		/// The 'get' function returns the length of all string arrays in the internal <b>List</b>.
 		/// The 'set' function can add new columns or remove columns at the right.
 		/// </summary>
 		public int ColumnCount
@@ -255,7 +263,8 @@ namespace Au
 		/// Gets or sets a field.
 		/// </summary>
 		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
-		/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then makes ColumnCount = column + 1.</param>
+		/// <param name="column">0-based column index. With the 'set' function it can be &gt;= <see cref="ColumnCount"/> and &lt; 1000; then sets <c>ColumnCount = column + 1</c>.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public string this[int row, int column]
 		{
 			get
@@ -286,10 +295,13 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets fields in a row.
-		/// The 'get' function gets the row array. It's not a copy; changing its elements will change the data of this CsvTable variable.
-		/// The 'set' function sets the row array. Does not copy the array, unless its Length is less than <see cref="ColumnCount"/>.
 		/// </summary>
 		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <remarks>
+		/// The 'get' function gets the row array. It's not a copy; changing its elements will change the data of this <see cref="CsvTable"/> variable.
+		/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
+		/// </remarks>
 		public string[] this[int row]
 		{
 			get
@@ -325,7 +337,8 @@ namespace Au
 		/// Inserts new row and sets its fields.
 		/// </summary>
 		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
-		/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its Length is less than <see cref="ColumnCount"/>. Adds new columns if array Length (or the number of string arguments) is greater than ColumnCount.</param>
+		/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than ColumnCount.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void InsertRow(int index, params string[] fields)
 		{
 			if(index < 0) index = RowCount;
@@ -337,6 +350,7 @@ namespace Au
 		/// Inserts new empty row.
 		/// </summary>
 		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void InsertRow(int index)
 		{
 			InsertRow(index, null);
@@ -347,6 +361,8 @@ namespace Au
 		/// </summary>
 		/// <param name="index">0-based row index.</param>
 		/// <param name="count">How many rows to remove, default 1.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <exception cref="ArgumentException"></exception>
 		public void RemoveRow(int index, int count = 1)
 		{
 			_a.RemoveRange(index, count);
@@ -371,9 +387,13 @@ namespace Au
 
 		/// <summary>
 		/// Loads and parses a CSV file.
-		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="FromString"/>.
 		/// </summary>
 		/// <param name="file"></param>
+		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="FromString"/>.
+		/// </remarks>
 		public void FromFile(string file)
 		{
 			FromString(File.ReadAllText(file));
@@ -381,8 +401,12 @@ namespace Au
 
 		/// <summary>
 		/// Composes CSV and saves to file.
-		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>.
 		/// </summary>
+		/// <param name="file"></param>
+		/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText(string, string)"/>.</exception>
+		/// <remarks>
+		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>.
+		/// </remarks>
 		public void ToFile(string file)
 		{
 			File.WriteAllText(file, ToString());
@@ -396,6 +420,7 @@ namespace Au
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		/// <param name="value">The number.</param>
 		/// <param name="hex">Let the number be in hexadecimal format, like 0x3A.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void SetInt(int row, int column, int value, bool hex = false)
 		{
 			this[row, column] = hex ? "0x" + value.ToString("X") : value.ToString();
@@ -406,6 +431,7 @@ namespace Au
 		/// </summary>
 		/// <param name="row"><see cref="this[int, int]"/></param>
 		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public int GetInt(int row, int column)
 		{
 			return this[row, column].ToInt32_();
@@ -417,6 +443,7 @@ namespace Au
 		/// <param name="row"><see cref="this[int, int]"/></param>
 		/// <param name="column"><see cref="this[int, int]"/></param>
 		/// <param name="value">The number.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void SetDouble(int row, int column, double value)
 		{
 			this[row, column] = value.ToString_();
@@ -427,6 +454,7 @@ namespace Au
 		/// </summary>
 		/// <param name="row"><see cref="this[int, int]"/></param>
 		/// <param name="column"><see cref="this[int, int]"/></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public double GetDouble(int row, int column)
 		{
 			return this[row, column].ToDouble_();

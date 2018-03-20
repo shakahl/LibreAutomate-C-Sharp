@@ -5,7 +5,7 @@
 
 HWND s_QM2;
 
-#if _DEBUG || PRINT_ALWAYS
+#if TRACE
 
 void Print(STR s)
 {
@@ -39,7 +39,7 @@ void Printf(STR frm, ...)
 #pragma endregion
 
 
-#if _DEBUG || PRINT_ALWAYS
+#if TRACE
 
 void Perf_Inst::First()
 {
@@ -189,7 +189,7 @@ bool Name(HWND w, out Bstr& s)
 	return R;
 }
 
-#if _DEBUG || PRINT_ALWAYS
+#if TRACE
 void PrintWnd(HWND w)
 {
 	Bstr sc, sn;

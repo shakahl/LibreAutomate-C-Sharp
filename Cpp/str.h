@@ -209,81 +209,27 @@ public:
 	//If appendLen<0, calls wcslen.
 	void FixBuffer(int appendLen = -1)
 	{
-		auto n = _len + (appendLen<0 ? wcslen(_b + _len) : appendLen);
+		auto n = _len + (appendLen < 0 ? wcslen(_b + _len) : appendLen);
 		assert(n < _all); if(n >= _all) n = _len;
 		_b[n] = 0;
 		_len = n;
 	}
 };
 
-//PCRE regular expression.
-//More info in the C# version.
-class Regex
+namespace pcre
 {
-	Regex(Regex&& x) = delete; //disable copying
 
-	pcre2_code_16* _code;
-	pcre2_match_data_16* _md;
-public:
+BSTR GetErrorMessage(int code);
+pcre2_code_16* Compile(STR rx, size_t len, __int64 flags = 0, out BSTR* errStr = null);
+bool Match(pcre2_code_16* code, STR s, size_t len, size_t start = 0, UINT flags = 0);
 
-	Regex() { _code = null; _md = null; }
+//If code is not null, calls pcre2_code_free_16.
+static void Free(pcre2_code_16* code) {
+	if(code != null) pcre2_code_free_16(code);
+}
 
-	~Regex()
-	{
-		if(_code) {
-			pcre2_code_free_16(_code); _code = null;
-			if(_md != null) pcre2_match_data_free_16(_md);
-		}
-	}
-
-	bool Parse(STR rx, size_t len, __int64 flags = PCRE2_UTF, out BSTR* errStr = null)
-	{
-		assert(_code == null);
-		int errCode; size_t errOffset;
-		UINT f = (UINT)flags, fe = flags >> 32;
-		pcre2_compile_context_16* cc = null;
-		if(fe) {
-			cc = pcre2_compile_context_create_16(null);
-			pcre2_set_compile_extra_options_16(cc, fe);
-		}
-		auto re = pcre2_compile_16(rx, len, f, &errCode, &errOffset, cc);
-		if(cc) pcre2_compile_context_free_16(cc);
-		if(re == null) {
-			if(errStr) *errStr = GetErrorMessage(errCode, errOffset);
-			return false;
-		}
-		_code = re;
-		return true;
-	}
-
-	bool Match(STR s, size_t len, size_t start = 0, UINT flags = 0)
-	{
-		if(_md == null) _md = pcre2_match_data_create_from_pattern(_code, null);
-		return pcre2_match(_code, s, len, start, flags, _md, null) > 0;
-	}
-
-	int GetCodeSize()
-	{
-		size_t codeSize = 0;
-		if(_code == null || 0 != pcre2_pattern_info(_code, PCRE2_INFO_SIZE, &codeSize)) return 0;
-		return (int)codeSize;
-	}
-
-	BSTR GetErrorMessage(int code, size_t offset = -1)
-	{
-		WCHAR b[300]; b[0] = 0;
-		auto t = b;
-		if(offset >= 0) {
-			wcscat(t, L"Regular expression error at offset "); t += wcslen(t);
-			_itow((int)offset, t, 10); t += wcslen(t);
-			wcscat(t, L": "); t += 2;
-		}
-		pcre2_get_error_message(code, t, _countof(b) - (t - b));
-		return SysAllocString(b);
-
-		//here can instead use StringBuilder, which was created later
-	}
 };
+
 
 //Wildcard expression.
 //More info in the C# version and help file.
@@ -296,14 +242,14 @@ public:
 	/// </summary>
 	enum class WildType :byte
 	{
-		/// Simple text (option t, or no *? characters and no t r p options).
+		/// Simple text (option t, or no *? characters and no t r options).
 		Text,
 
-		/// Wildcard (has *? characters and no t r p options).
+		/// Wildcard (has *? characters and no t r options).
 		/// Match() calls str::Like.
 		Wildcard,
 
-		/// PCRE regular expression (option p or r).
+		/// PCRE regular expression (option r).
 		RegexPcre,
 
 		/// Multiple parts (option m).
@@ -314,7 +260,7 @@ public:
 private:
 	union {
 		LPWSTR _text;
-		Regex* _regex;
+		pcre2_code_16* _regex;
 		Wildex* _multi_array;
 	};
 	union {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -299,7 +298,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt">SetInt</see> topic.</exception>
 		public static unsafe void SetStringArray(string[] data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
-			_Set(RegistryValueKind.MultiString, data ?? new string[0], valueName, key, parentKeyOrHive);
+			_Set(RegistryValueKind.MultiString, data ?? Array.Empty<string>(), valueName, key, parentKeyOrHive);
 		}
 
 		/// <summary>
@@ -342,7 +341,7 @@ namespace Au
 			if(k != null) {
 				try {
 					IntPtr h = k.Handle.DangerousGetHandle();
-					int e = Api.RegQueryValueEx(h, valueName, Zero, out var kind, data, ref size);
+					int e = Api.RegQueryValueEx(h, valueName, default, out var kind, data, ref size);
 					if(e == 0) return size;
 					if(e != Api.ERROR_FILE_NOT_FOUND) throw new Win32Exception(e);
 				}

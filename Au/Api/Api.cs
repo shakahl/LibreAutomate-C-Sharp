@@ -35,7 +35,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the native size of a struct variable.
 		/// Returns (uint)Marshal.SizeOf(typeof(T)).
-		/// Speed: the same (in Release config) as of Marshal.SizeOf(typeof(T)) and 2 times faster than Marshal.SizeOf(v).
+		/// Speed: the same (in Release config) as Marshal.SizeOf(typeof(T)), and 2 times faster than Marshal.SizeOf(v).
 		/// </summary>
 		internal static uint SizeOf<T>(T v) { return (uint)Marshal.SizeOf(typeof(T)); }
 
@@ -1056,11 +1056,11 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern bool ReleaseCapture();
 
-		[DllImport("user32.dll", EntryPoint = "CharLowerBuffW")]
-		internal static unsafe extern int CharLowerBuff(char* lpsz, int cchLength);
+		//[DllImport("user32.dll", EntryPoint = "CharLowerBuffW")]
+		//internal static unsafe extern int CharLowerBuff(char* lpsz, int cchLength);
 
-		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int wsprintfW(char* lpOut1024, string lpFmt, __arglist);
+		//[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int wsprintfW(char* lpOut1024, string lpFmt, __arglist);
 		//note: with __arglist always returns 0. Could instead use void*, but then much work to properly pack arguments.
 
 		//tested speed (time %) of various formatting functions, with two int and one string arg, with converting to string:
@@ -1269,6 +1269,10 @@ namespace Au.Types
 		[DllImport("kernel32.dll")] //note: no SetLastError = true
 		internal static extern bool CloseHandle(IntPtr hObject);
 
+		//currently not used
+		//[DllImport("kernel32.dll")] //note: no SetLastError = true
+		//internal static extern bool CloseHandle(HandleRef hObject);
+
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetCurrentThread();
 
@@ -1377,10 +1381,10 @@ namespace Au.Types
 		internal static extern bool VirtualFree(IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
+		internal static extern IntPtr VirtualAllocEx(HandleRef hProcess, IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFreeEx(HandleRef hProcess, IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFileAttributesW", SetLastError = true)]
 		internal static extern System.IO.FileAttributes GetFileAttributes(string lpFileName);
@@ -1750,10 +1754,10 @@ namespace Au.Types
 		internal static extern ushort GlobalDeleteAtom(ushort nAtom);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesRead);
+		internal static extern bool ReadProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesRead);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
+		internal static extern bool WriteProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
 
 		[DllImport("kernel32", SetLastError = true)]
 		internal extern static IntPtr CreateActCtx(ref ACTCTX actctx);
@@ -1862,7 +1866,7 @@ namespace Au.Types
 		}
 
 		[DllImport("advapi32.dll", SetLastError = true)]
-		internal static extern bool GetTokenInformation(IntPtr TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, void* TokenInformation, uint TokenInformationLength, out uint ReturnLength);
+		internal static extern bool GetTokenInformation(HandleRef TokenHandle, TOKEN_INFORMATION_CLASS TokenInformationClass, void* TokenInformation, uint TokenInformationLength, out uint ReturnLength);
 
 		[DllImport("advapi32.dll")]
 		internal static extern byte* GetSidSubAuthorityCount(IntPtr pSid);
@@ -1877,7 +1881,7 @@ namespace Au.Types
 		internal static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
 
 		[StructLayout(LayoutKind.Sequential)]
-		internal class SECURITY_ATTRIBUTES :IDisposable
+		internal sealed class SECURITY_ATTRIBUTES :IDisposable
 		{
 			public int nLength;
 			public void* lpSecurityDescriptor;
@@ -2162,7 +2166,7 @@ namespace Au.Types
 		internal static extern bool ShellExecuteEx(ref SHELLEXECUTEINFO pExecInfo);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, IntPtr[] apidl, uint dwFlags);
+		internal static extern int SHOpenFolderAndSelectItems(HandleRef pidlFolder, uint cidl, IntPtr[] apidl, uint dwFlags);
 
 		[DllImport("shell32.dll")]
 		internal static extern int ILGetSize(IntPtr pidl);

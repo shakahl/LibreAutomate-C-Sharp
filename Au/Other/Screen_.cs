@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -80,7 +79,7 @@ namespace Au
 
 			if(index != 0) {
 				if(!noThrow) throw new ArgumentOutOfRangeException(null, "Invalid screen index.");
-				Output.Warning("Invalid screen index.");
+				PrintWarning("Invalid screen index.");
 				return null;
 			}
 			return Screen.PrimaryScreen;
@@ -218,7 +217,7 @@ namespace Au
 		/// </summary>
 		public static bool IsInAnyScreen(Point p)
 		{
-			return Api.MonitorFromPoint(p, 0) != Zero; //0 - MONITOR_DEFAULTTONULL
+			return Api.MonitorFromPoint(p, 0) != default; //0 - MONITOR_DEFAULTTONULL
 		}
 
 		/// <summary>
@@ -226,7 +225,7 @@ namespace Au
 		/// </summary>
 		public static bool IsInAnyScreen(RECT r)
 		{
-			return Api.MonitorFromRect(ref r, 0) != Zero;
+			return Api.MonitorFromRect(ref r, 0) != default;
 		}
 
 		/// <summary>
@@ -234,7 +233,7 @@ namespace Au
 		/// </summary>
 		public static bool IsInAnyScreen(Wnd w)
 		{
-			return Api.MonitorFromWindow(w, 0) != Zero;
+			return Api.MonitorFromWindow(w, 0) != default;
 		}
 	}
 }

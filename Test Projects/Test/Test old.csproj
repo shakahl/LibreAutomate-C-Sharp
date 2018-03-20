@@ -58,8 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="Older.cs" />
+    <Compile Include="ParamGridTLP.cs" />
+    <Compile Include="Test2.cs" />
     <Compile Include="TestProg.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="TestWPF.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -74,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\function.ico" />
+    <Content Include="_TestOld.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

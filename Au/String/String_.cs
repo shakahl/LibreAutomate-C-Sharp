@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -366,7 +365,14 @@ namespace Au
 		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value, or 0 if fails to convert.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="startIndex">Offset in this string where to start parsing.</param>
+		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+		/// <param name="flags"></param>
+		/// <remarks>
 		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
+		/// 
 		/// Unlike int.Parse and Convert.ToInt32:
 		///		The number in string can be followed by more text, like "123text".
 		///		Has startIndex parameter that allows to get number from middle, like "text123text".
@@ -374,44 +380,49 @@ namespace Au
 		///		No exception when cannot convert.
 		///		Supports hexadecimal format, like "0x1A", case-insensitive.
 		///		Much faster.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
-		/// <param name="isHex">The number in string is hexadecimal without a prefix, like "1A".</param>
-		/// <remarks>
-		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
-		/// The number can be with "-" or "+", like "-5", but not like "- 5".
+		///	
+		/// The number in string can begin with ASCII spaces, tabs or newlines, like " 5".
+		/// The number in string can be with "-" or "+", like "-5", but not like "- 5".
 		/// Fails if the number is greater than +- uint.MaxValue (0xffffffff).
 		/// The return value becomes negative if the number is greater than int.MaxValue, for example "0xffffffff" is -1, but it becomes correct if assigned to uint (need cast).
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
-		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex, bool isHex = false)
+		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 		{
-			return (int)_ToInt(t, startIndex, out numberEndIndex, false, isHex);
+			return (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		}
+		//TODO: make all bool:
+		//	public static bool ToInt_(this string t, out int result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
+		//	public static bool ToInt_(this string t, out long result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 
 		/// <summary>
-		/// This overload does not have parameter numberEndIndex.
+		/// This <see cref="ToInt32_(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static int ToInt32_(this string t, int startIndex, bool isHex = false)
+		public static int ToInt32_(this string t, int startIndex, STIFlags flags = 0)
 		{
-			return (int)_ToInt(t, startIndex, out _, false, isHex);
+			return (int)_ToInt(t, startIndex, out _, false, flags);
 		}
 
 		/// <summary>
-		/// This overload does not have parameters.
+		/// This <see cref="ToInt32_(string, int, out int, STIFlags)"/> overload does not have parameters.
 		/// </summary>
 		public static int ToInt32_(this string t)
 		{
-			return (int)_ToInt(t, 0, out _, false, false);
+			return (int)_ToInt(t, 0, out _, false, 0);
 		}
 
 		/// <summary>
 		/// Converts part of string to long.
 		/// Returns the long value, or 0 if fails to convert.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="startIndex">Offset in this string where to start parsing.</param>
+		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+		/// <param name="flags"></param>
+		/// <remarks>
 		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
+		/// 
 		/// Unlike long.Parse and Convert.ToInt64:
 		///		The number in string can be followed by more text, like "123text".
 		///		Has startIndex parameter that allows to get number from middle, like "text123text".
@@ -419,45 +430,40 @@ namespace Au
 		///		No exception when cannot convert.
 		///		Supports hexadecimal format, like "0x1A", case-insensitive.
 		///		Much faster.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
-		/// <param name="isHex">The number in string is hexadecimal without a prefix, like "1A".</param>
-		/// <remarks>
-		/// The number can begin with ASCII spaces, tabs or newlines, like " 5".
-		/// The number can be with "-" or "+", like "-5", but not like "- 5".
+		///	
+		/// The number in string can begin with ASCII spaces, tabs or newlines, like " 5".
+		/// The number in string can be with "-" or "+", like "-5", but not like "- 5".
 		/// Fails if the number is greater than +- ulong.MaxValue (0xffffffffffffffff).
 		/// The return value becomes negative if the number is greater than long.MaxValue, for example "0xffffffffffffffff" is -1, but it becomes correct if assigned to ulong (need cast).
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
-		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex, bool isHex = false)
+		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 		{
-			return _ToInt(t, startIndex, out numberEndIndex, true, isHex);
+			return _ToInt(t, startIndex, out numberEndIndex, true, flags);
 		}
 
 		/// <summary>
-		/// This overload does not have parameter numberEndIndex.
+		/// This <see cref="ToInt64_(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static long ToInt64_(this string t, int startIndex, bool isHex = false)
+		public static long ToInt64_(this string t, int startIndex, STIFlags flags = 0)
 		{
-			return _ToInt(t, startIndex, out _, true, isHex);
+			return _ToInt(t, startIndex, out _, true, flags);
 		}
 
 		/// <summary>
-		/// This overload does not have parameters.
+		/// This <see cref="ToInt64_(string, int, out int, STIFlags)"/> overload does not have parameters.
 		/// </summary>
 		public static long ToInt64_(this string t)
 		{
-			return _ToInt(t, 0, out _, true, false);
+			return _ToInt(t, 0, out _, true, 0);
 		}
 
-		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, bool isHex)
+		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags)
 		{
 			numberEndIndex = 0;
 			int len = t == null ? 0 : t.Length;
-			if(startIndex < 0 || startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
+			if((uint)startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
 			int i = startIndex; char c = default;
 
 			//skip spaces
@@ -480,9 +486,17 @@ namespace Au
 			long R = 0; //result
 
 			//is hex?
-			if(!isHex && c == '0' && i <= len - 3) {
-				c = t[++i];
-				if(c == 'x' || c == 'X') { i++; isHex = true; } else i--;
+			bool isHex = false;
+			switch(flags & (STIFlags.NoHex | STIFlags.IsHexWithout0x)) {
+			case 0:
+				if(c == '0' && i <= len - 3) {
+					c = t[++i];
+					if(c == 'x' || c == 'X') { i++; isHex = true; } else i--;
+				}
+				break;
+			case STIFlags.IsHexWithout0x:
+				isHex = true;
+				break;
 			}
 
 			//skip '0'
@@ -533,16 +547,16 @@ namespace Au
 		/// <summary>
 		/// If this string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
 		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-		/// Everything else is the same as with <see cref="ToInt32_(string, int, out int, bool)"/>.
+		/// Everything else is the same as with <see cref="ToInt32_(string, int, out int, STIFlags)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="num">Receives the number. Receives 0 if no number.</param>
 		/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="isHex">The number in string is hexadecimal without a prefix, like "1A".</param>
-		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0, bool isHex = false)
+		/// <param name="flags"></param>
+		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0, STIFlags flags = 0)
 		{
-			num = ToInt32_(t, startIndex, out int end, isHex);
+			num = ToInt32_(t, startIndex, out int end, flags);
 			if(end == 0) {
 				tail = null;
 				return false;
@@ -577,142 +591,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// If this string is longer than length, returns its substring 0 to length - 3 with appended "...".
-		/// Else returns this string.
-		/// </summary>
-		public static string Limit_(this string t, int length)
-		{
-			int k = t.Length;
-			if(k <= length || length < 4) return t;
-			return t.Remove(length - 3) + "...";
-		}
-
-		/// <summary>
-		/// Returns true if this string matches regular expression pattern.
-		/// Calls <see cref="Regex.IsMatch(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// </summary>
-		public static bool RegexIs_(this string t, string pattern, RegexOptions options = 0)
-		{
-			return Regex.IsMatch(t, pattern, options | RegexOptions.CultureInvariant);
-		}
-
-		/// <summary>
-		/// Calls <see cref="RegexIs_(string, string, RegexOptions)"/> for each regular expression pattern specified in the argument list until it returns true.
-		/// Returns 1-based index of matching pattern, or 0 if none.
-		/// </summary>
-		public static int RegexIs_(this string t, RegexOptions options, params string[] patterns)
-		{
-			for(int i = 0; i < patterns.Length; i++) if(t.RegexIs_(patterns[i], options)) return i + 1;
-			return 0;
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// </summary>
-		public static Match RegexMatch_(this string t, string pattern, RegexOptions options = 0)
-		{
-			return Regex.Match(t, pattern, options | RegexOptions.CultureInvariant);
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Matches(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// </summary>
-		public static MatchCollection RegexMatches_(this string t, string pattern, RegexOptions options = 0)
-		{
-			return Regex.Matches(t, pattern, options | RegexOptions.CultureInvariant);
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// Returns the match position in this string, or -1. If group is not 0, it is submatch position.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="pattern"></param>
-		/// <param name="group">0 or a group number. For example, if pattern is "one(two)" and group is 1, returns "two" position.</param>
-		/// <param name="options"></param>
-		public static int RegexIndexOf_(this string t, string pattern, int group = 0, RegexOptions options = 0)
-		{
-			return RegexIndexOf_(t, pattern, out int unused, group, options);
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant. Also gets match length.
-		/// Returns the match position in this string, or -1. If group is not 0 - submatch position.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="pattern"></param>
-		/// <param name="length">Receives match length. If group is not 0 - submatch length.</param>
-		/// <param name="group">0 or a group number. For example, if pattern is "one(two)" and group is 1, gets "two" length and returns "two" position.</param>
-		/// <param name="options"></param>
-		public static int RegexIndexOf_(this string t, string pattern, out int length, int group = 0, RegexOptions options = 0)
-		{
-			length = 0;
-			var m = Regex.Match(t, pattern, options | RegexOptions.CultureInvariant);
-			if(!m.Success) return -1;
-			if(group == 0) { length = m.Length; return m.Index; }
-			var g = m.Groups[group];
-			length = g.Length;
-			return g.Index;
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Match(string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant. Also gets the match string.
-		/// Returns the match position in this string, or -1. If group is not 0 - submatch position.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="pattern"></param>
-		/// <param name="match">Receives the match string. If group is not 0 - submatch.</param>
-		/// <param name="group">0 or a group number. For example, if pattern is "one(two)" and group is 1, gets "two" and returns "two" position.</param>
-		/// <param name="options"></param>
-		public static int RegexIndexOf_(this string t, string pattern, out string match, int group = 0, RegexOptions options = 0)
-		{
-			match = null;
-			int i = RegexIndexOf_(t, pattern, out int len, group, options);
-			if(i >= 0) match = t.Substring(i, len);
-			return i;
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Replace(string, string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// </summary>
-		public static string RegexReplace_(this string t, string pattern, string replacement, RegexOptions options = 0)
-		{
-			return Regex.Replace(t, pattern, replacement, options | RegexOptions.CultureInvariant);
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Replace(string, string, MatchEvaluator, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// </summary>
-		public static string RegexReplace_(this string t, string pattern, MatchEvaluator evaluator, RegexOptions options = 0)
-		{
-			return Regex.Replace(t, pattern, evaluator, options | RegexOptions.CultureInvariant);
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Replace(string, string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// Gets the result string and returns the number of replacements made.
-		/// </summary>
-		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, RegexOptions options = 0)
-		{
-			int n = 0;
-			result = Regex.Replace(t, pattern, m => { n++; return m.Result(replacement); }, options | RegexOptions.CultureInvariant);
-			return n;
-		}
-
-		/// <summary>
-		/// Calls <see cref="Regex.Replace(string, string, string, RegexOptions)"/> and adds RegexOptions.CultureInvariant.
-		/// Gets the result string and returns the number of replacements made.
-		/// This overload has parameter 'count' (max number of replacements).
-		/// </summary>
-		public static int RegexReplace_(this string t, out string result, string pattern, string replacement, int count, RegexOptions options = 0)
-		{
-			var x = new Regex(pattern, options | RegexOptions.CultureInvariant);
-			int n = 0;
-			result = x.Replace(t, m => { n++; return m.Result(replacement); }, count);
-			return n;
-		}
-
-		/// <summary>
 		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex or startIndex+count is outside of this string bounds.</exception>
@@ -724,46 +602,101 @@ namespace Au
 			//return t.Substring(0, startIndex) + value + t.Substring(startIndex + count);
 
 			//maybe less garbage (didn't measure), but slightly slower
-			//var s = Util.LibStringBuilderCache.Acquire();
-			//if(startIndex != 0) s.Append(t, 0, startIndex);
-			//s.Append(value);
-			//int i = startIndex + count, n = t.Length - i;
-			//if(n != 0) s.Append(t, i, n);
-			//return s.ToStringCached_();
+			//using(new Util.LibStringBuilder(out var b)) {
+			//	if(startIndex != 0) b.Append(t, 0, startIndex);
+			//	b.Append(value);
+			//	int i = startIndex + count, n = t.Length - i;
+			//	if(n != 0) b.Append(t, i, n);
+			//	return b.ToString();
+			//}
 		}
+
+		/// <summary>
+		/// If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-3 with appended "...".
+		/// Else returns this string.
+		/// </summary>
+		public static string Limit_(this string t, int limit)
+		{
+			int k = t.Length;
+			if(limit < 3) limit = 3;
+			if(k <= limit) return t;
+			return t.Remove(limit - 3) + "...";
+		}
+		//CONSIDER: if string looks like path, insert the "..." in the middle.
+		//	Don't need it in Escape_, because path cannot contain characters that need to be escaped.
 
 		/// <summary>
 		/// Replaces some characters to C# escape sequences.
 		/// Replaces these characters: '\\', '\"', '\t', '\n', '\r' and all in range 0-31.
 		/// If the string contains these characters, replaces and returns new string. Else returns this string.
 		/// </summary>
-		public static string Escape_(this string t)
+		/// <param name="t">This string.</param>
+		/// <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-3 with appended "...". The enclosing "" are not counted.</param>
+		/// <param name="quote">Enclose in "".</param>
+		public static string Escape_(this string t, int limit = 0, bool quote = false)
 		{
-			if(t.Length == 0) return t;
-			int i;
-			for(i = 0; i < t.Length; i++) {
+			int i, len = t.Length;
+			if(len == 0) return quote ? "\"\"" : t;
+
+			if(limit > 0) {
+				if(limit < 3) limit = 3;
+				if(len > limit) len = limit - 3; else limit = 0;
+			}
+
+			for(i = 0; i < len; i++) {
 				var c = t[i];
-				if(c < ' ' || c == '\\' || c == '\"') break;
+				if(c < ' ' || c == '\\' || c == '\"') goto g1;
 				//tested: Unicode line-break chars in most controls don't break lines, therefore don't need to escape
 			}
-			if(i == t.Length) return t;
-			var s = Util.LibStringBuilderCache.Acquire(t.Length + t.Length / 16 + 100);
-			for(i = 0; i < t.Length; i++) {
-				var c = t[i];
-				if(c < ' ') {
-					switch(c) {
-					case '\t': s.Append("\\t"); break;
-					case '\n': s.Append("\\n"); break;
-					case '\r': s.Append("\\r"); break;
-					default: s.Append("\\u"); s.Append(((ushort)c).ToString("x4")); break;
-					}
-				} else if(c == '\\') s.Append("\\\\");
-				else if(c == '\"') s.Append("\\\"");
-				else s.Append(c);
+			if(limit > 0) t = Limit_(t, limit);
+			if(quote) t = "\"" + t + "\"";
+			return t;
+			g1:
+			using(new Util.LibStringBuilder(out var b, len + len / 16 + 100)) {
+				if(quote) b.Append('\"');
+				for(i = 0; i < len; i++) {
+					var c = t[i];
+					if(c < ' ') {
+						switch(c) {
+						case '\t': b.Append("\\t"); break;
+						case '\n': b.Append("\\n"); break;
+						case '\r': b.Append("\\r"); break;
+						default: b.Append("\\u").Append(((ushort)c).ToString("x4")); break;
+						}
+					} else if(c == '\\') b.Append("\\\\");
+					else if(c == '\"') b.Append("\\\"");
+					else b.Append(c);
+
+					if(limit > 0 && b.Length - (quote ? 1 : 0) >= len) break;
+				}
+
+				if(limit > 0) b.Append("...");
+				if(quote) b.Append('\"');
+				return b.ToString();
 			}
-			return s.ToStringCached_();
 		}
 		//TODO: Unescape
+	}
+
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Flags for String_.ToIntX functions.
+	/// </summary>
+	[Flags]
+	public enum STIFlags
+	{
+		/// <summary>
+		/// Don't support hexadecimal numbers (numbers with prefix "0x").
+		/// </summary>
+		NoHex = 1,
+
+		/// <summary>
+		/// The number in string is hexadecimal without a prefix, like "1A".
+		/// </summary>
+		IsHexWithout0x = 2,
 	}
 
 }

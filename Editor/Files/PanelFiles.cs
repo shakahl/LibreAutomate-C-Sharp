@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -288,7 +287,7 @@ partial class PanelFiles :Control
 			m?.Dispose();
 			m = null;
 			//Print($"Failed to load '{collDir}'. {ex.Message}");
-			switch(TaskDialog.ShowError("Failed to load collection", collDir,
+			switch(AuDialog.ShowError("Failed to load collection", collDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
 				owner: this, expandedText: ex.Message)) {
 			case 1: goto g1;

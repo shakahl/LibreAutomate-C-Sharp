@@ -106,7 +106,7 @@ static unsafe partial class Test
 
 		//		new Thread(() =>
 		//		{
-		//			Wait(1);
+		//			1.s();
 		//			Print("unload");
 		//			TestAppDomainUnload(d);
 		//		}).Start();
@@ -124,7 +124,7 @@ static unsafe partial class Test
 		//	t.SetApartmentState(ApartmentState.STA);
 		//	t.Start();
 		//}
-		//Wait(10);
+		//10.s();
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -150,14 +150,33 @@ static unsafe partial class Test
 		if(s_ao.TryGetValue(a, out var o)) Print(o.k);
 	}
 
+	static void TestFinalizersAndGC()
+	{
+		//Print(Marshal.SizeOf<HandleRef>());
+
+		Task.Run(() => { for(; ; ) { 100.ms(); GC.Collect(); } });
+
+		var w = +Wnd.Find("Quick*");
+
+		var a = +Acc.Find(w, "CHECKBOX", "Annot*");
+		//var atb = +Acc.Find(w, "TOOLBAR", prop: "id=2053");
+		//var a = +atb.Find("CHECKBOX", "Annot*");
+
+		a.DoAction();
+
+		Print("after");
+		0.3.s();
+		Print("end");
+	}
+
 	static void TestAcc()
 	{
 		//Acc.Misc.WorkaroundToolbarButtonName = true;
-		//Acc a = Acc.FromPoint(644, 1138); //PUSHBUTTON
+		//Acc a = Acc.FromPoint(644, 1138); //BUTTON
 		////Acc a = Acc.FromPoint(225, 1138); //SPLITBUTTON
 		////Acc a = Acc.FromPoint(453, 1138); //SEPARATOR
 		//Print(a);
-		//Wait(0.1);
+		//0.1.s();
 		////return;
 		//var cont = a.WndContainer;
 		//Perf.SpinCPU(100);
@@ -201,7 +220,7 @@ static unsafe partial class Test
 		//Wnd w = Wnd.Find("QM# -*");
 		//Wnd w = Wnd.Find("WinDbg*");
 		//Wnd w = Wnd.Misc.WndRoot;
-		//w.Activate(); Wait(.2);
+		//w.Activate(); .2.s();
 		//w= w.ChildById(2216);
 		//Wnd w = Wnd.Find(className: "QM_Editor").ChildById(2052);
 		//Acc a = Acc.FromWindow(w);
@@ -219,7 +238,7 @@ static unsafe partial class Test
 			Perf.NW();
 			x.PrintMemory();
 
-			//var a =Acc.deb; for(int j = 0; j < a.Length; j++) PrintList(j, a[j]);
+			//var a =Acc.deb; for(int j = 0; j < a.Length; j++) Print(j, a[j]);
 #else
 			//var a = Acc.Find(w, "LINK", "Bug Reports");
 			//var a = Acc.Find(w, "web:LINK", "Bug Reports");
@@ -232,9 +251,9 @@ static unsafe partial class Test
 			//var a = Acc.Find(w, "web:LINK", also: o => ++o.Counter == 4);
 			//var a = Acc.Find(w, "web:LINK", also: o => ++o.Counter == 4); //find 4-th LINK
 
-			//var a = Acc.Find(w, "PUSHBUTTON", "History");
-			//var a = Acc.Find(w, "web:DOCUMENT/div/PUSHBUTTON", "Bookmarks");
-			//var a = Acc.Find(w, "APPLICATION/GROUPING/PROPERTYPAGE/browser/DOCUMENT/div/PUSHBUTTON", "History");
+			//var a = Acc.Find(w, "BUTTON", "History");
+			//var a = Acc.Find(w, "web:DOCUMENT/div/BUTTON", "Bookmarks");
+			//var a = Acc.Find(w, "APPLICATION/GROUPING/PROPERTYPAGE/browser/DOCUMENT/div/BUTTON", "History");
 
 			//var a = Acc.Find(w, "LINK", "Programming", AFFlags.HiddenToo); //1126 (depends on hidden tabs)
 			//var a = Acc.Find(w, "LINK", "Programming"); //225
@@ -245,9 +264,9 @@ static unsafe partial class Test
 			//var a = Acc.Find(w, "APPLICATION[4]/GROUPING[-4]/PROPERTYPAGE[-4]/browser/DOCUMENT/div/div[4]/div[5]/div/LIST[3]/LISTITEM[2]/LIST/LISTITEM/LINK", "Programming"); //58
 			//var a = Acc.Find(w, "web://[4]/[5]//[3]/[2]///LINK", "Programming"); //47
 
-			//var a = Acc.Find(w, "PUSHBUTTON", "Resources    Alt+F6"); //6.4 s
-			//var a = Acc.Find(w, "class=ToolbarWindow32:PUSHBUTTON", "Resources    Alt+F6"); //120
-			//var a = Acc.Find(w, "CLIENT/WINDOW/TOOLBAR/PUSHBUTTON", "Resources    Alt+F6"); //139
+			//var a = Acc.Find(w, "BUTTON", "Resources    Alt+F6"); //6.4 s
+			//var a = Acc.Find(w, "class=ToolbarWindow32:BUTTON", "Resources    Alt+F6"); //120
+			//var a = Acc.Find(w, "CLIENT/WINDOW/TOOLBAR/BUTTON", "Resources    Alt+F6"); //139
 
 			//var f = new Acc.Finder("web:LINK", "Bug Reports");
 
@@ -321,7 +340,7 @@ static unsafe partial class Test
 
 	//	////w = Wnd.Find("* Studio ");
 	//	////Print(w);
-	//	////var a = Acc.Find(w, "PUSHBUTTON", "Search Control");
+	//	////var a = Acc.Find(w, "BUTTON", "Search Control");
 	//	////Print(a);
 	//	//////var b = a.Navigate("pr fi2 ne2");
 	//	//////var b = a.Navigate("pr fi ch3");
@@ -379,7 +398,7 @@ static unsafe partial class Test
 	//			//Perf.First();
 	//			using(var aa = a.Navigate(AccNAVDIR.PARENT)) {
 	//				//Perf.Next();
-	//				if(aa == null) PrintList(s, a.WndContainer, a.WndContainer.WndWindow);
+	//				if(aa == null) Print(s, a.WndContainer, a.WndContainer.WndWindow);
 	//				//if(aa == null) Print(s);
 	//				//else Print("<><c 0x8000>" + s + "</c>\r\n<c 0xff0000>" + aa.ToString(a.Level+1) + "</c>");
 	//			}
@@ -445,23 +464,23 @@ static unsafe partial class Test
 
 	static void TestAccExamples()
 	{
-		//var f = new Acc.Finder("PUSHBUTTON", "Apply"); //object properties
+		//var f = new Acc.Finder("BUTTON", "Apply"); //object properties
 		//Wnd w = Wnd.Find(className: "#32770", also: t => f.FindIn(t));
 		//Print(w);
 		//Print(f.Result);
 
 		//var w = Wnd.Find("Find");
-		////var a = Acc.Find(w, "PUSHBUTTON", also: o => o.GetRect(out var r, o.WndWindow) && r.Contains(266, 33));
-		////var a = Acc.Find(w, "PUSHBUTTON", also: o => o.GetRect(out var r, o.WndWindow) && r.left==234);
-		////var a = Acc.Find(w, "PUSHBUTTON", also: o => ++o.Counter == 2, navig: "pa pr2");
-		//var a = Acc.Find(w, "PUSHBUTTON", also: o => o.Level == 2);
+		////var a = Acc.Find(w, "BUTTON", also: o => o.GetRect(out var r, o.WndWindow) && r.Contains(266, 33));
+		////var a = Acc.Find(w, "BUTTON", also: o => o.GetRect(out var r, o.WndWindow) && r.left==234);
+		////var a = Acc.Find(w, "BUTTON", also: o => ++o.Counter == 2, navig: "pa pr2");
+		//var a = Acc.Find(w, "BUTTON", also: o => o.Level == 2);
 
 		var w = Wnd.Find("*Mozilla Firefox");
 		//var a = Acc.Find(w, "LINK", also: o => o.Value == "http://www.quickmacros.com/forum/viewforum.php?f=3&sid=720fc3129e6c70e07042b446be23a646");
 		//var a = Acc.Find(w, "LINK", also: o => o.Value.Like_("http://www.example.com/x.php?*"));
 		//var a = Acc.Find(w, "LINK", also: o => o.Value?.Like_("http://www.example.com/x.php?*") ?? false);
 		//var a = Acc.Find(w, "web:LINK", "General");
-		//var a = Acc.Find(w, "web:LINK", "**m|Untitled[]General");
+		//var a = Acc.Find(w, "web:LINK", "**m Untitled||General");
 
 		var f = new Acc.Finder("web:LINK", "General");
 		//f.MaxLevel = 10;
@@ -469,18 +488,18 @@ static unsafe partial class Test
 		var a = f.Result;
 
 		//var w = Wnd.Find("*Sandcastle*");
-		////var a = Acc.Find(w, "web:LINK", "**m|Untitled[]General");
+		////var a = Acc.Find(w, "web:LINK", "**m Untitled||General");
 		//Print(Acc.FromWindow(w).Children(true).Where(o=>!o.IsInvisible));
 
 		//var w = Wnd.Find("Find");
-		////var a = Acc.Find(w, "class=button:PUSHBUTTON");
+		////var a = Acc.Find(w, "class=button:BUTTON");
 		////var a = Acc.Find(w, "class=button:");
-		//var a = Acc.Find(w, "id=1132:PUSHBUTTON");
+		//var a = Acc.Find(w, "id=1132:BUTTON");
 
 		Print(a);
 		a?.Dispose();
 
-		//Print(TaskDialog.ShowEx(buttons: "One|Two|50 Three|51Four", flags: TDFlags.CommandLinks));
+		//Print(AuDialog.ShowEx(buttons: "One|Two|50 Three|51Four", flags: DFlags.CommandLinks));
 	}
 
 	static void TestAccWeb()
@@ -496,13 +515,13 @@ static unsafe partial class Test
 		//using(var a = Acc.Find(w, "web:LINK", also: o => o.Match("href", "*forum*")).OrThrow()) {
 		//using(var a = Acc.Find(w, "web:LINK", "\0 a:href=*forum*").OrThrow()) {
 		//using(var a = Acc.Find(w, "web:LINK", "name=P*\0 a:href=*forum*").OrThrow()) {
-		using(var a = Acc.Find(w, "web:LINK", "name=P*\0 a:href=**r|forum").OrThrow()) {
+		using(var a = Acc.Find(w, "web:LINK", "name=P*\0 a:href=**r forum").OrThrow()) {
 			Print(a);
 		}
 #elif false
 		var a = Acc.Find(w, "web:LINK", "Board index").OrThrow();
 		//var a = Acc.Find(w, "web:LISTITEM", "FAQ").OrThrow();
-		//var a = Acc.Find(w, "web:PUSHBUTTON", "Search").OrThrow();
+		//var a = Acc.Find(w, "web:BUTTON", "Search").OrThrow();
 		//var a = Acc.Find(w, "web:TEXT", "Search for keywords").OrThrow();
 		//var a = Acc.Find(w, "web:LIST").OrThrow();
 		Print(a);
@@ -619,13 +638,13 @@ static unsafe partial class Test
 		//	Print(a.ChildCount);
 		//	//Print(a.Navigate("first"));
 		//}
-		//using(var a = Acc.Find(w, "PUSHBUTTON", "Paste*").OrThrow()) {
+		//using(var a = Acc.Find(w, "BUTTON", "Paste*").OrThrow()) {
 		//	Print(a);
 		//}
 		//using(var a = Acc.FromWindow(w, AccOBJID.CLIENT)) {
 		//	a.EnumChildren(true, o =>
 		//	{
-		//		//PrintList(o.Level, o.Role);
+		//		//Print(o.Level, o.Role);
 		//		Print(o);
 		//		//100.ms();
 		//	});
@@ -637,11 +656,11 @@ static unsafe partial class Test
 	{
 		//var w = Wnd.Find("VLC leistuvė", "QWidget").OrThrow();
 		//Print(w);
-		//using(var a = Acc.Find(w, "CHECKBUTTON", "\0 description=Maišymo veiksena").OrThrow()) Print(a);
+		//using(var a = Acc.Find(w, "CHECKBOX", "\0 description=Maišymo veiksena").OrThrow()) Print(a);
 
 		//var w = Wnd.Find("Welcome Guide — Atom", "Chrome_WidgetWin_1").OrThrow();
 		//Print(w);
-		//using(var a = Acc.Find(w, "web:PUSHBUTTON", "*Learn Keyboard Shortcuts").OrThrow()) Print(a);
+		//using(var a = Acc.Find(w, "web:BUTTON", "*Learn Keyboard Shortcuts").OrThrow()) Print(a);
 
 		//Acc.Misc.MaxChildren *= 2;
 		var w = Wnd.Find("Quick*");
@@ -732,7 +751,7 @@ static unsafe partial class Test
 		AccEVENT ev = AccEVENT.OBJECT_FOCUS;
 		var hh = SetWinEventHook(ev, ev, default, _testWinEventProc, 0, 0, 0);
 		//Print(hh);
-		TaskDialog.Show();
+		AuDialog.Show();
 		//MessageBox.Show("");
 		//new Form().ShowDialog();
 		//Time.SleepDoEvents(10000);
@@ -790,8 +809,8 @@ static unsafe partial class Test
 		//w.Activate();
 		Output.Clear();
 		//using(var a = Acc.Find(w, null, "Mouse").OrThrow()) {
-		//using(var a = Acc.Find(w, "CHECKBUTTON", "Mouse").OrThrow()) {
-		//using(var a = Acc.Find(w, nameof(AccROLE.CHECKBUTTON), "Mouse").OrThrow()) {
+		//using(var a = Acc.Find(w, "CHECKBOX", "Mouse").OrThrow()) {
+		//using(var a = Acc.Find(w, nameof(AccROLE.CHECKBOX), "Mouse").OrThrow()) {
 		//5.s();
 		for(int i = 0; i < 1; i++) {
 			Perf.First();
@@ -820,7 +839,7 @@ static unsafe partial class Test
 
 				//	//Print(a);
 				//	//Print(ap);
-				//	PrintList(!w1.Is0, !w2.Is0);
+				//	Print(!w1.Is0, !w2.Is0);
 				//}
 				if(i == 0) Perf.SpinCPU(100);
 			}
@@ -839,9 +858,9 @@ static unsafe partial class Test
 		//using(var a = Acc.Find(w, "web:")) {
 		//using(var a = Acc.Find(w, "web:LINK", "\0 a:href=*forum*")) {
 		using(var a = Acc.Find(w, "web:LINK", "Programming", null, AFFlags.HiddenToo).OrThrow()) {
-			//using(var a = Acc.Find(w, "OUTLINEITEM", "Other Bookmarks", AFFlags.HiddenToo).OrThrow()) { //no scroll
-			//using(var a = Acc.Find(w, "OUTLINEITEM", "Temp", AFFlags.HiddenToo).OrThrow()) { //no scroll
-			//using(var a = Acc.Find(w, "OUTLINEITEM", "Structs.cs", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			//using(var a = Acc.Find(w, "TREEITEM", "Other Bookmarks", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			//using(var a = Acc.Find(w, "TREEITEM", "Temp", AFFlags.HiddenToo).OrThrow()) { //no scroll
+			//using(var a = Acc.Find(w, "TREEITEM", "Structs.cs", AFFlags.HiddenToo).OrThrow()) { //no scroll
 			Print(a);
 
 			//Print(a.Name);
@@ -863,7 +882,7 @@ static unsafe partial class Test
 		//var w = Wnd.Find("*Mozilla Firefox").OrThrow();
 		//var w = Wnd.Find("*Google Chrome").OrThrow();
 		var w = Wnd.Find("*Internet Explorer").OrThrow();
-		//using(var a=Acc.Find(w, "OUTLINE").OrThrow()) {
+		//using(var a=Acc.Find(w, "TREE").OrThrow()) {
 		//using(var a=Acc.Find(w, "LIST").OrThrow()) {
 		//using(var a=Acc.Find(w, "LIST", also:o=>++o.Counter==2).OrThrow()) {
 		//using(var a=Acc.Find(w, "web:LIST", "\0 a:name=cars").OrThrow()) {
@@ -918,15 +937,15 @@ static unsafe partial class Test
 
 	static void TestAccInOtherFunctions()
 	{
-		//Acc.Find(Wnd.Find("Quick*"), "PUSHBUTTON", "Options*").MouseClick();
+		//Acc.Find(Wnd.Find("Quick*"), "BUTTON", "Options*").MouseClick();
 
-		//var w = Wnd.Find("**c|*Firefox").OrThrow();
+		//var w = Wnd.Find("**c *Firefox").OrThrow();
 		//Print(w);
 		//var a = Acc.Find(w, "div", "Google").OrThrow();
 		////a.MouseMove();
 		//Perf.First();
 		//for(int i = 0; i < 5; i++) {
-		//	var si = ScreenImage.Find(@"Q:\app\Au\Tests\Images\google.bmp", a, SIFlags.WindowDC).OrThrow();
+		//	var si = WinImage.Find(a, @"Q:\app\Au\Tests\Images\google.bmp", WIFlags.WindowDC).OrThrow();
 		//	Perf.Next();
 		//}
 		//Perf.Write();
@@ -962,9 +981,9 @@ static unsafe partial class Test
 	static void TestAccSkipAndWait()
 	{
 		var w = Wnd.Find("Options");
-		//var a = Acc.Find(w, "CHECKBUTTON", skip:2).OrThrow();
-		//var a = Acc.WaitFor(0, w, "CHECKBUTTON", "Mouse").OrThrow();
-		var f = new Acc.Finder("CHECKBUTTON", "Mouse");
+		//var a = Acc.Find(w, "CHECKBOX", skip:2).OrThrow();
+		//var a = Acc.WaitFor(0, w, "CHECKBOX", "Mouse").OrThrow();
+		var f = new Acc.Finder("CHECKBOX", "Mouse");
 		Print(f.Wait(-2, w));
 		var a = f.Result;
 		Print(a);
@@ -1077,7 +1096,7 @@ static unsafe partial class Test
 		//	Perf.NW();
 		//	100.ms();
 		//}
-		//PrintList(e != null, e?.Name);
+		//Print(e != null, e?.Name);
 
 		AElement.s_testMethod = AElement.TestMethod.Find;
 		//AElement.s_testMethod = AElement.TestMethod.FindAll;
@@ -1109,7 +1128,7 @@ static unsafe partial class Test
 			//e = AElement.Find(w, "Debug...", UIA.TypeId.Button);
 			//e = AElement.Find(w, "Bold");
 			Perf.NW();
-			PrintList(e != null, e?.Name);
+			Print(e != null, e?.Name);
 			//if(e != null) break;
 		}
 
@@ -1135,7 +1154,7 @@ static unsafe partial class Test
 	static void TestAccToUIElem()
 	{
 		var w = Wnd.Find("Properties*").OrThrow();
-		var a = Acc.Find(w, "PUSHBUTTON", "OK").OrThrow();
+		var a = Acc.Find(w, "BUTTON", "OK").OrThrow();
 		var e = AElement.FromAcc(a, false);
 		if(e == null) { Print("failed"); return; }
 		Print(e.Name);
@@ -1218,27 +1237,27 @@ static unsafe partial class Test
 		s = "one two three ąčę";
 		//s = "one * three";
 
-		//w = "**c|one two three";
+		//w = "**c one two three";
 		//w = s;
 		//w = "one";
 		//w = "one*";
 		//w = "ONE TWO THREE";
-		//w = "**c|ONE TWO THREE";
+		//w = "**c ONE TWO THREE";
 		//w = "one * three";
-		//w = "**t|one * three";
-		w = @"**r|^one \w+ threE$";
-		//w = @"**p|^one \w+ threE$";
-		//w = @"**rc|^one \w+ three$";
-		//w = @"**rc|^one \w+ three ąčę$";
-		//w = @"**r|^one \w+ three ąčĘ$";
-		//w = @"**r|^one \w+ three \w+$";
-		//w = @"**r|^one \w+ three ...$";
-		//w = @"**r|(*UCP)^one \w+ three \w+$";
-		//w = @"**n|one";
-		//w = @"**n|one*";
-		//w = @"**m|one*";
-		//w = @"**m|kuku[]one*";
-		w = @"**m|ku[]**p|ku[]one*";
+		//w = "**t one * three";
+		w = @"**r ^one \w+ threE$";
+		//w = @"**r ^one \w+ threE$";
+		//w = @"**rc ^one \w+ three$";
+		//w = @"**rc ^one \w+ three ąčę$";
+		//w = @"**r ^one \w+ three ąčĘ$";
+		//w = @"**r ^one \w+ three \w+$";
+		//w = @"**r ^one \w+ three ...$";
+		//w = @"**r (*UCP)^one \w+ three \w+$";
+		//w = @"**n one";
+		//w = @"**n one*";
+		//w = @"**m one*";
+		//w = @"**m kuku||one*";
+		w = @"**m ku||**r ku||one*";
 
 		//		for(int i = 0; i < 1; i++) {
 		//			100.ms();
@@ -1251,10 +1270,10 @@ static unsafe partial class Test
 		//		}
 
 		s = "modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Auisuidu - hdjshhdsjhdj jdskjdks Auisuidu - hdjshhdsjhdj jdskjdkM ė";
-		w = "**c|modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Auisuidu - hdjshhdsjhdj jdskjdks Auisuidu - hdjshhdsjhdj jdskjdkM ė";
+		w = "**c modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Modjkajdkjka ajdkaj ja.ldskkdskofkoskfo sfosfjsigjf ijfisjfsoi soifoi  Auisuidu - hdjshhdsjhdj jdskjdks Auisuidu - hdjshhdsjhdj jdskjdkM ė";
 
 		s = "short678";
-		w = "**c|short678";
+		w = "**c short678";
 
 		w = w.Substring(4);
 		//w = w.ToUpper_();
@@ -1344,7 +1363,7 @@ static unsafe partial class Test
 
 	static void TestWildexStruct()
 	{
-		var x = new WildexStruct("**r|gg");
+		var x = new WildexStruct("**r gg");
 		Print(x.Value);
 		//x.Value = "k";
 		Print(x.Match("gg"));
@@ -1393,14 +1412,14 @@ static unsafe partial class Test
 		//	//if((i % 10) == 0) Print(i);
 		//	var x = new Cpp.Cpp_Regex(w);
 		//	if((i % 1000) == 0) {
-		//		//_PrintMemory();
+		//		//Debug_.LibPrintMemory();
 		//		1.ms();
 		//	}
 		//}
 		//Perf.NW();
 		//Print("END");
 
-		Print(Wnd.Find(@"**p|\QQuick\E \bMacros\b"));
+		Print(Wnd.Find(@"**r \QQuick\E \bMacros\b"));
 	}
 
 
@@ -1468,13 +1487,13 @@ static unsafe partial class Test
 			role = "web:LINK";
 			//role = "LINK";
 			//role = "id=:LINK";
-			//role = "PUSHBUTTON";
+			//role = "BUTTON";
 
 			//name = "Bug Reports";
 			name = "???????*";
 			//name = "Five";
 			//name = "Board index";
-			//name = "**p|-(Untitled";
+			//name = "**r -(Untitled";
 
 			//Acc ap = Acc.FromWindow(w);
 			//if(0!=Cpp.Cpp_AccFromWindow(true, w, 0, out var iacc)) return; Acc ap = new Acc(iacc);
@@ -1531,13 +1550,13 @@ static unsafe partial class Test
 
 			//p.role = "LINK";
 			p.role = "web:LINK";
-			//p.role = "web:PUSHBUTTON";
+			//p.role = "web:BUTTON";
 			//p.role = "LISTITEM";
 			//p.role = "id=-31772:LISTITEM";
 			//p.role = "class=SysListView32:LISTITEM";
 			//p.role = "id=7:LINK";
 			//p.role = "id=0xa:LINK";
-			//p.role = "class=Butt*:PUSHBUTTON";
+			//p.role = "class=Butt*:BUTTON";
 			//p.role = "id=bad:LINK";
 			//p.role = "ONE/TWO[5]/THREE[7!]/FOUR[-0xa]//SEVEN";
 			//p.role = "web:/ONE/TWO";
@@ -1549,12 +1568,12 @@ static unsafe partial class Test
 			//p.name = "Board index";
 			//p.name = "scintilla";
 			//p.name = "?*";
-			//p.name = "**p|^U.+d$";
-			//p.name = "**g|Untitled";
+			//p.name = "**r ^U.+d$";
+			//p.name = "**g Untitled";
 			//p.prop = "value=XXX\0  a:href=YYY\0\r\n description=DDD";
 			//p.prop = "maxLevel=15";
 			//p.prop = "notin=ONE,TWO,THREE";
-			//p.prop = "notin=PUSHBUTTON,MENUBAR,STATICTEXT";
+			//p.prop = "notin=BUTTON,MENUBAR,STATICTEXT";
 			//p.name = "Select";
 			//p.prop = "value=test\r";
 			//p.prop = "description=Used*";
@@ -1579,7 +1598,7 @@ static unsafe partial class Test
 				//var hr = Cpp.Cpp_AccFind(true, w, default, null, null, 0, null, 0, out var r);
 				//var hr = Cpp.Cpp_AccFind(true, default, iaccParent, null, null, 0, null, 0, out var r);
 				//var hr = Cpp.Cpp_AccFind(true, w, default, "GROUPING", "Extensions", 0, null, 0, out var r);
-				//var hr = Cpp.Cpp_AccFind(true, w, default, "PUSHBUTTON", "Infobar Container", 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "BUTTON", "Infobar Container", 0, null, 0, out var r);
 				var hr = Cpp.Cpp_AccFind(true, w, default, ref p, null, out var r, out var errStr);
 				//var hr = Cpp.Cpp_AccFind(true, w, default, ref p, callback, out var r, out var errStr);
 				//var hr = Cpp.Cpp_AccFind(true, default, iaccParent, ref p, null, out var r, out var errStr);
@@ -1588,7 +1607,7 @@ static unsafe partial class Test
 				//var hr = Cpp.Cpp_AccFromWindow(true, w, 0, out var r);
 				//var hr = Cpp.Cpp_AccFromWindow(true, w, (int)AccOBJID.CLIENT, out var r);
 				//var hr = Cpp.Cpp_AccFromPoint(true, Mouse.XY, out var r);
-				//var hr = Cpp.Cpp_AccFind(true, w, default, "PUSHBUTTON", null, 0, null, 0, out var r);
+				//var hr = Cpp.Cpp_AccFind(true, w, default, "BUTTON", null, 0, null, 0, out var r);
 				//var hr = Cpp.Cpp_AccFind(true, w, default, null, "New macro    Ctrl+N", 0, null, 0, out var r);
 				//var hr = Cpp.Cpp_AccFind(true, w, default, null, "Record    Ctrl+K", 0, null, 0, out var r);
 
@@ -1605,7 +1624,7 @@ static unsafe partial class Test
 					continue;
 				}
 				//continue;
-				//var aa = Acc.Find(w, "PUSHBUTTON");
+				//var aa = Acc.Find(w, "BUTTON");
 				using(var a = new Acc(r.iacc, r.elem)) {
 				//using(var a=aa) {
 					Print(a);
@@ -1788,7 +1807,7 @@ static unsafe partial class Test
 		Perf.First();
 		var a = Acc.Find(w, "web:LINK", link).OrThrow();
 		Perf.NW();
-		PrintList(1, a);
+		Print(1, a);
 		_ClickWait(w, a, "*Finance*", "Trending Now");
 
 		//Acc.Find(w, null, "Back", prop: "notin=DOCUMENT").DoAction();
@@ -1797,23 +1816,23 @@ static unsafe partial class Test
 		Perf.First();
 		a = Acc.Wait(10, w, "web:LINK", "Industries");
 		Perf.NW();
-		PrintList(2, a);
+		Print(2, a);
 		_ClickWait(w, a, "*Industry*", "My Portfolio & Markets");
 
 		Perf.First();
 		a = Acc.Wait(10, w, "web:LINK", "Steel*", flags: flags);
 		Perf.NW();
-		PrintList(3, a);
+		Print(3, a);
 		//var w1 = a.WndContainer;
-		//PrintList(w1.Handle, a);
+		//Print(w1.Handle, a);
 		_ClickWait(w, a, "*Stock Screener*", "Conglomerates");
 
 		Perf.First();
 		a = Acc.Wait(10, w, "web:LINK", "Results List");
 		//Perf.NW();
-		PrintList(4, a);
+		Print(4, a);
 
-		bool stop = 2 == TaskDialog.ShowEx("back", null, "1 Continue|2 Cancel", secondsTimeout: 3);
+		bool stop = 2 == AuDialog.ShowEx("back", null, "1 Continue|2 Cancel", secondsTimeout: 3);
 		//for(int i = 0; i < 3; i++) { //does not work well with Firefox
 		//	back.DoAction();
 		//	0.1.s();
@@ -1842,7 +1861,7 @@ static unsafe partial class Test
 
 		//var f = new Acc.Finder("web:");
 		//var f = new Acc.Finder("web:", flags: AFFlags.NotInProc);
-		var f = new Acc.Finder("web:PUSHBUTTON", "Search");
+		var f = new Acc.Finder("web:BUTTON", "Search");
 		//f.ResultGetProperty = 'R';
 		//f.ResultGetProperty = 'n';
 		//f.ResultGetProperty = 'v';
@@ -1884,9 +1903,9 @@ static unsafe partial class Test
 		AFFlags flags = 0;
 		//flags |= AFFlags.NotInProc;
 
-		//var a = Acc.Find(w, "CHECKBUTTON", flags: flags);
-		//var a = Acc.Find(w, "CHECKBUTTON", prop: "state=CHECKED, !DISABLED\0 notin=ONE,,TWO", flags: flags);
-		var a = Acc.Find(w, "CHECKBUTTON", prop: "state=CHECKED,FOCUSABLE, !FOCUSED\0", flags: flags);
+		//var a = Acc.Find(w, "CHECKBOX", flags: flags);
+		//var a = Acc.Find(w, "CHECKBOX", prop: "state=CHECKED, !DISABLED\0 notin=ONE,,TWO", flags: flags);
+		var a = Acc.Find(w, "CHECKBOX", prop: "state=CHECKED,FOCUSABLE, !FOCUSED\0", flags: flags);
 		//var a = Acc.Find(w, "TEXT", prop: "state=PROTECTED", flags: flags);
 
 		Print(a);
@@ -1928,8 +1947,8 @@ static unsafe partial class Test
 		var a = Acc.Find(w, "web:LINK", "Test").OrThrow();
 
 		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
-		//var a = Acc.Find(w, "PUSHBUTTON", "Compil*").OrThrow();
-		////var a = Acc.Find(w, "OUTLINEITEM", "init").OrThrow();
+		//var a = Acc.Find(w, "BUTTON", "Compil*").OrThrow();
+		////var a = Acc.Find(w, "TREEITEM", "init").OrThrow();
 
 		//var w = Wnd.Find("* Internet Explorer").OrThrow();
 		////var a = Acc.Find(w, "web:LINK", "Test").OrThrow();
@@ -1941,9 +1960,9 @@ static unsafe partial class Test
 		//var a = Acc.Find(w, "CLIENT", "Panels").OrThrow();
 
 		//var w = Wnd.Find("Test", "CabinetWClass").OrThrow();
-		////var a = Acc.Find(w, "PUSHBUTTON", "New folder").OrThrow();
+		////var a = Acc.Find(w, "BUTTON", "New folder").OrThrow();
 		////var a = Acc.Find(w, "CLIENT", "Test").OrThrow();
-		//var a = Acc.Find(w, "PUSHBUTTON", "Minimize").OrThrow();
+		//var a = Acc.Find(w, "BUTTON", "Minimize").OrThrow();
 
 		//var w = Wnd.Find("* Notepad").OrThrow();
 		//var a = Acc.Find(w, "TITLEBAR").OrThrow();
@@ -1973,7 +1992,7 @@ static unsafe partial class Test
 		//nav="pa";
 		Perf.First();
 		//int hr = Cpp.Cpp_Navigate(a, nav, out var r);
-		a = a.Navigate(nav, 0, true).OrThrow();
+		a = a.Navigate(nav).OrThrow();
 		//a = a.Navigate("parent next ch3", 0, true).OrThrow();
 		Perf.NW();
 		//if(hr != 0) { PrintHex(hr); return; }
@@ -2014,7 +2033,7 @@ static unsafe partial class Test
 	static void TestAccGetProp()
 	{
 		//var w1 = Wnd.Find(null, "QM_Editor").OrThrow();
-		//var f = new Acc.Finder("OUTLINEITEM");
+		//var f = new Acc.Finder("TREEITEM");
 		//f.ResultGetProperty = Acc.Finder.RProp.WndContainer;
 		//if(f.Find(w1)) Print((Wnd)f.ResultProperty);
 		//return;
@@ -2023,8 +2042,8 @@ static unsafe partial class Test
 		//var a = Acc.Find(w, "web:LINK", "Test").OrThrow();
 
 		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
-		////var a = Acc.Find(w, "PUSHBUTTON", "Compil*").OrThrow();
-		//var a = Acc.Find(w, "PUSHBUTTON", skip: 5, flags: AFFlags.NotInProc).OrThrow();
+		////var a = Acc.Find(w, "BUTTON", "Compil*").OrThrow();
+		//var a = Acc.Find(w, "BUTTON", skip: 5, flags: AFFlags.NotInProc).OrThrow();
 
 		//Print(a);
 
@@ -2055,7 +2074,7 @@ static unsafe partial class Test
 					//var nl = a.Name.Length;
 					//p.Next();
 					//var tt = p.TimeTotal;
-					//if(tt >= 2000) PrintList("<><c 0x8000>", tt, a, "</c>");
+					//if(tt >= 2000) Print("<><c 0x8000>", tt, a, "</c>");
 
 					//Print(a);
 					//Print(a.WndContainer);
@@ -2093,7 +2112,7 @@ static unsafe partial class Test
 			p.Next();
 			var tt = p.TimeTotal;
 			Print(tt);
-			if(tt >= 10000) PrintList(tt, a, a.WndTopLevel);
+			if(tt >= 10000) Print(tt, a, a.WndTopLevel);
 #endif
 			//a._misc.flags = 0;
 			//lenNIP += a.Name.Length;
@@ -2101,7 +2120,7 @@ static unsafe partial class Test
 		}
 		Perf.NW();
 		Print(sb);
-		PrintList(k.Count, lenNIP, lenIP);
+		Print(k.Count, lenNIP, lenIP);
 	}
 
 	static void TestWndAccName()
@@ -2125,7 +2144,7 @@ static unsafe partial class Test
 			Perf.Next();
 		}
 		Perf.Write();
-		PrintList(k.Count, g);
+		Print(k.Count, g);
 	}
 
 	static void TestAccIsInvisible()
@@ -2156,20 +2175,20 @@ static unsafe partial class Test
 		AFFlags flags = 0;
 		//flags |= AFFlags.NotInProc;
 
-		//var a = Acc.Find(w, "PUSHBUTTON", "Prev*", flags: flags).OrThrow();
+		//var a = Acc.Find(w, "BUTTON", "Prev*", flags: flags).OrThrow();
 		//a.DoAction();
 
 		//var a = Acc.Find(w, "TEXT", flags: flags).OrThrow();
 		//a.Value = "TEST";
 
-		//var a = Acc.Find(w, "CHECKBUTTON", "Unicode", flags: flags).OrThrow();
+		//var a = Acc.Find(w, "CHECKBOX", "Unicode", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "LISTITEM", "Mouse", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "LIST", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "COMBOBOX", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "class=bosa_sdm_Microsoft Office Word 11.0:COMBOBOX", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "class=bosa_sdm_Microsoft Office Word 11.0:LIST", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "COMBOBOX", flags: flags).OrThrow().Navigate("fi");
-		var a = Acc.Find(w, "LINK", "**p|^(T|G)", flags: flags).OrThrow();
+		var a = Acc.Find(w, "LINK", "**r ^(T|G)", flags: flags).OrThrow();
 		//a = a.Find("LIST", flags: AFFlags.HiddenToo);
 		Print(a);
 		//Print(a.Html(true));
@@ -2211,7 +2230,7 @@ static unsafe partial class Test
 		flags = 0;
 		//Acc.PrintAll(w, flags: flags);
 		//Print("----");
-		var a = Acc.Find(w, "PUSHBUTTON", "*PDF", flags: flags).OrThrow();
+		var a = Acc.Find(w, "BUTTON", "*PDF", flags: flags).OrThrow();
 		//var a = Acc.Find(w, "CLIENT", flags: flags).OrThrow();
 		Print(a);
 	}
@@ -2385,13 +2404,13 @@ static unsafe partial class Test
 		flags |= AFFlags.NotInProc;
 
 		var w = Wnd.Find("Options");
-		//var a = Acc.Find(w, "CHECKBUTTON").OrThrow();
-		var a = Acc.Find(w, "CHECKBUTTON", null, "state=DISABLED", flags: flags).OrThrow();
-		//var a = Acc.Find(w, "CHECKBUTTON", null, "state=1", flags: flags).OrThrow();
+		//var a = Acc.Find(w, "CHECKBOX").OrThrow();
+		var a = Acc.Find(w, "CHECKBOX", null, "state=DISABLED", flags: flags).OrThrow();
+		//var a = Acc.Find(w, "CHECKBOX", null, "state=1", flags: flags).OrThrow();
 		Print(a);
-		//a = Acc.Find(w, "CHECKBUTTON", null, $"rect={a.Rect}", flags: flags).OrThrow();
-		//a = Acc.Find(w, "CHECKBUTTON", null, "rect={L=1155 T=1182 W=132 H=13}", flags: flags).OrThrow();
-		a = Acc.Find(w, "CHECKBUTTON", null, "rect={L=1155 T=1182 W=132 H=13}", flags: flags).OrThrow();
+		//a = Acc.Find(w, "CHECKBOX", null, $"rect={a.Rect}", flags: flags).OrThrow();
+		//a = Acc.Find(w, "CHECKBOX", null, "rect={L=1155 T=1182 W=132 H=13}", flags: flags).OrThrow();
+		a = Acc.Find(w, "CHECKBOX", null, "rect={L=1155 T=1182 W=132 H=13}", flags: flags).OrThrow();
 		Print(a);
 	}
 
@@ -2421,7 +2440,7 @@ static unsafe partial class Test
 		Acc.PrintAll(w);
 		//Perf.First();
 		//var a = Acc.Find(w, "web:LINK", "Tutorials*").OrThrow();
-		var a = Acc.Find(w, "CHECKBUTTON", "C/C++").OrThrow();
+		var a = Acc.Find(w, "CHECKBOX", "C/C++").OrThrow();
 		//Perf.NW();
 		Print(a);
 	}
@@ -2456,7 +2475,7 @@ static unsafe partial class Test
 			//a= Acc.Find(w, "LINK", "HBox", flags: flags).OrThrow();
 			//a= Acc.Find(w, prop: "uiaid=JavaFX403", flags: flags).OrThrow();
 			//a = Acc.Find(w, "LISTITEM", flags: flags).OrThrow();
-			//a= Acc.Find(w, "PUSHBUTTON", prop: "elem=12", flags: flags).OrThrow();
+			//a= Acc.Find(w, "BUTTON", prop: "elem=12", flags: flags).OrThrow();
 			//a= Acc.Find(w, name:"About...", flags: flags).OrThrow();
 			//a= Acc.Find(w, "filler", flags: flags).OrThrow();
 			//a= Acc.Find(w, name: "Orientation", flags: flags).OrThrow();
@@ -2522,7 +2541,7 @@ static unsafe partial class Test
 		//a.VirtualRightClick(); //no
 		//a.MouseClick();
 		//a.DoJavaAction(); //yes in JavaFX (but activates window). In Edge just scrolls.
-		//Print(a.Find("PUSHBUTTON", "T*"));
+		//Print(a.Find("BUTTON", "T*"));
 		//Print(a.Find("STATICTEXT"));
 		//a.Focus(); //yes
 		//Print(a.Navigate("pa2 pr2 ne ch2")); //yes
@@ -2603,13 +2622,13 @@ static unsafe partial class Test
 
 		//Acc.PrintAll(w, "web:LINK"); return;
 		//var a = Acc.Find(w, "web:LINK", "Bug*").OrThrow();
-		//var a = Acc.Find(w, "OUTLINEITEM", "Test Projects", flags: AFFlags.UIAutomation).OrThrow();
-		//var a = Acc.Find(w, "OUTLINEITEM", "Downloads", flags: AFFlags.UIAutomation| AFFlags.NotInProc).OrThrow();
-		//var a = Acc.Find(w, "OUTLINEITEM", "Downloads", flags: AFFlags.UIAutomation).OrThrow();
+		//var a = Acc.Find(w, "TREEITEM", "Test Projects", flags: AFFlags.UIAutomation).OrThrow();
+		//var a = Acc.Find(w, "TREEITEM", "Downloads", flags: AFFlags.UIAutomation| AFFlags.NotInProc).OrThrow();
+		//var a = Acc.Find(w, "TREEITEM", "Downloads", flags: AFFlags.UIAutomation).OrThrow();
 		//var a = Acc.Find(w, "LISTITEM", "web", flags: AFFlags.UIAutomation).OrThrow();
-		//var a = Acc.Find(w, "OUTLINE", flags: AFFlags.UIAutomation| AFFlags.NotInProc).OrThrow();
-		//var a = Acc.Find(w, "OUTLINE", flags: AFFlags.UIAutomation).OrThrow();
-		//var a = Acc.Find(w, "OUTLINEITEM").OrThrow();
+		//var a = Acc.Find(w, "TREE", flags: AFFlags.UIAutomation| AFFlags.NotInProc).OrThrow();
+		//var a = Acc.Find(w, "TREE", flags: AFFlags.UIAutomation).OrThrow();
+		//var a = Acc.Find(w, "TREEITEM").OrThrow();
 		//var a = Acc.Find(w, "LINK", "Bug*", flags: AFFlags.UIAutomation).OrThrow();
 		Perf.First();
 		var a = Acc.FromWindow(w);
@@ -2655,8 +2674,8 @@ static unsafe partial class Test
 		var w = Wnd.Find("* Notepad");
 
 		//var a = Acc.Find(w, flags: AFFlags.UIA);
-		//var a = Acc.Find(w, "PUSHBUTTON", flags: AFFlags.UIA| AFFlags.NotInProc|AFFlags.HiddenToo| AFFlags.MenuToo);
-		var a = Acc.Find(w, "PUSHBUTTON", flags: AFFlags.NotInProc | AFFlags.MenuToo);
+		//var a = Acc.Find(w, "BUTTON", flags: AFFlags.UIA| AFFlags.NotInProc|AFFlags.HiddenToo| AFFlags.MenuToo);
+		var a = Acc.Find(w, "BUTTON", flags: AFFlags.NotInProc | AFFlags.MenuToo);
 
 		//var a = Acc.FromWindow(w, AccOBJID.UIA, flags: AWFlags.InProc);
 		////var a = Acc.FromWindow(w, AccOBJID.UIA);
@@ -2783,7 +2802,7 @@ static unsafe partial class Test
 		//bool b4 = (c == Color.Blue);
 		////bool b5 = (Color.Blue==c); //error
 
-		//PrintList(b1, b2, b3, b4);
+		//Print(b1, b2, b3, b4);
 
 		//var w = Wnd.Find("* Notepad").OrThrow();
 		//w.SetTransparency(true, null, 0xF0F0F0);
@@ -2794,7 +2813,7 @@ static unsafe partial class Test
 		////Color c = Color.FromArgb(0x0000ff);
 		//int[] c = { 0x8000, 0x0000ff };
 		////string[] c = { "one", "two" };
-		//ScreenImage.Find(c, Wnd.Find("Quick *")).MouseMove();
+		//WinImage.Find(Wnd.Find("Quick *"), c).MouseMove();
 
 
 	}
@@ -2808,7 +2827,7 @@ static unsafe partial class Test
 
 	//	w.CreateHandle(c);
 
-	//	TaskDialog.Show("test");
+	//	AuDialog.Show("test");
 
 	//	w.DestroyHandle();
 	//}
@@ -2873,7 +2892,7 @@ static unsafe partial class Test
 	//{
 	//	var f = new FormTEE();
 	//	f.Show();
-	//	TaskDialog.Show("test");
+	//	AuDialog.Show("test");
 	//}
 
 	//static void _DomainCallback()
@@ -2881,7 +2900,7 @@ static unsafe partial class Test
 	//	Output.LibWriteToQM2 = true;
 
 	//	var d =AppDomain.CurrentDomain;
-	//	PrintList(d.Id, d.FriendlyName);
+	//	Print(d.Id, d.FriendlyName);
 	//}
 
 	//static void TestNativeCallbackInMultipleAppDomains()
@@ -2912,7 +2931,7 @@ static unsafe partial class Test
 	//	var atom = Wnd.Misc.MyWindowClass.InterDomainRegister("aa test", _WndProc1);
 	//	var style =Native.WS_OVERLAPPEDWINDOW |Native.WS_VISIBLE;
 	//	var w = Wnd.Misc.MyWindowClass.InterDomainCreateWindow("aa test", "Test1", style, 0, 200, 200, 200, 200);
-	//	TaskDialog.Show("--");
+	//	AuDialog.Show("--");
 	//	Wnd.Misc.DestroyWindow(w);
 	//}
 
@@ -2943,13 +2962,13 @@ static unsafe partial class Test
 		var x = new MyWindow2();
 		if(!x.Create("MyWindow", "MyWindow", style, 0, 200, 200, 200, 200)) { Print("failed"); return; }
 		Timer_.After(1000, t => { GC.Collect(); });
-		TaskDialog.Show("--");
+		AuDialog.Show("--");
 		x.Destroy();
 
 		//var b = new AuToolbar();
 		//b["one"] = o => Print(o);
 		//b.Visible = true;
-		//TaskDialog.Show("--");
+		//AuDialog.Show("--");
 	}
 
 	static void TestOnScreenRect()
@@ -2977,7 +2996,7 @@ static unsafe partial class Test
 			//r = x.Rect; r.Offset(20, 20); x.Rect = r;
 			x.Opacity += 0.03;
 		});
-		TaskDialog.Show("test");
+		AuDialog.Show("test");
 		//var f = new Form(); f.ShowDialog();
 		//2.s();
 		//x.Dispose();
@@ -3034,7 +3053,7 @@ static unsafe partial class Test
 	static void TestAccPropFormat()
 	{
 		//var w1 = Wnd.Find("* Chrome").OrThrow();
-		//var a1 = Acc.Find(w1, "web:PUSHBUTTON", "Search").OrThrow().Navigate("pa").OrThrow();
+		//var a1 = Acc.Find(w1, "web:BUTTON", "Search").OrThrow().Navigate("pa").OrThrow();
 		//Print(a1 != null);
 		//return;
 
@@ -3074,7 +3093,7 @@ REE`");
 
 	static void _TestTupleParams((int one, string two) prop = default, int more = 0)
 	{
-		PrintList(prop.one, prop.two, more);
+		Print(prop.one, prop.two, more);
 	}
 
 	static void TestTupleParams()
@@ -3139,8 +3158,8 @@ REE`");
 		//var a6 = +Acc.Wait(3, w, "Example")?.Navigate("example");
 
 		//var w = Wnd.Find("Example").OrThrow();
-		//var r1 = ScreenImage.Find("example", w).OrThrow();
-		//var r2 = +ScreenImage.Find("example", w); //the same
+		//var r1 = WinImage.Find(w, "example").OrThrow();
+		//var r2 = +WinImage.Find(w, "example"); //the same
 	}
 
 	static void TestAccEdgeNoUIA()
@@ -3192,7 +3211,7 @@ REE`");
 		//Print(0xffffffffU);
 		//Print(-0xffffffffU);
 
-		fixed(char* p = s) {
+		fixed (char* p = s) {
 			PrintHex(Api.strtoi(p));
 		}
 	}
@@ -3390,10 +3409,10 @@ REE`");
 		Wnd w = Wnd.Find("*Notepad");
 		//return;
 
-		//AFFlags f = 0;
+		AFFlags f = 0;
 		////f |= AFFlags.NotInProc;
-		//var a = Acc.Find(w, "TEXT", flags: f);
-		var a = Acc.Find(w, "NOTFOUND");
+		var a = Acc.Find(w, "TEXT", flags: f);
+		//var a = Acc.Find(w, "NOTFOUND");
 		if(a == null) return;
 
 		Print(a);
@@ -3407,25 +3426,62 @@ REE`");
 		//}
 	}
 
-	//static void TestAccProcessDoesNotExit3()
-	//{
-	//	//Wnd w = Wnd.Find("*Notepad");
-	//	//var x=new
+	static void TestAccProcessDoesNotExit3()
+	{
+		//Wnd w = Wnd.Find("*Notepad");
+		//var x=new
 
-	//	var t = new Thread(() =>
-	//	  {
-	//		  TestAccProcessDoesNotExit();
-	//	  });
-	//	t.SetApartmentState(ApartmentState.STA);
-	//	t.IsBackground = false;
-	//	t.Start();
-	//	TaskDialog.Show();
-	//}
+		var t = new Thread(() => { Print(Api.GetCurrentThreadId()); TestAccProcessDoesNotExit(); });
+		t.SetApartmentState(ApartmentState.STA);
+		t.Start();
+		MessageBox.Show("");
+		Task.Run(() => { Print(Api.GetCurrentThreadId()); TestAccProcessDoesNotExit(); });
+		MessageBox.Show("");
+		var tt = new Thread(() =>
+		{
+			var ad = AppDomain.CreateDomain("qwerty");
+			ad.DoCallBack(() => { Output.LibWriteToQM2 = true; Print(Api.GetCurrentThreadId()); TestAccProcessDoesNotExit(); });
+			AppDomain.Unload(ad);
+		});
+		tt.SetApartmentState(ApartmentState.STA);
+		tt.Start();
+		MessageBox.Show("");
+	}
 
 	//static void TestIpcWithWmCopydataAndAnonymousPipe()
 	//{
 	//	Cpp.Cpp_Test();
 	//}
+
+	static void TestWndFindProgramEtc()
+	{
+		//var w = Wnd.Find("*pad", null, "program=notepa?\0 pid=10708\0 tid=0x1A50\0 owner=2622450");
+		//var w = Wnd.Find("*pad", programEtc: "program=notepa?");
+		//var w = Wnd.Find(programEtc: "program=notepa?");
+		//var w = Wnd.Find("*pad", programEtc: $"pid={10708}");
+		var w1 = Wnd.Find("*- Notepad");
+		var w = Wnd.Find("*pad", programEtc: $"owner={w1.Handle}");
+		Print(w);
+	}
+
+	static void TestTaskDialogOwnerWpf()
+	{
+		var w = new System.Windows.Window() { Title = "Test" };
+		var k0 = (Wnd)w;
+		Print(k0);
+		w.MouseLeftButtonUp += (unu, sed) =>
+		{
+			//AuDialog.Show("dialog", owner: w);
+			//System.Windows.MessageBox.Show(w, "message");
+			var k = (Wnd)w;
+			Print(k);
+		};
+		w.Show();
+		var app = new System.Windows.Application();
+		app.Run();
+
+		//AuDialog.Show(owner: Wnd.Find("Quick*"));
+	}
 
 	static void TestAccForm()
 	{
@@ -3434,8 +3490,8 @@ REE`");
 		//Cpp.Cpp_Test(); return;
 
 		var w = Wnd.Find("* Chrome").OrThrow();
-		a = Acc.Find(w, "web:PUSHBUTTON", "Search").OrThrow();
-		//a = Acc.Find(w, "web:PUSHBUTTON", "Search", "class=moo").OrThrow();
+		a = Acc.Find(w, "web:BUTTON", "Search").OrThrow();
+		//a = Acc.Find(w, "web:BUTTON", "Search", "class=moo").OrThrow();
 
 
 		//Print(a);
@@ -3455,7 +3511,7 @@ REE`");
 		//a = Acc.Find(w, "web:TEXT", "Search the Web").OrThrow();
 
 		//var w = Wnd.Find("Quick *").OrThrow();
-		//a = Acc.Find(w, "PUSHBUTTON", "Properties*").OrThrow();
+		//a = Acc.Find(w, "BUTTON", "Properties*").OrThrow();
 
 		//foreach(var k in Wnd.Misc.AllWindows(false)) {
 		//	//if(!k.ClassNameIs("Windows.UI.Core.CoreWindow")) continue;
@@ -3463,7 +3519,7 @@ REE`");
 		//	if(!k.IsCloaked) continue;
 		//	var s = k.Name; if(Empty(s) || s=="Default IME" || s== "MSCTFIME UI") continue;
 		//	Print(k);
-		//	//PrintList(k.IsVisible, k.IsCloaked);
+		//	//Print(k.IsVisible, k.IsCloaked);
 		//	//continue;
 		//	foreach(var c in k.AllChildren()) {
 		//		Print($"\t{c.ToString()}");
@@ -3485,7 +3541,1220 @@ REE`");
 		//Application.Run(f);
 		f.Close();
 		f.Dispose();
-		//TaskDialog.Show("-");
+		//AuDialog.Show("-");
+	}
+
+	//static void TestScreenCaptureSpeedWithCaptureblt()
+	//{
+	//	Perf.SpinCPU(1000);
+	//	var file = Folders.Temp + "test.png";
+	//	var r=Screen_.Rect;
+	//	Print(r);
+	//	for(int i = 0, n=16; i < n; i++) {
+	//		10.ms();
+	//		Perf.SpinCPU(100);
+	//		Perf.First();
+	//		using(var b = WinImage.Capture((i&1)!=0, r)) {
+	//			Perf.NW();
+	//			if(i == n-1) {
+	//				b.Save(file);
+	//				Shell.Run(file);
+	//			}
+	//		}
+	//	}
+
+	//}
+
+	static void TestWndForm()
+	{
+
+	}
+
+	static void TestWndImage()
+	{
+		//var w = +Wnd.Find("Icons");
+		//var r = +WinImage.Find(w, @"Q:\My QM\copy.bmp", WIFlags.WindowDC);
+		//r.MouseMove();
+
+		//var w = +Wnd.Find("Icons");
+		//var _image = Au.Controls.ImageUtil.ImageToString(@"Q:\My QM\copy.bmp");
+		//Print(_image);
+		//var r = +WinImage.Find(w, _image, WIFlags.WindowDC);
+		//r.MouseMove();
+
+
+
+		//Perf.First();
+		////var im = Image.FromFile(@"Q:\My QM\copy.bmp");
+		////var w = +Wnd.Find(also: o=> null!=WinImage.Find(o, im, WIFlags.WindowDC));
+		//var w = +Wnd.Find(also: o => null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC));
+		////var w = +Wnd.Find(also: o=> { Print(o); return null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC); });
+		////var w = +Wnd.Find(also: o => { Print(o); Perf.First(); var ok = null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC); Perf.NW(); return ok; });
+		//Perf.NW();
+		//Print(w);
+
+		//1.5.s();
+		////Task.Run(() => { for(int i = 0; i < 10; i++) { 2.s(); GC.Collect(); } });
+		//var path = @"Q:\My QM\copy.bmp"; //memsize 1 KB
+		//path = @"C:\Program Files\Android\Android Studio\plugins\android\lib\layoutlib\data\res\drawable-sw720dp-nodpi\default_wallpaper.png"; //memsize 28 MB
+		////path = @"C:\Program Files\Android\Android Studio\plugins\android\lib\device-art-resources\nexus_4\land_back.png"; //memsize 6 MB
+		////path = @"C:\Program Files\LibreOffice 5\share\gallery\education\Notebook.png"; //memsize 2 MB
+		////path = @"C:\Program Files\LibreOffice 5\share\gallery\finance\GoldBar.png"; //memsize 500 KB
+		////path = @"C:\Program Files\Android\Android Studio\plugins\android\lib\layoutlib\data\res\drawable-ldpi\jog_tab_right_confirm_red.png"; //memsize 22 KB
+		////path = @"C:\Program Files\Android\Android Studio\plugins\android\lib\layoutlib\data\res\drawable-mdpi\picture_emergency.png"; //memsize 36 KB
+		////path = @"C:\Program Files\Android\Android Studio\plugins\android\lib\device-art-resources\nexus_4\thumb.png"; //memsize 93 KB
+		////path = @"C:\Program Files\LibreOffice 5\share\gallery\computers\Database-Download.png"; //memsize 299 KB
+		////path = @"C:\Program Files\Android\Android Studio\plugins\android\lib\layoutlib\data\res\drawable-hdpi\ic_menu_recent_history.png"; //memsize 9 KB
+		//for(int i = 0; i < 150; i++) {
+		//	Debug_.LibPrintMemory();
+		//	var k = new WinImage._Finder._Image(path);
+		//	//k.Dispose();
+		//	//var k = Image.FromFile(path);
+		//	100.ms();
+		//}
+	}
+
+	static void TestWndFindContains()
+	{
+		Perf.First();
+		var w = +Wnd.Find(contains: "Do you want to save*");
+		//var w = +Wnd.Find(contains: "Untitled - Notepad");
+		//var w = +Wnd.Find(contains: "Personalization");
+		//var w = +Wnd.Find(contains: new Acc.Finder("STATICTEXT", "Do you want to save*"));
+		//var w = +Wnd.Find(contains: new Wnd.ChildFinder("Save", "Button"));
+		//var w = +Wnd.Find(contains: WinImage.LoadImage(@"Q:\My QM\copy.bmp"));
+		Perf.NW();
+		Print(w);
+
+		//var w = +Wnd.Find("* Notepad");
+		//Acc.PrintAll(w);
+		////Acc.PrintAll(w, flags: AFFlags.ClientArea);
+		//////Acc.PrintAll(w, flags: AFFlags.ClientArea | AFFlags.UIA);
+	}
+
+	static void TestAccFindWithChildFinder()
+	{
+		var w = Wnd.Find("* Internet Explorer").OrThrow();
+		for(int i = 0; i < 5; i++) {
+			100.ms();
+			Perf.First();
+			//var a = +Acc.Find(w, "web:LINK", "Videos");
+			//var a = +Acc.Find(w, "LINK", "Videos");
+			//var a = +Acc.Find(w, "LINK", "Videos", "class=*Server");
+			var a = +Acc.Find(w, "LINK", "Videos", controls: new Wnd.ChildFinder(null, "*Server"));
+			Perf.NW();
+			Print(a);
+		}
+	}
+
+	static void TestToIntWithFlags()
+	{
+		Print("15".ToInt32_());
+		Print("0xA".ToInt32_());
+		Print("C".ToInt32_());
+		Print("C".ToInt32_(0, STIFlags.IsHexWithout0x));
+		Print("0xA".ToInt32_(0, STIFlags.NoHex));
+	}
+
+	//static void TestNewWildexSyntax()
+	//{
+	//	string s, w;
+	//	s = "two";
+	//	//s = "ONE";
+
+	//	w = "two";
+	//	w = "**m one||two";
+	//	//w = "**m(^^^) one^^^two";
+	//	//w = "**m(^^ one^^two";
+	//	//w = "**m() one^^two";
+	//	//w = "**m(^^)one^^two";
+
+	//	//var x = new Wildex(w);
+	//	//Print(x.Match(s));
+
+	//	Cpp.Cpp_TestWildex(s, w);
+	//}
+
+	static void TestPcreSpeed()
+	{
+		//Print(Ver.Is64BitProcess);
+
+		string s = "test name-m7354().gge";
+		s = "var w1 = Wnd.Find('jdjdjsjhahdjhsdjahjdhj', 'sijdiairuiru')";
+
+		//var rx = new string[1000];
+		//for(int i = 0; i < 1000; i++) rx[i] = _rxTest + i.ToString();
+
+		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0, k6 = 0, k7 = 0, k8 = 0, k9 = 0;
+		Perf.SpinCPU(100);
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 1000;
+			Perf.First();
+			//for(int i2 = 0; i2 < n2; i2++) { if(_RxNet1(s, rx[i2])) k1++; }
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxNet1(s, _rxTest)) k1++; }
+			Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { if(_RxNet2(s, rx[i2])) k2++; }
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxNet2(s, _rxTest)) k2++; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxNet3(s)) k3++; }
+			Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { if(_RxPcre1(s, rx[i2])) k4++; }
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxPcre1(s, _rxTest)) k4++; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxPcre2(s, _rxTest)) k5++; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxPcre3(s)) k6++; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(_RxPcre4(s)) k7++; }
+			Perf.NW();
+		}
+		Print(k1, k2, k3, k4, k5, k6, k7);
+	}
+
+	public static bool _RxNet1(string s, string rx)
+	{
+		var r1 = new Regex(rx, RegexOptions.CultureInvariant);
+		return r1.Match(s).Success;
+	}
+
+	public static bool _RxNet2(string s, string rx)
+	{
+		//return false;
+		return Regex.IsMatch(s, rx, RegexOptions.CultureInvariant);
+	}
+
+	public static bool _RxPcre1(string s, string rx)
+	{
+		var r1 = new Regex_(rx, c_rxFlags);
+		//var r1 = new Regex_(rx, 0);
+		return r1.IsMatch(s);
+	}
+
+	public static bool _RxPcre2(string s, string rx)
+	{
+		return s.RegexIsMatch_(rx, c_rxFlags);
+	}
+
+	public static bool _RxPcre3(string s)
+	{
+		return _rxTestCompiledPcre.IsMatch(s);
+	}
+
+	public static bool _RxPcre4(string s)
+	{
+		return _rxTestCompiledPcre.Match(s, out RXMatch m);
+	}
+
+	public static bool _RxNet3(string s)
+	{
+		return _rxTestCompiledNet.Match(s).Success;
+	}
+
+	//const string _rxTest = @"\.$|[\\/|<>?*:""\x00-\x1f]";
+	//const string _rxTest = @"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)";
+	//const string _rxTest = @"(?i)^(CON|PRN|AUX|NUL|COM\d|LPT\d)(\.|$)";
+	//const string _rxTest = @".";
+	//const string _rxTest = @"^(?:Wnd|var) +(\w+) *=";
+	//const string _rxTest = @"(?i)^(?:Wnd|var) +(\w+) *=";
+	const string _rxTest = @"^var";
+	//const string _rxTest = @"^var(.)";
+	static Regex_ _rxTestCompiledPcre = new Regex_(_rxTest, c_rxFlags);
+	static Regex _rxTestCompiledNet = new Regex(_rxTest, RegexOptions.CultureInvariant);
+
+	const RXFlags c_rxFlags = 0;
+	//const RXFlags c_rxFlags = RXFlags.UTF; //slower by 20-50 %, regardless of (?i)
+	//const RXFlags c_rxFlags = RXFlags.UTF | RXFlags.NO_UTF_CHECK; //same speed
+
+	static void TestPcreRegexStatic()
+	{
+		string s;
+		s = "-10";
+		//Print(Regex_.Match(s, @"^-(\w+)"));
+		//Print(Regex_.Match(s, @"^-(\w+)"));
+		//Print(Regex_.Match(s, @"(\d\d)"));
+		//Print(Regex_.Match(s, @"(\d\d)", from: 1, to: -1));
+		//Print(Regex_.Match(s, @"(\d\d)", matchFlags: RXMatchFlags.ANCHORED, from: 0, to: -1));
+		//Print(Regex_.Match(s, @"^(\d\d)", from: 1, to: -1));
+		//Print(Regex_.Match(s, @"\G(\d\d)", from: 1, to: -1));
+		//Print(Regex_.Match(s, @"\A(\d\d)", from: 1, to: -1));
+
+		s = "aĄ";
+		Print(s.RegexIsMatch_(@"(?i)aą"));
+		Print(s.RegexIsMatch_(@"(?i)aą", RXFlags.NEVER_UTF));
+		Print(s.RegexIsMatch_(@"(?i)aĄ", RXFlags.NEVER_UTF));
+	}
+
+	static void TestRegexCulture()
+	{
+		//var x = new Regex("(?i)ĄąΣσ");
+		//Print(x.IsMatch("ąĄσΣ"));
+
+		RXFlags f = 0;
+		//f |= RXFlags.UTF;
+		//f |= RXFlags.NEVER_UTF;
+		string s, r;
+
+		s = "ąĄσΣ";
+		r = "(?i)ĄąΣσ";
+		//r ="(*UTF)(?i)ĄąΣσ";
+
+		//s ="ąĄ";
+		//r ="(?i)Ąą";
+
+		var x = new Regex_(r, f);
+		Print(x.IsMatch(s));
+	}
+
+	static int s_sep;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	//static RXMatch.Group TestRegex_()
+	static void TestRegex_()
+	{
+		string rx, s; RXFlags f = 0; RXMatchFlags f2 = 0;
+		rx = @"\d(\w)";
+		//rx = @"\d\K(\w)";
+		//rx = @"\d(?=\w)";
+		//rx = @"\d(?=\w\K)";
+		//rx = @"\d(&)?(?=\w\K)";
+		//rx = @"\d(-)?\w";
+		//rx = @"\d(-)?\w(o)";
+		//rx = @"\G\d(\w)";
+		s = "1wo 2k";
+
+		//rx = @"\d\d(\d\d)-\d\d-\d\d";
+		//rx = @"\d\d(\d\d)(*MARK:moo)-\d\d-\d\d";
+		//s = "2018-";
+		////s = "2018-11-11";
+		////s = "2018-11-kk"; //use long enough, else ignores MARK
+		////f2 |= RXMatchFlags.PARTIAL_SOFT;
+		////f |= RXFlags.NO_START_OPTIMIZE;
+
+		////rx = "a(b)?(c?)";
+		////s = "a";
+
+		//rx = @"(\w+) (\w+) (\w+)";
+		//s = "one two three";
+
+		//rx = "(?<=')(.*?)(?=')";
+		//s = "= 'testname'k";
+
+		var x = new Regex_(rx);
+		//Print(x.Match(s, out var m, f2));
+		//Print(x.Match(s, out var m, f2, new RXLimits(4)));
+		//Print(x.Match(s, out var m, f2, new RXLimits(4, 6)));
+
+		//Print(m[0].DebugToString(), m.IndexNoK);
+
+		//Print(x.IsMatch(s));
+		//Print(x.IsMatch(s, fromTo: new RXFromTo(2)));
+
+		//Print(x.MatchG(s, out var g));
+		//Print(x.MatchG(s, out var g, fromTo: new RXFromTo(2)));
+		//Print(g.DebugToString());
+
+		//Print(x.MatchS(s, out var ss));
+		//Print(x.MatchS(s, out var ss, fromTo: new RXFromTo(2)));
+		//Print(x.MatchS(s, out var ss, 1, fromTo: new RXFromTo(2)));
+		//Print(ss);
+
+		////s_sep = 1;
+		////int i = m[0].Index;
+		//////s_sep = 2;
+		////i += m[0].Length;
+		////s_sep = 3;
+		////var v = m[0].Value;
+		////s_sep = 4;
+		////var h = i.ToString();
+
+		////s_sep = 1;
+		////var g = m[0];
+		////s_sep = 2;
+		////int i = g.Index;
+		////s_sep = 3;
+		////i += g.Length;
+		////s_sep = 4;
+		////var v = g.Value;
+		////s_sep = 5;
+		////var h = i.ToString();
+
+		//if(m == null) Print("null");
+		//else if(!m.Exists) Print(m.Mark);
+		//else if(m.GroupCount == 1) Print(m[0].DebugToString(), m.Exists, m.IsPartial, m.IndexNoK, m.Mark);
+		//else Print(m[0].DebugToString(), m[1].DebugToString(), m.Exists, m.IsPartial, m.IndexNoK, m.Mark);
+
+		//Print(m.GroupIL(0));
+		//Print(m.GroupIV(0));
+
+		//Print(m[0].Length);
+		//Print(m[0].Value);
+		//Print(m[0].Length);
+		//Print(m[0].Value);
+
+		//Print($"{m[0].Value}, {m[1].Value}, {m[0].Value}, {m[1].Value}");
+		//Print($"{m[0]}, {m[1]}, {m[0]}, {m[1]}");
+		//Print($"{m[0].ToString()}, {m[1].ToString()}, {m[0].ToString()}, {m[1].ToString()}");
+
+		//return m[0];
+
+		//var g = m[0];
+		//Print(g.Length);
+		//Print(g.Value);
+		//Print(g.Length);
+		//Print(g.Value);
+
+		//var g1 = m[0];
+		//Print(g1.Length);
+		//Print(g1.Value);
+		//var g2 = m[0];
+		//Print(g2.Length);
+		//Print(g2.Value);
+
+		//ref var g1 = ref m[0];
+		//Print(g1.Length);
+		//Print(g1.Value);
+		//ref var g2 = ref m[0];
+		//Print(g2.Length);
+		//Print(g2.Value);
+
+		//return g;
+	}
+
+	static void TestRegexGroupNumberFromName()
+	{
+		var r = "(one)|(two)";
+		r = "(?<AM>one)|(?<AM>two)";
+		r = "((?<AM>mo)|(?<AM>ko))?--$";
+		var s = "--one--";
+		s = "--two--";
+
+		var x = new Regex_(r, RXFlags.DUPNAMES);
+		if(!x.Match(s, out var m)) { Print("no match"); return; }
+		int i = m.GroupNumberFromName("AM", out var notUnique);
+		Print(i, notUnique);
+	}
+
+	static void TestRegexCallout()
+	{
+		var r = @"--(?C1)(?:(\w+) (?C2))+--";
+		//r = "(*MARK:M1)(?C'cow')on(*MARK:M2)e(?C'dog')";
+		//r = @"(?C1)\w+(?C2)";
+		//var s = "--one--";
+		var s = "--one MONE do --";
+		//r = @"--(?C1)(\w+(?C2) )+--";
+
+		var x = new Regex_(r);
+		//var x = new Regex_(r, RXFlags.NO_AUTO_POSSESS|RXFlags.NO_DOTSTAR_ANCHOR| RXFlags.NO_START_OPTIMIZE);
+#if true
+		//x.SetCallout((in RXCalloutData d) =>
+		x.Callout = d =>
+		{
+			//Print(d.current_position, d.callout_number);
+			//Print(d.mark, d.callout_string);
+			Print($"last={d.capture_last}, top={d.capture_top}, pos={d.current_position}, start={d.start_match}, pat_pos={d.pattern_position}, next_len={d.next_item_length}");
+			int i = d.capture_last;
+			if(i > 0) Print(d.LastGroup, d.LastGroupValue);
+
+			d.Result = -1;
+
+			//Print(i);
+			//if(i > 0) {
+
+			//	var (offs, len) = d.Group(i);
+			//	var k = d.GroupValue(i);
+			//	if(offs > 1000 || len > 1000) Print(k);
+			//}
+		};
+#endif
+		if(!x.Match(s, out var m)) { Print("no match"); return; }
+
+		//Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { x.Match(s, out m); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.NW();
+		//}
+
+		Print(m);
+	}
+
+	static void TestRegexGetRepeatedGroupInstances()
+	{
+		var s = "BEGIN 111 2222 333 END";
+		var x = new Regex_(@"^(\w+) (?:(\d+) (?C1))+(\w+)$");
+		var a = new List<string>();
+		x.Callout = o => a.Add(o.LastGroupValue);
+		if(!x.Match(s, out var m)) { Print("no match"); return; }
+		Print(m[1]);
+		Print(a); //all numbers. m[2] contains only the last number.
+		Print(m[3]);
+	}
+
+	public static string DebugToString(this RXGroup t) => $"{t.Index.ToString()} {t.Length.ToString()} '{t.Value}'";
+
+	static void TestRegexMatch()
+	{
+		var s = "--333--";
+		var x = new Regex_(@"\d+(-)");
+
+		//Print(x.IsMatch(s));
+
+		//if(!x.Match(s, out var m)) { Print("no match"); return; }
+		//Print(m);
+
+		//if(!x.MatchS(s, out var m)) { Print("no match"); return; }
+		//Print(m);
+
+		if(!x.MatchG(s, out var m)) { Print("no match"); return; }
+		Print(m.DebugToString());
+
+		//s = "--aaa--333--";
+		//x = new Regex_(@"(?<n1>\w+)--(?'n2'\d+)");
+
+		//if(!x.MatchS(s, out var m, x.GroupNumberFromName("n2"))) { Print("no match"); return; }
+		//Print(m);
+	}
+
+	static void TestRegexFindAll()
+	{
+		var s = "BEGIN 111 2222 333 END";
+		var x = new Regex_(@"\w(\w+)");
+		//var x = new Regex_(@"\w\w(?=\w\w\K)");
+		//var x = new Regex_(@"\b");
+		//if(!x.FindAll(s, out var a)) { Print("no match"); return; }
+		//if(!x.FindAllG(s, out var a)) { Print("no match"); return; }
+		//if(!x.FindAllS(s, out string[] a)) { Print("no match"); return; }
+		//Print(a);
+		//Print(x.FindAll(s));
+		//Print(x.FindAllG(s));
+		//Print(x.FindAllS(s));
+		//Print(x.FindAllS(s, 1));
+		//Print(x.FindAllS(s, limits: new RXLimits(10)));
+		//Print(x.FindAllS(s, limits: new RXLimits(0, 10)));
+		//Print(x.FindAllS(s, limits: new RXLimits(maxCount: 2)));
+		foreach(var g in x.FindAllG(s)) Print(g.DebugToString());
+
+		//var x = new Regex(@"\w+ \w+");
+		//var a = x.Matches(s);
+		//Print(a.Count);
+	}
+
+	static void TestRegexReplace()
+	{
+		string s, rx, re;
+		s = "BEGIN 111 2222 333 END";
+		//s = "𑀠𑀡𑀢𑀣";
+#if true
+		//rx =@"\w(\w+)";
+		//rx =@"\b";
+		//rx=@"\w\K\w+";
+		//rx=@"\w+\K";
+		//rx=@"(?s)(?=.)";
+		//rx = @"\d+(*:number)|\w+(*:text)"; re = "-$*-";
+		rx = @"(\w+) (\w+)"; re = "$2-$1"; //re = "$22-$11";
+		rx = @"(?<one>\w+) (?<two>\w+)"; re = "${two}-${one}"; //re = "${2}-${1}"; //re = "${k$1}"; //re = "$4000000000-"; //re = "${4000000000}";
+															   //rx = @"(?<5>\w+) (?<2>\w+)"; re = "${2}-${5}"; //PCRE does not allow group names starting wih digit
+															   //rx = @"";
+															   //rx = @"";
+															   //rx = @"(*UTF)."; re = "'$0";
+															   //rx = @"[𑀠𑀡𑀢𑀣]"; re = "'$0";
+															   //rx = @"(*UTF)\b"; re = "'";
+															   //rx = @"(*UTF)(?=.)"; re = "'";
+		var x = new Regex_(rx);
+
+		//re = "moo";
+		//re = "'";
+		//re = "($0)";
+		//re = "($&)";
+		//re = "($`)";
+		//re = "($')";
+		//re = "($+)";
+		//re = "($_)";
+		//re = "($?)";
+		//re = "-$";
+		//re = "-$$-";
+		//re = "-$$";
+		//re = "$$-";
+		//re = "";
+		//re = "";
+
+		//Print(x.IsMatch(s));
+		Print(x.Replace(s, re));
+		//Print(x.ReplaceAll(s, re, 0, new RXLimits(10)));
+		//Print(x.ReplaceAll(s, re, 0, new RXLimits(10, 20)));
+		//Print(x.ReplaceOne(s, re));
+		//Print(x.ReplaceAll(s, m=>"moo"));
+		//Print(x.ReplaceAll(s, m=>m.ExpandReplacement("moo")));
+		//Print(x.ReplaceAll(s, m=>m.ExpandReplacement("$2 $1")));
+#else
+		//var x = new Regex(@"\w(?<5>\w+)");
+		//var x = new Regex(@"\w(\w+)(-)?");
+		//var x = new Regex(@"\b");
+		var x = new Regex(@".");
+		//var x = new Regex(@"(?s)(?=.)");
+
+		//Print(x.Replace(s, "'"));
+		//Print(x.Replace(s, m => m.Result("$1")));
+		//Print(x.Replace(s, "${5}"));
+		Print(x.Replace(s, "'$0"));
+
+		//var x = new Regex(@"\w+ \w+");
+		//var a = x.Matches(s);
+		//Print(a.Count);
+#endif
+
+	}
+
+	static void TestRegexFindAllE()
+	{
+		string s, rx;
+		s = "BEGIN 111 2222 333 END";
+		rx = @"\w+";
+		var x = new Regex_(rx);
+		//foreach(var m in x.FindAllE(s)) {
+		//	Print(m);
+		//}
+
+		foreach(var m in x.FindAll(s)) Print(m);
+		foreach(var m in x.FindAllG(s)) Print(m);
+		foreach(var m in x.FindAllS(s)) Print(m);
+
+		if(x.FindAll(s, out var am1)) Print(am1);
+		if(x.FindAllG(s, out var ag1)) Print(ag1);
+		if(x.FindAllS(s, out var as1)) Print(as1);
+
+		int k1 = 0, k2 = 0, k3 = 0, k4 = 0;
+		Perf.SpinCPU(100);
+		Debug_.LibPrintMemory();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 100;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { foreach(var m in x.FindAllS(s)) k1++; }
+			//for(int i2 = 0; i2 < n2; i2++) { if(x.FindAllS(s, out var a2)) k2++; }
+			Perf.NW();
+			Debug_.LibPrintMemory();
+		}
+		Print(k1, k2, k3, k4);
+	}
+
+	static void TestRegexSplit()
+	{
+		string s, rx;
+		s = "BEGIN 111 2222 333 END";
+		rx = @"\w+";
+		rx = @" ";
+		var x = new Regex_(rx);
+		//Print(x.Replace(s, "-", -1));
+		//Print(x.Split(s, 0));
+		foreach(var g in x.SplitG(s, 0)) Print(g.DebugToString());
+
+		//Print(s.Split(new char[] { ' ' }, 0));
+	}
+
+	static void TestRegexCalloutWithFindAll()
+	{
+		string s, rx;
+		s = "BEGIN 111 2222 333 and KKK 4 55 6 END";
+		rx = @"\w+ (?:(\d+) (?C1))+";
+		//s = "ABC111 DEF222 GHK333";
+		//rx = @"\w\K\w\w(?C1)\d+";
+		RXFlags f = 0;
+		//f |=RXFlags.AUTO_CALLOUT;
+		var x = new Regex_(rx, f);
+		x.Callout = o =>
+		{
+			Print(o.start_match, o.GroupValue(1));
+			//Print(o.start_match, o.capture_top);
+		};
+
+		foreach(var m in x.FindAll(s)) Print(m);
+
+	}
+
+	static void TestRegexAndGC()
+	{
+		Task.Run(() => { for(; ; ) { 100.ms(); GC.Collect(); } });
+
+		string s, rx;
+		s = "BEGIN 111 2222 END";
+		rx = @"\w+ (?:(\d+) (?C))+";
+		var x = new Regex_(rx);
+		x.Callout = o =>
+		{
+			MessageBox.Show(o.GroupValue(1));
+		};
+		x.IsMatch(s);
+		Print("---");
+		x.Callout = null;
+		Print(x.IsMatch(s));
+		Print("end");
+		MessageBox.Show("end");
+
+		//string s, r;
+		//s = "-- one555 -- two2 --";
+		//r = @"\b(three|four|five|one|two)\d+\b";
+		//var x = new Regex_(r);
+		//var x2 = new Regex(r);
+		//Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { x2.IsMatch(s); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { x.IsMatch(s); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.NW();
+		//}
+
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int TestAccLeaks3(Wnd w)
+	{
+		var a = Acc.FindAll(w);
+		//foreach(var v in a) v.Dispose();
+		return a.Length;
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void TestAccLeaks2(Wnd w)
+	{
+		//return;
+		int n = 0;
+		Debug_.LibPrintMemory();
+		for(int i = 0; i < 15; i++) {
+			for(int j = 0; j < 40; j++) {
+				n = TestAccLeaks3(w);
+			}
+			Debug_.LibPrintMemory();
+			100.ms();
+		}
+		Print(n);
+		//Print($"max {(double)Acc.DebugMaxMemoryPressure/(1024*1024)}, sum {(double)Acc.DebugMemorySum/(1024*1024)}");
+	}
+
+	static void TestAccLeaks()
+	{
+		//var w = +Wnd.Find(className: "FM");
+		//var w = +Wnd.Find("QM Help");
+		//var w = +Wnd.Find("* Firefox");
+		var w = +Wnd.Find("Quick M*");
+		//var w = +Wnd.Find("*Chrome");
+		Acc.FindAll(w);
+		GC.Collect();
+		MessageBox.Show("continue");
+		g1:
+		Output.Clear();
+		TestAccLeaks2(w);
+		MessageBox.Show("before GC");
+		GC.Collect();
+		100.ms();
+		GC.Collect();
+		100.ms();
+		GC.Collect();
+		100.ms();
+		GC.Collect();
+		100.ms();
+		GC.Collect();
+		if(MessageBox.Show("after GC\nContinue?", "", MessageBoxButtons.YesNo) == DialogResult.Yes) goto g1;
+	}
+
+	//public static void Write<T>(T x)
+	//{
+	//	Print(1);
+
+	//	//switch(x) {
+	//	//case IEnumerable<T> t:
+	//	//	Print(t);
+	//	//	break;
+	//	//}
+	//}
+
+	public static void Write(string x)
+	{
+		Print("string");
+	}
+
+	public static void Write(object x)
+	{
+		if(x is IEnumerable e) {
+			Print("IEnumerable");
+		} else {
+			Print("other");
+		}
+	}
+
+	public static void Write<T>(IEnumerable<T> x)
+	{
+		Print("IEnumerable<T>");
+	}
+
+	public static void Write<T>(T[] x)
+	{
+		Print("T[]");
+	}
+
+	//public static void Write<T>(IEnumerable<T> x, string format = "{v}\r\n")
+	//{
+	//	Print("IEnumerable<T>");
+	//	//Print(x is string);
+	//}
+
+	//public static void Write(object first, params object[] other)
+	//{
+	//	Print("params");
+	//	//Print(other != null);
+	//}
+
+	public static void Write(params object[] values)
+	{
+		Print("params");
+		//Print(other != null);
+	}
+
+	//public static void Write(string x1, object x2, params object[] xn)
+	//{
+	//	Print("params");
+	//	Print(xn != null);
+	//}
+
+	static void Func1(in int k)
+	{
+
+	}
+
+	static void Func2(ref int k)
+	{
+		Func1(k);
+	}
+
+	static void TestPrintListEx()
+	{
+		var a = new string[] { "one", null, "thr\t\"ee" };
+		var b = new List<string> { "one", null, "thr\t\"ee" };
+		//var a = new int[] { 55, 88};
+		//var a = new object[] { "te\txt", null, 55, b};
+		//a = null;
+		//a = new string[0];
+		//a = new string[] { "" };
+		var nongen = new System.Collections.ArrayList(a);
+
+		//PrintListEx(a);
+		//PrintListEx(a, "{0}. '{3}'\r\n");
+		//PrintListEx(a, "{0}. {4}\r\n");
+
+		//Print("aaa", "b\r\n\t\"c", 4, 1.4, a);
+
+		//Print("----");
+
+		//Print(a);
+		//PrintListEx(a);
+		PrintListEx(a, "{1}. {3}\r\n");
+		//Print(a, "', '");
+		//Print(a, "', '", "'", "'.");
+		//Print(a, "'\r\n'", "'", "'");
+		//Print(a, indices: true);
+		//Print(nongen);
+		//Print(new char[] { 'a', 'b' });
+		//Print(4, "ff");
+		//Print("one", "two");
+		//Print("one", true, null, 5, a);
+
+		////var c = "string";
+		//////Print(c.AsEnumerable());
+		////Print(c as IEnumerable<char>);
+
+		//var d = new Dictionary<string, int>() { { "one", 1 }, { "two", 2 } };
+		////Print(d);
+		//PrintListEx(d, "d[{0}] = {2}\r\n");
+	}
+
+	static void TestNewEscape()
+	{
+		Perf.First();
+		string s = "\t234567890";
+		//s = "ab";
+		//Print(s.Limit_(10));
+		//Print(s.Limit_(9));
+		//Print(s.Limit_(4));
+		//Print(s.Limit_(3));
+		//Print(s.Limit_(2));
+		//Print(s.Limit_(1));
+		//Print(s.Limit_(0));
+
+		Print(s.Escape_());
+		Print(s.Escape_(quote: true));
+		Print(s.Escape_(7, false));
+		Print(s.Escape_(7, true));
+
+		Print(s, "mm", s);
+		//Print(s, "mm");
+		//Print(s, "mm");
+		//Print(s, "mm");
+		PrintListEx(new string[] { s, "kk", s }, "{3}\r\n");
+
+		//Acc.PrintAll(Wnd.Find("Quick*").OrThrow());
+
+		Perf.Next();
+		//var w = Wnd.Find(null, "Notepad");
+		//w.SetText("one\ttwo");
+		//Print(w);
+
+		//Print(new CsvTable("one,two\r\nthree"));
+		Perf.NW();
+	}
+
+
+	static void TestKeySyntax()
+	{
+
+		Input.Common.SleepAfter = 100;
+		Key("Tab Ctrl+V");
+
+		var k = new Input() { SleepAfter = 200 };
+		k.Key("Tab Ctrl+V");
+
+		//using(var k = new Input()) {
+		//	k.Key("Tab Ctrl+V");
+		//}
+
+		//Input.PasteKeyText = true; //or Key(true, "keys", "text");
+		//Key("Ctrl+C", "text", "F2", 500, Keys.Back, "", "text", (Keys)8, (KScan)8);
+		//Key("Tab*2", "user", "Tab", "password", 200, "Enter");
+		//Text("user", "Tab");
+		//Paste("user");
+		//var w = +Wnd.Find("Quick*").Kid(2216);
+		//Key(w, "Ctrl+V");
+		//Text(w, "Ctrl+V");
+
+		//var k = new Input();
+		//k.Prop1 = 3;
+		//k.SendKeys("Enter");
+
+
+		//Part types depend on argument type:
+		//string - keys or text, in alternating order: Key("keys", "text", "keys", "text").
+		//	After arguments of other types again starts with keys: Key("keys", 10, 20, "keys", "text").
+		//	Keys can be empty string: Key("keys", 10, "", "text").
+		//int - milliseconds to sleep.
+		//enum Keys (or KCode?) - virtual key code: Key(Keys.Back, (Keys)8).
+		//enum KScan - scan code. Example: Key((KScan)10).
+		//bool - true to use clipboard (paste text), false (default) to use keyboard.
+		//	For Text(), the default depends on Input.TextOptions, which can specify to use paste with all or some windows, maybe using a predicate.
+		//some options/flags types.
+
+		//rejected
+		//Key("Ctrl+C", KText, "text", KSleep, 500, "F2", KCode, Keys.Back, KCode, Api.VK_APPS, KScan, 10);
+		//Key("Ctrl+C", "text", "F2", 500, "F2", Keys.Back, KCode, Api.VK_APPS, KScan, 10);
+		//Key("Ctrl+C 'text' F2", 500, "F2", Keys.Back, KCode, Api.VK_APPS, KScan, 10);
+		//Key("Ctrl+C 'text' F2", 500, "F2", Keys.Back, (Keys)8, (byte)10);
+
+		//consider
+		//Key(K.Ctrl.Alt.F.Plus.O.Text("text").Tab.Paste("text").Sleep(100).Enter);
+
+		//or don't use Text(params object[] text). Rarely used. Instead:
+		//Text(string text, string keys = null, TOptions options = null)
+		//rejected:
+		//Key(string keys, string text = null, TOptions options = null)
+
+		//rejected: use clipboard for text. Rarely need. Unclear parameters. Better Key("keys"); Paste("keys");
+		//KeyPaste("keys", "paste")
+
+		//SELECTED:
+		//Key(params object[] keys) //Keys("keys", "text", "keys", "text", 100, "keys", "text", Keys.Back, new KeyOptions(...));
+		//Text(string text, string keys = null)
+		//Text(KeyOptions options, string text, string keys = null)
+		//Paste(string text, string keys = null)
+		//Input.Paste(string text, string keys = null)
+		//Input.PasteFormat(string text, string format)
+		//Input.PasteTo(Wnd w, string text, string format = null)
+	}
+
+	static void TestLibDC()
+	{
+		using(var dcs = new LibScreenDC(0)) {
+			Print((IntPtr)dcs);
+			using(var dcm = new LibCompatibleDC(dcs)) {
+				Print((IntPtr)dcm);
+			}
+		}
+	}
+
+	static void TestSpan()
+	{
+		//Span<char> span;
+
+		//byte* pointerToStack = stackalloc byte[256];
+		//Span<byte> stackMemory = new Span<byte>(pointerToStack, 256);
+
+		//IntPtr unmanagedHandle = Marshal.AllocHGlobal(256);
+		//Span<byte> unmanaged = new Span<byte>(unmanagedHandle.ToPointer(), 256);
+		//Marshal.FreeHGlobal(unmanagedHandle);
+
+
+		//string input = "123,456";
+		//ReadOnlySpan<char> inputSpan = input.AsReadOnlySpan();
+		//int commaPos = input.IndexOf(',');
+		//int first = int.Parse(inputSpan.Slice(0, commaPos));
+		//int second = int.Parse(inputSpan.Slice(commaPos + 1));
+
+		//var s = "one two";
+		//var k = s.AsReadOnlySpan(3);
+		////Print(k.);
+		//for(int i = 0; i < k.Length; i++) Print(k[i]);
+
+		//foreach(var v in s.Segments_(Separators.Whitespace, SegFlags.NoEmpty)) {
+		//	Print(v);
+		//}
+
+	}
+
+	static void TestAuDialogRenamed()
+	{
+		//Print(Dpi.BaseDPI);
+		var s = "More text";
+		//s = "WWWWWWWWWWWWW WWWWWWWWWWWW MMMMMMMMMMM MMMMMMMMMMMM WWWWWWWWWWWW WWWWWWWWWWWW MMMMMMMMMMM MMMMMMMMMMM";
+		//Print(AuDialog.Show("Main instruction", s, "OK|Cancel|100 C1|C2", DIcon.App, DFlags.CommandLinks, expandedText: "Exp"));
+		//Print(AuDialog.Show("Main instruction", s, "OK|Cancel|100 C1|C2", DIcon.App, DFlags.CommandLinks | DFlags.Wider, expandedText: "Exp"));
+		//Print(AuDialog.Show("Main instruction", s, "OK|Cancel|100 C1|C2", default, DFlags.CommandLinks, expandedText: "Exp"));
+		//Print(AuDialog.Show("Main instruction", s, "OK|Cancel|100 C1|C2", default, DFlags.CommandLinks | DFlags.Wider, expandedText: "Exp"));
+		//Print(AuDialog.Show("Main instruction wide wide wide wide wide wide wide", s, "OK|Cancel|100 C1|C2", DIcon.App, DFlags.CommandLinks, expandedText: "Exp"));
+		//Print(AuDialog.Show("Main instruction wide wide wide wide wide wide wide", s, "OK|Cancel|100 C1|C2", DIcon.App, DFlags.CommandLinks | DFlags.Wider, expandedText: "Exp"));
+
+		////MessageBox.Show(s, "cap", default, MessageBoxIcon.Asterisk);
+
+		//AuDialog.ShowList("One wide wide wide wide wide wide wide and even more wide|Two");
+		AuDialog.ShowList("One wide wide wide wide wide wide wide and even more wide|Two", flags: DFlags.Wider);
+
+		//if(!AuDialog.ShowTextInput(out var s)) return;
+		//if(!AuDialog.ShowNumberInput(out var i)) return;
+
+	}
+
+	static void TestRegexExamples()
+	{
+		var s = "one, two,three , four";
+		var x = new Regex_(@" *, *");
+		var a = x.SplitG(s);
+		foreach(var v in a) Print(v.Index, v.Value);
+
+		//Print(s.RegexIndexOf_)
+
+
+		//var s = "one obertone";
+		//var r = @"\w\w\w(?C)\w+";
+		//var x = new Regex_(r);
+		//x.Callout = o => Print(o.current_position);
+		//if(x.Match(s, out var m)) Print(m); else Print("not found");
+
+		//var s = "one two22 three-333 four 55 -77";
+		////var x = new Regex_(@"\d+", RXFlags.MATCH_WORD);
+		////var x = new Regex_(@"\b(?:\d+)\b");
+		////var x = new Regex_(@"[A-Z]+", RXFlags.CASELESS);
+		//var x = new Regex_(@"^\w{3}");
+		////var x = new Regex_(@"^\w{3}", RXFlags.PARTIAL_SOFT);
+		////if(!x.FindAll(s, out var a)) { Print("not found"); return; }
+		////foreach(var m in a) Print(m.Value);
+
+		//if(x.Match("fg", out var m)) Print(m, m.IsPartial); else Print("no match");
+		//if(x.Match("fg", out var m2, new RXMore(matchFlags: RXMatchFlags.PARTIAL_SOFT))) Print(m2, m2.IsPartial); else Print("no match");
+
+		//var s = "one two22 three333 four";
+		//var x = new Regex_(@"\b(\w+?)(\d+)\b");
+		//if(!x.FindAll(s, out var a)) { Print("not found"); return; }
+		//foreach(var m in a) Print(m.Value, m[1].Value, m[2].Value);
+
+		//var s = "one two22 three333 four";
+		//var x = new Regex_(@"\b(\w+?)(\d+)\b");
+		//Print(x.IsMatch(s));
+		//if(x.Match(s, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+		//Print(x.FindAllS(s, 2));
+		//Print(x.ReplaceAll(s, "'$2$1'"));
+		//Print(x.ReplaceAll(s, o => o.Value.ToUpper_()));
+
+
+		//var s = "text <a href='url'>link</a> text";
+		//var rx =@"(?C1)<a (?C2)href='.+?'>(?C3)[^<]*(?C4)</a>";
+		//var x = new Regex_(rx);
+		//x.Callout = o => { Print(o.callout_number, o.current_position, s.Substring(o.start_match, o.current_position), rx.Substring(o.pattern_position, o.next_item_length)); };
+		//Print(x.IsMatch(s));
+
+		//var s = "one 'two' three";
+		//var rx = @"'(.+?)'";
+		//var x = new Regex_(rx, RXFlags.AUTO_CALLOUT);
+		//x.Callout = o => Print(o.current_position, o.pattern_position, rx.Substring(o.pattern_position, o.next_item_length));
+		//Print(x.IsMatch(s));
+
+		//var s = "one 123-5 two 12-456 three 1-34 four";
+		//var x = new Regex_(@"\b\d+-\d+\b(?C1)");
+		//x.Callout = o => { int len = o.current_position - o.start_match; /*Print(len);*/ if(len > 5) o.Result = 1; };
+		//Print(x.FindAllS(s));
+	}
+
+	static void TestRegexStatic()
+	{
+		//var s = "ab cd-45-ef gh";
+		//if(s.RegexMatch_(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
+		//	Print(
+		//		m.GroupCount, //3 (whole match and 2 groups)
+		//		m.Index, //3, same as m[0].Index
+		//		m.Value, //"cd-45-ef", same as m[0].Value
+		//		m[1].Index, //3
+		//		m[1].Value, //"cd"
+		//		m[2].Index, //6
+		//		m[2].Value //"45"
+		//		);
+
+		//var s = "ab cd--ef gh";
+		//if(s.RegexMatch_(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
+		//	Print(
+		//		m.GroupCountPlusOne, //4 (whole match and 3 groups)
+		//		m[2].Exists, //false
+		//		m[2].Index, //-1
+		//		m[2].Length, //0
+		//		m[2].Value //null
+		//		);
+
+
+		//var s = "one two22, three333,four";
+		//var x = new Regex_(@"\b(\w+?)(\d+)\b");
+
+		// Print("//IsMatch:");
+		//Print(x.IsMatch(s));
+
+		// Print("//Match:");
+		//if(x.Match(s, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+
+		// Print("//FindAll with foreach:");
+		//foreach(var v in x.FindAll(s)) Print(v.Value, v[1].Value, v[2].Value);
+		// Print("//FindAllS, get only strings of group 2:");
+		//Print(x.FindAllS(s, 2));
+
+		// Print("//Replace:");
+		//Print(x.Replace(s, "'$2$1'"));
+		// Print("//Replace with callback:");
+		//Print(x.Replace(s, o => o.Value.ToUpper_()));
+		// Print("//Replace with callback and ExpandReplacement:");
+		//Print(x.Replace(s, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+
+		// Print("//Split:");
+		//Print(new Regex_(@" *, *").Split(s));
+
+		//var s = "one two22, three333,four";
+		//var rx = @"\b(\w+?)(\d+)\b";
+		//Print("//RegexIsMatch_:");
+		//Print(s.RegexIsMatch_(rx));
+		//Print("//RegexMatch_:");
+		//if(s.RegexMatch_(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+		//Print("//RegexFindAll_ with foreach:");
+		//foreach(var v in s.RegexFindAll_(rx)) Print(v.Value, v[1].Value, v[2].Value);
+		//Print("//RegexFindAll_, get only strings:");
+		//Print(s.RegexFindAll_(rx, 2));
+		//Print("//RegexReplace_:");
+		//Print(s.RegexReplace_(rx, "'$2$1'"));
+		//Print("//RegexReplace_ with callback:");
+		//Print(s.RegexReplace_(rx, o => o.Value.ToUpper_()));
+		//Print("//RegexSplit_:");
+		//Print(s.RegexSplit_(@" *, *"));
+
+		//var s = "one two22, three333,four";
+		//var rx = @"\b(\w+?)(\d+)\b";
+
+		// Print("//RegexIsMatch_:");
+		//Print(s.RegexIsMatch_(rx));
+
+		// Print("//RegexMatch_:");
+		//if(s.RegexMatch_(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+
+		// Print("//RegexMatch_, get only string:");
+		//if(s.RegexMatch_(rx, 0, out var s0)) Print(s0);
+		// Print("//RegexMatch_, get only string of group 1:");
+		//if(s.RegexMatch_(rx, 1, out var s1)) Print(s1);
+
+		// Print("//RegexFindAll_ with foreach:");
+		//foreach(var v in s.RegexFindAll_(rx)) Print(v.Value, v[1].Value, v[2].Value);
+
+		// Print("//RegexFindAll_ with foreach, get only strings:");
+		//foreach(var v in s.RegexFindAll_(rx, 0)) Print(v);
+		// Print("//RegexFindAll_ with foreach, get only strings of group 2:");
+		//foreach(var v in s.RegexFindAll_(rx, 2)) Print(v);
+
+		// Print("//RegexFindAll_, get array:");
+		//if(s.RegexFindAll_(rx, out var am)) foreach(var k in am) Print(k.Value, k[1].Value, k[2].Value);
+
+		// Print("//RegexFindAll_, get array of strings:");
+		//if(s.RegexFindAll_(rx, 0, out var av)) Print(av);
+		// Print("//RegexFindAll_, get array of group 2 strings:");
+		//if(s.RegexFindAll_(rx, 2, out var ag)) Print(ag);
+
+		// Print("//RegexReplace_:");
+		//Print(s.RegexReplace_(rx, "'$2$1'"));
+
+		// Print("//RegexReplace_ with callback:");
+		//Print(s.RegexReplace_(rx, o => o.Value.ToUpper_()));
+		// Print("//RegexReplace_ with callback and ExpandReplacement:");
+		//Print(s.RegexReplace_(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+
+		// Print("//RegexReplace_, get replacement count:");
+		//if(0 != s.RegexReplace_(rx, "'$2$1'", out var s2)) Print(s2);
+
+		// Print("//RegexReplace_ with callback, get replacement count:");
+		//if(0 != s.RegexReplace_(rx, o => o.Value.ToUpper_(), out var s3)) Print(s3);
+
+		// Print("//RegexSplit_:");
+		//Print(s.RegexSplit_(@" *, *"));
+
+
+		//var s = "one two,three , four";
+
+		//var s = "one, two,three , four";
+		////Print(s.RegexSplit_(@" *, *"));
+		////Print(s.RegexSplit_(@" *, *", 2));
+
+		////Print(s.RegexIsMatch_(@"\w+,\w+"));
+		////Print(s.RegexIsMatch_(@"\w+,\w+", RXFlags.ANCHORED));
+
+		//if(s.RegexMatch_(@"\w+", out var m)) Print(m); else Print("no match");
+		//if(s.RegexMatch_(@"\w+,(\w+)", 1, out var k)) Print(k); else Print("no match");
+		//if(s.RegexMatch_(@"\w+,\K\w+", 0, out var kk)) Print(kk); else Print("no match");
+	}
+
+	//public static (string result, int count) RReplace()
+	//{
+	//	return ("test", 1);
+	//}
+
+	//static void TestTupleReturn()
+	//{
+	//	var s = "subject";
+	//	int n;
+	//	//var r = RReplace();
+	//	//var (r, n) = RReplace();
+	//	(s, n) = RReplace();
+	//}
+
+	static void TestWildexRegex()
+	{
+		//Wildex w = @"**r \ba\Qbc\E";
+		//Print(w.Match("abc"));
+
+		Print(Wnd.Find(@"**r Q\Quick\E"));
+	}
+
+	static void TestRegexGroupByName()
+	{
+		string s = "one two222 three";
+		if(s.RegexMatch_(@"(?<A>[a-z]+)(?<B>\d+)", out var m)) Print(m[1], m[2], m["A"], m["B"]);
 	}
 
 
@@ -3506,24 +4775,62 @@ REE`");
 		}
 
 		try {
+#if true
 
+			TestRegexGroupByName();
+			//TestWildexRegex();
+			//TestRegexStatic();
+			//TestRegexExamples();
+			//TestKeySyntax();
+			//TestAuDialogRenamed();
+			//TestSpan();
+			//TestLibDC();
+			//TestNewEscape();
+			//TestPrintListEx();
+			//TestRegexAndGC();
+			//TestRegexCalloutWithFindAll();
+			//TestRegexSplit();
+			//TestRegexFindAllE();
+			//TestRegexReplace();
+			//TestRegexFindAll();
+			//TestRegex_();
+			//TestRegexCulture();
+			//TestRegexMatch();
+			//TestRegexGetRepeatedGroupInstances();
+			//TestRegexCallout();
+			//TestRegexGroupNumberFromName();
+			//var g=TestRegex_(); //Print(g.Value); Print(g.Value);
+			//TestRegex_();
+			//TestPcreSpeed();
+			//TestPcreRegexStatic();
+			//TestNewWildexSyntax();
+			//TestWndImage();
+			//TestWndForm();
+			//TestTaskDialogOwnerWpf();
+			//TestWndFindProgramEtc();
 			//TestMainWindows2();
 			//TestRunConsole();
 			//TestStrtoiOverflow();
 			//TestCompiler();
+			//TestToIntWithFlags();
+			//TestFinalizersAndGC();
 			//return;
-
+#else
 			try {
 
+				//TestAccLeaks();
 				TestAccForm();
+				//TestWndFindContains();
+				//TestAccFindWithChildFinder();
 				//TestIpcWithWmCopydataAndAnonymousPipe();
-				//TestAccProcessDoesNotExit();
+				//TestAccProcessDoesNotExit3();
 				//TestAccFirefoxNoSuchInterface();
 				//TestAccThrowOperator();
 			}
 			finally {
 				Cpp.Cpp_Unload();
 			}
+#endif
 		}
 		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 
@@ -3536,7 +4843,7 @@ REE`");
 		key(...); //Input.Keys(...);
 		tkey(...); //Input.TextKeys(...); //or txt
 		paste(...); //Input.Paste(...);
-		msgbox(...); //TaskDialog.Show(...);
+		msgbox(...); //AuDialog.Show(...);
 		wait(...); //Time.Wait(...);
 		click(...); //Mouse.Click(...);
 		mmove(...); //Mouse.Move(...);
@@ -3550,9 +4857,9 @@ REE`");
 		*/
 
 		//l.Perf.First();
-		//l.TaskDialog.Show("f");
+		//l.AuDialog.Show("f");
 		//l.Util.LibDebug_.PrintLoadedAssemblies();
-		//Print(l.TDIcon.Info);
+		//Print(l.DIcon.Info);
 
 	}
 }

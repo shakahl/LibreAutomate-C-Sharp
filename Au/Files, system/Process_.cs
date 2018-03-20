@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -102,7 +101,7 @@ namespace Au
 
 			public _AllProcesses(out ProcessInfoInternal* p, out int count)
 			{
-				if(WTSEnumerateProcessesW(Zero, 0, 1, out p, out count)) _p = p; else _p = null;
+				if(WTSEnumerateProcessesW(default, 0, 1, out p, out count)) _p = p; else _p = null;
 			}
 
 			public void Dispose()
@@ -319,14 +318,14 @@ namespace Au
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		/// <exception cref="ArgumentException">
 		/// processName is "" or null.
-		/// Invalid wildcard expression ("**options|" or regular expression).
+		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
 		public static int[] GetProcessesByName(string processName, bool fullPath = false, bool ofThisSession = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			List<int> a = null;
 			LibGetProcessesByName(ref a, processName, fullPath, ofThisSession);
-			if(a == null) return new int[0];
+			if(a == null) return Array.Empty<int>();
 			return a.ToArray();
 		}
 
@@ -382,12 +381,12 @@ namespace Au
 			public IntPtr Handle => _h;
 
 			///
-			public bool Is0 { get { return _h == Zero; } }
+			public bool Is0 { get { return _h == default; } }
 
 			///
 			public void Dispose()
 			{
-				if(_h != Zero) { Api.CloseHandle(_h); _h = Zero; }
+				if(_h != default) { Api.CloseHandle(_h); _h = default; }
 			}
 
 			/// <summary>
@@ -425,11 +424,11 @@ namespace Au
 
 			static bool _Open(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
 			{
-				R = Zero;
+				R = default;
 				int e = 0;
 				if(processId != 0) {
 					R = Api.OpenProcess(desiredAccess, false, processId);
-					if(R != Zero) return true;
+					if(R != default) return true;
 					e = Native.GetError();
 				}
 				if(!processWindow.Is0) {
@@ -437,7 +436,7 @@ namespace Au
 					&& UacInfo.ThisProcess.IsUIAccess
 					) R = Api.GetProcessHandleFromHwnd(processWindow);
 
-					if(R != Zero) return true;
+					if(R != default) return true;
 					Api.SetLastError(e);
 				}
 				return false;
@@ -467,8 +466,7 @@ namespace Au
 		public sealed unsafe class Memory :IDisposable
 		{
 			LibProcessHandle _hproc;
-
-			#region IDisposable Support
+			HandleRef _HprocHR => new HandleRef(this, _hproc);
 
 			///
 			~Memory() { _Dispose(); }
@@ -483,16 +481,14 @@ namespace Au
 			void _Dispose()
 			{
 				if(_hproc.Is0) return;
-				if(Mem != Zero) {
+				if(Mem != default) {
 					var mem = Mem; Mem = default;
 					if(!_doNotFree) {
-						if(!Api.VirtualFreeEx(_hproc, mem)) Output.Warning("Failed to free process memory. " + Native.GetErrorMessage());
+						if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + Native.GetErrorMessage());
 					}
 				}
 				_hproc.Dispose();
 			}
-
-			#endregion
 
 			/// <summary>
 			/// Process handle.
@@ -515,9 +511,9 @@ namespace Au
 			/// <param name="freeWhenDisposing">
 			/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
 			/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
-			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <b>freeWhenDisposing</b> = false.</exception>
+			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <paramref name="freeWhenDisposing"/> = false.</exception>
 			/// <remarks>
-			/// This function can be used if this variable was created with <b>nBytes</b> = 0. Else exception. Also exception if this function previously called with <b>freeWhenDisposing</b> = true.
+			/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <paramref name="freeWhenDisposing"/> = true.
 			/// </remarks>
 			public void SetMem(IntPtr mem, bool freeWhenDisposing)
 			{
@@ -535,8 +531,8 @@ namespace Au
 				if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
 
 				if(nBytes != 0) {
-					Mem = Api.VirtualAllocEx(_hproc, Zero, nBytes);
-					if(Mem == Zero) { err = "Failed to allocate process memory."; goto ge; }
+					Mem = Api.VirtualAllocEx(_HprocHR, default, nBytes);
+					if(Mem == default) { err = "Failed to allocate process memory."; goto ge; }
 				}
 				return;
 				ge:
@@ -579,10 +575,10 @@ namespace Au
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
 			public bool WriteUnicodeString(string s, int offsetBytes = 0)
 			{
-				if(Mem == Zero) return false;
+				if(Mem == default) return false;
 				if(Empty(s)) return true;
 				fixed (char* p = s) {
-					return Api.WriteProcessMemory(_hproc, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
+					return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
 				}
 			}
 
@@ -596,22 +592,22 @@ namespace Au
 			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
 			public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null)
 			{
-				if(Mem == Zero) return false;
+				if(Mem == default) return false;
 				if(Empty(s)) return true;
 				if(enc == null) enc = Encoding.Default;
 				var a = enc.GetBytes(s + "\0");
 				fixed (byte* p = a) {
-					return Api.WriteProcessMemory(_hproc, Mem + offsetBytes, p, a.Length, null);
+					return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, a.Length, null);
 				}
 			}
 
 			string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null, bool cache = false)
 			{
-				if(Mem == Zero) return null;
+				if(Mem == default) return null;
 				int na = nChars; if(!ansiString) na *= 2;
 				var b = Util.Buffers.LibChar((na + 1) / 2);
 				fixed (char* p = b.A) {
-					if(!Api.ReadProcessMemory(_hproc, Mem + offsetBytes, p, na, null)) return null;
+					if(!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, p, na, null)) return null;
 					if(findLength) {
 						if(ansiString) nChars = Util.LibCharPtr.Length((byte*)p, nChars);
 						else nChars = Util.LibCharPtr.Length(p, nChars);
@@ -666,8 +662,8 @@ namespace Au
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
 			public bool Write(void* ptr, int nBytes, int offsetBytes = 0)
 			{
-				if(Mem == Zero) return false;
-				return Api.WriteProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
+				if(Mem == default) return false;
+				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -680,7 +676,7 @@ namespace Au
 			/// <seealso cref="SetMem"/>
 			public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
 			{
-				return Api.WriteProcessMemory(_hproc, ptrDestinationInThatProcess, ptr, nBytes, null);
+				return Api.WriteProcessMemory(_HprocHR, ptrDestinationInThatProcess, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -692,8 +688,8 @@ namespace Au
 			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
 			public bool Read(void* ptr, int nBytes, int offsetBytes = 0)
 			{
-				if(Mem == Zero) return false;
-				return Api.ReadProcessMemory(_hproc, Mem + offsetBytes, ptr, nBytes, null);
+				if(Mem == default) return false;
+				return Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
 			}
 
 			/// <summary>
@@ -706,7 +702,7 @@ namespace Au
 			/// <seealso cref="SetMem"/>
 			public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
 			{
-				return Api.ReadProcessMemory(_hproc, ptrSourceInThatProcess, ptr, nBytes, null);
+				return Api.ReadProcessMemory(_HprocHR, ptrSourceInThatProcess, ptr, nBytes, null);
 			}
 
 			//Cannot get pointer if generic type. Could try Marshal.StructureToPtr etc but I don't like it. Didn't test Unsafe.
@@ -721,13 +717,13 @@ namespace Au
 		/// <summary>
 		/// Holds access token (security info) of a process and provides various security info, eg UAC integrity level.
 		/// </summary>
-		public class UacInfo :IDisposable
+		public sealed class UacInfo :IDisposable
 		{
 			#region IDisposable Support
 
 			void _Dispose()
 			{
-				if(_htoken != Zero) { Api.CloseHandle(_htoken); _htoken = Zero; }
+				if(_htoken != default) { Api.CloseHandle(_htoken); _htoken = default; }
 			}
 
 			///
@@ -742,11 +738,15 @@ namespace Au
 			#endregion
 
 			IntPtr _htoken;
+			HandleRef _HtokenHR => new HandleRef(this, _htoken);
 
 			/// <summary>
 			/// Access token handle.
 			/// </summary>
-			public IntPtr TokenHandle => _htoken;
+			/// <remarks>
+			/// The handle is managed by this variable and will be closed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
+			/// </remarks>
+			public IntPtr UnsafeTokenHandle => _htoken;
 
 			/// <summary>
 			/// Gets true if the last called property function failed.
@@ -785,7 +785,7 @@ namespace Au
 					if(_haveElevation == 0) {
 						unsafe {
 							ElevationType elev;
-							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out var siz)) _haveElevation = 2;
+							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out var siz)) _haveElevation = 2;
 							else {
 								_haveElevation = 1;
 								_Elevation = elev;
@@ -812,7 +812,7 @@ namespace Au
 					if(_haveIsUIAccess == 0) {
 						unsafe {
 							uint uia;
-							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
+							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
 							else {
 								_haveIsUIAccess = 1;
 								_isUIAccess = uia != 0;
@@ -834,7 +834,7 @@ namespace Au
 			//	{
 			//		if(!Ver.MinWin8) return false;
 			//		uint isac;
-			//		if(Failed = !Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out var siz)) return false;
+			//		if(Failed = !Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out var siz)) return false;
 			//		return isac != 0;
 			//	}
 			//}
@@ -883,15 +883,15 @@ namespace Au
 			{
 				if(_haveIntegrityLevel == 0) {
 					unsafe {
-						Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
+						Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
 						if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 						else {
 							var b = stackalloc byte[(int)siz];
 							var tml = (TOKEN_MANDATORY_LABEL*)b;
-							if(!Api.GetTokenInformation(_htoken, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
+							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
 							uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
 
-							//Output.WriteHex(IL);
+							//PrintHex(IL);
 							if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = IL.Untrusted;
 							else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = IL.Low;
 							else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = IL.Medium;
@@ -1017,7 +1017,7 @@ namespace Au
 						))
 						return false;
 					bool R;
-					if(!CheckTokenMembership(Zero, AdministratorsGroup, out R)) R = false;
+					if(!CheckTokenMembership(default, AdministratorsGroup, out R)) R = false;
 					FreeSid(AdministratorsGroup);
 					return R;
 				}

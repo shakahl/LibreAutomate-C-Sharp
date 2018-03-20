@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -78,7 +77,7 @@ static class Strips
 		//var p = Perf.StartNew();
 		foreach(var k in _cmd.Dict.Keys) {
 			//Print(k);
-			if(_strips.Xml.Descendant_(k) == null) Output.Warning("no menu item for command " + k);
+			if(_strips.Xml.Descendant_(k) == null) PrintWarning("no menu item for command " + k);
 		}
 		//p.NW(); //450
 		//for vice versa, GStripManager takes care

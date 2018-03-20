@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -40,7 +39,7 @@ namespace Au.Tasks
 		static void Main(string[] args)
 		{
 			//if(args.Length >= 1 && args[0] == "/domain") {
-			//	TaskDialog.Show("domain");
+			//	AuDialog.Show("domain");
 			//	return;
 			//}
 
@@ -289,10 +288,10 @@ namespace Au.Tasks
 			string outDir = Folders.LocalAppData + @"Au\ScriptDll\";
 			Files.CreateDirectory(outDir);
 			string outFile = outDir + Path_.GetFileNameWithoutExtension(csFile) + ".exe";
-			//PrintList(csFile, dllFile);
+			//Print(csFile, dllFile);
 
 			if(!_compilerWindow.IsAlive) {
-				IntPtr ev = Api.CreateEvent(Zero, false, false, null);
+				IntPtr ev = Api.CreateEvent(default, false, false, null);
 				var thr = new Thread(_CompilerAppDomainThread);
 				thr.Start(ev);
 				Api.WaitForSingleObject(ev, Api.INFINITE);

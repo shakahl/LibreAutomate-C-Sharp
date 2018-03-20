@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -269,11 +268,11 @@ namespace Au.Types
 		/// <example>
 		/// <code><![CDATA[
 		/// var w = Wnd.Find("Example").OrThrow();
-		/// var r1 = ScreenImage.Find("example", w).OrThrow();
-		/// var r2 = +ScreenImage.Find("example", w); //the same
+		/// var r1 = WinImage.Find(w, "example").OrThrow();
+		/// var r2 = +WinImage.Find(w, "example"); //the same
 		/// ]]></code>
 		/// </example>
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public static SIResult OrThrow(this SIResult x) => +x;
+		public static WinImage OrThrow(this WinImage x) => +x;
 	}
 }

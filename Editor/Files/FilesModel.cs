@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -68,10 +67,10 @@ partial class FilesModel :ITreeModel
 		}
 
 		//var r = Root;
-		//PrintList(r.Name, r.Name == null);
-		//PrintList(r.Parent, r.Parent == null);
+		//Print(r.Name, r.Name == null);
+		//Print(r.Parent, r.Parent == null);
 		//Print(r.Index);
-		//PrintList(r.ItemPath, r.ItemPath== null);
+		//Print(r.ItemPath, r.ItemPath== null);
 		//Print(r.FilePath);
 	}
 
@@ -135,7 +134,7 @@ partial class FilesModel :ITreeModel
 				if(!isPath) s = f.FilePath;
 				var r = IconCache.GetImage(s, true);
 				//r.SetResolution(96f, 96f);
-				//PrintList(r.Size, r.PhysicalDimension, r.HorizontalResolution, r.VerticalResolution);
+				//Print(r.Size, r.PhysicalDimension, r.HorizontalResolution, r.VerticalResolution);
 				//p.NW();
 				return r;
 			}
@@ -171,14 +170,14 @@ partial class FilesModel :ITreeModel
 	{
 		if(nodeTag == null) return Root.Children;
 		var f = nodeTag as FileNode;
-		//PrintList("GetChildren", f);
+		//Print("GetChildren", f);
 		return f.Children;
 	}
 
 	public bool IsLeaf(object nodeTag)
 	{
 		var f = nodeTag as FileNode;
-		//PrintList("IsLeaf", f);
+		//Print("IsLeaf", f);
 		return !f.IsFolder;
 	}
 
@@ -306,7 +305,7 @@ partial class FilesModel :ITreeModel
 
 	private void _TV_NodeMouseClick(object sender, TreeNodeAdvMouseEventArgs e)
 	{
-		//PrintList(e.Button, e.ModifierKeys);
+		//Print(e.Button, e.ModifierKeys);
 		_selectOnClick_multi = false;
 		if(e.ModifierKeys != 0) return;
 		var f = e.Node.Tag as FileNode;
@@ -492,7 +491,7 @@ partial class FilesModel :ITreeModel
 			pos = NodePosition.Inside;
 		} else {
 			r = c.Tag as FileNode;
-			if(askIntoFolder && r.IsFolder && c.IsSelected && TV.SelectedNodes.Count == 1 && TaskDialog.ShowYesNo("Into the folder?", owner: TV)) pos = NodePosition.Inside;
+			if(askIntoFolder && r.IsFolder && c.IsSelected && TV.SelectedNodes.Count == 1 && AuDialog.ShowYesNo("Into the folder?", owner: TV)) pos = NodePosition.Inside;
 			else if(r.Next == null) pos = NodePosition.After; //usually we want to add after the last, not before
 			else pos = NodePosition.Before;
 		}
@@ -519,7 +518,7 @@ partial class FilesModel :ITreeModel
 
 		//confirmation
 		bool isLink = false; foreach(var f in a) if(f.IsLink()) isLink = true;
-		var r = TaskDialog.ShowEx("Deleting",
+		var r = AuDialog.ShowEx("Deleting",
 			string.Join("\n", a.Select(f => f.IsLink(out var target) ? $"{f.Name} ({target})" : f.Name))
 			+ "\n\nThe file will be moved to the Recycle Bin, if possible.",
 			"1 OK|0 Cancel", owner: TV, checkBox: "Don't delete file" + (isLink ? "|check" : null));
@@ -747,8 +746,8 @@ partial class FilesModel :ITreeModel
 		for(int i = 0; i < a.Length; i++) {
 			var s = a[i] = Path_.Normalize(a[i]);
 			if(s.IndexOf_(@"\$RECYCLE.BIN\", true) > 0) {
-				TaskDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{this.FilesDirectory}\">collection folder</a> or other normal folder.",
-					icon: TDIcon.Info, owner: TV, onLinkClick: e => Shell.TryRun(e.LinkHref));
+				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{this.FilesDirectory}\">collection folder</a> or other normal folder.",
+					icon: DIcon.Info, owner: TV, onLinkClick: e => Shell.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = this.FilesDirectory;
@@ -760,7 +759,7 @@ partial class FilesModel :ITreeModel
 		int r;
 		if(copy) {
 			if(fromCollectionDir) {
-				TaskDialog.ShowInfo("Files from collection folder", "Ctrl not supported."); //not implemented
+				AuDialog.ShowInfo("Files from collection folder", "Ctrl not supported."); //not implemented
 				return;
 			}
 			r = 2; //copy
@@ -768,9 +767,9 @@ partial class FilesModel :ITreeModel
 			r = 3; //move
 		} else {
 			string ins1 = dirsDropped ? "\nFolders not supported." : null;
-			r = TaskDialog.ShowEx("Import files", string.Join("\n", a),
+			r = AuDialog.ShowEx("Import files", string.Join("\n", a),
 			$"1 Add as a link to the external file{ins1}|2 Copy to the collection folder|3 Move to the collection folder|0 Cancel",
-			flags: TDFlags.CommandLinks | TDFlags.Wider, owner: TV, footerText: GetSecurityInfo(true));
+			flags: DFlags.CommandLinks | DFlags.Wider, owner: TV, footerText: GetSecurityInfo(true));
 			if(r == 0) return;
 		}
 
@@ -923,9 +922,9 @@ partial class FilesModel :ITreeModel
 		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
 			var a = (string[])e.Data.GetData(DataFormats.FileDrop);
 			if(a.Length == 1 && IsCollectionDirectory(a[0])) {
-				switch(TaskDialog.ShowEx("Collection", a[0],
+				switch(AuDialog.ShowEx("Collection", a[0],
 					"1 Open collection|2 Import collection|0 Cancel",
-					flags: TDFlags.Wider, footerText: GetSecurityInfo(true))) {
+					flags: DFlags.Wider, footerText: GetSecurityInfo(true))) {
 				case 1: Timer_.After(1, t => Panels.Files.LoadCollection(a[0])); break;
 				case 2: ImportCollection(a[0], target, pos); break;
 				}
@@ -1020,22 +1019,22 @@ partial class FilesModel :ITreeModel
 
 	private void _watcher_Renamed(object sender, RenamedEventArgs e)
 	{
-		PrintList(e.ChangeType, e.OldName, e.Name, e.OldFullPath, e.FullPath);
+		Print(e.ChangeType, e.OldName, e.Name, e.OldFullPath, e.FullPath);
 	}
 
 	private void _watcher_Deleted(object sender, FileSystemEventArgs e)
 	{
-		PrintList(e.ChangeType, e.Name, e.FullPath);
+		Print(e.ChangeType, e.Name, e.FullPath);
 	}
 
 	private void _watcher_Created(object sender, FileSystemEventArgs e)
 	{
-		PrintList(e.ChangeType, e.Name, e.FullPath);
+		Print(e.ChangeType, e.Name, e.FullPath);
 	}
 
 	private void _watcher_Changed(object sender, FileSystemEventArgs e)
 	{
-		PrintList(e.ChangeType, e.Name, e.FullPath);
+		Print(e.ChangeType, e.Name, e.FullPath);
 	}
 
 	#endregion

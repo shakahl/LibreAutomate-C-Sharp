@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -27,7 +26,7 @@ namespace Au
 	/// <summary>
 	/// A variable of Wnd type represents a window or control. It is a window handle, also known as HWND.
 	/// Wnd functions can be used with windows and controls of any process/thread.
-	/// Wnd functions also can be used with .NET Form and Control instances, like <c>Wnd w=(Wnd)netControl; w.Method(...);</c> or <c>((Wnd)netControl).Method(...);</c>.
+	/// Wnd functions also can be used with .NET form/control and WPF window class variables, like <c>Wnd w=(Wnd)form; w.Method(...);</c> or <c>((Wnd)form).Method(...);</c>.
 	/// </summary>
 	/// <remarks>
 	/// There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
@@ -90,44 +89,48 @@ namespace Au
 		Wnd(void* hwnd) { _h = hwnd; }
 		Wnd(IntPtr hwnd) { _h = (void*)hwnd; }
 
-		public static explicit operator Wnd(IntPtr hwnd) { return new Wnd(hwnd); } //Wnd=(Wnd)IntPtr //don't need implicit, it creates more problems than is useful
-		public static explicit operator IntPtr(Wnd w) { return w.Handle; } //IntPtr=(IntPtr)Wnd //could be implicit, but then problems with operator ==
-		public static explicit operator Wnd(LPARAM hwnd) { return new Wnd((void*)hwnd); } //Wnd=(Wnd)LPARAM
-		public static explicit operator LPARAM(Wnd w) { return w._h; } //LPARAM=(LPARAM)Wnd
+		//note: don't need implicit conversions. It creates more problems than is useful.
+
+		public static explicit operator Wnd(IntPtr hwnd) => new Wnd(hwnd);
+		public static explicit operator IntPtr(Wnd w) => w.Handle;
+		public static explicit operator Wnd(LPARAM hwnd) => new Wnd((void*)hwnd);
+		public static explicit operator LPARAM(Wnd w) => w._h;
 
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
-		/// The same as the extension method Wnd_().
+		/// Returns default(Wnd) if c is null.
 		/// If the handle is still not created, the Control auto-creates it (hidden window).
 		/// </summary>
-		public static explicit operator Wnd(Control c) { return new Wnd(c == null ? Zero : c.Handle); } //Wnd=(Wnd)Control //implicit would allow Wnd==null
+		public static explicit operator Wnd(Control c) => new Wnd(c == null ? default : c.Handle);
 
 		/// <summary>
-		/// If this window is a System.Windows.Forms.Control (or Form etc), gets the Control variable, else returns null.
+		/// Gets the window handle as Wnd from a System.Windows.Window variable (WPF window).
+		/// Returns default(Wnd) if w is null or the handle is still not created.
 		/// </summary>
-		public static explicit operator Control(Wnd w) { return Control.FromHandle(w.Handle); } //Control=(Control)Wnd
+		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
+		public static explicit operator Wnd(System.Windows.Window w) => new Wnd(w == null ? default : new System.Windows.Interop.WindowInteropHelper(w).Handle);
 
 		/// <summary>Compares window handles.</summary>
-		public static bool operator ==(Wnd w1, Wnd w2) { return w1._h == w2._h; }
+		public static bool operator ==(Wnd w1, Wnd w2) => w1._h == w2._h;
 		/// <summary>Compares window handles.</summary>
-		public static bool operator !=(Wnd w1, Wnd w2) { return w1._h != w2._h; }
+		public static bool operator !=(Wnd w1, Wnd w2) => w1._h != w2._h;
 
 		//Prevent accidental usage Wnd==null. The C# compiler allows it without a warning. As a side effect, the above also disables Wnd==Wnd?.
 		[Obsolete("Replace Wnd==Wnd? with Wnd.Equals(Wnd?). Replace Wnd==null with Wnd.Is0.", true)]
-		public static bool operator ==(Wnd w1, Wnd? w2) { return false; }
+		public static bool operator ==(Wnd w1, Wnd? w2) => false;
 		[Obsolete("Replace Wnd==Wnd? with Wnd.Equals(Wnd?). Replace Wnd==null with Wnd.Is0.", true)]
-		public static bool operator !=(Wnd w1, Wnd? w2) { return true; }
+		public static bool operator !=(Wnd w1, Wnd? w2) => true;
 		[Obsolete("Replace Wnd==Wnd? with Wnd.Equals(Wnd?). Replace Wnd==null with Wnd.Is0.", true)]
-		public static bool operator ==(Wnd? w1, Wnd w2) { return false; }
+		public static bool operator ==(Wnd? w1, Wnd w2) => false;
 		[Obsolete("Replace Wnd==Wnd? with Wnd.Equals(Wnd?). Replace Wnd==null with Wnd.Is0.", true)]
-		public static bool operator !=(Wnd? w1, Wnd w2) { return true; }
+		public static bool operator !=(Wnd? w1, Wnd w2) => true;
 #pragma warning restore 1591 //XML doc
 
 		/// <summary>
 		/// If x is not default(Wnd), returns x, else throws <see cref="NotFoundException"/>.
 		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)"/>. Examples are there.
 		/// </summary>
-		/// <exception cref="NotFoundException">x is null.</exception>
+		/// <exception cref="NotFoundException">x is default(Wnd).</exception>
 		public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 
 		/// <summary>
@@ -181,7 +184,7 @@ namespace Au
 			var sh = Handle.ToString();
 			if(cn == null) return sh + " <invalid handle>";
 			string s = Name;
-			if(s != null) s = s.Limit_(250).Escape_();
+			if(s != null) s = s.Escape_(limit: 250);
 			return $"{sh}  {cn}  \"{s}\"  {ProcessName}  {Rect.ToString()}";
 		}
 
@@ -443,7 +446,7 @@ namespace Au
 					//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
 					if(Ver.MinWin10 && HasExStyle(Native.WS_EX_NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
 						var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
-						//PrintList(isGhost, this);
+						//Print(isGhost, this);
 						return !isGhost;
 					}
 				}
@@ -1008,6 +1011,8 @@ namespace Au
 		{
 			LibActivate(0);
 		}
+		//CONSIDER: if fails to activate:
+		//TaskDialogEx("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
 
 		/// <summary>
 		/// Low-level version of <see cref="Activate()"/>.
@@ -2182,7 +2187,7 @@ namespace Au
 			SetWindowLong(gwl, (int)style);
 
 			if(updateNC) SetWindowPos(Native.SWP_FRAMECHANGED | Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOZORDER | Native.SWP_NOOWNERZORDER | Native.SWP_NOACTIVATE);
-			if(updateClient) Api.InvalidateRect(this, Zero, true);
+			if(updateClient) Api.InvalidateRect(this, default, true);
 		}
 
 		/// <summary>
@@ -2190,6 +2195,18 @@ namespace Au
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool IsPopupWindow => HasStyle(Native.WS_POPUP);
+
+		/// <summary>
+		/// Returns true if has Native.WS_EX_TOOLWINDOW style.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public bool IsToolWindow => HasExStyle(Native.WS_EX_TOOLWINDOW);
+
+		/// <summary>
+		/// Returns true if has Native.WS_THICKFRAME style.
+		/// </summary>
+		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		public bool IsResizable => HasStyle(Native.WS_THICKFRAME);
 
 		#endregion
 
@@ -2308,14 +2325,14 @@ namespace Au
 			{
 				if(Ver.Is64BitOS) {
 					int pid = ProcessId; if(pid == 0) return false;
-					IntPtr ph = Zero;
+					IntPtr ph = default;
 					try {
 						ph = Api.OpenProcess(Api.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-						if(ph == Zero || !Api.IsWow64Process(ph, out var is32bit)) return false;
+						if(ph == default || !Api.IsWow64Process(ph, out var is32bit)) return false;
 						if(!is32bit) return true;
 					}
 					finally {
-						if(ph != Zero) Api.CloseHandle(ph);
+						if(ph != default) Api.CloseHandle(ph);
 					}
 				}
 				Native.ClearError();
@@ -2820,7 +2837,7 @@ namespace Au.Types
 				if((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
 				a.Add(s, data);
 				return true;
-			}, Zero);
+			}, default);
 			return a;
 		}
 

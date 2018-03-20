@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -176,7 +175,7 @@ namespace Au
 		public unsafe string SavePositionSizeState(bool canBeMinimized = false)
 		{
 			if(!LibGetWindowPlacement(out var p)) return null;
-			//PrintList(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
+			//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
 			return Convert_.HexEncode(&p, sizeof(Api.WINDOWPLACEMENT), true);
 		}
@@ -192,7 +191,7 @@ namespace Au
 		{
 			Api.WINDOWPLACEMENT p; int siz = sizeof(Api.WINDOWPLACEMENT);
 			if(siz == Convert_.HexDecode(s, &p, siz)) {
-				//PrintList(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
+				//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 				if(!showActivate && !this.IsVisible) {
 					uint style = this.Style;
 					switch(p.showCmd) {

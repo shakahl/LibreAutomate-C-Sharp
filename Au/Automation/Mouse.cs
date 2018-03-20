@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -71,7 +70,7 @@ namespace Au
 					Time.Sleep(j); //0+1+2+3
 				}
 				//Perf.NW();
-				//PrintList(j, i);
+				//Print(j, i);
 				if(ok || willFail) break;
 				//note: don't put the _Sleep(7) here
 			}
@@ -109,7 +108,7 @@ namespace Au
 						if(dtfr >= 1) break;
 
 						int dx = (int)(dtfr * dxall), dy = (int)(dtfr * dyall);
-						//PrintList(dx, dy, dtfr);
+						//Print(dx, dy, dtfr);
 
 						var pt = new Point(p0.X + dx, p0.Y + dy);
 						if(dx != pdx || dy != pdy) {
@@ -340,7 +339,7 @@ namespace Au
 			/// To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
 			/// </param>
 			/// <param name="withSleepTimes">
-			/// <b>recorded</b> also contains sleep times (milliseconds) alternating with distances.
+			/// <paramref name="recorded"/> also contains sleep times (milliseconds) alternating with distances.
 			/// It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
 			/// </param>
 			public static string MouseToString(IEnumerable<uint> recorded, bool withSleepTimes)
@@ -384,7 +383,7 @@ namespace Au
 				}
 
 				//rejected: by default compresses to ~80% (20% smaller). When withSleepTimes, to ~50%, but never mind, rarely used.
-				//PrintList(a.Count, Convert_.Compress(a.ToArray()).Length);
+				//Print(a.Count, Convert_.Compress(a.ToArray()).Length);
 
 				return Convert.ToBase64String(a.ToArray());
 			}
@@ -546,7 +545,7 @@ namespace Au
 			//	1. (applied): show warning. Let the user modify the script: either don't click own windows or click from another thread.
 			if(w.Is0) w = Api.WindowFromPoint((pMoved != null) ? pMoved.GetValueOrDefault() : XY);
 			bool windowOfThisThread = w.IsOfThisThread;
-			if(windowOfThisThread) Output.Warning("Sending a click to a window of own thread often does not work. Use another thread.");
+			if(windowOfThisThread) PrintWarning("Sending a click to a window of own thread often does not work. Use another thread.");
 
 			switch(button & (MButton.Down | MButton.Up | MButton.DoubleClick)) {
 			case MButton.DoubleClick:
@@ -1027,7 +1026,7 @@ namespace Au
 			var mb = (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 				& ~t_pressedButtons;
 			if(WaitFor.NoMouseButtons(-5, mb)) return;
-			Output.Warning("Info: Waiting for releasing mouse buttons. See Options.Relaxed.");
+			PrintWarning("Info: Waiting for releasing mouse buttons. See Options.Relaxed.");
 			WaitFor.NoMouseButtons(0, mb);
 		}
 	}
@@ -1314,7 +1313,7 @@ namespace Au.Types
 
 		#endregion
 
-		#region SIResult
+		#region WinImage
 
 		/// <summary>
 		/// Moves the mouse to the found image.
@@ -1326,7 +1325,7 @@ namespace Au.Types
 		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of Mouse.Move.</exception>
-		public static void MouseMove(this SIResult t, Coord x = default, Coord y = default)
+		public static void MouseMove(this WinImage t, Coord x = default, Coord y = default)
 		{
 			(+t).LibMouseAction(0, x, y);
 		}
@@ -1342,7 +1341,7 @@ namespace Au.Types
 		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of Mouse.ClickEx.</exception>
-		public static void MouseClick(this SIResult t, Coord x = default, Coord y = default, MButton button = MButton.Left)
+		public static void MouseClick(this WinImage t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
 			(+t).LibMouseAction(button == 0 ? MButton.Left : button, x, y);
 		}

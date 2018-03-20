@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -48,7 +47,6 @@ namespace Au
 					Api.ReleaseComObject(_isl); _isl = null;
 				}
 			}
-			//~Shortcut() { Dispose(); } //don't need, we have only COM objects, GC will release them anyway
 
 			/// <summary>
 			/// Returns the internally used IShellLink COM interface.
@@ -142,13 +140,13 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
-			/// Most but not all shortcuts have this property; the 'get' function returns Zero if the shortcut does not have it.
+			/// Most but not all shortcuts have this property; the 'get' function returns null if the shortcut does not have it.
 			/// </remarks>
 			/// <exception cref="AuException">The 'set' function failed.</exception>
-			public Shell.Pidl TargetPidl
+			public Pidl TargetPidl
 			{
-				get => (0 == _isl.GetIDList(out var pidl)) ? new Shell.Pidl(pidl) : null;
-				set { AuException.ThrowIfHresultNot0(_isl.SetIDList(value)); }
+				get => (0 == _isl.GetIDList(out var pidl)) ? new Pidl(pidl) : null;
+				set { AuException.ThrowIfHresultNot0(_isl.SetIDList(value?.UnsafePtr ?? default)); GC.KeepAlive(value); }
 			}
 
 			/// <summary>
@@ -162,7 +160,8 @@ namespace Au
 				get
 				{
 					if(0 != _isl.GetIDList(out var pidl)) return null;
-					try { return Shell.Pidl.LibToShellString(pidl, Native.SIGDN.SIGDN_URL); } finally { Marshal.FreeCoTaskMem(pidl); }
+					try { return Pidl.LibToShellString(pidl, Native.SIGDN.SIGDN_URL); }
+					finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
@@ -181,11 +180,11 @@ namespace Au
 				{
 					var R = TargetPath; if(R != null) return R; //support MSI etc
 					if(0 != _isl.GetIDList(out var pidl)) return null;
-					try { return Shell.Pidl.LibToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
+					try { return Pidl.LibToString(pidl); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set
 				{
-					var pidl = Shell.Pidl.LibFromString(value, true);
+					var pidl = Pidl.LibFromString(value, true);
 					try { AuException.ThrowIfHresultNot0(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 			}

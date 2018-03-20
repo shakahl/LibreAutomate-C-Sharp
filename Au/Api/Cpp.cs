@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -22,7 +21,7 @@ namespace Au.Types
 {
 	[DebuggerStepThrough]
 	[System.Security.SuppressUnmanagedCodeSecurity]
-	internal unsafe class Cpp
+	internal static unsafe partial class Cpp
 	{
 		static Cpp()
 		{
@@ -49,7 +48,7 @@ namespace Au.Types
 
 			public Cpp_Acc(IntPtr iacc, int elem_) { acc = iacc; elem = elem_; misc = default; }
 			public Cpp_Acc(Acc a) { acc = a._iacc; elem = a._elem; misc = a._misc; }
-			public static implicit operator Cpp_Acc(Acc a) =>new Cpp_Acc(a);
+			public static implicit operator Cpp_Acc(Acc a) => new Cpp_Acc(a);
 		}
 
 		internal delegate int AccCallbackT(Cpp_Acc a);
@@ -62,7 +61,7 @@ namespace Au.Types
 			public int skip;
 			char resultProp; //Acc.Finder.RProp
 
-			public Cpp_AccParams(string role, string name, string prop, AFFlags flags, int skip, char resultProp) :this()
+			public Cpp_AccParams(string role, string name, string prop, AFFlags flags, int skip, char resultProp) : this()
 			{
 				if(role != null) { _role = role; _roleLength = role.Length; }
 				if(name != null) { _name = name; _nameLength = name.Length; }
@@ -95,6 +94,19 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccFromWindow(int flags, Wnd w, AccOBJID objId, out Cpp_Acc aResult, out BSTR sResult);
 
+		//flags: 1 get UIA, 2 prefer LINK.
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccFromPoint(Point p, AXYFlags flags, out Cpp_Acc aResult);
+
+		//flags: 1 get UIA.
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_AccGetFocused(Wnd w, int flags, out Cpp_Acc aResult);
+
+		//These are called from Acc class functions like Cpp.Cpp_Func(this, ...); GC.KeepAlive(this);.
+		//We can use 'this' because Cpp_Acc has an implicit conversion from Acc operator.
+		//Need GC.KeepAlive(this) everywhere. Else GC can collect the Acc (and release _iacc) while in the Cpp func.
+		//Alternatively could make the Cpp parameter 'const Cpp_Acc&', and pass Acc directly. But I don't like it.
+
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccNavigate(Cpp_Acc aFrom, string navig, out Cpp_Acc aResult);
 
@@ -125,14 +137,6 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccGetProps(Cpp_Acc a, string props, out BSTR sResult);
 
-		//flags: 1 get UIA, 2 prefer LINK.
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFromPoint(Point p, AXYFlags flags, out Cpp_Acc aResult);
-
-		//flags: 1 get UIA.
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccGetFocused(Wnd w, int flags, out Cpp_Acc aResult);
-
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Unload();
@@ -142,28 +146,14 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern char* Cpp_LowercaseTable();
 
-		// PCRE
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		internal static extern bool Cpp_RegexParse(Regex_ x, string rx, LPARAM len, RXFlags flags, [MarshalAs(UnmanagedType.BStr)] out string errStr);
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		internal static extern bool Cpp_RegexMatch(Regex_ x, string s, LPARAM len, LPARAM start = default, RMFlags flags = 0);
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_RegexDtor(Regex_ x);
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_RegexSize(Regex_ x);
-
-
 		// TEST
 
 		//TODO: remove tests
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Test();
+
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern void Cpp_TestWildex(string s, string w);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern int Cpp_TestInt(int a, int b, int c);
@@ -195,59 +185,4 @@ namespace Au.Types
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern void Cpp_ThreadExitEvent2(IntPtr callback);
 	}
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-	[Flags]
-	public enum RXFlags :long
-	{
-		ANCHORED = 0x80000000,
-		NO_UTF_CHECK = 0x40000000,
-		ENDANCHORED = 0x20000000,
-		ALLOW_EMPTY_CLASS = 0x00000001,
-		ALT_BSUX = 0x00000002,
-		AUTO_CALLOUT = 0x00000004,
-		CASELESS = 0x00000008,
-		DOLLAR_ENDONLY = 0x00000010,
-		DOTALL = 0x00000020,
-		DUPNAMES = 0x00000040,
-		EXTENDED = 0x00000080,
-		FIRSTLINE = 0x00000100,
-		MATCH_UNSET_BACKREF = 0x00000200,
-		MULTILINE = 0x00000400,
-		NEVER_UCP = 0x00000800,
-		NEVER_UTF = 0x00001000,
-		NO_AUTO_CAPTURE = 0x00002000,
-		NO_AUTO_POSSESS = 0x00004000,
-		NO_DOTSTAR_ANCHOR = 0x00008000,
-		NO_START_OPTIMIZE = 0x00010000,
-		UCP = 0x00020000,
-		UNGREEDY = 0x00040000,
-		UTF = 0x00080000,
-		NEVER_BACKSLASH_C = 0x00100000,
-		ALT_CIRCUMFLEX = 0x00200000,
-		ALT_VERBNAMES = 0x00400000,
-		USE_OFFSET_LIMIT = 0x00800000,
-		EXTENDED_MORE = 0x01000000,
-		LITERAL = 0x02000000,
-
-		//EXTRA_ALLOW_SURROGATE_ESCAPES = 0x1_00000000, //not used with UTF-16
-		//EXTRA_BAD_ESCAPE_IS_LITERAL = 0x2_00000000, //dangerous
-		EXTRA_MATCH_WORD = 0x4_00000000,
-		EXTRA_MATCH_LINE = 0x8_00000000,
-	}
-
-	[Flags]
-	public enum RMFlags :uint
-	{
-		ANCHORED = 0x80000000,
-		NO_UTF_CHECK = 0x40000000,
-		ENDANCHORED = 0x20000000,
-		NOTBOL = 0x00000001,
-		NOTEOL = 0x00000002,
-		NOTEMPTY = 0x00000004,
-		NOTEMPTY_ATSTART = 0x00000008,
-		PARTIAL_SOFT = 0x00000010,
-		PARTIAL_HARD = 0x00000020,
-	}
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

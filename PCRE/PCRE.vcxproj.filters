@@ -63,9 +63,6 @@
     <ClCompile Include="pcre2_study.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pcre2_substitute.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pcre2_substring.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -88,6 +85,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pcre2_dfa_match.c">
+      <Filter>Source Files\excluded</Filter>
+    </ClCompile>
+    <ClCompile Include="pcre2_substitute.c">
       <Filter>Source Files\excluded</Filter>
     </ClCompile>
   </ItemGroup>

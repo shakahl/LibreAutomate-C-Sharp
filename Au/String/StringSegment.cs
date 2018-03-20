@@ -72,9 +72,9 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets the start index within the buffer of this StringSegment.
-		/// The setter also changes <see cref="Length"/>, so that <see cref="End"/> remains unchanged.
+		/// The setter also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or greater than <see cref="End"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or greater than <see cref="EndOffset"/>.</exception>
 		public int Offset
 		{
 			get => _offset;
@@ -88,10 +88,10 @@ namespace Au
 
 		/// <summary>
 		/// Increments <see cref="Offset"/>.
-		/// Also changes <see cref="Length"/>, so that <see cref="End"/> remains unchanged.
+		/// Also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
 		/// </summary>
 		/// <param name="n">How much to increment. Can be negative.</param>
-		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Offset"/> would be less than 0 or greater than <see cref="End"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Offset"/> would be less than 0 or greater than <see cref="EndOffset"/>.</exception>
 		/// <remarks>
 		/// This method can be used instead of the <see cref="Offset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
@@ -99,10 +99,10 @@ namespace Au
 
 		/// <summary>
 		/// Decrements <see cref="Offset"/>.
-		/// Also changes <see cref="Length"/>, so that <see cref="End"/> remains unchanged.
+		/// Also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
 		/// </summary>
 		/// <param name="n">How much to decrement. Can be negative.</param>
-		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Offset"/> would be less than 0 or greater than <see cref="End"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Offset"/> would be less than 0 or greater than <see cref="EndOffset"/>.</exception>
 		/// <remarks>
 		/// This method can be used instead of the <see cref="Offset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
@@ -110,10 +110,10 @@ namespace Au
 
 		/// <summary>
 		/// Changes <see cref="Offset"/>.
-		/// Also changes <see cref="Length"/>, so that <see cref="End"/> remains unchanged.
+		/// Also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
 		/// </summary>
 		/// <param name="n">New value.</param>
-		/// <exception cref="ArgumentOutOfRangeException">n is less than 0 or greater than <see cref="End"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">n is less than 0 or greater than <see cref="EndOffset"/>.</exception>
 		/// <remarks>
 		/// This method can be used instead of the <see cref="Offset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
@@ -122,7 +122,7 @@ namespace Au
 		/// <summary>
 		/// Gets or sets the length of this StringSegment.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or new <see cref="End"/> would be greater than buffer length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or new <see cref="EndOffset"/> would be greater than buffer length.</exception>
 		public int Length
 		{
 			get => _length;
@@ -137,7 +137,7 @@ namespace Au
 		/// Increments <see cref="Length"/>.
 		/// </summary>
 		/// <param name="n">How much to increment. Can be negative.</param>
-		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Length"/> would be less than 0 or new <see cref="End"/> would be greater than buffer length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Length"/> would be less than 0 or new <see cref="EndOffset"/> would be greater than buffer length.</exception>
 		/// <remarks>
 		/// This method can be used instead of the <see cref="Length"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
@@ -147,7 +147,7 @@ namespace Au
 		/// Decrements <see cref="Length"/>.
 		/// </summary>
 		/// <param name="n">How much to decrement. Can be negative.</param>
-		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Length"/> would be less than 0 or new <see cref="End"/> would be greater than buffer length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Length"/> would be less than 0 or new <see cref="EndOffset"/> would be greater than buffer length.</exception>
 		/// <remarks>
 		/// This method can be used instead of the <see cref="Length"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
@@ -157,7 +157,7 @@ namespace Au
 		/// Changes <see cref="Length"/>.
 		/// </summary>
 		/// <param name="n">New value.</param>
-		/// <exception cref="ArgumentOutOfRangeException">n is less than 0 or new <see cref="End"/> would be greater than buffer length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">n is less than 0 or new <see cref="EndOffset"/> would be greater than buffer length.</exception>
 		/// <remarks>
 		/// This method can be used instead of the <see cref="Length"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
@@ -167,7 +167,7 @@ namespace Au
 		/// Gets or sets the end index within the buffer of this StringSegment. It's Offset + Length.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than <see cref="Offset"/> or greater than buffer length.</exception>
-		public int End
+		public int EndOffset
 		{
 			get => _offset + _length;
 			set
@@ -179,34 +179,34 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Increments <see cref="End"/>.
+		/// Increments <see cref="EndOffset"/>.
 		/// </summary>
 		/// <param name="n">How much to increment. Can be negative.</param>
-		/// <exception cref="ArgumentOutOfRangeException">New <see cref="End"/> would be less than <see cref="Offset"/> or greater than buffer length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">New <see cref="EndOffset"/> would be less than <see cref="Offset"/> or greater than buffer length.</exception>
 		/// <remarks>
-		/// This method can be used instead of the <see cref="End"/> setter when C# does not allow to call a property setter, for example with foreach variables.
+		/// This method can be used instead of the <see cref="EndOffset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
-		public void EndAdd(int n) => End += n;
+		public void EndAdd(int n) => EndOffset += n;
 
 		/// <summary>
-		/// Decrements <see cref="End"/>.
+		/// Decrements <see cref="EndOffset"/>.
 		/// </summary>
 		/// <param name="n">How much to decrement. Can be negative.</param>
-		/// <exception cref="ArgumentOutOfRangeException">New <see cref="End"/> would be less than <see cref="Offset"/> or greater than buffer length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">New <see cref="EndOffset"/> would be less than <see cref="Offset"/> or greater than buffer length.</exception>
 		/// <remarks>
-		/// This method can be used instead of the <see cref="End"/> setter when C# does not allow to call a property setter, for example with foreach variables.
+		/// This method can be used instead of the <see cref="EndOffset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
-		public void EndSub(int n) => End -= n;
+		public void EndSub(int n) => EndOffset -= n;
 
 		/// <summary>
-		/// Changes <see cref="End"/>.
+		/// Changes <see cref="EndOffset"/>.
 		/// </summary>
 		/// <param name="n">New value.</param>
 		/// <exception cref="ArgumentOutOfRangeException">n is less than <see cref="Offset"/> or greater than buffer length.</exception>
 		/// <remarks>
-		/// This method can be used instead of the <see cref="End"/> setter when C# does not allow to call a property setter, for example with foreach variables.
+		/// This method can be used instead of the <see cref="EndOffset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
 		/// </remarks>
-		public void EndSet(int n) => End = n;
+		public void EndSet(int n) => EndOffset = n;
 
 		/// <summary>
 		/// Returns true if Length == 0.

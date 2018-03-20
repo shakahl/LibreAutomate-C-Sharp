@@ -200,7 +200,7 @@ class AccFinder
 						if(i == 0) return _Error(L"Unknown name in prop. For HTML attributes use prefix @.");
 						const int nStrProp = 6;
 						if(i > nStrProp) {
-							int len = (int)(s - va); if(len==0) goto ge;
+							int len = (int)(s - va); if(len == 0) goto ge;
 							addToProp = false;
 							switch(i - nStrProp) {
 							case 1:
@@ -289,7 +289,7 @@ public:
 
 		if(!!(_flags2&eAF2::InWebPage)) {
 			_flags |= eAF::MenuToo;
-			if(!!(_flags&eAF::UIA)) return _Error(L"Don't use UI Automation to search in web page.");
+			if(!!(_flags&(eAF::UIA | eAF::ClientArea))) return _Error(L"Don't use flags UIA and ClientArea to search in web page.");
 			if(!!(_flags2&eAF2::InControls)) return _Error(L"Don't use class/id to search in web page.");
 		}
 
@@ -304,7 +304,7 @@ public:
 		if(a) {
 			if(!!(_flags2&eAF2::InWebPage)) return _ErrorHR(L"Don't use role prefix when searching in Acc.");
 			if(!!(_flags2&eAF2::InControls)) return _ErrorHR(L"Don't use class/id when searching in Acc.");
-			assert(!(_flags&eAF::UIA));
+			assert(!(_flags&(eAF::UIA | eAF::ClientArea))); //checked in C#
 
 			_FindInAcc(ref *a, 0);
 		} else if(!!(_flags2 & eAF2::InWebPage)) {
@@ -354,7 +354,7 @@ private:
 			//	Problems: 1. No Level. 2. Cannot apply many flags; then in some cases can be slower or less reliable.
 			//	Not very important. Now fast enough. Edge only 3 times slower (outproc); many times faster than outproc Chrome. JavaFX almost same speed (inproc).
 		} else {
-			hr = ao::AccFromWindowSR(w, OBJID_WINDOW, &aw.acc);
+			hr = ao::AccFromWindowSR(w, !!(_flags&eAF::ClientArea) ? OBJID_CLIENT : OBJID_WINDOW, &aw.acc);
 			aw.misc.role = ROLE_SYSTEM_WINDOW;
 		}
 		if(hr) return hr;
@@ -503,7 +503,7 @@ private:
 
 	gr:
 		if(!skipChildren) {
-			//depending on flags, skip children of AO that often have many descendants (eg MENUITEM, LIST, OUTLINE)
+			//depending on flags, skip children of AO that often have many descendants (eg MENUITEM, LIST, TREE)
 			skipChildren = _IsRoleToSkipDescendants(role, roleNeeded, a.acc);
 
 			//skip children of invisible AO that often have many descendants (eg DOCUMENT, WINDOW)
@@ -629,7 +629,7 @@ private:
 		return _FindDocumentSimple(ap, out ar, _flags2);
 	}
 
-	//Finds DOCUMENT with AccFinder::Find. Skips OUTLINE etc.
+	//Finds DOCUMENT with AccFinder::Find. Skips TREE etc.
 	//Returns 0 or NotFound.
 	static HRESULT _FindDocumentSimple(IAccessible* ap, out AccRaw& ar, eAF2 flags2)
 	{

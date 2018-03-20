@@ -1,0 +1,500 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="GENERATOR" content="VSdocman - documentation generator; http://www.helixoft.com" />
+	<title>WinImage.Find Method</title>
+
+	<link rel="stylesheet" type="text/css" href="msdn2017/msdn2017.css"></link>
+	<script src="msdn2017/msdn2017.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shCore_helixoft.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushVb.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushFSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCpp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushJScript.js" type="text/javascript"></script>
+	<link href="SyntaxHighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="SyntaxHighlighter/styles/shThemeMsdnLW.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript">
+		SyntaxHighlighter.all();
+	</script>				
+
+	<script type="text/javascript">
+<!--
+if (self.name != "vbdocright") {
+	if (location.search != "?toc=no") {
+		var filename = location.pathname.replace(/\\/g, "/");
+		filename = filename.substring(filename.lastIndexOf('/')+1);
+		location.replace("index.html#" + filename);
+	} 
+}
+
+function replaceTitleAndUrl(win, title, url) {
+	if(history.replaceState) {
+		win.history.replaceState(null, title, url);
+	} else {
+		win.document.title = document.title;
+		win.location.replace(url);
+	}
+}
+//-->
+	</script>	
+</head>
+
+<body style="direction: ltr;">
+	<script type="text/javascript">
+		try {
+			if (location.search != "?toc=no") {
+				parent.document.title = document.title;
+				var filename = location.pathname.replace(/\\/g, "/");
+				filename = filename.substring(filename.lastIndexOf('/')+1);
+				if (window.parent.location.search == null || window.parent.location.search != "?" + filename) {
+					if (window.parent.location.hash == null || window.parent.location.hash != "#" + filename) {
+						replaceTitleAndUrl(window.parent, document.title, "index.html#" + filename);
+					}
+				}
+			}
+		} catch (ex) {}
+	</script>
+	<div id="topic">
+<!--HEADER START-->
+  <div id="header">
+  	<div id="runningHeaderText">Au Reference</div>
+  	<h1 class="title">WinImage.Find Method</h1>
+  	<div id="headerLinks">
+
+	<a href="#seeAlsoSection">See Also</a>
+
+		</div>
+		<hr />
+	</div>
+<!--HEADER END-->
+    
+		<div id="mainSection">
+      <div id="mainBody">
+        <p />
+       
+        Finds image(s) or color(s) displayed in window or other area.
+Returns <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a> object containing the rectangle of the found image.
+Returns null if not found. To throw exception you can use operator +: <code>var r = +WinImage.Find(...);</code>
+
+
+        <p /><strong>Namespace:</strong>
+<a href="topic_00000000000000DB.html">Au</a>
+
+
+
+
+        <br /><strong>Assembly:</strong> Au (in Au.dll)
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Syntax</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="syntaxSection" class="section">	
+	
+	
+	<div id="syntaxCodeBlocks">
+		<div class="codeSnippetContainer">		
+			<div class="codeSnippetTabs">
+				<div class="codeSnippetTabLeftCornerActive">
+				</div>
+				<div class="codeSnippetTab csFirstTab csActiveTab codeVB">
+					<a>VB</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Csharp');">C#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeFsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Fsharp');">F#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCpp">
+					<a href="javascript: CodeSnippet_SetLanguage('Cpp');">C++</a>
+				</div>
+				<div class="codeSnippetTab csLastTab csNaTab codeJScript">
+					<a href="javascript: CodeSnippet_SetLanguage('JScript');">JScript</a>
+				</div>
+				<div class="codeSnippetTabRightCorner">
+				</div>
+				<div style="clear:both;">
+				</div>
+			</div>
+	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode codeVB">
+					<pre xml:space="preserve" class="brush: vb">Public Shared Function Find( _&nbsp;<br />   ByVal <i>area</i> As <a target="_top" href="topic_00000000000002A8.html" onclick="this.target='';return true;">WIArea</a>, _&nbsp;<br />   ByVal <i>image</i> As <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>, _&nbsp;<br />   Optional ByVal <i>flags</i> As <a target="_top" href="topic_00000000000002B4.html" onclick="this.target='';return true;">WIFlags</a> = 0, _&nbsp;<br />   Optional ByVal <i>colorDiff</i> As <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.int32.aspx">Integer</a> = 0, _&nbsp;<br />   Optional ByVal <i>also</i> As <a target="_top" href="http://msdn2.microsoft.com/en-us/library/bb549151.aspx">Func</a>(Of <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a>, <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.boolean.aspx">Boolean</a>) = null _&nbsp;<br />) As <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a></pre>			
+				</div>
+				<div class="codeSnippetCode codeNA">
+					<pre xml:space="preserve">This language is not supported or no code example is available.</pre>			
+				</div>
+			</div>
+		</div>
+		
+		<div class="codeSnippetContainer">
+			<div class="codeSnippetTabs">
+				<div class="codeSnippetTabLeftCorner">
+				</div>
+				<div class="codeSnippetTab csFirstTab csNaTab codeVB">
+					<a>VB</a>
+				</div>
+				<div class="codeSnippetTab csActiveTab codeCsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Csharp');">C#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeFsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Fsharp');">F#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCpp">
+					<a href="javascript: CodeSnippet_SetLanguage('Cpp');">C++</a>
+				</div>
+				<div class="codeSnippetTab csLastTab csNaTab codeJScript">
+					<a href="javascript: CodeSnippet_SetLanguage('JScript');">JScript</a>
+				</div>
+				<div class="codeSnippetTabRightCorner">
+				</div>
+				<div style="clear:both;">
+				</div>
+			</div>
+	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode codeCsharp">
+					<pre xml:space="preserve" class="brush: csharp">public static <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a> Find(&nbsp;<br />   <a target="_top" href="topic_00000000000002A8.html" onclick="this.target='';return true;">WIArea</a> <i>area</i>,&nbsp;<br />   <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">object</a> <i>image</i>,&nbsp;<br />   <a target="_top" href="topic_00000000000002B4.html" onclick="this.target='';return true;">WIFlags</a> <i>flags</i> = 0,&nbsp;<br />   <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.int32.aspx">int</a> <i>colorDiff</i> = 0,&nbsp;<br />   <a target="_top" href="http://msdn2.microsoft.com/en-us/library/bb549151.aspx">Func</a>&lt;<a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a>, <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.boolean.aspx">bool</a>&gt; <i>also</i> = null&nbsp;<br />)</pre>			
+				</div>
+				<div class="codeSnippetCode codeNA">
+					<pre xml:space="preserve">This language is not supported or no code example is available.</pre>			
+				</div>
+			</div>
+		</div>
+
+
+		
+		
+	</div>
+
+
+<h4 class="subHeading">
+	Parameters</h4><dl paramName="area">
+	<dt>
+		<span class="parameter">
+			area
+		</span>
+	</dt>
+	<dd>
+		Type: <a target="_top" href="topic_00000000000002A8.html" onclick="this.target='';return true;">WIArea</a> 
+		<p>
+			Where to search. Can be a window/control, accessible object, another image or a rectangle in screen.
+<ul><li></li><li></li><li></li><li></li><li></li></ul> 
+		</p>
+	</dd>
+</dl>
+<dl paramName="image">
+	<dt>
+		<span class="parameter">
+			image
+		</span>
+	</dt>
+	<dd>
+		Type: <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">object</a> 
+		<p>
+			Image or color to find. Can be:
+string - path of .png or .bmp file. If not full path, uses <a target="_top" href="topic_0000000000000550.html" onclick="this.target='';return true;">ThisAppImages</a>. Also can use resources and embedded images; read in Remarks.
+Bitmap - image object in memory.
+int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.
+IEnumerable of string, Bitmap, int/ColorInt/Color or object - multiple images or colors. Default action - find any. If flag <strong>AllMustExist</strong> - must find all. 
+		</p>
+	</dd>
+</dl>
+<dl paramName="flags">
+	<dt>
+		<span class="parameter">
+			flags
+		</span>
+	</dt>
+	<dd>
+		Type: <a target="_top" href="topic_00000000000002B4.html" onclick="this.target='';return true;">WIFlags</a> 
+		<p>
+			 
+		</p>
+	</dd>
+</dl>
+<dl paramName="colorDiff">
+	<dt>
+		<span class="parameter">
+			colorDiff
+		</span>
+	</dt>
+	<dd>
+		Type: <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.int32.aspx">int</a> 
+		<p>
+			Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel. 
+		</p>
+	</dd>
+</dl>
+<dl paramName="also">
+	<dt>
+		<span class="parameter">
+			also
+		</span>
+	</dt>
+	<dd>
+		Type: <a target="_top" href="http://msdn2.microsoft.com/en-us/library/bb549151.aspx">Func</a>&lt;<a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a>, <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.boolean.aspx">bool</a>&gt; 
+		<p>
+			A callback function to call for each found image until it returns true.
+Can be used to create actions like &quot;skip n matching images&quot; (like <code>also: t =&gt; t.MatchIndex == 1</code>), &quot;click all matching images&quot; (<code>also: t =&gt; { t.MouseClick(); 0.5.s(); return false; }</code>), &quot;get rectangles of all matching images&quot; (<code>also: t =&gt; { rectList.Add(t.Rect); return false; }</code>), &quot;ignore images that are or aren't in some custom areas&quot;, etc.
+When the callback function returns true, Find() returns result &quot;found&quot;. Else Find() tries to find more matching images (towards the right and bottom) and calls the callback function again when found. If the callback function always returns false, Find() returns result &quot;not found&quot;. 
+		</p>
+	</dd>
+</dl>
+
+<p />
+
+	<h4 class="subHeading">
+		Return Value</h4>
+	Type: <a target="_top" href="topic_000000000000029B.html" onclick="this.target='';return true;">WinImage</a> 
+	
+
+
+
+
+
+
+
+
+
+
+
+
+	</div>
+</div>
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Exceptions</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="exceptionsSection" class="section">	
+	<table>
+		<tr>
+			<th>
+				Exception type
+			</th>
+			<th>
+				Condition
+			</th>
+		</tr>
+		<tr>
+			<td>
+				<p>
+<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.argumentexception.aspx">ArgumentException</a>
+
+				</p>
+			</td>
+			<td>
+				<p>
+					An argument is of unsupported type or is/contains a null/invalid value. 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<p>
+<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.exception.aspx">Exception</a>
+
+				</p>
+			</td>
+			<td>
+				<p>
+					Depending on <i>image</i> string format, exceptions of <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.drawing.image.fromfile.aspx">FromFile(string)</a>, <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.drawing.bitmap.aspx">Bitmap(Stream)</a>, <a target="_top" href="topic_0000000000000636.html" onclick="this.target='';return true;">Decompress</a>. 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<p>
+<a href="topic_00000000000002C9.html">WndException</a>
+
+				</p>
+			</td>
+			<td>
+				<p>
+					Invalid window handle (the area argument). 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<p>
+<a href="topic_00000000000002BC.html">AuException</a>
+
+				</p>
+			</td>
+			<td>
+				<p>
+					Something failed. 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<p>
+<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.io.filenotfoundexception.aspx">FileNotFoundException</a>
+
+				</p>
+			</td>
+			<td>
+				<p>
+					The specified file does not exist. 
+				</p>
+			</td>
+		</tr>
+			
+	</table>
+	</div>
+</div>
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Remarks</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="remarksSection" class="section">	
+			If <i>image</i> is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @&quot;C:\X.png&quot; not found. Alternatively you can use code like <code>using(var b = Project.Properties.Resources.X) WinImage.Find(w, b);</code>.
+
+<i>image</i> can be string containing Base-64 encoded .png image file data with prefix &quot;image:&quot; or compressed .bmp file data with prefix &quot;~:&quot;. Created by Au.Controls.ImageUtil.ImageToString.
+
+Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
+
+The speed mostly depends on:
+1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <code>new WIArea(w, rectangle)</code>).
+2. Flag <strong>WindowDC</strong>. Usually makes several times faster. With this flag the speed depends on window.
+3. Video driver. Can be eg 10 times slower if incorrect or generic driver is used, for example on a virtual PC. Flag <strong>WindowDC</strong> should help.
+4. <i>colorDiff</i>. Should be as small as possible.
+
+If flag <strong>WindowDC</strong> is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in these windows.
+
+The function can only find images that exactly match the specified image. With <i>colorDiff</i> it can find images with slightly different colors and brightness. It cannot find images with different shapes.
+
+This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
+
+Throws ArgumentException if image or area is a bottom-up Bitmap object (see <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.drawing.imaging.bitmapdata.stride.aspx">Stride</a>). Such bitmaps are unusual in .NET (GDI+), but can be created by Image.FromHbitmap; instead use <a target="_top" href="topic_000000000000029E.html" onclick="this.target='';return true;">BitmapFromHbitmap</a>.
+	</div>					
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Applies to</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="frameworksSection" class="section">	
+  <h4 class="subHeading">.NET Framework</h4>Supported in: 4.5, 4.5.1, 4.5.2, 4.6, 4.6.1, 4.6.2, 4.7, 4.7.1<br />
+
+
+
+
+
+
+
+
+
+
+	
+	
+	</div>					
+</div>
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">See Also</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="seeAlsoSection" class="section">	
+		<div>
+			<a href="topic_000000000000029B.html">WinImage Class</a><br />
+
+
+
+<a href="topic_00000000000000DB.html">Au Namespace</a><br />
+
+
+			
+
+		</div>
+	</div>					
+</div>
+			</div>
+			</div>
+      <div id="footer">
+      	<p><span style="color: #FF0000;">Generated with unregistered version of <a target="_top" href="http://www.helixoft.com/vsdocman/overview.html">VSdocman</a></span>&nbsp;<br />Your own footer text will only be shown in registered version.</p>
+      </div>
+    </div>
+  	<script type="text/javascript">
+<!--
+	try {
+		parent.frames["vbdocswitch"].expandLinkInToc(location.href);
+	} catch (ex) {}
+//-->
+		</script>	
+  </body>
+</html>
+

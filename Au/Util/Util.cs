@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -28,16 +27,59 @@ namespace Au.Util
 	/// <summary>
 	/// Miscellaneous classes and functions used in this library. Can be used outside it too.
 	/// </summary>
-	internal class NamespaceDoc
+	[CompilerGenerated()]
+	class NamespaceDoc
 	{
 		//SHFB uses this for namespace documentation.
+	}
+
+	/// <summary>
+	/// Helps to get and release screen DC with the 'using(...){...}' pattern.
+	/// Uses API GetDC and ReleaseDC.
+	/// </summary>
+	internal struct LibScreenDC :IDisposable
+	{
+		IntPtr _dc;
+
+		public LibScreenDC(int unused) => _dc = Api.GetDC(default);
+		public static implicit operator IntPtr(LibScreenDC dc) => dc._dc;
+		public void Dispose() => Api.ReleaseDC(default, _dc);
+	}
+
+	/// <summary>
+	/// Helps to get and release window DC with the 'using(...){...}' pattern.
+	/// Uses API GetDC and ReleaseDC.
+	/// If w is default(Wnd), gets screen DC.
+	/// </summary>
+	internal struct LibWindowDC :IDisposable
+	{
+		IntPtr _dc;
+		Wnd _w;
+
+		public LibWindowDC(Wnd w) => _dc = Api.GetDC(_w = w);
+		public static implicit operator IntPtr(LibWindowDC dc) => dc._dc;
+		public void Dispose() => Api.ReleaseDC(_w, _dc);
+		public bool Is0 => _dc == default;
+	}
+
+	/// <summary>
+	/// Helps to create and delete screen DC with the 'using(...){...}' pattern.
+	/// Uses API CreateCompatibleDC and DeleteDC.
+	/// </summary>
+	internal struct LibCompatibleDC :IDisposable
+	{
+		IntPtr _dc;
+
+		public LibCompatibleDC(IntPtr dc) => _dc = Api.CreateCompatibleDC(dc);
+		public static implicit operator IntPtr(LibCompatibleDC dc) => dc._dc;
+		public void Dispose() => Api.DeleteDC(_dc);
 	}
 
 	/// <summary>
 	/// Creates and manages native bitmap handle and memory DC (GDI device context).
 	/// The bitmap is selected in the DC.
 	/// </summary>
-	public class MemoryBitmap :IDisposable
+	public sealed class MemoryBitmap :IDisposable
 	{
 		IntPtr _dc, _bm, _oldbm;
 
@@ -51,11 +93,13 @@ namespace Au.Util
 		/// </summary>
 		public IntPtr Hbitmap => _bm;
 
-		///
+		/// <summary>
+		/// Does nothing. Later you can call Create or Attach.
+		/// </summary>
 		public MemoryBitmap() { }
 
 		/// <summary>
-		/// Calls <see cref="Create(int, int)"/>.
+		/// Calls <see cref="Create"/>.
 		/// </summary>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
 		public MemoryBitmap(int width, int height)
@@ -63,32 +107,41 @@ namespace Au.Util
 			if(!Create(width, height)) throw new AuException("*create memory bitmap of specified size");
 		}
 
+		//rejected: not obvious, whether it attaches or copies. Also, attaching is rarely used.
+		///// <summary>
+		///// Calls <see cref="Attach"/>.
+		///// </summary>
+		//public MemoryBitmap(IntPtr hBitmap)
+		//{
+		//	Attach(hBitmap);
+		//}
+
 		/// <summary>
-		/// Deletes the bitmap and DC and calls GC.SuppressFinalize.
+		/// Deletes the bitmap and DC.
 		/// </summary>
 		public void Dispose()
 		{
 			Delete();
-			GC.SuppressFinalize(this);
+			//GC.SuppressFinalize(this); //no. We allow to Create/Attach after calling this.
 		}
 
 		///
 		~MemoryBitmap() { Delete(); }
+		//info: calls DeleteDC. MSDN says that ReleaseDC must be called from the same thread. But does not say it about DeleteDC and others.
 
 		/// <summary>
 		/// Deletes the bitmap and DC.
-		/// Unlike Dispose, does not call GC.SuppressFinalize.
 		/// </summary>
 		public void Delete()
 		{
-			if(_dc == Zero) return;
-			if(_bm != Zero) {
+			if(_dc == default) return;
+			if(_bm != default) {
 				Api.SelectObject(_dc, _oldbm);
 				Api.DeleteObject(_bm);
-				_bm = Zero;
+				_bm = default;
 			}
 			Api.DeleteDC(_dc);
-			_dc = Zero;
+			_dc = default;
 		}
 
 		/// <summary>
@@ -100,10 +153,10 @@ namespace Au.Util
 		/// <param name="height">Height, pixels.</param>
 		public bool Create(int width, int height)
 		{
-			IntPtr dcs = Api.GetDC(default);
-			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
-			Api.ReleaseDC(default, dcs);
-			return _bm != Zero;
+			using(var dcs = new LibScreenDC(0)) {
+				Attach(Api.CreateCompatibleBitmap(dcs, width, height));
+				return _bm != default;
+			}
 		}
 
 		/// <summary>
@@ -115,8 +168,8 @@ namespace Au.Util
 		public void Attach(IntPtr hBitmap)
 		{
 			Delete();
-			if(hBitmap != Zero) {
-				_dc = Api.CreateCompatibleDC(Zero);
+			if(hBitmap != default) {
+				_dc = Api.CreateCompatibleDC(default);
 				_oldbm = Api.SelectObject(_dc, _bm = hBitmap);
 			}
 		}
@@ -128,10 +181,10 @@ namespace Au.Util
 		public IntPtr Detach()
 		{
 			IntPtr bret = _bm;
-			if(_bm != Zero) {
+			if(_bm != default) {
 				Api.SelectObject(_dc, _oldbm);
 				Api.DeleteDC(_dc);
-				_dc = Zero; _bm = Zero;
+				_dc = default; _bm = default;
 			}
 			return bret;
 		}
@@ -140,35 +193,36 @@ namespace Au.Util
 	/// <summary>
 	/// Creates and manages native font handle.
 	/// </summary>
-	internal class LibNativeFont :IDisposable
+	internal sealed class LibNativeFont :IDisposable
 	{
 		public IntPtr Handle { get; private set; }
 		public int HeightOnScreen { get; private set; }
 
 		public LibNativeFont(IntPtr handle) { Handle = handle; }
 
-		public static implicit operator IntPtr(LibNativeFont f) { return (f == null) ? Zero : f.Handle; }
+		public static implicit operator IntPtr(LibNativeFont f) => (f == null) ? default : f.Handle;
 
-		~LibNativeFont() { Dispose(); }
-		public void Dispose()
+		~LibNativeFont() { _Dispose(); }
+		public void Dispose() { _Dispose(); GC.SuppressFinalize(this); }
+		void _Dispose()
 		{
-			if(Handle != Zero) { Api.DeleteObject(Handle); Handle = Zero; }
+			if(Handle != default) { Api.DeleteObject(Handle); Handle = default; }
 		}
 
 		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
 		{
-			var dcScreen = Api.GetDC(default);
-			int h2 = -Math_.MulDiv(height, Api.GetDeviceCaps(dcScreen, 90), 72);
-			Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
-			if(calculateHeightOnScreen) {
-				var dcMem = Api.CreateCompatibleDC(dcScreen);
-				var of = Api.SelectObject(dcMem, Handle);
-				Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
-				HeightOnScreen = z.Height;
-				Api.SelectObject(dcMem, of);
-				Api.DeleteDC(dcMem);
+			using(var dcs = new LibScreenDC(0)) {
+				int h2 = -Math_.MulDiv(height, Api.GetDeviceCaps(dcs, 90), 72);
+				Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
+				if(calculateHeightOnScreen) {
+					using(var dcMem = new LibCompatibleDC(dcs)) {
+						var of = Api.SelectObject(dcMem, Handle);
+						Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
+						HeightOnScreen = z.Height;
+						Api.SelectObject(dcMem, of);
+					}
+				}
 			}
-			Api.ReleaseDC(default, dcScreen);
 		}
 	}
 
@@ -182,7 +236,7 @@ namespace Au.Util
 		/// </summary>
 		public static IntPtr OfType(Type t)
 		{
-			return t == null ? Zero : Marshal.GetHINSTANCE(t.Module);
+			return t == null ? default : Marshal.GetHINSTANCE(t.Module);
 
 			//Tested these to get caller's module without Type parameter:
 			//This is dirty/dangerous and 50 times slower: [MethodImpl(MethodImplOptions.NoInlining)] ... return Marshal.GetHINSTANCE(new StackFrame(1).GetMethod().DeclaringType.Module);
@@ -196,7 +250,7 @@ namespace Au.Util
 		/// </summary>
 		public static IntPtr OfAssembly(Assembly asm)
 		{
-			return asm == null ? Zero : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
+			return asm == null ? default : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
 		}
 
 		/// <summary>
@@ -270,7 +324,7 @@ namespace Au.Util
 			if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
 			s = Path.GetFileName(s);
 			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
-			return Zero != Api.GetModuleHandle(s);
+			return default != Api.GetModuleHandle(s);
 		}
 	}
 
@@ -464,9 +518,7 @@ namespace Au.Util
 			get
 			{
 				if(_baseDPI == 0) {
-					var dc = Api.GetDC(default);
-					_baseDPI = Api.GetDeviceCaps(dc, 90); //LOGPIXELSY
-					Api.ReleaseDC(default, dc);
+					using(var dcs = new LibScreenDC(0)) _baseDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
 				}
 				return _baseDPI;
 			}
@@ -597,7 +649,7 @@ namespace Au.Util
 		public bool Set(long dueTime, int period = 0)
 		{
 			if(dueTime > 0) dueTime = -checked(dueTime * 10000);
-			return SetWaitableTimer(this.SafeWaitHandle, ref dueTime, period, Zero, Zero, false);
+			return SetWaitableTimer(this.SafeWaitHandle, ref dueTime, period, default, default, false);
 		}
 
 		/// <summary>
@@ -609,7 +661,7 @@ namespace Au.Util
 		public bool SetAbsolute(DateTime dueTime, int period = 0)
 		{
 			var t = dueTime.ToFileTimeUtc();
-			return SetWaitableTimer(this.SafeWaitHandle, ref t, period, Zero, Zero, false);
+			return SetWaitableTimer(this.SafeWaitHandle, ref t, period, default, default, false);
 		}
 	}
 
@@ -625,7 +677,7 @@ namespace Au.Util
 		/// <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
 		public static void AuHelp(string topic)
 		{
-			var s = Folders.ThisApp + "Au Help.chm::/html/" + topic + ".htm";
+			var s = Folders.ThisApp + "Help/Au Help.chm::/html/" + topic + ".htm";
 			Api.HtmlHelp(Api.GetDesktopWindow(), s, 0, 0); //HH_DISPLAY_TOPIC
 		}
 

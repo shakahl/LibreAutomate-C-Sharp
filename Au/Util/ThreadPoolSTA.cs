@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -127,7 +126,7 @@ namespace Au.Util
 			/// </summary>
 			public void Submit()
 			{
-				if(_work == Zero) throw new ObjectDisposedException(nameof(Work));
+				if(_work == default) throw new ObjectDisposedException(nameof(Work));
 				SubmitThreadpoolWork(_work);
 			}
 
@@ -137,7 +136,7 @@ namespace Au.Util
 			/// </summary>
 			public void Wait()
 			{
-				if(_work == Zero) throw new ObjectDisposedException(nameof(Work));
+				if(_work == default) throw new ObjectDisposedException(nameof(Work));
 				WaitForThreadpoolWorkCallbacks(_work, false);
 			}
 
@@ -147,7 +146,7 @@ namespace Au.Util
 			/// </summary>
 			public void Cancel()
 			{
-				if(_work == Zero) throw new ObjectDisposedException(nameof(Work));
+				if(_work == default) throw new ObjectDisposedException(nameof(Work));
 				WaitForThreadpoolWorkCallbacks(_work, true);
 			}
 
@@ -157,10 +156,10 @@ namespace Au.Util
 			/// </summary>
 			public void Dispose()
 			{
-				if(_work == Zero) return; //this is a simple callback (ThreadPoolSTA.SubmitCallback()) or already disposed
+				if(_work == default) return; //this is a simple callback (ThreadPoolSTA.SubmitCallback()) or already disposed
 				Cancel();
 				CloseThreadpoolWork(_work);
-				_work = Zero;
+				_work = default;
 				_gc.Free();
 			}
 
@@ -188,7 +187,7 @@ namespace Au.Util
 #else
 				int hr = Api.CoGetApartmentType(out var apt, out var aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
 				if(hr == 0 && apt != Api.APTTYPE.APTTYPE_STA) {
-					hr = Api.OleInitialize(Zero);
+					hr = Api.OleInitialize(default);
 					//Thread.CurrentThread.Priority = ThreadPriority.BelowNormal; //does not make getting/displaying icons better
 					//Api.SetThreadPriority(Api.GetCurrentThread(), -15);
 				}
@@ -205,7 +204,7 @@ namespace Au.Util
 				}
 				catch(Exception e) { Debug_.Print(e); }
 				finally {
-					if(_work == Zero) _gc.Free(); //free now if this is a simple callback (ThreadPoolSTA.SubmitCallback()). Else Dispose() frees.
+					if(_work == default) _gc.Free(); //free now if this is a simple callback (ThreadPoolSTA.SubmitCallback()). Else Dispose() frees.
 				}
 			}
 
@@ -218,10 +217,10 @@ namespace Au.Util
 		static ThreadPoolSTA()
 		{
 			var p = _ProcVar;
-			if(p->_pool == Zero) {
+			if(p->_pool == default) {
 				lock("d3+gzRQ2mkiiOHFKsRGCXw") {
-					if(p->_pool == Zero) {
-						var pool = CreateThreadpool(Zero);
+					if(p->_pool == default) {
+						var pool = CreateThreadpool(default);
 						//SetThreadpoolThreadMinimum(pool, 2); //don't need this
 						SetThreadpoolThreadMaximum(pool, 4); //info: 3-4 is optimal for getting icons
 						p->_pool = pool;
@@ -246,7 +245,7 @@ namespace Au.Util
 		{
 			_isAppDomainDying = true;
 			//var perf = Perf.StartNew();
-			CloseThreadpoolCleanupGroupMembers(_env.CleanupGroup, true, Zero);
+			CloseThreadpoolCleanupGroupMembers(_env.CleanupGroup, true, default);
 			CloseThreadpoolCleanupGroup(_env.CleanupGroup);
 			//perf.NW();
 			//info:

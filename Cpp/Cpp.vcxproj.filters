@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Cpp.def">
-      <Filter>Header Files\inactive</Filter>
+      <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -366,4 +366,47 @@ sure both macros are undefined; an emulation function will then be used. */
 #pragma warning(disable: 4244)
 #pragma warning(disable: 4267)
 
-//also in pcre2.h replace 'typedef uint16_t PCRE2_UCHAR16;' with 'typedef wchar_t PCRE2_UCHAR16;', because by default PCRE API don't accept strings.
+// -----------------------
+
+//PCRE library code modifications made for the Au library have comment "//au".
+//Also copied here:
+
+#if false
+//In pcre2.h replace
+typedef uint16_t PCRE2_UCHAR16;
+//with
+typedef wchar_t PCRE2_UCHAR16;
+//because by default PCRE API don't accept strings.
+
+----
+
+//Add callout parameter to pcre2_match definition and declaration:
+, int(*callout)(pcre2_callout_block *, void *)
+//In pcre2_match replace
+mb->callout = mcontext->callout;
+mb->callout_data = mcontext->callout_data;
+with
+mb->callout = callout;
+
+----
+
+//Add pcre2_match_data_create_au(). The copied code is in str.h.
+
+#endif
+
+// -----------------------
+
+//PCRE project settings:
+
+//Output dir (all config): bin\$(Platform)\$(Configuration)\
+//Static lib, unicode.
+//Preprocessor: ...;HAVE_CONFIG_H;PCRE2_CODE_UNIT_WIDTH=16
+//Run-time lib: multithreaded
+//Disable security checks
+//Warning level 3
+
+// -----------------------
+
+//Exclude files:
+//pcre2_dfa_match.c
+//pcre2_substitute.c

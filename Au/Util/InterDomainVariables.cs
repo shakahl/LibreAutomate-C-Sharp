@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -195,8 +194,8 @@ namespace Au
 				object o = GetVariable(name);
 				if(o != null) return (T)o;
 
-				//if(initValue is Func<MarshalByRefObject>) Output.Warning("MarshalByRefObject. Possibly the object will be created in wrong appdomain."); //not tested
-				//if(typeof(T).IsSubclassOf(typeof(MarshalByRefObject))) Output.Warning("MarshalByRefObject. Possibly the object will be created in wrong appdomain."); //not tested
+				//if(initValue is Func<MarshalByRefObject>) PrintWarning("MarshalByRefObject. Possibly the object will be created in wrong appdomain."); //not tested
+				//if(typeof(T).IsSubclassOf(typeof(MarshalByRefObject))) PrintWarning("MarshalByRefObject. Possibly the object will be created in wrong appdomain."); //not tested
 
 				T x = initValue();
 				SetVariable(name, x);
@@ -227,7 +226,7 @@ namespace Au
 		/// {
 		/// 	public void Method(int param)
 		/// 	{
-		/// 		PrintList(param, AppDomain.CurrentDomain.FriendlyName);
+		/// 		Print(param, AppDomain.CurrentDomain.FriendlyName);
 		/// 	}
 		/// }
 		/// ]]></code>

@@ -1,0 +1,947 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="GENERATOR" content="VSdocman - documentation generator; http://www.helixoft.com" />
+	<title>Path_ Methods</title>
+
+	<link rel="stylesheet" type="text/css" href="msdn2017/msdn2017.css"></link>
+	<script src="msdn2017/msdn2017.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shCore_helixoft.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushVb.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushFSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCpp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushJScript.js" type="text/javascript"></script>
+	<link href="SyntaxHighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="SyntaxHighlighter/styles/shThemeMsdnLW.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript">
+		SyntaxHighlighter.all();
+	</script>				
+
+	<script type="text/javascript">
+<!--
+if (self.name != "vbdocright") {
+	if (location.search != "?toc=no") {
+		var filename = location.pathname.replace(/\\/g, "/");
+		filename = filename.substring(filename.lastIndexOf('/')+1);
+		location.replace("index.html#" + filename);
+	} 
+}
+
+function replaceTitleAndUrl(win, title, url) {
+	if(history.replaceState) {
+		win.history.replaceState(null, title, url);
+	} else {
+		win.document.title = document.title;
+		win.location.replace(url);
+	}
+}
+//-->
+	</script>	
+</head>
+
+<body style="direction: ltr;">
+	<script type="text/javascript">
+		try {
+			if (location.search != "?toc=no") {
+				parent.document.title = document.title;
+				var filename = location.pathname.replace(/\\/g, "/");
+				filename = filename.substring(filename.lastIndexOf('/')+1);
+				if (window.parent.location.search == null || window.parent.location.search != "?" + filename) {
+					if (window.parent.location.hash == null || window.parent.location.hash != "#" + filename) {
+						replaceTitleAndUrl(window.parent, document.title, "index.html#" + filename);
+					}
+				}
+			}
+		} catch (ex) {}
+	</script>
+	<div id="topic">
+<!--HEADER START-->
+  <div id="header">
+  	<div id="runningHeaderText">Au Reference</div>
+  	<h1 class="title">Path_ Methods</h1>
+  	<div id="headerLinks">
+              <a href="topic_0000000000000592.html">Path_ Class</a>
+            &nbsp;<a href="#seeAlsoSection">See Also</a>
+		</div>
+		<hr />
+	</div>
+<!--HEADER END-->
+    
+		<div id="mainSection">
+      <div id="mainBody">
+        <p />
+        <p>
+          The following tables list the members exposed by the  
+              <a href="topic_0000000000000592.html">Path_</a>
+             type.
+        </p>
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="MethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000599.html">Combine(string, string, bool, bool)</a>
+
+	</td>
+	<td>
+
+Combines two path parts using character '\\'. For example directory path and file name.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A0.html">CorrectFileName(string, string)</a>
+
+	</td>
+	<td>
+
+Replaces characters that cannot be used in file names.
+Also corrects other forms of invalid or problematic filename: trims spaces and other blank characters; replaces &quot;.&quot; at the end; prepends &quot;@&quot; if a reserved name like &quot;CON&quot; or &quot;CON.txt&quot;; returns &quot;-&quot; if name is null/empty/whitespace.
+Returns valid filename. However it can be too long (itself or when combined with a directory path).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/bsc2ak47.aspx">Equals(Object)</a>
+
+	</td>
+	<td>
+
+Determines whether the specified object is equal to the current object.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000593.html">ExpandEnvVar(string)</a>
+
+	</td>
+	<td>
+
+If path starts with &quot;%&quot; or &quot;\&quot;%&quot;, expands environment variables enclosed in %, else just returns path.
+Also supports known folder names, like &quot;%Folders.Documents%&quot;. More info in Remarks.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.finalize.aspx">Finalize</a>
+
+	</td>
+	<td>
+
+Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A6.html">GetDirectoryPath(string, bool)</a>
+
+	</td>
+	<td>
+
+Removes filename part from path. By default also removes separator ('\\' or '/') if it is not after drive name (eg &quot;C:&quot;).
+Returns &quot;&quot; if the string is a filename.
+Returns null if the string is a root (like @&quot;C:\&quot; or &quot;C:&quot; or @&quot;\\server\share&quot; or &quot;http:&quot;).
+Returns null if the string is null.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A4.html">GetExtension(string)</a>
+
+	</td>
+	<td>
+
+Gets filename extension, like &quot;.txt&quot;.
+Returns &quot;&quot; if there is no extension.
+Returns null if path is null.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A5.html">GetExtension(string, out string)</a>
+
+	</td>
+	<td>
+
+Gets filename extension and path part without the extension.
+More info: <a target="_top" href=".html" onclick="this.target='';return true;">GetExtension(string)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A2.html">GetFileName(string)</a>
+
+	</td>
+	<td>
+
+Gets filename with extension.
+Returns &quot;&quot; if there is no filename.
+Returns null if path is null.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A3.html">GetFileNameWithoutExtension(string)</a>
+
+	</td>
+	<td>
+
+Gets filename without extension.
+Returns &quot;&quot; if there is no filename.
+Returns null if path is null.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.gethashcode.aspx">GetHashCode</a>
+
+	</td>
+	<td>
+
+Serves as the default hash function.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000596.html">GetRootLength(string)</a>
+
+	</td>
+	<td>
+
+Gets the length of the drive or network folder part in path, including its separator if any.
+If the string does not start with a drive or network folder path, returns 0 or prefix length (@&quot;\\?\&quot; or @&quot;\\?\UNC\&quot;).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.gettype.aspx">GetType</a>
+
+	</td>
+	<td>
+
+Gets the <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.type.aspx">Type</a> of the current instance.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000597.html">GetUrlProtocolLength(string)</a>
+
+	</td>
+	<td>
+
+Gets the length of the URL protocol name (also known as URI scheme) in string, including ':'.
+If the string does not start with a protocol name, returns 0.
+URL examples: &quot;http:&quot; (returns 5), &quot;http://www.x.com&quot; (returns 5), &quot;file:///path&quot; (returns 5), &quot;shell:etc&quot; (returns 6).
+The protocol can be unknown, the function just checks string format, which is an ASCII alpha character followed by one or more ASCII alpha-numeric, '.', '-', '+' characters, followed by ':' character.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000594.html">IsFullPath(string)</a>
+
+	</td>
+	<td>
+
+Returns true if path matches one of these wildcard patterns:
+	@&quot;?:\*&quot; - local path, like @&quot;C:\a\b.txt&quot;. Here ? is A-Z, a-z.
+	@&quot;?:&quot; - drive name, like @&quot;C:&quot;. Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
+	@&quot;\\*&quot; - network path, like @&quot;\\server\share\...&quot;. Or has prefix @&quot;\\?\&quot;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000595.html">IsFullPathExpandEnvVar(ref string)</a>
+
+	</td>
+	<td>
+
+Expands environment variables and calls <a target="_top" href="topic_0000000000000594.html" onclick="this.target='';return true;">IsFullPath</a>.
+Returns true if path matches one of these wildcard patterns:
+	@&quot;?:\*&quot; - local path, like @&quot;C:\a\b.txt&quot;. Here ? is A-Z, a-z.
+	@&quot;?:&quot; - drive name, like @&quot;C:&quot;. Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
+	@&quot;\\*&quot; - network path, like @&quot;\\server\share\...&quot;. Or has prefix @&quot;\\?\&quot;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A1.html">IsInvalidFileName(string)</a>
+
+	</td>
+	<td>
+
+Returns true if name cannot be used for a file name, eg contains '\\' etc characters or is empty.
+More info: <a target="_top" href="topic_00000000000005A0.html" onclick="this.target='';return true;">CorrectFileName</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000598.html">IsUrl(string)</a>
+
+	</td>
+	<td>
+
+Returns true if the string starts with a URL protocol name (existing or not) and ':' character.
+URL examples: &quot;http:&quot;, &quot;http://www.x.com&quot;, &quot;file:///path&quot;, &quot;shell:etc&quot;.
+Calls <a target="_top" href="topic_0000000000000597.html" onclick="this.target='';return true;">GetUrlProtocolLength</a> and returns true if it's not 0.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000005A7.html">MakeUnique(string, bool)</a>
+
+	</td>
+	<td>
+
+Gets path with unique filename for a new file or directory.
+If the specified path is of an existing file or directory, returns path where the filename part is modified like &quot;file 2.txt&quot;, &quot;file 3.txt&quot; etc. Else returns unchanged path.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+  <img alt="Protected method" title="Protected method" src="msdn2017/protmethod.png"></img>
+
+    
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.memberwiseclone.aspx">MemberwiseClone</a>
+
+	</td>
+	<td>
+
+Creates a shallow copy of the current <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000059A.html">Normalize(string, string, PNFlags)</a>
+
+	</td>
+	<td>
+
+Makes normal full path from path that can contain special substrings etc.
+The sequence of actions:
+1. If path starts with '%' character, expands environment variables (see <a target="_top" href="topic_0000000000000593.html" onclick="this.target='';return true;">ExpandEnvVar</a>).
+2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
+3. If path is not full path, and defaultParentDirectory is not null/&quot;&quot;, combines path with ExpandEnvVar(defaultParentDirectory).
+4. If path is not full path, throws exception.
+5. Calls API &lt;msdn&gt;GetFullPathName&lt;/msdn&gt;. It replaces '/' to '\\', replaces multiple '\\' to single (where need), processes @&quot;\..&quot; etc, trims spaces, etc.
+6. If no flag DoNotExpandDosPath, if contains '~' character, calls API &lt;msdn&gt;GetLongPathName&lt;/msdn&gt;. It converts short DOS path to normal path, if possible, for example @&quot;c:\progra~1&quot; to @&quot;c:\program files&quot;. It is slow. It converts path only if the file exists.
+7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is a drive path (eg @&quot;C:\&quot;).
+8. Appends '\\' character if ends with a drive name (eg &quot;C:&quot; -&gt; @&quot;C:\&quot;).
+9. If no flag DoNotPrefixLongPath, calls <a target="_top" href="topic_000000000000059C.html" onclick="this.target='';return true;">PrefixLongPathIfNeed</a>, which adds @&quot;\\?\&quot; etc prefix if path is very long.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000059B.html">PrefixLongPath(string)</a>
+
+	</td>
+	<td>
+
+If path is full path (see <a target="_top" href="topic_0000000000000594.html" onclick="this.target='';return true;">IsFullPath</a>) and does not start with @&quot;\\?\&quot;, prepends @&quot;\\?\&quot;.
+If path is network path (like @&quot;\\computer\folder\...&quot;), makes like @&quot;\\?\UNC\computer\folder\...&quot;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000059C.html">PrefixLongPathIfNeed(string)</a>
+
+	</td>
+	<td>
+
+Calls <a target="_top" href="topic_000000000000059B.html" onclick="this.target='';return true;">PrefixLongPath</a> if path is longer than <a target="_top" href="topic_000000000000059F.html" onclick="this.target='';return true;">MaxDirectoryPathLength</a> (247).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+inheritedMember 
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.tostring.aspx">ToString</a>
+
+	</td>
+	<td>
+
+Returns a string that represents the current object.
+(inherited from <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.object.aspx">Object</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000059D.html">UnprefixLongPath(string)</a>
+
+	</td>
+	<td>
+
+If path starts with @&quot;\\?\&quot; prefix, removes it.
+If path starts with @&quot;\\?\UNC\&quot; prefix, removes @&quot;?\UNC\&quot;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">See Also</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="seeAlsoSection" class="section">	
+		<div>
+			<a href="topic_0000000000000592.html">Path_ Class</a><br />
+	<a href="topic_00000000000000DB.html">Au Namespace</a><br />
+
+
+			
+
+		</div>
+	</div>					
+</div>
+			</div>
+			</div>
+      <div id="footer">
+      	<p><span style="color: #FF0000;">Generated with unregistered version of <a target="_top" href="http://www.helixoft.com/vsdocman/overview.html">VSdocman</a></span>&nbsp;<br />Your own footer text will only be shown in registered version.</p>
+      </div>
+    </div>
+  	<script type="text/javascript">
+<!--
+	try {
+		parent.frames["vbdocswitch"].expandLinkInToc(location.href);
+	} catch (ex) {}
+//-->
+		</script>	
+  </body>
+</html>
+

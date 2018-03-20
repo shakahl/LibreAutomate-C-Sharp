@@ -187,7 +187,7 @@
         <member name="T:Au.Controls.AuInfoBox">
             <summary>
             Scintilla-based control to show formatted information text.
-            To set text use the <see cref="M:Au.NoClass.Text(System.String[])"/> property. For formatting and links use tags. See <see cref="T:Au.Controls.SciTags"/>.
+            To set text use the <see cref="M:Au.NoClass.Text(System.String,System.String)"/> property. For formatting and links use tags. See <see cref="T:Au.Controls.SciTags"/>.
             </summary>
         </member>
         <member name="T:Au.Controls.SciText">
@@ -498,7 +498,7 @@
         <member name="P:Au.Controls.AuScintilla.SciLexerDllPath">
             <summary>
             Scintilla dll path.
-            Default is Folders.ThisApp + "SciLexer" + (Ver.Is64BitProcess ? "64" : "32") + ".dll". If you want to change it, call this before creating first control.
+            Default is <c>Folders.ThisApp + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
             </summary>
         </member>
         <member name="P:Au.Controls.AuScintilla.InitBorderStyle">
@@ -1338,7 +1338,7 @@
         </member>
         <member name="M:Au.Controls.ImageUtil.ImageToString(System.String)">
             <summary>
-            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library.
+            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.
             Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
             Supports all <see cref="T:Au.Controls.ImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
             Returns null if path is not a valid image string or the file does not exist or failed to load.

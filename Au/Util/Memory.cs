@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -49,10 +48,10 @@ namespace Au.Util
 				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
 				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
 					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.Common, Api.PAGE_READWRITE, 0, size, name);
-					if(hm == Zero) goto ge;
+					if(hm == default) goto ge;
 					created = Native.GetError() != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
-					if(t == Zero) { Api.CloseHandle(hm); goto ge; }
+					if(t == default) { Api.CloseHandle(hm); goto ge; }
 					InterDomainVariables.SetVariable(name, t);
 				}
 				return (void*)t;
@@ -157,7 +156,7 @@ namespace Au.Util
 #if true
 		static LibProcessMemory()
 		{
-			Ptr = (LibProcessMemory*)InterDomainVariables.GetVariable("Au_LibProcessMemory", () => Api.VirtualAlloc(Zero, Size));
+			Ptr = (LibProcessMemory*)InterDomainVariables.GetVariable("Au_LibProcessMemory", () => Api.VirtualAlloc(default, Size));
 		}
 		//This is slower (especially if using InterDomainVariables first time in domain) but not so bizarre as with window class. And less code.
 #else
@@ -166,9 +165,9 @@ namespace Au.Util
 			string name = "Au_LibMem";
 
 			var x = new Api.WNDCLASSEX(); x.cbSize = Api.SizeOf(x);
-			if(0 == Api.GetClassInfoEx(Zero, name, ref x)) {
-				x.lpfnWndProc = Api.VirtualAlloc(Zero, Size); //much faster when need to zero memory
-				if(x.lpfnWndProc == Zero) throw new OutOfMemoryException(name);
+			if(0 == Api.GetClassInfoEx(default, name, ref x)) {
+				x.lpfnWndProc = Api.VirtualAlloc(default, Size); //much faster when need to zero memory
+				if(x.lpfnWndProc == default) throw new OutOfMemoryException(name);
 
 				x.style = Api.CS_GLOBALCLASS;
 				x.lpszClassName = Marshal.StringToHGlobalUni(name);
@@ -178,7 +177,7 @@ namespace Au.Util
 					//Api.InitializeSRWLock(&((LibProcessMemory*)x.lpfnWndProc)->_lock);
 					//Api.InitializeCriticalSection(&((LibProcessMemory*)x.lpfnWndProc)->_cs);
 				} else {
-					if(0 == Api.GetClassInfoEx(Zero, name, ref x)) throw new OutOfMemoryException(name);
+					if(0 == Api.GetClassInfoEx(default, name, ref x)) throw new OutOfMemoryException(name);
 				}
 
 				Marshal.FreeHGlobal(x.lpszClassName);
@@ -520,66 +519,56 @@ namespace Au.Util
 
 	/// <summary>
 	/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
-	/// This is a modified copy of the .NET internal StringBuilderCache class.
+	/// Used like <c>using(new Au.Util.LibStringBuilder(out var b)) { b.Append("example"); var s = b.ToString(); }</c>.
 	/// </summary>
-	internal static class LibStringBuilderCache
+	/// <remarks>
+	/// This is a modified copy of the .NET internal StringBuilderCache class.
+	/// The cache uses 2 [ThreadLocal] StringBuilder instances, which allows 1 nesting level. Not error to use deeper nesting level, but then gets new StringBuilder, not from the cache.
+	/// </remarks>
+	internal struct LibStringBuilder :IDisposable
 	{
+		StringBuilder _sb;
+
 		/// <summary>
-		/// 2000. Acquire does not use the cache if requested capacity is bigger. Release does not use the cache if StrinBuilder capacity is bigger.
+		/// 2000. The cache is not used if capacity is bigger.
 		/// </summary>
 		public const int MAX_BUILDER_SIZE = 2000;
 
-		[ThreadStatic] private static StringBuilder t_cachedInstance;
+		[ThreadStatic] private static StringBuilder t_cachedInstance, t_cachedInstance2;
 
 		/// <summary>
-		/// Gets a StringBuilder of the specified capacity.
-		/// When finished using it, call <see cref="ExtensionMethods.ToStringCached_"/>.
+		/// Gets a new or cached/cleared StringBuilder of the specified capacity, min 200.
 		/// </summary>
-		/// <remarks>
-		/// Can be called any number of times. If a StringBuilder of good capacity is in the cache then it will be returned and the cache emptied. Subsequent calls will return a new StringBuilder. A single StringBuilder instance is cached as a [ThreadLocal] field.
-		/// </remarks>
-		public static StringBuilder Acquire(int capacity = 100)
+		public LibStringBuilder(out StringBuilder sb, int capacity = 200)
 		{
 			if(capacity <= MAX_BUILDER_SIZE) {
-				StringBuilder sb = t_cachedInstance;
-				if(sb != null) {
-					if(capacity <= sb.Capacity) {
-						t_cachedInstance = null;
-						sb.Clear();
-						return sb;
+				if(capacity < 200) capacity = 200;
+				StringBuilder b = t_cachedInstance;
+				bool alt = b == null; if(alt) b = t_cachedInstance2;
+				if(b != null) {
+					if(capacity <= b.Capacity) {
+						if(alt) t_cachedInstance2 = null; else t_cachedInstance = null;
+						b.Clear();
+						//Debug_.Print("StringBuilder cached, alt=" + alt);
+						sb = _sb = b;
+						return;
 					}
 				}
 			}
-			return new StringBuilder(capacity);
+			//Debug_.Print("StringBuilder new");
+			sb = _sb = new StringBuilder(capacity);
 		}
 
 		/// <summary>
-		/// Releases a StringBuilder acquired with <see cref="Acquire"/> to the cache.
-		/// The same as <see cref="ExtensionMethods.ToStringCached_"/>, but does not call ToString().
+		/// Releases the StringBuilder to the cache.
 		/// </summary>
-		/// <remarks>
-		/// Places the StringBuilder in the cache if it is not too big. The variable then should not be used.
-		/// Unbalanced Acquire/Release (or Acquire/ToStringCached_) are perfectly acceptable. It will merely cause to create a new StringBuilder next time Acquire is called.
-		/// </remarks>
-		public static void Release(StringBuilder sb)
+		public void Dispose()
 		{
-			if(sb != null && sb.Capacity <= MAX_BUILDER_SIZE) {
-				t_cachedInstance = sb;
+			if(_sb.Capacity <= MAX_BUILDER_SIZE) {
+				//Debug_.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
+				if(t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
 			}
+			_sb = null;
 		}
-
-		//moved to class NetExtensions, else would need 'using Au.Util;' everywhere.
-		///// <summary>
-		///// Releases this StringBuilder acquired with <see cref="Acquire"/> to the cache and returns its ToString().
-		///// </summary>
-		///// <remarks>
-		///// To release, calls <see cref="Release"/>. More info there.
-		///// </remarks>
-		//public static string ToStringCached_(this StringBuilder t)
-		//{
-		//	string result = t?.ToString();
-		//	Release(t);
-		//	return result;
-		//}
 	}
 }

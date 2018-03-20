@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -73,9 +72,9 @@ partial class EForm :Form
 		{
 			//Perf.NW();
 			Perf.Next();
-			//TaskDialog.Show("", Perf.Times);
+			//AuDialog.Show("", Perf.Times);
 			Print(Perf.Times);
-			//TaskDialog.Show(Perf.Times, IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
+			//AuDialog.Show(Perf.Times, IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
 			//GC.Collect();
 
 			CommandLine.OnAfterCreatedFormAndOpenedCollection();
@@ -109,7 +108,7 @@ partial class EForm :Form
 			break;
 		case Api.WM_ENABLE:
 			//.NET ignores this. Eg if an owned form etc disables this window, the Enabled property is not changed and no EnabledChanged event.
-			//PrintList(wParam, Enabled);
+			//Print(wParam, Enabled);
 			//Enabled = wParam != 0; //not good
 			Panels.PanelManager.EnableDisableAllFloatingWindows(wParam != 0);
 			break;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -129,7 +128,7 @@ namespace Au.Controls
 
 		void _AutoSizeLastColumn()
 		{
-			//PrintList(this.Name, this.RowsCount);
+			//Print(this.Name, this.RowsCount);
 			if(this.RowsCount > 0) {
 				int n = this.ClientSize.Width;
 				if(this.VScrollBarVisible) n -= this.VScrollBar.Width;
@@ -203,7 +202,7 @@ namespace Au.Controls
 			//{
 			//	base.OnMouseEnter(sender, e);
 
-			//	PrintList(sender.Position, sender.IsEditing());
+			//	Print(sender.Position, sender.IsEditing());
 			//	var pos = sender.Position;
 			//	if(pos.Column == 1) {
 			//		var grid = sender.Grid as ParamGrid;
@@ -545,6 +544,7 @@ namespace Au.Controls
 		public void Clear()
 		{
 			//this.Rows.Clear(); //makes editors invalid
+			if(_editor.IsEditing) _editor.EditCellContext.EndEdit(true);
 			this.RowsCount = 0;
 		}
 

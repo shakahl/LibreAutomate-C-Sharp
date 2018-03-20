@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -134,7 +133,7 @@ namespace Au.Controls
 			{
 				_sizeChanged = true;
 				var r = this.ClientRectangle;
-				//PrintList(IsHandleCreated, r);
+				//Print(IsHandleCreated, r);
 				if(r.Width > 0 && r.Height > 0) _gc.UpdateLayout(r); //not r.IsEmpty, because can be negative Width/Height
 				if(e != null) base.OnClientSizeChanged(e);
 			}

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -57,7 +56,7 @@ namespace Au
 			/// </summary>
 			/// <exception cref="ArgumentException">
 			/// className is "". To match any, use null.
-			/// Invalid wildcard expression ("**options|" or regular expression).
+			/// Invalid wildcard expression ("**options " or regular expression).
 			/// </exception>
 			public ChildFinder(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 			{
@@ -212,7 +211,7 @@ namespace Au
 										return -1;
 									}
 									catch(AuException e) { //probably process of higher UAC integrity level
-										Output.Warning($"Failed to get .NET control names. {e.Message}");
+										PrintWarning($"Failed to get .NET control names. {e.Message}");
 										return -1;
 									}
 								}
@@ -310,7 +309,7 @@ namespace Au
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
 		/// className is "". To match any, use null.
-		/// Invalid wildcard expression ("**options|" or regular expression).
+		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
 		public Wnd Child(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
@@ -370,7 +369,7 @@ namespace Au
 		/// <example>
 		/// Find window that contains certain accessible object (AO), and get the AO too.
 		/// <code><![CDATA[
-		/// var af = new Acc.Finder("PUSHBUTTON", "OK"); //AO properties
+		/// var af = new Acc.Finder("BUTTON", "OK"); //AO properties
 		/// Wnd w = Wnd.Find(className: "#32770", also: t => t.HasAcc(af));
 		/// Print(w);
 		/// Print(f.Result);

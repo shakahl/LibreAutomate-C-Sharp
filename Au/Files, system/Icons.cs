@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -59,23 +58,23 @@ namespace Au
 		/// Calls <see cref="GetPidlIconHandle"/> and converts to Bitmap. Returns null if failed.
 		/// Later call Dispose.
 		/// </summary>
-		/// <param name="pidl">Native ITEMIDLIST pointer or <see cref="Shell.Pidl"/>.</param>
+		/// <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		public static Bitmap GetPidlIconImage(IntPtr pidl, int size)
+		public static Bitmap GetPidlIconImage(Shell.Pidl pidl, int size)
 		{
 			return HandleToImage(GetPidlIconHandle(pidl, size));
 		}
 
 		/// <summary>
 		/// Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
-		/// Returns null if hi is Zero or fails to convert.
+		/// Returns null if hi is default(IntPtr) or if fails to convert.
 		/// </summary>
 		/// <param name="hi">Icon handle.</param>
 		public static Bitmap HandleToImage(IntPtr hi)
 		{
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 
-			if(hi == Zero) return null;
+			if(hi == default) return null;
 			//var perf = Perf.StartNew();
 			Icon ic = Icon.FromHandle(hi);
 			Bitmap im = null;
@@ -89,7 +88,7 @@ namespace Au
 		/// <summary>
 		/// Gets file icon.
 		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
-		/// Returns native icon handle. Returns Zero if failed, for example if the file does not exist.
+		/// Returns native icon handle. Returns default(IntPtr) if failed, for example if the file does not exist.
 		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>. Or instead use <see cref="GetFileIconImage"/>.
 		/// </summary>
 		/// <param name="file">
@@ -108,34 +107,34 @@ namespace Au
 		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
-			if(Empty(file)) return Zero;
+			if(Empty(file)) return default;
 			size = _NormalizeIconSizeParameter(size);
 			file = Path_.ExpandEnvVar(file);
 
 			//var perf = Perf.StartNew();
 			IntPtr R = _GetFileIcon(file, size, flags);
-			//perf.Next(); PrintList(perf.Times, file);
+			//perf.Next(); Print(perf.Times, file);
 			//Print($"<><c 0xff0000>{file}</c>");
 			return R;
 		}
 
 		/// <summary>
 		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
-		/// Returns native icon handle. Returns Zero if failed.
+		/// Returns native icon handle. Returns default(IntPtr) if failed.
 		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>. Or instead use <see cref="GetPidlIconImage"/>.
 		/// </summary>
-		/// <param name="pidl">Native ITEMIDLIST pointer or <see cref="Shell.Pidl"/>.</param>
+		/// <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
-		public static IntPtr GetPidlIconHandle(IntPtr pidl, int size)
+		public static IntPtr GetPidlIconHandle(Shell.Pidl pidl, int size)
 		{
-			if(pidl == Zero) return Zero;
+			if(pidl?.IsNull ?? false) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return _GetShellIcon(true, null, pidl, size);
 		}
 
 		internal static IntPtr _GetFileIcon(string file, int size, GIFlags flags)
 		{
-			IntPtr R = Zero, pidl = Zero;
+			IntPtr R = default;
 			int index = 0;
 			bool extractFromFile = false, isFileType = false, isURL = false, isShellPath = false, isPath = true;
 			//bool getDefaultIfFails = 0!=(flags&IconFlags.DefaultIfFails);
@@ -161,7 +160,7 @@ namespace Au
 			if(isPath) {
 				if(searchPath) {
 					file = Files.SearchPath(file, Folders.ThisAppImages);
-					if(file == null) return Zero; //ignore getDefaultIfFails
+					if(file == null) return default; //ignore getDefaultIfFails
 				}
 				file = Path_.UnprefixLongPath(file);
 			}
@@ -171,10 +170,10 @@ namespace Au
 				if(!extractFromFile && file.Length > 4) ext = file.EndsWith_(true, ".exe", ".scr", ".ico", ".cur", ".ani");
 				if(extractFromFile || ext > 0) {
 					R = GetFileIconHandleRaw(file, index, size);
-					if(R != Zero || extractFromFile) return R;
+					if(R != default || extractFromFile) return R;
 					switch(Files.ExistsAs(file, true)) {
 					case FileDir.NotFound:
-						return Zero;
+						return default;
 					case FileDir.File:
 						var siid = Native.SHSTOCKICONID.SIID_DOCNOASSOC;
 						if(ext >= 1 && ext <= 2) siid = Native.SHSTOCKICONID.SIID_APPLICATION;
@@ -183,8 +182,8 @@ namespace Au
 					}
 				} else if(file.EndsWith_(".lnk", true)) {
 					R = _GetLnkIcon(file, size);
-					if(R != Zero) return R;
-					//PrintList("_GetLnkIcon failed", file);
+					if(R != default) return R;
+					//Print("_GetLnkIcon failed", file);
 				}
 
 				//note: here we don't cache icons.
@@ -203,11 +202,11 @@ namespace Au
 			string progId = isShellPath ? null : Files.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : Registry_.Open(progId, Registry.ClassesRoot);
-			//PrintList(file, progId, isFileType, isURL, rk != null);
+			//Print(file, progId, isFileType, isURL, rk != null);
 
 			if(rk == null) {
 				//Unregistered file type/protocol, no extension, folder, ::{CLSID}, shell:AppsFolder\WinStoreAppId, or no progId key in HKCR
-				//PrintList(@"unregistered", file, progId);
+				//Print(@"unregistered", file, progId);
 				if(progId != null) goto gr; //the file type is known, but no progid key in HKCR. Let shell API figure out. Rare.
 				if(isExt || (isPath && Files.FileExists(file))) return GetShellStockIconHandle(Native.SHSTOCKICONID.SIID_DOCNOASSOC, size);
 				goto gr;
@@ -216,29 +215,29 @@ namespace Au
 			//Registered file type/protocol.
 			using(rk) {
 				if(Registry_.KeyExists(@"ShellEx\IconHandler", rk)) {
-					//PrintList(@"handler", file);
+					//Print(@"handler", file);
 					goto gr;
 				}
 
 				string icon;
 				if(Registry_.GetString(out icon, "", @"DefaultIcon", rk) && icon.Length > 0) {
-					//PrintList("registry: DefaultIcon", file, icon);
+					//Print("registry: DefaultIcon", file, icon);
 					if(icon[0] == '@') icon = null; //eg @{Microsoft.Windows.Photos_16.622.13140.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.Windows.Photos/Files/Assets/PhotosLogoExtensions.png}
 					else ParseIconLocation(ref icon, out index);
 				} else if(Registry_.GetString(out icon, "", @"shell\open\command", rk) && icon.Length > 0) {
-					//PrintList(@"registry: shell\open\command", file, icon);
+					//Print(@"registry: shell\open\command", file, icon);
 					var a = icon.Split_((icon[0] == '\"') ? "\"" : " ", StringSplitOptions.RemoveEmptyEntries);
 					icon = (a.Length == 0) ? null : a[0];
 					if(icon.EndsWith_("rundll32.exe", true)) icon = null;
 				} else {
 					icon = null;
-					//PrintList("registry: no", file);
+					//Print("registry: no", file);
 					//Usually shell API somehow gets icon.
 					//For example also looks in .ext -> PerceivedType -> HKCR\SystemFileAssociations.
 					//We can use AssocQueryString(ASSOCSTR_DEFAULTICON), but it is slow and not always gets correct icon.
 				}
 
-				//if(icon != null) PrintList(file, icon);
+				//if(icon != null) Print(file, icon);
 
 				if(icon == "%1") {
 					//Print(file);
@@ -250,17 +249,17 @@ namespace Au
 					icon = Path_.ExpandEnvVar(icon);
 					if(!Path_.IsFullPath(icon)) icon = Folders.System + icon;
 					R = GetFileIconHandleRaw(icon, index, size);
-					if(R != Zero) return R;
+					if(R != default) return R;
 				}
 			}
 			//}
 			gr:
 #endif
-			return _GetShellIcon(!isExt, file, Zero, size);
+			return _GetShellIcon(!isExt, file, null, size);
 		}
 
-		//usePidl - if pidl not Zero, use pidl, else convert file to PIDL. If false, pidl must be Zero.
-		static IntPtr _GetShellIcon(bool usePidl, string file, IntPtr pidl, int size, bool freePidl = false)
+		//usePidl - if pidl not null/IsNull, use pidl, else convert file to PIDL. If false, pidl must be null.
+		static IntPtr _GetShellIcon(bool usePidl, string file, Shell.Pidl pidl, int size, bool freePidl = false)
 		{
 			//info:
 			//	We support everything that can have icon - path, URL, protocol (eg "http:"), file extension (eg ".txt"), shell item parsing name (eg "::{CLSID}"), "shell:AppsFolder\WinStoreAppId".
@@ -270,45 +269,47 @@ namespace Au
 			//	IExtractIcon for some types fails or gets wrong icon. Even cannot use it to get correct-size icons, because for most file types it uses system imagelists, which are DPI-dependent.
 			//	SHMapPIDLToSystemImageListIndex+SHGetImageList also is not better.
 
+			var pidl2 = pidl?.UnsafePtr ?? default;
 			if(usePidl) {
-				if(pidl == Zero) {
-					pidl = Shell.Pidl.LibFromString(file);
-					if(pidl == Zero) usePidl = false; else freePidl = true;
+				if(pidl2 == default) {
+					pidl2 = Shell.Pidl.LibFromString(file);
+					if(pidl2 == default) usePidl = false; else freePidl = true;
 				}
 			}
 
 			if(!usePidl) {
-				Debug.Assert(pidl == Zero && file != null);
-				pidl = Marshal.StringToCoTaskMemUni(file);
+				Debug.Assert(pidl2 == default && file != null);
+				pidl2 = Marshal.StringToCoTaskMemUni(file);
 				freePidl = true;
 			}
 
-			if(pidl == Zero) return Zero;
+			if(pidl2 == default) return default;
 
 			//This is faster but fails with some files etc, randomly with others.
 			//It means that shell API and/or extensions are not thread-safe, even if can run in MTA.
-			//return _GetShellIcon2(pidl, size, usePidl);
+			//return _GetShellIcon2(pidl2, size, usePidl);
 
-			IntPtr R = Zero;
+			IntPtr R = default;
 			try {
 				if(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA) {
-					R = _GetShellIcon2(usePidl, pidl, size);
+					R = _GetShellIcon2(usePidl, pidl2, size);
 				} else {
 					//tested: switching thread does not make slower. The speed depends mostly on locking, because then thread pool threads must wait.
-					using(var work = Util.ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl, size); })) {
+					using(var work = Util.ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); })) {
 						work.Submit();
 						work.Wait();
 					}
 				}
 			}
-			finally { if(freePidl) Marshal.FreeCoTaskMem(pidl); }
+			finally { if(freePidl) Marshal.FreeCoTaskMem(pidl2); }
+			GC.KeepAlive(pidl);
 			return R;
 		}
 
 		[HandleProcessCorruptedStateExceptions] //shell extensions may throw
 		static IntPtr _GetShellIcon2(bool isPidl, IntPtr pidl, int size)
 		{
-			IntPtr R = Zero, il = Zero; int index = -1, ilIndex, realSize;
+			IntPtr R = default, il = default; int index = -1, ilIndex, realSize;
 
 			if(size < (realSize = GetShellIconSize(ShellSize.Small)) * 5 / 4) ilIndex = Api.SHIL_SMALL;
 			else if(size < (realSize = GetShellIconSize(ShellSize.Large)) * 5 / 4) ilIndex = Api.SHIL_LARGE;
@@ -325,28 +326,28 @@ namespace Au
 					if(isPidl) fl |= Api.SHGFI_PIDL; else fl |= Api.SHGFI_USEFILEATTRIBUTES;
 					var x = new Api.SHFILEINFO();
 					il = Api.SHGetFileInfo(pidl, 0, ref x, Api.SizeOf(x), fl);
-					if(il != Zero) index = x.iIcon;
+					if(il != default) index = x.iIcon;
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}
 				catch { Debug_.Print("exception"); }
 			}
-			if(index < 0) return Zero;
+			if(index < 0) return default;
 
 			//note: Getting icon from imagelist must be in STA thread too, else fails with some file types.
 			//tested: This part works without locking. Using another lock here makes slower.
 
 			try {
 				if(ilIndex == Api.SHIL_SMALL || ilIndex == Api.SHIL_LARGE || _GetShellImageList(ilIndex, out il)) {
-					//PrintList(il, Util.LibDebug_.GetComObjRefCount(il));
+					//Print(il, Util.LibDebug_.GetComObjRefCount(il));
 					R = Api.ImageList_GetIcon(il, index, 0);
-					if(size != realSize && R != Zero) {
-						//PrintList(size, realSize, index, file);
+					if(size != realSize && R != default) {
+						//Print(size, realSize, index, file);
 						R = Api.CopyImage(R, Api.IMAGE_ICON, size, size, Api.LR_COPYDELETEORG | Api.LR_COPYRETURNORG);
 					}
 				}
 			}
 			catch(Exception e) { Debug_.Print(e.Message); }
-			//finally { if(il != Zero) Marshal.Release(il); }
+			//finally { if(il != default) Marshal.Release(il); }
 			return R;
 		}
 
@@ -354,18 +355,18 @@ namespace Au
 		//Much faster than other shell API.
 		//Also gets correct icon where iextracticon fails and/or shgetfileinfo gets blank document icon, don't know why.
 		//Usually fails only when target does not exist. Then iextracticon also fails, and shgetfileinfo gets blank document icon.
-		//If fails, returns Zero. No exceptions.
+		//If fails, returns default(IntPtr). No exceptions.
 		static IntPtr _GetLnkIcon(string file, int size)
 		{
 			try {
 				using(var x = Shell.Shortcut.Open(file)) {
 					var s = x.GetIconLocation(out int ii); if(s != null) return GetFileIconHandleRaw(s, ii, size);
 					s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
-					//PrintList("need IDList", file);
+					//Print("need IDList", file);
 					using(var pidl = x.TargetPidl) return GetPidlIconHandle(pidl, size);
 				}
 			}
-			catch { return Zero; }
+			catch { return default; }
 		}
 
 		//If size is in enum ShellSize range (<=0), calls GetShellIconSize. If size is invalid, uses nearest valid value.
@@ -451,7 +452,7 @@ namespace Au
 
 		/// <summary>
 		/// Extracts icon directly from file that contains it.
-		/// Returns icon handle. Returns Zero if failed.
+		/// Returns icon handle. Returns default(IntPtr) if failed.
 		/// Later call <see cref="DestroyIconHandle"/> or <see cref="HandleToImage"/>.
 		/// </summary>
 		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
@@ -459,18 +460,18 @@ namespace Au
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static unsafe IntPtr GetFileIconHandleRaw(string file, int index = 0, int size = 16)
 		{
-			if(Empty(file)) return Zero;
+			if(Empty(file)) return default;
 			size = _NormalizeIconSizeParameter(size);
 
 			//We use SHDefExtractIcon because of better quality resizing (although several times slower) which matches shell and imagelist resizing.
 			//With .ico it matches LoadImage speed (without resizing). PrivateExtractIcons is slightly slower.
 
-			IntPtr R = Zero;
+			IntPtr R = default;
 			int hr = Api.SHDefExtractIcon(file, index, 0, &R, null, size);
-			if(hr != 0) return Zero;
+			if(hr != 0) return default;
 			return R;
 
-			//if(Api.PrivateExtractIcons(file, index, size, size, out R, Zero, 1, 0) != 1) return Zero;
+			//if(Api.PrivateExtractIcons(file, index, size, size, out R, default, 1, 0) != 1) return default;
 		}
 
 		/// <summary>
@@ -482,7 +483,7 @@ namespace Au
 		public static unsafe IntPtr GetShellStockIconHandle(Native.SHSTOCKICONID icon, int size)
 		{
 			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
-			if(0 != Api.SHGetStockIconInfo(icon, 0, ref x)) return Zero;
+			if(0 != Api.SHGetStockIconInfo(icon, 0, ref x)) return default;
 			var s = new string(x.szPath);
 			return GetFileIconHandleRaw(s, x.iIcon, size);
 			//CONSIDER: cache. At least exe and document icons; maybe also folder and open folder.
@@ -490,14 +491,14 @@ namespace Au
 
 		/// <summary>
 		/// Gets the first native icon handle of the entry assembly of this appdomain.
-		/// Returns Zero if there are no icons.
+		/// Returns default(IntPtr) if there are no icons.
 		/// It is not an icon from managed resources.
 		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
 		/// </summary>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static IntPtr GetAppIconHandle(int size)
 		{
-			IntPtr hinst = Util.ModuleHandle.OfAppDomainEntryAssembly(); if(hinst == Zero) return Zero;
+			IntPtr hinst = Util.ModuleHandle.OfAppDomainEntryAssembly(); if(hinst == default) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(hinst, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
 
@@ -509,14 +510,14 @@ namespace Au
 
 		/// <summary>
 		/// Gets the first native icon handle of the program file of this process.
-		/// Returns Zero if there are no icons.
+		/// Returns default(IntPtr) if there are no icons.
 		/// It is not an icon from managed resources.
 		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
 		/// </summary>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="ShellSize"/>, cast to int.</param>
 		public static IntPtr GetProcessExeIconHandle(int size)
 		{
-			IntPtr hinst = Util.ModuleHandle.OfProcessExe(); if(hinst == Zero) return Zero;
+			IntPtr hinst = Util.ModuleHandle.OfProcessExe(); if(hinst == default) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(hinst, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
 		}
@@ -531,24 +532,24 @@ namespace Au
 			int nb = Math_.AlignUp(width, 32) / 8 * height;
 			var aAnd = new byte[nb]; for(int i = 0; i < nb; i++) aAnd[i] = 0xff;
 			var aXor = new byte[nb];
-			return Api.CreateIcon(Zero, width, height, 1, 1, aAnd, aXor);
+			return Api.CreateIcon(default, width, height, 1, 1, aAnd, aXor);
 
 			//speed: 5-10 mcs. Faster than CopyImage etc.
 		}
 
 		/// <summary>
 		/// Destroys native icon.
-		/// Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is Zero.
+		/// Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is default.
 		/// </summary>
 		public static void DestroyIconHandle(IntPtr iconHandle)
 		{
-			if(iconHandle != Zero) Api.DestroyIcon(iconHandle);
+			if(iconHandle != default) Api.DestroyIcon(iconHandle);
 		}
 
 		//Rarely used. Better call Api.LoadImage directly.
 		///// <summary>
 		///// Loads cursor from file.
-		///// Returns cursor handle. Returns Zero if failed.
+		///// Returns cursor handle. Returns default(IntPtr) if failed.
 		///// Later call API DestroyCursor.
 		///// </summary>
 		///// <param name="file">.cur or .ani file.</param>
@@ -560,7 +561,7 @@ namespace Au
 		//public static IntPtr GetCursorHandle(string file, int size = 0)
 		//{
 		//	uint fl = Api.LR_LOADFROMFILE; if(size == 0) fl |= Api.LR_DEFAULTSIZE;
-		//	return Api.LoadImage(Zero, normalizesomehow(file), Api.IMAGE_CURSOR, size, size, fl);
+		//	return Api.LoadImage(default, normalizesomehow(file), Api.IMAGE_CURSOR, size, size, fl);
 		//}
 
 		/// <summary>
@@ -607,10 +608,13 @@ namespace Au
 		{
 			/// <summary>file passed to AsyncIcons.Add().</summary>
 			public string file;
+
 			/// <summary>obj passed to AsyncIcons.Add().</summary>
 			public object obj;
-			/// <summary>Icon handle. You can use <see cref="HandleToImage"/> if need Image; else finally call <see cref="DestroyIconHandle"/>. Can be Zero.</summary>
+
+			/// <summary>Icon handle. You can use <see cref="HandleToImage"/> if need Image; else finally call <see cref="DestroyIconHandle"/>. Can be default(IntPtr).</summary>
 			public IntPtr hIcon;
+
 			/// <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
 			//public Image image;
 
@@ -628,12 +632,14 @@ namespace Au
 
 		/// <summary>
 		/// Gets file icons asynchronously.
+		/// </summary>
+		/// <remarks>
 		/// Use to avoid waiting until all icons are extracted before displaying them in a UI (menu etc).
 		/// Instead you show the UI without icons, and then asynchronously receive icons when they are extracted.
 		/// At first call <see cref="Add(string, object)"/> for each file. Then call <see cref="GetAllAsync">GetAllAsync</see>.
-		/// Create a callback function of type <see cref="AsyncCallback"/> and pass its delegate to GetAllAsync.
-		/// </summary>
-		public class AsyncIcons :IDisposable
+		/// Create a callback function of type <see cref="AsyncCallback"/> and pass its delegate to <b>GetAllAsync</b>.
+		/// </remarks>
+		public sealed class AsyncIcons :IDisposable
 		{
 
 			//never mind:
@@ -672,7 +678,7 @@ namespace Au
 
 			/// <summary>
 			/// Starts getting icons of files added with Add().
-			/// After this function returns, icons are asynchronously extracted with <see cref="GetFileIconHandle"/>, and callback called with icon handle (or Zero if failed).
+			/// After this function returns, icons are asynchronously extracted with <see cref="GetFileIconHandle"/>, and callback called with icon handle (or default(IntPtr) if failed).
 			/// The callback is called in this thread. This thread must have a message loop (eg Application.Run()).
 			/// If you'll need more icons, you can call Add() and GetAllAsync() again with the same AsyncIcons instance, even if getting old icons if still not finished.
 			/// </summary>
@@ -762,7 +768,7 @@ namespace Au
 						if(_canceled) {
 							Api.DestroyIcon(k.hIcon);
 						} else {
-							_callback(k, _objCommon, --_counter); //even if hIcon == Zero, it can be useful
+							_callback(k, _objCommon, --_counter); //even if hIcon == default, it can be useful
 							if(_counter == 0) {
 								_host._works.Remove(this);
 								_host = null;
@@ -788,7 +794,7 @@ namespace Au
 					if(_canceled) {
 						Api.DestroyIcon(state.hIcon);
 					} else {
-						_callback(state, _objCommon); //even if hi == Zero, it can be useful
+						_callback(state, _objCommon); //even if hi == default, it can be useful
 						if(--_counter == 0) {
 							if(_onFinished != null) _onFinished(_objCommon);
 							_host._works.Remove(this);
@@ -815,7 +821,7 @@ namespace Au
 					if(_canceled) {
 						Api.DestroyIcon(state.hIcon);
 					} else {
-						_callback(state, _objCommon); //even if hi == Zero, it can be useful
+						_callback(state, _objCommon); //even if hi == default, it can be useful
 						if(--_counter == 0) {
 							if(_onFinished != null) _onFinished(_objCommon);
 							_host._works.Remove(this);
@@ -856,12 +862,11 @@ namespace Au
 			public void Dispose()
 			{
 				Cancel();
+				GC.SuppressFinalize(this);
 			}
 
-			/// <summary>
-			/// 
-			/// </summary>
-			~AsyncIcons() { Dispose(); }
+			///
+			~AsyncIcons() { Cancel(); }
 		}
 
 		/// <summary>
@@ -871,14 +876,13 @@ namespace Au
 		/// <remarks>
 		/// Can be used as static variables.
 		/// </remarks>
-		public class FileIconCache :IDisposable
+		public sealed class FileIconCache :IDisposable
 		{
 			XElement _x;
 			Hashtable _table;
 			string _cacheFile;
 			int _iconSize;
 			bool _dirty;
-			const string _lockString = "8Ljf1bOY7kiDXutQw6O75Q";
 
 			/// <summary>
 			/// Remembers cacheFile and iconSize.
@@ -892,7 +896,7 @@ namespace Au
 			}
 
 			///
-			~FileIconCache() { Dispose(); }
+			~FileIconCache() { SaveCacheFileNow(); }
 
 			/// <summary>
 			/// Calls <see cref="SaveCacheFileNow"/>.
@@ -900,6 +904,7 @@ namespace Au
 			public void Dispose()
 			{
 				SaveCacheFileNow();
+				GC.SuppressFinalize(this);
 			}
 
 			/// <summary>
@@ -909,7 +914,7 @@ namespace Au
 			public void SaveCacheFileNow()
 			{
 				if(_dirty) {
-					lock(_lockString) {
+					lock(this) {
 						if(_dirty) {
 							_dirty = false;
 							_x.Save(_cacheFile);
@@ -923,7 +928,7 @@ namespace Au
 			/// </summary>
 			public void ClearCache()
 			{
-				lock(_lockString) {
+				lock(this) {
 					_dirty = false;
 					Files.Delete(_cacheFile);
 					_x = null;
@@ -963,7 +968,7 @@ namespace Au
 					file = Path_.LibNormalize(file, noExpandEV: true);
 				}
 
-				lock(_lockString) {
+				lock(this) {
 					//is in memory cache?
 					if(_table == null) _table = new Hashtable(StringComparer.OrdinalIgnoreCase);
 					else { var o = _table[file]; if(o != null) return o as Bitmap; }
@@ -1054,10 +1059,10 @@ namespace Au.Types
 			/// <summary>
 			/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
 			/// </summary>
-			DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns Zero.
+			DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns default(IntPtr).
 
 			/// <summary>
-			/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for Zero and null. This is to make whole process as fast as possible.
+			/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for default(IntPtr) and null. This is to make whole process as fast as possible.
 			/// </summary>
 			NeedImage = 128, //rejected because with our menu/toolbar almost always makes slower
 #endif

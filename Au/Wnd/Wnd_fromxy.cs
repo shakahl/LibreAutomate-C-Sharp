@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -39,7 +38,7 @@ namespace Au
 		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
 		/// <remarks>
 		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
-		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <b>RealChildWindowFromPoint</b>. Also does not skip disabled controls. All this is not true with flag Raw.
+		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
 		/// This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
 		/// x and y can be Coord.Reverse etc; cannot be null.
 		/// </remarks>
@@ -155,7 +154,7 @@ namespace Au
 				if(rr.Width * rr.Height > r.Width * r.Height || rr == r) continue; //bigger than R, or equal
 
 				//is R transparent?
-				//PrintList("WM_NCHITTEST", R);
+				//Print("WM_NCHITTEST", R);
 				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Math_.MakeUint(p.X, p.Y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {

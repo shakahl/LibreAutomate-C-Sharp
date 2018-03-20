@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -156,24 +155,25 @@ namespace Aga.Controls.Tree
 			get
 			{
 				var tva = _tn.Tree;
-				var s = Au.Util.LibStringBuilderCache.Acquire();
-				s.Append(_tn.IsLeaf ? "item" : "folder");
-				bool start = false;
-				foreach(var c in tva.NodeControls) {
-					var col = c.ParentColumn;
-					if(col != null && !col.IsVisible) continue;
-					switch(c) {
-					case BaseTextControl t:
-						if(!start) { start = true; continue; } //skip first text, it is used for Name
-						if(col == null) s.AppendFormat(" | {0}", t.GetLabel(_tn));
-						else s.AppendFormat(" | {0}: {1}", col.Header, t.GetLabel(_tn));
-						break;
-					case NodeCheckBox b:
-						s.AppendFormat(" | {0}", b.GetValue(_tn));
-						break;
+				using(new Au.Util.LibStringBuilder(out var b)) {
+					b.Append(_tn.IsLeaf ? "item" : "folder");
+					bool start = false;
+					foreach(var c in tva.NodeControls) {
+						var col = c.ParentColumn;
+						if(col != null && !col.IsVisible) continue;
+						switch(c) {
+						case BaseTextControl t:
+							if(!start) { start = true; continue; } //skip first text, it is used for Name
+							if(col == null) b.AppendFormat(" | {0}", t.GetLabel(_tn));
+							else b.AppendFormat(" | {0}: {1}", col.Header, t.GetLabel(_tn));
+							break;
+						case NodeCheckBox cb:
+							b.AppendFormat(" | {0}", cb.GetValue(_tn));
+							break;
+						}
 					}
+					return b.ToString();
 				}
-				return s.ToStringCached_();
 			}
 		}
 
@@ -286,13 +286,14 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-				var s = Au.Util.LibStringBuilderCache.Acquire();
-				foreach(var col in _tva.Columns) {
-					if(!col.IsVisible) continue;
-					if(s.Length > 0) s.Append(" | ");
-					s.Append(col.Header);
+				using(new Au.Util.LibStringBuilder(out var b)) {
+					foreach(var col in _tva.Columns) {
+						if(!col.IsVisible) continue;
+						if(b.Length > 0) b.Append(" | ");
+						b.Append(col.Header);
+					}
+					return b.ToString();
 				}
-				return s.ToStringCached_();
 			}
 		}
 	}

@@ -83,7 +83,7 @@ static int get_accRole(IAccessible* acc, long elem = 0)
 //Returns L"" if failed. Never null.
 static STR RoleToString(ref VARIANT& role)
 {
-	static const STR s_roles[] = { L"0", L"TITLEBAR", L"MENUBAR", L"SCROLLBAR", L"GRIP", L"SOUND", L"CURSOR", L"CARET", L"ALERT", L"WINDOW", L"CLIENT", L"MENUPOPUP", L"MENUITEM", L"TOOLTIP", L"APPLICATION", L"DOCUMENT", L"PANE", L"CHART", L"DIALOG", L"BORDER", L"GROUPING", L"SEPARATOR", L"TOOLBAR", L"STATUSBAR", L"TABLE", L"COLUMNHEADER", L"ROWHEADER", L"COLUMN", L"ROW", L"CELL", L"LINK", L"HELPBALLOON", L"CHARACTER", L"LIST", L"LISTITEM", L"OUTLINE", L"OUTLINEITEM", L"PAGETAB", L"PROPERTYPAGE", L"INDICATOR", L"GRAPHIC", L"STATICTEXT", L"TEXT", L"PUSHBUTTON", L"CHECKBUTTON", L"RADIOBUTTON", L"COMBOBOX", L"DROPLIST", L"PROGRESSBAR", L"DIAL", L"HOTKEYFIELD", L"SLIDER", L"SPINBUTTON", L"DIAGRAM", L"ANIMATION", L"EQUATION", L"BUTTONDROPDOWN", L"BUTTONMENU", L"BUTTONDROPDOWNGRID", L"WHITESPACE", L"PAGETABLIST", L"CLOCK", L"SPLITBUTTON", L"IPADDRESS", L"OUTLINEBUTTON" };
+	static const STR s_roles[] = { L"0", L"TITLEBAR", L"MENUBAR", L"SCROLLBAR", L"GRIP", L"SOUND", L"CURSOR", L"CARET", L"ALERT", L"WINDOW", L"CLIENT", L"MENUPOPUP", L"MENUITEM", L"TOOLTIP", L"APPLICATION", L"DOCUMENT", L"PANE", L"CHART", L"DIALOG", L"BORDER", L"GROUPING", L"SEPARATOR", L"TOOLBAR", L"STATUSBAR", L"TABLE", L"COLUMNHEADER", L"ROWHEADER", L"COLUMN", L"ROW", L"CELL", L"LINK", L"HELPBALLOON", L"CHARACTER", L"LIST", L"LISTITEM", L"TREE", L"TREEITEM", L"PAGETAB", L"PROPERTYPAGE", L"INDICATOR", L"IMAGE", L"STATICTEXT", L"TEXT", L"BUTTON", L"CHECKBOX", L"RADIOBUTTON", L"COMBOBOX", L"DROPLIST", L"PROGRESSBAR", L"DIAL", L"HOTKEYFIELD", L"SLIDER", L"SPINBUTTON", L"DIAGRAM", L"ANIMATION", L"EQUATION", L"BUTTONDROPDOWN", L"BUTTONMENU", L"BUTTONDROPDOWNGRID", L"WHITESPACE", L"PAGETABLIST", L"CLOCK", L"SPLITBUTTON", L"IPADDRESS", L"TREEBUTTON" };
 	STR R = null; size_t i;
 g1:
 	switch(role.vt) {
@@ -152,7 +152,7 @@ static HRESULT accLocation(out RECT& r, IAccessible* iacc, long elem = 0)
 	return hr;
 }
 
-#if _DEBUG
+#if TRACE
 static void PrintAcc(IAccessible* acc, long elem = 0, int level = 0)
 {
 	_variant_t varRole; int intRole;
@@ -469,7 +469,11 @@ public:
 		VARIANT v[c_nStack];
 		long n = 0;
 		int hr = AccessibleChildren(_parent, 0, c_nStack, v, &n);
-		if(hr < 0) { PRINTHEX(hr); n = 0; } //never noticed
+		if(hr < 0) { //rare
+			n = 0;
+			//PRINTHEX(hr);
+			//ao::PrintAcc(_parent);
+		}
 
 		if(n == c_nStack) { //more children?
 			_parent->get_accChildCount(&n); //note: some objects return 0 or 1, ie < n, and hr is usually 0. Noticed this only in IE, when c_nStack<10.

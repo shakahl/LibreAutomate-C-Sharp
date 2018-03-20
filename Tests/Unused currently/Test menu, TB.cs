@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -40,7 +39,7 @@ public partial class Test
 
 	static void TestAuMenuBig(Control c = null)
 	{
-		//Wait(1);
+		//1.s();
 		var il = _TestCreateImageList();
 
 		//AuMenu.DefaultActivateMenuWindow = true;
@@ -224,7 +223,7 @@ public partial class Test
 			var wo = (Wnd)tb.Owner.Handle;
 			//var wo = (Wnd)tb.Control.Handle;
 			//Print(wo);
-			TaskDialog.Show("td", owner: wo);
+			AuDialog.Show("td", owner: wo);
 			//MessageBox.Show(wo, "txt");
 		};
 		m.Add(tb);
@@ -276,10 +275,10 @@ public partial class Test
 		if(c != null) {
 			//m.ModalAlways = true;
 			m.Show(c, 100, 100);
-			//TaskDialog.Show("");
+			//AuDialog.Show("");
 			//m.Show(c, 200, 200);
 		} else {
-			//Wait(1);
+			//1.s();
 			//Print(1);
 			//Perf.Next();
 			//m.Show(500, 300);
@@ -352,7 +351,7 @@ public partial class Test
 			////Task.Run(() =>
 			////{
 			//	var hi = Files.GetIconHandle(f);
-			//	if(hi != Zero) Api.DestroyIcon(hi);
+			//	if(hi != default) Api.DestroyIcon(hi);
 			//	else Print("no icon: " + f);
 			////});
 		}
@@ -423,7 +422,7 @@ public partial class Test
 		//m.Show(Mouse.X + 10, Mouse.Y);
 
 		//Print(1);
-		//TaskDialog.Show("");
+		//AuDialog.Show("");
 		//Print(2);
 
 		//using(m) { }
@@ -850,7 +849,7 @@ public partial class Test
 
 		//for(int i = 0; i < 1; i++) {
 		//	GC.Collect();
-		//	TaskDialog.Show("f");
+		//	AuDialog.Show("f");
 		//}
 	}
 
@@ -1046,7 +1045,7 @@ public partial class Test
 
 //		//bool topMost = true;
 //		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass2.Name, null,
-//			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
+//			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
 //		Perf.Next();
 
 //#if true
@@ -1139,7 +1138,7 @@ public partial class Test
 	//	Perf.First();
 	//	//bool topMost = true;
 	//	Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass3.Name, null,
-	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
+	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
 	//	Perf.Next();
 
 
@@ -1203,7 +1202,7 @@ public partial class Test
 
 	//	//bool topMost = true;
 	//	Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _WndClassNW.Name, null,
-	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, Zero, 0);
+	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
 	//	Perf.Next();
 	//	w.Show(true);
 	//	//w.ActivateLL();
@@ -1287,7 +1286,7 @@ public partial class Test
 //	{
 
 //		//MessageBox.Show("");
-//		//TaskDialog.Show("");
+//		//AuDialog.Show("");
 
 //		//Thread.Sleep(500);
 //		TestToolbar();
@@ -1304,7 +1303,7 @@ public partial class Test
 //		//t.Join();
 
 //		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
-//		//TaskDialog.Show(""); //active, OK
+//		//AuDialog.Show(""); //active, OK
 
 //		//Form f=new Form();
 //		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK

@@ -342,8 +342,11 @@ numbers must not be changed. */
 /* Types for code units in patterns and subject strings. */
 
 typedef uint8_t  PCRE2_UCHAR8;
+
+//au:
 //typedef uint16_t PCRE2_UCHAR16;
 typedef wchar_t PCRE2_UCHAR16;
+
 typedef uint32_t PCRE2_UCHAR32;
 
 typedef const PCRE2_UCHAR8  *PCRE2_SPTR8;
@@ -545,7 +548,7 @@ PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
     uint32_t, pcre2_match_data *, pcre2_match_context *, int *, PCRE2_SIZE); \
 PCRE2_EXP_DECL int PCRE2_CALL_CONVENTION \
   pcre2_match(const pcre2_code *, PCRE2_SPTR, PCRE2_SIZE, PCRE2_SIZE, \
-    uint32_t, pcre2_match_data *, pcre2_match_context *); \
+    uint32_t, pcre2_match_data *, pcre2_match_context *, int(*callout)(pcre2_callout_block *, void *)); \
 PCRE2_EXP_DECL void PCRE2_CALL_CONVENTION \
   pcre2_match_data_free(pcre2_match_data *); \
 PCRE2_EXP_DECL PCRE2_SPTR PCRE2_CALL_CONVENTION \
@@ -557,6 +560,7 @@ PCRE2_EXP_DECL PCRE2_SIZE PCRE2_CALL_CONVENTION \
 PCRE2_EXP_DECL PCRE2_SIZE PCRE2_CALL_CONVENTION \
   pcre2_get_startchar(pcre2_match_data *);
 
+//au: added pcre2_match parameter: , int(*callout)(pcre2_callout_block *, void *)
 
 /* Convenience functions for handling matched substrings. */
 

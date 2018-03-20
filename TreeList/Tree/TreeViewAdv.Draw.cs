@@ -72,7 +72,7 @@ namespace Aga.Controls.Tree
 				Rectangle rowRect = _rowLayout.GetRowBounds(row);
 				if(rowRect.Bottom + y <= e.ClipRectangle.Top) continue;
 				if(rowRect.Y + y >= e.ClipRectangle.Bottom) break;
-				//PrintList(row, rowRect.Y + y, rowRect.Bottom + y);
+				//Print(row, rowRect.Y + y, rowRect.Bottom + y);
 				DrawRow(e, ref context, row, rowRect);
 			}
 			//Rectangle displayRect = DisplayRectangle;

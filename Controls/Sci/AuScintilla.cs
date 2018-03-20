@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -185,7 +184,7 @@ namespace Au.Controls
 		unsafe void _NotifyCallback(void* cbParam, ref SCNotification n)
 		{
 			var code = n.nmhdr.code;
-			//if(code != NOTIF.SCN_PAINTED) PrintList(code);
+			//if(code != NOTIF.SCN_PAINTED) Print(code);
 			switch(code) {
 			case NOTIF.SCN_MODIFIED:
 				_NotifyModified(ref n);
@@ -201,7 +200,7 @@ namespace Au.Controls
 		{
 			var code = n.modificationType;
 			if((code & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
-			//PrintList(code, n.position);
+			//Print(code, n.position);
 			if(0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
 				bool ins = 0 != (code & MOD.SC_MOD_INSERTTEXT);
 				Images?.LibOnTextChanged(ins, ref n);
@@ -263,16 +262,16 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Scintilla dll path.
-		/// Default is Folders.ThisApp + "SciLexer" + (Ver.Is64BitProcess ? "64" : "32") + ".dll". If you want to change it, call this before creating first control.
+		/// Default is <c>Folders.ThisApp + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
 		/// </summary>
 		public static string SciLexerDllPath
 		{
 			get
 			{
 				if(s_dllPath == null) {
-					s_dllPath = Folders.ThisApp + "SciLexer" + (Ver.Is64BitProcess ? "64" : "32") + ".dll";
+					s_dllPath = Folders.ThisApp + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					if(!Files.ExistsAsFile(s_dllPath)) { //in designer?
-						s_dllPath = @"Q:\app\Au\_\SciLexer" + (Ver.Is64BitProcess ? "64" : "32") + ".dll";
+						s_dllPath = @"Q:\app\Au\_\Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					}
 				}
 				return s_dllPath;

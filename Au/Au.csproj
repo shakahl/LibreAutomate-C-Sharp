@@ -52,6 +52,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -68,6 +70,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\Cpp.cs" />
@@ -80,10 +83,11 @@
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />
     <Compile Include="Automation\Input.Misc.cs" />
-    <Compile Include="Automation\ScreenImage.cs" />
+    <Compile Include="Automation\WinImage.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\OnScreenRect.cs" />
     <Compile Include="Other\Screen_.cs" />
+    <Compile Include="String\Regex_ types.cs" />
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
@@ -101,8 +105,8 @@
     <Compile Include="Common\Exceptions.cs" />
     <Compile Include="Common\Structs.cs" />
     <Compile Include="Files, system\Folders.cs" />
-    <Compile Include="Menus, dialogs\AuToolbar.cs" />
-    <Compile Include="Menus, dialogs\AuMenu.cs" />
+    <Compile Include="Dialog, menu, toolbar\AuToolbar.cs" />
+    <Compile Include="Dialog, menu, toolbar\AuMenu.cs" />
     <Compile Include="Automation\Mouse.cs" />
     <Compile Include="Common\ExtensionMethods.cs" />
     <Compile Include="Common\NoClass.cs" />
@@ -113,7 +117,7 @@
     <Compile Include="Files, system\Process_.cs" />
     <Compile Include="Util\CharPtr.cs" />
     <Compile Include="String\wildcard.cs" />
-    <Compile Include="Menus, dialogs\TaskDialog.cs" />
+    <Compile Include="Dialog, menu, toolbar\AuDialog.cs" />
     <Compile Include="String\Csv.cs" />
     <None Include="packages.config" />
     <None Include="String\excluded\string classes.cs" />

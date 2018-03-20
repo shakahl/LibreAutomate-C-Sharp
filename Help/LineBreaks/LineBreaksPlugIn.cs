@@ -180,12 +180,12 @@ namespace LineBreaks
 
 			var doc = members.OwnerDocument;
 
-			//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:msdn.microsoft.com/en-us/library/windows/desktop+{API}''>{API}</see>
+			//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:msdn.microsoft.com+{API}''>{API}</see>
 			foreach(XmlElement n in members.SelectNodes("member/*//msdn")) {
 				//Print(n.InnerText);
 				var k = doc.CreateElement("see");
 				k.InnerText = n.InnerText;
-				k.SetAttribute("href", "https://www.google.com/search?q=site:msdn.microsoft.com/en-us/library/windows/desktop+" + n.InnerText);
+				k.SetAttribute("href", "https://www.google.com/search?q=site:msdn.microsoft.com+" + n.InnerText);
 				var p = n.ParentNode;
 				p.InsertAfter(k, n);
 				p.RemoveChild(n);

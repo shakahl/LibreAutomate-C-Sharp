@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -179,7 +178,7 @@ namespace Au.Controls
 			var k = new SCROLLINFO(); k.cbSize = Api.SizeOf(k);
 			k.fMask = SIF_TRACKPOS | SIF_POS | SIF_PAGE | SIF_RANGE;
 			GetScrollInfo((Wnd)this, vert, ref k);
-			//PrintList(k.nPos, k.nTrackPos, k.nPage, k.nMax);
+			//Print(k.nPos, k.nTrackPos, k.nPage, k.nMax);
 			int i = k.nPos;
 			switch(code) {
 			case ScrollEventType.ThumbTrack: i = k.nTrackPos; break;

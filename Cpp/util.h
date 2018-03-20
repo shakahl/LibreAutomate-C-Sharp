@@ -4,8 +4,8 @@
 #define ZEROTHIS memset(this, 0, sizeof(*this))
 #define ZEROTHISFROM(member) memset((LPBYTE)this+((LPBYTE)&member-(LPBYTE)this), 0, sizeof(*this)-((LPBYTE)&member-(LPBYTE)this))
 
-//#define PRINT_ALWAYS 1
-#if _DEBUG || PRINT_ALWAYS
+#define TRACE 1 //TODO
+#if TRACE
 
 void Print(STR s);
 void Printf(STR frm, ...);
@@ -52,7 +52,7 @@ inline void PrintComRefCount(IUnknown* u) {
 #define PrintComRefCount __noop
 #endif
 
-#if _DEBUG || PRINT_ALWAYS
+#if TRACE
 
 struct Perf_Inst
 {
@@ -316,7 +316,7 @@ using WNDENUMPROCL = const std::function <bool(HWND c)>;
 BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback);
 HWND FindChildByClassName(HWND w, STR className, bool visible);
 
-#if _DEBUG || PRINT_ALWAYS
+#if TRACE
 void PrintWnd(HWND w);
 #else
 #define PrintWnd __noop

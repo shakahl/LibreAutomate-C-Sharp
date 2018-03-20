@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -81,7 +80,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Wnd.FindOrRun"/>
-		public static int Run(string file, string args = null, SRFlags flags = 0, SRMoreParams more = null)
+		public static int Run(string file, string args = null, SRFlags flags = 0, SRMore more = null)
 		{
 			//TODO: return RunResult object that contains process id or exit code.
 			//	It also contains other info that helps Wnd.Find and WaitFor.WindowActive etc to find correct window.
@@ -95,8 +94,8 @@ namespace Au
 			if(more != null) {
 				more.ProcessHandle = null;
 				x.lpVerb = more.Verb;
-				x.lpDirectory = Path_.ExpandEnvVar(more.CurrentDirectory);
-				if(!more.OwnerWindow.IsNull) x.hwnd = more.OwnerWindow.Wnd.WndWindow;
+				x.lpDirectory = Path_.ExpandEnvVar(more.WorkingDirectory);
+				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Wnd.WndWindow;
 				switch(more.WindowState) {
 				case ProcessWindowStyle.Hidden: x.nShow = Api.SW_HIDE; break;
 				case ProcessWindowStyle.Minimized: x.nShow = Api.SW_SHOWMINIMIZED; break;
@@ -113,7 +112,7 @@ namespace Au
 			if(isShellPath) { //":: HexEncodedITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
 				pidl = Pidl.FromString(file); //does not throw
 				if(pidl != null) {
-					x.lpIDList = pidl;
+					x.lpIDList = pidl.UnsafePtr;
 					x.fMask |= Api.SEE_MASK_INVOKEIDLIST;
 				} else x.lpFile = file;
 			} else {
@@ -137,7 +136,7 @@ namespace Au
 			bool waitForExit = 0 != (flags & SRFlags.WaitForExit);
 			bool callerNeedsHandle = more != null && more.NeedProcessHandle;
 			Process_.LibProcessWaitHandle ph = null;
-			if(x.hProcess != Zero) {
+			if(x.hProcess != default) {
 				if(waitForExit || callerNeedsHandle) ph = new Process_.LibProcessWaitHandle(x.hProcess);
 			}
 
@@ -152,12 +151,12 @@ namespace Au
 					if(callerNeedsHandle) more.ProcessHandle = ph;
 					if(waitForExit) return Api.GetExitCodeProcess(x.hProcess, out var ec) ? (int)ec : 0;
 				}
-				if(x.hProcess != Zero) return Process_.GetProcessId(x.hProcess);
+				if(x.hProcess != default) return Process_.GetProcessId(x.hProcess);
 			}
 			finally {
 				if(!callerNeedsHandle || more.ProcessHandle == null) {
 					if(ph != null) ph.Dispose();
-					else if(x.hProcess != Zero) Api.CloseHandle(x.hProcess);
+					else if(x.hProcess != default) Api.CloseHandle(x.hProcess);
 				}
 			}
 
@@ -174,16 +173,16 @@ namespace Au
 		/// This is useful when you don't care whether Run succeeded, for example in AuMenu menu item command handlers. Using try/catch there would not look good.
 		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
 		/// </summary>
-		/// <seealso cref="Output.Warning"/>
+		/// <seealso cref="PrintWarning"/>
 		/// <seealso cref="AuScriptOptions.DisableWarnings"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRMoreParams more = null)
+		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRMore more = null)
 		{
 			try {
 				return Run(s, args, flags, more);
 			}
 			catch(AuException e) {
-				Output.Warning(e.Message, 1);
+				PrintWarning(e.Message, 1);
 				return int.MinValue;
 			}
 		}
@@ -238,7 +237,7 @@ namespace Au
 		/// Command line arguments.
 		/// This function expands environment variables if starts with "%" or "\"%".
 		/// </param>
-		/// <param name="curDir">Working directory. Default - <see cref="Directory.GetCurrentDirectory"/> of this process.</param>
+		/// <param name="directory">Working directory. Default - <see cref="Directory.GetCurrentDirectory"/> of this process.</param>
 		/// <param name="textEncoding">Text encoding used to convert console's ANSI text to C# Unicode text.</param>
 		/// <exception cref="Win32Exception">Failed, for example file not found.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Process.Start()"/>, <see cref="Process.WaitForExit"/>, <see cref="StreamReader.ReadToEnd"/>.</exception>
@@ -247,13 +246,13 @@ namespace Au
 		/// Uses <see cref="Process.Start()"/>. Does not use Windows shell API.
 		/// See also <see cref="Run"/>.
 		/// </remarks>
-		public static int RunConsole(out string output, string file, string args = null, string curDir = null, Encoding textEncoding = null)
+		public static int RunConsole(out string output, string file, string args = null, string directory = null, Encoding textEncoding = null)
 		{
 			output = null;
 			using(var p = new Process()) {
 				p.StartInfo.FileName = _NormalizeFile(true, file, out _, out _);
 				if(args != null) p.StartInfo.Arguments = Path_.ExpandEnvVar(args);
-				if(curDir != null) p.StartInfo.WorkingDirectory = Path_.ExpandEnvVar(curDir);
+				if(directory != null) p.StartInfo.WorkingDirectory = Path_.ExpandEnvVar(directory);
 				if(textEncoding != null) {
 					p.StartInfo.StandardOutputEncoding = textEncoding;
 					p.StartInfo.StandardErrorEncoding = textEncoding;
@@ -307,7 +306,7 @@ namespace Au
 		{
 			using(var pidl = Pidl.FromString(path)) {
 				if(pidl == null) return false;
-				return 0 == Api.SHOpenFolderAndSelectItems(pidl, 0, null, 0);
+				return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
 			}
 		}
 	}
@@ -337,14 +336,15 @@ namespace Au.Types
 	/// <summary>
 	/// More parameters for <see cref="Shell.Run"/>.
 	/// </summary>
-	public class SRMoreParams
+	public class SRMore
 	{
 		/// <summary>
-		/// Initial "current directory" for the new process.
-		/// If this is not set (null), the function gets parent directory path of the specified file that is to run, if possible (if its full path is specified or found). It's because some incorrectly designed programs look for their files in "current directory", and fail to start if initial "current directory" is not set to the program's directory.
-		/// If this is "" or invalid or the function cannot find full path, the new process will inherit "current directory" of this process.
+		/// Initial working directory for the new process.
+		/// Some programs look for their files in the working directory and fail to start if it is not the program's directory.
+		/// If null (default), the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found).
+		/// If this is "" or invalid or the function cannot find full path, the new process will inherit the curent working directory of this process.
 		/// </summary>
-		public string CurrentDirectory;
+		public string WorkingDirectory;
 
 		/// <summary>
 		/// File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
@@ -353,10 +353,10 @@ namespace Au.Types
 		public string Verb;
 
 		/// <summary>
-		/// A window that may be used as owner window of error message box.
+		/// Owner window for error message boxes.
 		/// Also, new window should be opened on the same screen. However many programs ignore it.
 		/// </summary>
-		public WndOrControl OwnerWindow;
+		public DOwner OwnerWindow;
 
 		/// <summary>
 		/// Preferred window state.
@@ -382,9 +382,9 @@ namespace Au.Types
 		/// Note: WaitHandle is disposable.
 		/// </summary>
 		/// <example>
+		/// This code does the same as Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);
 		/// <code><![CDATA[
-		/// //this code does the same as Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);
-		/// var p = new SRMoreParams() { NeedProcessHandle = true };
+		/// var p = new SRMore() { NeedProcessHandle = true };
 		/// Shell.Run(@"notepad.exe", more: p);
 		/// using(var h = p.ProcessHandle) h?.WaitOne();
 		/// ]]></code>

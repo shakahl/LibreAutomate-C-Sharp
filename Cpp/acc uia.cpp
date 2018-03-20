@@ -116,17 +116,17 @@ public:
 		return ret;
 	}
 
-	STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) { return E_NOTIMPL; }
+	STDMETHODIMP GetTypeInfoCount(UINT* pctinfo) { return E_NOTIMPL; }
 
-	STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) { return E_NOTIMPL; }
+	STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) { return E_NOTIMPL; }
 
-	STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, __RPC__out_ecount_full(cNames) DISPID *rgDispId) { return E_NOTIMPL; }
+	STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, __RPC__out_ecount_full(cNames) DISPID* rgDispId) { return E_NOTIMPL; }
 
-	STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) { return E_NOTIMPL; }
+	STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT *puArgErr) { return E_NOTIMPL; }
 #pragma endregion
 
 #pragma region IAccessible
-	STDMETHODIMP get_accParent(IDispatch **ppdispParent)
+	STDMETHODIMP get_accParent(IDispatch** ppdispParent)
 	{
 		//PRINTS(__FUNCTIONW__);
 		*ppdispParent = null;
@@ -138,13 +138,13 @@ public:
 		return hr;
 	}
 
-	STDMETHODIMP get_accChildCount(long *pcountChildren)
+	STDMETHODIMP get_accChildCount(long* pcountChildren)
 	{
 		//PRINTS(__FUNCTIONW__);
 		//Perf.First();
 		*pcountChildren = 0;
 		HRESULT hr;
-		if(!_children || GetTickCount()- _timeOfChildren>40) {
+		if(!_children || GetTickCount() - _timeOfChildren > 40) {
 			if(_children) _children.Release();
 			hr = _ae->FindAll(TreeScope::TreeScope_Children, CondAll(), &_children);
 			//Printf(L"0x%X %p", hr, _children.p);
@@ -157,7 +157,7 @@ public:
 		return hr;
 	}
 
-	STDMETHODIMP get_accChild(VARIANT varChild, IDispatch **ppdispChild)
+	STDMETHODIMP get_accChild(VARIANT varChild, IDispatch** ppdispChild)
 	{
 		//PRINTS(__FUNCTIONW__);
 		*ppdispChild = null;
@@ -332,7 +332,7 @@ public:
 		STDMETHODIMP Next(ULONG celt, VARIANT * rgVar, ULONG * pCeltFetched)
 		{
 			if(pCeltFetched) *pCeltFetched = 0;
-			for(ULONG i = 0; i<celt; i++, _next++) {
+			for(ULONG i = 0; i < celt; i++, _next++) {
 				if(_next == _count) return 1;
 				IUIAutomationElement* e = null;
 				HRESULT hr = _a->GetElement(_next, &e); if(hr != 0) return hr;
@@ -370,7 +370,7 @@ public:
 				int n; hr = a->get_Length(&n); if(hr != 0) n = 0;
 				if(n == 1) {
 					IUIAutomationElement* e = null;
-					hr=a->GetElement(0, &e);
+					hr = a->GetElement(0, &e);
 					if(hr == 0) {
 						pvarChildren->pdispVal = new UIAccessible(e);
 						pvarChildren->vt = VT_DISPATCH;
@@ -424,7 +424,7 @@ public:
 
 	STDMETHODIMP accNavigate(long navDir, VARIANT varStart, out VARIANT* pvarEndUpAt)
 	{
-		//PrintList("accNavigate", navDir, varStart.vt, varStart.value);
+		//Print("accNavigate", navDir, varStart.vt, varStart.value);
 
 		//WindowFromAccessibleObject (WFAO) at first calls this with an undocumented navDir 10.
 		//	tested: accNavigate(10) for a standard Windows control returns VARIANT(VT_I4, hwnd).
@@ -595,14 +595,14 @@ private:
 					w = (HWND)(LPARAM)p[1];
 					assert(IsWindow(w));
 					if(!IsWindow(w)) w = 0;
+				}
 			}
-		}
 			SafeArrayDestroy(a);
 			return w;
-	}
+		}
 
 		return 0;
-}
+	}
 #endif
 
 #pragma endregion

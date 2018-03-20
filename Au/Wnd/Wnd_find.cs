@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -29,7 +28,7 @@ namespace Au
 		/// These codes are equivalent:
 		/// <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
 		/// <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
-		/// Also can find in a custom list of windows.
+		/// Also can find in a list of windows.
 		/// </summary>
 		public class Finder
 		{
@@ -41,32 +40,65 @@ namespace Au
 			int _processId;
 			int _threadId;
 			Wnd _owner;
+			object _contains;
 
 			/// <summary>
 			/// See <see cref="Wnd.Find"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">
 			/// className is "". To match any, use null.
-			/// programEtc is "" or 0. To match any, use null. Actually this exception is thrown when constructing the WFOwner object (before calling this function), which usually is implicit and therefore it seems like the exception is thrown by this function.
-			/// Invalid wildcard expression ("**options|" or regular expression).
+			/// programEtc is "" or contains an empty/0 value or unknown property. To match any, use null.
+			/// Invalid wildcard expression ("**options " or regular expression).
 			/// </exception>
 			public Finder(
-				string name = null, string className = null, WFOwner programEtc = null,
-				WFFlags flags = 0, Func<Wnd, bool> also = null)
+				string name = null, string className = null, string programEtc = null,
+				WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 			{
 				_name = name;
 				if(className != null) {
 					if(className.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
 					_className = className;
 				}
-				if(programEtc != null) {
-					_program = programEtc.Program; //info: the WFOwner=string operator throws exception if ""
-					_processId = programEtc.Pid;
-					_threadId = programEtc.Tid;
-					_owner = programEtc.Owner;
-				}
+				if(programEtc != null) _ParseProgramEtc(programEtc);
 				_flags = flags;
 				_also = also;
+				if(contains != null) {
+					if(contains is string s) _contains = new Acc.Finder(name: s, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
+					else if(contains is Acc.Finder || contains is ChildFinder || contains is Image) _contains = contains;
+					else throw new ArgumentException("Bad type.", nameof(contains));
+				}
+			}
+
+			void _ParseProgramEtc(string programEtc)
+			{
+				if(programEtc.Length == 0) goto ge1;
+				if(programEtc.IndexOf('\0') < 0 && programEtc.IndexOf('=') < 0) {
+					_program = programEtc;
+					return;
+				}
+				foreach(var t in String_.Segments_(programEtc, "\0")) {
+					t.TrimStart();
+					if(t.StartsWith("program=")) {
+						var k = t.Substring(8);
+						if(k.Length == 0) goto ge1;
+						_program = k;
+					} else if(t.StartsWith("pid=")) {
+						_processId = programEtc.ToInt32_(t.Offset + 4);
+						if(_processId == 0) goto ge2;
+					} else if(t.StartsWith("tid=")) {
+						_threadId = programEtc.ToInt32_(t.Offset + 4);
+						if(_threadId == 0) goto ge2;
+					} else if(t.StartsWith("owner=")) {
+						_owner = (Wnd)(LPARAM)programEtc.ToInt32_(t.Offset + 6);
+						if(_owner.Is0) goto ge2;
+					} else goto ge3;
+
+					//rejected: programPath. Not very useful, 3 times slower, creates much more garbage, and not always can get full path.
+				}
+				return;
+				ge1: throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
+				ge2: throw new ArgumentException("programEtc contains a 0 value.");
+				ge3: throw new ArgumentException("Invalid programEtc.");
 			}
 
 			/// <summary>
@@ -245,6 +277,16 @@ namespace Au
 
 					if(_also != null && !_also(w)) continue;
 
+					if(_contains != null) {
+						bool found = false;
+						switch(_contains) {
+						case Acc.Finder f: found = f.Find(w); break;
+						case ChildFinder f: found = f.Find(w); break;
+						case Image f: found = null != WinImage.Find(w, f, WIFlags.WindowDC); break; //FUTURE: optimize
+						}
+						if(!found) continue;
+					}
+
 					if(getAll != null) {
 						getAll(w);
 						continue;
@@ -276,27 +318,38 @@ namespace Au
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. "" means 'must not have name'.
 		/// </param>
-		/// <param name="className">Window class name.
+		/// <param name="className">
+		/// Window class name.
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "".
 		/// </param>
 		/// <param name="programEtc">
-		/// Depends on type and flags:
-		/// <list type="bullet">
-		/// <item>null - can be any program etc.</item>
-		/// <item>
-		/// string - program file name without ".exe". Cannot be "".
+		/// Program file name without ".exe".
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-		/// </item>
-		/// <item>Wnd - owner window. See <see cref="WndOwner"/>.</item>
-		/// <item>int, uint - process id. See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>.</item>
+		/// null means 'can be any'. Cannot be "". Cannot be path.
+		/// 
+		/// Or a list of the following properties. Format: one or more "name=value", separated with "\0" or "\0 ". Names must match case. Values of string properties are wildcard expressions.
+		/// <list type="bullet">
+		/// <item>"program" - program file name. Example: <c>"program=notepad"</c>. Useful when need multiple properties or when file name contains character '='.</item>
+		/// <item>"pid" - process id. See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>. Example: <c>$"pid={pidVar}"</c>.</item>
+		/// <item>"tid" - thread id. See <see cref="ThreadId"/>, <see cref="Process_.CurrentThreadId"/>. Example: <c>"tid=" + tidVar</c>.</item>
+		/// <item>"owner" - owner window handle. See <see cref="WndOwner"/>. Example: <c>$"owner={w1.Handle}"</c>.</item>
 		/// </list>
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
 		/// Lambda etc callback function to call for each matching window.
 		/// It can evaluate more properties of the window and return true when they match.
-		/// Example: <c>also: t =&gt; t.HasStyle(Native.WS_CAPTION)</c>.
+		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
+		/// </param>
+		/// <param name="contains">
+		/// Text, image or other object in the client area of the window. Depends on type:
+		/// string - name of an accessible object (<see cref="Acc"/>) that must be in the window. Wildcard expression, the same as the <i>name</i> parameter of <see cref="Acc.Find"/>.
+		/// <see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.
+		/// <see cref="Wnd.ChildFinder"/> - arguments for <see cref="Wnd.Child"/>. Defines a child control that must be in the window.
+		/// <see cref="Image"/> or <see cref="Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>. See also <see cref="WinImage.LoadImage"/>.
+		///
+		/// This parameter is evaluated after <paramref name="also"/>.
 		/// </param>
 		/// <remarks>
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
@@ -305,9 +358,8 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// className is "". To match any, use null.
-		/// programEtc is "" or 0. To match any, use null. Actually this exception is thrown when constructing the WFOwner object (before calling this function), which usually is implicit and therefore it seems like the exception is thrown by this function.
-		/// programEtc argument type is not string/Wnd/int/uint/null.
-		/// Invalid wildcard expression ("**options|" or regular expression).
+		/// programEtc is "" or contains an empty/0 value or unknown property. To match any, use null.
+		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
@@ -322,9 +374,11 @@ namespace Au
 		/// </code>
 		/// </example>
 		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
-		public static Wnd Find(string name = null, string className = null, WFOwner programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
+		public static Wnd Find(
+			string name = null, string className = null, string programEtc = null,
+			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
-			var f = new Finder(name, className, programEtc, flags, also);
+			var f = new Finder(name, className, programEtc, flags, also, contains);
 			f.Find();
 			LastFind = f;
 			return f.Result;
@@ -355,9 +409,11 @@ namespace Au
 		/// <remarks>
 		/// The list is sorted to match the Z order, however hidden windows (when using WFFlags.HiddenToo) are always after visible windows.
 		/// </remarks>
-		public static Wnd[] FindAll(string name = null, string className = null, WFOwner programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null)
+		public static Wnd[] FindAll(
+			string name = null, string className = null, string programEtc = null,
+			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
-			var f = new Finder(name, className, programEtc, flags, also);
+			var f = new Finder(name, className, programEtc, flags, also, contains);
 			var a = f.FindAll();
 			LastFind = f;
 			return a;
@@ -403,8 +459,9 @@ namespace Au
 		/// <param name="programEtc"></param>
 		/// <param name="flags"></param>
 		/// <param name="also"></param>
+		/// <param name="contains"></param>
 		/// <param name="run">Callback function's delegate. See example.</param>
-		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="WaitFor.WindowActive(double, string, string, WFOwner, WFFlags, Func{Wnd, bool}, bool)"/>.</param>
+		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="WaitFor.WindowActive(double, string, string, string, WFFlags, Func{Wnd, bool}, object, bool)"/>.</param>
 		/// <param name="needActiveWindow">Finally the window must be active. For more info see the algorithm in Remarks.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <exception cref="TimeoutException">runWaitTimeoutS time has expired.</exception>
@@ -423,10 +480,12 @@ namespace Au
 		/// Print(w);
 		/// ]]></code>
 		/// </example>
-		public static Wnd FindOrRun(string name = null, string className = null, WFOwner programEtc = null, WFFlags flags = 0, Func<Wnd, bool> also = null,
+		public static Wnd FindOrRun(
+			string name = null, string className = null, string programEtc = null,
+			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null,
 			Func<int> run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
-			var w = Find(name, className, programEtc, flags, also);
+			var w = Find(name, className, programEtc, flags, also, contains);
 			if(!w.Is0) {
 				if(needActiveWindow) w.Activate();
 			} else if(run != null) {
@@ -732,77 +791,16 @@ namespace Au.Types
 	[Flags]
 	public enum WFFlags
 	{
-		/// <summary>Can find hidden windows. See <see cref="Wnd.IsVisibleEx"/>.</summary>
-		/// <remarks>Use this carefully. Always use className, not just name, because there are many hidden tooltip windows etc that could match the name.</remarks>
+		/// <summary>
+		/// Can find hidden windows. See <see cref="Wnd.IsVisibleEx"/>.
+		/// Use this carefully. Always use className, not just name, because there are many hidden tooltip windows etc that could match the name.
+		/// </summary>
 		HiddenToo = 1,
 
-		/// <summary>Skip cloaked windows. See <see cref="Wnd.IsCloaked"/>.</summary>
-		/// <remarks>These are windows hidden not in the classic way (Wnd.IsVisible does not detect it, Wnd.IsCloaked detects). For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.</remarks>
+		/// <summary>
+		/// Skip cloaked windows. See <see cref="Wnd.IsCloaked"/>.
+		/// Cloaked are windows hidden not in the classic way, therefore Wnd.IsVisible does not detect it, but Wnd.IsCloaked detects. For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.
+		/// </summary>
 		SkipCloaked = 2,
-
-		//rejected: Not very useful, 3 times slower, creates much more garbage, and not always can get full path.
-		///// <summary>The 'programEtc' argument is full path. Need this flag because the function cannot auto-detect it when using wildcard, regex etc.</summary>
-		//ProgramPath = ,
-	}
-
-	/// <summary>
-	/// Type of programEtc parameter of <see cref="Wnd.Find"/>.
-	/// Can contain one of: program name, process id, thread id, owner window.
-	/// Has implicit conversion from string (program name), int (process id) and Wnd (owner window).
-	/// The static functions allow to set thread id, process id, owner window.
-	/// </summary>
-	public class WFOwner
-	{
-		internal string Program;
-		internal int Pid;
-		internal int Tid;
-		internal Wnd Owner;
-
-		/// <summary>Sets program name. Without full path and ".exe". Returns null if programName is null.</summary>
-		/// <exception cref="ArgumentException">programName is "".</exception>
-		public static implicit operator WFOwner(string programName)
-		{
-			if(programName == null) return null;
-			if(programName.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
-			return new WFOwner() { Program = programName };
-		}
-
-		/// <summary>Sets process id.</summary>
-		/// <exception cref="ArgumentException">processId is 0.</exception>
-		public static implicit operator WFOwner(int processId)
-		{
-			if(processId == 0) throw new ArgumentException("0 process id.");
-			return new WFOwner() { Pid = processId };
-		}
-
-		/// <summary>Sets process id.</summary>
-		/// <exception cref="ArgumentException">processId is 0.</exception>
-		public static WFOwner ProcessId(int processId) => processId;
-
-		/// <summary>Sets process id of this process.</summary>
-		public static WFOwner ThisProcess => Api.GetCurrentProcessId();
-
-		/// <summary>Sets thread id of this thread.</summary>
-		public static WFOwner ThisThread => ThreadId(Api.GetCurrentThreadId());
-
-		/// <summary>Sets thread id.</summary>
-		/// <exception cref="ArgumentException">threadId is 0.</exception>
-		public static WFOwner ThreadId(int threadId)
-		{
-			if(threadId == 0) throw new ArgumentException("0 thread id.");
-			return new WFOwner() { Tid = threadId };
-		}
-
-		/// <summary>Sets owner window.</summary>
-		/// <exception cref="ArgumentException">ownerWindow.Is0 is true.</exception>
-		public static implicit operator WFOwner(Wnd ownerWindow)
-		{
-			if(ownerWindow.Is0) throw new ArgumentException("0 owner window.");
-			return new WFOwner() { Owner = ownerWindow };
-		}
-
-		/// <summary>Sets owner window.</summary>
-		/// <exception cref="ArgumentException">ownerWindow.Is0 is true.</exception>
-		public static WFOwner OwnerWindow(Wnd ownerWindow) => ownerWindow;
 	}
 }

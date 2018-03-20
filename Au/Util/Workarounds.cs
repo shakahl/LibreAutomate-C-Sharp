@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -44,7 +43,7 @@ namespace Au.Util
 			if(_workaroundWaitCursor) return; _workaroundWaitCursor = true;
 			var onceInProcess = &LibProcessMemory.Ptr->workarounds.doneWaitCursorWhenShowingMenuEtc;
 			if(*onceInProcess) return; *onceInProcess = true;
-			//PrintList("workaround", AppDomain.CurrentDomain.Id);
+			//Print("workaround", AppDomain.CurrentDomain.Id);
 
 			//Print(Api.GetActiveWindow());
 			if(Wnd.WndActive.IsOfThisProcess) return;
@@ -61,7 +60,7 @@ namespace Au.Util
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
 			ThreadStart d = () =>
 			{
-				Wnd w = Api.CreateWindowEx(Native.WS_EX_NOACTIVATE, "#32770", null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message, 0, Zero, 0);
+				Wnd w = Api.CreateWindowEx(Native.WS_EX_NOACTIVATE, "#32770", null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message, 0, default, 0);
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
@@ -105,7 +104,7 @@ namespace Au.Util
 
 		static bool IsContextActive()
 		{
-			IntPtr current = IntPtr.Zero;
+			IntPtr current = default;
 
 			if(_contextCreationSucceeded && Api.GetCurrentActCtx(out current)) {
 				return current == _hActCtx;
@@ -115,11 +114,11 @@ namespace Au.Util
 
 		internal static IntPtr Activate()
 		{
-			IntPtr R = IntPtr.Zero;
+			IntPtr R = default;
 
 			if(_contextCreationSucceeded) {
 				if(!IsContextActive()) {
-					if(!Api.ActivateActCtx(_hActCtx, out R)) R = IntPtr.Zero;
+					if(!Api.ActivateActCtx(_hActCtx, out R)) R = default;
 				}
 			}
 
@@ -128,7 +127,7 @@ namespace Au.Util
 
 		internal static void Deactivate(IntPtr userCookie)
 		{
-			if(userCookie != IntPtr.Zero) Api.DeactivateActCtx(0, userCookie);
+			if(userCookie != default) Api.DeactivateActCtx(0, userCookie);
 		}
 	}
 

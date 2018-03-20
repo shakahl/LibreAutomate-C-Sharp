@@ -64,6 +64,10 @@ long s_nAgentThreads; //how many threads in this process have our agent window
 ATOM s_agentWindowClassAtom;
 thread_local HWND t_agentWnd;
 }
+namespace outproc
+{
+void HwndTidCache_OnThreadDetach();
+}
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -82,6 +86,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 		//Printf(L"T-  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
 		HWND wAgent = inproc::t_agentWnd;
 		if(wAgent) DestroyWindow(wAgent);
+		outproc::HwndTidCache_OnThreadDetach();
 		break;
 	}
 	return TRUE;
@@ -99,7 +104,6 @@ HRESULT AccEnableChrome2(MarshalParams_AccElem* p);
 //Our hook of get_accHelpTopic.
 HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sResult, VARIANT vParams, long* pMagic)
 {
-	//Print("Hook_get_accHelpTopic"); //TODO
 	if(vParams.vt == VT_BSTR) {
 		//try {
 		auto size = SysStringByteLen(vParams.bstrVal);
@@ -401,14 +405,31 @@ public:
 	//	//	Print(2);
 	//	//}
 	//}
-	//FUTURE: release _iaccAgent. Now the dtor is disabled because of this problem:
+	//SHOULDDO: release _iaccAgent always. Now dtor is disabled because of this problem:
 	//	Release hangs.
 	//	Conditions:
 	//		Win7 (tested only on the virtual PC).
-	//		.NET primary STA thread. Only when primary, only when STA.
+	//		.NET primary STA thread. Only when primary, only when STA, only of primary appdomain.
 	//	Possible reasons (I guess):
-	//		.NET uninitializes COM before the dtor.
-	//		The dtor is called while unloading this dll.
+	//		dtor is called while unloading this dll.
+	//		.NET uninitializes COM before dtor is called.
+
+	//this is a workaround for the above problem.
+	//called on DLL_THREAD_DETACH, which is not called for the primary thread.
+	//now we will not have memory leaks in most cases, and in other cases it is not so important.
+	void OnThreadDetach()
+	{
+		if(_iaccAgent) {
+			//Print(1);
+			_iaccAgent->Release();
+			//Print(2);
+			_iaccAgent = null;
+		}
+	}
+	//is dtor always called? No. Eg not called for threadpool threads. Called for the primary thread and for threads that end before the process ends.
+	//~HwndTidCache() {
+	//	if(_iaccAgent) Printf(L"dtor, %i", GetCurrentThreadId());
+	//}
 
 	bool Get(DWORD tid, out HWND& w, out IAccessible** iaccAgent = null)
 	{
@@ -432,6 +453,13 @@ public:
 	}
 };
 
+thread_local HwndTidCache t_agentCache, t_failedCache;
+
+void HwndTidCache_OnThreadDetach()
+{
+	t_agentCache.OnThreadDetach();
+}
+
 //Finds agent window and gets its AO.
 //If dll still not injected, injects and creates agent window.
 //w - a window in the target process/thread.
@@ -444,7 +472,6 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	DWORD pid, tid = GetWindowThreadProcessId(w, &pid); if(tid == 0) return (HRESULT)eError::WindowClosed;
 
 	//use a simple cache to make faster, for example when waiting for AO in w
-	static thread_local HwndTidCache t_agentCache, t_failedCache;
 	if(t_agentCache.Get(tid, out wa, out &iaccAgent)) {
 		if(wAgent) *wAgent = wa;
 		return 0;

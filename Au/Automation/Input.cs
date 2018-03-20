@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -23,7 +22,7 @@ using static Au.NoClass;
 
 namespace Au
 {
-	public static partial class Input
+	public partial class Input
 	{
 		/// <summary>
 		/// Returns true if Alt key is pressed.
@@ -104,35 +103,92 @@ namespace Au
 			//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.
 		}
 
+		/// <summary>
+		/// This static <see cref="Input"/> instance is used by the static 'send keys' functions - <see cref="NoClass.Key"/>, <see cref="NoClass.Text"/>, <see cref="NoClass.Paste"/> and similar.
+		/// Use it to set options for these functions, for example at the start of your script or in the static constructor of script's class. See the first example.
+		/// Not used by other Input instances. See the second example.
+		/// </summary>
+		/// <example>
+		/// Use static functions.
+		/// <code><![CDATA[
+		/// Input.Common.SleepAfter = 100;
+		/// ...
+		/// Key("Tab Ctrl+V");
+		/// ]]></code>
+		/// Use an Input instance.
+		/// <code><![CDATA[
+		/// var k = new Input();
+		/// k.SleepAfter = 200;
+		/// k.Key("Tab Ctrl+V");
+		/// ]]></code>
+		/// </example>
+		public static Input Common => s_common;
+		static Input s_common = new Input();
 
-		public static void Key(params string[] keys)
+		/// <summary>
+		/// Wait milliseconds after sending each key down and up event.
+		/// Default: 0. Valid values: 0 - 1000 (1 second).
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <remarks>
+		/// If 0 (default), just sleeps briefly after some keys.
+		/// </remarks>
+		public int SleepIn
+		{
+			get => _sleepIn;
+			set => _sleepIn = ((uint)value <= 1000) ? value : throw new ArgumentOutOfRangeException(null, "0-1000");
+		}
+		int _sleepIn;
+
+		/// <summary>
+		/// Wait milliseconds when all keys have been sent (before the function returns).
+		/// Default: 50. Valid values: 0 - 5000 (5 seconds).
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public int SleepAfter
+		{
+			get => _sleepAfter;
+			set => _sleepAfter = ((uint)value <= 5000) ? value : throw new ArgumentOutOfRangeException(null, "0-5000");
+		}
+		int _sleepAfter = 50;
+
+		void _KeyText(bool isText, params object[] p)
 		{
 
 		}
-		//better name would be Keys, but it conflicts with the .NET Forms Keys enum that is used in this class and everywhere.
-		//	The WPF Key enum is rarely used.
-		//	Anyway, in scripts everybody will use the alias K().
 
-		//idea: params object[] keys. Then the last parameter can be eg AuScriptOptions.
-
-		//maybe better this, not params? More clear how to use it.
-		public static void Key(string keys, string text = null, string keys2 = null, string text2 = null, string keys3 = null, string text3 = null, string keys4 = null, string text4 = null)
+		public void Key(params object[] keys)
 		{
-
+			_KeyText(false, keys);
 		}
+		//Example:
+		//Key("keys", "text", "keys", "text", 500, "keys", "text", Keys.Back)
+		//Text sending method: in 'text' parts use 'VK_PACKET; in 'keys' parts use key codes and explicit Shift.
+		//rejected, because rarely used, and we have Text/Paste:
+		//	Key("keys Text", "text using keys and Shift", "keys Paste", "text using paste").
+		//	Key(new KeyOptions(usePaste: true), "keys", "text").
+		//	Key(KFlags.Paste, "keys", "text").
 
-		public static void Text(params string[] text)
+		public void Text(string text, string keys = null)
 		{
-
+			_KeyText(true, null, text, keys);
 		}
-		//note:
-		//	Don't use the hybrid option. In many apps sending keys for text snippets etc is too slow, better to paste always.
-		//	Then probably don't need Text(). In that rare cases when need, can use Keys("", "text");
+		//Text sending method: 'VK_PACKET; other overload allows to specify any method.
 
-		//public static void Text(AuScriptOptions options, params string[] text)
+		//public void Text(KeyOptions options, string text, string keys = null)
 		//{
 		//
 		//}
+
+		//public class KeyOptions:
+		//Allows to specify how to send text: VK_PACKET, Shift+keys, paste, WM_CHAR/WM_UNICHAR.
+		//	Can be different for different windows; can use callback for it.
+
+		//CONSIDER:
+		//Let Text() in 'paste' mode use Enter for the last newline if text ends with newline.
+		//Eg these apps remove the ending newline when pasting: Word, Wordpad, OpenOffice, LibreOffice.
+		//Don't use this for Paste().
+		//Try to use VK_PACKET, because Enter may close dialog.
 
 		//public class KeysToSend
 		//{
@@ -149,27 +205,39 @@ namespace Au
 
 		//}
 
-		//public static KeysToSend K => new KeysToSend();
-
-		public static void Paste(string text)
-		{
-			if(text == null) return;
-		}
-
-
-		public static void KeyAndPaste(params string[] keys)
+		public void Paste(string text, string keys = null)
 		{
 
 		}
 
-
-		public static void PasteAndKey(params string[] keys)
+		public void Paste(Wnd w, string text, string keys = null)
 		{
 
 		}
 
+		public void PasteFormat(string text, string format, string keys = null)
+		{
 
-		static void Test()
+		}
+
+		public void PasteFormat(Wnd w, string text, string format = null, string keys = null)
+		{
+
+		}
+
+		public string Copy(bool cut = false, string format = null)
+		{
+			return null;
+		}
+
+		public string Copy(Wnd w, bool cut = false, string format = null)
+		{
+			return null;
+		}
+
+		//public static void FocusPasswordField() //use instead of AutoPassword: FocusPasswordField(); Text(password, "Tab"); Text(user, "Enter");
+
+		void Test()
 		{
 			//Key("text", K.Ctrl.A.Tab.Execute(9).Enter);
 		}

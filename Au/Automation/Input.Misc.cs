@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -27,7 +26,7 @@ namespace Au
 	/// Keyboard and clipboard functions.
 	/// </summary>
 	//[DebuggerStepThrough]
-	public static partial class Input
+	public partial class Input
 	{
 		class _KeyFunc
 		{
@@ -39,6 +38,7 @@ namespace Au
 			/// Example: "Ctrl+" ... Mouse.Click() //Ctrl auto-released here.
 			/// </summary>
 			public static Keys Plus => (Keys)0x1000000;
+
 			/// <summary>
 			/// * operator.
 			/// 1. Repeats the preceding key.
@@ -47,39 +47,49 @@ namespace Au
 			/// Example: "Ctrl*down" ... "Ctrl*up".
 			/// </summary>
 			public static Keys Star => (Keys)0x2000000;
+
 			/// <summary>
 			/// ( operator.
 			/// 1. Encloses function arguments.
-			/// Example: WAIT(0.5).
+			/// Example: SLEEP(500).
 			/// 2. Turns off auto-releasing keys pressed with operator +, until ")".
 			/// Example: "Alt+(F O) ...".
 			/// Example: "Ctrl+(" ... Mouse.Click(); Mouse.Click(); ... ")" //Ctrl released here.
 			/// </summary>
 			public static Keys ParenStart => (Keys)0x3000000;
+
 			/// <summary>
 			/// ) operator.
 			/// Releases keys pressed with operator +, when auto-releasing was turned off with operator (. See <see cref="ParenStart"/>.
 			/// </summary>
 			public static Keys ParenEnd => (Keys)0x4000000;
-			/// <summary>
-			/// VK(vk, sc=0, ext=0)
-			/// Sends key specified as virtual-key code and/or scan code.
-			/// vk - virtual-key code.
-			/// sc - optional scan code.
-			/// ext - optional flags: 1 extended key. </summary>
-			public static Keys VK => (Keys)0x5000000;
-			/// <summary>
-			/// CHAR(c)
-			/// Sends a character using VK_PACKET.
-			/// c - Unicode character code.
-			/// </summary>
-			public static Keys CHAR => (Keys)0x6000000;
-			/// <summary>
-			/// SLEEP(t)
-			/// Waits.
-			/// t - number of milliseconds, eg 100. </summary>
-			public static Keys SLEEP => (Keys)0x8000000;
 
+			//rejected: use parameter types instead: next string = VK_PACKET, int = sleep ms, Keys = VK, etc
+			///// <summary>
+			///// VK(vk, sc=0, ext=0)
+			///// Sends key specified as virtual-key code and/or scan code.
+			///// vk - virtual-key code.
+			///// sc - optional scan code.
+			///// ext - optional flags: 1 extended key. </summary>
+			//public static Keys VK => (Keys)0x5000000;
+
+			///// <summary>
+			///// CHAR(c)
+			///// Sends a character using VK_PACKET.
+			///// c - Unicode character code.
+			///// </summary>
+			//public static Keys CHAR => (Keys)0x6000000;
+
+			///// <summary>
+			///// SLEEP(t)
+			///// Waits.
+			///// t - number of milliseconds, eg 100. </summary>
+			//public static Keys SLEEP => (Keys)0x8000000;
+
+			//TODO:
+			//bool parameter - true to use clipboard (paste text), false (default) to use keyboard.
+			//	For Text(), the default depends on Input.TextOptions, which can specify to use paste with all or some windows, maybe using a predicate.
+			//	Or/and use parameter type Input.TextOptions (or KOptions).
 		}
 
 		/// <summary>
@@ -287,12 +297,19 @@ namespace Au
 				case "Num9": return Keys.NumPad9;
 				case "NumEnter": return Keys_.NumEnter; //extended-key
 				case "NumLock": case "NumLk": return Keys.NumLock;
-				case "Num.": case "Decimal": return Keys.Decimal; //GetKeyNameText gives "Num Del"
-				case "Add": return Keys.Add;
-				//case "Num+": return Keys.Add; //+ is an operator
-				case "Divide": return Keys.Divide;
-				case "Multiply": return Keys.Multiply;
-				case "Subtract": return Keys.Subtract;
+				case "Num.": return Keys.Decimal; //GetKeyNameText gives "Num Del"
+				case "Num+": return Keys.Add; //+ is operator, but Num alone is not a key, just more difficult to parse.
+				case "Num/": return Keys.Divide;
+				case "Num*": return Keys.Multiply;
+				case "Num-": return Keys.Subtract;
+				//case "Decimal": return Keys.Decimal; //GetKeyNameText gives "Num Del"
+				//case "Add": return Keys.Add; //+ is operator, but Num alone is not a key, just more difficult to parse.
+				//case "Divide": return Keys.Divide;
+				//case "Multiply": return Keys.Multiply;
+				//case "Subtract": return Keys.Subtract;
+				//CONSIDER: for numpad keys use #: #0 - #9 #Enter #Lock #. #+ #/ #* #-. Even can be without spaces: "#5#+#6=#1#1". But more clear if "#5 #+ #6 = #1 #1".
+				//CONSIDER: allow + etc with numpad keys: N0 - N9 NEnter NLock N. N+ N/ N* N-. Cannot use N because eg N* is ambiguous. Can resolve anyway: "N* 5" vs "N*5"; "N+ 5" vs "N+5". But no, then difficult to read.
+				//CONSIDER: because the symbol key row is reserved, now need to use 1 - 0. Also allow ~~ - ~+, if it is more readable. But no, these symbols are different on keyboards.
 
 				//browser, multimedia, launch, sleep
 				case "BrowserBack": return Keys.BrowserBack;
@@ -314,6 +331,7 @@ namespace Au
 				case "VolumeMute": return Keys.VolumeMute;
 				case "VolumeUp": return Keys.VolumeUp;
 				case "Sleep": return Keys.Sleep;
+				//CONSIDER: don't support these keys. Difficult to remember etc. Can use Key(Keys.BrowserBack). But need that all functions support it.
 				}
 				return 0;
 			}

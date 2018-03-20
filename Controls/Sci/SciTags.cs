@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -189,7 +188,7 @@ namespace Au.Controls
 			//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.
 
 			string s = null;
-			StringBuilder sb = null;
+			StringBuilder b = null;
 			bool hasTags = false, hasTagsPrev = false;
 			//Output.DebugWriteToQM2(OutputServer.Messages.Count.ToString());
 			while(os.Messages.TryDequeue(out var m)) {
@@ -198,37 +197,37 @@ namespace Au.Controls
 				case Output.Server.MessageType.Clear:
 					_c.ST.ClearText();
 					s = null;
-					sb?.Clear();
+					b?.Clear();
 					break;
 				case Output.Server.MessageType.Write:
 					if(s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.StartsWith_("<>");
 					} else {
-						if(sb == null) sb = new StringBuilder();
-						if(sb.Length == 0) sb.Append(s);
+						if(b == null) b = new StringBuilder();
+						if(b.Length == 0) b.Append(s);
 
 						s = m.Text;
 
 						bool hasTagsThis = m.Text.StartsWith_("<>");
-						if(hasTagsThis && !hasTags) { hasTags = true; sb.Insert(0, "<\x15\x0\x4"); }
+						if(hasTagsThis && !hasTags) { hasTags = true; b.Insert(0, "<\x15\x0\x4"); }
 
 						if(!hasTags) {
-							sb.Append("\r\n");
+							b.Append("\r\n");
 						} else if(hasTagsThis) {
-							sb.Append("\r\n<\x15\x0\x4");
+							b.Append("\r\n<\x15\x0\x4");
 							//info: add "\r\n" here, not later, because later it would make more difficult <Z> tag
 						} else {
-							sb.Append(hasTagsPrev ? "\r\n<\x15\x0\x4" : "\r\n");
+							b.Append(hasTagsPrev ? "\r\n<\x15\x0\x4" : "\r\n");
 						}
-						sb.Append(s);
+						b.Append(s);
 						hasTagsPrev = hasTagsThis;
 					}
 					break;
 				}
 			}
 			if(s == null) return; //0 messages, or the last message is Clear
-			if(sb != null && sb.Length > 0) s = sb.ToString();
+			if(b != null && b.Length > 0) s = b.ToString();
 
 			//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
 
@@ -653,12 +652,11 @@ namespace Au.Controls
 			}
 			//get text <tag>LinkText
 			var s = _t.RangeText(iTag, pos);
-			//PrintList(iTag, iText, pos, s);
+			//Print(iTag, iText, pos, s);
 			//get tag, attribute and text
-			var m = s.RegexMatch_(@"(?s)^<(\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)"); if(!m.Success) return;
-			var g = m.Groups;
-			string tag = g[1].Value, attr = g[2].Success ? g[2].Value : (g[3].Success ? g[3].Value : g[4].Value);
-			//Print($"'{tag}'  '{attr}'  '{g[4].Value}'");
+			if(!s.RegexMatch_(@"(?s)^<(\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
+			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
+			//Print($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
 			//process it async, because bad things happen if now we remove focus or change control text etc
 			_c.BeginInvoke(new Action(() => _OnLinkClick(tag, attr)));
@@ -686,7 +684,7 @@ namespace Au.Controls
 				Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "dialog":
-				TaskDialog.Show(one ? null : s1, one ? s1 : s2, owner: _c);
+				AuDialog.Show(one ? null : s1, one ? s1 : s2, owner: _c);
 				break;
 			case "print":
 				Print(attr);
@@ -697,7 +695,7 @@ namespace Au.Controls
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '_' (others are displayed as text).
-				if(Options.Debug) TaskDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
+				if(Options.Debug) AuDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
 		}

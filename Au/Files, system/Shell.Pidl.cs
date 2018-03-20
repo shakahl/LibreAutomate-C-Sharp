@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -34,14 +33,30 @@ namespace Au
 		/// <remarks>
 		/// When calling shell API, virtual objects can be identified only by ITEMIDLIST. Some API also support "parsing name", which usually looks like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST. URLs can be identified by URL as well as by ITEMIDLIST.
 		/// </remarks>
-		public unsafe class Pidl :IDisposable
+		public unsafe sealed class Pidl :IDisposable
 		{
 			IntPtr _pidl;
 
 			/// <summary>
 			/// Gets the ITEMIDLIST pointer (PIDL).
 			/// </summary>
-			public static implicit operator IntPtr(Pidl pidl) { return (pidl == null) ? Zero : pidl._pidl; }
+			/// <remarks>
+			/// The ITEMIDLIST memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
+			/// </remarks>
+			public IntPtr UnsafePtr => _pidl;
+
+			/// <summary>
+			/// Gets the ITEMIDLIST pointer (PIDL).
+			/// </summary>
+			/// <remarks>
+			/// Use to pass to API where the parameter type is HandlePtr. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
+			/// </remarks>
+			public HandleRef HandleRef => new HandleRef(this, _pidl);
+
+			/// <summary>
+			/// Returns true if the PIDL is default(IntPtr).
+			/// </summary>
+			public bool IsNull => _pidl == default;
 
 			/// <summary>
 			/// Assigns an ITEMIDLIST to this variable.
@@ -51,33 +66,35 @@ namespace Au
 			/// It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc.
 			/// This variable will finally free it with Marshal.FreeCoTaskMem.
 			/// </param>
-			public Pidl(IntPtr pidl)
-			{
-				_pidl = pidl;
-			}
+			public Pidl(IntPtr pidl) => _pidl = pidl;
 
 			/// <summary>
 			/// Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
 			/// </summary>
 			public void Dispose()
 			{
-				if(_pidl != Zero) {
+				_Dispose();
+				GC.SuppressFinalize(this);
+			}
+
+			void _Dispose()
+			{
+				if(_pidl != default) {
 					Marshal.FreeCoTaskMem(_pidl);
-					_pidl = Zero;
-					GC.SuppressFinalize(this);
+					_pidl = default;
 				}
 			}
 
 			///
-			~Pidl() { Dispose(); }
+			~Pidl() { _Dispose(); }
 
 			/// <summary>
-			/// Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it you can use Marshal.FreeCoTaskMem.
+			/// Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.
 			/// </summary>
 			public IntPtr Detach()
 			{
 				var R = _pidl;
-				_pidl = Zero;
+				_pidl = default;
 				return R;
 			}
 
@@ -96,7 +113,7 @@ namespace Au
 			public static Pidl FromString(string s, bool throwIfFailed = false)
 			{
 				IntPtr R = LibFromString(s, throwIfFailed);
-				return (R == Zero) ? null : new Pidl(R);
+				return (R == default) ? null : new Pidl(R);
 			}
 
 			/// <summary>
@@ -116,10 +133,10 @@ namespace Au
 					n = Convert_.HexDecode(s, b, n, 3);
 					b[n] = b[n + 1] = 0;
 				} else { //file-system path or URL or shell object parsing name
-					var hr = Api.SHParseDisplayName(s, Zero, out R, 0, null);
+					var hr = Api.SHParseDisplayName(s, default, out R, 0, null);
 					if(hr != 0) {
 						if(throwIfFailed) throw new AuException(hr);
-						return Zero;
+						return default;
 					}
 				}
 				return R;
@@ -145,7 +162,9 @@ namespace Au
 			/// </remarks>
 			public string ToShellString(Native.SIGDN stringType, bool throwIfFailed = false)
 			{
-				return LibToShellString(_pidl, stringType, throwIfFailed);
+				var R = LibToShellString(_pidl, stringType, throwIfFailed);
+				GC.KeepAlive(this);
+				return R;
 			}
 
 			/// <summary>
@@ -153,7 +172,7 @@ namespace Au
 			/// </summary>
 			internal static string LibToShellString(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
 			{
-				if(pidl == Zero) return null;
+				if(pidl == default) return null;
 				var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
 				if(hr == 0) return R;
 				if(throwIfFailed) throw new AuException(hr);
@@ -167,7 +186,9 @@ namespace Au
 			/// </summary>
 			public override string ToString()
 			{
-				return LibToString(_pidl);
+				var R = LibToString(_pidl);
+				GC.KeepAlive(this);
+				return R;
 			}
 
 #if true
@@ -176,10 +197,10 @@ namespace Au
 			/// </summary>
 			internal static string LibToString(IntPtr pidl)
 			{
-				if(pidl == Zero) return null;
+				if(pidl == default) return null;
 				Api.IShellItem si = null;
 				try {
-					if(0 == Api.SHCreateShellItem(Zero, null, pidl, out si)) {
+					if(0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
 						//if(0 == Api.SHCreateItemFromIDList(pidl, ref Api.IID_IShellItem, out si)) { //same speed
 						//if(si.GetAttributes(0xffffffff, out uint attr)>=0) PrintHex(attr);
 						if(si.GetAttributes(Api.SFGAO_BROWSABLE | Api.SFGAO_FILESYSTEM, out uint attr) >= 0 && attr != 0) {
@@ -197,7 +218,7 @@ namespace Au
 			//this version works, but with virtual objects 2 times slower than SIGDN_DESKTOPABSOLUTEPARSING (which already is very slow with virtual).
 			public static string ToString2(IntPtr pidl)
 			{
-				if(pidl == Zero) return null;
+				if(pidl == default) return null;
 				var R = ToShellString2(pidl, Native.SIGDN.SIGDN_FILESYSPATH);
 				if(R == null) R = ToShellString2(pidl, Native.SIGDN.SIGDN_URL);
 				if(R == null) R = ToHexString2(pidl);
@@ -207,11 +228,11 @@ namespace Au
 			//this version works, but with virtual objects 30% slower. Also 30% slower for non-virtual objects (why?).
 			public static string ToString2(IntPtr pidl)
 			{
-				if(pidl == Zero) return null;
+				if(pidl == default) return null;
 
 				Api.IShellItem si = null;
 				try {
-					if(0 == Api.SHCreateShellItem(Zero, null, pidl, out si)) {
+					if(0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
 						string R = null;
 						if(0 == si.GetDisplayName(Native.SIGDN.SIGDN_FILESYSPATH, out R)) return R;
 						if(0 == si.GetDisplayName(Native.SIGDN.SIGDN_URL, out R)) return R;
@@ -232,7 +253,9 @@ namespace Au
 			/// </summary>
 			public string ToHexString()
 			{
-				return LibToHexString(_pidl);
+				var R = LibToHexString(_pidl);
+				GC.KeepAlive(this);
+				return R;
 			}
 
 			/// <summary>
@@ -240,7 +263,7 @@ namespace Au
 			/// </summary>
 			internal static string LibToHexString(IntPtr pidl)
 			{
-				if(pidl == Zero) return null;
+				if(pidl == default) return null;
 				int n = Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)
 				if(n < 0) return null;
 				if(n == 0) return ":: "; //shell root - Desktop

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -48,6 +47,7 @@ namespace Au.Tools
 		string _sWndVar;
 		Timer_ _timer;
 		OnScreenRect _osr;
+		CommonInfos _commonInfos;
 
 		public Form_Acc(Acc acc = null)
 		{
@@ -128,8 +128,7 @@ namespace Au.Tools
 		void _SetWindow()
 		{
 			var b = new StringBuilder("var ");
-			b.Append(_sWndVar ?? "w");
-			b.Append(" = +Wnd.Find(");
+			b.Append(_sWndVar ?? "w").Append(" = +Wnd.Find(");
 
 			var s = _wnd.Name;
 			_AppendString(b, s, noComma: true);
@@ -157,7 +156,7 @@ namespace Au.Tools
 			if(_noeventWndTextChanged) return;
 			var s = (sender as TextBox).Text;
 			if(Empty(s)) return;
-			if(s.RegexIndexOf_(@"^(?:Wnd|var) +(\w+) *=", out string w, 1) < 0) return;
+			if(!s.RegexMatch_(@"^(?:Wnd|var) +(\w+) *=", 1, out var w)) return;
 			if(w != _sWndVar) {
 				_sWndVar = w;
 				_OnGridChanged();
@@ -182,27 +181,27 @@ namespace Au.Tools
 			var role = p.Role; if(isWeb) role = "web:" + role;
 			_AddIfNotEmpty("role", role, true, false, info: c_infoRole);
 			//CONSIDER: path too. But maybe don't encourage, because then the code depends on window/page structure.
-			bool noName = !_AddIfNotEmpty("name", p.Name, true, true, info: _MakeInfoWildex("Name"));
-			if(_AddIfNotEmpty("uiaid", p.UiaId, noName, true, info: _MakeInfoWildex("UIA AutomationId"))) noName = false;
+			bool noName = !_AddIfNotEmpty("name", p.Name, true, true, info: "Name.$");
+			if(_AddIfNotEmpty("uiaid", p.UiaId, noName, true, info: "UIA AutomationId.$")) noName = false;
 
 			//control
 			if(!isWeb && w != _wnd) {
 				int id = w.ControlId;
 				bool isId = (id > 0 && id < 0x10000 && id != (int)w.Handle && _wnd.ChildAll("**id:" + id).Length == 1);
 				if(isId) _Add("id", id.ToString(), true, info: c_infoId);
-				_Add("class", _StripClassName(w.ClassName), !isId, info: _MakeInfoWildex(c_infoClass));
+				_Add("class", _StripClassName(w.ClassName), !isId, info: c_infoClass);
 			}
 
-			_AddIfNotEmpty("value", p.Value, false, true, info: _MakeInfoWildex("Value"));
-			if(_AddIfNotEmpty("description", p.Description, noName, true, info: _MakeInfoWildex("Description"))) noName = false;
-			_AddIfNotEmpty("action", p.DefaultAction, false, true, info: _MakeInfoWildex("Default action"));
-			if(_AddIfNotEmpty("key", p.KeyboardShortcut, noName, true, info: _MakeInfoWildex("Keyboard shortcut"))) noName = false;
-			if(_AddIfNotEmpty("help", p.Help, noName, true, info: _MakeInfoWildex("Help"))) noName = false;
+			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
+			if(_AddIfNotEmpty("description", p.Description, noName, true, info: "Description.$")) noName = false;
+			_AddIfNotEmpty("action", p.DefaultAction, false, true, info: "Default action.$");
+			if(_AddIfNotEmpty("key", p.KeyboardShortcut, noName, true, info: "Keyboard shortcut.$")) noName = false;
+			if(_AddIfNotEmpty("help", p.Help, noName, true, info: "Help.$")) noName = false;
 			foreach(var attr in p.HtmlAttributes as Dictionary<string, string>) {
 				string na = attr.Key, va = attr.Value;
 				bool check = noName && (na == "id" || na == "name") && va.Length > 0;
 				if(check) noName = false;
-				_Add("@" + na, _EscapeWildex(va), check, info: _MakeInfoWildex("HTML attribute"));
+				_Add("@" + na, _EscapeWildex(va), check, info: "HTML attribute.$");
 			}
 			int elem = _acc.SimpleElementId; if(elem != 0) _Add("elem", elem.ToString(), info: c_infoElem);
 			_Add("state", p.State.ToString(), info: c_infoState);
@@ -244,8 +243,6 @@ namespace Au.Tools
 
 				_grid.ZAddOptional(null, name, value, check, tt, info);
 			}
-
-			string _MakeInfoWildex(string prefix) => prefix + c_infoWildex;
 		}
 
 		//Returns true if a is in visible web page in one of 3 browsers.
@@ -372,7 +369,7 @@ namespace Au.Tools
 		bool _CapturingKeyDialog()
 		{
 			var key = _CapturingKey;
-			var d = new TaskDialog("Accessible object capturing key", buttons: "OK|Cancel", owner: this, flags: TDFlags.OwnerCenter);
+			var d = new AuDialog("Accessible object capturing key", buttons: "OK|Cancel", owner: this, flags: DFlags.OwnerCenter);
 			d.SetRadioButtons("3F3|4F4|5F5|6F6|7F7|8F8|9F9|10F10|11F11|12F12", key);
 			var r = d.ShowDialog(); if(r != 1) return false;
 			if(r.RadioButton != key) _CapturingKey = r.RadioButton;
@@ -548,13 +545,10 @@ namespace Au.Tools
 					b.Append(", ");
 					if(!isName) b.Append("prop: ");
 				}
-				b.Append('\"');
-				b.Append(na);
-				b.Append('=');
+				b.Append('\"').Append(na).Append('=');
 				if(!Empty(va)) {
 					if(_IsVerbatim(va)) {
-						b.Append("\" + ");
-						b.Append(va);
+						b.Append("\" + ").Append(va);
 						continue;
 					} else {
 						va = va.Escape_();
@@ -574,8 +568,7 @@ namespace Au.Tools
 					isFlags = true;
 					_AppendOther(b, flag, (isName && isProp) ? null : "flags");
 				} else {
-					b.Append('|');
-					b.Append(flag);
+					b.Append('|').Append(flag);
 				}
 			}
 
@@ -602,14 +595,10 @@ namespace Au.Tools
 		static void _AppendString(StringBuilder b, string s, string param = null, bool noComma = false)
 		{
 			if(!noComma && b.Length > 1) b.Append(", ");
-			if(param != null) { b.Append(param); b.Append(": "); }
+			if(param != null) b.Append(param).Append(": ");
 			if(s == null) b.Append("null");
 			else if(_IsVerbatim(s)) b.Append(s);
-			else {
-				b.Append('\"');
-				b.Append(s.Escape_());
-				b.Append('\"');
-			}
+			else b.Append('\"').Append(s.Escape_()).Append('\"');
 		}
 
 		//Returns true if s is like @"*" or $"*" or $@"*".
@@ -625,21 +614,21 @@ namespace Au.Tools
 		{
 			Debug.Assert(!Empty(s));
 			if(!noComma && b.Length > 1) b.Append(", ");
-			if(param != null) { b.Append(param); b.Append(": "); }
+			if(param != null) b.Append(param).Append(": ");
 			b.Append(s);
 		}
 
 		static string _EscapeWildex(string s)
 		{
-			if(Wildex.HasWildcards(s)) s = "**t|" + s;
+			if(Wildex.HasWildcards(s)) s = "**t " + s;
 			return s;
 		}
 
 		static string _StripClassName(string s, bool escapeWildex = false)
 		{
 			if(!Empty(s)) {
-				int n = s.RegexReplace_(out s, @"^WindowsForms\d+(\..+?\.).+", "*$1*");
-				if(n == 0) n = s.RegexReplace_(out s, @"^(HwndWrapper\[.+?;).+", "$1*");
+				int n = s.RegexReplace_(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
+				if(n == 0) n = s.RegexReplace_(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
 				if(escapeWildex && n == 0) s = _EscapeWildex(s);
 			}
 			return s;
@@ -683,7 +672,7 @@ namespace Au.Tools
 			var stack = new Stack<_AccNode>(); stack.Push(xRoot);
 			int level = 0;
 
-			AFFlags flags = AFFlags.Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
+			AFFlags flags = LibEnum.AFFlags_Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
 			if(_IsChecked2(nameof(AFFlags.UIA))) flags |= AFFlags.UIA;
 			var us = (uint)p.State;
 			var prop = $"rect={p.Rect.ToString()}\0state=0x{(us.ToString("X"))},!0x{((~us).ToString("X"))}";
@@ -706,7 +695,7 @@ namespace Au.Tools
 						level = lev;
 					}
 					x.a = o;
-					if(o.MiscFlags.Has_(AccMiscFlags.Marked)) {
+					if(o.MiscFlags.Has_(LibEnum.AccMiscFlags_Marked)) {
 						//Print(o);
 						if(xSelect == null) xSelect = x;
 					}
@@ -819,7 +808,7 @@ namespace Au.Tools
 			var a = e.Node.Tag as _AccNode;
 			//Print(a.a);
 			if(e.Node.IsSelected) {
-				//PrintList(e.Text, e.Context.DrawSelection);
+				//Print(e.Text, e.Context.DrawSelection);
 				if(e.Context.DrawSelection == DrawSelectionMode.Inactive) e.TextColor = Color.Blue;
 			} else {
 				if(a.IsInvisible) e.TextColor = Color.Gray;
@@ -905,19 +894,13 @@ namespace Au.Tools
 						}
 
 						if(isWINDOW) {
-							var b = Au.Util.LibStringBuilderCache.Acquire();
-							b.Append(p.Role);
-							b.Append("  (");
-							b.Append(p.WndContainer.ClassName);
-							b.Append(")");
-							if(p.Name.Length > 0) {
-								b.Append("  \"");
-								b.Append(p.Name);
-								b.Append("\"");
+							using(new Util.LibStringBuilder(out var b)) {
+								b.Append(p.Role).Append("  (").Append(p.WndContainer.ClassName).Append(")");
+								if(p.Name.Length > 0) b.Append("  \"").Append(p.Name).Append("\"");
+								_displayText = b.ToString();
 							}
-							_displayText = b.ToStringCached_();
 						} else if(p.Name.Length == 0) _displayText = p.Role;
-						else _displayText = p.Role + " \"" + p.Name.Limit_(250).Escape_() + "\"";
+						else _displayText = p.Role + " \"" + p.Name.Escape_(limit: 250) + "\"";
 
 						IsInvisible = a.LibIsInvisible(p.State);
 					}
@@ -975,7 +958,7 @@ namespace Au.Tools
 			//Perf.First();
 
 			var b = new StringBuilder();
-			b.Append(sWnd); b.Append("var _p_ = Perf.StartNew();"); b.AppendLine("var _a_ = ");
+			b.Append(sWnd).Append("var _p_ = Perf.StartNew();").AppendLine("var _a_ = ");
 			b.AppendLine(sAcc);
 			b.AppendLine($"_p_.Next(); return (_p_.TimeTotal, _a_, {_sWndVar});");
 
@@ -988,19 +971,22 @@ namespace Au.Tools
 			}
 			catch(CompilationErrorException e) {
 				var es = String.Join("\r\n", e.Diagnostics);
-				TaskDialog.ShowError(e.GetType().Name, es, owner: this, flags: TDFlags.OwnerCenter | TDFlags.Wider/*, expandedText: code*/);
+				AuDialog.ShowError(e.GetType().Name, es, owner: this, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 				return;
 			}
 			catch(NotFoundException) {
-				TaskDialog.ShowInfo("Window not found", owner: this, flags: TDFlags.OwnerCenter);
+				AuDialog.ShowInfo("Window not found", owner: this, flags: DFlags.OwnerCenter);
 				return;
 				//info: throws only when window not found. This is to show time anyway when acc not found.
 			}
 			catch(Exception e) {
-				TaskDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: TDFlags.OwnerCenter);
+				AuDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: DFlags.OwnerCenter);
 				return;
 			}
-			finally { _bTest.Enabled = true; }
+			finally {
+				GC.Collect(); //GC does not work with compiler. Task Manager shows 53 MB. After several times can be 300 MB. This makes 22 MB.
+				_bTest.Enabled = true;
+			}
 
 			//Perf.NW();
 			//Print(r);
@@ -1012,16 +998,16 @@ namespace Au.Tools
 				_lSpeed.Text = sTime;
 				_ShowOnScreenRect(r.a.Rect, true);
 			} else {
-				//TaskDialog.ShowEx("Not found", owner: this, flags: TDFlags.OwnerCenter, icon: TDIcon.Info, secondsTimeout: 2);
+				//AuDialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				_lSpeed.ForeColor = Color.Red;
 				_lSpeed.Text = "Not found,";
 				Timer_.After(500, tt => _lSpeed.Text = sTime);
 			}
 
 			if(r.w != _wnd) {
-				TaskDialog.ShowWarning("Wnd.Find finds another window",
+				AuDialog.ShowWarning("Wnd.Find finds another window",
 				$"Captured: {_wnd.ToString()}\r\n\r\nFound: {r.w.ToString()}",
-				owner: this, flags: TDFlags.OwnerCenter | TDFlags.Wider);
+				owner: this, flags: DFlags.OwnerCenter | DFlags.Wider);
 			} else if(r.a != null && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
 				if(!r.a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
@@ -1043,7 +1029,7 @@ namespace Au.Tools
 			//Perf.First();
 
 			var b = new StringBuilder();
-			b.Append(sWnd); b.Append("var _p_ = Perf.StartNew();"); b.AppendLine("var _a_ = ");
+			b.Append(sWnd); b.Append("var _p_ = Perf.StartNew();").AppendLine("var _a_ = ");
 			b.AppendLine(sAcc);
 			b.AppendLine("_p_.Next(); return (_p_.TimeTotal, _a_);");
 
@@ -1054,16 +1040,16 @@ namespace Au.Tools
 				result = ((long, Acc))(await Au.Compiler.Scripting.EvaluateAsync(s, s_testReferences, s_testImports));
 			}
 			catch(Au.Compiler.CompilationException e) {
-				TaskDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: TDFlags.OwnerCenter | TDFlags.Wider/*, expandedText: s*/);
+				AuDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: s*/);
 				return;
 			}
 			catch(NotFoundException) {
-				TaskDialog.ShowInfo("Window not found", owner: this, flags: TDFlags.OwnerCenter);
+				AuDialog.ShowInfo("Window not found", owner: this, flags: DFlags.OwnerCenter);
 				return;
 				//info: throws only when window not found. This is to show time anyway when acc not found.
 			}
 			catch(Exception e) {
-				TaskDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: TDFlags.OwnerCenter);
+				AuDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: DFlags.OwnerCenter);
 				return;
 			}
 			finally { _bTest.Enabled = true; }
@@ -1078,7 +1064,7 @@ namespace Au.Tools
 				_lSpeed.Text = sTime;
 				_ShowOnScreenRect(result.a.Rect, true);
 			} else {
-				//TaskDialog.ShowEx("Not found", owner: this, flags: TDFlags.OwnerCenter, icon: TDIcon.Info, secondsTimeout: 2);
+				//AuDialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				_lSpeed.ForeColor = Color.Red;
 				_lSpeed.Text = "Not found,";
 				Timer_.After(1000, tt => _lSpeed.Text = sTime);
@@ -1114,7 +1100,7 @@ namespace Au.Tools
 
 			var b = new StringBuilder();
 			if(!Empty(sWnd)) b.AppendLine(sWnd);
-			b.Append("var a = "); b.AppendLine(sAcc);
+			b.Append("var a = ").AppendLine(sAcc);
 
 			return b.ToString();
 		}
@@ -1149,6 +1135,8 @@ namespace Au.Tools
 				TextRenderer.DrawText(e.Graphics, text, Font, c.ClientRectangle, Color.FromKnownColor(KnownColor.GrayText), TextFormatFlags.WordBreak);
 			}
 
+			_commonInfos = new CommonInfos(_info);
+
 			_info.Tags.AddLinkTag("_key", _ => _CapturingKeyDialog());
 			_info.Tags.AddLinkTag("_resetInfo", _ => _SetFormInfo(null));
 			_info.Tags.AddLinkTag("_jab", _ => Java.EnableDisableJabUI(this));
@@ -1161,6 +1149,9 @@ namespace Au.Tools
 				info = c_infoForm;
 				var k = _CapturingKey;
 				if(k != 3) info = info.Replace("F3", "F" + k.ToString());
+			}else if(info.EndsWith_("$")) {
+				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length-1));
+				return;
 			}
 			_info.Text = info;
 		}
@@ -1175,14 +1166,12 @@ namespace Au.Tools
 
 How to find AOs that don't have a name or other property with unique constant value? Capture another AO near it, and use <b>navig<> to get it. Or try <b>skip<>.";
 		const string c_infoRole = @"Role. Or path, like ROLE1/ROLE2/ROLE3. Prefix <b>web:<>, <b>firefox:<> or <b>chrome:<> means 'in web page'. Path is relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc). Read more in <help M_Au_Acc_Find>Acc.Find<> help.";
-		const string c_infoWildex = @". The text is <help 0248143b-a0dd-4fa1-84f9-76831db6714a>wildcard expression<>. Examples:  whole,  *end,  start*,  *middle*,  **t|non-wildcard,  **c|case-sensitive,  **tc|case-sens-non-wild,  **p|regex,  **pc|case-sens-regex,  **n|not this,
-**m|this[]or this[]**p|or this regex[]**n|and not this";
 		const string c_infoState = @"State. List of states that the AO must have and/or not have.
 Example: CHECKED, !DISABLED
 Note: AO state can change. Use only states you need. Remove others from the list.";
 		const string c_infoRect = @"Rectangle. Can be specified width (W) and/or height (H).
 Example: {W=100 H=20}";
-		const string c_infoClass = @"Control class name. Will search only in controls that have it";
+		const string c_infoClass = @"Control class name. Will search only in controls that have it.$";
 		const string c_infoId = @"Control id. Will search only in controls that have it.";
 		const string c_infoElem = @"Simple element id.
 Note: It usually changes when elements before the AO are added or removed. Use it only if really need.";
@@ -1194,7 +1183,7 @@ Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 wou
 		const string c_infoWait = @"The <b>wait<> value is the max number of seconds to wait for the AO. If 0 or empty, waits without a timeout. Else on timeout the function returns null or throws exception, depending on <b>Throw if not found<>.";
 		const string c_infoLevel = @"<b>level<> - 0-based level of the AO in the object tree. Or min and max levels. Default 0 1000. Relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc).";
 		const string c_infoNotin = @"<b>notin<> - don't search in AOs that have these roles. Can make faster.
-Example: LIST,OUTLINE,TASKBAR,SCROLLBAR";
+Example: LIST,TREE,TASKBAR,SCROLLBAR";
 		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature: open URL <link firefox.exe|about:config>about:config<>, set <b>browser.tabs.remote.autostart<> = <b>false<>, restart Firefox. More info in <help T_Au_Acc>Acc<> help.
 <_resetInfo>X<>";
 		const string c_infoJava = @"If there are no AOs in this window, need to <_jab>enable<> Java Access Bridge etc. More info in <help T_Au_Acc>Acc<> help.
@@ -1210,7 +1199,7 @@ Example: LIST,OUTLINE,TASKBAR,SCROLLBAR";
 		//	string sOld = grid[pos].Value as string, sNew = editor.GetEditedValue() as string, err = null;
 		//	if(sNew == sOld) return;
 		//	if(sNew == null) return;
-		//	//PrintList(sOld, sNew);
+		//	//Print(sOld, sNew);
 		//	switch(grid.ZGetRowKey(pos.Row)) {
 		//	case "example":
 		//		if(!sNew.RegexIs_(@"^example$")) err = "example.";
@@ -1231,10 +1220,10 @@ Example: LIST,OUTLINE,TASKBAR,SCROLLBAR";
 			/// Calls <see cref="EnableDisableJab"/>(null) and shows results in task dialog.
 			/// </summary>
 			/// <param name="owner"></param>
-			public static void EnableDisableJabUI(WndOrControl owner)
+			public static void EnableDisableJabUI(DOwner owner)
 			{
 				var (ok, results) = EnableDisableJab(null);
-				if(results != null) TaskDialog.Show("Results", results, icon: ok ? TDIcon.Info : TDIcon.Error, owner: owner, flags: TDFlags.OwnerCenter | TDFlags.Wider);
+				if(results != null) AuDialog.Show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.OwnerCenter);
 			}
 
 			/// <summary>
@@ -1245,7 +1234,7 @@ Example: LIST,OUTLINE,TASKBAR,SCROLLBAR";
 			public static (bool ok, string results) EnableDisableJab(bool? enable/*, bool allUsers*/)
 			{
 				if(enable == null) {
-					switch(TaskDialog.ShowList("1 Enable|2 Disable|Cancel", "Java Access Bridge")) {
+					switch(AuDialog.ShowList("1 Enable|2 Disable|Cancel", "Java Access Bridge")) {
 					case 1: enable = true; break;
 					case 2: enable = false; break;
 					default: return (false, null);

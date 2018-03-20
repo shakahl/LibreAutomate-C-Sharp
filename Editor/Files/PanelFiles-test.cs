@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -99,13 +98,13 @@ partial class PanelFiles
 			int dx = _c.OffsetX, dy = _c.OffsetY;
 			foreach(var v in _c.GetNodeControls(n)) {
 				var r = v.Bounds; r.X -= dx; r.Y -= dy;
-				PrintList(r);
+				Print(r);
 			}
 		};
 		m["GetNodeControlInfoAt"] = o =>
 		{
 			var k = _c.GetNodeControlInfoAt(new Point(60, 40));
-			PrintList(k.Node?.Tag, k.Bounds);
+			Print(k.Node?.Tag, k.Bounds);
 		};
 #if TEST_MANY_COLUMNS
 				m["column IsVisible"] = o =>
@@ -152,7 +151,7 @@ partial class PanelFiles
 		m["disable control"] = o =>
 		{
 			_c.Enabled = false;
-			TaskDialog.Show();
+			AuDialog.Show();
 			_c.Enabled = true;
 		};
 		m["ItemPath"] = o =>

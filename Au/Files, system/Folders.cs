@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -380,7 +379,7 @@ namespace Au
 		/// <summary>
 		/// Gets or sets path of images (icons etc) folder of this application.
 		/// Default is ThisApp + "Images".
-		/// Functions of these classes will look for image there: Icons, AuMenu, AuToolbar, possibly some other.
+		/// Functions of these classes will look for image there: Icons, AuMenu, AuToolbar, WinImage, possibly some other.
 		/// </summary>
 		public static FolderPath ThisAppImages
 		{
@@ -492,14 +491,14 @@ namespace Au
 			//tested: with IKnownFolder much slower.
 
 			var guid = new KNOWNFOLDERID(a, b, c, d);
-			return (0 == SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out string R)) ? R : null;
+			return (0 == SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out string R)) ? R : null;
 		}
 
 		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
 		static Shell.Pidl _GetVI(uint a, uint b, uint c, uint d)
 		{
 			var guid = new KNOWNFOLDERID(a, b, c, d);
-			if(0 != SHGetKnownFolderIDList(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, Zero, out IntPtr pidl)) return null;
+			if(0 != SHGetKnownFolderIDList(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out IntPtr pidl)) return null;
 			return new Shell.Pidl(pidl);
 		}
 
@@ -620,7 +619,7 @@ namespace Au
 			int FolderIdToCsidl(ref Guid rfid, out int pnCsidl);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolderIds(out IntPtr ppKFId, out uint ids); //KNOWNFOLDERID **ppKFId
+			int GetFolderIds(out IntPtr ppKFId, out uint ids); //KNOWNFOLDERID** ppKFId
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetFolder(ref Guid rfid, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
@@ -705,7 +704,7 @@ namespace Au
 			var dict = new Dictionary<string, string>();
 
 			var man = new KnownFolderManager() as IKnownFolderManager;
-			IntPtr ipIds = Zero;
+			IntPtr ipIds = default;
 			try {
 				if(man.GetFolderIds(out ipIds, out uint nIds) != 0) return null;
 				unsafe

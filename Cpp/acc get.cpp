@@ -30,7 +30,7 @@ void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem)
 		if(elem != 0) elem = 0; else util::Swap(ref a, ref parent);
 	}
 	if(parent != a) parent->Release();
-	//note: ignore role. Because it can be anything, not only TEXT, STATICTEXT, GRAPHIC.
+	//note: ignore role. Because it can be anything, not only TEXT, STATICTEXT, IMAGE.
 	//rejected: support 2 levels, eg youtube right-side list.
 	//	Can be even more levels, and multiple children of LINK, some of them may be useful for automation.
 	//	Often they have default action "jump" and value=URL.

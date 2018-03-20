@@ -47,6 +47,32 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 
+//au: allows the caller to allocate pcre2_match_data in a faster way than the default malloc/free.
+//	At first call pcre2_match_data_create_au with md=null. It returns the memory size needed.
+//	Then allocate memory, call pcre2_match_data, pass the memory as md. It initializes the pcre2_match_data.
+//	Note: do it in C++. In C# slower, tested.
+static void* default_malloc(size_t size, void* data) { (void)data; return malloc(size); }
+static void default_free(void* block, void* data) { (void)data; free(block); }
+int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md)
+{
+	//code from pcre2_match_data_create_from_pattern (below)
+	int oveccount = ((pcre2_real_code *)code)->top_bracket + 1;
+	int memSize = offsetof(pcre2_match_data, ovector) + 2 * oveccount * sizeof(PCRE2_SIZE);
+
+	if(md != NULL) {
+		//code from PRIV(memctl_malloc) in pcre2_context.h
+		md->memctl.malloc = default_malloc;
+		md->memctl.free = default_free;
+		md->memctl.memory_data = NULL;
+
+		//code from pcre2_match_data_create (below)
+		md->oveccount = oveccount;
+	}
+
+	return memSize;
+}
+
+
 /*************************************************
 *  Create a match data block given ovector size  *
 *************************************************/

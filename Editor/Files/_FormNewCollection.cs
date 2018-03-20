@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -59,7 +58,7 @@ partial class FilesModel
 			var path = textPath.Text;
 			if(!Path_.IsFullPath(path)) ok = false;
 			else if(Files.ExistsAsAny(path)) {
-				TaskDialog.ShowError("Already exists", path, owner: this);
+				AuDialog.ShowError("Already exists", path, owner: this);
 				ok = false;
 			}
 			this.DialogResult = ok ? DialogResult.OK : DialogResult.None;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -132,8 +131,6 @@ namespace Au
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe partial class Acc :IDisposable
 	{
-		//tested: Acc object memory size with overhead: 32 bytes. Note: we don't use RCW<IAccessible>, which would add another 32 bytes.
-
 		//FUTURE: Acc.Misc.EnableAccInChromeWebPagesWhenItStarts
 		//FUTURE: Acc.Misc.EnableAccInJavaWindows (see JavaEnableJAB in QM2)
 		//FUTURE: add functions to marshal AO to another thread.
@@ -150,7 +147,9 @@ namespace Au
 
 		internal IntPtr _iacc;
 		internal int _elem;
-		internal _Misc _misc; //info: does not make real object memory bigger (still 32 bytes).
+		internal _Misc _misc;
+		//Real Acc object memory size with header: 32 bytes on 64-bit.
+		//We don't use RCW<IAccessible>, which would add another 32 bytes.
 
 		/// <summary>
 		/// Creates Acc from IAccessible and child id.
@@ -174,7 +173,7 @@ namespace Au
 
 		/// <summary>
 		/// Sets fields.
-		/// _iacc must be Is0.
+		/// _iacc must be 0, iacc not 0.
 		/// </summary>
 		void _Set(IntPtr iacc, int elem = 0, _Misc misc = default, bool addRef = false)
 		{
@@ -185,21 +184,41 @@ namespace Au
 			_elem = elem;
 			_misc = misc;
 
-			//CONSIDER: GC.AddMemoryPressure/GC.RemoveMemoryPressure
+			int mp = _MemoryPressure;
+			GC.AddMemoryPressure(mp);
+			//s_dmp += mp; if(s_dmp > DebugMaxMemoryPressure) DebugMaxMemoryPressure = s_dmp;
+			//DebugMemorySum += mp;
 		}
 
-		void _Dispose(bool doNotRelease = false)
+		int _MemoryPressure => _elem == 0 ? c_memoryPressure : c_memoryPressure / 4;
+		const int c_memoryPressure = 128;
+		//Ideally this should be the average AO memory size.
+		//Actually much more, maybe 500, if counting both processes, but:
+		//	Release() does not delete the object if refcount!=0. Usually refcount==0, unless we have an AO and its simple elements (_elem!=0).
+		//	It seems GC is too frequent when using AddMemoryPressure/RemoveMemoryPressure. In this case it is frequent enough.
+
+		//internal static int DebugMaxMemoryPressure;
+		//static int s_dmp;
+		//internal static int DebugMemorySum;
+
+		///
+		protected virtual void Dispose(bool disposing)
 		{
 			if(_iacc != default) {
 				var t = _iacc; _iacc = default;
 				//Perf.First();
-				if(!doNotRelease) Marshal.Release(t);
-				//if(!doNotRelease) Print($"rel: {Marshal.Release(t)}");
+				//int rc =
+				Marshal.Release(t);
 				//Perf.NW();
+				//Print($"rel: {Marshal.Release(t)}");
+				//Print(t, _elem, rc);
+
+				int mp = _MemoryPressure;
+				GC.RemoveMemoryPressure(mp);
+				//s_dmp -= mp;
 			}
 			_elem = 0;
 			_misc = default;
-			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
@@ -207,14 +226,14 @@ namespace Au
 		/// </summary>
 		public void Dispose()
 		{
-			_Dispose();
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		///
 		~Acc()
 		{
-			//Debug_.Print("Acc not disposed: " + (_role != 0 ? Role : ("_Disposed=" + _Disposed.ToString())));
-			_Dispose();
+			Dispose(false);
 		}
 
 		/// <summary>
@@ -423,12 +442,6 @@ namespace Au
 		}
 #endif
 
-		//FUTURE
-		//public static Acc FromImage(SIResult foundImage, Coord x=default, Coord y=default, bool noThrow = false)
-		//{
-		//	return null;
-		//}
-
 		/// <summary>
 		/// Used only for debug.
 		/// </summary>
@@ -502,34 +515,34 @@ namespace Au
 			if(_Disposed) return "<disposed>";
 			if(!GetProperties("Rnsvdarw@", out var k)) return "<failed>";
 
-			var s = Util.LibStringBuilderCache.Acquire();
+			using(new Util.LibStringBuilder(out var b)) {
+				if(Level > 0) b.Append(' ', Level);
+				b.Append(k.Role);
+				_Add('n', k.Name);
+				if(k.State != 0) _Add('s', k.State.ToString(), '(', ')');
+				_Add('v', k.Value);
+				_Add('d', k.Description);
+				_Add('a', k.DefaultAction);
+				if(!k.Rect.Is0) _Add('r', k.Rect.ToString(), '\0', '\0');
+				if(SimpleElementId != 0) b.Append(",  e=").Append(SimpleElementId);
+				foreach(var kv in k.HtmlAttributes) {
+					b.Append(",  @").Append(kv.Key).Append('=').Append('\"');
+					b.Append(kv.Value.Escape_(limit: 250)).Append('\"');
+				}
+				_Add('w', k.WndContainer.ClassName ?? "");
 
-			if(Level > 0) s.Append(' ', Level);
-			s.Append(k.Role);
-			_Add('n', k.Name);
-			if(k.State != 0) _Add('s', k.State.ToString(), '(', ')');
-			_Add('v', k.Value);
-			_Add('d', k.Description);
-			_Add('a', k.DefaultAction);
-			if(!k.Rect.Is0) _Add('r', k.Rect.ToString(), '\0', '\0');
-			if(SimpleElementId != 0) { s.Append(",  e="); s.Append(SimpleElementId); }
-			foreach(var kv in k.HtmlAttributes) {
-				s.Append(",  @"); s.Append(kv.Key); s.Append('='); s.Append('\"');
-				s.Append(kv.Value.Limit_(250).Escape_()); s.Append('\"');
+				void _Add(char name, string value, char q1 = '\"', char q2 = '\"')
+				{
+					if(value.Length == 0) return;
+					var t = value; if(q1 == '\"') t = t.Escape_(limit: 250);
+					b.Append(",  ").Append(name).Append('=');
+					if(q1 != '\0') b.Append(q1);
+					b.Append(t);
+					if(q1 != '\0') b.Append(q2);
+				}
+
+				return b.ToString();
 			}
-			_Add('w', k.WndContainer.ClassName??"");
-
-			void _Add(char name, string value, char q1 = '\"', char q2 = '\"')
-			{
-				if(value.Length == 0) return;
-				var t = value; if(q1 == '\"') t = t.Limit_(250).Escape_();
-				s.Append(",  "); s.Append(name); s.Append('=');
-				if(q1 != '\0') s.Append(q1);
-				s.Append(t);
-				if(q1 != '\0') s.Append(q2);
-			}
-
-			return s.ToStringCached_();
 		}
 
 		/// <summary>
@@ -538,7 +551,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="ToString"/>.
 		/// Catches exceptions. On exception prints $"!exception! exceptionType exceptionMessage".
-		/// Parameters are the same as of <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int)"/>.
+		/// Parameters are of <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
 		/// By default skips invisible objects and objects in menus. Use flags to include them.
 		/// Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix "web:" or "chrome:" to enable. See example.
 		/// </remarks>

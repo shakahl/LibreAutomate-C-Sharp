@@ -4,7 +4,7 @@
 
   <introduction>
    <para>
-    <newTerm>Wildcard expression</newTerm> - a simple text format that allows you to use wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Typically used for arguments of 'find' functions, for example <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Au.Wnd.Find(System.String,System.String,Au.Types.WFOwner,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean})</codeEntityReference>.
+    <newTerm>Wildcard expression</newTerm> - a simple text format that supports wildcard characters, regular expression, multiple parts and 'must not match'. Like a regular expression, but much simpler. Can be used with many 'find' functions, for example <codeEntityReference linkText="Wnd.Find">M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)</codeEntityReference>.
    </para>
   </introduction>
 
@@ -46,7 +46,7 @@
     </alert>
 
     <para>
-     Can start with <literal>**options|</literal>, like <literal>"**tc|text"</literal>.
+     Can start with <literal>"**options "</literal>, like <literal>"**tc text"</literal>.
     </para>
 
     <table>
@@ -58,7 +58,7 @@
       <entry>
        <para>Simple text, not wildcard.</para>
        <para>
-        Example: <literal>"**t|text"</literal>
+        Example: <literal>"**t text"</literal>
        </para>
       </entry>
      </row>
@@ -68,17 +68,19 @@
       </entry>
       <entry>
        <para>
-        .NET regular expression. See <codeEntityReference qualifyHint="false">T:System.Text.RegularExpressions.Regex</codeEntityReference>.
+        PCRE regular expression. See <codeEntityReference qualifyHint="false">T:Au.Regex_</codeEntityReference>.
+		Syntax: <externalLink><linkText>full</linkText><linkUri>https://www.pcre.org/current/doc/html/pcre2pattern.html</linkUri></externalLink>, <externalLink><linkText>short</linkText><linkUri>https://www.pcre.org/current/doc/html/pcre2syntax.html</linkUri></externalLink>.
        </para>
       </entry>
      </row>
      <row>
       <entry>
-       <para>p</para>
+       <para>R</para>
       </entry>
       <entry>
        <para>
-        PCRE regular expression. See <codeEntityReference qualifyHint="false">T:Au.Regex_</codeEntityReference>.
+        .NET regular expression. See <codeEntityReference qualifyHint="false">T:System.Text.RegularExpressions.Regex</codeEntityReference>.
+		Cannot be used with <codeEntityReference qualifyHint="false">T:Au.Acc</codeEntityReference> class functions.
        </para>
       </entry>
      </row>
@@ -89,9 +91,8 @@
       <entry>
        <para>Case-sensitive.</para>
        <para>
-        Example: <literal>"**rc|regex, match case"</literal>
+        Example: <literal>"**rc regex"</literal>
        </para>
-       <para>Info: case-sensitive r regular expression (.NET) is much faster.</para>
       </entry>
      </row>
      <row>
@@ -107,13 +108,14 @@
        <para>m</para>
       </entry>
       <entry>
-       <para>Multi-part. Use separator [].</para>
+       <para>Multi-part.</para>
        <para>
-        Example: <literal>"**m|findThis[]orThis[]**r|orThisRegex[]**n|butNotThis[]**nr|andNotThisRegex"</literal>
+        Example: <literal>"**m findThis||orThis||**r orThisRegex||**n butNotThis||**nr andNotThisRegex"</literal>
        </para>
        <para>
-        Example 2: <literal>"**mn|notThis[]andNotThis"</literal>
+        Example 2: <literal>"**mn notThis||andNotThis"</literal>
        </para>
+       <para>Default separator is ||. Custom separator example: <literal>"**m(^^^) findThis^^^orThis"</literal>.</para>
       </entry>
      </row>
     </table>
@@ -121,7 +123,7 @@
     <alert>
      <para>
       Exception <codeEntityReference qualifyHint="false">T:System.ArgumentException</codeEntityReference>
-      if invalid <literal>**options|</literal> or regular expression.
+      if invalid <literal>"**options "</literal> or regular expression.
      </para>
     </alert>
 
@@ -145,7 +147,7 @@
    <content>
     <code>
      //Find item whose property 1 is "example" (case-insensitive), property 2 starts with "2017-" and property 3 matches a case-sensitive regular expression.
-     var item = x.FindItem("example", "2017-*", "**rc|regex");
+     var item = x.FindItem("example", "2017-*", "**rc regex");
     </code>
    </content>
   </section>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -85,8 +84,9 @@ namespace Au
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
 		/// If the computer goes to sleep or hibernate during that time, the real time is seconds + the sleep/hibernate time.
+		/// Tip: code <c>5.s();</c> is the same as <c>Time.WaitS(5);</c>.
 		/// </remarks>
-		public static void Wait(double seconds)
+		public static void WaitS(double seconds)
 		{
 			seconds *= 1000.0;
 			if(seconds > int.MaxValue || seconds < 0) throw new ArgumentOutOfRangeException();
@@ -95,7 +95,7 @@ namespace Au
 
 		/// <summary>
 		/// Suspends this thread for the specified amount of time.
-		/// The same as <see cref="Wait"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
+		/// The same as <see cref="WaitS"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
 		/// </summary>
 		/// <param name="milliseconds">
 		/// Time to wait, milliseconds.
@@ -106,6 +106,7 @@ namespace Au
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process events and messages, therefore should not be used with big milliseconds in threads with windows, timers or COM events. Supports asynchronous procedure calls.
 		/// If the computer goes to sleep or hibernate during that time, the real time is milliseconds + the sleep/hibernate time.
+		/// Tip: code <c>50.ms();</c> is the same as <c>Time.Sleep(50);</c>.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
 		public static void Sleep(int milliseconds)
@@ -113,7 +114,7 @@ namespace Au
 			LibSleepPrecision.LibTempSet1(milliseconds);
 			if(milliseconds < 2000) {
 				Thread.Sleep(milliseconds);
-			} else { //fix Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
+			} else { //workaround for Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
 				g1:
 				long t = MillisecondsWithoutComputerSleepTime;
 				Thread.Sleep(milliseconds);
@@ -190,26 +191,26 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Wait"/>.
-		/// This extension method allows to replace code like <c>Wait(5);</c> with <c>5.s();</c>.
+		/// Calls <see cref="WaitS"/>.
+		/// Example: <c>5.s();</c> is the same as <c>Time.WaitS(5);</c>.
 		/// </summary>
 		public static void s(this int seconds)
 		{
-			Wait(seconds);
+			WaitS(seconds);
 		}
 
 		/// <summary>
-		/// Calls <see cref="Wait"/>.
-		/// This extension method allows to replace code like <c>Wait(2.5);</c> with <c>2.5.s();</c>.
+		/// Calls <see cref="WaitS"/>.
+		/// Example: <c>2.5.s();</c> is the same as <c>Time.WaitS(2.5);</c>.
 		/// </summary>
 		public static void s(this double seconds)
 		{
-			Wait(seconds);
+			WaitS(seconds);
 		}
 
 		/// <summary>
 		/// Calls <see cref="Sleep"/>.
-		/// This extension method allows to replace code like <c>Time.Sleep(50);</c> with <c>50.ms();</c>.
+		/// Example: <c>50.ms();</c> is the same as <c>Time.Sleep(50);</c>.
 		/// </summary>
 		public static void ms(this int milliseconds)
 		{
@@ -271,7 +272,7 @@ namespace Au
 		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
-		/// Don't need this for Time.Sleep, Time.Wait, Time.SleepDoEvents and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
+		/// Don't need this for Time.Sleep, Time.WaitS, Time.SleepDoEvents and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
 		/// This does not change the minimal period of <see cref="Timer_"/> and System.Windows.Forms.Timer.
 		/// </remarks>
 		/// <example>
@@ -326,14 +327,19 @@ namespace Au
 			/// </summary>
 			public void Dispose()
 			{
-				if(_period == 0) return;
-				//Print("revoke");
-				Api.timeEndPeriod((uint)_period); _period = 0;
+				_Dispose();
 				GC.SuppressFinalize(this);
 			}
 
+			void _Dispose()
+			{
+				if(_period == 0) return;
+				//Print("revoke");
+				Api.timeEndPeriod((uint)_period); _period = 0;
+			}
+
 			///
-			~LibSleepPrecision() { Dispose(); }
+			~LibSleepPrecision() { _Dispose(); }
 
 			/// <summary>
 			/// Gets current actual system time resolution (period).
@@ -529,7 +535,7 @@ namespace Au
 		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
 		/// <remarks>
 		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
 		public static Timer_ After(int milliseconds, Action<Timer_> callback, object tag = null)
 		{
@@ -545,7 +551,7 @@ namespace Au
 		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
 		/// <remarks>
 		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or TaskDialog.Show(). The callback function is not called while this thread does not do it.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
 		public static Timer_ Every(int periodMS, Action<Timer_> callback, object tag = null)
 		{

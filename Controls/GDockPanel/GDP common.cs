@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -310,7 +309,7 @@ namespace Au.Controls
 
 			internal void SetDockState(GDockState state, bool onStartDrag = false)
 			{
-				//PrintList(this, Name);
+				//Print(this, Name);
 				var gp = this as GPanel;
 
 				if(state == GDockState.LastVisible) {
@@ -329,7 +328,7 @@ namespace Au.Controls
 				if(state == prevState) return;
 
 				if(this.ParentSplit == null && state == GDockState.Docked) { //new panel
-					TaskDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager);
+					AuDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager);
 					return;
 				}
 

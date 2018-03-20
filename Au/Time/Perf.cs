@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -47,8 +46,8 @@ namespace Au
 				if(!Util.Assembly_.LibIsAuNgened) {
 					Stopwatch.GetTimestamp(); //maybe the .NET assembly not ngened
 #if false
-					//RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("First", new Type[0]).MethodHandle);
-					//RuntimeHelpers.PrepareMethod(typeof(Perf.Inst).GetMethod("First", new Type[0]).MethodHandle);
+					//RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("First", Array.Empty<Type>()).MethodHandle);
+					//RuntimeHelpers.PrepareMethod(typeof(Perf.Inst).GetMethod("First", Array.Empty<Type>()).MethodHandle);
 					RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("Next").MethodHandle);
 					RuntimeHelpers.PrepareMethod(typeof(Perf.Inst).GetMethod("Next").MethodHandle);
 					RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("NW").MethodHandle);
@@ -181,39 +180,35 @@ namespace Au
 					//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
 					bool average = false; int nMeasurements = 1;
 
-					var s = Util.LibStringBuilderCache.Acquire();
-					s.Append("speed:");
+					using(new Util.LibStringBuilder(out var b)) {
+						b.Append("speed:");
 
-					fixed (long* p = _a) fixed (char* c = _aMark) {
-						g1:
-						double t = 0.0, tPrev = 0.0;
-						for(i = 0; i < n; i++) {
-							s.Append("  ");
-							if(c[i] != '\0') {
-								s.Append(c[i]);
-								s.Append('=');
+						fixed (long* p = _a) fixed (char* c = _aMark) {
+							g1:
+							double t = 0.0, tPrev = 0.0;
+							for(i = 0; i < n; i++) {
+								b.Append("  ");
+								if(c[i] != '\0') b.Append(c[i]).Append('=');
+								t = freq * p[i];
+								double d = t - tPrev; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
+								if(average) d /= nMeasurements;
+								b.Append((long)d);
+								tPrev = t;
 							}
-							t = freq * p[i];
-							double d = t - tPrev; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
-							if(average) d /= nMeasurements;
-							s.Append((long)d);
-							tPrev = t;
-						}
 
-						if(n > 1) {
-							s.Append("  (");
-							if(average) t /= nMeasurements;
-							s.Append((long)t);
-							s.Append(")");
-						}
+							if(n > 1) {
+								if(average) t /= nMeasurements;
+								b.Append("  (").Append((long)t).Append(")");
+							}
 
-						if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
-							average = true;
-							s.Append(";  measured "); s.Append(nMeasurements); s.Append(" times, average");
-							goto g1;
+							if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
+								average = true;
+								b.Append(";  measured ").Append(nMeasurements).Append(" times, average");
+								goto g1;
+							}
 						}
+						return b.ToString();
 					}
-					return s.ToStringCached_();
 				}
 			}
 

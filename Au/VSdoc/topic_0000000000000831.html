@@ -1,0 +1,6048 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="GENERATOR" content="VSdocman - documentation generator; http://www.helixoft.com" />
+	<title>Wnd Structure</title>
+
+	<link rel="stylesheet" type="text/css" href="msdn2017/msdn2017.css"></link>
+	<script src="msdn2017/msdn2017.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shCore_helixoft.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushVb.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushFSharp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushCpp.js" type="text/javascript"></script>
+	<script src="SyntaxHighlighter/scripts/shBrushJScript.js" type="text/javascript"></script>
+	<link href="SyntaxHighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="SyntaxHighlighter/styles/shThemeMsdnLW.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript">
+		SyntaxHighlighter.all();
+	</script>				
+
+	<script type="text/javascript">
+<!--
+if (self.name != "vbdocright") {
+	if (location.search != "?toc=no") {
+		var filename = location.pathname.replace(/\\/g, "/");
+		filename = filename.substring(filename.lastIndexOf('/')+1);
+		location.replace("index.html#" + filename);
+	} 
+}
+
+function replaceTitleAndUrl(win, title, url) {
+	if(history.replaceState) {
+		win.history.replaceState(null, title, url);
+	} else {
+		win.document.title = document.title;
+		win.location.replace(url);
+	}
+}
+//-->
+	</script>	
+</head>
+
+<body style="direction: ltr;">
+	<script type="text/javascript">
+		try {
+			if (location.search != "?toc=no") {
+				parent.document.title = document.title;
+				var filename = location.pathname.replace(/\\/g, "/");
+				filename = filename.substring(filename.lastIndexOf('/')+1);
+				if (window.parent.location.search == null || window.parent.location.search != "?" + filename) {
+					if (window.parent.location.hash == null || window.parent.location.hash != "#" + filename) {
+						replaceTitleAndUrl(window.parent, document.title, "index.html#" + filename);
+					}
+				}
+			}
+		} catch (ex) {}
+	</script>
+	<div id="topic">
+<!--HEADER START-->
+  <div id="header">
+  	<div id="runningHeaderText">Au Reference</div>
+  	<h1 class="title">Wnd Structure</h1>
+  	<div id="headerLinks">
+	<a href="#codeExampleSection">Example</a>
+
+	<a href="#seeAlsoSection">See Also</a>
+
+		</div>
+		<hr />
+	</div>
+<!--HEADER END-->
+    
+		<div id="mainSection">
+      <div id="mainBody">
+        <p />
+       
+        A variable of Wnd type represents a window or control. It is a window handle, also known as HWND.
+Wnd functions can be used with windows and controls of any process/thread.
+Wnd functions also can be used with .NET form/control and WPF window class variables, like <code>Wnd w=(Wnd)form; w.Method(...);</code> or <code>((Wnd)form).Method(...);</code>.
+
+
+        <p /><strong>Namespace:</strong>
+<a href="topic_00000000000000DB.html">Au</a>
+
+
+
+
+        <br /><strong>Assembly:</strong> Au (in Au.dll)
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Syntax</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="syntaxSection" class="section">	
+	
+	
+	<div id="syntaxCodeBlocks">
+		<div class="codeSnippetContainer">		
+			<div class="codeSnippetTabs">
+				<div class="codeSnippetTabLeftCornerActive">
+				</div>
+				<div class="codeSnippetTab csFirstTab csActiveTab codeVB">
+					<a>VB</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Csharp');">C#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeFsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Fsharp');">F#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCpp">
+					<a href="javascript: CodeSnippet_SetLanguage('Cpp');">C++</a>
+				</div>
+				<div class="codeSnippetTab csLastTab csNaTab codeJScript">
+					<a href="javascript: CodeSnippet_SetLanguage('JScript');">JScript</a>
+				</div>
+				<div class="codeSnippetTabRightCorner">
+				</div>
+				<div style="clear:both;">
+				</div>
+			</div>
+	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode codeVB">
+					<pre xml:space="preserve" class="brush: vb">&lt;Serializable()&gt; _&nbsp;<br />Public Structure Wnd&nbsp;<br />    Implements <a target="_top" href="http://msdn2.microsoft.com/en-us/library/ms131187.aspx">IEquatable</a>(Of <a target="_top" href="topic_0000000000000831.html" onclick="this.target='';return true;">Wnd</a>)</pre>			
+				</div>
+				<div class="codeSnippetCode codeNA">
+					<pre xml:space="preserve">This language is not supported or no code example is available.</pre>			
+				</div>
+			</div>
+		</div>
+		
+		<div class="codeSnippetContainer">
+			<div class="codeSnippetTabs">
+				<div class="codeSnippetTabLeftCorner">
+				</div>
+				<div class="codeSnippetTab csFirstTab csNaTab codeVB">
+					<a>VB</a>
+				</div>
+				<div class="codeSnippetTab csActiveTab codeCsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Csharp');">C#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeFsharp">
+					<a href="javascript: CodeSnippet_SetLanguage('Fsharp');">F#</a>
+				</div>
+				<div class="codeSnippetTab csNaTab codeCpp">
+					<a href="javascript: CodeSnippet_SetLanguage('Cpp');">C++</a>
+				</div>
+				<div class="codeSnippetTab csLastTab csNaTab codeJScript">
+					<a href="javascript: CodeSnippet_SetLanguage('JScript');">JScript</a>
+				</div>
+				<div class="codeSnippetTabRightCorner">
+				</div>
+				<div style="clear:both;">
+				</div>
+			</div>
+	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode codeCsharp">
+					<pre xml:space="preserve" class="brush: csharp">[Serializable()]&nbsp;<br />public struct Wnd : <a target="_top" href="http://msdn2.microsoft.com/en-us/library/ms131187.aspx">IEquatable</a>&lt;<a target="_top" href="topic_0000000000000831.html" onclick="this.target='';return true;">Wnd</a>&gt;</pre>			
+				</div>
+				<div class="codeSnippetCode codeNA">
+					<pre xml:space="preserve">This language is not supported or no code example is available.</pre>			
+				</div>
+			</div>
+		</div>
+
+
+		
+		
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	</div>
+</div>
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Properties</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="PropertiesSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008EF.html">AsButton</a>
+
+	</td>
+	<td>
+
+Casts this to <a target="_top" href="topic_00000000000008E5.html" onclick="this.target='';return true;">WButton</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C1.html">ClassName</a>
+
+	</td>
+	<td>
+
+Gets class name.
+Returns null if fails, eg if the window is closed. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000087F.html">ClientHeight</a>
+
+	</td>
+	<td>
+
+Gets client area height.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000087C.html">ClientRect</a>
+
+	</td>
+	<td>
+
+Gets client area rectangle (width and height).
+The same as <a target="_top" href="topic_000000000000087D.html" onclick="this.target='';return true;">ClientSize</a>, just the return type is different.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000882.html">ClientRectInScreen</a>
+
+	</td>
+	<td>
+
+Gets client area rectangle in screen coordinates.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000087D.html">ClientSize</a>
+
+	</td>
+	<td>
+
+Gets client area width and height.
+The same as <a target="_top" href="topic_000000000000087C.html" onclick="this.target='';return true;">ClientRect</a>, just the return type is different.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000087E.html">ClientWidth</a>
+
+	</td>
+	<td>
+
+Gets client area width.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B4.html">ControlId</a>
+
+	</td>
+	<td>
+
+Gets or sets id of this control.
+The 'get' function supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C5.html">ControlText</a>
+
+	</td>
+	<td>
+
+Gets control text.
+Returns &quot;&quot; if no text. Returns null if fails, eg if the window is closed. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008AA.html">ExStyle</a>
+
+	</td>
+	<td>
+
+Gets window extended style.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000843.html">Handle</a>
+
+	</td>
+	<td>
+
+Gets window handle as IntPtr.
+Code <code>w.Handle</code> is the same as <code>(IntPtr)w</code> .
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000879.html">Height</a>
+
+	</td>
+	<td>
+
+Gets height.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000857.html">Is0</a>
+
+	</td>
+	<td>
+
+Returns true if the <a target="_top" href="topic_0000000000000831.html" onclick="this.target='';return true;">handle</a> is 0.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008BC.html">Is64Bit</a>
+
+	</td>
+	<td>
+
+Returns true if the window is of a 64-bit process, false if of a 32-bit process.
+Also returns false if fails. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+If <a target="_top" href="topic_0000000000000611.html" onclick="this.target='';return true;">Is64BitOS</a> is true, calls API &lt;msdn&gt;GetWindowThreadProcessId&lt;/msdn&gt;, &lt;msdn&gt;OpenProcess&lt;/msdn&gt; and &lt;msdn&gt;IsWow64Process&lt;/msdn&gt;.
+&lt;note&gt;If you know that the window belongs to current process, instead use <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.environment.is64bitprocess.aspx">Is64BitProcess</a> or <code>IntPtr.Size==8</code>. This function is much slower.&lt;/note&gt;
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000091F.html">IsActive</a>
+
+	</td>
+	<td>
+
+Returns true if this window is the active (foreground) window.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000858.html">IsAlive</a>
+
+	</td>
+	<td>
+
+Returns true if the <a target="_top" href="topic_0000000000000831.html" onclick="this.target='';return true;">handle</a> identifies an existing window.
+Returns false if the handle is 0 or invalid.
+Invalid non-0 handle usually means that the window is closed/destroyed.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000913.html">IsChildWindow</a>
+
+	</td>
+	<td>
+
+Returns true if this is a child window (control), false if top-level window.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000861.html">IsCloaked</a>
+
+	</td>
+	<td>
+
+Returns true if the window is cloaked.
+Returns false if not cloaked or if failed.
+On Windows 7 returns false because there is no &quot;cloaked window&quot; feature.
+Windows 10 uses window cloaking mostly to hide windows on inactive desktops. Windows 8 - mostly to hide Metro app windows.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000860.html">IsCloakedGetState</a>
+
+	</td>
+	<td>
+
+Gets the cloaked state.
+Returns 0 if not cloaked or if failed.
+Else returns flags: 1 cloaked by its application, 2 cloaked by Windows, 4 cloaked because its owner window is cloaked.
+On Windows 7 returns 0 because there is no &quot;cloaked window&quot; feature.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008BF.html">IsConsole</a>
+
+	</td>
+	<td>
+
+Returns true if this is a console window (class name &quot;ConsoleWindowClass&quot;).
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000085E.html">IsEnabled</a>
+
+	</td>
+	<td>
+
+Gets the enabled state.
+Returns true if the window is enabled.
+Returns false if is disabled or is a child of disabled parent.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+Calls API &lt;msdn&gt;IsWindowEnabled&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000086E.html">IsFocused</a>
+
+	</td>
+	<td>
+
+Returns true if this is the control or window that has the keyboard input focus.
+Can belong to any process/thread. With controls of this thread you can use the more lightweight function <a target="_top" href="topic_0000000000000871.html" onclick="this.target='';return true;">IsFocusedLocal</a>.
+Calls <a target="_top" href="topic_000000000000086D.html" onclick="this.target='';return true;">WndFocused</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000871.html">IsFocusedLocal</a>
+
+	</td>
+	<td>
+
+Returns true if this is the control or window of this thread that has the keyboard input focus.
+Calls API &lt;msdn&gt;GetFocus&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000979.html">IsFullScreen</a>
+
+	</td>
+	<td>
+
+Returns true if this is a full-screen window and not desktop.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008BD.html">IsHung</a>
+
+	</td>
+	<td>
+
+Returns true if thread of this window is considered hung (not responding).
+Calls API &lt;msdn&gt;IsHungAppWindow&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008BE.html">IsHungGhost</a>
+
+	</td>
+	<td>
+
+Returns true if the window is a ghost window that the system creates over a hung (not responding) window to allow the user to minimally interact with it.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000863.html">IsMaximized</a>
+
+	</td>
+	<td>
+
+Returns true if maximized, false if not.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+Calls API &lt;msdn&gt;IsZoomed&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000862.html">IsMinimized</a>
+
+	</td>
+	<td>
+
+Returns true if minimized, false if not.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+Calls API &lt;msdn&gt;IsIconic&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008BA.html">IsOfThisProcess</a>
+
+	</td>
+	<td>
+
+Returns true if this window belongs to the current process, false if to another process.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+Calls API &lt;msdn&gt;GetWindowThreadProcessId&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B9.html">IsOfThisThread</a>
+
+	</td>
+	<td>
+
+Returns true if this window belongs to the current thread, false if to another thread.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+Calls API &lt;msdn&gt;GetWindowThreadProcessId&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008AF.html">IsPopupWindow</a>
+
+	</td>
+	<td>
+
+Returns true if has Native.WS_POPUP style.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B1.html">IsResizable</a>
+
+	</td>
+	<td>
+
+Returns true if has Native.WS_THICKFRAME style.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B0.html">IsToolWindow</a>
+
+	</td>
+	<td>
+
+Returns true if has Native.WS_EX_TOOLWINDOW style.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A7.html">IsTopmost</a>
+
+	</td>
+	<td>
+
+Returns true if this is a topmost (always-on-top) window.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C0.html">IsUacAccessDenied</a>
+
+	</td>
+	<td>
+
+Returns true if UAC would not allow to automate the window.
+It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008BB.html">IsUnicode</a>
+
+	</td>
+	<td>
+
+Returns true if the window is a Unicode window, false if ANSI.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+Calls API &lt;msdn&gt;IsWindowUnicode&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000859.html">IsVisible</a>
+
+	</td>
+	<td>
+
+Returns true if the window is visible.
+Returns false if is invisible or is a child of invisible parent.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000085B.html">IsVisibleAndNotCloaked</a>
+
+	</td>
+	<td>
+
+Returns true if <a target="_top" href="topic_0000000000000859.html" onclick="this.target='';return true;">IsVisible</a> returns true and <a target="_top" href="topic_0000000000000861.html" onclick="this.target='';return true;">IsCloaked</a> returns false.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000085A.html">IsVisibleEx</a>
+
+	</td>
+	<td>
+
+Returns true if the window is visible.
+Returns false if is invisible or is a child of invisible parent.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000097B.html">IsWindows10StoreApp</a>
+
+	</td>
+	<td>
+
+Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is &quot;ApplicationFrameWindow&quot;, 2 if &quot;Windows.UI.Core.CoreWindow&quot;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000097A.html">IsWindows8MetroStyle</a>
+
+	</td>
+	<td>
+
+Returns true if this window has Metro style, ie is not a classic desktop window.
+On Windows 8/8.1 most Windows Store app windows and many shell windows have Metro style.
+On Windows 10 few windows have Metro style.
+On Windows 7 there are no Metro style windows.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008FF.html">LastFind</a>
+
+	</td>
+	<td>
+
+Gets arguments and result of this thread's last call to <a target="_top" href="topic_00000000000008FE.html" onclick="this.target='';return true;">Find</a> or <a target="_top" href="topic_0000000000000900.html" onclick="this.target='';return true;">FindAll</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000892.html">MouseClientXY</a>
+
+	</td>
+	<td>
+
+Returns mouse pointer position relative to the client area of this window.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C4.html">Name</a>
+
+	</td>
+	<td>
+
+Gets window or control name.
+Returns &quot;&quot; if no name. Returns null if fails, eg if the window is closed. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C8.html">NameAcc</a>
+
+	</td>
+	<td>
+
+Gets <a target="_top" href="topic_000000000000010D.html" onclick="this.target='';return true;">Name</a> of the accessible object (role WINDOW) of this window or control.
+Returns &quot;&quot; if the object has no name or failed to get it. Returns null if invalid window handle.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C9.html">NameWinForms</a>
+
+	</td>
+	<td>
+
+Gets Control.Name property of a .NET Windows Forms control.
+Returns null if it is not a Windows Forms control or if fails.
+&lt;note&gt;Use this with controls of other processes. Don't use with your controls, when you have a Control object.&lt;/note&gt;
+&lt;note&gt;This is slow when getting names of multiple controls in a window. Instead create a <a target="_top" href="topic_0000000000000972.html" onclick="this.target='';return true;">WinFormsControlNames</a> instance and call its <a target="_top" href="topic_0000000000000975.html" onclick="this.target='';return true;">GetControlName</a> method for each control.&lt;/note&gt;
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B8.html">ProcessId</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;GetWindowThreadProcessId&lt;/msdn&gt; and returns process id.
+Returns 0 if fails. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008CA.html">ProcessName</a>
+
+	</td>
+	<td>
+
+Gets filename (without &quot;.exe&quot;) of process executable file.
+Return null if fails.
+Calls <a target="_top" href="topic_00000000000008B8.html" onclick="this.target='';return true;">ProcessId</a> and <a target="_top" href="topic_00000000000005AE.html" onclick="this.target='';return true;">Process_.GetProcessName</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008CB.html">ProcessPath</a>
+
+	</td>
+	<td>
+
+Gets full path of process executable file.
+Return null if fails.
+Calls <a target="_top" href="topic_00000000000008B8.html" onclick="this.target='';return true;">ProcessId</a> and <a target="_top" href="topic_00000000000005AE.html" onclick="this.target='';return true;">Process_.GetProcessName</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B5.html">Prop</a>
+
+	</td>
+	<td>
+
+Returns an object that manages window properties using API &lt;msdn&gt;SetProp&lt;/msdn&gt; and co.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000874.html">Rect</a>
+
+	</td>
+	<td>
+
+Gets rectangle (position and size) in screen coordinates.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000890.html">RectInParent</a>
+
+	</td>
+	<td>
+
+Gets or sets child window rectangle in parent window's client area.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A0.html">Screen</a>
+
+	</td>
+	<td>
+
+Gets <a target="_top" href="http://msdn2.microsoft.com/en-us/library/system.windows.forms.screen.aspx">Screen</a> object of the screen that contains this window (the biggest part of it) or is nearest to it.
+If this window handle is default(Wnd) or invalid, gets the primary screen.
+Calls <a target="_top" href="topic_0000000000000685.html" onclick="this.target='';return true;">FromWindow</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000875.html">Size</a>
+
+	</td>
+	<td>
+
+Gets width and height.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A9.html">Style</a>
+
+	</td>
+	<td>
+
+Gets window style.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B7.html">ThreadId</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;GetWindowThreadProcessId&lt;/msdn&gt; and returns thread id.
+Returns 0 if fails. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+&lt;note&gt;It is native thread id, not Thread.ManagedThreadId.&lt;/note&gt;
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000878.html">Width</a>
+
+	</td>
+	<td>
+
+Gets width.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000091E.html">WndActive</a>
+
+	</td>
+	<td>
+
+Gets the active (foreground) window.
+Calls API &lt;msdn&gt;GetForegroundWindow&lt;/msdn&gt;.
+Returns default(Wnd) if there is no active window; more info: <a target="_top" href="topic_000000000000086A.html" onclick="this.target='';return true;">WaitForAnActiveWindow</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000915.html">WndDirectParent</a>
+
+	</td>
+	<td>
+
+Gets the window or control that is the direct parent of this control.
+Returns default(Wnd) if this is a top-level window.
+If you need the top-level parent window, use <a target="_top" href="topic_0000000000000912.html" onclick="this.target='';return true;">WndWindow</a> instead.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000916.html">WndDirectParentOrOwner</a>
+
+	</td>
+	<td>
+
+Gets the window or control that is the direct parent of this control or owner of this top-level window.
+Calls API &lt;msdn&gt;GetParent&lt;/msdn&gt;. Faster than <a target="_top" href="topic_0000000000000915.html" onclick="this.target='';return true;">WndDirectParent</a>.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000091B.html">WndFirstChild</a>
+
+	</td>
+	<td>
+
+Gets the child control at the top of the Z order.
+Returns default(Wnd) if no children.
+The same as <a target="_top" href="topic_000000000000091D.html" onclick="this.target='';return true;">WndChild</a>(0).
+Calls API &lt;msdn&gt;GetWindow&lt;/msdn&gt;(this, GW_CHILD).
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000917.html">WndFirstSibling</a>
+
+	</td>
+	<td>
+
+Gets the window of the same type that is highest in the Z order.
+If this is a top-level window, gets first top-level window, else gets first control of the same direct parent.
+If this is the first, returns this, not default(Wnd).
+Calls API &lt;msdn&gt;GetWindow&lt;/msdn&gt;(this, GW_HWNDFIRST).
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000086D.html">WndFocused</a>
+
+	</td>
+	<td>
+
+Gets the control or window that has the keyboard input focus.
+It can belong to any process/thread. With controls of this thread you can use the more lightweight function <a target="_top" href="topic_0000000000000870.html" onclick="this.target='';return true;">WndFocusedLocal</a>.
+Calls API &lt;msdn&gt;GetGUIThreadInfo&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000870.html">WndFocusedLocal</a>
+
+	</td>
+	<td>
+
+Gets the control or window of this thread that has the keyboard input focus.
+Calls API &lt;msdn&gt;GetFocus&lt;/msdn&gt;.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000091C.html">WndLastChild</a>
+
+	</td>
+	<td>
+
+Gets the child control at the bottom of the Z order.
+Returns default(Wnd) if no children.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000918.html">WndLastSibling</a>
+
+	</td>
+	<td>
+
+Gets the window of the same type that is lowest in the Z order.
+If this is a top-level window, gets last top-level window, else gets last control of the same direct parent.
+If this is the last, returns this, not default(Wnd).
+Calls API &lt;msdn&gt;GetWindow&lt;/msdn&gt;(this, GW_HWNDLAST).
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000919.html">WndNext</a>
+
+	</td>
+	<td>
+
+Gets the window of the same type that is next (below this) in the Z order.
+If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
+If this is the last, returns default(Wnd).
+Calls API &lt;msdn&gt;GetWindow&lt;/msdn&gt;(this, GW_HWNDNEXT).
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000911.html">WndOwner</a>
+
+	</td>
+	<td>
+
+Gets or sets the owner window of this top-level window.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000091A.html">WndPrev</a>
+
+	</td>
+	<td>
+
+Gets the window of the same type that is previous (above this) in the Z order.
+If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
+If this is the first, returns default(Wnd).
+Calls API &lt;msdn&gt;GetWindow&lt;/msdn&gt;(this, GW_HWNDPREV).
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000912.html">WndWindow</a>
+
+	</td>
+	<td>
+
+Gets the top-level parent window of this control.
+If this is a top-level window, returns this. Returns default(Wnd) if this window is invalid.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000876.html">X</a>
+
+	</td>
+	<td>
+
+Gets horizontal position in screen coordinates.
+
+	</td>
+</tr>
+	
+
+
+	
+		<tr class="
+
+
+">
+	<td>
+<img alt="Public property" title="Public property" src="msdn2017/pubproperty.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000877.html">Y</a>
+
+	</td>
+	<td>
+
+Gets vertical position in screen coordinates.
+
+	</td>
+</tr>
+	
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="MethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000868.html">Activate()</a>
+
+	</td>
+	<td>
+
+Activates this window (brings to the foreground).
+Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000869.html">ActivateLL()</a>
+
+	</td>
+	<td>
+
+Low-level version of <a target="_top" href="topic_0000000000000868.html" onclick="this.target='';return true;">Activate</a>.
+Just calls <a target="_top" href="topic_000000000000086B.html" onclick="this.target='';return true;">EnableActivate</a>, API &lt;msdn&gt;SetForegroundWindow&lt;/msdn&gt; and makes sure that it actually worked, but does not check whether it activated exactly this window.
+No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
+Returns false if fails.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008E4.html">AllChildren(bool, bool, bool)</a>
+
+	</td>
+	<td>
+
+Gets child controls.
+Returns array containing 0 or more control handles as Wnd.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008F0.html">ButtonClick(int, bool)</a>
+
+	</td>
+	<td>
+
+Finds a child button by id and sends a &quot;click&quot; message. Does not use the mouse.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Click(bool)</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008F1.html">ButtonClick(string, string, bool)</a>
+
+	</td>
+	<td>
+
+Finds a child button by name and sends a &quot;click&quot; message. Does not use the mouse.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Click(bool)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008DD.html">Child(string, string, WCFlags, Func&lt;WndBoolean&gt;, int)</a>
+
+	</td>
+	<td>
+
+Finds a child control and returns its handle as Wnd.
+Returns default(Wnd) if not found. See also: <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a>, <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Wnd)</a>, <a target="_top" href=".html" onclick="this.target='';return true;">operator+(Wnd)</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008E2.html">ChildAll(string, string, WCFlags, Func&lt;WndBoolean&gt;)</a>
+
+	</td>
+	<td>
+
+Finds all matching child controls.
+Returns List containing 0 or more control handles as Wnd.
+Everything except the return type is the same as with <a target="_top" href="topic_00000000000008DD.html" onclick="this.target='';return true;">Child</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008E3.html">ChildFast(string, string, Wnd)</a>
+
+	</td>
+	<td>
+
+Finds a direct child control and returns its handle as Wnd.
+Returns default(Wnd) if not found. See also: <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a>, <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Wnd)</a>, <a target="_top" href=".html" onclick="this.target='';return true;">operator+(Wnd)</a>.
+Calls API &lt;msdn&gt;FindWindowEx&lt;/msdn&gt;.
+Faster than <a target="_top" href="topic_00000000000008DD.html" onclick="this.target='';return true;">Child</a>, which uses API &lt;msdn&gt;EnumChildWindows&lt;/msdn&gt;.
+Can be used only when you know full name and/or class name.
+Finds hidden controls too.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000090C.html">ChildFromXY(Coord, Coord, bool, bool)</a>
+
+	</td>
+	<td>
+
+Gets child control from point.
+Returns default(Wnd) if the point is not in a child control or not in the client area of this window.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C2.html">ClassNameIs(string)</a>
+
+	</td>
+	<td>
+
+Returns true if the class name of this window matches className. Else returns false.
+Also returns false when fails (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C3.html">ClassNameIs(params string[])</a>
+
+	</td>
+	<td>
+
+If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
+Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008CC.html">Close(bool, bool)</a>
+
+	</td>
+	<td>
+
+Closes the window.
+Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if noWait==true.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000893.html">ContainsScreenXY(Coord, Coord, CoordOptions)</a>
+
+	</td>
+	<td>
+
+Returns true if this window (its rectangle) contains the specified point in primary screen coordinates.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000895.html">ContainsWindowXY(Coord, Coord)</a>
+
+	</td>
+	<td>
+
+This overload calls <a target="_top" href=".html" onclick="this.target='';return true;">ContainsWindowXY</a>(WndWindow, x, y).
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000894.html">ContainsWindowXY(Wnd, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Returns true if this control (its rectangle) contains the specified point in parent window.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000085F.html">Enable(bool)</a>
+
+	</td>
+	<td>
+
+Enables or disables the window.
+Calls API &lt;msdn&gt;EnableWindow&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000089E.html">EnsureInScreen(object, bool)</a>
+
+	</td>
+	<td>
+
+Moves this window if need, to ensure that entire window is in screen.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000083F.html">Equals(Wnd)</a>
+
+	</td>
+	<td>
+
+Returns true if w == this.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000840.html">Equals(Nullable&lt;Wnd&gt;)</a>
+
+	</td>
+	<td>
+
+Returns true if w != null and w.Value == this.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000841.html">Equals(object)</a>
+
+	</td>
+	<td>
+
+Returns true if obj is this Wnd.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008FE.html">Find(string, string, string, WFFlags, Func&lt;WndBoolean&gt;, object)</a>
+
+	</td>
+	<td>
+
+Finds a top-level window and returns its handle as Wnd.
+Returns default(Wnd) if not found. See also: <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a>, <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Wnd)</a>, <a target="_top" href=".html" onclick="this.target='';return true;">operator+(Wnd)</a>. See examples.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000900.html">FindAll(string, string, string, WFFlags, Func&lt;WndBoolean&gt;, object)</a>
+
+	</td>
+	<td>
+
+Finds all matching windows.
+Returns array containing 0 or more window handles as Wnd.
+Everything except the return type is the same as with <a target="_top" href="topic_00000000000008FE.html" onclick="this.target='';return true;">Find</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000901.html">FindFast(string, string, Wnd)</a>
+
+	</td>
+	<td>
+
+Finds a top-level window and returns its handle as Wnd.
+Returns default(Wnd) if not found. To check it you can use <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a> or <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Wnd)</a>.
+Calls API &lt;msdn&gt;FindWindowEx&lt;/msdn&gt;.
+Faster than <a target="_top" href="topic_00000000000008FE.html" onclick="this.target='';return true;">Find</a>, which uses API &lt;msdn&gt;EnumWindows&lt;/msdn&gt;.
+Can be used only when you know full name and/or class name.
+Finds hidden windows too.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000902.html">FindOrRun(string, string, string, WFFlags, Func&lt;WndBoolean&gt;, object, Func&lt;Int32&gt;, double, bool)</a>
+
+	</td>
+	<td>
+
+Finds a top-level window. If found, activates (optionally), else calls callback function that should open the window (eg call <a target="_top" href="topic_00000000000005F8.html" onclick="this.target='';return true;">Run</a>) and waits for the window.
+Returns window handle as Wnd. Returns default(Wnd) if not found (if runWaitTimeoutS is negative; else exception).
+The first 5 parameters are the same as <a target="_top" href="topic_00000000000008FE.html" onclick="this.target='';return true;">Find</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000086C.html">Focus()</a>
+
+	</td>
+	<td>
+
+Sets the keyboard input focus to this control or window.
+Also activetes its top-level parent window (see <a target="_top" href="topic_0000000000000868.html" onclick="this.target='';return true;">Activate</a>).
+Can belong to any process/thread. With controls of this thread you can use the more lightweight function <a target="_top" href="topic_000000000000086F.html" onclick="this.target='';return true;">FocusLocal</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000086F.html">FocusLocal()</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SetFocus&lt;/msdn&gt;, which sets the keyboard input focus to this control or window, which must be of this thread.
+Fails if it belongs to another thread or is invalid or disabled.
+Returns false if fails. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000090B.html">FromMouse(WXYFlags)</a>
+
+	</td>
+	<td>
+
+Gets visible top-level window or control from mouse cursor position.
+More info: <a target="_top" href=".html" onclick="this.target='';return true;">FromXY(Coord,Coord,WXYFlags,CoordOptions)</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000909.html">FromXY(Coord, Coord, WXYFlags, CoordOptions)</a>
+
+	</td>
+	<td>
+
+Gets visible top-level window or control from point.
+By default the coordinates are relative to the primary screen.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000090A.html">FromXY(Point, WXYFlags)</a>
+
+	</td>
+	<td>
+
+Gets visible top-level window or control from point.
+More info: <a target="_top" href=".html" onclick="this.target='';return true;">FromXY(Coord,Coord,WXYFlags,CoordOptions)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000087A.html">GetClientRect(out RECT)</a>
+
+	</td>
+	<td>
+
+Gets client area rectangle.
+The same as the <a target="_top" href="topic_000000000000087C.html" onclick="this.target='';return true;">ClientRect</a> property.
+The same as <a target="_top" href="topic_000000000000087B.html" onclick="this.target='';return true;">GetClientSize</a>, just the parameter type is different.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000087B.html">GetClientSize(out Size)</a>
+
+	</td>
+	<td>
+
+Gets client area width and height.
+The same as the <a target="_top" href="topic_000000000000087D.html" onclick="this.target='';return true;">ClientSize</a> property.
+The same as <a target="_top" href="topic_000000000000087A.html" onclick="this.target='';return true;">GetClientRect</a>, just the parameter type is different.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000842.html">GetHashCode()</a>
+
+	</td>
+	<td>
+
+Returns the hash code for this instance.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000872.html">GetRect(out RECT)</a>
+
+	</td>
+	<td>
+
+Gets rectangle (position and size) in screen coordinates.
+The same as the <a target="_top" href="topic_0000000000000874.html" onclick="this.target='';return true;">Rect</a> property.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000088F.html">GetRectInClientOf(Wnd, out RECT)</a>
+
+	</td>
+	<td>
+
+Gets rectangle of this window (usually control) relative to the client area of another window (usually the parent).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000891.html">GetRectNotMinMax(out RECT)</a>
+
+	</td>
+	<td>
+
+Gets rectangle of normal (restored) window even if currently it is minimized or maximized.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000873.html">GetSize(out Size)</a>
+
+	</td>
+	<td>
+
+Gets width and height.
+The same as the <a target="_top" href="topic_0000000000000875.html" onclick="this.target='';return true;">Size</a> property.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C6.html">GetText(Nullable&lt;Boolean&gt;, bool)</a>
+
+	</td>
+	<td>
+
+Gets window/control name or control text.
+Returns &quot;&quot; if it is empty.
+Returns null if fails, eg if the window is closed. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+This is a low-level function. You can instead use <a target="_top" href="topic_00000000000008C4.html" onclick="this.target='';return true;">Name</a> and <a target="_top" href="topic_00000000000008C5.html" onclick="this.target='';return true;">ControlText</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B6.html">GetThreadProcessId(out int)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;GetWindowThreadProcessId&lt;/msdn&gt;.
+Returns thread id and also gets process id.
+Returns 0 if fails. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+&lt;note&gt;It is native thread id, not Thread.ManagedThreadId.&lt;/note&gt;
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000881.html">GetWindowAndClientRectInScreen(out RECT, out RECT)</a>
+
+	</td>
+	<td>
+
+Gets window rectangle and client area rectangle, both in screen coordinates.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B2.html">GetWindowLong(int)</a>
+
+	</td>
+	<td>
+
+Calls API GetWindowLong if this process is 32-bit, GetWindowLongPtr if 64-bit.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008E0.html">HasAcc(Finder)</a>
+
+	</td>
+	<td>
+
+Returns true if this window contains the specified accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ChildFinder)</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008DF.html">HasChild(ChildFinder)</a>
+
+	</td>
+	<td>
+
+Returns true if this window contains the specified control.
+Calls <a target="_top" href="topic_00000000000008D8.html" onclick="this.target='';return true;">Find</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008DE.html">HasChild(string, string, WCFlags, Func&lt;WndBoolean&gt;, int)</a>
+
+	</td>
+	<td>
+
+Returns true if this window contains the specified control.
+Calls <a target="_top" href="topic_00000000000008DD.html" onclick="this.target='';return true;">Child</a>.
+&lt;note type=&quot;note&quot;&gt;
+Using this function many times with same parameters is inefficient. Instead create new <a target="_top" href="topic_00000000000008D5.html" onclick="this.target='';return true;">ChildFinder</a> and call <a target="_top" href="topic_00000000000008D8.html" onclick="this.target='';return true;">Find</a> or <a target="_top" href=".html" onclick="this.target='';return true;">HasChild(ChildFinder)</a>. See example.
+&lt;/note&gt;
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008AC.html">HasExStyle(UInt32)</a>
+
+	</td>
+	<td>
+
+Returns true if the window has all specified extended style flags (see <a target="_top" href="topic_00000000000008AA.html" onclick="this.target='';return true;">ExStyle</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008AB.html">HasStyle(UInt32)</a>
+
+	</td>
+	<td>
+
+Returns true if the window has all specified style flags (see <a target="_top" href="topic_00000000000008A9.html" onclick="this.target='';return true;">Style</a>).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000914.html">IsChildOf(Wnd)</a>
+
+	</td>
+	<td>
+
+Returns true if this is a direct or indirect child (descendant) of window w.
+Calls API &lt;msdn&gt;IsChild&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000957.html">IsSpecHwnd(Wnd)</a>
+
+	</td>
+	<td>
+
+Returns true if w contains a non-zero special handle value (see <a target="_top" href="topic_0000000000000958.html" onclick="this.target='';return true;">SpecHwnd</a>).
+Note that HWND_TOP is 0.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008E1.html">Kid(int, WCFlags)</a>
+
+	</td>
+	<td>
+
+Finds a child control by its id and returns its handle as Wnd.
+Returns default(Wnd) if not found. See also: <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a>, <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Wnd)</a>, <a target="_top" href=".html" onclick="this.target='';return true;">operator+(Wnd)</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000884.html">MapClientToClientOf(Wnd, ref Point)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000883.html">MapClientToClientOf(Wnd, ref RECT)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000886.html">MapClientToScreen(ref Point)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the client area of this window to coordinates relative to the screen.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000885.html">MapClientToScreen(ref RECT)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the client area of this window to coordinates relative to the screen.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000889.html">MapClientToWindow(ref Point)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000088A.html">MapClientToWindow(ref RECT)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000888.html">MapScreenToClient(ref Point)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the screen to coordinates relative to the client area of this window.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000887.html">MapScreenToClient(ref RECT)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the screen to coordinates relative to the client area of this window.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000088B.html">MapWindowToClient(ref Point)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000088C.html">MapWindowToClient(ref RECT)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000088D.html">MapWindowToScreen(ref Point)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the top-left corner of this window to screen coordinates.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000088E.html">MapWindowToScreen(ref RECT)</a>
+
+	</td>
+	<td>
+
+Converts coordinates relative to the top-left corner of this window to screen coordinates.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008F2.html">MenuClick(int, bool)</a>
+
+	</td>
+	<td>
+
+Posts a &quot;menu item clicked&quot; notification (&lt;msdn&gt;WM_COMMAND&lt;/msdn&gt;) as if that menu item was clicked. Does not use the mouse.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000089A.html">Move(Coord, Coord, Coord, Coord, CoordOptions)</a>
+
+	</td>
+	<td>
+
+Moves and/or resizes.
+With windows of current thread usually it's better to use <a target="_top" href=".html" onclick="this.target='';return true;">MoveLL(int,int,int,int,uint)</a>.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000089B.html">Move(Coord, Coord, CoordOptions)</a>
+
+	</td>
+	<td>
+
+Moves.
+Calls Move(x, y, null, null, workArea).
+With windows of current thread usually it's better to use <a target="_top" href=".html" onclick="this.target='';return true;">MoveLL(int,int)</a>.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000089D.html">MoveInScreen(Coord, Coord, object, bool, bool)</a>
+
+	</td>
+	<td>
+
+Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000898.html">MoveLL(int, int)</a>
+
+	</td>
+	<td>
+
+Moves.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000897.html">MoveLL(int, int, int, int, UInt32)</a>
+
+	</td>
+	<td>
+
+Moves and resizes.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000089F.html">MoveToScreenCenter(object)</a>
+
+	</td>
+	<td>
+
+Moves this window to the center of the screen.
+Calls ShowNotMinMax(true) and MoveInScreen(null, null, screen, true, true).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000084D.html">Post(UInt32, LPARAM, LPARAM)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;PostMessage&lt;/msdn&gt;.
+Returns its return value (false if failed). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000089C.html">Resize(Coord, Coord, CoordOptions)</a>
+
+	</td>
+	<td>
+
+Resizes.
+Calls Move(null, null, width, height, workArea).
+With windows of current thread usually it's better to use <a target="_top" href=".html" onclick="this.target='';return true;">ResizeLL(int,int)</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000899.html">ResizeLL(int, int)</a>
+
+	</td>
+	<td>
+
+Resizes.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000097D.html">RestorePositionSizeState(string, bool, bool)</a>
+
+	</td>
+	<td>
+
+Restores window position, size and state that is stored in a string created by <a target="_top" href="topic_000000000000097C.html" onclick="this.target='';return true;">SavePositionSizeState</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000097C.html">SavePositionSizeState(bool)</a>
+
+	</td>
+	<td>
+
+Gets window position, size and state stored in a string that can be used with <a target="_top" href="topic_000000000000097D.html" onclick="this.target='';return true;">RestorePositionSizeState</a>.
+Returns null if failed. Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000845.html">Send(UInt32, LPARAM, LPARAM)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessage&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000084C.html">SendNotify(UInt32, LPARAM, LPARAM)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendNotifyMessage&lt;/msdn&gt;.
+Returns its return value (false if failed). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000847.html">SendS(UInt32, LPARAM, char[])</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessage&lt;/msdn&gt; where lParam is char[].
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000846.html">SendS(UInt32, LPARAM, string)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessage&lt;/msdn&gt; where lParam is string.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000849.html">SendTimeout(int, out LPARAM, UInt32, LPARAM, LPARAM, UInt32)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessageTimeout&lt;/msdn&gt; and gets the result of the message processing.
+Returns its return value (false if failed). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+flags can be Native.SMTO_.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000848.html">SendTimeout(int, UInt32, LPARAM, LPARAM, UInt32)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessageTimeout&lt;/msdn&gt;.
+Returns its return value (false if failed). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+flags can be Native.SMTO_.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000084B.html">SendTimeoutS(int, out LPARAM, UInt32, LPARAM, char[], UInt32)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessageTimeout&lt;/msdn&gt; where lParam is char[].
+Returns its return value (false if failed). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+flags can be Native.SMTO_.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000084A.html">SendTimeoutS(int, out LPARAM, UInt32, LPARAM, string, UInt32)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SendMessageTimeout&lt;/msdn&gt; where lParam is string.
+Returns its return value (false if failed). Supports <a target="_top" href="topic_0000000000000004.html" onclick="this.target='';return true;">GetError</a>.
+flags can be Native.SMTO_.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000880.html">SetClientSize(Nullable&lt;Int32&gt;, Nullable&lt;Int32&gt;)</a>
+
+	</td>
+	<td>
+
+Calculates and sets window rectangle from the specified client area rectangle.
+Calls <a target="_top" href="topic_0000000000000899.html" onclick="this.target='';return true;">ResizeLL</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008AE.html">SetExStyle(UInt32, SetAddRemove, bool, bool)</a>
+
+	</td>
+	<td>
+
+Changes window extended style.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008AD.html">SetStyle(UInt32, SetAddRemove, bool, bool)</a>
+
+	</td>
+	<td>
+
+Changes window style.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008C7.html">SetText(string)</a>
+
+	</td>
+	<td>
+
+Sets window/control name or control text.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000978.html">SetTransparency(bool, Nullable&lt;Double&gt;, Nullable&lt;ColorInt&gt;)</a>
+
+	</td>
+	<td>
+
+Sets transparency.
+On Windows 7 works only with top-level windows, on newer OS also with controls.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008B3.html">SetWindowLong(int, LPARAM)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SetWindowLong&lt;/msdn&gt; if this process is 32-bit, SetWindowLongPtr if 64-bit.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000896.html">SetWindowPos(UInt32, int, int, int, int, Wnd)</a>
+
+	</td>
+	<td>
+
+Calls API &lt;msdn&gt;SetWindowPos&lt;/msdn&gt;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000085C.html">Show(bool)</a>
+
+	</td>
+	<td>
+
+Shows (if hidden) or hides this window.
+Does not activate/deactivate/zorder.
+With windows of current thread usually it's better to use <a target="_top" href="topic_000000000000085D.html" onclick="this.target='';return true;">ShowLL</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000085D.html">ShowLL(bool)</a>
+
+	</td>
+	<td>
+
+Shows (if hidden) or hides this window.
+Does not activate/deactivate/zorder.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000865.html">ShowMaximized(bool)</a>
+
+	</td>
+	<td>
+
+If not minimized, minimizes.
+Also unhides.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000864.html">ShowMinimized(bool)</a>
+
+	</td>
+	<td>
+
+If not minimized, minimizes.
+Also unhides.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000866.html">ShowNotMinMax(bool)</a>
+
+	</td>
+	<td>
+
+If maximized or minimized, makes normal (not min/max).
+Also unhides.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000867.html">ShowNotMinimized(bool)</a>
+
+	</td>
+	<td>
+
+If minimized, restores previous non-minimized state (maximized or normal).
+Also unhides.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000851.html">ThrowIf0()</a>
+
+	</td>
+	<td>
+
+If <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a>, throws <a target="_top" href="topic_00000000000002C9.html" onclick="this.target='';return true;">WndException</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000852.html">ThrowIfInvalid()</a>
+
+	</td>
+	<td>
+
+If <a target="_top" href="topic_0000000000000857.html" onclick="this.target='';return true;">Is0</a> or !<a target="_top" href="topic_0000000000000858.html" onclick="this.target='';return true;">IsAlive</a>, throws <a target="_top" href="topic_00000000000002C9.html" onclick="this.target='';return true;">WndException</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000856.html">ThrowNoNative(string)</a>
+
+	</td>
+	<td>
+
+Throws <a target="_top" href="topic_00000000000002C9.html" onclick="this.target='';return true;">WndException</a> that uses mainMessage and does not use the last Windows API error.
+Also the message depends on whether the window handle is 0/invalid.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000853.html">ThrowUseNative()</a>
+
+	</td>
+	<td>
+
+Throws <a target="_top" href="topic_00000000000002C9.html" onclick="this.target='';return true;">WndException</a> that uses the last Windows API error (code and message).
+Also the message depends on whether the window handle is 0/invalid.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000855.html">ThrowUseNative(int, string)</a>
+
+	</td>
+	<td>
+
+Throws <a target="_top" href="topic_00000000000002C9.html" onclick="this.target='';return true;">WndException</a> that uses mainMessage and the specified Windows API error code.
+Also the message depends on whether the window handle is 0/invalid.
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000854.html">ThrowUseNative(string)</a>
+
+	</td>
+	<td>
+
+Throws <a target="_top" href="topic_00000000000002C9.html" onclick="this.target='';return true;">WndException</a> that uses mainMessage and the last Windows API error (code and message).
+Also the message depends on whether the window handle is 0/invalid.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000844.html">ToString()</a>
+
+	</td>
+	<td>
+
+Formats string $&quot;{handle}  {ClassName}  \&quot;{Name}\&quot;  {ProcessName}  {Rect}&quot;.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000091D.html">WndChild(int)</a>
+
+	</td>
+	<td>
+
+Gets the child control at the specified position in the Z order.
+Returns default(Wnd) if no children or if index is invalid.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A1.html">ZorderAbove(Wnd)</a>
+
+	</td>
+	<td>
+
+Places this window before window w in the Z order.
+Also can make this window topmost or non-topmost, depending on where w is in the Z order.
+This window and w can be both top-level windows or both controls of same parent.
+May not work with top-level windows when it would move an inactive window above the active window.
+If w is default(Wnd), calls <a target="_top" href="topic_00000000000008A4.html" onclick="this.target='';return true;">ZorderBottom</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A2.html">ZorderBelow(Wnd)</a>
+
+	</td>
+	<td>
+
+Places this window after window w in the Z order.
+Also can make this window topmost or non-topmost, depending on where w is in the Z order.
+This window and w can be both top-level windows or both controls of same parent.
+May not work with top-level windows when it would move an inactive window above the active window.
+If w is default(Wnd), calls <a target="_top" href="topic_00000000000008A3.html" onclick="this.target='';return true;">ZorderTop</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A4.html">ZorderBottom()</a>
+
+	</td>
+	<td>
+
+Places this window or control at the bottom of the Z order.
+If the window was topmost, makes it and its owner window non-topmost.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A8.html">ZorderIsBefore(Wnd)</a>
+
+	</td>
+	<td>
+
+Returns true if this window is above window w in the Z order.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A6.html">ZorderNoTopmost(bool)</a>
+
+	</td>
+	<td>
+
+Makes this window non-topmost.
+If this window has an owner window, makes the owner window non-topmost too.
+This cannot be a control.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A3.html">ZorderTop()</a>
+
+	</td>
+	<td>
+
+Places this window or control at the top of the Z order.
+If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows (after topmost windows).
+Does not activate.
+In most cases does not work with top-level inactive windows, although returns true; instead use <a target="_top" href="topic_0000000000000869.html" onclick="this.target='';return true;">ActivateLL</a>.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+<img alt="Public method" title="Public method" src="msdn2017/pubmethod.png"></img>
+	  
+
+    
+	</td>
+	<td>
+	<a href="topic_00000000000008A5.html">ZorderTopmost()</a>
+
+	</td>
+	<td>
+
+Makes this window topmost (always on top of non-topmost windows in the Z order).
+Does not activate.
+If this window has an owner window, the owner does not become topmost.
+This cannot be a control.
+
+	</td>
+</tr>
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Operators</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="OperatorsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+
+			<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000083A.html">Equality</a>
+
+	</td>
+	<td>
+	<strong><span style="color:red;">Obsolete.</span></strong>
+
+
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000083C.html">Equality</a>
+
+	</td>
+	<td>
+	<strong><span style="color:red;">Obsolete.</span></strong>
+
+
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000838.html">Equality</a>
+
+	</td>
+	<td>
+
+Compares window handles.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000836.html">Explicit Conversion (Control to Wnd)</a>
+
+	</td>
+	<td>
+
+Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
+Returns default(Wnd) if c is null.
+If the handle is still not created, the Control auto-creates it (hidden window).
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000832.html">Explicit Conversion (IntPtr to Wnd)</a>
+
+	</td>
+	<td>
+
+
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000834.html">Explicit Conversion (LPARAM to Wnd)</a>
+
+	</td>
+	<td>
+
+
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000837.html">Explicit Conversion (Window to Wnd)</a>
+
+	</td>
+	<td>
+
+Gets the window handle as Wnd from a System.Windows.Window variable (WPF window).
+Returns default(Wnd) if w is null or the handle is still not created.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000833.html">Explicit Conversion (Wnd to IntPtr)</a>
+
+	</td>
+	<td>
+
+
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000835.html">Explicit Conversion (Wnd to LPARAM)</a>
+
+	</td>
+	<td>
+
+
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000083B.html">Inequality</a>
+
+	</td>
+	<td>
+	<strong><span style="color:red;">Obsolete.</span></strong>
+
+
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000083D.html">Inequality</a>
+
+	</td>
+	<td>
+	<strong><span style="color:red;">Obsolete.</span></strong>
+
+
+
+	</td>
+</tr>
+			<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000839.html">Inequality</a>
+
+	</td>
+	<td>
+
+Compares window handles.
+
+	</td>
+</tr>
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<tr class="
+
+
+">
+	<td>
+	<img alt="Operator" title="Operator" src="msdn2017/puboperator.png"></img>
+	<img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	</td>
+	<td>
+	<a href="topic_000000000000083E.html">UnaryPlus</a>
+
+	</td>
+	<td>
+
+If x is not default(Wnd), returns x, else throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>.
+Alternatively you can use <a target="_top" href=".html" onclick="this.target='';return true;">OrThrow(Wnd)</a>. Examples are there.
+
+	</td>
+</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Extension Methods</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="ExtensionMethodsSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000298.html">MouseClick(this Acc, Coord, Coord, MButton)</a>
+
+	</td>
+	<td>
+
+Clicks this accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_000000000000029A.html">MouseClick(this WinImage, Coord, Coord, MButton)</a>
+
+	</td>
+	<td>
+
+Clicks the found image.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a> or <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Coord,Coord,CoordOptions)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000296.html">MouseClick(this Wnd, Coord, Coord, MButton, bool)</a>
+
+	</td>
+	<td>
+
+Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">ClickEx(MButton,Wnd,Coord,Coord,bool)</a>.
+By default x y coordinates are relative to the client area; default - center. Default action - left click.
+
+	</td>
+</tr>
+		
+	
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000297.html">MouseMove(this Acc, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Moves the cursor (mouse pointer) to this accessible object.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000299.html">MouseMove(this WinImage, Coord, Coord)</a>
+
+	</td>
+	<td>
+
+Moves the mouse to the found image.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a> or <a target="_top" href=".html" onclick="this.target='';return true;">Move(Coord,Coord,CoordOptions)</a>.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_0000000000000295.html">MouseMove(this Wnd, Coord, Coord, bool)</a>
+
+	</td>
+	<td>
+
+Moves the cursor (mouse pointer) to the position x y relative to this window.
+Calls <a target="_top" href=".html" onclick="this.target='';return true;">Move(Wnd,Coord,Coord,bool)</a>.
+By default x y coordinates are relative to the client area; default - center.
+
+	</td>
+</tr>
+		
+	
+
+
+						<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D6.html">OrThrow(this Acc)</a>
+
+	</td>
+	<td>
+
+If this is null, throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D7.html">OrThrow(this WinImage)</a>
+
+	</td>
+	<td>
+
+If this is null, throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+					<tr class="
+
+
+">
+	<td>
+	<img alt="Public extension method" title="Public extension method" src="msdn2017/pubextensionmethod.png"></img>
+    
+	</td>
+	<td>
+	<a href="topic_00000000000002D5.html">OrThrow(this Wnd)</a>
+
+	</td>
+	<td>
+
+If this is default(Wnd), throws <a target="_top" href="topic_00000000000002D2.html" onclick="this.target='';return true;">NotFoundException</a>, else returns this.
+
+	</td>
+</tr>
+		
+	
+
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Classes</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="ClassSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+
+<!-- Classes -->
+	<tr class="
+	
+	
+	">
+	  <td>
+    <img alt="Public class" title="Public class" src="msdn2017/pubclass.png"></img>
+    
+
+    
+	  </td>
+	  <td>
+	    <a href="topic_00000000000008D5.html">ChildFinder</a>
+	  </td>
+	  <td>
+
+Contains control (child window) properties and is used to find the control.
+Can be used instead of <a target="_top" href="topic_00000000000008DD.html" onclick="this.target='';return true;">Child</a> or <a target="_top" href="topic_00000000000008E2.html" onclick="this.target='';return true;">ChildAll</a>.
+Also can be used to find window that contains certain control, like in the example.
+
+		</td>
+	</tr>
+	<tr class="
+	
+	
+	">
+	  <td>
+    <img alt="Public class" title="Public class" src="msdn2017/pubclass.png"></img>
+    
+
+    
+	  </td>
+	  <td>
+	    <a href="topic_00000000000008F6.html">Finder</a>
+	  </td>
+	  <td>
+
+Contains top-level window properties and can be used to find the window.
+Can be used instead of <a target="_top" href="topic_00000000000008FE.html" onclick="this.target='';return true;">Find</a> or <a target="_top" href="topic_0000000000000900.html" onclick="this.target='';return true;">FindAll</a>.
+These codes are equivalent:
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode">
+					<pre xml:space="preserve">Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);					</pre>			
+				</div>
+			</div>
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode">
+					<pre xml:space="preserve">var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);					</pre>			
+				</div>
+			</div>
+Also can find in a list of windows.
+
+		</td>
+	</tr>
+	<tr class="
+	
+	
+	">
+	  <td>
+    <img alt="Public class" title="Public class" src="msdn2017/pubclass.png"></img>
+    
+    <img alt="Static" title="Static" src="msdn2017/static.png"></img>
+
+    
+	  </td>
+	  <td>
+	    <a href="topic_000000000000084E.html">Misc</a>
+	  </td>
+	  <td>
+
+Contains miscellaneous static window-related functions and classes, rarely used or useful only for programmers.
+
+		</td>
+	</tr>
+
+<!-- Classes End -->
+
+<!-- Standard Modules -->
+
+<!-- Standard Modules End -->
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Structures</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="StructureSection" class="section">	
+  <table class="memberListTable">
+    <tr>
+      <th></th>
+      <th>
+        Name
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+
+	<tr class="
+	
+	
+	">
+	  <td>
+    <img alt="Public structure" title="Public structure" src="msdn2017/pubstructure.png"></img>
+    
+
+    
+	  </td>
+	  <td>
+	    <a href="topic_00000000000008E5.html">WButton</a>
+	  </td>
+	  <td>
+
+Like <a target="_top" href="topic_0000000000000831.html" onclick="this.target='';return true;">Wnd</a>, but has only button, check box and radio button functions - Click, Check etc.
+
+		</td>
+	</tr>
+
+  </table>
+
+  <a href="#mainBody">
+    Top
+  </a>
+
+	</div>					
+</div>
+
+
+
+
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Remarks</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="remarksSection" class="section">	
+			There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
+
+More functions are in the nested classes - <a target="_top" href="topic_000000000000084E.html" onclick="this.target='';return true;">Misc</a>, <a target="_top" href=".html" onclick="this.target='';return true;">Desktop</a> etc. They are used mostly in programming, rarely in automation scripts.
+
+What happens when a Wnd function fails:
+<ul><li></li><li></li><li></li><li></li><li></li></ul>
+
+Many functions fail if the window's process has a higher <a target="_top" href="topic_00000000000005C6.html" onclick="this.target='';return true;">UAC integrity level</a> (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: Activate, ActivateLL, ShowMinimized, ShowNotMinimized, ShowNotMinMax, Close.
+
+The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <code>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</code>.
+
+See also: MSDN article &lt;msdn&gt;Window Features&lt;/msdn&gt;.
+	</div>					
+</div>
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Example</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="codeExampleSection" class="section">	
+			<div class="codeSnippetCodeCollection">
+				<div class="codeSnippetToolbar">
+					<a title="Copy to clipboard." href="javascript:void(0)" onclick="CopyCode(this);">Copy</a>
+				</div>
+				
+				<div class="codeSnippetCode">
+					<pre xml:space="preserve">
+ Wnd w = Wnd.Find(&quot;* - Notepad&quot;);
+ if(w.Is0) { Print(&quot;window not found&quot;); return; }
+ w.Activate();
+ Wnd c = w.Child(className: &quot;Edit&quot;);
+ Print(c.Name);
+ 					</pre>			
+				</div>
+			</div>										
+	</div>					
+</div>
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+	
+	
+	
+	
+	
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">Applies to</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="frameworksSection" class="section">	
+  <h4 class="subHeading">.NET Framework</h4>Supported in: 4.5, 4.5.1, 4.5.2, 4.6, 4.6.1, 4.6.2, 4.7, 4.7.1<br />
+
+
+
+
+
+
+
+
+
+
+	
+	
+	</div>					
+</div>
+
+
+<div class="section_container">
+	<div class="section_heading">
+		<span><a href="javascript:void(0)" title="Collapse" onclick="toggleSection(this);">See Also</a></span>
+		<div><hr /></div>
+	</div>
+
+	<div id="seeAlsoSection" class="section">	
+		<div>
+	<a href="topic_00000000000000DB.html">Au Namespace</a><br />
+
+
+	
+
+		</div>
+	</div>					
+</div>
+			</div>
+			</div>
+      <div id="footer">
+      	<p><span style="color: #FF0000;">Generated with unregistered version of <a target="_top" href="http://www.helixoft.com/vsdocman/overview.html">VSdocman</a></span>&nbsp;<br />Your own footer text will only be shown in registered version.</p>
+      </div>
+    </div>
+  	<script type="text/javascript">
+<!--
+	try {
+		parent.frames["vbdocswitch"].expandLinkInToc(location.href);
+	} catch (ex) {}
+//-->
+		</script>	
+  </body>
+</html>
+

@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -122,14 +121,12 @@ class PanelStatus :Control
 		if(noChange) return;
 		_p = p;
 
-		var sb = Au.Util.LibStringBuilderCache.Acquire(1000);
+		using(new Au.Util.LibStringBuilder(out var b, 1000)) {
 
-		sb.Append(p.X);
-		sb.Append("\n");
-		sb.Append(p.Y);
+			b.Append(p.X).Append("\n").Append(p.Y);
 
-		_c.ST.SetText(sb.ToStringCached_());
-
+			_c.ST.SetText(b.ToString());
+		}
 		//remember: limit long text, each line separatelly
 	}
 

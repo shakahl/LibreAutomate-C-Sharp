@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -15,6 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Text.RegularExpressions;
 
 using Au.Types;
 using static Au.NoClass;
@@ -89,7 +89,7 @@ namespace Au
 				if(cW == cS || cW == '?') continue;
 				if((table == null) || (table[cW] != table[cS])) return false;
 			}
-			if(w == we) return s == se; //p ended?
+			if(w == we) return s == se; //w ended?
 			goto gr; //s ended
 			g1:
 
@@ -129,7 +129,7 @@ namespace Au
 			//	Most users would not know about it.
 			//	Usually can use ? for literal * and ?.
 			//	Usually can use regular expression if need such precision.
-			//	Could not use "**options|text" for wildcard expressions.
+			//	Then cannot use "**options " for wildcard expressions.
 			//	Could use other escape sequences, eg [*], [?] and [[], but it makes slower and is more harmful than useful.
 
 			//The first two loops are fast, but Equals_ much faster when !ignoreCase. We cannot use such optimizations that it can.
@@ -163,7 +163,7 @@ namespace Au.Types
 	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find">Wnd.Find</see> uses it to compare window name, class name and program.
 	/// The 'find' function creates a Wildex instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </summary>
-	/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
+	/// <exception cref="ArgumentException">Invalid "**options " or regular expression.</exception>
 	/// <example>
 	/// <code><![CDATA[
 	/// //This version does not support wildcard expressions.
@@ -200,29 +200,37 @@ namespace Au.Types
 		/// "" will match "".
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
+		/// <exception cref="ArgumentException">Invalid "**options " or regular expression.</exception>
 		public Wildex(string wildcardExpression)
 		{
 			var w = wildcardExpression;
 			if(w == null) throw new ArgumentNullException();
 			_type = WildType.Wildcard;
 			_ignoreCase = true;
+			string[] split = null;
 
 			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') {
-				for(int i = 2; i < w.Length; i++) {
+				for(int i = 2, j; i < w.Length; i++) {
 					switch(w[i]) {
 					case 't': _type = WildType.Text; break;
-					case 'r': _type = WildType.RegexNet; break;
-					case 'p': _type = WildType.RegexPcre; break;
+					case 'r': _type = WildType.RegexPcre; break;
+					case 'R': _type = WildType.RegexNet; break;
 					case 'm': _type = WildType.Multi; break;
 					case 'c': _ignoreCase = false; break;
 					case 'n': _not = true; break;
-					case '|': w = w.Substring(i + 1); goto g1;
+					case ' ': w = w.Substring(i + 1); goto g1;
+					case '(':
+						if(w[i - 1] != 'm') goto ge;
+						for(j = ++i; j < w.Length; j++) if(w[j] == ')') break;
+						if(j >= w.Length || j == i) goto ge;
+						split = new string[] { w.Substring(i, j - i) };
+						i = j;
+						break;
 					default: goto ge;
 					}
 				}
 				ge:
-				throw new ArgumentException("invalid **options|");
+				throw new ArgumentException("Invalid \"**options \" in wildcard expression.");
 				g1:
 				switch(_type) {
 				case WildType.RegexNet:
@@ -233,7 +241,7 @@ namespace Au.Types
 					_obj = new Regex_(w);
 					return;
 				case WildType.Multi:
-					var a = w.Split(_splitMulti, StringSplitOptions.None); //TODO: use Split_. But currently it does not support string separators. Or use code like in the cpp version. Maybe better use eg ` instead of [].
+					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
 					var multi = new Wildex[a.Length];
 					for(int i = 0; i < a.Length; i++) multi[i] = new Wildex(a[i]);
 					_obj = multi;
@@ -244,7 +252,7 @@ namespace Au.Types
 			if(_type == WildType.Wildcard && !HasWildcards(w)) _type = WildType.Text;
 			_obj = w;
 		}
-		static string[] _splitMulti = new string[] { "[]" };
+		static string[] _splitMulti = new string[] { "||" };
 
 		/// <summary>
 		/// Creates new Wildex from wildcard expression string.
@@ -258,8 +266,8 @@ namespace Au.Types
 			if(wildcardExpression == null) return null;
 
 			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of Wnd.Find and Wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'className' and 'programEtc' parameters, where "" causes exception, so they will quickly learn.
-			///// If the string is "", calls <see cref="Output.Warning"/>. To match "", use "**empty" instead. Or <see cref="AuScriptOptions.DisableWarnings"/>.
-			//	if(wildcardExpression.Length == 0) Output.Warning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
+			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead. Or <see cref="AuScriptOptions.DisableWarnings"/>.
+			//	if(wildcardExpression.Length == 0) PrintWarning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
 			return new Wildex(wildcardExpression);
 		}
@@ -282,11 +290,11 @@ namespace Au.Types
 				var t = _obj as string;
 				R = s.Equals_(t, _ignoreCase);
 				break;
+			case WildType.RegexPcre:
+				R = (_obj as Regex_).IsMatch(s);
+				break;
 			case WildType.RegexNet:
 				R = (_obj as Regex).IsMatch(s);
-				break;
-			case WildType.RegexPcre:
-				R = (_obj as Regex_).Match(s);
 				break;
 			case WildType.Multi:
 				var multi = _obj as Wildex[];
@@ -317,28 +325,28 @@ namespace Au.Types
 		public enum WildType :byte
 		{
 			/// <summary>
-			/// Simple text (option t, or no *? characters and no t r options).
+			/// Simple text (option t, or no *? characters and no t r R options).
 			/// Match() calls <see cref="String_.Equals_(string, string, bool)"/>.
 			/// </summary>
 			Text,
 
 			/// <summary>
-			/// Wildcard (has *? characters and no t r options).
+			/// Wildcard (has *? characters and no t r R options).
 			/// Match() calls <see cref="String_.Like_(string, string, bool)"/>.
 			/// </summary>
 			Wildcard,
 
 			/// <summary>
-			/// .NET egular expression (option r).
+			/// PCRE regular expression (option r).
+			/// Match() calls <see cref="Regex_.IsMatch"/>.
+			/// </summary>
+			RegexPcre,
+
+			/// <summary>
+			/// .NET egular expression (option R).
 			/// Match() calls <see cref="Regex.IsMatch(string)"/>.
 			/// </summary>
 			RegexNet,
-
-			/// <summary>
-			/// PCRE regular expression (option p).
-			/// Match() calls <see cref="Regex_.Match"/>.
-			/// </summary>
-			RegexPcre,
 
 			/// <summary>
 			/// Multiple parts (option m).
@@ -356,15 +364,15 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets the Regex object created from regular expression string.
-		/// null if TextType is not RegexNet (no option r).
+		/// null if TextType is not RegexPcre (no option r).
 		/// </summary>
-		public Regex RegexNet => _obj as Regex;
+		public Regex RegexPcre => _obj as Regex;
 
 		/// <summary>
 		/// Gets the Regex object created from regular expression string.
-		/// null if TextType is not RegexPcre (no option p).
+		/// null if TextType is not RegexNet (no option R).
 		/// </summary>
-		public Regex RegexPcre => _obj as Regex;
+		public Regex RegexNet => _obj as Regex;
 
 		/// <summary>
 		/// Array of Wildex variables, one for each part in multi-part text.
@@ -397,7 +405,7 @@ namespace Au.Types
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		public static bool HasWildcards(string s)
+		public static bool HasWildcards(string s) //CONSIDER: IsWildcard
 		{
 			if(s == null) return false;
 			for(int i = 0; i < s.Length; i++) {
@@ -415,8 +423,8 @@ namespace Au.Types
 	/// <remarks>
 	/// Has all the same capabilities as Wildex, but is just a struct of single pointer size.
 	/// The pointer is Object that can be of one of these types:
-	/// <see cref="Wildex"/> - if the assigned string was with wildcard expression options, like "**c|text". To compare it with other strings, <see cref="Match"/> calls <see cref="Wildex.Match"/>.
-	/// <see cref="String"/> - if the assigned string was without wildcard expression options, like "text". To compare it with other strings, <see cref="Match"/> calls <see cref="String_.Like_(string, string, bool)"/> with <b>ignoreCase</b> true.
+	/// <see cref="Wildex"/> - if the assigned string was with wildcard expression options, like "**c text". To compare it with other strings, <see cref="Match"/> calls <see cref="Wildex.Match"/>.
+	/// <see cref="String"/> - if the assigned string was without wildcard expression options. To compare it with other strings, <see cref="Match"/> calls <see cref="String_.Like_(string, string, bool)"/> with <i>ignoreCase</i> true.
 	/// null - if was not assigned a non-null string.
 	/// </remarks>
 	public struct WildexStruct
@@ -429,7 +437,7 @@ namespace Au.Types
 		/// "" will match "".
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException">Invalid **options| or regular expression.</exception>
+		/// <exception cref="ArgumentException">Invalid "**options " or regular expression.</exception>
 		public WildexStruct(string wildcardExpression)
 		{
 			var w = wildcardExpression;
@@ -472,8 +480,8 @@ namespace Au.Types
 		public bool HasValue => _obj != null;
 
 		/// <summary>
-		/// Returns Wildex if the assigned string was with wildcard expression options, like "**c|text".
-		/// Returns String if the assigned string was without wildcard expression options, like "text".
+		/// Returns Wildex if the assigned string was with wildcard expression options, like "**c text".
+		/// Returns String if the assigned string was without wildcard expression options.
 		/// Returns null if was not assigned a non-null string.
 		/// </summary>
 		public object Value => _obj;

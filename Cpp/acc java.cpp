@@ -56,7 +56,7 @@ public:
 
 	STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) { return E_NOTIMPL; }
 
-	STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) { return E_NOTIMPL; }
+	STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) { return E_NOTIMPL; }
 
 	STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, __RPC__out_ecount_full(cNames) DISPID *rgDispId) { return E_NOTIMPL; }
 
@@ -64,7 +64,7 @@ public:
 #pragma endregion
 
 #pragma region IAccessible
-	STDMETHODIMP get_accParent(IDispatch **ppdispParent)
+	STDMETHODIMP get_accParent(IDispatch** ppdispParent)
 	{
 		//PRINTS(__FUNCTIONW__);
 		*ppdispParent = null;
@@ -99,7 +99,7 @@ public:
 		return 0;
 	}
 
-	STDMETHODIMP get_accChild(VARIANT varChild, IDispatch **ppdispChild)
+	STDMETHODIMP get_accChild(VARIANT varChild, IDispatch** ppdispChild)
 	{
 		//PRINTS(__FUNCTIONW__);
 		int i = varChild.lVal - 1;
@@ -273,7 +273,7 @@ public:
 
 	STDMETHODIMP accNavigate(long navDir, VARIANT varStart, out VARIANT* pvarEndUpAt)
 	{
-		//PrintList("accNavigate", navDir, varStart.vt, varStart.value);
+		//Print("accNavigate", navDir, varStart.vt, varStart.value);
 
 		//WindowFromAccessibleObject (WFAO) at first calls this with an undocumented navDir 10.
 		//	tested: accNavigate(10) for a standard Windows control returns VARIANT(VT_I4, hwnd).

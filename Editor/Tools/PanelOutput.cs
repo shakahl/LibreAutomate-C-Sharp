@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -123,7 +122,7 @@ class PanelOutput :Control
 			//Wnd.Misc.WndRoot.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.WndOwner = MainForm.Wnd_();
+			w.WndOwner = (Wnd)MainForm;
 		}
 	}
 
