@@ -346,7 +346,7 @@ namespace Au.Controls
 					mi.ShortcutKeyDisplayString = null;
 				}
 				if(x.Attribute_(out s, "hk")) {
-					bool ok = Input.Misc.ReadHotkeyString(s, out var hk);
+					bool ok = Keyb.Misc.ParseHotkeyString(s, out var hk);
 					if(ok) try { mi.ShortcutKeys = hk; } catch { ok = false; }
 					if(!ok) Debug_.Print("Invalid hotkey: " + s);
 				}
@@ -617,7 +617,7 @@ namespace Au.Controls
 					s = f.textHotkey.Text; if(s == "") s = null;
 					x.SetAttributeValue("hk", s);
 					//remove the hotkey from another item, to avoid duplicates
-					if(Input.Misc.ReadHotkeyString(s, out var hk)) {
+					if(Keyb.Misc.ParseHotkeyString(s, out var hk)) {
 						var xx = f.FindUsedHotkey(hk, x);
 						if(xx != null) {
 							xx.SetAttributeValue("hk", null);

@@ -17,7 +17,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
-//using System.Xml.XPath;
 
 using Au;
 using Au.Types;
@@ -309,7 +308,7 @@ namespace Au.Tools
 				}
 
 				g1:
-				_capturing = Api.RegisterHotKey((Wnd)this, 1, 0, (uint)(_CapturingKey + (int)Keys.F1 - 1));
+				_capturing = Api.RegisterHotKey((Wnd)this, 1, 0, (Keys)(_CapturingKey + (int)Keys.F1 - 1));
 				if(!_capturing) {
 					if(_CapturingKeyDialog()) goto g1;
 					_cCapture.Checked = false;

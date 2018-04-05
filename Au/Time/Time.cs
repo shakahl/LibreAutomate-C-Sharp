@@ -84,9 +84,9 @@ namespace Au
 		/// Calls <see cref="Thread.Sleep(int)"/>.
 		/// Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
 		/// If the computer goes to sleep or hibernate during that time, the real time is seconds + the sleep/hibernate time.
-		/// Tip: code <c>5.s();</c> is the same as <c>Time.WaitS(5);</c>.
+		/// Tip: code <c>5.s();</c> is the same as <c>Time.SleepS(5);</c>.
 		/// </remarks>
-		public static void WaitS(double seconds)
+		public static void SleepS(double seconds)
 		{
 			seconds *= 1000.0;
 			if(seconds > int.MaxValue || seconds < 0) throw new ArgumentOutOfRangeException();
@@ -95,7 +95,7 @@ namespace Au
 
 		/// <summary>
 		/// Suspends this thread for the specified amount of time.
-		/// The same as <see cref="WaitS"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
+		/// The same as <see cref="SleepS"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
 		/// </summary>
 		/// <param name="milliseconds">
 		/// Time to wait, milliseconds.
@@ -147,7 +147,7 @@ namespace Au
 			LibSleepPrecision.LibTempSet1(milliseconds);
 			for(;;) {
 				long t = 0;
-				int timeSlice = 100; //we call API in loop with small timeout to make it respond to Thread.Abort
+				int timeSlice = 300; //we call API in loop with small timeout to make it respond to Thread.Abort
 				if(milliseconds > 0) {
 					if(milliseconds < timeSlice) timeSlice = milliseconds;
 					t = MillisecondsWithoutComputerSleepTime;
@@ -191,21 +191,52 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="WaitS"/>.
-		/// Example: <c>5.s();</c> is the same as <c>Time.WaitS(5);</c>.
+		/// Waits for a signaled kernel handle.
+		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_SENDMESSAGE and MWMO_ALERTABLE.
+		/// If a handle is signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80). If failed, returns -1.
 		/// </summary>
-		public static void s(this int seconds)
+		/// <param name="nHandles">Count.</param>
+		/// <param name="handle1"></param>
+		/// <param name="handle2"></param>
+		/// <param name="handle3"></param>
+		/// <param name="handle4"></param>
+		/// <remarks>
+		/// Dispatches received messages, hook notifications, etc. Uses API PeekMessage/DispatchMessage in loop.
+		/// Allows to abort thread.
+		/// </remarks>
+		internal static unsafe int LibWaitForHandlesAndDispatchSentMessages(int nHandles, IntPtr handle1, IntPtr handle2 = default, IntPtr handle3 = default, IntPtr handle4 = default)
 		{
-			WaitS(seconds);
+			var ha = stackalloc IntPtr[4];
+			ha[0] = handle1; ha[1] = handle2; ha[2] = handle3; ha[3] = handle4;
+			const uint timeSlice = 300; //we call API in loop with small timeout to make it respond to Thread.Abort
+			for(; ; ) {
+				uint k = Api.MsgWaitForMultipleObjectsEx(nHandles, ha, timeSlice, Api.QS_SENDMESSAGE, Api.MWMO_ALERTABLE);
+				if(k == nHandles) { //sent message, hook notification, etc. Note: COM RPC uses postmessage; this func not tested.
+					while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) Api.DispatchMessage(ref m);
+				} else if((k >= 0 && k < nHandles) || (k >= Api.WAIT_ABANDONED_0 && k < Api.WAIT_ABANDONED_0 + nHandles)) {
+					return (int)k;
+				} else if(k == Api.WAIT_FAILED) return -1;
+				//else WAIT_TIMEOUT or WAIT_IO_COMPLETION (APC, aborting thread, etc)
+			}
+			//note: with PeekMessage don't use |Api.PM_QS_SENDMESSAGE. Then setwineventhook hook does not work. Although eg LL key/mouse hooks work.
 		}
 
 		/// <summary>
-		/// Calls <see cref="WaitS"/>.
-		/// Example: <c>2.5.s();</c> is the same as <c>Time.WaitS(2.5);</c>.
+		/// Calls <see cref="SleepS"/>.
+		/// Example: <c>5.s();</c> is the same as <c>Time.SleepS(5);</c>.
+		/// </summary>
+		public static void s(this int seconds)
+		{
+			SleepS(seconds);
+		}
+
+		/// <summary>
+		/// Calls <see cref="SleepS"/>.
+		/// Example: <c>2.5.s();</c> is the same as <c>Time.SleepS(2.5);</c>.
 		/// </summary>
 		public static void s(this double seconds)
 		{
-			WaitS(seconds);
+			SleepS(seconds);
 		}
 
 		/// <summary>
@@ -272,7 +303,7 @@ namespace Au
 		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
-		/// Don't need this for Time.Sleep, Time.WaitS, Time.SleepDoEvents and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
+		/// Don't need this for Time.Sleep, Time.SleepS, Time.SleepDoEvents and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
 		/// This does not change the minimal period of <see cref="Timer_"/> and System.Windows.Forms.Timer.
 		/// </remarks>
 		/// <example>

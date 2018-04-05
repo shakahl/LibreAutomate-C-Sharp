@@ -20,6 +20,8 @@ using static Au.NoClass;
 
 #pragma warning disable 649 //unused fields in API structs
 
+//FUTURE: ShowCheckList
+
 namespace Au
 {
 	/// <summary>

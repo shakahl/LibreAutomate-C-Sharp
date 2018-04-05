@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -14,9 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
-//using System.Xml.XPath;
-using System.Collections.Concurrent;
+//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -637,7 +636,7 @@ namespace Au.Controls
 		/// </summary>
 		internal void LibOnLinkClick(int pos, bool ctrl)
 		{
-			if(Input.IsAlt) return;
+			if(Keyb.IsAlt) return;
 
 			int iTag, iText, k;
 			//to find beginning of link text (after <tag>), search for STYLE__HIDDEN before
@@ -750,7 +749,7 @@ namespace Au.Controls
 
 		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
 		{
-			if(setFocus && _c.InitReadOnlyAlways && !Input.IsAlt) {
+			if(setFocus && _c.InitReadOnlyAlways && !Keyb.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math_.LoShort(m.LParam), Math_.HiShort(m.LParam));
 				//Print(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;

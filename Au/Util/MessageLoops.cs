@@ -181,7 +181,7 @@ namespace Au.Util
 					call = true;
 				} else if(m == Api.WM_KEYDOWN || m == Api.WM_KEYUP || m == Api.WM_SYSKEYDOWN || m == Api.WM_SYSKEYUP) {
 					//on key down/up caller may want to update cursor when eg Ctrl pressed/released
-					if(x.Msg.wParam == Api.VK_ESCAPE) break;
+					if(x.Msg.wParam == Keys.Escape) break;
 					call = true;
 				}
 

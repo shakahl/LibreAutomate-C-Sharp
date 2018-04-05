@@ -157,7 +157,7 @@ namespace Au.Controls
 		{
 			int iSel = -1;
 			var s = textHotkey.Text.Trim();
-			if(Input.Misc.ReadHotkeyString(s, out var hk)) {
+			if(Keyb.Misc.ParseHotkeyString(s, out var hk)) {
 				var x = FindUsedHotkey(hk, _x);
 				if(x != null) iSel = _hotkeys.IndexOf(x);
 			}
@@ -170,8 +170,8 @@ namespace Au.Controls
 			var s = textHotkey.Text.Trim();
 			if(Empty(s)) return;
 			bool ok = true;
-			if(!Input.Misc.ReadHotkeyString(s, out var hk) || (hk & Keys_.Windows) != 0) ok = false;
-			else if((hk & (Keys.Control | Keys.Alt)) == 0) { var k = hk & Keys.KeyCode; ok = (k >= Keys.F2 && k <= Keys.F24); }
+			if(!Keyb.Misc.ParseHotkeyString(s, out var mod, out var k) || mod.Has_(KMod.Win)) ok = false;
+			else if(!mod.HasAny_(KMod.Ctrl | KMod.Alt)) ok = (k >= Keys.F2 && k <= Keys.F24);
 
 			if(!ok) {
 				e.Cancel = true;
@@ -185,7 +185,7 @@ namespace Au.Controls
 				foreach(var x in _hotkeys) {
 					if(x == xSkip) continue;
 					var s = x.Attribute_("hk");
-					if(Input.Misc.ReadHotkeyString(s, out var k) && k == hk) return x;
+					if(Keyb.Misc.ParseHotkeyString(s, out var k) && k == hk) return x;
 				}
 			}
 			return null;
@@ -365,7 +365,7 @@ namespace Au.Controls
 			this.textIcon.Size = new System.Drawing.Size(384, 23);
 			this.textIcon.TabIndex = 5;
 			this.toolTip1.SetToolTip(this.textIcon, "Icon file path like c:\\a\\b.ico or c:\\a\\b.dll,5\r\nYou can drag and drop a file here" +
-        ".");
+		".");
 			// 
 			// button1
 			// 

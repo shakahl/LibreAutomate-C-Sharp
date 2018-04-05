@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 //using System.Text; //StringBuilder, we don't use it, very slow
 using System.Drawing; //Point, Size
+using System.Windows.Forms; //Keys
 using Microsoft.Win32.SafeHandles;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
@@ -93,7 +94,7 @@ namespace Au.Types
 		/// <summary>
 		/// If o is not null, calls <see cref="Marshal.ReleaseComObject"/>.
 		/// </summary>
-		internal static void ReleaseComObject<T>(T o) where T: class
+		internal static void ReleaseComObject<T>(T o) where T : class
 		{
 			if(o != null) Marshal.ReleaseComObject(o);
 		}
@@ -325,6 +326,38 @@ namespace Au.Types
 
 		internal delegate LPARAM HOOKPROC(int code, LPARAM wParam, LPARAM lParam);
 
+		internal struct KBDLLHOOKSTRUCT
+		{
+			public uint vkCode;
+			public uint scanCode;
+			public uint flags;
+			public uint time;
+			public LPARAM dwExtraInfo;
+
+			const uint LLKHF_EXTENDED = 0x1;
+			const uint LLKHF_INJECTED = 0x10;
+			const uint LLKHF_ALTDOWN = 0x20;
+			const uint LLKHF_UP = 0x80;
+
+			public bool IsExtended => 0 != (flags & LLKHF_EXTENDED);
+			public bool IsInjected => 0 != (flags & LLKHF_INJECTED);
+			public bool IsUp => 0 != (flags & LLKHF_UP);
+
+			/// <summary>
+			/// Converts flags to SendInput flags KEYEVENTF_KEYUP and KEYEVENTF_EXTENDEDKEY.
+			/// </summary>
+			public byte SendInputFlags
+			{
+				get
+				{
+					uint f = 0;
+					if(IsUp) f |= KEYEVENTF_KEYUP;
+					if(IsExtended) f |= KEYEVENTF_EXTENDEDKEY;
+					return (byte)f;
+				}
+			}
+		}
+
 		internal struct MSLLHOOKSTRUCT
 		{
 			public Point pt;
@@ -332,6 +365,10 @@ namespace Au.Types
 			public uint flags;
 			public uint time;
 			public LPARAM dwExtraInfo;
+
+			const uint LLMHF_INJECTED = 0x1;
+
+			public bool IsInjected => 0 != (flags & LLMHF_INJECTED);
 		}
 
 		internal const int GA_PARENT = 1;
@@ -856,37 +893,47 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool AttachThreadInput(int idAttach, int idAttachTo, bool fAttach);
 
-		[Flags]
-		internal enum IKFlag :uint
-		{
-			Extended = 1, Up = 2, Unicode = 4, Scancode = 8
-		};
+		internal const uint KEYEVENTF_EXTENDEDKEY = 0x1;
+		internal const uint KEYEVENTF_KEYUP = 0x2;
+		internal const uint KEYEVENTF_UNICODE = 0x4;
+		internal const uint KEYEVENTF_SCANCODE = 0x8;
 
-		internal struct INPUTKEY
+		internal struct INPUTK
 		{
 			LPARAM _type;
 			public ushort wVk;
 			public ushort wScan;
-			public IKFlag dwFlags;
+			public uint dwFlags;
 			public uint time;
 			public LPARAM dwExtraInfo;
+#pragma warning disable 414 //never used
 			int _u1, _u2; //need INPUT size
+#pragma warning restore 414
 
-			public INPUTKEY(int vk, int sc, IKFlag flags = 0)
+			public INPUTK(ushort vk, ushort sc, uint flags = 0)
 			{
-				_type = INPUT_KEYBOARD;
-				wVk = (ushort)vk; wScan = (ushort)sc; dwFlags = flags;
-				time = 0; dwExtraInfo = AuExtraInfo;
-				_u2 = _u1 = 0;
-				Debug.Assert(sizeof(INPUTKEY) == sizeof(INPUTMOUSE));
+				_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
+				wVk = vk; wScan = sc; dwFlags = flags;
+				time = 0; _u2 = _u1 = 0;
+				Debug.Assert(sizeof(INPUTK) == sizeof(INPUTM));
 			}
 
-			public const uint AuExtraInfo = 0xA1427fa5;
+			public void Set(ushort vk, ushort sc, uint flags = 0)
+			{
+				_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
+				wVk = vk; wScan = sc; dwFlags = flags;
+			}
+
+			//public void InitCommonFields()
+			//{
+			//	_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
+			//}
+
 			const int INPUT_KEYBOARD = 1;
 		}
 
 		[Flags]
-		internal enum IMFlag :uint
+		internal enum IMFlags :uint
 		{
 			Move = 1,
 			LeftDown = 2, LeftUp = 4,
@@ -902,26 +949,30 @@ namespace Au.Types
 			X2 = 0x2000000,
 		};
 
-		internal struct INPUTMOUSE
+		internal struct INPUTM
 		{
 			LPARAM _type;
 			public int dx;
 			public int dy;
 			public int mouseData;
-			public IMFlag dwFlags;
+			public IMFlags dwFlags;
 			public uint time;
 			public LPARAM dwExtraInfo;
 
-			public INPUTMOUSE(IMFlag flags, int x = 0, int y = 0, int data = 0)
+			public INPUTM(IMFlags flags, int x = 0, int y = 0, int data = 0)
 			{
 				_type = INPUT_MOUSE;
 				dx = x; dy = y; dwFlags = flags; mouseData = data;
 				time = 0; dwExtraInfo = AuExtraInfo;
 			}
 
-			public const uint AuExtraInfo = 0xA1427fa5;
 			const int INPUT_MOUSE = 0;
 		}
+
+		/// <summary>
+		/// Extra info value of key and mouse events sent by functions of this library.
+		/// </summary>
+		internal const int AuExtraInfo = 0x71427fa5;
 
 		//[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern int SendInput(int cInputs, ref INPUTKEY pInputs, int cbSize);
@@ -936,35 +987,9 @@ namespace Au.Types
 		internal static extern int SendInput(int cInputs, void* pInputs, int cbSize);
 		//note: the API never indicates a failure if arguments are valid. Tested UAC (documented), BlockInput, ClipCursor.
 
-		internal static bool SendInput_Key(ref INPUTKEY ik)
-		{
-			fixed (void* p = &ik) {
-				return SendInput(1, p, sizeof(INPUTKEY)) != 0;
-			}
-		}
+		internal static bool SendInput(INPUTK* ip, int n = 1) => SendInput(n, ip, sizeof(INPUTK)) != 0;
 
-		internal static bool SendInput_Key(INPUTKEY[] ik)
-		{
-			if(ik == null || ik.Length == 0) return false;
-			fixed (void* p = ik) {
-				return SendInput(ik.Length, p, sizeof(INPUTKEY)) != 0;
-			}
-		}
-
-		internal static bool SendInput_Mouse(ref INPUTMOUSE ik)
-		{
-			fixed (void* p = &ik) {
-				return SendInput(1, p, sizeof(INPUTMOUSE)) != 0;
-			}
-		}
-
-		//internal static bool SendInput_Mouse(INPUTMOUSE[] ik)
-		//{
-		//	if(ik == null || ik.Length == 0) return false;
-		//	fixed (void* p = ik) {
-		//		return SendInput(ik.Length, p, sizeof(INPUTMOUSE)) != 0;
-		//	}
-		//}
+		internal static bool SendInput(INPUTM* ip, int n = 1) => SendInput(n, ip, sizeof(INPUTM)) != 0;
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsHungAppWindow(Wnd hwnd);
@@ -996,20 +1021,23 @@ namespace Au.Types
 		internal static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern short GetKeyState(int nVirtKey);
+		internal static extern short GetKeyState(Keys nVirtKey);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern short GetAsyncKeyState(Keys vKey);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, Keys vk);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool UnregisterHotKey(Wnd hWnd, int id);
 
 		internal const uint MWMO_WAITALL = 0x1;
 		internal const uint MWMO_ALERTABLE = 0x2;
 		internal const uint MWMO_INPUTAVAILABLE = 0x4;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint MsgWaitForMultipleObjectsEx(uint nCount, IntPtr* pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, uint vk);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool UnregisterHotKey(Wnd hWnd, int id);
+		internal static extern uint MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool EndMenu();
@@ -1106,8 +1134,14 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern bool UpdateWindow(Wnd hWnd);
 
+		[DllImport("user32.dll")]
+		internal static extern LPARAM GetKeyboardLayout(int idThread);
 
+		[DllImport("user32.dll", EntryPoint = "MapVirtualKeyExW")]
+		internal static extern uint MapVirtualKeyEx(uint uCode, uint uMapType, LPARAM dwhkl);
 
+		[DllImport("user32.dll", EntryPoint = "VkKeyScanExW")]
+		internal static extern short VkKeyScanEx(char ch, LPARAM dwhkl);
 
 		#endregion
 
@@ -1786,6 +1820,31 @@ namespace Au.Types
 			public IntPtr lpApplicationName;
 			public IntPtr hModule;
 		}
+
+		//TODO: remove these if unused
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool SwitchToThread();
+
+		internal const ushort ALL_PROCESSOR_GROUPS = 0xFFFF;
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern uint GetMaximumProcessorCount(ushort GroupNumber);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetProcessAffinityMask(IntPtr hProcess, out LPARAM lpProcessAffinityMask, out LPARAM lpSystemAffinityMask);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern LPARAM SetThreadAffinityMask(IntPtr hThread, LPARAM dwThreadAffinityMask);
+
+
+		internal const uint THREAD_QUERY_LIMITED_INFORMATION = 0x800;
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, int dwThreadId);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 
 
 
@@ -2520,9 +2579,9 @@ namespace Au.Types
 
 
 
-#endregion
+		#endregion
 
-#region dwmapi
+		#region dwmapi
 
 		[DllImport("dwmapi.dll")]
 		internal static extern int DwmGetWindowAttribute(Wnd hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
@@ -2533,9 +2592,9 @@ namespace Au.Types
 
 
 
-#endregion
+		#endregion
 
-#region ntdll
+		#region ntdll
 
 		[DllImport("ntdll.dll")]
 		internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
@@ -2562,9 +2621,9 @@ namespace Au.Types
 
 
 
-#endregion
+		#endregion
 
-#region other
+		#region other
 
 		[DllImport("uxtheme.dll", PreserveSig = true)]
 		internal static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
@@ -2589,7 +2648,7 @@ namespace Au.Types
 
 
 
-#endregion
+		#endregion
 
 	}
 }

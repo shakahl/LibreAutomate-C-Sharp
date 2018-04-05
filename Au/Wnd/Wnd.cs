@@ -136,12 +136,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if w == this.
 		/// </summary>
-		public bool Equals(Wnd w) //IEquatable<Wnd>.Equals, to avoid boxing with eg Dictionary<Wnd, T2>
-		{
-			return w == this;
-
-			//TODO: LPARAM etc must support IEquatable too.
-		}
+		public bool Equals(Wnd w) => w == this; //IEquatable<Wnd>.Equals, to avoid boxing with eg Dictionary<Wnd, T2>
 
 		/// <summary>
 		/// Returns true if w != null and w.Value == this.
@@ -152,7 +147,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if obj is this Wnd.
+		/// Returns true if obj is Wnd and contains the same window handle.
 		/// </summary>
 		public override bool Equals(object obj)
 		{
@@ -161,12 +156,9 @@ namespace Au
 		}
 
 		///
-		public override int GetHashCode()
-		{
-			return (int)_h;
-			//window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables.
-			//IntPtr.GetHashCode also returns this.
-		}
+		public override int GetHashCode() => (int)_h;
+		//window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables.
+		//IntPtr.GetHashCode also returns this.
 
 		/// <summary>
 		/// Gets window handle as IntPtr.
@@ -785,8 +777,8 @@ namespace Au
 			{
 				if(debugOut) Debug_.Print("EnableActivate: need key");
 
-				var x = new Api.INPUTKEY(0, 128, Api.IKFlag.Up);
-				Api.SendInput_Key(ref x);
+				var x = new Api.INPUTK(0, 128, Api.KEYEVENTF_KEYUP);
+				Api.SendInput(&x);
 				//info: works without waiting.
 			}
 
@@ -1074,12 +1066,14 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Sets the keyboard input focus to this control or window.
+		/// Sets the keyboard input focus to this control.
 		/// Also activetes its top-level parent window (see <see cref="Activate()"/>).
-		/// Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="FocusLocal"/>.
 		/// </summary>
 		/// <remarks>
+		/// The control can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="FocusLocal"/>.
+		/// Works not with all windows. For example, does not work with Windows Store apps. Then use <see cref="Acc.Focus"/>.
 		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then does not throw exception.
+		/// This can be control or top-level window. Top-level windows also can have focus.
 		/// </remarks>
 		/// <exception cref="WndException">
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
@@ -1087,14 +1081,15 @@ namespace Au
 		/// </exception>
 		/// <seealso cref="WndFocused"/>
 		/// <seealso cref="IsFocused"/>
+		/// <seealso cref="Acc.Focus"/>
 		public void Focus()
 		{
 			ThrowIfInvalid();
 			Wnd wTL = WndWindow;
 			if(!wTL.IsActive) wTL.LibActivate(Lib.ActivateFlags.NoGetWndWindow);
 
-			int th1 = Api.GetCurrentThreadId(), th2 = ThreadId;
-			if(th1 == th2) {
+			int tid = ThreadId;
+			if(tid == Api.GetCurrentThreadId()) {
 				if(!FocusLocal()) {
 					if(!IsEnabled) goto gDisabled;
 					goto gFailed;
@@ -1106,8 +1101,8 @@ namespace Au
 			if(!IsEnabled) goto gDisabled;
 
 			bool ok = false;
-			if(Api.AttachThreadInput(th1, th2, true))
-				try {
+			using(new Util.LibAttachThreadInput(tid, out bool atiOK)) {
+				if(atiOK) { //FUTURE: if fails, try Acc.Focus.
 					for(int i = 0; i < 5; i++) {
 						if(i > 0) Thread.Sleep(30);
 						Native.ClearError();
@@ -1117,8 +1112,7 @@ namespace Au
 						}
 					}
 				}
-				finally { Api.AttachThreadInput(th1, th2, false); }
-
+			}
 			if(!ok) goto gFailed;
 
 			LibMinimalSleepNoCheckThread();
@@ -1145,6 +1139,7 @@ namespace Au
 				return g.hwndFocus;
 			}
 		}
+		//TODO: need functions that wait eg max 1 s until a window is focused or active.
 
 		/// <summary>
 		/// Returns true if this is the control or window that has the keyboard input focus.
@@ -2470,6 +2465,7 @@ namespace Au
 		public string Name
 		{
 			get => GetText(false, true);
+			//TODO: should never return null. Makes programming unsafe or more difficult. Need a bool func instead. Other string props too.
 		}
 
 		/// <summary>

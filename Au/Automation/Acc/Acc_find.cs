@@ -14,13 +14,15 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
-//using System.Xml.XPath;
+//using System.Xml.Linq;
 
 using Au.Types;
 using static Au.NoClass;
 
 #pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
+
+//TODO: some windows use eg Chrome control in non-chrome-classnamed window. Eg Spotify.
+//	Now the tool somehow detects it and everything is OK, but need to review/test more.
 
 namespace Au
 {
@@ -234,7 +236,7 @@ namespace Au
 
 					if(hr == 0) {
 						switch(_resultProp) {
-						case (default):
+						case '\0':
 							Result = new Acc(ca);
 							break;
 						case 'r':

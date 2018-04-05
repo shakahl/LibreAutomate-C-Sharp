@@ -939,7 +939,7 @@ namespace Au
 			_mouseWasIn = false;
 			if(init) {
 				_timer = Timer_.Every(100, _OnTimer);
-				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, Api.VK_ESCAPE);
+				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, Keys.Escape);
 			} else {
 				if(_timer != null) { _timer.Stop(); _timer = null; }
 				if(_hotkeyRegistered) _hotkeyRegistered = !Api.UnregisterHotKey((Wnd)_cm.Handle, _hotkeyEsc);

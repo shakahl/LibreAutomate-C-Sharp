@@ -15,7 +15,6 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
-//using System.Xml.XPath;
 
 using Au.Types;
 using static Au.NoClass;
@@ -126,16 +125,15 @@ namespace Au
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// </param>
-		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
+		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
 		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
-		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
-		/// <seealso cref="Input.IsModified"/>
-		public static bool NoModifierKeys(double secondsTimeout = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows)
+		/// <seealso cref="Keyb.IsMod"/>
+		public static bool NoModifierKeys(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
-			//return WaitFor.Condition(secondsTimeout, o => !Input.LibIsModifiers(modifierKeys)); //shorter but creates garbage
+			//return WaitFor.Condition(secondsTimeout, o => !Keyb.LibIsModifiers(modifierKeys)); //shorter but creates garbage
 			var to = new LibTimeout(secondsTimeout);
 			for(;;) {
-				if(!Input.IsModified(modifierKeys)) return true;
+				if(!Keyb.IsMod(modifierKeys)) return true;
 				if(!to.Sleep()) return false;
 			}
 		}
@@ -149,7 +147,7 @@ namespace Au
 		/// </param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
 		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
-		/// <seealso cref="Mouse.IsPressed(MouseButtons)"/>
+		/// <seealso cref="Mouse.IsPressed"/>
 		public static bool NoMouseButtons(double secondsTimeout = 0.0, MouseButtons buttons= MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
 			var to = new LibTimeout(secondsTimeout);
@@ -166,16 +164,16 @@ namespace Au
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
 		/// </param>
-		/// <param name="modifierKeys">Wait only for these keys. One or more of these flags: Keys.Control, Keys.Shift, Keys.Menu, Keys_.Windows. Default - all.</param>
-		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
+		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
+		/// <param name="buttons">Check only these buttons. Default - all.</param>
 		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
-		/// <exception cref="ArgumentException">modifierKeys is 0 or contains non-modifier keys.</exception>
-		/// <seealso cref="Input.IsModified"/>
-		public static bool NoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, Keys modifierKeys= Keys.Control | Keys.Shift | Keys.Menu | Keys_.Windows, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		/// <seealso cref="Keyb.IsMod"/>
+		/// <seealso cref="Mouse.IsPressed"/>
+		public static bool NoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
 			var to = new LibTimeout(secondsTimeout);
 			for(;;) {
-				if(!Input.IsModified(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
+				if(!Keyb.IsMod(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
 			}
 		}

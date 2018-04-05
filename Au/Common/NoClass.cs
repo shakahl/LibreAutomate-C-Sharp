@@ -21,19 +21,21 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Often-used static functions, to be used like Func instead of Class.Func.
-	/// Mostly aliases of functions of this library.
-	/// In C# source files add <c>using static Au.NoClass;</c>. Then you can use:
-	///		<c>Print</c> instead of <c>Output.Write</c>;
-	///		<c>Empty</c> instead of <c>string.IsNullOrEmpty</c>;
-	///		and more.
+	/// This class contains aliases of some frequently used functions.
+	/// In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without specifying a type name.
+	/// Examples:
+	///	<c>Print</c> is the same as <c>Output.Write</c>;
+	///	<c>Empty</c> is the same as <c>string.IsNullOrEmpty</c>;
 	/// </summary>
-	[DebuggerStepThrough]
-	public static class NoClass
+	//[DebuggerStepThrough]
+	public static partial class NoClass
 	{
 		/// <summary>
 		/// Calls <see cref="Output.Write" qualifyHint="true"/>. It writes string + "\r\n" to the output.
 		/// </summary>
+		/// <remarks>
+		/// If "" or null, writes empty line. To write "null" if null, use code <c>Print((object)s);</c>.
+		/// </remarks>
 		public static void Print(string value)
 		{
 			Output.Write(value);
@@ -46,20 +48,39 @@ namespace Au
 		/// <param name="value">Value of any type. Can be null.</param>
 		/// <remarks>
 		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
-		/// If the type implements IEnumerable (non-generic), writes list like <see cref="Print{T}(IEnumerable{T})"/>.
-		/// This overload is used for value types (int, Point) etc and other types except strings, arrays and generic collections (they have own overloads).
+		/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+		/// If null, prints "null".
+		/// 
+		/// This overload is used for value types (int, Point) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
 		/// </remarks>
 		public static void Print(object value)
 		{
-			if(value is System.Collections.IEnumerable e) {
-				Print(System.Linq.Enumerable.Cast<object>(e));
-			} else {
-				Output.Write(value?.ToString());
-			}
+			Output.Write(LibPrintObjectToString(value));
 		}
 
 		/// <summary>
-		/// Writes array, List, Dictionary or other generic collection to the output, as a list of item values separated by "\r\n".
+		/// Converts object to string like <see cref="Print(object)"/> does.
+		/// </summary>
+		internal static string LibPrintObjectToString(object value)
+		{
+			string s;
+			switch(value) {
+			case null: s = "null"; break;
+			case string t: s = t; break;
+			case uint u: s = "0x" + u.ToString("X"); break;
+			case ulong u: s = "0x" + u.ToString("X"); break;
+			case ushort u: s = "0x" + u.ToString("X"); break;
+			case byte u: s = "0x" + u.ToString("X"); break;
+			case char[] t: s = new string(t); break;
+			case System.Collections.IEnumerable e: s = string.Join("\r\n", System.Linq.Enumerable.Cast<object>(e)); break;
+			default: s = value.ToString(); break;
+			}
+			//if(s.IndexOf('\0') >= 0) s = s.Escape_(quote: true); //no
+			return s;
+		}
+
+		/// <summary>
+		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items separated by "\r\n".
 		/// </summary>
 		/// <param name="value">Array or generic collection of any type. Can be null.</param>
 		/// <remarks>
@@ -71,19 +92,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Writes array, List, Dictionary or other generic collection to the output, as a list of item values.
+		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items.
 		/// </summary>
 		/// <param name="value">Array or generic collection of any type. Can be null.</param>
 		/// <param name="format">
 		/// Item format string.
 		/// 
 		/// These special substrings are replaced with:
+		/// {s} - <c>item.ToString</c>, or "null" if null.
 		/// {0} - item index, starting from 0.
 		/// {1} - item index, starting from 1.
-		/// {2} - item string value, or empty string if null.
-		/// {3} - item string value, or "null" if null. Strings are escaped (<see cref="String_.Escape_"/>) and enclosed in "".
 		/// 
-		/// If this parameter is null or omitted, uses "{3}\r\n". It works like <see cref="Print{T}(IEnumerable{T})"/>.
+		/// Default "{s}\r\n". It works like <see cref="Print{T}(IEnumerable{T})"/>.
 		/// </param>
 		/// <param name="trimEnd">
 		/// How many characters to remove from the end of the result string.
@@ -92,33 +112,29 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
 		/// </remarks>
-		public static void PrintListEx<T>(IEnumerable<T> value, string format = "{3}\r\n", int trimEnd = 2)
+		public static void PrintListEx<T>(IEnumerable<T> value, string format = "{s}\r\n", int trimEnd = 2)
 		{
 			string s = null;
 			if(value != null) {
 				using(new Util.LibStringBuilder(out var b)) {
-					if(format == null) format = "{3}\r\n";
-					bool simpleFormat = false, has0 = false, has1 = false, has3 = false;
-					if(format == "{3}\r\n") has3 = true;
-					else if(format == "{2}\r\n") simpleFormat = true;
-					else {
-						has0 = format.Contains("{0}");
-						has1 = format.Contains("{1}");
-						has3 = format.Contains("{3}");
-					}
-					var a = new string[5];
+					string[] a = null;
+					if(format != "{s}\r\n") format.RegexFindAll_(@"(?s)(\{[s01]\})|.+?(?=(?1)|$)", 0, out a);
 					int i = 0;
 					foreach(T v in value) {
-						var t = v?.ToString();
-						if(simpleFormat) b.AppendLine(t);
-						else {
-							if(has0) a[0] = i.ToString();
-							if(has1) a[1] = (i + 1).ToString();
-							a[2] = t;
-							if(has3) a[3] = (v == null) ? "null" : ((v is string) ? t?.Escape_(quote: true) : t);
-							b.AppendFormat(format, a);
-						}
 						i++;
+						string t = v == null ? "null" : v.ToString();
+						if(a == null) {
+							b.AppendLine(t);
+						} else {
+							foreach(string m in a) {
+								switch(m) {
+								case "{s}": b.Append(t); break;
+								case "{0}": b.Append(i - 1); break;
+								case "{1}": b.Append(i); break;
+								default: b.Append(m); break;
+								}
+							}
+						}
 					}
 					if(trimEnd > 0 && i > 0) b.Remove(b.Length - trimEnd, trimEnd);
 					s = b.ToString();
@@ -134,6 +150,7 @@ namespace Au
 		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
 		/// If a value is null, writes "null".
 		/// If a value is string, escapes it (<see cref="String_.Escape_"/>), limits to 250 characters (<see cref="String_.Limit_"/>) and encloses in "".
+		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// </remarks>
 		public static void Print(object value1, object value2, params object[] more)
 		{
@@ -144,20 +161,16 @@ namespace Au
 					switch(v) {
 					case string s: b.Append(s.Escape_(limit: 250, quote: true)); break;
 					case null: b.Append("null"); break;
+					case uint u: b.Append("0x").Append(u.ToString("X")); break;
+					case ulong u: b.Append("0x").Append(u.ToString("X")); break;
+					case ushort u: b.Append("0x").Append(u.ToString("X")); break;
+					case byte u: b.Append("0x").Append(u.ToString("X")); break;
 					default: b.Append(v); break;
 					}
 				}
 				Output.Write(b.ToString());
 			}
 		}
-
-		/// <summary>
-		/// Writes integer number to the output (<see cref="Output.Write" qualifyHint="true"/>), in hexadecimal format like "0x5A".
-		/// </summary>
-		/// <param name="value">Value of an integer type (int, uint, long, etc).</param>
-		public static void PrintHex(object value) { Output.Write($"0x{value:X}"); }
-		//never mind: this is slower, but with Write("0x" + value.ToString("X")); we'd need switch or overloads for all integer types.
-		//FUTURE: add overload to write hex-encoded byte[], void*, etc. Like QM2 outb.
 
 		/// <summary>
 		/// Writes warning text to the output.
@@ -174,7 +187,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void PrintWarning(string text, int showStackFromThisFrame = 0, string prefix = "Warning: ")
 		{
-			string s = text??"";
+			string s = text ?? "";
 
 			var a = Options.LibDisabledWarnings;
 			if(a != null) foreach(var k in a) if(s.Like_(k, true)) return;
@@ -194,14 +207,14 @@ namespace Au
 		}
 		static long s_warningTime;
 
-		//rejected. Let use like 3.s() instead of WaitS(3).
+		//rejected. Let use like 3.s() instead.
 		///// <summary>
 		///// Suspends this thread for the specified amount of time.
-		///// Calls <see cref="Time.WaitS" qualifyHint="true"/>.
+		///// Calls <see cref="Time.SleepS" qualifyHint="true"/>.
 		///// </summary>
 		///// <param name="seconds">
 		///// The number of seconds to wait.
-		///// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.WaitS" qualifyHint="true"/>.
+		///// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.SleepS" qualifyHint="true"/>.
 		///// </param>
 		///// <exception cref="ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		//public static void WaitS(double seconds) => Time.WaitS(seconds);
@@ -217,20 +230,5 @@ namespace Au
 		/// The same as string.IsNullOrEmpty.
 		/// </summary>
 		public static bool Empty(string s) => (s?.Length ?? 0) == 0;
-
-		///
-		public static void Key(params object[] keys) => Input.Common.Key(keys);
-
-		///
-		public static void Text(string text, string keys = null) => Input.Common.Text(text, keys);
-
-		///
-		public static void Paste(string text, string keys = null) => Input.Common.Paste(text, keys);
 	}
-}
-
-namespace Au.Types
-{
-	///
-	public enum KScan { } //TODO
 }

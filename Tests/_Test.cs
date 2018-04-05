@@ -15,7 +15,7 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
-//using System.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -169,6 +169,26 @@ static unsafe partial class Test
 		Print("end");
 	}
 
+	//static void TestSpeedThreadAndTask()
+	//{
+	//	//Perf.SpinCPU(100);
+	//	100.ms();
+	//	for(int i1 = 0; i1 < 5; i1++) {
+	//		int n2 = 1;
+	//		Perf.First();
+	//		//for(int i2 = 0; i2 < n2; i2++) { var t = new Thread(()=> { /*Print(1);*/ }); t.Start(); }
+	//		Perf.Next();
+	//		for(int i2 = 0; i2 < n2; i2++) { Task.Run(()=> { /*Print(2);*/ }); }
+	//		Perf.Next();
+	//		for(int i2 = 0; i2 < n2; i2++) { }
+	//		Perf.Next();
+	//		for(int i2 = 0; i2 < n2; i2++) { }
+	//		Perf.NW();
+	//		200.ms();
+	//	}
+
+	//}
+
 	static void TestAcc()
 	{
 		//Acc.Misc.WorkaroundToolbarButtonName = true;
@@ -200,7 +220,7 @@ static unsafe partial class Test
 
 		//_StartMemoryMonitorThread();
 
-		//Acc.Misc.WorkaroundToolbarButtonName = Input.IsScrollLock;
+		//Acc.Misc.WorkaroundToolbarButtonName = Keyb.IsScrollLock;
 		//Print(Acc.Misc.WorkaroundToolbarButtonName);
 		//Print(Acc.FromPoint(257, 1138)); return; //QM toolbar button Properties
 		//Print(Acc.FromPoint(1147, 1092)); return; //QM floating toolbar button Mouse
@@ -1139,7 +1159,7 @@ static unsafe partial class Test
 
 	static void TestAElementFromPoint()
 	{
-		for(; !Input.IsCtrl; 1.s()) {
+		for(; !Keyb.IsCtrl; 1.s()) {
 			UIA.IElement e = null;
 			try { e = AElement.FromMouse(true); } catch(Exception ex) { Print(ex); }
 
@@ -2299,7 +2319,7 @@ static unsafe partial class Test
 		AXYFlags flags = 0;
 		flags |= AXYFlags.PreferLink;
 		//flags |= AXYFlags.UIA;
-		if(Input.IsScrollLock) flags |= AXYFlags.NotInProc;
+		if(Keyb.IsScrollLock) flags |= AXYFlags.NotInProc;
 
 		Perf.First();
 		for(int i = 0; i < 5; i++) {
@@ -3212,7 +3232,7 @@ REE`");
 		//Print(-0xffffffffU);
 
 		fixed (char* p = s) {
-			PrintHex(Api.strtoi(p));
+			Print((uint)Api.strtoi(p));
 		}
 	}
 
@@ -4414,72 +4434,6 @@ REE`");
 		Perf.NW();
 	}
 
-
-	static void TestKeySyntax()
-	{
-
-		Input.Common.SleepAfter = 100;
-		Key("Tab Ctrl+V");
-
-		var k = new Input() { SleepAfter = 200 };
-		k.Key("Tab Ctrl+V");
-
-		//using(var k = new Input()) {
-		//	k.Key("Tab Ctrl+V");
-		//}
-
-		//Input.PasteKeyText = true; //or Key(true, "keys", "text");
-		//Key("Ctrl+C", "text", "F2", 500, Keys.Back, "", "text", (Keys)8, (KScan)8);
-		//Key("Tab*2", "user", "Tab", "password", 200, "Enter");
-		//Text("user", "Tab");
-		//Paste("user");
-		//var w = +Wnd.Find("Quick*").Kid(2216);
-		//Key(w, "Ctrl+V");
-		//Text(w, "Ctrl+V");
-
-		//var k = new Input();
-		//k.Prop1 = 3;
-		//k.SendKeys("Enter");
-
-
-		//Part types depend on argument type:
-		//string - keys or text, in alternating order: Key("keys", "text", "keys", "text").
-		//	After arguments of other types again starts with keys: Key("keys", 10, 20, "keys", "text").
-		//	Keys can be empty string: Key("keys", 10, "", "text").
-		//int - milliseconds to sleep.
-		//enum Keys (or KCode?) - virtual key code: Key(Keys.Back, (Keys)8).
-		//enum KScan - scan code. Example: Key((KScan)10).
-		//bool - true to use clipboard (paste text), false (default) to use keyboard.
-		//	For Text(), the default depends on Input.TextOptions, which can specify to use paste with all or some windows, maybe using a predicate.
-		//some options/flags types.
-
-		//rejected
-		//Key("Ctrl+C", KText, "text", KSleep, 500, "F2", KCode, Keys.Back, KCode, Api.VK_APPS, KScan, 10);
-		//Key("Ctrl+C", "text", "F2", 500, "F2", Keys.Back, KCode, Api.VK_APPS, KScan, 10);
-		//Key("Ctrl+C 'text' F2", 500, "F2", Keys.Back, KCode, Api.VK_APPS, KScan, 10);
-		//Key("Ctrl+C 'text' F2", 500, "F2", Keys.Back, (Keys)8, (byte)10);
-
-		//consider
-		//Key(K.Ctrl.Alt.F.Plus.O.Text("text").Tab.Paste("text").Sleep(100).Enter);
-
-		//or don't use Text(params object[] text). Rarely used. Instead:
-		//Text(string text, string keys = null, TOptions options = null)
-		//rejected:
-		//Key(string keys, string text = null, TOptions options = null)
-
-		//rejected: use clipboard for text. Rarely need. Unclear parameters. Better Key("keys"); Paste("keys");
-		//KeyPaste("keys", "paste")
-
-		//SELECTED:
-		//Key(params object[] keys) //Keys("keys", "text", "keys", "text", 100, "keys", "text", Keys.Back, new KeyOptions(...));
-		//Text(string text, string keys = null)
-		//Text(KeyOptions options, string text, string keys = null)
-		//Paste(string text, string keys = null)
-		//Input.Paste(string text, string keys = null)
-		//Input.PasteFormat(string text, string format)
-		//Input.PasteTo(Wnd w, string text, string format = null)
-	}
-
 	static void TestLibDC()
 	{
 		using(var dcs = new LibScreenDC(0)) {
@@ -4757,6 +4711,515 @@ REE`");
 		if(s.RegexMatch_(@"(?<A>[a-z]+)(?<B>\d+)", out var m)) Print(m[1], m[2], m["A"], m["B"]);
 	}
 
+	static void TestPrintHex()
+	{
+		//for(int i=0; i<1000; i++) {
+		//	char c = (char)i;
+		//	Print(c.ToString());
+		//}
+		//return;
+
+		//string s = "ab{s}cd{1}ef{gh\r\nij";
+		//s = "{s}\r\n";
+		////string rx;
+
+		////Print(s.RegexFindAll_(@"(?s)\{[sr01]\}|.+?(?=\{|$)"));
+		////Print(s.RegexFindAll_(@"\{[sr01]\}|[^{]+"));
+		////foreach(var m in s.RegexFindAll_(@"(?s)(\{[sr01]\})|.+?(?=(?1)|\z)")) Print($"{m.Index} {m.Length} '{m.Value}'");
+		//foreach(var m in s.RegexFindAll_(@"(?s)(\{[sr01]\})|.+?(?=(?1)|$)")) Print($"{m.Index} {m.Length} '{m.Value}'");
+
+		//return;
+
+		//int i = 10;
+		//Print(i);
+		//Print((uint)i);
+		//string s = "kk";
+		//var ca = new char[] { 'a', 'b' };
+		//var ca = new int[] { 'a', 'b', '\0', '\r', '\n', '\t', (char)20, (char)130, 'c' };
+		//var ca = new string[] { "one", "two\r\n\t\0mmm", null };
+		//var ca = new uint[] { 'a', 'b', '\0', '\r', '\n', '\t', (char)20, (char)130, 'c' };
+		//var ca = new int?[] { 'a', 'b', '\0', '\r', '\n', '\t', (char)20, null };
+		//var ca = new object[] { 'a', 10, 10u, "one", "two\r\n\tmmm", null };
+		//Print(i, (uint)i, s, ca);
+		//Print(s);
+		//Print((object)s);
+		//s = null;
+		//Print(i, (uint)i, s);
+		//Print(s);
+		//Print((object)s);
+		//Print(new StringBuilder("SB"));
+		//Print(new int[] { 4, 5 });
+
+		//Print("Print(ca):");
+		//Print(ca);
+		//Print("Print((object)ca):");
+		//Print((object)ca);
+		//Print(@"PrintListEx(ca, ""{s}\r\n""):");
+		//PrintListEx(ca);
+		//PrintListEx(ca, "{s}\r\n");
+		//PrintListEx(ca, "{0}. '{s}'\r\n");
+		//PrintListEx(ca, "{s}", 0);
+	}
+
+	[DllImport("user32.dll")]
+	internal static extern bool GetKeyboardState(sbyte* lpKeyState);
+
+	public static KMod GetMod(KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+	{
+		var a = stackalloc sbyte[256];
+		GetKeyboardState(a);
+		if(a[17] >= 0) modifierKeys &= ~KMod.Ctrl;
+		if(a[16] >= 0) modifierKeys &= ~KMod.Shift;
+		if(a[18] >= 0) modifierKeys &= ~KMod.Alt;
+		if((a[91] >= 0 && a[92] >= 0)) modifierKeys &= ~KMod.Win;
+		return modifierKeys;
+	}
+
+	static void TestGetMod()
+	{
+		//Print(GetMod());
+		//Print(Keyb.IsMod());
+		Print(Keyb.GetMod());
+
+		Perf.SpinCPU(100);
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 1000;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { Keyb.IsMod(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { GetMod(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { Keyb.GetMod(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.NW();
+		}
+
+	}
+
+	//static void TestAttachThreadInput()
+	//{
+	//	var w = Wnd.Find("FileZilla").Kid(-31791).OrThrow();
+	//	//using(new LibAttachThreadInput(w.ThreadId, out bool ok)) {
+	//	//	Print(ok);
+	//	//}
+	//	w.Focus();
+	//}
+
+	static void TestLibThreadCpuSwitcher()
+	{
+		//Task.Run(() => Perf.SpinCPU(300));
+		//Task.Run(() => Perf.SpinCPU(300));
+		//Task.Run(() => Perf.SpinCPU(300));
+		//Task.Run(() => Perf.SpinCPU(300));
+		10.ms();
+		using(var ts = new LibThreadSwitcher()) {
+			for(int i = 0; i < 15; i++) {
+				Perf.First();
+				if(!ts.Switch()) Print("failed");
+				Perf.NW();
+			}
+		}
+	}
+
+	static void TestBlockUserInput()
+	{
+		//using(new BlockUserInput(BIEvents.All)) {
+		//	Print("blocked");
+		//	5.s();
+		//}
+		//Print("unblocked");
+		//return;
+
+		//100.ms();
+		//using(var bi = new BlockUserInput()) {
+		//	for(int i = 0; i < 5; i++) {
+		//		bi.Start(BIEvents.Keys);
+		//		100.ms();
+		//		bi.Stop();
+		//		100.ms();
+		//	}
+		//}
+		//for(int i = 0; i < 5; i++) {
+		//	using(var bi = new BlockUserInput(BIEvents.Keys)) 100.ms();
+		//	100.ms();
+		//}
+
+		//Task.Run(() => {
+		//	for(int i = 0; i < 100; i++) {
+		//		100.ms();
+		//		GC.Collect();
+		//	}
+		//});
+
+		//BlockUserInput.DoNotBlockKeys = new Keys[] { Keys.A, Keys.B };
+
+		//using(var bi = new BlockUserInput(BIEvents.Keys)) {
+		//using(var bi = new BlockUserInput(BIEvents.MouseClicks|BIEvents.MouseMoving)) {
+		using(var bi = new BlockUserInput(BIEvents.All)) {
+			//bi.Dispose();
+			//bi.Stop();
+			//bi.Start(BIEvents.Keys);
+			bi.ResendBlockedKeys = true;
+			//bi.ResumeAfterCtrlAltDelete = true;
+			//15.s();
+
+			5.s();
+			//Shell.Run(@"C:\Program Files\Process Hacker 2\ProcessHacker.exe");
+			//AuDialog.ShowEx(secondsTimeout: 5);
+			//Print("> inner");
+			//using(var bk = new BlockUserInput()) {
+			//	bk.ResendBlockedKeys = true;
+			//	bk.Start(BIEvents.Keys);
+			//	5.s();
+			//}
+			//Print("< inner");
+			//5.s();
+
+			//3.s();
+			//bi.Pause = true;
+			//3.s();
+			//bi.Pause = false;
+			//3.s();
+
+			//AuDialog.Show("started");
+			//bi.Stop();
+			//AuDialog.Show("stopped");
+		}
+
+		//var t = new Thread(() =>
+		//  {
+		//	  var bi = new BlockUserInput(BIEvents.Keys);
+		//	  500.ms();
+		//  });
+		//t.Start();
+		//AuDialog.Show("started");
+
+		Print("END");
+	}
+
+	static void TestIsKey()
+	{
+		for(int i = 1; i < 255; i++) {
+			var k = (Keys)i;
+			var s = k.ToString(); if(Empty(s) || s.Contains(",")) continue;
+			//Print($"{k,-20} {Keyb.IsKeyPressed(k)}, {Keyb.IsKeyToggled(k)}");
+			Print($"{k,-20} {Keyb.GetKeyState(k):X4} {Keyb.GetAsyncKeyState(k):X4}");
+		}
+	}
+
+	static void TestKeySyntax()
+	{
+
+		Keyb.Options.SleepFinally = 100;
+		Key("Tab Ctrl+V");
+
+		var k = new Keyb(Keyb.Options) { SleepFinally = 200 };
+		k.Add("Tab Ctrl+V").Send();
+
+		//using(var k = new Keyb()) {
+		//	k.Key("Tab Ctrl+V");
+		//}
+
+		//Keyb.PasteKeyText = true; //or Key(true, "keys", "text");
+		//Key("Ctrl+C", "text", "F2", 500, Keys.Back, "", "text", (Keys)8, (KScan)8);
+		//Key("Tab*2", "user", "Tab", "password", 200, "Enter");
+		//Text("user", "Tab");
+		//Paste("user");
+		//var w = +Wnd.Find("Quick*").Kid(2216);
+		//Key(w, "Ctrl+V");
+		//Text(w, "Ctrl+V");
+
+		//var k = new Keyb();
+		//k.Prop1 = 3;
+		//k.SendKeys("Enter");
+
+
+		//Part types depend on argument type:
+		//string - keys or text, in alternating order: Key("keys", "text", "keys", "text").
+		//	After arguments of other types again starts with keys: Key("keys", 10, 20, "keys", "text").
+		//	Keys can be empty string: Key("keys", 10, "", "text").
+		//int - milliseconds to sleep.
+		//enum Keys (or KCode?) - virtual key code: Key(Keys.Back, (Keys)8).
+		//enum KScan - scan code. Example: Key((KScan)10).
+		//bool - true to use clipboard (paste text), false (default) to use keyboard.
+		//	For Text(), the default depends on Keyb.TextOptions, which can specify to use paste with all or some windows, maybe using a predicate.
+		//some options/flags types.
+
+		//rejected
+		//Key("Ctrl+C", KText, "text", KSleep, 500, "F2", KCode, Keys.Back, KCode, Api.VK_APPS, KScan, 10);
+		//Key("Ctrl+C", "text", "F2", 500, "F2", Keys.Back, KCode, Api.VK_APPS, KScan, 10);
+		//Key("Ctrl+C 'text' F2", 500, "F2", Keys.Back, KCode, Api.VK_APPS, KScan, 10);
+		//Key("Ctrl+C 'text' F2", 500, "F2", Keys.Back, (Keys)8, (byte)10);
+
+		//consider
+		//Key(K.Ctrl.Alt.F.Plus.O.Text("text").Tab.Paste("text").Sleep(100).Enter);
+
+		//or don't use Text(params object[] text). Rarely used. Instead:
+		//Text(string text, string keys = null, TOptions options = null)
+		//rejected:
+		//Key(string keys, string text = null, TOptions options = null)
+
+		//rejected: use clipboard for text. Rarely need. Unclear parameters. Better Key("keys"); Paste("keys");
+		//KeyPaste("keys", "paste")
+
+		//SELECTED:
+		//Key(params object[] keys) //Keys("keys", "text", "keys", "text", 100, "keys", "text", Keys.Back, new KeyOptions(...));
+		//Text(string text, string keys = null)
+		//Text(KeyOptions options, string text, string keys = null)
+		//Paste(string text, string keys = null)
+		//Keyb.Paste(string text, string keys = null)
+		//Keyb.PasteFormat(string text, string format)
+		//Keyb.PasteTo(Wnd w, string text, string format = null)
+	}
+
+
+	//public struct KParam
+	//{
+	//	public static implicit operator KParam(Action a) => new KParam();
+	//}
+
+	//static void TestKParam(KParam p)
+	//{
+
+	//}
+
+	static string _CreateLongText(int len)
+	{
+		var b = new StringBuilder(len+30);
+		while(b.Length<len) {
+			if(b.Length > 0) b.Append(' ');
+			b.Append(b.Length);
+		}
+		return b.ToString();
+	}
+
+	static void TestKey()
+	{
+		//Key("RShift*down");
+		//100.ms();
+		//Print(Keyb.GetKeyState(Keys.ShiftKey), Keyb.GetKeyState(Keys.LShiftKey), Keyb.GetKeyState(Keys.RShiftKey));
+		//Key("RShift*up");
+		//Print(Keyb.GetKeyState(Keys.ShiftKey), Keyb.GetKeyState(Keys.LShiftKey), Keyb.GetKeyState(Keys.RShiftKey));
+
+		//Key("RCtrl*down");
+		//100.ms();
+		//Print(Keyb.GetKeyState(Keys.ControlKey), Keyb.GetKeyState(Keys.LControlKey), Keyb.GetKeyState(Keys.RControlKey));
+		//Key("Ctrl*up");
+		//Print(Keyb.GetKeyState(Keys.ControlKey), Keyb.GetKeyState(Keys.LControlKey), Keyb.GetKeyState(Keys.RControlKey));
+
+		//Keyb.Options.NoModOff = true;
+		////Key("Alt*down");
+		//1100.ms();
+		//Print(Keyb.GetKeyState(Keys.Menu), Keyb.GetKeyState(Keys.LMenu), Keyb.GetKeyState(Keys.RMenu));
+		////Key("Alt*up");
+		////Print(Keyb.GetKeyState(Keys.Menu), Keyb.GetKeyState(Keys.LMenu), Keyb.GetKeyState(Keys.RMenu));
+
+		//return;
+
+		//Key("RWin*down");
+		//100.ms();
+		//Print(Keyb.GetKeyState(Keys.LWin), Keyb.GetKeyState(Keys.RWin));
+		//Key("RWin*up");
+		//Print(Keyb.GetKeyState(Keys.LWin), Keyb.GetKeyState(Keys.RWin));
+
+		//return;
+
+		//TestKParam(() => Print(1));
+
+		//if(Time.LibSleepPrecision.Current < 15) throw new Exception("s");
+		//AuDialog.Show(""+Time.LibSleepPrecision.Current);
+		////Print(System.Configuration.ConfigurationSettings.AppSettings.AllKeys);
+		//return;
+
+		//PrintHex(Keyb._GetKeyboardLayoutOfActiveThread()); return;
+
+		//var k = new Keyb();
+		//k.Key("a");
+
+		var wa = Wnd.WndActive;
+		//var w = Wnd.Find("Quick*").OrThrow();
+		//var w = Wnd.Find("* Writer").OrThrow();
+		//var w = Wnd.Find("* Word*").OrThrow();
+		//var w = Wnd.Find("Dialog").OrThrow();
+		//var w = Wnd.Find("*Notepad").OrThrow();
+		//w.Activate();
+		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		100.ms();
+
+		Keyb.Options.TextOption = KTextOption.Keys;
+		for(int i = 0; i < 5; i++) {
+			//Text("One Two Three Four Five Six Seven Eight Nine Ten\r\n");
+			Text("OneTwoThreeFourFive ");
+		}
+		return;
+
+		//Text("abCD$,ąĄ", "keys Enter");
+		//Key(1000, "", "abCD$,ąĄ", "keys Enter");
+
+		//Keyb.Options.SleepFinally = 0;
+		////Keyb.Options.TimeTextChar=0;
+		//var s =_CreateLongText(100);
+		//Print(s.Length);
+		//Perf.First();
+		//Text(s, "Enter");
+		//Perf.NW();
+
+		//Key(Keys.BrowserBack);
+		//Key("BrowserBack");
+
+		var b = new Keyb(null);
+		b.SleepFinally = 0;
+		b.TimeKeyPressed = 1;
+		for(int i = 0; i < 5; i++) {
+			Clipboard.Clear();
+			20.ms();
+			b.Add("Ctrl+C");
+			//int t = 1;
+			////b.Add("Ctrl*down", 1, "C*down", 1, "C*up", 0, "Ctrl*up");
+			//b.Add("Ctrl*down", 1, "C*down", 1, "Ctrl*up", 0, "C*up");
+			//b.AddKey(Keys.ControlKey).AddKeys("+").AddKey(Keys.A);
+			b.Send();
+			300.ms();
+			Print(Clipboard.GetText());
+		}
+		return;
+
+		//Keyb.Options.SleepFinally = 100;
+		//Keyb.Options.Hook = () => new KOptions() { SleepFinally = 100 };
+		//Keyb.Options.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	Wnd w = o.w.WndWindow;
+		//	if(w.Name?.StartsWith_("Unti") ?? false) o.opt.TimeKeyPressed = 500;
+		//	//opt.TextOption = KTextOption.Keys;
+		//	//opt.SleepFinally = 1000;
+		//	//opt.TimeTextChar = 500;
+		//};
+
+		var x = new Keyb(Keyb.Options);
+
+		//2.s();
+		//Action actNotepad = () => Wnd.Find("*Notepad").Activate();
+		//Action actQm = () => Wnd.Find("Quick M*").Activate();
+		//x.Add("abc Space", actNotepad, "some text", actQm, "Enter");
+		//x.Add("abc Space", "some text", 1d, "Enter", 2.5);
+		//x.AddText("a"); x.AddText("b"); x.AddText("c");
+		x.AddText("a"); x.AddCallback(()=>Print(1)); x.AddText("c");
+		//x.Add("Alt+Tab");
+		//x.Add("Ctrl+S a", 1000, "Esc*2");
+		Perf.First();
+		for(int i = 0; i < 1; i++) {
+			x.Send();
+			//x.Send(true);
+			Perf.Next();
+		}
+		Perf.Write();
+		//x.Key("Enter", "Tab", "Enter");
+		//x.Text("Left");
+
+		return;
+
+		//x.AddChar('a').AddChar('B');
+		//x.AddText("Test");
+		//x.AddKeys("Ctrl+A Tab*33 T * 33k b* Num* ab c Alt+(A B) Alt + (A B) #- #+ #* # #hk h#*#4 #**55 F12 FF kNow **");
+		//x.AddKeys("Shift+A");
+		//x.AddKeys("Shift+A qwertyuiopasdfghjklzxcvbnm");
+		//x.AddKeys("Ctrl+Shift+A");
+		//x.AddKeys("B*3");
+		//x.AddKeys("Shift+C*3");
+		//x.AddKeys("Shift+M"); x.Send(); x.Send(); x.Send();
+		//x.AddKeys("Shift+M"); for(int i=0; i<3; i++) x.Send(true);
+		//x.AddKeys("Shift+"); x.Send(); Print(1); x.AddKeys("k"); x.Send();
+		//x.AddEvents("Shift+", Keys.K, (45, false));
+		//x.AddKeys("Ctrl LCtrl RCtrl Alt+a LAlt+a RAlt+a Shift LShift RShift");
+		//x.AddKeys("ab Esc 1 2 RCtrl Right Shift+A Alt+(fe)");
+		//x.AddText("one\rtwo\nthree\r\nfour ąč");
+		//x.AddKeys("Ctrl+A Del");
+		//x.AddKeys(@"Tab qwertyuiop Enter asdfghjkl Enter zxcvbnm Enter `1234567890-= Enter []\;',./ Enter #/#*#-#+#.#0#1#2#3#4#5#6#7#8#9");
+		//x.AddKeys("F1 F12 F24 Back");
+		//x.AddKeys("F1 F12 F24 Back Backspace BAC NumLock NUM");
+		//x.AddKeys("Alt AltG App Add Bac Ctr Con Cap Del Dec Div Dow Ent End Esc Hom Ins");
+		//x.AddKeys("Lef LSh LCt LCo LAl LWi Rig RSh RCt RCo RAl RWi Ret");
+		//x.AddKeys("Men Mul Num PgU PageU PgD PageD Pau Pri PRT Shi Spa Scr Sub Tab Up Win");
+		//x.AddKeys("$send$input $4");
+		//x.AddKeys("$send$(input)");
+		//x.AddText("𑀠-𑀡-𑀢-𑀣-𑀤-𑀥-𑀦-𑀧-𑀨-𑀩-𑀪-𑀫-𑀬-𑀭-𑀮-𑀯");
+		//x.AddKeysText("", "𑀠-𑀡-𑀢-𑀣", 1000, "", "-𑀤-𑀥");
+		//Keyb.Common.TimeTextChar = 100;
+		//Keyb.Common.TimeTextCharSent = 1;
+		//x.AddText("123 β, 𑀨-𑀪-𑀫.");
+		//x.AddText("123456789").AddSleep(400).AddText(" 123456789\r\n");
+		//x.AddText("a β 123 ƱʍЧ.");
+		//x.AddKeys("Enter", 10);
+		//Keyb.Common.TextOption = KTextOption.Keys;
+		//x.AddKeys("-");
+		//x.AddText("abc");
+		//x.AddKeys("Shift+(");
+
+		//var s = new StringBuilder();
+		//for(int i = 0; ; i++) {
+		//	int len = s.Length; if(len > 1000) break;
+		//	s.Append(len).Append(" 123456789 123456789 123456789 123456789 123456789 βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ\r\n");
+		//	//s+="123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567-\r\n"
+		//	//	+ "βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱ-\r\n";
+		//}
+		//x.AddText(s.ToString());
+
+		////x.AddText("a\r\nBcDE\n\r");
+		//x.AddText("aąAĄβƱʍЧ\r\n");
+		//x.AddText("abc");
+
+		//x.Add("Tab", 1000, Keys.A, (Action)(() => Print(1)), "Tab-");
+
+		Action click = () => Mouse.Click();
+		//x.Add("Shift+", click);
+		//x.Add("Shift+(", click);
+		//x.Add("Shift+(", click, ")");
+		//x.Add("Shift+", (Action)(() => Mouse.Click()));
+		//x.Add("Shift+", click, "a");
+		//x.Add("Shift+", Keys.A, "a");
+		//x.Add("Shift+", 500, "a");
+		//x.Add("Shift+", "text", "a");
+		//x.Add("Shift+", 500);
+		//x.Add(Keys.A, "*3");
+		x.Add("Shift*down", click, "*up");
+
+
+		Perf.First();
+		x.Send();
+		//Keyb.Common.TimeKeyPressed = 0;
+		//for(int i = 0; i < 8; i++) {
+		//	x.Send(true);
+		//}
+		//SendKeys.SendWait(s);
+		Perf.NW();
+
+		//100.ms();
+		//wa.Activate();
+	}
+
+	static void TestKeybExamples()
+	{
+		//var k = new Keyb(Keyb.StaticOptions);
+		//k.TimeKeyPressed = 50;
+		//k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(Keys.Enter).AddSleep(500);
+		//k.Send(); //sends and clears the variable
+		//k.Add("Tab // Space*3", "text", Keys.Enter, 500); //does the same as the above k.Add... line
+		//for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
+
+		//Keyb.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
+
+		//Keyb.Options.TimeKeyPressed = 300; //set options for static functions
+		//Keyb.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
+
+		//Keyb.Text("text\r\n"); //send text that ends with newline
+		//Keyb.Text("text", "Enter", 300); //send text, press Enter, wait 300 ms
+
+		Text("Key and Text can be used without the \"Keyb.\" prefix.");
+		Key("Enter");
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -4777,7 +5240,16 @@ REE`");
 		try {
 #if true
 
-			TestRegexGroupByName();
+			//TestKeybExamples();
+			TestKey();
+			//TestIsKey();
+			//TestGetMod();
+			//TestBlockUserInput();
+			//TestSpeedThreadAndTask();
+			//TestLibThreadCpuSwitcher();
+			//TestAttachThreadInput();
+			//TestPrintHex();
+			//TestRegexGroupByName();
 			//TestWildexRegex();
 			//TestRegexStatic();
 			//TestRegexExamples();
@@ -4840,9 +5312,9 @@ REE`");
 		using static AuAlias;
 
 		say(...); //Output.Write(...); //or print
-		key(...); //Input.Keys(...);
-		tkey(...); //Input.TextKeys(...); //or txt
-		paste(...); //Input.Paste(...);
+		key(...); //Keyb.Key(...);
+		tkey(...); //Keyb.Text(...); //or txt
+		paste(...); //Keyb.Paste(...);
 		msgbox(...); //AuDialog.Show(...);
 		wait(...); //Time.Wait(...);
 		click(...); //Mouse.Click(...);

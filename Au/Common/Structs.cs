@@ -14,10 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-
-//using System.Xml.Serialization;
-//using System.Xml;
-//using System.Xml.Schema;
+//using System.Xml.Linq;
 
 using static Au.NoClass;
 
@@ -60,7 +57,7 @@ namespace Au.Types
 		public static implicit operator LPARAM(ulong x) { return new LPARAM((void*)x); }
 		public static implicit operator LPARAM(bool x) { return new LPARAM((void*)(x ? 1 : 0)); }
 		//public static implicit operator LPARAM(Enum x) { return new LPARAM((void*)(int)x); } //error
-		//public static implicit operator LPARAM(WPARAM x) { return new LPARAM(x); }
+		public static implicit operator LPARAM(Keys x) { return new LPARAM((void*)(int)x); }
 		//int etc = LPARAM
 		public static implicit operator void* (LPARAM x) { return x._v; }
 		public static implicit operator IntPtr(LPARAM x) { return (IntPtr)x._v; }
@@ -102,9 +99,12 @@ namespace Au.Types
 
 	/// <summary>
 	/// Contains rectangle coordinates.
-	/// Unlike Rectangle, which contains fields for width and height and therefore cannot be used with Windows API functions, RECT contains fields for right and bottom and can be used with Windows API.
 	/// </summary>
-	//[DebuggerStepThrough] //TODO
+	/// <remarks>
+	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b>/<b>Rect</b>/<b>Int32Rect</b> can't, because their fields are different.
+	/// This type has implicit conversions from/to <b>Rectangle</b>.
+	/// </remarks>
+	[DebuggerStepThrough]
 	[Serializable]
 	public struct RECT
 	{
@@ -118,7 +118,7 @@ namespace Au.Types
 		/// <param name="top"></param>
 		/// <param name="rightOrWidth">right or width, depending on <paramref name="useWidthHeight"/>.</param>
 		/// <param name="bottomOrHeight">bottom or height, depending on <paramref name="useWidthHeight"/>.</param>
-		/// <param name="useWidthHeight">If true, used width/height. If false, used right/bottom.</param>
+		/// <param name="useWidthHeight">If true, rightOrWidth/bottomOrHeight are width/height. Else right/bottom.</param>
 		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight)
 		{
 			this.left = left; this.top = top;
@@ -209,7 +209,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns true if this rectangle and another rectangle intersect.
 		/// </summary>
-		public bool IntersectsWith(RECT r2) { return Api.IntersectRect(out RECT r, ref this, ref r2); }
+		public bool IntersectsWith(RECT r2) { return Api.IntersectRect(out _, ref this, ref r2); }
 
 		/// <summary>
 		/// Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>

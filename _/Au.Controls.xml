@@ -187,7 +187,7 @@
         <member name="T:Au.Controls.AuInfoBox">
             <summary>
             Scintilla-based control to show formatted information text.
-            To set text use the <see cref="M:Au.NoClass.Text(System.String,System.String)"/> property. For formatting and links use tags. See <see cref="T:Au.Controls.SciTags"/>.
+            To set text use the <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/> property. For formatting and links use tags. See <see cref="T:Au.Controls.SciTags"/>.
             </summary>
         </member>
         <member name="T:Au.Controls.SciText">

@@ -20,7 +20,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
 using System.Security; //for XML comments
 using System.Globalization;
@@ -328,7 +327,7 @@ namespace Au.Types
 			return t.Width <= 0 || t.Height <= 0;
 		}
 
-		//rejected: too simple. We have PrintHex, also can use $"0x{t:X}" or "0x" + t.ToString("X").
+		//rejected: too simple. We have Print(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".
 		///// </summary>

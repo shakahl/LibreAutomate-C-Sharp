@@ -111,7 +111,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unused currently\Test menu, TB.cs" />
     <Compile Include="Unused currently\TestOptions.cs" />
-    <Compile Include="Unused currently\TestString.cs" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Unused currently\FormMenu.resx">
       <DependentUpon>FormMenu.cs</DependentUpon>

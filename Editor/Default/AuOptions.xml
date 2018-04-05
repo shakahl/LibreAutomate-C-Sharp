@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<au>
+	<options>
+		<o name="PasteEnter">
+			<PasteEnter>true</PasteEnter>
+		</o>
+	</options>
+	<windows>
+		<w program="WINWORD">PasteEnter</w>
+	</windows>
+	<controls>
+		<c class="RICHEDIT*">PasteEnter</c>
+	</controls>
+</au>

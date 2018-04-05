@@ -14,8 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
-//using System.Xml.XPath;
+//using System.Xml.Linq;
 
 using Au.Types;
 using static Au.NoClass;
@@ -34,7 +33,7 @@ namespace Au
 	public static class Debug_
 	{
 		/// <summary>
-		/// Prefix for Debug_.Print, Debug_.PrintIf, Debug_.PrintHex.
+		/// Prefix for Debug_.Print, Debug_.PrintIf.
 		/// Default is "Debug: ".
 		/// </summary>
 		/// <example>
@@ -47,14 +46,15 @@ namespace Au
 		//info: named not Prefix, because intellisense selects it when we want Print, it is annoying
 
 		/// <summary>
-		/// Suffix for Debug_.Print, Debug_.PrintIf, Debug_.PrintHex.
+		/// Suffix for Debug_.Print, Debug_.PrintIf.
 		/// </summary>
 		/// <seealso cref="TextPrefix"/>
 		public static string TextSuffix { get; set; }
 
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
-			Output.Write($"{TextPrefix}{cmn} ({Path_.GetFileName(cp)}:{cln}):  {text}{TextSuffix}");
+			string s = LibPrintObjectToString(text);
+			Output.Write($"{TextPrefix}{cmn} ({Path_.GetFileName(cp)}:{cln}):  {s}{TextSuffix}");
 		}
 
 		/// <summary>
@@ -80,17 +80,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write"/> to show some integer value in hex format. Also shows current function name/file/line.
-		/// Works only if DEBUG is defined. Read more in class help.
-		/// The 3 optional parameters are not used explicitly.
-		/// </summary>
-		[Conditional("DEBUG")]
-		public static void PrintHex(object value, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-		{
-			_Print($"0x{value:X}", cp, cln, cmn);
-		}
-
-		/// <summary>
 		/// Calls <see cref="Output.Write"/> with current function name.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The optional parameter is not used explicitly.
@@ -106,7 +95,8 @@ namespace Au
 		[Conditional("DEBUG")]
 		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
-			AuDialog.ShowEx("Debug", text?.ToString(), flags: DFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
+			string s = LibPrintObjectToString(text);
+			AuDialog.ShowEx("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({Path_.GetFileName(cp)}:{cln})");
 		}
 
 		//rejected: use if(Options.Debug) AuDialog.ShowWarning(...). It adds stack trace.

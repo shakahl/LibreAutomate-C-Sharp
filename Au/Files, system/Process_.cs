@@ -891,7 +891,6 @@ namespace Au
 							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
 							uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
 
-							//PrintHex(IL);
 							if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = IL.Untrusted;
 							else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = IL.Low;
 							else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = IL.Medium;

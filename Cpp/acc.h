@@ -580,7 +580,7 @@ private:
 				}
 			}
 
-			//wnd::PrintWnd(w); PrintHex((int)bits);
+			//wnd::PrintWnd(w); Print((uint)bits);
 
 			int iMoveTo = 0;
 			for(int i = 0; i < 7; i++) {

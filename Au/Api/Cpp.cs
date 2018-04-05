@@ -153,6 +153,9 @@ namespace Au.Types
 		internal static extern void Cpp_Test();
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern LPARAM Cpp_InputSync(int action, int tid, LPARAM hh);
+
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern void Cpp_TestWildex(string s, string w);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

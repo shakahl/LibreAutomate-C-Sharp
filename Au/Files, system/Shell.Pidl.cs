@@ -15,7 +15,6 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
-//using System.Xml.XPath;
 
 using Au.Types;
 using static Au.NoClass;
@@ -202,7 +201,7 @@ namespace Au
 				try {
 					if(0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
 						//if(0 == Api.SHCreateItemFromIDList(pidl, ref Api.IID_IShellItem, out si)) { //same speed
-						//if(si.GetAttributes(0xffffffff, out uint attr)>=0) PrintHex(attr);
+						//if(si.GetAttributes(0xffffffff, out uint attr)>=0) Print(attr);
 						if(si.GetAttributes(Api.SFGAO_BROWSABLE | Api.SFGAO_FILESYSTEM, out uint attr) >= 0 && attr != 0) {
 							var f = (0 != (attr & Api.SFGAO_FILESYSTEM)) ? Native.SIGDN.SIGDN_FILESYSPATH : Native.SIGDN.SIGDN_URL;
 							if(0 == si.GetDisplayName(f, out var R)) return R;

@@ -128,7 +128,6 @@ namespace Au
 		/// <seealso cref="Print{T}(IEnumerable{T})"/>
 		/// <seealso cref="Print(object, object, object[])"/>
 		/// <seealso cref="PrintListEx{T}(IEnumerable{T}, string, int)"/>
-		/// <seealso cref="PrintHex(object)"/>
 		public static void Write(string value)
 		{
 			Writer.WriteLine(value);

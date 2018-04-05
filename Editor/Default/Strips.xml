@@ -5,7 +5,7 @@
 	t="default text". If this attribute is missing, creates text from name, for example "File_NewScript" -> "New Script".
 	tt="tooltip". If this attribute is missing, for tooltip uses t.
 	color="ColorName" - text color. Also can be like "0xRRGGBB" or "#RRGGBB".
-	hk="hotkey" - hotkey (keyboard shortcut). Activates the hotkey and displays it. Example: Ctrl+H. See documentation of function Au.Input.Misc.ReadHotkeyString.
+	hk="hotkey" - hotkey (keyboard shortcut). Activates the hotkey and displays it. Example: Ctrl+H. See documentation of function Au.Keyb.Misc.ReadHotkeyString.
 	hkText="other hotkeys" - text to append to the hotkey display text. If hk not used - text to display as hotkey. Use this for hotkeys that your application implements not through the MenuStrip.
 	style="ToolStripItemDisplayStyle" - 1 text, 2 image, 3 image+text.
 	hide="" - hidden (always is on the overflow strip).

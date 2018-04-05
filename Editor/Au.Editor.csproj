@@ -160,6 +160,7 @@
     <Content Include="Default\files.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Default\AuOptions.xml" />
     <Content Include="Default\Panels.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

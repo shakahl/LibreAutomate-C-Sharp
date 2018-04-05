@@ -8,6 +8,67 @@
 #if _DEBUG
 //#if 1
 
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+inline HMODULE GetCurrentModuleHandle()
+{
+	return (HMODULE)&__ImageBase;
+}
+
+LRESULT CALLBACK KeyHookProc(int code, WPARAM wParam, LPARAM lParam)
+{
+	if(code < 0) goto g1;
+	if(wParam == 0x8F) {
+		//Print(L"<hook>");
+		HANDLE ev = OpenEventW(EVENT_MODIFY_STATE, false, L"ee57812345hh");
+		if(ev == 0) {
+			PRINTS(L"key sync hook: OpenEventW failed");
+			goto g1;
+		}
+		SetEvent(ev);
+		CloseHandle(ev);
+	}
+	g1:
+	return CallNextHookEx(0, code, wParam, lParam);
+}
+
+EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
+{
+	if(action == 1) {
+		auto hh=SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), tid);
+		if(hh==0 && tid!=0) hh=SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
+		return hh;
+	} else if(action == 2) {
+		UnhookWindowsHookEx(hh);
+	}
+	return 0;
+}
+//
+//LRESULT CALLBACK ForegroundIdleProc(int code, WPARAM wParam, LPARAM lParam)
+//{
+//	//Print(code);
+//	if(code < 0) goto g1;
+//	HANDLE ev = OpenEventW(EVENT_MODIFY_STATE, false, L"ee57812345hh");
+//	if(ev == 0) {
+//		Print(L"failed");
+//		goto g1;
+//	}
+//	SetEvent(ev);
+//	CloseHandle(ev);
+//
+//	g1:
+//	return CallNextHookEx(0, code, wParam, lParam);
+//}
+//
+//EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
+//{
+//	if(action == 1) {
+//		return SetWindowsHookExW(WH_FOREGROUNDIDLE, ForegroundIdleProc, GetCurrentModuleHandle(), 0);
+//	} else if(action == 2) {
+//		UnhookWindowsHookEx(hh);
+//	}
+//	return 0;
+//}
 
 //#define IID_IThreadExitEvent __uuidof(IThreadExitEvent)
 //__interface  __declspec(uuid("57017F56-E7CA-4A7B-A8F8-2AE36077F50D"))
@@ -453,13 +514,13 @@ ICppTest* Cpp_Interface()
 //	IAccessible* a = 0; VARIANT vc = {};
 //	HRESULT hr = AccessibleObjectFromPoint(p, &a, &vc);
 //	if (hr != 0) {
-//		PrintHex(hr); return;
+//		Print((uint)hr); return;
 //	}
 //	try {
 //		BSTR s = 0;
 //		hr = a->get_accName(vc, &s);
 //		if (hr != 0) {
-//			PrintHex(hr); return;
+//			Print((uint)hr); return;
 //		}
 //
 //		Print(s);
@@ -771,7 +832,7 @@ EXPORT void Cpp_Test()
 //
 //	//AccessibleStates states;
 //	//if(a2->get_states(&states)) { Print("get_states failed"); return; }
-//	//PrintHex(states);
+//	//Print((uint)states);
 //
 //	//long n;
 //	//if(a2->get_nExtendedStates(&n)) { Print("get_nExtendedStates failed"); return; } //fails

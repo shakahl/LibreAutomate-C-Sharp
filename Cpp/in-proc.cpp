@@ -234,7 +234,7 @@ LRESULT WINAPI AgentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE: {
 		if(!(t_agentStream = MarshalAgentIAccessible(hwnd))) return -1; //-1 destroys the window
 	} break;
-	} //else PrintHex(msg);
+	} //else Print(msg);
 
 	auto R = DefWindowProcW(hwnd, msg, wParam, lParam);
 
@@ -296,7 +296,7 @@ LRESULT WINAPI HookCallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
 		ReplyMessage((LRESULT)wAgent);
 		return 1;
 		//tested: not faster if we unhook before creating window
-	} //else PrintHex(m.message);
+	} //else Print(m.message);
 
 	return CallNextHookEx(0, nCode, wParam, lParam);
 }

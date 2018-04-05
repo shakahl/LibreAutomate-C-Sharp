@@ -254,7 +254,7 @@ bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guid
 ////{
 ////	DWORD signaledIndex;
 ////	auto hr = CoWaitForMultipleHandles(0, 0, 0, null, &signaledIndex); //fails, invalid parameter
-////	PrintHex(hr);
+////	Print((uint)hr);
 ////}
 //
 //void SleepDoEvents(int milliseconds)

@@ -14,9 +14,8 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Xml.Linq;
-//using System.Xml.XPath;
+//using System.Linq;
+//using System.Xml.Linq;
 
 using Au;
 using Au.Types;

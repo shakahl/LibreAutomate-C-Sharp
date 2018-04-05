@@ -78,11 +78,13 @@
     <Compile Include="Automation\Acc\Acc_types.cs" />
     <Compile Include="Automation\Acc\Acc_find.cs" />
     <Compile Include="Automation\Acc\Acc.cs" />
-    <Compile Include="Automation\Auto misc.cs" />
-    <Compile Include="Automation\Input.cs" />
+    <Compile Include="Automation\Input\BlockInput.cs" />
+    <Compile Include="Automation\Input\Keyb.cs" />
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />
-    <Compile Include="Automation\Input.Misc.cs" />
+    <Compile Include="Automation\Input\Keyb^clip.cs" />
+    <Compile Include="Automation\Input\Keyb^util.cs" />
+    <Compile Include="Automation\Input\Keyb^misc.cs" />
     <Compile Include="Automation\WinImage.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\OnScreenRect.cs" />
@@ -107,7 +109,7 @@
     <Compile Include="Files, system\Folders.cs" />
     <Compile Include="Dialog, menu, toolbar\AuToolbar.cs" />
     <Compile Include="Dialog, menu, toolbar\AuMenu.cs" />
-    <Compile Include="Automation\Mouse.cs" />
+    <Compile Include="Automation\Input\Mouse.cs" />
     <Compile Include="Common\ExtensionMethods.cs" />
     <Compile Include="Common\NoClass.cs" />
     <Compile Include="Other\Char_.cs" />

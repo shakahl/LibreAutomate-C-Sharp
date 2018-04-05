@@ -13,18 +13,12 @@ void Printf(STR frm, ...);
 inline void Print(LPCSTR s) { Printf(L"%S", s); }
 inline void Print(const std::wstring& s) { Print(s.c_str()); }
 inline void Print(int i) { Printf(L"%i", i); }
-inline void Print(unsigned int i) { Print((int)i); }
+inline void Print(unsigned int i) { Printf(L"0x%X", i); }
 inline void Print(long i) { Print((int)i); }
-inline void Print(unsigned long i) { Print((int)i); }
+inline void Print(unsigned long i) { Print((unsigned int)i); }
 inline void Print(__int64 i) { Printf(L"%I64i", i); }
-inline void Print(unsigned __int64 i) { Print((__int64)i); }
+inline void Print(unsigned __int64 i) { Printf(L"0x%I64X", i); }
 inline void Print(void* i) { Printf(sizeof(void*) == 8 ? L"%I64i" : L"%i", i); }
-
-inline void PrintHex(int i) { Printf(L"0x%X", i); }
-inline void PrintHex(unsigned int i) { PrintHex((int)i); }
-inline void PrintHex(long i) { PrintHex((int)i); }
-inline void PrintHex(unsigned long i) { PrintHex((int)i); }
-inline void PrintHex(__int64 i) { Printf(L"0x%I64X", i); }
 
 #define PRINTI(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  %i", x)
 #define PRINTS(x) Printf(L"debug: " __FILEW__ "(" _CRT_STRINGIZE(__LINE__) "):  %s", x)
@@ -43,7 +37,6 @@ inline void PrintComRefCount(IUnknown* u) {
 #else
 #define Print __noop
 #define Printf __noop
-#define PrintHex __noop
 #define PRINTI __noop
 #define PRINTS __noop
 #define PRINTHEX __noop

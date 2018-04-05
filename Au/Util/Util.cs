@@ -682,4 +682,120 @@ namespace Au.Util
 		}
 
 	}
+
+	/// <summary>
+	/// Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
+	/// Constructor attaches thread input of this thread to that of the specified thread. <b>Dispose</b> detaches.
+	/// </summary>
+	internal struct LibAttachThreadInput :IDisposable
+	{
+		int _tidThis, _tidAttach;
+
+		/// <summary>
+		/// Attaches thread input of this thread to that of the specified thread.
+		/// </summary>
+		public LibAttachThreadInput(int idThreadAttachTo, out bool succeeded)
+		{
+			_tidThis = Api.GetCurrentThreadId();
+			succeeded = Api.AttachThreadInput(_tidThis, idThreadAttachTo, true);
+			_tidAttach = succeeded ? idThreadAttachTo : 0;
+		}
+
+		/// <summary>
+		/// Detaches thread input.
+		/// </summary>
+		public void Dispose()
+		{
+			if(_tidAttach != 0) {
+				Api.AttachThreadInput(_tidThis, _tidAttach, false);
+				_tidAttach = 0;
+			}
+		}
+
+		/// <summary>
+		/// Returns true if AttachThreadInput succeeded and this variable is not disposed.
+		/// </summary>
+		public bool IsAttached => _tidAttach != 0;
+	}
+
+	/// <summary>
+	/// Switches to another thread and sleeps for the remainder of this time slice of the thread scheduler.
+	/// Unlike Sleep(0) etc, works on multi-processor computers too.
+	/// </summary>
+	/// <remarks>
+	/// Causes this thread to yield execution to another thread that is ready to run on ANY logical processor.
+	/// If the remainder of this time slice is less than 400 mcs, retries to sleep during the next time slice.
+	/// If there are no other ready threads, does not sleep. Then the speed is about 100 mcs.
+	/// </remarks>
+	internal struct LibThreadSwitcher :IDisposable
+	{
+		ulong _processAffinity, _threadAffinity;
+
+		public void Dispose()
+		{
+			if(_threadAffinity != 0) {
+				//Print(_threadAffinity);
+				Api.SetThreadAffinityMask(Api.GetCurrentThread(), _threadAffinity);
+			}
+		}
+
+		static uint s_nProc = Api.GetMaximumProcessorCount(Api.ALL_PROCESSOR_GROUPS);
+
+		/// <summary>
+		/// Switches to another thread and sleeps for the remainder of this time slice of the thread scheduler.
+		/// Returns false if fails. Fails if there are more than 64 logical processors.
+		/// </summary>
+		public bool Switch()
+		{
+			const int c_nTry = 2;
+			uint nProc = s_nProc;
+			long t0 = Time.Microseconds;
+			bool switched, retry = false;
+			g2:
+			switched = false;
+			if(nProc == 1) {
+				for(int i = 0; i < c_nTry; i++) {
+					if(switched=Api.SwitchToThread()) break;
+				}
+			} else {
+				if(nProc == 0 || nProc > 64) return false;
+				if(_processAffinity == 0) {
+					if(!Api.GetProcessAffinityMask(Api.GetCurrentProcess(), out var amProcess, out var amSystem)) return false;
+					ulong processAffinity = amProcess, systemAffinity = amSystem;
+					//Print((int)nProc, processAffinity);
+					for(int i = 0; i < nProc; i++) {
+						var bit = 1UL << i;
+						if((bit & processAffinity) == 0 && (bit & systemAffinity) != 0) return false; //are all bits 1?
+					}
+					_processAffinity = processAffinity;
+				}
+
+				var ht = Api.GetCurrentThread();
+				for(int i = 0; i < c_nTry; i++) {
+					for(int j = 0; j < nProc; j++) {
+						var bit = 1UL << j;
+						if((bit & _processAffinity) == 0) continue; //is this bit in system affinity?
+						var tam = Api.SetThreadAffinityMask(ht, bit);
+						if(tam == 0) return false;
+						if(_threadAffinity == 0) _threadAffinity = tam;
+						if(switched=Api.SwitchToThread()) {
+							//Print(i, j);
+							goto g1;
+						}
+					}
+				}
+			}
+			g1:
+			if(switched) {
+				long t1 = Time.Microseconds;
+				if(t1 - t0 < 400) {
+					//Print("-->", t1 - t0, retry);
+					if(!retry) { retry = true; goto g2; }
+					Time.Sleep(1);
+				}
+			}
+			return true;
+		}
+		//TODO: remove if unused. Currently does not work with Key/Text.
+	}
 }

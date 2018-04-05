@@ -14,8 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
-//using System.Xml.XPath;
+//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -443,7 +442,7 @@ namespace Au
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = Math_.MakeUint(r.CenterX, r.CenterY);
-			uint b = 0; if(Input.IsCtrl) b |= Api.MK_CONTROL; if(Input.IsShift) b |= Api.MK_SHIFT;
+			uint b = 0; if(Keyb.IsCtrl) b |= Api.MK_CONTROL; if(Keyb.IsShift) b |= Api.MK_SHIFT;
 			uint b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
 			w.Post(right ? Api.WM_RBUTTONDOWN : Api.WM_LBUTTONDOWN, b1, xy);
 			w.Post(Api.WM_MOUSEMOVE, b1, xy);
@@ -483,8 +482,8 @@ namespace Au
 				&& 0 == _GetState(out state) && state.Has_(AccSTATE.FOCUSED) //avoid sending keys to another control
 				) {
 				GC.KeepAlive(this);
-				w.Post(Api.WM_KEYDOWN, Api.VK_SPACE, 0);
-				w.Post(Api.WM_KEYUP, Api.VK_SPACE, 0);
+				w.Post(Api.WM_KEYDOWN, Keys.Space, 0);
+				w.Post(Api.WM_KEYUP, Keys.Space, 0);
 				//tested: works even if the window is inactive.
 				w.LibMinimalSleepNoCheckThread();
 				return;
@@ -599,7 +598,7 @@ namespace Au
 							using(a2) {
 								if(eventNotify == null) { /*Print("null 3");*/ return; }
 								bool isFrame;
-								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) Debug_.PrintHex(hr);
+								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) Debug_.Print((uint)hr);
 								if(eventNotify == null) { /*Print("null 4");*/ return; }
 								if(hr != 0) isFrame = false;
 								else if(roleStr != null) isFrame = roleStr.EndsWith_("frame", true);

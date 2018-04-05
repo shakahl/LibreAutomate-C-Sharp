@@ -18,6 +18,8 @@ using System.Drawing;
 using Au.Types;
 using static Au.NoClass;
 
+//TODO: WaitFor.WindowActiveAndControlFocused(), WaitFor.WindowActiveAndHasFocus().
+
 namespace Au
 {
 	//TODO: move all to Wnd.
