@@ -147,6 +147,11 @@ namespace Au
 		{
 			public Wnd wFocus;
 			public KOptions options;
+
+			public void Clear()
+			{
+				wFocus = default;
+			}
 		}
 
 		List<_KEvent> _a = new List<_KEvent>(); //all key events and elements for each text/callback/repeat/sleep
@@ -458,8 +463,8 @@ namespace Au
 				if(!canSendAgain) {
 					_a.Clear();
 					_data = null;
-					_sstate.wFocus = default;
-					//and don't reset _parent/_parsing.plus/_parsing.mod
+					_sstate.Clear();
+					//and don't clear _pstate
 				}
 			}
 
@@ -491,27 +496,42 @@ namespace Au
 
 			var ki = new Api.INPUTK(vk, sc, (uint)k.SIFlags);
 
-			int count = 1;
-			int sleep = opt.TimeKeyPressed;
-			if(i < _a.Count - 1) {
+			int count = 1, sleep = opt.TimeKeyPressed;
+			if(i == _a.Count - 1) {
+				if(!k.IsPair) sleep = _LimitSleepTime(sleep) - opt.SleepFinally;
+			} else {
 				var kNext = _a[i + 1];
 				if(kNext.IsRepeat) count = kNext.repeat;
 				else if(!k.IsPair) {
-					if(kNext.IsSleep) sleep = 0;
-					else if(k.IsUp) sleep = 0;
-					else if(sleep > 10) sleep = _LimitSleepTime(sleep);
-				}
+					//If this is pair, sleep between down and up, and don't sleep after up.
+					//Else if repeat, sleep always.
+					//Else in most cases don't need to sleep. In some cases need, but can limit the time.
+					//	For example, in Ctrl+C normally would not need to sleep after Ctrl down and Ctrl up.
+					//	However some apps/controls then may not work. Maybe they process mod and nonmod keys somehow async.
+					//	For example, Ctrl+C in IE address bar often does not work if there is no sleep after Ctrl down. Always works if 1 ms.
 
-			} else {
-				if(!k.IsPair && sleep > 10) sleep = _LimitSleepTime(sleep);
+					sleep = _LimitSleepTime(sleep);
+					if(kNext.IsKey) {
+						bool thisMod = _KeyTypes.IsMod(k.vk), nextMod = _KeyTypes.IsMod(kNext.vk);
+						if(!k.IsUp) {
+							if(kNext.IsUp) sleep = opt.TimeKeyPressed;
+							else if(thisMod == nextMod) sleep = 0;
+						} else {
+							if(!thisMod || nextMod) sleep = 0;
+						}
+					} else if(kNext.IsSleep) sleep = sleep - kNext.sleep;
+				}
 			}
-			//TODO: always sleep on down, except between 2 mod or 2 nonmod keys. Don't need on up.
-			//TODO: default TimeKeyPressed = 5.
+			if(sleep < 0) sleep = 0;
+
+			//var s = ((Keys)k.vk).ToString();
+			//if(k.IsPair) Print($"{s}<{sleep}>");
+			//else { var ud = k.IsUp ? '-' : '+'; if(sleep > 0) Print($"{s}{ud} {sleep}"); else Print($"{s}{ud}"); }
 
 			for(int r = 0; r < count; r++) {
-				Perf.First();
+				//Perf.First();
 				Api.SendInput(&ki);
-				Perf.Next();
+				//Perf.Next();
 				if(sleep > 0) {
 					Time.Sleep(sleep);
 				}
@@ -521,8 +541,8 @@ namespace Au
 					ki.dwFlags &= ~Api.KEYEVENTF_KEYUP;
 
 				}
-				Perf.NW();
-				//speed: min 400 mcs for each event. Does not depend on whether all events sent by single SendInput call.
+				//Perf.NW();
+				//speed: min 400 mcs for each event. Often > 1000. Does not depend on whether all events sent by single SendInput call.
 			}
 		}
 

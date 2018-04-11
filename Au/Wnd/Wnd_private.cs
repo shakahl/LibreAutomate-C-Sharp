@@ -177,6 +177,14 @@ namespace Au
 					return (WFlags)(int)w.Prop.Remove(s_atom._atom);
 				}
 			}
+
+			internal static Wnd CreateMessageWindowDefWndProc()
+			{
+				if(s_atomDWP == 0) s_atomDWP = Misc.MyWindow.RegisterClass(c_wndClassDWP);
+				return Misc.CreateMessageWindow(c_wndClassDWP);
+			}
+			static ushort s_atomDWP;
+			const string c_wndClassDWP = "Au.DWP";
 		}
 	}
 }

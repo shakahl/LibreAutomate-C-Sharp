@@ -73,12 +73,15 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\Api^kernel32.cs" />
+    <Compile Include="Api\Api^user32.cs" />
     <Compile Include="Api\Cpp.cs" />
     <Compile Include="Automation\Acc\Acc_func.cs" />
     <Compile Include="Automation\Acc\Acc_types.cs" />
     <Compile Include="Automation\Acc\Acc_find.cs" />
     <Compile Include="Automation\Acc\Acc.cs" />
     <Compile Include="Automation\Input\BlockInput.cs" />
+    <Compile Include="Automation\Input\Clipb.cs" />
     <Compile Include="Automation\Input\Keyb.cs" />
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />

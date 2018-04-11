@@ -59,7 +59,7 @@ namespace Au
 		public AuScriptOptions(AuScriptOptions o)
 		{
 			if(o == null) {
-				_o.MouseClickSleep = 50;
+				_o.MouseClickSleep = 25;
 			} else {
 				_o = o._o;
 				if(o.LibDisabledWarnings != null) LibDisabledWarnings = new List<string>(o.LibDisabledWarnings);
@@ -95,7 +95,7 @@ namespace Au
 
 		/// <summary>
 		/// Wait milliseconds at the end of Mouse.Click() and other functions that generate mouse button or wheel events.
-		/// Default: 50. Valid values: 0 - 60000 (1 minute).
+		/// Default: 25. Valid values: 0 - 60000 (1 minute).
 		/// </summary>
 		/// <remarks>
 		/// This option also is applied to:
@@ -106,7 +106,7 @@ namespace Au
 		public int MouseClickSleep
 		{
 			get => _o.MouseClickSleep;
-			set { if((uint)value > 60000) throw new ArgumentOutOfRangeException(null, "0-60000"); _o.MouseClickSleep = (ushort)value; }
+			set { if((uint)value > 60000) throw new ArgumentOutOfRangeException(null, "Max 60000"); _o.MouseClickSleep = (ushort)value; }
 		}
 
 		/// <summary>

@@ -5047,12 +5047,32 @@ REE`");
 		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
 		100.ms();
 
-		Keyb.Options.TextOption = KTextOption.Keys;
-		for(int i = 0; i < 5; i++) {
-			//Text("One Two Three Four Five Six Seven Eight Nine Ten\r\n");
-			Text("OneTwoThreeFourFive ");
-		}
-		return;
+		////Keyb.Options.SleepFinally = 20;
+		//Keyb.Options.TimeKeyPressed = 100;
+		////Key("ab");
+		////Key("a Ctrl+b c d");
+		//Key("Ctrl+c");
+		////Key("Ctrl+Alt+c");
+		////Key("Alt+a+b+c z");
+		////Key("Alt+a+b+c");
+		////Key("Alt+(a b)");
+		////Key("Alt+(a b) c");
+		////Key("A*down A*up");
+		////Key("A*down");
+		////Key("A*up");
+		////Key("A*3");
+		////Key("A+*3");
+		////Key("A", 10, "B");
+		////Key("Ctrl+", 20, "B");
+		////Key("Ctrl*down A*down Ctrl*up A*up");
+		////Key("Shift+", "text");
+
+		////Keyb.Options.TextOption = KTextOption.Keys;
+		////for(int i = 0; i < 5; i++) {
+		////	//Text("One Two Three Four Five Six Seven Eight Nine Ten\r\n");
+		////	Text("OneTwoThreeFourFive ");
+		////}
+		//return;
 
 		//Text("abCD$,ąĄ", "keys Enter");
 		//Key(1000, "", "abCD$,ąĄ", "keys Enter");
@@ -5068,21 +5088,41 @@ REE`");
 		//Key(Keys.BrowserBack);
 		//Key("BrowserBack");
 
+		//for(int i = 0; i < 5; i++) {
+		//	Perf.First();
+		//	Clipb.Clear();
+		//	//Clipb.SetText("fff");
+		//	//300.ms();
+		//	Perf.Next();
+		//	//20.ms();
+		//	Key("Ctrl+C");
+		//	Perf.NW();
+		//	300.ms();
+		//}
+		//return;
+
 		var b = new Keyb(null);
 		b.SleepFinally = 0;
-		b.TimeKeyPressed = 1;
+		b.TimeKeyPressed = 0;
 		for(int i = 0; i < 5; i++) {
-			Clipboard.Clear();
+			Clipb.Clear();
 			20.ms();
 			b.Add("Ctrl+C");
 			//int t = 1;
 			////b.Add("Ctrl*down", 1, "C*down", 1, "C*up", 0, "Ctrl*up");
 			//b.Add("Ctrl*down", 1, "C*down", 1, "Ctrl*up", 0, "C*up");
 			//b.AddKey(Keys.ControlKey).AddKeys("+").AddKey(Keys.A);
+			//Perf.First();
 			b.Send();
-			300.ms();
-			Print(Clipboard.GetText());
+			//Perf.NW();
+			200.ms();
+			Print(Clipb.GetText());
 		}
+		Print("END");
+
+		//Keyb.Options.TimeKeyPressed = 1;
+		//Text("Some Text, Some Text, Some Text, Some Text, Some Text, Some Text, Some Text, Some Text\r\n");
+		//Key("$some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, Enter");
 		return;
 
 		//Keyb.Options.SleepFinally = 100;
@@ -5220,6 +5260,24 @@ REE`");
 		Key("Enter");
 	}
 
+	static void TestClipb()
+	{
+		Clipb.SetText("qwe");
+
+		var s = Clipb.GetText();
+		Print((object)s);
+		
+		
+		//Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	Perf.First();
+		//	string s = Clipb.GetText();
+		//	Perf.NW();
+		//	Print((object)s);
+		//	100.ms();
+		//}
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -5240,6 +5298,7 @@ REE`");
 		try {
 #if true
 
+			//TestClipb();
 			//TestKeybExamples();
 			TestKey();
 			//TestIsKey();

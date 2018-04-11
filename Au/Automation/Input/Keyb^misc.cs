@@ -393,26 +393,29 @@ namespace Au.Types
 				_timeKeyPressed = o._timeKeyPressed;
 				_timeTextChar = o._timeTextChar;
 				_sleepFinally = o._sleepFinally;
-				TextOption = o.TextOption;
 				_pasteLength = o._pasteLength;
+				TextOption = o.TextOption;
 				PasteEnter = o.PasteEnter;
 				NoModOff = o.NoModOff;
 				NoCapsOff = o.NoCapsOff;
 				Hook = o.Hook;
 			} else {
-				_timeKeyPressed = 1;
+				_timeKeyPressed = 5;
 				_timeTextChar = 0f;
 				_sleepFinally = 10;
 				_pasteLength = 300;
 				TextOption = KTextOption.Characters;
-				//TODO: set all others to 0/false
+				PasteEnter = false;
+				NoModOff = false;
+				NoCapsOff = false;
+				Hook = null;
 			}
 		}
 		KOptions _clonedFrom;
 
 		/// <summary>
 		/// Wait milliseconds between each key down and up event of 'keys' parameters of <b>Key</b> and similar functions.
-		/// Default: 1.
+		/// Default: 5.
 		/// </summary>
 		/// <value>Time to sleep, milliseconds. Valid values: 0 - 1000 (1 second). Valid values for <see cref="Keyb.StaticOptions"/>: 0 - 10.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
