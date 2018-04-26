@@ -317,6 +317,50 @@
             This flag incluses flags <b>Keys</b>, <b>MouseClicks</b> and <b>MouseMoving</b>.
             </summary>
         </member>
+        <member name="T:Au.Types.ClipFormats">
+            <summary>
+            Some clipboard format ids.
+            These and other standard and registered format ids can be used with <see cref="T:Au.Clipb.Data"/> class functions.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ClipFormats.Text">
+            <summary>The text format. Standard, API constant CF_UNICODETEXT. The default format of <see cref="T:Au.Clipb.Data"/> add/get text functions.</summary>
+        </member>
+        <member name="F:Au.Types.ClipFormats.Image">
+            <summary>The image format. Standard, API constant CF_BITMAP. Used by <see cref="T:Au.Clipb.Data"/> add/get image functions.</summary>
+        </member>
+        <member name="F:Au.Types.ClipFormats.Files">
+            <summary>The file-list format. Standard, API constant CF_HDROP. Used by <see cref="T:Au.Clipb.Data"/> add/get files functions.</summary>
+        </member>
+        <member name="P:Au.Types.ClipFormats.Html">
+            <summary>The HTML format. Registered, name "HTML Format". Used by <see cref="T:Au.Clipb.Data"/> add/get HTML functions.</summary>
+        </member>
+        <member name="P:Au.Types.ClipFormats.Rtf">
+            <summary>The RTF format. Registered, name "Rich Text Format". Used by <see cref="T:Au.Clipb.Data"/> add/get RTF functions.</summary>
+        </member>
+        <member name="P:Au.Types.ClipFormats.ClipboardViewerIgnore">
+            <summary>
+            The "Clipboard Viewer Ignore" registered format.
+            </summary>
+            <remarks>
+            Some clipboard viewer/manager programs don't try to get clipboard data if this format is present. For example Ditto, Clipdiary.
+            The copy/paste functions of this library add this format to the clipboard to avoid displaying the temporary text/data in these programs, which also could make the paste function slower and less reliable.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ClipFormats.Register(System.String,System.Text.Encoding)">
+            <summary>
+            Registers a clipboard format and returns its id. If already registered, just returns id.
+            </summary>
+            <param name="name">Format name.</param>
+            <param name="textEncoding">Text encoding, if it's a text format. Used by <see cref="M:Au.Clipb.Data.GetText(System.Int32)"/>, <see cref="M:Au.Clipb.Data.AddText(System.String,System.Int32)"/> and functions that call them. For example <see cref="P:System.Text.Encoding.UTF8"/> or <see cref="P:System.Text.Encoding.Default"/> (ANSI). If null, text of unknown formats is considered Unicode UTF-16 (no encoding/decoding needed).</param>
+            <remarks>Calls API <msdn>RegisterClipboardFormat</msdn>.</remarks>
+        </member>
+        <member name="M:Au.Types.ClipFormats.LibGetTextEncoding(System.Int32,System.Boolean@)">
+            <summary>
+            Gets text encoding for format.
+            Returns null if UTF-16 or if the format is unknown and not in s_textEncoding.
+            </summary>
+        </member>
         <member name="T:Au.Types.Native">
             <summary>
             Windows API types and constants used with public functions (parameters etc) of this library.
@@ -660,7 +704,8 @@
         </member>
         <member name="T:Au.Types.KOptions">
             <summary>
-            Options for class <see cref="T:Au.Keyb"/>.
+            Options for functions of class <see cref="T:Au.Keyb"/>.
+            Some options also are used with <see cref="T:Au.Clipb"/> functions that send keys (Ctrl+V etc).
             </summary>
             <seealso cref="P:Au.Keyb.Options"/>
             <seealso cref="P:Au.Keyb.StaticOptions"/>
@@ -676,20 +721,27 @@
             Resets options to the default values or to the current values of the <b>KOptions</b> instance passed to the constructor.
             </summary>
         </member>
+        <member name="M:Au.Types.KOptions.LibGetHookOptionsOrThis(Au.Wnd)">
+            <summary>
+            Returns this variable or KOptions cloned from this variable and possibly modified by Hook.
+            </summary>
+            <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
+        </member>
         <member name="P:Au.Types.KOptions.TimeKeyPressed">
             <summary>
-            Wait milliseconds between each key down and up event of 'keys' parameters of <b>Key</b> and similar functions.
-            Default: 5.
+            How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <b>Key</b> and similar functions.
+            Default: 1.
             </summary>
             <value>Time to sleep, milliseconds. Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.Keyb.StaticOptions"/>: 0 - 10.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
             Not used for 'text' parameters; see <see cref="P:Au.Types.KOptions.TimeTextChar"/>.
+            Clipboard functions that send keys Ctrl+V, Ctrl+C or Ctrl+X use this only after Ctrl (need it for some apps). The V/C/X key time depends on how fast the target app gets or sets clipboard data. 
             </remarks>
         </member>
         <member name="P:Au.Types.KOptions.TimeTextChar">
             <summary>
-            Wait milliseconds between each key down and up event of 'text' parameters of <b>Text</b>, <b>Key</b> and similar functions.
+            How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <b>Text</b>, <b>Key</b> and similar functions.
             Default: 0.
             </summary>
             <value>
@@ -709,11 +761,12 @@
             <value>Time to sleep, milliseconds. Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.Keyb.StaticOptions"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
+            Not used by <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>.
             </remarks>
         </member>
         <member name="P:Au.Types.KOptions.TextOption">
             <summary>
-            How functions send text.
+            How functions send text to the active window.
             Default: <see cref="F:Au.Types.KTextOption.Characters"/>.
             </summary>
         </member>
@@ -734,39 +787,94 @@
             Some apps remove the last newline when pasting. For example Word, WordPad, OpenOffice, LibreOffice, standard rich text controls. This option is a workaround.
             </remarks>
         </member>
+        <member name="P:Au.Types.KOptions.RestoreClipboard">
+            <summary>
+            Whether to restore clipboard data when copying or pasting text.
+            Default: true.
+            By default restores only text. See also <see cref="P:Au.Types.KOptions.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.KOptions.RestoreClipboardAllFormats">
+            <summary>
+            When copying or pasting text, restore clipboard data of all formats that are possible to restore.
+            Default: false - restore only text.
+            </summary>
+            <remarks>
+            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>.
+            
+            This property is static, not thread-static. It should be set (if need) at the very start of the script (eg in the script template) and not changed later.
+            </remarks>
+            <seealso cref="P:Au.Types.KOptions.RestoreClipboard"/>
+            <seealso cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>
+        </member>
+        <member name="P:Au.Types.KOptions.RestoreClipboardExceptFormats">
+            <summary>
+            When copying or pasting text, and <see cref="P:Au.Types.KOptions.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
+            Default: null.
+            </summary>
+            <remarks>
+            To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
+            It also depends on whether this is the first time the data is being retrieved. The app can render data on demand, when some app is retrieving it from the clipboard first time; then can be slow etc.
+            
+            You can use function <see cref="M:Au.Types.KOptions.PrintClipboard"/> to see format names and get-data times.
+            
+            There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
+            These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
+            
+            This property is static, not thread-static. It should be set (if need) at the very start of the script (eg in the script template) and not changed later.
+            </remarks>
+            <seealso cref="P:Au.Types.KOptions.RestoreClipboard"/>
+            <seealso cref="M:Au.Types.KOptions.PrintClipboard"/>
+        </member>
+        <member name="M:Au.Types.KOptions.PrintClipboard">
+            <summary>
+            Prints some info about current clipboard data.
+            </summary>
+            <remarks>
+            Prints this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>).
+            <note type="note">Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/> and don't call this function in loop. Else it shows small times.</note>
+            The time depends on app, etc. More info: <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>.
+            </remarks>
+        </member>
         <member name="P:Au.Types.KOptions.NoModOff">
             <summary>
-            When starting, don't release modifier keys.
+            When starting to send keys, don't release modifier keys.
             Default: false.
             </summary>
         </member>
         <member name="P:Au.Types.KOptions.NoCapsOff">
             <summary>
-            When starting, don't turn off CapsLock.
+            When starting to send keys, don't turn off CapsLock.
             Default: false.
+            </summary>
+        </member>
+        <member name="P:Au.Types.KOptions.NoBlockInput">
+            <summary>
+            Don't block user-pressed keys.
+            Default: false. User-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
             </summary>
         </member>
         <member name="P:Au.Types.KOptions.Hook">
             <summary>
-            Callback function that can modify options of 'send keys or text' functions depending on conditions (active window etc).
+            Callback function that can modify options of 'send keys or text' functions depending on active window etc.
             Default: null.
             </summary>
             <remarks>
-            The callback function is called by <see cref="M:Au.NoClass.Key(System.Object[])"/>, <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.Send(System.Boolean)"/> and similar functions.
+            The callback function is called by <see cref="M:Au.NoClass.Key(System.Object[])"/>, <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.Send(System.Boolean)"/>, <see cref="M:Au.NoClass.Paste(System.String)"/> and similar functions. Not called by <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>.
             </remarks>
-            <seealso cref="T:Au.Types.KOptions.HookData"/>
+            <seealso cref="T:Au.Types.KOHookData"/>
         </member>
-        <member name="T:Au.Types.KOptions.HookData">
+        <member name="T:Au.Types.KOHookData">
             <summary>
             Parameter type of the <see cref="P:Au.Types.KOptions.Hook"/> callback function.
             </summary>
         </member>
-        <member name="F:Au.Types.KOptions.HookData.opt">
+        <member name="F:Au.Types.KOHookData.opt">
             <summary>
-            Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff.
+            Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
             </summary>
         </member>
-        <member name="F:Au.Types.KOptions.HookData.w">
+        <member name="F:Au.Types.KOHookData.w">
             <summary>
             The focused control. If there is no focused control - the active window. Use <c>w.WndWindow</c> to get top-level parent window; if <c>w.WndWindow == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
             </summary>
@@ -4571,56 +4679,535 @@
         </member>
         <member name="T:Au.Clipb">
             <summary>
-            This class contains functions to get and set clipboard text using non-OLE API.
+            Clipboard functions: copy, paste, get and set clipboard text and other data.
             </summary>
             <remarks>
-            Unlike the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class, works in any thread (don't need STA). Also, don't need to process Windows messages while waiting.
+            This class is similar to the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
+            To set/get clipboard data of non-text formats, use class <see cref="T:Au.Clipb.Data"/>; to paste, use it with <see cref="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.KOptions)"/>; to copy (get from the active app), use it with <see cref="M:Au.Clipb.CopyData(System.Action,System.Boolean,Au.Types.KOptions)"/>.
             </remarks>
-        </member>
-        <member name="M:Au.Clipb.GetText">
-            <summary>
-            Gets text from the clipboard.
-            Returns null if there is no text in the clipboard.
-            </summary>
-            <exception cref="T:Au.Types.AuException">Failed to open clipboard. Throws after 10 s of wait/retry.</exception>
-        </member>
-        <member name="M:Au.Clipb.SetText(System.String)">
-            <summary>
-            Puts text in the clipboard.
-            </summary>
-            <param name="text">Text. If null, clears the clipboard.</param>
-            <exception cref="T:Au.Types.AuException">
-            Failed to open clipboard. Throws after 10 s of wait/retry.
-            Or failed to set clipboard data. Unlikely.
-            </exception>
-            <exception cref="T:System.OutOfMemoryException">Failed to allocate memory.</exception>
         </member>
         <member name="M:Au.Clipb.Clear">
             <summary>
             Clears the clipboard.
             </summary>
-            <exception cref="T:Au.Types.AuException">Failed to open clipboard. Throws after 10 s of wait/retry.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
         </member>
-        <member name="T:Au.Clipb._Clipb">
+        <member name="P:Au.Clipb.Text">
+            <summary>
+            Gets or sets clipboard text.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
+            <exception cref="T:System.OutOfMemoryException">The 'set' function failed to allocate memory.</exception>
+            <remarks>
+            The 'get' function calls <see cref="M:Au.Clipb.Data.GetText(System.Int32)"/>. Also can get file paths, as multiline text. Returns null if there is no text/files.
+            </remarks>
+            <seealso cref="T:Au.Clipb.Data"/>
+        </member>
+        <member name="M:Au.Clipb._SetClipboardData_ClipboardViewerIgnore">
+            <summary>
+            Calls API SetClipboardData("Clipboard Viewer Ignore"). Clipboard must be open.
+            Then clipboard manager/viewer/etc programs that are aware of this convention don't try to get our clipboard data while we are pasting.
+            Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't.
+            </summary>
+        </member>
+        <member name="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)">
+            <summary>
+            Gets the selected text from the focused app using the clipboard.
+            </summary>
+            <param name="cut">Use Ctrl+X.</param>
+            <param name="options">
+            Options. If null (default), uses <see cref="P:Au.Keyb.Options"/>.
+            Uses <see cref="P:Au.Types.KOptions.RestoreClipboard"/>, <see cref="P:Au.Types.KOptions.NoBlockInput"/>, <see cref="P:Au.Types.KOptions.TimeKeyPressed"/> (only after Ctrl). Does not use <see cref="P:Au.Types.KOptions.Hook"/>.
+            </param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Also can get file paths, as multiline text.
+            Sends keys Ctrl+C, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
+            Fails (exception) if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
+            Works with console windows too, even if they don't support Ctrl+C.
+            </remarks>
+        </member>
+        <member name="M:Au.Clipb.CopyData(System.Action,System.Boolean,Au.Types.KOptions)">
+            <summary>
+            Gets data of any formats from the focused app using the clipboard and a callback function.
+            </summary>
+            <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="T:Au.Clipb.Data"/> class or the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
+            <param name="cut">Use Ctrl+X.</param>
+            <param name="options"><inheritdoc cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <exception cref="T:System.Exception">Exceptions thrown by the callback function.</exception>
+            <remarks>
+            Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
+            Fails (exception) if the focused app does not set clipboard data.
+            Works with console windows too, even if they don't support Ctrl+C.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            string text = null; Bitmap image = null; string[] files = null;
+            Clipb.CopyData(() => { text = Clipb.Data.GetText(); image = Clipb.Data.GetImage(); files = Clipb.Data.GetFiles(); });
+            if(text == null) Print("no text in clipboard"); else Print(text);
+            if(image == null) Print("no image in clipboard"); else Print(image.Size);
+            if(files == null) Print("no files in clipboard"); else Print(files);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)">
+            <summary>
+            Pastes text into the focused app using the clipboard.
+            </summary>
+            <param name="text">Text.</param>
+            <param name="options">
+            Options. If null (default), uses <see cref="P:Au.Keyb.Options"/>.
+            Uses <see cref="P:Au.Types.KOptions.RestoreClipboard"/>, <see cref="P:Au.Types.KOptions.PasteEnter"/>, <see cref="P:Au.Types.KOptions.NoBlockInput"/>, <see cref="P:Au.Types.KOptions.TimeKeyPressed"/> (only after Ctrl), <see cref="P:Au.Types.KOptions.SleepFinally"/>, <see cref="P:Au.Types.KOptions.Hook"/>.
+            </param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Adds to the clipboard, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
+            Fails (exception) if nothing gets clipboard data in several seconds.
+            Works with console windows too, even if they don't support Ctrl+V.
+            A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="P:Au.Types.ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a quite big delay.
+            </remarks>
+        </member>
+        <member name="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.KOptions)">
+            <summary>
+            Pastes data added to a <see cref="T:Au.Clipb.Data"/> variable into the focused app using the clipboard.
+            </summary>
+            <inheritdoc cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>
+            <example>
+            Paste data of two formats: HTML and text.
+            <code><![CDATA[
+            Clipb.PasteData(new Clipb.Data().AddHtml("<b>text</b>").AddText("text"));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Clipb.LibPaste(System.Object,Au.Types.KOptions,Au.Wnd)">
+            <summary>
+            Used by Clipb and Keyb.
+            The caller should block user input (if need), release modifier keys, get opt/wFocus, sleep finally (if need).
+            </summary>
+            <param name="data">string or Data.</param>
+            <param name="opt"></param>
+            <param name="wFocus"></param>
+        </member>
+        <member name="T:Au.Clipb._ClipboardListener">
+            <summary>
+            Waits until the target app gets (Paste) or sets (Copy) clipboard text.
+            For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
+            </summary>
+        </member>
+        <member name="F:Au.Clipb._ClipboardListener.Success">
+            <summary>
+            The clipboard message has been received. Probably the target window responded to the Ctrl+C or Ctrl+V.
+            On Paste it is unreliable because of clipboard viewers/managers/etc. The caller also must check IsBadWindow.
+            </summary>
+        </member>
+        <member name="F:Au.Clipb._ClipboardListener.IsBadWindow">
+            <summary>
+            On Paste, true if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
+            Not used on Copy.
+            </summary>
+        </member>
+        <member name="F:Au.Clipb._ClipboardListener.FailedToSetData">
+            <summary>
+            Exception thrown/catched when failed to set clipboard data.
+            </summary>
+        </member>
+        <member name="M:Au.Clipb._ClipboardListener.#ctor(System.Boolean,System.Object,Au.Wnd,Au.Wnd)">
+            <summary>
+            Subclasses clipOwner.
+            </summary>
+            <param name="paste">true if used for paste, false if for copy.</param>
+            <param name="data">If used for paste, can be string containing Unicode text or int/string dictionary containing clipboard format/data.</param>
+            <param name="clipOwner">Our clipboard owner window.</param>
+            <param name="wFocus">The target control or window.</param>
+        </member>
+        <member name="M:Au.Clipb._ClipboardListener.Wait(Au.Keyb.Lib.SendCopyPaste@)">
+            <summary>
+            Waits until the target app gets (Paste) or sets (Copy) clipboard text.
+            Throws AuException on timeout (3 s normally, 28 s if the target window is hung).
+            </summary>
+            <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
+        </member>
+        <member name="T:Au.Clipb._OpenClipboard">
             <summary>
             Opens and closes clipboard using API OpenClipboard and CloseClipboard.
             Constructor tries to open for 10 s, then throws AuException.
-            If the 'empty' parameter is true, creates temporary hidden clipboard owner window. Also then calls EmptyClipboard.
+            If the 'createOwner' parameter is true, creates temporary message-only clipboard owner window.
+            If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
             Dispose() closes clipboard and destroys the owner window.
             </summary>
         </member>
-        <member name="M:Au.Clipb._StringToClipData(System.String)">
+        <member name="M:Au.Clipb._OpenClipboard.Reopen(System.Boolean)">
             <summary>
-            Allocates memory with API GlobalAlloc, copies s to it, and returns the memory handle.
-            The handle can be stored in clipboard with API SetClipboardData(CF_UNICODETEXT). Else call API GlobalFree.
+            Opens again.
+            Must be closed.
+            Owner window should be not destroyed; does not create again.
+            </summary>
+            <param name="noThrow">If fails, return false, no exception. Also then waits 1 s instead of 10 s.</param>
+            <exception cref="T:Au.Types.AuException">Failed to open.</exception>
+        </member>
+        <member name="T:Au.Clipb._SaveRestore">
+            <summary>
+            Saves and restores clipboard data.
+            Clipboard must be open. Don't need to call EmptyClipboard before Restore.
+            </summary>
+        </member>
+        <member name="T:Au.Clipb.Data">
+            <summary>
+            Sets or gets clipboard data in multiple formats.
+            </summary>
+            <remarks>
+            The <b>AddX</b> functions add data to the variable (not to the clipboard). Then <see cref="M:Au.Clipb.Data.SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.KOptions)"/>.
+            The static <b>GetX</b> functions get data directly from the clipboard.
+            </remarks>
+            <example>
+            Get bitmap image from clipboard.
+            <code><![CDATA[
+            var image = Clipb.Data.GetImage();
+            if(image == null) Print("no image in clipboard"); else Print(image.Size);
+            ]]></code>
+            Set clipboard data of two formats: text and image.
+            <code><![CDATA[
+            new Clipb.Data().AddText("text").AddImage(Image.FromFile(@"q:\file.png")).SetClipboard();
+            ]]></code>
+            Paste data of two formats: HTML and text.
+            <code><![CDATA[
+            Clipb.PasteData(new Clipb.Data().AddHtml("<b>text</b>").AddText("text"));
+            ]]></code>
+            Copy data of two formats: HTML and text.
+            <code><![CDATA[
+            string html = null, text = null;
+            Clipb.CopyData(() => { html = Clipb.Data.GetHtml(); text = Clipb.Data.GetText(); });
+            Print(html); Print(text);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Clipb.Data.AddText(System.String,System.Int32)">
+            <summary>
+            Adds text.
+            Returns this.
+            </summary>
+            <param name="text">Text.</param>
+            <param name="format">
+            Clipboard format id. Default: <see cref="F:Au.Types.ClipFormats.Text"/> (CF_UNICODETEXT).
+            Text encoding (UTF-16, ANSI, etc) depends on format; default UTF-16. See <see cref="M:Au.Types.ClipFormats.Register(System.String,System.Text.Encoding)"/>.
+            </param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <exception cref="T:System.ArgumentException">Invalid format.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Text.Encoding.GetBytes(System.String)"/>, which is called if encoding is not UTF-16.</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.AddBinary(System.Byte[],System.Int32)">
+            <summary>
+            Adds data of any format as byte[].
+            Returns this.
+            </summary>
+            <param name="data">byte[] containing data.</param>
+            <param name="format">Clipboard format id. See <see cref="M:Au.Types.ClipFormats.Register(System.String,System.Text.Encoding)"/>.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <exception cref="T:System.ArgumentException">Invalid format. Supported are all registered formats and standard formats &lt;CF_MAX except GDI handles.</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.AddImage(System.Drawing.Image)">
+            <summary>
+            Adds image. Uses clipboard format <see cref="F:Au.Types.ClipFormats.Image"/> (CF_BITMAP).
+            Returns this.
+            </summary>
+            <param name="image">Image. Must be <see cref="T:System.Drawing.Bitmap"/>, else exception.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Au.Clipb.Data.AddHtml(System.String)">
+            <summary>
+            Adds HTML text. Uses clipboard format <see cref="P:Au.Types.ClipFormats.Html"/> ("HTML Format").
+            Returns this.
+            </summary>
+            <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <example>
+            <code><![CDATA[
+            d.AddHtml("<i>italy</i>");
+            d.AddHtml("<html><body><i>italy</i></body></html>");
+            d.AddHtml("<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>");
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Clipb.Data.AddRtf(System.String)">
+            <summary>
+            Adds rich text (RTF). Uses clipboard format <see cref="P:Au.Types.ClipFormats.Rtf"/> ("Rich Text Format").
+            Returns this.
+            </summary>
+            <param name="rtf">Rich text. Simplest example: <c>@"{\rtf1 text\par}"</c>.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Au.Clipb.Data.AddFiles(System.String[])">
+            <summary>
+            Adds list of files to copy/paste. Uses clipboard format <see cref="F:Au.Types.ClipFormats.Files"/> (CF_HDROP).
+            Returns this.
+            </summary>
+            <param name="files">One or more file paths.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Au.Clipb.Data.SetClipboard">
+            <summary>
+            Copies the added data of all formats to the clipboard.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
+            <exception cref="T:System.OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
+            <remarks>
+            Calls API <msdn>OpenClipboard</msdn>, <msdn>EmptyClipboard</msdn>, <msdn>SetClipboardData</msdn> and <msdn>CloseClipboard</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.Clipb.Data.SetOpenClipboard(System.Boolean,System.Int32)">
+            <summary>
+            Copies the added data to the clipboard.
+            </summary>
+            <param name="renderLater">Call API <msdn>SetClipboardData</msdn>(format, default). When/if some app will try to get clipboard data, the first time your clipboard owner window will receive <msdn>WM_RENDERFORMAT</msdn> message and should call <c>SetOpenClipboard(false);</c>.</param>
+            <param name="format">Copy data only of this format. If 0 (default), of all formats.</param>
+            <exception cref="T:System.OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to set clipboard data.</exception>
+            <remarks>
+            This function is similar to <see cref="M:Au.Clipb.Data.SetClipboard"/>. It calls API <msdn>SetClipboardData</msdn> and does not call <b>OpenClipboard</b>, <b>EmptyClipboard</b>, <b>CloseClipboard</b>. The clipboard must be open and owned by a window of this thread.
+            </remarks>
+        </member>
+        <member name="M:Au.Clipb.Data.LibSetText(System.String)">
+            <summary>
+            Copies Unicode text to the clipboard without open/empty/close.
+            </summary>
+        </member>
+        <member name="M:Au.Clipb.Data.LibCreateHtmlFormatData(System.String)">
+            <summary>
+            Converts HTML string to byte[] containing data in clipboard format "HTML Format".
+            </summary>
+            <param name="html">Full HTML or HTML fragment. If full HTML, a fragment in it can be optionally specified. See examples.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <example>
+            HTML examples.
+            <code><![CDATA[
+            "<i>italy</i>"
+            "<html><body><i>italy</i></body></html>"
+            "<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>"
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Clipb.Data.LibGetText(System.Int32)">
+            <summary>
+            Gets clipboard text without open/close.
+            If format is 0, tries CF_UNICODETEXT and CF_HDROP.
+            </summary>
+        </member>
+        <member name="M:Au.Clipb.Data.GetText(System.Int32)">
+            <summary>
+            Gets text from the clipboard.
+            Returns null if there is no text.
+            </summary>
+            <param name="format">
+            Clipboard format id. Default: <see cref="F:Au.Types.ClipFormats.Text"/> (CF_UNICODETEXT).
+            If 0, tries to get text (<see cref="F:Au.Types.ClipFormats.Text"/>) or file paths (<see cref="F:Au.Types.ClipFormats.Files"/>; returns multiline text).
+            Text encoding (UTF-16, ANSI, etc) depends on format; default UTF-16. See <see cref="M:Au.Types.ClipFormats.Register(System.String,System.Text.Encoding)"/>.
+            </param>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.GetBinary(System.Int32)">
+            <summary>
+            Gets clipboard data of any format as byte[].
+            Returns null if there is no data of the specified format.
+            </summary>
+            <exception cref="T:System.ArgumentException">Invalid format. Supported are all registered formats and standard formats &lt;CF_MAX except GDI handles.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.GetImage">
+            <summary>
+            Gets image from the clipboard. Uses clipboard format <see cref="F:Au.Types.ClipFormats.Image"/> (CF_BITMAP).
+            Returns null if there is no data of this format.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Drawing.Image.FromHbitmap(System.IntPtr)"/>.</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.GetHtml">
+            <summary>
+            Gets HTML text from the clipboard. Uses clipboard format <see cref="P:Au.Types.ClipFormats.Html"/> ("HTML Format").
+            Returns null if there is no data of this format or if failed to parse it.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.GetHtml(System.Int32@,System.Int32@,System.String@)">
+            <summary>
+            Gets HTML text from the clipboard. Uses clipboard format <see cref="P:Au.Types.ClipFormats.Html"/> ("HTML Format").
+            Returns null if there is no data of this format or if failed to parse it.
+            </summary>
+            <param name="fragmentStart">Fragment start index in the returned string.</param>
+            <param name="fragmentLength">Fragment length.</param>
+            <param name="sourceURL">Source URL, or null if unavailable.</param>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.GetRtf">
+            <summary>
+            Gets rich text (RTF) from the clipboard. Uses clipboard format <see cref="P:Au.Types.ClipFormats.Rtf"/> ("Rich Text Format").
+            Returns null if there is no data of this format.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+        </member>
+        <member name="M:Au.Clipb.Data.GetFiles">
+            <summary>
+            Gets file paths from the clipboard. Uses clipboard format <see cref="F:Au.Types.ClipFormats.Files"/> (CF_HDROP).
+            Returns null if there is no data of this format.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+        </member>
+        <member name="M:Au.Clipb.Data._HdropToFiles(System.IntPtr)">
+            <summary>
+            Gets file paths from HDROP.
+            Returns array of 0 or more non-null elements.
+            </summary>
+        </member>
+        <member name="M:Au.Clipb.Data.Contains(System.Int32)">
+            <summary>
+            Returns true if the clipboard contains data of the specified format.
+            </summary>
+            <param name="format">Clipboard format id. See <see cref="T:Au.Types.ClipFormats"/>.</param>
+            <remarks>Calls API <msdn>IsClipboardFormatAvailable</msdn>.</remarks>
+        </member>
+        <member name="M:Au.Clipb.Data.Contains(System.Int32[])">
+            <summary>
+            Returns the first of the specified formats that is in the clipboard.
+            Returns 0 if the clipboard is empty. Returns -1 if the clipboard contains data but not in any of the specified formats.
+            </summary>
+            <param name="formats">Clipboard format ids. See <see cref="T:Au.Types.ClipFormats"/>.</param>
+            <remarks>Calls API <msdn>GetPriorityClipboardFormat</msdn>.</remarks>
+        </member>
+        <member name="T:Au.NoClass">
+            <summary>
+            This class contains aliases of some frequently used functions.
+            In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without specifying a type name.
+            Examples:
+            <c>Print</c> is the same as <c>Output.Write</c>;
+            <c>Empty</c> is the same as <c>string.IsNullOrEmpty</c>;
+            </summary>
+        </member>
+        <member name="M:Au.NoClass.Paste(System.String)">
+            <summary>
+            Calls <see cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>.
+            </summary>
+            <inheritdoc cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>
+        </member>
+        <member name="M:Au.NoClass.CopyText">
+            <summary>
+            Calls <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>.
+            </summary>
+            <inheritdoc cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>
+        </member>
+        <member name="M:Au.NoClass.Key(System.Object[])">
+            <summary>
+            Sends virtual keystrokes to the active window.
+            Alias of <see cref="M:Au.Keyb.Key(System.Object[])"/>.
+            </summary>
+            <inheritdoc cref="M:Au.Keyb.Key(System.Object[])"/>
+        </member>
+        <member name="M:Au.NoClass.Text(System.String,System.Object[])">
+            <summary>
+            Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
+            Alias of <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>.
+            </summary>
+            <inheritdoc cref="M:Au.Keyb.Text(System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.NoClass.Print(System.String)">
+            <summary>
+            Calls <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>. It writes string + "\r\n" to the output.
+            </summary>
+            <remarks>
+            If "" or null, writes empty line. To write "null" if null, use code <c>Print((object)s);</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.NoClass.Print(System.Object)">
+            <summary>
+            Writes value of any type to the output.
+            </summary>
+            <param name="value">Value of any type. Can be null.</param>
+            <remarks>
+            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
+            If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+            If null, prints "null".
+            
+            This overload is used for value types (int, Point) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
+            </remarks>
+        </member>
+        <member name="M:Au.NoClass.LibPrintObjectToString(System.Object)">
+            <summary>
+            Converts object to string like <see cref="M:Au.NoClass.Print(System.Object)"/> does.
+            </summary>
+        </member>
+        <member name="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Writes array, List, Dictionary or other generic collection to the output, as a list of items separated by "\r\n".
+            </summary>
+            <param name="value">Array or generic collection of any type. Can be null.</param>
+            <remarks>
+            Calls <see cref="M:Au.NoClass.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)"/>, which calls <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.NoClass.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)">
+            <summary>
+            Writes array, List, Dictionary or other generic collection to the output, as a list of items.
+            </summary>
+            <param name="value">Array or generic collection of any type. Can be null.</param>
+            <param name="format">
+            Item format string.
+            
+            These special substrings are replaced with:
+            {s} - <c>item.ToString</c>, or "null" if null.
+            {0} - item index, starting from 0.
+            {1} - item index, starting from 1.
+            
+            Default "{s}\r\n". It works like <see cref="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})"/>.
+            </param>
+            <param name="trimEnd">
+            How many characters to remove from the end of the result string.
+            Default 2 (removes the default "\r\n" separator from the last item).
+            </param>
+            <remarks>
+            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.NoClass.Print(System.Object,System.Object,System.Object[])">
+            <summary>
+            Writes multiple arguments of any type to the output, using separator ", ".
+            </summary>
+            <remarks>
+            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
+            If a value is null, writes "null".
+            If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+            </remarks>
+        </member>
+        <member name="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)">
+            <summary>
+            Writes warning text to the output.
+            By default appends the stack trace.
+            </summary>
+            <param name="text">Warning text.</param>
+            <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
+            <param name="prefix">Text before <paramref name="text"/>. Default "Warning: ".</param>
+            <remarks>
+            Calls <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
+            If <see cref="P:Au.AuScriptOptions.Debug">Options.Debug</see> is false, does not show more that 1 warning/second.
+            To disable some warnings, use <see cref="M:Au.AuScriptOptions.DisableWarnings(System.String[])">Options.DisableWarnings</see>.
+            </remarks>
+        </member>
+        <member name="P:Au.NoClass.Options">
+            <summary>
+            Gets AuScriptOptions object of this thread.
+            Alias of <see cref="P:Au.AuScriptOptions.Options" qualifyHint="true"/>.
+            </summary>
+        </member>
+        <member name="M:Au.NoClass.Empty(System.String)">
+            <summary>
+            Returns true if the string is null or "".
+            The same as string.IsNullOrEmpty.
             </summary>
         </member>
         <member name="T:Au.Keyb">
             <summary>
-            Sends keys and text to the active window, presses hotkeys, copies/pastes text through the clipboard, gets key states.
+            Keyboard functions: send keystrokes and text to the active window, press hotkeys, get key states.
             </summary>
             <remarks>
-            Provides static and instance functions. The static functions depend on <see cref="P:Au.Keyb.Options"/> or <see cref="P:Au.Keyb.StaticOptions"/>. The instance functions can use these options or not.
+            The static functions depend on <see cref="P:Au.Keyb.Options"/>, which depends on <see cref="P:Au.Keyb.StaticOptions"/>. <b>Keyb</b> variables don't depend on it by default.
             Below are examples with the static functions. See also examples in <see cref="M:Au.Keyb.Key(System.Object[])"/>, <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.#ctor(Au.Types.KOptions)"/>.
             </remarks>
             <example>
@@ -4654,6 +5241,34 @@
             ]]></code>
             </example>
         </member>
+        <member name="M:Au.Keyb.AddKeys(System.String)">
+            <summary>
+            Adds keystrokes to the internal collection. They will be sent by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="M:Au.Keyb.Key(System.Object[])"/>. Can be null or "".</param>
+            <exception cref="T:System.ArgumentException">Error in <paramref name="keys"/> string, for example an unknown key name.</exception>
+        </member>
+        <member name="M:Au.Keyb.AddKey(System.Windows.Forms.Keys,System.Nullable{System.Boolean})">
+            <summary>
+            Adds single key, specified as <see cref="T:System.Windows.Forms.Keys"/>, to the internal collection. It will be sent by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="key">Virtual-key code.</param>
+            <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
+            <exception cref="T:System.ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
+        </member>
+        <member name="M:Au.Keyb.AddKey(System.Windows.Forms.Keys,System.Int32,System.Boolean,System.Nullable{System.Boolean})">
+            <summary>
+            Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="key">Virtual-key code. Can be 0.</param>
+            <param name="scanCode">Scan code of the physical key. Can be 0.</param>
+            <param name="extendedKey">true if the key is an extended key.</param>
+            <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
+            <exception cref="T:System.ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
+        </member>
         <member name="M:Au.Keyb.LibAddRaw(System.Byte,System.UInt16,System.Byte)">
             <summary>
             Adds key down or up event.
@@ -4662,6 +5277,54 @@
             <param name="scan"></param>
             <param name="siFlags">SendInput flags.</param>
         </member>
+        <member name="M:Au.Keyb.AddText(System.String)">
+            <summary>
+            Adds text. It will be sent by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="text">Text. Can be null.</param>
+        </member>
+        <member name="M:Au.Keyb.AddCallback(System.Action)">
+            <summary>
+            Adds a callback function. It will be called by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="callback"></param>
+        </member>
+        <member name="M:Au.Keyb.AddRepeat(System.Int32)">
+            <summary>
+            Adds a repeat-key operator. Then <see cref="M:Au.Keyb.Send(System.Boolean)"/> will send the last added key the specified number of times.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="count">Repeat count.</param>
+            <exception cref="T:System.ArgumentException">
+            <paramref name="count"/> &gt;60000 or &lt;0.
+            The last added event is not key. Can repeat only single key. Cannot repeat text etc.
+            </exception>
+        </member>
+        <member name="M:Au.Keyb.AddSleep(System.Int32)">
+            <summary>
+            Adds a short pause. Then <see cref="M:Au.Keyb.Send(System.Boolean)"/> will sleep (wait).
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="timeMS">Time to sleep, milliseconds.</param>
+            <exception cref="T:System.ArgumentException"><paramref name="timeMS"/> &gt;60000 (1 minute) or &lt;0.</exception>
+        </member>
+        <member name="M:Au.Keyb.Add(System.Object[])">
+            <summary>
+            Adds any number of keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+            </summary>
+            <param name="a">Arguments. The same as with <see cref="M:Au.Keyb.Key(System.Object[])"/>.</param>
+            <exception cref="T:System.ArgumentException">An argument is of an unsupported type or has an invalid value.</exception>
+        </member>
+        <member name="M:Au.Keyb.Send(System.Boolean)">
+            <summary>
+            Sends keys, text and executes other events added with the <b>AddX</b> functions.
+            </summary>
+            <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
+            <exception cref="T:System.ArgumentException"><paramref name="canSendAgain"/> is true and keys end with + or (.</exception>
+        </member>
         <member name="M:Au.Keyb._KeynameToKey(System.String,System.Int32,System.Int32)">
             <summary>
             Converts part of string to Keys.
@@ -4669,27 +5332,32 @@
             Returns 0 if invalid key name.
             </summary>
         </member>
-        <member name="M:Au.Keyb._Util.KeyToMod(System.Windows.Forms.Keys)">
+        <member name="T:Au.Keyb.Lib">
+            <summary>
+            Internal static functions.
+            </summary>
+        </member>
+        <member name="M:Au.Keyb.Lib.KeyToMod(System.Windows.Forms.Keys)">
             <summary>
             If k is ShiftKey, ControlKey, Menu, LWin or RWin, returns it as modifier flag, eg KMod.Shift from Keys.ShiftKey.
             Else returns 0.
             Also supports RShiftKey etc.
             </summary>
         </member>
-        <member name="M:Au.Keyb._Util.VkToSc(System.Byte,Au.Types.LPARAM)">
+        <member name="M:Au.Keyb.Lib.VkToSc(System.Byte,Au.Types.LPARAM)">
             <summary>
             Gets scan code from virtual-key code.
             </summary>
             <param name="vk">Virtual-key code, eg (byte)Keys.</param>
             <param name="hkl">Keyboard layout. If default(LPARAM), uses of current thread.</param>
         </member>
-        <member name="M:Au.Keyb._Util.SendKeyEventRaw(System.UInt16,System.UInt16,System.UInt32)">
+        <member name="M:Au.Keyb.Lib.SendKeyEventRaw(System.UInt16,System.UInt16,System.UInt32)">
             <summary>
             Sends one key event.
             Just calls API SendInput with raw parameters.
             </summary>
         </member>
-        <member name="M:Au.Keyb._Util.SendKey(System.Windows.Forms.Keys,System.Int32)">
+        <member name="M:Au.Keyb.Lib.SendKey(System.Windows.Forms.Keys,System.Int32)">
             <summary>
             Sends key.
             Not used for keys whose scancode can depend on keyboard layout. To get scancode, uses keyboard layout of current thread.
@@ -4697,13 +5365,46 @@
             <param name="k"></param>
             <param name="downUp">1 down, 2 up, 0 down-up.</param>
         </member>
-        <member name="M:Au.Keyb._Util.ModPressRelease(System.Boolean,Au.Types.KMod)">
+        <member name="M:Au.Keyb.Lib.ModPressRelease(System.Boolean,Au.Types.KMod)">
             <summary>
             Presses or releases one or more modifier keys.
             Sends in this order: Ctrl, Alt, Shift, Win.
             </summary>
             <param name="press"></param>
             <param name="mod">Modifier keys. Does nothing if 0.</param>
+        </member>
+        <member name="M:Au.Keyb.Lib.ReleaseModAndCapsLock(Au.Types.KOptions,System.Boolean)">
+            <summary>
+            Releases modifier keys if pressed. Optionally turns off CapsLock if toggled.
+            Returns true if was CapsLock.
+            Uses options NoModOff and NoCapsOff. Does not call Hook.
+            </summary>
+            <param name="opt"></param>
+            <param name="forClipb">Used for Clipb Ctrl+V/C/X. Ignore CapsLock and always release modifiers, regardless of opt.</param>
+        </member>
+        <member name="T:Au.Keyb.Lib.SendCopyPaste">
+            <summary>
+            Sends Ctrl+V or Ctrl+C or Ctrl+X, and/or optionally Enter.
+            Caller gets opt and wFocus with _GetOptionsAndWndFocused (it may want to know some options too).
+            Caller calls Press, waits until the target app gets clipboard data, then calls Release.
+            </summary>
+        </member>
+        <member name="M:Au.Keyb.Lib.SendCopyPaste.Press(System.Windows.Forms.Keys,Au.Types.KOptions,Au.Wnd,System.Boolean)">
+            <summary>
+            Presses Ctrl+key. Does not release.
+            If enter is true, Release will press Enter.
+            </summary>
+        </member>
+        <member name="M:Au.Keyb.Lib.SendCopyPaste.Release">
+            <summary>
+            Releases keys.
+            Does nothing if already released.
+            </summary>
+        </member>
+        <member name="M:Au.Keyb.Lib.SendCopyPaste.Enter(Au.Types.KOptions)">
+            <summary>
+            Sends Enter.
+            </summary>
         </member>
         <member name="M:Au.Keyb._GetOptionsAndWndFocused(Au.Wnd@,System.Boolean)">
             <summary>
@@ -4717,15 +5418,6 @@
             Returns KOptions of this variable or KOptions cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
-        </member>
-        <member name="M:Au.Keyb._ReleaseModAndCapsLock(System.Boolean)">
-            <summary>
-            Releases modifier keys if pressed. Optionally turns off CapsLock if toggled.
-            Returns true if released CapsLock.
-            Uses options NoModOff and NoCapsOff. Does not call Hook.
-            If pressed Alt or Win, sends Ctrl to avoid menu mode.
-            </summary>
-            <param name="onlyMod">Ignore CapsLock.</param>
         </member>
         <member name="P:Au.Keyb.IsAlt">
             <summary>
@@ -4825,15 +5517,21 @@
         </member>
         <member name="T:Au.Keyb.Misc">
             <summary>
-            Miscellaneous functions related to keyboard input.
+            Miscellaneous functions.
             </summary>
         </member>
-        <member name="M:Au.Keyb.Misc.GetTextCursorRect(Au.Types.RECT@)">
+        <member name="M:Au.Keyb.Misc.GetTextCursorRect(Au.Types.RECT@,Au.Wnd@,System.Boolean)">
             <summary>
-            Gets current text cursor (caret) rectangle in screen coordinates.
-            Returns the control that contains it.
-            If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns default(Wnd).
+            Gets text cursor (caret) position and size.
+            Returns false if fails.
             </summary>
+            <param name="r">Receives the rectangle, in screen coordinates.</param>
+            <param name="w">Receives the control that contains the text cursor.</param>
+            <param name="orMouse">If fails, get mouse pointer coodinates.</param>
+            <remarks>
+            Can get only standard text cursor. Many apps use non-standard cursor; then fails.
+            Also fails if the text cursor currently is not displayed.
+            </remarks>
         </member>
         <member name="M:Au.Keyb.Misc.ParseHotkeyString(System.String,Au.Types.KMod@,System.Windows.Forms.Keys@)">
             <summary>
@@ -4893,11 +5591,11 @@
         </member>
         <member name="P:Au.Keyb.Options">
             <summary>
-            This [ThreadStatic] <see cref="T:Au.Types.KOptions"/> instance is used by the static 'send keys or text' functions - <see cref="M:Au.Keyb.Key(System.Object[])"/>, <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.Paste(System.String,System.String,System.String)"/> and similar.
+            This [ThreadStatic] <see cref="T:Au.Types.KOptions"/> instance is used by static 'send keys or text' functions of classes <see cref="T:Au.Keyb"/>, <see cref="T:Au.Clipb"/> and by functions that use them (<see cref="M:Au.Keyb.Key(System.Object[])"/>, <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>, <see cref="M:Au.NoClass.Paste(System.String)"/>, <see cref="M:Au.NoClass.CopyText"/>).
             </summary>
             <remarks>
-            Each thread has its own <b>Options</b> instance. It inherits options from <see cref="P:Au.Keyb.StaticOptions"/> when used first time in thread (explicitly or by these functions).
-            Use it to set options for the static 'send keys or text' functions (<see cref="M:Au.Keyb.Key(System.Object[])"/> etc), anywhere in your script. See the first example.
+            Each thread has its own <b>Options</b> instance. It inherits options from <see cref="P:Au.Keyb.StaticOptions"/> when used first time in thread.
+            Can be used to change options for these functions (<see cref="M:Au.Keyb.Key(System.Object[])"/> etc) anywhere in your script. See the first example.
             Also can be used when creating <see cref="T:Au.Keyb"/> instances; then they inherit these options. See the second example.
             </remarks>
             <example>
@@ -4915,7 +5613,7 @@
         </member>
         <member name="M:Au.Keyb.Key(System.Object[])">
             <summary>
-            Sends keys and/or text to the active window or presses a hotkey.
+            Sends virtual keystrokes to the active window.
             </summary>
             <param name="keys">
             Any number of arguments of these types:
@@ -4926,12 +5624,12 @@
         </member>
         <member name="M:Au.Keyb.Text(System.String,System.Object[])">
             <summary>
-            Sends text and optionally keys to the active window.
+            Sends text to the active window, using virtual keystrokes or the clipboard. Then optionally can send non-text keystrokes.
             </summary>
             <param name="text">Text to send.</param>
-            <param name="keys">Optional more parameters. The same as with <see cref="T:System.Windows.Forms.Keys"/>. Can be used for example to press keys or wait.</param>
+            <param name="keys">Optional more parameters. The same as with <see cref="M:Au.Keyb.Key(System.Object[])"/>. Can be used for example to press keys or wait.</param>
             <remarks>
-            This function is identical to <see cref="T:System.Windows.Forms.Keys"/>, except that the first parameter is interpreted as text, not as keys.
+            This function is identical to <see cref="T:System.Windows.Forms.Keys"/>, except: the first parameter is text, not keys.
             </remarks>
             <example>
             <code><![CDATA[
@@ -4940,127 +5638,6 @@
             Text("Can be used without the \"Keyb.\" prefix.\n");
             ]]></code>
             </example>
-        </member>
-        <member name="T:Au.NoClass">
-            <summary>
-            This class contains aliases of some frequently used functions.
-            In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without specifying a type name.
-            Examples:
-            <c>Print</c> is the same as <c>Output.Write</c>;
-            <c>Empty</c> is the same as <c>string.IsNullOrEmpty</c>;
-            </summary>
-        </member>
-        <member name="M:Au.NoClass.Paste(System.String,System.String)">
-            <inheritdoc cref="M:Au.Keyb.Paste(System.String,System.String,System.String)"/>
-        </member>
-        <member name="M:Au.NoClass.Key(System.Object[])">
-            <summary>
-            Sends keys and/or text to the active window or presses a hotkey.
-            Alias of <see cref="M:Au.Keyb.Key(System.Object[])"/>.
-            </summary>
-            <inheritdoc cref="M:Au.Keyb.Key(System.Object[])"/>
-        </member>
-        <member name="M:Au.NoClass.Text(System.String,System.Object[])">
-            <summary>
-            Sends text and optionally keys to the active window.
-            Alias of <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>.
-            </summary>
-            <inheritdoc cref="M:Au.Keyb.Text(System.String,System.Object[])"/>
-        </member>
-        <member name="M:Au.NoClass.Print(System.String)">
-            <summary>
-            Calls <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>. It writes string + "\r\n" to the output.
-            </summary>
-            <remarks>
-            If "" or null, writes empty line. To write "null" if null, use code <c>Print((object)s);</c>.
-            </remarks>
-        </member>
-        <member name="M:Au.NoClass.Print(System.Object)">
-            <summary>
-            Writes value of any type to the output.
-            </summary>
-            <param name="value">Value of any type. Can be null.</param>
-            <remarks>
-            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
-            If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
-            If null, prints "null".
-            
-            This overload is used for value types (int, Point) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
-            </remarks>
-        </member>
-        <member name="M:Au.NoClass.LibPrintObjectToString(System.Object)">
-            <summary>
-            Converts object to string like <see cref="M:Au.NoClass.Print(System.Object)"/> does.
-            </summary>
-        </member>
-        <member name="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})">
-            <summary>
-            Writes array, List, Dictionary or other generic collection to the output, as a list of items separated by "\r\n".
-            </summary>
-            <param name="value">Array or generic collection of any type. Can be null.</param>
-            <remarks>
-            Calls <see cref="M:Au.NoClass.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)"/>, which calls <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.NoClass.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)">
-            <summary>
-            Writes array, List, Dictionary or other generic collection to the output, as a list of items.
-            </summary>
-            <param name="value">Array or generic collection of any type. Can be null.</param>
-            <param name="format">
-            Item format string.
-            
-            These special substrings are replaced with:
-            {s} - <c>item.ToString</c>, or "null" if null.
-            {0} - item index, starting from 0.
-            {1} - item index, starting from 1.
-            
-            Default "{s}\r\n". It works like <see cref="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})"/>.
-            </param>
-            <param name="trimEnd">
-            How many characters to remove from the end of the result string.
-            Default 2 (removes the default "\r\n" separator from the last item).
-            </param>
-            <remarks>
-            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.NoClass.Print(System.Object,System.Object,System.Object[])">
-            <summary>
-            Writes multiple arguments of any type to the output, using separator ", ".
-            </summary>
-            <remarks>
-            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
-            If a value is null, writes "null".
-            If a value is string, escapes it (<see cref="M:Au.String_.Escape_(System.String,System.Int32,System.Boolean)"/>), limits to 250 characters (<see cref="M:Au.String_.Limit_(System.String,System.Int32)"/>) and encloses in "".
-            If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
-            </remarks>
-        </member>
-        <member name="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)">
-            <summary>
-            Writes warning text to the output.
-            By default appends the stack trace.
-            </summary>
-            <param name="text">Warning text.</param>
-            <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
-            <param name="prefix">Text before <paramref name="text"/>. Default "Warning: ".</param>
-            <remarks>
-            Calls <see cref="M:Au.Output.Write(System.String)" qualifyHint="true"/>.
-            If <see cref="P:Au.AuScriptOptions.Debug">Options.Debug</see> is false, does not show more that 1 warning/second.
-            To disable some warnings, use <see cref="M:Au.AuScriptOptions.DisableWarnings(System.String[])">Options.DisableWarnings</see>.
-            </remarks>
-        </member>
-        <member name="P:Au.NoClass.Options">
-            <summary>
-            Gets AuScriptOptions object of this thread.
-            Alias of <see cref="P:Au.AuScriptOptions.Options" qualifyHint="true"/>.
-            </summary>
-        </member>
-        <member name="M:Au.NoClass.Empty(System.String)">
-            <summary>
-            Returns true if the string is null or "".
-            The same as string.IsNullOrEmpty.
-            </summary>
         </member>
         <member name="T:Au.WinImage">
             <summary>
@@ -6566,6 +7143,11 @@
             <param name="t">This string.</param>
             <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-3 with appended "...". The enclosing "" are not counted.</param>
             <param name="quote">Enclose in "".</param>
+        </member>
+        <member name="M:Au.String_.IsAscii_(System.String)">
+            <summary>
+            Returns true if this string is "" or contains only ASCII characters.
+            </summary>
         </member>
         <member name="T:Au.StringSegment">
             <summary>
@@ -10679,23 +11261,6 @@
             Returns true if AttachThreadInput succeeded and this variable is not disposed.
             </summary>
         </member>
-        <member name="T:Au.Util.LibThreadSwitcher">
-            <summary>
-            Switches to another thread and sleeps for the remainder of this time slice of the thread scheduler.
-            Unlike Sleep(0) etc, works on multi-processor computers too.
-            </summary>
-            <remarks>
-            Causes this thread to yield execution to another thread that is ready to run on ANY logical processor.
-            If the remainder of this time slice is less than 400 mcs, retries to sleep during the next time slice.
-            If there are no other ready threads, does not sleep. Then the speed is about 100 mcs.
-            </remarks>
-        </member>
-        <member name="M:Au.Util.LibThreadSwitcher.Switch">
-            <summary>
-            Switches to another thread and sleeps for the remainder of this time slice of the thread scheduler.
-            Returns false if fails. Fails if there are more than 64 logical processors.
-            </summary>
-        </member>
         <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>
             A workaround for:
@@ -12952,102 +13517,95 @@
         <member name="P:Au.Time.Microseconds">
             <summary>
             Gets the number of microseconds elapsed since Windows startup.
-            The precision is 1 microsecond.
             </summary>
             <remarks>
             Uses API <msdn>QueryPerformanceCounter</msdn>.
-            Includes the computer sleep/hibernate time (see also <see cref="P:Au.Time.MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
+            Independent of computer clock time changes.
             MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Time.Milliseconds">
             <summary>
             Gets the number of milliseconds elapsed since Windows startup.
-            The precision is 1 millisecond.
-            See also <see cref="P:Au.Time.Microseconds"/>.
             </summary>
             <remarks>
-            Includes the computer sleep/hibernate time (see also <see cref="P:Au.Time.MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
-            Unlike Environment.TickCount, this function is more precise and returns a 64-bit value that will not roll over in 100 years.
+            Uses API <msdn>QueryPerformanceCounter</msdn>.
+            Similar to <see cref="P:System.Environment.TickCount"/>, but more precise (1 ms) and returns a 64-bit value.
+            Independent of computer clock time changes.
             </remarks>
         </member>
         <member name="P:Au.Time.MillisecondsWithoutComputerSleepTime">
             <summary>
-            Gets the number of milliseconds elapsed since Windows startup, not including time the system spends in sleep or hibernation.
-            The precision is 1-16 milliseconds.
+            Gets the number of milliseconds elapsed since Windows startup, not including the sleep/hibernate time.
             </summary>
             <remarks>
             Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
+            The precision is 1-16 milliseconds.
             Independent of computer clock time changes.
-            This function can be used to implement a timeout in 'wait for' functions, when repeatedly checking a condition.
             </remarks>
         </member>
         <member name="M:Au.Time.SleepS(System.Double)">
             <summary>
-            Suspends this thread for the specified amount of time.
-            The same as <see cref="M:Au.Time.Sleep(System.Int32)"/>, but uses seconds, not milliseconds.
+            Waits <paramref name="timeS"/> seconds.
+            The same as <see cref="M:Au.Time.Sleep(System.Int32)"/>, but the time is specified in seconds, not milliseconds.
             </summary>
-            <param name="seconds">
-            Time to wait, seconds.
-            The smallest value is 0.001 (1 ms).
-            </param>
-            <exception cref="T:System.ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+            <param name="timeS">Time to wait, seconds. The smallest value is 0.001 (1 ms).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeS"/> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
             <remarks>
             Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
-            Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-            If the computer goes to sleep or hibernate during that time, the real time is seconds + the sleep/hibernate time.
+            Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM events. Supports APC.
+            If the computer goes to sleep or hibernate during that time, the real time is <paramref name="timeS"/> + the sleep/hibernate time.
             Tip: code <c>5.s();</c> is the same as <c>Time.SleepS(5);</c>.
             </remarks>
         </member>
         <member name="M:Au.Time.Sleep(System.Int32)">
             <summary>
-            Suspends this thread for the specified amount of time.
-            The same as <see cref="M:Au.Time.SleepS(System.Double)"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
+            Waits <paramref name="timeMS"/> milliseconds.
+            The same as <see cref="M:Au.Time.SleepS(System.Double)"/>, but the time is specified in milliseconds, not seconds; and supports Timeout.Infinite.
             </summary>
-            <param name="milliseconds">
-            Time to wait, milliseconds.
-            If 0, can wait briefly if another busy thread runs on the same logical CPU, which happens not often on modern multi-core CPU.
-            Also can be <see cref="F:System.Threading.Timeout.Infinite"/>.
-            </param>
+            <param name="timeMS">Time to wait, milliseconds. Or <see cref="F:System.Threading.Timeout.Infinite"/>.</param>
             <remarks>
             Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
-            Does not process events and messages, therefore should not be used with big milliseconds in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-            If the computer goes to sleep or hibernate during that time, the real time is milliseconds + the sleep/hibernate time.
+            Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM events, unless <paramref name="timeMS"/> is small. Supports APC.
+            If the computer goes to sleep or hibernate during that time, the real time is <paramref name="timeMS"/> + the sleep/hibernate time.
             Tip: code <c>50.ms();</c> is the same as <c>Time.Sleep(50);</c>.
             </remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
         </member>
-        <member name="M:Au.Time.SleepDoEvents(System.Int32)">
+        <member name="M:Au.Time.SleepDoEvents(System.Int32,System.Boolean)">
             <summary>
-            Partially suspends this thread for the specified amount of time, during which processes events and messages.
+            Waits <paramref name="timeMS"/> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
             </summary>
-            <param name="milliseconds">
-            The number of milliseconds to wait.
-            The smallest value is 1.
-            Also can be <see cref="F:System.Threading.Timeout.Infinite"/>.
-            </param>
+            <param name="timeMS">Time to wait, milliseconds. Or <see cref="F:System.Threading.Timeout.Infinite"/>.</param>
+            <param name="qsSendmessage">Call <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_SENDMESSAGE instead of QS_ALLINPUT.</param>
             <remarks>
-            Unlike <see cref="M:Au.Time.Sleep(System.Int32)"/>, this function retrieves and dispatches all Windows messages, including posted (key/mouse input, window paint, timer and other). Also calls event handlers, hook procedures, etc. Supports asynchronous procedure calls.
-            This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>. In some places does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
-            In threads without windows and timers usually don't need to process posted messages, but in some cases need to process sent messages, some events, hooks etc. Then you can instead use <see cref="M:System.Threading.Thread.Join(System.Int32)"/>, like <c>Thread.CurrentThread.Join(1000);</c>.
+            Unlike <see cref="M:Au.Time.Sleep(System.Int32)"/>, this function retrieves and dispatches Windows messages, calls .NET/COM event handlers, hook procedures, etc. Supports APC.
+            This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. In some places this function does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
+            Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
             Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="M:Au.Time.DoEvents"/>.
             </remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
-            <exception cref="T:System.Exception">Any exceptions thrown by functions that are executed while waiting (event handlers etc).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
             <seealso cref="T:Au.Util.MessageLoop"/>
+        </member>
+        <member name="M:Au.Time.SleepDoEvents(System.Int32,System.Boolean@,System.Boolean)">
+            <summary>
+            The same as <see cref="M:Au.Time.SleepDoEvents(System.Int32,System.Boolean)"/>, but also can wait until a variable is set.
+            </summary>
+            <param name="timeMS"></param>
+            <param name="stop">Stop waiting when this variable is set to true. Set it when processing events/messages/etc while waiting.</param>
+            <param name="qsSendmessage"></param>
+            <inheritdoc cref="M:Au.Time.SleepDoEvents(System.Int32,System.Boolean)"/>
         </member>
         <member name="M:Au.Time.DoEvents">
             <summary>
-            Retrieves and dispatches messages from the message queue of current thread.
+            Retrieves and dispatches events and Windows messages from the message queue of this thread.
             </summary>
             <remarks>
-            If this thread has a .NET message loop (<see cref="P:System.Windows.Forms.Application.MessageLoop"/>), calls <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
-            Else uses more lightweight API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
+            Similar to <see cref="M:System.Windows.Forms.Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
             Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
             </remarks>
-            <exception cref="T:System.Exception">Any exceptions thrown by functions that are executed while dispatching messages (event handlers etc).</exception>
         </member>
-        <member name="M:Au.Time.LibWaitForHandlesAndDispatchSentMessages(System.Int32,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)">
+        <member name="M:Au.Time.LibMsgWaitFor(System.Int32,System.IntPtr,System.IntPtr,System.IntPtr,System.IntPtr)">
             <summary>
             Waits for a signaled kernel handle.
             Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_SENDMESSAGE and MWMO_ALERTABLE.
@@ -13260,42 +13818,75 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Au.WaitFor.LibTimeout">
+        <member name="T:Au.WaitFor.Loop">
             <summary>
-            Can be used to easily implement timeout in wait-for functions.
-            See how it is used eg in <see cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)"/>.
+            Can be used to easily implement 'wait for' functions with a timeout.
+            </summary>
+            <remarks>
+            See examples. The code works like most 'wait for' functions of this library: on timeout throws exception, unless secondsTimeout is negative.
+            Similar code is used by most 'wait for' functions of this library.
+            See also <see cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)"/>; usually it's easier; internally it uses similar code too.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            public static bool WaitForMouseLeftButtonDown(double secondsTimeout)
+            {
+            	var x = new WaitFor.Loop(secondsTimeout);
+            	for(; ; ) {
+            		if(Mouse.IsPressed(MouseButtons.Left)) return true;
+            		if(!x.Sleep()) return false;
+            	}
+            }
+            ]]></code>
+            The same with WaitFor.Condition.
+            <code><![CDATA[
+            static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
+            {
+            	return WaitFor.Condition(secondsTimeout, o => Mouse.IsPressed(MouseButtons.Left));
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.WaitFor.Loop.Period">
+            <summary>
+            Current period (<see cref="M:Au.WaitFor.Loop.Sleep"/> sleep time), milliseconds.
+            Initially it is constructor's <i>initPeriod</i> argument (default 10). Then <see cref="M:Au.WaitFor.Loop.Sleep"/> increments it until reached <see cref="P:Au.WaitFor.Loop.MaxPeriod"/>.
             </summary>
         </member>
-        <member name="P:Au.WaitFor.LibTimeout.Period">
+        <member name="P:Au.WaitFor.Loop.MaxPeriod">
             <summary>
-            Current period, milliseconds.
-            Initially it is constructor->initPeriod (default 10). The Sleep method increments it until reached MaxPeriod.
+            Maximal period (<see cref="M:Au.WaitFor.Loop.Sleep"/> sleep time), milliseconds.
+            It is constructor's <i>maxPeriod</i> argument (default 500).
             </summary>
         </member>
-        <member name="P:Au.WaitFor.LibTimeout.MaxPeriod">
+        <member name="P:Au.WaitFor.Loop.TimeRemaining">
             <summary>
-            Maximal period, milliseconds.
-            It is constructor->maxPeriod (default 500).
+            Gets or sets the remaining time, milliseconds.
             </summary>
         </member>
-        <member name="P:Au.WaitFor.LibTimeout.TimeRemaining">
-            <summary>
-            Remaining time, milliseconds.
-            </summary>
+        <member name="M:Au.WaitFor.Loop.#ctor(System.Double,System.Int32,System.Int32)">
+            <param name="secondsTimeout">
+            The maximal time to wait in the loop, seconds. If 0, waits indefinitely. If &gt;0, after that time interval <see cref="M:Au.WaitFor.Loop.Sleep"/> throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval <see cref="M:Au.WaitFor.Loop.Sleep"/> returns false.
+            </param>
+            <param name="initPeriod">The initial sleep time of <see cref="M:Au.WaitFor.Loop.Sleep"/>, milliseconds. Default 10.</param>
+            <param name="maxPeriod">The maximal sleep time of <see cref="M:Au.WaitFor.Loop.Sleep"/>, milliseconds. Default 500. The period is incremented by 1 millisecond in each loop until it reaches <paramref name="maxPeriod"/>. It gives a good response time initially, and small CPU usage after some time.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="initPeriod"/> &lt; 1 or <paramref name="maxPeriod"/> &lt; <paramref name="initPeriod"/>.</exception>
         </member>
-        <member name="M:Au.WaitFor.LibTimeout.IsTimeout">
+        <member name="M:Au.WaitFor.Loop.IsTimeout">
             <summary>
-            If the timeout is not expired, returns false.
-            Else if constructor->secondsTimeout was negative, returns true.
-            Else throws TimeoutException.
-            Also gets current time and updates private fields, if need.
+            If the <i>secondsTimeout</i> time is not expired, returns false.
+            Else if <i>secondsTimeout</i> is negative, returns true.
+            Else throws <see cref="T:System.TimeoutException"/>.
+            Also updates private fields, if need.
             </summary>
+            <exception cref="T:System.TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
-        <member name="M:Au.WaitFor.LibTimeout.Sleep">
+        <member name="M:Au.WaitFor.Loop.Sleep">
             <summary>
-            If IsTimeout(), returns false.
-            Else sleeps for Period milliseconds, increments Period if it is less than MaxPeriod, and returns true.
+            If <see cref="M:Au.WaitFor.Loop.IsTimeout"/> returns true, returns false.
+            Else sleeps for <see cref="P:Au.WaitFor.Loop.Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="P:Au.WaitFor.Loop.MaxPeriod"/>, and returns true.
             </summary>
+            <exception cref="T:System.TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.WaitFor.Condition(System.Double,System.Func{System.Object,System.Boolean},System.Object,System.Int32,System.Int32)">
             <summary>
@@ -13307,10 +13898,10 @@
             </param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
             <param name="param">Something to pass to the callback function.</param>
-            <param name="minPeriod">The initial period of calling the callback function, in milliseconds.</param>
-            <param name="maxPeriod">The maximal period of calling the callback function, in milliseconds. The period is incremented by 1 millisecond in each loop until it reaches maxPeriod. It gives a good response time initially, and small CPU usage after some time.</param>
+            <param name="initPeriod">The initial period of calling the callback function, milliseconds. Default 10.</param>
+            <param name="maxPeriod">The maximal period of calling the callback function, milliseconds. Default 500. The period is incremented by 1 millisecond in each loop until it reaches <paramref name="maxPeriod"/>. It gives a good response time initially, and small CPU usage after some time.</param>
             <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
-            <exception cref="T:System.ArgumentException">minPeriod &lt; 1 or maxPeriod &lt; minPeriod.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="initPeriod"/> &lt; 1 or <paramref name="maxPeriod"/> &lt; <paramref name="initPeriod"/>.</exception>
             <exception cref="T:System.Exception">Exceptions thrown by the condition callback function.</exception>
         </member>
         <member name="M:Au.WaitFor.NoModifierKeys(System.Double,Au.Types.KMod)">

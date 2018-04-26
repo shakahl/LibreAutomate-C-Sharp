@@ -122,7 +122,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
 		public static Wnd WindowExists(Wnd.Finder f, double secondsTimeout = 0.0, bool not = false)
 		{
-			var to = new LibTimeout(secondsTimeout);
+			var to = new Loop(secondsTimeout);
 			if(not) {
 				Wnd w = default;
 				for(;;) {
@@ -196,7 +196,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
 		public static Wnd WindowActive(Wnd.Finder f, double secondsTimeout = 0.0, bool not = false)
 		{
-			var to = new LibTimeout(secondsTimeout);
+			var to = new Loop(secondsTimeout);
 			for(;;) {
 				Wnd w = Wnd.WndActive;
 				if(not) {
@@ -344,7 +344,7 @@ namespace Au
 		public static bool WindowCondition(Wnd w, Func<Wnd, bool> condition, double secondsTimeout = 0.0, bool doNotThrowIfClosed = false)
 		{
 			bool wasInvalid = false;
-			var to = new LibTimeout(secondsTimeout);
+			var to = new Loop(secondsTimeout);
 			for(;;) {
 				if(!doNotThrowIfClosed) w.ThrowIfInvalid();
 				if(condition(w)) return true;

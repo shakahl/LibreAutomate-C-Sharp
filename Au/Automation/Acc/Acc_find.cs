@@ -230,7 +230,7 @@ namespace Au
 
 				var ap = new Cpp.Cpp_AccParams(_role, _name, _prop, flags, _skip, _resultProp);
 
-				var to = new WaitFor.LibTimeout(secondsTimeout, inProc ? 20 : 100, inProc ? 200 : 1000);
+				var to = new WaitFor.Loop(secondsTimeout, inProc ? 20 : 100, inProc ? 200 : 1000);
 				for(bool doneUAC = false, doneThread = false; ;) {
 					var hr = Cpp.Cpp_AccFind(w, aParent, ref ap, _callback, out var ca, out var sResult);
 

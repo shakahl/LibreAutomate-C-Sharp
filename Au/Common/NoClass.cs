@@ -41,6 +41,7 @@ namespace Au
 			Output.Write(value);
 			//note: need this overload. Cannot use Write(object) for strings because string is IEnumerable<char> and we have overload with IEnumerable<T>.
 		}
+		//CONSIDER: PrintColor.
 
 		/// <summary>
 		/// Writes value of any type to the output.
@@ -149,17 +150,17 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
 		/// If a value is null, writes "null".
-		/// If a value is string, escapes it (<see cref="String_.Escape_"/>), limits to 250 characters (<see cref="String_.Limit_"/>) and encloses in "".
 		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// </remarks>
 		public static void Print(object value1, object value2, params object[] more)
 		{
+			if(more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
 			using(new Util.LibStringBuilder(out var b)) {
-				for(int i = 0, n = 2 + more?.Length ?? 0; i < n; i++) {
+				for(int i = 0, n = 2 + more.Length; i < n; i++) {
 					if(i > 0) b.Append(", ");
 					object v = i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]);
 					switch(v) {
-					case string s: b.Append(s.Escape_(limit: 250, quote: true)); break;
+					case string s: b.Append(s); break;
 					case null: b.Append("null"); break;
 					case uint u: b.Append("0x").Append(u.ToString("X")); break;
 					case ulong u: b.Append("0x").Append(u.ToString("X")); break;
@@ -169,8 +170,15 @@ namespace Au
 					}
 				}
 				Output.Write(b.ToString());
+
+				//rejected: escape strings (eg if contains characters "\r\n,\0"):
+				//	it can damage formatting tags etc;
+				//	the string may be already escaped, eg Wnd.ToString or Acc.ToString;
+				//	we don't know whether the caller wants it;
+				//	let the caller escape it if wants, it's easy.
 			}
 		}
+		static readonly object[] s_oaNull = new object[] { null };
 
 		/// <summary>
 		/// Writes warning text to the output.

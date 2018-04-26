@@ -195,7 +195,10 @@ namespace Au
 			bool _U(char cc1, char cc2) { return u == ((uint)cc1 << 16 | cc2); }
 		}
 
-		static class _Util
+		/// <summary>
+		/// Internal static functions.
+		/// </summary>
+		internal static class Lib
 		{
 			/// <summary>
 			/// If k is ShiftKey, ControlKey, Menu, LWin or RWin, returns it as modifier flag, eg KMod.Shift from Keys.ShiftKey.
@@ -283,9 +286,96 @@ namespace Au
 				Api.SendInput(a, n);
 			}
 
+			/// <summary>
+			/// Releases modifier keys if pressed. Optionally turns off CapsLock if toggled.
+			/// Returns true if was CapsLock.
+			/// Uses options NoModOff and NoCapsOff. Does not call Hook.
+			/// </summary>
+			/// <param name="opt"></param>
+			/// <param name="forClipb">Used for Clipb Ctrl+V/C/X. Ignore CapsLock and always release modifiers, regardless of opt.</param>
+			internal static bool ReleaseModAndCapsLock(KOptions opt, bool forClipb = false)
+			{
+				//note: don't call Hook here, it does not make sense.
+
+				bool R = !forClipb && !opt.NoCapsOff && IsCapsLock;
+				if(R) SendKey(Keys.CapsLock);
+
+				if(forClipb || !opt.NoModOff) {
+					bool isLAlt = IsKeyPressedSyncOrAsync(Keys.LMenu);
+					bool isRAlt = IsKeyPressedSyncOrAsync(Keys.RMenu);
+					bool isLWin = IsKeyPressedSyncOrAsync(Keys.LWin);
+					bool isRWin = IsKeyPressedSyncOrAsync(Keys.RWin);
+					bool isLCtrl = IsKeyPressedSyncOrAsync(Keys.LControlKey);
+					bool isRCtrl = IsKeyPressedSyncOrAsync(Keys.RControlKey);
+					bool menu = (isLAlt || isRAlt || isLWin || isRWin) && !(isLCtrl || isRCtrl);
+					if(menu) SendKey(Keys.ControlKey); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
+					if(isLCtrl) SendCtrl(false);
+					if(isRCtrl) SendRCtrlUp();
+					if(IsKeyPressedSyncOrAsync(Keys.LShiftKey)) SendShift(false);
+					if(IsKeyPressedSyncOrAsync(Keys.RShiftKey)) SendRShiftUp();
+					if(isLAlt) SendAlt(false);
+					if(isRAlt) SendRAltUp();
+					if(isLWin) SendKey(Keys.LWin, 2);
+					if(isRWin) SendKey(Keys.RWin, 2);
+				}
+
+				return R;
+			}
+
 			internal static bool IsKeyPressedSyncOrAsync(Keys k)
 			{
 				return Api.GetKeyState(k) < 0 || Api.GetAsyncKeyState(k) < 0;
+			}
+
+			/// <summary>
+			/// Sends Ctrl+V or Ctrl+C or Ctrl+X, and/or optionally Enter.
+			/// Caller gets opt and wFocus with _GetOptionsAndWndFocused (it may want to know some options too).
+			/// Caller calls Press, waits until the target app gets clipboard data, then calls Release.
+			/// </summary>
+			internal unsafe struct SendCopyPaste
+			{
+				ushort _scan;
+				byte _vk;
+				bool _enter;
+				KOptions _opt;
+
+				/// <summary>
+				/// Presses Ctrl+key. Does not release.
+				/// If enter is true, Release will press Enter.
+				/// </summary>
+				public void Press(Keys key, KOptions opt, Wnd wFocus, bool enter = false)
+				{
+					_scan = VkToSc(_vk = (byte)key, Api.GetKeyboardLayout(wFocus.ThreadId));
+					_enter = enter;
+					_opt = opt;
+
+					SendCtrl(true);
+					Time.Sleep(_LimitSleepTime(Math.Max(opt.TimeKeyPressed, 3))); //to avoid problems with apps like IE address bar
+					SendKeyEventRaw(_vk, _scan, 0);
+				}
+
+				/// <summary>
+				/// Releases keys.
+				/// Does nothing if already released.
+				/// </summary>
+				public void Release()
+				{
+					if(_vk == 0) return;
+
+					SendKeyEventRaw(_vk, _scan, Api.KEYEVENTF_KEYUP);
+					SendCtrl(false);
+					_vk = 0;
+					if(_enter) Enter(_opt);
+				}
+
+				/// <summary>
+				/// Sends Enter.
+				/// </summary>
+				public static void Enter(KOptions opt)
+				{
+					var e = new _KEvent(true, Keys.Enter, 0, 0x1C);
+					_SendKey2(e, default, true, opt);
+				}
 			}
 
 			internal struct INPUTKEY2
@@ -331,7 +421,7 @@ namespace Au
 				wFocus = default;
 				return this;
 			}
-			return _GetOptions(wFocus = _Util.GetWndFocusedOrActive());
+			return _GetOptions(wFocus = Lib.GetWndFocusedOrActive());
 		}
 
 		/// <summary>
@@ -345,45 +435,9 @@ namespace Au
 			if(wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
 				if(_sstate.options == null) _sstate.options = new KOptions(this); else _sstate.options.ResetOptions();
-				call(new HookData(_sstate.options, wFocus));
+				call(new KOHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;
-		}
-
-		/// <summary>
-		/// Releases modifier keys if pressed. Optionally turns off CapsLock if toggled.
-		/// Returns true if released CapsLock.
-		/// Uses options NoModOff and NoCapsOff. Does not call Hook.
-		/// If pressed Alt or Win, sends Ctrl to avoid menu mode.
-		/// </summary>
-		/// <param name="onlyMod">Ignore CapsLock.</param>
-		bool _ReleaseModAndCapsLock(bool onlyMod = false)
-		{
-			//note: don't call Hook here, it does not make sense.
-
-			bool R = !onlyMod && !base.NoCapsOff && IsCapsLock;
-			if(R) _Util.SendKey(Keys.CapsLock);
-
-			if(!base.NoModOff) {
-				bool isLAlt = _Util.IsKeyPressedSyncOrAsync(Keys.LMenu);
-				bool isRAlt = _Util.IsKeyPressedSyncOrAsync(Keys.RMenu);
-				bool isLWin = _Util.IsKeyPressedSyncOrAsync(Keys.LWin);
-				bool isRWin = _Util.IsKeyPressedSyncOrAsync(Keys.RWin);
-				bool isLCtrl = _Util.IsKeyPressedSyncOrAsync(Keys.LControlKey);
-				bool isRCtrl = _Util.IsKeyPressedSyncOrAsync(Keys.RControlKey);
-				bool menu = (isLAlt || isRAlt || isLWin || isRWin) && !(isLCtrl || isRCtrl);
-				if(menu) _Util.SendKey(Keys.ControlKey); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
-				if(isLCtrl) _Util.SendCtrl(false);
-				if(isRCtrl) _Util.SendRCtrlUp();
-				if(_Util.IsKeyPressedSyncOrAsync(Keys.LShiftKey)) _Util.SendShift(false);
-				if(_Util.IsKeyPressedSyncOrAsync(Keys.RShiftKey)) _Util.SendRShiftUp();
-				if(isLAlt) _Util.SendAlt(false);
-				if(isRAlt) _Util.SendRAltUp();
-				if(isLWin) _Util.SendKey(Keys.LWin, 2);
-				if(isRWin) _Util.SendKey(Keys.RWin, 2);
-			}
-
-			return R;
 		}
 
 		void _ThrowIfSending()

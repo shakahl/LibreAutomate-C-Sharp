@@ -35,15 +35,12 @@ namespace Au.Util
 			using(new Util.LibEnsureWindowsFormsSynchronizationContext(true)) {
 				_loopEndEvent = Api.CreateEvent(default, true, false, null);
 				try {
-					Application.DoEvents(); //info: with Time.DoEvents something does not work, don't remember.
+					Application.DoEvents(); //info: with Time.DoEvents something does not work, don't remember, maybe AuMenu.
 
 					for(; ; ) {
-						//this would not respond to Thread.Abort
-						//uint k = Api.MsgWaitForMultipleObjectsEx(1, ref _loopEndEvent, Api.INFINITE, Api.QS_ALLINPUT);
-						//this responds to Thread.Abort
 						var ev =_loopEndEvent;
-						uint k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT);
-						if(k == Api.WAIT_TIMEOUT) continue;
+						uint k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
+						if(k == Api.WAIT_TIMEOUT) continue; //we don't use INFINITE, because then does not respond to Thread.Abort
 
 						Application.DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.

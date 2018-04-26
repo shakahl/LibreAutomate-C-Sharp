@@ -591,6 +591,10 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 
+		internal const uint GMEM_FIXED = 0x0;
+		internal const uint GMEM_MOVEABLE = 0x2;
+		internal const uint GMEM_ZEROINIT = 0x40;
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr GlobalAlloc(uint uFlags, LPARAM dwBytes);
 
@@ -598,7 +602,7 @@ namespace Au.Types
 		internal static extern IntPtr GlobalFree(IntPtr hMem);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern void* GlobalLock(IntPtr hMem);
+		internal static extern IntPtr GlobalLock(IntPtr hMem);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GlobalUnlock(IntPtr hMem);

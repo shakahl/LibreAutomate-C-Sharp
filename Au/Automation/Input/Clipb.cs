@@ -24,147 +24,651 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// This class contains functions to get and set clipboard text using non-OLE API.
+	/// Clipboard functions: copy, paste, get and set clipboard text and other data.
 	/// </summary>
 	/// <remarks>
-	/// Unlike the .NET <see cref="Clipboard"/> class, works in any thread (don't need STA). Also, don't need to process Windows messages while waiting.
+	/// This class is similar to the .NET <see cref="Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
+	/// To set/get clipboard data of non-text formats, use class <see cref="Data"/>; to paste, use it with <see cref="PasteData"/>; to copy (get from the active app), use it with <see cref="CopyData"/>.
 	/// </remarks>
-	public static unsafe class Clipb
+	public static partial class Clipb
 	{
-		/// <summary>
-		/// Gets text from the clipboard.
-		/// Returns null if there is no text in the clipboard.
-		/// </summary>
-		/// <exception cref="AuException">Failed to open clipboard. Throws after 10 s of wait/retry.</exception>
-		public static string GetText()
-		{
-			using(new _Clipb(false)) {
-				var h = Api.GetClipboardData(13); //CF_UNICODETEXT
-				if(h == default) return null;
-				var v = (char*)Api.GlobalLock(h);
-				if(v == null) return null;
-				try {
-					int len = Api.GlobalSize(h);
-					if(len < 2 || (len & 1) != 0) return null;
-					len /= 2; if(v[len - 1] == '\0') len--;
-					return new string(v, 0, len);
-				}
-				finally { Api.GlobalUnlock(h); }
-			}
-		}
-
-		/// <summary>
-		/// Puts text in the clipboard.
-		/// </summary>
-		/// <param name="text">Text. If null, clears the clipboard.</param>
-		/// <exception cref="AuException">
-		/// Failed to open clipboard. Throws after 10 s of wait/retry.
-		/// Or failed to set clipboard data. Unlikely.
-		/// </exception>
-		/// <exception cref="OutOfMemoryException">Failed to allocate memory.</exception>
-		public static void SetText(string text)
-		{
-			using(new _Clipb(true)) {
-				if(text == null) return;
-				var h =_StringToClipData(text);
-				if(default == Api.SetClipboardData(13, h)) {
-					int ec = Native.GetError();
-					Api.GlobalFree(h);
-					throw new AuException(ec, "set clipboard data");
-				}
-			}
-		}
-
 		/// <summary>
 		/// Clears the clipboard.
 		/// </summary>
-		/// <exception cref="AuException">Failed to open clipboard. Throws after 10 s of wait/retry.</exception>
-		public static void Clear() => SetText(null);
+		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+		public static void Clear()
+		{
+			using(new _OpenClipboard(false)) _EmptyClipboard();
+		}
+
+		static void _EmptyClipboard()
+		{
+			if(!Api.EmptyClipboard()) Debug.Assert(false);
+		}
+
+		/// <summary>
+		/// Gets or sets clipboard text.
+		/// </summary>
+		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
+		/// <exception cref="OutOfMemoryException">The 'set' function failed to allocate memory.</exception>
+		/// <remarks>
+		/// The 'get' function calls <see cref="Data.GetText"/>. Also can get file paths, as multiline text. Returns null if there is no text/files.
+		/// </remarks>
+		/// <seealso cref="Clipb.Data"/>
+		public static string Text
+		{
+			get => Data.GetText(0);
+			set
+			{
+				using(new _OpenClipboard(true)) {
+					_EmptyClipboard();
+					if(value != null) Data.LibSetText(value);
+				}
+			}
+		}
+
+		//Sets text (string) or multi-format data (Data). Clipboard must be open.
+		static void _SetClipboard(object data, bool renderLater)
+		{
+			switch(data) {
+			case Data d:
+				d.SetOpenClipboard(renderLater);
+				break;
+			case string s:
+				if(renderLater) Api.SetClipboardData(Api.CF_UNICODETEXT, default);
+				else Data.LibSetText(s);
+				break;
+			}
+		}
+
+		/// <summary>
+		/// Calls API SetClipboardData("Clipboard Viewer Ignore"). Clipboard must be open.
+		/// Then clipboard manager/viewer/etc programs that are aware of this convention don't try to get our clipboard data while we are pasting.
+		/// Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't.
+		/// </summary>
+		static void _SetClipboardData_ClipboardViewerIgnore()
+		{
+			Api.SetClipboardData(ClipFormats.ClipboardViewerIgnore, Api.GlobalAlloc(Api.GMEM_MOVEABLE | Api.GMEM_ZEROINIT, 1));
+			//tested: hMem cannot be default(IntPtr) or 0 bytes.
+		}
+
+		/// <summary>
+		/// Gets the selected text from the focused app using the clipboard.
+		/// </summary>
+		/// <param name="cut">Use Ctrl+X.</param>
+		/// <param name="options">
+		/// Options. If null (default), uses <see cref="Keyb.Options"/>.
+		/// Uses <see cref="KOptions.RestoreClipboard"/>, <see cref="KOptions.NoBlockInput"/>, <see cref="KOptions.TimeKeyPressed"/> (only after Ctrl). Does not use <see cref="KOptions.Hook"/>.
+		/// </param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Also can get file paths, as multiline text.
+		/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
+		/// Fails (exception) if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
+		/// Works with console windows too, even if they don't support Ctrl+C.
+		/// </remarks>
+		public static string CopyText(bool cut = false, KOptions options = null)
+		{
+			return _Copy(cut, options, null);
+			//rejected: 'format' parameter. Not useful.
+		}
+
+		/// <summary>
+		/// Gets data of any formats from the focused app using the clipboard and a callback function.
+		/// </summary>
+		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="Data"/> class or the .NET <see cref="Clipboard"/> class. Don't call copy/paste functions.</param>
+		/// <param name="cut">Use Ctrl+X.</param>
+		/// <param name="options"><inheritdoc cref="CopyText"/></param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="Exception">Exceptions thrown by the callback function.</exception>
+		/// <remarks>
+		/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
+		/// Fails (exception) if the focused app does not set clipboard data.
+		/// Works with console windows too, even if they don't support Ctrl+C.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// string text = null; Bitmap image = null; string[] files = null;
+		/// Clipb.CopyData(() => { text = Clipb.Data.GetText(); image = Clipb.Data.GetImage(); files = Clipb.Data.GetFiles(); });
+		/// if(text == null) Print("no text in clipboard"); else Print(text);
+		/// if(image == null) Print("no image in clipboard"); else Print(image.Size);
+		/// if(files == null) Print("no files in clipboard"); else Print(files);
+		/// ]]></code>
+		/// </example>
+		public static void CopyData(Action callback, bool cut = false, KOptions options = null)
+		{
+			if(callback == null) throw new ArgumentNullException();
+			_Copy(cut, options, callback);
+		}
+
+		static string _Copy(bool cut, KOptions options, Action callback)
+		{
+			string R = null;
+			var opt = options ?? Keyb.Options;
+			bool restore = opt.RestoreClipboard;
+			_ClipboardListener listener = null;
+			var bi = new BlockUserInput() { ResendBlockedKeys = true };
+			var oc = new _OpenClipboard(createOwner: true, noOpenNow: !restore);
+			try {
+				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
+				Keyb.Lib.ReleaseModAndCapsLock(opt, forClipb: true);
+
+				var save = new _SaveRestore();
+				if(restore) {
+					save.Save();
+					oc.Close(false); //close clipboard; don't destroy our clipboard owner window
+				}
+
+				Wnd wFocus = Keyb.Lib.GetWndFocusedOrActive();
+				listener = new _ClipboardListener(false, null, oc.WndClipOwner, wFocus);
+
+				if(!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AuException();
+				var ctrlC = new Keyb.Lib.SendCopyPaste();
+				try {
+					if(wFocus.IsConsole) {
+						wFocus.Post(Api.WM_SYSCOMMAND, 65520);
+						//system menu -> &Edit -> &Copy; tested on all OS; Windows 10 supports Ctrl+C, but it may be disabled.
+					} else {
+						ctrlC.Press(cut ? Keys.X : Keys.C, opt, wFocus);
+					}
+
+					//wait until the app sets clipboard text
+					listener.Wait(ref ctrlC);
+				}
+				finally {
+					ctrlC.Release();
+					Api.RemoveClipboardFormatListener(oc.WndClipOwner);
+				}
+
+				wFocus.SendTimeout(500, 0); //workaround: in SharpDevelop and ILSpy (both WPF), API GetClipboardData takes ~1 s. Need to sleep min 10 ms or send message.
+
+				if(callback != null) {
+					callback();
+					if(restore) oc.Reopen();
+				} else {
+					oc.Reopen();
+					R = Data.LibGetText(0);
+				}
+
+				if(restore) save.Restore();
+			}
+			finally {
+				oc.Dispose();
+				bi.Dispose();
+			}
+			GC.KeepAlive(listener);
+			if(R == null && callback == null) throw new AuException("*copy text"); //no text in the clipboard. Probably not a text control; if text control but empty selection, usually throws in Wait, not here, because the target app then does not use the clipboard.
+			return R;
+		}
+
+		/// <summary>
+		/// Pastes text into the focused app using the clipboard.
+		/// </summary>
+		/// <param name="text">Text.</param>
+		/// <param name="options">
+		/// Options. If null (default), uses <see cref="Keyb.Options"/>.
+		/// Uses <see cref="KOptions.RestoreClipboard"/>, <see cref="KOptions.PasteEnter"/>, <see cref="KOptions.NoBlockInput"/>, <see cref="KOptions.TimeKeyPressed"/> (only after Ctrl), <see cref="KOptions.SleepFinally"/>, <see cref="KOptions.Hook"/>.
+		/// </param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Adds to the clipboard, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
+		/// Fails (exception) if nothing gets clipboard data in several seconds.
+		/// Works with console windows too, even if they don't support Ctrl+V.
+		/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a quite big delay.
+		/// </remarks>
+		public static void PasteText(string text, KOptions options = null)
+		{
+			if(Empty(text)) return;
+			_Paste(text, options);
+		}
+
+		/// <summary>
+		/// Pastes data added to a <see cref="Data"/> variable into the focused app using the clipboard.
+		/// </summary>
+		/// <inheritdoc cref="PasteText"/>
+		/// <example>
+		/// Paste data of two formats: HTML and text.
+		/// <code><![CDATA[
+		/// Clipb.PasteData(new Clipb.Data().AddHtml("<b>text</b>").AddText("text"));
+		/// ]]></code>
+		/// </example>
+		public static void PasteData(Data data, KOptions options = null)
+		{
+			if(data == null) throw new ArgumentNullException();
+			_Paste(data, options);
+		}
+
+		//rejected. Should use some UI-created/saved data containing all three formats.
+		//public static void PasteRichText(string text, string rtf, string html = null, KOptions options = null)
+		//{
+		//	var a = new List<(int, object)>();
+		//	if(!Empty(text)) a.Add((0, text));
+		//	if(!Empty(rtf)) a.Add((Lib.RtfFormat, rtf));
+		//	if(!Empty(html)) a.Add((Lib.HtmlFormat, html));
+		//	if(a.Count == 0) return;
+		//	_Paste(a, options);
+		//}
+
+		static void _Paste(object data, KOptions options = null)
+		{
+			var wFocus = Keyb.Lib.GetWndFocusedOrActive();
+			var opt = options ?? Keyb.Options;
+			var bi = new BlockUserInput() { ResendBlockedKeys = true };
+			try {
+				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
+				Keyb.Lib.ReleaseModAndCapsLock(opt, forClipb: true);
+				opt = opt.LibGetHookOptionsOrThis(wFocus);
+				LibPaste(data, opt, wFocus);
+			}
+			finally {
+				bi.Dispose();
+			}
+
+			int sleepFinally = opt.SleepFinally;
+			if(sleepFinally > 0) Time.Sleep(sleepFinally);
+		}
+
+		/// <summary>
+		/// Used by Clipb and Keyb.
+		/// The caller should block user input (if need), release modifier keys, get opt/wFocus, sleep finally (if need).
+		/// </summary>
+		/// <param name="data">string or Data.</param>
+		/// <param name="opt"></param>
+		/// <param name="wFocus"></param>
+		internal static void LibPaste(object data, KOptions opt, Wnd wFocus)
+		{
+			bool isConsole = wFocus.IsConsole, enter = false;
+
+			if(opt.PasteEnter) {
+				string s = data as string;
+				if(enter = s != null && s.EndsWith_('\n') && !isConsole) {
+					s = s.Remove(s.Length - (s.EndsWith_("\r\n") ? 2 : 1));
+					if(s.Length == 0) {
+						Keyb.Lib.SendCopyPaste.Enter(opt);
+						return;
+					}
+					data = s;
+					//rejected: alternative workaround - convert to RTF.
+					//	It works in Word, WordPad, OO, LO.
+					//	But then eg Word for it uses default formatting instead of current formatting.
+					//	Also some apps may not fully support our RTF and add different text, eg '?' for non-ASCII chars.
+				}
+			}
+
+			bool sync = true;
+			_ClipboardListener listener = null;
+			using(var oc = new _OpenClipboard(true)) {
+
+				bool restore = opt.RestoreClipboard;
+				var save = new _SaveRestore();
+				if(restore) save.Save();
+
+				_EmptyClipboard();
+				_SetClipboardData_ClipboardViewerIgnore();
+				_SetClipboard(data, renderLater: sync);
+				oc.Close(false); //close clipboard; don't destroy our clipboard owner window
+				if(sync) listener = new _ClipboardListener(true, data, oc.WndClipOwner, wFocus);
+				//info:
+				//	oc ctor creates a temporary message-only clipboard owner window. Its wndproc initially is DefWindowProc.
+				//	listener ctor subclasses it. Its wndproc receives WM_RENDERFORMAT which sets clipboard data etc.
+
+				var ctrlV = new Keyb.Lib.SendCopyPaste();
+				try {
+					if(isConsole) {
+						wFocus.Post(Api.WM_SYSCOMMAND, 65521);
+						//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it may be disabled.
+					} else {
+						ctrlV.Press(Keys.V, opt, wFocus, enter);
+					}
+
+					//wait if the app slowly gets clipboard text
+					if(sync) {
+						listener.Wait(ref ctrlV);
+						if(listener.FailedToSetData != null) throw new AuException(listener.FailedToSetData.Message);
+						if(listener.IsBadWindow) sync = false;
+					}
+					if(!sync) {
+						Time.Sleep(opt.TimeKeyPressed + 3);
+					}
+				}
+				finally {
+					ctrlV.Release();
+				}
+
+				//CONSIDER: KOptions.TimePasteSync. Or use SleepFinally here, not after.
+				for(int i = 0, n = sync ? 3 : 20; i < n; i++) { //see comments below about Dreamweaver
+					wFocus.SendTimeout(1000, 0, flags: 0);
+					Time.Sleep(i + 3);
+				}
+
+				if(restore && save.IsSaved && oc.Reopen(true)) save.Restore();
+			}
+			GC.KeepAlive(listener);
+
+			//known problematic apps:
+			//	Dreamweaver: first time after starting DW, if several Paste called in loop, the first pasted text if of the second Paste. Workaround: two wFocus.SendTimeout(1000, 0);.
+		}
+
+		/// <summary>
+		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
+		/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
+		/// </summary>
+		class _ClipboardListener
+		{
+			bool _paste; //true if used for paste, false if for copy
+			object _data; //string or Data. null if !_paste.
+			Native.WNDPROC _wndProc;
+			//Wnd _wPrevClipViewer;
+			Wnd _wFocus;
+
+			/// <summary>
+			/// The clipboard message has been received. Probably the target window responded to the Ctrl+C or Ctrl+V.
+			/// On Paste it is unreliable because of clipboard viewers/managers/etc. The caller also must check IsBadWindow.
+			/// </summary>
+			public bool Success;
+
+			/// <summary>
+			/// On Paste, true if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
+			/// Not used on Copy.
+			/// </summary>
+			public bool IsBadWindow;
+
+			/// <summary>
+			/// Exception thrown/catched when failed to set clipboard data.
+			/// </summary>
+			public Exception FailedToSetData;
+
+			/// <summary>
+			/// Subclasses clipOwner.
+			/// </summary>
+			/// <param name="paste">true if used for paste, false if for copy.</param>
+			/// <param name="data">If used for paste, can be string containing Unicode text or int/string dictionary containing clipboard format/data.</param>
+			/// <param name="clipOwner">Our clipboard owner window.</param>
+			/// <param name="wFocus">The target control or window.</param>
+			public _ClipboardListener(bool paste, object data, Wnd clipOwner, Wnd wFocus)
+			{
+				_paste = paste;
+				_data = data;
+				_wndProc = _WndProc;
+				_wFocus = wFocus;
+				clipOwner.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
+
+				//rejected: use SetClipboardViewer to block clipboard managers/viewers/etc. This was used in QM2.
+				//	Nowadays most such programs don't use SetClipboardViewer. Probably they use AddClipboardFormatListener.
+				//	known apps that have clipboard viewer installed with SetClipboardViewer:
+				//		OpenOffice, LibreOffice: tested Writer, Calc.
+				//		VLC: after first Paste.
+				//_wPrevClipViewer = Api.SetClipboardViewer(clipOwner);
+				//Print(_wPrevClipViewer);
+			}
+
+			/// <summary>
+			/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
+			/// Throws AuException on timeout (3 s normally, 28 s if the target window is hung).
+			/// </summary>
+			/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
+			public void Wait(ref Keyb.Lib.SendCopyPaste ctrlKey)
+			{
+				//Print(Success); //on Paste often already true, because SendInput dispatches sent messages
+				for(int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.
+					Time.SleepDoEvents(500, ref Success, qsSendmessage: _paste); //note: qsSendmessage must be false on Copy, because WM_CLIPBOARDUPDATE is posted, not sent
+					if(Success) break;
+					//is hung?
+					if(--n == 0) throw new AuException(_paste ? "*paste" : "*copy");
+					ctrlKey.Release();
+					_wFocus.SendTimeout(5000, 0, flags: 0);
+				}
+			}
+
+			LPARAM _WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+			{
+				//Wnd.Misc.PrintMsg(w, message, wParam, lParam);
+
+				switch(message) {
+				//case Api.WM_DESTROY:
+				//	Api.ChangeClipboardChain(w, _wPrevClipViewer);
+				//	break;
+				case Api.WM_RENDERFORMAT:
+					if(_paste && !Success) {
+						IsBadWindow = !_IsTargetWindow();
+
+						//note: need to set clipboard data even if bad window.
+						//	Else the clipboard program may retry in loop. Eg Ditto. Then often pasting fails.
+						//	If IsBadWindow, we'll then sleep briefly.
+						//	Clipboard programs get clipboard data with a delay. Eg Ditto default is 100 ms and can be changed. Therefore usually they don't interfere, unless the target app is very slow.
+						//	Also, after setting clipboard data we cannot wait for good window, because we'll not receive second WM_RENDERFORMAT.
+
+						try { _SetClipboard(_data, false); }
+						catch(Exception ex) { FailedToSetData = ex; } //cannot throw in wndproc, will throw later
+						Success = true;
+					}
+					return 0;
+				case Api.WM_CLIPBOARDUPDATE:
+					//this message was added in Vista. It is posted, not sent. Once, not for each format. QM2 used SetClipboardViewer/WM_DRAWCLIPBOARD.
+					if(!_paste) Success = true;
+					return 0;
+				}
+
+				return Api.DefWindowProc(w, message, wParam, lParam);
+
+				//Returns false if probably not the target app reads from the clipboard. Probably a clipboard viewer/manager/etc.
+				bool _IsTargetWindow()
+				{
+					Wnd wOC = Api.GetOpenClipboardWindow();
+
+					//int color = 0; if(wOC != _wFocus) color = wOC.ProcessId == _wFocus.ProcessId ? 0xFF0000 : 0xFF;
+					//Print($"<><c {color}>{wOC}</c>");
+
+					if(wOC == _wFocus) return true;
+					if(wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
+					if(wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers too, eg Ditto.
+					if(wOC.ProcessName.Equals_("RuntimeBroker", true)) return true; //Edge, Store apps
+
+					//CONSIDER: option to return true for user-known windows. Also show warning or info that includes wOC info.
+
+					Debug_.Print(wOC.ToString());
+					return false;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Opens and closes clipboard using API OpenClipboard and CloseClipboard.
 		/// Constructor tries to open for 10 s, then throws AuException.
-		/// If the 'empty' parameter is true, creates temporary hidden clipboard owner window. Also then calls EmptyClipboard.
+		/// If the 'createOwner' parameter is true, creates temporary message-only clipboard owner window.
+		/// If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
 		/// Dispose() closes clipboard and destroys the owner window.
 		/// </summary>
-		struct _Clipb :IDisposable
+		struct _OpenClipboard :IDisposable
 		{
 			bool _isOpen;
 			Wnd _w;
 
-			public _Clipb(bool empty)
+			public Wnd WndClipOwner => _w;
+
+			public _OpenClipboard(bool createOwner, bool noOpenNow = false)
 			{
 				_isOpen = false;
 				_w = default;
-				if(empty) {
+				if(createOwner) {
 					_w = Wnd.Lib.CreateMessageWindowDefWndProc();
 					//MSDN says, SetClipboardData fails if OpenClipboard called with 0 hwnd. It doesn't, but better use hwnd.
 					//Creating/destroying window is the slowest part of SetText().
 				}
-				var to = new WaitFor.LibTimeout(-10);
+				if(!noOpenNow) Reopen();
+			}
+
+			/// <summary>
+			/// Opens again.
+			/// Must be closed.
+			/// Owner window should be not destroyed; does not create again.
+			/// </summary>
+			/// <param name="noThrow">If fails, return false, no exception. Also then waits 1 s instead of 10 s.</param>
+			/// <exception cref="AuException">Failed to open.</exception>
+			public bool Reopen(bool noThrow = false)
+			{
+				Debug.Assert(!_isOpen);
+				var to = new WaitFor.Loop(noThrow ? -1 : -10, 1);
 				while(!Api.OpenClipboard(_w)) {
 					int ec = Native.GetError();
 					if(!to.Sleep()) {
 						Dispose();
+						if(noThrow) return false;
 						throw new AuException(ec, "*open clipboard");
 					}
 				}
 				_isOpen = true;
-				if(empty) Api.EmptyClipboard();
+				return true;
 			}
 
-			public void Dispose()
+			public void Close(bool destroyOwnerWindow)
 			{
 				if(_isOpen) {
 					Api.CloseClipboard();
 					_isOpen = false;
 				}
-				if(!_w.Is0) {
+				if(destroyOwnerWindow && !_w.Is0) {
 					Api.DestroyWindow(_w);
 					_w = default;
 				}
 			}
+
+			public void Dispose() => Close(true);
 		}
 
 		/// <summary>
-		/// Allocates memory with API GlobalAlloc, copies s to it, and returns the memory handle.
-		/// The handle can be stored in clipboard with API SetClipboardData(CF_UNICODETEXT). Else call API GlobalFree.
+		/// Saves and restores clipboard data.
+		/// Clipboard must be open. Don't need to call EmptyClipboard before Restore.
 		/// </summary>
-		static IntPtr _StringToClipData(string s)
+		struct _SaveRestore
 		{
-			Debug.Assert(s != null);
-			int memSize = (s.Length + 1) * 2;
-			var h = Api.GlobalAlloc(0x2002, memSize); //GMEM_MOVEABLE | GMEM_DDESHARE
-			if(h == default) goto ge;
-			var v = Api.GlobalLock(h);
-			if(v == null) { Api.GlobalFree(h); goto ge; }
+			Dictionary<int, byte[]> _data;
 
-			try { fixed (char* p = s) Buffer.MemoryCopy(p, v, memSize, memSize); }
-			finally { Api.GlobalUnlock(h); }
+			public void Save(bool debug = false)
+			{
+				var p1 = new Perf.Inst(); //will need if debug==true
+				bool allFormats = KOptions.RestoreClipboardAllFormats || debug;
+				string[] exceptFormats = KOptions.RestoreClipboardExceptFormats;
 
-			return h;
-			ge: throw new OutOfMemoryException();
+				for(int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
+					bool skip = false; string name = null;
+					if(!allFormats) {
+						skip = format != Api.CF_UNICODETEXT;
+					} else {
+						//standard, private
+						if(format < Api.CF_MAX) { //standard
+							switch(format) {
+							case Api.CF_OEMTEXT: //synthesized from other text formats
+							case Api.CF_BITMAP: //synthesized from DIB formats
+							case Api.CF_PALETTE: //rare, never mind
+								skip = true;
+								break;
+							case Api.CF_METAFILEPICT:
+							case Api.CF_ENHMETAFILE:
+								skip = true; //never mind, maybe in the future
+								break;
+							}
+						} else if(format < 0xC000) { //CF_OWNERDISPLAY, DSP, GDI, private
+							skip = true; //never mind. Not auto-freed, etc. Rare.
+						} //else registered
+
+						if(!skip && exceptFormats != null && exceptFormats.Length != 0) {
+							name = LibGetFormatName(format);
+							foreach(string s in exceptFormats) if(s.Equals_(name, true)) { skip = true; break; }
+						}
+					}
+
+					if(debug) {
+						if(name == null) name = LibGetFormatName(format);
+						if(skip) Print($"{name,-62}  restore=False");
+						else p1.First();
+						//note: we don't call GetClipboardData for formats in exceptFormats, because the conditions must be like when really saving. Time of GetClipboardData(format2) may depend on whether called GetClipboardData(format1).
+					}
+					if(skip) continue;
+
+					var data = Api.GetClipboardData(format);
+
+					int size = (data == default) ? 0 : (int)Api.GlobalSize(data);
+					if(size == 0 || size > 10 * 1024 * 1024) skip = true;
+					//If data == default, probably the target app did SetClipboardData(NULL) but did not render data on WM_RENDERFORMAT.
+					//	If we try to save/restore, we'll receive WM_RENDERFORMAT too. It can be dangerous.
+
+					if(debug) {
+						p1.Next();
+						Print($"{name,-32}  time={p1.TimeTotal,-8}  size={size,-8}  restore={!skip}");
+						continue;
+					}
+					if(skip) continue;
+
+					var b = Api.GlobalLock(data);
+					Debug.Assert(b != default); if(b == default) continue;
+					try {
+						if(_data == null) _data = new Dictionary<int, byte[]>();
+						var a = new byte[size];
+						Marshal.Copy(b, a, 0, size);
+						_data.Add(format, a);
+					}
+					finally { Api.GlobalUnlock(data); }
+				}
+			}
+
+			public void Restore()
+			{
+				if(_data == null) return;
+				_EmptyClipboard();
+				foreach(var v in _data) {
+					var a = v.Value;
+					var h = Api.GlobalAlloc(Api.GMEM_MOVEABLE, a.Length);
+					var b = Api.GlobalLock(h);
+					if(b != default) {
+						try { Marshal.Copy(a, 0, b, a.Length); } finally { Api.GlobalUnlock(h); }
+						if(default == Api.SetClipboardData(v.Key, h)) b = default;
+					}
+					Debug.Assert(b != default);
+					if(b == default) Api.GlobalFree(h);
+				}
+			}
+
+			public bool IsSaved => _data != null;
+		}
+
+		internal static unsafe string LibGetFormatName(int format)
+		{
+			//registered
+			if(format >= 0xC000) {
+				var b = stackalloc char[300];
+				int len = Api.GetClipboardFormatName(format, b, 300);
+				if(len > 0) return Util.StringCache.LibAdd(b, len);
+			}
+			//standard
+			string s = null;
+			switch(format) { case Api.CF_TEXT: s = "CF_TEXT"; break; case Api.CF_BITMAP: s = "CF_BITMAP"; break; case Api.CF_METAFILEPICT: s = "CF_METAFILEPICT"; break; case Api.CF_SYLK: s = "CF_SYLK"; break; case Api.CF_DIF: s = "CF_DIF"; break; case Api.CF_TIFF: s = "CF_TIFF"; break; case Api.CF_OEMTEXT: s = "CF_OEMTEXT"; break; case Api.CF_DIB: s = "CF_DIB"; break; case Api.CF_PALETTE: s = "CF_PALETTE"; break; case Api.CF_RIFF: s = "CF_RIFF"; break; case Api.CF_WAVE: s = "CF_WAVE"; break; case Api.CF_UNICODETEXT: s = "CF_UNICODETEXT"; break; case Api.CF_ENHMETAFILE: s = "CF_ENHMETAFILE"; break; case Api.CF_HDROP: s = "CF_HDROP"; break; case Api.CF_LOCALE: s = "CF_LOCALE"; break; case Api.CF_DIBV5: s = "CF_DIBV5"; break; }
+			return s ?? format.ToString();
+		}
+
+		internal static void LibPrintClipboard()
+		{
+			Print("---- Clipboard ----");
+			using(var oc = new _OpenClipboard(true)) {
+				Api.GetClipboardData(0); //JIT
+				var save = new _SaveRestore();
+				save.Save(true);
+			}
 		}
 	}
 
-	//TODO: move to Util or somewhere
-	//internal struct LibTempNativeWindow :IDisposable
-	//{
-	//	Wnd _w;
+	public static partial class NoClass
+	{
+		/// <summary>
+		/// Calls <see cref="Clipb.PasteText"/>.
+		/// </summary>
+		/// <inheritdoc cref="Clipb.PasteText"/>
+		public static void Paste(string text) => Clipb.PasteText(text);
 
-	//	public LibTempNativeWindow(Wnd w)
-	//	{
-	//		_w = w;
-	//	}
-
-	//	public static implicit operator Wnd(LibTempNativeWindow w) => w._w;
-
-	//	public void Dispose()
-	//	{
-	//		if(!_w.Is0) {
-	//			Api.DestroyWindow(_w);
-	//			_w = default;
-	//		}
-	//	}
-	//}
+		/// <summary>
+		/// Calls <see cref="Clipb.CopyText"/>.
+		/// </summary>
+		/// <inheritdoc cref="Clipb.CopyText"/>
+		public static string CopyText() => Clipb.CopyText();
+	}
 }

@@ -31,35 +31,32 @@ namespace Au
 
 		/// <summary>
 		/// Gets the number of microseconds elapsed since Windows startup.
-		/// The precision is 1 microsecond.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
-		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
+		/// Independent of computer clock time changes.
 		/// MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
 		/// </remarks>
 		public static long Microseconds => (long)(Stopwatch.GetTimestamp() * _freqMCS);
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup.
-		/// The precision is 1 millisecond.
-		/// See also <see cref="Microseconds"/>.
 		/// </summary>
 		/// <remarks>
-		/// Includes the computer sleep/hibernate time (see also <see cref="MillisecondsWithoutComputerSleepTime"/>). Independent of computer clock time changes.
-		/// Unlike Environment.TickCount, this function is more precise and returns a 64-bit value that will not roll over in 100 years.
+		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
+		/// Similar to <see cref="Environment.TickCount"/>, but more precise (1 ms) and returns a 64-bit value.
+		/// Independent of computer clock time changes.
 		/// </remarks>
 		public static long Milliseconds => (long)(Stopwatch.GetTimestamp() * _freqMS);
 		//public static long Milliseconds => Api.GetTickCount64(); //15 ms precision. On current OS and hardware, QueryPerformanceCounter is reliable and almost as fast.
 
 		/// <summary>
-		/// Gets the number of milliseconds elapsed since Windows startup, not including time the system spends in sleep or hibernation.
-		/// The precision is 1-16 milliseconds.
+		/// Gets the number of milliseconds elapsed since Windows startup, not including the sleep/hibernate time.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
+		/// The precision is 1-16 milliseconds.
 		/// Independent of computer clock time changes.
-		/// This function can be used to implement a timeout in 'wait for' functions, when repeatedly checking a condition.
 		/// </remarks>
 		public static long MillisecondsWithoutComputerSleepTime
 		{
@@ -72,122 +69,128 @@ namespace Au
 		//speed on Win10: GetTickCount64 100%, QueryPerformanceCounter 180%, QueryUnbiasedInterruptTime 130%.
 
 		/// <summary>
-		/// Suspends this thread for the specified amount of time.
-		/// The same as <see cref="Sleep"/>, but uses seconds, not milliseconds.
+		/// Waits <paramref name="timeS"/> seconds.
+		/// The same as <see cref="Sleep"/>, but the time is specified in seconds, not milliseconds.
 		/// </summary>
-		/// <param name="seconds">
-		/// Time to wait, seconds.
-		/// The smallest value is 0.001 (1 ms).
-		/// </param>
-		/// <exception cref="ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		/// <param name="timeS">Time to wait, seconds. The smallest value is 0.001 (1 ms).</param>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeS"/> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
-		/// Does not process events and messages, therefore should not be used in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-		/// If the computer goes to sleep or hibernate during that time, the real time is seconds + the sleep/hibernate time.
+		/// Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM events. Supports APC.
+		/// If the computer goes to sleep or hibernate during that time, the real time is <paramref name="timeS"/> + the sleep/hibernate time.
 		/// Tip: code <c>5.s();</c> is the same as <c>Time.SleepS(5);</c>.
 		/// </remarks>
-		public static void SleepS(double seconds)
+		public static void SleepS(double timeS)
 		{
-			seconds *= 1000.0;
-			if(seconds > int.MaxValue || seconds < 0) throw new ArgumentOutOfRangeException();
-			Sleep((int)seconds);
+			timeS *= 1000.0;
+			if(timeS > int.MaxValue || timeS < 0) throw new ArgumentOutOfRangeException();
+			Sleep((int)timeS);
 		}
 
 		/// <summary>
-		/// Suspends this thread for the specified amount of time.
-		/// The same as <see cref="SleepS"/>, but uses milliseconds, not seconds; and supports Timeout.Infinite.
+		/// Waits <paramref name="timeMS"/> milliseconds.
+		/// The same as <see cref="SleepS"/>, but the time is specified in milliseconds, not seconds; and supports Timeout.Infinite.
 		/// </summary>
-		/// <param name="milliseconds">
-		/// Time to wait, milliseconds.
-		/// If 0, can wait briefly if another busy thread runs on the same logical CPU, which happens not often on modern multi-core CPU.
-		/// Also can be <see cref="Timeout.Infinite"/>.
-		/// </param>
+		/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/>.</param>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
-		/// Does not process events and messages, therefore should not be used with big milliseconds in threads with windows, timers or COM events. Supports asynchronous procedure calls.
-		/// If the computer goes to sleep or hibernate during that time, the real time is milliseconds + the sleep/hibernate time.
+		/// Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM events, unless <paramref name="timeMS"/> is small. Supports APC.
+		/// If the computer goes to sleep or hibernate during that time, the real time is <paramref name="timeMS"/> + the sleep/hibernate time.
 		/// Tip: code <c>50.ms();</c> is the same as <c>Time.Sleep(50);</c>.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
-		public static void Sleep(int milliseconds)
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
+		public static void Sleep(int timeMS)
 		{
-			LibSleepPrecision.LibTempSet1(milliseconds);
-			if(milliseconds < 2000) {
-				Thread.Sleep(milliseconds);
+			LibSleepPrecision.LibTempSet1(timeMS);
+			if(timeMS < 2000) {
+				Thread.Sleep(timeMS);
 			} else { //workaround for Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
 				g1:
 				long t = MillisecondsWithoutComputerSleepTime;
-				Thread.Sleep(milliseconds);
-				t = milliseconds - (MillisecondsWithoutComputerSleepTime - t);
-				if(t >= 500) { milliseconds = (int)t; goto g1; }
+				Thread.Sleep(timeMS);
+				t = timeMS - (MillisecondsWithoutComputerSleepTime - t);
+				if(t >= 500) { timeMS = (int)t; goto g1; }
 			}
 		}
 
 		/// <summary>
-		/// Partially suspends this thread for the specified amount of time, during which processes events and messages.
+		/// Waits <paramref name="timeMS"/> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
 		/// </summary>
-		/// <param name="milliseconds">
-		/// The number of milliseconds to wait.
-		/// The smallest value is 1.
-		/// Also can be <see cref="Timeout.Infinite"/>.
-		/// </param>
+		/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/>.</param>
+		/// <param name="qsSendmessage">Call <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_SENDMESSAGE instead of QS_ALLINPUT.</param>
 		/// <remarks>
-		/// Unlike <see cref="Sleep"/>, this function retrieves and dispatches all Windows messages, including posted (key/mouse input, window paint, timer and other). Also calls event handlers, hook procedures, etc. Supports asynchronous procedure calls.
-		/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>. In some places does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
-		/// In threads without windows and timers usually don't need to process posted messages, but in some cases need to process sent messages, some events, hooks etc. Then you can instead use <see cref="Thread.Join(int)"/>, like <c>Thread.CurrentThread.Join(1000);</c>.
+		/// Unlike <see cref="Sleep"/>, this function retrieves and dispatches Windows messages, calls .NET/COM event handlers, hook procedures, etc. Supports APC.
+		/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. In some places this function does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
+		/// Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>.
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">milliseconds is negative and not Timeout.Infinite.</exception>
-		/// <exception cref="Exception">Any exceptions thrown by functions that are executed while waiting (event handlers etc).</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
 		/// <seealso cref="Util.MessageLoop"/>
-		public static unsafe void SleepDoEvents(int milliseconds)
+		public static unsafe void SleepDoEvents(int timeMS, bool qsSendmessage = false)
 		{
-			if(milliseconds == 0) { DoEvents(); return; }
-			if(milliseconds < 0 && milliseconds != Timeout.Infinite) throw new ArgumentOutOfRangeException();
-			LibSleepPrecision.LibTempSet1(milliseconds);
-			for(;;) {
-				long t = 0;
-				int timeSlice = 300; //we call API in loop with small timeout to make it respond to Thread.Abort
-				if(milliseconds > 0) {
-					if(milliseconds < timeSlice) timeSlice = milliseconds;
-					t = MillisecondsWithoutComputerSleepTime;
-				}
-
-				uint k = Api.MsgWaitForMultipleObjectsEx(0, null, (uint)timeSlice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE);
-				//info: k can be 0 (message etc), WAIT_TIMEOUT, WAIT_IO_COMPLETION, WAIT_FAILED.
-				if(k == Api.WAIT_FAILED) throw new Win32Exception(); //unlikely, because not using handles
-				if(k == 0) DoEvents();
-
-				if(milliseconds > 0) {
-					milliseconds -= (int)(MillisecondsWithoutComputerSleepTime - t);
-					if(milliseconds <= 0) break;
-				}
-			}
+			bool _ = false;
+			SleepDoEvents(timeMS, ref _, qsSendmessage);
 		}
 
 		/// <summary>
-		/// Retrieves and dispatches messages from the message queue of current thread.
+		/// The same as <see cref="SleepDoEvents(int, bool)"/>, but also can wait until a variable is set.
 		/// </summary>
-		/// <remarks>
-		/// If this thread has a .NET message loop (<see cref="Application.MessageLoop"/>), calls <see cref="Application.DoEvents"/>.
-		/// Else uses more lightweight API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
-		/// Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>.
-		/// </remarks>
-		/// <exception cref="Exception">Any exceptions thrown by functions that are executed while dispatching messages (event handlers etc).</exception>
-		public static void DoEvents()
+		/// <param name="timeMS"></param>
+		/// <param name="stop">Stop waiting when this variable is set to true. Set it when processing events/messages/etc while waiting.</param>
+		/// <param name="qsSendmessage"></param>
+		/// <inheritdoc cref="SleepDoEvents(int, bool)"/>
+		public static unsafe void SleepDoEvents(int timeMS, ref bool stop, bool qsSendmessage = false)
 		{
-			if(Application.MessageLoop) { //never mind: loads Forms.dll. It's fast.
-				Application.DoEvents();
-			} else {
-				while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
-					//Wnd.Misc.PrintMsg(ref m);
-					if(m.message == Api.WM_QUIT) { Api.PostQuitMessage(m.wParam); return; }
-					Api.TranslateMessage(ref m);
-					Api.DispatchMessage(ref m);
-				}
+			if(stop) return;
+
+			if(timeMS == 0) {
+				_DoEvents(qsSendmessage);
+				return;
 			}
 
-			//info: Could be bool, return false on WM_QUIT. But probably not useful. It seems that WM_QUIT is not used when closing Form.
+			long tEnd = long.MaxValue;
+			if(timeMS > 0) tEnd = MillisecondsWithoutComputerSleepTime + timeMS;
+			else if(timeMS < 0 && timeMS != Timeout.Infinite) throw new ArgumentOutOfRangeException();
+
+			LibSleepPrecision.LibTempSet1(timeMS);
+			while(!stop) {
+				int timeSlice = 300; //call API in loop with small timeout to make it respond to Thread.Abort
+				if(timeMS > 0) {
+					long t = tEnd - MillisecondsWithoutComputerSleepTime;
+					if(t <= 0) break;
+					if(t < timeSlice) timeSlice = (int)t;
+				}
+				uint k = Api.MsgWaitForMultipleObjectsEx(0, null, (uint)timeSlice, qsSendmessage ? Api.QS_SENDMESSAGE : Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
+				//info: k can be 0 (message etc), WAIT_TIMEOUT, WAIT_IO_COMPLETION, WAIT_FAILED.
+				if(k == Api.WAIT_FAILED) throw new Win32Exception(); //unlikely, because not using handles
+				if(k == 0 && !_DoEvents(qsSendmessage)) break;
+			}
+		}
+
+		static bool _DoEvents(bool onlySentMessages)
+		{
+			//note: with PeekMessage don't use |Api.PM_QS_SENDMESSAGE. Then setwineventhook hook does not work. Although eg LL key/mouse hooks work.
+			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
+				//Wnd.Misc.PrintMsg(ref m);
+				if(!onlySentMessages) {
+					if(m.message == Api.WM_QUIT) { Api.PostQuitMessage(m.wParam); return false; }
+					Api.TranslateMessage(ref m);
+				}
+				Api.DispatchMessage(ref m);
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Retrieves and dispatches events and Windows messages from the message queue of this thread.
+		/// </summary>
+		/// <remarks>
+		/// Similar to <see cref="Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
+		/// Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>.
+		/// </remarks>
+		public static void DoEvents()
+		{
+			_DoEvents(false);
 		}
 
 		/// <summary>
@@ -204,21 +207,20 @@ namespace Au
 		/// Dispatches received messages, hook notifications, etc. Uses API PeekMessage/DispatchMessage in loop.
 		/// Allows to abort thread.
 		/// </remarks>
-		internal static unsafe int LibWaitForHandlesAndDispatchSentMessages(int nHandles, IntPtr handle1, IntPtr handle2 = default, IntPtr handle3 = default, IntPtr handle4 = default)
+		internal static unsafe int LibMsgWaitFor(int nHandles, IntPtr handle1, IntPtr handle2 = default, IntPtr handle3 = default, IntPtr handle4 = default)
 		{
 			var ha = stackalloc IntPtr[4];
 			ha[0] = handle1; ha[1] = handle2; ha[2] = handle3; ha[3] = handle4;
 			const uint timeSlice = 300; //we call API in loop with small timeout to make it respond to Thread.Abort
 			for(; ; ) {
-				uint k = Api.MsgWaitForMultipleObjectsEx(nHandles, ha, timeSlice, Api.QS_SENDMESSAGE, Api.MWMO_ALERTABLE);
+				uint k = Api.MsgWaitForMultipleObjectsEx(nHandles, ha, timeSlice, Api.QS_SENDMESSAGE, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
 				if(k == nHandles) { //sent message, hook notification, etc. Note: COM RPC uses postmessage; this func not tested.
-					while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) Api.DispatchMessage(ref m);
+					_DoEvents(true);
 				} else if((k >= 0 && k < nHandles) || (k >= Api.WAIT_ABANDONED_0 && k < Api.WAIT_ABANDONED_0 + nHandles)) {
 					return (int)k;
 				} else if(k == Api.WAIT_FAILED) return -1;
 				//else WAIT_TIMEOUT or WAIT_IO_COMPLETION (APC, aborting thread, etc)
 			}
-			//note: with PeekMessage don't use |Api.PM_QS_SENDMESSAGE. Then setwineventhook hook does not work. Although eg LL key/mouse hooks work.
 		}
 
 		/// <summary>
@@ -247,51 +249,6 @@ namespace Au
 		{
 			Sleep(milliseconds);
 		}
-
-#if false
-		//Don't use. Unfinished.
-		/// <summary>
-		/// Waits Script.Speed milliseconds, or longer if window w is busy.
-		/// Does not wait if window w is of this thread.
-		/// </summary>
-		/// <param name="w">A window.</param>
-		/// <param name="minMS">Minimal time to wait, ms.</param>
-		/// <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
-		public static void AutoDelay(Wnd w, int minMS, int maxMS = 0)
-		{
-			if(w.IsOfThisThread) return;
-
-			int ms = Script.Speed;
-			if(ms < minMS) ms = minMS;
-			if(maxMS > 0 && ms > maxMS) ms = maxMS;
-
-			for(int i = 0, t = 0; t < ms;) {
-				i += 2; t += i; if(t > ms) i -= t - ms;
-				//Print(i);
-				Sleep(i);
-				if(!w.Is0 && !w.SendTimeout(1000, 0)) w = default;
-			}
-		}
-
-		/// <summary>
-		/// Waits Script.Speed milliseconds, or longer if window w is busy.
-		/// Does not wait if window w is of this thread.
-		/// </summary>
-		/// <param name="w">A window.</param>
-		public static void AutoDelay(Wnd w) { AutoDelay(w, 0, 0); }
-
-		/// <summary>
-		/// Waits Script.Speed milliseconds.
-		/// </summary>
-		/// <param name="minMS">Minimal time to wait, ms.</param>
-		/// <param name="maxMS">Maximal time to wait, ms. Does not limit if 0.</param>
-		public static void AutoDelay(int minMS, int maxMS = 0) { AutoDelay(default, minMS, maxMS); }
-
-		/// <summary>
-		/// Waits Script.Speed milliseconds.
-		/// </summary>
-		public static void AutoDelay() { AutoDelay(default, 0, 0); }
-#endif
 
 		/// <summary>
 		/// Temporarily changes the time resolution/precision of Thread.Sleep and some other functions.
@@ -408,7 +365,7 @@ namespace Au
 						ThreadPool.QueueUserWorkItem(endAfterMS2 =>
 						{
 							Thread.Sleep((int)endAfterMS2); //note: don't use captured variables. It somehow creates new garbage all the time.
-							for(;;) {
+							for(; ; ) {
 								int t;
 								lock("2KgpjPxRck+ouUuRC4uBYg") {
 									t = (int)(s_TS1_EndTime - MillisecondsWithoutComputerSleepTime);

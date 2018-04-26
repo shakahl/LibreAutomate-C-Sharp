@@ -169,6 +169,70 @@ static unsafe partial class Test
 		Print("end");
 	}
 
+	class FormDoEvents :Form
+	{
+		public bool stop;
+
+		protected override void OnFormClosing(FormClosingEventArgs e)
+		{
+			Print("closing");
+			stop = true;
+			base.OnFormClosing(e);
+		}
+
+		protected override void WndProc(ref Message m)
+		{
+			//Print(m);
+			base.WndProc(ref m);
+		}
+	}
+
+	static void TestSleep2()
+	{
+		//Print(Time.Milliseconds, Time.MillisecondsWithoutComputerSleepTime);
+
+		//for(int i = 0; i < 5; i++) {
+		//	Perf.First();
+		//	for(var t = Time.Microseconds; Time.Microseconds < t + 300;) { }
+		//	Perf.Next();
+		//	Time.SleepDoEvents(1);
+		//	Perf.Next();
+		//	Perf.Write();
+		//}
+
+		var f = new FormDoEvents();
+		var b = new Button();
+		b.Click += (unu, sed) =>
+		{
+			f.stop = true;
+			//Perf.First();
+			//Time.SleepDoEvents(5000);
+			//Perf.NW();
+		};
+		f.Controls.Add(b);
+		Timer_.After(500, t =>
+		{
+			Perf.First();
+			//Time.SleepDoEvents(5000, true);
+			//Time.SleepDoEvents(5000, ref f.stop);
+
+			//for(var g=Time.Milliseconds; Time.Milliseconds < g+5000; ) {
+			//	//Application.DoEvents();
+			//	Time.DoEvents();
+			//}
+
+			//var m = new Au.Util.MessageLoop();
+			//Timer_.After(1000, ty => m.Stop());
+			//m.Loop();
+
+			Perf.Next();
+			Perf.NW();
+		});
+
+		f.ShowDialog();
+		Print("END");
+	}
+
 	//static void TestSpeedThreadAndTask()
 	//{
 	//	//Perf.SpinCPU(100);
@@ -4761,6 +4825,35 @@ REE`");
 		//PrintListEx(ca, "{s}", 0);
 	}
 
+	//static void TestWaitPrecision()
+	//{
+	//	//Print(Time.LibSleepPrecision.Current);
+	//	//var t = new WaitFor.Loop(-0.1, 1);
+	//	//for(; ; ) {
+	//	//	Perf.First();
+	//	//	if(!t.Sleep()) break;
+	//	//	Perf.NW();
+	//	//}
+
+	//	Print(WaitForMouseLeftButtonDown(3));
+
+	//	//Print(WaitFor.Condition(3, o => Mouse.IsPressed(MouseButtons.Left)));
+	//}
+
+	//static bool WaitForMouseLeftButtonDown(double secondsTimeout)
+	//{
+	//	var x = new WaitFor.Loop(secondsTimeout);
+	//	for(; ; ) {
+	//		if(Mouse.IsPressed(MouseButtons.Left)) return true;
+	//		if(!x.Sleep()) return false;
+	//	}
+	//}
+
+	//static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
+	//{
+	//	return WaitFor.Condition(secondsTimeout, o => Mouse.IsPressed(MouseButtons.Left));
+	//}
+
 	[DllImport("user32.dll")]
 	internal static extern bool GetKeyboardState(sbyte* lpKeyState);
 
@@ -4806,21 +4899,21 @@ REE`");
 	//	w.Focus();
 	//}
 
-	static void TestLibThreadCpuSwitcher()
-	{
-		//Task.Run(() => Perf.SpinCPU(300));
-		//Task.Run(() => Perf.SpinCPU(300));
-		//Task.Run(() => Perf.SpinCPU(300));
-		//Task.Run(() => Perf.SpinCPU(300));
-		10.ms();
-		using(var ts = new LibThreadSwitcher()) {
-			for(int i = 0; i < 15; i++) {
-				Perf.First();
-				if(!ts.Switch()) Print("failed");
-				Perf.NW();
-			}
-		}
-	}
+	//static void TestLibThreadCpuSwitcher()
+	//{
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	10.ms();
+	//	using(var ts = new LibThreadSwitcher()) {
+	//		for(int i = 0; i < 15; i++) {
+	//			Perf.First();
+	//			if(!ts.Switch()) Print("failed");
+	//			Perf.NW();
+	//		}
+	//	}
+	//}
 
 	static void TestBlockUserInput()
 	{
@@ -4986,8 +5079,8 @@ REE`");
 
 	static string _CreateLongText(int len)
 	{
-		var b = new StringBuilder(len+30);
-		while(b.Length<len) {
+		var b = new StringBuilder(len + 30);
+		while(b.Length < len) {
 			if(b.Length > 0) b.Append(' ');
 			b.Append(b.Length);
 		}
@@ -5047,6 +5140,16 @@ REE`");
 		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
 		100.ms();
 
+		//new Keyb(Keyb.Options).AddKeys("Tab Ctrl+V Alt+E+P Alt+(E P) Ctrl+Shift+Left Left*3 Space a , 5 #5 $abc Enter").Send();
+		//new Keyb(Keyb.Options).AddKeys("Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc Enter").AddText("Abc ").Send();
+
+		//Key("ab", 1000, "cd", 2000);
+		//Keyb.Options.TextOption = KTextOption.Keys;
+		//Text("aą2");
+
+		//Key("Alt+Tab", 100, "", "text");
+		//Key("Alt+Tab", "text");
+
 		////Keyb.Options.SleepFinally = 20;
 		//Keyb.Options.TimeKeyPressed = 100;
 		////Key("ab");
@@ -5101,23 +5204,23 @@ REE`");
 		//}
 		//return;
 
-		var b = new Keyb(null);
-		b.SleepFinally = 0;
-		b.TimeKeyPressed = 0;
-		for(int i = 0; i < 5; i++) {
-			Clipb.Clear();
-			20.ms();
-			b.Add("Ctrl+C");
-			//int t = 1;
-			////b.Add("Ctrl*down", 1, "C*down", 1, "C*up", 0, "Ctrl*up");
-			//b.Add("Ctrl*down", 1, "C*down", 1, "Ctrl*up", 0, "C*up");
-			//b.AddKey(Keys.ControlKey).AddKeys("+").AddKey(Keys.A);
-			//Perf.First();
-			b.Send();
-			//Perf.NW();
-			200.ms();
-			Print(Clipb.GetText());
-		}
+		//var b = new Keyb(null);
+		//b.SleepFinally = 0;
+		//b.TimeKeyPressed = 0;
+		//for(int i = 0; i < 5; i++) {
+		//	Clipb.Clear();
+		//	20.ms();
+		//	b.Add("Ctrl+C");
+		//	//int t = 1;
+		//	////b.Add("Ctrl*down", 1, "C*down", 1, "C*up", 0, "Ctrl*up");
+		//	//b.Add("Ctrl*down", 1, "C*down", 1, "Ctrl*up", 0, "C*up");
+		//	//b.AddKey(Keys.ControlKey).AddKeys("+").AddKey(Keys.A);
+		//	//Perf.First();
+		//	b.Send();
+		//	//Perf.NW();
+		//	200.ms();
+		//	Print(Clipb.GetText());
+		//}
 		Print("END");
 
 		//Keyb.Options.TimeKeyPressed = 1;
@@ -5145,7 +5248,7 @@ REE`");
 		//x.Add("abc Space", actNotepad, "some text", actQm, "Enter");
 		//x.Add("abc Space", "some text", 1d, "Enter", 2.5);
 		//x.AddText("a"); x.AddText("b"); x.AddText("c");
-		x.AddText("a"); x.AddCallback(()=>Print(1)); x.AddText("c");
+		x.AddText("a"); x.AddCallback(() => Print(1)); x.AddText("c");
 		//x.Add("Alt+Tab");
 		//x.Add("Ctrl+S a", 1000, "Esc*2");
 		Perf.First();
@@ -5262,12 +5365,12 @@ REE`");
 
 	static void TestClipb()
 	{
-		Clipb.SetText("qwe");
+		//Clipb.SetText("qwe");
 
-		var s = Clipb.GetText();
-		Print((object)s);
-		
-		
+		//var s = Clipb.GetText();
+		//Print((object)s);
+
+
 		//Perf.SpinCPU(100);
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	Perf.First();
@@ -5276,6 +5379,300 @@ REE`");
 		//	Print((object)s);
 		//	100.ms();
 		//}
+
+	}
+
+	static void TestPaste()
+	{
+		var wa = Wnd.WndActive;
+		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		100.ms();
+
+		Keyb.Options.TextOption = KTextOption.Paste;
+		Keyb.Options.PasteEnter = true;
+		Keyb.Options.SleepFinally = 0;
+		//Keyb.Options.RestoreClipboard = true;
+		KOptions.RestoreClipboardAllFormats = true;
+		//KOptions.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
+
+		//Keyb.Options.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	o.opt.PasteEnter = true;
+		//};
+
+		//Text("a\r\n");
+		//return;
+
+		var a = new string[] { "One ", "Two ", "Three\r\n", };
+		//var a = new string[] { "One\r\n", "Two\r\n", "Three\r\n", };
+		Perf.First();
+		for(int i = 0; i < a.Length; i++) {
+			//Paste("Paste\r\n");
+			//Paste(a[i]);
+			Text(a[i]);
+			Perf.Next();
+			//100.ms();
+			//Wnd.WndFocused.Send(0);
+			//Perf.Next();
+			//break;
+		}
+		Perf.Write();
+
+		//Paste("Paste\r\n");
+		//Text("Text\r\n");
+		//Paste("Text\r\n", "Tab keys");
+		//Text("Text\r\n", "Tab keys");
+		//Key("a");
+		Print("END");
+	}
+
+	static void TestCopy()
+	{
+		//Api.OpenClipboard(default);
+		//for(int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
+		//	Print(Clipb.LibGetFormatName(format));
+		//}
+		//Api.CloseClipboard();
+		//return;
+
+		//Print(Clipb.GetText());
+		//return;
+
+		var wa = Wnd.WndActive;
+		//if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		100.ms();
+
+		//Keyb.Options.SleepFinally = 0;
+		//Keyb.Options.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	o.opt.PasteEnter = true;
+		//};
+
+		//Text("a\r\n");
+		//return;
+
+		//Keyb.Options.RestoreClipboard = false;
+		KOptions.RestoreClipboardAllFormats = true;
+		//KOptions.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
+
+		//KOptions.PrintClipboard();
+		////return;
+		//Print("---");
+
+		//for(int i = 0; i < 1; i++) {
+		//	Perf.First();
+		//	var s = Clipb.CopyText();
+		//	Perf.NW();
+		//	Print(s);
+		//	100.ms();
+		//	//break;
+		//}
+
+		//Print("---");
+		//KOptions.PrintClipboard();
+		//Print(Clipb.GetText());
+
+		var af = new object[] { 0, 1, 7, 13, "Rich Text Format", "HTML Format", "text/html", "FileName", "FileNameW", "DwHt" };
+		foreach(var v in af) {
+			int f = 0; if(v is int ii) f = ii; else f = ClipFormats.Register(v as string);
+			Clipb.CopyData(() => { var s = Clipb.Data.GetText(f); Print(v, s ?? "<NO>"); });
+		}
+
+		//Print(Clipb.CopyText());
+		//Clipb.CopyData(() => Print(Clipb.GetText()));
+		//Clipb.CopyData(() => Print(Clipboard.GetText()));
+
+		Print("END");
+	}
+
+	static void TestPasteFormat()
+	{
+		//var g = Image.FromFile(@"q:\app\il_qm.bmp");
+		//Clipboard.SetImage(g);
+
+		//return;
+
+		//		var html=@"Version:0.9
+		//StartHTML:00000146
+		//EndHTML:00000281
+		//StartFragment:00000180
+		//EndFragment:00000245
+		//SourceURL:http://www.quickmacros.com/index.html
+		//<html><body>
+		//<!--StartFragment--><a href=""http://www.quickmacros.com/features.html"">Screenshot</a><!--EndFragment-->
+		//</body>
+		//</html>";
+		var html = "<i>italy</i>";
+		html = "[<i>ąčę</i>]";
+		html = "<html><body>[<i>ą č ę</i>]</body></html>";
+		html = "<html><body>[<i>ą č ę</i>]</body></html>";
+
+		//Clipb.SetText("Text");
+		//Clipb.SetData(new(int, object)[] { (0, "Text2") });
+		//Clipb.SetData(new(int, object)[] { (Api.CF_TEXT, "ASCII") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.RtfFormat, @"{\rtf1 rtf\par}"), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.HtmlFormat, html), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.HtmlFormat, html), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.RtfFormat, @"{\rtf1 rtf\par}"), (Clipb.Misc.HtmlFormat, "<html><body>text <a href='http://www.quickmacros.com'>Quick Macros</a> text</body></html>"), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (1, "Text ą č ę") });
+		//Clipb.SetData(new(int, object)[] { (1, ("Text ąčę", Encoding.GetEncoding(1257))) });
+		//Clipb.SetData(new(int, object)[] { (0, g) });
+		//new Clipb.Data().AddText("text").AddImage(g).SetClipboard();
+		//new Clipb.Data().AddCsvTable(new CsvTable("onę,\"t\"\"w\"\"\r\no\"\r\nth     r\tee,<four>")).SetClipboard();
+
+		//Clipb.Paste("text");
+		//Clipb.PasteData(new Clipb.Data().AddText("text2"));
+		//Clipb.PasteData(new Clipb.Data().AddImage(g));
+
+		//var b = WinImage.Capture(new RECT(100, 100, 100, 100, true));
+		//Wnd.Misc.SwitchActiveWindow();
+		//Clipb.PasteData(new Clipb.Data().AddImage(b));
+
+		//	new Clipb.Data().AddFiles(@"C:\Users\G\Documents\Book1.xls", @"C:\Users\G\Documents\dictionary.xls").SetClipboard();
+
+		return;
+
+		var wa = Wnd.WndActive;
+		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		100.ms();
+
+		Keyb.Options.PasteEnter = true;
+		Keyb.Options.SleepFinally = 0;
+		KOptions.RestoreClipboardAllFormats = true;
+
+		//Keyb.Options.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	o.opt.SleepFinally=1000;
+		//};
+
+		Clipb.PasteText("Paste\r\n");
+
+		Print("END");
+	}
+
+	static void TestCreateHtmlFormatData()
+	{
+		Clipb.Data.LibCreateHtmlFormatData("<i>italy</i>");
+		Clipb.Data.LibCreateHtmlFormatData("<html><body><i>italy</i></body></html>");
+		Clipb.Data.LibCreateHtmlFormatData("<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>");
+
+		//Clipb.Data.CreateHtmlFormatData("ac");
+		//Clipb.Data.CreateHtmlFormatData("ač");
+		//Clipb.Data.CreateHtmlFormatData("<html><body><!--StartFragment-->ac<!--EndFragment--></body></html>");
+		//Clipb.Data.CreateHtmlFormatData("<html><body><!--StartFragment-->ač<!--EndFragment--></body></html>");
+		//Clipb.Data.CreateHtmlFormatData("ac<html><body><!--StartFragment-->ac<!--EndFragment--></body></html>");
+		//Clipb.Data.CreateHtmlFormatData("ač<html><body><!--StartFragment-->ač<!--EndFragment--></body></html>");
+	}
+
+	static void TestClipbGetText()
+	{
+		int ubo = ClipFormats.Register("Ubo", Encoding.UTF32);
+
+		//var af = new object[] {0, 1, 7, 13, "Rich Text Format", "HTML Format", "text/html", "FileName", "FileNameW", "DwHt", "Ubo"};
+		//foreach(var v in af) {
+		//	int f = 0; if(v is int ii) f = ii; else f = ClipFormats.Register(v as string);
+		//	var s = Clipb.GetText(f);
+		//	Print(v, s ?? "<NO>");
+		//}
+
+		int th = ClipFormats.Register("text/html");
+		int fn = ClipFormats.Register("FileName", Encoding.Default);
+
+		new Clipb.Data().AddText("text0").AddText("text1", 1).AddText("text7", 7)//.AddText("text13", 13)
+			.AddRtf("rtf").AddHtml("html").AddText("text/html", th).AddText("FileName", fn).AddText("Ubo", ubo)
+			.SetClipboard();
+	}
+
+	static void TestClipbDataGet()
+	{
+		//Print(Clipb.Text);
+		//Clipb.Text = "moo";
+
+		//var b = Clipb.Data.GetImage();
+		//if(b == null) { Print("null"); return; }
+
+		////var f2 = Folders.Temp + "test.png";
+		////b.Save(f2);
+		////Shell.Run(f2);
+
+		//var f = new Form();
+		//var k = new PictureBox();
+		//k.SizeMode = PictureBoxSizeMode.AutoSize;
+		//k.Image = b;
+		//f.Controls.Add(k);
+		//f.ShowDialog();
+
+		//Print(Clipb.Data.GetBinary(1).Length);
+		//Print(Clipb.Data.GetFiles());
+		//Print(Clipb.Data.GetRtf());
+
+		//var s = Clipb.Data.GetHtml(out int fs, out int fl, out string sourceURL); if(s == null) return;
+		//Print(s); Print(fs, fl, sourceURL); Print(s.Substring(fs, fl));
+
+		//		var csv = @"onę 𑀱,""t""""Q"""" 'A'
+		//o""
+		//th     r	ee,<four>";
+		//		var t = new CsvTable(csv);
+		//var s = t.ToHtmlTable();
+
+		//var s = t.ToXml();
+		//Print(s);
+		//var f = ClipFormats.Register("XML Spreadsheet", Encoding.UTF8);
+		//new Clipb.Data().AddText(s, f).SetClipboard();
+
+		//Print(t.ToHtmlTable2());
+		//Print("----");
+		//Print(XmlToHtml(s));
+
+		//new Clipb.Data().AddCsvTable(t).SetClipboard();
+
+		//Clipb.Data.
+		//new Clipb.Data().
+
+	}
+
+	static void TestClipbDataContains()
+	{
+		//Print(Clipb.Data.Contains(ClipFormats.Rtf));
+		//Print(Clipb.Data.Contains(ClipFormats.Rtf, ClipFormats.Text));
+
+		//string text = null; Bitmap image = null; string[] files = null;
+		//Clipb.CopyData(() => { text = Clipb.Data.GetText(); image = Clipb.Data.GetImage(); files = Clipb.Data.GetFiles(); });
+		//if(text == null) Print("no text in clipboard"); else Print(text);
+		//if(image == null) Print("no image in clipboard"); else Print(image.Size);
+		//if(files == null) Print("no files in clipboard"); else Print(files);
+
+		//Clipb.PasteData(new Clipb.Data().AddHtml("<b>text</b>").AddText("text"));
+		//string html = null, text = null;
+		//Clipb.CopyData(() => { html = Clipb.Data.GetHtml(); text = Clipb.Data.GetText(); });
+		//Print(text); Print(html);
+		//var image = Clipb.Data.GetImage();
+		//if(image == null) Print("no image in clipboard"); else Print(image.Size);
+
+	}
+
+	static void TestPrintNoQuot()
+	{
+		//Print("aaa\r\nbbb");
+		//Print("simple", "aaa\r\nbbb", null);
+		Print(new string[] { "simple", "aaa\r\nbbb", null});
+	}
+
+	static void TestKeybFinally()
+	{
+		var wa = Wnd.WndActive;
+		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		100.ms();
+
+		//Key("Tab abc Enter*2 Back");
+
+		//Keyb.Options.PasteEnter = true;
+		//Paste("text\r\n");
+
+		Keyb.Key
 	}
 
 
@@ -5298,9 +5695,20 @@ REE`");
 		try {
 #if true
 
+			TestKeybFinally();
+			//TestPrintNoQuot();
+			//TestClipbDataContains();
+			//TestClipbDataGet();
+			//TestClipbGetText();
+			//TestCopy();
+			//TestCreateHtmlFormatData();
+			//TestPasteFormat();
+			//TestPaste();
+			//TestSleep2();
+			//TestKey();
 			//TestClipb();
 			//TestKeybExamples();
-			TestKey();
+			//TestWaitPrecision();
 			//TestIsKey();
 			//TestGetMod();
 			//TestBlockUserInput();

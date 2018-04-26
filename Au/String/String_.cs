@@ -676,6 +676,17 @@ namespace Au
 			}
 		}
 		//TODO: Unescape
+
+		/// <summary>
+		/// Returns true if this string is "" or contains only ASCII characters.
+		/// </summary>
+		public static bool IsAscii_(this string t)
+		{
+			for(int i = 0; i < t.Length; i++) {
+				if(t[i] > 0x7f) return false;
+			}
+			return true;
+		}
 	}
 
 }

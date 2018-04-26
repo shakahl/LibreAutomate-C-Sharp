@@ -82,10 +82,10 @@
     <Compile Include="Automation\Acc\Acc.cs" />
     <Compile Include="Automation\Input\BlockInput.cs" />
     <Compile Include="Automation\Input\Clipb.cs" />
+    <Compile Include="Automation\Input\Clipb.Data.cs" />
     <Compile Include="Automation\Input\Keyb.cs" />
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />
-    <Compile Include="Automation\Input\Keyb^clip.cs" />
     <Compile Include="Automation\Input\Keyb^util.cs" />
     <Compile Include="Automation\Input\Keyb^misc.cs" />
     <Compile Include="Automation\WinImage.cs" />

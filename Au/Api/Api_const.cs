@@ -638,8 +638,8 @@ namespace Au.Types
 
 		#region WAIT_
 
-		internal const int WAIT_TIMEOUT = 258;
 		internal const uint WAIT_FAILED = 0xFFFFFFFF;
+		internal const int WAIT_TIMEOUT = 0x102;
 		internal const uint WAIT_OBJECT_0 = 0x0;
 		internal const uint WAIT_ABANDONED = 0x80;
 		internal const uint WAIT_ABANDONED_0 = 0x80;
@@ -747,6 +747,37 @@ namespace Au.Types
 
 		#endregion
 
+		#region CF_
+
+		internal const int CF_TEXT = 1;
+		internal const int CF_BITMAP = 2;
+		internal const int CF_METAFILEPICT = 3;
+		internal const int CF_SYLK = 4;
+		internal const int CF_DIF = 5;
+		internal const int CF_TIFF = 6;
+		internal const int CF_OEMTEXT = 7;
+		internal const int CF_DIB = 8;
+		internal const int CF_PALETTE = 9;
+		//internal const int CF_PENDATA = 10; //obsolete
+		internal const int CF_RIFF = 11;
+		internal const int CF_WAVE = 12;
+		internal const int CF_UNICODETEXT = 13;
+		internal const int CF_ENHMETAFILE = 14;
+		internal const int CF_HDROP = 15;
+		internal const int CF_LOCALE = 16;
+		internal const int CF_DIBV5 = 17;
+		internal const int CF_MAX = 18;
+		//internal const int CF_OWNERDISPLAY = 0x80; //these are rare and not supported by this library
+		//internal const int CF_DSPTEXT = 0x81;
+		//internal const int CF_DSPBITMAP = 0x82;
+		//internal const int CF_DSPMETAFILEPICT = 0x83;
+		//internal const int CF_DSPENHMETAFILE = 0x8E;
+		//internal const int CF_PRIVATEFIRST = 0x200;
+		//internal const int CF_PRIVATELAST = 0x2FF;
+		//internal const int CF_GDIOBJFIRST = 0x300;
+		//internal const int CF_GDIOBJLAST = 0x3FF;
+
+		#endregion
 
 		internal const uint INFINITE = 0xFFFFFFFF;
 

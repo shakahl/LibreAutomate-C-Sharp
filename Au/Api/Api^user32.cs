@@ -944,7 +944,7 @@ namespace Au.Types
 		internal const uint MWMO_INPUTAVAILABLE = 0x4;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, uint dwMilliseconds = INFINITE, uint dwWakeMask = QS_ALLINPUT, uint MWMO_Flags = 0);
+		internal static extern uint MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, uint dwMilliseconds, uint dwWakeMask, uint MWMO_Flags);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool EndMenu();
@@ -1060,11 +1060,40 @@ namespace Au.Types
 		internal static extern bool EmptyClipboard();
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+		internal static extern IntPtr SetClipboardData(int uFormat, IntPtr hMem);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr GetClipboardData(uint uFormat);
+		internal static extern IntPtr GetClipboardData(int uFormat);
 
+		//[DllImport("user32.dll", SetLastError = true)]
+		//internal static extern Wnd SetClipboardViewer(Wnd hWndNewViewer);
+
+		//[DllImport("user32.dll")]
+		//internal static extern bool ChangeClipboardChain(Wnd hWndRemove, Wnd hWndNewNext);
+
+		[DllImport("user32.dll")]
+		internal static extern Wnd GetOpenClipboardWindow();
+
+		[DllImport("user32.dll", EntryPoint = "RegisterClipboardFormatW")]
+		internal static extern int RegisterClipboardFormat(string lpszFormat);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool AddClipboardFormatListener(Wnd hwnd);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool RemoveClipboardFormatListener(Wnd hwnd);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern int EnumClipboardFormats(int format);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool IsClipboardFormatAvailable(int format);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern int GetPriorityClipboardFormat(int[] paFormatPriorityList, int cFormats);
+
+		[DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameW", SetLastError = true)]
+		internal static unsafe extern int GetClipboardFormatName(int format, char* lpszFormatName, int cchMaxCount);
 
 	}
 }

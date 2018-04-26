@@ -305,7 +305,7 @@ namespace Au
 		}
 
 		static Server s_localServer; //null if we don't have a local server
-		static _ClientOfGlobalServer s_client = new _ClientOfGlobalServer();
+		static readonly _ClientOfGlobalServer s_client = new _ClientOfGlobalServer();
 
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace
 		static void _WriteToOutputServer(string s)

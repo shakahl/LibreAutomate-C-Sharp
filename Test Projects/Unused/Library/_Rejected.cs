@@ -1,9 +1,34 @@
-﻿//Classes and functions that were (almost) finished, but rejected for some reason. Maybe still can be useful in the future.
+﻿//Classes and functions that were finished or almost finished, but rejected for some reason. Maybe still can be useful in the future.
 //For example, when tried to make faster/better than existing .NET classes/functions, but the result was not fast/good enough.
 
 
 
 
+
+
+
+public static string TextToRTF(string s)
+{
+	if(Empty(s)) return s;
+	var b = new StringBuilder(@"{\rtf1
+			");
+	for(int i = 0; i < s.Length; i++) {
+		char c = s[i];
+		if(c > 0x7f || c == 0) {
+			b.Append(@"\u");
+			b.Append((short)c);
+			b.Append('?');
+		} else if(c == '\r' || c == '\n') {
+			if(c == '\n' && i > 0 && s[i - 1] == '\r') continue;
+			b.AppendLine(@"\par");
+		} else {
+			if(c == '\\' || c == '{' || c == '}') b.Append('\\');
+			b.Append(c);
+		}
+	}
+	b.Append("}");
+	return b.ToString();
+}
 
 
 

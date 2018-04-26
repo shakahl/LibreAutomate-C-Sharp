@@ -150,7 +150,7 @@ namespace Au
 			}
 		}
 
-		static string[] s_roles = { "0", "TITLEBAR", "MENUBAR", "SCROLLBAR", "GRIP", "SOUND", "CURSOR", "CARET", "ALERT", "WINDOW", "CLIENT", "MENUPOPUP", "MENUITEM", "TOOLTIP", "APPLICATION", "DOCUMENT", "PANE", "CHART", "DIALOG", "BORDER", "GROUPING", "SEPARATOR", "TOOLBAR", "STATUSBAR", "TABLE", "COLUMNHEADER", "ROWHEADER", "COLUMN", "ROW", "CELL", "LINK", "HELPBALLOON", "CHARACTER", "LIST", "LISTITEM", "TREE", "TREEITEM", "PAGETAB", "PROPERTYPAGE", "INDICATOR", "IMAGE", "STATICTEXT", "TEXT", "BUTTON", "CHECKBOX", "RADIOBUTTON", "COMBOBOX", "DROPLIST", "PROGRESSBAR", "DIAL", "HOTKEYFIELD", "SLIDER", "SPINBUTTON", "DIAGRAM", "ANIMATION", "EQUATION", "BUTTONDROPDOWN", "BUTTONMENU", "BUTTONDROPDOWNGRID", "WHITESPACE", "PAGETABLIST", "CLOCK", "SPLITBUTTON", "IPADDRESS", "TREEBUTTON" };
+		static readonly string[] s_roles = { "0", "TITLEBAR", "MENUBAR", "SCROLLBAR", "GRIP", "SOUND", "CURSOR", "CARET", "ALERT", "WINDOW", "CLIENT", "MENUPOPUP", "MENUITEM", "TOOLTIP", "APPLICATION", "DOCUMENT", "PANE", "CHART", "DIALOG", "BORDER", "GROUPING", "SEPARATOR", "TOOLBAR", "STATUSBAR", "TABLE", "COLUMNHEADER", "ROWHEADER", "COLUMN", "ROW", "CELL", "LINK", "HELPBALLOON", "CHARACTER", "LIST", "LISTITEM", "TREE", "TREEITEM", "PAGETAB", "PROPERTYPAGE", "INDICATOR", "IMAGE", "STATICTEXT", "TEXT", "BUTTON", "CHECKBOX", "RADIOBUTTON", "COMBOBOX", "DROPLIST", "PROGRESSBAR", "DIAL", "HOTKEYFIELD", "SLIDER", "SPINBUTTON", "DIAGRAM", "ANIMATION", "EQUATION", "BUTTONDROPDOWN", "BUTTONMENU", "BUTTONDROPDOWNGRID", "WHITESPACE", "PAGETABLIST", "CLOCK", "SPLITBUTTON", "IPADDRESS", "TREEBUTTON" };
 
 		//Returns HRESULT.
 		int _GetRole(out AccROLE roleInt, out string roleStr, bool dontNeedStr)
@@ -525,7 +525,7 @@ namespace Au
 			if(action == null) DoAction(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
-			var to = new WaitFor.LibTimeout(secondsTimeout, 25);
+			var to = new WaitFor.Loop(secondsTimeout, 25);
 			while(to.Sleep()) {
 				w.ThrowIfInvalid();
 				if(!wndOK) {
@@ -878,7 +878,7 @@ namespace Au
 			if(secondsToWait == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
-				var to = new WaitFor.LibTimeout(secondsToWait > 0 ? -secondsToWait : 0.0);
+				var to = new WaitFor.Loop(secondsToWait > 0 ? -secondsToWait : 0.0);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 				while(hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}

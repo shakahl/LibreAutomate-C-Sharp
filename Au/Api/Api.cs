@@ -679,6 +679,8 @@ namespace Au.Types
 		[DllImport("shell32.dll", EntryPoint = "SHFileOperationW")]
 		internal static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
 
+		[DllImport("shell32.dll", EntryPoint = "DragQueryFileW")]
+		internal static extern int DragQueryFile(IntPtr hDrop, int iFile, char* lpszFile, uint cch);
 
 
 

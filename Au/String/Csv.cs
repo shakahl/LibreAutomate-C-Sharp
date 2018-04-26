@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -14,6 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Xml.Linq;
 
 using Au.Types;
 using static Au.NoClass;
@@ -459,5 +461,7 @@ namespace Au
 		{
 			return this[row, column].ToDouble_();
 		}
+
+		//rejected: ToXml, ToHtml. Could be pasted in Excel, but need special format, difficult to make fully compatible. OpenOffice supports only HTML.
 	}
 }

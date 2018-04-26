@@ -18,16 +18,13 @@ using System.Drawing;
 using Au.Types;
 using static Au.NoClass;
 
-//CONSIDER:
-//If a mod key is pressed, wait max 5 s, then exception. Or release.
-
 namespace Au
 {
 	/// <summary>
-	/// Sends keys and text to the active window, presses hotkeys, copies/pastes text through the clipboard, gets key states.
+	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
 	/// </summary>
 	/// <remarks>
-	/// Provides static and instance functions. The static functions depend on <see cref="Options"/> or <see cref="StaticOptions"/>. The instance functions can use these options or not.
+	/// The static functions depend on <see cref="Options"/>, which depends on <see cref="StaticOptions"/>. <b>Keyb</b> variables don't depend on it by default.
 	/// Below are examples with the static functions. See also examples in <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb(KOptions)"/>.
 	/// </remarks>
 	/// <example>
@@ -139,7 +136,7 @@ namespace Au
 			public bool plus; //we are between "+" and key or text
 
 			//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
-			public static Regex_ s_rxKeys = new Regex_(@"[A-Z]\w*|#\S|\* *(?:\d+|down|up)\b|[+$]\s*\(|\S");
+			public static readonly Regex_ s_rxKeys = new Regex_(@"[A-Z]\w*|#\S|\* *(?:\d+|down|up)\b|[+$]\s*\(|\S");
 		}
 
 		//This struct is used to separate sending-only fields from other fields.
@@ -160,6 +157,12 @@ namespace Au
 		_KSendingState _sstate; //sending state
 		bool _sending; //while sending, don't allow to add or send
 
+		/// <summary>
+		/// Adds keystrokes to the internal collection. They will be sent by <see cref="Send"/>.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="Key"/>. Can be null or "".</param>
+		/// <exception cref="ArgumentException">Error in <paramref name="keys"/> string, for example an unknown key name.</exception>
 		public Keyb AddKeys(string keys)
 		{
 			_ThrowIfSending();
@@ -252,6 +255,13 @@ namespace Au
 			return this;
 		}
 
+		/// <summary>
+		/// Adds single key, specified as <see cref="Keys"/>, to the internal collection. It will be sent by <see cref="Send"/>.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="key">Virtual-key code.</param>
+		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
+		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
 		public Keyb AddKey(Keys key, bool? down = null)
 		{
 			_ThrowIfSending();
@@ -264,19 +274,16 @@ namespace Au
 			return _AddKey(new _KEvent(isPair, key, f));
 		}
 
-		public Keyb AddScanCode(int scanCode, bool extendedKey, bool? down = null)
-		{
-			_ThrowIfSending();
-			if((uint)scanCode > 0xffff) throw new ArgumentException("Max 0xffff.", nameof(scanCode));
-
-			bool isPair; _KFlags f = _KFlags.Scancode;
-			if(!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
-			if(extendedKey) f |= _KFlags.Extended;
-
-			return _AddKey(new _KEvent(isPair, 0, f, (ushort)scanCode));
-		}
-
-		public Keyb AddRaw(Keys key, int scanCode, bool extendedKey, bool? down = null)
+		/// <summary>
+		/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="Send"/>.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="key">Virtual-key code. Can be 0.</param>
+		/// <param name="scanCode">Scan code of the physical key. Can be 0.</param>
+		/// <param name="extendedKey">true if the key is an extended key.</param>
+		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
+		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
+		public Keyb AddKey(Keys key, int scanCode, bool extendedKey, bool? down = null)
 		{
 			_ThrowIfSending();
 			if((uint)scanCode > 0xffff) throw new ArgumentException("Max 0xffff.", nameof(scanCode));
@@ -305,6 +312,11 @@ namespace Au
 			return _AddKey(new _KEvent(false, (Keys)vk, (_KFlags)(siFlags & 0xf), scan));
 		}
 
+		/// <summary>
+		/// Adds text. It will be sent by <see cref="Send"/>.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="text">Text. Can be null.</param>
 		public Keyb AddText(string text)
 		{
 			_ThrowIfSending();
@@ -336,6 +348,11 @@ namespace Au
 			return _data;
 		}
 
+		/// <summary>
+		/// Adds a callback function. It will be called by <see cref="Send"/>.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="callback"></param>
 		public Keyb AddCallback(Action callback)
 		{
 			_ThrowIfSending();
@@ -343,6 +360,15 @@ namespace Au
 			return _AddKey(new _KEvent(_KType.Callback, _SetData(callback)));
 		}
 
+		/// <summary>
+		/// Adds a repeat-key operator. Then <see cref="Send"/> will send the last added key the specified number of times.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="count">Repeat count.</param>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="count"/> &gt;60000 or &lt;0.
+		/// The last added event is not key. Can repeat only single key. Cannot repeat text etc.
+		/// </exception>
 		public Keyb AddRepeat(int count)
 		{
 			_ThrowIfSending();
@@ -352,6 +378,12 @@ namespace Au
 			return this;
 		}
 
+		/// <summary>
+		/// Adds a short pause. Then <see cref="Send"/> will sleep (wait).
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="timeMS">Time to sleep, milliseconds.</param>
+		/// <exception cref="ArgumentException"><paramref name="timeMS"/> &gt;60000 (1 minute) or &lt;0.</exception>
 		public Keyb AddSleep(int timeMS)
 		{
 			_ThrowIfSending();
@@ -360,8 +392,15 @@ namespace Au
 			return this;
 		}
 
-		//TODO: AddWaitFocusChanged(float timeS)
+		//CONSIDER: AddWaitFocusChanged(float timeS)
+		//	Eg when showing Open/SaveAs dialog, the file Edit control receives focus after 200 ms. Sending text to it works anyway, but the script fails if then it clicks OK not with keys (eg with Acc).
 
+		/// <summary>
+		/// Adds any number of keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
+		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// </summary>
+		/// <param name="a">Arguments. The same as with <see cref="Key"/>.</param>
+		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value.</exception>
 		public Keyb Add(params object[] a)
 		{
 			_ThrowIfSending();
@@ -390,13 +429,13 @@ namespace Au
 					case Action g:
 						AddCallback(g);
 						break;
-					case ValueTuple<int, bool> t:
-						AddScanCode(t.Item1, t.Item2);
-						break;
 					case ValueTuple<Keys, int, bool> t:
-						AddRaw(t.Item1, t.Item2, t.Item3);
+						AddKey(t.Item1, t.Item2, t.Item3);
 						break;
-					default: throw new ArgumentException("Bad type. Expected string, Keys, int, double, Action, (int, bool) or (Keys, int, bool).");
+					case ValueTuple<int, bool> t:
+						AddKey(0, t.Item1, t.Item2);
+						break;
+					default: throw new ArgumentException("Bad type. Expected string, Keys, int, double, Action, (Keys, int, bool) or (int, bool).");
 					}
 					wasKeysString = false;
 				}
@@ -404,12 +443,17 @@ namespace Au
 			return this;
 		}
 
+		/// <summary>
+		/// Sends keys, text and executes other events added with the <b>AddX</b> functions.
+		/// </summary>
+		/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
+		/// <exception cref="ArgumentException"><paramref name="canSendAgain"/> is true and keys end with + or (.</exception>
 		public void Send(bool canSendAgain = false)
 		{
 			_ThrowIfSending();
 			if(_a.Count == 0) return;
 			if(canSendAgain) {
-				if(_pstate.paren || _pstate.plus) throw new ArgumentException("canSendAgain cannot be true if keys ends with + or +(");
+				if(_pstate.paren || _pstate.plus) throw new ArgumentException("canSendAgain cannot be true if keys ends with + or (");
 			}
 
 			//Print("-- _parsing.mod --");
@@ -426,14 +470,14 @@ namespace Au
 			var bi = new BlockUserInput() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
-				bi.Start(BIEvents.Keys);
-				restoreCapsLock = _ReleaseModAndCapsLock();
+				if(!base.NoBlockInput) bi.Start(BIEvents.Keys);
+				restoreCapsLock = Lib.ReleaseModAndCapsLock(this);
 				//Perf.Next();
 				for(int i = 0; i < _a.Count; i++) {
 					var k = _a[i];
 					switch(k.Type) {
 					case _KType.Sleep:
-						if(i == _a.Count - 1) sleepFinally = k.sleep; //TODO: test
+						if(i == _a.Count - 1) sleepFinally = k.sleep;
 						else Time.Sleep(k.sleep);
 						break;
 					case _KType.Repeat:
@@ -451,9 +495,10 @@ namespace Au
 					}
 				}
 				//Perf.Next();
+				sleepFinally += _GetOptionsAndWndFocused(out _, false).SleepFinally;
 			}
 			finally {
-				if(restoreCapsLock) _Util.SendKey(Keys.CapsLock);
+				if(restoreCapsLock) Lib.SendKey(Keys.CapsLock);
 				_sending = false;
 				bi.Dispose();
 				//Perf.NW();
@@ -468,7 +513,6 @@ namespace Au
 				}
 			}
 
-			sleepFinally += _GetOptionsAndWndFocused(out _, false).SleepFinally;
 			if(sleepFinally > 0) Time.Sleep(sleepFinally);
 
 			//_SyncWait();
@@ -482,25 +526,26 @@ namespace Au
 
 		unsafe void _SendKey(_KEvent k, int i)
 		{
-			byte vk = k.vk; ushort sc = k.scan;
-			bool needScanCode = sc == 0 && !k.SIFlags.HasAny_(_KFlags.Scancode | _KFlags.Unicode);
+			bool needScanCode = k.scan == 0 && !k.SIFlags.HasAny_(_KFlags.Scancode | _KFlags.Unicode);
 			var opt = _GetOptionsAndWndFocused(out var wFocus, needScanCode);
 			if(needScanCode) {
 				var hkl = Api.GetKeyboardLayout(wFocus.ThreadId); //most layouts have the same standard scancodes, but eg dvorak different
-				sc = _Util.VkToSc(k.vk, hkl); //speed: ~25 with getting hkl
+				k.scan = Lib.VkToSc(k.vk, hkl);
 			}
-			//Print(sc);
 
-			//Print(new _KEvent() { vk = vk, scan = sc, flags = k.SIFlags });
-			//continue;
+			bool isLast = i == _a.Count - 1;
+			_SendKey2(k, isLast ? default : _a[i + 1], isLast, opt);
+		}
 
-			var ki = new Api.INPUTK(vk, sc, (uint)k.SIFlags);
+		//Caller should set k.scan; this func doesn't.
+		unsafe static void _SendKey2(_KEvent k, _KEvent kNext, bool isLast, KOptions opt)
+		{
+			var ki = new Api.INPUTK(k.vk, k.scan, (uint)k.SIFlags);
 
 			int count = 1, sleep = opt.TimeKeyPressed;
-			if(i == _a.Count - 1) {
+			if(isLast) {
 				if(!k.IsPair) sleep = _LimitSleepTime(sleep) - opt.SleepFinally;
 			} else {
-				var kNext = _a[i + 1];
 				if(kNext.IsRepeat) count = kNext.repeat;
 				else if(!k.IsPair) {
 					//If this is pair, sleep between down and up, and don't sleep after up.
@@ -549,7 +594,7 @@ namespace Au
 		unsafe void _SendText(_KEvent ke)
 		{
 			string s = _GetData(ke.data) as string;
-			var opt = _GetOptionsAndWndFocused(out var wFocus, TextOption == KTextOption.Keys);
+			var opt = _GetOptionsAndWndFocused(out var wFocus, true);
 			var textOption = opt.TextOption;
 
 			if(s.Length >= opt.PasteLength) textOption = KTextOption.Paste;
@@ -565,14 +610,9 @@ namespace Au
 			}
 
 			if(textOption == KTextOption.Paste) {
-				_Paste(s);
+				Clipb.LibPaste(s, opt, wFocus);
 				return;
 			}
-
-			//TODO: while sending:
-			//	throw if no active thread. Or wait. Or show AuDialog. Eg GetForegroundWindow returns 0 if PC locked or in Ctrl+Alt+Del screen.
-			//	throw if changed focus. Maybe add option to not throw.
-			//	throw on Ctrl+Alt+Del.
 
 			LPARAM hkl = textOption == KTextOption.Keys ? Api.GetKeyboardLayout(wFocus.ThreadId) : default;
 			KMod prevMod = 0;
@@ -609,24 +649,23 @@ namespace Au
 							vk = km & 0xff; mod = (KMod)(km >> 8);
 						}
 						//Print(c, vk, mod, (ushort)km);
-						//TODO: if cannot convert digits, use numpad.
 					}
 
 					if(vk == 0) { //use vk_packet
-						if(prevMod != 0) { _Util.ModPressRelease(false, prevMod); prevMod = 0; }
+						if(prevMod != 0) { Lib.ModPressRelease(false, prevMod); prevMod = 0; }
 
 						//note: need key-up event for VK_PACKET too.
 						//	Known controls that need it: Qt edit controls; Office 2003 'type question' field.
 					} else if(mod != prevMod) {
 						var pm = prevMod; prevMod |= mod; //to release in case of exception between here and 'prevMod = mod'
-						if(0 != (mod ^ pm & KMod.Ctrl)) _Util.SendCtrl(0 != (mod & KMod.Ctrl));
-						if(0 != (mod ^ pm & KMod.Alt)) _Util.SendAlt(0 != (mod & KMod.Alt));
-						if(0 != (mod ^ pm & KMod.Shift)) _Util.SendShift(0 != (mod & KMod.Shift));
+						if(0 != (mod ^ pm & KMod.Ctrl)) Lib.SendCtrl(0 != (mod & KMod.Ctrl));
+						if(0 != (mod ^ pm & KMod.Alt)) Lib.SendAlt(0 != (mod & KMod.Alt));
+						if(0 != (mod ^ pm & KMod.Shift)) Lib.SendShift(0 != (mod & KMod.Shift));
 						prevMod = mod;
 						if(isleep > 0) Time.Sleep(_LimitSleepTime(isleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
 					}
 
-					var ki = new _Util.INPUTKEY2((byte)vk, vk == 0 ? c : _Util.VkToSc((byte)vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
+					var ki = new Lib.INPUTKEY2((byte)vk, vk == 0 ? c : Lib.VkToSc((byte)vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
 					Api.SendInput(&ki.k0, sleep > 0 ? 1 : 2);
 					if(sleep > 0) {
 						Time.Sleep(sleep);
@@ -635,10 +674,10 @@ namespace Au
 				}
 			}
 			finally {
-				_Util.ModPressRelease(false, prevMod);
+				Lib.ModPressRelease(false, prevMod);
 			}
 
-			//SHOULDDO: try this sync method if text if long, eg > 500 char:
+			//FUTURE: try this sync method if long text, eg > 500 char:
 			//	In a thread pool thread measure CPU of the target thread. If near 100%, sleep eg 100 ms eg every 100 chars.
 		}
 

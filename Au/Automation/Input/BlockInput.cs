@@ -173,7 +173,7 @@ namespace Au
 				//info: the hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
 
 				//Print("started");
-				Time.LibWaitForHandlesAndDispatchSentMessages(2, _stopEvent, _threadHandle);
+				Time.LibMsgWaitFor(2, _stopEvent, _threadHandle);
 				//Print("ended");
 				GC.KeepAlive(this);
 			}

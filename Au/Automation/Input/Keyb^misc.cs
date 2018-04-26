@@ -53,7 +53,7 @@ namespace Au
 		public static bool IsShift => Api.GetKeyState(Keys.ShiftKey) < 0;
 
 		/// <summary>
-		/// Returns true if Win key is pressed (left or right).
+		/// Returns true if Win key is pressed.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
@@ -96,7 +96,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if the Caps Lock key is locked.
+		/// Returns true if the Caps Lock key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
@@ -104,7 +104,7 @@ namespace Au
 		public static bool IsCapsLock => (Api.GetKeyState(Keys.CapsLock) & 1) != 0;
 
 		/// <summary>
-		/// Returns true if the Num Lock key is locked.
+		/// Returns true if the Num Lock key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
@@ -112,7 +112,7 @@ namespace Au
 		public static bool IsNumLock => (Api.GetKeyState(Keys.NumLock) & 1) != 0;
 
 		/// <summary>
-		/// Returns true if the Scroll Lock key is locked.
+		/// Returns true if the Scroll Lock key is toggled.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
@@ -164,27 +164,36 @@ namespace Au
 		#endregion
 
 		/// <summary>
-		/// Miscellaneous functions related to keyboard input.
+		/// Miscellaneous functions.
 		/// </summary>
 		public static class Misc
 		{
 			/// <summary>
-			/// Gets current text cursor (caret) rectangle in screen coordinates.
-			/// Returns the control that contains it.
-			/// If there is no text cursor or cannot get it (eg it is not a standard text cursor), gets mouse pointer coodinates and returns default(Wnd).
+			/// Gets text cursor (caret) position and size.
+			/// Returns false if fails.
 			/// </summary>
-			public static Wnd GetTextCursorRect(out RECT r)
+			/// <param name="r">Receives the rectangle, in screen coordinates.</param>
+			/// <param name="w">Receives the control that contains the text cursor.</param>
+			/// <param name="orMouse">If fails, get mouse pointer coodinates.</param>
+			/// <remarks>
+			/// Can get only standard text cursor. Many apps use non-standard cursor; then fails.
+			/// Also fails if the text cursor currently is not displayed.
+			/// </remarks>
+			public static bool GetTextCursorRect(out RECT r, out Wnd w, bool orMouse = false)
 			{
 				if(Wnd.Misc.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
 					if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
 					r = g.rcCaret;
 					g.hwndCaret.MapClientToScreen(ref r);
-					return g.hwndCaret;
+					w = g.hwndCaret;
+					return true;
 				}
-
-				Api.GetCursorPos(out var p);
-				r = new RECT(p.X, p.Y, 0, 16, true);
-				return default;
+				if(orMouse) {
+					Api.GetCursorPos(out var p);
+					r = new RECT(p.X, p.Y, 0, 16, true);
+				} else r = default;
+				w = default;
+				return false;
 
 				//note: in Word, after changing caret pos, gets pos 0 0. After 0.5 s gets correct. After typing always correct.
 				//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.
@@ -230,7 +239,7 @@ namespace Au
 					if(len == 0) break;
 
 					Keys k = _KeynameToKey(s, start, len); if(k == 0) break;
-					var m = _Util.KeyToMod(k);
+					var m = Lib.KeyToMod(k);
 					bool lastKey = (i == eos);
 					if(lastKey != (m == 0)) break;
 					if(lastKey) {
@@ -282,11 +291,11 @@ namespace Au
 		static KOptions s_options = new KOptions();
 
 		/// <summary>
-		/// This [ThreadStatic] <see cref="KOptions"/> instance is used by the static 'send keys or text' functions - <see cref="Key"/>, <see cref="Text"/>, <see cref="Paste"/> and similar.
+		/// This [ThreadStatic] <see cref="KOptions"/> instance is used by static 'send keys or text' functions of classes <see cref="Keyb"/>, <see cref="Clipb"/> and by functions that use them (<see cref="Key"/>, <see cref="Text"/>, <see cref="Paste"/>, <see cref="CopyText"/>).
 		/// </summary>
 		/// <remarks>
-		/// Each thread has its own <b>Options</b> instance. It inherits options from <see cref="StaticOptions"/> when used first time in thread (explicitly or by these functions).
-		/// Use it to set options for the static 'send keys or text' functions (<see cref="Key"/> etc), anywhere in your script. See the first example.
+		/// Each thread has its own <b>Options</b> instance. It inherits options from <see cref="StaticOptions"/> when used first time in thread.
+		/// Can be used to change options for these functions (<see cref="Key"/> etc) anywhere in your script. See the first example.
 		/// Also can be used when creating <see cref="Keyb"/> instances; then they inherit these options. See the second example.
 		/// </remarks>
 		/// <example>
@@ -305,7 +314,7 @@ namespace Au
 		[ThreadStatic] static KOptions t_options;
 
 		/// <summary>
-		/// Sends keys and/or text to the active window or presses a hotkey.
+		/// Sends virtual keystrokes to the active window. Also can send text, wait, etc.
 		/// </summary>
 		/// <param name="keys">
 		/// Any number of arguments of these types:
@@ -320,15 +329,13 @@ namespace Au
 		//Example:
 		//Key("keys", "text", "keys", "text", 500, "keys", "text", Keys.Back)
 
-		//CONSIDER: Key("TimeKeyPressed=10 PasteText=true ...")
-
 		/// <summary>
-		/// Sends text and optionally keys to the active window.
+		/// Sends text to the active window, using virtual keystrokes or the clipboard. Also can send non-text keystrokes.
 		/// </summary>
 		/// <param name="text">Text to send.</param>
-		/// <param name="keys">Optional more parameters. The same as with <see cref="Keys"/>. Can be used for example to press keys or wait.</param>
+		/// <param name="keys">Optional more parameters. The same as with <see cref="Key"/>. Can be used for example to press non-text keys, wait, send more text.</param>
 		/// <remarks>
-		/// This function is identical to <see cref="Keys"/>, except that the first parameter is interpreted as text, not as keys.
+		/// This function is identical to <see cref="Keys"/>, except: the first parameter is literal text (not keys). This example shows the difference: <c>Key("keys", "text", "keys", "text"); Text("text", "keys", "text", "keys");</c>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -346,14 +353,14 @@ namespace Au
 	public static partial class NoClass
 	{
 		/// <summary>
-		/// Sends keys and/or text to the active window or presses a hotkey.
+		/// Sends virtual keystrokes to the active window.
 		/// Alias of <see cref="Keyb.Key"/>.
 		/// </summary>
 		/// <inheritdoc cref="Keyb.Key"/>
 		public static void Key(params object[] keys) => Keyb.Key(keys);
 
 		/// <summary>
-		/// Sends text and optionally keys to the active window.
+		/// Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
 		/// Alias of <see cref="Keyb.Text"/>.
 		/// </summary>
 		/// <inheritdoc cref="Keyb.Text"/>
@@ -364,15 +371,13 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Options for class <see cref="Keyb"/>.
+	/// Options for functions of class <see cref="Keyb"/>.
+	/// Some options also are used with <see cref="Clipb"/> functions that send keys (Ctrl+V etc).
 	/// </summary>
 	/// <seealso cref="Keyb.Options"/>
 	/// <seealso cref="Keyb.StaticOptions"/>
-	public class KOptions
+	public class KOptions //TODO: MOptions
 	{
-		//FUTURE: let the default KOptions use a config file or something, because may need different options for different windows.
-		//	Currently it is possible with Hook.
-
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
@@ -388,39 +393,61 @@ namespace Au.Types
 		/// </summary>
 		public void ResetOptions() //note: named not Reset because KOptions is base of Keyb
 		{
-			var o = _clonedFrom;
-			if(o != null) {
-				_timeKeyPressed = o._timeKeyPressed;
-				_timeTextChar = o._timeTextChar;
-				_sleepFinally = o._sleepFinally;
-				_pasteLength = o._pasteLength;
-				TextOption = o.TextOption;
-				PasteEnter = o.PasteEnter;
-				NoModOff = o.NoModOff;
-				NoCapsOff = o.NoCapsOff;
-				Hook = o.Hook;
+			if(_clonedFrom != null) {
+				LibCopyOptionsFrom(_clonedFrom);
 			} else {
-				_timeKeyPressed = 5;
-				_timeTextChar = 0f;
+				_timeKeyPressed = 1;
+				_timeTextChar = default;
 				_sleepFinally = 10;
 				_pasteLength = 300;
 				TextOption = KTextOption.Characters;
-				PasteEnter = false;
-				NoModOff = false;
-				NoCapsOff = false;
-				Hook = null;
+				PasteEnter = default;
+				RestoreClipboard = true;
+				NoModOff = default;
+				NoCapsOff = default;
+				NoBlockInput = default;
+				Hook = default;
 			}
 		}
 		KOptions _clonedFrom;
 
+		internal void LibCopyOptionsFrom(KOptions o)
+		{
+			_timeKeyPressed = o._timeKeyPressed;
+			_timeTextChar = o._timeTextChar;
+			_sleepFinally = o._sleepFinally;
+			_pasteLength = o._pasteLength;
+			TextOption = o.TextOption;
+			PasteEnter = o.PasteEnter;
+			RestoreClipboard = o.RestoreClipboard;
+			NoModOff = o.NoModOff;
+			NoCapsOff = o.NoCapsOff;
+			NoBlockInput = o.NoBlockInput;
+			Hook = o.Hook;
+		}
+
 		/// <summary>
-		/// Wait milliseconds between each key down and up event of 'keys' parameters of <b>Key</b> and similar functions.
-		/// Default: 5.
+		/// Returns this variable or KOptions cloned from this variable and possibly modified by Hook.
+		/// </summary>
+		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
+		internal KOptions LibGetHookOptionsOrThis(Wnd wFocus)
+		{
+			var call = this.Hook;
+			if(call == null || wFocus.Is0) return this;
+			var R = new KOptions(this);
+			call(new KOHookData(R, wFocus));
+			return R;
+		}
+
+		/// <summary>
+		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <b>Key</b> and similar functions.
+		/// Default: 1.
 		/// </summary>
 		/// <value>Time to sleep, milliseconds. Valid values: 0 - 1000 (1 second). Valid values for <see cref="Keyb.StaticOptions"/>: 0 - 10.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Not used for 'text' parameters; see <see cref="TimeTextChar"/>.
+		/// Clipboard functions that send keys Ctrl+V, Ctrl+C or Ctrl+X use this only after Ctrl (need it for some apps). The V/C/X key time depends on how fast the target app gets or sets clipboard data. 
 		/// </remarks>
 		public int TimeKeyPressed
 		{
@@ -430,7 +457,7 @@ namespace Au.Types
 		int _timeKeyPressed;
 
 		/// <summary>
-		/// Wait milliseconds between each key down and up event of 'text' parameters of <b>Text</b>, <b>Key</b> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <b>Text</b>, <b>Key</b> and similar functions.
 		/// Default: 0.
 		/// </summary>
 		/// <value>
@@ -455,6 +482,7 @@ namespace Au.Types
 		/// <value>Time to sleep, milliseconds. Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="Keyb.StaticOptions"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
+		/// Not used by <see cref="Clipb.CopyText"/>.
 		/// </remarks>
 		public int SleepFinally
 		{
@@ -474,7 +502,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// How functions send text.
+		/// How functions send text to the active window.
 		/// Default: <see cref="KTextOption.Characters"/>.
 		/// </summary>
 		public KTextOption TextOption { get; set; }
@@ -510,47 +538,104 @@ namespace Au.Types
 		///// </remarks>
 		//public bool PasteMultilineIndented { get; set; }
 
-		//rejected: WmPaste. Few windows support it.
+		/// <summary>
+		/// Whether to restore clipboard data when copying or pasting text.
+		/// Default: true.
+		/// By default restores only text. See also <see cref="RestoreClipboardAllFormats"/>, <see cref="RestoreClipboardExceptFormats"/>.
+		/// </summary>
+		public bool RestoreClipboard { get; set; }
+
+		#region static RestoreClipboard options
 
 		/// <summary>
-		/// When starting, don't release modifier keys.
+		/// When copying or pasting text, restore clipboard data of all formats that are possible to restore.
+		/// Default: false - restore only text.
+		/// </summary>
+		/// <remarks>
+		/// Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="RestoreClipboardExceptFormats"/>.
+		/// 
+		/// This property is static, not thread-static. It should be set (if need) at the very start of the script (eg in the script template) and not changed later.
+		/// </remarks>
+		/// <seealso cref="RestoreClipboard"/>
+		/// <seealso cref="RestoreClipboardExceptFormats"/>
+		public static bool RestoreClipboardAllFormats { get; set; }
+
+		/// <summary>
+		/// When copying or pasting text, and <see cref="RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
+		/// Default: null.
+		/// </summary>
+		/// <remarks>
+		/// To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
+		/// It also depends on whether this is the first time the data is being retrieved. The app can render data on demand, when some app is retrieving it from the clipboard first time; then can be slow etc.
+		/// 
+		/// You can use function <see cref="PrintClipboard"/> to see format names and get-data times.
+		/// 
+		/// There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
+		/// These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
+		/// 
+		/// This property is static, not thread-static. It should be set (if need) at the very start of the script (eg in the script template) and not changed later.
+		/// </remarks>
+		/// <seealso cref="RestoreClipboard"/>
+		/// <seealso cref="PrintClipboard"/>
+		public static string[] RestoreClipboardExceptFormats { get; set; }
+
+		/// <summary>
+		/// Prints some info about current clipboard data.
+		/// </summary>
+		/// <remarks>
+		/// Prints this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="RestoreClipboardExceptFormats"/>).
+		/// <note type="note">Copy something to the clipboard each time before calling this function. Don't use <see cref="Clipb.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
+		/// The time depends on app, etc. More info: <see cref="RestoreClipboardExceptFormats"/>.
+		/// </remarks>
+		public static void PrintClipboard() => Clipb.LibPrintClipboard();
+
+		#endregion
+
+		/// <summary>
+		/// When starting to send keys, don't release modifier keys.
 		/// Default: false.
 		/// </summary>
 		public bool NoModOff { get; set; }
 
 		/// <summary>
-		/// When starting, don't turn off CapsLock.
+		/// When starting to send keys, don't turn off CapsLock.
 		/// Default: false.
 		/// </summary>
 		public bool NoCapsOff { get; set; }
 
 		/// <summary>
-		/// Callback function that can modify options of 'send keys or text' functions depending on conditions (active window etc).
+		/// Don't block user-pressed keys.
+		/// Default: false. User-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
+		/// </summary>
+		public bool NoBlockInput { get; set; }
+
+		/// <summary>
+		/// Callback function that can modify options of 'send keys or text' functions depending on active window etc.
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb.Send"/> and similar functions.
+		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb.Send"/>, <see cref="Paste"/> and similar functions. Not called by <see cref="Clipb.CopyText"/>.
 		/// </remarks>
-		/// <seealso cref="HookData"/>
-		public Action<HookData> Hook { get; set; }
+		/// <seealso cref="KOHookData"/>
+		public Action<KOHookData> Hook { get; set; }
+	}
+
+	/// <summary>
+	/// Parameter type of the <see cref="KOptions.Hook"/> callback function.
+	/// </summary>
+	public struct KOHookData
+	{
+		internal KOHookData(KOptions opt, Wnd w) { this.opt = opt; this.w = w; }
 
 		/// <summary>
-		/// Parameter type of the <see cref="Hook"/> callback function.
+		/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
 		/// </summary>
-		public struct HookData
-		{
-			internal HookData(KOptions opt, Wnd w) { this.opt = opt; this.w = w; }
+		public readonly KOptions opt;
 
-			/// <summary>
-			/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff.
-			/// </summary>
-			public readonly KOptions opt;
-
-			/// <summary>
-			/// The focused control. If there is no focused control - the active window. Use <c>w.WndWindow</c> to get top-level parent window; if <c>w.WndWindow == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
-			/// </summary>
-			public readonly Wnd w;
-		}
+		/// <summary>
+		/// The focused control. If there is no focused control - the active window. Use <c>w.WndWindow</c> to get top-level parent window; if <c>w.WndWindow == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
+		/// </summary>
+		public readonly Wnd w;
 	}
 
 	/// <summary>
@@ -595,6 +680,8 @@ namespace Au.Types
 		/// When pasting text, previous clipboard data is lost.
 		/// </summary>
 		Paste,
+
+		//rejected: WmPaste. Few windows support it.
 	}
 
 #pragma warning disable 1591 //missing doc

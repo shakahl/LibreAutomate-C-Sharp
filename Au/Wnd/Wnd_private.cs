@@ -146,7 +146,7 @@ namespace Au
 			internal class WinFlags
 			{
 				ushort _atom; //atom is much faster than string
-				static WinFlags s_atom = new WinFlags();
+				static readonly WinFlags s_atom = new WinFlags();
 
 				private WinFlags() => _atom = Api.GlobalAddAtom("Au.WFlags");
 
