@@ -30,7 +30,7 @@ namespace Au
 	/// Does not block:
 	/// <list type="bullet">
 	/// <item>In windows of the same thread that started blocking. For example, if your script shows a message box, the user can click its buttons.</item>
-	/// <item>In windows of higher UAC integrity level (IL) processes, unless this process has uiAccess IL.</item>
+	/// <item>In windows of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (IL) processes, unless this process has uiAccess IL.</item>
 	/// <item>In special screens such as when you press Ctrl+Alt+Delete or when you launch and admin program. See also <see cref="ResumeAfterCtrlAltDelete"/>.</item>
 	/// <item>Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.</item>
 	/// <item><see cref="DoNotBlockKeys"/> keys.</item>
@@ -142,7 +142,7 @@ namespace Au
 			if(bk != null && !discardBlockedKeys) {
 				_blockedKeys = null;
 				if(Time.Milliseconds - _startTime < c_maxResendTime) {
-					bk.NoCapsOff = bk.NoModOff = true;
+					bk.Options.NoCapsOff = bk.Options.NoModOff = true;
 					try { bk.Send(); }
 					catch(Exception ex) { Debug_.Print(ex.Message); }
 				}
@@ -201,7 +201,7 @@ namespace Au
 				//}
 
 				if(ResendBlockedKeys && Time.Milliseconds - _startTime < c_maxResendTime) {
-					if(_blockedKeys == null) _blockedKeys = new Keyb(Keyb.StaticOptions);
+					if(_blockedKeys == null) _blockedKeys = new Keyb(Opt.Static.Key);
 					_blockedKeys.LibAddRaw((byte)e->vkCode, (ushort)e->scanCode, e->SendInputFlags);
 					//Print((Keys)e->vkCode);
 				}
@@ -250,7 +250,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, UAC consent, etc.
+		/// Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> consent, etc.
 		/// </summary>
 		public bool ResumeAfterCtrlAltDelete { get; set; }
 
@@ -258,7 +258,7 @@ namespace Au
 		/// Record blocked keys, and play back when stopped blocking.
 		/// </summary>
 		/// <remarks>
-		/// Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, UAC consent or some other special screen. 3. Called <see cref="Pause"/>.
+		/// Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> consent or some other special screen. 3. Called <see cref="Pause"/>.
 		/// </remarks>
 		public bool ResendBlockedKeys { get; set; }
 

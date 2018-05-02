@@ -22,12 +22,13 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Adds extension methods to System.String.
+	/// Adds extension methods to <see cref="String"/>.
+	/// </summary>
+	/// <remarks>
 	/// Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
 	/// Extension method names have suffix _.
-	/// Most of these extension methods throw NullReferenceException if called for a string variable that is null.
-	/// </summary>
-	//[DebuggerStepThrough]
+	/// Most of these extension methods throw <b>NullReferenceException</b> if called for a string variable that is null.
+	/// </remarks>
 	public static unsafe partial class String_
 	{
 		/// <summary>
@@ -626,7 +627,7 @@ namespace Au
 		//	Don't need it in Escape_, because path cannot contain characters that need to be escaped.
 
 		/// <summary>
-		/// Replaces some characters to C# escape sequences.
+		/// Replaces some characters with C# escape sequences.
 		/// Replaces these characters: '\\', '\"', '\t', '\n', '\r' and all in range 0-31.
 		/// If the string contains these characters, replaces and returns new string. Else returns this string.
 		/// </summary>

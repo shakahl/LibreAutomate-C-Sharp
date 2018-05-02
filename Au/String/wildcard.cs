@@ -160,7 +160,7 @@ namespace Au.Types
 {
 	/// <summary>
 	/// This class implements <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> parsing and matching (comparing).
-	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find">Wnd.Find</see> uses it to compare window name, class name and program.
+	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find"/> uses it to compare window name, class name and program.
 	/// The 'find' function creates a Wildex instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </summary>
 	/// <exception cref="ArgumentException">Invalid "**options " or regular expression.</exception>
@@ -266,7 +266,7 @@ namespace Au.Types
 			if(wildcardExpression == null) return null;
 
 			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of Wnd.Find and Wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'className' and 'programEtc' parameters, where "" causes exception, so they will quickly learn.
-			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead. Or <see cref="AuScriptOptions.DisableWarnings"/>.
+			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead.
 			//	if(wildcardExpression.Length == 0) PrintWarning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
 			return new Wildex(wildcardExpression);

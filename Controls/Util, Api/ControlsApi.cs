@@ -9,6 +9,15 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
+	/// <summary>
+	/// Controls.
+	/// </summary>
+	[CompilerGenerated()]
+	class NamespaceDoc
+	{
+		//SHFB uses this for namespace documentation.
+	}
+
 	internal static class Api2
 	{
 

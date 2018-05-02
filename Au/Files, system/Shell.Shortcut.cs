@@ -360,7 +360,7 @@ namespace Au
 					//note: can be a registry key instead of file path. No such shortcuts on my PC.
 				}
 
-				//GetPath problem: replaces "c:\program files" to "c:\program files (x86)".
+				//GetPath problem: replaces "c:\program files" with "c:\program files (x86)".
 				//These don't help: SLGP_RAWPATH, GetIDList, disabled redirection.
 				//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
 				if(Ver.Is32BitProcessOn64BitOS) {

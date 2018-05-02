@@ -24,12 +24,14 @@ namespace Au
 	{
 		/// <summary>
 		/// Contains top-level window properties and can be used to find the window.
+		/// </summary>
+		/// <remarks>
 		/// Can be used instead of <see cref="Wnd.Find"/> or <see cref="Wnd.FindAll"/>.
 		/// These codes are equivalent:
 		/// <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
 		/// <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
 		/// Also can find in a list of windows.
-		/// </summary>
+		/// </remarks>
 		public class Finder
 		{
 			Wildex _name;
@@ -107,7 +109,7 @@ namespace Au
 			public Wnd Result { get; internal set; }
 
 			/// <summary>
-			/// Finds the specified window, like <see cref="Wnd.Find">Wnd.Find</see>.
+			/// Finds the specified window, like <see cref="Wnd.Find"/>.
 			/// Returns true if found.
 			/// The <see cref="Result"/> property will be the window.
 			/// </summary>
@@ -138,7 +140,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Finds all matching windows, like <see cref="Wnd.FindAll">Wnd.FindAll</see>.
+			/// Finds all matching windows, like <see cref="Wnd.FindAll"/>.
 			/// Returns array containing 0 or more window handles as Wnd.
 			/// </summary>
 			public Wnd[] FindAll()
@@ -311,7 +313,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>. See examples.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>. See examples.
 		/// </summary>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
@@ -353,7 +355,7 @@ namespace Au
 		/// </param>
 		/// <remarks>
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
-		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="FindFast">FindFast</see>.
+		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="FindFast"/>.
 		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
@@ -421,9 +423,9 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. To check it you can use <see cref="Is0"/> or <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
-		/// Faster than <see cref="Find">Find</see>, which uses API <msdn>EnumWindows</msdn>.
+		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
 		/// Finds hidden windows too.
 		/// </summary>
@@ -508,9 +510,9 @@ namespace Au
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
-			/// <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows">MainWindows</see>.</note>
+			/// <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
 			/// By default array elements are sorted to match the Z order.
-			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has UAC integrity level uiAccess; to get such windows you can use <see cref="FindFast">FindFast</see>.
+			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess; to get such windows you can use <see cref="FindFast"/>.
 			/// </remarks>
 			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
 			{
@@ -545,7 +547,7 @@ namespace Au
 			/// <summary>
 			/// Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
 			/// Calls API <msdn>FindWindowEx</msdn>.
-			/// Faster than <see cref="Find">Find</see>, which does not find message-only windows.
+			/// Faster than <see cref="Find"/>, which does not find message-only windows.
 			/// Can be used only when you know full name and/or class name.
 			/// Finds hidden windows too.
 			/// </summary>

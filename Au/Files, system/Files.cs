@@ -26,12 +26,14 @@ namespace Au
 {
 	/// <summary>
 	/// File system functions.
-	/// Works with files and directories. Disk drives like @"C:\" or "C:" are directories too.
-	/// Extends .NET file system classes such as File and Directory.
-	/// Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
-	/// Most functions support only full path. Most of them throw ArgumentException if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
-	/// Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="Path_.PrefixLongPath"/>, <see cref="Path_.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 	/// </summary>
+	/// <remarks>
+	/// Works with files and directories. Disk drives like @"C:\" or "C:" are directories too.
+	/// Extends .NET file system classes such as <see cref="File"/> and <see cref="Directory"/>.
+	/// Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
+	/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
+	/// Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="Path_.PrefixLongPath"/>, <see cref="Path_.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
+	/// </remarks>
 	public static partial class Files
 	{
 		#region attributes, exists, search, enum
@@ -783,7 +785,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
 		/// On Windows 7 does not copy the security properties; sets default security properties.
-		/// Does not copy symbolic links (silently skips, no exception) if this process is not admin.
+		/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
 		public static void Copy(string path, string newPath, IfExists ifExists = IfExists.Fail, FCFlags copyFlags = 0, Func<FEFile, bool> filter = null)
@@ -811,7 +813,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
 		/// On Windows 7 does not copy the security properties; sets default security properties.
-		/// Does not copy symbolic links (silently skips, no exception) if this process is not admin.
+		/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
 		public static void CopyTo(string path, string newDirectory, IfExists ifExists = IfExists.Fail, FCFlags copyFlags = 0, Func<FEFile, bool> filter = null)

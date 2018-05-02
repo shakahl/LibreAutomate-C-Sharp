@@ -646,6 +646,11 @@
             </param>
             <seealso cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>
         </member>
+        <member name="T:Au.Controls.NamespaceDoc">
+            <summary>
+            Controls.
+            </summary>
+        </member>
         <member name="T:Au.Controls.GDockPanel.GNode">
             <summary>
             Base of GSplit, GContentNode (GPanel and GTab) and GDummyNode.

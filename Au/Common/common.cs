@@ -18,6 +18,18 @@ using System.Drawing;
 using Au.Types;
 using static Au.NoClass;
 
+namespace Au
+{
+	/// <summary>
+	/// This namespace contains main classes of this library.
+	/// </summary>
+	[CompilerGenerated()]
+	class NamespaceDoc
+	{
+		//SHFB uses this for namespace documentation.
+	}
+}
+
 namespace Au.Types
 {
 	/// <summary>

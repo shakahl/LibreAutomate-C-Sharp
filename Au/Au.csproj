@@ -87,8 +87,9 @@
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />
     <Compile Include="Automation\Input\Keyb^util.cs" />
-    <Compile Include="Automation\Input\Keyb^misc.cs" />
+    <Compile Include="Automation\Input\Keyb^static.cs" />
     <Compile Include="Automation\WinImage.cs" />
+    <Compile Include="Common\Opt.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\OnScreenRect.cs" />
     <Compile Include="Other\Screen_.cs" />
@@ -97,7 +98,6 @@
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
     <Compile Include="Common\Param types.cs" />
-    <Compile Include="Common\ScriptOptions.cs" />
     <Compile Include="Files, system\Files.Misc.cs" />
     <Compile Include="Files, system\Shell.Pidl.cs" />
     <Compile Include="Files, system\Shell.Shortcut.cs" />

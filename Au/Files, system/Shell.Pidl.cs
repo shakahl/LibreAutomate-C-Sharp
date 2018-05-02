@@ -26,10 +26,10 @@ namespace Au
 	{
 		/// <summary>
 		/// A Pidl variable holds and manages an ITEMIDLIST pointer. An ITEMIDLIST is a native variable-length structure that represents a file or other shell object and is used by Windows shell API instead of file-system path.
-		/// With shell API is used ITEMIDLIST pointer (PIDL) as IntPtr. This class has an implicit Pidl-to-IntPtr cast operator and therefore a Pidl variable can be passed to shell API IntPtr parameters.
-		/// The ITEMIDLIST is in unmanaged memory, therefore this class implements IDisposable.
 		/// </summary>
 		/// <remarks>
+		/// With shell API is used ITEMIDLIST pointer (PIDL) as IntPtr. This class has an implicit Pidl-to-IntPtr cast operator and therefore a Pidl variable can be passed to shell API IntPtr parameters.
+		/// The ITEMIDLIST is in unmanaged memory, therefore this class implements IDisposable.
 		/// When calling shell API, virtual objects can be identified only by ITEMIDLIST. Some API also support "parsing name", which usually looks like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST. URLs can be identified by URL as well as by ITEMIDLIST.
 		/// </remarks>
 		public unsafe sealed class Pidl :IDisposable

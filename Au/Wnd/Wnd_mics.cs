@@ -262,7 +262,7 @@ namespace Au
 
 			/// <summary>
 			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
-			/// It allows processes of lower UAC integrity level to send these messages to this process.
+			/// It allows processes of lower <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level to send these messages to this process.
 			/// </summary>
 			public static void UacEnableMessages(params uint[] messages)
 			{
@@ -270,7 +270,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower UAC integrity level processes, for example if you'll use <see cref="InterProcessGetData"/>.
+			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level processes, for example if you'll use <see cref="InterProcessGetData"/>.
 			/// Call this once in process.
 			/// </summary>
 			public static void InterProcessEnableReceivingWM_COPYDATA()
@@ -304,7 +304,7 @@ namespace Au
 			/// <param name="lParam">lParam of the window procedure when it received WM_COPYDATA message. It is COPYDATASTRUCT pointer.</param>
 			/// <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
 			/// <remarks>
-			/// <note type="note">UAC blocks messages sent from processes of lower integrity level. Call <see cref="InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
+			/// <note type="note"><conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> blocks messages sent from processes of lower integrity level. Call <see cref="InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
 			/// </remarks>
 			public static unsafe string InterProcessGetData(LPARAM lParam, out int stringId)
 			{
@@ -315,7 +315,7 @@ namespace Au
 
 			/// <summary>
 			/// Removes '&amp;' characters from string.
-			/// Replaces "&amp;&amp;" to "&amp;".
+			/// Replaces "&amp;&amp;" with "&amp;".
 			/// Returns new string if s has '&amp;' characters, else returns s.
 			/// </summary>
 			/// <remarks>

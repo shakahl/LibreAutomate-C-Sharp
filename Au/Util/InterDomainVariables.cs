@@ -25,11 +25,13 @@ namespace Au
 
 	/// <summary>
 	/// Inter-domain variables. Allows to share values by all app domains of this process.
+	/// </summary>
+	/// <remarks>
 	/// Similar to environment variables, but supports more types and does not inherit parent process variables; the speed is similar.
 	/// Supports not all types. The type must have one of these properties:
 	/// 1. Derived from MarshalByRefObject. The stored value is a virtual reference (proxy), not a copy. The owner domain must be still alive when other domains access (call methods etc) the retrieved value, else AppDomainUnloadedException.
 	/// 2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
-	/// </summary>
+	/// </remarks>
 	[DebuggerStepThrough]
 	public static class InterDomainVariables
 	{

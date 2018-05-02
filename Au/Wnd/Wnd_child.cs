@@ -26,9 +26,11 @@ namespace Au
 	{
 		/// <summary>
 		/// Contains control (child window) properties and is used to find the control.
+		/// </summary>
+		/// <remarks>
 		/// Can be used instead of <see cref="Wnd.Child"/> or <see cref="Wnd.ChildAll"/>.
 		/// Also can be used to find window that contains certain control, like in the example.
-		/// </summary>
+		/// </remarks>
 		/// <example>
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
@@ -52,7 +54,7 @@ namespace Au
 			readonly int _id;
 
 			/// <summary>
-			/// See <see cref="Wnd.Child">Wnd.Child</see>.
+			/// See <see cref="Wnd.Child"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">
 			/// className is "". To match any, use null.
@@ -263,7 +265,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -280,7 +282,7 @@ namespace Au
 		/// </item>
 		/// <item>
 		/// "**wfName:" - use .NET Windows Forms Control Name property.
-		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of UAC.
+		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
 		/// </item>
 		/// <item>
 		/// "**id:" (like "**id:15") - use control id.
@@ -382,7 +384,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
@@ -419,7 +421,7 @@ namespace Au
 		/// <summary>
 		/// Finds all matching child controls.
 		/// Returns List containing 0 or more control handles as Wnd.
-		/// Everything except the return type is the same as with <see cref="Child">Child</see>.
+		/// Everything except the return type is the same as with <see cref="Child"/>.
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <exception cref="ArgumentException"/>
@@ -437,9 +439,9 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>, <see cref="operator +(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
-		/// Faster than <see cref="Child">Child</see>, which uses API <msdn>EnumChildWindows</msdn>.
+		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
 		/// Finds hidden controls too.
 		/// </summary>

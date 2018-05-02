@@ -585,10 +585,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Receives messages sent from clients when they call Output.Write and related methods.
-		/// If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
+		/// Receives messages sent from clients when they call <see cref="Output.Write"/> and related methods.
 		/// </summary>
 		/// <remarks>
+		/// If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
 		/// Works asynchronously, to make writing messages faster.
 		/// When a client writes a message, the message arrives to the server with some delay and is placed in the <see cref="Messages"/> queue.
 		/// You then can get/remove messages (call Messages.TryDequeue) and display them in a window (for example).
@@ -676,6 +676,7 @@ namespace Au
 				Clear,
 			}
 
+			//TODO: move to Au.Types
 			/// <summary>
 			/// Contains message text and/or related info.
 			/// See <see cref="Messages"/>.

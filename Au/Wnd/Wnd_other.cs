@@ -185,7 +185,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s">The string. Can be null/"".</param>
 		/// <param name="ensureInScreen">Call <see cref="EnsureInScreen"/>. Even when s is null/"".</param>
-		/// <param name="showActivate">Call <see cref="Show">Show</see>(true) and <see cref="ActivateLL"/>. Even when s is null/"".</param>
+		/// <param name="showActivate">Call <see cref="Show"/>(true) and <see cref="ActivateLL"/>. Even when s is null/"".</param>
 		/// <exception cref="WndException"/>
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{

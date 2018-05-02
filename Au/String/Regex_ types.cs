@@ -321,7 +321,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Returns true if the group exists in the subject string, false if does not exist.
-		/// More info in <see cref="RXGroup"/> help. Example in <see cref="RXMatch"/> help.
+		/// More info in <see cref="RXGroup"/> topic. Example in <see cref="RXMatch"/> topic.
 		/// </summary>
 		/// <remarks>
 		/// Other ways to detect it: if a group does not exist, its Index is -1 and Value is null.

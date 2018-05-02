@@ -28,9 +28,11 @@ namespace Au
 		{
 			/// <summary>
 			/// Creates window and allows your derived class to replace its window procedure.
+			/// </summary>
+			/// <remarks>
 			/// Similar to <see cref="NativeWindow"/>, but more lightweight and does not change the class name.
 			/// Can register a new window class or extend (subclass) an existing class.
-			/// </summary>
+			/// </remarks>
 			public class MyWindow
 			{
 				static LPARAM _defWindowProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");

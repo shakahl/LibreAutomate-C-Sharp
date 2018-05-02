@@ -30,15 +30,6 @@ namespace Au
 	[DebuggerStepThrough]
 	public class Script
 	{
-		///// <summary>
-		///// Gets or sets Option.Speed (auto-delay and speed for some automation functions, for this thread).
-		///// </summary>
-		//public static int Speed
-		//{
-		//	get => (t_opt ?? AuScriptOptions.Default).Speed;
-		//	set { Option.Speed = value; }
-		//}
-
 		/// <summary>
 		/// Calls the first non-static method of the derived class.
 		/// The method must have 0 parameters.

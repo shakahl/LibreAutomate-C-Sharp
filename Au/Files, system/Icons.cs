@@ -625,7 +625,7 @@ namespace Au
 		/// For <see cref="AsyncIcons.GetAllAsync"/>. 
 		/// </summary>
 		/// <param name="result">Contains icon Image or handle, as well as the input parameters. <see cref="AsyncResult"/></param>
-		/// <param name="objCommon">objCommon passed to <see cref="AsyncIcons.GetAllAsync">GetAllAsync</see>.</param>
+		/// <param name="objCommon">objCommon passed to <see cref="AsyncIcons.GetAllAsync"/>.</param>
 		/// <param name="nLeft">How many icons is still to get. Eg 0 if this is the last icon.</param>
 		/// <tocexclude />
 		public delegate void AsyncCallback(AsyncResult result, object objCommon, int nLeft);
@@ -636,7 +636,7 @@ namespace Au
 		/// <remarks>
 		/// Use to avoid waiting until all icons are extracted before displaying them in a UI (menu etc).
 		/// Instead you show the UI without icons, and then asynchronously receive icons when they are extracted.
-		/// At first call <see cref="Add(string, object)"/> for each file. Then call <see cref="GetAllAsync">GetAllAsync</see>.
+		/// At first call <see cref="Add(string, object)"/> for each file. Then call <see cref="GetAllAsync"/>.
 		/// Create a callback function of type <see cref="AsyncCallback"/> and pass its delegate to <b>GetAllAsync</b>.
 		/// </remarks>
 		public sealed class AsyncIcons :IDisposable
@@ -1042,7 +1042,7 @@ namespace Au.Types
 		LiteralPath = 1,
 
 		/// <summary>
-		/// If file is not full path, call <see cref="Files.SearchPath">Files.SearchPath</see>.
+		/// If file is not full path, call <see cref="Files.SearchPath"/>.
 		/// Without this flag searches only in <see cref="Folders.ThisAppImages"/>; with this flag also searches there first.
 		/// </summary>
 		SearchPath = 2,

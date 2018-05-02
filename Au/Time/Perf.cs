@@ -21,17 +21,20 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Code speed measurement.
-	/// Easier to use than System.Stopwatch class.
-	/// Stores data in shared memory, therefore works across appdomains.
+	/// Code speed measurement. Easier to use than <see cref="Stopwatch"/>.
 	/// </summary>
+	/// <remarks>
+	/// Stores data in shared memory, therefore works across appdomains.
+	/// </remarks>
 	[DebuggerStepThrough]
 	public static unsafe class Perf
 	{
 		/// <summary>
 		/// The same as Perf class, but allows to have multiple independent speed measurements.
-		/// Stores data int the variable, not in shared memory like Perf class.
 		/// </summary>
+		/// <remarks>
+		/// Stores data int the variable, not in shared memory like <see cref="Perf"/> class.
+		/// </remarks>
 		public unsafe struct Inst
 		{
 			//[DllImport("kernel32.dll")]
@@ -117,12 +120,14 @@ namespace Au
 				_counter = 0;
 				_nMeasurements++;
 			}
+
 			/// <summary>
-			/// Calls <see cref="SpinCPU">SpinCPU</see>(spinCpuMS) and <see cref="First()"/>.
+			/// Calls <see cref="SpinCPU"/>(spinCpuMS) and <see cref="First()"/>.
 			/// </summary>
 			public void First(int spinCpuMS) { SpinCPU(spinCpuMS); First(); }
+
 			/// <summary>
-			/// Calls <see cref="SpinCPU">SpinCPU</see>(spinCpuMS, codes) and <see cref="First()"/>.
+			/// Calls <see cref="SpinCPU"/>(spinCpuMS, codes) and <see cref="First()"/>.
 			/// </summary>
 			public void First(int spinCpuMS, params Action[] codes)
 			{

@@ -25,6 +25,15 @@ using Au.Controls;
 namespace Au.Tools
 {
 	/// <summary>
+	/// Tools.
+	/// </summary>
+	[CompilerGenerated()]
+	class NamespaceDoc
+	{
+		//SHFB uses this for namespace documentation.
+	}
+
+	/// <summary>
 	/// Can be used by tool dialogs to display common info in <see cref="AuInfoBox"/> control.
 	/// The control must support tags.
 	/// </summary>

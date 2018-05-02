@@ -62,7 +62,7 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Work"/> object that can be used when need more options than <see cref="SubmitCallback">SubmitCallback</see> has.
+		/// Creates a <see cref="Work"/> object that can be used when need more options than <see cref="SubmitCallback"/> has.
 		/// </summary>
 		/// <param name="state">Something to pass to the callback functions.</param>
 		/// <param name="workCallback">Callback function to call in a thread pool thread.</param>
@@ -79,7 +79,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
-		/// Can be used when need more options than <see cref="SubmitCallback">SubmitCallback</see> has.
+		/// Can be used when need more options than <see cref="SubmitCallback"/> has.
 		/// </summary>
 		/// <example><code>
 		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {

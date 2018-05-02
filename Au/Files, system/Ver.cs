@@ -22,9 +22,11 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Provides various version info, for example Windows OS version.
-	/// The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, instead use Environment.OSVersion.
+	/// Provides various version info, for example the true Windows OS version.
 	/// </summary>
+	/// <remarks>
+	/// The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, instead use <see cref="Environment.OSVersion"/>.
+	/// </remarks>
 	[DebuggerStepThrough]
 	public static unsafe class Ver
 	{

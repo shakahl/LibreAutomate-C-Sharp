@@ -56,7 +56,7 @@ namespace Au.Types
 		/// <summary>
 		/// Search without loading dll into the target process.
 		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
-		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher UAC integrity level, Firefox web page if its multiprocess feature is not disabled.
+		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level, Firefox web page if its multiprocess feature is not disabled.
 		/// Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="Wnd.Child"/> and search in it. 3. Use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
 		/// Don't need this flag when searching in Acc (then it is inherited from the Acc variable).
 		/// See also: <see cref="Acc.MiscFlags"/>.

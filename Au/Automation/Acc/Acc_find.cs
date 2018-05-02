@@ -30,8 +30,10 @@ namespace Au
 	{
 		/// <summary>
 		/// Contains accessible object (AO) properties and is used to find the AO.
-		/// Can be used instead of <see cref="Acc.Find(Wnd, string, string, String, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
 		/// </summary>
+		/// <remarks>
+		/// Can be used instead of <see cref="Acc.Find(Wnd, string, string, String, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
+		/// </remarks>
 		/// <example>
 		/// Find window that contains certain AO, and get the AO too.
 		/// <code><![CDATA[
@@ -133,7 +135,7 @@ namespace Au
 			/// Using flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 			/// </exception>
 			/// <exception cref="WndException">Invalid window.</exception>
-			/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 			public bool Find(Wnd w)
 			{
 				return _FindOrWait(w, 0, false);
@@ -152,7 +154,7 @@ namespace Au
 			/// <see cref="SimpleElementId"/> is not 0.
 			/// Using flag <see cref="AFFlags.UIA"/>.
 			/// </exception>
-			/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 			public bool Find(Acc a)
 			{
 				return _FindOrWait(a, 0, false);
@@ -420,13 +422,13 @@ namespace Au
 		/// Using flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 		/// </exception>
 		/// <exception cref="WndException">Invalid w.</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		/// <remarks>
 		/// This function walks the tree of accessible objects of the window, control or web page, until it finds a matching AO.
 		/// Uses <see cref="Finder.Find(Wnd)"/>. You can use it directly (see example).
 		/// In wildcard expressions supports PCRE regular expressions (prefix "**r ") but not .NET regular expressions (prefix "**R "). They are similar.
 		/// To find web page AOs usually it's better to use <see cref="Wait(double, Wnd, string, string, string, AFFlags, Func{Acc, bool}, int)"/> instead, it's more reliable.
-		/// More info in <see cref="Acc">class help</see>.
+		/// More info in <see cref="Acc"/> topic.
 		/// </remarks>
 		/// <example>
 		/// Find link "Example" in web page, and click. Throw NotFoundException if not found.
@@ -471,7 +473,7 @@ namespace Au
 		/// <see cref="SimpleElementId"/> is not 0.
 		/// Using flag <see cref="AFFlags.UIA"/>.
 		/// </exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		public Acc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null, int skip = 0)
 		{
 			//info: f.Find will throw if this Acc is invalid etc.

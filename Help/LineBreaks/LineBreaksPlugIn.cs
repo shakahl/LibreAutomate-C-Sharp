@@ -180,6 +180,8 @@ namespace LineBreaks
 
 			var doc = members.OwnerDocument;
 
+			_ProcessSee(members);
+
 			//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:msdn.microsoft.com+{API}''>{API}</see>
 			foreach(XmlElement n in members.SelectNodes("member/*//msdn")) {
 				//Print(n.InnerText);
@@ -262,6 +264,45 @@ namespace LineBreaks
 		static void PrintNode(string s, XmlNode parent)
 		{
 			Print($"<><Z 0xffffff>{s}</Z>\r\n<c 0x8000>{parent.OuterXml}</c>");
+		}
+
+		//<see cref="Class.Member"/> -> <see cref="Class.Member">{Class.Member}</see>, because SHFB removes "Class."
+		void _ProcessSee(XmlNode members)
+		{
+			//info: the original cref text is lost.
+			//	C# compiler replaces it to fully-qualified, with type prefix, like "M:Namespace.Type.Method(String)".
+
+			foreach(XmlElement n in members.SelectNodes("member/*//see|member/seealso")) {
+				var an = n.GetAttributeNode("cref");
+				if(an == null) continue; //href?
+
+				if(!Empty(n.InnerText)) {
+					//Print(n.InnerText);
+					continue; //link text specified explicitly, like <see cref="X">Y</see>
+				}
+
+				if(n.GetAttributeNode("r") != null) continue;
+
+				//note: easier would be to add qualifyHint="true", but SHFB bug: inserts space, like "Type. Member"
+				//	for seealso qualifyHint is default, and no bug.
+
+				var s = an.Value;
+				//Print($"<><c 0x8000>{s}</c>");
+
+				//remove from s:
+				//	the type prefix ("M:" etc);
+				//	our namespaces that are used in every file.
+				//	method parameters.
+				int iStart = 2;
+				if(s.EqualsAt_(2, "Au.Types.")) iStart += 9; else if(s.EqualsAt_(2, "Au.")) iStart += 3;
+				int iEnd = s.IndexOf('('); if(iEnd < 0) iEnd = s.Length;
+				s = s.Substring(iStart, iEnd - iStart);
+				//Print(s);
+
+				n.InnerText = s;
+
+				//Print(n.OuterXml);
+			}
 		}
 	}
 }

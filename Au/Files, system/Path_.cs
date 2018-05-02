@@ -22,7 +22,7 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Extends the .NET class Path.
+	/// Extends <see cref="Path"/>.
 	/// </summary>
 	public static unsafe class Path_
 	{
@@ -355,7 +355,7 @@ namespace Au
 		/// 2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
 		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
 		/// 4. If path is not full path, throws exception.
-		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' to '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
+		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' with '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
 		/// 6. If no flag DoNotExpandDosPath, if contains '~' character, calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
 		/// 7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is a drive path (eg @"C:\").
 		/// 8. Appends '\\' character if ends with a drive name (eg "C:" -> @"C:\").

@@ -24,8 +24,10 @@ namespace Au
 {
 	/// <summary>
 	/// Shows a transparent rectangle on screen.
-	/// For it creates a temporary partially transparent window.
 	/// </summary>
+	/// <remarks>
+	/// Creates a temporary partially transparent window, and draws rectangle in it.
+	/// </remarks>
 	public class OnScreenRect :IDisposable
 	{
 		static OnScreenRect()

@@ -24,14 +24,13 @@ namespace Au
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
 	/// </summary>
 	/// <remarks>
-	/// The static functions depend on <see cref="Options"/>, which depends on <see cref="StaticOptions"/>. <b>Keyb</b> variables don't depend on it by default.
-	/// Below are examples with the static functions. See also examples in <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb(KOptions)"/>.
+	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="Opt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="Keyb(KOptions)"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// Keyb.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
 	/// 
-	/// Keyb.Options.TimeKeyPressed = 300; //set options for static functions
+	/// Opt.Key.KeySpeed = 300; //set options for static functions
 	/// Keyb.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
 	/// 
 	/// Keyb.Text("text\r\n"); //send text that ends with newline
@@ -41,20 +40,25 @@ namespace Au
 	/// Key("Enter");
 	/// ]]></code>
 	/// </example>
-	public partial class Keyb :KOptions
+	public partial class Keyb
 	{
-		/// <param name="cloneOptions">If not null, copies options from it to this <b>Keyb</b> variable. If null, uses default options.</param>
+		/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If null, uses default options.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// var k = new Keyb(Keyb.StaticOptions);
-		/// k.TimeKeyPressed = 50;
+		/// var k = new Keyb(Opt.Static.Key);
+		/// k.Options.KeySpeed = 50;
 		/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(Keys.Enter).AddSleep(500);
 		/// k.Send(); //sends and clears the variable
 		/// k.Add("Tab // Space*3", "text", Keys.Enter, 500); //does the same as the above k.Add... line
 		/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
 		/// ]]></code>
 		/// </example>
-		public Keyb(KOptions cloneOptions) : base(cloneOptions) { }
+		public Keyb(KOptions cloneOptions) { Options = new KOptions(cloneOptions); }
+
+		/// <summary>
+		/// Options used by this variable.
+		/// </summary>
+		public KOptions Options { get; }
 
 		//KEYEVENTF_ flags for API SendInput.
 		[Flags]
@@ -159,7 +163,7 @@ namespace Au
 
 		/// <summary>
 		/// Adds keystrokes to the internal collection. They will be sent by <see cref="Send"/>.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Returns self.
 		/// </summary>
 		/// <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="Key"/>. Can be null or "".</param>
 		/// <exception cref="ArgumentException">Error in <paramref name="keys"/> string, for example an unknown key name.</exception>
@@ -257,15 +261,15 @@ namespace Au
 
 		/// <summary>
 		/// Adds single key, specified as <see cref="Keys"/>, to the internal collection. It will be sent by <see cref="Send"/>.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Returns self.
 		/// </summary>
-		/// <param name="key">Virtual-key code.</param>
+		/// <param name="key">Virtual-key code, as <see cref="Keys"/> or int like <c>(Keys)200</c>. Valid values are 1-255.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
 		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
 		public Keyb AddKey(Keys key, bool? down = null)
 		{
 			_ThrowIfSending();
-			if(key == 0 || (uint)key > 255) throw new ArgumentException("Max 255.", nameof(key));
+			if(key == 0 || (uint)key > 255) throw new ArgumentException("Invalid value.", nameof(key));
 
 			bool isPair; _KFlags f = 0;
 			if(!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
@@ -276,21 +280,21 @@ namespace Au
 
 		/// <summary>
 		/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="Send"/>.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Returns self.
 		/// </summary>
-		/// <param name="key">Virtual-key code. Can be 0.</param>
-		/// <param name="scanCode">Scan code of the physical key. Can be 0.</param>
+		/// <param name="key">Virtual-key code, as <see cref="Keys"/> or int like <c>(Keys)200</c>. Valid values are 1-255. Can be 0.</param>
+		/// <param name="scanCode">Scan code of the physical key. Scan code values are 1-127, but this function allows 1-0xffff. Can be 0.</param>
 		/// <param name="extendedKey">true if the key is an extended key.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
-		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
+		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>). Or invalid scan code.</exception>
 		public Keyb AddKey(Keys key, int scanCode, bool extendedKey, bool? down = null)
 		{
 			_ThrowIfSending();
-			if((uint)scanCode > 0xffff) throw new ArgumentException("Max 0xffff.", nameof(scanCode));
+			if((uint)scanCode > 0xffff) throw new ArgumentException("Invalid value.", nameof(scanCode));
 			bool isPair; _KFlags f = 0;
 			if(key == 0) f = _KFlags.Scancode;
 			else {
-				if((uint)key > 255) throw new ArgumentException("Max 255.", nameof(key));
+				if((uint)key > 255) throw new ArgumentException("Invalid value.", nameof(key));
 				//don't: if extendedKey false, set true if need. Don't do it because this func is named 'raw'.
 			}
 
@@ -314,9 +318,12 @@ namespace Au
 
 		/// <summary>
 		/// Adds text. It will be sent by <see cref="Send"/>.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Returns self.
 		/// </summary>
 		/// <param name="text">Text. Can be null.</param>
+		/// <remarks>
+		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
+		/// </remarks>
 		public Keyb AddText(string text)
 		{
 			_ThrowIfSending();
@@ -349,10 +356,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds a callback function. It will be called by <see cref="Send"/>.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Adds a callback function.
+		/// Returns self.
 		/// </summary>
 		/// <param name="callback"></param>
+		/// <remarks>
+		/// The callback function will be called by <see cref="Send"/> and can do anything except sending keys and copy/paste.
+		/// </remarks>
 		public Keyb AddCallback(Action callback)
 		{
 			_ThrowIfSending();
@@ -361,18 +371,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds a repeat-key operator. Then <see cref="Send"/> will send the last added key the specified number of times.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Adds the repeat-key operator. Then <see cref="Send"/> will send the last added key the specified number of times.
+		/// Returns self.
 		/// </summary>
 		/// <param name="count">Repeat count.</param>
-		/// <exception cref="ArgumentException">
-		/// <paramref name="count"/> &gt;60000 or &lt;0.
-		/// The last added event is not key. Can repeat only single key. Cannot repeat text etc.
-		/// </exception>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> &gt;10000 or &lt;0.</exception>
+		/// <exception cref="ArgumentException">The last added item is not key. Can repeat only single key; cannot repeat text etc.</exception>
 		public Keyb AddRepeat(int count)
 		{
 			_ThrowIfSending();
-			if((uint)count > 60000) throw new ArgumentOutOfRangeException(nameof(count), "Max 60000.");
+			if((uint)count > 10000) throw new ArgumentOutOfRangeException(nameof(count), "Max repeat count is 10000.");
 			int i = _a.Count; if(i == 0 || !_a[i - 1].IsKey) throw new ArgumentException("No key to repeat.");
 			_a.Add(new _KEvent(_KType.Repeat, (ushort)count));
 			return this;
@@ -380,14 +388,14 @@ namespace Au
 
 		/// <summary>
 		/// Adds a short pause. Then <see cref="Send"/> will sleep (wait).
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Returns self.
 		/// </summary>
 		/// <param name="timeMS">Time to sleep, milliseconds.</param>
-		/// <exception cref="ArgumentException"><paramref name="timeMS"/> &gt;60000 (1 minute) or &lt;0.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeMS"/> &gt;10000 (1 minute) or &lt;0.</exception>
 		public Keyb AddSleep(int timeMS)
 		{
 			_ThrowIfSending();
-			if((uint)timeMS > 60000) throw new ArgumentException(nameof(timeMS), "Max 60000.");
+			if((uint)timeMS > 10000) throw new ArgumentOutOfRangeException(nameof(timeMS), "Max sleep time is 10000.");
 			_a.Add(new _KEvent(_KType.Sleep, (ushort)timeMS));
 			return this;
 		}
@@ -397,17 +405,17 @@ namespace Au
 
 		/// <summary>
 		/// Adds any number of keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
-		/// Returns self. Example: <c>x.AddX(...).AddX(...).Send();</c>.
+		/// Returns self.
 		/// </summary>
-		/// <param name="a">Arguments. The same as with <see cref="Key"/>.</param>
-		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value.</exception>
-		public Keyb Add(params object[] a)
+		/// <param name="keysEtc">Arguments. The same as with <see cref="Key"/>.</param>
+		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example unknown key name.</exception>
+		public Keyb Add(params object[] keysEtc)
 		{
 			_ThrowIfSending();
-			if(a != null) {
+			if(keysEtc != null) {
 				bool wasKeysString = false;
-				for(int i = 0; i < a.Length; i++) {
-					var o = a[i] ?? "";
+				for(int i = 0; i < keysEtc.Length; i++) {
+					var o = keysEtc[i] ?? "";
 					switch(o) {
 					case string s:
 						if(!wasKeysString) {
@@ -423,9 +431,9 @@ namespace Au
 					case int ms:
 						AddSleep(ms);
 						break;
-					case double sec:
-						AddSleep(checked((int)(sec * 1000d)));
-						break;
+					//case double sec: //rejected
+					//	AddSleep(checked((int)(sec * 1000d)));
+					//	break;
 					case Action g:
 						AddCallback(g);
 						break;
@@ -470,15 +478,15 @@ namespace Au
 			var bi = new BlockUserInput() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
-				if(!base.NoBlockInput) bi.Start(BIEvents.Keys);
-				restoreCapsLock = Lib.ReleaseModAndCapsLock(this);
+				if(!Options.NoBlockInput) bi.Start(BIEvents.Keys);
+				restoreCapsLock = Lib.ReleaseModAndCapsLock(Options);
 				//Perf.Next();
 				for(int i = 0; i < _a.Count; i++) {
 					var k = _a[i];
 					switch(k.Type) {
 					case _KType.Sleep:
 						if(i == _a.Count - 1) sleepFinally = k.sleep;
-						else Time.Sleep(k.sleep);
+						else Lib.Sleep(k.sleep);
 						break;
 					case _KType.Repeat:
 						Debug.Assert(i > 0 && _a[i - 1].IsKey);
@@ -513,7 +521,7 @@ namespace Au
 				}
 			}
 
-			if(sleepFinally > 0) Time.Sleep(sleepFinally);
+			if(sleepFinally > 0) Lib.Sleep(sleepFinally);
 
 			//_SyncWait();
 			//CONSIDER: instead of SleepFinally use TimeSyncFinally, default 100 ms. Eg send a sync key and wait max TimeSyncFinally ms.
@@ -542,7 +550,7 @@ namespace Au
 		{
 			var ki = new Api.INPUTK(k.vk, k.scan, (uint)k.SIFlags);
 
-			int count = 1, sleep = opt.TimeKeyPressed;
+			int count = 1, sleep = opt.KeySpeed;
 			if(isLast) {
 				if(!k.IsPair) sleep = _LimitSleepTime(sleep) - opt.SleepFinally;
 			} else {
@@ -559,7 +567,7 @@ namespace Au
 					if(kNext.IsKey) {
 						bool thisMod = _KeyTypes.IsMod(k.vk), nextMod = _KeyTypes.IsMod(kNext.vk);
 						if(!k.IsUp) {
-							if(kNext.IsUp) sleep = opt.TimeKeyPressed;
+							if(kNext.IsUp) sleep = opt.KeySpeed;
 							else if(thisMod == nextMod) sleep = 0;
 						} else {
 							if(!thisMod || nextMod) sleep = 0;
@@ -578,7 +586,7 @@ namespace Au
 				Api.SendInput(&ki);
 				//Perf.Next();
 				if(sleep > 0) {
-					Time.Sleep(sleep);
+					Lib.Sleep(sleep);
 				}
 				if(k.IsPair) {
 					ki.dwFlags |= Api.KEYEVENTF_KEYUP;
@@ -617,9 +625,8 @@ namespace Au
 			LPARAM hkl = textOption == KTextOption.Keys ? Api.GetKeyboardLayout(wFocus.ThreadId) : default;
 			KMod prevMod = 0;
 
-			double fsleep = opt.TimeTextChar;
-			double fsleepIncrement = 0;
-			int isleep = (int)fsleep;
+			int sleep = opt.TextSpeed;
+			//rejected: option to sleep 1 ms every n-th char (eg use float 0...1 or negative value). Does nothing good. Need a better way to wait while the target app swallows large text.
 
 			try {
 				for(int i = 0; i < s.Length; i++) {
@@ -632,13 +639,6 @@ namespace Au
 						if(!lastChar && s[i + 1] == '\n') continue;
 						c = '\n';
 					}
-
-					int sleep = isleep;
-					if(sleep == 0 && fsleep > 0) {
-						fsleepIncrement += fsleep;
-						if(fsleepIncrement >= 1f || lastChar || c == '\n') { sleep = 1; fsleepIncrement = 0; }
-					}
-					//Print(sleep);
 
 					int vk = 0; KMod mod = 0;
 					if(c == '\n') {
@@ -662,13 +662,13 @@ namespace Au
 						if(0 != (mod ^ pm & KMod.Alt)) Lib.SendAlt(0 != (mod & KMod.Alt));
 						if(0 != (mod ^ pm & KMod.Shift)) Lib.SendShift(0 != (mod & KMod.Shift));
 						prevMod = mod;
-						if(isleep > 0) Time.Sleep(_LimitSleepTime(isleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
+						if(sleep > 0) Lib.Sleep(_LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
 					}
 
 					var ki = new Lib.INPUTKEY2((byte)vk, vk == 0 ? c : Lib.VkToSc((byte)vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
 					Api.SendInput(&ki.k0, sleep > 0 ? 1 : 2);
 					if(sleep > 0) {
-						Time.Sleep(sleep);
+						Lib.Sleep(sleep);
 						Api.SendInput(&ki.k1, 1);
 					}
 				}
@@ -679,6 +679,9 @@ namespace Au
 
 			//FUTURE: try this sync method if long text, eg > 500 char:
 			//	In a thread pool thread measure CPU of the target thread. If near 100%, sleep eg 100 ms eg every 100 chars.
+
+			//rejected: throw if changed the focused window.
+			//	Possible false positives, because everything is async.
 		}
 
 		static int _LimitSleepTime(int t) => t <= 10 ? t : (t / 4 + 10);

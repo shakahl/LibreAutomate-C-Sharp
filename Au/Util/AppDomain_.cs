@@ -21,7 +21,7 @@ using static Au.NoClass;
 namespace Au.Util
 {
 	/// <summary>
-	/// Extends the .NET AppDomain class.
+	/// Extends <see cref="AppDomain"/>.
 	/// </summary>
 	public static class AppDomain_
 	{

@@ -88,11 +88,11 @@ namespace Au
 #pragma warning disable 660, 661 //no Equals()
 			/// <summary>
 			/// Contains file properties that can be used to uniquely identify the file on a single computer.
-			/// Can be used with files and directories.
-			/// To get it, use <see cref="GetFileId"/>.
 			/// </summary>
 			/// <remarks>
-			/// Path to the same file or directory can be specified in many different ways. To determine whether two paths represent to the same file, get and compare FileId of them.
+			/// Can be used with files and directories.
+			/// To get it, use <see cref="GetFileId"/>.
+			/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
 			/// </remarks>
 			/// <tocexclude />
 			public struct FileId

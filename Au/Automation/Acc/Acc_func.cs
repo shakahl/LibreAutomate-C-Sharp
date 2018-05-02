@@ -387,7 +387,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the object does not have a default action. Then you can use <see cref="ExtensionMethods.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the object does not have a default action. Then you can use <see cref="ExtensionMethods.MouseClick(Acc, Coord, Coord, MButton)" r=""/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
 		/// </remarks>
 		public void DoAction()
@@ -460,7 +460,7 @@ namespace Au
 		/// If null (default), performs default action (like <see cref="DoAction"/>) or posts Space key message. More info in Remarks.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Read more about Java accessible objects in <see cref="Acc">class help</see>.
+		/// Read more about Java accessible objects in <see cref="Acc"/> topic.
 		/// 
 		/// Problem: if the action opens a dialog, DoAction/DoJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the object is focusable, this function tries a workaround: it makes the object (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
 		/// </remarks>
@@ -661,7 +661,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <msdn>IAccessible.accSelect</msdn>.
 		/// Not all objects support it. Most objects support not all flags. It depends on object <see cref="AccSTATE">states</see> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
-		/// Many object have bugs, especially with flag TAKEFOCUS. More bugs when the object found with flag NotInProc.
+		/// Many object have bugs, especially with flag TAKEFOCUS. More bugs when the object found with flag <see cref="AFFlags.NotInProc"/>.
 		/// </remarks>
 		public void Select(AccSELFLAG how = AccSELFLAG.TAKESELECTION)
 		{

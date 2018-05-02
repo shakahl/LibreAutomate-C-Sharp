@@ -23,7 +23,7 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Extends the .NET class Screen.
+	/// Extends <see cref="Screen"/>.
 	/// </summary>
 	public static class Screen_
 	{

@@ -117,7 +117,6 @@ namespace Au
 		/// Waits <paramref name="timeMS"/> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
 		/// </summary>
 		/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/>.</param>
-		/// <param name="qsSendmessage">Call <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_SENDMESSAGE instead of QS_ALLINPUT.</param>
 		/// <remarks>
 		/// Unlike <see cref="Sleep"/>, this function retrieves and dispatches Windows messages, calls .NET/COM event handlers, hook procedures, etc. Supports APC.
 		/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. In some places this function does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
@@ -126,25 +125,41 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
 		/// <seealso cref="Util.MessageLoop"/>
-		public static unsafe void SleepDoEvents(int timeMS, bool qsSendmessage = false)
+		public static unsafe void SleepDoEvents(int timeMS)
 		{
 			bool _ = false;
-			SleepDoEvents(timeMS, ref _, qsSendmessage);
+			LibSleepDoEvents(timeMS, ref _);
 		}
 
 		/// <summary>
-		/// The same as <see cref="SleepDoEvents(int, bool)"/>, but also can wait until a variable is set.
+		/// The same as <see cref="SleepDoEvents(int)"/>, but also can wait until a variable is set.
 		/// </summary>
 		/// <param name="timeMS"></param>
-		/// <param name="stop">Stop waiting when this variable is set to true. Set it when processing events/messages/etc while waiting.</param>
-		/// <param name="qsSendmessage"></param>
-		/// <inheritdoc cref="SleepDoEvents(int, bool)"/>
-		public static unsafe void SleepDoEvents(int timeMS, ref bool stop, bool qsSendmessage = false)
+		/// <param name="stop">Stop waiting when this variable is set to true. You can set it when processing events/messages/etc while waiting.</param>
+		/// <inheritdoc cref="SleepDoEvents(int)"/>
+		public static unsafe void SleepDoEvents(int timeMS, ref bool stop)
 		{
+			LibSleepDoEvents(timeMS, ref stop);
+		}
+
+		/// <summary>SleepDoEvents + noSetPrecision.</summary>
+		internal static unsafe void LibSleepDoEvents(int timeMS, bool noSetPrecision)
+		{
+			bool _ = false;
+			LibSleepDoEvents(timeMS, ref _, noSetPrecision);
+		}
+
+		/// <summary>SleepDoEvents + noSetPrecision.</summary>
+		internal static unsafe void LibSleepDoEvents(int timeMS, ref bool stop, bool noSetPrecision = false)
+		{
+			//rejected: , bool qsSendmessage = false. Not useful.
+			//	If thread has windows, hangs if we don't get posted messages.
+			//	Else dispatching them usually does not harm.
+
 			if(stop) return;
 
 			if(timeMS == 0) {
-				_DoEvents(qsSendmessage);
+				_DoEvents();
 				return;
 			}
 
@@ -152,7 +167,8 @@ namespace Au
 			if(timeMS > 0) tEnd = MillisecondsWithoutComputerSleepTime + timeMS;
 			else if(timeMS < 0 && timeMS != Timeout.Infinite) throw new ArgumentOutOfRangeException();
 
-			LibSleepPrecision.LibTempSet1(timeMS);
+			if(!noSetPrecision) LibSleepPrecision.LibTempSet1(timeMS);
+
 			while(!stop) {
 				int timeSlice = 300; //call API in loop with small timeout to make it respond to Thread.Abort
 				if(timeMS > 0) {
@@ -160,14 +176,14 @@ namespace Au
 					if(t <= 0) break;
 					if(t < timeSlice) timeSlice = (int)t;
 				}
-				uint k = Api.MsgWaitForMultipleObjectsEx(0, null, (uint)timeSlice, qsSendmessage ? Api.QS_SENDMESSAGE : Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
+				uint k = Api.MsgWaitForMultipleObjectsEx(0, null, (uint)timeSlice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
 				//info: k can be 0 (message etc), WAIT_TIMEOUT, WAIT_IO_COMPLETION, WAIT_FAILED.
 				if(k == Api.WAIT_FAILED) throw new Win32Exception(); //unlikely, because not using handles
-				if(k == 0 && !_DoEvents(qsSendmessage)) break;
+				if(k == 0 && !_DoEvents()) break;
 			}
 		}
 
-		static bool _DoEvents(bool onlySentMessages)
+		static bool _DoEvents(bool onlySentMessages = false)
 		{
 			//note: with PeekMessage don't use |Api.PM_QS_SENDMESSAGE. Then setwineventhook hook does not work. Although eg LL key/mouse hooks work.
 			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
@@ -190,7 +206,7 @@ namespace Au
 		/// </remarks>
 		public static void DoEvents()
 		{
-			_DoEvents(false);
+			_DoEvents();
 		}
 
 		/// <summary>
@@ -401,9 +417,11 @@ namespace Au
 
 	/// <summary>
 	/// Timer that uses API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
+	/// </summary>
+	/// <remarks>
 	/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
 	/// Use in UI threads (need a message loop).
-	/// </summary>
+	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// //this example sets 3 timers

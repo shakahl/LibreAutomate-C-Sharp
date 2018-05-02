@@ -25,10 +25,10 @@ namespace Au
 {
 	/// <summary>
 	/// A variable of Wnd type represents a window or control. It is a window handle, also known as HWND.
-	/// Wnd functions can be used with windows and controls of any process/thread.
-	/// Wnd functions also can be used with .NET form/control and WPF window class variables, like <c>Wnd w=(Wnd)form; w.Method(...);</c> or <c>((Wnd)form).Method(...);</c>.
 	/// </summary>
 	/// <remarks>
+	/// Wnd functions can be used with windows and controls of any process/thread. Also can be used with .NET form/control and WPF window class variables, like <c>Wnd w=(Wnd)form; w.Method(...);</c> or <c>((Wnd)form).Method(...);</c>.
+	/// 
 	/// There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
 	/// 
 	/// More functions are in the nested classes - <see cref="Misc"/>, <see cref="Misc.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
@@ -42,7 +42,7 @@ namespace Au
 	/// <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
 	/// </list>
 	/// 
-	/// Many functions fail if the window's process has a higher <see cref="Process_.UacInfo">UAC integrity level</see> (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: Activate, ActivateLL, ShowMinimized, ShowNotMinimized, ShowNotMinMax, Close.
+	/// Many functions fail if the window's process has a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
 	/// 
 	/// The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
 	/// 
@@ -128,9 +128,10 @@ namespace Au
 
 		/// <summary>
 		/// If x is not default(Wnd), returns x, else throws <see cref="NotFoundException"/>.
-		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)"/>. Examples are there.
+		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
 		/// </summary>
 		/// <exception cref="NotFoundException">x is default(Wnd).</exception>
+		/// <example><inheritdoc cref="ExtensionMethods.OrThrow(Wnd)"/></example>
 		public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 
 		/// <summary>
@@ -364,7 +365,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if the <see cref="Wnd">handle</see> is 0.
+		/// Returns true if the <see cref="Wnd">window handle</see> is 0.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -376,7 +377,7 @@ namespace Au
 		public bool Is0 => _h == null;
 
 		/// <summary>
-		/// Returns true if the <see cref="Wnd">handle</see> identifies an existing window.
+		/// Returns true if the <see cref="Wnd">window handle</see> identifies an existing window.
 		/// Returns false if the handle is 0 or invalid.
 		/// Invalid non-0 handle usually means that the window is closed/destroyed.
 		/// </summary>
@@ -455,7 +456,7 @@ namespace Au
 		/// <summary>
 		/// Shows (if hidden) or hides this window.
 		/// Does not activate/deactivate/zorder.
-		/// With windows of current thread usually it's better to use <see cref="ShowLL">ShowLL</see>.
+		/// With windows of current thread usually it's better to use <see cref="ShowLL"/>.
 		/// </summary>
 		/// <remarks>
 		/// Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
@@ -472,7 +473,7 @@ namespace Au
 		/// Does not activate/deactivate/zorder.
 		/// </summary>
 		/// <remarks>
-		/// This library has two similar functions - <see cref="Show">Show</see> and <b>ShowLL</b>. <b>Show</b> is better to use in automation scripts, with windows of any process/thread. <b>ShowLL</b> usually is better to use in programming, with windows of current thread.
+		/// This library has two similar functions - <see cref="Show"/> and <b>ShowLL</b>. <b>Show</b> is better to use in automation scripts, with windows of any process/thread. <b>ShowLL</b> usually is better to use in programming, with windows of current thread.
 		/// <b>ShowLL</b> is more low-level. Does not throw exception when fails, and does not add a delay; <b>Show</b> adds a small delay when the window is of other thread.
 		/// 
 		/// Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
@@ -879,8 +880,6 @@ namespace Au
 		/// <exception cref="WndException"/>
 		internal bool LibActivate(Lib.ActivateFlags flags)
 		{
-			//CONSIDER: use Options.Relaxed
-
 			if(!flags.Has_(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
 			if(flags.Has_(Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
 			else {
@@ -1077,7 +1076,7 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="WndException">
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
-		/// Fails to set focus when the target process is admin and this process isn't.
+		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>).
 		/// </exception>
 		/// <seealso cref="WndFocused"/>
 		/// <seealso cref="IsFocused"/>
@@ -1374,7 +1373,7 @@ namespace Au
 
 		/// <summary>
 		/// Calculates and sets window rectangle from the specified client area rectangle.
-		/// Calls <see cref="ResizeLL">ResizeLL</see>.
+		/// Calls <see cref="ResizeLL"/>.
 		/// </summary>
 		/// <param name="width">Width. Use null to not change.</param>
 		/// <param name="height">Height. Use null to not change.</param>
@@ -1576,7 +1575,7 @@ namespace Au
 		/// Gets or sets child window rectangle in parent window's client area.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetRectInClientOf">GetRectInClientOf</see>. Returns empty rectangle if fails (eg window closed).
+		/// Calls <see cref="GetRectInClientOf"/>. Returns empty rectangle if fails (eg window closed).
 		/// </remarks>
 		public RECT RectInParent
 		{
@@ -1646,7 +1645,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload calls <see cref="ContainsWindowXY(Wnd, Coord, Coord)">ContainsWindowXY</see>(WndWindow, x, y).
+		/// This overload calls <see cref="ContainsWindowXY(Wnd, Coord, Coord)"/>(WndWindow, x, y).
 		/// </summary>
 		public bool ContainsWindowXY(Coord x, Coord y)
 		{
@@ -2369,7 +2368,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if UAC would not allow to automate the window.
+		/// Returns true if <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> would not allow to automate the window.
 		/// It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -2607,14 +2606,14 @@ namespace Au
 		/// <summary>
 		/// Gets filename (without ".exe") of process executable file.
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName">Process_.GetProcessName</see>.
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName"/>.
 		/// </summary>
 		public string ProcessName => Process_.GetProcessName(ProcessId);
 
 		/// <summary>
 		/// Gets full path of process executable file.
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName">Process_.GetProcessName</see>.
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName"/>.
 		/// </summary>
 		public string ProcessPath => Process_.GetProcessName(ProcessId, true);
 
@@ -2637,7 +2636,7 @@ namespace Au
 		/// </param>
 		/// <remarks>
 		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-		/// If the window is of this thread, just calls <see cref="Send">Send</see> (if noWait==false) or <see cref="Post">Post</see> (if noWait==true) and returns true.
+		/// If the window is of this thread, just calls <see cref="Send"/> (if noWait==false) or <see cref="Post"/> (if noWait==true) and returns true.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -2718,7 +2717,7 @@ namespace Au
 		//Rarely used. It is easy, and there is example in Close() help: Wnd.FindAll("* Notepad", "Notepad").ForEach(t => t.Close());
 		///// <summary>
 		///// Closes all matching windows.
-		///// Calls <see cref="FindAll">FindAll</see>. All parameters etc are the same. Then calls <see cref="Close">Close</see> for each found window.
+		///// Calls <see cref="FindAll"/>. All parameters etc are the same. Then calls <see cref="Close"/> for each found window.
 		///// Returns the number of found windows.
 		///// </summary>
 		//public static int CloseAll(
@@ -2822,7 +2821,7 @@ namespace Au.Types
 		/// Uses API <msdn>EnumPropsEx</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied (UAC). Supports <see cref="Native.GetError"/>.
+		/// Returns 0-length list if fails. Fails if invalid window or access denied (<conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>). Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		public Dictionary<string, LPARAM> GetList()
 		{

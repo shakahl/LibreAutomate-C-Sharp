@@ -117,15 +117,24 @@ namespace Au
 			/// If <see cref="IsTimeout"/> returns true, returns false.
 			/// Else sleeps for <see cref="Period"/> milliseconds, increments <b>Period</b> if it is less than <see cref="MaxPeriod"/>, and returns true.
 			/// </summary>
+			/// <param name="doEvents">Use <see cref="Time.SleepDoEvents(int)"/> instead of <see cref="Thread.Sleep"/>.</param>
 			/// <exception cref="TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			public bool Sleep()
+			public bool Sleep(bool doEvents = false)
 			{
 				if(IsTimeout()) return false;
+
 				if(Period < 10 && !_precisionIsSet) { //default Period is 10
 					_precisionIsSet = true;
 					Time.LibSleepPrecision.TempSet1();
 				}
-				Thread.Sleep(Period);
+
+				if(doEvents) {
+					Time.LibSleepDoEvents(Period, noSetPrecision: true);
+					//CONSIDER: bool? doEvents. If null, use Opt.Wait.DoEvents.
+				} else {
+					Thread.Sleep(Period);
+				}
+
 				if(Period < MaxPeriod) Period++;
 				return true;
 			}

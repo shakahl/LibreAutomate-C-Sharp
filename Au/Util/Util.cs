@@ -25,7 +25,8 @@ using static Au.NoClass;
 namespace Au.Util
 {
 	/// <summary>
-	/// Miscellaneous classes and functions used in this library. Can be used outside it too.
+	/// Miscellaneous classes and functions, used in this library as utility/helper.
+	/// Some classes are public, and can be used not only in this library.
 	/// </summary>
 	[CompilerGenerated()]
 	class NamespaceDoc
@@ -286,7 +287,7 @@ namespace Au.Util
 	{
 		/// <summary>
 		/// Gets the entry assembly of this appdomain.
-		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="AppDomain.DoCallBack">AppDomain.DoCallBack</see>.
+		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="AppDomain.DoCallBack"/>.
 		/// </summary>
 		public static Assembly EntryAssembly
 		{
@@ -330,7 +331,7 @@ namespace Au.Util
 
 	//currently not used
 	///// <summary>
-	///// Extends the .NET <see cref="Marshal"/> class.
+	///// Extends <see cref="Marshal"/>.
 	///// </summary>
 	//public static class Marshal_
 	//{

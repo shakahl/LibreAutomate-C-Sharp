@@ -20,7 +20,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API error code of this thread.
-		/// Need it before calling some functions if you want to use <see cref="GetError"/> or <see cref="GetErrorMessage()">GetErrorMessage</see>.
+		/// Need it before calling some functions if you want to use <see cref="GetError"/> or <see cref="GetErrorMessage()"/>.
 		/// </summary>
 		public static void ClearError()
 		{
@@ -42,7 +42,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
 		/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most Wnd propery-get functions.
-		/// When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> to get the error code. Also you can use <see cref="GetErrorMessage()">GetErrorMessage</see>.
+		/// When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> to get the error code. Also you can use <see cref="GetErrorMessage()"/>.
 		/// 
 		/// Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="ClearError"/> before.
 		///

@@ -21,10 +21,6 @@ using static Au.NoClass;
 
 namespace Au
 {
-	/// <summary>
-	/// Keyboard and clipboard functions.
-	/// </summary>
-	//[DebuggerStepThrough]
 	public partial class Keyb
 	{
 		/// <summary>
@@ -44,9 +40,9 @@ namespace Au
 				if(c >= 'A' && c <= 'Z') return (Keys)c;
 				if(c >= '0' && c <= '9') return (Keys)c;
 				switch(c) {
+				case '=': return Keys.Oemplus;
 				case '`': case '~': return Keys.Oemtilde;
 				case '-': case '_': return Keys.OemMinus;
-				case '=': return Keys.Oemplus;
 				case '[': case '{': return Keys.OemOpenBrackets;
 				case ']': case '}': return Keys.OemCloseBrackets;
 				case '\\': case '|': return Keys.OemPipe;
@@ -114,20 +110,16 @@ namespace Au
 			case 'A':
 				if(_U('l', 't')) return c3 == 'g' ? Keys.RMenu : Keys.Menu;
 				if(_U('p', 'p')) return Keys.Apps;
-				if(_U('d', 'd')) return Keys.Add;
 				break;
 			case 'B':
 				if(_U('a', 'c')) return Keys.Back;
 				break;
 			case 'C':
 				if(_U('t', 'r')) return Keys.ControlKey;
-				if(_U('o', 'n')) return Keys.ControlKey;
 				if(_U('a', 'p')) return Keys.CapsLock;
 				break;
 			case 'D':
 				if(_U('e', 'l')) return Keys.Delete;
-				if(_U('e', 'c')) return Keys.Decimal;
-				if(_U('i', 'v')) return Keys.Divide;
 				if(_U('o', 'w')) return Keys.Down;
 				break;
 			case 'E':
@@ -143,18 +135,14 @@ namespace Au
 				break;
 			case 'L':
 				if(_U('e', 'f')) return Keys.Left;
-				if(_U('s', 'h')) return Keys.LShiftKey;
-				if(_U('c', 't') || _U('c', 'o')) return Keys.LControlKey;
-				if(_U('a', 'l')) return Keys.LMenu;
-				if(_U('w', 'i')) return Keys.LWin;
+				//don't need LShift etc
 				break;
 			case 'M':
 				if(_U('e', 'n')) return Keys.Apps;
-				if(_U('u', 'l')) return Keys.Multiply;
 				break;
 			case 'N':
 				if(_U('u', 'm')) return Keys.NumLock;
-				//case "NumEnter": return Keys.Return|ExtendedKeyFlag; //Key((Keys.Return, 0, true))
+				//for NumEnter use Key((Keys.Return, 0, true))
 				break;
 			case 'P':
 				if(_U('a', 'g') && c3 == 'e') return c4 == 'u' ? Keys.PageUp : (c4 == 'd' ? Keys.PageDown : 0);
@@ -165,18 +153,16 @@ namespace Au
 				break;
 			case 'R':
 				if(_U('i', 'g')) return Keys.Right;
-				if(_U('s', 'h')) return Keys.RShiftKey;
-				if(_U('c', 't') || _U('c', 'o')) return Keys.RControlKey;
 				if(_U('a', 'l')) return Keys.RMenu;
+				if(_U('c', 't')) return Keys.RControlKey;
+				if(_U('s', 'h')) return Keys.RShiftKey;
 				if(_U('w', 'i')) return Keys.RWin;
-				if(_U('e', 't')) return Keys.Enter;
 				break;
 			case 'S':
 				if(_U('h', 'i')) return Keys.ShiftKey;
 				if(_U('p', 'a')) return Keys.Space;
 				if(_U('c', 'r')) return Keys.Scroll;
-				if(_U('u', 'b')) return Keys.Subtract;
-				//case "SysRq": return Keys.PrintScreen; //SysRq not used on Windows
+				//SysRq not used on Windows
 				break;
 			case 'T':
 				if(_U('a', 'b')) return Keys.Tab;
@@ -200,6 +186,16 @@ namespace Au
 		/// </summary>
 		internal static class Lib
 		{
+			/// <summary>
+			/// Calls Time.SleepDoEvents.
+			/// </summary>
+			internal static void Sleep(int ms)
+			{
+				Time.SleepDoEvents(ms);
+
+				//see comments in Mouse._Sleep.
+			}
+
 			/// <summary>
 			/// If k is ShiftKey, ControlKey, Menu, LWin or RWin, returns it as modifier flag, eg KMod.Shift from Keys.ShiftKey.
 			/// Else returns 0.
@@ -350,7 +346,7 @@ namespace Au
 					_opt = opt;
 
 					SendCtrl(true);
-					Time.Sleep(_LimitSleepTime(Math.Max(opt.TimeKeyPressed, 3))); //to avoid problems with apps like IE address bar
+					Time.Sleep(_LimitSleepTime(Math.Max(opt.KeySpeed, 3))); //to avoid problems with apps like IE address bar
 					SendKeyEventRaw(_vk, _scan, 0);
 				}
 
@@ -417,9 +413,9 @@ namespace Au
 		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(Wnd) if Hook is null.</param>
 		KOptions _GetOptionsAndWndFocused(out Wnd wFocus, bool getWndAlways)
 		{
-			if(base.Hook == null && !getWndAlways) {
+			if(Options.Hook == null && !getWndAlways) {
 				wFocus = default;
-				return this;
+				return Options;
 			}
 			return _GetOptions(wFocus = Lib.GetWndFocusedOrActive());
 		}
@@ -430,11 +426,11 @@ namespace Au
 		/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
 		KOptions _GetOptions(Wnd wFocus)
 		{
-			var call = base.Hook;
-			if(call == null || wFocus.Is0) return this;
+			var call = Options.Hook;
+			if(call == null || wFocus.Is0) return Options;
 			if(wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
-				if(_sstate.options == null) _sstate.options = new KOptions(this); else _sstate.options.ResetOptions();
+				if(_sstate.options == null) _sstate.options = new KOptions(Options); else _sstate.options.LibReset(Options);
 				call(new KOHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;

@@ -44,7 +44,8 @@
     <VisibleItems>InheritedMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\..\Au\Au.csproj" />
+      <DocumentationSource sourceFile="..\..\Au\bin\Release\Au.XML" />
+      <DocumentationSource sourceFile="..\..\Au\bin\Release\Au.dll" />
     </DocumentationSources>
     <WarnOnMissingSourceContext>False</WarnOnMissingSourceContext>
     <ComponentPath>..\Plugins\</ComponentPath>
@@ -208,6 +209,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Conceptual1.aml" />
+    <None Include="UAC.aml" />
     <None Include="VersionHistory\v1.0.0.0.aml" />
     <None Include="VersionHistory\VersionHistory.aml" />
     <None Include="Welcome.aml" />

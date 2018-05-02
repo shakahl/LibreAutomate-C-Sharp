@@ -22,8 +22,7 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Registry functions.
-	/// Extends Microsoft.Win32.Registry.
+	/// Registry functions. Extends <see cref="Registry"/>.
 	/// </summary>
 	public static class Registry_
 	{
@@ -188,7 +187,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions are listed in <see cref="GetInt">GetInt</see> topic.</exception>
+		/// <exception cref="Exception">Exceptions are listed in <see cref="GetInt"/> topic.</exception>
 		public static bool GetLong(out long data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = 0;
@@ -205,7 +204,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions are listed in <see cref="GetInt">GetInt</see> topic.</exception>
+		/// <exception cref="Exception">Exceptions are listed in <see cref="GetInt"/> topic.</exception>
 		public static bool GetString(out string data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = null;
@@ -222,7 +221,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions are listed in <see cref="GetInt">GetInt</see> topic.</exception>
+		/// <exception cref="Exception">Exceptions are listed in <see cref="GetInt"/> topic.</exception>
 		public static bool GetStringArray(out string[] data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			data = null;
@@ -266,7 +265,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt">SetInt</see> topic.</exception>
+		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt"/> topic.</exception>
 		public static void SetLong(long data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			_Set(RegistryValueKind.QWord, data, valueName, key, parentKeyOrHive);
@@ -281,7 +280,7 @@ namespace Au
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
 		/// <param name="REG_EXPAND_SZ">Let the registry value type be REG_EXPAND_SZ.</param>
-		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt">SetInt</see> topic.</exception>
+		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt"/> topic.</exception>
 		public static unsafe void SetString(string data, string valueName, string key = null, RegistryKey parentKeyOrHive = null, bool REG_EXPAND_SZ = false)
 		{
 			_Set(REG_EXPAND_SZ ? RegistryValueKind.ExpandString : RegistryValueKind.String, data ?? "", valueName, key, parentKeyOrHive);
@@ -295,7 +294,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt">SetInt</see> topic.</exception>
+		/// <exception cref="Exception">Exceptions are listed in <see cref="SetInt"/> topic.</exception>
 		public static unsafe void SetStringArray(string[] data, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
 			_Set(RegistryValueKind.MultiString, data ?? Array.Empty<string>(), valueName, key, parentKeyOrHive);
@@ -310,7 +309,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions thrown by <see cref="CreateOrOpen">CreateOrOpen</see>.</exception>
+		/// <exception cref="Exception">Exceptions thrown by <see cref="CreateOrOpen"/>.</exception>
 		/// <exception cref="Win32Exception">Failed to write the value to the key.</exception>
 		public static unsafe void SetBinary(void* data, int size, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{
@@ -333,7 +332,7 @@ namespace Au
 		/// <param name="valueName">Registry value name.</param>
 		/// <param name="key">Registry key. See <see cref="ParseKeyString"/></param>
 		/// <param name="parentKeyOrHive">If not null, the 'key' argument is a subkey of this key or hive; if the 'key' argument is null or "", parentKeyOrHive is the direct parent key of the value.</param>
-		/// <exception cref="Exception">Exceptions thrown by <see cref="Open">Open</see>.</exception>
+		/// <exception cref="Exception">Exceptions thrown by <see cref="Open"/>.</exception>
 		/// <exception cref="Win32Exception">The value exists but failed to get it, for example the specified size is smaller than registry data size.</exception>
 		public static unsafe int GetBinary(void* data, int size, string valueName, string key = null, RegistryKey parentKeyOrHive = null)
 		{

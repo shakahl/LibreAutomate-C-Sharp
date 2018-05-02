@@ -1095,5 +1095,8 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "GetClipboardFormatNameW", SetLastError = true)]
 		internal static unsafe extern int GetClipboardFormatName(int format, char* lpszFormatName, int cchMaxCount);
 
+		[DllImport("user32.dll")]
+		internal static extern int GetDoubleClickTime();
+
 	}
 }

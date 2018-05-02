@@ -110,7 +110,6 @@
     <Compile Include="_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unused currently\Test menu, TB.cs" />
-    <Compile Include="Unused currently\TestOptions.cs" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Unused currently\FormMenu.resx">
       <DependentUpon>FormMenu.cs</DependentUpon>
@@ -138,7 +137,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Au\Au.csproj">

@@ -160,8 +160,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Arranges windows, shows/hides desktop.
-			/// The same as the taskbar right-click menu commands.
+			/// Arranges windows, shows/hides desktop. The same as the taskbar right-click menu commands.
 			/// </summary>
 			public static class Desktop
 			{
@@ -254,9 +253,11 @@ namespace Au
 
 			/// <summary>
 			/// Gets programming names of .NET Windows Forms controls.
-			/// Usually each control has a unique name. It is useful to identify controls without a classic name/text.
-			/// Control id of these controls is not constant and cannot be used.
 			/// </summary>
+			/// <remarks>
+			/// Usually each control has a unique name. It is useful to identify controls without a classic name/text.
+			/// The control id of these controls is not useful, it is not constant.
+			/// </remarks>
 			public sealed class WinFormsControlNames :IDisposable
 			{
 				Process_.Memory _pm;
@@ -276,7 +277,7 @@ namespace Au
 				/// </summary>
 				/// <param name="w">Any top-level or child window of that process.</param>
 				/// <exception cref="WndException">w invalid.</exception>
-				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of UAC.</exception>
+				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.</exception>
 				public WinFormsControlNames(Wnd w)
 				{
 					_pm = new Process_.Memory(w, 4096); //throws

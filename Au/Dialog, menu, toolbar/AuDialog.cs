@@ -26,10 +26,11 @@ namespace Au
 {
 	/// <summary>
 	/// Standard dialogs to show information or get user input.
-	/// You can use static functions (less code) or create class instances (more options).
-	/// More info: <see cref="ShowEx"/>.
 	/// </summary>
 	/// <remarks>
+	/// You can use static functions (less code) or create class instances (more options).
+	/// More info: <see cref="ShowEx"/>.
+	/// 
 	/// Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
 	/// 
 	/// Cannot be used in services. Instead use <see cref="MessageBox.Show(string, string, MessageBoxButtons, MessageBoxIcon, MessageBoxDefaultButton, MessageBoxOptions)"/> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
@@ -138,7 +139,7 @@ namespace Au
 		#region static options
 
 		/// <summary>
-		/// Default options used by AuDialog class functions called in this appdomain.
+		/// Default options used by <see cref="AuDialog"/> class functions.
 		/// </summary>
 		public static class Options
 		{
@@ -553,7 +554,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Set properties of the control that shows and hides text added by <see cref="SetExpandedText">SetExpandedText</see>.
+		/// Set properties of the control that shows and hides text added by <see cref="SetExpandedText"/>.
 		/// </summary>
 		/// <param name="defaultExpanded"></param>
 		/// <param name="collapsedText"></param>
@@ -641,7 +642,7 @@ namespace Au
 		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="AuDialog.Options.DefaultScreen"/> is ignored.
 		/// </summary>
 		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or Wnd (window handle). Can be null.</param>
-		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY">SetXY</see> and <see cref="Screen">Screen</see> are ignored.</param>
+		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
 		public void SetOwnerWindow(DOwner owner, bool ownerCenter = false, bool doNotDisable = false)
@@ -1142,10 +1143,11 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
-		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWaitEx">ShowNoWaitEx</see> and <see cref="ShowProgressEx">ShowProgressEx</see>.
+		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWaitEx"/> and <see cref="ShowProgressEx"/>.
 		/// </remarks>
 		public TDMessageSender Send { get; private set; }
 
+		//TODO: try to move to Au.Types. Then remove tocexclude.
 		/// <summary>
 		/// Sends task dialog API messages, like <c>d.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// </summary>
@@ -1187,7 +1189,7 @@ namespace Au
 				var td = _tdo; if(td == null) return;
 
 				if(partId == TDApi.TDE.CONTENT && td._editType == DEdit.Multiline) {
-					text = td._c.pszContent = text + _multilineString;
+					text = td._c.pszContent = text + c_multilineString;
 				}
 
 				_dlg.SendS((uint)(resizeDialog ? TDApi.TDM.SET_ELEMENT_TEXT : TDApi.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
@@ -1359,7 +1361,7 @@ namespace Au
 		}
 
 		//used to reserve space for multiline Edit control by appending this to text2
-		const string _multilineString = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n ";
+		const string c_multilineString = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n ";
 
 		Wnd _EditControlGetPlace(out RECT r)
 		{
@@ -1371,8 +1373,8 @@ namespace Au
 
 			if(_editType == DEdit.Multiline) {
 				int top = r.top;
-				if(!_c.pszContent.EndsWith_(_multilineString)) {
-					_c.pszContent += _multilineString;
+				if(!_c.pszContent.EndsWith_(c_multilineString)) {
+					_c.pszContent += c_multilineString;
 					_dlg.SendS((uint)TDApi.TDM.SET_ELEMENT_TEXT, (int)TDApi.TDE.CONTENT, _c.pszContent);
 					prog.GetRectInClientOf(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
 				}
@@ -1508,9 +1510,9 @@ namespace Au
 		/// ]]></code>
 		/// </param>
 		/// <remarks>
-		/// The returned DResult variable has these properties: selected button id, selected radio button id, check box state.
+		/// The returned <see cref="DResult"/> variable has these properties: selected button id, selected radio button id, check box state.
 		/// Tip: DResult supports implicit cast to int. You can use code <c>switch(AuDialog.ShowEx(...))</c> instead of <c>switch(AuDialog.ShowEx(...).Button)</c> .
-		/// Tip: For optional parameters use named arguments. Example: <c>AuDialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
+		/// Tip: Use named arguments. Example: <c>AuDialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
 		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a AuDialog class instance, set properties and call ShowDialog. Example in <see cref="AuDialog"/> class help.
 		/// </remarks>
 		/// <example>
@@ -1569,7 +1571,7 @@ namespace Au
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <remarks>
 		/// Calls <see cref="ShowEx"/>.
-		/// Tip: For optional parameters use named arguments. Example: <c>AuDialog.Show("Text.", icon: DIcon.Info)</c> .
+		/// Tip: Use named arguments. Example: <c>AuDialog.Show("Text.", icon: DIcon.Info)</c> .
 		/// </remarks>
 		/// <seealso cref="ShowInfo"/>
 		/// <seealso cref="ShowWarning"/>
@@ -1992,7 +1994,7 @@ namespace Au
 		/// <summary>
 		/// Shows dialog like <see cref="Show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see <see cref="ShowNoWaitEx">example</see>).
+		/// Returns <see cref="AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>. Through the <b>Send</b> property you can modify controls and close the dialog. Example in <see cref="ShowNoWaitEx"/> topic.
 		/// Parameters are the same as with <see cref="Show"/>.
 		/// </summary>
 		/// <remarks>

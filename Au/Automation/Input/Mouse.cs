@@ -23,7 +23,9 @@ namespace Au
 	/// <summary>
 	/// Mouse functions.
 	/// </summary>
-	//[DebuggerStepThrough]
+	/// <remarks>
+	/// Should not be used to click windows of own thread. It may work or not. If need, use another thread. Example in <see cref="Keyb.Key"/>.
+	/// </remarks>
 	public static partial class Mouse
 	{
 		/// <summary>
@@ -43,7 +45,7 @@ namespace Au
 
 		static void _Move(Point p, bool fast)
 		{
-			bool relaxed = Options.Relaxed, willFail = false;
+			bool relaxed = Opt.Mouse.Relaxed, willFail = false;
 
 			if(!Screen_.IsInAnyScreen(p)) {
 				if(!relaxed) throw new ArgumentOutOfRangeException(null, "Cannot mouse-move. This x y is not in screen. " + p.ToString());
@@ -77,7 +79,7 @@ namespace Au
 			if(!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				Wnd.WndActive.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
-				//rejected: Wnd.Misc.WndRoot.ActivateLL()
+																		//rejected: Wnd.Misc.WndRoot.ActivateLL()
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -86,14 +88,12 @@ namespace Au
 			}
 			t_prevMousePos.last = p;
 
-			//_SleepMax(7, ok?p:XY);
-			_SleepMax(7);
-			//info: 7-8 is WM_MOUSEMOVE period when user moves the mouse quite fast, even when the system timer period is 15.625 (default)
+			_Sleep(Opt.Mouse.MoveSleepFinally);
 		}
 
 		static void _MoveSlowTo(Point p)
 		{
-			int speed = Options.MouseMoveSpeed;
+			int speed = Opt.Mouse.MoveSpeed;
 			if(speed == 0 && IsPressed()) speed = 1; //make one intermediate movement, because some programs (older MSDEV) don't select text otherwise
 			if(speed > 0) {
 				var p0 = XY;
@@ -116,8 +116,7 @@ namespace Au
 							pdx = dx; pdy = dy;
 						}
 
-						//_SleepExact(7, pt);
-						_SleepExact(7);
+						_Sleep(7); //7-8 is WM_MOUSEMOVE period when user moves the mouse quite fast, even when the system timer period is 15.625 (default).
 					}
 				}
 			}
@@ -127,10 +126,10 @@ namespace Au
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
 		/// </summary>
 		/// <param name="p">Coordinates in screen.</param>
-		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if Options.Relaxed is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher UAC integrity level; 3. Some application called API ClipCursor. No exception if Options.Relaxed is true (then final cursor position is undefined).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="AuScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>, <see cref="AuScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7)), <see cref="AuScriptOptions.Relaxed">Options.Relaxed</see>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
 		/// </remarks>
 		/// <example>
 		/// Save-restore mouse position.
@@ -158,12 +157,12 @@ namespace Au
 		/// <param name="y">Y coordinate relative to screen.</param>
 		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
 		/// <exception cref="ArgumentOutOfRangeException">
-		/// 1. The specified x y is not in screen (any screen). No exception if Options.Relaxed is true (then moves to a screen edge).
+		/// 1. The specified x y is not in screen (any screen). No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).
 		/// 2. Invalid screen index.
 		/// </exception>
-		/// <exception cref="AuException">Failed to move the cursor to x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher UAC integrity level; 3. Some application called API ClipCursor. No exception if Options.Relaxed is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AuException"><inheritdoc cref="Move(Point)"/></exception>
 		/// <remarks>
-		/// Uses <see cref="AuScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>, <see cref="AuScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7)), <see cref="AuScriptOptions.Relaxed">Options.Relaxed</see>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
 		/// </remarks>
 		public static Point Move(Coord x, Coord y, CoordOptions co = null)
 		{
@@ -186,10 +185,10 @@ namespace Au
 		/// The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
 		/// Other window-related failures.
 		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if Options.Relaxed is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher UAC integrity level; 3. Some application called API ClipCursor. No exception if Options.Relaxed is true (then final cursor position is undefined).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException"><inheritdoc cref="Move(Point)"/></exception>
 		/// <remarks>
-		/// Uses <see cref="AuScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>, <see cref="AuScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7)), <see cref="AuScriptOptions.Relaxed">Options.Relaxed</see>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
 		/// </remarks>
 		public static Point Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -197,7 +196,7 @@ namespace Au
 			w.ThrowIfInvalid();
 			var wTL = w.WndWindow;
 			if(!wTL.IsVisibleEx) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
-			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _SleepExact(500); } //never mind: if w is a control...
+			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
 			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();
 			_Move(p, fast: false);
@@ -214,8 +213,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Moves the mouse cursor where it was at the time of the last <see cref="Save"/> call in this thread. If Save was not called - of the first 'mouse move' or 'mouse move and click' function call in this thread. Does nothing if these functions were not called.
+		/// Moves the mouse cursor where it was at the time of the last <see cref="Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse move and click' function call in this thread. Does nothing if these functions were not called.
 		/// </summary>
+		/// <remarks>
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// </remarks>
 		public static void Restore()
 		{
 			if(t_prevMousePos == null) return;
@@ -250,10 +252,10 @@ namespace Au
 		/// </summary>
 		/// <param name="dx">X offset from LastMoveXY.X.</param>
 		/// <param name="dy">Y offset from LastMoveXY.Y.</param>
-		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if Options.Relaxed is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher UAC integrity level; 3. Some application called API ClipCursor. No exception if Options.Relaxed is true (then final cursor position is undefined).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="AuScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>, <see cref="AuScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7)), <see cref="AuScriptOptions.Relaxed">Options.Relaxed</see>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
 		/// </remarks>
 		public static Point MoveRelative(int dx, int dy)
 		{
@@ -271,10 +273,10 @@ namespace Au
 		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Util.Recording.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
-		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception if Options.Relaxed is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher UAC integrity level; 3. Some application called API ClipCursor. No exception if Options.Relaxed is true (then final cursor position is undefined).</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="AuScriptOptions.MouseClickSleep">Options.MouseClickSleep</see> (sleeps Math.Min(Options.MouseClickSleep, 7) after each movement, except if recorded with sleep times), <see cref="AuScriptOptions.Relaxed">Options.Relaxed</see> (for the last movement; does not care about intermediate movements). Does not use <see cref="AuScriptOptions.MouseMoveSpeed">Options.MouseMoveSpeed</see>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
 		public static Point MoveRecorded(string recordedString, double speedFactor = 1.0)
 		{
@@ -293,8 +295,7 @@ namespace Au
 			for(int i = 1; i < a.Length;) {
 				if(i > 1 && (isSleep || !withSleepTimes)) {
 					_SendMove(p);
-					//if(!withSleepTimes) _SleepMax((int)Math.Round(7 * speedFactor), p);
-					if(!withSleepTimes) _SleepMax((int)Math.Round(7 * speedFactor));
+					if(!withSleepTimes) _Sleep((int)Math.Round(7 * speedFactor));
 				}
 
 				int v = a[i++], nbytes = (v & 3) + 1;
@@ -303,8 +304,7 @@ namespace Au
 				if(isSleep) {
 					//Print($"nbytes={nbytes}    sleep={v}");
 
-					//_SleepExact((int)Math.Round(v * speedFactor), p);
-					_SleepExact((int)Math.Round(v * speedFactor));
+					_Sleep((int)Math.Round(v * speedFactor));
 				} else {
 					int shift = nbytes * 4 - 1, mask = (1 << shift) - 1;
 					int x = v & mask, y = (v >> shift) & mask;
@@ -462,74 +462,18 @@ namespace Au
 			//note: the API never indicates a failure if arguments are valid. Tested UAC (documented), BlockInput, ClipCursor.
 		}
 
-#if use_doevents_parameter
-		/// <summary>
-		/// Calls Time.Sleep() or Time.SleepDoEvents().
-		/// If ms is less than 0 or greater than Options.MouseClickSleep, uses Options.MouseClickSleep.
-		/// </summary>
-		static void _SleepMax(int ms, bool doEvents)
+		static void _Sleep(int ms)
 		{
-			var optSleep = Options.MouseClickSleep;
-			if((uint)ms > optSleep) ms = optSleep;
-
-			if(doEvents) Time.SleepDoEvents(ms); else Time.Sleep(ms);
-			//note: always doevents. Because:
-			//	Cannot always reliably detect what window will receive the message and what then happens.
-			//	There is not much sense to avoid doevents. If no message loop, it is fast and safe; else the script author should use another thread or expect anything.
-		}
-
-		/// <summary>
-		/// Calls _SleepMax(ms, Api.WindowFromPoint(p).IsOfThisThread).
-		/// If ms is less than 0 or greater than Options.MouseClickSleep, uses Options.MouseClickSleep.
-		/// </summary>
-		static void _SleepMax(int ms, Point p)
-		{
-			_SleepMax(ms, Api.WindowFromPoint(p).IsOfThisThread);
-		}
-
-		/// <summary>
-		/// Calls Time.Sleep() or Time.SleepDoEvents().
-		/// </summary>
-		static void _SleepExact(int ms, bool doEvents)
-		{
-			if(doEvents) Time.SleepDoEvents(ms); else Time.Sleep(ms);
-		}
-
-		/// <summary>
-		/// Calls _SleepExact(ms, Api.WindowFromPoint(p).IsOfThisThread).
-		/// </summary>
-		static void _SleepExact(int ms, Point p)
-		{
-			_SleepExact(ms, Api.WindowFromPoint(p).IsOfThisThread);
-		}
-#else
-		/// <summary>
-		/// Calls Time.SleepDoEvents().
-		/// If ms is less than 0 or greater than Options.MouseClickSleep, uses Options.MouseClickSleep.
-		/// </summary>
-		static void _SleepMax(int ms)
-		{
-			var optSleep = Options.MouseClickSleep;
-			if((uint)ms > optSleep) ms = optSleep;
-
 			Time.SleepDoEvents(ms);
 
 			//note: always doevents, even if window from point is not of our thread. Because:
 			//	Cannot always reliably detect what window will receive the message and what then happens.
 			//	There is not much sense to avoid doevents. If no message loop, it is fast and safe; else the script author should use another thread or expect anything.
+			//	API SendInput dispatches sent messages anyway.
 			//	_Click shows warning if window of this thread.
 
-			//TODO: sync better, especially (or only if) when ms is -1 (after full click or wheel).
+			//FUTURE: sync better, especially finally.
 		}
-
-		/// <summary>
-		/// Calls Time.SleepDoEvents().
-		/// </summary>
-		static void _SleepExact(int ms)
-		{
-			Time.SleepDoEvents(ms);
-		}
-#endif
 
 		[ThreadStatic] static MouseButtons t_pressedButtons;
 
@@ -538,28 +482,32 @@ namespace Au
 			//Sending a click to a window of own thread often does not work.
 			//Reason 1: often the window on down event enters a message loop that waits for up event. But then this func cannot send the up event because it is in the loop (if it does doevents).
 			//	Known workarounds:
-			//	1 (applied). Don't doevents between sending down and up events.
+			//	1 (applied). Don't sleepdoevents between sending down and up events.
 			//	2. Let this func send the click from another thread, and sleepdoevents until that thread finishes the click.
 			//Reason 2: if this func called from a click handler, OS does not send more mouse events.
 			//	Known workarounds:
 			//	1. (applied): show warning. Let the user modify the script: either don't click own windows or click from another thread.
+
 			if(w.Is0) w = Api.WindowFromPoint((pMoved != null) ? pMoved.GetValueOrDefault() : XY);
 			bool windowOfThisThread = w.IsOfThisThread;
-			if(windowOfThisThread) PrintWarning("Sending a click to a window of own thread often does not work. Use another thread.");
+			if(windowOfThisThread) PrintWarning("Click(window of own thread) may not work. Use another thread.");
+
+			int sleep = Opt.Mouse.ClickSpeed;
 
 			switch(button & (MButton.Down | MButton.Up | MButton.DoubleClick)) {
 			case MButton.DoubleClick:
+				sleep = Math.Min(sleep, Api.GetDoubleClickTime() / 4);
+				//info: default double-click time is 500. Control Panel can set 200-900. API can set 1.
+				//info: to detect double-click, some apps use time between down and down (that is why /4), others between up and down.
+
 				_SendButton(button, true, pMoved);
-				//if(!windowOfThisThread) _SleepMax(20, doEvents: false);
-				if(!windowOfThisThread) _SleepMax(20);
+				if(!windowOfThisThread) _Sleep(sleep);
 				_SendButton(button, false, pMoved);
-				//if(!windowOfThisThread) _SleepMax(50, doEvents: false);
-				if(!windowOfThisThread) _SleepMax(50);
+				if(!windowOfThisThread) _Sleep(sleep);
 				goto case 0;
-			case 0:
+			case 0: //click
 				_SendButton(button, true, pMoved);
-				//if(!windowOfThisThread) _SleepMax(20, doEvents: false);
-				if(!windowOfThisThread) _SleepMax(20);
+				if(!windowOfThisThread) _Sleep(sleep);
 				_SendButton(button, false, pMoved);
 				break;
 			case MButton.Down:
@@ -568,10 +516,9 @@ namespace Au
 			case MButton.Up:
 				_SendButton(button, false, pMoved);
 				break;
-			default: throw new ArgumentException("Several specified: Down, Up, DoubleClick", nameof(button));
+			default: throw new ArgumentException("Incompatible flags: Down, Up, DoubleClick", nameof(button));
 			}
-			//_SleepMax(-1, windowOfThisThread);
-			_SleepMax(-1);
+			_Sleep(sleep + Opt.Mouse.ClickSleepFinally);
 
 			//rejected: detect click failures (UAC, BlockInput, hooks).
 			//	Difficult. Cannot detect reliably. SendInput returns true.
@@ -584,18 +531,21 @@ namespace Au
 		/// </summary>
 		/// <param name="button">Button and action. Default: left click.</param>
 		/// <param name="useLastMoveXY">
-		/// Use <see cref="LastMoveXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse move and click' function called in this thread. Use this option for reliability. Example: <c>Mouse.Move(100, 100); Mouse.ClickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between Mouse.Move sets it and Mouse.ClickEx uses it. In such case this option atomically moves the cursor to LastMoveXY. This movement is instant and does not use Options.MouseMoveSpeed and Options.MouseClickSleep.
+		/// Use <see cref="LastMoveXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse move and click' function called in this thread. Use this option for reliability.
+		/// Example: <c>Mouse.Move(100, 100); Mouse.ClickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>Mouse.Move</c> sets it and <c>Mouse.ClickEx</c> uses it. In such case this option atomically moves the cursor to <b>LastMoveXY</b>. This movement is instant and does not use <see cref="Opt"/>.
 		/// If false (default), clicks at the current cursor position (does not move it).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.ClickSpeed" r=""/>, <see cref="MOptions.ClickSleepFinally" r=""/>.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastMoveXY = false)
 		{
 			Point? p = null; if(useLastMoveXY) p = LastMoveXY;
 			_Click(button, p);
 			return button;
+			//CONSIDER: MOptions.ClickAtLastMoveXY
 		}
 
 		/// <summary>
@@ -610,6 +560,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="MOptions.ClickSpeed" r=""/>, <see cref="MOptions.ClickSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Coord x, Coord y, CoordOptions co = null)
 		{
@@ -631,8 +582,9 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="WndException">x y is not in the window (read more in Remarks).</exception>
 		/// <remarks>
-		/// If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <see cref="AuScriptOptions.Relaxed">Options.Relaxed</see> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="MOptions.ClickSpeed" r=""/>, <see cref="MOptions.ClickSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <b>Opt.Mouse.Relaxed</b> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -640,7 +592,7 @@ namespace Au
 
 			//Make sure will click w, not another window.
 			var action = button & (MButton.Down | MButton.Up | MButton.DoubleClick);
-			if(action != MButton.Up && !Options.Relaxed) { //allow to release anywhere, eg it could be a drag-drop
+			if(action != MButton.Up && !Opt.Mouse.Relaxed) { //allow to release anywhere, eg it could be a drag-drop
 				var wTL = w.WndWindow;
 				bool bad = !wTL.Rect.Contains(p);
 				if(!bad && !_CheckWindowFromPoint()) {
@@ -825,8 +777,14 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <remarks>
-		/// The return value can be used to auto-release pressed button. Example: <c>using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(20, 0);</c>. The button is auto-released when the 'using' block ends, even on exception. This can be used to drag-drop or drag-select.
+		/// The return value can be used to auto-release pressed button. See example.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// //drag and drop: start at x=8 y=8, move 20 pixels down, drop
+		/// using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(0, 20); //the button is auto-released when the 'using' code block ends
+		/// ]]></code>
+		/// </example>
 		public static MRelease LeftDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			return ClickEx(MButton.Left | MButton.Down, w, x, y, nonClient);
@@ -955,11 +913,13 @@ namespace Au
 		/// </summary>
 		/// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
 		/// <param name="horizontal">Horizontal wheel.</param>
+		/// <remarks>
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.ClickSleepFinally" r=""/>.
+		/// </remarks>
 		public static void Wheel(int ticks, bool horizontal = false)
 		{
 			_SendRaw(horizontal ? Api.IMFlags.HWheel : Api.IMFlags.Wheel, 0, 0, ticks);
-			//_SleepMax(-1, true); //info: always doevents, because we cannot know what window receives the message. By default the focused window, but can be redirected to the mouse window eg using hooks.
-			_SleepMax(-1);
+			_Sleep(Opt.Mouse.ClickSleepFinally);
 		}
 
 		//rejected: unclear etc. Instead let use Mouse.LeftUp(true) or using(Mouse.LeftDown(...).
@@ -1015,17 +975,17 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some buttons are in pressed state, except those pressed by a <see cref="Mouse"/> class function in this thread.
-		/// Does nothing if Options.Relaxed == true.
+		/// Does nothing if the <b>Relaxed</b> option is true.
 		/// </summary>
 		internal static void LibWaitWhileButtonsPressed()
 		{
 			//not public, because we have WaitFor.MouseButtonsReleased, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
 
-			if(Options.Relaxed) return;
+			if(Opt.Mouse.Relaxed) return;
 			var mb = (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 				& ~t_pressedButtons;
 			if(WaitFor.NoMouseButtons(-5, mb)) return;
-			PrintWarning("Info: Waiting for releasing mouse buttons. See Options.Relaxed.");
+			PrintWarning("Info: Waiting for releasing mouse buttons. See Opt.Mouse.Relaxed.");
 			WaitFor.NoMouseButtons(0, mb);
 		}
 	}
@@ -1084,7 +1044,7 @@ namespace Au
 			//rejected:
 			///// <param name="waitMS">
 			///// Maximal time to wait, milliseconds. Also which API to use.
-			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits <see cref="AuScriptOptions.MouseClickSleep">Options.MouseClickSleep</see>.
+			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits Opt.Mouse.<see cref="MOptions.ClickSpeed" r=""/> ms.
 			///// If less than 0 (eg Timeout.Infinite), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
 			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max waitMS milliseconds, then throws AuException.
 			///// The SendX functions are not natural and less likely to work.
@@ -1096,7 +1056,7 @@ namespace Au
 			//	bool ok;
 			//	if(message == 0) {
 			//		ok=w.Post(message, wParam, lParam);
-			//		_SleepMax(-1, w.IsOfThisThread);
+			//		_Sleep(Opt.Mouse.ClickSpeed);
 			//	} else if(waitMS < 0) {
 			//		w.Send(message, wParam, lParam);
 			//		ok = true;
@@ -1164,46 +1124,6 @@ namespace Au.Types
 		/// <summary>(flag) Double-click.</summary>
 		DoubleClick = 128,
 	}
-
-	//rejected: now we use bools instead. Unlikely will need more options in the future; then can add overloads with flags.
-	///// <summary>
-	///// Flags for 'mouse move' and 'mouse move and click' functions.
-	///// </summary>
-	//[Flags]
-	//public enum MFlags
-	//{
-	//	/// <summary>
-	//	/// The specified x y coordinates are relative to the top-left corner of the window, not of its client area.
-	//	/// Not used with screen coordinates.
-	//	/// </summary>
-	//	NonClientXY = 1,
-
-	//	/// <summary>
-	//	/// The specified x y coordinates are relative to the work area of the primary screen.
-	//	/// Not used with window coordinates.
-	//	/// </summary>
-	//	WorkAreaXY = 2,
-
-	//	///// <summary>
-	//	///// Make the function less strict (less checking for possibly invalid conditions).
-	//	///// 1. Before moving the mouse pointer, do not wait while a mouse button is pressed by the user or another thread. For example, this waiting prevents an unintended drag-drop, but maybe you want to allow it.
-	//	///// 2. Allow to click in another window. Without this, if the click x y is not in window w or a window of its thread, activates w and throws exception if x y is still not in w.
-	//	///// You can also use Options.Relaxed=true instead of this flag.
-	//	///// </summary>
-	//	//Relaxed = 4,
-	//	//rejected: Use only Options.Relaxed. Rarely used.
-
-	//	///// <summary>
-	//	///// Restore mouse position after move+click.
-	//	///// Not used with the 'move' functions.
-	//	///// </summary>
-	//	//RestoreMouseXY = ,
-	//	//rejected: Better let use code 'Mouse.Restore();'. It is shorter and more clear than ', MFlags.RestoreMouseXY'.
-
-	//	//FromLastXY = ,
-	//	//rejected: To drag-drop, can use 3 statements: Mouse.LeftDown(x1, y1); Mouse.MoveRelative(x2, y2); Mouse.LeftUp().
-	//	//	With this flag 2, but not much shorter:		Mouse.LeftDown(x1, y1); Mouse.LeftUp(x2, y2, MFlags.FromLastXY).
-	//}
 
 	/// <summary>
 	/// The Dispose function releases mouse buttons pressed by the function that returned this variable.

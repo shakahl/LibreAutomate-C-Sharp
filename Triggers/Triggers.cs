@@ -20,20 +20,29 @@ using static Au.NoClass;
 
 namespace Au.Triggers
 {
-public static class Trigger
-{
-	public static readonly HotkeyTriggers Hotkey=new HotkeyTriggers();
-
-	[AttributeUsage(AttributeTargets.Method)]
-	public class HotkeyAttribute : Attribute
+	/// <summary>
+	/// Triggers.
+	/// </summary>
+	[CompilerGenerated()]
+	class NamespaceDoc
 	{
-		public readonly string hotkey;
-
-		public HotkeyAttribute(string hotkey)
-		{
-			this.hotkey=hotkey;
-		}
+		//SHFB uses this for namespace documentation.
 	}
 
-}
+	public static class Trigger
+	{
+		public static readonly HotkeyTriggers Hotkey = new HotkeyTriggers();
+
+		[AttributeUsage(AttributeTargets.Method)]
+		public class HotkeyAttribute :Attribute
+		{
+			public readonly string hotkey;
+
+			public HotkeyAttribute(string hotkey)
+			{
+				this.hotkey = hotkey;
+			}
+		}
+
+	}
 }

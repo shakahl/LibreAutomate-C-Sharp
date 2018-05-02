@@ -25,6 +25,7 @@ namespace Au
 {
 	/// <summary>
 	/// Accessible object.
+	/// Finds controls and smaller objects in a window or web page. Clicks, gets properties, etc.
 	/// </summary>
 	/// <remarks>
 	/// Accessible objects (AO) are various user interface (UI) objects in windows and controls. For example buttons, links, list items. This class can find them, get properties, click, etc. Especially useful with web pages, because there are no controls. And many other windows don't use controls but support AO. But not all UI objects are AO.
@@ -237,9 +238,10 @@ namespace Au
 
 		/// <summary>
 		/// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)"/>. Examples are there.
+		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)" r=""/>.
 		/// </summary>
 		/// <exception cref="NotFoundException">x is null.</exception>
+		/// <example><inheritdoc cref="ExtensionMethods.OrThrow(Acc)"/></example>
 		public static Acc operator +(Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
 
 		/// <summary>
@@ -286,7 +288,7 @@ namespace Au
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="WndException">Invalid window.</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
 		{
 			var hr = Cpp.Cpp_AccFromWindow(flags.Has_(AWFlags.NotInProc) ? 1 : 0, w, objid, out var a, out _);
@@ -310,7 +312,7 @@ namespace Au
 		/// </summary>
 		/// <param name="p">Coordinates in screen.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		public static Acc FromXY(Point p, AXYFlags flags = 0)
 		{
 			for(int i = 0; ; i++) {
@@ -331,7 +333,7 @@ namespace Au
 		/// <param name="y">Y coordinate in screen.</param>
 		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		public static Acc FromXY(Coord x, Coord y, CoordOptions co = null, AXYFlags flags = 0)
 		{
 			var p = Coord.Normalize(x, y, co);
@@ -343,7 +345,7 @@ namespace Au
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </summary>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher UAC integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		public static Acc FromMouse(AXYFlags flags = 0)
 		{
 			return FromXY(Mouse.XY, flags);

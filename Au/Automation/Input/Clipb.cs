@@ -28,7 +28,10 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// This class is similar to the .NET <see cref="Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
+	/// 
 	/// To set/get clipboard data of non-text formats, use class <see cref="Data"/>; to paste, use it with <see cref="PasteData"/>; to copy (get from the active app), use it with <see cref="CopyData"/>.
+	/// 
+	/// Should not be used to copy/paste in windows of own thread. In most cases it works, but strange problems are possible, because it waits until the window processes the copy/paste request, and while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. Example in <see cref="Keyb.Key"/>.
 	/// </remarks>
 	public static partial class Clipb
 	{
@@ -97,8 +100,8 @@ namespace Au
 		/// </summary>
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
-		/// Options. If null (default), uses <see cref="Keyb.Options"/>.
-		/// Uses <see cref="KOptions.RestoreClipboard"/>, <see cref="KOptions.NoBlockInput"/>, <see cref="KOptions.TimeKeyPressed"/> (only after Ctrl). Does not use <see cref="KOptions.Hook"/>.
+		/// Options. If null (default), uses <see cref="Opt.Key"/>.
+		/// Uses <see cref="KOptions.RestoreClipboard" r=""/>, <see cref="KOptions.NoBlockInput" r=""/>, partially <see cref="KOptions.KeySpeed" r=""/>. Does not use <see cref="KOptions.Hook" r=""/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -144,7 +147,7 @@ namespace Au
 		static string _Copy(bool cut, KOptions options, Action callback)
 		{
 			string R = null;
-			var opt = options ?? Keyb.Options;
+			var opt = options ?? Opt.Key;
 			bool restore = opt.RestoreClipboard;
 			_ClipboardListener listener = null;
 			var bi = new BlockUserInput() { ResendBlockedKeys = true };
@@ -206,8 +209,8 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="options">
-		/// Options. If null (default), uses <see cref="Keyb.Options"/>.
-		/// Uses <see cref="KOptions.RestoreClipboard"/>, <see cref="KOptions.PasteEnter"/>, <see cref="KOptions.NoBlockInput"/>, <see cref="KOptions.TimeKeyPressed"/> (only after Ctrl), <see cref="KOptions.SleepFinally"/>, <see cref="KOptions.Hook"/>.
+		/// Options. If null (default), uses <see cref="Opt.Key"/>.
+		/// Uses <see cref="KOptions.RestoreClipboard" r=""/>, <see cref="KOptions.PasteEnter" r=""/>, <see cref="KOptions.NoBlockInput" r=""/>, <see cref="KOptions.SleepFinally" r=""/>, <see cref="KOptions.Hook" r=""/>, partially <see cref="KOptions.KeySpeed" r=""/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -216,6 +219,13 @@ namespace Au
 		/// Works with console windows too, even if they don't support Ctrl+V.
 		/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a quite big delay.
 		/// </remarks>
+		/// <seealso cref="Keyb.Text"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// Clipb.PasteText("Example\r\n");
+		/// Paste("Example\r\n"); //the same as above
+		/// ]]></code>
+		/// </example>
 		public static void PasteText(string text, KOptions options = null)
 		{
 			if(Empty(text)) return;
@@ -252,7 +262,7 @@ namespace Au
 		static void _Paste(object data, KOptions options = null)
 		{
 			var wFocus = Keyb.Lib.GetWndFocusedOrActive();
-			var opt = options ?? Keyb.Options;
+			var opt = options ?? Opt.Key;
 			var bi = new BlockUserInput() { ResendBlockedKeys = true };
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
@@ -265,7 +275,7 @@ namespace Au
 			}
 
 			int sleepFinally = opt.SleepFinally;
-			if(sleepFinally > 0) Time.Sleep(sleepFinally);
+			if(sleepFinally > 0) Keyb.Lib.Sleep(sleepFinally);
 		}
 
 		/// <summary>
@@ -328,7 +338,7 @@ namespace Au
 						if(listener.IsBadWindow) sync = false;
 					}
 					if(!sync) {
-						Time.Sleep(opt.TimeKeyPressed + 3);
+						Keyb.Lib.Sleep(opt.KeySpeed + 3);
 					}
 				}
 				finally {
@@ -338,7 +348,7 @@ namespace Au
 				//CONSIDER: KOptions.TimePasteSync. Or use SleepFinally here, not after.
 				for(int i = 0, n = sync ? 3 : 20; i < n; i++) { //see comments below about Dreamweaver
 					wFocus.SendTimeout(1000, 0, flags: 0);
-					Time.Sleep(i + 3);
+					Keyb.Lib.Sleep(i + 3);
 				}
 
 				if(restore && save.IsSaved && oc.Reopen(true)) save.Restore();
@@ -411,7 +421,10 @@ namespace Au
 			{
 				//Print(Success); //on Paste often already true, because SendInput dispatches sent messages
 				for(int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.
-					Time.SleepDoEvents(500, ref Success, qsSendmessage: _paste); //note: qsSendmessage must be false on Copy, because WM_CLIPBOARDUPDATE is posted, not sent
+					Time.SleepDoEvents(500, ref Success);
+					//note: don't use ', qsSendmessage: true' on Copy, because WM_CLIPBOARDUPDATE is posted, not sent.
+					//	On Paste too, else does not work if the target window is of this thread.
+
 					if(Success) break;
 					//is hung?
 					if(--n == 0) throw new AuException(_paste ? "*paste" : "*copy");

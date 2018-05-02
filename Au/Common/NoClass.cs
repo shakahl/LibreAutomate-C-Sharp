@@ -21,17 +21,18 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// This class contains aliases of some frequently used functions.
-	/// In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without specifying a type name.
+	/// This class contains aliases of some frequently used functions. You can call them without type name.
+	/// </summary>
+	/// <remarks>
+	/// In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without type name.
 	/// Examples:
 	///	<c>Print</c> is the same as <c>Output.Write</c>;
 	///	<c>Empty</c> is the same as <c>string.IsNullOrEmpty</c>;
-	/// </summary>
-	//[DebuggerStepThrough]
+	/// </remarks>
 	public static partial class NoClass
 	{
 		/// <summary>
-		/// Calls <see cref="Output.Write" qualifyHint="true"/>. It writes string + "\r\n" to the output.
+		/// Calls <see cref="Output.Write"/>. It writes string + "\r\n" to the output.
 		/// </summary>
 		/// <remarks>
 		/// If "" or null, writes empty line. To write "null" if null, use code <c>Print((object)s);</c>.
@@ -48,7 +49,7 @@ namespace Au
 		/// </summary>
 		/// <param name="value">Value of any type. Can be null.</param>
 		/// <remarks>
-		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
+		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write"/>.
 		/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// If null, prints "null".
 		/// 
@@ -85,7 +86,7 @@ namespace Au
 		/// </summary>
 		/// <param name="value">Array or generic collection of any type. Can be null.</param>
 		/// <remarks>
-		/// Calls <see cref="PrintListEx"/>, which calls <see cref="Output.Write" qualifyHint="true"/>.
+		/// Calls <see cref="PrintListEx"/>, which calls <see cref="Output.Write"/>.
 		/// </remarks>
 		public static void Print<T>(IEnumerable<T> value)
 		{
@@ -111,7 +112,7 @@ namespace Au
 		/// Default 2 (removes the default "\r\n" separator from the last item).
 		/// </param>
 		/// <remarks>
-		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
+		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write"/>.
 		/// </remarks>
 		public static void PrintListEx<T>(IEnumerable<T> value, string format = "{s}\r\n", int trimEnd = 2)
 		{
@@ -148,7 +149,7 @@ namespace Au
 		/// Writes multiple arguments of any type to the output, using separator ", ".
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write" qualifyHint="true"/>.
+		/// Calls <see cref="object.ToString"/> and <see cref="Output.Write"/>.
 		/// If a value is null, writes "null".
 		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// </remarks>
@@ -188,24 +189,22 @@ namespace Au
 		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
 		/// <param name="prefix">Text before <paramref name="text"/>. Default "Warning: ".</param>
 		/// <remarks>
-		/// Calls <see cref="Output.Write" qualifyHint="true"/>.
-		/// If <see cref="AuScriptOptions.Debug">Options.Debug</see> is false, does not show more that 1 warning/second.
-		/// To disable some warnings, use <see cref="AuScriptOptions.DisableWarnings">Options.DisableWarnings</see>.
+		/// Calls <see cref="Output.Write"/>.
+		/// Does not show more that 1 warning/second, unless Opt.Debug.<see cref="DOptions.Verbose" r=""/> == true.
+		/// To disable some warnings, use Opt.Debug.<see cref="DOptions.DisableWarnings" r=""/>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void PrintWarning(string text, int showStackFromThisFrame = 0, string prefix = "Warning: ")
 		{
-			string s = text ?? "";
+			if(Opt.Debug.IsWarningDisabled(text)) return;
 
-			var a = Options.LibDisabledWarnings;
-			if(a != null) foreach(var k in a) if(s.Like_(k, true)) return;
-
-			if(!Options.Debug) {
+			if(!Opt.Debug.Verbose) {
 				var t = Time.Milliseconds;
 				if(t - s_warningTime < 1000) return;
 				s_warningTime = t;
 			}
 
+			string s = text ?? "";
 			if(showStackFromThisFrame >= 0) {
 				var x = new StackTrace(showStackFromThisFrame + 1, true);
 				s = prefix + s + "\r\n" + x.ToString();
@@ -218,20 +217,14 @@ namespace Au
 		//rejected. Let use like 3.s() instead.
 		///// <summary>
 		///// Suspends this thread for the specified amount of time.
-		///// Calls <see cref="Time.SleepS" qualifyHint="true"/>.
+		///// Calls <see cref="Time.SleepS"/>.
 		///// </summary>
 		///// <param name="seconds">
 		///// The number of seconds to wait.
-		///// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.SleepS" qualifyHint="true"/>.
+		///// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.SleepS"/>.
 		///// </param>
 		///// <exception cref="ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		//public static void WaitS(double seconds) => Time.WaitS(seconds);
-
-		/// <summary>
-		/// Gets AuScriptOptions object of this thread.
-		/// Alias of <see cref="AuScriptOptions.Options" qualifyHint="true"/>.
-		/// </summary>
-		public static AuScriptOptions Options => AuScriptOptions.Options;
 
 		/// <summary>
 		/// Returns true if the string is null or "".

@@ -32,7 +32,7 @@ namespace Au
 		/// A window that has an owner window is always on top of its owner window.
 		/// Don't call this for controls, they don't have an owner window.
 		/// The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="Native.GetError"/>.
-		/// The 'set' function can fail, eg if the owner's process has higher UAC integrity level.
+		/// The 'set' function can fail, eg if the owner's process has higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level.
 		/// </remarks>
 		public Wnd WndOwner
 		{
@@ -140,7 +140,7 @@ namespace Au
 		/// <summary>
 		/// Gets the child control at the top of the Z order.
 		/// Returns default(Wnd) if no children.
-		/// The same as <see cref="WndChild">WndChild</see>(0).
+		/// The same as <see cref="WndChild"/>(0).
 		/// Calls API <msdn>GetWindow</msdn>(this, GW_CHILD).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -262,7 +262,7 @@ namespace Au
 			/// <summary>
 			/// Gets the virtual parent window of all top-level windows.
 			/// Calls API <msdn>GetDesktopWindow</msdn>.
-			/// <note>It is not the visible desktop window (see <see cref="WndDesktop"/>)</note>.
+			/// <note>It is not the visible desktop window (see <see cref="WndDesktop"/>)</note>
 			/// </summary>
 			public static Wnd WndRoot => _wDesktop;
 
@@ -276,15 +276,19 @@ namespace Au
 			/// <summary>
 			/// Gets the desktop window.
 			/// It displays desktop icons and wallpaper in its child control <see cref="WndDesktopControl"/>. The "Show Desktop" command (Win+D) activates it.
-			/// <note>It is not the same as API <msdn>GetDesktopWindow</msdn> (see <see cref="WndRoot"/>)</note>.
-			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+			/// <note>It is not API <msdn>GetDesktopWindow</msdn> (see <see cref="WndRoot"/>)</note>
 			/// </summary>
+			/// <remarks>
+			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+			/// </remarks>
 			public static Wnd WndDesktop => _WndDesktop(out var lv);
 
 			/// <summary>
 			/// Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="WndDesktop"/>.
-			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
 			/// </summary>
+			/// <remarks>
+			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+			/// </remarks>
 			public static Wnd WndDesktopControl { get { _WndDesktop(out var lv); return lv; } }
 
 			static Wnd _WndDesktop(out Wnd lvControl)
@@ -317,7 +321,7 @@ namespace Au
 			/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
 			/// </summary>
 			/// <param name="w"></param>
-			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has UAC integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
 			/// <param name="skipMinimized">Return false if w is minimized.</param>
 			public static bool IsMainWindow(Wnd w, bool allDesktops = false, bool skipMinimized = false)
 			{
@@ -359,7 +363,7 @@ namespace Au
 			/// Gets main windows, ie those that probably are in the Windows taskbar.
 			/// Returns array containing 0 or more Wnd.
 			/// </summary>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has UAC integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
 			/// <remarks>
 			/// Uses <see cref="IsMainWindow"/>.
 			/// Does not match the order of buttons in the Windows taskbar.
@@ -386,7 +390,7 @@ namespace Au
 			/// Returns default(Wnd) if there are no such windows.
 			/// </summary>
 			/// <param name="w">Start from this window. If default(Wnd), starts from the top of the Z order.</param>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has UAC integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
 			/// <param name="skipMinimized">Skip minimized windows.</param>
 			/// <param name="retryFromTop">If w is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
 			/// <remarks>

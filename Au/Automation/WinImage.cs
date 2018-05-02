@@ -28,9 +28,11 @@ namespace Au
 {
 	/// <summary>
 	/// Captures, finds and clicks images and colors in windows.
-	/// An image is any visible rectangular part of window. A color is any visible pixel of window.
-	/// A WinImage variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
 	/// </summary>
+	/// <remarks>
+	/// An image is any visible rectangular part of window. A color is any visible pixel of window.
+	/// A <b>WinImage</b> variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
+	/// </remarks>
 	public class WinImage
 	{
 		#region capture, etc
@@ -205,9 +207,10 @@ namespace Au
 
 		/// <summary>
 		/// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)"/>. Examples are there.
+		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)" r=""/>.
 		/// </summary>
 		/// <exception cref="NotFoundException">x is null.</exception>
+		/// <example><inheritdoc cref="ExtensionMethods.OrThrow(WinImage)"/></example>
 		public static WinImage operator +(WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 
 		/// <summary>

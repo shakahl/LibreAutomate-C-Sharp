@@ -21,8 +21,12 @@ using static Au.NoClass;
 namespace Au.Types
 {
 	/// <summary>
-	/// Types of function parameters and return values, base classes, exceptions.
-	/// Class NetExtensions contains extension methods for various .NET classes.
+	/// This namespace contains:
+	/// <list type="bullet">
+	/// <item>Types of function parameters and return values.</item>
+	/// <item>Exception classes, some base classes, some other types.</item>
+	/// <item>Extension methods for various .NET classes.</item>
+	/// </list>
 	/// </summary>
 	[CompilerGenerated()]
 	class NamespaceDoc
@@ -56,7 +60,7 @@ namespace Au.Types
 	/// <see cref="Types{T1, T2, T3}"/>
 	/// <see cref="Types{T1, T2, T3, T4}"/>
 	/// 
-	/// To support null (for example for optional parameters), use nullable. See examples.
+	/// To support null (for example for optional arguments), use nullable. See examples.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -341,20 +345,23 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Returns <see cref="Fraction">Fraction</see>(0.5).
+		/// Returns <c>Fraction(0.5)</c>.
 		/// </summary>
+		/// <seealso cref="Fraction"/>
 		public static Coord Center => Fraction(0.5);
 
 		/// <summary>
-		/// Returns <see cref="Reverse">Reverse</see>(0).
+		/// Returns <c>Reverse(0)</c>.
 		/// This point will be outside of the rectangle. See also <see cref="MaxInside"/>.
 		/// </summary>
+		/// <seealso cref="Reverse"/>
 		public static Coord Max => Reverse(0);
 
 		/// <summary>
-		/// Returns <see cref="Reverse">Reverse</see>(1).
-		/// This point will be inside of the rectangle, at the very right or bottom, assuming that the rectangle is not empty.
+		/// Returns <c>Reverse(1)</c>.
+		/// This point will be inside of the rectangle, at the very right or bottom, assuming the rectangle is not empty.
 		/// </summary>
+		/// <seealso cref="Reverse"/>
 		public static Coord MaxInside => Reverse(1);
 
 		//rejected: this could be used like Coord.Max + 1. Too limited usage.
