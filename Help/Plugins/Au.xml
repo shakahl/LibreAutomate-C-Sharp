@@ -743,18 +743,18 @@
             The result rectangle is of the last image. To get all rectangles, use the <i>also</i> parameter: <c>also: t => { rectList.Add(t.Rect); return true; }</c>.
             </summary>
         </member>
-        <member name="T:Au.Types.DOptions">
+        <member name="T:Au.Types.OptDebug">
             <summary>
             Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
             </summary>
         </member>
-        <member name="P:Au.Types.DOptions.Verbose">
+        <member name="P:Au.Types.OptDebug.Verbose">
             <summary>
             If true, some library functions may display more warnings and other info.
             If not explicitly set, the default value depends on the build configuration of the entry assymbly: true if Debug, false if Release.
             </summary>
         </member>
-        <member name="M:Au.Types.DOptions.DisableWarnings(System.String[])">
+        <member name="M:Au.Types.OptDebug.DisableWarnings(System.String[])">
             <summary>
             Disables one or more run-time warnings.
             </summary>
@@ -779,48 +779,48 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Types.DOptions.IsWarningDisabled(System.String)">
+        <member name="M:Au.Types.OptDebug.IsWarningDisabled(System.String)">
             <summary>
-            Returns true if the specified warning text matches a wildcard string added with <see cref="M:Au.Types.DOptions.DisableWarnings(System.String[])"/>.
+            Returns true if the specified warning text matches a wildcard string added with <see cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>.
             </summary>
             <param name="text">Warning text. Case-insensitive.</param>
         </member>
-        <member name="T:Au.Types.DOptions.RestoreWarnings">
+        <member name="T:Au.Types.OptDebug.RestoreWarnings">
             <summary>Infrastructure.</summary>
             <tocexclude />
         </member>
-        <member name="M:Au.Types.DOptions.RestoreWarnings.Dispose">
+        <member name="M:Au.Types.OptDebug.RestoreWarnings.Dispose">
             <summary>Restores warnings.</summary>
         </member>
-        <member name="T:Au.Types.MOptions">
+        <member name="T:Au.Types.OptMouse">
             <summary>
             Options for functions of class <see cref="T:Au.Mouse"/>.
             </summary>
             <seealso cref="P:Au.Opt.Mouse"/>
             <seealso cref="P:Au.Opt.Static.Mouse"/>
             <remarks>
-            Total <c>Click(x, y)</c> time is: mouse move + <see cref="P:Au.Types.MOptions.MoveSleepFinally"/> + button down + <see cref="P:Au.Types.MOptions.ClickSpeed"/> + button down + <see cref="P:Au.Types.MOptions.ClickSpeed"/> + <see cref="P:Au.Types.MOptions.ClickSleepFinally"/>.
+            Total <c>Click(x, y)</c> time is: mouse move + <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/> + button down + <see cref="P:Au.Types.OptMouse.ClickSpeed"/> + button down + <see cref="P:Au.Types.OptMouse.ClickSpeed"/> + <see cref="P:Au.Types.OptMouse.ClickSleepFinally"/>.
             </remarks>
         </member>
-        <member name="M:Au.Types.MOptions.#ctor(Au.Types.MOptions)">
+        <member name="M:Au.Types.OptMouse.#ctor(Au.Types.OptMouse)">
             <summary>
             Initializes this instance with default values or values copied from another instance.
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="M:Au.Types.MOptions._LibReset(Au.Types.MOptions)">
+        <member name="M:Au.Types.OptMouse._LibReset(Au.Types.OptMouse)">
             <summary>
             Copies options from o, or sets default if o==null. Like ctor does.
             </summary>
         </member>
-        <member name="P:Au.Types.MOptions.ClickSpeed">
+        <member name="P:Au.Types.OptMouse.ClickSpeed">
             <summary>
             How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
             Default: 20. Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.Opt.Static.Mouse"/>: 0 - 100 (1 s).
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="P:Au.Types.MOptions.MoveSpeed">
+        <member name="P:Au.Types.OptMouse.MoveSpeed">
             <summary>
             If not 0, makes mouse movements slower, not instant.
             Default: 0. Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="P:Au.Opt.Static.Mouse"/>: 0 - 100.
@@ -832,17 +832,17 @@
             Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
             </remarks>
         </member>
-        <member name="P:Au.Types.MOptions.ClickSleepFinally">
+        <member name="P:Au.Types.OptMouse.ClickSleepFinally">
             <summary>
             How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
             Default: 10. Valid values: 0 - 10000 (10 s). Valid values for <see cref="P:Au.Opt.Static.Mouse"/>: 0 - 100.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            The 'click' functions also sleep <see cref="P:Au.Types.MOptions.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
+            The 'click' functions also sleep <see cref="P:Au.Types.OptMouse.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
             </remarks>
         </member>
-        <member name="P:Au.Types.MOptions.MoveSleepFinally">
+        <member name="P:Au.Types.OptMouse.MoveSleepFinally">
             <summary>
             How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
             Default: 10. Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.Opt.Static.Mouse"/>: 0 - 100.
@@ -852,7 +852,7 @@
             Used by <see cref="M:Au.Mouse.Move(System.Drawing.Point)"/> (finally), <see cref="M:Au.Mouse.Click(System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
             </remarks>
         </member>
-        <member name="P:Au.Types.MOptions.Relaxed">
+        <member name="P:Au.Types.OptMouse.Relaxed">
             <summary>
             Make some functions less strict (throw less exceptions etc).
             Default: false.
@@ -875,7 +875,7 @@
             </list>
             </remarks>
         </member>
-        <member name="T:Au.Types.KOptions">
+        <member name="T:Au.Types.OptKey">
             <summary>
             Options for functions of class <see cref="T:Au.Keyb"/>.
             Some options also are used with <see cref="T:Au.Clipb"/> functions that send keys (Ctrl+V etc).
@@ -883,68 +883,68 @@
             <seealso cref="P:Au.Opt.Key"/>
             <seealso cref="P:Au.Opt.Static.Key"/>
         </member>
-        <member name="M:Au.Types.KOptions.#ctor(Au.Types.KOptions)">
+        <member name="M:Au.Types.OptKey.#ctor(Au.Types.OptKey)">
             <summary>
             Initializes this instance with default values or values copied from another instance.
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="M:Au.Types.KOptions.LibReset(Au.Types.KOptions)">
+        <member name="M:Au.Types.OptKey.LibReset(Au.Types.OptKey)">
             <summary>
             Copies options from o, or sets default if o==null. Like ctor does.
             </summary>
         </member>
-        <member name="M:Au.Types.KOptions.LibGetHookOptionsOrThis(Au.Wnd)">
+        <member name="M:Au.Types.OptKey.LibGetHookOptionsOrThis(Au.Wnd)">
             <summary>
-            Returns this variable or KOptions cloned from this variable and possibly modified by Hook.
+            Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
         </member>
-        <member name="P:Au.Types.KOptions.KeySpeed">
+        <member name="P:Au.Types.OptKey.KeySpeed">
             <summary>
             How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="M:Au.Keyb.Key(System.Object[])"/> and similar functions.
             Default: 1. Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.Opt.Static.Key"/>: 0 - 10.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Not used for 'text' parameters; see <see cref="P:Au.Types.KOptions.TextSpeed"/>.
+            Not used for 'text' parameters; see <see cref="P:Au.Types.OptKey.TextSpeed"/>.
             Clipboard functions that send keys Ctrl+V, Ctrl+C or Ctrl+X use this only after Ctrl (need it for some apps). The V/C/X key time depends on how fast the target app gets or sets clipboard data. 
             </remarks>
         </member>
-        <member name="P:Au.Types.KOptions.TextSpeed">
+        <member name="P:Au.Types.OptKey.TextSpeed">
             <summary>
             How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.Key(System.Object[])"/> and similar functions.
             Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.Opt.Static.Key"/>: 0 - 10.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Not used for 'keys' parameters; see <see cref="P:Au.Types.KOptions.KeySpeed"/>.
+            Not used for 'keys' parameters; see <see cref="P:Au.Types.OptKey.KeySpeed"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.KOptions.SleepFinally">
+        <member name="P:Au.Types.OptKey.SleepFinally">
             <summary>
             How long to wait (milliseconds) before a 'send keys or text' function returns.
             Default: 10. Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.Opt.Static.Key"/>: 0 - 100.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Not used by <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>.
+            Not used by <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.KOptions.TextOption">
+        <member name="P:Au.Types.OptKey.TextOption">
             <summary>
             How functions send text to the active window (keys, clipboard, etc).
             Default: <see cref="F:Au.Types.KTextOption.Characters"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.KOptions.PasteLength">
+        <member name="P:Au.Types.OptKey.PasteLength">
             <summary>
             To send text use clipboard (like with option <see cref="F:Au.Types.KTextOption.Paste"/>) if text length is &gt;= this value.
             Default: 300.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="P:Au.Types.KOptions.PasteEnter">
+        <member name="P:Au.Types.OptKey.PasteEnter">
             <summary>
             When pasting text that ends with newline characters, remove the last newline and after pasting send the Enter key.
             Default: false.
@@ -953,68 +953,68 @@
             Some apps remove the last newline when pasting. For example Word, WordPad, OpenOffice, LibreOffice, standard rich text controls. This option is a workaround.
             </remarks>
         </member>
-        <member name="P:Au.Types.KOptions.RestoreClipboard">
+        <member name="P:Au.Types.OptKey.RestoreClipboard">
             <summary>
             Whether to restore clipboard data when copying or pasting text.
             Default: true.
-            By default restores only text. See also <see cref="P:Au.Types.KOptions.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>.
+            By default restores only text. See also <see cref="P:Au.Types.OptKey.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.KOptions.RestoreClipboardAllFormats">
+        <member name="P:Au.Types.OptKey.RestoreClipboardAllFormats">
             <summary>
             When copying or pasting text, restore clipboard data of all formats that are possible to restore.
             Default: false - restore only text.
             </summary>
             <remarks>
-            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>.
+            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>.
             
             This property is static, not thread-static. It should be set (if need) at the very start of the script (eg in the script template) and not changed later.
             </remarks>
-            <seealso cref="P:Au.Types.KOptions.RestoreClipboard"/>
-            <seealso cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>
+            <seealso cref="P:Au.Types.OptKey.RestoreClipboard"/>
+            <seealso cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>
         </member>
-        <member name="P:Au.Types.KOptions.RestoreClipboardExceptFormats">
+        <member name="P:Au.Types.OptKey.RestoreClipboardExceptFormats">
             <summary>
-            When copying or pasting text, and <see cref="P:Au.Types.KOptions.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
+            When copying or pasting text, and <see cref="P:Au.Types.OptKey.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
             Default: null.
             </summary>
             <remarks>
             To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
             It also depends on whether this is the first time the data is being retrieved. The app can render data on demand, when some app is retrieving it from the clipboard first time; then can be slow etc.
             
-            You can use function <see cref="M:Au.Types.KOptions.PrintClipboard"/> to see format names and get-data times.
+            You can use function <see cref="M:Au.Types.OptKey.PrintClipboard"/> to see format names and get-data times.
             
             There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
             These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
             
             This property is static, not thread-static. It should be set (if need) at the very start of the script (eg in the script template) and not changed later.
             </remarks>
-            <seealso cref="P:Au.Types.KOptions.RestoreClipboard"/>
-            <seealso cref="M:Au.Types.KOptions.PrintClipboard"/>
+            <seealso cref="P:Au.Types.OptKey.RestoreClipboard"/>
+            <seealso cref="M:Au.Types.OptKey.PrintClipboard"/>
         </member>
-        <member name="M:Au.Types.KOptions.PrintClipboard">
+        <member name="M:Au.Types.OptKey.PrintClipboard">
             <summary>
             Prints some info about current clipboard data.
             </summary>
             <remarks>
-            Shows this info in the output, for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>).
-            <note type="note">Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/> and don't call this function in loop. Else it shows small times.</note>
-            The time depends on app, etc. More info: <see cref="P:Au.Types.KOptions.RestoreClipboardExceptFormats"/>.
+            Shows this info in the output, for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>).
+            <note type="note">Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)"/> and don't call this function in loop. Else it shows small times.</note>
+            The time depends on app, etc. More info: <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.KOptions.NoModOff">
+        <member name="P:Au.Types.OptKey.NoModOff">
             <summary>
             When starting to send keys or text, don't release modifier keys.
             Default: false.
             </summary>
         </member>
-        <member name="P:Au.Types.KOptions.NoCapsOff">
+        <member name="P:Au.Types.OptKey.NoCapsOff">
             <summary>
             When starting to send keys or text, don't turn off CapsLock.
             Default: false.
             </summary>
         </member>
-        <member name="P:Au.Types.KOptions.NoBlockInput">
+        <member name="P:Au.Types.OptKey.NoBlockInput">
             <summary>
             While sending or pasting keys or text, don't block user-pressed keys.
             Default: false.
@@ -1023,19 +1023,19 @@
             If false (default), user-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
             </remarks>
         </member>
-        <member name="P:Au.Types.KOptions.Hook">
+        <member name="P:Au.Types.OptKey.Hook">
             <summary>
             Callback function that can modify options of 'send keys or text' functions depending on active window etc.
             Default: null.
             </summary>
             <remarks>
-            The callback function is called by <see cref="M:Au.NoClass.Key(System.Object[])"/>, <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.Send(System.Boolean)"/>, <see cref="M:Au.NoClass.Paste(System.String)"/> and similar functions. Not called by <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>.
+            The callback function is called by <see cref="M:Au.NoClass.Key(System.Object[])"/>, <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/>, <see cref="M:Au.Keyb.Send(System.Boolean)"/>, <see cref="M:Au.NoClass.Paste(System.String)"/> and similar functions. Not called by <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)"/>.
             </remarks>
             <seealso cref="T:Au.Types.KOHookData"/>
         </member>
         <member name="T:Au.Types.KOHookData">
             <summary>
-            Parameter type of the <see cref="P:Au.Types.KOptions.Hook"/> callback function.
+            Parameter type of the <see cref="P:Au.Types.OptKey.Hook"/> callback function.
             </summary>
         </member>
         <member name="F:Au.Types.KOHookData.opt">
@@ -1051,7 +1051,7 @@
         <member name="T:Au.Types.KTextOption">
             <summary>
             How functions send text.
-            See <see cref="P:Au.Types.KOptions.TextOption"/>.
+            See <see cref="P:Au.Types.OptKey.TextOption"/>.
             </summary>
             <remarks>
             There are three ways to send text to the active app using keys: 1. Characters (default) - use special key code VK_PACKET. 2. Keys - press keybord keys. 3. Paste - use the clipboard and Ctrl+V.
@@ -1081,7 +1081,7 @@
             Paste text using the clipboard and Ctrl+V.
             Few apps don't support it.
             This option is recommended for long text, because other ways then are too slow.
-            Other options are unreliable when text length is more than 4000 or 5000 and the target app is too slow to process sent characters. Then <see cref="P:Au.Types.KOptions.TextSpeed"/> can help.
+            Other options are unreliable when text length is more than 4000 or 5000 and the target app is too slow to process sent characters. Then <see cref="P:Au.Types.OptKey.TextSpeed"/> can help.
             Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete or auto-indent. However some apps modify even pasted text, for example trim the last newline.
             When pasting text, previous clipboard data is lost.
             </summary>
@@ -1589,7 +1589,7 @@
             <see cref="T:Au.Types.Types`3"/>
             <see cref="T:Au.Types.Types`4"/>
             
-            To support null (for example for optional parameters), use nullable. See examples.
+            To support null (for example for optional arguments), use nullable. See examples.
             </remarks>
             <example>
             <code><![CDATA[
@@ -3047,7 +3047,7 @@
         </member>
         <member name="T:Au.Types.DIcon">
             <summary>
-            AuDialog icon. Used with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String)"/> and similar functions.
+            Standard icons for <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.DIcon.App">
@@ -3063,7 +3063,7 @@
         </member>
         <member name="T:Au.Types.DFlags">
             <summary>
-            AuDialog flags. Used with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String)"/> and similar functions.
+            Flags for <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.DFlags.CommandLinks">
@@ -3116,8 +3116,7 @@
         </member>
         <member name="T:Au.Types.DResult">
             <summary>
-            Dialog result, returned by <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions.
-            Contains multiple result values: selected button id, selected radio button id, check box state, edit field text.
+            Result of <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions: button id, radio button id, check box state, edit field text.
             </summary>
         </member>
         <member name="F:Au.Types.DResult.Timeout">
@@ -3159,36 +3158,119 @@
         </member>
         <member name="T:Au.Types.DEventArgs">
             <summary>
-            Arguments for AuDialog event handlers.
-            More info: <msdn>TaskDialogCallbackProc</msdn>.
-            To return a non-zero value from the callback function, assign the value to the returnValue field.
+            Arguments for <see cref="T:Au.AuDialog"/> event handlers.
             </summary>
+            <remarks>
+            To return a non-zero value from the callback function, assign the value to the <b>returnValue</b> field.
+            More info: <msdn>TaskDialogCallbackProc</msdn>.
+            </remarks>
         </member>
         <member name="P:Au.Types.DEventArgs.LinkHref">
             <summary>
-            Clicked hyperlink href attribute value. Use in HyperlinkClicked event handler.
+            Clicked hyperlink href attribute value. Use in <see cref="E:Au.AuDialog.HyperlinkClicked"/> event handler.
             </summary>
         </member>
         <member name="P:Au.Types.DEventArgs.Button">
             <summary>
-            Clicked button id. Use in ButtonClicked event handler.
+            Clicked button id. Use in <see cref="E:Au.AuDialog.ButtonClicked"/> event handler.
             </summary>
         </member>
         <member name="P:Au.Types.DEventArgs.TimerTimeMS">
             <summary>
-            Dialog timer time in milliseconds. Use in Timer event handler.
-            The event handler can set returnValue=1 to reset this.
+            Dialog timer time in milliseconds. Use in <see cref="E:Au.AuDialog.Timer"/> event handler.
+            The event handler can set <b>returnValue</b>=1 to reset this.
             </summary>
         </member>
         <member name="P:Au.Types.DEventArgs.DoNotCloseDialog">
             <summary>
-            Your ButtonClicked event handler function can use this to prevent closing the dialog.
+            Your <see cref="E:Au.AuDialog.ButtonClicked"/> event handler function can use this to prevent closing the dialog.
             </summary>
         </member>
         <member name="P:Au.Types.DEventArgs.EditText">
             <summary>
             Gets or sets edit field text.
             </summary>
+        </member>
+        <member name="T:Au.Types.TDSend">
+            <summary>
+            Can be used through <see cref="P:Au.AuDialog.Send"/>, to interact with dialog while it is open.
+            </summary>
+            <remarks>
+            Example (in an event handler): <c>e.dialog.Close();</c>
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.Message(Au.Types.TDApi.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Sends a message to the dialog.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            Example (in an event handler): <c>e.dialog.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
+            Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
+            Reference: <msdn>task dialog messages</msdn>.
+            NAVIGATE_PAGE currently not supported.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.ChangeText1(System.String,System.Boolean)">
+            <summary>
+            Changes the main big-font text.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.ChangeText2(System.String,System.Boolean)">
+            <summary>
+            Changes the main small-font text.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.ChangeFooterText(System.String,System.Boolean)">
+            <summary>
+            Changes the footer text.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.ChangeExpandedText(System.String,System.Boolean)">
+            <summary>
+            Changes the expanded area text.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.Close(System.Int32)">
+            <summary>
+            Clicks a button. Normally it closes the dialog.
+            </summary>
+            <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            Sends message TDApi.TDM.CLICK_BUTTON.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.EnableButton(System.Int32,System.Boolean)">
+            <summary>
+            Enables or disables a button.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
+            Sends message TDApi.TDM.ENABLE_BUTTON.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.TDSend.Progress(System.Int32)">
+            <summary>
+            Sets progress bar value, 0 to 100.
+            </summary>
+            <remarks>
+            Call this method while the dialog is open, eg in an event handler.
+            Sends message TDApi.TDM.SET_PROGRESS_BAR_POS.
+            </remarks>
         </member>
         <member name="T:Au.Types.TDApi">
             <summary>
@@ -3632,6 +3714,7 @@
         <member name="T:Au.Acc">
             <summary>
             Accessible object.
+            Finds controls and smaller objects in a window or web page. Clicks, gets properties, etc.
             </summary>
             <remarks>
             Accessible objects (AO) are various user interface (UI) objects in windows and controls. For example buttons, links, list items. This class can find them, get properties, click, etc. Especially useful with web pages, because there are no controls. And many other windows don't use controls but support AO. But not all UI objects are AO.
@@ -3946,7 +4029,7 @@
             </summary>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
-            Fails if the object does not have a default action. Then you can use <see cref="M:Au.Types.ExtensionMethods.MouseClick(Au.Acc,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)"/>, or try <see cref="M:Au.Acc.VirtualClick"/>, <see cref="M:Au.Acc.Select(Au.Types.AccSELFLAG)"/>, <see cref="M:Au.Acc.Focus(System.Boolean)"/> and keyboard functions.
+            Fails if the object does not have a default action. Then you can use <see cref="M:Au.Types.ExtensionMethods.MouseClick(Au.Acc,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)" r=""/>, or try <see cref="M:Au.Acc.VirtualClick"/>, <see cref="M:Au.Acc.Select(Au.Types.AccSELFLAG)"/>, <see cref="M:Au.Acc.Focus(System.Boolean)"/> and keyboard functions.
             The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="M:Au.Acc.DoJavaAction(System.String)"/> or one of the above functions (MouseClick etc).
             </remarks>
         </member>
@@ -4151,8 +4234,10 @@
         <member name="T:Au.Acc.Finder">
             <summary>
             Contains accessible object (AO) properties and is used to find the AO.
-            Can be used instead of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
+            <remarks>
+            Can be used instead of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
+            </remarks>
             <example>
             Find window that contains certain AO, and get the AO too.
             <code><![CDATA[
@@ -4544,9 +4629,10 @@
         <member name="M:Au.Acc.op_UnaryPlus(Au.Acc)">
             <summary>
             If x is not null, returns x, else throws <see cref="T:Au.Types.NotFoundException"/>.
-            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)"/>. Examples are there.
+            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)" r=""/>.
             </summary>
             <exception cref="T:Au.Types.NotFoundException">x is null.</exception>
+            <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)"/></example>
         </member>
         <member name="P:Au.Acc.SimpleElementId">
             <summary>
@@ -4801,7 +4887,7 @@
             <remarks>
             This class is similar to the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
             
-            To set/get clipboard data of non-text formats, use class <see cref="T:Au.Clipb.Data"/>; to paste, use it with <see cref="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.KOptions)"/>; to copy (get from the active app), use it with <see cref="M:Au.Clipb.CopyData(System.Action,System.Boolean,Au.Types.KOptions)"/>.
+            To set/get clipboard data of non-text formats, use class <see cref="T:Au.Clipb.Data"/>; to paste, use it with <see cref="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.OptKey)"/>; to copy (get from the active app), use it with <see cref="M:Au.Clipb.CopyData(System.Action,System.Boolean,Au.Types.OptKey)"/>.
             
             Should not be used to copy/paste in windows of own thread. In most cases it works, but strange problems are possible, because it waits until the window processes the copy/paste request, and while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. Example in <see cref="M:Au.Keyb.Key(System.Object[])"/>.
             </remarks>
@@ -4830,14 +4916,14 @@
             Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't.
             </summary>
         </member>
-        <member name="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)">
+        <member name="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)">
             <summary>
             Gets the selected text from the focused app using the clipboard.
             </summary>
             <param name="cut">Use Ctrl+X.</param>
             <param name="options">
             Options. If null (default), uses <see cref="P:Au.Opt.Key"/>.
-            Uses <see cref="P:Au.Types.KOptions.RestoreClipboard" r=""/>, <see cref="P:Au.Types.KOptions.NoBlockInput" r=""/>, partially <see cref="P:Au.Types.KOptions.KeySpeed" r=""/>. Does not use <see cref="P:Au.Types.KOptions.Hook" r=""/>.
+            Uses <see cref="P:Au.Types.OptKey.RestoreClipboard" r=""/>, <see cref="P:Au.Types.OptKey.NoBlockInput" r=""/>, partially <see cref="P:Au.Types.OptKey.KeySpeed" r=""/>. Does not use <see cref="P:Au.Types.OptKey.Hook" r=""/>.
             </param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
@@ -4847,13 +4933,13 @@
             Works with console windows too, even if they don't support Ctrl+C.
             </remarks>
         </member>
-        <member name="M:Au.Clipb.CopyData(System.Action,System.Boolean,Au.Types.KOptions)">
+        <member name="M:Au.Clipb.CopyData(System.Action,System.Boolean,Au.Types.OptKey)">
             <summary>
             Gets data of any formats from the focused app using the clipboard and a callback function.
             </summary>
             <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="T:Au.Clipb.Data"/> class or the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
             <param name="cut">Use Ctrl+X.</param>
-            <param name="options"><inheritdoc cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/></param>
+            <param name="options"><inheritdoc cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)"/></param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <exception cref="T:System.Exception">Exceptions thrown by the callback function.</exception>
             <remarks>
@@ -4871,14 +4957,14 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)">
+        <member name="M:Au.Clipb.PasteText(System.String,Au.Types.OptKey)">
             <summary>
             Pastes text into the focused app using the clipboard.
             </summary>
             <param name="text">Text.</param>
             <param name="options">
             Options. If null (default), uses <see cref="P:Au.Opt.Key"/>.
-            Uses <see cref="P:Au.Types.KOptions.RestoreClipboard" r=""/>, <see cref="P:Au.Types.KOptions.PasteEnter" r=""/>, <see cref="P:Au.Types.KOptions.NoBlockInput" r=""/>, <see cref="P:Au.Types.KOptions.SleepFinally" r=""/>, <see cref="P:Au.Types.KOptions.Hook" r=""/>, partially <see cref="P:Au.Types.KOptions.KeySpeed" r=""/>.
+            Uses <see cref="P:Au.Types.OptKey.RestoreClipboard" r=""/>, <see cref="P:Au.Types.OptKey.PasteEnter" r=""/>, <see cref="P:Au.Types.OptKey.NoBlockInput" r=""/>, <see cref="P:Au.Types.OptKey.SleepFinally" r=""/>, <see cref="P:Au.Types.OptKey.Hook" r=""/>, partially <see cref="P:Au.Types.OptKey.KeySpeed" r=""/>.
             </param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
@@ -4895,11 +4981,11 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.KOptions)">
+        <member name="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.OptKey)">
             <summary>
             Pastes data added to a <see cref="T:Au.Clipb.Data"/> variable into the focused app using the clipboard.
             </summary>
-            <inheritdoc cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>
+            <inheritdoc cref="M:Au.Clipb.PasteText(System.String,Au.Types.OptKey)"/>
             <example>
             Paste data of two formats: HTML and text.
             <code><![CDATA[
@@ -4907,7 +4993,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Clipb.LibPaste(System.Object,Au.Types.KOptions,Au.Wnd)">
+        <member name="M:Au.Clipb.LibPaste(System.Object,Au.Types.OptKey,Au.Wnd)">
             <summary>
             Used by Clipb and Keyb.
             The caller should block user input (if need), release modifier keys, get opt/wFocus, sleep finally (if need).
@@ -4984,7 +5070,7 @@
             Sets or gets clipboard data in multiple formats.
             </summary>
             <remarks>
-            The <b>AddX</b> functions add data to the variable (not to the clipboard). Then <see cref="M:Au.Clipb.Data.SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.KOptions)"/>.
+            The <b>AddX</b> functions add data to the variable (not to the clipboard). Then <see cref="M:Au.Clipb.Data.SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="M:Au.Clipb.PasteData(Au.Clipb.Data,Au.Types.OptKey)"/>.
             The static <b>GetX</b> functions get data directly from the clipboard.
             </remarks>
             <example>
@@ -5202,24 +5288,26 @@
         </member>
         <member name="T:Au.NoClass">
             <summary>
-            This class contains aliases of some frequently used functions.
-            In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without specifying a type name.
+            This class contains aliases of some frequently used functions. You can call them without type name.
+            </summary>
+            <remarks>
+            In C# source files add <c>using static Au.NoClass;</c>, and you can call these functions without type name.
             Examples:
             <c>Print</c> is the same as <c>Output.Write</c>;
             <c>Empty</c> is the same as <c>string.IsNullOrEmpty</c>;
-            </summary>
+            </remarks>
         </member>
         <member name="M:Au.NoClass.Paste(System.String)">
             <summary>
-            Calls <see cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>.
+            Calls <see cref="M:Au.Clipb.PasteText(System.String,Au.Types.OptKey)"/>.
             </summary>
-            <inheritdoc cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>
+            <inheritdoc cref="M:Au.Clipb.PasteText(System.String,Au.Types.OptKey)"/>
         </member>
         <member name="M:Au.NoClass.CopyText">
             <summary>
-            Calls <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>.
+            Calls <see cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)"/>.
             </summary>
-            <inheritdoc cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.KOptions)"/>
+            <inheritdoc cref="M:Au.Clipb.CopyText(System.Boolean,Au.Types.OptKey)"/>
         </member>
         <member name="M:Au.NoClass.Key(System.Object[])">
             <summary>
@@ -5313,8 +5401,8 @@
             <param name="prefix">Text before <paramref name="text"/>. Default "Warning: ".</param>
             <remarks>
             Calls <see cref="M:Au.Output.Write(System.String)"/>.
-            Does not show more that 1 warning/second, unless Opt.Debug.<see cref="P:Au.Types.DOptions.Verbose" r=""/> == true.
-            To disable some warnings, use Opt.Debug.<see cref="M:Au.Types.DOptions.DisableWarnings(System.String[])" r=""/>.
+            Does not show more that 1 warning/second, unless Opt.Debug.<see cref="P:Au.Types.OptDebug.Verbose" r=""/> == true.
+            To disable some warnings, use Opt.Debug.<see cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.NoClass.Empty(System.String)">
@@ -5328,7 +5416,7 @@
             Keyboard functions: send virtual keystrokes and text to the active window, get key states.
             </summary>
             <remarks>
-            The main function is <see cref="M:Au.Keyb.Key(System.Object[])"/>. Most documentation is there. See also <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>. These functions use <see cref="P:Au.Opt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="M:Au.Keyb.#ctor(Au.Types.KOptions)"/>.
+            The main function is <see cref="M:Au.Keyb.Key(System.Object[])"/>. Most documentation is there. See also <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>. These functions use <see cref="P:Au.Opt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="M:Au.Keyb.#ctor(Au.Types.OptKey)"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -5345,7 +5433,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Keyb.#ctor(Au.Types.KOptions)">
+        <member name="M:Au.Keyb.#ctor(Au.Types.OptKey)">
             <param name="cloneOptions">Options to be copied to <see cref="P:Au.Keyb.Options"/> of this variable. If null, uses default options.</param>
             <example>
             <code><![CDATA[
@@ -5504,7 +5592,7 @@
             <param name="press"></param>
             <param name="mod">Modifier keys. Does nothing if 0.</param>
         </member>
-        <member name="M:Au.Keyb.Lib.ReleaseModAndCapsLock(Au.Types.KOptions,System.Boolean)">
+        <member name="M:Au.Keyb.Lib.ReleaseModAndCapsLock(Au.Types.OptKey,System.Boolean)">
             <summary>
             Releases modifier keys if pressed. Optionally turns off CapsLock if toggled.
             Returns true if was CapsLock.
@@ -5520,7 +5608,7 @@
             Caller calls Press, waits until the target app gets clipboard data, then calls Release.
             </summary>
         </member>
-        <member name="M:Au.Keyb.Lib.SendCopyPaste.Press(System.Windows.Forms.Keys,Au.Types.KOptions,Au.Wnd,System.Boolean)">
+        <member name="M:Au.Keyb.Lib.SendCopyPaste.Press(System.Windows.Forms.Keys,Au.Types.OptKey,Au.Wnd,System.Boolean)">
             <summary>
             Presses Ctrl+key. Does not release.
             If enter is true, Release will press Enter.
@@ -5532,21 +5620,21 @@
             Does nothing if already released.
             </summary>
         </member>
-        <member name="M:Au.Keyb.Lib.SendCopyPaste.Enter(Au.Types.KOptions)">
+        <member name="M:Au.Keyb.Lib.SendCopyPaste.Enter(Au.Types.OptKey)">
             <summary>
             Sends Enter.
             </summary>
         </member>
         <member name="M:Au.Keyb._GetOptionsAndWndFocused(Au.Wnd@,System.Boolean)">
             <summary>
-            Returns KOptions of this variable or KOptions cloned from this variable and possibly modified by Hook.
+            Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
             <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(Wnd) if Hook is null.</param>
         </member>
         <member name="M:Au.Keyb._GetOptions(Au.Wnd)">
             <summary>
-            Returns KOptions of this variable or KOptions cloned from this variable and possibly modified by Hook.
+            Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
         </member>
@@ -5648,7 +5736,7 @@
         </member>
         <member name="T:Au.Keyb.Misc">
             <summary>
-            Miscellaneous functions.
+            Miscellaneous keyboard-related functions.
             </summary>
         </member>
         <member name="M:Au.Keyb.Misc.GetTextCursorRect(Au.Types.RECT@,Au.Wnd@,System.Boolean)">
@@ -5880,7 +5968,7 @@
             <term>Changed</term>
             </listheader>
             <item>
-            <description><see cref="P:Au.Types.KOptions.NoBlockInput" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.NoBlockInput" r=""/></description>
             <description>false.
             Blocks user-pressed keys. Sends them afterwards.
             If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</description>
@@ -5888,58 +5976,58 @@
             Does not block user-pressed keys. It can be dangerous.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.NoCapsOff" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.NoCapsOff" r=""/></description>
             <description>false.
             If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</description>
             <description>true.
             Does not touch the CapsLock key.
-            Alphabetic keys of 'keys' arguments can depend on CapsLock. Text of 'text' arguments doesn't depend on CapsLock, unless <see cref="P:Au.Types.KOptions.TextOption" r=""/> is <see cref="F:Au.Types.KTextOption.Keys"/>.</description>
+            Alphabetic keys of 'keys' arguments can depend on CapsLock. Text of 'text' arguments doesn't depend on CapsLock, unless <see cref="P:Au.Types.OptKey.TextOption" r=""/> is <see cref="F:Au.Types.KTextOption.Keys"/>.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.NoModOff" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.NoModOff" r=""/></description>
             <description>false.
             Releases modifier keys (Alt, Ctrl, Shift, Win) if pressed.
-            Does it only at the start; later they cannot interfere, unless <see cref="P:Au.Types.KOptions.NoBlockInput" r=""/> is true.</description>
+            Does it only at the start; later they cannot interfere, unless <see cref="P:Au.Types.OptKey.NoBlockInput" r=""/> is true.</description>
             <description>true.
             Does not touch modifier keys. It can be dangerous.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.KeySpeed" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.KeySpeed" r=""/></description>
             <description>1 ms.</description>
             <description>0 - 1000.
             Changes the speed for 'keys' arguments (makes slower if &gt;1).</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.TextSpeed" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.TextSpeed" r=""/></description>
             <description>0 ms.</description>
             <description>0 - 1000.
             Changes the speed for 'text' arguments (makes slower).</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.SleepFinally" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.SleepFinally" r=""/></description>
             <description>10 ms.</description>
             <description>0 - 10000.
             Tip: to sleep finally, also can be used code like this: <c>Key("keys", 1000);</c>.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.TextOption" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.TextOption" r=""/></description>
             <description><see cref="F:Au.Types.KTextOption.Characters"/></description>
             <description><b>Keys</b> (send keys and Shift) or <b>Paste</b> (use clipboard).</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.PasteLength" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.PasteLength" r=""/></description>
             <description>300.
             This option is used for 'text' arguments. If text length &gt;= this value, uses the clipboard.</description>
             <description>&gt;=0.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.PasteEnter" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.PasteEnter" r=""/></description>
             <description>false.</description>
             <description>true.
             This option is used for 'text' arguments when using the clipboard.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.RestoreClipboard" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.RestoreClipboard" r=""/></description>
             <description>true.
             Restore clipboard data (by default only text).
             This option is used for 'text' arguments when using the clipboard.</description>
@@ -5947,14 +6035,14 @@
             Don't restore clipboard data.</description>
             </item>
             <item>
-            <description><see cref="P:Au.Types.KOptions.Hook" r=""/></description>
+            <description><see cref="P:Au.Types.OptKey.Hook" r=""/></description>
             <description>null.</description>
             <description>Callback function that can modify options depending on active window etc.</description>
             </item>
             </list>
-            When you don't want to use or modify <see cref="P:Au.Opt.Key"/>, use a <see cref="T:Au.Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="M:Au.Keyb.#ctor(Au.Types.KOptions)"/> topic.
+            When you don't want to use or modify <see cref="P:Au.Opt.Key"/>, use a <see cref="T:Au.Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="M:Au.Keyb.#ctor(Au.Types.OptKey)"/> topic.
             
-            This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="P:Au.Types.KOptions.SleepFinally" r=""/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+            This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="P:Au.Types.OptKey.SleepFinally" r=""/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
             
             This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
             
@@ -6063,7 +6151,7 @@
             To send text can be used keys or clipboard, depending on <see cref="P:Au.Opt.Key"/> and text.
             More info in <see cref="M:Au.Keyb.Key(System.Object[])"/> topic.
             </remarks>
-            <seealso cref="M:Au.Clipb.PasteText(System.String,Au.Types.KOptions)"/>
+            <seealso cref="M:Au.Clipb.PasteText(System.String,Au.Types.OptKey)"/>
             <example>
             <code><![CDATA[
             Keyb.Text("Text where key names like Enter are interpreted as text.\r\n");
@@ -6075,9 +6163,11 @@
         <member name="T:Au.WinImage">
             <summary>
             Captures, finds and clicks images and colors in windows.
-            An image is any visible rectangular part of window. A color is any visible pixel of window.
-            A WinImage variable holds results of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and similar functions (rectangle etc).
             </summary>
+            <remarks>
+            An image is any visible rectangular part of window. A color is any visible pixel of window.
+            A <b>WinImage</b> variable holds results of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and similar functions (rectangle etc).
+            </remarks>
         </member>
         <member name="M:Au.WinImage.Capture(Au.Types.RECT)">
             <summary>
@@ -6140,9 +6230,10 @@
         <member name="M:Au.WinImage.op_UnaryPlus(Au.WinImage)">
             <summary>
             If x is not null, returns x, else throws <see cref="T:Au.Types.NotFoundException"/>.
-            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)"/>. Examples are there.
+            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)" r=""/>.
             </summary>
             <exception cref="T:Au.Types.NotFoundException">x is null.</exception>
+            <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)"/></example>
         </member>
         <member name="F:Au.WinImage.Rect">
             <summary>
@@ -6440,8 +6531,10 @@
         <member name="T:Au.OnScreenRect">
             <summary>
             Shows a transparent rectangle on screen.
-            For it creates a temporary partially transparent window.
             </summary>
+            <remarks>
+            Creates a temporary partially transparent window, and draws rectangle in it.
+            </remarks>
         </member>
         <member name="M:Au.OnScreenRect.#ctor">
             
@@ -6500,9 +6593,357 @@
             </summary>
             <param name="show">If true, creates the rectangle window or just makes visible. Else hides the window; does not destroy.</param>
         </member>
+        <member name="T:Au.Tools.OutputServer">
+            <summary>
+            Receives messages sent from clients when they call <see cref="M:Au.Output.Write(System.String)"/> and related methods.
+            </summary>
+            <remarks>
+            If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
+            Works asynchronously, to make writing messages faster.
+            When a client writes a message, the message arrives to the server with some delay and is placed in the <see cref="P:Au.Tools.OutputServer.Messages"/> queue.
+            You then can get/remove messages (call Messages.TryDequeue) and display them in a window (for example).
+            You can be notified about new messages.
+            
+            Recommended setup (see example):
+            1. When your application starts, create an OutputServer instance and assign to a static variable. Call Start.
+            2. When your application creates its output window, call <see cref="M:Au.Tools.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/> to register callback function.
+            3. In the callback function get/remove/display all new messages.
+            4. Call Stop when closing the window. Optional but recommended.
+            </remarks>
+            <example>
+            Simple program with output window.
+            <code><![CDATA[
+            class OutputFormExample :Form
+            {
+            	TextBox _tb;
+            
+            	public OutputFormExample()
+            	{
+            		_tb = new TextBox();
+            		_tb.ReadOnly = true;
+            		_tb.Multiline = true;
+            		_tb.ScrollBars = ScrollBars.Both;
+            		_tb.WordWrap = false;
+            		_tb.Dock = DockStyle.Fill;
+            		_tb.TabStop = false;
+            		this.Controls.Add(_tb);
+            
+            		_os.SetNotifications(_ProcessMessages, this);
+            	}
+            
+            	void _ProcessMessages()
+            	{
+            		while(_os.Messages.TryDequeue(out var m)) {
+            			switch(m.Type) {
+            			case Au.Tools.OutputServer.MessageType.Clear:
+            				_tb.Clear();
+            				break;
+            			case Au.Tools.OutputServer.MessageType.Write:
+            				//_tb.AppendText(m.Text);
+            				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
+            				break;
+            			}
+            		}
+            	}
+            
+            	static Au.Tools.OutputServer _os = new Au.Tools.OutputServer(false);
+            
+            	[STAThread]
+            	public static void Main()
+            	{
+            		_os.Start();
+            
+            		//test Print and Clear, before and after creating window
+            		Output.IgnoreConsole = true;
+            		Print("test before setting notifications");
+            		Task.Run(() => { 1.s(); Print("test after"); 1.s(); Output.Clear(); 1.s(); Print("test after Clear"); });
+            
+            		var f = new OutputFormExample();
+            		f.ShowDialog();
+            		_os.Stop();
+            	}
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Au.Tools.OutputServer.MessageType">
+            <summary>
+            See <see cref="P:Au.Tools.OutputServer.Message.Type"/>.
+            </summary>
+            <tocexclude />
+        </member>
+        <member name="F:Au.Tools.OutputServer.MessageType.Write">
+            <summary>
+            Add line to the output window.
+            All Message members can be used.
+            </summary>
+        </member>
+        <member name="F:Au.Tools.OutputServer.MessageType.Clear">
+            <summary>
+            Clear the output window.
+            Other Message members are not used.
+            </summary>
+        </member>
+        <member name="T:Au.Tools.OutputServer.Message">
+            <summary>
+            Contains message text and/or related info.
+            See <see cref="P:Au.Tools.OutputServer.Messages"/>.
+            </summary>
+            <tocexclude />
+        </member>
+        <member name="P:Au.Tools.OutputServer.Message.Type">
+            <summary>
+            Message type.
+            Currently there are 2 types - Write and Clear.
+            </summary>
+        </member>
+        <member name="P:Au.Tools.OutputServer.Message.Text">
+            <summary>
+            Message text.
+            Used with MessageType.Write.
+            </summary>
+        </member>
+        <member name="P:Au.Tools.OutputServer.Message.TimeUtc">
+            <summary>
+            Message time in FILETIME format, UTC.
+            Used with MessageType.Write.
+            To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Tools.OutputServer.Message.Domain">
+            <summary>
+            The name of the appdomain that called the Write/Print/etc method.
+            Used with MessageType.Write.
+            </summary>
+        </member>
+        <member name="P:Au.Tools.OutputServer.Messages">
+            <summary>
+            Contains all received and still not removed messages that were sent by clients when they call Output.Write etc.
+            Call TryDequeue to get/remove them.
+            </summary>
+        </member>
+        <member name="M:Au.Tools.OutputServer.#ctor(System.Boolean)">
+            <param name="isGlobal">Serve all appdomains and processes that don't have local server.</param>
+        </member>
+        <member name="M:Au.Tools.OutputServer.Start">
+            <summary>
+            Starts server.
+            Returns false if server already exists (if global - in any process).
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+        </member>
+        <member name="M:Au.Tools.OutputServer.Stop">
+            <summary>
+            Stops server.
+            </summary>
+        </member>
+        <member name="M:Au.Tools.OutputServer.Finalize">
+            <summary>
+            Calls Stop.
+            </summary>
+        </member>
+        <member name="M:Au.Tools.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)">
+            <summary>
+            Sets callback function, to be notified about server events.
+            </summary>
+            <param name="cbFunc">
+            Callback function's delegate. Called when one or more messages are available.
+            It should get/remove messages from <see cref="P:Au.Tools.OutputServer.Messages"/> queue (call TryDequeue).
+            See example in class help.
+            </param>
+            <param name="c">A control or form. The callback function will be called in its thread (<see cref="M:System.Windows.Forms.Control.BeginInvoke(System.Delegate)"/>). If null, the callback function will be called in other thread.</param>
+        </member>
+        <member name="M:Au.Tools.OutputServer.LibLocalWrite(System.String,System.Int64,System.String)">
+            <summary>
+            Adds s directly to Messages and sets timer.
+            If s is null, it is 'Clear' command.
+            Else if !NoNewline, appends "\r\n".
+            Used with local server only.
+            </summary>
+        </member>
+        <member name="P:Au.Tools.OutputServer.NoNewline">
+            <summary>
+            Let messages don't end with "\r\n".
+            </summary>
+            <remarks>
+            This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
+            </remarks>
+        </member>
+        <member name="P:Au.Tools.OutputServer.LibMailslotName">
+            <summary>
+            Gets mailslot name like @"\\.\mailslot\Au.Output\" + sessionId.
+            </summary>
+        </member>
+        <member name="P:Au.Tools.OutputServer.LibTimerName">
+            <summary>
+            Gets waitable timer name like "timer.Au.Output".
+            </summary>
+        </member>
+        <member name="T:Au.Tools.OutputServer.LibSharedMemoryData">
+            <summary>
+            Shared memory variables. Used with global server only.
+            </summary>
+        </member>
+        <member name="T:Au.Output">
+            <summary>
+            Writes text to the output window, console or log file.
+            </summary>
+        </member>
+        <member name="P:Au.Output.IsConsoleProcess">
+            <summary>
+            Returns true if this is a console process.
+            </summary>
+        </member>
+        <member name="P:Au.Output.IsWritingToConsole">
+            <summary>
+            Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="P:Au.Output.Writer"/> is not changed.
+            Does not write to console in these cases: <see cref="P:Au.Output.IsConsoleProcess"/> is false. <see cref="P:Au.Output.IgnoreConsole"/> is true. <see cref="P:Au.Output.LogFile"/> is not null. The startup info of this process tells to not show console window and to not redirect the standard output.
+            </summary>
+        </member>
+        <member name="P:Au.Output.IgnoreConsole">
+            <summary>
+            If true, Write and related functions in console process don't not use the console window. Then everything is like in non-console process.
+            </summary>
+            <seealso cref="P:Au.Output.RedirectConsoleOutput"/>
+            <seealso cref="P:Au.Output.RedirectDebugOutput"/>
+        </member>
+        <member name="M:Au.Output.Clear">
+            <summary>
+            Clears the output window or console text (if <see cref="P:Au.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Au.Output.LogFile"/> not null).
+            </summary>
+        </member>
+        <member name="M:Au.Output.Write(System.String)">
+            <summary>
+            Writes string + "\r\n" to the output window or console (if <see cref="P:Au.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Au.Output.LogFile"/> not null).
+            </summary>
+            <seealso cref="M:Au.NoClass.Print(System.String)"/>
+            <seealso cref="M:Au.NoClass.Print(System.Object)"/>
+            <seealso cref="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})"/>
+            <seealso cref="M:Au.NoClass.Print(System.Object,System.Object,System.Object[])"/>
+            <seealso cref="M:Au.NoClass.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)"/>
+        </member>
+        <member name="P:Au.Output.Writer">
+            <summary>
+            Gets or sets object that actually writes text when is called Output.Write, Print and similar functions.
+            </summary>
+            <remarks>
+            If you want to redirect, modify or just monitor output text, use code like in the example. It is known as "output redirection".
+            Redirection is applied to whole appdomain, and does not affect other appdomains.
+            Redirection affects Output.Write, Print and similar functions, also Output.RedirectConsoleOutput and Output.RedirectDebugOutput. It does not affect Output.WriteDirectly and Output.Clear.
+            Don't call Output.Write, Print etc in method WriteLine(string) of your writer class. It would call itself and create stack overflow. But you can call Output.WriteDirectly.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            [STAThread]
+            static void Main()
+            {
+            	Output.Writer = new TestOutputWriter();
+            
+            	Print("test");
+            }
+            
+            class TestOutputWriter :TextWriter
+            {
+            	public override void WriteLine(string value) { Output.WriteDirectly("redir: " + value); }
+            	public override Encoding Encoding => Encoding.Unicode;
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Au.Output._OutputWriter">
+            <summary>
+            Our default writer class for the Writer property.
+            </summary>
+        </member>
+        <member name="M:Au.Output.WriteDirectly(System.String)">
+            <summary>
+            Writes string value + "\r\n" to the output window or console (if <see cref="P:Au.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Au.Output.LogFile"/> not null).
+            Unlike Output.Write, Print etc, the string is not passed to <see cref="P:Au.Output.Writer"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Output.RedirectConsoleOutput">
+            <summary>
+            Let Console.WriteX methods in non-console process write to the same destination as Output.Write etc.
+            </summary>
+            <remarks>
+            Console.Write will write line, like Console.WriteLine.
+            Console.Clear will not clear output; it will throw exception.
+            </remarks>
+        </member>
+        <member name="P:Au.Output.RedirectDebugOutput">
+            <summary>
+            Let Debug.WriteX and Trace.WriteX methods write to the same destination as Output.Write etc.
+            </summary>
+            <remarks>
+            Tip: To write to the output window even in console process, set <c>Output.IgnoreConsole=true;</c> before calling this method first time.
+            </remarks>
+        </member>
+        <member name="P:Au.Output.LogFile">
+            <summary>
+            Sets log file path.
+            When set (not null), text passed to Output.Write, Print and similar functions will be written to the file. Assuming that <see cref="P:Au.Output.Writer"/> is not changed.
+            If value is null - restores default behavior.
+            </summary>
+            <remarks>
+            The first Write etc call (in this appdomain) creates or opens the file and deletes old content if the file already exists.
+            Multiple appdomains cannot use the same file. If the file is open for writing, Write makes unique filename and changes LogFile value.
+            
+            Also supports mailslots. For LogFile use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
+            </remarks>
+            <exception cref="T:System.ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
+        </member>
+        <member name="P:Au.Output.LogFileTimestamp">
+            <summary>
+            Let Write etc also add current time when using log file (see <see cref="P:Au.Output.LogFile"/>).
+            The time is local, not UTC.
+            </summary>
+        </member>
+        <member name="M:Au.Output._LogFile.Open">
+            <summary>
+            Opens LogFile file handle for writing.
+            Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
+            </summary>
+            <remarks>
+            Multiple appdomains cannot use the same file. Each appdomain overwrites it when opens first time.
+            </remarks>
+        </member>
+        <member name="M:Au.Output._LogFile.WriteLine(System.String)">
+            <summary>
+            Writes s + "\r\n" and optionally timestamp.
+            </summary>
+            <remarks>
+            If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
+            </remarks>
+        </member>
+        <member name="M:Au.Output._LogFile.Clear">
+            <summary>
+            Sets file size = 0.
+            </summary>
+        </member>
+        <member name="M:Au.Output._LogFile.Close">
+            <summary>
+            Closes file handle.
+            </summary>
+        </member>
+        <member name="M:Au.Output.LibCreateFile(System.String,System.Boolean)">
+            <summary>
+            Calls Api.CreateFile to open file or mailslot.
+            </summary>
+            <param name="name">File path or mailslot name.</param>
+            <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
+        </member>
+        <member name="P:Au.Output.LibWriteToQM2">
+            <summary>
+            Sets to use QM2 as the output server.
+            Eg can be used to debug the Output class itself. Although can instead use console.
+            </summary>
+        </member>
+        <member name="M:Au.Output._WriteToQM2(System.String)">
+            <param name="s">If null, clears output.</param>
+        </member>
         <member name="T:Au.Screen_">
             <summary>
-            Extends the .NET class Screen.
+            Extends <see cref="T:System.Windows.Forms.Screen"/>.
             </summary>
         </member>
         <member name="F:Au.Screen_.Primary">
@@ -7240,11 +7681,13 @@
         </member>
         <member name="T:Au.String_">
             <summary>
-            Adds extension methods to System.String.
+            Adds extension methods to <see cref="T:System.String"/>.
+            </summary>
+            <remarks>
             Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
             Extension method names have suffix _.
-            Most of these extension methods throw NullReferenceException if called for a string variable that is null.
-            </summary>
+            Most of these extension methods throw <b>NullReferenceException</b> if called for a string variable that is null.
+            </remarks>
         </member>
         <member name="M:Au.String_.RegexIsMatch_(System.String,System.String,Au.Types.RXFlags)">
             <summary>
@@ -7735,7 +8178,7 @@
         </member>
         <member name="M:Au.String_.Escape_(System.String,System.Int32,System.Boolean)">
             <summary>
-            Replaces some characters to C# escape sequences.
+            Replaces some characters with C# escape sequences.
             Replaces these characters: '\\', '\"', '\t', '\n', '\r' and all in range 0-31.
             If the string contains these characters, replaces and returns new string. Else returns this string.
             </summary>
@@ -8118,11 +8561,13 @@
         <member name="T:Au.InterDomainVariables">
             <summary>
             Inter-domain variables. Allows to share values by all app domains of this process.
+            </summary>
+            <remarks>
             Similar to environment variables, but supports more types and does not inherit parent process variables; the speed is similar.
             Supports not all types. The type must have one of these properties:
             1. Derived from MarshalByRefObject. The stored value is a virtual reference (proxy), not a copy. The owner domain must be still alive when other domains access (call methods etc) the retrieved value, else AppDomainUnloadedException.
             2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
-            </summary>
+            </remarks>
         </member>
         <member name="M:Au.InterDomainVariables.SetVariable(System.String,System.Object)">
             <summary>
@@ -8201,26 +8646,28 @@
         <member name="T:Au.Files">
             <summary>
             File system functions.
-            Works with files and directories. Disk drives like @"C:\" or "C:" are directories too.
-            Extends .NET file system classes such as File and Directory.
-            Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
-            Most functions support only full path. Most of them throw ArgumentException if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
-            Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="M:Au.Path_.PrefixLongPath(System.String)"/>, <see cref="M:Au.Path_.PrefixLongPathIfNeed(System.String)"/>. Many functions support long paths even without prefix.
             </summary>
+            <remarks>
+            Works with files and directories. Disk drives like @"C:\" or "C:" are directories too.
+            Extends .NET file system classes such as <see cref="T:System.IO.File"/> and <see cref="T:System.IO.Directory"/>.
+            Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
+            Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
+            Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="M:Au.Path_.PrefixLongPath(System.String)"/>, <see cref="M:Au.Path_.PrefixLongPathIfNeed(System.String)"/>. Many functions support long paths even without prefix.
+            </remarks>
         </member>
         <member name="T:Au.Files.Misc">
             <summary>
-            Miscellaneous functions.
+            Miscellaneous file/directory functions.
             </summary>
         </member>
         <member name="T:Au.Files.Misc.FileId">
             <summary>
             Contains file properties that can be used to uniquely identify the file on a single computer.
-            Can be used with files and directories.
-            To get it, use <see cref="M:Au.Files.Misc.GetFileId(System.String,Au.Files.Misc.FileId@)"/>.
             </summary>
             <remarks>
-            Path to the same file or directory can be specified in many different ways. To determine whether two paths represent to the same file, get and compare FileId of them.
+            Can be used with files and directories.
+            To get it, use <see cref="M:Au.Files.Misc.GetFileId(System.String,Au.Files.Misc.FileId@)"/>.
+            There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
             </remarks>
             <tocexclude />
         </member>
@@ -8687,12 +9134,12 @@
         </member>
         <member name="T:Au.Shell.Pidl">
             <summary>
-            A Pidl variable holds and manages an ITEMIDLIST pointer. An ITEMIDLIST is a native variable-length structure that represents a file or other shell object and is used by Windows shell API instead of file-system path.
-            With shell API is used ITEMIDLIST pointer (PIDL) as IntPtr. This class has an implicit Pidl-to-IntPtr cast operator and therefore a Pidl variable can be passed to shell API IntPtr parameters.
-            The ITEMIDLIST is in unmanaged memory, therefore this class implements IDisposable.
+            Manages an ITEMIDLIST structure that is used with shell API to identify files and other shell objects. Like a file-system path, but not string.
             </summary>
             <remarks>
             When calling shell API, virtual objects can be identified only by ITEMIDLIST. Some API also support "parsing name", which usually looks like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST. URLs can be identified by URL as well as by ITEMIDLIST.
+            
+            The ITEMIDLIST structure is in unmanaged memory, therefore this class implements IDisposable.
             </remarks>
         </member>
         <member name="P:Au.Shell.Pidl.UnsafePtr">
@@ -9022,7 +9469,7 @@
             Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
             </summary>
             <seealso cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>
-            <seealso cref="M:Au.Types.DOptions.DisableWarnings(System.String[])"/>
+            <seealso cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>
         </member>
         <member name="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
@@ -9076,7 +9523,7 @@
         </member>
         <member name="T:Au.Path_">
             <summary>
-            Extends the .NET class Path.
+            Extends <see cref="T:System.IO.Path"/>.
             </summary>
         </member>
         <member name="M:Au.Path_.ExpandEnvVar(System.String)">
@@ -9220,7 +9667,7 @@
             2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
             3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
             4. If path is not full path, throws exception.
-            5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' to '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
+            5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' with '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
             6. If no flag DoNotExpandDosPath, if contains '~' character, calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
             7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is a drive path (eg @"C:\").
             8. Appends '\\' character if ends with a drive name (eg "C:" -> @"C:\").
@@ -9463,9 +9910,11 @@
         </member>
         <member name="T:Au.Ver">
             <summary>
-            Provides various version info, for example Windows OS version.
-            The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, instead use Environment.OSVersion.
+            Provides various version info, for example the true Windows OS version.
             </summary>
+            <remarks>
+            The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, instead use <see cref="P:System.Environment.OSVersion"/>.
+            </remarks>
         </member>
         <member name="P:Au.Ver.WinVer">
             <summary>
@@ -9668,7 +10117,7 @@
         </member>
         <member name="T:Au.NamespaceDoc">
             <summary>
-            Main classes.
+            This namespace contains main classes of this library.
             </summary>
         </member>
         <member name="T:Au.Folders">
@@ -9742,6 +10191,16 @@
         </member>
         <member name="P:Au.Folders.SystemX86">
             <summary>More info in class help.</summary>
+        </member>
+        <member name="T:Au.Folders.Virtual">
+            <summary>
+            Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as string like ":: 12345678...". 
+            </summary>
+        </member>
+        <member name="T:Au.Folders.VirtualPidl">
+            <summary>
+            Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="T:Au.Shell.Pidl"/>. 
+            </summary>
         </member>
         <member name="P:Au.Folders.Temp">
             <summary>
@@ -10297,7 +10756,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSpeed" r=""/>, <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
             <example>
             Save-restore mouse position.
@@ -10326,7 +10785,7 @@
             </exception>
             <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(System.Drawing.Point)"/></exception>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSpeed" r=""/>, <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
@@ -10346,7 +10805,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(System.Drawing.Point)"/></exception>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSpeed" r=""/>, <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.Save">
@@ -10359,7 +10818,7 @@
             Moves the mouse cursor where it was at the time of the last <see cref="M:Au.Mouse.Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse move and click' function call in this thread. Does nothing if these functions were not called.
             </summary>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
         </member>
         <member name="P:Au.Mouse.LastMoveXY">
@@ -10378,7 +10837,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSpeed" r=""/>, <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.MoveRecorded(System.String,System.Double)">
@@ -10392,7 +10851,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The last x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
             </remarks>
         </member>
         <member name="M:Au.Mouse._SendMove(System.Drawing.Point)">
@@ -10431,7 +10890,7 @@
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <remarks>
             The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.ClickSpeed" r=""/>, <see cref="P:Au.Types.MOptions.ClickSleepFinally" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.ClickSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)">
@@ -10447,7 +10906,7 @@
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)"/>.</exception>
             <remarks>
             The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSpeed" r=""/>, <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="P:Au.Types.MOptions.ClickSpeed" r=""/>, <see cref="P:Au.Types.MOptions.ClickSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="P:Au.Types.OptMouse.ClickSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
@@ -10465,7 +10924,7 @@
             <exception cref="T:Au.Types.WndException">x y is not in the window (read more in Remarks).</exception>
             <remarks>
             The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.MoveSpeed" r=""/>, <see cref="P:Au.Types.MOptions.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="P:Au.Types.MOptions.ClickSpeed" r=""/>, <see cref="P:Au.Types.MOptions.ClickSleepFinally" r=""/>, <see cref="P:Au.Types.MOptions.Relaxed" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="P:Au.Types.OptMouse.ClickSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <b>Opt.Mouse.Relaxed</b> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
             </remarks>
         </member>
@@ -10694,7 +11153,7 @@
             <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
             <param name="horizontal">Horizontal wheel.</param>
             <remarks>
-            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.MOptions.ClickSleepFinally" r=""/>.
+            Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.IsPressed(System.Windows.Forms.MouseButtons)">
@@ -11010,7 +11469,7 @@
         </member>
         <member name="T:Au.Util.AppDomain_">
             <summary>
-            Extends the .NET AppDomain class.
+            Extends <see cref="T:System.AppDomain"/>.
             </summary>
         </member>
         <member name="M:Au.Util.AppDomain_.GetDefaultDomain(System.Boolean@)">
@@ -11751,8 +12210,10 @@
         <member name="T:Au.Char_">
             <summary>
             Provides function to get ASCII character type (is digit etc) etc.
-            Unlike Char.IsDigit etc, these functions never return true for non-ASCII characters. Also they are faster.
             </summary>
+            <remarks>
+            Unlike <see cref="M:System.Char.IsDigit(System.Char)"/> etc, these functions never return true for non-ASCII characters. Also they are faster.
+            </remarks>
         </member>
         <member name="M:Au.Char_.IsAsciiDigit(System.Char)">
             <summary>
@@ -12123,7 +12584,7 @@
             <remarks>
             The Debug_.PrintX functions write to the same output as <see cref="M:Au.Output.Write(System.String)"/>, not to the trace listeners like <see cref="M:System.Diagnostics.Debug.Print(System.String)"/> etc do. Also they add caller's name, file and line number.
             Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="T:System.Diagnostics.ConditionalAttribute"/>("DEBUG")].
-            Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Opt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>, Opt.Debug.<see cref="P:Au.Types.DOptions.Verbose" r=""/>.
+            Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Opt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>, Opt.Debug.<see cref="P:Au.Types.OptDebug.Verbose" r=""/>.
             </remarks>
         </member>
         <member name="P:Au.Debug_.TextPrefix">
@@ -12148,40 +12609,40 @@
             <summary>
             Calls <see cref="M:Au.Output.Write(System.String)"/> to show some debug info. Also shows current function name/file/line.
             Works only if DEBUG is defined. Read more in class help.
-            The 3 optional parameters are not used explicitly.
+            The 3 optional arguments are not used explicitly.
             </summary>
         </member>
         <member name="M:Au.Debug_.PrintIf(System.Boolean,System.Object,System.String,System.Int32,System.String)">
             <summary>
             If condition is true, calls <see cref="M:Au.Output.Write(System.String)"/> to show some debug info. Also shows current function name/file/line.
             Works only if DEBUG is defined. Read more in class help.
-            The 3 optional parameters are not used explicitly.
+            The 3 optional arguments are not used explicitly.
             </summary>
         </member>
         <member name="M:Au.Debug_.PrintFunc(System.String)">
             <summary>
             Calls <see cref="M:Au.Output.Write(System.String)"/> with current function name.
             Works only if DEBUG is defined. Read more in class help.
-            The optional parameter is not used explicitly.
+            The optional argument is not used explicitly.
             </summary>
         </member>
         <member name="M:Au.Debug_.Dialog(System.Object,System.String,System.Int32,System.String)">
             <summary>
             Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String)"/> to show some debug info.
             Works only if DEBUG is defined. Read more in class help.
-            The 3 optional parameters are not used explicitly.
+            The 3 optional arguments are not used explicitly.
             </summary>
         </member>
         <member name="M:Au.Debug_.LibCheckFlagsOpt``1(``0,``0)">
             <summary>
             Checks flags and throws ArgumentException if some flags are invalid. The message includes valid flag names.
-            Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-            Does nothing if Opt.Debug.<see cref="P:Au.Types.DOptions.Verbose" r=""/> == false.
             </summary>
             <param name="flags">Flags to check.</param>
             <param name="goodFlags">Valid flags.</param>
             <typeparam name="T">The enum type used for flags.</typeparam>
             <remarks>
+            Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
+            Does nothing if Opt.Debug.<see cref="P:Au.Types.OptDebug.Verbose" r=""/> == false.
             When flags are valid, this function is very fast (inline, no calls).
             </remarks>
         </member>
@@ -12196,358 +12657,9 @@
             Works in Release too.
             </summary>
         </member>
-        <member name="T:Au.Output">
-            <summary>
-            Writes text to the output window, console or log file.
-            </summary>
-        </member>
-        <member name="P:Au.Output.IsConsoleProcess">
-            <summary>
-            Returns true if this is a console process.
-            </summary>
-        </member>
-        <member name="P:Au.Output.IsWritingToConsole">
-            <summary>
-            Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="P:Au.Output.Writer"/> is not changed.
-            Does not write to console in these cases: <see cref="P:Au.Output.IsConsoleProcess"/> is false. <see cref="P:Au.Output.IgnoreConsole"/> is true. <see cref="P:Au.Output.LogFile"/> is not null. The startup info of this process tells to not show console window and to not redirect the standard output.
-            </summary>
-        </member>
-        <member name="P:Au.Output.IgnoreConsole">
-            <summary>
-            If true, Write and related functions in console process don't not use the console window. Then everything is like in non-console process.
-            </summary>
-            <seealso cref="P:Au.Output.RedirectConsoleOutput"/>
-            <seealso cref="P:Au.Output.RedirectDebugOutput"/>
-        </member>
-        <member name="M:Au.Output.Clear">
-            <summary>
-            Clears the output window or console text (if <see cref="P:Au.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Au.Output.LogFile"/> not null).
-            </summary>
-        </member>
-        <member name="M:Au.Output.Write(System.String)">
-            <summary>
-            Writes string + "\r\n" to the output window or console (if <see cref="P:Au.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Au.Output.LogFile"/> not null).
-            </summary>
-            <seealso cref="M:Au.NoClass.Print(System.String)"/>
-            <seealso cref="M:Au.NoClass.Print(System.Object)"/>
-            <seealso cref="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})"/>
-            <seealso cref="M:Au.NoClass.Print(System.Object,System.Object,System.Object[])"/>
-            <seealso cref="M:Au.NoClass.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)"/>
-        </member>
-        <member name="P:Au.Output.Writer">
-            <summary>
-            Gets or sets object that actually writes text when is called Output.Write, Print and similar functions.
-            </summary>
-            <remarks>
-            If you want to redirect, modify or just monitor output text, use code like in the example. It is known as "output redirection".
-            Redirection is applied to whole appdomain, and does not affect other appdomains.
-            Redirection affects Output.Write, Print and similar functions, also Output.RedirectConsoleOutput and Output.RedirectDebugOutput. It does not affect Output.WriteDirectly and Output.Clear.
-            Don't call Output.Write, Print etc in method WriteLine(string) of your writer class. It would call itself and create stack overflow. But you can call Output.WriteDirectly.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            [STAThread]
-            static void Main()
-            {
-            	Output.Writer = new TestOutputWriter();
-            
-            	Print("test");
-            }
-            
-            class TestOutputWriter :TextWriter
-            {
-            	public override void WriteLine(string value) { Output.WriteDirectly("redir: " + value); }
-            	public override Encoding Encoding => Encoding.Unicode;
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="T:Au.Output._OutputWriter">
-            <summary>
-            Our default writer class for the Writer property.
-            </summary>
-        </member>
-        <member name="M:Au.Output.WriteDirectly(System.String)">
-            <summary>
-            Writes string value + "\r\n" to the output window or console (if <see cref="P:Au.Output.IsWritingToConsole"/>) or log file (if <see cref="P:Au.Output.LogFile"/> not null).
-            Unlike Output.Write, Print etc, the string is not passed to <see cref="P:Au.Output.Writer"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Output.RedirectConsoleOutput">
-            <summary>
-            Let Console.WriteX methods in non-console process write to the same destination as Output.Write etc.
-            </summary>
-            <remarks>
-            Console.Write will write line, like Console.WriteLine.
-            Console.Clear will not clear output; it will throw exception.
-            </remarks>
-        </member>
-        <member name="P:Au.Output.RedirectDebugOutput">
-            <summary>
-            Let Debug.WriteX and Trace.WriteX methods write to the same destination as Output.Write etc.
-            </summary>
-            <remarks>
-            Tip: To write to the output window even in console process, set <c>Output.IgnoreConsole=true;</c> before calling this method first time.
-            </remarks>
-        </member>
-        <member name="P:Au.Output.LogFile">
-            <summary>
-            Sets log file path.
-            When set (not null), text passed to Output.Write, Print and similar functions will be written to the file. Assuming that <see cref="P:Au.Output.Writer"/> is not changed.
-            If value is null - restores default behavior.
-            </summary>
-            <remarks>
-            The first Write etc call (in this appdomain) creates or opens the file and deletes old content if the file already exists.
-            Multiple appdomains cannot use the same file. If the file is open for writing, Write makes unique filename and changes LogFile value.
-            
-            Also supports mailslots. For LogFile use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
-            </remarks>
-            <exception cref="T:System.ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
-        </member>
-        <member name="P:Au.Output.LogFileTimestamp">
-            <summary>
-            Let Write etc also add current time when using log file (see <see cref="P:Au.Output.LogFile"/>).
-            The time is local, not UTC.
-            </summary>
-        </member>
-        <member name="P:Au.Output.LibWriteToQM2">
-            <summary>
-            Sets to use QM2 as the output server.
-            Eg can be used to debug the Output class itself. Although can instead use console.
-            </summary>
-        </member>
-        <member name="M:Au.Output._WriteToQM2(System.String)">
-            <param name="s">If null, clears output.</param>
-        </member>
-        <member name="M:Au.Output._CreateFile(System.String,System.Boolean)">
-            <summary>
-            Calls Api.CreateFile to open file or mailslot.
-            </summary>
-            <param name="name">File path or mailslot name.</param>
-            <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
-        </member>
-        <member name="M:Au.Output._LogFile.Open">
-            <summary>
-            Opens LogFile file handle for writing.
-            Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
-            </summary>
-            <remarks>
-            Multiple appdomains cannot use the same file. Each appdomain overwrites it when opens first time.
-            </remarks>
-        </member>
-        <member name="M:Au.Output._LogFile.WriteLine(System.String)">
-            <summary>
-            Writes s + "\r\n" and optionally timestamp.
-            </summary>
-            <remarks>
-            If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
-            </remarks>
-        </member>
-        <member name="M:Au.Output._LogFile.Clear">
-            <summary>
-            Sets file size = 0.
-            </summary>
-        </member>
-        <member name="M:Au.Output._LogFile.Close">
-            <summary>
-            Closes file handle.
-            </summary>
-        </member>
-        <member name="T:Au.Output.Server">
-            <summary>
-            Receives messages sent from clients when they call Output.Write and related methods.
-            If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
-            </summary>
-            <remarks>
-            Works asynchronously, to make writing messages faster.
-            When a client writes a message, the message arrives to the server with some delay and is placed in the <see cref="P:Au.Output.Server.Messages"/> queue.
-            You then can get/remove messages (call Messages.TryDequeue) and display them in a window (for example).
-            You can be notified about new messages.
-            
-            Recommended setup (see example):
-            1. When your application starts, create an Output.Server instance and assign to a static variable. Call Start.
-            2. When your application creates its output window, call <see cref="M:Au.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)"/> to register callback function.
-            3. In the callback function get/remove/display all new messages.
-            4. Call Stop when closing the window. Optional but recommended.
-            </remarks>
-            <example>
-            Simple program with output window.
-            <code><![CDATA[
-            class OutputFormExample :Form
-            {
-            	TextBox _tb;
-            
-            	public OutputFormExample()
-            	{
-            		_tb = new TextBox();
-            		_tb.ReadOnly = true;
-            		_tb.Multiline = true;
-            		_tb.ScrollBars = ScrollBars.Both;
-            		_tb.WordWrap = false;
-            		_tb.Dock = DockStyle.Fill;
-            		_tb.TabStop = false;
-            		this.Controls.Add(_tb);
-            
-            		_os.SetNotifications(_ProcessMessages, this);
-            	}
-            
-            	void _ProcessMessages()
-            	{
-            		while(_os.Messages.TryDequeue(out var m)) {
-            			switch(m.Type) {
-            			case Output.Server.MessageType.Clear:
-            				_tb.Clear();
-            				break;
-            			case Output.Server.MessageType.Write:
-            				//_tb.AppendText(m.Text);
-            				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
-            				break;
-            			}
-            		}
-            	}
-            
-            	static Output.Server _os = new Output.Server(false);
-            
-            	[STAThread]
-            	public static void Main()
-            	{
-            		_os.Start();
-            
-            		//test Print and Clear, before and after creating window
-            		Output.IgnoreConsole = true;
-            		Print("test before setting notifications");
-            		Task.Run(() => { 1.s(); Print("test after"); 1.s(); Output.Clear(); 1.s(); Print("test after Clear"); });
-            
-            		var f = new OutputFormExample();
-            		f.ShowDialog();
-            		_os.Stop();
-            	}
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="T:Au.Output.Server.MessageType">
-            <summary>
-            See <see cref="P:Au.Output.Server.Message.Type"/>.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="F:Au.Output.Server.MessageType.Write">
-            <summary>
-            Add line to the output window.
-            All Message members can be used.
-            </summary>
-        </member>
-        <member name="F:Au.Output.Server.MessageType.Clear">
-            <summary>
-            Clear the output window.
-            Other Message members are not used.
-            </summary>
-        </member>
-        <member name="T:Au.Output.Server.Message">
-            <summary>
-            Contains message text and/or related info.
-            See <see cref="P:Au.Output.Server.Messages"/>.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="P:Au.Output.Server.Message.Type">
-            <summary>
-            Message type.
-            Currently there are 2 types - Write and Clear.
-            </summary>
-        </member>
-        <member name="P:Au.Output.Server.Message.Text">
-            <summary>
-            Message text.
-            Used with MessageType.Write.
-            </summary>
-        </member>
-        <member name="P:Au.Output.Server.Message.TimeUtc">
-            <summary>
-            Message time in FILETIME format, UTC.
-            Used with MessageType.Write.
-            To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Output.Server.Message.Domain">
-            <summary>
-            The name of the appdomain that called the Write/Print/etc method.
-            Used with MessageType.Write.
-            </summary>
-        </member>
-        <member name="P:Au.Output.Server.Messages">
-            <summary>
-            Contains all received and still not removed messages that were sent by clients when they call Output.Write etc.
-            Call TryDequeue to get/remove them.
-            </summary>
-        </member>
-        <member name="M:Au.Output.Server.#ctor(System.Boolean)">
-            <param name="isGlobal">Serve all appdomains and processes that don't have local server.</param>
-        </member>
-        <member name="M:Au.Output.Server.Start">
-            <summary>
-            Starts server.
-            Returns false if server already exists (if global - in any process).
-            </summary>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-        </member>
-        <member name="M:Au.Output.Server.Stop">
-            <summary>
-            Stops server.
-            </summary>
-        </member>
-        <member name="M:Au.Output.Server.Finalize">
-            <summary>
-            Calls Stop.
-            </summary>
-        </member>
-        <member name="M:Au.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)">
-            <summary>
-            Sets callback function, to be notified about server events.
-            </summary>
-            <param name="cbFunc">
-            Callback function's delegate. Called when one or more messages are available.
-            It should get/remove messages from <see cref="P:Au.Output.Server.Messages"/> queue (call TryDequeue).
-            See example in class help.
-            </param>
-            <param name="c">A control or form. The callback function will be called in its thread (<see cref="M:System.Windows.Forms.Control.BeginInvoke(System.Delegate)"/>). If null, the callback function will be called in other thread.</param>
-        </member>
-        <member name="M:Au.Output.Server.LocalWrite(System.String,System.Int64,System.String)">
-            <summary>
-            Adds s directly to Messages and sets timer.
-            If s is null, it is 'Clear' command.
-            Else if !NoNewline, appends "\r\n".
-            Used with local server only.
-            </summary>
-        </member>
-        <member name="P:Au.Output.Server.NoNewline">
-            <summary>
-            Let messages don't end with "\r\n".
-            </summary>
-            <remarks>
-            This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
-            </remarks>
-        </member>
-        <member name="P:Au.Output.Server.LibMailslotName">
-            <summary>
-            Gets mailslot name like @"\\.\mailslot\Au.Output\" + sessionId.
-            </summary>
-        </member>
-        <member name="P:Au.Output.Server.LibTimerName">
-            <summary>
-            Gets waitable timer name like "timer.Au.Output".
-            </summary>
-        </member>
-        <member name="T:Au.Output.Server.LibSharedMemoryData">
-            <summary>
-            Shared memory variables. Used with global server only.
-            </summary>
-        </member>
         <member name="T:Au.Process_">
             <summary>
-            Extends the .NET class Process.
-            Also has some thread functions.
+            Process and thread functions. Extends <see cref="T:System.Diagnostics.Process"/>.
             </summary>
         </member>
         <member name="M:Au.Process_.GetProcessName(System.Int32,System.Boolean,System.Boolean)">
@@ -12951,10 +13063,11 @@
         <member name="T:Au.AuDialog">
             <summary>
             Standard dialogs to show information or get user input.
-            You can use static functions (less code) or create class instances (more options).
-            More info: <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <remarks>
+            You can use static functions (less code) or create class instances (more options).
+            More info: <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            
             Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
             
             Cannot be used in services. Instead use <see cref="M:System.Windows.Forms.MessageBox.Show(System.String,System.String,System.Windows.Forms.MessageBoxButtons,System.Windows.Forms.MessageBoxIcon,System.Windows.Forms.MessageBoxDefaultButton,System.Windows.Forms.MessageBoxOptions)"/> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
@@ -12982,7 +13095,7 @@
         </member>
         <member name="T:Au.AuDialog.Options">
             <summary>
-            Default options used by AuDialog class functions called in this appdomain.
+            Default options used by <see cref="T:Au.AuDialog"/> class functions.
             </summary>
         </member>
         <member name="P:Au.AuDialog.Options.DefaultTitle">
@@ -13333,77 +13446,15 @@
         <member name="P:Au.AuDialog.Send">
             <summary>
             Allows to modify dialog controls while it is open, and close the dialog.
+            </summary>
+            <remarks>
             Example: <c>d.Send.Close();</c> .
             Example: <c>d.Send.ChangeText2("new text", false);</c> .
             Example: <c>d.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
-            </summary>
-            <remarks>
+            
             Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
             Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.AuDialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </remarks>
-        </member>
-        <member name="T:Au.AuDialog.TDMessageSender">
-            <summary>
-            Sends task dialog API messages, like <c>d.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.Message(Au.Types.TDApi.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Sends a message to the dialog.
-            Call this method while the dialog is open, eg in an event handler.
-            Example (in an event handler): <c>e.dialog.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
-            Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, set progress.
-            Reference: <msdn>task dialog messages</msdn>.
-            NAVIGATE_PAGE currently not supported.
-            </summary>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.ChangeText1(System.String,System.Boolean)">
-            <summary>
-            Changes the main big-font text.
-            Call this method while the dialog is open, eg in an event handler.
-            </summary>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.ChangeText2(System.String,System.Boolean)">
-            <summary>
-            Changes the main small-font text.
-            Call this method while the dialog is open, eg in an event handler.
-            </summary>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.ChangeFooterText(System.String,System.Boolean)">
-            <summary>
-            Changes the footer text.
-            Call this method while the dialog is open, eg in an event handler.
-            </summary>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.ChangeExpandedText(System.String,System.Boolean)">
-            <summary>
-            Changes the expanded area text.
-            Call this method while the dialog is open, eg in an event handler.
-            </summary>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.Close(System.Int32)">
-            <summary>
-            Clicks a button. Normally it closes the dialog.
-            Call this method while the dialog is open, eg in an event handler.
-            Sends message TDApi.TDM.CLICK_BUTTON.
-            </summary>
-            <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.EnableButton(System.Int32,System.Boolean)">
-            <summary>
-            Enables or disables a button.
-            Call this method while the dialog is open, eg in an event handler.
-            Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
-            Sends message TDApi.TDM.ENABLE_BUTTON.
-            </summary>
-        </member>
-        <member name="M:Au.AuDialog.TDMessageSender.Progress(System.Int32)">
-            <summary>
-            Sets progress bar value, 0 to 100.
-            Call this method while the dialog is open, eg in an event handler.
-            Sends message TDApi.TDM.SET_PROGRESS_BAR_POS.
-            </summary>
         </member>
         <member name="P:Au.AuDialog.EditControl">
             <summary>
@@ -13438,9 +13489,9 @@
             ]]></code>
             </param>
             <remarks>
-            The returned DResult variable has these properties: selected button id, selected radio button id, check box state.
+            The returned <see cref="T:Au.Types.DResult"/> variable has these properties: selected button id, selected radio button id, check box state.
             Tip: DResult supports implicit cast to int. You can use code <c>switch(AuDialog.ShowEx(...))</c> instead of <c>switch(AuDialog.ShowEx(...).Button)</c> .
-            Tip: For optional parameters use named arguments. Example: <c>AuDialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
+            Tip: Use named arguments. Example: <c>AuDialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
             This function allows you to use most of the dialog features, but not all. Alternatively you can create a AuDialog class instance, set properties and call ShowDialog. Example in <see cref="T:Au.AuDialog"/> class help.
             </remarks>
             <example>
@@ -13489,7 +13540,7 @@
             <param name="expandedText">Text that the user can show and hide.</param>
             <remarks>
             Calls <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.DOwner,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
-            Tip: For optional parameters use named arguments. Example: <c>AuDialog.Show("Text.", icon: DIcon.Info)</c> .
+            Tip: Use named arguments. Example: <c>AuDialog.Show("Text.", icon: DIcon.Info)</c> .
             </remarks>
             <seealso cref="M:Au.AuDialog.ShowInfo(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DOwner,System.String)"/>
             <seealso cref="M:Au.AuDialog.ShowWarning(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DOwner,System.String)"/>
@@ -14193,9 +14244,11 @@
         <member name="T:Au.Timer_">
             <summary>
             Timer that uses API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
+            </summary>
+            <remarks>
             Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
             Use in UI threads (need a message loop).
-            </summary>
+            </remarks>
             <example>
             <code><![CDATA[
             //this example sets 3 timers
@@ -14625,10 +14678,10 @@
         <member name="T:Au.Wnd">
             <summary>
             A variable of Wnd type represents a window or control. It is a window handle, also known as HWND.
-            Wnd functions can be used with windows and controls of any process/thread.
-            Wnd functions also can be used with .NET form/control and WPF window class variables, like <c>Wnd w=(Wnd)form; w.Method(...);</c> or <c>((Wnd)form).Method(...);</c>.
             </summary>
             <remarks>
+            Wnd functions can be used with windows and controls of any process/thread. Also can be used with .NET form/control and WPF window class variables, like <c>Wnd w=(Wnd)form; w.Method(...);</c> or <c>((Wnd)form).Method(...);</c>.
+            
             There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
             
             More functions are in the nested classes - <see cref="T:Au.Wnd.Misc"/>, <see cref="T:Au.Wnd.Misc.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
@@ -14680,9 +14733,10 @@
         <member name="M:Au.Wnd.op_UnaryPlus(Au.Wnd)">
             <summary>
             If x is not default(Wnd), returns x, else throws <see cref="T:Au.Types.NotFoundException"/>.
-            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/>. Examples are there.
+            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>.
             </summary>
             <exception cref="T:Au.Types.NotFoundException">x is default(Wnd).</exception>
+            <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/></example>
         </member>
         <member name="M:Au.Wnd.Equals(Au.Wnd)">
             <summary>
@@ -14860,8 +14914,7 @@
         </member>
         <member name="T:Au.Wnd.Misc.Desktop">
             <summary>
-            Arranges windows, shows/hides desktop.
-            The same as the taskbar right-click menu commands.
+            Arranges windows, shows/hides desktop. The same as the taskbar right-click menu commands.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.Desktop.ToggleShowDesktop">
@@ -14893,9 +14946,11 @@
         <member name="T:Au.Wnd.Misc.WinFormsControlNames">
             <summary>
             Gets programming names of .NET Windows Forms controls.
-            Usually each control has a unique name. It is useful to identify controls without a classic name/text.
-            Control id of these controls is not constant and cannot be used.
             </summary>
+            <remarks>
+            Usually each control has a unique name. It is useful to identify controls without a classic name/text.
+            The control id of these controls is not useful, it is not constant.
+            </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.WinFormsControlNames.Dispose">
             
@@ -14933,9 +14988,11 @@
         <member name="T:Au.Wnd.Misc.MyWindow">
             <summary>
             Creates window and allows your derived class to replace its window procedure.
+            </summary>
+            <remarks>
             Similar to <see cref="T:System.Windows.Forms.NativeWindow"/>, but more lightweight and does not change the class name.
             Can register a new window class or extend (subclass) an existing class.
-            </summary>
+            </remarks>
         </member>
         <member name="P:Au.Wnd.Misc.MyWindow.Handle">
             <summary>
@@ -15104,7 +15161,7 @@
             <summary>
             Gets the virtual parent window of all top-level windows.
             Calls API <msdn>GetDesktopWindow</msdn>.
-            <note>It is not the visible desktop window (see <see cref="P:Au.Wnd.Misc.WndDesktop"/>)</note>.
+            <note>It is not the visible desktop window (see <see cref="P:Au.Wnd.Misc.WndDesktop"/>)</note>
             </summary>
         </member>
         <member name="P:Au.Wnd.Misc.WndShell">
@@ -15118,15 +15175,19 @@
             <summary>
             Gets the desktop window.
             It displays desktop icons and wallpaper in its child control <see cref="P:Au.Wnd.Misc.WndDesktopControl"/>. The "Show Desktop" command (Win+D) activates it.
-            <note>It is not the same as API <msdn>GetDesktopWindow</msdn> (see <see cref="P:Au.Wnd.Misc.WndRoot"/>)</note>.
-            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            <note>It is not API <msdn>GetDesktopWindow</msdn> (see <see cref="P:Au.Wnd.Misc.WndRoot"/>)</note>
             </summary>
+            <remarks>
+            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            </remarks>
         </member>
         <member name="P:Au.Wnd.Misc.WndDesktopControl">
             <summary>
             Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="P:Au.Wnd.Misc.WndDesktop"/>.
-            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
             </summary>
+            <remarks>
+            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)">
             <summary>
@@ -15342,7 +15403,7 @@
         <member name="M:Au.Wnd.Misc.StringRemoveUnderlineAmpersand(System.String)">
             <summary>
             Removes '&amp;' characters from string.
-            Replaces "&amp;&amp;" to "&amp;".
+            Replaces "&amp;&amp;" with "&amp;".
             Returns new string if s has '&amp;' characters, else returns s.
             </summary>
             <remarks>
@@ -16616,9 +16677,11 @@
         <member name="T:Au.Wnd.ChildFinder">
             <summary>
             Contains control (child window) properties and is used to find the control.
+            </summary>
+            <remarks>
             Can be used instead of <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/> or <see cref="M:Au.Wnd.ChildAll(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean})"/>.
             Also can be used to find window that contains certain control, like in the example.
-            </summary>
+            </remarks>
             <example>
             Find window that contains certain control, and get the control too.
             <code><![CDATA[
@@ -16696,7 +16759,7 @@
         <member name="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)">
             <summary>
             Finds a child control and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
             </summary>
             <param name="name">
             Control name.
@@ -16800,7 +16863,7 @@
         <member name="M:Au.Wnd.Kid(System.Int32,Au.Types.WCFlags)">
             <summary>
             Finds a child control by its id and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
             </summary>
             <param name="id">Control id.</param>
             <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>.</param>
@@ -16824,7 +16887,7 @@
         <member name="M:Au.Wnd.ChildFast(System.String,System.String,Au.Wnd)">
             <summary>
             Finds a direct child control and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
             Calls API <msdn>FindWindowEx</msdn>.
             Faster than <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>, which uses API <msdn>EnumChildWindows</msdn>.
             Can be used only when you know full name and/or class name.
@@ -17122,12 +17185,14 @@
         <member name="T:Au.Wnd.Finder">
             <summary>
             Contains top-level window properties and can be used to find the window.
+            </summary>
+            <remarks>
             Can be used instead of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             These codes are equivalent:
             <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
             <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
             Also can find in a list of windows.
-            </summary>
+            </remarks>
         </member>
         <member name="M:Au.Wnd.Finder.#ctor(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
@@ -17189,7 +17254,7 @@
         <member name="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
              <summary>
              Finds a top-level window and returns its handle as Wnd.
-             Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>. See examples.
+             Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>. See examples.
              </summary>
              <param name="name">
              Window name. Usually it is the title bar text.
@@ -17281,7 +17346,7 @@
         <member name="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)">
             <summary>
             Finds a top-level window and returns its handle as Wnd.
-            Returns default(Wnd) if not found. To check it you can use <see cref="P:Au.Wnd.Is0"/> or <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
             Calls API <msdn>FindWindowEx</msdn>.
             Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
             Can be used only when you know full name and/or class name.
@@ -17481,8 +17546,7 @@
         </member>
         <member name="T:Au.Registry_">
             <summary>
-            Registry functions.
-            Extends Microsoft.Win32.Registry.
+            Registry functions. Extends <see cref="T:Microsoft.Win32.Registry"/>.
             </summary>
         </member>
         <member name="F:Au.Registry_.AuKey">
@@ -17926,8 +17990,7 @@
         </member>
         <member name="T:Au.Icons.FileIconCache">
             <summary>
-            Gets file icons.
-            Uses 2-level cache - memory and file.
+            Gets file icons. Uses 2-level cache - memory and file.
             </summary>
             <remarks>
             Can be used as static variables.
@@ -17996,16 +18059,19 @@
         </member>
         <member name="T:Au.Perf">
             <summary>
-            Code speed measurement.
-            Easier to use than System.Stopwatch class.
-            Stores data in shared memory, therefore works across appdomains.
+            Code speed measurement. Easier to use than <see cref="T:System.Diagnostics.Stopwatch"/>.
             </summary>
+            <remarks>
+            Stores data in shared memory, therefore works across appdomains.
+            </remarks>
         </member>
         <member name="T:Au.Perf.Inst">
             <summary>
             The same as Perf class, but allows to have multiple independent speed measurements.
-            Stores data int the variable, not in shared memory like Perf class.
             </summary>
+            <remarks>
+            Stores data int the variable, not in shared memory like <see cref="T:Au.Perf"/> class.
+            </remarks>
         </member>
         <member name="P:Au.Perf.Inst.Incremental">
             <summary>

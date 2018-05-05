@@ -115,11 +115,8 @@ namespace LineBreaks
 		/// <param name="configuration">The configuration data that the plug-in should use to initialize itself</param>
 		public void Initialize(BuildProcess buildProcess, XPathNavigator configuration)
 		{
-			//Output.Clear();
-			//PrintFunc();
-			//Print(buildProcess.CommentsFiles.Count); //null CommentsFiles
-			//Print(buildProcess.
-
+			Output.LibUseQM2 = true;
+			Output.Clear();
 
 			builder = buildProcess;
 
@@ -174,24 +171,18 @@ namespace LineBreaks
 
 		void _Process(XmlNode members)
 		{
-			Output.LibWriteToQM2 = true;
-			Output.Clear();
 			//Debugger.Launch(); if(Debugger.IsAttached) Debugger.Break();
 
+			ProcessLineBreaks(members);
+			ProcessSee(members);
+			ProcessMsdn(members);
+
+			//doc.Save(@"q:\test\xmldoc.xml");
+		}
+
+		void ProcessLineBreaks(XmlNode members)
+		{
 			var doc = members.OwnerDocument;
-
-			_ProcessSee(members);
-
-			//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:msdn.microsoft.com+{API}''>{API}</see>
-			foreach(XmlElement n in members.SelectNodes("member/*//msdn")) {
-				//Print(n.InnerText);
-				var k = doc.CreateElement("see");
-				k.InnerText = n.InnerText;
-				k.SetAttribute("href", "https://www.google.com/search?q=site:msdn.microsoft.com+" + n.InnerText);
-				var p = n.ParentNode;
-				p.InsertAfter(k, n);
-				p.RemoveChild(n);
-			}
 
 			//line breaks
 			foreach(XmlNode n in members.SelectNodes("member//text()")) { //info: could be "member/*//text()", but this allows to catch text outside <summary> etc, which is incorrect.
@@ -200,7 +191,7 @@ namespace LineBreaks
 
 				var tag = p.Name;
 				//don't process text in these tags
-				switch(tag) { case "code": case "c": case "see": case "seealso": case "a": case "conceptualLink": case "para": case "b": case "i": case "term": continue; }
+				switch(tag) { case "code": case "c": case "see": case "seealso": case "a": case "conceptualLink": case "para": case "b": case "i": case "term": case "msdn": continue; }
 				//show new tags, maybe need to exclude too (add to the above switch)
 				switch(tag) {
 				case "summary": case "remarks": case "param": case "typeparam": case "value": case "exception": case "example": case "note": case "item": case "description": break;
@@ -217,13 +208,13 @@ namespace LineBreaks
 				//keep first newline (don't add <br/>)?
 				if(s[0] == '\r' && s[1] == '\n') {
 					var xprev = n.PreviousSibling;
-					if(xprev == null || IsBlockElement(xprev, s, p)) iStart = 2;
+					if(xprev == null || _IsBlockElement(xprev, s, p)) iStart = 2;
 				}
 				//keep last newline (don't add <br/>)?
 				for(i = iEnd - 1; i >= iStart; i--) if(s[i] != ' ') break;
 				if(i > iStart && s[i] == '\n') {
 					var xnext = n.NextSibling;
-					if(xnext == null || IsBlockElement(xnext, s, p)) {
+					if(xnext == null || _IsBlockElement(xnext, s, p)) {
 						if(s[i - 1] == '\r') i--;
 						iEnd = i;
 					}
@@ -236,18 +227,17 @@ namespace LineBreaks
 
 				var a = s.SplitLines_();
 				for(i = a.Length - 1; i >= 0; i--) {
-					p.InsertAfter(doc.CreateTextNode("\r\n" + a[i]), n);
+					//p.InsertAfter(doc.CreateTextNode("\r\n" + a[i]), n); //no: if with \r\n, IE adds spaces where don't need
+					p.InsertAfter(doc.CreateTextNode(a[i]), n);
 					if(i > 0) p.InsertAfter(doc.CreateElement("br"), n);
 				}
 				p.RemoveChild(n);
 
 				//TODO: preprocess tab-indented (after ///) lines.
 			}
-
-			//doc.Save(@"q:\test\xmldoc.xml");
 		}
 
-		static bool IsBlockElement(XmlNode n, string s, XmlNode parent)
+		static bool _IsBlockElement(XmlNode n, string s, XmlNode parent)
 		{
 			var t = n.Name;
 			switch(t) {
@@ -267,7 +257,7 @@ namespace LineBreaks
 		}
 
 		//<see cref="Class.Member"/> -> <see cref="Class.Member">{Class.Member}</see>, because SHFB removes "Class."
-		void _ProcessSee(XmlNode members)
+		void ProcessSee(XmlNode members)
 		{
 			//info: the original cref text is lost.
 			//	C# compiler replaces it to fully-qualified, with type prefix, like "M:Namespace.Type.Method(String)".
@@ -283,25 +273,49 @@ namespace LineBreaks
 
 				if(n.GetAttributeNode("r") != null) continue;
 
-				//note: easier would be to add qualifyHint="true", but SHFB bug: inserts space, like "Type. Member"
-				//	for seealso qualifyHint is default, and no bug.
-
+#if false //bug in SHFB or IES: adds spaces in text of some links, like "Type. Member"
+				n.SetAttribute("qualifyHint", "true");
+#else //does not add some useful info for generic etc. Never mind.
 				var s = an.Value;
 				//Print($"<><c 0x8000>{s}</c>");
 
+				//if(s.IndexOf('`') >= 0) continue; //generic
+				//if(s.IndexOf('#') >= 0) continue; //eg M:Au.Type.#ctor
+				//if(s.IndexOf_(".op_") >= 0) continue; //operator
+				//if(s.IndexOf_(".Item(") >= 0) continue; //indexer
+
 				//remove from s:
-				//	the type prefix ("M:" etc);
-				//	our namespaces that are used in every file.
-				//	method parameters.
+				//	the type prefix ("M:" etc)
+				//	our namespaces that are used in every file
+				//	method parameters
+				//	generic suffix, like ``1
 				int iStart = 2;
 				if(s.EqualsAt_(2, "Au.Types.")) iStart += 9; else if(s.EqualsAt_(2, "Au.")) iStart += 3;
-				int iEnd = s.IndexOf('('); if(iEnd < 0) iEnd = s.Length;
+				int iEnd = s.IndexOf('`');
+				if(iEnd < 0) iEnd = s.IndexOf('(');
+				if(iEnd < 0) iEnd = s.Length;
 				s = s.Substring(iStart, iEnd - iStart);
 				//Print(s);
 
 				n.InnerText = s;
+#endif
 
 				//Print(n.OuterXml);
+			}
+		}
+
+		//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:msdn.microsoft.com+{API}''>{API}</see>
+		void ProcessMsdn(XmlNode members)
+		{
+			var doc = members.OwnerDocument;
+			foreach(XmlElement n in members.SelectNodes("member/*//msdn")) {
+				//Print(n.InnerText);
+				var k = doc.CreateElement("see");
+				k.InnerText = n.InnerText;
+				k.SetAttribute("href", "https://www.google.com/search?q=site:msdn.microsoft.com+" + n.InnerText);
+				var p = n.ParentNode;
+				p.InsertAfter(k, n);
+				p.RemoveChild(n);
 			}
 		}
 	}

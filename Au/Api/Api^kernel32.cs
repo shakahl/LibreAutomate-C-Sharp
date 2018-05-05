@@ -610,6 +610,8 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern LPARAM GlobalSize(IntPtr hMem);
 
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetFileSizeEx(SafeFileHandle hFile, out long lpFileSize);
 
 
 	}

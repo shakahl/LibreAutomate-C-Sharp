@@ -26,7 +26,7 @@ using static Au.Controls.Sci;
 class PanelOutput :Control
 {
 	SciOutput _c;
-	Queue<Output.Server.Message> _history;
+	Queue<Au.Tools.OutputServer.Message> _history;
 
 	//public SciControl Output { get => _c; }
 
@@ -37,7 +37,7 @@ class PanelOutput :Control
 		_c.AccessibleName = this.Name = "Output";
 		this.Controls.Add(_c);
 
-		_history = new Queue<Output.Server.Message>();
+		_history = new Queue<Au.Tools.OutputServer.Message>();
 		OutputServer.SetNotifications(_GetServerMessages, this);
 
 		_c.HandleCreated += _c_HandleCreated;
@@ -47,7 +47,7 @@ class PanelOutput :Control
 	{
 		_c.Tags.OutputServerProcessMessages(OutputServer, m =>
 		{
-			if(m.Type != Output.Server.MessageType.Write) return;
+			if(m.Type != Au.Tools.OutputServer.MessageType.Write) return;
 			_history.Enqueue(m);
 			if(_history.Count > 50) _history.Dequeue();
 		});

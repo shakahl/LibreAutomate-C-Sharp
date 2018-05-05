@@ -190,8 +190,8 @@ namespace Au
 		/// <param name="prefix">Text before <paramref name="text"/>. Default "Warning: ".</param>
 		/// <remarks>
 		/// Calls <see cref="Output.Write"/>.
-		/// Does not show more that 1 warning/second, unless Opt.Debug.<see cref="DOptions.Verbose" r=""/> == true.
-		/// To disable some warnings, use Opt.Debug.<see cref="DOptions.DisableWarnings" r=""/>.
+		/// Does not show more that 1 warning/second, unless Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == true.
+		/// To disable some warnings, use Opt.Debug.<see cref="OptDebug.DisableWarnings" r=""/>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void PrintWarning(string text, int showStackFromThisFrame = 0, string prefix = "Warning: ")

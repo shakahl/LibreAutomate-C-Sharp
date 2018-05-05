@@ -24,7 +24,7 @@ namespace Au
 	partial class Files
 	{
 		/// <summary>
-		/// Miscellaneous functions.
+		/// Miscellaneous file/directory functions.
 		/// </summary>
 		public static class Misc
 		{

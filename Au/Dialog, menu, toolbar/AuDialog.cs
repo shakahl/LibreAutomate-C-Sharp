@@ -894,7 +894,7 @@ namespace Au
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
-				return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
+			return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
 			catch(Exception e) when(!(e is ThreadAbortException)) {
@@ -935,7 +935,7 @@ namespace Au
 			switch(message) {
 			case TDApi.TDN.DIALOG_CONSTRUCTED:
 				_LockUnlock(false);
-				Send = new TDMessageSender(w, this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
+				Send = new TDSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
 
 				Util.AppDomain_.Exit += _AppDomain__Exit; //closes dialog, to avoid the annoying "stopped working" UI
@@ -1120,7 +1120,7 @@ namespace Au
 			_isClosed = true;
 			if(_dlg.Is0) return;
 			_dlg = default;
-			Send.Clear();
+			Send.LibClear();
 			Util.AppDomain_.Exit -= _AppDomain__Exit;
 		}
 		bool _isClosed;
@@ -1137,150 +1137,43 @@ namespace Au
 
 		/// <summary>
 		/// Allows to modify dialog controls while it is open, and close the dialog.
+		/// </summary>
+		/// <remarks>
 		/// Example: <c>d.Send.Close();</c> .
 		/// Example: <c>d.Send.ChangeText2("new text", false);</c> .
 		/// Example: <c>d.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
-		/// </summary>
-		/// <remarks>
+		/// 
 		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
 		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWaitEx"/> and <see cref="ShowProgressEx"/>.
 		/// </remarks>
-		public TDMessageSender Send { get; private set; }
+		public TDSend Send { get; private set; }
 
-		//TODO: try to move to Au.Types. Then remove tocexclude.
-		/// <summary>
-		/// Sends task dialog API messages, like <c>d.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
-		/// </summary>
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)] //this class is nested because uses many AuDialog private fields and types
-		public class TDMessageSender
+		//called by TDSend
+		internal int LibSendMessage(TDApi.TDM message, LPARAM wParam = default, LPARAM lParam = default)
 		{
-			Wnd _dlg;
-			AuDialog _tdo; //note: using _tdo._hdlg would be unsafe in multithreaded context because may be already set to null, even if caller called IsOpen before.
-
-			internal TDMessageSender(Wnd dlg, AuDialog tdo) { _dlg = dlg; _tdo = tdo; }
-			internal void Clear() { _dlg = default; _tdo = null; }
-
-			/// <summary>
-			/// Sends a message to the dialog.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// Example (in an event handler): <c>e.dialog.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
-			/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, set progress.
-			/// Reference: <msdn>task dialog messages</msdn>.
-			/// NAVIGATE_PAGE currently not supported.
-			/// </summary>
-			public int Message(TDApi.TDM message, LPARAM wParam = default, LPARAM lParam = default)
-			{
-				var td = _tdo; if(td == null) return 0;
-
-				switch(message) {
-				case TDApi.TDM.CLICK_BUTTON:
-				case TDApi.TDM.ENABLE_BUTTON:
-				case TDApi.TDM.SET_BUTTON_ELEVATION_REQUIRED_STATE:
-					wParam = td._buttons.MapIdUserToNative(wParam);
-					break;
-				}
-
-				return _dlg.Send((uint)message, wParam, lParam);
+			switch(message) {
+			case TDApi.TDM.CLICK_BUTTON:
+			case TDApi.TDM.ENABLE_BUTTON:
+			case TDApi.TDM.SET_BUTTON_ELEVATION_REQUIRED_STATE:
+				wParam = _buttons.MapIdUserToNative(wParam);
+				break;
 			}
 
-			void _SetText(bool resizeDialog, TDApi.TDE partId, string text)
-			{
-				var td = _tdo; if(td == null) return;
+			return _dlg.Send((uint)message, wParam, lParam);
+		}
 
-				if(partId == TDApi.TDE.CONTENT && td._editType == DEdit.Multiline) {
-					text = td._c.pszContent = text + c_multilineString;
-				}
-
-				_dlg.SendS((uint)(resizeDialog ? TDApi.TDM.SET_ELEMENT_TEXT : TDApi.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
-				//info: null does not change text.
-
-				if(td._IsEdit) td._EditControlUpdateAsync(!resizeDialog);
-				//info: sometimes even UPDATE_ELEMENT_TEXT sends our control to the bottom of the Z order.
+		//called by TDSend
+		internal void LibSetText(bool resizeDialog, TDApi.TDE partId, string text)
+		{
+			if(partId == TDApi.TDE.CONTENT && _editType == DEdit.Multiline) {
+				text = _c.pszContent = text + c_multilineString;
 			}
 
-			/// <summary>
-			/// Changes the main big-font text.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// </summary>
-			public void ChangeText1(string text, bool resizeDialog)
-			{
-				_SetText(resizeDialog, TDApi.TDE.MAIN_INSTRUCTION, text);
-			}
+			_dlg.SendS((uint)(resizeDialog ? TDApi.TDM.SET_ELEMENT_TEXT : TDApi.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
+			//info: null does not change text.
 
-			/// <summary>
-			/// Changes the main small-font text.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// </summary>
-			public void ChangeText2(string text, bool resizeDialog)
-			{
-				_SetText(resizeDialog, TDApi.TDE.CONTENT, text);
-			}
-
-			/// <summary>
-			/// Changes the footer text.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// </summary>
-			public void ChangeFooterText(string text, bool resizeDialog)
-			{
-				_SetText(resizeDialog, TDApi.TDE.FOOTER, text);
-			}
-
-			/// <summary>
-			/// Changes the expanded area text.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// </summary>
-			public void ChangeExpandedText(string text, bool resizeDialog)
-			{
-				_SetText(resizeDialog, TDApi.TDE.EXPANDED_INFORMATION, text);
-			}
-
-#if false //currently not implemented
-			/// <summary>
-			/// Applies new properties to the dialog while it is already open.
-			/// Call this method while the dialog is open, eg in an event handler, after setting new properties.
-			/// Sends message TDApi.TDM.NAVIGATE_PAGE.
-			/// </summary>
-			public void Reconstruct()
-			{
-				var td = _tdo; if(td == null) return;
-				_ApiSendMessageTASKDIALOGCONFIG(_dlg, (uint)TDApi.TDM.NAVIGATE_PAGE, 0, ref td._c);
-			}
-
-			[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-			static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(Wnd hWnd, uint msg, LPARAM wParam, [In] ref TASKDIALOGCONFIG c);
-#endif
-			/// <summary>
-			/// Clicks a button. Normally it closes the dialog.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// Sends message TDApi.TDM.CLICK_BUTTON.
-			/// </summary>
-			/// <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
-			public bool Close(int buttonId = 0)
-			{
-				return 0 != Message(TDApi.TDM.CLICK_BUTTON, buttonId);
-			}
-
-			/// <summary>
-			/// Enables or disables a button.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
-			/// Sends message TDApi.TDM.ENABLE_BUTTON.
-			/// </summary>
-			public void EnableButton(int buttonId, bool enable)
-			{
-				Message(TDApi.TDM.ENABLE_BUTTON, buttonId, enable);
-			}
-
-			/// <summary>
-			/// Sets progress bar value, 0 to 100.
-			/// Call this method while the dialog is open, eg in an event handler.
-			/// Sends message TDApi.TDM.SET_PROGRESS_BAR_POS.
-			/// </summary>
-			public int Progress(int percent)
-			{
-				return Message(TDApi.TDM.SET_PROGRESS_BAR_POS, percent);
-			}
+			if(_IsEdit) _EditControlUpdateAsync(!resizeDialog);
+			//info: sometimes even UPDATE_ELEMENT_TEXT sends our control to the bottom of the Z order.
 		}
 
 		#endregion send messages
@@ -2020,7 +1913,7 @@ namespace Au.Types
 #pragma warning disable 1591 //missing XML documentation
 
 	/// <summary>
-	/// AuDialog icon. Used with <see cref="AuDialog.Show"/> and similar functions.
+	/// Standard icons for <see cref="AuDialog.Show"/> and similar functions.
 	/// </summary>
 	public enum DIcon
 	{
@@ -2046,7 +1939,7 @@ namespace Au.Types
 #pragma warning restore 1591 //missing XML documentation
 
 	/// <summary>
-	/// AuDialog flags. Used with <see cref="AuDialog.Show"/> and similar functions.
+	/// Flags for <see cref="AuDialog.Show"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum DFlags
@@ -2112,8 +2005,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Dialog result, returned by <see cref="AuDialog.ShowEx"/> and similar functions.
-	/// Contains multiple result values: selected button id, selected radio button id, check box state, edit field text.
+	/// Result of <see cref="AuDialog.ShowEx"/> and similar functions: button id, radio button id, check box state, edit field text.
 	/// </summary>
 	public class DResult
 	{
@@ -2164,10 +2056,12 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Arguments for AuDialog event handlers.
-	/// More info: <msdn>TaskDialogCallbackProc</msdn>.
-	/// To return a non-zero value from the callback function, assign the value to the returnValue field.
+	/// Arguments for <see cref="AuDialog"/> event handlers.
 	/// </summary>
+	/// <remarks>
+	/// To return a non-zero value from the callback function, assign the value to the <b>returnValue</b> field.
+	/// More info: <msdn>TaskDialogCallbackProc</msdn>.
+	/// </remarks>
 	public class DEventArgs :EventArgs
 	{
 		internal DEventArgs(AuDialog obj_, Wnd hwnd_, TDApi.TDN message_, LPARAM wParam_, LPARAM lParam_)
@@ -2185,23 +2079,23 @@ namespace Au.Types
 #pragma warning restore 1591 //missing XML documentation
 
 		/// <summary>
-		/// Clicked hyperlink href attribute value. Use in HyperlinkClicked event handler.
+		/// Clicked hyperlink href attribute value. Use in <see cref="AuDialog.HyperlinkClicked"/> event handler.
 		/// </summary>
 		public string LinkHref { get; private set; }
 
 		/// <summary>
-		/// Clicked button id. Use in ButtonClicked event handler.
+		/// Clicked button id. Use in <see cref="AuDialog.ButtonClicked"/> event handler.
 		/// </summary>
 		public int Button => wParam;
 
 		/// <summary>
-		/// Dialog timer time in milliseconds. Use in Timer event handler.
-		/// The event handler can set returnValue=1 to reset this.
+		/// Dialog timer time in milliseconds. Use in <see cref="AuDialog.Timer"/> event handler.
+		/// The event handler can set <b>returnValue</b>=1 to reset this.
 		/// </summary>
 		public int TimerTimeMS => wParam;
 
 		/// <summary>
-		/// Your ButtonClicked event handler function can use this to prevent closing the dialog.
+		/// Your <see cref="AuDialog.ButtonClicked"/> event handler function can use this to prevent closing the dialog.
 		/// </summary>
 		public bool DoNotCloseDialog { set { returnValue = value ? 1 : 0; } }
 
@@ -2212,6 +2106,137 @@ namespace Au.Types
 		{
 			get => dialog.EditControl.ControlText;
 			set { dialog.EditControl.SetText(value); }
+		}
+	}
+
+	/// <summary>
+	/// Can be used through <see cref="AuDialog.Send"/>, to interact with dialog while it is open.
+	/// </summary>
+	/// <remarks>
+	/// Example (in an event handler): <c>e.dialog.Close();</c>
+	/// </remarks>
+	public class TDSend
+	{
+		volatile AuDialog _tdo;
+
+		internal TDSend(AuDialog tdo) { _tdo = tdo; }
+		internal void LibClear() { _tdo = null; }
+
+		/// <summary>
+		/// Sends a message to the dialog.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// Example (in an event handler): <c>e.dialog.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c>
+		/// Also there are several other functions to send some messages: change text, close dialog, enable/disable buttons, update progress.
+		/// Reference: <msdn>task dialog messages</msdn>.
+		/// NAVIGATE_PAGE currently not supported.
+		/// </remarks>
+		public int Message(TDApi.TDM message, LPARAM wParam = default, LPARAM lParam = default)
+		{
+			return _tdo?.LibSendMessage(message, wParam, lParam) ?? 0;
+		}
+
+		void _SetText(bool resizeDialog, TDApi.TDE partId, string text)
+		{
+			_tdo?.LibSetText(resizeDialog, partId, text);
+		}
+
+		/// <summary>
+		/// Changes the main big-font text.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// </remarks>
+		public void ChangeText1(string text, bool resizeDialog)
+		{
+			_SetText(resizeDialog, TDApi.TDE.MAIN_INSTRUCTION, text);
+		}
+
+		/// <summary>
+		/// Changes the main small-font text.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// </remarks>
+		public void ChangeText2(string text, bool resizeDialog)
+		{
+			_SetText(resizeDialog, TDApi.TDE.CONTENT, text);
+		}
+
+		/// <summary>
+		/// Changes the footer text.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// </remarks>
+		public void ChangeFooterText(string text, bool resizeDialog)
+		{
+			_SetText(resizeDialog, TDApi.TDE.FOOTER, text);
+		}
+
+		/// <summary>
+		/// Changes the expanded area text.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// </remarks>
+		public void ChangeExpandedText(string text, bool resizeDialog)
+		{
+			_SetText(resizeDialog, TDApi.TDE.EXPANDED_INFORMATION, text);
+		}
+
+#if false //currently not implemented
+		/// <summary>
+		/// Applies new properties to the dialog while it is already open.
+		/// Call this method while the dialog is open, eg in an event handler, after setting new properties.
+		/// Sends message TDApi.TDM.NAVIGATE_PAGE.
+		/// </summary>
+		public void Reconstruct()
+		{
+			var td = _tdo; if(td == null) return;
+			_ApiSendMessageTASKDIALOGCONFIG(_dlg, (uint)TDApi.TDM.NAVIGATE_PAGE, 0, ref td._c);
+		}
+
+		[DllImport("user32.dll", EntryPoint = "SendMessageW")]
+		static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(Wnd hWnd, uint msg, LPARAM wParam, [In] ref TASKDIALOGCONFIG c);
+#endif
+		/// <summary>
+		/// Clicks a button. Normally it closes the dialog.
+		/// </summary>
+		/// <param name="buttonId">A button id or some other number that will be returned by ShowDialog.</param>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// Sends message TDApi.TDM.CLICK_BUTTON.
+		/// </remarks>
+		public bool Close(int buttonId = 0)
+		{
+			return 0 != Message(TDApi.TDM.CLICK_BUTTON, buttonId);
+		}
+
+		/// <summary>
+		/// Enables or disables a button.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
+		/// Sends message TDApi.TDM.ENABLE_BUTTON.
+		/// </remarks>
+		public void EnableButton(int buttonId, bool enable)
+		{
+			Message(TDApi.TDM.ENABLE_BUTTON, buttonId, enable);
+		}
+
+		/// <summary>
+		/// Sets progress bar value, 0 to 100.
+		/// </summary>
+		/// <remarks>
+		/// Call this method while the dialog is open, eg in an event handler.
+		/// Sends message TDApi.TDM.SET_PROGRESS_BAR_POS.
+		/// </remarks>
+		public int Progress(int percent)
+		{
+			return Message(TDApi.TDM.SET_PROGRESS_BAR_POS, percent);
 		}
 	}
 

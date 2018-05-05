@@ -173,7 +173,7 @@ namespace Au
 		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
 		/// </summary>
 		/// <seealso cref="PrintWarning"/>
-		/// <seealso cref="DOptions.DisableWarnings"/>
+		/// <seealso cref="OptDebug.DisableWarnings"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
 		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRMore more = null)
 		{

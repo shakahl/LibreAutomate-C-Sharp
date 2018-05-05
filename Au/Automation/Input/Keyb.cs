@@ -24,7 +24,7 @@ namespace Au
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
 	/// </summary>
 	/// <remarks>
-	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="Opt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="Keyb(KOptions)"/>.
+	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="Opt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="Keyb(OptKey)"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -53,12 +53,12 @@ namespace Au
 		/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
 		/// ]]></code>
 		/// </example>
-		public Keyb(KOptions cloneOptions) { Options = new KOptions(cloneOptions); }
+		public Keyb(OptKey cloneOptions) { Options = new OptKey(cloneOptions); }
 
 		/// <summary>
 		/// Options used by this variable.
 		/// </summary>
-		public KOptions Options { get; }
+		public OptKey Options { get; }
 
 		//KEYEVENTF_ flags for API SendInput.
 		[Flags]
@@ -147,7 +147,7 @@ namespace Au
 		struct _KSendingState
 		{
 			public Wnd wFocus;
-			public KOptions options;
+			public OptKey options;
 
 			public void Clear()
 			{
@@ -546,7 +546,7 @@ namespace Au
 		}
 
 		//Caller should set k.scan; this func doesn't.
-		unsafe static void _SendKey2(_KEvent k, _KEvent kNext, bool isLast, KOptions opt)
+		unsafe static void _SendKey2(_KEvent k, _KEvent kNext, bool isLast, OptKey opt)
 		{
 			var ki = new Api.INPUTK(k.vk, k.scan, (uint)k.SIFlags);
 

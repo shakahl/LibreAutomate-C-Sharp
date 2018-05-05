@@ -289,7 +289,7 @@ namespace Au
 			/// </summary>
 			/// <param name="opt"></param>
 			/// <param name="forClipb">Used for Clipb Ctrl+V/C/X. Ignore CapsLock and always release modifiers, regardless of opt.</param>
-			internal static bool ReleaseModAndCapsLock(KOptions opt, bool forClipb = false)
+			internal static bool ReleaseModAndCapsLock(OptKey opt, bool forClipb = false)
 			{
 				//note: don't call Hook here, it does not make sense.
 
@@ -333,13 +333,13 @@ namespace Au
 				ushort _scan;
 				byte _vk;
 				bool _enter;
-				KOptions _opt;
+				OptKey _opt;
 
 				/// <summary>
 				/// Presses Ctrl+key. Does not release.
 				/// If enter is true, Release will press Enter.
 				/// </summary>
-				public void Press(Keys key, KOptions opt, Wnd wFocus, bool enter = false)
+				public void Press(Keys key, OptKey opt, Wnd wFocus, bool enter = false)
 				{
 					_scan = VkToSc(_vk = (byte)key, Api.GetKeyboardLayout(wFocus.ThreadId));
 					_enter = enter;
@@ -367,7 +367,7 @@ namespace Au
 				/// <summary>
 				/// Sends Enter.
 				/// </summary>
-				public static void Enter(KOptions opt)
+				public static void Enter(OptKey opt)
 				{
 					var e = new _KEvent(true, Keys.Enter, 0, 0x1C);
 					_SendKey2(e, default, true, opt);
@@ -407,11 +407,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns KOptions of this variable or KOptions cloned from this variable and possibly modified by Hook.
+		/// Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
 		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(Wnd) if Hook is null.</param>
-		KOptions _GetOptionsAndWndFocused(out Wnd wFocus, bool getWndAlways)
+		OptKey _GetOptionsAndWndFocused(out Wnd wFocus, bool getWndAlways)
 		{
 			if(Options.Hook == null && !getWndAlways) {
 				wFocus = default;
@@ -421,16 +421,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns KOptions of this variable or KOptions cloned from this variable and possibly modified by Hook.
+		/// Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
-		KOptions _GetOptions(Wnd wFocus)
+		OptKey _GetOptions(Wnd wFocus)
 		{
 			var call = Options.Hook;
 			if(call == null || wFocus.Is0) return Options;
 			if(wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
-				if(_sstate.options == null) _sstate.options = new KOptions(Options); else _sstate.options.LibReset(Options);
+				if(_sstate.options == null) _sstate.options = new OptKey(Options); else _sstate.options.LibReset(Options);
 				call(new KOHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;

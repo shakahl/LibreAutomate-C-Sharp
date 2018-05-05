@@ -2980,7 +2980,7 @@ static partial class Test
 
 	//static void _DomainCallback()
 	//{
-	//	Output.LibWriteToQM2 = true;
+	//	Output.LibUseQM2 = true;
 
 	//	var d =AppDomain.CurrentDomain;
 	//	Print(d.Id, d.FriendlyName);
@@ -3523,7 +3523,7 @@ REE`");
 		var tt = new Thread(() =>
 		{
 			var ad = AppDomain.CreateDomain("qwerty");
-			ad.DoCallBack(() => { Output.LibWriteToQM2 = true; Print(Api.GetCurrentThreadId()); TestAccProcessDoesNotExit(); });
+			ad.DoCallBack(() => { Output.LibUseQM2 = true; Print(Api.GetCurrentThreadId()); TestAccProcessDoesNotExit(); });
 			AppDomain.Unload(ad);
 		});
 		tt.SetApartmentState(ApartmentState.STA);
@@ -5152,7 +5152,7 @@ REE`");
 		return;
 
 		//Opt.Key.SleepFinally = 100;
-		//Opt.Key.Hook = () => new KOptions() { SleepFinally = 100 };
+		//Opt.Key.Hook = () => new OptKey() { SleepFinally = 100 };
 		//Opt.Key.Hook = o =>
 		//{
 		//	Print(o.w);
@@ -5316,8 +5316,8 @@ REE`");
 		Opt.Key.PasteEnter = true;
 		Opt.Key.SleepFinally = 0;
 		//Opt.Key.RestoreClipboard = true;
-		KOptions.RestoreClipboardAllFormats = true;
-		//KOptions.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
+		OptKey.RestoreClipboardAllFormats = true;
+		//OptKey.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
 
 		//Opt.Key.Hook = o =>
 		//{
@@ -5378,10 +5378,10 @@ REE`");
 		//return;
 
 		//Opt.Key.RestoreClipboard = false;
-		KOptions.RestoreClipboardAllFormats = true;
-		//KOptions.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
+		OptKey.RestoreClipboardAllFormats = true;
+		//OptKey.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
 
-		//KOptions.PrintClipboard();
+		//OptKey.PrintClipboard();
 		////return;
 		//Print("---");
 
@@ -5395,7 +5395,7 @@ REE`");
 		//}
 
 		//Print("---");
-		//KOptions.PrintClipboard();
+		//OptKey.PrintClipboard();
 		//Print(Clipb.GetText());
 
 		var af = new object[] { 0, 1, 7, 13, "Rich Text Format", "HTML Format", "text/html", "FileName", "FileNameW", "DwHt" };
@@ -5464,7 +5464,7 @@ REE`");
 
 		Opt.Key.PasteEnter = true;
 		Opt.Key.SleepFinally = 0;
-		KOptions.RestoreClipboardAllFormats = true;
+		OptKey.RestoreClipboardAllFormats = true;
 
 		//Opt.Key.Hook = o =>
 		//{
@@ -5721,8 +5721,8 @@ REE`");
 
 	//public static class Options
 	//{
-	//	public static KOptions Key { get { return _key; } }
-	//	[ThreadStatic] static KOptions _key;
+	//	public static OptKey Key { get { return _key; } }
+	//	[ThreadStatic] static OptKey _key;
 	//}
 
 	static void TestAuOptions()
@@ -5820,17 +5820,116 @@ REE`");
 		f.ShowDialog();
 	}
 
+	static void TestAuDialogMessaging()
+	{
+		var d = new AuDialog("text1", "text2");
+		d.HelpF1 += e =>
+		{
+			e.dialog.Send.ChangeText2("moo", false);
+			//e.dialog.Send.Close();
+		};
+		d.ShowDialog();
+	}
+
+	static unsafe void _WriteToQM2(string s)
+	{
+		if(!_hwndQM2.IsAlive) {
+			_hwndQM2 = Api.FindWindow("QM_Editor", null);
+			if(_hwndQM2.Is0) return;
+		}
+		//_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
+		//_hwndQM2.Send(Api.WM_APP+88, -1, 0);
+		//_hwndQM2.SendS(Api.WM_APP+88, -1, s);
+
+		fixed (char* p = s) {
+			Api.COPYDATASTRUCT d = default;
+			d.cbData = (s.Length + 1) * 2;
+			d.lpData = (IntPtr)p;
+			_hwndQM2.Send(Api.WM_COPYDATA, 72598, &d);
+		}
+	}
+	static Wnd _hwndQM2;
+
+	static unsafe void _AddMessage(ConcurrentQueue<Au.Tools.OutputServer.Message> q)
+	{
+		char c = '\0';
+		var m = new Au.Tools.OutputServer.Message(Au.Tools.OutputServer.MessageType.Write, new string(&c), 0, null);
+	}
+
+	static void TestOutputServer()
+	{
+
+		//var q = new ConcurrentQueue<Au.Tools.OutputServer.Message>();
+		//_AddMessage(q);
+		//var m1 = GC.GetTotalMemory(false);
+		//int n = 10000;
+		//for(int i = 0; i < n; i++) {
+		//	_AddMessage(q);
+		//}
+		//var m2 = GC.GetTotalMemory(false);
+		//Print((m2 - m1) / n);
+		//return;
+
+		//Output.IgnoreConsole = true;
+		//100.ms();
+		////Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	Output.LogFile = Folders.Temp + "test_log.txt";
+		//	int n2 = 100;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { Print("123456789."); }
+		//	Perf.Next();
+		//	Output.LogFile = null;
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { Print("123456789."); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { _WriteToQM2("123456789."); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { Console.WriteLine("123456789."); }
+		//	Perf.Next();
+		//	Perf.Write();
+		//}
+		//Console.ReadKey();
+
+		Output.LibUseQM2 = true;
+		Output.Clear();
+		Output.LibUseQM2 = false;
+		Print("warm");
+		_WriteToQM2("warm");
+
+		var s ="123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.";
+		//s = new string('a', 11_0000);
+
+		100.ms();
+		Perf.SpinCPU(100);
+		for(int i1 = 0; i1 < 1; i1++) {
+			int n2 = 100;
+			n2 = 1000000;
+			n2 = 1000;
+			Perf.First();
+			//for(int i2 = 0; i2 < n2; i2++) { _WriteToQM2(s); }
+			for(int i2 = 0; i2 < n2; i2++) { Print(s); }
+			Perf.Next();
+			Perf.Write();
+			Output.LibUseQM2 = true;
+			Print("OK", (double)Perf.TimeTotal / n2);
+			Output.LibUseQM2 = false;
+			1.ms();
+		}
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
 		//MessageBox.Show(""); return;
+		//OutputFormExample.Main(); return;
 
 #if DEBUG
 		//Output.IgnoreConsole = true;
 		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
 #endif
-		Output.LibWriteToQM2 = true;
+		Output.LibUseQM2 = true;
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
@@ -5840,6 +5939,8 @@ REE`");
 		try {
 #if true
 
+			TestOutputServer();
+			//TestAuDialogMessaging();
 			//TestKeybClipbMouseOwnWindow();
 			//TestAuOptions();
 			//TestKeyOwnThread();

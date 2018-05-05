@@ -585,19 +585,19 @@
             This func is usually called after clearing control text.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.Output.Server,System.Action{Au.Output.Server.Message})">
+        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.Tools.OutputServer,System.Action{Au.Tools.OutputServer.Message})">
             <summary>
-            Displays <see cref="T:Au.Output.Server"/> messages that are currently in its queue.
+            Displays <see cref="T:Au.Tools.OutputServer"/> messages that are currently in its queue.
             </summary>
-            <param name="os">The Output.Server instance.</param>
-            <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.Messages.</param>
+            <param name="os">The OutputServer instance.</param>
+            <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
             <remarks>
             Removes messages from the queue.
             Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
             Messages with tags must have prefix "&lt;&gt;".
             Limits text length to about 4 MB (removes oldest text when exceeded).
             </remarks>
-            <seealso cref="M:Au.Output.Server.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
+            <seealso cref="M:Au.Tools.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
         </member>
         <member name="M:Au.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
             <summary>

@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="LineBreaksPlugIn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="test.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Au\Au.csproj">

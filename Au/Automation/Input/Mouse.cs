@@ -129,7 +129,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
 		/// <example>
 		/// Save-restore mouse position.
@@ -162,7 +162,7 @@ namespace Au
 		/// </exception>
 		/// <exception cref="AuException"><inheritdoc cref="Move(Point)"/></exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
 		public static Point Move(Coord x, Coord y, CoordOptions co = null)
 		{
@@ -188,7 +188,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException"><inheritdoc cref="Move(Point)"/></exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
 		public static Point Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -216,7 +216,7 @@ namespace Au
 		/// Moves the mouse cursor where it was at the time of the last <see cref="Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse move and click' function call in this thread. Does nothing if these functions were not called.
 		/// </summary>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
 		public static void Restore()
 		{
@@ -255,7 +255,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
 		public static Point MoveRelative(int dx, int dy)
 		{
@@ -276,7 +276,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
 		public static Point MoveRecorded(string recordedString, double speedFactor = 1.0)
 		{
@@ -538,14 +538,14 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.ClickSpeed" r=""/>, <see cref="MOptions.ClickSleepFinally" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastMoveXY = false)
 		{
 			Point? p = null; if(useLastMoveXY) p = LastMoveXY;
 			_Click(button, p);
 			return button;
-			//CONSIDER: MOptions.ClickAtLastMoveXY
+			//CONSIDER: OptMouse.ClickAtLastMoveXY
 		}
 
 		/// <summary>
@@ -560,7 +560,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="MOptions.ClickSpeed" r=""/>, <see cref="MOptions.ClickSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Coord x, Coord y, CoordOptions co = null)
 		{
@@ -583,7 +583,7 @@ namespace Au
 		/// <exception cref="WndException">x y is not in the window (read more in Remarks).</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.MoveSpeed" r=""/>, <see cref="MOptions.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="MOptions.ClickSpeed" r=""/>, <see cref="MOptions.ClickSleepFinally" r=""/>, <see cref="MOptions.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <b>Opt.Mouse.Relaxed</b> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -914,7 +914,7 @@ namespace Au
 		/// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
 		/// <param name="horizontal">Horizontal wheel.</param>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="MOptions.ClickSleepFinally" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSleepFinally" r=""/>.
 		/// </remarks>
 		public static void Wheel(int ticks, bool horizontal = false)
 		{
@@ -1044,7 +1044,7 @@ namespace Au
 			//rejected:
 			///// <param name="waitMS">
 			///// Maximal time to wait, milliseconds. Also which API to use.
-			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits Opt.Mouse.<see cref="MOptions.ClickSpeed" r=""/> ms.
+			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits Opt.Mouse.<see cref="OptMouse.ClickSpeed" r=""/> ms.
 			///// If less than 0 (eg Timeout.Infinite), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
 			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max waitMS milliseconds, then throws AuException.
 			///// The SendX functions are not natural and less likely to work.

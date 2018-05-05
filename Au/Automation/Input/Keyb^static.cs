@@ -447,7 +447,7 @@ namespace Au
 		/// <term>Changed</term>
 		/// </listheader>
 		/// <item>
-		/// <description><see cref="KOptions.NoBlockInput" r=""/></description>
+		/// <description><see cref="OptKey.NoBlockInput" r=""/></description>
 		/// <description>false.
 		/// Blocks user-pressed keys. Sends them afterwards.
 		/// If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</description>
@@ -455,58 +455,58 @@ namespace Au
 		/// Does not block user-pressed keys. It can be dangerous.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.NoCapsOff" r=""/></description>
+		/// <description><see cref="OptKey.NoCapsOff" r=""/></description>
 		/// <description>false.
 		/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</description>
 		/// <description>true.
 		/// Does not touch the CapsLock key.
-		/// Alphabetic keys of 'keys' arguments can depend on CapsLock. Text of 'text' arguments doesn't depend on CapsLock, unless <see cref="KOptions.TextOption" r=""/> is <see cref="KTextOption.Keys"/>.</description>
+		/// Alphabetic keys of 'keys' arguments can depend on CapsLock. Text of 'text' arguments doesn't depend on CapsLock, unless <see cref="OptKey.TextOption" r=""/> is <see cref="KTextOption.Keys"/>.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.NoModOff" r=""/></description>
+		/// <description><see cref="OptKey.NoModOff" r=""/></description>
 		/// <description>false.
 		/// Releases modifier keys (Alt, Ctrl, Shift, Win) if pressed.
-		/// Does it only at the start; later they cannot interfere, unless <see cref="KOptions.NoBlockInput" r=""/> is true.</description>
+		/// Does it only at the start; later they cannot interfere, unless <see cref="OptKey.NoBlockInput" r=""/> is true.</description>
 		/// <description>true.
 		/// Does not touch modifier keys. It can be dangerous.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.KeySpeed" r=""/></description>
+		/// <description><see cref="OptKey.KeySpeed" r=""/></description>
 		/// <description>1 ms.</description>
 		/// <description>0 - 1000.
 		/// Changes the speed for 'keys' arguments (makes slower if &gt;1).</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.TextSpeed" r=""/></description>
+		/// <description><see cref="OptKey.TextSpeed" r=""/></description>
 		/// <description>0 ms.</description>
 		/// <description>0 - 1000.
 		/// Changes the speed for 'text' arguments (makes slower).</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.SleepFinally" r=""/></description>
+		/// <description><see cref="OptKey.SleepFinally" r=""/></description>
 		/// <description>10 ms.</description>
 		/// <description>0 - 10000.
 		/// Tip: to sleep finally, also can be used code like this: <c>Key("keys", 1000);</c>.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.TextOption" r=""/></description>
+		/// <description><see cref="OptKey.TextOption" r=""/></description>
 		/// <description><see cref="KTextOption.Characters"/></description>
 		/// <description><b>Keys</b> (send keys and Shift) or <b>Paste</b> (use clipboard).</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.PasteLength" r=""/></description>
+		/// <description><see cref="OptKey.PasteLength" r=""/></description>
 		/// <description>300.
 		/// This option is used for 'text' arguments. If text length &gt;= this value, uses the clipboard.</description>
 		/// <description>&gt;=0.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.PasteEnter" r=""/></description>
+		/// <description><see cref="OptKey.PasteEnter" r=""/></description>
 		/// <description>false.</description>
 		/// <description>true.
 		/// This option is used for 'text' arguments when using the clipboard.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.RestoreClipboard" r=""/></description>
+		/// <description><see cref="OptKey.RestoreClipboard" r=""/></description>
 		/// <description>true.
 		/// Restore clipboard data (by default only text).
 		/// This option is used for 'text' arguments when using the clipboard.</description>
@@ -514,14 +514,14 @@ namespace Au
 		/// Don't restore clipboard data.</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="KOptions.Hook" r=""/></description>
+		/// <description><see cref="OptKey.Hook" r=""/></description>
 		/// <description>null.</description>
 		/// <description>Callback function that can modify options depending on active window etc.</description>
 		/// </item>
 		/// </list>
-		/// When you don't want to use or modify <see cref="Opt.Key"/>, use a <see cref="Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="Keyb(KOptions)"/> topic.
+		/// When you don't want to use or modify <see cref="Opt.Key"/>, use a <see cref="Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="Keyb(OptKey)"/> topic.
 		/// 
-		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="KOptions.SleepFinally" r=""/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally" r=""/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
 		/// This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
 		/// 

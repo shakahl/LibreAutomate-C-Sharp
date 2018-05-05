@@ -870,8 +870,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets file icons.
-		/// Uses 2-level cache - memory and file.
+		/// Gets file icons. Uses 2-level cache - memory and file.
 		/// </summary>
 		/// <remarks>
 		/// Can be used as static variables.

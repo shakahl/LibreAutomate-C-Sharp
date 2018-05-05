@@ -169,18 +169,18 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Displays <see cref="Output.Server"/> messages that are currently in its queue.
+		/// Displays <see cref="Tools.OutputServer"/> messages that are currently in its queue.
 		/// </summary>
-		/// <param name="os">The Output.Server instance.</param>
-		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.Messages.</param>
+		/// <param name="os">The OutputServer instance.</param>
+		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
 		/// <remarks>
 		/// Removes messages from the queue.
 		/// Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
 		/// Messages with tags must have prefix "&lt;&gt;".
 		/// Limits text length to about 4 MB (removes oldest text when exceeded).
 		/// </remarks>
-		/// <seealso cref="Output.Server.SetNotifications"/>
-		public void OutputServerProcessMessages(Output.Server os, Action<Output.Server.Message> onMessage = null)
+		/// <seealso cref="Tools.OutputServer.SetNotifications"/>
+		public void OutputServerProcessMessages(Tools.OutputServer os, Action<Tools.OutputServer.Message> onMessage = null)
 		{
 			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 			//	If multiple messages, use StringBuilder.
@@ -189,16 +189,15 @@ namespace Au.Controls
 			string s = null;
 			StringBuilder b = null;
 			bool hasTags = false, hasTagsPrev = false;
-			//Output.DebugWriteToQM2(OutputServer.Messages.Count.ToString());
-			while(os.Messages.TryDequeue(out var m)) {
+			while(os.GetMessage(out var m)) {
 				onMessage?.Invoke(m);
 				switch(m.Type) {
-				case Output.Server.MessageType.Clear:
+				case Tools.OutputServer.MessageType.Clear:
 					_c.ST.ClearText();
 					s = null;
 					b?.Clear();
 					break;
-				case Output.Server.MessageType.Write:
+				case Tools.OutputServer.MessageType.Write:
 					if(s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.StartsWith_("<>");
@@ -244,6 +243,10 @@ namespace Au.Controls
 
 			if(hasTags) AddText(s, true, true);
 			else _c.ST.AppendText(s, true, true, true);
+
+			//test slow client
+			//Thread.Sleep(500);
+			//Output.LibWriteQM2(s.Length / 1048576d);
 		}
 
 		/// <summary>

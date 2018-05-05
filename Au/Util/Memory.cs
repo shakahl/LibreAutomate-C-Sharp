@@ -78,7 +78,7 @@ namespace Au.Util
 
 		//reserve 16 for some header, eg shared memory version.
 		[FieldOffset(16)]
-		internal Output.Server.LibSharedMemoryData outp; //now sizeof 2, reserve 16
+		internal Tools.OutputServer.LibSharedMemoryData outp; //now sizeof 2, reserve 16
 		[FieldOffset(32)]
 		internal Perf.Inst perf; //now sizeof 184, reserve 256-32
 		[FieldOffset(256)]
@@ -98,7 +98,7 @@ namespace Au.Util
 
 		static LibSharedMemory()
 		{
-			Debug.Assert(sizeof(Output.Server.LibSharedMemoryData) <= 16);
+			Debug.Assert(sizeof(Tools.OutputServer.LibSharedMemoryData) <= 16);
 			Debug.Assert(sizeof(Perf.Inst) <= 256 - 32);
 
 			_sm = (LibSharedMemory*)SharedMemory.CreateOrGet("Au_SM_0x10000", Size, out var created);

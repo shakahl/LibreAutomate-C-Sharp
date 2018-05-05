@@ -190,6 +190,9 @@ namespace Au
 		static string __Windows;
 		static FolderPath _Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
 
+		/// <summary>
+		/// Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as string like ":: 12345678...". 
+		/// </summary>
 		[DebuggerStepThrough]
 		public static class Virtual
 		{
@@ -218,6 +221,9 @@ namespace Au
 			public static FolderPath UsersLibraries { get { return _GetV(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); } }
 		}
 
+		/// <summary>
+		/// Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="Shell.Pidl"/>. 
+		/// </summary>
 		[DebuggerStepThrough]
 		public static class VirtualPidl
 		{

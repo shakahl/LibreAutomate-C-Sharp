@@ -101,7 +101,7 @@ namespace Au
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="Opt.Key"/>.
-		/// Uses <see cref="KOptions.RestoreClipboard" r=""/>, <see cref="KOptions.NoBlockInput" r=""/>, partially <see cref="KOptions.KeySpeed" r=""/>. Does not use <see cref="KOptions.Hook" r=""/>.
+		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, partially <see cref="OptKey.KeySpeed" r=""/>. Does not use <see cref="OptKey.Hook" r=""/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -110,7 +110,7 @@ namespace Au
 		/// Fails (exception) if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
 		/// Works with console windows too, even if they don't support Ctrl+C.
 		/// </remarks>
-		public static string CopyText(bool cut = false, KOptions options = null)
+		public static string CopyText(bool cut = false, OptKey options = null)
 		{
 			return _Copy(cut, options, null);
 			//rejected: 'format' parameter. Not useful.
@@ -138,13 +138,13 @@ namespace Au
 		/// if(files == null) Print("no files in clipboard"); else Print(files);
 		/// ]]></code>
 		/// </example>
-		public static void CopyData(Action callback, bool cut = false, KOptions options = null)
+		public static void CopyData(Action callback, bool cut = false, OptKey options = null)
 		{
 			if(callback == null) throw new ArgumentNullException();
 			_Copy(cut, options, callback);
 		}
 
-		static string _Copy(bool cut, KOptions options, Action callback)
+		static string _Copy(bool cut, OptKey options, Action callback)
 		{
 			string R = null;
 			var opt = options ?? Opt.Key;
@@ -210,7 +210,7 @@ namespace Au
 		/// <param name="text">Text.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="Opt.Key"/>.
-		/// Uses <see cref="KOptions.RestoreClipboard" r=""/>, <see cref="KOptions.PasteEnter" r=""/>, <see cref="KOptions.NoBlockInput" r=""/>, <see cref="KOptions.SleepFinally" r=""/>, <see cref="KOptions.Hook" r=""/>, partially <see cref="KOptions.KeySpeed" r=""/>.
+		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.PasteEnter" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, <see cref="OptKey.SleepFinally" r=""/>, <see cref="OptKey.Hook" r=""/>, partially <see cref="OptKey.KeySpeed" r=""/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -226,7 +226,7 @@ namespace Au
 		/// Paste("Example\r\n"); //the same as above
 		/// ]]></code>
 		/// </example>
-		public static void PasteText(string text, KOptions options = null)
+		public static void PasteText(string text, OptKey options = null)
 		{
 			if(Empty(text)) return;
 			_Paste(text, options);
@@ -242,14 +242,14 @@ namespace Au
 		/// Clipb.PasteData(new Clipb.Data().AddHtml("<b>text</b>").AddText("text"));
 		/// ]]></code>
 		/// </example>
-		public static void PasteData(Data data, KOptions options = null)
+		public static void PasteData(Data data, OptKey options = null)
 		{
 			if(data == null) throw new ArgumentNullException();
 			_Paste(data, options);
 		}
 
 		//rejected. Should use some UI-created/saved data containing all three formats.
-		//public static void PasteRichText(string text, string rtf, string html = null, KOptions options = null)
+		//public static void PasteRichText(string text, string rtf, string html = null, OptKey options = null)
 		//{
 		//	var a = new List<(int, object)>();
 		//	if(!Empty(text)) a.Add((0, text));
@@ -259,7 +259,7 @@ namespace Au
 		//	_Paste(a, options);
 		//}
 
-		static void _Paste(object data, KOptions options = null)
+		static void _Paste(object data, OptKey options = null)
 		{
 			var wFocus = Keyb.Lib.GetWndFocusedOrActive();
 			var opt = options ?? Opt.Key;
@@ -285,7 +285,7 @@ namespace Au
 		/// <param name="data">string or Data.</param>
 		/// <param name="opt"></param>
 		/// <param name="wFocus"></param>
-		internal static void LibPaste(object data, KOptions opt, Wnd wFocus)
+		internal static void LibPaste(object data, OptKey opt, Wnd wFocus)
 		{
 			bool isConsole = wFocus.IsConsole, enter = false;
 
@@ -345,7 +345,7 @@ namespace Au
 					ctrlV.Release();
 				}
 
-				//CONSIDER: KOptions.TimePasteSync. Or use SleepFinally here, not after.
+				//CONSIDER: OptKey.TimePasteSync. Or use SleepFinally here, not after.
 				for(int i = 0, n = sync ? 3 : 20; i < n; i++) { //see comments below about Dreamweaver
 					wFocus.SendTimeout(1000, 0, flags: 0);
 					Keyb.Lib.Sleep(i + 3);
@@ -560,8 +560,8 @@ namespace Au
 			public void Save(bool debug = false)
 			{
 				var p1 = new Perf.Inst(); //will need if debug==true
-				bool allFormats = KOptions.RestoreClipboardAllFormats || debug;
-				string[] exceptFormats = KOptions.RestoreClipboardExceptFormats;
+				bool allFormats = OptKey.RestoreClipboardAllFormats || debug;
+				string[] exceptFormats = OptKey.RestoreClipboardExceptFormats;
 
 				for(int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
 					bool skip = false; string name = null;

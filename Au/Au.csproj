@@ -92,6 +92,7 @@
     <Compile Include="Common\Opt.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\OnScreenRect.cs" />
+    <Compile Include="Other\OutputServer.cs" />
     <Compile Include="Other\Screen_.cs" />
     <Compile Include="String\Regex_ types.cs" />
     <Compile Include="String\Regex_.cs" />

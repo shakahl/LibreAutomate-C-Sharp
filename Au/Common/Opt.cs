@@ -57,8 +57,8 @@ namespace Au
 		/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 		/// ]]></code>
 		/// </example>
-		public static KOptions Key => t_key ?? (t_key = new KOptions(Opt.Static.Key));
-		[ThreadStatic] internal static KOptions t_key;
+		public static OptKey Key => t_key ?? (t_key = new OptKey(Opt.Static.Key));
+		[ThreadStatic] static OptKey t_key;
 
 		/// <summary>
 		/// Options for mouse functions (class <see cref="Mouse"/> and functions that use it).
@@ -72,8 +72,8 @@ namespace Au
 		/// Mouse.Click();
 		/// ]]></code>
 		/// </example>
-		public static MOptions Mouse => t_mouse ?? (t_mouse = new MOptions(Opt.Static.Mouse));
-		[ThreadStatic] internal static MOptions t_mouse;
+		public static OptMouse Mouse => t_mouse ?? (t_mouse = new OptMouse(Opt.Static.Mouse));
+		[ThreadStatic] static OptMouse t_mouse;
 
 		/// <summary>
 		/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
@@ -88,8 +88,8 @@ namespace Au
 		/// PrintWarning("Example");
 		/// ]]></code>
 		/// </example>
-		public static DOptions Debug => t_debug ?? (t_debug = new DOptions());
-		[ThreadStatic] static DOptions t_debug;
+		public static OptDebug Debug => t_debug ?? (t_debug = new OptDebug());
+		[ThreadStatic] static OptDebug t_debug;
 
 		/// <summary>
 		/// Default <see cref="Opt"/> properties of each thread.
@@ -118,7 +118,7 @@ namespace Au
 			/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 			/// ]]></code>
 			/// </example>
-			public static KOptions Key { get; } = new KOptions();
+			public static OptKey Key { get; } = new OptKey();
 
 			/// <summary>
 			/// Default option values for <see cref="Opt.Mouse"/> of each thread.
@@ -130,7 +130,7 @@ namespace Au
 			/// Mouse.Click(); //uses Opt.Mouse, which is implicitly copied from Opt.Static.Mouse
 			/// ]]></code>
 			/// </example>
-			public static MOptions Mouse { get; } = new MOptions();
+			public static OptMouse Mouse { get; } = new OptMouse();
 
 			/// <summary>
 			/// Default option values for <see cref="Opt.Debug"/> of each thread.
@@ -140,7 +140,7 @@ namespace Au
 			/// Opt.Static.Debug.Verbose = false;
 			/// ]]></code>
 			/// </example>
-			public static DOptions Debug { get; } = new DOptions();
+			public static OptDebug Debug { get; } = new OptDebug();
 
 		}
 
@@ -185,10 +185,10 @@ namespace Au
 			[EditorBrowsable(EditorBrowsableState.Never)]
 			public struct RestoreMouse :IDisposable
 			{
-				MOptions _o;
-				internal RestoreMouse(int unused) => Opt.t_mouse = new MOptions(_o = Opt.t_mouse);
+				OptMouse _o;
+				internal RestoreMouse(int unused) => t_mouse = new OptMouse(_o = t_mouse);
 				/// <summary>Restores options.</summary>
-				public void Dispose() => Opt.t_mouse = _o;
+				public void Dispose() => t_mouse = _o;
 			}
 
 			/// <summary>Infrastructure.</summary>
@@ -196,10 +196,10 @@ namespace Au
 			[EditorBrowsable(EditorBrowsableState.Never)]
 			public struct RestoreKey :IDisposable
 			{
-				KOptions _o;
-				internal RestoreKey(int unused) => Opt.t_key = new KOptions(_o = Opt.t_key);
+				OptKey _o;
+				internal RestoreKey(int unused) => t_key = new OptKey(_o = t_key);
 				/// <summary>Restores options.</summary>
-				public void Dispose() => Opt.t_key = _o;
+				public void Dispose() => t_key = _o;
 			}
 		}
 	}
@@ -210,7 +210,7 @@ namespace Au.Types
 	/// <summary>
 	/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
 	/// </summary>
-	public class DOptions
+	public class OptDebug
 	{
 		struct _Options //makes easier to copy and reset fields
 		{
@@ -219,7 +219,7 @@ namespace Au.Types
 		_Options _o;
 		List<string> _disabledWarnings;
 
-		internal DOptions()
+		internal OptDebug()
 		{
 			var o = Opt.Static.Debug;
 			if(this == o) {
@@ -308,10 +308,10 @@ namespace Au.Types
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public struct RestoreWarnings :IDisposable
 		{
-			DOptions _o;
+			OptDebug _o;
 			int _restoreCount;
 
-			internal RestoreWarnings(DOptions o, int restoreCount) { _o = o; _restoreCount = restoreCount; }
+			internal RestoreWarnings(OptDebug o, int restoreCount) { _o = o; _restoreCount = restoreCount; }
 
 			/// <summary>Restores warnings.</summary>
 			public void Dispose() => _o.LibRestoreWarnings(_restoreCount);
@@ -326,7 +326,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Total <c>Click(x, y)</c> time is: mouse move + <see cref="MoveSleepFinally"/> + button down + <see cref="ClickSpeed"/> + button down + <see cref="ClickSpeed"/> + <see cref="ClickSleepFinally"/>.
 	/// </remarks>
-	public class MOptions
+	public class OptMouse
 	{
 		struct _Options //makes easier to copy and reset fields
 		{
@@ -339,7 +339,7 @@ namespace Au.Types
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		internal MOptions(MOptions cloneOptions = null) //don't need public like KOptions
+		internal OptMouse(OptMouse cloneOptions = null) //don't need public like OptKey
 		{
 			_LibReset(cloneOptions);
 		}
@@ -347,7 +347,7 @@ namespace Au.Types
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		void _LibReset(MOptions o) //could be used as internal, but currently don't need
+		void _LibReset(OptMouse o) //could be used as internal, but currently don't need
 		{
 			if(o != null) {
 				_o = o._o;
@@ -453,13 +453,13 @@ namespace Au.Types
 	/// </summary>
 	/// <seealso cref="Opt.Key"/>
 	/// <seealso cref="Opt.Static.Key"/>
-	public class KOptions
+	public class OptKey
 	{
 		/// <summary>
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		public KOptions(KOptions cloneOptions = null)
+		public OptKey(OptKey cloneOptions = null)
 		{
 			LibReset(cloneOptions);
 		}
@@ -467,7 +467,7 @@ namespace Au.Types
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		internal void LibReset(KOptions o)
+		internal void LibReset(OptKey o)
 		{
 			if(o != null) {
 				_keySpeed = o._keySpeed;
@@ -497,14 +497,14 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Returns this variable or KOptions cloned from this variable and possibly modified by Hook.
+		/// Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
-		internal KOptions LibGetHookOptionsOrThis(Wnd wFocus)
+		internal OptKey LibGetHookOptionsOrThis(Wnd wFocus)
 		{
 			var call = this.Hook;
 			if(call == null || wFocus.Is0) return this;
-			var R = new KOptions(this);
+			var R = new OptKey(this);
 			call(new KOHookData(R, wFocus));
 			return R;
 		}
@@ -692,16 +692,16 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Parameter type of the <see cref="KOptions.Hook"/> callback function.
+	/// Parameter type of the <see cref="OptKey.Hook"/> callback function.
 	/// </summary>
 	public struct KOHookData
 	{
-		internal KOHookData(KOptions opt, Wnd w) { this.opt = opt; this.w = w; }
+		internal KOHookData(OptKey opt, Wnd w) { this.opt = opt; this.w = w; }
 
 		/// <summary>
 		/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
 		/// </summary>
-		public readonly KOptions opt;
+		public readonly OptKey opt;
 
 		/// <summary>
 		/// The focused control. If there is no focused control - the active window. Use <c>w.WndWindow</c> to get top-level parent window; if <c>w.WndWindow == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
@@ -711,7 +711,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// How functions send text.
-	/// See <see cref="KOptions.TextOption"/>.
+	/// See <see cref="OptKey.TextOption"/>.
 	/// </summary>
 	/// <remarks>
 	/// There are three ways to send text to the active app using keys: 1. Characters (default) - use special key code VK_PACKET. 2. Keys - press keybord keys. 3. Paste - use the clipboard and Ctrl+V.
@@ -746,7 +746,7 @@ namespace Au.Types
 		/// Paste text using the clipboard and Ctrl+V.
 		/// Few apps don't support it.
 		/// This option is recommended for long text, because other ways then are too slow.
-		/// Other options are unreliable when text length is more than 4000 or 5000 and the target app is too slow to process sent characters. Then <see cref="KOptions.TextSpeed"/> can help.
+		/// Other options are unreliable when text length is more than 4000 or 5000 and the target app is too slow to process sent characters. Then <see cref="OptKey.TextSpeed"/> can help.
 		/// Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete or auto-indent. However some apps modify even pasted text, for example trim the last newline.
 		/// When pasting text, previous clipboard data is lost.
 		/// </summary>
