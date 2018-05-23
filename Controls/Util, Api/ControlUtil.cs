@@ -21,8 +21,8 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	public static class ControlUtil
-	{
+	//public static class ControlUtil
+	//{
 
-	}
+	//}
 }

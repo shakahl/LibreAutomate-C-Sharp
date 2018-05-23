@@ -72,7 +72,7 @@ namespace Au
 						i = name.EqualsAt_(2, false, "id:", "text:", "accName:", "wfName:");
 						int iFrom = 0;
 						switch(i) {
-						case 1: _nameIs = _NameIs.id; _id = name.ToInt32_(5); break;
+						case 1: _nameIs = _NameIs.id; _id = name.ToInt_(5); break;
 						case 2: _nameIs = _NameIs.text; iFrom = 7; break;
 						case 3: _nameIs = _NameIs.accName; iFrom = 10; break;
 						case 4: _nameIs = _NameIs.wfName; iFrom = 9; break;
@@ -663,7 +663,7 @@ namespace Au
 					catch(Exception ex) { Debug_.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
 					return 0;
 				} else {
-					return W.Send(BM_GETCHECK);
+					return (int)W.Send(BM_GETCHECK);
 				}
 			}
 

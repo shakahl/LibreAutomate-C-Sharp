@@ -25,8 +25,8 @@ namespace Au.Types
 	/// <summary>
 	/// Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg wParam/lParam of SendMessage.
 	/// Unlike IntPtr:
-	///		Has implicit casts from/to most integral types.
-	///		Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create strange bugs.
+	///		Has implicit casts from most integral types. And explicit casts to.
+	///		Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create bugs.
 	/// </summary>
 	/// <remarks>
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
@@ -56,27 +56,32 @@ namespace Au.Types
 		public static implicit operator LPARAM(long x) { return new LPARAM((void*)x); }
 		public static implicit operator LPARAM(ulong x) { return new LPARAM((void*)x); }
 		public static implicit operator LPARAM(bool x) { return new LPARAM((void*)(x ? 1 : 0)); }
-		//public static implicit operator LPARAM(Enum x) { return new LPARAM((void*)(int)x); } //error
-		public static implicit operator LPARAM(Keys x) { return new LPARAM((void*)(int)x); }
+		//also would be good to have LPARAM(Enum x), but I don't know how. Try like ExtensionMethods.Has_<T>. Maybe future C# will allow it.
+
 		//int etc = LPARAM
 		public static implicit operator void* (LPARAM x) { return x._v; }
 		public static implicit operator IntPtr(LPARAM x) { return (IntPtr)x._v; }
-		public static implicit operator UIntPtr(LPARAM x) { return (UIntPtr)x._v; }
-		public static implicit operator int(LPARAM x) { return (int)x._v; }
-		public static implicit operator uint(LPARAM x) { return (uint)x._v; }
-		public static implicit operator sbyte(LPARAM x) { return (sbyte)x._v; }
-		public static implicit operator byte(LPARAM x) { return (byte)x._v; }
-		public static implicit operator short(LPARAM x) { return (short)x._v; }
-		public static implicit operator ushort(LPARAM x) { return (ushort)x._v; }
-		public static implicit operator char(LPARAM x) { return (char)(ushort)x._v; }
-		public static implicit operator long(LPARAM x) { return (long)x._v; }
-		public static implicit operator ulong(LPARAM x) { return (ulong)x._v; }
+		public static explicit operator UIntPtr(LPARAM x) { return (UIntPtr)x._v; }
+		public static explicit operator int(LPARAM x) { return (int)x._v; }
+		public static explicit operator uint(LPARAM x) { return (uint)x._v; }
+		public static explicit operator sbyte(LPARAM x) { return (sbyte)x._v; }
+		public static explicit operator byte(LPARAM x) { return (byte)x._v; }
+		public static explicit operator short(LPARAM x) { return (short)x._v; }
+		public static explicit operator ushort(LPARAM x) { return (ushort)x._v; }
+		public static explicit operator char(LPARAM x) { return (char)(ushort)x._v; }
+		public static explicit operator long(LPARAM x) { return (long)x._v; }
+		public static explicit operator ulong(LPARAM x) { return (ulong)x._v; }
 		public static implicit operator bool(LPARAM x) { return x._v != null; }
+		//note: don't use implicit. It's unsafe. Eg arithmetic and other operators then implicitly convert LPARAM operands to int, although must be long.
 
 		public static bool operator ==(LPARAM a, LPARAM b) { return a._v == b._v; }
 		public static bool operator !=(LPARAM a, LPARAM b) { return a._v != b._v; }
-
-		//TODO: need to overload operator < etc, because now gives unexpected results.
+		public static bool operator <(LPARAM a, LPARAM b) { return a._v < b._v; }
+		public static bool operator >(LPARAM a, LPARAM b) { return a._v > b._v; }
+		public static bool operator <=(LPARAM a, LPARAM b) { return a._v <= b._v; }
+		public static bool operator >=(LPARAM a, LPARAM b) { return a._v >= b._v; }
+		public static LPARAM operator +(LPARAM a, int b) { return (byte*)a._v + b; }
+		public static LPARAM operator -(LPARAM a, int b) { return (byte*)a._v - b; }
 
 		public override string ToString() => ((IntPtr)_v).ToString();
 
@@ -236,8 +241,8 @@ namespace Au.Types
 		/// Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
 		/// Final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If null - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y coordinate in the specified screen. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="screen">Use this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses the primary screen.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
@@ -262,7 +267,7 @@ namespace Au.Types
 		/// </remarks>
 		public void EnsureInScreen(object screen = null, bool workArea = true)
 		{
-			Wnd.Lib.MoveInScreen(true, null, null, false, default, ref this, screen, workArea, true);
+			Wnd.Lib.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
 
 		public override string ToString()
@@ -329,11 +334,11 @@ namespace Au.Types
 			c.color = 0;
 			if(s == null || s.Length < 2) return false;
 			if(s[0] == '0' && s[1] == 'x') {
-				c.color = s.ToInt32_(0, out int len);
+				c.color = s.ToInt_(0, out int len);
 				if(len < 3) return false;
 				if(len <= 8) c.color |= unchecked((int)0xFF000000);
 			} else if(s[0] == '#') {
-				c.color = s.ToInt32_(1, out int end, STIFlags.IsHexWithout0x);
+				c.color = s.ToInt_(1, out int end, STIFlags.IsHexWithout0x);
 				if(end < 2) return false;
 				if(end <= 7) c.color |= unchecked((int)0xFF000000);
 			} else {
@@ -444,7 +449,7 @@ namespace Au.Types
 		public static implicit operator VARIANT(int x) { return new VARIANT(x); }
 		public static implicit operator VARIANT(string x) { return new VARIANT(x); }
 
-		public int ValueInt { get { Debug.Assert(vt == Api.VARENUM.VT_I4); return value; } }
+		public int ValueInt { get { Debug.Assert(vt == Api.VARENUM.VT_I4); return (int)value; } }
 		public BSTR ValueBstr { get { Debug.Assert(vt == Api.VARENUM.VT_BSTR); return BSTR.AttachBSTR((char*)value); } }
 
 		/// <summary>

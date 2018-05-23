@@ -327,172 +327,6 @@ namespace Au.Types
 
 		#endregion
 
-		#region VK_
-
-		//rejected: we use Keys enum instead
-		//internal const int VK_ZOOM = 251;
-		//internal const int VK_XBUTTON2 = 6;
-		//internal const int VK_XBUTTON1 = 5;
-		//internal const int VK_VOLUME_UP = 175;
-		//internal const int VK_VOLUME_MUTE = 173;
-		//internal const int VK_VOLUME_DOWN = 174;
-		//internal const int VK_UP = 38;
-		//internal const int VK_TAB = 9;
-		//internal const int VK_SUBTRACT = 109;
-		//internal const int VK_SPACE = 32;
-		//internal const int VK_SNAPSHOT = 44;
-		//internal const int VK_SLEEP = 95;
-		//internal const int VK_SHIFT = 16;
-		//internal const int VK_SEPARATOR = 108;
-		//internal const int VK_SELECT = 41;
-		//internal const int VK_SCROLL = 145;
-		//internal const int VK_RWIN = 92;
-		//internal const int VK_RSHIFT = 161;
-		//internal const int VK_RMENU = 165;
-		//internal const int VK_RIGHT = 39;
-		//internal const int VK_RETURN = 13;
-		//internal const int VK_RCONTROL = 163;
-		//internal const int VK_RBUTTON = 2;
-		//internal const int VK_PROCESSKEY = 229;
-		//internal const int VK_PRIOR = 33;
-		//internal const int VK_PRINT = 42;
-		//internal const int VK_PLAY = 250;
-		//internal const int VK_PAUSE = 19;
-		//internal const int VK_PACKET = 231;
-		//internal const int VK_PA1 = 253;
-		//internal const int VK_OEM_WSCTRL = 238;
-		//internal const int VK_OEM_RESET = 233;
-		//internal const int VK_OEM_PLUS = 187;
-		//internal const int VK_OEM_PERIOD = 190;
-		//internal const int VK_OEM_PA3 = 237;
-		//internal const int VK_OEM_PA2 = 236;
-		//internal const int VK_OEM_PA1 = 235;
-		//internal const int VK_OEM_NEC_EQUAL = 146;
-		//internal const int VK_OEM_MINUS = 189;
-		//internal const int VK_OEM_JUMP = 234;
-		//internal const int VK_OEM_FJ_TOUROKU = 148;
-		//internal const int VK_OEM_FJ_ROYA = 150;
-		//internal const int VK_OEM_FJ_MASSHOU = 147;
-		//internal const int VK_OEM_FJ_LOYA = 149;
-		//internal const int VK_OEM_FJ_JISHO = 146;
-		//internal const int VK_OEM_FINISH = 241;
-		//internal const int VK_OEM_ENLW = 244;
-		//internal const int VK_OEM_CUSEL = 239;
-		//internal const int VK_OEM_COPY = 242;
-		//internal const int VK_OEM_COMMA = 188;
-		//internal const int VK_OEM_CLEAR = 254;
-		//internal const int VK_OEM_BACKTAB = 245;
-		//internal const int VK_OEM_AX = 225;
-		//internal const int VK_OEM_AUTO = 243;
-		//internal const int VK_OEM_ATTN = 240;
-		//internal const int VK_OEM_8 = 223;
-		//internal const int VK_OEM_7 = 222;
-		//internal const int VK_OEM_6 = 221;
-		//internal const int VK_OEM_5 = 220;
-		//internal const int VK_OEM_4 = 219;
-		//internal const int VK_OEM_3 = 192;
-		//internal const int VK_OEM_2 = 191;
-		//internal const int VK_OEM_102 = 226;
-		//internal const int VK_OEM_1 = 186;
-		//internal const int VK_NUMPAD9 = 105;
-		//internal const int VK_NUMPAD8 = 104;
-		//internal const int VK_NUMPAD7 = 103;
-		//internal const int VK_NUMPAD6 = 102;
-		//internal const int VK_NUMPAD5 = 101;
-		//internal const int VK_NUMPAD4 = 100;
-		//internal const int VK_NUMPAD3 = 99;
-		//internal const int VK_NUMPAD2 = 98;
-		//internal const int VK_NUMPAD1 = 97;
-		//internal const int VK_NUMPAD0 = 96;
-		//internal const int VK_NUMLOCK = 144;
-		//internal const int VK_NONCONVERT = 29;
-		//internal const int VK_NONAME = 252;
-		//internal const int VK_NEXT = 34;
-		//internal const int VK_MULTIPLY = 106;
-		//internal const int VK_MODECHANGE = 31;
-		//internal const int VK_MENU = 18;
-		//internal const int VK_MEDIA_STOP = 178;
-		//internal const int VK_MEDIA_PREV_TRACK = 177;
-		//internal const int VK_MEDIA_PLAY_PAUSE = 179;
-		//internal const int VK_MEDIA_NEXT_TRACK = 176;
-		//internal const int VK_MBUTTON = 4;
-		//internal const int VK_LWIN = 91;
-		//internal const int VK_LSHIFT = 160;
-		//internal const int VK_LMENU = 164;
-		//internal const int VK_LEFT = 37;
-		//internal const int VK_LCONTROL = 162;
-		//internal const int VK_LBUTTON = 1;
-		//internal const int VK_LAUNCH_MEDIA_SELECT = 181;
-		//internal const int VK_LAUNCH_MAIL = 180;
-		//internal const int VK_LAUNCH_APP2 = 183;
-		//internal const int VK_LAUNCH_APP1 = 182;
-		//internal const int VK_KANJI = 25;
-		//internal const int VK_KANA = 21;
-		//internal const int VK_JUNJA = 23;
-		//internal const int VK_INSERT = 45;
-		//internal const int VK_ICO_HELP = 227;
-		//internal const int VK_ICO_CLEAR = 230;
-		//internal const int VK_ICO_00 = 228;
-		//internal const int VK_HOME = 36;
-		//internal const int VK_HELP = 47;
-		//internal const int VK_HANJA = 25;
-		//internal const int VK_HANGUL = 21;
-		//internal const int VK_HANGEUL = 21;
-		//internal const int VK_FINAL = 24;
-		//internal const int VK_F9 = 120;
-		//internal const int VK_F8 = 119;
-		//internal const int VK_F7 = 118;
-		//internal const int VK_F6 = 117;
-		//internal const int VK_F5 = 116;
-		//internal const int VK_F4 = 115;
-		//internal const int VK_F3 = 114;
-		//internal const int VK_F24 = 135;
-		//internal const int VK_F23 = 134;
-		//internal const int VK_F22 = 133;
-		//internal const int VK_F21 = 132;
-		//internal const int VK_F20 = 131;
-		//internal const int VK_F2 = 113;
-		//internal const int VK_F19 = 130;
-		//internal const int VK_F18 = 129;
-		//internal const int VK_F17 = 128;
-		//internal const int VK_F16 = 127;
-		//internal const int VK_F15 = 126;
-		//internal const int VK_F14 = 125;
-		//internal const int VK_F13 = 124;
-		//internal const int VK_F12 = 123;
-		//internal const int VK_F11 = 122;
-		//internal const int VK_F10 = 121;
-		//internal const int VK_F1 = 112;
-		//internal const int VK_EXSEL = 248;
-		//internal const int VK_EXECUTE = 43;
-		//internal const int VK_ESCAPE = 27;
-		//internal const int VK_EREOF = 249;
-		//internal const int VK_END = 35;
-		//internal const int VK_DOWN = 40;
-		//internal const int VK_DIVIDE = 111;
-		//internal const int VK_DELETE = 46;
-		//internal const int VK_DECIMAL = 110;
-		//internal const int VK_CRSEL = 247;
-		//internal const int VK_CONVERT = 28;
-		//internal const int VK_CONTROL = 17;
-		//internal const int VK_CLEAR = 12;
-		//internal const int VK_CAPITAL = 20;
-		//internal const int VK_CANCEL = 3;
-		//internal const int VK_BROWSER_STOP = 169;
-		//internal const int VK_BROWSER_SEARCH = 170;
-		//internal const int VK_BROWSER_REFRESH = 168;
-		//internal const int VK_BROWSER_HOME = 172;
-		//internal const int VK_BROWSER_FORWARD = 167;
-		//internal const int VK_BROWSER_FAVORITES = 171;
-		//internal const int VK_BROWSER_BACK = 166;
-		//internal const int VK_BACK = 8;
-		//internal const int VK_ATTN = 246;
-		//internal const int VK_APPS = 93;
-		//internal const int VK_ADD = 107;
-		//internal const int VK_ACCEPT = 30;
-
-		#endregion
-
 		#region HT (hit-test)
 
 		internal const int HTVSCROLL = 7;
@@ -588,27 +422,6 @@ namespace Au.Types
 
 		#endregion
 
-		#region IDC_
-
-		internal const int IDC_ARROW = 32512;
-		internal const int IDC_IBEAM = 32513;
-		internal const int IDC_WAIT = 32514;
-		internal const int IDC_CROSS = 32515;
-		internal const int IDC_UPARROW = 32516;
-		internal const int IDC_SIZE = 32640;
-		internal const int IDC_ICON = 32641;
-		internal const int IDC_SIZENWSE = 32642;
-		internal const int IDC_SIZENESW = 32643;
-		internal const int IDC_SIZEWE = 32644;
-		internal const int IDC_SIZENS = 32645;
-		internal const int IDC_SIZEALL = 32646;
-		internal const int IDC_NO = 32648;
-		internal const int IDC_HAND = 32649;
-		internal const int IDC_APPSTARTING = 32650;
-		internal const int IDC_HELP = 32651;
-
-		#endregion
-
 		#region IDI_
 
 		internal const int IDI_APPLICATION = 32512;
@@ -638,12 +451,12 @@ namespace Au.Types
 
 		#region WAIT_
 
-		internal const uint WAIT_FAILED = 0xFFFFFFFF;
+		internal const int WAIT_FAILED = -1;
+		internal const int WAIT_OBJECT_0 = 0x0;
+		internal const int WAIT_ABANDONED = 0x80;
+		internal const int WAIT_ABANDONED_0 = 0x80;
+		internal const int WAIT_IO_COMPLETION = 0xC0;
 		internal const int WAIT_TIMEOUT = 0x102;
-		internal const uint WAIT_OBJECT_0 = 0x0;
-		internal const uint WAIT_ABANDONED = 0x80;
-		internal const uint WAIT_ABANDONED_0 = 0x80;
-		internal const uint WAIT_IO_COMPLETION = 0xC0;
 
 		#endregion
 

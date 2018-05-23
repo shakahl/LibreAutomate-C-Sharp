@@ -359,8 +359,8 @@ namespace Au.Controls
 			//Print(test, EImageUtil.ImageToString(test));
 
 			switch(imType) {
-			case ImageUtil.ImageType.EmbeddedCompressedBmp: i += 2; break; //~:
-			case ImageUtil.ImageType.EmbeddedPngGifJpg: i += 6; break; //image:
+			case ImageUtil.ImageType.Base64CompressedBmp: i += 2; break; //~:
+			case ImageUtil.ImageType.Base64PngGifJpg: i += 6; break; //image:
 			case ImageUtil.ImageType.Resource: i += 9; break; //resource:
 			}
 
@@ -369,7 +369,7 @@ namespace Au.Controls
 			//load
 			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
 			if(b == null) goto g1;
-			if(!ImageUtil.GetBitmapFileInfo(b, out var q)) goto g1;
+			if(!ImageUtil.LibGetBitmapFileInfo(b, out var q)) goto g1;
 
 			//create _Image
 			im = new _Image() {
@@ -442,7 +442,7 @@ namespace Au.Controls
 					hasImages = true;
 
 					//draw image
-					if(!ImageUtil.GetBitmapFileInfo(u.data, out var q)) { Debug.Assert(false); continue; }
+					if(!ImageUtil.LibGetBitmapFileInfo(u.data, out var q)) { Debug.Assert(false); continue; }
 					int isFirstLine = (c.annotLine == 0) ? 1 : 0, hLine = r.bottom - r.top;
 					int currentTop = c.annotLine * hLine, currentBottom = currentTop + hLine, imageBottom = q.height + IMAGE_MARGIN_TOP;
 					int y = r.top + isFirstLine * IMAGE_MARGIN_TOP, yy = Math.Min(currentBottom, imageBottom) - currentTop;

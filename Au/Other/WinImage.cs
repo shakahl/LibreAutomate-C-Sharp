@@ -173,11 +173,13 @@ namespace Au
 		{
 			Bitmap R = null;
 			object o = null;
-			if(file.StartsWith_("image:") || file.StartsWith_("~:")) { //image embedded in script as string
-				int n = file.Length * 4 / 3;
-				var b = new byte[n];
+			if(file.StartsWith_("image:") || file.StartsWith_("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
 				bool compressed = file[0] == '~';
-				fixed (byte* p = b) n = Convert_.Base64Decode(file, p, n, compressed ? 2 : 6);
+				int start = compressed ? 2 : 6, len = file.Length - start, n = (int)(len * 3L / 4);
+				var b = new byte[n];
+				fixed (byte* pb = b) {
+					fixed (char* ps = file) n = Convert_.Base64Decode(ps + start, len, pb, n);
+				}
 				using(var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false)) {
 					if(compressed) Convert_.Decompress(stream, b, 0, n);
 					R = new Bitmap(stream);
@@ -239,7 +241,7 @@ namespace Au
 			MatchIndex = 0;
 		}
 
-		//Called by two WinImage extension methods in Mouse class.
+		//Called by extension methods.
 		internal void LibMouseAction(MButton button, Coord x, Coord y)
 		{
 			if(_area.Type == WIArea.AType.Bitmap) throw new InvalidOperationException();
@@ -307,7 +309,7 @@ namespace Au
 		/// <remarks>
 		/// If <paramref name="image"/> is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) WinImage.Find(w, b);</c>.
 		/// 
-		/// <paramref name="image"/> can be string containing Base-64 encoded .png image file data with prefix "image:" or compressed .bmp file data with prefix "~:". Created by Au.Controls.ImageUtil.ImageToString.
+		/// <paramref name="image"/> can be string containing Base64-encoded .png image file data with prefix "image:" or compressed .bmp file data with prefix "~:". Created by Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
 		/// 
 		/// Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
 		/// 
@@ -335,7 +337,7 @@ namespace Au
 			}
 		}
 
-		//TODO: public Finder, like Wnd and Acc.
+		//FUTURE: public Finder, like Wnd and Acc.
 		//FUTURE: test OpenCV - an open source library for computer vision.
 
 		internal enum _Action { Find, Wait, WaitNot, WaitChanged }
@@ -346,7 +348,7 @@ namespace Au
 		/// On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
+		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
 		/// </param>
 		/// <param name="area"></param>
 		/// <param name="image"></param>
@@ -354,6 +356,8 @@ namespace Au
 		/// <param name="colorDiff"></param>
 		/// <param name="also"></param>
 		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="Find"/>.
 		/// </remarks>
@@ -369,14 +373,15 @@ namespace Au
 		/// Waits until image(s) or color(s) is NOT displayed in window or other area.
 		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
-		/// </param>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="area"></param>
 		/// <param name="image"></param>
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
 		/// <param name="also"></param>
+		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="Find"/>.
 		/// </remarks>
@@ -389,12 +394,13 @@ namespace Au
 		/// Waits until something visually changes in window or other area.
 		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
-		/// </param>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="area"></param>
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
+		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// Parameters and other info is the same as with <see cref="WaitNot"/> and <see cref="Find"/>. Instead of <i>image</i> parameter, this function captures the area image at the beginning.
 		/// </remarks>
@@ -406,7 +412,7 @@ namespace Au
 		static (bool ok, WinImage result) _Wait(_Action action, double secondsTimeout, WIArea area, object image, WIFlags flags, int colorDiff, Func<WinImage, bool> also)
 		{
 			using(var f = new _Finder(action, area, image, flags, colorDiff, also)) {
-				var ok = WaitFor.Condition(secondsTimeout, o => (o as _Finder).Find_ApplyNot(), f, 50, 1000);
+				bool ok = WaitFor.Condition(secondsTimeout, () => f.Find() ^ (action > _Action.Wait));
 				return (ok, f.Result);
 			}
 		}
@@ -535,7 +541,7 @@ namespace Au
 				case WIArea.AType.Acc:
 					if(_area.A == null) throw new ArgumentNullException(nameof(area));
 					_area.W = _area.A.WndContainer;
-					break;
+					goto case WIArea.AType.Wnd;
 				case WIArea.AType.Bitmap:
 					badFlags = WIFlags.WindowDC;
 					if(action != _Action.Find) throw new ArgumentException(); //there is no sense to wait for some changes in Bitmap
@@ -599,17 +605,17 @@ namespace Au
 
 				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
 				bool allMustExist = 0 != (_flags & WIFlags.AllMustExist);
+				bool failedGetRect = false;
 
 				//Get area rectangle.
 				RECT r;
 				_resultOffset = default;
 				switch(_area.Type) {
 				case WIArea.AType.Wnd:
-					r = windowDC ? _area.W.ClientRect : _area.W.ClientRectInScreen;
-					//TODO: if failed, probably the window is destroyed, then throw
+					failedGetRect = !_area.W.GetClientRect(out r, !windowDC);
 					break;
 				case WIArea.AType.Acc:
-					if(!(windowDC ? _area.A.GetRect(out r, _area.W) : _area.A.GetRect(out r))) throw new AuException("*get rectangle");
+					failedGetRect = !(windowDC ? _area.A.GetRect(out r, _area.W) : _area.A.GetRect(out r));
 					break;
 				case WIArea.AType.Bitmap:
 					r = new RECT(0, 0, _area.B.Width, _area.B.Height, false);
@@ -620,6 +626,10 @@ namespace Au
 					_area.HasRect = false;
 					_resultOffset.X = r.left; _resultOffset.Y = r.top;
 					break;
+				}
+				if(failedGetRect) {
+					_area.W.ThrowIfInvalid();
+					throw new AuException("*get rectangle");
 				}
 				//FUTURE: DPI
 
@@ -641,7 +651,8 @@ namespace Au
 					//	Never mind: should also adjust control rectangle in ancestors in the same way.
 					//		This is not so important because usually whole control is visible (resized, not clipped).
 					int x = r.left, y = r.top;
-					r.Intersect(windowDC ? _area.W.ClientRect : _area.W.ClientRectInScreen);
+					_area.W.GetClientRect(out var rw, !windowDC);
+					r.Intersect(rw);
 					x -= r.left; y -= r.top;
 					_resultOffset.X -= x; _resultOffset.Y -= y;
 				}
@@ -1008,7 +1019,7 @@ namespace Au
 				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
 				Wnd w = windowDC ? _area.W : default;
 				using(var dc = new Util.LibWindowDC(w)) { //quite fast, when compared with other parts
-					if(dc.Is0 && windowDC) _area.W.ThrowNoNative("Failed");
+					if(dc.Is0 && windowDC) w.ThrowNoNative("Failed");
 					//_Debug("get DC");
 					//copy from screen/window DC to memory bitmap
 					uint rop = windowDC ? 0xCC0020u : 0xCC0020u | 0x40000000u; //SRCCOPY|CAPTUREBLT
@@ -1044,11 +1055,6 @@ namespace Au
 				//	areaBmp.Save(testFile);
 				//}
 				//Shell.Run(testFile);
-			}
-
-			internal bool Find_ApplyNot()
-			{
-				return Find() ^ (_action > _Action.Wait);
 			}
 		}
 

@@ -322,7 +322,6 @@ namespace Au
 				if(flags.Has_(AXYFlags.NoThrow)) return null;
 				_WndThrow(hr, Wnd.FromXY(p.X, p.Y, WXYFlags.Raw), "*get accessible object from point.");
 			}
-			//TODO: maybe don't retry
 		}
 
 		/// <summary>
@@ -376,7 +375,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn>.
+		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="Util.AccHook"/>.
 		/// Returns null if failed. Suports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <param name="w"></param>
@@ -386,7 +385,7 @@ namespace Au
 		/// The parameters are of the callback function.
 		/// Uses API <msdn>AccessibleObjectFromEvent</msdn>.
 		/// Often fails because the object already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
-		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in a callback function used with API <msdn>SetWinEventHook</msdn> kills this process.
+		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in the callback function kills this process.
 		/// </remarks>
 		public static Acc FromEvent(Wnd w, int idObject, int idChild)
 		{

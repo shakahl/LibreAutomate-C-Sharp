@@ -184,17 +184,16 @@ namespace LineBreaks
 		{
 			var doc = members.OwnerDocument;
 
-			//line breaks
 			foreach(XmlNode n in members.SelectNodes("member//text()")) { //info: could be "member/*//text()", but this allows to catch text outside <summary> etc, which is incorrect.
 				var p = n.ParentNode;
 				if(p.NodeType != XmlNodeType.Element) continue; //none
 
 				var tag = p.Name;
 				//don't process text in these tags
-				switch(tag) { case "code": case "c": case "see": case "seealso": case "a": case "conceptualLink": case "para": case "b": case "i": case "term": case "msdn": continue; }
+				switch(tag) { case "code": case "c": case "see": case "seealso": case "a": case "conceptualLink": case "para": case "b": case "i": case "term": case "inheritdoc": case "msdn": continue; }
 				//show new tags, maybe need to exclude too (add to the above switch)
 				switch(tag) {
-				case "summary": case "remarks": case "param": case "typeparam": case "value": case "exception": case "example": case "note": case "item": case "description": break;
+				case "summary": case "remarks": case "param": case "typeparam": case "value": case "returns": case "exception": case "example": case "note": case "item": case "description": break;
 				//default: Print(tag); break;
 				default: Print(p.OuterXml); break;
 				}
@@ -242,7 +241,7 @@ namespace LineBreaks
 			var t = n.Name;
 			switch(t) {
 			case "code": case "list": case "note": case "para": case "h2": case "h3": case "h4": case "hr": case "ol": case "ul": case "table": case "p": return true;
-			case "c": case "see": case "paramref": case "typeparamref": case "conceptualLink": case "a": case "b": case "i": case "div": case "span": case "img": break;
+			case "c": case "see": case "paramref": case "typeparamref": case "conceptualLink": case "a": case "b": case "i": case "div": case "span": case "img": case "inheritdoc": break;
 			default: PrintNode(s, parent); break; //detect misc small bugs in XML doc
 			}
 			return false;

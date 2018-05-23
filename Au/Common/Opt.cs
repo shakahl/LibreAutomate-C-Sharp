@@ -92,6 +92,16 @@ namespace Au
 		[ThreadStatic] static OptDebug t_debug;
 
 		/// <summary>
+		/// Options for 'wait for' functions.
+		/// </summary>
+		/// <remarks>
+		/// Each thread has its own <b>Opt.WaitFor</b> instance. There is no <b>Opt.Static.WaitFor</b>.
+		/// Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
+		/// </remarks>
+		public static OptWaitFor WaitFor => t_waitFor ?? (t_waitFor = new OptWaitFor());
+		[ThreadStatic] static OptWaitFor t_waitFor;
+
+		/// <summary>
 		/// Default <see cref="Opt"/> properties of each thread.
 		/// </summary>
 		/// <remarks>
@@ -755,4 +765,49 @@ namespace Au.Types
 		//rejected: WmPaste. Few windows support it.
 	}
 
+	/// <summary>
+	/// Options for 'wait for' functions.
+	/// </summary>
+	/// <seealso cref="Opt.WaitFor"/>
+	/// <seealso cref="WaitFor.Condition"/>
+	/// <seealso cref="WaitFor.Loop"/>
+	public class OptWaitFor
+	{
+		/// <summary>
+		/// The sleep time between checking the wait condition. Milliseconds.
+		/// Default: 10. Valid values: 1-1000.
+		/// </summary>
+		/// <remarks>
+		/// Most 'wait for' functions of this library use <see cref="WaitFor.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
+		/// This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
+		/// </remarks>
+		/// <seealso cref="WaitFor.Loop.Period"/>
+		public int Period { get => _period; set => _period = Math_.MinMax(value, 1, 1000); }
+		int _period;
+
+		/// <summary>
+		/// Use <see cref="Time.SleepDoEvents"/> instead of <see cref="Time.Sleep"/>.
+		/// Default: false.
+		/// </summary>
+		/// <remarks>
+		/// Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="Time.SleepDoEvents"/>.
+		/// </remarks>
+		public bool DoEvents { get; set; }
+
+		///
+		public OptWaitFor(int period = 10, bool doEvents = false)
+		{
+			Period = period; DoEvents = doEvents;
+		}
+
+		/// <summary>
+		/// Implicit conversion from int. Sets <see cref="Period"/>.
+		/// </summary>
+		public static implicit operator OptWaitFor(int period) => new OptWaitFor(period, false);
+
+		/// <summary>
+		/// Implicit conversion from bool. Sets <see cref="DoEvents"/>.
+		/// </summary>
+		public static implicit operator OptWaitFor(bool doEvents) => new OptWaitFor(10, doEvents);
+	}
 }

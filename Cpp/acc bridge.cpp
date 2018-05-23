@@ -105,7 +105,7 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 	//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
 	//	Other workarounds:
 	//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
-	//		Not tested: wrap the AO in our AO (like we do with Java and UIA). Has no sense, just would make slower.
+	//		Not tested: wrap the AO in our AO (like we do with Java and UIA). Makes no sense, just would make slower.
 	IMarshal* m = null;
 	if(0 == a.acc->QueryInterface(&m)) {
 		m->Release();

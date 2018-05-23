@@ -32,46 +32,42 @@ namespace Au
 	public static unsafe partial class String_
 	{
 		/// <summary>
-		/// Calls <see cref="String.Equals(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
+		/// Compares this and other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
 		public static bool Equals_(this string t, string value, bool ignoreCase = false)
 		{
-			return ignoreCase ? _EqualsI2(t, value) : t.Equals(value);
+			if((object)t == null) throw new NullReferenceException();
+			if((object)value == null || t.Length != value.Length) return false;
+			//if(ReferenceEquals(t, value)) return true;
+			fixed (char* a = t, b = value) return _Equals(a, b, t.Length, ignoreCase);
 		}
 
-		static bool _EqualsI2(string t, string s)
+		static bool _Equals(char* a, char* b, int len, bool ignoreCase)
 		{
-			if(t == null) throw new NullReferenceException();
-			if(s == null || t.Length != s.Length) return false;
-			fixed (char* a = t, b = s) return _EqualsI(a, b, t.Length);
-			//fixed (char* a = t, b = s) return 0 != Cpp.Cpp_StringEqualsI(a, b, t.Length); //faster with long strings, but much slower with short
-		}
+			//never mind: in 32-bit process this is not the fastest code (too few registers).
+			//tested: strings don't have to be aligned at 4 or 8.
+			//ignoreCase optimization: at first compare case-sensitive, as much as possible.
+			while(len >= 12) {
+				if(*(long*)a != *(long*)b) break;
+				if(*(long*)(a + 4) != *(long*)(b + 4)) break;
+				if(*(long*)(a + 8) != *(long*)(b + 8)) break;
+				a += 12; b += 12; len -= 12;
+			}
 
-		static bool _EqualsI(char* a, char* b, int len)
-		{
-			if(len != 0) {
-				//optimization: at first compare case-sensitive, as much as possible.
-				//	never mind: in 32-bit process this is not the fastest code (too few registers). But makes much faster anyway.
-				//	tested: strings don't have to be aligned at 4 or 8.
-				while(len >= 12) {
-					if(*(long*)a != *(long*)b) break;
-					if(*(long*)(a + 4) != *(long*)(b + 4)) break;
-					if(*(long*)(a + 8) != *(long*)(b + 8)) break;
-					a += 12; b += 12; len -= 12;
-				}
-
+			if(ignoreCase) {
 				var table = Util.LibTables.LowerCase;
 
 				for(int i = 0; i < len; i++) {
 					int c1 = a[i], c2 = b[i];
 					if(c1 != c2 && table[c1] != table[c2]) goto gFalse;
 				}
+			} else {
+				for(int i = 0; i < len; i++) {
+					if(a[i] != b[i]) goto gFalse;
+				}
 			}
-			//throw new Exception(); //used to debug, because breakpoints somehow don't work here
 			return true;
 			gFalse: return false;
-
-			//TODO: use this in all functions, especially where now uses String.Compare, it is slow.
 		}
 
 		/// <summary>
@@ -85,17 +81,59 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.EndsWith(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
+		/// Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
+		public static bool EqualsAt_(this string t, int startIndex, string value, bool ignoreCase = false)
+		{
+			_ThrowIfNull(t, value);
+			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException();
+			int n = value.Length;
+			if(n > t.Length - startIndex) return false;
+			fixed (char* a = t, b = value) return _Equals(a + startIndex, b, n, ignoreCase);
+		}
+
+		/// <summary>
+		/// Calls <see cref="EqualsAt_(string, int, string, bool)"/> for each string specified in the argument list until it returns true.
+		/// Returns 1-based index of matching string, or 0 if none.
+		/// </summary>
+		/// <exception cref="ArgumentNullException">A string in <paramref name="strings"/> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
+		public static int EqualsAt_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
+		{
+			for(int i = 0; i < strings.Length; i++) if(t.EqualsAt_(startIndex, strings[i], ignoreCase)) return i + 1;
+			return 0;
+		}
+
+		//For StringSegment.
+		internal static bool LibEqualsAt_(string s1, int i1, string s2, int i2, int len, bool ignoreCase)
+		{
+			fixed (char* a = s1, b = s2) return _Equals(a + i1, b + i2, len, ignoreCase);
+		}
+
+		static void _ThrowIfNull(string t, string value)
+		{
+			if((object)t == null) throw new NullReferenceException();
+			if((object)value == null) throw new ArgumentNullException();
+		}
+
+		/// <summary>
+		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
+		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		public static bool EndsWith_(this string t, string value, bool ignoreCase = false)
 		{
-			return t.EndsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			_ThrowIfNull(t, value);
+			int n = value.Length; if(n > t.Length) return false;
+			fixed (char* a = t, b = value) return _Equals(a + t.Length - n, b, n, ignoreCase);
 		}
 
 		/// <summary>
 		/// Calls <see cref="EndsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
+		/// <exception cref="ArgumentNullException">A string in <paramref name="strings"/> is null.</exception>
 		public static int EndsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.EndsWith_(strings[i], ignoreCase)) return i + 1;
@@ -103,7 +141,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if ends with the specified character.
+		/// Returns true if this string ends with the specified character.
 		/// Fast, case-sensitive.
 		/// </summary>
 		public static bool EndsWith_(this string t, char value)
@@ -113,17 +151,21 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.StartsWith(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
+		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		public static bool StartsWith_(this string t, string value, bool ignoreCase = false)
 		{
-			return t.StartsWith(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			_ThrowIfNull(t, value);
+			int n = value.Length; if(n > t.Length) return false;
+			fixed (char* a = t, b = value) return _Equals(a, b, n, ignoreCase);
 		}
 
 		/// <summary>
 		/// Calls <see cref="StartsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
+		/// <exception cref="ArgumentNullException">A string in <paramref name="strings"/> is null.</exception>
 		public static int StartsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.StartsWith_(strings[i], ignoreCase)) return i + 1;
@@ -131,7 +173,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if starts with the specified character.
+		/// Returns true if this string starts with the specified character.
 		/// Fast, case-sensitive.
 		/// </summary>
 		public static bool StartsWith_(this string t, char value)
@@ -140,123 +182,44 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares part of this string with another string and returns true if matches.
-		/// Calls <see cref="string.Compare(string, int, string, int, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
+		/// Calls <see cref="String.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		public static bool EqualsAt_(this string t, int startIndex, string value, bool ignoreCase = false)
-		{
-			return 0 == string.Compare(t, startIndex, value, 0, value.Length, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-			//tested: with Ordinal 60% slower than Equals. Slightly faster than CompareOrdinal.
-		}
-
-		/// <summary>
-		/// Calls <see cref="EqualsAt_(string, int, string, bool)"/> for each string specified in the argument list until it returns true.
-		/// Returns 1-based index of matching string, or 0 if none.
-		/// </summary>
-		public static int EqualsAt_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
-		{
-			for(int i = 0; i < strings.Length; i++) if(t.EqualsAt_(startIndex, strings[i], ignoreCase)) return i + 1;
-			return 0;
-		}
-
-		/// <summary>
-		/// Calls <see cref="String.IndexOf(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
-		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		public static int IndexOf_(this string t, string value, bool ignoreCase = false)
 		{
 			return t.IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
+
 		/// <summary>
-		/// Calls <see cref="String.IndexOf(string, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
+		/// Calls <see cref="String.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
 		public static int IndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
 		{
 			return t.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
+
 		/// <summary>
-		/// Calls <see cref="String.IndexOf(string, int, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
+		/// Calls <see cref="String.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
 		public static int IndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
-		/// <summary>
-		/// Returns <c>IndexOfAny(anyOf.ToCharArray())</c>.
-		/// </summary>
-		public static int IndexOfAny_(this string t, string anyOf)
-		{
-			return t.IndexOfAny(anyOf.ToCharArray());
-		}
-		/// <summary>
-		/// Returns <c>IndexOfAny(anyOf.ToCharArray(), startIndex)</c>.
-		/// </summary>
-		public static int IndexOfAny_(this string t, string anyOf, int startIndex)
-		{
-			return t.IndexOfAny(anyOf.ToCharArray(), startIndex);
-		}
-		/// <summary>
-		/// Returns <c>IndexOfAny(anyOf.ToCharArray(), startIndex, count)</c>.
-		/// </summary>
-		public static int IndexOfAny_(this string t, string anyOf, int startIndex, int count)
-		{
-			return t.IndexOfAny(anyOf.ToCharArray(), startIndex, count);
-			//FUTURE: create own code. Now ToCharArray is slow and generates garbage.
-		}
+		//rejected: LastIndexOf_. Rarely used.
+		//rejected: IndexOfAny_, LastIndexOfAny_ and Trim_ that would use string instead of char[]. Not so often used. For speed/garbage it's better to use static char[].
 
 		/// <summary>
-		/// Calls <see cref="String.LastIndexOf(string, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
-		/// </summary>
-		public static int LastIndexOf_(this string t, string value, bool ignoreCase = false)
-		{
-			return t.LastIndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-		}
-		/// <summary>
-		/// Calls <see cref="String.LastIndexOf(string, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
-		/// </summary>
-		public static int LastIndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
-		{
-			return t.LastIndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-		}
-		/// <summary>
-		/// Calls <see cref="String.LastIndexOf(string, int, int, StringComparison)"/> with StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase.
-		/// </summary>
-		public static int LastIndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
-		{
-			return t.LastIndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-		}
-
-		//rejected: rarely used. If need, can use "any".ToCharArray().
-		///// <summary>
-		///// Returns LastIndexOfAny(anyOf.ToCharArray()).
-		///// </summary>
-		//public static int LastIndexOfAny_(this string t, string anyOf)
-		//{
-		//	return t.LastIndexOfAny(anyOf.ToCharArray());
-		//}
-		///// <summary>
-		///// Returns LastIndexOfAny(anyOf.ToCharArray(), startIndex).
-		///// </summary>
-		//public static int LastIndexOfAny_(this string t, string anyOf, int startIndex)
-		//{
-		//	return t.LastIndexOfAny(anyOf.ToCharArray(), startIndex);
-		//}
-		///// <summary>
-		///// Returns LastIndexOfAny(anyOf.ToCharArray(), startIndex, count).
-		///// </summary>
-		//public static int LastIndexOfAny_(this string t, string anyOf, int startIndex, int count)
-		//{
-		//	return t.LastIndexOfAny(anyOf.ToCharArray(), startIndex, count);
-		//}
-
-		/// <summary>
-		/// Returns <see cref="String.Length"/>. If this is null, returns 0.
+		/// Returns <see cref="String.Length"/>. If this string is null, returns 0.
 		/// </summary>
 		public static int Length_(this string t) => t?.Length ?? 0;
 
 		/// <summary>
 		/// Splits this string into substrings using the specified separators.
-		/// Returns string[].
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
@@ -272,7 +235,6 @@ namespace Au
 
 		/// <summary>
 		/// Splits this string into substrings using the specified separators.
-		/// Returns string[].
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
@@ -287,7 +249,6 @@ namespace Au
 
 		/// <summary>
 		/// Splits this string into lines using separators "\r\n", "\n", "\r".
-		/// Returns string[].
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="noEmptyLines">Don't get empty lines.</param>
@@ -339,31 +300,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns <c>Trim(trimChars.ToCharArray())</c>.
-		/// </summary>
-		public static string Trim_(this string t, string trimChars)
-		{
-			return t.Trim(trimChars.ToCharArray());
-		}
-
-		/// <summary>
-		/// Returns <c>TrimEnd(trimChars.ToCharArray())</c>.
-		/// </summary>
-		public static string TrimEnd_(this string t, string trimChars)
-		{
-			return t.TrimEnd(trimChars.ToCharArray());
-		}
-
-		/// <summary>
-		/// Returns <c>TrimStart(trimChars.ToCharArray())</c>.
-		/// </summary>
-		public static string TrimStart_(this string t, string trimChars)
-		{
-			return t.TrimStart(trimChars.ToCharArray());
-			//FUTURE: create own code. Now ToCharArray is slow and generates garbage.
-		}
-
-		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value, or 0 if fails to convert.
 		/// </summary>
@@ -389,26 +325,23 @@ namespace Au
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
-		public static int ToInt32_(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
+		public static int ToInt_(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 		{
 			return (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		}
-		//TODO: make all bool:
-		//	public static bool ToInt_(this string t, out int result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
-		//	public static bool ToInt_(this string t, out long result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 
 		/// <summary>
-		/// This <see cref="ToInt32_(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
+		/// This <see cref="ToInt_(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static int ToInt32_(this string t, int startIndex, STIFlags flags = 0)
+		public static int ToInt_(this string t, int startIndex, STIFlags flags = 0)
 		{
 			return (int)_ToInt(t, startIndex, out _, false, flags);
 		}
 
 		/// <summary>
-		/// This <see cref="ToInt32_(string, int, out int, STIFlags)"/> overload does not have parameters.
+		/// This <see cref="ToInt_(string, int, out int, STIFlags)"/> overload does not have parameters.
 		/// </summary>
-		public static int ToInt32_(this string t)
+		public static int ToInt_(this string t)
 		{
 			return (int)_ToInt(t, 0, out _, false, 0);
 		}
@@ -439,23 +372,23 @@ namespace Au
 		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
-		public static long ToInt64_(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
+		public static long ToLong_(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 		{
 			return _ToInt(t, startIndex, out numberEndIndex, true, flags);
 		}
 
 		/// <summary>
-		/// This <see cref="ToInt64_(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
+		/// This <see cref="ToLong_(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
 		/// </summary>
-		public static long ToInt64_(this string t, int startIndex, STIFlags flags = 0)
+		public static long ToLong_(this string t, int startIndex, STIFlags flags = 0)
 		{
 			return _ToInt(t, startIndex, out _, true, flags);
 		}
 
 		/// <summary>
-		/// This <see cref="ToInt64_(string, int, out int, STIFlags)"/> overload does not have parameters.
+		/// This <see cref="ToLong_(string, int, out int, STIFlags)"/> overload does not have parameters.
 		/// </summary>
-		public static long ToInt64_(this string t)
+		public static long ToLong_(this string t)
 		{
 			return _ToInt(t, 0, out _, true, 0);
 		}
@@ -548,7 +481,7 @@ namespace Au
 		/// <summary>
 		/// If this string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
 		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-		/// Everything else is the same as with <see cref="ToInt32_(string, int, out int, STIFlags)"/>.
+		/// Everything else is the same as with <see cref="ToInt_(string, int, out int, STIFlags)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="num">Receives the number. Receives 0 if no number.</param>
@@ -557,7 +490,7 @@ namespace Au
 		/// <param name="flags"></param>
 		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0, STIFlags flags = 0)
 		{
-			num = ToInt32_(t, startIndex, out int end, flags);
+			num = ToInt_(t, startIndex, out int end, flags);
 			if(end == 0) {
 				tail = null;
 				return false;
@@ -594,7 +527,7 @@ namespace Au
 		/// <summary>
 		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">startIndex or startIndex+count is outside of this string bounds.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
 		public static string ReplaceAt_(this string t, int startIndex, int count, string value)
 		{
 			return t.Remove(startIndex, count).Insert(startIndex, value);
@@ -676,7 +609,7 @@ namespace Au
 				return b.ToString();
 			}
 		}
-		//TODO: Unescape
+		//FUTURE: Unescape()
 
 		/// <summary>
 		/// Returns true if this string is "" or contains only ASCII characters.
@@ -688,8 +621,20 @@ namespace Au
 			}
 			return true;
 		}
-	}
 
+		internal static class Lib
+		{
+			/// <summary>{ '\r', '\n' }</summary>
+			internal static char[] lineSep = new char[] { '\r', '\n' };
+
+			/// <summary>{ '\\', '/' }</summary>
+			internal static char[] pathSep = new char[] { '\\', '/' };
+
+			///// <summary>{ '*', '?' }</summary>
+			//internal static char[] wildcard = new char[] { '*', '?' };
+
+		}
+	}
 }
 
 namespace Au.Types

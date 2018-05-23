@@ -28,6 +28,20 @@ namespace Au
 	/// <remarks>
 	/// Creates a temporary partially transparent window, and draws rectangle in it.
 	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// using(var x = new OnScreenRect()) {
+	/// 	x.Rect = new RECT(100, 100, 200, 200, true);
+	/// 	x.Color = Color.SlateBlue;
+	/// 	x.Thickness = 4;
+	/// 	x.Show(true);
+	/// 	for(int i = 0; i < 6; i++) {
+	/// 		300.ms();
+	/// 		x.Visible = !x.Visible;
+	/// 	}
+	/// }
+	/// ]]></code>
+	/// </example>
 	public class OnScreenRect :IDisposable
 	{
 		static OnScreenRect()

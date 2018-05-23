@@ -59,7 +59,7 @@ namespace Au.Tools
 			_acc = acc; //will be processed in OnLoad
 		}
 
-		//todo: remove this test code.
+		//_TODO: remove this test code.
 
 		//protected override void OnPaint(PaintEventArgs e)
 		//{
@@ -308,7 +308,7 @@ namespace Au.Tools
 				}
 
 				g1:
-				_capturing = Api.RegisterHotKey((Wnd)this, 1, 0, (Keys)(_CapturingKey + (int)Keys.F1 - 1));
+				_capturing = Api.RegisterHotKey((Wnd)this, 1, 0, _CapturingKey + (int)KKey.F1 - 1);
 				if(!_capturing) {
 					if(_CapturingKeyDialog()) goto g1;
 					_cCapture.Checked = false;
@@ -1161,7 +1161,7 @@ namespace Au.Tools
 2. Click the Test button. It finds and shows the AO and the search time.
 3. If need, check/uncheck/edit some fields or select another AO, Test.
 4. Click OK, it inserts C# code in the editor. Or Copy to the clipboard.
-5. In the editor, after this code add code to use the AO. <help T_Au_Acc>Examples<>. If need, rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.
+5. In the editor, add code to use the AO. <help T_Au_Acc>Examples<>. If need, rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.
 
 How to find AOs that don't have a name or other property with unique constant value? Capture another AO near it, and use <b>navig<> to get it. Or try <b>skip<>.";
 		const string c_infoRole = @"Role. Or path, like ROLE1/ROLE2/ROLE3. Prefix <b>web:<>, <b>firefox:<> or <b>chrome:<> means 'in web page'. Path is relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc). Read more in <help M_Au_Acc_Find>Acc.Find<> help.";
@@ -1219,7 +1219,7 @@ Example: LIST,TREE,TASKBAR,SCROLLBAR";
 			/// Calls <see cref="EnableDisableJab"/>(null) and shows results in task dialog.
 			/// </summary>
 			/// <param name="owner"></param>
-			public static void EnableDisableJabUI(DOwner owner)
+			public static void EnableDisableJabUI(AnyWnd owner)
 			{
 				var (ok, results) = EnableDisableJab(null);
 				if(results != null) AuDialog.Show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.OwnerCenter);

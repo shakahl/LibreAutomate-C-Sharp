@@ -225,21 +225,15 @@
             The host AuScintilla.
             </summary>
         </member>
+        <member name="M:Au.Controls.SciText.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Sends a Scintilla message to the control and returns LPARAM.
+            Don't call this function from another thread.
+            </summary>
+        </member>
         <member name="M:Au.Controls.SciText.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
-            Calls a Scintilla message to the control.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.Call(System.Int32,Au.Types.LPARAM)">
-            <summary>
-            Calls a Scintilla message.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.Call(System.Int32)">
-            <summary>
-            Calls a Scintilla message.
+            Sends a Scintilla message to the control and returns int.
             Don't call this function from another thread.
             </summary>
         </member>
@@ -477,21 +471,15 @@
             Occurs when any Scintilla notification is received.
             </summary>
         </member>
+        <member name="M:Au.Controls.AuScintilla.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Sends a Scintilla message to the control and returns LPARAM.
+            Don't call this function from another thread.
+            </summary>
+        </member>
         <member name="M:Au.Controls.AuScintilla.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
-            Calls a Scintilla message to the control.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.AuScintilla.Call(System.Int32,Au.Types.LPARAM)">
-            <summary>
-            Calls a Scintilla message.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.AuScintilla.Call(System.Int32)">
-            <summary>
-            Calls a Scintilla message.
+            Sends a Scintilla message to the control and returns int.
             Don't call this function from another thread.
             </summary>
         </member>
@@ -1271,9 +1259,15 @@
             This class exists because .NET ScrollableControl does not work when AutoScroll is false.
             </summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.BitmapFileInfo.biHeader">
+        <member name="F:Au.Controls.ImageUtil.LibBitmapFileInfo.biHeader">
             <summary>
             Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ImageUtil.LibGetBitmapFileInfo(System.Byte[],Au.Controls.ImageUtil.LibBitmapFileInfo@)">
+            <summary>
+            Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
+            Checks if it is valid bitmap file header. Returns false if invalid.
             </summary>
         </member>
         <member name="T:Au.Controls.ImageUtil.ImageType">
@@ -1284,39 +1278,39 @@
         <member name="F:Au.Controls.ImageUtil.ImageType.None">
             <summary>The string isn't image.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.EmbeddedCompressedBmp">
-            <summary>Compressed and Base64-encoded bitmap file data with "~:" prefix. See <see cref="M:Au.Controls.ImageUtil.ImageToString(System.String)"/>.</summary>
+        <member name="F:Au.Controls.ImageUtil.ImageType.Base64CompressedBmp">
+            <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="M:Au.Controls.ImageUtil.ImageToString(System.String)"/>.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.EmbeddedPngGifJpg">
+        <member name="F:Au.Controls.ImageUtil.ImageType.Base64PngGifJpg">
             <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.Resource">
             <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.Bmp">
-            <summary>.bmp file.</summary>
+            <summary>.bmp file path.</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.PngGifJpg">
-            <summary>.png, .gif or .jpg file.</summary>
+            <summary>.png, .gif or .jpg file path.</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.Ico">
-            <summary>.ico file.</summary>
+            <summary>.ico file path.</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.Cur">
-            <summary>.cur or .ani file.</summary>
+            <summary>.cur or .ani file path.</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.IconLib">
             <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.ShellIcon">
-            <summary>None of other image types, when anyFile is true.</summary>
+            <summary>None of other image types, when <i>anyFile</i> is true.</summary>
         </member>
         <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Byte*,System.Int32)">
             <summary>
             Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-            <param name="s"></param>
+            <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
             <param name="length">If -1, calls LibCharPtr.Length(s).</param>
         </member>
         <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)">
@@ -1324,20 +1318,20 @@
             Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-            <param name="s"></param>
+            <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
         </member>
         <member name="M:Au.Controls.ImageUtil.BmpFileDataFromString(System.String,Au.Controls.ImageUtil.ImageType,System.Boolean)">
             <summary>
             Loads image and returns its data in .bmp file format.
             </summary>
-            <param name="s">Depends on t. File path or resource name without prefix or embedded image data without prefix.</param>
+            <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
             <param name="t">Image type and string format.</param>
             <param name="searchPath">Use <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/></param>
-            <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages.</remarks>
+            <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>.</remarks>
         </member>
         <member name="M:Au.Controls.ImageUtil.BmpFileDataToString(System.Byte[])">
             <summary>
-            Compresses in-memory .bmp file data (<see cref="M:Au.Convert_.Compress(System.Byte[])"/>) and Base64-encodes.
+            Compresses .bmp file data (<see cref="M:Au.Convert_.Compress(System.Byte[])"/>) and Base64-encodes.
             Returns string with "~:" prefix.
             </summary>
         </member>

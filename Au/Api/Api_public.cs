@@ -109,6 +109,11 @@ namespace Au.Types
 			public LPARAM lParam;
 			public uint time;
 			public Point pt;
+
+			public override string ToString()
+			{
+				return System.Windows.Forms.Message.Create(hwnd.Handle, (int)message, wParam, lParam).ToString();
+			}
 		}
 
 		/// <summary><msdn>SHSTOCKICONID</msdn></summary>
@@ -224,6 +229,64 @@ namespace Au.Types
 			public Wnd hwndMoveSize;
 			public Wnd hwndCaret;
 			public RECT rcCaret;
+		}
+
+#pragma warning disable 649, 169 //field never assigned/used
+		/// <summary><msdn>CREATESTRUCT</msdn></summary>
+		/// <remarks>
+		/// lpszClass is unavailable, because often it is atom. Instead use <see cref="Wnd.ClassName"/>.
+		/// </remarks>
+		/// <tocexclude />
+		public struct CREATESTRUCT
+		{
+			public IntPtr lpCreateParams;
+			public IntPtr hInstance;
+			public IntPtr hMenu;
+			public Wnd hwndParent;
+			public int cy;
+			public int cx;
+			public int y;
+			public int x;
+			public uint style;
+			LPARAM _lpszName;
+			LPARAM _lpszClass;
+			public uint dwExStyle;
+
+			public unsafe string lpszName => _lpszName == default ? null : new string((char*)_lpszName);
+
+			//tested and documented: hook can change only x y cx cy.
+		}
+#pragma warning restore 649, 169
+
+		/// <summary><msdn>MOUSEHOOKSTRUCT</msdn></summary>
+		/// <tocexclude />
+		public struct MOUSEHOOKSTRUCT
+		{
+			public Point pt;
+			public Wnd hwnd;
+			public uint wHitTestCode;
+			public LPARAM dwExtraInfo;
+		}
+
+		/// <summary><msdn>CWPSTRUCT</msdn></summary>
+		/// <tocexclude />
+		public struct CWPSTRUCT
+		{
+			public LPARAM lParam;
+			public LPARAM wParam;
+			public uint message;
+			public Wnd hwnd;
+		}
+
+		/// <summary><msdn>CWPRETSTRUCT</msdn></summary>
+		/// <tocexclude />
+		public struct CWPRETSTRUCT
+		{
+			public LPARAM lResult;
+			public LPARAM lParam;
+			public LPARAM wParam;
+			public uint message;
+			public Wnd hwnd;
 		}
 
 		/// <summary><msdn>SIGDN</msdn></summary>

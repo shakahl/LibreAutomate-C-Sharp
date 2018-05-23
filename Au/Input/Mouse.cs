@@ -145,7 +145,7 @@ namespace Au
 		/// </example>
 		public static void Move(Point p)
 		{
-			LibWaitWhileButtonsPressed();
+			LibWaitForNoButtonsPressed();
 			_Move(p, fast: false);
 		}
 
@@ -166,7 +166,7 @@ namespace Au
 		/// </remarks>
 		public static Point Move(Coord x, Coord y, CoordOptions co = null)
 		{
-			LibWaitWhileButtonsPressed();
+			LibWaitForNoButtonsPressed();
 			var p = Coord.Normalize(x, y, co);
 			_Move(p, fast: false);
 			return p;
@@ -192,7 +192,7 @@ namespace Au
 		/// </remarks>
 		public static Point Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
-			LibWaitWhileButtonsPressed();
+			LibWaitForNoButtonsPressed();
 			w.ThrowIfInvalid();
 			var wTL = w.WndWindow;
 			if(!wTL.IsVisibleEx) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
@@ -221,7 +221,7 @@ namespace Au
 		public static void Restore()
 		{
 			if(t_prevMousePos == null) return;
-			LibWaitWhileButtonsPressed();
+			LibWaitForNoButtonsPressed();
 			_Move(t_prevMousePos.first, fast: true);
 		}
 
@@ -259,7 +259,7 @@ namespace Au
 		/// </remarks>
 		public static Point MoveRelative(int dx, int dy)
 		{
-			LibWaitWhileButtonsPressed();
+			LibWaitForNoButtonsPressed();
 			var p = LastMoveXY;
 			p.Offset(dx, dy);
 			_Move(p, fast: false);
@@ -270,7 +270,7 @@ namespace Au
 		/// Plays recorded mouse movements, relative to <see cref="LastMoveXY"/>.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
-		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Util.Recording.MouseToString"/>.</param>
+		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Tools.Recording.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
@@ -280,7 +280,7 @@ namespace Au
 		/// </remarks>
 		public static Point MoveRecorded(string recordedString, double speedFactor = 1.0)
 		{
-			LibWaitWhileButtonsPressed();
+			LibWaitForNoButtonsPressed();
 
 			var a = Convert_.Base64Decode(recordedString);
 
@@ -323,12 +323,12 @@ namespace Au
 		}
 	}
 
-	namespace Util
+	namespace Tools
 	{
 		/// <summary>
 		/// Functions for keyboard/mouse/etc recorder tools.
 		/// </summary>
-		public static class Recording
+		public static partial class Recording
 		{
 			/// <summary>
 			/// Converts multiple recorded mouse movements to string for <see cref="Mouse.MoveRecorded(string, double)"/>.
@@ -410,6 +410,9 @@ namespace Au
 		/// </summary>
 		static void _SendButton(MButton button, bool down, Point? pMoved)
 		{
+			//CONSIDER: release user-pressed modifier keys, like Keyb does.
+			//CONSIDER: block user input, like Keyb does.
+
 			Api.IMFlags f; MouseButtons mb = 0;
 			switch(button & (MButton.Left | MButton.Right | MButton.Middle | MButton.X1 | MButton.X2)) {
 			case 0: //allow 0 for left. Example: Wnd.Find(...).MouseClick(x, y, MButton.DoubleClick)
@@ -962,31 +965,133 @@ namespace Au
 		/// See also: <see cref="Control.MouseButtons"/>.
 		/// </summary>
 		/// <param name="buttons">Check only these buttons. Default - all.</param>
-		/// <seealso cref="WaitFor.NoMouseButtons"/>
+		/// <seealso cref="WaitForNoButtonsPressed"/>
 		public static bool IsPressed(MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 		{
-			if(0 != (buttons & MouseButtons.Left) && Api.GetKeyState(Keys.LButton) < 0) return true;
-			if(0 != (buttons & MouseButtons.Right) && Api.GetKeyState(Keys.RButton) < 0) return true;
-			if(0 != (buttons & MouseButtons.Middle) && Api.GetKeyState(Keys.MButton) < 0) return true;
-			if(0 != (buttons & MouseButtons.XButton1) && Api.GetKeyState(Keys.XButton1) < 0) return true;
-			if(0 != (buttons & MouseButtons.XButton2) && Api.GetKeyState(Keys.XButton2) < 0) return true;
+			if(0 != (buttons & MouseButtons.Left) && Keyb.IsPressed(KKey.MouseLeft)) return true;
+			if(0 != (buttons & MouseButtons.Right) && Keyb.IsPressed(KKey.MouseRight)) return true;
+			if(0 != (buttons & MouseButtons.Middle) && Keyb.IsPressed(KKey.MouseMiddle)) return true;
+			if(0 != (buttons & MouseButtons.XButton1) && Keyb.IsPressed(KKey.MouseX1)) return true;
+			if(0 != (buttons & MouseButtons.XButton2) && Keyb.IsPressed(KKey.MouseX2)) return true;
 			return false;
+		}
+
+		/// <summary>
+		/// Waits while some mouse buttons are in pressed state (see <see cref="IsPressed"/>).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <seealso cref="Keyb.WaitForNoModifierKeysAndMouseButtons"/>
+		public static bool WaitForNoButtonsPressed(double secondsTimeout = 0.0, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		{
+			return Keyb.WaitForNoModifierKeysAndMouseButtons(secondsTimeout, 0, buttons);
 		}
 
 		/// <summary>
 		/// Waits while some buttons are in pressed state, except those pressed by a <see cref="Mouse"/> class function in this thread.
 		/// Does nothing if the <b>Relaxed</b> option is true.
 		/// </summary>
-		internal static void LibWaitWhileButtonsPressed()
+		internal static void LibWaitForNoButtonsPressed()
 		{
-			//not public, because we have WaitFor.MouseButtonsReleased, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
+			//not public, because we have WaitForNoButtonsPressed, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
 
 			if(Opt.Mouse.Relaxed) return;
 			var mb = (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
 				& ~t_pressedButtons;
-			if(WaitFor.NoMouseButtons(-5, mb)) return;
+			if(WaitForNoButtonsPressed(-5, mb)) return;
 			PrintWarning("Info: Waiting for releasing mouse buttons. See Opt.Mouse.Relaxed.");
-			WaitFor.NoMouseButtons(0, mb);
+			WaitForNoButtonsPressed(0, mb);
+		}
+
+		/// <summary>
+		/// Waits for down or up event of the specified mouse button or buttons.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
+		/// <param name="flags"></param>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="ArgumentException"><paramref name="button"/> is 0.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <remarks>
+		/// Unlike <see cref="WaitForNoButtonsPressed"/>, waits for down or up event, not for button state.
+		/// With default flags, waits for button-up event and does not discard the event.
+		/// Uses low-level mouse hook.
+		/// </remarks>
+		public static bool WaitForClick(double secondsTimeout, MouseButtons button, MWFlags flags = MWFlags.Up)
+		{
+			if(button == 0) throw new ArgumentException();
+			return 0 != _WaitForButton(secondsTimeout, button, flags);
+		}
+
+		/// <summary>
+		/// Waits for down or up event of any mouse button, and gets the button code.
+		/// </summary>
+		/// <returns>Returns the button code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
+		/// <inheritdoc cref="WaitForClick(double, MouseButtons, MWFlags)"/>
+		public static MouseButtons WaitForClick(double secondsTimeout, MWFlags flags = MWFlags.Up)
+		{
+			return _WaitForButton(secondsTimeout, 0, flags);
+		}
+
+		static MouseButtons _WaitForButton(double secondsTimeout, MouseButtons button, MWFlags flags)
+		{
+			//info: this and related functions use similar code as Keyb._WaitForKeyEvent.
+
+			MouseButtons R = 0;
+			using(Util.WinHook.Mouse(x =>
+			{
+				MouseButtons b = 0;
+				switch(x.Event) {
+				case HookData.MouseEvent.LeftButton: b = MouseButtons.Left; break;
+				case HookData.MouseEvent.RightButton: b = MouseButtons.Right; break;
+				case HookData.MouseEvent.MiddleButton: b = MouseButtons.Middle; break;
+				case HookData.MouseEvent.X1Button: b = MouseButtons.XButton1; break;
+				case HookData.MouseEvent.X2Button: b = MouseButtons.XButton2; break;
+				}
+				if(b == 0) return false;
+				if(button != 0 && !button.Has_(b)) return false;
+				if(x.IsButtonUp != flags.Has_(MWFlags.Up)) {
+					if(!x.IsButtonUp && flags.Has_(MWFlags.Discard)) return true; //if will need to discard up, now discard down too
+					return false;
+				}
+				R = b;
+				return flags.Has_(MWFlags.Discard);
+			})) WaitFor.Message(secondsTimeout, () => R != 0);
+
+			return R;
+		}
+		//CONSIDER: WaitForMouseMove, WaitForMouseStop. In QM2 these functions were created because somebody asked, but I don't use.
+
+		/// <summary>
+		/// Waits for a standard mouse cursor (pointer) visible.
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="cursor">Id of a standard cursor.</param>
+		/// <param name="not">Wait until this cursor disappears.</param>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		public static bool WaitForCursor(double secondsTimeout, MCursor cursor, bool not = false)
+		{
+			IntPtr hcur = Api.LoadCursor(default, cursor);
+			if(hcur == default) throw new AuException(0, "*load cursor");
+
+			return WaitFor.Condition(secondsTimeout, () => (Tools.Misc.GetCurrentMouseCursor(out var h) && h == hcur) ^ not);
+		}
+
+		/// <summary>
+		/// Waits for a nonstandard mouse cursor (pointer) visible.
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Tools.Misc.HashMouseCursor"/>.</param>
+		/// <param name="not">Wait until this cursor disappears.</param>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
+		{
+			if(cursorHash == 0) throw new ArgumentException();
+			return WaitFor.Condition(secondsTimeout, () => (Tools.Misc.GetCurrentMouseCursor(out var h) && Tools.Misc.HashMouseCursor(h) == cursorHash) ^ not);
 		}
 	}
 
@@ -1150,6 +1255,69 @@ namespace Au.Types
 		}
 	}
 
+	/// <summary>Flags for <see cref="Mouse.WaitForClick"/></summary>
+	[Flags]
+	public enum MWFlags
+	{
+		/// <summary>Wait for button-up event.</summary>
+		Up = 1,
+
+		/// <summary>
+		/// Make the event invisible for other apps.
+		/// If flag <b>Up</b> also is specified, makes both down and up events invisible.
+		/// </summary>
+		Discard = 2,
+	}
+
+	/// <summary>
+	/// Standard cursor ids.
+	/// Used with <see cref="Mouse.WaitForCursor(double, MCursor, bool)"/>.
+	/// </summary>
+	public enum MCursor
+	{
+		/// <summary>Standard arrow.</summary>
+		Arrow = 32512,
+
+		/// <summary>I-beam (text editing).</summary>
+		IBeam = 32513,
+
+		/// <summary>Hourglass.</summary>
+		Wait = 32514,
+
+		/// <summary>Crosshair.</summary>
+		Cross = 32515,
+
+		/// <summary>Vertical arrow.</summary>
+		UpArrow = 32516,
+
+		/// <summary>Double-pointed arrow pointing northwest and southeast.</summary>
+		SizeNWSE = 32642,
+
+		/// <summary>Double-pointed arrow pointing northeast and southwest.</summary>
+		SizeNESW = 32643,
+
+		/// <summary>Double-pointed arrow pointing west and east.</summary>
+		SizeWE = 32644,
+
+		/// <summary>Double-pointed arrow pointing north and south.</summary>
+		SizeNS = 32645,
+
+		/// <summary>Four-pointed arrow pointing north, south, east, and west.</summary>
+		SizeAll = 32646,
+
+		/// <summary>Slashed circle.</summary>
+		No = 32648,
+
+		/// <summary>Hand.</summary>
+		Hand = 32649,
+
+		/// <summary>Standard arrow and small hourglass.</summary>
+		AppStarting = 32650,
+
+		/// <summary>Arrow and question mark.</summary>
+		Help = 32651,
+	}
+
 	public static partial class ExtensionMethods
 	{
 		#region Wnd
@@ -1267,5 +1435,43 @@ namespace Au.Types
 
 		#endregion
 
+	}
+}
+
+namespace Au.Tools
+{
+	/// <summary>
+	/// Miscellaneous functions.
+	/// </summary>
+	public static partial class Misc
+	{
+		/// <summary>
+		/// Calculates 64-bit FNV1 hash of a mouse cursor's mask bitmap.
+		/// Returns 0 if fails.
+		/// </summary>
+		/// <param name="hCursor">Native cursor handle. See <see cref="GetCurrentMouseCursor"/>.</param>
+		public static unsafe long HashMouseCursor(IntPtr hCursor)
+		{
+			long R = 0; Api.BITMAP b;
+			if(!Api.GetIconInfo(hCursor, out var ii)) return 0;
+			if(ii.hbmColor != default) Api.DeleteObject(ii.hbmColor);
+			var hb = Api.CopyImage(ii.hbmMask, Api.IMAGE_BITMAP, 0, 0, Api.LR_COPYDELETEORG | Api.LR_CREATEDIBSECTION);
+			if(hb == default) { Api.DeleteObject(ii.hbmMask); return 0; }
+			if(0 != Api.GetObject(hb, sizeof(Api.BITMAP), &b) && b.bmBits != default)
+				R = Convert_.HashFnv1_64((byte*)b.bmBits, b.bmHeight * b.bmWidthBytes);
+			Api.DeleteObject(hb);
+			return R;
+		}
+
+		/// <summary>
+		/// Gets the native handle of the current mouse cursor.
+		/// Returns false if the cursor is currently invisible.
+		/// </summary>
+		public static bool GetCurrentMouseCursor(out IntPtr hcursor)
+		{
+			Api.CURSORINFO ci = default; ci.cbSize = Api.SizeOf(ci);
+			if(Api.GetCursorInfo(ref ci) && ci.flags.Has_(Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
+			hcursor = default; return false;
+		}
 	}
 }

@@ -123,23 +123,16 @@ namespace Au
 
 				bool _Create(string className, string name, uint style, uint exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
 				{
-					IntPtr hh = default;
-					try {
-						hh = Api.SetWindowsHookEx(Api.WH_CBT, (code, wParam, lParam) =>
-						{
-							Debug.Assert(code == Api.HCBT_CREATEWND);
-							if(code == Api.HCBT_CREATEWND) {
-								var ww = (Wnd)wParam;
-								Debug.Assert(ww.ClassNameIs(className));
-								_classWndProc = ww.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
-								Api.UnhookWindowsHookEx(hh); hh = default;
-								return 0;
-							}
-							return Api.CallNextHookEx(default, code, wParam, lParam);
-						}, default, Api.GetCurrentThreadId());
-						Handle = CreateWindow(className, name, style, exStyle, x, y, width, height, parent, controlId);
-					}
-					finally { if(hh != default) Api.UnhookWindowsHookEx(hh); }
+					using(Util.WinHook.ThreadCbt(c =>
+					{
+						if(c.code == HookData.CbtEvent.CREATEWND) {
+							var ww = (Wnd)c.wParam;
+							Debug.Assert(ww.ClassNameIs(className));
+							_classWndProc = ww.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
+							c.hook.Unhook();
+						} else Debug.Assert(false);
+						return false;
+					})) Handle = CreateWindow(className, name, style, exStyle, x, y, width, height, parent, controlId);
 					return !Handle.Is0;
 
 					//Replaces the window procedure (usually DefWindowProcW) with _wndProc.

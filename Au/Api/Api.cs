@@ -820,14 +820,6 @@ namespace Au.Types
 		[DllImport("oleacc.dll")]
 		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
-		internal delegate void WINEVENTPROC(IntPtr hWinEventHook, AccEVENT event_, Wnd hwnd, int idObject, int idChild, int idEventThread, int dwmsEventTime);
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr SetWinEventHook(AccEVENT eventMin, AccEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, int idProcess, int idThread, LibAccHookFlags dwFlags);
-
-		[DllImport("user32.dll")]
-		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
-
 
 
 

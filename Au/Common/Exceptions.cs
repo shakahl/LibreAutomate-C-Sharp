@@ -120,7 +120,6 @@ namespace Au.Types
 		{
 			if(errorCode != 0) throw new AuException(errorCode, message);
 		}
-		//TODO: review usage, maybe somewhere us ThrowIfHresultNegative instead
 
 		/// <summary>
 		/// If errorCode is less than 0, throws AuException that includes the code and its message.

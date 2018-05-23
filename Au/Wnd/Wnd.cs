@@ -1289,16 +1289,17 @@ namespace Au
 
 		/// <summary>
 		/// Gets client area rectangle.
-		/// The same as the <see cref="ClientRect"/> property.
-		/// The same as <see cref="GetClientSize"/>, just the parameter type is different.
 		/// </summary>
 		/// <param name="r">Receives the rectangle. Will be empty if failed.</param>
+		/// <param name="inScreen">
+		/// Get rectangle in screen coordinates; the same as <see cref="GetWindowAndClientRectInScreen"/>.
+		/// If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="ClientRect"/> or <see cref="GetClientSize"/>.</param>
 		/// <remarks>
-		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public bool GetClientRect(out RECT r)
+		public bool GetClientRect(out RECT r, bool inScreen = false)
 		{
+			if(inScreen) return GetWindowAndClientRectInScreen(out _, out r);
 			if(Api.GetClientRect(this, out r)) return true;
 			r = default;
 			return false;
@@ -1408,28 +1409,34 @@ namespace Au
 		/// </summary>
 		/// <param name="rWindow">Receives window rectangle.</param>
 		/// <param name="rClient">Receives client area rectangle.</param>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="Native.GetError"/>.</remarks>
 		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
 		{
-			if(LibGetWindowInfo(out var u)) { rWindow = u.rcWindow; rClient = u.rcClient; return true; }
-			rWindow = default; rClient = default;
+			if(LibGetWindowInfo(out var u)) {
+				rWindow = u.rcWindow;
+				rClient = u.rcClient;
+				return true;
+			}
+			rWindow = default;
+			rClient = default;
 			return false;
 		}
 
-		/// <summary>
-		/// Gets client area rectangle in screen coordinates.
-		/// </summary>
-		/// <remarks>
-		/// Calls <see cref="GetWindowAndClientRectInScreen"/>. Returns empty rectangle if fails (eg window closed).
-		/// </remarks>
-		public RECT ClientRectInScreen
-		{
-			get
-			{
-				GetWindowAndClientRectInScreen(out var rw, out var rc);
-				return rc;
-			}
-		}
+		//rejected: because now GetClientRect has 'inScreen' parameter.
+		///// <summary>
+		///// Gets client area rectangle in screen coordinates.
+		///// </summary>
+		///// <remarks>
+		///// Calls <see cref="GetWindowAndClientRectInScreen"/>. Returns empty rectangle if fails (eg window closed).
+		///// </remarks>
+		//public RECT ClientRectInScreen
+		//{
+		//	get
+		//	{
+		//		GetWindowAndClientRectInScreen(out var rw, out var rc);
+		//		return rc;
+		//	}
+		//}
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
@@ -1613,8 +1620,8 @@ namespace Au
 		/// <summary>
 		/// Returns true if this window (its rectangle) contains the specified point in primary screen coordinates.
 		/// </summary>
-		/// <param name="x">X coordinate in screen. Not used if null.</param>
-		/// <param name="y">Y coordinate in screen. Not used if null.</param>
+		/// <param name="x">X coordinate in screen. Not used if default(Coord).</param>
+		/// <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
 		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area.</param>
 		public bool ContainsScreenXY(Coord x, Coord y, CoordOptions co = null)
 		{
@@ -1633,8 +1640,8 @@ namespace Au
 		/// Direct or indirect parent window. The coordinates are relative to its client area.
 		/// Actually this and parent can be any windows or controls, the function does not check whether this is a child of parent.
 		/// </param>
-		/// <param name="x">X coordinate. Not used if null.</param>
-		/// <param name="y">Y coordinate. Not used if null.</param>
+		/// <param name="x">X coordinate. Not used if default(Coord).</param>
+		/// <param name="y">Y coordinate. Not used if default(Coord).</param>
 		public bool ContainsWindowXY(Wnd parent, Coord x, Coord y)
 		{
 			if(!parent.IsAlive) return false;
@@ -1719,10 +1726,10 @@ namespace Au
 		/// Moves and/or resizes.
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, uint)"/>.
 		/// </summary>
-		/// <param name="x">Left. If null, does not move in X axis.</param>
-		/// <param name="y">Top. If null, does not move in Y axis.</param>
-		/// <param name="width">Width. If null, does not change width.</param>
-		/// <param name="height">Height. If null, does not change height.</param>
+		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
+		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
+		/// <param name="width">Width. If default(Coord), does not change width.</param>
+		/// <param name="height">Height. If default(Coord), does not change height.</param>
 		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
@@ -1768,11 +1775,11 @@ namespace Au
 
 		/// <summary>
 		/// Moves.
-		/// Calls Move(x, y, null, null, workArea).
+		/// Calls <c>Move(x, y, default, default, co)</c>.
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </summary>
-		/// <param name="x">Left. If null, does not move in X axis.</param>
-		/// <param name="y">Top. If null, does not move in Y axis.</param>
+		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
+		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
@@ -1781,16 +1788,16 @@ namespace Au
 		/// </remarks>
 		public void Move(Coord x, Coord y, CoordOptions co = null)
 		{
-			Move(x, y, null, null, co);
+			Move(x, y, default, default, co);
 		}
 
 		/// <summary>
 		/// Resizes.
-		/// Calls Move(null, null, width, height, workArea).
+		/// Calls Move(default, default, width, height, co).
 		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </summary>
-		/// <param name="width">Width. If null, does not change width.</param>
-		/// <param name="height">Height. If null, does not change height.</param>
+		/// <param name="width">Width. If default(Coord), does not change width.</param>
+		/// <param name="height">Height. If default(Coord), does not change height.</param>
 		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
@@ -1798,7 +1805,7 @@ namespace Au
 		/// </remarks>
 		public void Resize(Coord width, Coord height, CoordOptions co = null)
 		{
-			Move(null, null, width, height, co);
+			Move(default, default, width, height, co);
 		}
 
 		#endregion
@@ -1886,8 +1893,8 @@ namespace Au
 		/// <summary>
 		/// Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If null - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y coordinate in the specified screen. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="screen">Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), use screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
@@ -1920,21 +1927,21 @@ namespace Au
 		{
 			RECT r = default;
 			if(screen is int) screen = Screen_.FromIndex((int)screen, noThrow: true); //returns null if invalid
-			Lib.MoveInScreen(true, null, null, true, this, ref r, screen, workArea, true);
+			Lib.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
 		}
 
 		/// <summary>
 		/// Moves this window to the center of the screen.
-		/// Calls ShowNotMinMax(true) and MoveInScreen(null, null, screen, true, true).
 		/// </summary>
 		/// <param name="screen">Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses screen of this window.</param>
 		/// <exception cref="WndException"/>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
+		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
 		public void MoveToScreenCenter(object screen = null)
 		{
 			ShowNotMinMax(true);
-			MoveInScreen(null, null, screen, true);
+			MoveInScreen(default, default, screen, true);
 		}
 
 		/// <summary>
@@ -2107,7 +2114,7 @@ namespace Au
 		/// <seealso cref="SetStyle"/>
 		public uint Style
 		{
-			get => GetWindowLong(Native.GWL_STYLE);
+			get => (uint)GetWindowLong(Native.GWL_STYLE);
 		}
 
 		/// <summary>
@@ -2119,7 +2126,7 @@ namespace Au
 		/// <seealso cref="SetExStyle"/>
 		public uint ExStyle
 		{
-			get => GetWindowLong(Native.GWL_EXSTYLE);
+			get => (uint)GetWindowLong(Native.GWL_EXSTYLE);
 		}
 
 		/// <summary>
@@ -2172,7 +2179,7 @@ namespace Au
 		{
 			var gwl = exStyle ? Native.GWL_EXSTYLE : Native.GWL_STYLE;
 			if(how != SetAddRemove.Set) {
-				uint pstyle = GetWindowLong(gwl);
+				uint pstyle = (uint)GetWindowLong(gwl);
 				if(how == SetAddRemove.Add) style |= pstyle;
 				else if(how == SetAddRemove.Remove) style = pstyle & ~style;
 				else if(how == SetAddRemove.Xor) style = pstyle ^ style;
@@ -2231,7 +2238,7 @@ namespace Au
 		{
 			Native.ClearError();
 			LPARAM R;
-			if(IntPtr.Size == 8) R = Api.SetWindowLong64(this, index, newValue); else R = Api.SetWindowLong32(this, index, newValue);
+			if(IntPtr.Size == 8) R = Api.SetWindowLong64(this, index, newValue); else R = Api.SetWindowLong32(this, index, (int)newValue);
 			if(R == 0 && Native.GetError() != 0) ThrowUseNative();
 			return R;
 		}
@@ -2276,23 +2283,27 @@ namespace Au
 			processId = 0;
 			return Api.GetWindowThreadProcessId(this, out processId);
 		}
+
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns thread id.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
 		public int ThreadId => GetThreadProcessId(out var pid);
+		
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns process id.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		public int ProcessId { get { GetThreadProcessId(out var pid); return pid; } }
+		
 		/// <summary>
 		/// Returns true if this window belongs to the current thread, false if to another thread.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
 		public bool IsOfThisThread => Api.GetCurrentThreadId() == ThreadId;
+		
 		/// <summary>
 		/// Returns true if this window belongs to the current process, false if to another process.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
@@ -2551,7 +2562,7 @@ namespace Au
 		string _GetTextSlow()
 		{
 			if(!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
-			int n = ln; if(n < 1) return "";
+			int n = (int)ln; if(n < 1) return "";
 
 			var b = Util.Buffers.LibChar(n);
 			fixed (char* p = b.A) {
@@ -2626,7 +2637,7 @@ namespace Au
 		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if noWait==true.
 		/// </summary>
 		/// <param name="noWait">
-		/// If false (default), waits a while until the window is destroyed or disabled. But does not wait indefinitely.
+		/// If false (default), waits a while until the window is destroyed or disabled. But does not wait infinitely.
 		/// If true, does not wait.
 		/// </param>
 		/// <param name="useXButton">

@@ -93,7 +93,7 @@ namespace Au.Controls
 
 		#endregion
 
-		public struct BitmapFileInfo
+		internal struct LibBitmapFileInfo
 		{
 			/// <summary>
 			/// Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
@@ -103,11 +103,13 @@ namespace Au.Controls
 			public bool isCompressed;
 		}
 
-		//Checks if it is valid bitmap file header. Returns false if invalid.
-		//Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
-		public static bool GetBitmapFileInfo(byte[] mem, out BitmapFileInfo x)
+		/// <summary>
+		/// Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
+		/// Checks if it is valid bitmap file header. Returns false if invalid.
+		/// </summary>
+		internal static bool LibGetBitmapFileInfo(byte[] mem, out LibBitmapFileInfo x)
 		{
-			x = new BitmapFileInfo();
+			x = new LibBitmapFileInfo();
 			fixed (byte* bp = mem) {
 				BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)bp;
 				int minHS = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPCOREHEADER);
@@ -142,31 +144,31 @@ namespace Au.Controls
 			/// <summary>The string isn't image.</summary>
 			None,
 
-			/// <summary>Compressed and Base64-encoded bitmap file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
-			EmbeddedCompressedBmp,
+			/// <summary>Compressed and Base64-encoded .bmp file data with "~:" prefix. See <see cref="ImageToString(string)"/>.</summary>
+			Base64CompressedBmp,
 
 			/// <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
-			EmbeddedPngGifJpg,
+			Base64PngGifJpg,
 
 			/// <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
 			Resource,
 
-			/// <summary>.bmp file.</summary>
+			/// <summary>.bmp file path.</summary>
 			Bmp,
 
-			/// <summary>.png, .gif or .jpg file.</summary>
+			/// <summary>.png, .gif or .jpg file path.</summary>
 			PngGifJpg,
 
-			/// <summary>.ico file.</summary>
+			/// <summary>.ico file path.</summary>
 			Ico,
 
-			/// <summary>.cur or .ani file.</summary>
+			/// <summary>.cur or .ani file path.</summary>
 			Cur,
 
 			/// <summary>Icon from a .dll or other file containing icons, like @"C:\a\b.dll,15".</summary>
 			IconLib,
 
-			/// <summary>None of other image types, when anyFile is true.</summary>
+			/// <summary>None of other image types, when <i>anyFile</i> is true.</summary>
 			ShellIcon
 		}
 
@@ -174,9 +176,9 @@ namespace Au.Controls
 		/// Gets image type from string.
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-		/// <param name="s"></param>
+		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		/// <param name="length">If -1, calls LibCharPtr.Length(s).</param>
-		public static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1)
+		internal static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1)
 		{
 			if(length < 0) length = LibCharPtr.Length(s);
 			if(length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
@@ -184,8 +186,8 @@ namespace Au.Controls
 
 			//special strings
 			switch(c1) {
-			case '~': return (c2 == ':') ? ImageType.EmbeddedCompressedBmp : ImageType.None;
-			case 'i': if(LibCharPtr.AsciiStartsWith(s, "image:")) return ImageType.EmbeddedPngGifJpg; break;
+			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
+			case 'i': if(LibCharPtr.AsciiStartsWith(s, "image:")) return ImageType.Base64PngGifJpg; break;
 			case 'r': if(LibCharPtr.AsciiStartsWith(s, "resource:")) return ImageType.Resource; break;
 			}
 
@@ -211,23 +213,25 @@ namespace Au.Controls
 			if(anyFile) return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
 			return ImageType.None;
 		}
+
 		/// <summary>
 		/// Gets image type from string.
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
-		/// <param name="s"></param>
+		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		public static ImageType ImageTypeFromString(bool anyFile, string s)
 		{
-			fixed (byte* p = Convert_.Utf8FromString(s)) return ImageTypeFromString(true, p);
+			var b = Convert_.Utf8FromString(s);
+			fixed (byte* p = b) return ImageTypeFromString(true, p, b.Length - 1);
 		}
 
 		/// <summary>
 		/// Loads image and returns its data in .bmp file format.
 		/// </summary>
-		/// <param name="s">Depends on t. File path or resource name without prefix or embedded image data without prefix.</param>
+		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
 		/// <param name="t">Image type and string format.</param>
 		/// <param name="searchPath">Use <see cref="Files.SearchPath"/></param>
-		/// <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages.</remarks>
+		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="Folders.ThisAppImages"/>.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
 			//Print(t, s);
@@ -248,9 +252,9 @@ namespace Au.Controls
 				}
 
 				switch(t) {
-				case ImageType.EmbeddedCompressedBmp:
+				case ImageType.Base64CompressedBmp:
 					return Convert_.Decompress(Convert_.Base64Decode(s));
-				case ImageType.EmbeddedPngGifJpg:
+				case ImageType.Base64PngGifJpg:
 					using(var stream = new MemoryStream(Convert_.Base64Decode(s), false)) {
 						return _ImageToBytes(Image.FromStream(stream));
 					}
@@ -316,8 +320,8 @@ namespace Au.Controls
 			try {
 				using(var m = new MemoryBitmap(siz, siz)) {
 					var r = new RECT(0, 0, siz, siz, false);
-					Api.FillRect(m.Hdc, ref r, GetStockObject(0)); //WHITE_BRUSH
-					if(!DrawIconEx(m.Hdc, 0, 0, hi, siz, siz, 0, default, 3)) return null; //DI_NORMAL
+					Api.FillRect(m.Hdc, ref r, Api.GetStockObject(0)); //WHITE_BRUSH
+					if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
 
 					int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
 					var a = new byte[headersSize + siz * siz * 3];
@@ -334,53 +338,22 @@ namespace Au.Controls
 				}
 			}
 			finally {
-				if(isCursor) DestroyCursor(hi); else Icons.DestroyIconHandle(hi);
+				if(isCursor) Api.DestroyCursor(hi); else Api.DestroyIcon(hi);
 			}
 		}
 
-		[DllImport("user32.dll")]
-		internal static extern bool DrawIconEx(IntPtr hdc, int xLeft, int yTop, IntPtr hIcon, int cxWidth, int cyWidth, uint istepIfAniCur, IntPtr hbrFlickerFreeDraw, uint diFlags);
-
-		[DllImport("user32.dll")]
-		internal static extern bool DestroyCursor(IntPtr hCursor);
-
-		[DllImport("gdi32.dll")]
-		internal static extern IntPtr GetStockObject(int i);
-
 #if false //currently not used
-
-	internal struct ICONINFO
-	{
-		public bool fIcon;
-		public uint xHotspot;
-		public uint yHotspot;
-		public IntPtr hbmMask;
-		public IntPtr hbmColor;
-	}
-	[DllImport("user32.dll")]
-	internal static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
-
-	internal struct BITMAP
-	{
-		public int bmType;
-		public int bmWidth;
-		public int bmHeight;
-		public int bmWidthBytes;
-		public ushort bmPlanes;
-		public ushort bmBitsPixel;
-		public IntPtr bmBits;
-	}
 
 	/// <summary>
 	/// Gets icon or cursor size from its native handle.
 	/// Returns 0 if failed.
 	/// </summary>
-	static int GetIconSizeFromHandle(IntPtr hi)
+	public static int GetIconSizeFromHandle(IntPtr hi)
 	{
-		if(!GetIconInfo(hi, out var ii)) return 0;
+		if(!Api.GetIconInfo(hi, out var ii)) return 0;
 		try {
 			var hb = (ii.hbmColor != default) ? ii.hbmColor : ii.hbmMask;
-			BITMAP b;
+			Api.BITMAP b;
 			if(0 == Api.GetObject(hb, sizeof(BITMAP), &b)) return 0;
 			Print(b.bmWidth, b.bmHeight, b.bmBits);
 			return b.bmWidth;
@@ -393,7 +366,7 @@ namespace Au.Controls
 #endif
 
 		/// <summary>
-		/// Compresses in-memory .bmp file data (<see cref="Convert_.Compress"/>) and Base64-encodes.
+		/// Compresses .bmp file data (<see cref="Convert_.Compress"/>) and Base64-encodes.
 		/// Returns string with "~:" prefix.
 		/// </summary>
 		public static string BmpFileDataToString(byte[] bmpFileData)
@@ -414,8 +387,8 @@ namespace Au.Controls
 			var t = ImageTypeFromString(true, path);
 			switch(t) {
 			case ImageType.None: return null;
-			case ImageType.EmbeddedCompressedBmp:
-			case ImageType.EmbeddedPngGifJpg:
+			case ImageType.Base64CompressedBmp:
+			case ImageType.Base64PngGifJpg:
 			case ImageType.Resource:
 				return path;
 			case ImageType.PngGifJpg:

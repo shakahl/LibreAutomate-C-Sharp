@@ -33,7 +33,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsAlt => Api.GetKeyState(Keys.Menu) < 0;
+		public static bool IsAlt => IsPressed(KKey.Alt);
 
 		/// <summary>
 		/// Returns true if Ctrl key is pressed.
@@ -41,7 +41,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsCtrl => Api.GetKeyState(Keys.ControlKey) < 0;
+		public static bool IsCtrl => IsPressed(KKey.Ctrl);
 
 		/// <summary>
 		/// Returns true if Shift key is pressed.
@@ -49,7 +49,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsShift => Api.GetKeyState(Keys.ShiftKey) < 0;
+		public static bool IsShift => IsPressed(KKey.Shift);
 
 		/// <summary>
 		/// Returns true if Win key is pressed.
@@ -57,13 +57,13 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsWin => Api.GetKeyState(Keys.LWin) < 0 || Api.GetKeyState(Keys.RWin) < 0;
+		public static bool IsWin => IsPressed(KKey.Win) || IsPressed(KKey.RWin);
 
 		/// <summary>
 		/// Returns true if some modifier keys are pressed: Ctrl, Shift, Alt, Win.
 		/// </summary>
 		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
-		/// <seealso cref="WaitFor.NoModifierKeys"/>
+		/// <seealso cref="WaitForNoModifierKeys"/>
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
@@ -100,7 +100,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsCapsLock => (Api.GetKeyState(Keys.CapsLock) & 1) != 0;
+		public static bool IsCapsLock => (Api.GetKeyState((int)KKey.CapsLock) & 1) != 0;
 
 		/// <summary>
 		/// Returns true if the Num Lock key is toggled.
@@ -108,7 +108,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsNumLock => (Api.GetKeyState(Keys.NumLock) & 1) != 0;
+		public static bool IsNumLock => (Api.GetKeyState((int)KKey.NumLock) & 1) != 0;
 
 		/// <summary>
 		/// Returns true if the Scroll Lock key is toggled.
@@ -116,7 +116,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="GetKeyState"/>.
 		/// </remarks>
-		public static bool IsScrollLock => (Api.GetKeyState(Keys.Scroll) & 1) != 0;
+		public static bool IsScrollLock => (Api.GetKeyState((int)KKey.ScrollLock) & 1) != 0;
 
 		/// <summary>
 		/// Calls API <msdn>GetKeyState</msdn> and returns its return value.
@@ -127,7 +127,7 @@ namespace Au
 		/// This and other 'get key state' functions of this library except <see cref="GetAsyncKeyState"/> use API <msdn>GetKeyState</msdn>.
 		/// If a key is blocked by a hook, its state does not change. If it's a low-level hook, then it's impossible to detect whether the key is physically pressed.
 		/// </remarks>
-		public static short GetKeyState(Keys key) => Api.GetKeyState(key);
+		public static short GetKeyState(KKey key) => Api.GetKeyState((int)key);
 
 		/// <summary>
 		/// Calls API <msdn>GetAsyncKeyState</msdn> and returns its return value.
@@ -137,17 +137,15 @@ namespace Au
 		/// This key state changes when the OS receives the key down or up notification and before the active app receives the notification.
 		/// If a key is blocked by a low-level hook, its state does not change. Then it's impossible to detect whether the key is physically pressed.
 		/// </remarks>
-		public static short GetAsyncKeyState(Keys key) => Api.GetAsyncKeyState(key);
+		public static short GetAsyncKeyState(KKey key) => Api.GetAsyncKeyState((int)key);
 
-		//rejected: rarely used; can use GetKeyState, GetAsyncKeyState, IsCtrl, etc.
-		///// <summary>
-		///// Returns true if the specified key or mouse button is pressed.
-		///// </summary>
-		///// <remarks>
-		///// Calls API <msdn>GetKeyState</msdn>.
-		///// For mouse buttons use Keys.LButton etc.
-		///// </remarks>
-		//public static bool IsKeyPressed(Keys key) => Api.GetKeyState(key) < 0;
+		/// <summary>
+		/// Returns true if the specified key or mouse button is pressed.
+		/// </summary>
+		/// <remarks>
+		/// Calls API <msdn>GetKeyState</msdn>.
+		/// </remarks>
+		public static bool IsPressed(KKey key) => Api.GetKeyState((int)key) < 0;
 
 		//rejected: rarely used; does not work with most keys; can use GetKeyState, IsCapsLock, etc.
 		///// <summary>
@@ -155,10 +153,163 @@ namespace Au
 		///// </summary>
 		///// <remarks>
 		///// Calls API <msdn>GetKeyState</msdn>.
-		///// For mouse buttons use Keys.LButton etc.
 		///// Can get the toggled state of the lock keys, modifier keys and mouse buttons. Cannot get of most other keys.
 		///// </remarks>
-		//public static bool IsKeyToggled(Keys key) => (Api.GetKeyState(key) & 1) != 0;
+		//public static bool IsKeyToggled(KKey key) => (Api.GetKeyState((int)key) & 1) != 0;
+
+		#endregion
+
+		#region wait
+
+		/// <summary>
+		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state (see <see cref="IsMod"/>).
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		public static bool WaitForNoModifierKeys(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+		{
+			return WaitForNoModifierKeysAndMouseButtons(secondsTimeout, modifierKeys, 0);
+		}
+
+		/// <summary>
+		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
+		/// <param name="buttons">Check only these buttons. Default - all.</param>
+		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <seealso cref="IsMod"/>
+		/// <seealso cref="Mouse.IsPressed"/>
+		/// <seealso cref="Mouse.WaitForNoButtonsPressed"/>
+		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		{
+			var to = new WaitFor.Loop(secondsTimeout, 2);
+			for(; ; ) {
+				if(!IsMod(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
+				if(!to.Sleep()) return false;
+			}
+		}
+
+		//public static bool WaitForKeyPressed(double secondsTimeout, KKey key)
+		//{
+
+		//	return false;
+		//}
+
+		/// <summary>
+		/// Waits while the specified keys or/and mouse buttons are in pressed state.
+		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="keys">One or more keys or/and mouse buttons. Waits for all.</param>
+		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
+		{
+			return WaitFor.Condition(secondsTimeout, () =>
+			{
+				foreach(var k in keys) if(GetKeyState(k) < 0) return false;
+				return true;
+			}, 2);
+		}
+
+		/// <inheritdoc cref="WaitForReleased(double, KKey[])"/>
+		/// <remarks>The keys string is like with <see cref="Key"/>.</remarks>
+		public static bool WaitForReleased(double secondsTimeout, string keys)
+		{
+			return WaitForReleased(secondsTimeout, Misc.ParseKeysString(keys));
+		}
+
+		/// <summary>
+		/// Registers a temporary hotkey and waits for it.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="hotkey"><inheritdoc cref="Util.RegisterHotkey.Register"/></param>
+		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
+		/// <exception cref="AuException">Failed to register hotkey.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <remarks>
+		/// Uses <see cref="Util.RegisterHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
+		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// Keyb.WaitForHotkey(0, "F11");
+		/// Keyb.WaitForHotkey(0, KKey.F11);
+		/// Keyb.WaitForHotkey(0, "Shift+A", true);
+		/// Keyb.WaitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
+		/// Keyb.WaitForHotkey(0, Keys.Control | Keys.Alt | Keys.H); //Ctrl+Alt+H
+		/// Keyb.WaitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
+		/// if(!Keyb.WaitForHotkey(-5, "Left")) Print("timeout"); //returns false after 5 s
+		/// ]]></code>
+		/// </example>
+		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false)
+		{
+			if(s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("WaitForHotkey");
+			using(Util.RegisterHotkey rhk = default) {
+				if(!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
+				if(!WaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
+			}
+			if(waitModReleased) return WaitForNoModifierKeys(secondsTimeout, hotkey.Mod);
+			return true;
+		}
+		static ushort s_atomWFH;
+
+		/// <summary>
+		/// Waits for down or up event of the specified key.
+		/// </summary>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="key">Wait for this key.</param>
+		/// <param name="flags"></param>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <remarks>
+		/// Unlike <see cref="WaitForReleased"/>, waits for down or up event, not for key state.
+		/// With default flags, waits for key-down event and discards the event.
+		/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="WaitForHotkey"/>.
+		/// </remarks>
+		public static bool WaitForKeyEvent(double secondsTimeout, KKey key, KWFlags flags = KWFlags.Discard)
+		{
+			if(key == 0) throw new ArgumentException();
+			return 0 != _WaitForKeyEvent(secondsTimeout, key, flags);
+		}
+
+		/// <inheritdoc cref="WaitForKeyEvent(double, KKey, KWFlags)"/>
+		public static bool WaitForKeyEvent(double secondsTimeout, string key, KWFlags flags = KWFlags.Discard)
+		{
+			return 0 != _WaitForKeyEvent(secondsTimeout, Misc.LibParseKeyNameThrow(key), flags);
+		}
+
+		/// <summary>
+		/// Waits for down or up event of any key, and gets the key code.
+		/// </summary>
+		/// <returns>Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
+		/// <inheritdoc cref="WaitForKeyEvent(double, KKey, KWFlags)"/>
+		public static KKey WaitForKeyEvent(double secondsTimeout, KWFlags flags = KWFlags.Discard)
+		{
+			return _WaitForKeyEvent(secondsTimeout, 0, flags);
+		}
+
+		static KKey _WaitForKeyEvent(double secondsTimeout, KKey key, KWFlags flags)
+		{
+			KKey R = 0;
+			using(Util.WinHook.Keyboard(x =>
+			{
+				if(key != 0 && !x.IsKey(key)) return false;
+				if(x.IsUp != flags.Has_(KWFlags.Up)) {
+					if(!x.IsUp && flags.Has_(KWFlags.Discard)) return true; //if will need to discard up, now discard down too
+					return false;
+				}
+				R = flags.Has_(KWFlags.ModLR) ? x.vkCode : x.Key;
+				return flags.Has_(KWFlags.Discard);
+			})) WaitFor.Message(secondsTimeout, () => R != 0);
+
+			return R;
+		}
 
 		#endregion
 
@@ -199,68 +350,112 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Converts hotkey string to <see cref="Keys"/> and <see cref="KMod"/>.
-			/// For example, if s is "Ctrl+Left", sets mod=KMod.Ctrl, key=Keys.Left.
+			/// Converts key name to <see cref="KKey"/>.
+			/// Returns 0 if unknown key name.
+			/// </summary>
+			/// <param name="keyName">Key name, like with <see cref="Keyb.Key"/>.</param>
+			public static KKey ParseKeyName(string keyName)
+			{
+				keyName = keyName ?? "";
+				return _KeynameToKey(keyName, 0, keyName.Length);
+			}
+
+			/// <summary>
+			/// Calls <see cref="ParseKeyName"/> and throws ArgumentException if invalid key string.
+			/// </summary>
+			/// <param name="keyName"></param>
+			internal static KKey LibParseKeyNameThrow(string keyName)
+			{
+				var k = ParseKeyName(keyName);
+				if(k == 0) throw new ArgumentException("Unknown key name or error in key string.");
+				return k;
+			}
+
+			/// <summary>
+			/// Converts key name to <see cref="KKey"/>.
+			/// Returns 0 if unknown key name.
+			/// </summary>
+			/// <param name="s">String containing key name, like with <see cref="Keyb.Key"/>.</param>
+			/// <param name="startIndex">Key name start index in <paramref name="s"/>.</param>
+			/// <param name="length">Key name length.</param>
+			/// <exception cref="ArgumentOutOfRangeException">Invalid start index or length.</exception>
+			public static KKey ParseKeyName(string s, int startIndex, int length)
+			{
+				s = s ?? "";
+				if((uint)startIndex > s.Length || (uint)length > s.Length - startIndex) throw new ArgumentOutOfRangeException();
+				return _KeynameToKey(s, startIndex, length);
+			}
+
+			/// <summary>
+			/// Converts keys string to <see cref="KKey"/> array.
+			/// </summary>
+			/// <param name="keys">String containing one or more key names, like with <see cref="Keyb.Key"/>. Operators are not supported.</param>
+			/// <exception cref="ArgumentException">Error in keys string.</exception>
+			public static KKey[] ParseKeysString(string keys)
+			{
+				var a = new List<KKey>();
+				foreach(var g in _SplitKeysString(keys ?? "")) {
+					KKey k = _KeynameToKey(keys, g.Index, g.Length);
+					if(k == 0) throw _ArgumentException_ErrorInKeysString(keys, g.Index, g.Length);
+					a.Add(k);
+				}
+				return a.ToArray();
+			}
+
+			/// <summary>
+			/// Converts hotkey string to <see cref="KKey"/> and <see cref="KMod"/>.
+			/// For example, if s is "Ctrl+Left", sets mod=KMod.Ctrl, key=KKey.Left.
+			/// Returns false if the string is invalid.
 			/// </summary>
 			/// <remarks>
-			/// Returns false if the string is invalid.
+			/// Key names are like with <see cref="Keyb.Key"/>.
 			/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
-			/// The first character of named keys must be upper-case, eg "Left" and not "left". Keys A-Z don't have to match case.
 			/// Valid hotkey examples: "A", "a", "7", "F12", ".", "End", "Ctrl+D", "Ctrl+Alt+Shift+Win+Left", " Ctrl + U ".
 			/// Invalid hotkey examples: null, "", "A+B", "Ctrl+A+K", "A+Ctrl", "Ctrl+Shift", "Ctrl+", "NoSuchKey", "tab".
 			/// </remarks>
-			public static bool ParseHotkeyString(string s, out KMod mod, out Keys key)
+			public static bool ParseHotkeyString(string s, out KMod mod, out KKey key)
 			{
-				return _ParseHotkeyString(s, out mod, out key, out _);
+				key = 0; mod = 0;
+				if(s == null) return false;
+				int i = 0;
+				foreach(var g in _SplitKeysString(s)) {
+					if(key != 0) return false;
+					if((i++ & 1) == 0) {
+						KKey k = _KeynameToKey(s, g.Index, g.Length);
+						if(k == 0) return false;
+						var m = Lib.KeyToMod(k);
+						if(m != 0) mod |= m; else key = k;
+					} else if(g.Length != 1 || s[g.Index] != '+') return false;
+				}
+				return key != 0;
 			}
 
 			/// <summary>
 			/// Converts hotkey string to <see cref="Keys"/>.
 			/// For example, if s is "Ctrl+Left", sets hotkey=Keys.Control|Keys.Left.
+			/// Returns false if the string is invalid.
 			/// </summary>
-			/// <inheritdoc cref="ParseHotkeyString(string, out KMod, out Keys)"/>
+			/// <inheritdoc cref="ParseHotkeyString(string, out KMod, out KKey)"/>
 			public static bool ParseHotkeyString(string s, out Keys hotkey)
 			{
-				return _ParseHotkeyString(s, out _, out _, out hotkey);
-			}
-
-			static bool _ParseHotkeyString(string s, out KMod mod, out Keys key, out Keys modAndKey)
-			{
-				key = 0; mod = 0; modAndKey = 0;
-				if(s == null) return false;
-				s = s.Trim();
-				for(int i = 0, eos = s.Length; i < eos; i++) {
-					if(s[i] <= ' ') continue;
-					int start = i;
-					while(i < eos && s[i] != '+') i++;
-					int len = i - start;
-					while(len > 0 && s[start + len - 1] <= ' ') len--; //trim spaces before +
-					if(len == 0) break;
-
-					Keys k = _KeynameToKey(s, start, len); if(k == 0) break;
-					var m = Lib.KeyToMod(k);
-					bool lastKey = (i == eos);
-					if(lastKey != (m == 0)) break;
-					if(lastKey) {
-						key = k;
-						modAndKey = KModToKeys(mod) | key;
-						return true;
-					}
-					mod |= m;
-				}
-				return false;
+				if(!ParseHotkeyString(s, out var mod, out var key)) { hotkey = 0; return false; }
+				hotkey = KModToKeys(mod) | (Keys)key;
+				return true;
 			}
 
 			/// <summary>
 			/// Converts modifier key flags from <b>KMod</b> to <b>Keys</b>.
 			/// </summary>
+			/// <remarks>
+			/// For Win returns flag (Keys)0x80000.
+			/// </remarks>
 			public static Keys KModToKeys(KMod mod) => (Keys)((int)mod << 16);
 
 			/// <summary>
 			/// Converts modifier key flags from <b>Keys</b> to <b>KMod</b>.
 			/// </summary>
 			/// <remarks>
-			/// For Win returns flag (Keys)0x80000.
+			/// For Win can be used flag (Keys)0x80000.
 			/// </remarks>
 			public static KMod KModFromKeys(Keys mod) => (KMod)((int)mod >> 16);
 		}
@@ -281,17 +476,17 @@ namespace Au
 		/// <item>
 		/// <term>string after 'keys' string</term>
 		/// <description>literal text. When there are several strings in sequence, they are interpreted as keys, text, keys, text...
-		/// Example: <c>Key("keys", "text", "keys", "text", 500, "keys", "text", "keys", Keys.Back, "keys", "text");</c>
+		/// Example: <c>Key("keys", "text", "keys", "text", 500, "keys", "text", "keys", KKey.Back, "keys", "text");</c>
 		/// Function <see cref="Text"/> is the same as <b>Key</b>, but the first parameter is text.
 		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
 		/// See <see cref="AddText"/>.
 		/// </description>
 		/// </item>
 		/// <item>
-		/// <term><see cref="Keys"/></term>
+		/// <term><see cref="KKey"/></term>
 		/// <description>a single key.
-		/// Example: <c>Key("Shift+", Keys.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
-		/// See <see cref="AddKey(Keys, bool?)"/>.
+		/// Example: <c>Key("Shift+", KKey.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
+		/// See <see cref="AddKey(KKey, bool?)"/>.
 		/// </description>
 		/// </item>
 		/// <item>
@@ -318,14 +513,14 @@ namespace Au
 		/// <term>(int, bool)</term>
 		/// <description>a single key, specified using scan code and extended-key flag.
 		/// Example: <c>Key("", "key F1:", (0x3B, false));</c>
-		/// See <see cref="AddKey(Keys, int, bool, bool?)"/>.
+		/// See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// </description>
 		/// </item>
 		/// <item>
-		/// <term>(Keys, int, bool)</term>
-		/// <description>a single key, specified using <see cref="Keys"/> and/or scan code and extended-key flag.
-		/// Example: <c>Key("", "numpad Enter:", (Keys.Enter, 0, true));</c>
-		/// See <see cref="AddKey(Keys, int, bool, bool?)"/>.
+		/// <term>(KKey, int, bool)</term>
+		/// <description>a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
+		/// Example: <c>Key("", "numpad Enter:", (KKey.Enter, 0, true));</c>
+		/// See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// </description>
 		/// </item>
 		/// </list>
@@ -355,7 +550,7 @@ namespace Au
 		/// <b>Arrow:</b> Down, Left, Right, Up
 		/// <b>Other:</b> Back, Del, End, Enter, Esc, Home, Ins, Menu, PgDown, PgUp, PrtSc, Space, Tab
 		/// </description>
-		/// <description>Start with an uppercase character. Only the first 3 characters are significant. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c>.
+		/// <description>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
 		/// 
 		/// Alternative key names: AltGr (RAlt), App (Menu), PageDown, PageUp, PrintScreen (PrtSc).
 		/// </description>
@@ -375,9 +570,9 @@ namespace Au
 		/// </item>
 		/// <item>
 		/// <description>Other keys</description>
-		/// <description><see cref="Keys"/> enum member names</description>
+		/// <description>Names of enum <see cref="KKey"/> or <see cref="Keys"/> members.</description>
 		/// <description>Start with an uppercase character.
-		/// Example: <c>Key("BrowserBack", Keys.BrowserBack);</c>
+		/// Example: <c>Key("BrowserBack", KKey.BrowserBack);</c>
 		/// </description>
 		/// </item>
 		/// <item>
@@ -437,7 +632,7 @@ namespace Au
 		/// <description>$ is the same as Shift+.</description>
 		/// </item>
 		/// </list>
-		/// Operators and related keys can be in separate arguments. Examples: <c>Key("Shift+", Keys.A); Key(Keys.A, "*3");</c>.
+		/// Operators and related keys can be in separate arguments. Examples: <c>Key("Shift+", KKey.A); Key(KKey.A, "*3");</c>.
 		/// 
 		/// Uses <see cref="Opt.Key"/>:
 		/// <list type="table">
@@ -526,6 +721,8 @@ namespace Au
 		/// This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
 		/// 
 		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
+		/// 
+		/// The mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -567,16 +764,16 @@ namespace Au
 		/// Key("Ctrl+V", 500, "", "Text");
 		/// 
 		/// //F2, Ctrl+K, Left 3 times, Space, A, comma, 5, numpad 5, Shift+A, B, C, BrowserBack.
-		/// Key("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", Keys.BrowserBack);
+		/// Key("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", KKey.BrowserBack);
 		/// 
 		/// //Shift down, A 3 times, Shift up.
 		/// Key("Shift+A*3");
 		/// 
 		/// //Shift down, A 3 times, Shift up.
-		/// Key("Shift+", Keys.A, "*3");
+		/// Key("Shift+", KKey.A, "*3");
 		/// 
 		/// //Shift down, A, wait 500 ms, B, Shift up.
-		/// Key("Shift+(", Keys.A, 500, Keys.B, ")");
+		/// Key("Shift+(", KKey.A, 500, KKey.B, ")");
 		/// 
 		/// //Send keys and text slowly.
 		/// Opt.Key.KeySpeed = Opt.Key.TextSpeed = 50;
@@ -663,28 +860,6 @@ namespace Au
 		/// <inheritdoc cref="Keyb.Text"/>
 		public static void Text(string text, params object[] keysEtc) => Keyb.Text(text, keysEtc);
 	}
-}
-
-namespace Au.Types
-{
-#pragma warning disable 1591 //missing doc
-	/// <summary>
-	/// Modifier keys as flags.
-	/// </summary>
-	/// <remarks>
-	/// The values don't match those in the .NET enum <see cref="Keys"/>. This library does not use the .NET enum for modifier keys, mostly because it: does not have Win as modifier flag; confusing names, for example Alt and Menu.
-	/// </remarks>
-	/// <seealso cref="Keyb.Misc.KModToKeys"/>
-	/// <seealso cref="Keyb.Misc.KModFromKeys"/>
-	[Flags]
-	public enum KMod
-	{
-		Shift = 1,
-		Ctrl = 2,
-		Alt = 4,
-		Win = 8,
-	}
-#pragma warning restore 1591
 }
 
 //FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); Text(password, "Tab", user, "Enter");

@@ -293,8 +293,8 @@ namespace Au
 				{
 					if(_pm == null) return null;
 					if(!IsWinFormsControl(c)) return null;
-					if(!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || R < 1) return null;
-					int len = R - 1;
+					if(!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || (int)R < 1) return null;
+					int len = (int)R - 1;
 					if(len == 0) return "";
 					return _pm.LibReadUnicodeStringCached(len);
 				}

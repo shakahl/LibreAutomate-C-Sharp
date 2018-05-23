@@ -309,7 +309,7 @@ namespace Au
 			public static unsafe string InterProcessGetData(LPARAM lParam, out int stringId)
 			{
 				var c = (Api.COPYDATASTRUCT*)lParam;
-				stringId = c->dwData;
+				stringId = (int)c->dwData;
 				return Marshal.PtrToStringUni(c->lpData, c->cbData / 2);
 			}
 
@@ -347,13 +347,13 @@ namespace Au
 			/// </summary>
 			/// <param name="m"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(ref Message m, params uint[] ignore)
+			public static void PrintMsg(in Message m, params uint[] ignore)
 			{
 				uint msg = (uint)m.Msg;
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 
 				Wnd w = (Wnd)m.HWnd;
-				uint counter = w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
+				uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
 				Print(counter.ToString(), m.ToString());
 			}
 
@@ -369,7 +369,7 @@ namespace Au
 			{
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 				var m = Message.Create(w.Handle, (int)msg, wParam, lParam);
-				PrintMsg(ref m);
+				PrintMsg(in m);
 			}
 
 			/// <summary>
@@ -411,7 +411,7 @@ namespace Au
 		/// </summary>
 		public static bool IsSpecHwnd(Wnd w)
 		{
-			int i = (LPARAM)w;
+			int i = (int)(LPARAM)w;
 			return (i <= 1 && i >= -3) || i == 0xffff;
 		}
 	}

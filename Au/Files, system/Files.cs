@@ -297,7 +297,7 @@ namespace Au
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
 
-			if(path.EndsWith_(".exe", true) && path.IndexOfAny(_sep) < 0) {
+			if(path.EndsWith_(".exe", true) && path.IndexOfAny(String_.Lib.pathSep) < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 					if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
@@ -954,7 +954,7 @@ namespace Au
 		static bool _DeleteShell(string path, bool recycle, List<string> a = null)
 		{
 			if(a != null) path = string.Join("\0", a);
-			if(path.IndexOfAny_("*?") >= 0) throw new ArgumentException("*? not supported.");
+			if(Wildex.HasWildcards(path)) throw new ArgumentException("*? not supported.");
 			var x = new Api.SHFILEOPSTRUCT() { wFunc = Api.FO_DELETE };
 			uint f = Api.FOF_NO_UI; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
 			if(recycle) f |= Api.FOF_ALLOWUNDO; else f |= Api.FOF_NO_CONNECTED_ELEMENTS;
@@ -1081,15 +1081,13 @@ namespace Au
 			return Path_.LibNormalize(path, noExpandEV: true);
 		}
 
-		static char[] _sep = new char[] { '\\', '/' };
-
 		/// <summary>
 		/// Finds filename, eg @"b.txt" in @"c:\a\b.txt".
 		/// </summary>
 		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns -1.</exception>
 		static int _FindFilename(string path, bool noException = false)
 		{
-			int R = path.LastIndexOfAny(_sep);
+			int R = path.LastIndexOfAny(String_.Lib.pathSep);
 			if(R < 0 || R == path.Length - 1) {
 				if(noException) return -1;
 				throw new ArgumentException($"No filename in path: '{path}'.");

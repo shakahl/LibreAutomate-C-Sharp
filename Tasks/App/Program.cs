@@ -203,7 +203,7 @@ namespace Au.Tasks
 			//	Print("destroy");
 			//	break;
 			case Api.WM_SETTEXT:
-				return _OnSetText(wParam, lParam);
+				return _OnSetText((int)wParam, lParam);
 			case Api.WM_COPYDATA:
 				_OnCopyData((Wnd)wParam, (Api.COPYDATASTRUCT*)lParam);
 				break;
@@ -302,7 +302,7 @@ namespace Au.Tasks
 			_compilerDomain.SetData("cs", csFile);
 			_compilerDomain.SetData("out", outFile);
 			Perf.Next(); //20 ms first time, then <100 mcs
-			int R = _compilerWindow.Send(Api.WM_USER, 0, 0);
+			int R = (int)_compilerWindow.Send(Api.WM_USER, 0, 0);
 			Print(R);
 			if(R != 0) return;
 

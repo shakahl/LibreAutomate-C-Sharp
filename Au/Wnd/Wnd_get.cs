@@ -352,7 +352,7 @@ namespace Au
 					}
 					//On Win8 impossible to get next window like Alt+Tab.
 					//	All store apps are topmost, covering non-topmost desktop windows.
-					//	DwmGetWindowAttribute has no sense here.
+					//	DwmGetWindowAttribute makes no sense here.
 					//	Desktop windows are never cloaked, inactive store windows are cloaked, etc.
 				}
 

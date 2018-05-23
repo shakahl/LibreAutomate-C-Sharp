@@ -374,7 +374,7 @@ EndFragment:0000000000
 				{
 					mem = Api.GlobalLock(hmem);
 					if(mem == default) { _hmem = default; size = 0; return; }
-					size = Api.GlobalSize(_hmem = hmem);
+					size = (int)Api.GlobalSize(_hmem = hmem);
 				}
 
 				public void Dispose()
@@ -525,10 +525,10 @@ EndFragment:0000000000
 				int isf = s.IndexOf_("StartFragment:", true);
 				int ief = s.IndexOf_("EndFragment:", true);
 				if(ish < 0 || ieh < 0 || isf < 0 || ief < 0) return null;
-				isf = s.ToInt32_(isf + 14); if(isf < 0) return null;
-				ief = s.ToInt32_(ief + 12); if(ief < isf) return null;
-				ish = s.ToInt32_(ish + 10); if(ish < 0) ish = isf; else if(ish > isf) return null;
-				ieh = s.ToInt32_(ieh + 8); if(ieh < 0) ieh = ief; else if(ieh < ief) return null;
+				isf = s.ToInt_(isf + 14); if(isf < 0) return null;
+				ief = s.ToInt_(ief + 12); if(ief < isf) return null;
+				ish = s.ToInt_(ish + 10); if(ish < 0) ish = isf; else if(ish > isf) return null;
+				ieh = s.ToInt_(ieh + 8); if(ieh < 0) ieh = ief; else if(ieh < ief) return null;
 
 				if(s.Length != b.Length) {
 					if(ieh > b.Length) return null;
@@ -540,7 +540,7 @@ EndFragment:0000000000
 				//Print(ish, ieh, isf, ief);
 
 				int isu = s.IndexOf_("SourceURL:", true), ieu;
-				if(isu >= 0 && (ieu = s.IndexOfAny_("\r\n", isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
+				if(isu >= 0 && (ieu = s.IndexOfAny(String_.Lib.lineSep, isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
 
 				fragmentStart = isf - ish; fragmentLength = ief - isf;
 				return s.Substring(ish, ieh - ish);

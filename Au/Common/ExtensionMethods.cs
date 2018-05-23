@@ -156,18 +156,18 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int (<see cref="String_.ToInt32_(string)"/>).
+		/// Gets attribute value converted to int (<see cref="String_.ToInt_(string)"/>).
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
 		public static int Attribute_(this XElement t, XName name, int defaultValue)
 		{
 			var x = t.Attribute(name);
-			return x != null ? x.Value.ToInt32_() : defaultValue;
+			return x != null ? x.Value.ToInt_() : defaultValue;
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int (<see cref="String_.ToInt32_(string)"/>).
+		/// Gets attribute value converted to int (<see cref="String_.ToInt_(string)"/>).
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
@@ -175,7 +175,7 @@ namespace Au.Types
 		{
 			var x = t.Attribute(name);
 			if(x == null) { value = 0; return false; }
-			value = x.Value.ToInt32_();
+			value = x.Value.ToInt_();
 			return true;
 		}
 

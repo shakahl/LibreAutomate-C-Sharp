@@ -141,7 +141,7 @@ namespace Au
 			internal static bool LibIsSameFile(string path1, string path2)
 			{
 				//try to optimize. No, it's unreliable.
-				//int i1 = path1.LastIndexOfAny(_sep3), i2 = path2.LastIndexOfAny(_sep3);
+				//int i1 = path1.LastIndexOfAny(s_sep3), i2 = path2.LastIndexOfAny(s_sep3);
 				//if(i1 >= 0 && i2 >= 0 && path1[i1] != '~' && path2[i2] != '~') {
 				//	i1++; i2++;
 				//	if()
@@ -154,7 +154,7 @@ namespace Au
 				return false;
 			}
 
-			//static char[] _sep3 = new char[] { '\\', '/', '~' };
+			//static char[] s_sep3 = new char[] { '\\', '/', '~' };
 #if false
 		//this is ~300 times slower than Files.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished. Move to Shell class.
 		public static void RenameFileOrDirectory(string path, string newName)

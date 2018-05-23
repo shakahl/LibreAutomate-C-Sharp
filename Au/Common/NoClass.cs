@@ -214,18 +214,6 @@ namespace Au
 		}
 		static long s_warningTime;
 
-		//rejected. Let use like 3.s() instead.
-		///// <summary>
-		///// Suspends this thread for the specified amount of time.
-		///// Calls <see cref="Time.SleepS"/>.
-		///// </summary>
-		///// <param name="seconds">
-		///// The number of seconds to wait.
-		///// The smallest value is 0.001 (1 ms), but the system usually makes it longer. More info: <see cref="Time.SleepS"/>.
-		///// </param>
-		///// <exception cref="ArgumentOutOfRangeException">seconds is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
-		//public static void WaitS(double seconds) => Time.WaitS(seconds);
-
 		/// <summary>
 		/// Returns true if the string is null or "".
 		/// The same as string.IsNullOrEmpty.

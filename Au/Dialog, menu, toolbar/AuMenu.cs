@@ -939,7 +939,7 @@ namespace Au
 			_mouseWasIn = false;
 			if(init) {
 				_timer = Timer_.Every(100, _OnTimer);
-				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, Keys.Escape);
+				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, (int)KKey.Escape);
 			} else {
 				if(_timer != null) { _timer.Stop(); _timer = null; }
 				if(_hotkeyRegistered) _hotkeyRegistered = !Api.UnregisterHotKey((Wnd)_cm.Handle, _hotkeyEsc);
@@ -1065,7 +1065,7 @@ namespace Au.Types
 
 		///// <summary>
 		///// ContextMenu to show when right-clicked.
-		///// //todo: how to know which item clicked? Maybe add a common default context menu. Currently not used.
+		///// //_TODO: how to know which item clicked? Maybe add a common default context menu. Currently not used.
 		///// </summary>
 		//public ContextMenu ContextMenu
 		//{

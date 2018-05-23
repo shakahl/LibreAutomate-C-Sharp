@@ -881,7 +881,7 @@ namespace Au
 							if(t == eos) break;
 							ch = *s;
 							if(ch >= '0' && ch <= '9') { //${number}. info: group name cannot start with digit, then PCRE returns error.
-								group = repl.ToInt32_((int)(s - s0), out int numEnd, STIFlags.NoHex);
+								group = repl.ToInt_((int)(s - s0), out int numEnd, STIFlags.NoHex);
 								if(s0 + numEnd != t || group < 0) continue;
 							} else { //${name}
 								group = m.LibGroupNumberFromName(s, (int)(t - s), out _); //speed: 40-100 ns
@@ -889,7 +889,7 @@ namespace Au
 							}
 							s = t + 1;
 						} else if(ch >= '0' && ch <= '9') { //$number
-							group = repl.ToInt32_((int)(s - s0), out int numEnd, STIFlags.NoHex);
+							group = repl.ToInt_((int)(s - s0), out int numEnd, STIFlags.NoHex);
 							if(numEnd == 0 || group < 0) continue;
 							s = s0 + numEnd;
 						} else {
@@ -1061,7 +1061,7 @@ namespace Au
 		{
 			//note: don't need 'more' parameter for static functions.
 			//	from/to rarely used;
-			//	matchFlags has no sense because can be set in flags.
+			//	matchFlags makes no sense because can be set in flags.
 
 			if(s == null) return false;
 			var x = _cache.AddOrGet(rx, flags);

@@ -21,9 +21,6 @@ using static Au.NoClass;
 
 #pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
 
-//TODO: some windows use eg Chrome control in non-chrome-classnamed window. Eg Spotify.
-//	Now the tool somehow detects it and everything is OK, but need to review/test more.
-
 namespace Au
 {
 	public unsafe partial class Acc
@@ -166,9 +163,7 @@ namespace Au
 			/// Returns true if found. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 			/// Returns true if found. Else if <paramref name="secondsTimeout"/> is negative, returns false. Else exception.
 			/// </summary>
-			/// <param name="secondsTimeout">
-			/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
-			/// </param>
+			/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 			/// <param name="w">Window or control that contains the AO.</param>
 			/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd)"/>.</exception>
@@ -182,9 +177,7 @@ namespace Au
 			/// The same as <see cref="Find(Acc)"/>, but waits until the AO is found or the given time expires.
 			/// Returns true if found. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 			/// </summary>
-			/// <param name="secondsTimeout">
-			/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
-			/// </param>
+			/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 			/// <param name="a">Direct or indirect parent AO.</param>
 			/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Acc)"/>.</exception>
@@ -232,7 +225,7 @@ namespace Au
 
 				var ap = new Cpp.Cpp_AccParams(_role, _name, _prop, flags, _skip, _resultProp);
 
-				var to = new WaitFor.Loop(secondsTimeout, inProc ? 20 : 100, inProc ? 200 : 1000);
+				var to = new WaitFor.Loop(secondsTimeout, inProc ? 10 : 40);
 				for(bool doneUAC = false, doneThread = false; ;) {
 					var hr = Cpp.Cpp_AccFind(w, aParent, ref ap, _callback, out var ca, out var sResult);
 
@@ -279,7 +272,7 @@ namespace Au
 						break;
 					case Cpp.EError.WaitChromeDisabled:
 						//Print("WaitChromeDisabled");
-						if(to.TimeRemaining < 3000) to.TimeRemaining += to.Period * 15 / 16;
+						if(to.TimeRemaining < 3000) to.TimeRemaining += (long)(to.Period * 15 / 16);
 						//normally waits ~10 times longer, eg 10 s instead of 1
 						break;
 					default:
@@ -489,7 +482,7 @@ namespace Au
 		/// Parameters etc are as with <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
+		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
 		/// </param>
 		/// <param name="w"></param>
 		/// <param name="role"></param>
@@ -513,7 +506,7 @@ namespace Au
 		/// Parameters etc are as with <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
+		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
 		/// </param>
 		/// <param name="role"></param>
 		/// <param name="name"></param>

@@ -39,7 +39,7 @@ namespace Au.Util
 
 					for(; ; ) {
 						var ev =_loopEndEvent;
-						uint k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
+						int k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
 						if(k == Api.WAIT_TIMEOUT) continue; //we don't use INFINITE, because then does not respond to Thread.Abort
 
 						Application.DoEvents();
@@ -163,7 +163,7 @@ namespace Au.Util
 			for(; ; ) {
 				if(Api.GetCapture() != w) return false;
 				if(Api.GetMessage(out x.Msg, default, 0, 0) <= 0) {
-					if(x.Msg.message == Api.WM_QUIT) Api.PostQuitMessage(x.Msg.wParam);
+					if(x.Msg.message == Api.WM_QUIT) Api.PostQuitMessage((int)x.Msg.wParam);
 					break;
 				}
 
@@ -178,7 +178,7 @@ namespace Au.Util
 					call = true;
 				} else if(m == Api.WM_KEYDOWN || m == Api.WM_KEYUP || m == Api.WM_SYSKEYDOWN || m == Api.WM_SYSKEYUP) {
 					//on key down/up caller may want to update cursor when eg Ctrl pressed/released
-					if(x.Msg.wParam == Keys.Escape) break;
+					if(x.Msg.wParam == (byte)KKey.Escape) break;
 					call = true;
 				}
 

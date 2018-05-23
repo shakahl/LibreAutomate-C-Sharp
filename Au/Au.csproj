@@ -76,19 +76,20 @@
     <Compile Include="Api\Api^kernel32.cs" />
     <Compile Include="Api\Api^user32.cs" />
     <Compile Include="Api\Cpp.cs" />
-    <Compile Include="Automation\Acc\Acc_func.cs" />
-    <Compile Include="Automation\Acc\Acc_types.cs" />
-    <Compile Include="Automation\Acc\Acc_find.cs" />
-    <Compile Include="Automation\Acc\Acc.cs" />
-    <Compile Include="Automation\Input\BlockInput.cs" />
-    <Compile Include="Automation\Input\Clipb.cs" />
-    <Compile Include="Automation\Input\Clipb.Data.cs" />
-    <Compile Include="Automation\Input\Keyb.cs" />
+    <Compile Include="Acc\Acc_func.cs" />
+    <Compile Include="Acc\Acc_types.cs" />
+    <Compile Include="Acc\Acc_find.cs" />
+    <Compile Include="Acc\Acc.cs" />
+    <Compile Include="Input\BlockInput.cs" />
+    <Compile Include="Input\Clipb.cs" />
+    <Compile Include="Input\Clipb.Data.cs" />
+    <Compile Include="Input\Keyb.cs" />
     <Compile Include="Api\Api_COM.cs" />
     <Compile Include="Api\Api_public.cs" />
-    <Compile Include="Automation\Input\Keyb^util.cs" />
-    <Compile Include="Automation\Input\Keyb^static.cs" />
-    <Compile Include="Automation\WinImage.cs" />
+    <Compile Include="Input\Keyb^types.cs" />
+    <Compile Include="Input\Keyb^util.cs" />
+    <Compile Include="Input\Keyb^static.cs" />
+    <Compile Include="Other\WinImage.cs" />
     <Compile Include="Common\Opt.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Other\OnScreenRect.cs" />
@@ -97,6 +98,9 @@
     <Compile Include="String\Regex_ types.cs" />
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
+    <Compile Include="Util\AccHook.cs" />
+    <Compile Include="Util\Util^GDI.cs" />
+    <Compile Include="Util\WinHook.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
     <Compile Include="Common\Param types.cs" />
     <Compile Include="Files, system\Files.Misc.cs" />
@@ -113,7 +117,7 @@
     <Compile Include="Files, system\Folders.cs" />
     <Compile Include="Dialog, menu, toolbar\AuToolbar.cs" />
     <Compile Include="Dialog, menu, toolbar\AuMenu.cs" />
-    <Compile Include="Automation\Input\Mouse.cs" />
+    <Compile Include="Input\Mouse.cs" />
     <Compile Include="Common\ExtensionMethods.cs" />
     <Compile Include="Common\NoClass.cs" />
     <Compile Include="Other\Char_.cs" />
@@ -125,11 +129,12 @@
     <Compile Include="String\wildcard.cs" />
     <Compile Include="Dialog, menu, toolbar\AuDialog.cs" />
     <Compile Include="String\Csv.cs" />
+    <Compile Include="Wnd\Wnd_wait.cs" />
     <None Include="packages.config" />
     <None Include="String\excluded\string classes.cs" />
     <None Include="String\excluded\String_ex.cs" />
     <Compile Include="Time\Time.cs" />
-    <Compile Include="Time\WaitFor other.cs" />
+    <Compile Include="Time\WaitFor.cs" />
     <Compile Include="Util\ArrayBuilder.cs" />
     <Compile Include="Util\StringCache.cs" />
     <Compile Include="Util\Tables.cs" />
@@ -146,7 +151,6 @@
     <Compile Include="Util\Memory.cs" />
     <Compile Include="Util\MessageLoops.cs" />
     <Compile Include="Util\ThreadPoolSTA.cs" />
-    <Compile Include="Time\WaitFor Wnd.cs" />
     <Compile Include="Wnd\Wnd_find.cs" />
     <Compile Include="Wnd\Wnd_get.cs" />
     <Compile Include="Wnd\Wnd_mics.cs" />
@@ -165,7 +169,9 @@
   <ItemGroup>
     <None Include="Properties\Au.pfx" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Automation\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

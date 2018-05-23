@@ -566,22 +566,6 @@ namespace Au.Types
 			public IntPtr hModule;
 		}
 
-		//TODO: remove these if unused
-
-		[DllImport("kernel32.dll")]
-		internal static extern bool SwitchToThread();
-
-		internal const ushort ALL_PROCESSOR_GROUPS = 0xFFFF;
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern uint GetMaximumProcessorCount(ushort GroupNumber);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetProcessAffinityMask(IntPtr hProcess, out LPARAM lpProcessAffinityMask, out LPARAM lpSystemAffinityMask);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern LPARAM SetThreadAffinityMask(IntPtr hThread, LPARAM dwThreadAffinityMask);
-
 
 		internal const uint THREAD_QUERY_LIMITED_INFORMATION = 0x800;
 
@@ -613,6 +597,11 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetFileSizeEx(SafeFileHandle hFile, out long lpFileSize);
 
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern int WaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, bool bWaitAll, uint dwMilliseconds, bool bAlertable);
+
+		[DllImport("kernel32.dll")]
+		internal static extern int SleepEx(uint dwMilliseconds, bool bAlertable);
 
 	}
 }

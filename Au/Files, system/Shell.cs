@@ -39,14 +39,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Runs/opens a program, document, folder, URL, new email, Control Panel item etc.
-		/// By default returns process id. If used flag WaitForExit, returns process exit code.
-		/// Returns 0 if did not start new process or did not get process handle, usually because opened the document in an existing process.
+		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
+		/// The returned <see cref="SRResult"/> variable contains some process info - process id etc.
 		/// </summary>
 		/// <param name="file">
 		/// What to run. Can be:
-		/// Full path of a file or folder. Examples: <c>@"C:\folder\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
-		/// Filename of a file or folder, like <c>"notepad.exe"</c>. The function calls <see cref="Files.SearchPath"/>.
+		/// Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
+		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="Files.SearchPath"/>.
 		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
@@ -63,35 +62,31 @@ namespace Au
 		/// <param name="more">Allows to specify more parameters.</param>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
-		/// It works like when you double-click an icon. It may start new process or not. For example it may just activate window if the program is already running.
+		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
 		/// Uses API <msdn>ShellExecuteEx</msdn>.
 		/// Similar to <see cref="Process.Start(string, string)"/>.
-		/// The returned process id can be used to find a window of the new process. Example:
-		/// <code><![CDATA[
-		/// Wnd w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", Shell.Run("notepad.exe"));
-		/// ]]></code>
 		/// </remarks>
+		/// <seealso cref="Wnd.FindOrRun"/>
 		/// <example>
+		/// Run notepad and wait for its window.
+		/// <code><![CDATA[
+		/// Shell.Run("notepad.exe");
+		/// Wnd w = Wnd.Wait(true, 10, "*- Notepad", "Notepad");
+		/// ]]></code>
+		/// Run notepad or activate its window. Works like Wnd.FindOrRun.
 		/// <code><![CDATA[
 		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		/// if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
 		/// w.Activate();
 		/// ]]></code>
 		/// </example>
-		/// <seealso cref="Wnd.FindOrRun"/>
-		public static int Run(string file, string args = null, SRFlags flags = 0, SRMore more = null)
+		public static SRResult Run(string file, string args = null, SRFlags flags = 0, SRMore more = null)
 		{
-			//TODO: return RunResult object that contains process id or exit code.
-			//	It also contains other info that helps Wnd.Find and WaitFor.WindowActive etc to find correct window.
-			//	It also could contain unclosed process handle, if a flag is set.
-			//	Pass it to Wnd.Find as programEtc.
-
 			var x = new Api.SHELLEXECUTEINFO();
 			x.cbSize = Api.SizeOf(x);
 			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_NOCLOSEPROCESS | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
 			x.nShow = Api.SW_SHOWNORMAL;
 			if(more != null) {
-				more.ProcessHandle = null;
 				x.lpVerb = more.Verb;
 				x.lpDirectory = Path_.ExpandEnvVar(more.WorkingDirectory);
 				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Wnd.WndWindow;
@@ -132,57 +127,63 @@ namespace Au
 			}
 			if(!ok) throw new AuException(0, $"*run '{file}'");
 
+			var R = new SRResult();
 			bool waitForExit = 0 != (flags & SRFlags.WaitForExit);
-			bool callerNeedsHandle = more != null && more.NeedProcessHandle;
+			bool needHandle = flags.Has_(SRFlags.NeedProcessHandle);
 			Process_.LibProcessWaitHandle ph = null;
 			if(x.hProcess != default) {
-				if(waitForExit || callerNeedsHandle) ph = new Process_.LibProcessWaitHandle(x.hProcess);
+				if(waitForExit || needHandle) ph = new Process_.LibProcessWaitHandle(x.hProcess);
+				if(!waitForExit) R.ProcessId = Process_.GetProcessId(x.hProcess);
 			}
 
 			try {
 				Api.AllowSetForegroundWindow(Api.ASFW_ANY);
 
 				if(x.lpVerb != null && !Application.MessageLoop)
-					Thread.CurrentThread.Join(50); //need min 5-10 for Properties. And not Sleep.
+					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.
 
 				if(ph != null) {
-					if(waitForExit) ph.WaitOne();
-					if(callerNeedsHandle) more.ProcessHandle = ph;
-					if(waitForExit) return Api.GetExitCodeProcess(x.hProcess, out var ec) ? (int)ec : 0;
+					if(waitForExit) {
+						ph.WaitOne();
+						if(Api.GetExitCodeProcess(x.hProcess, out var ec)) R.ProcessExitCode = ec;
+					}
+					if(needHandle) R.ProcessHandle = ph;
 				}
-				if(x.hProcess != default) return Process_.GetProcessId(x.hProcess);
 			}
 			finally {
-				if(!callerNeedsHandle || more.ProcessHandle == null) {
+				if(R.ProcessHandle == null) {
 					if(ph != null) ph.Dispose();
 					else if(x.hProcess != default) Api.CloseHandle(x.hProcess);
 				}
 			}
+			
+			return R;
 
-			return 0;
-
-			//tested: works well in MTA apartment.
+			//tested: works well in MTA thread.
 			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use Wnd.FindOrRun or Find/Run/Wait like in the examples.
 			//rejected: in QM2, run also has 'autodelay'. Better don't add such hidden things. Let the script decide what to do.
 		}
 
 		/// <summary>
 		/// Calls <see cref="Run"/> and handles exceptions. All parameters are the same.
-		/// If Run throws exception, shows warning with its Message and returns int.MinValue.
-		/// This is useful when you don't care whether Run succeeded, for example in AuMenu menu item command handlers. Using try/catch there would not look good.
-		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
+		/// If <b>Run</b> throws exception, prints it as warning and returns null.
 		/// </summary>
+		/// <remarks>
+		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
+		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
+		/// </remarks>
 		/// <seealso cref="PrintWarning"/>
 		/// <seealso cref="OptDebug.DisableWarnings"/>
+		/// <seealso cref="Wnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static int TryRun(string s, string args = null, SRFlags flags = 0, SRMore more = null)
+		public static SRResult TryRun(string s, string args = null, SRFlags flags = 0, SRMore more = null)
 		{
 			try {
 				return Run(s, args, flags, more);
 			}
 			catch(AuException e) {
 				PrintWarning(e.Message, 1);
-				return int.MinValue;
+				return null;
 			}
 		}
 
@@ -330,6 +331,11 @@ namespace Au.Types
 		/// Uses <see cref="WaitHandle.WaitOne()"/>.
 		/// </summary>
 		WaitForExit = 2,
+
+		/// <summary>
+		/// Get process handle (<see cref="SRResult.ProcessHandle"/>), if possible.
+		/// </summary>
+		NeedProcessHandle = 4,
 	}
 
 	/// <summary>
@@ -355,7 +361,7 @@ namespace Au.Types
 		/// Owner window for error message boxes.
 		/// Also, new window should be opened on the same screen. However many programs ignore it.
 		/// </summary>
-		public DOwner OwnerWindow;
+		public AnyWnd OwnerWindow;
 
 		/// <summary>
 		/// Preferred window state.
@@ -368,26 +374,47 @@ namespace Au.Types
 		//this either does not work or I could not find a program that uses default window position (does not save/restore)
 		//if(more.Screen != null) { x._14.hMonitor = (IntPtr)more.Screen.GetHashCode(); x.fMask |= Api.SEE_MASK_HMONITOR; } //GetHashCode gets HMONITOR
 
+	}
+
+	/// <summary>
+	/// Results of <see cref="Shell.Run"/>.
+	/// </summary>
+	public class SRResult
+	{
 		/// <summary>
-		/// Get process handle, if possible.
-		/// The <see cref="ProcessHandle"/> property will contain it.
+		/// The exit code of the process.
+		/// 0 if no flag <b>WaitForExit</b> or if cannot wait.
 		/// </summary>
-		public bool NeedProcessHandle;
+		/// <remarks>
+		/// Usually the exit code is 0 or a process-defined error code.
+		/// </remarks>
+		public int ProcessExitCode { get; internal set; }
 
 		/// <summary>
-		/// This is an [Out] value.
-		/// When the function returns, if <see cref="NeedProcessHandle"/> was set to true, contains process handle in a <see cref="WaitHandle"/> variable.
-		/// null if did not start new process (eg opened the document in an existing process) or did not get process handle for some other reason.
-		/// Note: WaitHandle is disposable.
+		/// The process id.
+		/// 0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.
+		/// </summary>
+		public int ProcessId { get; internal set; }
+
+		/// <summary>
+		/// If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="WaitHandle"/> variable must be disposed.
+		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		/// <example>
-		/// This code does the same as Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);
+		/// This code does the same as <c>Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
-		/// var p = new SRMore() { NeedProcessHandle = true };
-		/// Shell.Run(@"notepad.exe", more: p);
-		/// using(var h = p.ProcessHandle) h?.WaitOne();
+		/// var r = Shell.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		/// using(var h = r.ProcessHandle) h?.WaitOne();
 		/// ]]></code>
 		/// </example>
 		public WaitHandle ProcessHandle { get; internal set; }
+
+		/// <summary>
+		/// Returns <see cref="ProcessId"/> as string.
+		/// </summary>
+		public override string ToString()
+		{
+			return ProcessId.ToString();
+		}
 	}
 }

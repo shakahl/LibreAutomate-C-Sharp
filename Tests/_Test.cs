@@ -831,34 +831,14 @@ static partial class Test
 
 	static void TestAccFromEvent()
 	{
-		AccEVENT ev = AccEVENT.OBJECT_FOCUS;
-		var hh = SetWinEventHook(ev, ev, default, _testWinEventProc, 0, 0, 0);
-		//Print(hh);
-		AuDialog.Show();
-		//MessageBox.Show("");
-		//new Form().ShowDialog();
-		//Time.SleepDoEvents(10000);
-		UnhookWinEvent(hh);
-		Print("END");
-	}
-
-	static WINEVENTPROC _testWinEventProc = _TestWinEventProc;
-	static void _TestWinEventProc(IntPtr hHook, AccEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime)
-	{
-		//Print(w);
-		using(var a = Acc.FromEvent(w, idObject, idChild)) {
+		using(new AccHook(AccEVENT.OBJECT_FOCUS, 0, x =>
+		{
+			Print(x.wnd);
+			var a = x.GetAcc();
 			if(a == null) Print(Native.GetErrorMessage());
 			else Print(a);
-		}
+		})) MessageBox.Show("hook");
 	}
-
-	internal delegate void WINEVENTPROC(IntPtr hHook, AccEVENT event_, Wnd w, int idObject, int idChild, int idThread, int eventTime);
-
-	[DllImport("user32.dll")]
-	internal static extern IntPtr SetWinEventHook(AccEVENT eventMin, AccEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
-
-	[DllImport("user32.dll")]
-	internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
 	//static void TestAccFromComObject()
 	//{
@@ -924,7 +904,7 @@ static partial class Test
 				//	//Print(ap);
 				//	Print(!w1.Is0, !w2.Is0);
 				//}
-				if(i == 0) Perf.SpinCPU(100);
+				if(i == 0) Perf.WarmUpCPU(100);
 			}
 		}
 		//100.ms();
@@ -1261,7 +1241,7 @@ static partial class Test
 		var x2 = new Regex_(w);
 
 		//100.ms();
-		Perf.SpinCPU(200);
+		Perf.WarmUpCPU(200);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -1373,7 +1353,7 @@ static partial class Test
 			Print(w.Equals_(s, ignoreCase));
 			Print(x.Match(s));
 
-			Perf.SpinCPU(200);
+			Perf.WarmUpCPU(200);
 			//200.ms();
 			for(int i1 = 0; i1 < 5; i1++) {
 				int n2 = 10000;
@@ -1444,13 +1424,13 @@ static partial class Test
 	//	public bool HasValue => _1 != default;
 	//}
 
-	static void TestWildexStruct()
-	{
-		var x = new WildexStruct("**r gg");
-		Print(x.Value);
-		//x.Value = "k";
-		Print(x.Match("gg"));
-	}
+	//static void TestWildexStruct()
+	//{
+	//	var x = new WildexStruct("**r gg");
+	//	Print(x.Value);
+	//	//x.Value = "k";
+	//	Print(x.Match("gg"));
+	//}
 
 	static void TestCppRegex()
 	{
@@ -1800,10 +1780,10 @@ static partial class Test
 
 	static void _ClickWait(Wnd w, Acc a, string name, string old)
 	{
-		//todo: test what Chrome web page objects exist when window name changed before invalidating old DOCUMENT.
+		//_TODO: test what Chrome web page objects exist when window name changed before invalidating old DOCUMENT.
 
 		//var w = a.WndTopLevel;
-		////Wnd w = default; WaitFor.Condition(3, o=> { bool ok = !(w = a.WndTopLevel).Is0; if(!ok) Print("wnd 0"); return ok; });
+		////Wnd w = default; WaitFor.Condition(3, ()=> { bool ok = !(w = a.WndTopLevel).Is0; if(!ok) Print("wnd 0"); return ok; });
 		//Acc.Find(w, "web:", old).OrThrow();
 
 		//var docOld = Acc.Find(w, "web:", secondsTimeout: 0);
@@ -1921,7 +1901,7 @@ static partial class Test
 		//	0.1.s();
 		//}
 		Acc.Find(w, null, "Back", "notin=DOCUMENT").VirtualRightClick();
-		var wBackMenu = WaitFor.WindowExists(10, null, menuClass, also: o => o.HasStyle(Native.WS_POPUP));
+		var wBackMenu = Wnd.Wait(false, 10, null, menuClass, also: o => o.HasStyle(Native.WS_POPUP));
 		//Print(wBackMenu);
 		a = Acc.Wait(10, wBackMenu, "MENUITEM", "Yahoo");
 		//Print(a);
@@ -1932,7 +1912,7 @@ static partial class Test
 
 		//return;
 		if(stop) return;
-		WaitFor.WindowExists(30, appName);
+		Wnd.Wait(false, 30, appName);
 		3.s();
 		Print("---------");
 		goto g1;
@@ -2170,7 +2150,7 @@ static partial class Test
 		//return;
 		Print("");
 		long lenIP = 0, lenNIP = 0;
-		Perf.SpinCPU(500);
+		Perf.WarmUpCPU(500);
 		Perf.First();
 		var sb = new StringBuilder(1000000);
 		foreach(var a in k) {
@@ -2212,7 +2192,7 @@ static partial class Test
 		foreach(var w in Wnd.Misc.AllWindows(true)) {
 			k.AddRange(w.AllChildren());
 		}
-		Perf.SpinCPU(200);
+		Perf.WarmUpCPU(200);
 		Perf.First();
 		long g = 0;
 		for(int i = 0; i < 5; i++) {
@@ -2837,7 +2817,7 @@ static partial class Test
 		Print(LevenshteinDistance("kitten", "sitting"));
 		0.1.s();
 		int n = 0;
-		Perf.SpinCPU(100);
+		Perf.WarmUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -3272,20 +3252,20 @@ REE`");
 		//if(!ColorInt.FromString("#FF", out var c)) return;
 		//Print(c);
 
-		//Print("0x1A".ToInt32_());
-		//Print("1A".ToInt32_());
-		//Print("0x1A".ToInt32_(0, true));
-		//Print("1A".ToInt32_(0, true));
-		//Print("0x1A".ToInt32_(0, out _, true));
-		//Print("1A".ToInt32_(0, out _, true));
+		//Print("0x1A".ToInt_());
+		//Print("1A".ToInt_());
+		//Print("0x1A".ToInt_(0, true));
+		//Print("1A".ToInt_(0, true));
+		//Print("0x1A".ToInt_(0, out _, true));
+		//Print("1A".ToInt_(0, out _, true));
 
 		string s = "0x10";
 		s = "0xffffffff";
 		s = "0x80000000";
 		s = "-0xffffffff";
 		//s = "0xffffffffffffffff";
-		//Print(s.ToInt32_());
-		//Print(s.ToInt64_());
+		//Print(s.ToInt_());
+		//Print(s.ToLong_());
 		//Print("-----");
 		//Print(Api.strtoi(s));
 		//Print(Api.strtoi64(s));
@@ -3732,11 +3712,11 @@ REE`");
 
 	static void TestToIntWithFlags()
 	{
-		Print("15".ToInt32_());
-		Print("0xA".ToInt32_());
-		Print("C".ToInt32_());
-		Print("C".ToInt32_(0, STIFlags.IsHexWithout0x));
-		Print("0xA".ToInt32_(0, STIFlags.NoHex));
+		Print("15".ToInt_());
+		Print("0xA".ToInt_());
+		Print("C".ToInt_());
+		Print("C".ToInt_(0, STIFlags.IsHexWithout0x));
+		Print("0xA".ToInt_(0, STIFlags.NoHex));
 	}
 
 	//static void TestNewWildexSyntax()
@@ -3769,7 +3749,7 @@ REE`");
 		//for(int i = 0; i < 1000; i++) rx[i] = _rxTest + i.ToString();
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0, k6 = 0, k7 = 0, k8 = 0, k9 = 0;
-		Perf.SpinCPU(100);
+		Perf.WarmUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -4214,7 +4194,7 @@ REE`");
 		if(x.FindAllS(s, out var as1)) Print(as1);
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0;
-		Perf.SpinCPU(100);
+		Perf.WarmUpCPU(100);
 		Debug_.LibPrintMemory();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 100;
@@ -4836,7 +4816,7 @@ REE`");
 
 	//	Print(WaitForMouseLeftButtonDown(3));
 
-	//	//Print(WaitFor.Condition(3, o => Mouse.IsPressed(MouseButtons.Left)));
+	//	//Print(WaitFor.Condition(3, () => Mouse.IsPressed(MouseButtons.Left)));
 	//}
 
 	//static bool WaitForMouseLeftButtonDown(double secondsTimeout)
@@ -4850,7 +4830,7 @@ REE`");
 
 	//static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
 	//{
-	//	return WaitFor.Condition(secondsTimeout, o => Mouse.IsPressed(MouseButtons.Left));
+	//	return WaitFor.Condition(secondsTimeout, () => Mouse.IsPressed(MouseButtons.Left));
 	//}
 
 	[DllImport("user32.dll")]
@@ -4873,7 +4853,7 @@ REE`");
 		//Print(Keyb.IsMod());
 		Print(Keyb.GetMod());
 
-		Perf.SpinCPU(100);
+		Perf.WarmUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -4993,7 +4973,7 @@ REE`");
 	static void TestIsKey()
 	{
 		for(int i = 1; i < 255; i++) {
-			var k = (Keys)i;
+			var k = (KKey)i;
 			var s = k.ToString(); if(Empty(s) || s.Contains(",")) continue;
 			//Print($"{k,-20} {Keyb.IsKeyPressed(k)}, {Keyb.IsKeyToggled(k)}");
 			Print($"{k,-20} {Keyb.GetKeyState(k):X4} {Keyb.GetAsyncKeyState(k):X4}");
@@ -5897,11 +5877,11 @@ REE`");
 		Print("warm");
 		_WriteToQM2("warm");
 
-		var s ="123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.";
+		var s = "123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.";
 		//s = new string('a', 11_0000);
 
 		100.ms();
-		Perf.SpinCPU(100);
+		Perf.WarmUpCPU(100);
 		for(int i1 = 0; i1 < 1; i1++) {
 			int n2 = 100;
 			n2 = 1000000;
@@ -5916,6 +5896,609 @@ REE`");
 			Output.LibUseQM2 = false;
 			1.ms();
 		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static bool _TestLparamOperators(LPARAM a, LPARAM b)
+	{
+		return (a < b);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static LPARAM _TestLparamOperators2(LPARAM a, LPARAM b)
+	{
+		a += 1;
+		return (a + (int)b);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void TestLparamOperators()
+	{
+		//Print(_TestLparamOperators(10, (long)int.MaxValue+1));
+		Print(_TestLparamOperators2((long)int.MaxValue + 1, 10));
+
+		//LPARAM k = (long)int.MaxValue + 1;
+		//int i = k;
+		//long g = k;
+		//Print(i, g);
+	}
+
+	static void TestTimer()
+	{
+		var t = new Timer_(k => { Print(1); /*k.Stop();*/ k.Start(200, true); });
+		t.Start(1000, false);
+		AuDialog.Show();
+	}
+
+	static void TestWinImage1()
+	{
+		var f = Folders.Temp + "test.png";
+		//WinImage.Capture(new RECT(693, 1578, 12, 12, true)).Save(f);
+
+		var w = Wnd.Find("Programs");
+		if(true) {
+			//WinImage.Find(w, f).MouseMove();
+			WinImage.Find(w, f, WIFlags.WindowDC).MouseMove();
+			//WinImage.Wait(10, w, f).MouseMove();
+		} else {
+			var a = Acc.Find(w, "TREE");
+			//WinImage.Find(a, f).MouseMove();
+			WinImage.Find(a, f, WIFlags.WindowDC).MouseMove();
+			//WinImage.Wait(10, w, f).MouseMove();
+		}
+	}
+
+	static void TestShellRunResult()
+	{
+		//var r = Shell.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		//using(var h = r.ProcessHandle) h?.WaitOne();
+		//Print(r.ProcessId, r.ProcessExitCode);
+
+		//Shell.Run("notepad.exe");
+		//Wnd w = WaitFor.WindowActive(10, "*- Notepad", "Notepad");
+
+		//Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		//if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+		//w.Activate();
+
+		Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
+
+		//Wnd w = WaitFor.WindowActive(10, "*- Notepad", "Notepad", "pid=" + Shell.Run("notepad.exe"));
+		//var r = Shell.Run("notepad.exe");
+		//500.ms();
+		////var w = Wnd.Find("*- Notepad", "Notepad", r);
+		//Print("pid: " + r);
+		//var w = Wnd.Find("*- Notepad", "Notepad", "pid=" + r);
+		Print(w);
+	}
+
+	static void TestBase64()
+	{
+		//var a = new byte[] { 1, 2, 3, 4 };
+		//var s = Convert.ToBase64String(a);
+		//Print(Convert_.Base64Decode(s));
+
+		//Print(Au.Controls.ImageUtil.ImageToString(@"Q:\Test\image.png"));
+		//Print(Au.Controls.ImageUtil.ImageToString(@"Q:\app\il_qm.bmp"));
+
+		var s = Au.Controls.ImageUtil.ImageToString(@"Q:\Test\image.png");
+		WinImage.Find(new WIArea(0, 0, 2000, 2000), s).MouseMove();
+	}
+
+	static void TestStringCompare()
+	{
+		string s1 = "123456789i123456789i123456789i123456789i123456789i";
+		string s2 = "123456789i123456789i123456789i123456789i123456789j";
+		string s3 = "23456789i123456789i123456789i123456789i123456789i";
+		string s4 = "123456789i123456789i123456789i123456789i123456789";
+		Print(s1.Equals(s2));
+		Print(s1.Equals(s2, StringComparison.OrdinalIgnoreCase));
+		//Print(string.Compare(s1, s2, StringComparison.Ordinal));
+		//Print(string.Compare(s1, s2, StringComparison.OrdinalIgnoreCase));
+		Print(s1.Equals_(s2));
+		Print(s1.Equals_(s2, true));
+		//Print(s1.EqualsAt_(1, s3));
+		//Print(s1.EqualsAt_(1, s3, true));
+		//Print(s1.EndsWith_(s3));
+		//Print(s1.EndsWith_(s3, true));
+		//Print(s1.StartsWith_(s4));
+		//Print(s1.StartsWith_(s4, true));
+		Print(s1.IndexOfAny("ai".ToCharArray()));
+		Print(s1.IndexOfAny(s_ca1));
+
+		Perf.WarmUpCPU(100);
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 10000;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { s1.Equals(s2); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s1.Equals(s2); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.Equals(s2, StringComparison.OrdinalIgnoreCase); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { string.Compare(s1, s2, StringComparison.Ordinal); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { string.Compare(s1, s2, StringComparison.OrdinalIgnoreCase); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s1.Equals_(s2); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s1.Equals_(s2, true); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.EqualsAt_(0, s2); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.EqualsAt_(0, s2, true); }
+			Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.EndsWith_(s3); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.EndsWith_(s3, true); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.StartsWith_(s4); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { s1.StartsWith_(s4, true); }
+			//Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s1.IndexOfAny("ai".ToCharArray()); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { s1.IndexOfAny(s_ca1); }
+			Perf.Next();
+			Perf.Write();
+		}
+
+	}
+	static char[] s_ca1 = new char[] { 'a', 'i' };
+
+	static void TestWaitFor()
+	{
+		//WaitFor.WindowVisible
+		//Wnd.
+		//new Acc.Finder().Wait
+		//new Wnd.Finder().
+
+		//Print(Wnd.Wait(true, 10, "* Notepad"));
+		//Wnd w = Wnd.WaitAny(true, 10, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
+		//Print(w);
+
+		//Print(Wnd.WaitNot(-5, "* Notepad"));
+
+		//Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
+		//Print(w);
+
+		//Wnd w = Wnd.Find("* Notepad");
+
+		//w.WaitForCondition(30, t => t.IsActive);
+		//Print("active");
+
+		//w.WaitForCondition(0, t => t.IsMinimized || !t.IsAlive, true);
+		//if(!w.IsAlive) { Print("closed"); return; }
+		//Print("minimized");
+
+		//var c = new Wnd.ChildFinder(className: "Edit");
+		//w.WaitForCondition(10, t => c.Find(t) && c.Result.IsFocused);
+		//Print("child focused");
+
+		//Keyb.WaitForNoModifierKeys();
+		//Keyb.WaitForNoModifierKeysAndMouseButtons();
+		//Mouse.WaitForNoButtonsPressed();
+		//WaitFor.Condition(0, () => Keyb.IsScrollLock);
+
+		//Acc a;
+		//a.WaitForState(0, o => !o.IsDisabled);
+		//WaitFor.Condition(0, () => !a.IsDisabled);
+
+		//Shell.Run("notepad.exe");
+		//Wnd w = Wnd.Wait(true, 10, "*- Notepad", "Notepad");
+
+		//Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		//if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
+		//w.Activate();
+
+		//var s = @"Q:\Test\image.png";
+		//var area =new WIArea(200, 0, 1000, 2000);
+		////WinImage.Find(area, s).MouseMove();
+		////WinImage.Wait(5, area, s).MouseMove();
+		//Print(WinImage.WaitNot(-5, area, s));
+
+		//Wnd w = Wnd.Find("Quick*");
+		////w.WaitForCondition(10, t => t.Name.Like_("*Auto*"));
+		//w.WaitForName(10, "*Auto*");
+		////w.WaitForName(10, "**r (Auto*");
+
+		//Print(Mouse.WaitForCursor(-10, MCursor.IBeam));
+
+		//Au.Tools.Misc.GetCurrentMouseCursor(out var hcur);
+		//var hash = Au.Tools.Misc.HashMouseCursor(hcur);
+		////3.s();
+		////Print(Mouse.WaitForCursor(-10, hash));
+		//Print(Mouse.WaitForCursor(-10, hash, true));
+
+		//Time.SleepDoEventsVar()
+
+		//WaitFor.Condition(-0.1, () => false, (1,1));
+		Perf.First();
+		Perf.NW();
+		Output.Clear();
+
+		//var o = new OptWaitFor();
+		//o = true;
+		//Print(o.Period);
+		//return;
+
+		//Timer_.Every(500, t => Print("timer"));
+		//Opt.WaitFor.DoEvents = true;
+		//Opt.WaitFor.Period = 25;
+		//for(int i = 0; i < 1; i++) {
+		//	Perf.First();
+		//	//WaitFor.Condition(-15, () => { Perf.NW(); Perf.First(); return false; });
+		//	WaitFor.Condition(-2.5, () => { Perf.NW(); Perf.First(); return false; }, 20);
+		//}
+
+		//WaitFor.Condition(-0.1, () => false, (1,1));
+		//Perf.First();
+		//Perf.NW();
+		//Output.Clear();
+
+		//WaitFor.OptionFasterResponse = true;
+		//for(int i = 0; i < 1; i++) {
+		//	Perf.First();
+		//	//WaitFor.Condition(-1.5, () => { Perf.NW(); Perf.First(); return false; });
+		//	//WaitFor.Condition(-5.5, () => { Perf.NW(); Perf.First(); return false; }, (30, 100));
+		//	//WaitFor.Condition(-5.5, () => { Perf.NW(); Perf.First(); return false; }, new OptWaitFor(30, 100));
+		//	WaitFor.Condition(-0.5, () => { Perf.NW(); Perf.First(); return false; }, new OptWaitFor(30, 100));
+		//}
+
+		//var w = Wnd.Find("*Notepad");
+		////var w = Wnd.Find("Registry Editor");
+		//var w = Wnd.Find("Font");
+		//////w.ShowMinimized();
+		//////Api.SetForegroundWindow(w);
+		//////Print(Wnd.Wait(true, 30, "*Notepad"));
+		////Print(Wnd.WaitAny(true, 30, new Wnd.Finder("*Notepad")));
+
+		////Print(w.WaitForCondition(10, t => !t.IsAlive, true));
+		//Opt.WaitFor.DoEvents = true;
+		//Timer_.Every(1000, t => Print("timer"));
+		////Print(w.WaitForClosed());
+		////Print(w.WaitForClosed(0, true));
+		//Print(w.WaitForClosed(5, true));
+		//Print(w.WaitForClosed(-5, true));
+
+		var keys = "Ctrl F1  End \ta b #* End-=`~[{]}\\|;:'\",<.>/? cde";
+		//var keys = "Ctrl F1  End \ta b #* Ctrl+(k)";
+		//Print(Keyb.Misc.ParseKeysString(keys));
+		//Print(Keyb.Misc.ParseKeyName("Enter"));
+		//Print(Keyb.Misc.ParseKeyName("F5"));
+		//Print(Keyb.Misc.ParseKeyName("F0x5"));
+		//Print(Keyb.Misc.ParseKeyName("F 5"));
+		//Print(Keyb.Misc.ParseKeyName("F5k"));
+		//Print(Keyb.Misc.ParseKeyName("End"));
+		//Print(Keyb.Misc.ParseKeyName("Ends"));
+		//Print(Keyb.Misc.ParseKeyName("Ends5"));
+		//Print(Keyb.Misc.ParseKeyName("End", 2, 1));
+		//Print(Keyb.Misc.ParseKeyName("End", 3, 1));
+		//Print(Keyb.Misc.ParseKeyName("End", 1, -1));
+		//Print(Keyb.Misc.ParseHotkeyString("End", out var k), k);
+		//Print(Keyb.Misc.ParseHotkeyString(" Shift + * ", out var k), k);
+
+
+		//2.s();
+		////Wnd.Misc.SwitchActiveWindow();
+		//Wnd.Find("Quick*").Activate();
+
+		//Print(Keyb.WaitForReleased(-5, KKey.Left));
+		//Print(Keyb.WaitForReleased(-5, KKey.Shift, KKey.Escape));
+		//Print(Keyb.WaitForReleased(-5, "Left"));
+		//Print(Keyb.WaitForReleased(-5, "Left Shift"));
+		//Print(Keyb.WaitForReleased(-5, "MouseLeft"));
+
+		//Key("Ctrl+A Del", 100, "", "text", KKey.Enter);
+		//Key("F5");
+
+		//Key("Shift*down");
+		//Key("a");
+		//Mouse.Click();
+		//Key("Shift*up");
+
+		//Keyb.WaitForHotkey(0, "F11");
+		//Keyb.WaitForHotkey(0, KKey.F11);
+		//Keyb.WaitForHotkey(0, "Shift+A", true);
+		//Keyb.WaitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
+		//Keyb.WaitForHotkey(0, Keys.Control | Keys.Alt | Keys.H); //Ctrl+Alt+H
+		//Keyb.WaitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
+		//if(!Keyb.WaitForHotkey(-5, "Left")) Print("timeout"); //returns false after 5 s
+
+		//Print(Keyb.WaitForKeyEvent(-5));
+		//Print(Keyb.WaitForKeyEvent(-5, KWFlags.ModLR));
+		//Print(Keyb.WaitForKeyEvent(-5, KWFlags.Up));
+		//Print(Keyb.WaitForKeyEvent(-5, KWFlags.Up|KWFlags.Discard));
+		//Print(Keyb.WaitForKeyEvent(-5, KKey.Ctrl));
+		//Print(Keyb.WaitForKeyEvent(-5, KKey.RCtrl));
+		//Print(Keyb.WaitForKeyEvent(-5, "Left"));
+
+		//Print(Mouse.WaitForClick(-5));
+		//Print(Mouse.WaitForClick(-5, MWFlags.Discard));
+		//Print(Mouse.WaitForClick(-5, MWFlags.Up | MWFlags.Discard));
+		//Print(Mouse.WaitForClick(-5, 0));
+		//Print(Mouse.WaitForClick(-5, MouseButtons.Left));
+		//Print(Mouse.WaitForClick(-5, MouseButtons.Left | MouseButtons.Right));
+
+		//Print(Keyb.WaitForHotkey(0, "#5"));
+		//Print(Keyb.WaitForHotkey(0, 5));
+		//Print(Keyb.IsShift);
+
+		//Wnd.Find("Quick*").Activate();
+		//Print(CopyText());
+		//Paste("test");
+
+		//bool stop = false;
+		//Task.Run(() => { 2.s(); Print("task"); stop = true; });
+		//WaitFor.Variable(5, ref stop, options: 1);
+		//Print(stop);
+
+		//bool stop = false;
+		//Timer_.After(2000, t => { Print("timer"); stop = true; });
+		//WaitFor.Message(5, () => stop);
+		//Print(stop);
+
+		//Timer_.After(2000, t => { Print("timer"); });
+		//WaitFor.PostedMessage(5, (ref Native.MSG m) => { Print(m); return m.message == 0x113; }); //WM_TIMER
+		//Print("finished");
+
+		//using(var b = new BlockUserInput(BIEvents.All)) {
+		//	b.ResendBlockedKeys = true;
+		//	5.s();
+		//}
+
+
+		//var e1 = Api.CreateEvent(default, false, false, null);
+		//var e2 = Api.CreateEvent(default, false, false, null);
+		//////Timer_.After(1000, t => { Print("timer"); Api.SetEvent(e1); Api.SetEvent(e2); });
+		////Timer_.After(1000, t => { Print("timer"); Api.SetEvent(e2); });
+		//////Task.Run(()=> { 2000.ms(); Print("task"); Api.SetEvent(e1); });
+		////var f = WFHFlags.All | WFHFlags.DoEvents;
+		//////Print(Time.LibWait(3000, e1, e2));
+		//////Print(Time.LibWait(3000, f, e1, e2));
+		////Print(WaitFor.Handles(-3, f, e1, e2));
+
+		//bool stop = false, stop2=false;
+		////Timer_.After(1000, t => { Print("timer"); stop = true; });
+		//Timer_.After(1000, t => { Print("timer"); stop2 = true; });
+		////Print(Time.LibWait(3000, WFHFlags.DoEvents, (ref Native.MSG m)=> { Print(m); return true; }, ref stop));
+		//Print(Time.LibWait(3000, WFHFlags.DoEvents| WFHFlags.CallbackAfter, (ref Native.MSG m)=> { Print(m); return stop2; }, ref stop));
+
+		//bool stop = false;
+		//var f = new Form();
+		//f.KeyUp += (unu, sed) =>
+		//{
+		//	Print("start");
+
+		//	////Timer_.After(1000, t => { Print("timer"); Api.SetEvent(e1); Api.SetEvent(e2); });
+		//	Timer_.After(1000, t => { Print("timer"); Api.SetEvent(e2); stop = true; });
+		//	Task.Run(()=> { 2000.ms(); Print("task"); Api.SetEvent(e1); });
+		//	//Task.Run(()=> { 2000.ms(); Print("task"); Api.SetEvent(e2); Api.SetEvent(e1); });
+
+		//	//Time.LibWait(3000, WFHFlags.DoEvents);
+		//	//WaitFor.Handles(-3, 0);
+		//	//WaitFor.Handles(-3, WFHFlags.DoEvents);
+		//	//Print(WaitFor.Handles(-4, 0, e1, e2));
+		//	//Print(WaitFor.Handles(-4, WFHFlags.DoEvents, e1, e2));
+		//	//Print(WaitFor.Handles(-4, WFHFlags.DoEvents | WFHFlags.All, e1, e2));
+		//	//Print(WaitFor.Handles(-4, WFHFlags.All, e1, e2));
+		//	//Thread.CurrentThread.Join(3000);
+		//	//Time.SleepDoEvents(3000);
+		//	Time.SleepDoEventsVar(3000, ref stop);
+		//	Print("end");
+		//};
+		//f.ShowDialog();
+
+		Print("ok");
+	}
+
+	static void TestRegisterHotkey()
+	{
+		var f = new FormRegisterHotkey();
+		f.ShowDialog();
+	}
+
+	class FormRegisterHotkey :Form
+	{
+		RegisterHotkey _hk1, _hk2;
+
+		protected override void WndProc(ref Message m)
+		{
+			switch((uint)m.Msg) {
+			case Api.WM_CREATE: //0x1
+				bool r1 = _hk2.Register(1, "Ctrl+Alt+F10", this);
+				bool r2 = _hk1.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
+				Print(r1, r2);
+				break;
+			case Api.WM_DESTROY: //0x2
+				_hk1.Unregister();
+				_hk2.Unregister();
+				break;
+			case RegisterHotkey.WM_HOTKEY:
+				Print(m.WParam);
+				break;
+			}
+			base.WndProc(ref m);
+		}
+	}
+
+	static unsafe void TestWinHook()
+	{
+		////using Au.Util;
+		//var stop = false;
+		//using(WinHook.Keyboard(x =>
+		//{
+		//	Print(x);
+		//	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to cancel the event
+		//	return false;
+		//})) {
+		//	MessageBox.Show("Low-level keyboard hook.", "Test");
+		//	//or
+		//	//WaitFor.Message(-10, () => stop); //wait max 10 s for Esc key
+		//	//Print("the end");
+		//}
+
+		////using Au.Util;
+		//var stop = false;
+		//using(WinHook.Mouse(x =>
+		//{
+		//	Print(x);
+		//	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to cancel the event
+		//	return false;
+		//})) {
+		//	MessageBox.Show("Low-level mouse hook.", "Test");
+		//	//or
+		//	//WaitFor.Message(-10, () => stop); //wait max 10 s for right-click
+		//	//Print("the end");
+		//}
+
+		////using Au.Util;
+		//using(WinHook.ThreadCbt(x =>
+		//{
+		//	Print(x.code);
+		//	switch(x.code) {
+		//	case HookData.CbtEvent.ACTIVATE:
+		//		Print(x.ActivationInfo(out _, out _));
+		//		break;
+		//	case HookData.CbtEvent.CREATEWND:
+		//		Print(x.CreationInfo(out var c, out _), c->x, c->lpszName);
+		//		break;
+		//	case HookData.CbtEvent.CLICKSKIPPED:
+		//		Print(x.MouseInfo(out var m), m->pt, m->hwnd);
+		//		break;
+		//	case HookData.CbtEvent.KEYSKIPPED:
+		//		Print(x.KeyInfo(out _));
+		//		break;
+		//	case HookData.CbtEvent.SETFOCUS:
+		//		Print(x.FocusInfo(out Wnd wPrev), wPrev);
+		//		break;
+		//	case HookData.CbtEvent.MOVESIZE:
+		//		Print(x.MoveSizeInfo(out var r), r->ToString());
+		//		break;
+		//	case HookData.CbtEvent.MINMAX:
+		//		Print(x.MinMaxInfo(out var state), state);
+		//		break;
+		//	case HookData.CbtEvent.DESTROYWND:
+		//		Print((Wnd)x.wParam);
+		//		break;
+		//	}
+		//	return false;
+		//})) {
+		//	MessageBox.Show("CBT hook.", "Test", MessageBoxButtons.OKCancel);
+		//	//new Form().ShowDialog(); //to test MINMAX
+		//}
+
+		//Timer_.After(1000, t => { Wnd.Misc.PostThreadMessage(Api.WM_APP); Api.PeekMessage(out var mk, default, 0, 0, Api.PM_NOREMOVE); Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE); });
+
+		////using Au.Util;
+		//using(WinHook.ThreadGetMessage(x =>
+		//{
+		//	Print(x.msg->ToString(), x.PM_NOREMOVE);
+		//})) MessageBox.Show("hook");
+
+		////using Au.Util;
+		//using(WinHook.ThreadKeyboard(x =>
+		//{
+		//	Print(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
+		//	return false;
+		//})) MessageBox.Show("hook");
+
+		////using Au.Util;
+		//using(WinHook.ThreadMouse(x =>
+		//{
+		//	Print(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
+		//	return false;
+		//})) MessageBox.Show("hook");
+
+		//Task.Run(() => { 1.s(); Wnd.Find(className: "#32770").Send(Api.WM_APP + 87); });
+
+		////using Au.Util;
+		//using(WinHook.ThreadCallWndProc(x =>
+		//{
+		//	ref var m = ref *x.msg;
+		//	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam);
+		//	Print(mm, x.sentByOtherThread);
+		//})) MessageBox.Show("hook");
+
+		////using Au.Util;
+		//using(WinHook.ThreadCallWndProcRet(x =>
+		//{
+		//	ref var m = ref *x.msg;
+		//	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam); mm.Result = m.lResult;
+		//	Print(mm, x.sentByOtherThread);
+		//})) MessageBox.Show("hook");
+
+		//Print(WaitForKey2(-5, KKey.Left));
+
+		//using(var x = new OnScreenRect()) {
+		//	x.Rect = new RECT(100, 100, 200, 200, true);
+		//	x.Color = Color.SlateBlue;
+		//	x.Thickness = 4;
+		//	x.Show(true);
+		//	for(int i = 0; i < 6; i++) {
+		//		300.ms();
+		//		x.Visible = !x.Visible;
+		//	}
+		//}
+
+		//var h = WinHook.ThreadCbt(x =>
+		// {
+
+		//	 return false;
+		// });
+		//MessageBox.Show("hook");
+
+		//AuDialog.ShowEx("test", secondsTimeout: 5);
+
+		//using(var b = new BlockUserInput(BIEvents.MouseClicks)) {
+		//	//AuDialog.Show(buttons: "OK|Cancel");
+		//	AuDialog.ShowTextInput(out var s, editType: DEdit.Multiline);
+		//}
+	}
+
+	//public static bool WaitForKey(double secondsTimeout, KKey key)
+	//{
+	//	bool ok = false;
+	//	using(WinHook.Keyboard(x => ok = x.IsKey(key))) {
+	//		return WaitFor.Message(secondsTimeout, () => ok);
+	//	}
+	//}
+
+	static void _TestGetAccFromHook()
+	{
+		try {
+			//Api.ReplyMessage(0);
+			Print(Acc.FromMouse());
+		}
+		catch(Exception e) { Print(e.Message); }
+	}
+
+	static void TestAccHook()
+	{
+		//using Au.Util;
+		bool stop = false;
+		using(new AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
+		{
+			Print(x.wnd);
+			var a = x.GetAcc();
+			Print(a);
+			if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
+		})) {
+			MessageBox.Show("hook");
+			//or
+			//WaitFor.Message(-10, () => stop); //wait max 10 s for activated taskbar
+			//Print("the end");
+		}
+
+		//using(var b = new BlockUserInput(BIEvents.Keys)) {
+		//	//AuDialog.Show(buttons: "OK|Cancel");
+		//	AuDialog.ShowTextInput(out var s, editType: DEdit.Multiline);
+		//}
+	}
+
+	static void TestWaitWithHook()
+	{
+
 	}
 
 
@@ -5939,7 +6522,20 @@ REE`");
 		try {
 #if true
 
-			TestOutputServer();
+			//TestWaitFor();
+			//TestAccFromEvent();
+			//TestAccHook();
+			//TestWinHook();
+			//TestOnScreenRect();
+			//TestMyWindow();
+			//TestRegisterHotkey();
+			//TestStringCompare();
+			//TestBase64();
+			//TestShellRunResult();
+			//TestWinImage1();
+			//TestTimer();
+			//TestLparamOperators();
+			//TestOutputServer();
 			//TestAuDialogMessaging();
 			//TestKeybClipbMouseOwnWindow();
 			//TestAuOptions();

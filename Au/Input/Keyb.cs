@@ -47,9 +47,9 @@ namespace Au
 		/// <code><![CDATA[
 		/// var k = new Keyb(Opt.Static.Key);
 		/// k.Options.KeySpeed = 50;
-		/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(Keys.Enter).AddSleep(500);
+		/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
 		/// k.Send(); //sends and clears the variable
-		/// k.Add("Tab // Space*3", "text", Keys.Enter, 500); //does the same as the above k.Add... line
+		/// k.Add("Tab // Space*3", "text", KKey.Enter, 500); //does the same as the above k.Add... line
 		/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
 		/// ]]></code>
 		/// </example>
@@ -84,7 +84,7 @@ namespace Au
 		[StructLayout(LayoutKind.Explicit)]
 		struct _KEvent
 		{
-			[FieldOffset(0)] internal byte vk; //(byte)Keys
+			[FieldOffset(0)] internal KKey vk; //byte
 			[FieldOffset(1)] byte _flags; //_KFlags in 0x0F and _KType in 0xF0
 			[FieldOffset(2)] internal ushort scan; //scan code if IsKey
 			[FieldOffset(2)] internal ushort data; //_data or _data index if IsText or IsCallback
@@ -92,9 +92,9 @@ namespace Au
 			[FieldOffset(2)] internal ushort sleep; //milliseconds if IsSleep
 
 			//Event type KeyEvent or KeyPair.
-			internal _KEvent(bool pair, Keys vk, _KFlags siFlags, ushort scan = 0) : this()
+			internal _KEvent(bool pair, KKey vk, _KFlags siFlags, ushort scan = 0) : this()
 			{
-				this.vk = (byte)vk;
+				this.vk = vk;
 				var f = (byte)siFlags; if(pair) f |= 16; _flags = f;
 				this.scan = scan;
 			}
@@ -107,7 +107,7 @@ namespace Au
 				this.data = data;
 			}
 
-			internal _KType Type => (_KType)((byte)_flags >> 4);
+			internal _KType Type => (_KType)(_flags >> 4);
 			internal bool IsPair => Type == _KType.KeyPair;
 			internal bool IsKey => Type <= _KType.KeyPair;
 			internal bool IsText => Type == _KType.Text;
@@ -127,7 +127,7 @@ namespace Au
 				if(IsCallback) { Debug.Assert(SIFlags == 0); return $"callback " + data; }
 				if(IsSleep) { Debug.Assert(SIFlags == 0); return "sleep " + sleep; }
 				if(IsRepeat) { Debug.Assert(SIFlags == 0); return "repeat " + repeat; }
-				return $"{(Keys)vk,-12} scan={scan,-4} flags={_flags}";
+				return $"{vk,-12} scan={scan,-4} flags={_flags}";
 			}
 #endif
 		}
@@ -138,9 +138,6 @@ namespace Au
 			public Stack<_KEvent> mod; //pushed on "+" or "+(". Then popped on key not preceded by +, and also in Send().
 			public bool paren; //we are between "+(" and ")"
 			public bool plus; //we are between "+" and key or text
-
-			//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
-			public static readonly Regex_ s_rxKeys = new Regex_(@"[A-Z]\w*|#\S|\* *(?:\d+|down|up)\b|[+$]\s*\(|\S");
 		}
 
 		//This struct is used to separate sending-only fields from other fields.
@@ -172,7 +169,7 @@ namespace Au
 			_ThrowIfSending();
 			if(Empty(keys)) return this;
 			int i = 0, len = 0;
-			foreach(var g in _KParsingState.s_rxKeys.FindAllG(keys)) {
+			foreach(var g in _SplitKeysString(keys)) {
 				//Print($"<><c 0xC000>{g.Value}</c>"); //continue;
 				i = g.Index; len = g.Length;
 				char c = keys[i]; _KEvent e;
@@ -196,12 +193,12 @@ namespace Au
 						break;
 					default: //repeat
 						if(!e.IsKey) goto ge;
-						AddRepeat(keys.ToInt32_(i + 1));
+						AddRepeat(keys.ToInt_(i + 1));
 						break;
 					}
 					break;
 				case '$': //Shift+ //note: don't add the same for other modifiers. It just makes difficult to remember and read.
-					AddKey(Keys.ShiftKey);
+					AddKey(KKey.Shift);
 					goto case '+';
 				case '+':
 					if(_pstate.paren || _a.Count == 0) goto ge;
@@ -229,8 +226,7 @@ namespace Au
 				}
 			}
 			return this;
-			ge:
-			throw new ArgumentException($"Error in keys string: {keys.Remove(i)}<<<{keys.Substring(i, len)}>>>{keys.Substring(i + len)}");
+			ge: throw _ArgumentException_ErrorInKeysString(keys, i, len);
 
 			bool _FindLastKey(out _KEvent e, bool canBeText)
 			{
@@ -260,20 +256,20 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds single key, specified as <see cref="Keys"/>, to the internal collection. It will be sent by <see cref="Send"/>.
+		/// Adds single key, specified as <see cref="KKey"/>, to the internal collection. It will be sent by <see cref="Send"/>.
 		/// Returns self.
 		/// </summary>
-		/// <param name="key">Virtual-key code, as <see cref="Keys"/> or int like <c>(Keys)200</c>. Valid values are 1-255.</param>
+		/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
-		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>).</exception>
-		public Keyb AddKey(Keys key, bool? down = null)
+		/// <exception cref="ArgumentException">Invalid <paramref name="key"/> (0).</exception>
+		public Keyb AddKey(KKey key, bool? down = null)
 		{
 			_ThrowIfSending();
-			if(key == 0 || (uint)key > 255) throw new ArgumentException("Invalid value.", nameof(key));
+			if(key == 0) throw new ArgumentException("Invalid value.", nameof(key));
 
 			bool isPair; _KFlags f = 0;
 			if(!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
-			if(_KeyTypes.IsExtended((byte)key)) f |= _KFlags.Extended;
+			if(_KeyTypes.IsExtended(key)) f |= _KFlags.Extended;
 
 			return _AddKey(new _KEvent(isPair, key, f));
 		}
@@ -282,20 +278,19 @@ namespace Au
 		/// Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="Send"/>.
 		/// Returns self.
 		/// </summary>
-		/// <param name="key">Virtual-key code, as <see cref="Keys"/> or int like <c>(Keys)200</c>. Valid values are 1-255. Can be 0.</param>
+		/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
 		/// <param name="scanCode">Scan code of the physical key. Scan code values are 1-127, but this function allows 1-0xffff. Can be 0.</param>
 		/// <param name="extendedKey">true if the key is an extended key.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
-		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>, for example contains modifier flags <b>Control</b>, <b>Shift</b> or <b>Alt</b> (instead use <b>ControlKey</b>, <b>ShiftKey</b> or <b>Menu</b>). Or invalid scan code.</exception>
-		public Keyb AddKey(Keys key, int scanCode, bool extendedKey, bool? down = null)
+		/// <exception cref="ArgumentException">Invalid scan code.</exception>
+		public Keyb AddKey(KKey key, int scanCode, bool extendedKey, bool? down = null)
 		{
 			_ThrowIfSending();
 			if((uint)scanCode > 0xffff) throw new ArgumentException("Invalid value.", nameof(scanCode));
 			bool isPair; _KFlags f = 0;
 			if(key == 0) f = _KFlags.Scancode;
 			else {
-				if((uint)key > 255) throw new ArgumentException("Invalid value.", nameof(key));
-				//don't: if extendedKey false, set true if need. Don't do it because this func is named 'raw'.
+				//don't: if extendedKey false, set true if need. Don't do it because this func is 'raw'.
 			}
 
 			if(!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
@@ -310,10 +305,10 @@ namespace Au
 		/// <param name="vk"></param>
 		/// <param name="scan"></param>
 		/// <param name="siFlags">SendInput flags.</param>
-		internal Keyb LibAddRaw(byte vk, ushort scan, byte siFlags)
+		internal Keyb LibAddRaw(KKey vk, ushort scan, byte siFlags)
 		{
 			_ThrowIfSending();
-			return _AddKey(new _KEvent(false, (Keys)vk, (_KFlags)(siFlags & 0xf), scan));
+			return _AddKey(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
 		}
 
 		/// <summary>
@@ -400,9 +395,6 @@ namespace Au
 			return this;
 		}
 
-		//CONSIDER: AddWaitFocusChanged(float timeS)
-		//	Eg when showing Open/SaveAs dialog, the file Edit control receives focus after 200 ms. Sending text to it works anyway, but the script fails if then it clicks OK not with keys (eg with Acc).
-
 		/// <summary>
 		/// Adds any number of keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
 		/// Returns self.
@@ -425,7 +417,7 @@ namespace Au
 						}
 						AddText(s);
 						break;
-					case Keys k:
+					case KKey k:
 						AddKey(k);
 						break;
 					case int ms:
@@ -437,13 +429,13 @@ namespace Au
 					case Action g:
 						AddCallback(g);
 						break;
-					case ValueTuple<Keys, int, bool> t:
+					case ValueTuple<KKey, int, bool> t:
 						AddKey(t.Item1, t.Item2, t.Item3);
 						break;
 					case ValueTuple<int, bool> t:
 						AddKey(0, t.Item1, t.Item2);
 						break;
-					default: throw new ArgumentException("Bad type. Expected string, Keys, int, double, Action, (Keys, int, bool) or (int, bool).");
+					default: throw new ArgumentException("Bad type. Expected string, KKey, int, double, Action, (KKey, int, bool) or (int, bool).");
 					}
 					wasKeysString = false;
 				}
@@ -506,7 +498,7 @@ namespace Au
 				sleepFinally += _GetOptionsAndWndFocused(out _, false).SleepFinally;
 			}
 			finally {
-				if(restoreCapsLock) Lib.SendKey(Keys.CapsLock);
+				if(restoreCapsLock) Lib.SendKey(KKey.CapsLock);
 				_sending = false;
 				bi.Dispose();
 				//Perf.NW();
@@ -577,7 +569,7 @@ namespace Au
 			}
 			if(sleep < 0) sleep = 0;
 
-			//var s = ((Keys)k.vk).ToString();
+			//var s = (k.vk).ToString();
 			//if(k.IsPair) Print($"{s}<{sleep}>");
 			//else { var ud = k.IsUp ? '-' : '+'; if(sleep > 0) Print($"{s}{ud} {sleep}"); else Print($"{s}{ud}"); }
 
@@ -640,13 +632,13 @@ namespace Au
 						c = '\n';
 					}
 
-					int vk = 0; KMod mod = 0;
+					KKey vk = 0; KMod mod = 0;
 					if(c == '\n') {
-						vk = (int)Keys.Enter;
+						vk = KKey.Enter;
 					} else if(textOption == KTextOption.Keys) {
 						short km = Api.VkKeyScanEx(c, hkl); //note: call for non-ASCII char too; depending on keyboard layout it can succeed
 						if(0 == (km & 0xf800)) { //-1 if failed, mod flag 8 Hankaku key, 16/32 reserved for driver
-							vk = km & 0xff; mod = (KMod)(km >> 8);
+							vk = (KKey)(km & 0xff); mod = (KMod)(km >> 8);
 						}
 						//Print(c, vk, mod, (ushort)km);
 					}
@@ -665,7 +657,7 @@ namespace Au
 						if(sleep > 0) Lib.Sleep(_LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
 					}
 
-					var ki = new Lib.INPUTKEY2((byte)vk, vk == 0 ? c : Lib.VkToSc((byte)vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
+					var ki = new Lib.INPUTKEY2(vk, vk == 0 ? c : Lib.VkToSc(vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
 					Api.SendInput(&ki.k0, sleep > 0 ? 1 : 2);
 					if(sleep > 0) {
 						Lib.Sleep(sleep);

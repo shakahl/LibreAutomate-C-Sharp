@@ -51,38 +51,25 @@ namespace Au.Controls
 		#region util
 
 		/// <summary>
-		/// Calls a Scintilla message to the control.
+		/// Sends a Scintilla message to the control and returns LPARAM.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public LPARAM Call(int sciMessage, LPARAM wParam, LPARAM lParam)
-		{
-			return SC.Call(sciMessage, wParam, lParam);
-		}
+		[DebuggerStepThrough]
+		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => SC.CallRetPtr(sciMessage, wParam, lParam);
 
 		/// <summary>
-		/// Calls a Scintilla message.
+		/// Sends a Scintilla message to the control and returns int.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public LPARAM Call(int sciMessage, LPARAM wParam)
-		{
-			return SC.Call(sciMessage, wParam);
-		}
-
-		/// <summary>
-		/// Calls a Scintilla message.
-		/// Don't call this function from another thread.
-		/// </summary>
-		public LPARAM Call(int sciMessage)
-		{
-			return SC.Call(sciMessage);
-		}
+		[DebuggerStepThrough]
+		public int Call(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => SC.Call(sciMessage, wParam, lParam);
 
 		/// <summary>
 		/// Calls a Scintilla message that sets a string which is passed using lParam.
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public LPARAM SetString(int sciMessage, LPARAM wParam, string lParam)
+		public int SetString(int sciMessage, LPARAM wParam, string lParam)
 		{
 			fixed (byte* s = _ToUtf8(lParam)) {
 				return SC.Call(sciMessage, wParam, s);
@@ -95,7 +82,7 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public LPARAM SetStringString(int sciMessage, string wParam0lParam)
+		public int SetStringString(int sciMessage, string wParam0lParam)
 		{
 			int len;
 			fixed (byte* s = _ToUtf8(wParam0lParam, &len)) {

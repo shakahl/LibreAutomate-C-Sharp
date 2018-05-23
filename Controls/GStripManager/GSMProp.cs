@@ -146,7 +146,7 @@ namespace Au.Controls
 			textHotkey.TextChanged += _TextHotkey_TextChanged;
 		}
 
-		//prevents user selecting an item because it has no sense etc
+		//prevents user selecting an item because it makes no sense etc
 		private void _ComboUsedHotkeys_SelectionChangeCommitted(object sender, EventArgs e)
 		{
 			_TextHotkey_TextChanged(null, e);
@@ -171,7 +171,7 @@ namespace Au.Controls
 			if(Empty(s)) return;
 			bool ok = true;
 			if(!Keyb.Misc.ParseHotkeyString(s, out var mod, out var k) || mod.Has_(KMod.Win)) ok = false;
-			else if(!mod.HasAny_(KMod.Ctrl | KMod.Alt)) ok = (k >= Keys.F2 && k <= Keys.F24);
+			else if(!mod.HasAny_(KMod.Ctrl | KMod.Alt)) ok = (k >= KKey.F2 && k <= KKey.F24);
 
 			if(!ok) {
 				e.Cancel = true;

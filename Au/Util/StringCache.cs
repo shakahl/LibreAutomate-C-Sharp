@@ -26,7 +26,7 @@ namespace Au.Util
 	/// </summary>
 	/// <remarks>
 	/// Can be used in possibly very frequently called functions to avoid much string garbage and frequent garbage collections.
-	/// For example, Wnd.ClassName and Wnd.Name use this. They are called by Wnd.Find for each window (can be hundreds of them). And WaitFor.WindowExists calls Wnd.Find every 30 or so milliseconds. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every Wnd.Find call creates almost the same set of strings, therefore it makes sense to cache them.
+	/// For example, <b>Wnd.ClassName</b> and <b>Wnd.Name</b> use this. They are called by <b>Wnd.Wait</b> for each window (can be hundreds of them) repeatedly. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every loop creates almost the same set of strings, therefore it makes sense to cache them.
 	/// To allow GC free the cached strings, use a WeakReferenc&lt;StringCache&gt; object. See example.
 	/// </remarks>
 	/// <example>
@@ -289,7 +289,7 @@ namespace Au.Util
 		internal static string LibAdd(string s, int startIndex, int count)
 		{
 			int len = s?.Length ?? 0;
-			if((uint)startIndex > len || count < 0 || startIndex + count > len) throw new ArgumentOutOfRangeException();
+			if((uint)startIndex > len || (uint)count > len - startIndex) throw new ArgumentOutOfRangeException();
 			if(len == 0) return s;
 			fixed (char* p = s) return LibAdd(p + startIndex, count);
 		}

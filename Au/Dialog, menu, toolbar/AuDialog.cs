@@ -197,14 +197,14 @@ namespace Au
 			FlagRtlLayout = Options.RtlLayout;
 		}
 
-		//FUTURE: <inheritdoc [cref="member"] [select="xpath-filter-expr"] />
+		//FUTURE: <inheritdoc>
 
 		/// <summary>
 		/// Initializes a new <see cref="AuDialog"/> instance and sets main properties.
 		/// Parameters etc are of <see cref="ShowEx"/>.
 		/// </summary>
 		public AuDialog(
-			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, DOwner owner = default,
+			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) : this()
@@ -396,7 +396,7 @@ namespace Au
 			static string _ParseSingleString(string s, ref int id, bool dontSplit)
 			{
 				if(!dontSplit && s.ToIntAndString_(out var i, out string r)) id = i; else { r = s; id++; }
-				r = r.Trim_("\r\n"); //API does not like newline at start, etc
+				r = r.Trim(String_.Lib.lineSep); //API does not like newline at start, etc
 				if(r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
 				return r;
@@ -645,7 +645,7 @@ namespace Au
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
-		public void SetOwnerWindow(DOwner owner, bool ownerCenter = false, bool doNotDisable = false)
+		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false)
 		{
 			_c.hwndParent = owner.IsEmpty ? default : owner.Wnd.WndWindow;
 			_SetFlag(TDF_.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
@@ -656,8 +656,8 @@ namespace Au
 		/// <summary>
 		/// Sets dialog position in screen.
 		/// </summary>
-		/// <param name="x">X position in <see cref="Screen"/>. If null - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure thet entire window is in screen.</param>
 		public void SetXY(Coord x, Coord y, bool rawXY = false)
 		{
@@ -796,9 +796,9 @@ namespace Au
 
 			_c.pfCallback = _CallbackProc;
 
-			IntPtr hhook = default; Api.HOOKPROC hpHolder = null;
 			int rNativeButton = 0, rRadioButton = 0, rIsChecked = 0, hr = 0;
 			bool hasCustomButtons = false;
+			Util.WinHook hook = null;
 			IntPtr actCtxCookie = default;
 
 			try {
@@ -809,7 +809,7 @@ namespace Au
 				else hasCustomButtons = true;
 
 				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
-					hhook = Api.SetWindowsHookEx(Api.WH_GETMESSAGE, hpHolder = _HookProc, default, Api.GetCurrentThreadId());
+					hook = Util.WinHook.ThreadGetMessage(_HookProc);
 				}
 
 				Wnd.Lib.EnableActivate(true);
@@ -858,10 +858,10 @@ namespace Au
 
 				_threadIdInShow = 0;
 
+				hook?.Dispose();
+
 				//DeactivateActCtx throws SEHException on Thread.Abort, don't know why.
 				try { Util.LibActCtx.Deactivate(actCtxCookie); } catch(SEHException) { /*Debug_.Print("exc");*/ }
-
-				if(hhook != default) Api.UnhookWindowsHookEx(hhook);
 
 				_buttons.MarshalFreeButtons(ref _c);
 			}
@@ -974,7 +974,7 @@ namespace Au
 				break;
 			case TDApi.TDN.TIMER:
 				if(_timeoutActive) {
-					int timeElapsed = wParam / 1000;
+					int timeElapsed = (int)wParam / 1000;
 					if(timeElapsed < _timeoutS) {
 						if(!_timeoutNoInfo) Send.ChangeFooterText(_TimeoutFooterText(_timeoutS - timeElapsed - 1), false);
 					} else {
@@ -987,7 +987,7 @@ namespace Au
 				break;
 			case TDApi.TDN.BUTTON_CLICKED:
 				e = ButtonClicked;
-				wParam = _buttons.MapIdNativeToUser(wParam);
+				wParam = _buttons.MapIdNativeToUser((int)wParam);
 				break;
 			case TDApi.TDN.HYPERLINK_CLICKED:
 				e = HyperlinkClicked;
@@ -1155,11 +1155,11 @@ namespace Au
 			case TDApi.TDM.CLICK_BUTTON:
 			case TDApi.TDM.ENABLE_BUTTON:
 			case TDApi.TDM.SET_BUTTON_ELEVATION_REQUIRED_STATE:
-				wParam = _buttons.MapIdUserToNative(wParam);
+				wParam = _buttons.MapIdUserToNative((int)wParam);
 				break;
 			}
 
-			return _dlg.Send((uint)message, wParam, lParam);
+			return (int)_dlg.Send((uint)message, wParam, lParam);
 		}
 
 		//called by TDSend
@@ -1181,30 +1181,22 @@ namespace Au
 		#region hookProc, timeoutText
 
 		//Disables timeout on click or key.
-		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
+		unsafe void _HookProc(HookData.ThreadGetMessage d)
 		{
-			if(code >= 0 && _HookProc(code, wParam, ref *(Native.MSG*)lParam)) return 1;
-
-			return Api.CallNextHookEx(default, code, wParam, lParam);
-		}
-
-		bool _HookProc(int code, LPARAM wParam, ref Native.MSG m)
-		{
-			switch(m.message) {
+			switch(d.msg->message) {
 			case Api.WM_LBUTTONDOWN:
 			case Api.WM_NCLBUTTONDOWN:
 			case Api.WM_RBUTTONDOWN:
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_KEYDOWN:
 			case Api.WM_SYSKEYDOWN:
-				if(_timeoutActive && m.hwnd.WndWindow == _dlg) {
+				if(_timeoutActive && d.msg->hwnd.WndWindow == _dlg) {
 					_timeoutActive = false;
 					//_TimeoutFooterTextHide();
 					Send.ChangeFooterText(_timeoutFooterText, false);
 				}
 				break;
 			}
-			return false;
 		}
 
 		string _TimeoutFooterText(int timeLeft)
@@ -1392,8 +1384,8 @@ namespace Au
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
 		/// <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="DResult.Timeout"/>.</param>
 		/// <param name="onLinkClick">
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
@@ -1421,7 +1413,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static DResult ShowEx(
-			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, DOwner owner = default,
+			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			)
@@ -1485,7 +1477,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, DOwner owner = default, string expandedText = null)
+		public static int Show(string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return ShowEx(text1, text2, buttons, icon, flags, owner, expandedText).Button;
 		}
@@ -1495,7 +1487,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DOwner owner = default, string expandedText = null)
+		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return Show(text1, text2, buttons, DIcon.Info, flags, owner, expandedText);
 		}
@@ -1505,7 +1497,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DOwner owner = default, string expandedText = null)
+		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return Show(text1, text2, buttons, DIcon.Warning, flags, owner, expandedText);
 		}
@@ -1515,7 +1507,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DOwner owner = default, string expandedText = null)
+		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return Show(text1, text2, buttons, DIcon.Error, flags, owner, expandedText);
 		}
@@ -1526,7 +1518,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, DIcon icon = 0, DFlags flags = 0, DOwner owner = default, string expandedText = null)
+		public static bool ShowOKCancel(string text1 = null, string text2 = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner, expandedText);
 		}
@@ -1537,7 +1529,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, DIcon icon = 0, DFlags flags = 0, DOwner owner = default, string expandedText = null)
+		public static bool ShowYesNo(string text1 = null, string text2 = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner, expandedText);
 		}
@@ -1561,8 +1553,8 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
@@ -1598,7 +1590,7 @@ namespace Au
 		public static DResult ShowTextInputEx(
 			string text1 = null, string text2 = null,
 			DEdit editType = DEdit.Text, object editText = null,
-			DFlags flags = 0, DOwner owner = default,
+			DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
 			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
 			string buttons = "1 OK|2 Cancel", Action<DEventArgs> onButtonClick = null
@@ -1646,7 +1638,7 @@ namespace Au
 			out string s,
 			string text1 = null, string text2 = null,
 			DEdit editType = DEdit.Text, object editText = null,
-			DFlags flags = 0, DOwner owner = default
+			DFlags flags = 0, AnyWnd owner = default
 			)
 		{
 			s = null;
@@ -1682,12 +1674,12 @@ namespace Au
 			out int i,
 			string text1 = null, string text2 = null,
 			DEdit editType = DEdit.Number, object editText = null,
-			DFlags flags = 0, DOwner owner = default
+			DFlags flags = 0, AnyWnd owner = default
 			)
 		{
 			i = 0;
 			if(!ShowTextInput(out string s, text1, text2, editType, editText, flags, owner)) return false;
-			i = s.ToInt32_();
+			i = s.ToInt_();
 			return true;
 		}
 
@@ -1710,8 +1702,8 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If null (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <remarks>
@@ -1726,7 +1718,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static DResult ShowListEx(
-			object list, string text1 = null, string text2 = null, DFlags flags = 0, DOwner owner = default,
+			object list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
@@ -1762,7 +1754,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(object list, string text1 = null, string text2 = null, DFlags flags = 0, DOwner owner = default)
+		public static int ShowList(object list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default)
 		{
 			return ShowListEx(list, text1, text2, flags, owner);
 		}
@@ -1795,7 +1787,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="AuException">Failed to show dialog.</exception>
 		public static AuDialog ShowProgressEx(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, DOwner owner = default,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 		)
@@ -1838,7 +1830,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="AuException">Failed to show dialog.</exception>
 		public static AuDialog ShowProgress(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, DOwner owner = default,
+			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			Coord x = default, Coord y = default)
 		{
 			return ShowProgressEx(marquee, text1, text2, buttons, flags, owner, x: x, y: y);
@@ -1872,7 +1864,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static AuDialog ShowNoWaitEx(
-			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, DOwner owner = default,
+			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			)
@@ -1897,7 +1889,7 @@ namespace Au
 		public static AuDialog ShowNoWait(
 			string text1 = null, string text2 = null,
 			string buttons = null, DIcon icon = 0, DFlags flags = 0,
-			DOwner owner = default
+			AnyWnd owner = default
 			)
 		{
 			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);
@@ -2086,13 +2078,13 @@ namespace Au.Types
 		/// <summary>
 		/// Clicked button id. Use in <see cref="AuDialog.ButtonClicked"/> event handler.
 		/// </summary>
-		public int Button => wParam;
+		public int Button => (int)wParam;
 
 		/// <summary>
 		/// Dialog timer time in milliseconds. Use in <see cref="AuDialog.Timer"/> event handler.
 		/// The event handler can set <b>returnValue</b>=1 to reset this.
 		/// </summary>
-		public int TimerTimeMS => wParam;
+		public int TimerTimeMS => (int)wParam;
 
 		/// <summary>
 		/// Your <see cref="AuDialog.ButtonClicked"/> event handler function can use this to prevent closing the dialog.

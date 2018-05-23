@@ -403,7 +403,7 @@ namespace Au.Controls
 					for(int i = 1, k = this.SplitterWidth; i <= 10; i++)
 						m.Add(i.ToString(), o =>
 						{
-							this.SplitterWidth = o.Item.Text.ToInt32_();
+							this.SplitterWidth = o.Item.Text.ToInt_();
 							_manager._UpdateLayout(true); //not this.UpdateLayout() because may need to apply minimal layouts
 						}).Checked = k == 0;
 				}

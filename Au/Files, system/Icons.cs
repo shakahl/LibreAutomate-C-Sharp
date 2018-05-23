@@ -579,7 +579,7 @@ namespace Au
 			if(s.Length < 3) return false;
 			if(!Char_.IsAsciiDigit(s[s.Length - 1])) return false;
 			int i = s.LastIndexOf(','); if(i < 1) return false;
-			index = s.ToInt32_(i + 1, out int e); if(e != s.Length) return false;
+			index = s.ToInt_(i + 1, out int e); if(e != s.Length) return false;
 			s = s.Remove(i);
 			return true;
 
@@ -936,11 +936,11 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Gets file icon as Bitmap.
+			/// Gets file icon as <b>Bitmap</b>.
 			/// If it is in the memory cache, gets it from there.
 			/// Else if it is in the file cache, gets it from there and adds to the memory cache.
 			/// Else gets from file (uses <see cref="Icons.GetFileIconImage"/> and adds to the file cache and to the memory cache.
-			/// Returns null if GetFileIconImage failed, eg file does not exist.
+			/// Returns null if <b>GetFileIconImage</b> failed, eg file does not exist.
 			/// </summary>
 			/// <param name="file">Any file or folder.</param>
 			/// <param name="useExt">
@@ -982,13 +982,13 @@ namespace Au
 								Debug_.Print("info: cleared icon cache");
 							}
 
-							//TODO: Delete unused entries. Maybe try to auto-update changed icons.
+							//FUTURE: Delete unused entries. Maybe try to auto-update changed icons.
+							//	Not very important, because there is ClearCache.
 						}
 						if(_x != null) {
 							var x = _x.Element_("i", "name", file, true);
 							if(x != null) {
-								//using(var ms = new MemoryStream(Convert.FromBase64String(x.Value))) {
-								using(var ms = new MemoryStream(Convert_.Base64Decode(x.Value))) {
+								using(var ms = new MemoryStream(Convert_.Base64Decode(x.Value), false)) {
 									R = new Bitmap(ms);
 								}
 							}

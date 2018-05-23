@@ -449,35 +449,35 @@ namespace Au.Types
 		/// The offset within the subject string at which the current match attempt started. But depends on \K etc.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public int start_match => _p->start_match;
+		public int start_match => (int)_p->start_match;
 
 		/// <summary>
 		/// The current offset within the subject string.
 		/// </summary>
-		public int current_position => _p->current_position;
+		public int current_position => (int)_p->current_position;
 
 		/// <summary>
 		/// The offset in the regular expression to the next item to be matched.
 		/// </summary>
-		public int pattern_position => _p->pattern_position;
+		public int pattern_position => (int)_p->pattern_position;
 
 		/// <summary>
 		/// The length of the next item to be processed in the regular expression.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public int next_item_length => _p->next_item_length;
+		public int next_item_length => (int)_p->next_item_length;
 
 		/// <summary>
 		/// The callout string offset in the regular expression. Used with callouts like "(?C'calloutString')".
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public int callout_string_offset => _p->callout_string_offset;
+		public int callout_string_offset => (int)_p->callout_string_offset;
 
 		/// <summary>
 		/// The callout string, eg "xyz" for "(?C'xyz')".
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public string callout_string => _p->callout_string == null ? null : Util.StringCache.LibAdd(_p->callout_string, _p->callout_string_length);
+		public string callout_string => _p->callout_string == null ? null : Util.StringCache.LibAdd(_p->callout_string, (int)_p->callout_string_length);
 
 		/// <summary>
 		/// The most recently passed (*MARK), (*PRUNE), or (*THEN) item in the match, or null if no such items have been passed.
@@ -494,8 +494,8 @@ namespace Au.Types
 		{
 			if(group <= 0 || group >= _p->capture_top) throw new ArgumentOutOfRangeException(nameof(group), "Must be > 0 and < capture_top.");
 			var v = _p->vec;
-			int i = v[group *= 2];
-			return (i, v[group + 1] - i);
+			int i = (int)v[group *= 2];
+			return (i, (int)v[group + 1] - i);
 		}
 
 		/// <summary>

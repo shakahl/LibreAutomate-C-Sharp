@@ -178,7 +178,7 @@ namespace Au
 		public static int HashFast(string s, int startIndex, int count)
 		{
 			int len = s?.Length ?? 0;
-			if((uint)startIndex > len || count < 0 || startIndex + count > len) throw new ArgumentOutOfRangeException();
+			if((uint)startIndex > len || (uint)count > len - startIndex) throw new ArgumentOutOfRangeException();
 			if(s == null) return 0;
 			fixed (char* p = s) return HashFast(p + startIndex, count);
 		}
@@ -460,58 +460,57 @@ namespace Au
 
 		#region base64
 
-		/// <summary>
-		/// Converts Base64 ANSI string to binary data (bytes). Stores it in caller's memory buffer.
-		/// Returns the number of bytes stored in resultBuffer.
-		/// </summary>
-		/// <param name="s">Base64 string. Can be null if len is 0.</param>
-		/// <param name="len">s length (bytes).</param>
-		/// <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
-		/// <param name="bufferSize">resultBuffer buffer length (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
-		/// <remarks>
-		/// Allows (discards) non-base64 characters.
-		/// Supports URL-safe characters: '-' for '+' and '_' for '/'.
-		/// </remarks>
-		/// <exception cref="ArgumentException">bufferSize too small.</exception>
-		public static unsafe int Base64Decode(byte* s, int len, void* resultBuffer, int bufferSize)
-		{
-			//TODO: remove this overload if not used.
+		//currently not used
+		///// <summary>
+		///// Converts Base64 ANSI string to binary data (bytes). Stores it in caller's memory buffer.
+		///// Returns the number of bytes stored in resultBuffer.
+		///// </summary>
+		///// <param name="s">Base64 string. Can be null if len is 0.</param>
+		///// <param name="len">s length (bytes).</param>
+		///// <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
+		///// <param name="bufferSize">resultBuffer buffer length (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
+		///// <remarks>
+		///// Allows (discards) non-base64 characters.
+		///// Supports URL-safe characters: '-' for '+' and '_' for '/'.
+		///// </remarks>
+		///// <exception cref="ArgumentException">bufferSize too small.</exception>
+		//public static unsafe int Base64Decode(byte* s, int len, void* resultBuffer, int bufferSize)
+		//{
+		//	if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");
+		//	byte* r = (byte*)resultBuffer;
+		//	byte* t = Util.LibTables.Base64;
 
-			if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");
-			byte* r = (byte*)resultBuffer;
-			byte* t = Util.LibTables.Base64;
+		//	var sTo = s + len;
+		//	uint x = 0x80;
+		//	while(s < sTo) {
+		//		byte ch = *s++;
+		//		if(ch > 'z') continue;
+		//		uint sixBits = t[ch];
+		//		if(sixBits == 0xff) continue;
+		//		x <<= 6;
+		//		x |= sixBits;
 
-			var sTo = s + len;
-			uint x = 0x80;
-			while(s < sTo) {
-				byte ch = *s++;
-				if(ch > 'z') continue;
-				uint sixBits = t[ch];
-				if(sixBits == 0xff) continue;
-				x <<= 6;
-				x |= sixBits;
+		//		if(0 != (x & 0x80000000)) {
+		//			r[0] = (byte)(x >> 16);
+		//			r[1] = (byte)(x >> 8);
+		//			r[2] = (byte)(x);
+		//			r += 3;
+		//			x = 0x80;
+		//		}
+		//	}
 
-				if(0 != (x & 0x80000000)) {
-					r[0] = (byte)(x >> 16);
-					r[1] = (byte)(x >> 8);
-					r[2] = (byte)(x);
-					r += 3;
-					x = 0x80;
-				}
-			}
-
-			if(x != 0x80) {
-				if(0 != (x & 0x2000000)) { //the last 3 chars -> 2 bytes
-					r[0] = (byte)(x >> 10); //x contains 18 bits
-					r[1] = (byte)(x >> 2);
-					r += 2;
-				} else if(0 != (x & 0x80000)) { //the last 2 chars -> 1 byte
-					r[0] = (byte)(x >> 4); //x contains 12 bits
-					r += 1;
-				}
-			}
-			return (int)(r - (byte*)resultBuffer);
-		}
+		//	if(x != 0x80) {
+		//		if(0 != (x & 0x2000000)) { //the last 3 chars -> 2 bytes
+		//			r[0] = (byte)(x >> 10); //x contains 18 bits
+		//			r[1] = (byte)(x >> 2);
+		//			r += 2;
+		//		} else if(0 != (x & 0x80000)) { //the last 2 chars -> 1 byte
+		//			r[0] = (byte)(x >> 4); //x contains 12 bits
+		//			r += 1;
+		//		}
+		//	}
+		//	return (int)(r - (byte*)resultBuffer);
+		//}
 
 		/// <summary>
 		/// Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
@@ -521,18 +520,10 @@ namespace Au
 		/// <param name="len">s length (characters).</param>
 		/// <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
 		/// <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
-		/// <remarks>
-		/// How it is different than Convert.FromBase64String:
-		/// 1. Allows (discards) non-base64 characters.
-		/// 2. Supports URL-safe characters: '-' for '+' and '_' for '/'.
-		/// 3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 
-		/// 4. Faster.
-		/// </remarks>
 		/// <exception cref="ArgumentException">bufferSize too small.</exception>
+		/// <remarks><inheritdoc cref="Base64Decode(string)"/></remarks>
 		public static unsafe int Base64Decode(char* s, int len, void* resultBuffer, int bufferSize)
 		{
-			//TODO: try to do it in a safer way, eg with a WeakReference<byte[]>.
-
 			if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");
 			byte* r = (byte*)resultBuffer;
 			byte* t = Util.LibTables.Base64;
@@ -568,22 +559,8 @@ namespace Au
 			}
 			return (int)(r - (byte*)resultBuffer);
 
-			//speed: slightly faster than HexDecode for the same binary data size. Near 2 times faster than the .NET function, when don't need to allocate buffer for result.
-		}
-
-		/// <summary>
-		/// Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
-		/// Returns the number of bytes stored in resultBuffer.
-		/// The same as <see cref="Base64Decode(char*, int, void*, int)"/>, just different input string type.
-		/// </summary>
-		/// <param name="s">Base64 string. Can be null, then returns null.</param>
-		/// <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
-		/// <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
-		/// <param name="stringStartIndex">0 or index of first character of Base64 substring in s.</param>
-		public static int Base64Decode(string s, void* resultBuffer, int bufferSize, int stringStartIndex = 0)
-		{
-			if(s == null) return 0;
-			fixed (char* p = s) return Base64Decode(p + stringStartIndex, s.Length - stringStartIndex, resultBuffer, bufferSize);
+			//speed: slightly faster than HexDecode for the same binary data size.
+			//	Near 2 times faster than the .NET function, when don't need to allocate buffer for result.
 		}
 
 		/// <summary>
@@ -592,14 +569,12 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Base64 string. Can be null, then returns null.</param>
 		/// <remarks>
-		/// How it is different than Convert.FromBase64String:
+		/// How this function is different than <see cref="Convert.FromBase64String"/>:
 		/// 1. Allows (discards) non-base64 characters.
 		/// 2. Supports URL-safe characters: '-' for '+' and '_' for '/'.
 		/// 3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 
-		/// 4. Faster.
 		/// 
 		/// This library does not have Base64-encode functions. Use <see cref="Convert.ToBase64String(byte[])"/>.
-		/// See also <see cref="Convert.FromBase64String(string)"/>. It does the same, but does not support some parameter types (char*, ANSI string, byte* buffer) that are used internally in this libray and related software, that is why these library functions were created.
 		/// </remarks>
 		public static unsafe byte[] Base64Decode(string s)
 		{

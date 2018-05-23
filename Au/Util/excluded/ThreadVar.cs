@@ -159,7 +159,7 @@ namespace Au//.Util
 
 		void _LaterDispose()
 		{
-			//todo: subscribe to Thread_.Exit.
+			//_TODO: subscribe to Thread_.Exit.
 		}
 	}
 }

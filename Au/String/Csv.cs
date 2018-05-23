@@ -436,7 +436,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public int GetInt(int row, int column)
 		{
-			return this[row, column].ToInt32_();
+			return this[row, column].ToInt_();
 		}
 
 		/// <summary>

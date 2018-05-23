@@ -85,13 +85,13 @@ namespace Au
 						if(k.Length == 0) goto ge1;
 						_program = k;
 					} else if(t.StartsWith("pid=")) {
-						_processId = programEtc.ToInt32_(t.Offset + 4);
+						_processId = programEtc.ToInt_(t.Offset + 4);
 						if(_processId == 0) goto ge2;
 					} else if(t.StartsWith("tid=")) {
-						_threadId = programEtc.ToInt32_(t.Offset + 4);
+						_threadId = programEtc.ToInt_(t.Offset + 4);
 						if(_threadId == 0) goto ge2;
 					} else if(t.StartsWith("owner=")) {
-						_owner = (Wnd)(LPARAM)programEtc.ToInt32_(t.Offset + 6);
+						_owner = (Wnd)(LPARAM)programEtc.ToInt_(t.Offset + 6);
 						if(_owner.Is0) goto ge2;
 					} else goto ge3;
 
@@ -390,13 +390,13 @@ namespace Au
 		/// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
 		/// </summary>
 		/// <remarks>
-		/// <b>WaitFor.WindowActive</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
+		/// <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
 		/// </remarks>
 		/// <example>
-		/// This example is similar to what FindOrRun does.
+		/// This example is similar to what <see cref="FindOrRun"/> does.
 		/// <code><![CDATA[
 		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		/// if(w.Is0) { Shell.Run("notepad.exe"); w = WaitFor.WindowActive(Wnd.LastFind); }
+		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
 		/// ]]></code>
 		/// </example>
 		public static Finder LastFind { get => t_lastFindParams; set { t_lastFindParams = value; } }
@@ -450,11 +450,10 @@ namespace Au
 			return Api.FindWindowEx(default, wAfter, className, name);
 		}
 
-		//TODO: test more.
 		/// <summary>
 		/// Finds a top-level window. If found, activates (optionally), else calls callback function that should open the window (eg call <see cref="Shell.Run"/>) and waits for the window.
-		/// Returns window handle as Wnd. Returns default(Wnd) if not found (if runWaitTimeoutS is negative; else exception).
-		/// The first 5 parameters are the same as <see cref="Find"/>.
+		/// Returns window handle as Wnd. Returns default(Wnd) if not found (if <paramref name="runWaitS"/> is negative; else exception).
+		/// The first 6 parameters are the same as <see cref="Find"/>.
 		/// </summary>
 		/// <param name="name"></param>
 		/// <param name="className"></param>
@@ -463,16 +462,16 @@ namespace Au
 		/// <param name="also"></param>
 		/// <param name="contains"></param>
 		/// <param name="run">Callback function's delegate. See example.</param>
-		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="WaitFor.WindowActive(double, string, string, string, WFFlags, Func{Wnd, bool}, object, bool)"/>.</param>
-		/// <param name="needActiveWindow">Finally the window must be active. For more info see the algorithm in Remarks.</param>
+		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="Wait"/>.</param>
+		/// <param name="needActiveWindow">Finally the window must be active.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
-		/// <exception cref="TimeoutException">runWaitTimeoutS time has expired.</exception>
+		/// <exception cref="TimeoutException"><paramref name="runWaitS"/> time has expired.</exception>
 		/// <remarks>
 		/// The algorithm is:
 		/// <code>
 		/// var w=Wnd.Find(...);
-		/// if(!w.Is0) { if(needActiveWindow) w.Activate(); }
-		/// else if(run!=null) { run(); if(needActiveWindow) w = WaitFor.WindowActive(..., runWaitTimeoutS); else WaitFor.WindowExists(..., runWaitTimeoutS); }
+		/// if(w.Is0) { run(); w=Wnd.Wait(needActiveWindow, runWaitS, ...); }
+		/// else if(needActiveWindow) w.Activate();
 		/// return w;
 		/// </code>
 		/// </remarks>
@@ -485,17 +484,15 @@ namespace Au
 		public static Wnd FindOrRun(
 			string name = null, string className = null, string programEtc = null,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null,
-			Func<int> run = null, double runWaitS = 60.0, bool needActiveWindow = true)
+			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
 			var w = Find(name, className, programEtc, flags, also, contains);
 			if(!w.Is0) {
 				if(needActiveWindow) w.Activate();
 			} else if(run != null) {
 				var finder = LastFind;
-				var r = run();
-				//TODO: set finder._processId = r (when we have Shell.RunResult). Allow null.
-				if(needActiveWindow) w = WaitFor.WindowActive(finder, runWaitS);
-				else w = WaitFor.WindowExists(finder, runWaitS);
+				run();
+				w = WaitAny(needActiveWindow, runWaitS, finder);
 			}
 			return w;
 		}
@@ -805,4 +802,15 @@ namespace Au.Types
 		/// </summary>
 		SkipCloaked = 2,
 	}
+
+	//rejected: the type of parameter programEtc of Wnd.Find. Better use string like "pid: " + pid.
+	//public class WFEtc
+	//{
+	//	object _o;
+	//	WFEtc(object o) => _o = o;
+
+	//	public static implicit operator WFEtc(string program)=>new WFEtc(program);
+	//	public static implicit operator WFEtc(int processId)=>new WFEtc(processId);
+	//	public static implicit operator WFEtc(Wnd ownerWindow)=>new WFEtc(ownerWindow);
+	//}
 }

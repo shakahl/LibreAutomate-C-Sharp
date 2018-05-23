@@ -52,5 +52,15 @@ namespace Au
 		/// </summary>
 		public static bool IsAsciiAlpha(byte c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
 
+		/// <summary>
+		/// Returns true if character is 'A' to 'Z' or 'a' to 'z' or '0' to '9'.
+		/// </summary>
+		public static bool IsAsciiAlphaDigit(char c) { return IsAsciiAlpha(c) || IsAsciiDigit(c); }
+
+		/// <summary>
+		/// Returns true if character is 'A' to 'Z' or 'a' to 'z' or '0' to '9'.
+		/// </summary>
+		public static bool IsAsciiAlphaDigit(byte c) { return IsAsciiAlpha(c) || IsAsciiDigit(c); }
+
 	}
 }

@@ -172,7 +172,7 @@ namespace Au
 						wFocus.Post(Api.WM_SYSCOMMAND, 65520);
 						//system menu -> &Edit -> &Copy; tested on all OS; Windows 10 supports Ctrl+C, but it may be disabled.
 					} else {
-						ctrlC.Press(cut ? Keys.X : Keys.C, opt, wFocus);
+						ctrlC.Press(cut ? KKey.X : KKey.C, opt, wFocus);
 					}
 
 					//wait until the app sets clipboard text
@@ -328,7 +328,7 @@ namespace Au
 						wFocus.Post(Api.WM_SYSCOMMAND, 65521);
 						//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it may be disabled.
 					} else {
-						ctrlV.Press(Keys.V, opt, wFocus, enter);
+						ctrlV.Press(KKey.V, opt, wFocus, enter);
 					}
 
 					//wait if the app slowly gets clipboard text
@@ -363,7 +363,7 @@ namespace Au
 		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
 		/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
 		/// </summary>
-		class _ClipboardListener
+		class _ClipboardListener :LibWaitVariable
 		{
 			bool _paste; //true if used for paste, false if for copy
 			object _data; //string or Data. null if !_paste.
@@ -375,7 +375,7 @@ namespace Au
 			/// The clipboard message has been received. Probably the target window responded to the Ctrl+C or Ctrl+V.
 			/// On Paste it is unreliable because of clipboard viewers/managers/etc. The caller also must check IsBadWindow.
 			/// </summary>
-			public bool Success;
+			public bool Success => waitVar;
 
 			/// <summary>
 			/// On Paste, true if probably not the target process retrieved clipboard data. Probably a clipboard viewer/manager/etc.
@@ -421,9 +421,7 @@ namespace Au
 			{
 				//Print(Success); //on Paste often already true, because SendInput dispatches sent messages
 				for(int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.
-					Time.SleepDoEvents(500, ref Success);
-					//note: don't use ', qsSendmessage: true' on Copy, because WM_CLIPBOARDUPDATE is posted, not sent.
-					//	On Paste too, else does not work if the target window is of this thread.
+					WaitFor.LibWait(500, WHFlags.DoEvents, null, this);
 
 					if(Success) break;
 					//is hung?
@@ -453,12 +451,12 @@ namespace Au
 
 						try { _SetClipboard(_data, false); }
 						catch(Exception ex) { FailedToSetData = ex; } //cannot throw in wndproc, will throw later
-						Success = true;
+						waitVar = true;
 					}
 					return 0;
 				case Api.WM_CLIPBOARDUPDATE:
 					//this message was added in Vista. It is posted, not sent. Once, not for each format. QM2 used SetClipboardViewer/WM_DRAWCLIPBOARD.
-					if(!_paste) Success = true;
+					if(!_paste) waitVar = true;
 					return 0;
 				}
 

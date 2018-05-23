@@ -34,6 +34,7 @@ namespace Au
 	/// <item>In special screens such as when you press Ctrl+Alt+Delete or when you launch and admin program. See also <see cref="ResumeAfterCtrlAltDelete"/>.</item>
 	/// <item>Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.</item>
 	/// <item><see cref="DoNotBlockKeys"/> keys.</item>
+	/// <item>Keyboard hooks don't work in windows of this process if this process uses direct input or raw input API.</item>
 	/// </list>
 	/// 
 	/// To stop blocking, can be used the 'using' pattern, like in the example. Or the 'try/finally' pattern, where the finally block calls <see cref="Dispose"/> or <see cref="Stop"/>. Also automatically stops when this thread ends. Users can stop with Ctrl+Alt+Delete.
@@ -153,91 +154,87 @@ namespace Au
 
 		void _ThreadProc()
 		{
-			IntPtr hk = default, hm = default, hwe = default;
+			Util.WinHook hk = null, hm = null; Util.AccHook hwe = null;
 			try {
-				if(_block.Has_(BIEvents.Keys)) {
-					if(_keyHookProc == null) _keyHookProc = _KeyHookProc;
-					hk = Api.SetWindowsHookEx(Api.WH_KEYBOARD_LL, _keyHookProc, default, 0);
-					if(hk == default) _block = 0;
+				try {
+					if(_block.Has_(BIEvents.Keys))
+						hk = Util.WinHook.Keyboard(_keyHookProc ?? (_keyHookProc = _KeyHookProc));
+					if(_block.HasAny_(BIEvents.MouseClicks | BIEvents.MouseMoving))
+						hm = Util.WinHook.Mouse(_mouseHookProc ?? (_mouseHookProc = _MouseHookProc));
 				}
-				if(_block.HasAny_(BIEvents.MouseClicks | BIEvents.MouseMoving)) {
-					if(_mouseHookProc == null) _mouseHookProc = _MouseHookProc;
-					hm = Api.SetWindowsHookEx(Api.WH_MOUSE_LL, _mouseHookProc, default, 0);
-					if(hm == default) _block = 0;
-				}
-				if(_block == 0) return;
+				catch(AuException e1) { Debug_.Print(e1); _block = 0; return; } //failed to hook
 				Api.SetEvent(_syncEvent);
 
-				if(_winEventProc == null) _winEventProc = _WinEventProc;
-				hwe = Api.SetWinEventHook(AccEVENT.SYSTEM_DESKTOPSWITCH, AccEVENT.SYSTEM_DESKTOPSWITCH, default, _winEventProc, 0, 0, 0);
+				try { hwe = new Util.AccHook(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ?? (_winEventProc = _WinEventProc)); }
+				catch(AuException e1) { Debug_.Print(e1); } //failed to hook
 				//info: the hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
 
 				//Print("started");
-				Time.LibMsgWaitFor(2, _stopEvent, _threadHandle);
+				WaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 				//Print("ended");
-				GC.KeepAlive(this);
 			}
 			finally {
-				if(hk != default) Api.UnhookWindowsHookEx(hk);
-				if(hm != default) Api.UnhookWindowsHookEx(hm);
-				if(hwe != default) Api.UnhookWinEvent(hwe);
+				hk?.Dispose();
+				hm?.Dispose();
+				hwe?.Dispose();
 				Api.SetEvent(_syncEvent);
-				GC.KeepAlive(this);
 			}
+			GC.KeepAlive(this);
 		}
 
-		//protect hook delegates from GC
-		Api.HOOKPROC _keyHookProc, _mouseHookProc;
-		Api.WINEVENTPROC _winEventProc;
+		Func<HookData.Keyboard, bool> _keyHookProc;
+		Func<HookData.Mouse, bool> _mouseHookProc;
+		Action<HookData.AccHookData> _winEventProc;
 
-		LPARAM _KeyHookProc(int code, LPARAM message, LPARAM lParam)
+		bool _KeyHookProc(HookData.Keyboard x)
 		{
-			var e = (Api.KBDLLHOOKSTRUCT*)lParam;
-			if(!_DoNotBlock(e->IsInjected, e->dwExtraInfo, e->vkCode)) {
-				//Print(message, e->vkCode);
+			if(_DoNotBlock(x.IsInjected, x.dwExtraInfo, x.vkCode)) return false;
+			//Print(message, x.vkCode);
 
-				//if(e->vkCode == (uint)Keys.Delete && !e->IsUp) {
-				//	//Could detect Ctrl+Alt+Del here. But SetWinEventHook(SYSTEM_DESKTOPSWITCH) is better.
-				//}
+			//if(x.vkCode == KKey.Delete && !x.IsUp) {
+			//	//Could detect Ctrl+Alt+Del here. But SetWinEventHook(SYSTEM_DESKTOPSWITCH) is better.
+			//}
 
-				if(ResendBlockedKeys && Time.Milliseconds - _startTime < c_maxResendTime) {
-					if(_blockedKeys == null) _blockedKeys = new Keyb(Opt.Static.Key);
-					_blockedKeys.LibAddRaw((byte)e->vkCode, (ushort)e->scanCode, e->SendInputFlags);
-					//Print((Keys)e->vkCode);
-				}
-				return 1;
+			if(ResendBlockedKeys && Time.Milliseconds - _startTime < c_maxResendTime) {
+				if(_blockedKeys == null) _blockedKeys = new Keyb(Opt.Static.Key);
+				_blockedKeys.LibAddRaw(x.vkCode, (ushort)x.scanCode, x.LibSendInputFlags);
+				//Print(x.vkCode);
 			}
-
-			return Api.CallNextHookEx(default, code, message, lParam);
+			return true;
 		}
 
-		LPARAM _MouseHookProc(int code, LPARAM message, LPARAM lParam)
+		bool _MouseHookProc(HookData.Mouse x)
 		{
-			var e = (Api.MSLLHOOKSTRUCT*)lParam;
-			if(!_DoNotBlock(e->IsInjected, e->dwExtraInfo)) {
-				//Print(message, e->pt);
-
-				return 1;
+			bool isMMove = x.Event == HookData.MouseEvent.Move;
+			switch(_block & (BIEvents.MouseClicks | BIEvents.MouseMoving)) {
+			case BIEvents.MouseClicks | BIEvents.MouseMoving: break;
+			case BIEvents.MouseClicks: if(isMMove) return false; break;
+			case BIEvents.MouseMoving: if(!isMMove) return false; break;
 			}
-
-			return Api.CallNextHookEx(default, code, message, lParam);
+			return !_DoNotBlock(x.IsInjected, x.dwExtraInfo, 0, isMMove);
 		}
 
-		bool _DoNotBlock(bool isInjected, LPARAM extraInfo, uint vk = 0)
+		bool _DoNotBlock(bool isInjected, LPARAM extraInfo, KKey vk = 0, bool isMMove = false)
 		{
 			if(_pause) return true;
 			if(isInjected) {
 				if(extraInfo == DoNotBlockInjectedExtraInfo || DoNotBlockInjected) return true;
 			}
+			Wnd w;
 			if(vk != 0) {
 				var a = DoNotBlockKeys;
-				if(a != null) foreach(uint k in a) if(vk == k) return true;
+				if(a != null) foreach(var k in a) if(vk == k) return true;
+				w = Wnd.WndActive;
+			} else {
+				w = isMMove ? Wnd.WndActive : Wnd.FromMouse();
+				//note: don't use hook's pt, because of a bug in some OS versions.
+				//note: for wheel it's better to use FromMouse.
 			}
-			if(Wnd.WndActive.ThreadId == _threadId) return true;
+			if(w.ThreadId == _threadId) return true;
 			return false;
 		}
 
-		void _WinEventProc(IntPtr hWinEventHook, AccEVENT event_, Wnd hwnd, int idObject, int idChild, int idEventThread, int dwmsEventTime)
+		void _WinEventProc(HookData.AccHookData x)
 		{
 			//the hook is called before and after Ctrl+Alt+Del screen. Only idEventThread different.
 			//	GetForegroundWindow returns 0. WTSGetActiveConsoleSessionId returns main session.
@@ -276,12 +273,12 @@ namespace Au
 
 		/// <summary>
 		/// Do not block these keys.
-		/// Default: { Keys.Pause, Keys.PrintScreen, Keys.F1 }.
+		/// Default: { KKey.Pause, KKey.PrintScreen, KKey.F1 }.
 		/// </summary>
 		/// <remarks>
 		/// The array should contain keys without modifier key flags.
 		/// </remarks>
-		public static Keys[] DoNotBlockKeys { get; set; } = new Keys[] { Keys.Pause, Keys.PrintScreen, Keys.F1 };
+		public static KKey[] DoNotBlockKeys { get; set; } = new KKey[] { KKey.Pause, KKey.PrintScreen, KKey.F1 };
 
 		/// <summary>
 		/// Gets or sets whether the blocking is paused.
@@ -311,27 +308,27 @@ namespace Au.Types
 	public enum BIEvents
 	{
 		/// <summary>
-		/// Do not block anything.
+		/// Do not block.
 		/// </summary>
 		None,
 
 		/// <summary>
-		/// Block keys. Excepth if generated by functions of this library.
+		/// Block keys. Except if generated by functions of this library.
 		/// </summary>
 		Keys = 1,
 
 		/// <summary>
-		/// Block mouse clicks. Excepth if generated by functions of this library.
+		/// Block mouse clicks and wheel. Except if generated by functions of this library.
 		/// </summary>
 		MouseClicks = 2,
 
 		/// <summary>
-		/// Block mouse moving. Excepth if generated by functions of this library.
+		/// Block mouse moving. Except if generated by functions of this library.
 		/// </summary>
 		MouseMoving = 4,
 
 		/// <summary>
-		/// Block keys, mouse clicks and mouse moving. Excepth if generated by functions of this library.
+		/// Block keys, mouse clicks, wheel and mouse moving. Except if generated by functions of this library.
 		/// This flag incluses flags <b>Keys</b>, <b>MouseClicks</b> and <b>MouseMoving</b>.
 		/// </summary>
 		All = 7,

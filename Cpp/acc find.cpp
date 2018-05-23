@@ -607,6 +607,10 @@ private:
 			}
 		}
 
+		//FUTURE: some windows may use Chrome control in non-chrome-classnamed window.
+		//	Eg old version of Spotify, IIRC. Everything was OK; probably AOs not disabled.
+		//	Need to review/test more, but now I don't know such programs.
+
 		if(!!(_flags2 & eAF2::InFirefoxPage)) {
 			//To get DOCUMENT, use Navigate(0x1009). It is documented and tested on FF>=2.
 			_variant_t vNav;

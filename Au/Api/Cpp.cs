@@ -28,9 +28,11 @@ namespace Au.Types
 			string s = Ver.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
 			if(default != Api.LoadLibrary(Folders.ThisApp + s)) return; //normal
 			if(default != Api.LoadLibrary(Folders.ThisAppTemp + s)) return; //extracted from resources
+			if(default != Api.LoadLibrary("AuCpp.dll")) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
+			if(default != Api.LoadLibrary(@"Q:\app\Au\_" + s)) return; //my project output directory
 			throw new AuException(0, "*load AuCpp.dll");
 
-			//TODO: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then Folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
+			//PROBLEM: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then Folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
 		}
 
 		//speed:
@@ -148,7 +150,7 @@ namespace Au.Types
 
 		// TEST
 
-		//TODO: remove tests
+		//FUTURE: remove tests
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Test();
 

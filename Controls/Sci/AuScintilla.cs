@@ -175,7 +175,7 @@ namespace Au.Controls
 
 		void _DefWndProc(ref Message m)
 		{
-			m.Result = Call(m.Msg, m.WParam, m.LParam);
+			m.Result = CallRetPtr(m.Msg, m.WParam, m.LParam);
 			//This is faster, why to go through CallWindowProc.
 			//Howewer cannot override DefWndProc with this. Then crashes.
 		}
@@ -222,10 +222,11 @@ namespace Au.Controls
 		public event SciEventHandler SciNotify;
 
 		/// <summary>
-		/// Calls a Scintilla message to the control.
+		/// Sends a Scintilla message to the control and returns LPARAM.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public LPARAM Call(int sciMessage, LPARAM wParam, LPARAM lParam)
+		[DebuggerStepThrough]
+		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam, LPARAM lParam)
 		{
 			//if(!IsHandleCreated) {
 			//	Debug.Assert(!Visible);
@@ -242,22 +243,11 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Calls a Scintilla message.
+		/// Sends a Scintilla message to the control and returns int.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public LPARAM Call(int sciMessage, LPARAM wParam)
-		{
-			return Call(sciMessage, wParam, default);
-		}
-
-		/// <summary>
-		/// Calls a Scintilla message.
-		/// Don't call this function from another thread.
-		/// </summary>
-		public LPARAM Call(int sciMessage)
-		{
-			return Call(sciMessage, default, default);
-		}
+		[DebuggerStepThrough]
+		public int Call(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => (int)CallRetPtr(sciMessage, wParam, lParam);
 
 		/// <summary>
 		/// Scintilla dll path.

@@ -1,5 +1,5 @@
 ﻿//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it.
-//Can be used instead of String.Split. Generates zero garbage. Faster (the github version with StringTokenizer was slower).
+//Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
 using System;
 using System.Runtime.CompilerServices;
@@ -12,15 +12,19 @@ using static Au.NoClass;
 
 namespace Au
 {
-	//TODO: test all untested methods
+	//FUTURE: test more. Now not all functions tested. But wait, maybe new C# will have native slices etc.
+
 	/// <summary>
-	/// An optimized representation of a substring.
+	/// An optimized representation of a substring (any part of a string).
 	/// </summary>
 	/// <remarks>
-	/// A StringSegment variable holds a reference to the string containing the substring (<see cref="Buffer"/>), the start index of the substring (<see cref="Offset"/>) and substring length (<see cref="Length"/>). A new string object is allocated only by functions that return a string, eg <see cref="Value"/>.
-	/// One of ways to create StringSegment instances is to split a string with <see cref="String_.Segments_(string, string, SegFlags)"/>.
-	/// Functions throw ArgumentOutOfRangeException, ArgumentNullException or NullReferenceException exception when an argument is invalid. The indexer throws IndexOutOfRangeException.
-	/// Don't use the default constructor. Then Buffer is null and the behavior of functions is undefined. Other constructors throw exception if the string is null.
+	/// The main properties are: <see cref="Buffer"/> - the string containing the substring; <see cref="Offset"/> - the start index of the substring in the string; <see cref="Length"/> substring length. There is no string object for the substring itself; however <see cref="Value"/> and some other functions allocate and return a new string object.
+	/// 
+	/// One of ways to create <b>StringSegment</b> instances is to split a string with <see cref="String_.Segments_(string, string, SegFlags)"/>.
+	/// 
+	/// Don't use the default constructor (parameterless). Then <b>Buffer</b> is null and the behavior of functions is undefined. Other constructors throw exception if the string is null.
+	/// 
+	/// Functions throw <b>ArgumentOutOfRangeException</b>, <b>ArgumentNullException</b>, <b>NullReferenceException</b> or <b>IndexOutOfRangeException</b> exception when an argument is invalid.
 	/// </remarks>
 	public struct StringSegment :IEquatable<StringSegment>, IEquatable<string>
 	{
@@ -28,10 +32,9 @@ namespace Au
 		int _offset, _length;
 
 		/// <summary>
-		/// Initializes an instance of the StringSegment struct.
-		/// The segment will be whole buffer.
+		/// Sets the substring = whole <paramref name="buffer"/>.
 		/// </summary>
-		/// <param name="buffer">Cannot be null.</param>
+		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
 		public StringSegment(string buffer)
 		{
 			_buffer = buffer;
@@ -40,15 +43,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Initializes an instance of the StringSegment struct.
+		/// Sets the substring = part of <paramref name="buffer"/> that starts at index <paramref name="offset"/> and has length <paramref name="length"/>.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
-		/// <param name="offset">The offset of the segment within the buffer.</param>
-		/// <param name="length">The length of the segment.</param>
+		/// <param name="offset">The offset of the substring in <paramref name="buffer"/>.</param>
+		/// <param name="length">The length of the substring.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StringSegment(string buffer, int offset, int length)
 		{
-			if((uint)offset > (uint)buffer.Length || (uint)length > (uint)(buffer.Length - offset)) throw new ArgumentOutOfRangeException(); //and NullReferenceException if buffer null
+			if((uint)offset > buffer.Length || (uint)length > buffer.Length - offset) throw new ArgumentOutOfRangeException(); //and NullReferenceException if buffer null
 
 			_buffer = buffer;
 			_offset = offset;
@@ -56,23 +59,21 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Initializes an instance of the StringSegment struct.
-		/// The segment will be from offset to the end of buffer.
+		/// Sets the substring = part of <paramref name="buffer"/> that starts at index <paramref name="offset"/>.
 		/// </summary>
-		/// <param name="buffer">The original string used as buffer.</param>
-		/// <param name="offset">The offset of the segment within the buffer.</param>
+		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
+		/// <param name="offset">The offset of the substring in <paramref name="buffer"/>.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StringSegment(string buffer, int offset) : this(buffer, offset, buffer.Length - offset) { }
 
 		/// <summary>
-		/// Gets the string buffer of this StringSegment.
-		/// See also <see cref="Value"/>.
+		/// Gets the string that contains this substring.
 		/// </summary>
 		public string Buffer => _buffer;
 
 		/// <summary>
-		/// Gets or sets the start index within the buffer of this StringSegment.
-		/// The setter also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
+		/// Gets or sets the start index of this substring within <see cref="Buffer"/>.
+		/// The setter also changes <see cref="Length"/>, but not <see cref="EndOffset"/>.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or greater than <see cref="EndOffset"/>.</exception>
 		public int Offset
@@ -88,7 +89,7 @@ namespace Au
 
 		/// <summary>
 		/// Increments <see cref="Offset"/>.
-		/// Also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
+		/// Also changes <see cref="Length"/>, but not <see cref="EndOffset"/>.
 		/// </summary>
 		/// <param name="n">How much to increment. Can be negative.</param>
 		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Offset"/> would be less than 0 or greater than <see cref="EndOffset"/>.</exception>
@@ -99,7 +100,7 @@ namespace Au
 
 		/// <summary>
 		/// Decrements <see cref="Offset"/>.
-		/// Also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
+		/// Also changes <see cref="Length"/>, but not <see cref="EndOffset"/>.
 		/// </summary>
 		/// <param name="n">How much to decrement. Can be negative.</param>
 		/// <exception cref="ArgumentOutOfRangeException">New <see cref="Offset"/> would be less than 0 or greater than <see cref="EndOffset"/>.</exception>
@@ -110,7 +111,7 @@ namespace Au
 
 		/// <summary>
 		/// Changes <see cref="Offset"/>.
-		/// Also changes <see cref="Length"/>, so that <see cref="EndOffset"/> remains unchanged.
+		/// Also changes <see cref="Length"/>, but not <see cref="EndOffset"/>.
 		/// </summary>
 		/// <param name="n">New value.</param>
 		/// <exception cref="ArgumentOutOfRangeException">n is less than 0 or greater than <see cref="EndOffset"/>.</exception>
@@ -120,7 +121,7 @@ namespace Au
 		public void OffsetSet(int n) => Offset = n;
 
 		/// <summary>
-		/// Gets or sets the length of this StringSegment.
+		/// Gets or sets the length of the substring.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or new <see cref="EndOffset"/> would be greater than buffer length.</exception>
 		public int Length
@@ -164,7 +165,7 @@ namespace Au
 		public void LengthSet(int n) => Length = n;
 
 		/// <summary>
-		/// Gets or sets the end index within the buffer of this StringSegment. It's Offset + Length.
+		/// Gets or sets the end index of this substring within <see cref="Buffer"/>. It's <see cref="Offset"/> + <see cref="Length"/>.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than <see cref="Offset"/> or greater than buffer length.</exception>
 		public int EndOffset
@@ -209,59 +210,40 @@ namespace Au
 		public void EndSet(int n) => EndOffset = n;
 
 		/// <summary>
-		/// Returns true if Length == 0.
+		/// Returns true if <b>Length</b> == 0.
 		/// </summary>
-		public bool IsEmpty()
-		{
-			return _length == 0;
-		}
+		public bool IsEmpty() => _length == 0;
 
 		/// <summary>
-		/// Gets the value of this segment as a string.
+		/// Gets the value of this substring as a new string.
 		/// </summary>
 		/// <remarks>
 		/// <note type="note">Always creates new string object (substring of <see cref="Buffer"/>). See also <see cref="ValueCached"/>.</note>
 		/// </remarks>
-		public string Value
-		{
-			get
-			{
-				return _buffer.Substring(_offset, _length);
-			}
-		}
+		public string Value => _buffer.Substring(_offset, _length);
 
 		/// <summary>
-		/// Gets the value of this segment as a cached string.
+		/// Gets the value of this substring as a cached string.
 		/// </summary>
 		/// <remarks>
-		/// Uses an internal thread-specific <see cref="Util.StringCache"/>. Use this function instead of <see cref="Value"/> to avoid much garbage when identical substring values are frequent.
+		/// Can be used instead of <see cref="Value"/> to avoid much garbage when identical substring values are frequent.
+		/// Uses a <see cref="Util.StringCache"/>.
 		/// </remarks>
-		public string ValueCached
-		{
-			get
-			{
-				return Util.StringCache.LibAdd(_buffer, _offset, _length);
-			}
-		}
+		public string ValueCached => Util.StringCache.LibAdd(_buffer, _offset, _length);
 
 		/// <summary>
 		/// Returns <see cref="Value"/>.
 		/// </summary>
-		public override string ToString()
-		{
-			return Value;
-		}
+		public override string ToString() => Value;
 
 		///
-		public override int GetHashCode()
-		{
-			return Convert_.HashFast(_buffer, _offset, _length);
-		}
+		public override int GetHashCode() => Convert_.HashFast(_buffer, _offset, _length);
 
 		/// <summary>
-		/// Gets the char at a specified position in the current StringSegment.
+		/// Gets the character at a specified position in this substring.
 		/// </summary>
-		/// <param name="index">Character index in this StringSegment.</param>
+		/// <param name="index">Character index in this substring.</param>
+		/// <exception cref="IndexOutOfRangeException">index is not in this substring, even if it is in <see cref="Buffer"/>.</exception>
 		public char this[int index]
 		{
 			get
@@ -273,151 +255,109 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if obj is StringSegment and its string value is equal to this variable.
-		/// Compares only substrigs, not offsets. Uses StringComparison.Ordinal.
+		/// Returns true if <paramref name="obj"/> is <b>StringSegment</b> and its value is equal to that of this variable.
+		/// Compares only substrigs, not offsets.
 		/// </summary>
-		public override bool Equals(object obj)
-		{
-			return obj is StringSegment && _Equals((StringSegment)obj, false);
-		}
+		public override bool Equals(object obj) => obj is StringSegment && _Equals((StringSegment)obj, false);
 
 		/// <summary>
-		/// Returns true if string values of this and other variable are equal.
-		/// Compares only substrigs, not offsets. Uses StringComparison.Ordinal.
+		/// Returns true if values of this and other variable are equal.
+		/// Compares only substrigs, not offsets.
 		/// </summary>
 		/// <param name="other">A variable to compare with this variable.</param>
-		public bool Equals(StringSegment other)
-		{
-			return _Equals(other, false);
-		}
+		public bool Equals(StringSegment other) => _Equals(other, false);
+		//note: cannot make single func with ignoreCase parameter, because need to implement IEquatable.
 
 		/// <summary>
-		/// Returns true if string values of this and other variable are equal, case insensitive.
-		/// Compares only substrigs, not offsets. Uses StringComparison.OrdinalIgnoreCase.
+		/// Returns true if values of this and other variable are equal, case insensitive.
+		/// Compares only substrigs, not offsets.
 		/// </summary>
 		/// <param name="other">A variable to compare with this variable.</param>
-		public bool EqualsI(StringSegment other)
-		{
-			return _Equals(other, true);
-		}
+		public bool EqualsI(StringSegment other) => _Equals(other, true);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool _Equals(StringSegment s, bool ignoreCase)
 		{
 			int len = s.Length;
 			if(len != _length) return false;
-			return string.Compare(_buffer, _offset, s._buffer, s._offset, len, _StrComp(ignoreCase)) == 0;
+			return String_.LibEqualsAt_(_buffer, _offset, s._buffer, s._offset, len, ignoreCase);
 		}
-
-		StringComparison _StrComp(bool ignoreCase) => ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool _Equals(string s, bool ignoreCase)
-		{
-			int len = s.Length; //NullReferenceException
-			if(len != _length) return false;
-			return string.Compare(_buffer, _offset, s, 0, len, _StrComp(ignoreCase)) == 0;
-		}
+		bool _Equals(string s, bool ignoreCase) => _buffer.EqualsAt_(_offset, s, ignoreCase);
 
 		/// <summary>
-		/// Returns true if the specified string is equal to this StringSegment.
-		/// Uses StringComparison.Ordinal.
+		/// Returns true if the specified string is equal to this substring.
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
-		public bool Equals(string text)
-		{
-			return _Equals(text, false);
-		}
+		public bool Equals(string text) => _Equals(text, false);
+		//note: cannot make single func with ignoreCase parameter, because need to implement IEquatable.
 
 		/// <summary>
-		/// Returns true if the specified string is equal to this StringSegment, case-insensitive.
-		/// Uses StringComparison.OrdinalIgnoreCase.
+		/// Returns true if the specified string is equal to this substring, case-insensitive.
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
-		public bool EqualsI(string text)
-		{
-			return _Equals(text, true);
-		}
+		public bool EqualsI(string text) => _Equals(text, true);
 
 		/// <summary>
-		/// Returns true if two specified StringSegment variables have the same string value.
-		/// Compares only substrigs, not offsets. Uses StringComparison.Ordinal.
+		/// Compares two substrings and returns true if their values are equal.
+		/// Compares only substrigs, not offsets.
 		/// </summary>
-		/// <param name="left">The first StringSegment to compare.</param>
-		/// <param name="right">The second StringSegment to compare.</param>
-		public static bool operator ==(StringSegment left, StringSegment right)
-		{
-			return left._Equals(right, false);
-		}
+		public static bool operator ==(StringSegment left, StringSegment right) => left._Equals(right, false);
 
 		/// <summary>
-		/// Returns true if two specified StringSegment variables have different string values.
-		/// Compares only substrigs, not offsets. Uses StringComparison.Ordinal.
+		/// Compares two substrings and returns true if their values are not equal.
+		/// Compares only substrigs, not offsets.
 		/// </summary>
-		/// <param name="left">The first StringSegment to compare.</param>
-		/// <param name="right">The second StringSegment to compare.</param>
-		public static bool operator !=(StringSegment left, StringSegment right)
-		{
-			return left._Equals(right, true);
-		}
+		public static bool operator !=(StringSegment left, StringSegment right) => left._Equals(right, true);
 
 		/// <summary>
-		/// Creates a new StringSegment from the given string.
+		/// Creates a new <b>StringSegment</b> from the given string.
 		/// </summary>
-		/// <param name="value">The string to convert to a StringSegment. Cannot be null.</param>
-		public static implicit operator StringSegment(string value)
-		{
-			return new StringSegment(value);
-		}
-		// PERF: Do NOT add a implicit converter from StringSegment to String. That would negate most of the perf safety.
+		/// <param name="value">The string. Cannot be null.</param>
+		public static implicit operator StringSegment(string value) => new StringSegment(value);
 
-		//public static explicit operator string(StringSegment seg)=>seg.Value;
+		//public static explicit operator string(StringSegment seg) => seg.Value;
 
 		/// <summary>
-		/// Returns true if the beginning of this StringSegment matches the specified string.
-		/// Uses StringComparison.Ordinal or OrdinalIgnoreCase.
+		/// Returns true if the beginning of this substring matches the specified string.
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		public bool StartsWith(string text, bool ignoreCase = false)
 		{
-			var textLength = text.Length; //NullReferenceException
-			if(_length < textLength) return false;
-
-			return string.Compare(_buffer, _offset, text, 0, textLength, _StrComp(ignoreCase)) == 0;
+			if(_length < text.Length) return false; //NullReferenceException
+			return _buffer.EqualsAt_(_offset, text, ignoreCase);
 		}
 
 		/// <summary>
-		/// Returns true if the end of this StringSegment matches the specified string.
-		/// Uses StringComparison.Ordinal or OrdinalIgnoreCase.
+		/// Returns true if the end of this substring matches the specified string.
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		public bool EndsWith(string text, bool ignoreCase = false)
 		{
-			var textLength = text.Length; //NullReferenceException
-			if(_length < textLength) return false;
-
-			return string.Compare(_buffer, _offset + _length - textLength, text, 0, textLength, _StrComp(ignoreCase)) == 0;
+			var len = text.Length; //NullReferenceException
+			if(_length < len) return false;
+			return _buffer.EqualsAt_(_offset + _length - len, text, ignoreCase);
 		}
 
 		/// <summary>
-		/// Gets a substring from this StringSegment.
-		/// The substring starts at the position specified by offset and has the remaining length.
+		/// Gets a substring of this substring, as string.
 		/// </summary>
-		/// <param name="offset">The zero-based starting character position of a substring in this StringSegment.</param>
-		/// <param name="cached">Use an internal thread-specific <see cref="Util.StringCache"/>, to avoid much garbage when identical substring values are frequent.</param>
+		/// <param name="offset">The start index in this substring.</param>
+		/// <param name="cached">Use a <see cref="Util.StringCache"/>, to avoid much garbage when identical substring values are frequent.</param>
 		public string Substring(int offset, bool cached = false)
 		{
 			return Substring(offset, _length - offset, cached);
 		}
 
 		/// <summary>
-		/// Gets a substring from this StringSegment.
+		/// Gets a substring of this substring, as string.
 		/// </summary>
-		/// <param name="offset">The zero-based starting character position of a substring in this StringSegment.</param>
-		/// <param name="length">The number of characters in the substring.</param>
-		/// <param name="cached">Use an internal thread-specific <see cref="Util.StringCache"/>, to avoid much garbage when identical substring values are frequent.</param>
+		/// <param name="offset">The start index in this substring.</param>
+		/// <param name="length">The number of characters.</param>
+		/// <param name="cached">Use a <see cref="Util.StringCache"/>, to avoid much garbage when identical substring values are frequent.</param>
 		public string Substring(int offset, int length, bool cached = false)
 		{
 			if(offset < 0 || offset + length > _length) throw new ArgumentOutOfRangeException(); //the rest will be validated in the called function
@@ -428,20 +368,19 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets a StringSegment that represents a substring from this StringSegment.
-		/// The StringSegment starts at the position specified by offset and has the remaining length.
+		/// Gets a substring of this substring, as <b>StringSegment</b>.
 		/// </summary>
-		/// <param name="offset">The zero-based starting character position of a substring in this StringSegment.</param>
+		/// <param name="offset">The start index in this substring.</param>
 		public StringSegment Subsegment(int offset)
 		{
 			return Subsegment(offset, _length - offset);
 		}
 
 		/// <summary>
-		/// Gets a StringSegment that represents a substring from this StringSegment.
+		/// Gets a substring of this substring, as <b>StringSegment</b>.
 		/// </summary>
-		/// <param name="offset">The zero-based starting character position of a substring in this StringSegment.</param>
-		/// <param name="length">The number of characters in the substring.</param>
+		/// <param name="offset">The start index in this substring.</param>
+		/// <param name="length">The number of characters.</param>
 		public StringSegment Subsegment(int offset, int length)
 		{
 			if(offset < 0 || offset + length > _length) throw new ArgumentOutOfRangeException(); //the rest will be validated in the called function
@@ -450,11 +389,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the first occurrence of the character c in this StringSegment.
+		/// Finds a character and returns its index in this substring.
 		/// Returns -1 if not found.
 		/// </summary>
 		/// <param name="c">The character.</param>
-		/// <param name="startIndex">The zero-based index position at which the search starts.</param>
+		/// <param name="startIndex">The search starting position.</param>
 		/// <param name="count">The number of characters to examine.</param>
 		public int IndexOf(char c, int startIndex, int count)
 		{
@@ -466,18 +405,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the first occurrence of the character c in this StringSegment.
+		/// Finds a character and returns its index in this substring.
 		/// Returns -1 if not found.
 		/// </summary>
 		/// <param name="c">The character.</param>
-		/// <param name="startIndex">The zero-based index position at which the search starts.</param>
+		/// <param name="startIndex">The search starting position.</param>
 		public int IndexOf(char c, int startIndex)
 		{
 			return IndexOf(c, startIndex, _length - startIndex);
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the first occurrence of the character c in this StringSegment.
+		/// Finds a character and returns its index in this substring.
 		/// Returns -1 if not found.
 		/// </summary>
 		/// <param name="c">The character.</param>
@@ -489,7 +428,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the first occurrence in this StringSegment of any specified characters.
+		/// Finds a character and returns its index in this substring.
 		/// Returns -1 if not found.
 		/// </summary>
 		/// <param name="anyOf">One or more characters to seek.</param>
@@ -505,7 +444,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the first occurrence in this StringSegment of any specified characters.
+		/// Finds a character and returns its index in this substring.
 		/// Returns -1 if not found.
 		/// </summary>
 		/// <param name="anyOf">One or more characters to seek.</param>
@@ -516,7 +455,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the first occurrence in this StringSegment of any specified characters.
+		/// Finds a character and returns its index in this substring.
 		/// Returns -1 if not found.
 		/// </summary>
 		/// <param name="anyOf">One or more characters to seek.</param>
@@ -528,19 +467,19 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the zero-based index of the last occurrence in this StringSegment of any specified characters.
+		/// Finds a character and returns its index in this substring. Searches right-to-left.
 		/// Returns -1 if not found.
 		/// </summary>
-		/// <param name="value">The character.</param>
-		public int LastIndexOf(char value)
+		/// <param name="c">The character.</param>
+		public int LastIndexOf(char c)
 		{
-			var index = _buffer.LastIndexOf(value, _offset + _length - 1, _length);
+			var index = _buffer.LastIndexOf(c, _offset + _length - 1, _length);
 			if(index >= 0) index -= _offset;
 			return index;
 		}
 
 		/// <summary>
-		/// Removes all leading and trailing whitespaces.
+		/// Removes all leading and trailing whitespaces (see <see cref="char.IsWhiteSpace"/>).
 		/// </summary>
 		public void Trim()
 		{
@@ -549,7 +488,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Removes all leading whitespaces (see <see cref="char.IsWhiteSpace(char)"/>).
+		/// Removes all leading whitespaces (see <see cref="char.IsWhiteSpace"/>).
 		/// </summary>
 		public void TrimStart()
 		{
@@ -569,9 +508,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns a <see cref="SegParser"/> that will split this StringSegment into StringSegments when used with foreach.
+		/// Returns a <see cref="SegParser"/> that will split this substring into substrings as <b>StringSegment</b> variables when used with foreach.
 		/// </summary>
-		/// <param name="separators">A string containing characters that delimit the substrings in this StringSegment. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
 		/// <seealso cref="String_.Segments_(string, string, SegFlags)"/>
 		public SegParser Split(string separators, SegFlags flags = 0)
@@ -583,11 +522,10 @@ namespace Au
 	public static partial class String_
 	{
 		/// <summary>
-		/// This function can be used with foreach to split this string into substrings as StringSegment variables.
-		/// Returns a SSegmenter object that implements IEnumerable&lt;StringSegment&gt;.
+		/// This function can be used with foreach to split this string into substrings as <see cref="StringSegment"/> variables.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="separators">A string containing characters that delimit the substrings in this string. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
 		/// <example>
 		/// <code><![CDATA[
@@ -602,13 +540,12 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This function can be used with foreach to split the specified part of this string into substrings as StringSegment variables.
-		/// Returns a SSegmenter object that implements IEnumerable&lt;StringSegment&gt;.
+		/// This function can be used with foreach to split the specified part of this string into substrings as <see cref="StringSegment"/> variables.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="startIndex">Start of the part of this string.</param>
-		/// <param name="length">Length of the part of this string.</param>
-		/// <param name="separators">A string containing characters that delimit the substrings in this string. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="startIndex">The start of the part of this string.</param>
+		/// <param name="length">The length of the part of this string.</param>
+		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
 		public static SegParser Segments_(this string t, int startIndex, int length, string separators, SegFlags flags = 0)
 		{
@@ -663,10 +600,12 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Splits a string or StringSegment into StringSegments.
-	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="String_.Split_(string, string, SegFlags)"/> and <see cref="String_.SplitLines_"/>.
-	/// Normally you don't create Segmenter instances explicitly; instead use <see cref="String_.Segments_(string, string, SegFlags)"/> or <see cref="StringSegment.Split"/> with foreach.
+	/// Splits a string or <b>StringSegment</b> into substrings as <see cref="StringSegment"/> variables.
 	/// </summary>
+	/// <remarks>
+	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="String_.Split_(string, string, SegFlags)"/> and <see cref="String_.SplitLines_"/>.
+	/// Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="String_.Segments_(string, string, SegFlags)"/> or <see cref="StringSegment.Split"/> with foreach.
+	/// </remarks>
 	public struct SegParser :IEnumerable<StringSegment>, IEnumerator<StringSegment>
 	{
 		readonly string _separators;
@@ -695,7 +634,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Initializes this instance to split a StringSegment.
+		/// Initializes this instance to split a <see cref="StringSegment"/>.
 		/// </summary>
 		/// <param name="seg">The StringSegment.</param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
@@ -840,7 +779,7 @@ namespace Au.Types
 		const int c_a1Size = 50; //400 bytes, in 32-bit 200
 		[ThreadStatic] static string[] t_a1; //tested: with WeakReference cannot make fast enough.
 
-		//rejected: has no sense. Can use LINQ ToArray.
+		//rejected: not useful. Can use LINQ ToArray.
 		//public StringSegment[] ToSegmentArray(int maxCount = -1)
 	}
 }

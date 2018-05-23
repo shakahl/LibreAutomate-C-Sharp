@@ -119,7 +119,7 @@ namespace Au
 			get
 			{
 				LibThrowIfDisposed();
-				if(_misc.role != 0) return (AccROLE)_misc.role; //TODO: use AccMiscFlags.RoleIsString
+				if(_misc.role != 0) return (AccROLE)_misc.role; //SHOULDDO: use AccMiscFlags.RoleIsString
 				_Hresult(_FuncId.role, _GetRole(out var role, out _, dontNeedStr: true));
 				return role;
 			}
@@ -395,7 +395,7 @@ namespace Au
 			LibThrowIfDisposed();
 			var hr = Cpp.Cpp_AccAction(this, 'a');
 			GC.KeepAlive(this);
-			if(hr != 0) AuException.ThrowIfHresultNot0(hr);
+			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
 
@@ -482,8 +482,8 @@ namespace Au
 				&& 0 == _GetState(out state) && state.Has_(AccSTATE.FOCUSED) //avoid sending keys to another control
 				) {
 				GC.KeepAlive(this);
-				w.Post(Api.WM_KEYDOWN, Keys.Space, 0);
-				w.Post(Api.WM_KEYUP, Keys.Space, 0);
+				w.Post(Api.WM_KEYDOWN, (byte)KKey.Space, 0);
+				w.Post(Api.WM_KEYUP, (byte)KKey.Space, 0);
 				//tested: works even if the window is inactive.
 				w.LibMinimalSleepNoCheckThread();
 				return;
@@ -500,7 +500,7 @@ namespace Au
 		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits indefinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
+		/// <inheritdoc cref="WaitFor.Condition"/>
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>
@@ -779,7 +779,7 @@ namespace Au
 		/// </remarks>
 		public bool GetProperties(string props, out AccProperties result)
 		{
-			//TODO: use cached role
+			//SHOULDDO: use cached role.
 
 			result = default;
 			LibThrowIfDisposed();

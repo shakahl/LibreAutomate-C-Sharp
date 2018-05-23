@@ -546,10 +546,10 @@ namespace Au.Controls
 			{
 				Rectangle r = default;
 				if(s != null) {
-					r.X = s.ToInt32_(0, out int i);
-					r.Y = s.ToInt32_(i, out i);
-					r.Width = s.ToInt32_(i, out i);
-					r.Height = s.ToInt32_(i, out i);
+					r.X = s.ToInt_(0, out int i);
+					r.Y = s.ToInt_(i, out i);
+					r.Width = s.ToInt_(i, out i);
+					r.Height = s.ToInt_(i, out i);
 				}
 				return r;
 			}

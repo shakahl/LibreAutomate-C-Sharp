@@ -24,16 +24,16 @@ namespace Au
 	/// Code speed measurement. Easier to use than <see cref="Stopwatch"/>.
 	/// </summary>
 	/// <remarks>
-	/// Stores data in shared memory, therefore works across appdomains.
+	/// Stores data in shared memory, therefore the same measurement can be used in multiple appdomains and even processes. See also <see cref="Inst"/>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	public static unsafe class Perf
 	{
 		/// <summary>
-		/// The same as Perf class, but allows to have multiple independent speed measurements.
+		/// The same as <see cref="Perf"/> class, but allows to have multiple independent speed measurements.
 		/// </summary>
 		/// <remarks>
-		/// Stores data int the variable, not in shared memory like <see cref="Perf"/> class.
+		/// Stores data in the variable, not in shared memory.
 		/// </remarks>
 		public unsafe struct Inst
 		{
@@ -77,15 +77,12 @@ namespace Au
 			fixed long _a[_nElem];
 			fixed char _aMark[_nElem];
 
-			/// <summary>
-			/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
-			/// Finally you can call Write() or Times to get the sums.
-			/// Usually used to measure code in loops. See example.
-			/// </summary>
-			/// <example><code>
+			/// <summary><inheritdoc cref="Perf.Incremental"/></summary>
+			/// <example>
+			/// <code><![CDATA[
 			/// var perf = new Perf.Inst();
 			/// perf.Incremental = true;
-			/// for(int i = 0; i &lt; 5; i++) {
+			/// for(int i = 0; i < 5; i++) {
 			/// 	Thread.Sleep(100); //not included in the measurement
 			/// 	perf.First();
 			/// 	Thread.Sleep(30); //will make sum ~150000
@@ -96,7 +93,8 @@ namespace Au
 			/// }
 			/// perf.Write(); //speed:  154317  51060  (205377)
 			/// perf.Incremental = false;
-			/// </code></example>
+			/// ]]></code>
+			/// </example>
 			public bool Incremental
 			{
 				get => _incremental;
@@ -109,9 +107,7 @@ namespace Au
 				}
 			}
 
-			/// <summary>
-			/// Stores current time in the first element of an internal array.
-			/// </summary>
+			/// <inheritdoc cref="Perf.First()"/>
 			public void First()
 			{
 				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
@@ -122,27 +118,26 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls <see cref="SpinCPU"/>(spinCpuMS) and <see cref="First()"/>.
+			/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU) and <see cref="First()"/>.
 			/// </summary>
-			public void First(int spinCpuMS) { SpinCPU(spinCpuMS); First(); }
-
-			/// <summary>
-			/// Calls <see cref="SpinCPU"/>(spinCpuMS, codes) and <see cref="First()"/>.
-			/// </summary>
-			public void First(int spinCpuMS, params Action[] codes)
+			public void First(int timeWarmUpCPU)
 			{
-				SpinCPU(spinCpuMS, codes);
+				WarmUpCPU(timeWarmUpCPU);
 				First();
 			}
 
 			/// <summary>
-			/// Stores current time in next element of an internal array.
-			/// Don't call Next() more than 16 times after First(), because the array has fixed size.
+			/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU, codes) and <see cref="First()"/>.
 			/// </summary>
-			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+			public void First(int timeWarmUpCPU, params Action[] codes)
+			{
+				WarmUpCPU(timeWarmUpCPU, codes);
+				First();
+			}
+
+			/// <inheritdoc cref="Perf.Next"/>
 			public void Next(char cMark = '\0')
 			{
-				//TODO: for mark use string, not char
 				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
 				int n = _counter; if(n >= _nElem) return;
 				_counter++;
@@ -154,8 +149,8 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Formats a string from time values collected by calling First() and Next(), and shows it in the output.
-			/// The string contains the number of microseconds of each code execution between calling First() and each Next().
+			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
+			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 			/// </summary>
 			public void Write()
 			{
@@ -171,8 +166,8 @@ namespace Au
 			public void NW(char cMark = '\0') { Next(cMark); Write(); }
 
 			/// <summary>
-			/// Formats a string from time values collected by calling First() and Next().
-			/// The string contains the number of microseconds of each code execution between calling First() and each Next().
+			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
+			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 			/// </summary>
 			public string Times
 			{
@@ -218,7 +213,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Gets the number of microseconds between First() and the last Next().
+			/// Gets the number of microseconds between <see cref="First"/> and the last <see cref="Next"/>.
 			/// </summary>
 			public long TimeTotal
 			{
@@ -233,49 +228,48 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Executes code (lambda) nTimes times, and then calls Next().
+			/// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
 			/// </summary>
-			public void Execute(int nTimes, Action code)
+			public void Execute(int count, Action code)
 			{
-				while(nTimes-- > 0) code();
+				while(count-- > 0) code();
 				Next();
 			}
 
 			/// <summary>
-			/// nTimesAll times executes this code: <c>First(); foreach(Action a in codes) Execute(nTimesEach, a); Write();</c>.
+			/// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 			/// </summary>
-			public void ExecuteMulti(int nTimesAll, int nTimesEach, params Action[] codes)
+			public void ExecuteMulti(int countAll, int countEach, params Action[] codes)
 			{
-				while(nTimesAll-- > 0) {
+				while(countAll-- > 0) {
 					First();
-					foreach(Action a in codes) Execute(nTimesEach, a);
+					foreach(Action a in codes) Execute(countEach, a);
 					Write();
 				}
-			}
-
-			/// <summary>
-			/// Repeatedly executes codes (zero or more lambda functions) for the specified number of milliseconds.
-			/// </summary>
-			public void SpinCPU(int milliseconds, params Action[] codes)
-			{
-				int n = 0;
-				for(long t0 = Time.Microseconds; Time.Microseconds - t0 < milliseconds * 1000; n++) {
-					for(int i = 0; i < codes.Length; i++) codes[i]();
-				}
-				//Print(n);
 			}
 		}
 
 		static Inst* _SM => &Util.LibSharedMemory.Ptr->perf;
 
 		/// <summary>
+		/// Creates and returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.
+		/// </summary>
+		public static Inst StartNew()
+		{
+			var R = new Inst();
+			R.First();
+			return R;
+		}
+
+		/// <summary>
 		/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
-		/// Finally you can call Write() or Times to get the sums.
+		/// Finally you can call <see cref="Write"/> or <see cref="Times"/> to get the sums.
 		/// Usually used to measure code in loops. See example.
 		/// </summary>
-		/// <example><code>
+		/// <example>
+		/// <code><![CDATA[
 		/// Perf.Incremental = true;
-		/// for(int i = 0; i &lt; 5; i++) {
+		/// for(int i = 0; i < 5; i++) {
 		/// 	Thread.Sleep(100); //not included in the measurement
 		/// 	Perf.First();
 		/// 	Thread.Sleep(30); //will make sum ~150000
@@ -286,7 +280,8 @@ namespace Au
 		/// }
 		/// Perf.Write(); //speed:  154317  51060  (205377)
 		/// Perf.Incremental = false;
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public static bool Incremental
 		{
 			get => _SM->Incremental;
@@ -298,71 +293,84 @@ namespace Au
 		/// Stores current time in the first element of an internal array.
 		/// </summary>
 		public static void First() { _SM->First(); }
+
 		/// <summary>
-		/// Calls <see cref="SpinCPU"/>(spinCpuMS) and <see cref="First()"/>.
+		/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU) and <see cref="First()"/>.
 		/// </summary>
-		public static void First(int spinCpuMS) { _SM->First(spinCpuMS); }
+		public static void First(int timeWarmUpCPU) { _SM->First(timeWarmUpCPU); }
+
 		/// <summary>
-		/// Calls <see cref="SpinCPU"/>(spinCpuMS, codes) and <see cref="First()"/>.
+		/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU, codes) and <see cref="First()"/>.
 		/// </summary>
-		public static void First(int spinCpuMS, params Action[] codes) { _SM->First(spinCpuMS, codes); }
+		public static void First(int timeWarmUpCPU, params Action[] codes) { _SM->First(timeWarmUpCPU, codes); }
 
 		/// <summary>
 		/// Stores current time in next element of an internal array.
-		/// Don't call Next() more than 16 times after First(), because the array has fixed size.
 		/// </summary>
-		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+		/// <remarks>
+		/// Don't call <b>Next</b> more than 16 times after <b>First</b>, because the array has fixed size.
+		/// </remarks>
+		/// <param name="cMark">A character to mark this time in the results string, like "A=150".</param>
 		public static void Next(char cMark = '\0') { _SM->Next(cMark); }
 
 		/// <summary>
-		/// Formats a string from time values collected by calling First() and Next(), and shows it in the output.
-		/// The string contains the number of microseconds of each code execution between calling First() and each Next().
-		/// Example: <c>Perf.First(100); CODE1; Perf.Next(); CODE2; Perf.Next(); Perf.Write(); //speed: timeOfCODE1 timeOfCODE2</c>.
+		/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
+		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// Perf.First(100);
+		/// CODE1;
+		/// Perf.Next();
+		/// CODE2;
+		/// Perf.Next();
+		/// Perf.Write(); //speed:  timeOfCODE1  timeOfCODE2  (totalTime)
+		/// ]]></code>
+		/// </example>
 		public static void Write() { _SM->Write(); }
 
 		/// <summary>
 		/// Calls <see cref="Next"/> and <see cref="Write"/>.
-		/// You can use <c>Perf.NW();</c> instead of <c>Perf.Next(); Perf.Write();</c>.
 		/// </summary>
 		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
 		public static void NW(char cMark = '\0') { _SM->NW(cMark); }
 
 		/// <summary>
-		/// Formats a string from time values collected by calling First() and Next().
-		/// The string contains the number of microseconds of each code execution between calling First() and each Next().
+		/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
+		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
 		public static string Times => _SM->Times;
 
 		/// <summary>
-		/// Gets the number of microseconds between First() and the last Next().
+		/// Gets the number of microseconds between <see cref="First"/> and the last <see cref="Next"/>.
 		/// </summary>
 		public static long TimeTotal => _SM->TimeTotal;
 
 		/// <summary>
-		/// Executes code (lambda) nTimes times, and then calls Next().
+		/// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
 		/// </summary>
-		public static void Execute(int nTimes, Action code) { _SM->Execute(nTimes, code); }
+		public static void Execute(int count, Action code) { _SM->Execute(count, code); }
 
 		/// <summary>
-		/// nTimesAll times executes this code: <c>First(); foreach(Action a in codes) Execute(nTimesEach, a); Write();</c>.
+		/// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 		/// </summary>
-		public static void ExecuteMulti(int nTimesAll, int nTimesEach, params Action[] codes) { _SM->ExecuteMulti(nTimesAll, nTimesEach, codes); }
+		public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) { _SM->ExecuteMulti(countAll, countEach, codes); }
 
 		/// <summary>
-		/// Repeatedly executes codes (zero or more lambda functions) for the specified number of milliseconds (recommended 100 or more).
-		/// Can be called before measuring code speed, because after some idle time CPU may need to work for some time to gain full speed.
+		/// Makes CPU to run at full speed.
 		/// </summary>
-		public static void SpinCPU(int milliseconds, params Action[] codes) { _SM->SpinCPU(milliseconds, codes); }
-
-		/// <summary>
-		/// Creates/returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.
-		/// </summary>
-		public static Inst StartNew()
+		/// <param name="milliseconds">How long to warm up CPU. The minimal required time probably can be about 100 ms, but depends on CPU.</param>
+		/// <param name="codes">Zero or more lambda functions to execute in loop. For example can be used to JIT-compile them.</param>
+		/// <remarks>
+		/// To save energy, most CPU don't run at full speed when not actively used. Then time measurements can be incorrect. This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
+		/// </remarks>
+		public static void WarmUpCPU(int milliseconds, params Action[] codes)
 		{
-			var R = new Inst();
-			R.First();
-			return R;
+			int n = 0;
+			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < milliseconds * 1000; n++) {
+				for(int i = 0; i < codes.Length; i++) codes[i]();
+			}
+			//Print(n);
 		}
 	}
 }

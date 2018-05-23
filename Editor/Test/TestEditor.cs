@@ -39,20 +39,13 @@ partial class EForm
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
-		var hh = Api.SetWindowsHookEx(Api.WH_CBT, _cbtHookProc, default, Api.GetCurrentThreadId());
-		Application.ApplicationExit += (unu, sed) => Api.UnhookWindowsHookEx(hh); //without it at exit crashes, and process exits with a delay
+		_hook = Au.Util.WinHook.ThreadCbt(x =>
+		{
+			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
+			return false;
+		});
+		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with WinHook) 
 	}
-
-	static Api.HOOKPROC _cbtHookProc = _CbtHookProc;
-	static unsafe LPARAM _CbtHookProc(int code, LPARAM wParam, LPARAM lParam)
-	{
-		if(code == Api.HCBT_CREATEWND) {
-			Wnd w = (Wnd)wParam;
-			var s = w.ClassName;
-			Print(w);
-		}
-
-		return Api.CallNextHookEx(default, code, wParam, lParam);
-	}
+	static Au.Util.WinHook _hook;
 }
 #endif

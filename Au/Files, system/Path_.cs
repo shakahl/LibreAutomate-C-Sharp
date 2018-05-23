@@ -226,7 +226,7 @@ namespace Au
 				for(int i = 1; i < len; i++) {
 					var c = s[i];
 					if(c == ':') return i + 1;
-					if(!(Char_.IsAsciiAlpha(c) || Char_.IsAsciiDigit(c) || c == '.' || c == '-' || c == '+')) break;
+					if(!(Char_.IsAsciiAlphaDigit(c) || c == '.' || c == '-' || c == '+')) break;
 				}
 			}
 			return 0;
@@ -307,8 +307,6 @@ namespace Au
 			throw new ArgumentException("Empty filename or path.");
 		}
 
-		static char[] _sep = new char[] { '\\', '/' };
-
 		/// <summary>
 		/// Returns true if character c == '\\' || c == '/'.
 		/// </summary>
@@ -339,7 +337,7 @@ namespace Au
 				int i = s.Length - 1;
 				if(i > 0) {
 					if(LibIsSepChar(s[i]) && s[i - 1] != ':') {
-						var s2 = s.TrimEnd(_sep);
+						var s2 = s.TrimEnd(String_.Lib.pathSep);
 						if(s2.Length != 0) s = s2;
 					}
 					if(_EndsWithDriveWithoutSep(s)) s = s + "\\";

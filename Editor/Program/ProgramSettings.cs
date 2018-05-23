@@ -117,7 +117,7 @@ class ProgramSettings
 	/// </summary>
 	public bool Get(string name, out int value, int defaultValue = 0)
 	{
-		if(_Get(name, out var s)) { value = s.ToInt32_(); return true; }
+		if(_Get(name, out var s)) { value = s.ToInt_(); return true; }
 		value = defaultValue; return false;
 	}
 

@@ -126,7 +126,7 @@ namespace Au.Types
 			{
 				this.cbSize = SizeOf<WNDCLASSEX>();
 				if(ex == null) {
-					hCursor = LoadCursor(default, IDC_ARROW);
+					hCursor = LoadCursor(default, MCursor.Arrow);
 					hbrBackground = (IntPtr)(COLOR_BTNFACE + 1);
 				} else {
 					this.style = ex.style;
@@ -134,7 +134,7 @@ namespace Au.Types
 					this.cbWndExtra = ex.cbWndExtra;
 					//this.hInstance = ex.hInstance;
 					this.hIcon = ex.hIcon;
-					this.hCursor = ex.hCursor ?? LoadCursor(default, IDC_ARROW);
+					this.hCursor = ex.hCursor ?? LoadCursor(default, MCursor.Arrow);
 					this.hbrBackground = ex.hbrBackground ?? (IntPtr)(COLOR_BTNFACE + 1);
 					this.hIconSm = ex.hIconSm;
 				}
@@ -192,91 +192,8 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW", SetLastError = true)]
 		internal static extern bool PeekMessage(out Native.MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 
-		internal const int WH_MSGFILTER = -1;
-		internal const int WH_KEYBOARD = 2;
-		internal const int WH_GETMESSAGE = 3;
-		internal const int WH_CALLWNDPROC = 4;
-		internal const int WH_CBT = 5;
-		internal const int WH_SYSMSGFILTER = 6;
-		internal const int WH_MOUSE = 7;
-		internal const int WH_DEBUG = 9;
-		internal const int WH_SHELL = 10;
-		internal const int WH_FOREGROUNDIDLE = 11;
-		internal const int WH_CALLWNDPROCRET = 12;
-		internal const int WH_KEYBOARD_LL = 13;
-		internal const int WH_MOUSE_LL = 14;
-
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ReplyMessage(LPARAM lResult);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr SetWindowsHookEx(int WH_X, HOOKPROC lpfn, IntPtr hMod, int dwThreadId);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM CallNextHookEx(IntPtr hhk, int nCode, LPARAM wParam, LPARAM lParam);
-
-		internal const int HCBT_MOVESIZE = 0;
-		internal const int HCBT_MINMAX = 1;
-		//internal const int HCBT_QS = 2;
-		internal const int HCBT_CREATEWND = 3;
-		internal const int HCBT_DESTROYWND = 4;
-		internal const int HCBT_ACTIVATE = 5;
-		internal const int HCBT_CLICKSKIPPED = 6;
-		internal const int HCBT_KEYSKIPPED = 7;
-		internal const int HCBT_SYSCOMMAND = 8;
-		internal const int HCBT_SETFOCUS = 9;
-
-		internal const int HC_ACTION = 0;
-
-		internal delegate LPARAM HOOKPROC(int code, LPARAM wParam, LPARAM lParam);
-
-		internal struct KBDLLHOOKSTRUCT
-		{
-			public uint vkCode;
-			public uint scanCode;
-			public uint flags;
-			public uint time;
-			public LPARAM dwExtraInfo;
-
-			const uint LLKHF_EXTENDED = 0x1;
-			const uint LLKHF_INJECTED = 0x10;
-			const uint LLKHF_ALTDOWN = 0x20;
-			const uint LLKHF_UP = 0x80;
-
-			public bool IsExtended => 0 != (flags & LLKHF_EXTENDED);
-			public bool IsInjected => 0 != (flags & LLKHF_INJECTED);
-			public bool IsUp => 0 != (flags & LLKHF_UP);
-
-			/// <summary>
-			/// Converts flags to SendInput flags KEYEVENTF_KEYUP and KEYEVENTF_EXTENDEDKEY.
-			/// </summary>
-			public byte SendInputFlags
-			{
-				get
-				{
-					uint f = 0;
-					if(IsUp) f |= KEYEVENTF_KEYUP;
-					if(IsExtended) f |= KEYEVENTF_EXTENDEDKEY;
-					return (byte)f;
-				}
-			}
-		}
-
-		internal struct MSLLHOOKSTRUCT
-		{
-			public Point pt;
-			public uint mouseData;
-			public uint flags;
-			public uint time;
-			public LPARAM dwExtraInfo;
-
-			const uint LLMHF_INJECTED = 0x1;
-
-			public bool IsInjected => 0 != (flags & LLMHF_INJECTED);
-		}
 
 		internal const int GA_PARENT = 1;
 		internal const int GA_ROOT = 2;
@@ -388,6 +305,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyIcon(IntPtr hIcon);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool DestroyCursor(IntPtr hCursor);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetWindowRect(Wnd hWnd, out RECT lpRect);
@@ -817,18 +737,18 @@ namespace Au.Types
 			int _u1, _u2; //need INPUT size
 #pragma warning restore 414
 
-			public INPUTK(ushort vk, ushort sc, uint flags = 0)
+			public INPUTK(KKey vk, ushort sc, uint flags = 0)
 			{
 				_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
-				wVk = vk; wScan = sc; dwFlags = flags;
+				wVk = (ushort)vk; wScan = sc; dwFlags = flags;
 				time = 0; _u2 = _u1 = 0;
 				Debug.Assert(sizeof(INPUTK) == sizeof(INPUTM));
 			}
 
-			public void Set(ushort vk, ushort sc, uint flags = 0)
+			public void Set(KKey vk, ushort sc, uint flags = 0)
 			{
 				_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
-				wVk = vk; wScan = sc; dwFlags = flags;
+				wVk = (ushort)vk; wScan = sc; dwFlags = flags;
 			}
 
 			//public void InitCommonFields()
@@ -908,7 +828,7 @@ namespace Au.Types
 		internal static extern IntPtr CreateIcon(IntPtr hInstance, int nWidth, int nHeight, byte cPlanes, byte cBitsPixel, byte[] lpbANDbits, byte[] lpbXORbits);
 
 		[DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
-		internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
+		internal static extern IntPtr LoadCursor(IntPtr hInstance, MCursor cursorId);
 
 		internal delegate void TIMERPROC(Wnd param1, uint param2, LPARAM param3, uint param4);
 
@@ -928,13 +848,19 @@ namespace Au.Types
 		internal static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern short GetKeyState(Keys nVirtKey);
+		internal static extern short GetKeyState(int nVirtKey);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern short GetAsyncKeyState(Keys vKey);
+		internal static extern short GetAsyncKeyState(int vKey);
+
+		internal const uint MOD_ALT = 0x1;
+		internal const uint MOD_CONTROL = 0x2;
+		internal const uint MOD_SHIFT = 0x4;
+		internal const uint MOD_WIN = 0x8;
+		internal const uint MOD_NOREPEAT = 0x4000;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, Keys vk);
+		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, int vk);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool UnregisterHotKey(Wnd hWnd, int id);
@@ -944,7 +870,7 @@ namespace Au.Types
 		internal const uint MWMO_INPUTAVAILABLE = 0x4;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern uint MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, uint dwMilliseconds, uint dwWakeMask, uint MWMO_Flags);
+		internal static extern int MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, uint dwMilliseconds, uint dwWakeMask, uint MWMO_Flags);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool EndMenu();
@@ -1097,6 +1023,117 @@ namespace Au.Types
 
 		[DllImport("user32.dll")]
 		internal static extern int GetDoubleClickTime();
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool DrawIconEx(IntPtr hdc, int xLeft, int yTop, IntPtr hIcon, int cxWidth, int cyWidth, int istepIfAniCur = 0, IntPtr hbrFlickerFreeDraw = default, uint diFlags = 3); //DI_NORMAL
+
+		internal const uint CURSOR_SHOWING = 0x1;
+
+		internal struct CURSORINFO
+		{
+			public uint cbSize;
+			public uint flags;
+			public IntPtr hCursor;
+			public Point ptScreenPos;
+		}
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool GetCursorInfo(ref CURSORINFO pci);
+
+		internal struct ICONINFO
+		{
+			public bool fIcon;
+			public uint xHotspot;
+			public uint yHotspot;
+			public IntPtr hbmMask;
+			public IntPtr hbmColor;
+		}
+
+		[DllImport("user32.dll")]
+		internal static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+
+		internal struct BITMAP
+		{
+			public int bmType;
+			public int bmWidth;
+			public int bmHeight;
+			public int bmWidthBytes;
+			public ushort bmPlanes;
+			public ushort bmBitsPixel;
+			public IntPtr bmBits;
+		}
+
+		internal const int WH_MSGFILTER = -1;
+		internal const int WH_KEYBOARD = 2;
+		internal const int WH_GETMESSAGE = 3;
+		internal const int WH_CALLWNDPROC = 4;
+		internal const int WH_CBT = 5;
+		//internal const int WH_SYSMSGFILTER = 6; //hook proc must be in dll
+		internal const int WH_MOUSE = 7;
+		internal const int WH_DEBUG = 9;
+		internal const int WH_SHELL = 10;
+		internal const int WH_FOREGROUNDIDLE = 11;
+		internal const int WH_CALLWNDPROCRET = 12;
+		internal const int WH_KEYBOARD_LL = 13;
+		internal const int WH_MOUSE_LL = 14;
+
+		internal delegate LPARAM HOOKPROC(int code, LPARAM wParam, LPARAM lParam);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern IntPtr SetWindowsHookEx(int WH_X, HOOKPROC lpfn, IntPtr hMod, int dwThreadId);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern LPARAM CallNextHookEx(IntPtr hhk, int nCode, LPARAM wParam, LPARAM lParam);
+
+		internal const uint LLKHF_EXTENDED = 0x1;
+		internal const uint LLKHF_INJECTED = 0x10;
+		internal const uint LLKHF_ALTDOWN = 0x20;
+		internal const uint LLKHF_UP = 0x80;
+
+		internal struct KBDLLHOOKSTRUCT
+		{
+			public uint vkCode;
+			public uint scanCode;
+			public uint flags;
+			public uint time;
+			public LPARAM dwExtraInfo;
+		}
+
+		internal const uint LLMHF_INJECTED = 0x1;
+
+		internal struct MSLLHOOKSTRUCT
+		{
+			public Point pt;
+			public uint mouseData;
+			public uint flags;
+			public uint time;
+			public LPARAM dwExtraInfo;
+		}
+
+		internal struct CBTACTIVATESTRUCT
+		{
+			public bool fMouse;
+			public Wnd hWndActive;
+		}
+
+		internal unsafe struct CBT_CREATEWND
+		{
+			public Native.CREATESTRUCT* lpcs;
+			public Wnd hwndInsertAfter;
+		}
+
+		internal const int HC_NOREMOVE = 3;
+
+		internal delegate void WINEVENTPROC(IntPtr hWinEventHook, AccEVENT event_, Wnd hwnd, int idObject, int idChild, int idEventThread, int dwmsEventTime);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr SetWinEventHook(AccEVENT eventMin, AccEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, int idProcess, int idThread, AccHookFlags dwFlags);
+
+		[DllImport("user32.dll")]
+		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
 	}
 }
