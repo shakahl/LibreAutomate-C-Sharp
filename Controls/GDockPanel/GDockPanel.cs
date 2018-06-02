@@ -283,7 +283,7 @@ namespace Au.Controls
 			bool R = false, hilite = false, isTooltip = false;
 			if((((uint)lParam) & 0xFFFF) == Api.HTCLIENT && !c.Capture) {
 				var p = c.MouseClientXY_();
-				switch(_HitTest(c, p.X, p.Y, out var ht)) {
+				switch(_HitTest(c, p.x, p.y, out var ht)) {
 				case _HitTestResult.Splitter:
 					//info: works better than Cursor=x in OnMouseMove.
 					var cursor = ht.gs.IsVerticalSplit ? Cursors.VSplit : Cursors.HSplit;
@@ -313,7 +313,7 @@ namespace Au.Controls
 							{
 								var gp = _toolTipTabButton; if(gp == null) return;
 								var p2 = gp.ParentControl.MouseClientXY_();
-								_toolTip.Show(gp.ToolTipText, gp.ParentControl, p2.X, p2.Y + 20, _toolTip.AutoPopDelay);
+								_toolTip.Show(gp.ToolTipText, gp.ParentControl, p2.x, p2.y + 20, _toolTip.AutoPopDelay);
 							});
 						}
 					}

@@ -12,10 +12,9 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 using System.Xml.Linq;
+using System.Drawing;
 using System.Drawing.Imaging;
 
 using Au.Types;
@@ -444,7 +443,7 @@ namespace Au
 		static bool _GetShellImageList(int ilIndex, out IntPtr R)
 		{
 			lock("vK6Z4XiSxkGSfC14/or5Mw") { //the API fails if called simultaneously by multiple threads
-				if(0 == Api.SHGetImageList(ilIndex, ref Api.IID_IImageList, out R)) return true;
+				if(0 == Api.SHGetImageList(ilIndex, Api.IID_IImageList, out R)) return true;
 			}
 			Debug.Assert(false);
 			return false;

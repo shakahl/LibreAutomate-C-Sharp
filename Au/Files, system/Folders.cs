@@ -12,7 +12,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -497,14 +496,14 @@ namespace Au
 			//tested: with IKnownFolder much slower.
 
 			var guid = new KNOWNFOLDERID(a, b, c, d);
-			return (0 == SHGetKnownFolderPath(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out string R)) ? R : null;
+			return (0 == SHGetKnownFolderPath(guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out string R)) ? R : null;
 		}
 
 		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
 		static Shell.Pidl _GetVI(uint a, uint b, uint c, uint d)
 		{
 			var guid = new KNOWNFOLDERID(a, b, c, d);
-			if(0 != SHGetKnownFolderIDList(ref guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out IntPtr pidl)) return null;
+			if(0 != SHGetKnownFolderIDList(guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out IntPtr pidl)) return null;
 			return new Shell.Pidl(pidl);
 		}
 
@@ -544,10 +543,10 @@ namespace Au
 		}
 
 		[DllImport("shell32.dll")]
-		static extern int SHGetKnownFolderPath(ref KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out string ppszPath);
+		static extern int SHGetKnownFolderPath(in KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out string ppszPath);
 
 		[DllImport("shell32.dll")]
-		static extern int SHGetKnownFolderIDList(ref KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
+		static extern int SHGetKnownFolderIDList(in KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
 
 		[Flags]
 		enum KNOWN_FOLDER_FLAG :uint
@@ -622,22 +621,22 @@ namespace Au
 			int FolderIdFromCsidl(int nCsidl, out Guid pfid);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FolderIdToCsidl(ref Guid rfid, out int pnCsidl);
+			int FolderIdToCsidl(in Guid rfid, out int pnCsidl);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetFolderIds(out IntPtr ppKFId, out uint ids); //KNOWNFOLDERID** ppKFId
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolder(ref Guid rfid, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
+			int GetFolder(in Guid rfid, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetFolderByName([In, MarshalAs(UnmanagedType.LPWStr)] string pszCanonicalName, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int RegisterFolder(ref Guid rfid, ref KNOWNFOLDER_DEFINITION pKFD);
+			int RegisterFolder(in Guid rfid, in KNOWNFOLDER_DEFINITION pKFD);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int UnregisterFolder(ref Guid rfid);
+			int UnregisterFolder(in Guid rfid);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int FindFolderFromPath([In, MarshalAs(UnmanagedType.LPWStr)] string pszPath, FFFP_MODE mode, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
@@ -646,9 +645,9 @@ namespace Au
 			int FindFolderFromIDList(IntPtr pidl, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int Redirect(ref Guid rfid, IntPtr hwnd, uint Flags,
+			int Redirect(in Guid rfid, IntPtr hwnd, uint Flags,
 					[In, MarshalAs(UnmanagedType.LPWStr)] string pszTargetPath, uint cFolders,
-					ref Guid pExclusion, [MarshalAs(UnmanagedType.LPWStr)] out string ppszError);
+					in Guid pExclusion, [MarshalAs(UnmanagedType.LPWStr)] out string ppszError);
 		}
 
 		[ComImport, Guid("4df0c730-df9d-4ae3-9153-aa6b82e9795a")]
@@ -674,8 +673,8 @@ namespace Au
 			int GetCategory(out KF_CATEGORY category);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			//int GetShellItem(uint dwFlags, ref Guid riid, out Api.IShellItem si);
-			int GetShellItem(uint dwFlags, ref Guid riid, out IntPtr si);
+			//int GetShellItem(uint dwFlags, in Guid riid, out Api.IShellItem si);
+			int GetShellItem(uint dwFlags, in Guid riid, out IntPtr si);
 
 			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
 			int GetPath(uint dwFlags, [MarshalAs(UnmanagedType.LPWStr)]out string path);

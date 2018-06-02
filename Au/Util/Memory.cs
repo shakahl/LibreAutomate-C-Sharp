@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -135,7 +133,7 @@ namespace Au.Util
 		//Be careful with types whose sizes are different in 32 and 64 bit process. Use long and cast to IntPtr etc.
 
 		//public int test;
-		internal LibTables.ProcessVariables tables;
+		internal LibTables.ProcessVariables tables; //sizeof = 200
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
 		//internal Thread_.ProcessVariables thread_;
@@ -171,7 +169,7 @@ namespace Au.Util
 
 				x.style = Api.CS_GLOBALCLASS;
 				x.lpszClassName = Marshal.StringToHGlobalUni(name);
-				bool ok = 0 != Api.RegisterClassEx(ref x);
+				bool ok = 0 != Api.RegisterClassEx(x);
 
 				if(ok) {
 					//Api.InitializeSRWLock(&((LibProcessMemory*)x.lpfnWndProc)->_lock);

@@ -459,7 +459,7 @@ namespace Au
 		public void Show(Control owner, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
 		{
 			var p = owner.MouseClientXY_();
-			_Show(3, p.X, p.Y, direction, owner);
+			_Show(3, p.x, p.y, direction, owner);
 		}
 
 		void _Show(int overload, int x = 0, int y = 0, ToolStripDropDownDirection direction = 0, Control control = null)
@@ -957,7 +957,7 @@ namespace Au
 		void _CloseIfMouseIsFar()
 		{
 			int dist = MouseClosingDistance;
-			Point p = Mouse.XY;
+			POINT p = Mouse.XY;
 			for(int i = -1; i < _visibleSubmenus.Count; i++) {
 				var k = i >= 0 ? _visibleSubmenus[i] : _cm as ToolStripDropDown;
 				RECT r = k.Bounds;

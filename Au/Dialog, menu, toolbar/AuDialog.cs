@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
@@ -33,7 +32,7 @@ namespace Au
 	/// 
 	/// Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
 	/// 
-	/// Cannot be used in services. Instead use <see cref="MessageBox.Show(string, string, MessageBoxButtons, MessageBoxIcon, MessageBoxDefaultButton, MessageBoxOptions)"/> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
+	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
 	/// </remarks>
 	/// <example>
 	/// This example creates a class instance, sets properties, shows dialog, uses events, uses result.
@@ -62,7 +61,7 @@ namespace Au
 		#region private API
 
 		[DllImport("comctl32.dll")]
-		static extern int TaskDialogIndirect([In] ref TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
+		static extern int TaskDialogIndirect(in TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
 
 		//TASKDIALOGCONFIG flags.
 		[Flags]
@@ -171,7 +170,7 @@ namespace Au
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
 			/// If screen index is invalid, the 'show' method shows warning, no exception.
 			/// </summary>
-			public static object DefaultScreen { get; set; }
+			public static Screen_ DefaultScreen { get; set; }
 			//SHOULDDO: check invalid index now
 
 			/// <summary>
@@ -671,9 +670,9 @@ namespace Au
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
 		/// If null or not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
 		/// If screen index is invalid, the 'show' method shows warning, no exception.
-		/// More info: <see cref="Screen_.FromObject"/>, <see cref="Wnd.MoveInScreen"/>.
+		/// More info: <see cref="Screen_"/>, <see cref="Wnd.MoveInScreen"/>.
 		/// </summary>
-		public object Screen { set; private get; }
+		public Screen_ Screen { set; private get; }
 
 		/// <summary>
 		/// Let the dialog close itself after closeAfterS seconds.
@@ -759,11 +758,13 @@ namespace Au
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
 
-			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = Wnd.Misc.WndActiveOfThisThread; //info: MessageBox.Show also does it, but it also disables all thread windows
+			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = Wnd.ThisThread.WndActive; //info: MessageBox.Show also does it, but it also disables all thread windows
 			if(_c.hwndParent.IsAlive) {
 				if(!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
 				if(_enableOwner && !_c.hwndParent.IsEnabled) _enableOwner = false;
 			}
+
+			_SetPos(true); //get screen
 
 			_SetFlag(TDF_.SIZE_TO_CONTENT, true); //can make max 50% wider
 			_SetFlag(TDF_.ALLOW_DIALOG_CANCELLATION, FlagXCancel);
@@ -894,7 +895,7 @@ namespace Au
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
-			return TaskDialogIndirect(ref _c, out pnButton, out pnRadioButton, out pChecked);
+				return TaskDialogIndirect(in _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
 			catch(Exception e) when(!(e is ThreadAbortException)) {
@@ -926,6 +927,25 @@ namespace Au
 			}
 		}
 
+		//Need to call this twice:
+		//	1. Before showing dialog, to get Screen_. Later cannot apply Screen_.OfActiveWindow, because the dialog is the active window.
+		//	2. On TDN.CREATED, to move dialog if need.
+		void _SetPos(bool before)
+		{
+			if(before) _screen = default;
+			if(_HasFlag(TDF_.POSITION_RELATIVE_TO_WINDOW)) return;
+			bool isXY = !_x.IsEmpty || !_y.IsEmpty;
+			if(!_rawXY) {
+				if(before) {
+					_screen = Screen;
+					if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
+					if(!_screen.IsNull) _screen = _screen.GetScreen();
+				}
+				else if(isXY || !_screen.IsNull) _dlg.MoveInScreen(_x, _y, _screen);
+			} else if(isXY && !before) _dlg.Move(_x, _y);
+		}
+		Screen_ _screen;
+
 		int _CallbackProc(Wnd w, TDApi.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
 		{
 			Action<DEventArgs> e = null;
@@ -946,15 +966,7 @@ namespace Au
 				break;
 			case TDApi.TDN.CREATED:
 				if(_enableOwner) _c.hwndParent.Enable(true);
-
-				if(!_HasFlag(TDF_.POSITION_RELATIVE_TO_WINDOW)) {
-					bool isXY = !_x.IsEmpty || !_y.IsEmpty;
-					if(!_rawXY) {
-						object scr = Screen; if(scr == null && _c.hwndParent.Is0) scr = Options.DefaultScreen;
-						if(scr is int) scr = Screen_.FromIndex((int)scr, noThrow: true); //returns null if invalid
-						if(isXY || scr != null) w.MoveInScreen(_x, _y, scr);
-					} else if(isXY) w.Move(_x, _y);
-				}
+				_SetPos(false);
 
 				bool topmost = false;
 				if(FlagTopmost != null) topmost = FlagTopmost.GetValueOrDefault();
@@ -1314,7 +1326,7 @@ namespace Au
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
 			_editParent.ZorderTop();
-			_editWnd.FocusLocal();
+			Wnd.ThisThread.Focus(_editWnd);
 		}
 
 		void _EditControlOnMessage(TDApi.TDN message)
@@ -1343,10 +1355,10 @@ namespace Au
 			//Print(msg, wParam, lParam);
 			switch(msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				_dlg.ChildFast(null, "DirectUIHWND").FocusLocal();
+				Wnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				_dlg.ChildFast(null, "DirectUIHWND").FocusLocal();
+				Wnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);
@@ -1384,8 +1396,8 @@ namespace Au
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
 		/// <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="DResult.Timeout"/>.</param>
 		/// <param name="onLinkClick">
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
@@ -1553,8 +1565,8 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
@@ -1702,8 +1714,8 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <remarks>
@@ -1960,7 +1972,7 @@ namespace Au.Types
 		OwnerCenter = 8,
 
 		/// <summary>
-		/// x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure thet entire window is in screen.
+		/// x y are relative to the primary screen (ignore <see cref="AuDialog.Screen"/> etc). Don't ensure thet entire window is in screen.
 		/// More info: <see cref="AuDialog.SetXY"/>. 
 		/// </summary>
 		RawXY = 16,
@@ -2191,7 +2203,7 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-		static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(Wnd hWnd, uint msg, LPARAM wParam, [In] ref TASKDIALOGCONFIG c);
+		static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(Wnd hWnd, uint msg, LPARAM wParam, in TASKDIALOGCONFIG c);
 #endif
 		/// <summary>
 		/// Clicks a button. Normally it closes the dialog.

@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -53,7 +51,7 @@ namespace Au
 		/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// If null, prints "null".
 		/// 
-		/// This overload is used for value types (int, Point) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
+		/// This overload is used for value types (int, RECT) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
 		/// </remarks>
 		public static void Print(object value)
 		{

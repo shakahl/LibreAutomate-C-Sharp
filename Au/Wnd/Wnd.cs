@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -83,7 +81,7 @@ namespace Au
 
 		void* _h;
 
-		#region constructors, operators, overrides, constants
+		#region constructors, operators, overrides
 
 #pragma warning disable 1591 //XML doc
 		Wnd(void* hwnd) { _h = hwnd; }
@@ -101,13 +99,13 @@ namespace Au
 		/// Returns default(Wnd) if c is null.
 		/// If the handle is still not created, the Control auto-creates it (hidden window).
 		/// </summary>
-		public static explicit operator Wnd(Control c) => new Wnd(c == null ? default : c.Handle);
+		public static explicit operator Wnd(System.Windows.Forms.Control c) => new Wnd(c == null ? default : c.Handle);
 
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Window variable (WPF window).
 		/// Returns default(Wnd) if w is null or the handle is still not created.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static explicit operator Wnd(System.Windows.Window w) => new Wnd(w == null ? default : new System.Windows.Interop.WindowInteropHelper(w).Handle);
 
 		/// <summary>Compares window handles.</summary>
@@ -716,7 +714,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets WINDOWPLACEMENT length field and calls API <msdn>SetWindowPlacement</msdn>.
+		/// Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
 		/// </summary>
 		/// <exception cref="WndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
 		internal bool LibSetWindowPlacement(ref Api.WINDOWPLACEMENT wp, string errStr = null)
@@ -724,7 +722,7 @@ namespace Au
 			//initially this was public, but probably don't need.
 
 			wp.length = Api.SizeOf(wp);
-			if(Api.SetWindowPlacement(this, ref wp)) return true;
+			if(Api.SetWindowPlacement(this, wp)) return true;
 			if(errStr != null) ThrowUseNative(errStr);
 			return false;
 		}
@@ -1030,7 +1028,7 @@ namespace Au
 				for(int i = 0; i < 32; i++) {
 					Time.DoEvents();
 					if(!WndActive.Is0) return true;
-					Thread.Sleep(15);
+					Thread.Sleep(15); //SHOULDDO: SleepDoEvents
 				}
 				return false;
 				//Call this after showing a dialog API.
@@ -1069,7 +1067,7 @@ namespace Au
 		/// Also activetes its top-level parent window (see <see cref="Activate()"/>).
 		/// </summary>
 		/// <remarks>
-		/// The control can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="FocusLocal"/>.
+		/// The control can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="ThisThread.Focus"/>.
 		/// Works not with all windows. For example, does not work with Windows Store apps. Then use <see cref="Acc.Focus"/>.
 		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then does not throw exception.
 		/// This can be control or top-level window. Top-level windows also can have focus.
@@ -1089,7 +1087,7 @@ namespace Au
 
 			int tid = ThreadId;
 			if(tid == Api.GetCurrentThreadId()) {
-				if(!FocusLocal()) {
+				if(!ThisThread.Focus(this)) {
 					if(!IsEnabled) goto gDisabled;
 					goto gFailed;
 				}
@@ -1105,7 +1103,7 @@ namespace Au
 					for(int i = 0; i < 5; i++) {
 						if(i > 0) Thread.Sleep(30);
 						Native.ClearError();
-						if(FocusLocal()) {
+						if(ThisThread.Focus(this)) {
 							Wnd f = WndFocused;
 							if(f == this || f.IsChildOf(this)) { ok = true; break; }
 						}
@@ -1125,9 +1123,11 @@ namespace Au
 
 		/// <summary>
 		/// Gets the control or window that has the keyboard input focus.
-		/// It can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="WndFocusedLocal"/>.
-		/// Calls API <msdn>GetGUIThreadInfo</msdn>.
 		/// </summary>
+		/// <remarks>
+		/// The control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="ThisThread.WndFocused"/>.
+		/// Calls API <msdn>GetGUIThreadInfo</msdn>.
+		/// </remarks>
 		/// <seealso cref="Focus"/>
 		/// <seealso cref="IsFocused"/>
 		public static Wnd WndFocused
@@ -1138,50 +1138,65 @@ namespace Au
 				return g.hwndFocus;
 			}
 		}
-		//TODO: need functions that wait eg max 1 s until a window is focused or active.
+		//FUTURE: need functions that wait eg max 1 s until a window is focused or active.
+		//	Example: after activating a window using the taskbar, there is no active window for 100 ms or more.
+		//	Example: after opening a common file dialog, the Edit control is focused after 200 ms, until that there is no focus.
+		// For 'active' we already have Misc.WaitForAnActiveWindow.
 
 		/// <summary>
 		/// Returns true if this is the control or window that has the keyboard input focus.
-		/// Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="IsFocusedLocal"/>.
-		/// Calls <see cref="WndFocused"/>.
 		/// </summary>
+		/// <remarks>
+		/// This control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="ThisThread.IsFocused"/>.
+		/// Calls <see cref="WndFocused"/>.
+		/// </remarks>
 		/// <seealso cref="Focus"/>
 		public bool IsFocused => !this.Is0 && this == WndFocused;
 
 		/// <summary>
-		/// Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to this control or window, which must be of this thread.
-		/// Fails if it belongs to another thread or is invalid or disabled.
-		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Functions that can be used only with windows/controls of this thread.
 		/// </summary>
-		/// <remarks>
-		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then returns true.
-		/// </remarks>
-		/// <seealso cref="WndFocusedLocal"/>
-		/// <seealso cref="IsFocusedLocal"/>
-		public bool FocusLocal()
+		public static class ThisThread
 		{
-			if(this.Is0) { Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE); return false; }
-			var w = Api.GetFocus(); if(w == this) return true;
-			if(!Api.SetFocus(this).Is0) return true;
-			if(w.Is0) return !Api.GetFocus().Is0;
-			return false;
+			/// <summary>
+			/// Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to the specified control or window, which must be of this thread.
+			/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+			/// </summary>
+			/// <remarks>
+			/// Fails if the control/window belongs to another thread or is invalid or disabled.
+			/// Can instead focus a child control. For example, if ComboBox, will focus its child Edit control. Then returns true.
+			/// </remarks>
+			public static bool Focus(Wnd w)
+			{
+				if(w.Is0) { Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE); return false; }
+				var f = Api.GetFocus(); if(f == w) return true;
+				if(!Api.SetFocus(w).Is0) return true;
+				if(f.Is0) return !Api.GetFocus().Is0;
+				return false;
+			}
+
+			/// <summary>
+			/// Gets the control or window of this thread that has the keyboard input focus.
+			/// </summary>
+			/// <remarks>
+			/// Calls API <msdn>GetFocus</msdn>.
+			/// </remarks>
+			public static Wnd WndFocused => Api.GetFocus();
+
+			/// <summary>
+			/// Returns true if this is the control or window of this thread that has the keyboard input focus.
+			/// </summary>
+			/// <remarks>
+			/// Calls API <msdn>GetFocus</msdn>.
+			/// </remarks>
+			public static bool IsFocused(Wnd w) => !w.Is0 && w == Api.GetFocus();
+
+			/// <summary>
+			/// Gets the active window of this thread.
+			/// Calls API <msdn>GetActiveWindow</msdn>.
+			/// </summary>
+			public static Wnd WndActive => Api.GetActiveWindow();
 		}
-
-		/// <summary>
-		/// Gets the control or window of this thread that has the keyboard input focus.
-		/// Calls API <msdn>GetFocus</msdn>.
-		/// </summary>
-		/// <seealso cref="FocusLocal"/>
-		/// <seealso cref="IsFocusedLocal"/>
-		public static Wnd WndFocusedLocal => Api.GetFocus();
-
-		/// <summary>
-		/// Returns true if this is the control or window of this thread that has the keyboard input focus.
-		/// Calls API <msdn>GetFocus</msdn>.
-		/// </summary>
-		/// <seealso cref="FocusLocal"/>
-		/// <seealso cref="WndFocusedLocal"/>
-		public bool IsFocusedLocal => !this.Is0 && this == Api.GetFocus();
 
 		#endregion
 
@@ -1189,10 +1204,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets rectangle (position and size) in screen coordinates.
-		/// The same as the <see cref="Rect"/> property.
 		/// </summary>
-		/// <param name="r">Receives the rectangle. Will be empty if failed.</param>
+		/// <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
 		/// <remarks>
+		/// The same as the <see cref="Rect"/> property.
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
@@ -1205,16 +1220,16 @@ namespace Au
 
 		/// <summary>
 		/// Gets width and height.
-		/// The same as the <see cref="Size"/> property.
 		/// </summary>
-		/// <param name="z">Receives width and height. Will be empty if failed.</param>
+		/// <param name="z">Receives width and height. Will be default(SIZE) if failed.</param>
 		/// <remarks>
+		/// The same as the <see cref="Size"/> property.
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public bool GetSize(out Size z)
+		public bool GetSize(out SIZE z)
 		{
-			if(Api.GetWindowRect(this, out RECT r)) { z = new Size(r.Width, r.Height); return true; }
+			if(Api.GetWindowRect(this, out RECT r)) { z = new SIZE(r.Width, r.Height); return true; }
 			z = default;
 			return false;
 		}
@@ -1223,7 +1238,7 @@ namespace Au
 		/// Gets rectangle (position and size) in screen coordinates.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetRect"/>. Returns empty RECT if fails (eg window closed).
+		/// Calls <see cref="GetRect"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
 		public RECT Rect
 		{
@@ -1233,20 +1248,20 @@ namespace Au
 				return r;
 			}
 		}
-		//TODO: Need a function to get the visible part of window rect, without the transparent border on Win10. There is API, but don't remember, maybe in DWM.
+		//FUTURE: Need a function to get the visible part of window rect, without the transparent border on Win10. There is API, but don't remember, maybe in DWM.
 
 		/// <summary>
 		/// Gets width and height.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetSize"/>. Returns empty Size if fails (eg window closed).
+		/// Calls <see cref="GetSize"/>. Returns default(SIZE) if fails (eg window closed).
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public Size Size
+		public SIZE Size
 		{
 			get
 			{
-				GetSize(out Size z);
+				GetSize(out SIZE z);
 				return z;
 			}
 		}
@@ -1290,7 +1305,7 @@ namespace Au
 		/// <summary>
 		/// Gets client area rectangle.
 		/// </summary>
-		/// <param name="r">Receives the rectangle. Will be empty if failed.</param>
+		/// <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
 		/// <param name="inScreen">
 		/// Get rectangle in screen coordinates; the same as <see cref="GetWindowAndClientRectInScreen"/>.
 		/// If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="ClientRect"/> or <see cref="GetClientSize"/>.</param>
@@ -1307,28 +1322,28 @@ namespace Au
 
 		/// <summary>
 		/// Gets client area width and height.
+		/// </summary>
+		/// <param name="z">Receives width and height. Will be default(RECT) if failed.</param>
+		/// <remarks>
 		/// The same as the <see cref="ClientSize"/> property.
 		/// The same as <see cref="GetClientRect"/>, just the parameter type is different.
-		/// </summary>
-		/// <param name="z">Receives width and height. Will be empty if failed.</param>
-		/// <remarks>
 		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public bool GetClientSize(out Size z)
+		public bool GetClientSize(out SIZE z)
 		{
-			if(Api.GetClientRect(this, out RECT r)) { z = new Size(r.right, r.bottom); return true; }
+			if(Api.GetClientRect(this, out RECT r)) { z = new SIZE(r.right, r.bottom); return true; }
 			z = default;
 			return false;
 		}
 
 		/// <summary>
 		/// Gets client area rectangle (width and height).
-		/// The same as <see cref="ClientSize"/>, just the return type is different.
 		/// </summary>
 		/// <remarks>
+		/// The same as <see cref="ClientSize"/>, just the return type is different.
 		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
-		/// Calls <see cref="GetClientRect"/>. Returns empty rectangle if fails (eg window closed).
+		/// Calls <see cref="GetClientRect"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
 		public RECT ClientRect
 		{
@@ -1340,16 +1355,16 @@ namespace Au
 		}
 		/// <summary>
 		/// Gets client area width and height.
-		/// The same as <see cref="ClientRect"/>, just the return type is different.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetClientSize"/>. Returns empty Size value if fails (eg window closed).
+		/// The same as <see cref="ClientRect"/>, just the return type is different.
+		/// Calls <see cref="GetClientSize"/>. Returns default(SIZE) if fails (eg window closed).
 		/// </remarks>
-		public Size ClientSize
+		public SIZE ClientSize
 		{
 			get
 			{
-				GetClientSize(out Size z);
+				GetClientSize(out SIZE z);
 				return z;
 			}
 		}
@@ -1360,7 +1375,7 @@ namespace Au
 		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
 		public int ClientWidth
 		{
-			get => ClientSize.Width;
+			get => ClientSize.width;
 		}
 
 		/// <summary>
@@ -1369,7 +1384,7 @@ namespace Au
 		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
 		public int ClientHeight
 		{
-			get => ClientSize.Height;
+			get => ClientSize.height;
 		}
 
 		/// <summary>
@@ -1427,7 +1442,7 @@ namespace Au
 		///// Gets client area rectangle in screen coordinates.
 		///// </summary>
 		///// <remarks>
-		///// Calls <see cref="GetWindowAndClientRectInScreen"/>. Returns empty rectangle if fails (eg window closed).
+		///// Calls <see cref="GetWindowAndClientRectInScreen"/>. Returns default(RECT) if fails (eg window closed).
 		///// </remarks>
 		//public RECT ClientRectInScreen
 		//{
@@ -1451,7 +1466,7 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapClientToClientOf(Wnd w, ref Point p)
+		public bool MapClientToClientOf(Wnd w, ref POINT p)
 		{
 			fixed (void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
 		}
@@ -1469,7 +1484,7 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapClientToScreen(ref Point p)
+		public bool MapClientToScreen(ref POINT p)
 		{
 			return Api.ClientToScreen(this, ref p);
 		}
@@ -1487,7 +1502,7 @@ namespace Au
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapScreenToClient(ref Point p)
+		public bool MapScreenToClient(ref POINT p)
 		{
 			return Api.ScreenToClient(this, ref p);
 		}
@@ -1503,10 +1518,10 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapClientToWindow(ref Point p)
+		public bool MapClientToWindow(ref POINT p)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
-			p.X += rc.left - rw.left; p.Y += rc.top - rw.top;
+			p.x += rc.left - rw.left; p.y += rc.top - rw.top;
 			return true;
 		}
 
@@ -1525,10 +1540,10 @@ namespace Au
 		/// Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapWindowToClient(ref Point p)
+		public bool MapWindowToClient(ref POINT p)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
-			p.X += rw.left - rc.left; p.Y += rw.top - rc.top;
+			p.x += rw.left - rc.left; p.y += rw.top - rc.top;
 			return true;
 		}
 
@@ -1547,10 +1562,10 @@ namespace Au
 		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool MapWindowToScreen(ref Point p)
+		public bool MapWindowToScreen(ref POINT p)
 		{
 			if(!GetRect(out var rw)) return false;
-			p.X += rw.left; p.Y += rw.top;
+			p.x += rw.left; p.y += rw.top;
 			return true;
 		}
 
@@ -1582,7 +1597,7 @@ namespace Au
 		/// Gets or sets child window rectangle in parent window's client area.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetRectInClientOf"/>. Returns empty rectangle if fails (eg window closed).
+		/// Calls <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
 		public RECT RectInParent
 		{
@@ -1607,7 +1622,7 @@ namespace Au
 		/// <summary>
 		/// Returns mouse pointer position relative to the client area of this window.
 		/// </summary>
-		public Point MouseClientXY
+		public POINT MouseClientXY
 		{
 			get
 			{
@@ -1622,12 +1637,12 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in screen. Not used if default(Coord).</param>
 		/// <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area.</param>
 		public bool ContainsScreenXY(Coord x, Coord y, CoordOptions co = null)
 		{
-			Point p = Coord.Normalize(x, y, co);
+			POINT p = Coord.Normalize(x, y, co);
 			if(!GetRect(out RECT r)) return false;
-			if(!r.Contains(x.IsEmpty ? r.left : p.X, y.IsEmpty ? r.top : p.Y)) return false;
+			if(!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
 			return true;
 
 			//note: we don't use name ContainsXY and 2 overloads, mostly because of possible incorrect usage. Also now easier to read the code.
@@ -1645,9 +1660,9 @@ namespace Au
 		public bool ContainsWindowXY(Wnd parent, Coord x, Coord y)
 		{
 			if(!parent.IsAlive) return false;
-			Point p = Coord.NormalizeInWindow(x, y, parent);
+			POINT p = Coord.NormalizeInWindow(x, y, parent);
 			if(!GetRectInClientOf(parent, out RECT r)) return false;
-			if(!r.Contains(x.IsEmpty ? r.left : p.X, y.IsEmpty ? r.top : p.Y)) return false;
+			if(!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
 			return true;
 		}
 
@@ -1668,8 +1683,8 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>.
-		/// For swpFlags you can use Native.SWP_NOMOVE etc.
-		/// For wndInsertAfter you can use SpecHwnd.HWND_TOPMOST etc.
+		/// For <paramref name="swpFlags"/> you can use <b>Native.SWP_x</b>.
+		/// For <paramref name="wndInsertAfter"/> you can use <b>Native.HWND_x</b>.
 		/// </remarks>
 		public bool SetWindowPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default)
 		{
@@ -1730,7 +1745,7 @@ namespace Au
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
@@ -1741,7 +1756,7 @@ namespace Au
 			ThrowIfInvalid();
 
 			Wnd w = WndDirectParent;
-			Point xy, wh;
+			POINT xy, wh;
 			if(!w.Is0) {
 				xy = Coord.NormalizeInWindow(x, y, w);
 				wh = Coord.NormalizeInWindow(width, height, w);
@@ -1756,10 +1771,10 @@ namespace Au
 
 			if(getRect != 0) {
 				if(!GetRectInClientOf(w, out RECT r)) ThrowUseNative("*move/resize*");
-				if((getRect & 1) != 0) xy.X = r.left;
-				if((getRect & 2) != 0) xy.Y = r.top;
-				if((getRect & 4) != 0) wh.X = r.Width;
-				if((getRect & 8) != 0) wh.Y = r.Height;
+				if((getRect & 1) != 0) xy.x = r.left;
+				if((getRect & 2) != 0) xy.y = r.top;
+				if((getRect & 4) != 0) wh.x = r.Width;
+				if((getRect & 8) != 0) wh.y = r.Height;
 			}
 
 			//restore min/max, except if child or hidden
@@ -1768,7 +1783,7 @@ namespace Au
 				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 
-			if(!MoveLL(xy.X, xy.Y, wh.X, wh.Y, f)) ThrowUseNative("*move/resize*");
+			if(!MoveLL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
 
 			LibMinimalSleepIfOtherThread();
 		}
@@ -1780,7 +1795,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Not used when this is a child window.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
@@ -1798,7 +1813,7 @@ namespace Au
 		/// </summary>
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
+		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
@@ -1819,13 +1834,13 @@ namespace Au
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
 			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
-			object screen, bool bWorkArea, bool bEnsureInScreen)
+			Screen_ screen, bool bWorkArea, bool bEnsureInScreen)
 			{
-				Screen scr;
-				if(screen == null) {
-					if(useWindow) scr = Screen_.FromWindow(w);
-					else scr = bEnsureMethod ? Screen.FromRectangle(r) : Screen.PrimaryScreen;
-				} else scr = Screen_.FromObject(screen);
+				System.Windows.Forms.Screen scr;
+				if(!screen.IsNull) scr = screen.GetScreen();
+				else if(useWindow) scr = Screen_.ScreenFromWindow(w);
+				else if(bEnsureMethod) scr = System.Windows.Forms.Screen.FromRectangle(r);
+				else scr = System.Windows.Forms.Screen.PrimaryScreen;
 
 				RECT rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
 
@@ -1839,8 +1854,10 @@ namespace Au
 					x = r.left;
 					y = r.top;
 				} else {
+					if(left.IsEmpty) left = Coord.Center;
+					if(top.IsEmpty) top = Coord.Center;
 					var p = Coord.NormalizeInRect(left, top, rs, centerIfEmpty: true);
-					x = p.X; y = p.Y;
+					x = p.x; y = p.y;
 					switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
 					switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
 				}
@@ -1856,7 +1873,7 @@ namespace Au
 
 				if(useWindow) { //move window
 					w.LibGetWindowPlacement(out var wp, "*move*");
-					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.FromWindow(w));
+					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.ScreenFromWindow(w));
 					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
 					Wnd hto = default; bool visible = w.IsVisible;
@@ -1895,16 +1912,15 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="screen">Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), use screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="Screen_"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
 		/// <exception cref="WndException"/>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// </remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveInScreen(Coord x, Coord y, object screen = null, bool workArea = true, bool ensureInScreen = true)
+		public void MoveInScreen(Coord x, Coord y, Screen_ screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			RECT r = default;
 			Lib.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
@@ -1913,32 +1929,27 @@ namespace Au
 		/// <summary>
 		/// Moves this window if need, to ensure that entire window is in screen.
 		/// </summary>
-		/// <param name="screen">
-		/// Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses screen of this window.
-		/// If screen index is invalid, shows warning, no exception. Then uses screen of this window.
-		/// </param>
+		/// <param name="screen">Move to this screen (see <see cref="Screen_"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// </remarks>
 		/// <seealso cref="RECT.EnsureInScreen"/>
-		public void EnsureInScreen(object screen = null, bool workArea = true)
+		public void EnsureInScreen(Screen_ screen = default, bool workArea = true)
 		{
 			RECT r = default;
-			if(screen is int) screen = Screen_.FromIndex((int)screen, noThrow: true); //returns null if invalid
 			Lib.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
 		}
 
 		/// <summary>
 		/// Moves this window to the center of the screen.
 		/// </summary>
-		/// <param name="screen">Move to this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="Screen_"/>). If default, uses screen of this window.</param>
 		/// <exception cref="WndException"/>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveToScreenCenter(object screen = null)
+		public void MoveToScreenCenter(Screen_ screen = default)
 		{
 			ShowNotMinMax(true);
 			MoveInScreen(default, default, screen, true);
@@ -1947,11 +1958,11 @@ namespace Au
 		/// <summary>
 		/// Gets <see cref="System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(Wnd) or invalid, gets the primary screen.
-		/// Calls <see cref="Screen_.FromWindow"/>.
+		/// Calls <see cref="Screen_.ScreenFromWindow"/>.
 		/// </summary>
-		public Screen Screen
+		public System.Windows.Forms.Screen Screen
 		{
-			get => Screen_.FromWindow(this);
+			get => Screen_.ScreenFromWindow(this);
 		}
 
 		#endregion
@@ -2002,7 +2013,7 @@ namespace Au
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTop()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_TOP);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_TOP);
 
 			//CONSIDER: find a workaround. Eg in some cases this works: set HWND_TOPMOST then HWND_NOTOPMOST.
 		}
@@ -2010,7 +2021,7 @@ namespace Au
 		//Better don't use workarounds here.
 		//public bool ZorderTop()
 		//{
-		//	Wnd wa = SpecHwnd.Top;
+		//	Wnd wa = Native.HWND_TOP;
 		//	if(!IsChildWindow) {
 		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
 		//		//Workaround: insert this after the first window, then insert the first window after this.
@@ -2028,7 +2039,7 @@ namespace Au
 		public bool ZorderBottom()
 		{
 			ZorderNoTopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_BOTTOM);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_BOTTOM);
 		}
 
 		/// <summary>
@@ -2040,7 +2051,7 @@ namespace Au
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTopmost()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_TOPMOST);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_TOPMOST);
 		}
 
 		/// <summary>
@@ -2055,7 +2066,7 @@ namespace Au
 			if(!IsTopmost) return true;
 
 			for(int i = 0; i < 4; i++) {
-				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, SpecHwnd.HWND_NOTOPMOST)) return false;
+				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_NOTOPMOST)) return false;
 				if(i == 0 && !IsTopmost) break;
 				//Print("retry");
 			}
@@ -2290,20 +2301,20 @@ namespace Au
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
 		public int ThreadId => GetThreadProcessId(out var pid);
-		
+
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns process id.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		public int ProcessId { get { GetThreadProcessId(out var pid); return pid; } }
-		
+
 		/// <summary>
 		/// Returns true if this window belongs to the current thread, false if to another thread.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
 		public bool IsOfThisThread => Api.GetCurrentThreadId() == ThreadId;
-		
+
 		/// <summary>
 		/// Returns true if this window belongs to the current process, false if to another process.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
@@ -2441,10 +2452,7 @@ namespace Au
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. Cannot be null.</param>
-		public bool ClassNameIs(string className)
-		{
-			return ClassName.Like_(className, true);
-		}
+		public bool ClassNameIs(string className) => ClassName.Like_(className, true);
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
@@ -2458,7 +2466,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets window or control name.
+		/// Gets name.
 		/// Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <remarks>
@@ -2472,11 +2480,7 @@ namespace Au
 		/// <seealso cref="ControlText"/>
 		/// <seealso cref="NameAcc"/>
 		/// <seealso cref="NameWinForms"/>
-		public string Name
-		{
-			get => GetText(false, true);
-			//TODO: should never return null. Makes programming unsafe or more difficult. Need a bool func instead. Other string props too.
-		}
+		public string Name => GetText(false, true);
 
 		/// <summary>
 		/// Gets control text.
@@ -2490,10 +2494,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="Name"/>
-		public string ControlText
-		{
-			get => GetText(true, false);
-		}
+		public string ControlText => GetText(true, false);
 
 		/// <summary>
 		/// Gets window/control name or control text.

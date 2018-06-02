@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using System.Text.RegularExpressions; //for XML doc links
@@ -283,11 +281,11 @@ namespace Au.Types
 			_len = end - start; //note: can be <0 if (?=...\K). It's OK.
 		}
 
-		internal RXGroup(string subject, Point p)
+		internal RXGroup(string subject, POINT p)
 		{
 			_subject = subject;
-			_index = p.X;
-			_len = p.Y - p.X; //note: can be <0 if (?=...\K). It's OK.
+			_index = p.x;
+			_len = p.y - p.x; //note: can be <0 if (?=...\K). It's OK.
 		}
 
 		/// <summary>
@@ -637,7 +635,7 @@ namespace Au.Types
 		/// <summary>This and related API are documented in the C++ dll project.</summary>
 		internal struct RegexMatch //note: 'ref struct' crashes VS
 		{
-			public Point* vec;
+			public POINT* vec;
 			public int vecCount;
 			public int indexNoK;
 			public char* mark;

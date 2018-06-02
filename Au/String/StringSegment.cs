@@ -515,7 +515,7 @@ namespace Au
 		/// <seealso cref="String_.Segments_(string, string, SegFlags)"/>
 		public SegParser Split(string separators, SegFlags flags = 0)
 		{
-			return new SegParser(ref this, separators, flags);
+			return new SegParser(this, separators, flags);
 		}
 	}
 
@@ -550,7 +550,7 @@ namespace Au
 		public static SegParser Segments_(this string t, int startIndex, int length, string separators, SegFlags flags = 0)
 		{
 			var seg = new StringSegment(t, startIndex, length);
-			return new SegParser(ref seg, separators, flags);
+			return new SegParser(seg, separators, flags);
 		}
 	}
 }
@@ -639,7 +639,7 @@ namespace Au.Types
 		/// <param name="seg">The StringSegment.</param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
-		public SegParser(ref StringSegment seg, string separators, SegFlags flags = 0)
+		public SegParser(in StringSegment seg, string separators, SegFlags flags = 0)
 		{
 			_separators = separators;
 			_s = seg.Buffer;

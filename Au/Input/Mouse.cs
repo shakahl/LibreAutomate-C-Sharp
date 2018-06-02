@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -31,19 +29,19 @@ namespace Au
 		/// <summary>
 		/// Gets cursor (mouse pointer) position.
 		/// </summary>
-		public static Point XY { get { Api.GetCursorPos(out var p); return p; } }
+		public static POINT XY { get { Api.GetCursorPos(out var p); return p; } }
 
 		/// <summary>
-		/// Gets cursor (mouse pointer) X coordinate (Mouse.XY.X).
+		/// Gets cursor (mouse pointer) X coordinate (Mouse.XY.x).
 		/// </summary>
-		public static int X => XY.X;
+		public static int X => XY.x;
 
 		/// <summary>
-		/// Gets cursor (mouse pointer) Y coordinate (Mouse.XY.Y).
+		/// Gets cursor (mouse pointer) Y coordinate (Mouse.XY.y).
 		/// </summary>
-		public static int Y => XY.Y;
+		public static int Y => XY.y;
 
-		static void _Move(Point p, bool fast)
+		static void _Move(POINT p, bool fast)
 		{
 			bool relaxed = Opt.Mouse.Relaxed, willFail = false;
 
@@ -54,7 +52,7 @@ namespace Au
 
 			if(!fast) _MoveSlowTo(p);
 
-			Point p0 = XY;
+			POINT p0 = XY;
 			//bool retry = false; g1:
 			bool ok = false;
 			for(int i = 0, n = relaxed ? 3 : 10; i < n; i++) {
@@ -91,13 +89,13 @@ namespace Au
 			_Sleep(Opt.Mouse.MoveSleepFinally);
 		}
 
-		static void _MoveSlowTo(Point p)
+		static void _MoveSlowTo(POINT p)
 		{
 			int speed = Opt.Mouse.MoveSpeed;
 			if(speed == 0 && IsPressed()) speed = 1; //make one intermediate movement, because some programs (older MSDEV) don't select text otherwise
 			if(speed > 0) {
 				var p0 = XY;
-				int dxall = p.X - p0.X, dyall = p.Y - p0.Y;
+				int dxall = p.x - p0.x, dyall = p.y - p0.y;
 				double dist = Math.Sqrt(dxall * dxall + dyall * dyall);
 				if(dist > 1.5) {
 					double dtall = Math.Sqrt(dist) * speed + 9;
@@ -110,7 +108,7 @@ namespace Au
 						int dx = (int)(dtfr * dxall), dy = (int)(dtfr * dyall);
 						//Print(dx, dy, dtfr);
 
-						var pt = new Point(p0.X + dx, p0.Y + dy);
+						var pt = new POINT(p0.x + dx, p0.y + dy);
 						if(dx != pdx || dy != pdy) {
 							_SendMove(pt);
 							pdx = dx; pdy = dy;
@@ -143,7 +141,7 @@ namespace Au
 		/// Mouse.Move(Coord.Normalize(10, 10, screen: 1));
 		/// ]]></code>
 		/// </example>
-		public static void Move(Point p)
+		public static void Move(POINT p)
 		{
 			LibWaitForNoButtonsPressed();
 			_Move(p, fast: false);
@@ -155,16 +153,16 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate relative to screen.</param>
 		/// <param name="y">Y coordinate relative to screen.</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
 		/// <exception cref="ArgumentOutOfRangeException">
 		/// 1. The specified x y is not in screen (any screen). No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).
 		/// 2. Invalid screen index.
 		/// </exception>
-		/// <exception cref="AuException"><inheritdoc cref="Move(Point)"/></exception>
+		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
-		public static Point Move(Coord x, Coord y, CoordOptions co = null)
+		public static POINT Move(Coord x, Coord y, CoordOptions co = null)
 		{
 			LibWaitForNoButtonsPressed();
 			var p = Coord.Normalize(x, y, co);
@@ -186,11 +184,11 @@ namespace Au
 		/// Other window-related failures.
 		/// </exception>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException"><inheritdoc cref="Move(Point)"/></exception>
+		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
-		public static Point Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
+		public static POINT Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			LibWaitForNoButtonsPressed();
 			w.ThrowIfInvalid();
@@ -227,7 +225,7 @@ namespace Au
 
 		class _PrevMousePos
 		{
-			public Point first, last;
+			public POINT first, last;
 			public _PrevMousePos() { first = last = XY; }
 		}
 		[ThreadStatic] static _PrevMousePos t_prevMousePos;
@@ -236,7 +234,7 @@ namespace Au
 		/// Mouse cursor position of the most recent successful 'mouse move' or 'mouse move and click' function call in this thread.
 		/// If such functions are still not called in this thread, returns <see cref="XY"/>.
 		/// </summary>
-		public static Point LastMoveXY { get { var v = t_prevMousePos; return (v != null) ? v.last : XY; } }
+		public static POINT LastMoveXY { get { var v = t_prevMousePos; return (v != null) ? v.last : XY; } }
 
 		//rejected. MoveRelative usually is better. If need, can use code: Move(Mouse.X+dx, Mouse.Y+dy).
 		//public static void MoveFromCurrent(int dx, int dy)
@@ -250,18 +248,18 @@ namespace Au
 		/// Moves the cursor (mouse pointer) relative to <see cref="LastMoveXY"/>.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
-		/// <param name="dx">X offset from LastMoveXY.X.</param>
-		/// <param name="dy">Y offset from LastMoveXY.Y.</param>
+		/// <param name="dx">X offset from LastMoveXY.x.</param>
+		/// <param name="dy">Y offset from LastMoveXY.y.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
-		public static Point MoveRelative(int dx, int dy)
+		public static POINT MoveRelative(int dx, int dy)
 		{
 			LibWaitForNoButtonsPressed();
 			var p = LastMoveXY;
-			p.Offset(dx, dy);
+			p.x += dx; p.y += dy;
 			_Move(p, fast: false);
 			return p;
 		}
@@ -278,7 +276,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
-		public static Point MoveRecorded(string recordedString, double speedFactor = 1.0)
+		public static POINT MoveRecorded(string recordedString, double speedFactor = 1.0)
 		{
 			LibWaitForNoButtonsPressed();
 
@@ -314,7 +312,7 @@ namespace Au
 
 					//Print($"dx={dx} dy={dy}    x={x} y={y}    nbytes={nbytes}    v=0x{v:X}");
 
-					p.Offset(dx, dy);
+					p.x += dx; p.y += dy;
 				}
 				isSleep ^= withSleepTimes;
 			}
@@ -396,10 +394,10 @@ namespace Au
 		/// Sends single mouse movement event.
 		/// x y are normal absolute coordinates.
 		/// </summary>
-		static void _SendMove(Point p)
+		static void _SendMove(POINT p)
 		{
 			if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(); //sets .first=XY
-			_SendRaw(Api.IMFlags.Move, p.X, p.Y);
+			_SendRaw(Api.IMFlags.Move, p.x, p.y);
 		}
 
 		/// <summary>
@@ -408,19 +406,19 @@ namespace Au
 		/// Applies SM_SWAPBUTTON.
 		/// If pMoved!=null, also moves to pMoved in the same API SendInput call.
 		/// </summary>
-		static void _SendButton(MButton button, bool down, Point? pMoved)
+		static void _SendButton(MButton button, bool down, POINT? pMoved)
 		{
 			//CONSIDER: release user-pressed modifier keys, like Keyb does.
 			//CONSIDER: block user input, like Keyb does.
 
-			Api.IMFlags f; MouseButtons mb = 0;
+			Api.IMFlags f; MButtons mb = 0;
 			switch(button & (MButton.Left | MButton.Right | MButton.Middle | MButton.X1 | MButton.X2)) {
 			case 0: //allow 0 for left. Example: Wnd.Find(...).MouseClick(x, y, MButton.DoubleClick)
-			case MButton.Left: f = down ? Api.IMFlags.LeftDown : Api.IMFlags.LeftUp; mb = MouseButtons.Left; break;
-			case MButton.Right: f = down ? Api.IMFlags.RightDown : Api.IMFlags.RightUp; mb = MouseButtons.Right; break;
-			case MButton.Middle: f = down ? Api.IMFlags.MiddleDown : Api.IMFlags.MiddleUp; mb = MouseButtons.Middle; break;
-			case MButton.X1: f = down ? Api.IMFlags.XDown | Api.IMFlags.X1 : Api.IMFlags.XUp | Api.IMFlags.X1; mb = MouseButtons.XButton1; break;
-			case MButton.X2: f = down ? Api.IMFlags.XDown | Api.IMFlags.X2 : Api.IMFlags.XUp | Api.IMFlags.X2; mb = MouseButtons.XButton2; break;
+			case MButton.Left: f = down ? Api.IMFlags.LeftDown : Api.IMFlags.LeftUp; mb = MButtons.Left; break;
+			case MButton.Right: f = down ? Api.IMFlags.RightDown : Api.IMFlags.RightUp; mb = MButtons.Right; break;
+			case MButton.Middle: f = down ? Api.IMFlags.MiddleDown : Api.IMFlags.MiddleUp; mb = MButtons.Middle; break;
+			case MButton.X1: f = down ? Api.IMFlags.XDown | Api.IMFlags.X1 : Api.IMFlags.XUp | Api.IMFlags.X1; mb = MButtons.X1; break;
+			case MButton.X2: f = down ? Api.IMFlags.XDown | Api.IMFlags.X2 : Api.IMFlags.XUp | Api.IMFlags.X2; mb = MButtons.X2; break;
 			default: throw new ArgumentException("Several buttons specified", nameof(button)); //rejected: InvalidEnumArgumentException. It's in System.ComponentModel namespace.
 			}
 
@@ -435,7 +433,7 @@ namespace Au
 			if(pMoved != null) f |= Api.IMFlags.Move;
 
 			var p = pMoved.GetValueOrDefault();
-			_SendRaw(f, p.X, p.Y);
+			_SendRaw(f, p.x, p.y);
 
 			if(down) t_pressedButtons |= mb; else t_pressedButtons &= ~mb;
 		}
@@ -450,8 +448,8 @@ namespace Au
 		{
 			if(0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
-				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= Screen_.Width;
-				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= Screen_.Height;
+				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= Screen_.PrimaryWidth;
+				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= Screen_.PrimaryHeight;
 			}
 
 			int mouseData = 0;
@@ -478,9 +476,9 @@ namespace Au
 			//FUTURE: sync better, especially finally.
 		}
 
-		[ThreadStatic] static MouseButtons t_pressedButtons;
+		[ThreadStatic] static MButtons t_pressedButtons;
 
-		static void _Click(MButton button, Point? pMoved = null, Wnd w = default)
+		static void _Click(MButton button, POINT? pMoved = null, Wnd w = default)
 		{
 			//Sending a click to a window of own thread often does not work.
 			//Reason 1: often the window on down event enters a message loop that waits for up event. But then this func cannot send the up event because it is in the loop (if it does doevents).
@@ -545,7 +543,7 @@ namespace Au
 		/// </remarks>
 		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastMoveXY = false)
 		{
-			Point? p = null; if(useLastMoveXY) p = LastMoveXY;
+			POINT? p = null; if(useLastMoveXY) p = LastMoveXY;
 			_Click(button, p);
 			return button;
 			//CONSIDER: OptMouse.ClickAtLastMoveXY
@@ -558,7 +556,7 @@ namespace Au
 		/// <param name="button">Button and action.</param>
 		/// <param name="x">X coordinate relative to screen.</param>
 		/// <param name="y">Y coordinate relative to screen.</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
 		/// <remarks>
@@ -949,42 +947,56 @@ namespace Au
 		///// Releases mouse buttons pressed by this thread (t_pressedButtons).
 		///// </summary>
 		///// <param name="p">If not null, and XY is different, moves to this point. Used for reliability.</param>
-		//static void _ReleaseButtons(Point? p = null)
+		//static void _ReleaseButtons(POINT? p = null)
 		//{
 		//	var b = t_pressedButtons;
-		//	if(0 != (b & MouseButtons.Left)) _Click(MButton.Left | MButton.Up, p);
-		//	if(0 != (b & MouseButtons.Right)) _Click(MButton.Right | MButton.Up, p);
-		//	if(0 != (b & MouseButtons.Middle)) _Click(MButton.Middle | MButton.Up, p);
-		//	if(0 != (b & MouseButtons.XButton1)) _Click(MButton.X1 | MButton.Up, p);
-		//	if(0 != (b & MouseButtons.XButton2)) _Click(MButton.X2 | MButton.Up, p);
+		//	if(0 != (b & MButtons.Left)) _Click(MButton.Left | MButton.Up, p);
+		//	if(0 != (b & MButtons.Right)) _Click(MButton.Right | MButton.Up, p);
+		//	if(0 != (b & MButtons.Middle)) _Click(MButton.Middle | MButton.Up, p);
+		//	if(0 != (b & MButtons.X1)) _Click(MButton.X1 | MButton.Up, p);
+		//	if(0 != (b & MButtons.X2)) _Click(MButton.X2 | MButton.Up, p);
 		//}
 		//rejected: finally release script-pressed buttons, especially on exception. Instead let use code: using(Mouse.LeftDown(...)), it auto-releases pressed button.
 
 		/// <summary>
 		/// Returns true if some mouse buttons are pressed.
-		/// See also: <see cref="Control.MouseButtons"/>.
 		/// </summary>
 		/// <param name="buttons">Check only these buttons. Default - all.</param>
 		/// <seealso cref="WaitForNoButtonsPressed"/>
-		public static bool IsPressed(MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		public static bool IsPressed(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
-			if(0 != (buttons & MouseButtons.Left) && Keyb.IsPressed(KKey.MouseLeft)) return true;
-			if(0 != (buttons & MouseButtons.Right) && Keyb.IsPressed(KKey.MouseRight)) return true;
-			if(0 != (buttons & MouseButtons.Middle) && Keyb.IsPressed(KKey.MouseMiddle)) return true;
-			if(0 != (buttons & MouseButtons.XButton1) && Keyb.IsPressed(KKey.MouseX1)) return true;
-			if(0 != (buttons & MouseButtons.XButton2) && Keyb.IsPressed(KKey.MouseX2)) return true;
+			if(0 != (buttons & MButtons.Left) && Keyb.IsPressed(KKey.MouseLeft)) return true;
+			if(0 != (buttons & MButtons.Right) && Keyb.IsPressed(KKey.MouseRight)) return true;
+			if(0 != (buttons & MButtons.Middle) && Keyb.IsPressed(KKey.MouseMiddle)) return true;
+			if(0 != (buttons & MButtons.X1) && Keyb.IsPressed(KKey.MouseX1)) return true;
+			if(0 != (buttons & MButtons.X2) && Keyb.IsPressed(KKey.MouseX2)) return true;
 			return false;
 		}
 
 		/// <summary>
+		/// Returns a value indicating which mouse buttons are in pressed state.
+		/// </summary>
+		/// <param name="buttons">Check only these buttons. Default - all.</param>
+		public static MButtons PressedButtons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
+		{
+			MButtons R = 0;
+			if(0 != (buttons & MButtons.Left) && Keyb.IsPressed(KKey.MouseLeft)) R |= MButtons.Left;
+			if(0 != (buttons & MButtons.Right) && Keyb.IsPressed(KKey.MouseRight)) R |= MButtons.Right;
+			if(0 != (buttons & MButtons.Middle) && Keyb.IsPressed(KKey.MouseMiddle)) R |= MButtons.Middle;
+			if(0 != (buttons & MButtons.X1) && Keyb.IsPressed(KKey.MouseX1)) return R |= MButtons.X1;
+			if(0 != (buttons & MButtons.X2) && Keyb.IsPressed(KKey.MouseX2)) return R |= MButtons.X2;
+			return R;
+		}
+
+		/// <summary>
 		/// Waits while some mouse buttons are in pressed state (see <see cref="IsPressed"/>).
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <seealso cref="Keyb.WaitForNoModifierKeysAndMouseButtons"/>
-		public static bool WaitForNoButtonsPressed(double secondsTimeout = 0.0, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		public static bool WaitForNoButtonsPressed(double secondsTimeout = 0.0, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
 			return Keyb.WaitForNoModifierKeysAndMouseButtons(secondsTimeout, 0, buttons);
 		}
@@ -998,7 +1010,7 @@ namespace Au
 			//not public, because we have WaitForNoButtonsPressed, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
 
 			if(Opt.Mouse.Relaxed) return;
-			var mb = (MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+			var mb = (MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 				& ~t_pressedButtons;
 			if(WaitForNoButtonsPressed(-5, mb)) return;
 			PrintWarning("Info: Waiting for releasing mouse buttons. See Opt.Mouse.Relaxed.");
@@ -1006,58 +1018,73 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits for down or up event of the specified mouse button or buttons.
+		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
-		/// <param name="flags"></param>
+		/// <param name="up">Wait for button-up event.</param>
+		/// <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="ArgumentException"><paramref name="button"/> is 0.</exception>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// Unlike <see cref="WaitForNoButtonsPressed"/>, waits for down or up event, not for button state.
-		/// With default flags, waits for button-up event and does not discard the event.
 		/// Uses low-level mouse hook.
 		/// </remarks>
-		public static bool WaitForClick(double secondsTimeout, MouseButtons button, MWFlags flags = MWFlags.Up)
+		/// <example>
+		/// <code><![CDATA[
+		/// Mouse.WaitForClick(0, MButtons.Left, up: true, block: false);
+		/// Print("click");
+		/// ]]></code>
+		/// </example>
+		public static bool WaitForClick(double secondsTimeout, MButtons button, bool up = false, bool block = false)
 		{
 			if(button == 0) throw new ArgumentException();
-			return 0 != _WaitForButton(secondsTimeout, button, flags);
+			return 0 != _WaitForClick(secondsTimeout, button, up, block);
 		}
 
 		/// <summary>
-		/// Waits for down or up event of any mouse button, and gets the button code.
+		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
 		/// <returns>Returns the button code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <inheritdoc cref="WaitForClick(double, MouseButtons, MWFlags)"/>
-		public static MouseButtons WaitForClick(double secondsTimeout, MWFlags flags = MWFlags.Up)
+		/// <inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// var button = Mouse.WaitForClick(0, up: true, block: true);
+		/// Print(button);
+		/// ]]></code>
+		/// </example>
+		public static MButtons WaitForClick(double secondsTimeout, bool up = false, bool block = false)
 		{
-			return _WaitForButton(secondsTimeout, 0, flags);
+			return _WaitForClick(secondsTimeout, 0, up, block);
 		}
 
-		static MouseButtons _WaitForButton(double secondsTimeout, MouseButtons button, MWFlags flags)
+		static MButtons _WaitForClick(double secondsTimeout, MButtons button, bool up, bool block)
 		{
-			//info: this and related functions use similar code as Keyb._WaitForKeyEvent.
+			//info: this and related functions use similar code as Keyb._WaitForKey.
 
-			MouseButtons R = 0;
+			MButtons R = 0;
 			using(Util.WinHook.Mouse(x =>
 			{
-				MouseButtons b = 0;
+				MButtons b = 0;
 				switch(x.Event) {
-				case HookData.MouseEvent.LeftButton: b = MouseButtons.Left; break;
-				case HookData.MouseEvent.RightButton: b = MouseButtons.Right; break;
-				case HookData.MouseEvent.MiddleButton: b = MouseButtons.Middle; break;
-				case HookData.MouseEvent.X1Button: b = MouseButtons.XButton1; break;
-				case HookData.MouseEvent.X2Button: b = MouseButtons.XButton2; break;
+				case HookData.MouseEvent.LeftButton: b = MButtons.Left; break;
+				case HookData.MouseEvent.RightButton: b = MButtons.Right; break;
+				case HookData.MouseEvent.MiddleButton: b = MButtons.Middle; break;
+				case HookData.MouseEvent.X1Button: b = MButtons.X1; break;
+				case HookData.MouseEvent.X2Button: b = MButtons.X2; break;
 				}
 				if(b == 0) return false;
 				if(button != 0 && !button.Has_(b)) return false;
-				if(x.IsButtonUp != flags.Has_(MWFlags.Up)) {
-					if(!x.IsButtonUp && flags.Has_(MWFlags.Discard)) return true; //if will need to discard up, now discard down too
+				if(x.IsButtonUp != up) {
+					if(up && block) { //button down when we are waiting for up. If block, now block down too.
+						if(button == 0) button = b;
+						return true;
+					}
 					return false;
 				}
 				R = b;
-				return flags.Has_(MWFlags.Discard);
+				return block;
 			})) WaitFor.Message(secondsTimeout, () => R != 0);
 
 			return R;
@@ -1066,12 +1093,12 @@ namespace Au
 
 		/// <summary>
 		/// Waits for a standard mouse cursor (pointer) visible.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		public static bool WaitForCursor(double secondsTimeout, MCursor cursor, bool not = false)
 		{
 			IntPtr hcur = Api.LoadCursor(default, cursor);
@@ -1082,12 +1109,12 @@ namespace Au
 
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Tools.Misc.HashMouseCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();
@@ -1178,7 +1205,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// button parameter type for <see cref="Mouse.ClickEx(MButton, bool)"/> and similar functions.
+	/// <i>button</i> parameter type for <see cref="Mouse.ClickEx(MButton, bool)"/> and similar functions.
 	/// There are two groups of values:
 	/// 1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
 	/// 2. Action (Down, Up, DoubleClick). Default: click.
@@ -1188,29 +1215,19 @@ namespace Au.Types
 	[Flags]
 	public enum MButton
 	{
-		/// <summary>
-		/// The left button.
-		/// </summary>
+		/// <summary>The left button.</summary>
 		Left = 1,
 
-		/// <summary>
-		/// The right button.
-		/// </summary>
+		/// <summary>The right button.</summary>
 		Right = 2,
 
-		/// <summary>
-		/// The middle button.
-		/// </summary>
+		/// <summary>The middle button.</summary>
 		Middle = 4,
 
-		/// <summary>
-		/// The 4-th button.
-		/// </summary>
+		/// <summary>The 4-th button.</summary>
 		X1 = 8,
 
-		/// <summary>
-		/// The 5-th button.
-		/// </summary>
+		/// <summary>The 5-th button.</summary>
 		X2 = 16,
 
 		//rejected: not necessary. Can be confusing.
@@ -1228,6 +1245,32 @@ namespace Au.Types
 
 		/// <summary>(flag) Double-click.</summary>
 		DoubleClick = 128,
+	}
+
+	/// <summary>
+	/// Flags for mouse buttons.
+	/// Used with functions that check mouse button states (pressed or released).
+	/// </summary>
+	/// <remarks>
+	/// The values are the same as of <see cref="System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.
+	/// </remarks>
+	[Flags]
+	public enum MButtons
+	{
+		/// <summary>The left button.</summary>
+		Left = 0x00100000,
+
+		/// <summary>The right button.</summary>
+		Right = 0x00200000,
+
+		/// <summary>The middle button.</summary>
+		Middle = 0x00400000,
+
+		/// <summary>The 4-th button.</summary>
+		X1 = 0x00800000,
+
+		/// <summary>The 5-th button.</summary>
+		X2 = 0x01000000,
 	}
 
 	/// <summary>
@@ -1253,20 +1296,6 @@ namespace Au.Types
 			if(0 != (_buttons & MButton.X1)) Mouse.ClickEx(MButton.X1 | MButton.Up, true);
 			if(0 != (_buttons & MButton.X2)) Mouse.ClickEx(MButton.X2 | MButton.Up, true);
 		}
-	}
-
-	/// <summary>Flags for <see cref="Mouse.WaitForClick"/></summary>
-	[Flags]
-	public enum MWFlags
-	{
-		/// <summary>Wait for button-up event.</summary>
-		Up = 1,
-
-		/// <summary>
-		/// Make the event invisible for other apps.
-		/// If flag <b>Up</b> also is specified, makes both down and up events invisible.
-		/// </summary>
-		Discard = 2,
 	}
 
 	/// <summary>
@@ -1390,11 +1419,11 @@ namespace Au.Types
 			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AuException(0, "*get rectangle");
 			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 			if(w.Is0) {
-				if(button == 0) Mouse.Move(p.X, p.Y);
-				else Mouse.ClickEx(button, p.X, p.Y);
+				if(button == 0) Mouse.Move(p.x, p.y);
+				else Mouse.ClickEx(button, p.x, p.y);
 			} else {
-				if(button == 0) Mouse.Move(w, p.X, p.Y);
-				else Mouse.ClickEx(button, w, p.X, p.Y);
+				if(button == 0) Mouse.Move(w, p.x, p.y);
+				else Mouse.ClickEx(button, w, p.x, p.y);
 			}
 		}
 

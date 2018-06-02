@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -149,7 +147,7 @@ namespace Au
 			{
 				if(value == _r) return;
 				_r = value;
-				if(_IsWindow) _w.Handle.SetWindowPos(Native.SWP_NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, SpecHwnd.HWND_TOPMOST);
+				if(_IsWindow) _w.Handle.SetWindowPos(Native.SWP_NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND_TOPMOST);
 			}
 		}
 		RECT _r;
@@ -234,16 +232,16 @@ namespace Au
 			bool isBlack = _color == 0;
 			var brush = isBlack ? Api.GetStockObject(Api.BLACK_BRUSH) : Api.CreateSolidBrush((uint)_color.ToBGR());
 			if(_opacity > 0) {
-				Api.FillRect(dc, ref r, brush);
+				Api.FillRect(dc, r, brush);
 			} else {
-				Api.FillRect(dc, ref r, Api.GetStockObject(Api.WHITE_BRUSH)); //transparent
+				Api.FillRect(dc, r, Api.GetStockObject(Api.WHITE_BRUSH)); //transparent
 
-				var hr = Api.CreateRectRgnIndirect(ref r);
+				var hr = Api.CreateRectRgnIndirect(r);
 				Api.FrameRgn(dc, hr, brush, _thickness, _thickness);
 				Api.DeleteObject(hr);
 			}
 			if(!isBlack) Api.DeleteObject(brush);
-			Api.EndPaint(w, ref ps);
+			Api.EndPaint(w, ps);
 		}
 	}
 }

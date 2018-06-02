@@ -15,7 +15,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 //using System.Xml.Linq;
@@ -257,16 +256,16 @@ namespace Au
 			var p = Coord.NormalizeInRect(x, y, Rect, centerIfEmpty: true);
 
 			if(_area.Type == WIArea.AType.Screen) {
-				if(button == 0) Mouse.Move(p.X, p.Y);
-				else Mouse.ClickEx(button, p.X, p.Y);
+				if(button == 0) Mouse.Move(p.x, p.y);
+				else Mouse.ClickEx(button, p.x, p.y);
 			} else {
 				var w = _area.W;
 				if(_area.Type == WIArea.AType.Acc) {
 					if(!_area.A.GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
-					p.Offset(r.left, r.top);
+					p.x += r.left; p.y += r.top;
 				}
-				if(button == 0) Mouse.Move(w, p.X, p.Y);
-				else Mouse.ClickEx(button, w, p.X, p.Y);
+				if(button == 0) Mouse.Move(w, p.x, p.y);
+				else Mouse.ClickEx(button, w, p.x, p.y);
 			}
 		}
 
@@ -344,8 +343,7 @@ namespace Au
 
 		/// <summary>
 		/// Waits for image(s) or color(s) displayed in window or other area.
-		/// Returns <see cref="WinImage"/> object containing the rectangle of the found image.
-		/// On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
+		/// Returns <see cref="WinImage"/> object containing the rectangle of the found image. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
@@ -355,7 +353,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
 		/// <param name="also"></param>
-		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
@@ -371,7 +369,6 @@ namespace Au
 
 		/// <summary>
 		/// Waits until image(s) or color(s) is NOT displayed in window or other area.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="area"></param>
@@ -379,7 +376,8 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
 		/// <param name="also"></param>
-		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
@@ -392,13 +390,13 @@ namespace Au
 
 		/// <summary>
 		/// Waits until something visually changes in window or other area.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="area"></param>
 		/// <param name="flags"></param>
 		/// <param name="colorDiff"></param>
-		/// <exception cref="TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
@@ -495,7 +493,7 @@ namespace Au
 
 			//output
 			WinImage _result;
-			Point _resultOffset; //to map the found rectangle from the captured area coordinates to the specified area coordinates
+			POINT _resultOffset; //to map the found rectangle from the captured area coordinates to the specified area coordinates
 
 			//area data
 			_AreaData _ad;
@@ -624,7 +622,7 @@ namespace Au
 					r = _area.R;
 					if(!Screen_.IsInAnyScreen(r)) r = default;
 					_area.HasRect = false;
-					_resultOffset.X = r.left; _resultOffset.Y = r.top;
+					_resultOffset.x = r.left; _resultOffset.y = r.top;
 					break;
 				}
 				if(failedGetRect) {
@@ -638,7 +636,7 @@ namespace Au
 
 				if(_area.HasRect) {
 					var rr = _area.R;
-					_resultOffset.X = rr.left; _resultOffset.Y = rr.top;
+					_resultOffset.x = rr.left; _resultOffset.y = rr.top;
 					rr.Offset(r.left, r.top);
 					r.Intersect(rr);
 				}
@@ -654,7 +652,7 @@ namespace Au
 					_area.W.GetClientRect(out var rw, !windowDC);
 					r.Intersect(rw);
 					x -= r.left; y -= r.top;
-					_resultOffset.X -= x; _resultOffset.Y -= y;
+					_resultOffset.x -= x; _resultOffset.y -= y;
 				}
 				if(r.IsEmpty) return false; //never mind: if WaitChanged and this is the first time, immediately returns 'changed'
 
@@ -829,7 +827,7 @@ namespace Au
 				if(_action != _Action.WaitChanged) {
 					int iFound = (int)(f.p - o_pos0 - areaPixels);
 					RECT r = new RECT(iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight, true);
-					r.Offset(_resultOffset.X, _resultOffset.Y);
+					r.Offset(_resultOffset.x, _resultOffset.y);
 					_result.Rect = r;
 
 					if(_also != null) {

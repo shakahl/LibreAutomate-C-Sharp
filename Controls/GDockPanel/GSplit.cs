@@ -267,17 +267,17 @@ namespace Au.Controls
 				_manager.Cursor = this.IsVerticalSplit ? Cursors.VSplit : Cursors.HSplit;
 				bool vert = this.IsVerticalSplit;
 				var p = _manager.MouseClientXY_();
-				var offset = vert ? (p.X - this.SplitterBounds.X) : (p.Y - this.SplitterBounds.Y);
-				Au.Util.DragDrop.SimpleDragDrop(_manager, MouseButtons.Left, d =>
+				var offset = vert ? (p.x - this.SplitterBounds.X) : (p.y - this.SplitterBounds.Y);
+				Au.Util.DragDrop.SimpleDragDrop(_manager, MButtons.Left, d =>
 				{
 					if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 					p = _manager.MouseClientXY_();
 					var b = this.Bounds;
 					int xy, loBound, hiBound, widHei;
 					if(vert) {
-						xy = p.X; loBound = b.Left; hiBound = b.Right; widHei = b.Width;
+						xy = p.x; loBound = b.Left; hiBound = b.Right; widHei = b.Width;
 					} else {
-						xy = p.Y; loBound = b.Top; hiBound = b.Bottom; widHei = b.Height;
+						xy = p.y; loBound = b.Top; hiBound = b.Bottom; widHei = b.Height;
 					}
 					xy -= offset;
 					int min1 = _MinimalChildWidthOrHeight(Child1), min2 = _MinimalChildWidthOrHeight(Child2) + this.SplitterWidth;

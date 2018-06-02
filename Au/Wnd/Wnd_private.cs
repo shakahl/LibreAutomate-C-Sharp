@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -66,8 +64,8 @@ namespace Au
 					break;
 				case 2:
 					if(Ver.MinWin10) {
-						if(0 == Api.SHGetPropertyStoreForWindow(w, ref Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
-							if(0 == ps.GetValue(ref Api.PKEY_AppUserModel_ID, out var v)) {
+						if(0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
+							if(0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
 								if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
 								v.Dispose();
 							}
@@ -135,23 +133,18 @@ namespace Au
 			[Flags]
 			internal enum WFlags
 			{
-				//TODO: remove if unused. Now used by AElement.
-				ChromeYes = 1,
-				ChromeNo = 2,
+				//these were used by AElement.
+				//ChromeYes = 1,
+				//ChromeNo = 2,
 			}
 
 			/// <summary>
 			/// Calls API SetProp/GetProp to set/get window flags <see cref="WFlags"/>.
 			/// </summary>
-			internal class WinFlags
+			internal static class WinFlags
 			{
-				ushort _atom; //atom is much faster than string
-				static readonly WinFlags s_atom = new WinFlags();
-
-				private WinFlags() => _atom = Api.GlobalAddAtom("Au.WFlags");
-
-				//~WinFlags() => Api.GlobalDeleteAtom(_atom); //don't. Deletes even if currently used by a window prop, making the prop useless.
-				//TODO: can be simplified, because now don't need finalizer
+				static readonly ushort s_atom = Api.GlobalAddAtom("Au.WFlags"); //atom is much faster than string
+				//note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
 
 				internal static bool Set(Wnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
 				{
@@ -164,17 +157,17 @@ namespace Au
 						}
 						flags = f;
 					}
-					return w.Prop.Set(s_atom._atom, (int)flags);
+					return w.Prop.Set(s_atom, (int)flags);
 				}
 
 				internal static WFlags Get(Wnd w)
 				{
-					return (WFlags)(int)w.Prop[s_atom._atom];
+					return (WFlags)(int)w.Prop[s_atom];
 				}
 
 				internal static WFlags Remove(Wnd w)
 				{
-					return (WFlags)(int)w.Prop.Remove(s_atom._atom);
+					return (WFlags)(int)w.Prop.Remove(s_atom);
 				}
 			}
 

@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -157,7 +155,7 @@ namespace Au
 		/// <remarks>
 		/// Unlike <see cref="Sleep"/>, this function retrieves and dispatches Windows messages, calls .NET event handlers, hook procedures, timer functions, COM/RPC, etc. Supports APC.
 		/// This function can be used in threads with windows. However usually there are better ways, for example timer, other thread, async/await/Task. In some places this function does not work as expected, for example in Form/Control mouse event handlers .NET blocks other mouse events.
-		/// Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>.
+		/// Be careful, this function is as dangerous as <see cref="System.Windows.Forms.Application.DoEvents"/>.
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
@@ -186,8 +184,8 @@ namespace Au
 		/// Retrieves and dispatches events and Windows messages from the message queue of this thread.
 		/// </summary>
 		/// <remarks>
-		/// Similar to <see cref="Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
-		/// Be careful, this function is as dangerous as <see cref="Application.DoEvents"/>.
+		/// Similar to <see cref="System.Windows.Forms.Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
+		/// Be careful, this function is as dangerous as <b>Application.DoEvents</b>.
 		/// </remarks>
 		public static void DoEvents()
 		{
@@ -195,8 +193,8 @@ namespace Au
 				//Wnd.Misc.PrintMsg(m);
 				//if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return; }
 				if(m.message == Api.WM_QUIT) Thread.CurrentThread.Abort();
-				Api.TranslateMessage(ref m);
-				Api.DispatchMessage(ref m);
+				Api.TranslateMessage(m);
+				Api.DispatchMessage(m);
 			}
 		}
 

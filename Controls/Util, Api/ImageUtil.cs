@@ -320,7 +320,7 @@ namespace Au.Controls
 			try {
 				using(var m = new MemoryBitmap(siz, siz)) {
 					var r = new RECT(0, 0, siz, siz, false);
-					Api.FillRect(m.Hdc, ref r, Api.GetStockObject(0)); //WHITE_BRUSH
+					Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
 					if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
 
 					int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);

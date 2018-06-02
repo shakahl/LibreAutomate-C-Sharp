@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -185,14 +183,14 @@ namespace Au.Types
 		/// <param name="r">The rectangle.</param>
 		/// <param name="widthHeight">Use only width and height of r. If false, the function adds r offset (left and top).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
-		public static Point NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false)
+		public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false)
 		{
 			if(widthHeight) r.Offset(-r.left, -r.top);
 			else if(centerIfEmpty) {
 				if(x.IsEmpty) x = Center;
 				if(y.IsEmpty) y = Center;
 			}
-			return new Point(x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
+			return new POINT(x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
 		}
 
 		/// <summary>
@@ -203,7 +201,7 @@ namespace Au.Types
 		/// <param name="w">The window.</param>
 		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static Point NormalizeInWindow(Coord x, Coord y, Wnd w, bool nonClient = false, bool centerIfEmpty = false)
+		public static POINT NormalizeInWindow(Coord x, Coord y, Wnd w, bool nonClient = false, bool centerIfEmpty = false)
 		{
 			//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
 
@@ -211,7 +209,7 @@ namespace Au.Types
 				if(x.IsEmpty) x = Center;
 				if(y.IsEmpty) y = Center;
 			}
-			Point p = default;
+			POINT p = default;
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
 				if(nonClient) {
@@ -219,8 +217,8 @@ namespace Au.Types
 				} else if(_NeedRect(x, y)) {
 					r = w.ClientRect;
 				} else r = default;
-				p.X = x._Normalize(r.left, r.right);
-				p.Y = y._Normalize(r.top, r.bottom);
+				p.x = x._Normalize(r.left, r.right);
+				p.y = y._Normalize(r.top, r.bottom);
 			}
 			return p;
 		}
@@ -230,22 +228,22 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate relative to the specified screen (default - primary).</param>
 		/// <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
-		public static Point Normalize(Coord x, Coord y, CoordOptions co = null, bool widthHeight = false)
+		public static POINT Normalize(Coord x, Coord y, CoordOptions co = null, bool widthHeight = false)
 		{
-			Point p = default;
+			POINT p = default;
 			if(!x.IsEmpty || !y.IsEmpty) {
-				object scr = co?.Screen;
+				Screen_ scr = co?.Screen??default;
 				bool workArea = co?.WorkArea ?? false;
 				RECT r;
-				if(workArea || scr != null || _NeedRect(x, y)) {
+				if(workArea || !scr.IsNull || _NeedRect(x, y)) {
 					r = Screen_.GetRect(scr, workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
-				p.X = x._Normalize(r.left, r.right);
-				p.Y = y._Normalize(r.top, r.bottom);
+				p.x = x._Normalize(r.left, r.right);
+				p.y = y._Normalize(r.top, r.bottom);
 			}
 			return p;
 		}
@@ -268,9 +266,9 @@ namespace Au.Types
 	public class CoordOptions
 	{
 		/// <summary>
-		/// Screen index or anything that can be converted to <see cref="Screen"/> with <see cref="Screen_.FromObject"/>.
+		/// Screen index or anything that can be used to get screen.
 		/// </summary>
-		public object Screen { get; set; }
+		public Screen_ Screen { get; set; }
 
 		/// <summary>
 		/// If true, coordinates are relative to the work area, not to whole screen.
@@ -284,7 +282,7 @@ namespace Au.Types
 		public CoordOptions() { }
 
 		///
-		public CoordOptions(bool workArea, object screen = null)
+		public CoordOptions(bool workArea, Screen_ screen = default)
 		{
 			WorkArea = workArea;
 			Screen = screen;
@@ -308,9 +306,9 @@ namespace Au.Types
 		/// <summary> Assignment of a value of type Wnd. </summary>
 		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((Wnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
-		public static implicit operator AnyWnd(Control c) => new AnyWnd(c);
+		public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.Window (WPF window). </summary>
-		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(new System.Windows.Interop.WindowInteropHelper(w));
+		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(w);
 
 		/// <summary>
 		/// Gets the window or control handle as Wnd.
@@ -323,13 +321,13 @@ namespace Au.Types
 			{
 				if(_o == null) return default;
 				if(_o is Wnd) return (Wnd)_o;
-				if(_o is Control c) return (Wnd)c;
+				if(_o is System.Windows.Forms.Control c) return (Wnd)c;
 				return _Wpf();
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
-		Wnd _Wpf() => (Wnd)((System.Windows.Interop.WindowInteropHelper)_o).Handle;
+		Wnd _Wpf() => (Wnd)(System.Windows.Window)_o;
 
 		/// <summary>
 		/// true if not assigned.

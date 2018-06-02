@@ -76,7 +76,7 @@ namespace Au.Controls
 				_ttToolTip.Hide(_TopLevelParent);
 				var par = _TopLevelParent;
 				var p = par.MouseWindowXY_();
-				_ttToolTip.Show(_ttItem.ToolTipText, par, p.X, p.Y + 20, 5000);
+				_ttToolTip.Show(_ttItem.ToolTipText, par, p.x, p.y + 20, 5000);
 				//info: why here we use _TopLevelParent (not this ToolStrip Control):
 				//	Shortly: to enable tooltip in inactive form.
 				//	Show() shows tooltip only when 1 or 2 are true:

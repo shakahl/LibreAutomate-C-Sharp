@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -187,7 +185,7 @@ namespace Au
 			var pidl = Misc.PidlFromString(path, true);
 			try {
 				var guid = typeof(Api.IShellItem).GUID;
-				AuException.ThrowIfFailed(Api.SHCreateItemFromIDList(pidl, ref guid, out var R), errMsg);
+				AuException.ThrowIfFailed(Api.SHCreateItemFromIDList(pidl, guid, out var R), errMsg);
 				return R;
 			}
 			finally { Marshal.FreeCoTaskMem(pidl); }
@@ -196,7 +194,7 @@ namespace Au
 		static class Api
 		{
 			[DllImport("shell32.dll", PreserveSig = true)]
-			internal static extern int SHCreateItemFromIDList(IntPtr pidl, ref Guid riid, out IShellItem ppv);
+			internal static extern int SHCreateItemFromIDList(IntPtr pidl, in Guid riid, out IShellItem ppv);
 
 			[ComImport, Guid("3ad05575-8857-4850-9277-11b85bdb8e09"), ClassInterface(ClassInterfaceType.None)]
 			internal class FileOperation { }

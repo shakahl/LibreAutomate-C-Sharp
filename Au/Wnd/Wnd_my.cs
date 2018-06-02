@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -30,7 +28,7 @@ namespace Au
 			/// Creates window and allows your derived class to replace its window procedure.
 			/// </summary>
 			/// <remarks>
-			/// Similar to <see cref="NativeWindow"/>, but more lightweight and does not change the class name.
+			/// Similar to <see cref="System.Windows.Forms.NativeWindow"/>, but more lightweight and does not change the class name.
 			/// Can register a new window class or extend (subclass) an existing class.
 			/// </remarks>
 			public class MyWindow
@@ -84,7 +82,7 @@ namespace Au
 				/// </summary>
 				public bool CreateMessageWindow(string className)
 				{
-					return Create(className, null, Native.WS_POPUP, Native.WS_EX_NOACTIVATE, 0, 0, 0, 0, SpecHwnd.HWND_MESSAGE);
+					return Create(className, null, Native.WS_POPUP, Native.WS_EX_NOACTIVATE, 0, 0, 0, 0, Native.HWND_MESSAGE);
 					//note: WS_EX_NOACTIVATE is important.
 				}
 
@@ -172,7 +170,7 @@ namespace Au
 								x.lpfnWndProc = _defWindowProc;
 								x.style |= Api.CS_GLOBALCLASS;
 
-								atom = Api.RegisterClassEx(ref x);
+								atom = Api.RegisterClassEx(x);
 								if(atom == 0) throw new Win32Exception();
 							}
 

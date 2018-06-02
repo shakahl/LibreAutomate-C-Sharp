@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -178,7 +176,7 @@ namespace Au
 			if(c >= 'A' && c <= 'Z') {
 				var s1 = s.Substring(i, len);
 				if(Enum.TryParse(s1, true, out KKey r1)) return r1;
-				if(Enum.TryParse(s1, true, out Keys r2) && (uint)r2 <= 0xff) return (KKey)r2;
+				if(Enum.TryParse(s1, true, out System.Windows.Forms.Keys r2) && (uint)r2 <= 0xff) return (KKey)r2;
 			}
 			return 0;
 

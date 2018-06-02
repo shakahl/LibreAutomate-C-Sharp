@@ -27,7 +27,7 @@ using Au.Controls;
 class PanelStatus :Control
 {
 	AuScintilla _c;
-	Point _p;
+	POINT _p;
 #if MOUSE_INFO_FAST_RESPONSE
 	Timer_ _timer;
 	bool _isMyTimer;
@@ -122,7 +122,7 @@ class PanelStatus :Control
 
 		using(new Au.Util.LibStringBuilder(out var b, 1000)) {
 
-			b.Append(p.X).Append("\n").Append(p.Y);
+			b.Append(p.x).Append("\n").Append(p.y);
 
 			_c.ST.SetText(b.ToString());
 		}

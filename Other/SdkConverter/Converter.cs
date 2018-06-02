@@ -22,17 +22,16 @@ namespace SdkConverter
 		[STAThread]
 		static void Main(string[] args)
 		{
+			Output.LibUseQM2 = true;
 			Output.Clear();
-			Converter x;
+			var x = new Converter();
 
 #if TEST_SMALL
-			x = new Converter();
 			x.Convert(
 				//@"Q:\app\Au\Other\SdkConverter\Data\Header.h",
 				@"Q:\app\Au\Other\SdkPreprocess\Cpp.cpp",
 				@"Q:\app\Au\Api\Api.cs", false);
 #else
-			x = new Converter();
 			x.Convert(@"Q:\app\Au\Api\Api-preprocessed-64.cpp", @"Q:\app\Au\Api\Api-64.cs", false);
 			x = new Converter();
 			x.Convert(@"Q:\app\Au\Api\Api-preprocessed-32.cpp", @"Q:\app\Au\Api\Api-32.cs", true);
@@ -133,7 +132,7 @@ namespace SdkConverter
 // Not all declarations can be compiled without editing.
 //    For example, cannot declare some struct pointer (use IntPtr instead, or in struct replace non-blittable types with IntPtr etc), cannot use undefined struct pointer/ref/out (use IntPtr instead).
 // Not all declarations are correct, usually because declarations in Windows SDK files from which they have been automatically converted lack some info.
-//    For example, some function parameters that should be 'out' or '[Out]' or '[In]' or array now are just 'ref', because SDK declarations didn't have proper in/out annotations. Also for this reason some parameters that should be 'string' now are 'StringBuilder'.
+//    For example, some function parameters that should be 'out' or '[Out]' or '[In]' or array now are just 'ref', because SDK declarations didn't have proper in/out annotations. Also for this reason some parameters that should be 'string' now are 'char*'.
 //    You may want to create overloads where parameters can be of more than one type.
 //    You may want to add 'SetLastError=true' to DllImport attribute parameters.
 // Some declarations contain pointers and therefore can be used only in 'unsafe' context, in some cases with 'fixed'. Or you can replace pointers to IntPtr.
@@ -141,7 +140,6 @@ namespace SdkConverter
 // In some cases need to use different declarations in 32-bit and 64-bit process. This file contains everything that is not different, + 64-bit versions, + 32-bit versions with name suffix ""__32"".
 
 using System;
-using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 

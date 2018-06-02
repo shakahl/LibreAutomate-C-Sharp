@@ -12,7 +12,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -154,7 +153,7 @@ namespace Au.Util
 		/// <param name="w">Window or control that owns the drag operation.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-		public static bool SimpleDragDrop(Wnd w, MouseButtons mouseButton = MouseButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
+		public static bool SimpleDragDrop(Wnd w, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
 			Api.SetCapture(w);
 
@@ -171,9 +170,9 @@ namespace Au.Util
 				uint m = x.Msg.message;
 				if(m >= Api.WM_MOUSEFIRST && m <= Api.WM_MOUSELAST) {
 					if(m == Api.WM_LBUTTONUP) {
-						if(R = (mouseButton & MouseButtons.Left) != 0) break;
+						if(R = (mouseButton & MButtons.Left) != 0) break;
 					} else if(m == Api.WM_RBUTTONUP) {
-						if(R = (mouseButton & MouseButtons.Right) != 0) break;
+						if(R = (mouseButton & MButtons.Right) != 0) break;
 					}
 					call = true;
 				} else if(m == Api.WM_KEYDOWN || m == Api.WM_KEYUP || m == Api.WM_SYSKEYDOWN || m == Api.WM_SYSKEYUP) {
@@ -191,7 +190,7 @@ namespace Au.Util
 					}
 				}
 
-				Api.DispatchMessage(ref x.Msg);
+				Api.DispatchMessage(x.Msg);
 			}
 
 			Api.ReleaseCapture();
@@ -205,13 +204,13 @@ namespace Au.Util
 		/// <param name="c">Window or control that owns the drag operation.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-		public static bool SimpleDragDrop(Control c, MouseButtons mouseButton = MouseButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
+		public static bool SimpleDragDrop(Control c, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
 			return SimpleDragDrop((Wnd)c, mouseButton, onMouseKeyMessage);
 		}
 
 		/// <summary>
-		/// <see cref="SimpleDragDrop(Control, MouseButtons, Action{MsgArgs})"/> callback function arguments.
+		/// <see cref="SimpleDragDrop(Control, MButtons, Action{MsgArgs})"/> callback function arguments.
 		/// </summary>
 		public class MsgArgs
 		{

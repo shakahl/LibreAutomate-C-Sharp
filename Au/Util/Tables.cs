@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -30,9 +28,12 @@ namespace Au.Util
 	{
 		internal struct ProcessVariables
 		{
-			//char* _caseTable; //char[0x10000] containing lower-case versions of the first 0x10000 characters
-			byte* _base64Table;
-			byte* _hexTable;
+			//char* _caseTable; //char[0x10000] containing lower-case versions of the first 0x10000 characters. Now it is in AuCpp dll.
+			byte* _base64Ptr;
+			byte* _hexPtr;
+
+			fixed byte _base64Arr['z' + 1];
+			fixed byte _hexArr[55];
 
 			//internal char* CaseTable()
 			//{
@@ -48,49 +49,48 @@ namespace Au.Util
 
 			internal byte* Base64Table()
 			{
-				if(_base64Table == null) {
-					_base64Table = (byte*)NativeHeap.Alloc('z' + 1);
-					for(uint i = 0; i <= 'z'; i++) _base64Table[i] = _Base64DecodeChar(i);
+				if(_base64Ptr == null) {
+					fixed (byte* t = _base64Arr) {
+						for(uint i = 0; i <= 'z'; i++) t[i] = _DecodeChar(i);
+						_base64Ptr = t;
+					}
 				}
-				return _base64Table;
-			}
+				return _base64Ptr;
 
-			static byte _Base64DecodeChar(uint ch)
-			{
-				if(ch >= 'A' && ch <= 'Z') return (byte)(ch - 'A' + 0);    // 0 range starts at 'A'
-				if(ch >= 'a' && ch <= 'z') return (byte)(ch - 'a' + 26);   // 26 range starts at 'a'
-				if(ch >= '0' && ch <= '9') return (byte)(ch - '0' + 52);   // 52 range starts at '0'
-				if(ch == '+') return 62;
-				if(ch == '/') return 63;
-				if(ch == '-') return 62; //alternative for '+' which cannot be used in URLs and XML tag names
-				if(ch == '_') return 63; //alternative for '/' which cannot be used in paths, URLs and XML tag names
-				return 0xff;
+				byte _DecodeChar(uint ch)
+				{
+					if(ch >= 'A' && ch <= 'Z') return (byte)(ch - 'A' + 0);    // 0 range starts at 'A'
+					if(ch >= 'a' && ch <= 'z') return (byte)(ch - 'a' + 26);   // 26 range starts at 'a'
+					if(ch >= '0' && ch <= '9') return (byte)(ch - '0' + 52);   // 52 range starts at '0'
+					if(ch == '+') return 62;
+					if(ch == '/') return 63;
+					if(ch == '-') return 62; //alternative for '+' which cannot be used in URLs and XML tag names
+					if(ch == '_') return 63; //alternative for '/' which cannot be used in paths, URLs and XML tag names
+					return 0xff;
+				}
 			}
 
 			internal byte* HexTable()
 			{
-				if(_hexTable == null) {
-					_hexTable = (byte*)NativeHeap.Alloc(55);
-					for(int u = 0; u < 55; u++) {
-						char c = (char)(u + '0');
-						if(c >= '0' && c <= '9') _hexTable[u] = (byte)u;
-						else if(c >= 'A' && c <= 'F') _hexTable[u] = (byte)(c - ('A' - 10));
-						else if(c >= 'a' && c <= 'f') _hexTable[u] = (byte)(c - ('a' - 10));
-						else _hexTable[u] = 0xFF;
+				if(_hexPtr == null) {
+					fixed(byte* t = _hexArr) {
+						for(int u = 0; u < 55; u++) {
+							char c = (char)(u + '0');
+							if(c >= '0' && c <= '9') t[u] = (byte)u;
+							else if(c >= 'A' && c <= 'F') t[u] = (byte)(c - ('A' - 10));
+							else if(c >= 'a' && c <= 'f') t[u] = (byte)(c - ('a' - 10));
+							else t[u] = 0xFF;
+						}
+						_hexPtr = t;
 					}
 				}
-				return _hexTable;
+				return _hexPtr;
 			}
 		}
 
 		//info: this pattern of accessing a table is fastest. Optimized code accesses the table directly,
 		//	like 'movzx eax,byte ptr [eax+0E073C0h]', where 0E073C0h is table address and eax is index.
 		//	Even if we at first store it in a local variable, which is needed because not in all cases the code will be optimized in such way.
-		//TODO: review speed of functions that use Base64, Hex. Should use register, like now LowerCase.
-		//TODO: store all tables in cpp dll memory, like the lcase table.
-		//	Now uses NativeHeap.Alloc and never frees. Memory leak if would inject and then unload that appdomain.
-		//	Also could statically initialize.
-		//TODO: for all process memory (inter-domain) use cpp dll memory.
 
 		/// <summary>
 		/// Gets native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.

@@ -2,8 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Drawing;
-using System.Windows.Forms;
 using Microsoft.Win32.SafeHandles;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
@@ -145,7 +143,7 @@ namespace Au.Types
 		internal static extern int GetDeviceCaps(IntPtr hdc, int index);
 
 		[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
-		internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out Size psizl);
+		internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out SIZE psizl);
 
 		[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
 		internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, int bItalic = 0, int bUnderline = 0, int bStrikeOut = 0, int iCharSet = 0, int iOutPrecision = 0, int iClipPrecision = 0, int iQuality = 0, int iPitchAndFamily = 0, string pszFaceName = null);
@@ -154,7 +152,7 @@ namespace Au.Types
 		//internal static unsafe extern int CharUpperBuff(char* lpsz, int cchLength);
 
 		[DllImport("user32.dll")]
-		internal static extern int FillRect(IntPtr hDC, ref RECT lprc, IntPtr hbr);
+		internal static extern int FillRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
 
 		[DllImport("gdi32.dll")] //tested: in some cases does not set last error even if returns false
 		internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
@@ -205,7 +203,7 @@ namespace Au.Types
 		internal static extern IntPtr CreateSolidBrush(uint color);
 
 		[DllImport("gdi32.dll")]
-		internal static extern IntPtr CreateRectRgnIndirect(ref RECT lprect);
+		internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
 
 		[DllImport("gdi32.dll")]
 		internal static extern bool FrameRgn(IntPtr hdc, IntPtr hrgn, IntPtr hbr, int w, int h);
@@ -399,13 +397,13 @@ namespace Au.Types
 		//There are 2 newer API - SHCreateItemFromIDList (absoulte) and SHCreateItemWithParent (parent+relative). They can get IShellItem2 too, which is currently not useful here. Same speed.
 
 		//[DllImport("shell32.dll", PreserveSig = true)]
-		//internal static extern int SHCreateItemFromIDList(IntPtr pidl, ref Guid riid, out IShellItem ppv); //or IShellItem2
+		//internal static extern int SHCreateItemFromIDList(IntPtr pidl, in Guid riid, out IShellItem ppv); //or IShellItem2
 
 		//[DllImport("shell32.dll", PreserveSig = true)]
-		//internal static extern int SHBindToParent(IntPtr pidl, ref Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
+		//internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHGetPropertyStoreForWindow(Wnd hwnd, ref Guid riid, out IPropertyStore ppv);
+		internal static extern int SHGetPropertyStoreForWindow(Wnd hwnd, in Guid riid, out IPropertyStore ppv);
 
 		internal static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
 
@@ -514,9 +512,9 @@ namespace Au.Types
 		internal const int SHIL_JUMBO = 4;
 
 		//[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
-		//internal static extern int SHGetImageList(int iImageList, ref Guid riid, out IImageList ppvObj);
+		//internal static extern int SHGetImageList(int iImageList, in Guid riid, out IImageList ppvObj);
 		[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]
-		internal static extern int SHGetImageList(int iImageList, ref Guid riid, out IntPtr ppvObj);
+		internal static extern int SHGetImageList(int iImageList, in Guid riid, out IntPtr ppvObj);
 
 		internal const uint SHCNE_RENAMEITEM = 0x1;
 		internal const uint SHCNE_CREATE = 0x2;
@@ -689,9 +687,9 @@ namespace Au.Types
 		#region shlwapi
 
 		[DllImport("shlwapi.dll", EntryPoint = "#176", PreserveSig = true)]
-		internal static extern int IUnknown_QueryService(IntPtr punk, ref Guid guidService, ref Guid riid, out IntPtr ppvOut);
-		//internal static extern int IUnknown_QueryService(IntPtr punk, ref Guid guidService, ref Guid riid, void* ppvOut);
-		//internal static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, ref Guid guidService, ref Guid riid, out IntPtr ppvOut);
+		internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
+		//internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, void* ppvOut);
+		//internal static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
 
 		[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
 		internal static extern bool PathIsDirectoryEmpty(string pszPath);
@@ -764,7 +762,7 @@ namespace Au.Types
 		internal static extern BSTR SysAllocString(char* psz);
 
 		[DllImport("oleaut32.dll", EntryPoint = "#147", PreserveSig = true)]
-		internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, ref VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
+		internal static extern int VariantChangeTypeEx(ref VARIANT pvargDest, in VARIANT pvarSrc, uint lcid, ushort wFlags, VARENUM vt);
 
 		[DllImport("oleaut32.dll", EntryPoint = "#9", PreserveSig = true)]
 		internal static extern int VariantClear(ref VARIANT pvarg);
@@ -806,13 +804,13 @@ namespace Au.Types
 		//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, ref Guid riid, out IntPtr ppvObject);
+		//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, in Guid riid, out IntPtr ppvObject);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
 		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out Wnd phwnd);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromPoint(Point ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
+		//internal static extern int AccessibleObjectFromPoint(POINT ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
 		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, int dwId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
@@ -1003,8 +1001,6 @@ namespace Au.Types
 
 		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
 		internal static extern Wnd HtmlHelp(Wnd hwndCaller, string pszFile, uint uCommand, LPARAM dwData);
-
-
 
 		#endregion
 

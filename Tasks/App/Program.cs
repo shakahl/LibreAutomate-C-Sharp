@@ -74,7 +74,7 @@ namespace Au.Tasks
 			try {
 				Wnd.Misc.WndClass.InterDomainRegister("Au.Tasks", WndProcAppsManager);
 				_wMain = Wnd.Misc.WndClass.InterDomainCreateWindow(0, "Au.Tasks",
-					//null, Api.WS_POPUP, 0, 0, 0, 0, Wnd.Misc.SpecHwnd.Message);
+					//null, Api.WS_POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE);
 					"QM# Tasks", Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 400, 300, 400, 200, Wnd0);
 
 				Perf.First();
@@ -245,7 +245,7 @@ namespace Au.Tasks
 			string s;
 			switch((uint)c->dwData) {
 			case 4:
-				s = Marshal.PtrToStringUni(c->lpData, c->cbData / 2);
+				s = new string((char*)c->lpData, 0, c->cbData / 2);
 				Print(s);
 				break;
 			}

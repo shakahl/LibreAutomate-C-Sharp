@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -246,13 +244,13 @@ namespace Au
 			/// Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
 			/// </summary>
 			/// <exception cref="AuException">The 'set' function failed.</exception>
-			public Keys Hotkey
+			public System.Windows.Forms.Keys Hotkey
 			{
 				get
 				{
 					if(0 != _isl.GetHotkey(out ushort k2)) return 0;
 					uint k = k2;
-					return (Keys)((k & 0xFF) | ((k & 0x700) << 8));
+					return (System.Windows.Forms.Keys)((k & 0xFF) | ((k & 0x700) << 8));
 				}
 				set
 				{

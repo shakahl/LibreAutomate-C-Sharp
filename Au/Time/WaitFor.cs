@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -65,7 +63,7 @@ namespace Au
 		/// {
 		/// 	var x = new WaitFor.Loop(secondsTimeout);
 		/// 	for(; ; ) {
-		/// 		if(Mouse.IsPressed(MouseButtons.Left)) return true;
+		/// 		if(Mouse.IsPressed(MButtons.Left)) return true;
 		/// 		if(!x.Sleep()) return false;
 		/// 	}
 		/// }
@@ -74,7 +72,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
 		/// {
-		/// 	return WaitFor.Condition(secondsTimeout, () => Mouse.IsPressed(MouseButtons.Left));
+		/// 	return WaitFor.Condition(secondsTimeout, () => Mouse.IsPressed(MButtons.Left));
 		/// }
 		/// ]]></code>
 		/// </example>
@@ -206,7 +204,7 @@ namespace Au
 		/// Returns 1-based index of the first signaled handle. Negative if abandoned mutex.
 		/// On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </returns>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
@@ -315,8 +313,8 @@ namespace Au
 				}
 				//if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return false; }
 				if(m.message == Api.WM_QUIT) Thread.CurrentThread.Abort();
-				Api.TranslateMessage(ref m);
-				Api.DispatchMessage(ref m);
+				Api.TranslateMessage(m);
+				Api.DispatchMessage(m);
 			}
 			if(msgCallback is Func<bool> callback2) R = callback2();
 			return R;
@@ -335,7 +333,7 @@ namespace Au
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
 		/// Does not use <see cref="Opt.WaitFor"/>.
@@ -358,7 +356,7 @@ namespace Au
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
 		/// Does not use <see cref="Opt.WaitFor"/>.
@@ -383,7 +381,7 @@ namespace Au
 		/// <param name="variable">Stop waiting when this variable is set to true.</param>
 		/// <param name="options"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="Message"/>.
 		/// </remarks>
@@ -391,11 +389,11 @@ namespace Au
 		/// <code><![CDATA[
 		/// bool stop = false;
 		/// Task.Run(() => { 2.s(); Print("task"); stop = true; });
-		/// WaitFor.Variable(5, ref stop);
+		/// WaitFor.Variable(5, stop);
 		/// Print(stop);
 		/// ]]></code>
 		/// </example>
-		public static bool Variable(double secondsTimeout, ref bool variable, OptWaitFor options = null)
+		public static bool Variable(double secondsTimeout, in bool variable, OptWaitFor options = null)
 		{
 			var to = new Loop(secondsTimeout, options);
 			for(; ; ) {

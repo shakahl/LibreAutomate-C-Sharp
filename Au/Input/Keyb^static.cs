@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -163,11 +161,11 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state (see <see cref="IsMod"/>).
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		public static bool WaitForNoModifierKeys(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
 			return WaitForNoModifierKeysAndMouseButtons(secondsTimeout, modifierKeys, 0);
@@ -175,16 +173,16 @@ namespace Au
 
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
 		/// <param name="buttons">Check only these buttons. Default - all.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <seealso cref="IsMod"/>
 		/// <seealso cref="Mouse.IsPressed"/>
 		/// <seealso cref="Mouse.WaitForNoButtonsPressed"/>
-		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MouseButtons buttons = MouseButtons.Left | MouseButtons.Right | MouseButtons.Middle | MouseButtons.XButton1 | MouseButtons.XButton2)
+		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
 			var to = new WaitFor.Loop(secondsTimeout, 2);
 			for(; ; ) {
@@ -201,10 +199,10 @@ namespace Au
 
 		/// <summary>
 		/// Waits while the specified keys or/and mouse buttons are in pressed state.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="keys">One or more keys or/and mouse buttons. Waits for all.</param>
+		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="Key"/>, without operators.</param>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
 			return WaitFor.Condition(secondsTimeout, () =>
@@ -215,7 +213,6 @@ namespace Au
 		}
 
 		/// <inheritdoc cref="WaitForReleased(double, KKey[])"/>
-		/// <remarks>The keys string is like with <see cref="Key"/>.</remarks>
 		public static bool WaitForReleased(double secondsTimeout, string keys)
 		{
 			return WaitForReleased(secondsTimeout, Misc.ParseKeysString(keys));
@@ -259,53 +256,80 @@ namespace Au
 		static ushort s_atomWFH;
 
 		/// <summary>
-		/// Waits for down or up event of the specified key.
+		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="key">Wait for this key.</param>
-		/// <param name="flags"></param>
+		/// <param name="key">Wait for this key. Can be a single-key string like with <see cref="Key"/>.</param>
+		/// <param name="up">Wait for key-up event.</param>
+		/// <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="ArgumentException">Invalid <paramref name="key"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="key"/> is 0.</exception>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
-		/// Unlike <see cref="WaitForReleased"/>, waits for down or up event, not for key state.
-		/// With default flags, waits for key-down event and discards the event.
+		/// Unlike <see cref="WaitForReleased"/>, waits for key event, not for key state.
 		/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="WaitForHotkey"/>.
 		/// </remarks>
-		public static bool WaitForKeyEvent(double secondsTimeout, KKey key, KWFlags flags = KWFlags.Discard)
+		/// <example>
+		/// <code><![CDATA[
+		/// Keyb.WaitForKey(0, KKey.Ctrl, up: false, block: true);
+		/// Print("Ctrl");
+		/// ]]></code>
+		/// </example>
+		public static bool WaitForKey(double secondsTimeout, KKey key, bool up = false, bool block = false)
 		{
 			if(key == 0) throw new ArgumentException();
-			return 0 != _WaitForKeyEvent(secondsTimeout, key, flags);
+			return 0 != _WaitForKey(secondsTimeout, key, up, block);
 		}
 
-		/// <inheritdoc cref="WaitForKeyEvent(double, KKey, KWFlags)"/>
-		public static bool WaitForKeyEvent(double secondsTimeout, string key, KWFlags flags = KWFlags.Discard)
+		/// <inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/>
+		/// <exception cref="ArgumentException">Invalid <paramref name="key"/> string.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
+		/// Print("Ctrl");
+		/// ]]></code>
+		/// </example>
+		public static bool WaitForKey(double secondsTimeout, string key, bool up = false, bool block = false)
 		{
-			return 0 != _WaitForKeyEvent(secondsTimeout, Misc.LibParseKeyNameThrow(key), flags);
+			return 0 != _WaitForKey(secondsTimeout, Misc.LibParseKeyNameThrow(key), up, block);
 		}
 
 		/// <summary>
-		/// Waits for down or up event of any key, and gets the key code.
+		/// Waits for key-down or key-up event of any key, and gets the key code.
 		/// </summary>
-		/// <returns>Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <inheritdoc cref="WaitForKeyEvent(double, KKey, KWFlags)"/>
-		public static KKey WaitForKeyEvent(double secondsTimeout, KWFlags flags = KWFlags.Discard)
+		/// <returns>
+		/// Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
+		/// </returns>
+		/// <inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// var key = Keyb.WaitForKey(0, up: true, block: true);
+		/// Print(key);
+		/// ]]></code>
+		/// </example>
+		public static KKey WaitForKey(double secondsTimeout, bool up = false, bool block = false)
 		{
-			return _WaitForKeyEvent(secondsTimeout, 0, flags);
+			return _WaitForKey(secondsTimeout, 0, up, block);
 		}
 
-		static KKey _WaitForKeyEvent(double secondsTimeout, KKey key, KWFlags flags)
+		static KKey _WaitForKey(double secondsTimeout, KKey key, bool up, bool block)
 		{
+			//SHOULDDO: if up and block: don't block if was pressed when starting to wait. Also in the Mouse func.
+
 			KKey R = 0;
 			using(Util.WinHook.Keyboard(x =>
 			{
 				if(key != 0 && !x.IsKey(key)) return false;
-				if(x.IsUp != flags.Has_(KWFlags.Up)) {
-					if(!x.IsUp && flags.Has_(KWFlags.Discard)) return true; //if will need to discard up, now discard down too
+				if(x.IsUp != up) {
+					if(up && block) { //key down when we are waiting for up. If block, now block down too.
+						if(key == 0) key = x.vkCode;
+						return true;
+					}
 					return false;
 				}
-				R = flags.Has_(KWFlags.ModLR) ? x.vkCode : x.Key;
-				return flags.Has_(KWFlags.Discard);
+				R = x.vkCode; //info: for mod keys returns left/right
+				return block;
 			})) WaitFor.Message(secondsTimeout, () => R != 0);
 
 			return R;
@@ -340,7 +364,7 @@ namespace Au
 				}
 				if(orMouse) {
 					Api.GetCursorPos(out var p);
-					r = new RECT(p.X, p.Y, 0, 16, true);
+					r = new RECT(p.x, p.y, 0, 16, true);
 				} else r = default;
 				w = default;
 				return false;
@@ -431,15 +455,15 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Converts hotkey string to <see cref="Keys"/>.
+			/// Converts hotkey string to <see cref="System.Windows.Forms.Keys"/>.
 			/// For example, if s is "Ctrl+Left", sets hotkey=Keys.Control|Keys.Left.
 			/// Returns false if the string is invalid.
 			/// </summary>
 			/// <inheritdoc cref="ParseHotkeyString(string, out KMod, out KKey)"/>
-			public static bool ParseHotkeyString(string s, out Keys hotkey)
+			public static bool ParseHotkeyString(string s, out System.Windows.Forms.Keys hotkey)
 			{
 				if(!ParseHotkeyString(s, out var mod, out var key)) { hotkey = 0; return false; }
-				hotkey = KModToKeys(mod) | (Keys)key;
+				hotkey = KModToKeys(mod) | (System.Windows.Forms.Keys)key;
 				return true;
 			}
 
@@ -449,7 +473,7 @@ namespace Au
 			/// <remarks>
 			/// For Win returns flag (Keys)0x80000.
 			/// </remarks>
-			public static Keys KModToKeys(KMod mod) => (Keys)((int)mod << 16);
+			public static System.Windows.Forms.Keys KModToKeys(KMod mod) => (System.Windows.Forms.Keys)((int)mod << 16);
 
 			/// <summary>
 			/// Converts modifier key flags from <b>Keys</b> to <b>KMod</b>.
@@ -457,7 +481,7 @@ namespace Au
 			/// <remarks>
 			/// For Win can be used flag (Keys)0x80000.
 			/// </remarks>
-			public static KMod KModFromKeys(Keys mod) => (KMod)((int)mod >> 16);
+			public static KMod KModFromKeys(System.Windows.Forms.Keys mod) => (KMod)((int)mod >> 16);
 		}
 
 		/// <summary>
@@ -570,7 +594,7 @@ namespace Au
 		/// </item>
 		/// <item>
 		/// <description>Other keys</description>
-		/// <description>Names of enum <see cref="KKey"/> or <see cref="Keys"/> members.</description>
+		/// <description>Names of enum <see cref="KKey"/> or <see cref="System.Windows.Forms.Keys"/> members.</description>
 		/// <description>Start with an uppercase character.
 		/// Example: <c>Key("BrowserBack", KKey.BrowserBack);</c>
 		/// </description>

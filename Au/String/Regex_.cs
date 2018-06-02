@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 
 using System.Text.RegularExpressions; //for XML doc links
@@ -488,10 +486,10 @@ namespace Au
 			void _SetNextFrom()
 			{
 				var p = _m.vec[0]; //x=start, y=end
-				_from = p.Y;
+				_from = p.y;
 				//empty match?
-				if(_from <= p.X) {
-					if(_from < p.X) throw new ArgumentException(@"This function does not support (?=...\K).");
+				if(_from <= p.x) {
+					if(_from < p.x) throw new ArgumentException(@"This function does not support (?=...\K).");
 					_from++;
 					//also skip the second part of surrogate pair
 					if(_from < _to && (_subject[_from] & 0xfc00) == 0xdc00) {
@@ -505,11 +503,11 @@ namespace Au
 
 			public RXMatch Match => new RXMatch(_regex, _subject, _rc, in _m);
 
-			public Point GroupP => _m.vec[_group];
+			public POINT GroupP => _m.vec[_group];
 
 			public RXGroup GroupG => new RXGroup(_subject, GroupP);
 
-			public string GroupS { get { var p = GroupP; return p.X < 0 ? null : _subject.Substring(p.X, p.Y - p.X); } }
+			public string GroupS { get { var p = GroupP; return p.x < 0 ? null : _subject.Substring(p.x, p.y - p.x); } }
 		}
 
 		/// <summary>
@@ -705,9 +703,9 @@ namespace Au
 				}
 				//append s part before this match
 				var p = e.GroupP; //x=start, y=end
-				int nBefore = p.X - prevEnd;
+				int nBefore = p.x - prevEnd;
 				if(nBefore != 0) b.Append(s, prevEnd, nBefore);
-				prevEnd = p.Y;
+				prevEnd = p.y;
 				//append replacement
 				string re = null;
 				if(replType >= 2) {
@@ -959,8 +957,8 @@ namespace Au
 				var e = new _MatchEnum(this, s, 0, more, maxCount - 1);
 				while(e.Next()) {
 					var p = e.GroupP;
-					a.Add(s.Substring(prevEnd, p.X - prevEnd));
-					prevEnd = p.Y;
+					a.Add(s.Substring(prevEnd, p.x - prevEnd));
+					prevEnd = p.y;
 				}
 				if(e.foundCount > 0) {
 					a.Add(s.Substring(prevEnd));
@@ -1002,8 +1000,8 @@ namespace Au
 				var e = new _MatchEnum(this, s, 0, more, maxCount - 1);
 				while(e.Next()) {
 					var p = e.GroupP;
-					a.Add(new RXGroup(s, prevEnd, p.X));
-					prevEnd = p.Y;
+					a.Add(new RXGroup(s, prevEnd, p.x));
+					prevEnd = p.y;
 				}
 				if(e.foundCount > 0) {
 					a.Add(new RXGroup(s, prevEnd, s.Length));
@@ -1022,8 +1020,8 @@ namespace Au
 		//		var e = new _MatchEnum(this, s, 0, more, maxCount - 1);
 		//		while(e.Next()) {
 		//			var p = e.GroupP;
-		//			yield return new RXGroup(s, prevEnd, p.X);
-		//			prevEnd = p.Y;
+		//			yield return new RXGroup(s, prevEnd, p.x);
+		//			prevEnd = p.y;
 		//		}
 		//		if(e.foundCount > 0) {
 		//			yield return new RXGroup(s, prevEnd, s.Length);

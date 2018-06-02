@@ -288,7 +288,7 @@ namespace Au.Controls
 			bool hasTags = false;
 			byte currentStyle = STYLE_DEFAULT;
 			_stack.Clear();
-			List<Point> codes = null;
+			List<POINT> codes = null;
 
 			while(s < sEnd) {
 				//find '<'
@@ -418,9 +418,9 @@ namespace Au.Controls
 				case 4 << 16 | 'c': //<code>code</code>
 					int i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>");
 					if(i2 < 0) goto ge;
-					if(codes == null) codes = new List<Point>();
+					if(codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
-					codes.Add(new Point(iStartCode, iStartCode + i2));
+					codes.Add(new POINT(iStartCode, iStartCode + i2));
 					while(i2-- > 0) _Write(*s++, STYLE_DEFAULT);
 					s += 7;
 					hasTags = true;
@@ -539,15 +539,15 @@ namespace Au.Controls
 				_SetLexer(LexLanguage.SCLEX_CPP);
 				//Perf.Next();
 				for(int i = 0; i < codes.Count; i++) {
-					_c.Call(SCI_COLOURISE, codes[i].X + prevLen, codes[i].Y + prevLen);
+					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
 				}
 				//Perf.Next();
 				_SetLexer(LexLanguage.SCLEX_NULL);
 				//Perf.Next();
 
 				for(int i = 0; i < codes.Count; i++) {
-					_StyleRange(codes[i].X);
-					endStyled = codes[i].Y;
+					_StyleRange(codes[i].x);
+					endStyled = codes[i].y;
 				}
 			}
 			_StyleRange(len);

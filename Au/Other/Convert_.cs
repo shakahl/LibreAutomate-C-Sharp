@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 using System.IO.Compression;
@@ -351,6 +349,7 @@ namespace Au
 			}
 
 			//speed: fast enough without a lookup table.
+			//CryptBinaryToString speed: 50 times slower.
 		}
 
 		/// <summary>
@@ -561,6 +560,8 @@ namespace Au
 
 			//speed: slightly faster than HexDecode for the same binary data size.
 			//	Near 2 times faster than the .NET function, when don't need to allocate buffer for result.
+
+			//tested CryptBinaryToString speed: 5 times slower than Convert.ToBase64String.
 		}
 
 		/// <summary>

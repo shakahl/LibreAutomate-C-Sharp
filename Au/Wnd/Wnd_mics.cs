@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -109,7 +107,7 @@ namespace Au
 				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? _msgBoxFont : customFontHandle);
 				return w;
 			}
-			static Util.LibNativeFont _msgBoxFont = new Util.LibNativeFont(SystemFonts.MessageBoxFont.ToHfont());
+			static Util.LibNativeFont _msgBoxFont = new Util.LibNativeFont(System.Drawing.SystemFonts.MessageBoxFont.ToHfont());
 
 			/// <summary>
 			/// Creates native/unmanaged <msdn>message-only window</msdn>.
@@ -119,7 +117,7 @@ namespace Au
 			/// <param name="className">Window class name. Can be any existing class.</param>
 			public static Wnd CreateMessageWindow(string className)
 			{
-				return CreateWindow(className, null, Native.WS_POPUP, Native.WS_EX_NOACTIVATE, parent: SpecHwnd.HWND_MESSAGE);
+				return CreateWindow(className, null, Native.WS_POPUP, Native.WS_EX_NOACTIVATE, parent: Native.HWND_MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
@@ -292,7 +290,7 @@ namespace Au
 			{
 				var c = new Api.COPYDATASTRUCT() { dwData = stringId, cbData = s.Length * 2 };
 				fixed (char* p = s) {
-					c.lpData = (IntPtr)p;
+					c.lpData = p;
 					return w.Send(Api.WM_COPYDATA, wSender.Handle, &c);
 				}
 			}
@@ -310,7 +308,7 @@ namespace Au
 			{
 				var c = (Api.COPYDATASTRUCT*)lParam;
 				stringId = (int)c->dwData;
-				return Marshal.PtrToStringUni(c->lpData, c->cbData / 2);
+				return new string((char*)c->lpData, 0, c->cbData / 2);
 			}
 
 			/// <summary>
@@ -347,7 +345,7 @@ namespace Au
 			/// </summary>
 			/// <param name="m"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(in Message m, params uint[] ignore)
+			public static void PrintMsg(in System.Windows.Forms.Message m, params uint[] ignore)
 			{
 				uint msg = (uint)m.Msg;
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
@@ -368,7 +366,7 @@ namespace Au
 			public static void PrintMsg(Wnd w, uint msg, LPARAM wParam, LPARAM lParam, params uint[] ignore)
 			{
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
-				var m = Message.Create(w.Handle, (int)msg, wParam, lParam);
+				var m = System.Windows.Forms.Message.Create(w.Handle, (int)msg, wParam, lParam);
 				PrintMsg(in m);
 			}
 
@@ -381,7 +379,6 @@ namespace Au
 			{
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 			}
-			//TODO: in whole library replace ref with in where need.
 
 			/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#410")]
@@ -406,8 +403,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if w contains a non-zero special handle value (see <see cref="SpecHwnd"/>).
-		/// Note that HWND_TOP is 0.
+		/// Returns true if w contains a non-zero special handle value (<b>Native.HWND_x</b>).
+		/// Note that <b>Native.HWND_TOP</b> is 0.
 		/// </summary>
 		public static bool IsSpecHwnd(Wnd w)
 		{
@@ -419,26 +416,6 @@ namespace Au
 
 namespace Au.Types
 {
-	/// <summary>
-	/// Contains static properties that return special window handle values that can be used with some API functions and with some Wnd functions too.
-	/// </summary>
-	public class SpecHwnd
-	{
-		/// <summary>API HWND_TOP (0). Used with SetWindowPos.</summary>
-		public static Wnd HWND_TOP => (Wnd)(LPARAM)0;
-		/// <summary>API HWND_BOTTOM (1). Used with SetWindowPos.</summary>
-		public static Wnd HWND_BOTTOM => (Wnd)(LPARAM)1;
-		/// <summary>API HWND_TOPMOST (-1). Used with SetWindowPos.</summary>
-		public static Wnd HWND_TOPMOST => (Wnd)(LPARAM)(-1);
-		/// <summary>API HWND_NOTOPMOST (-2). Used with SetWindowPos.</summary>
-		public static Wnd HWND_NOTOPMOST => (Wnd)(LPARAM)(-2);
-		/// <summary>API HWND_MESSAGE (-3). Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
-		public static Wnd HWND_MESSAGE => (Wnd)(LPARAM)(-3);
-		/// <summary>API HWND_BROADCAST (0xffff). Used with API SendMessage, Wnd.Send etc.</summary>
-		public static Wnd HWND_BROADCAST => (Wnd)(LPARAM)0xffff;
-	}
-	//TODO: move to Native
-
 	/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
 	public delegate LPARAM SUBCLASSPROC(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 }

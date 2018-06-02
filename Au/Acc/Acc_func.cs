@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -497,14 +495,14 @@ namespace Au
 
 		/// <summary>
 		/// Calls <see cref="DoAction"/> or <paramref name="action"/> and waits until window name changes and web page name changes.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">
 		/// <inheritdoc cref="WaitFor.Condition"/>
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="WndException">The window was closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the <paramref name="action"/> function.</exception>

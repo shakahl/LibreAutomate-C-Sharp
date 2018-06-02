@@ -162,7 +162,7 @@
         </member>
         <member name="T:Au.Types.AXYFlags">
             <summary>
-            Flags for <see cref="M:Au.Acc.FromXY(System.Drawing.Point,Au.Types.AXYFlags)"/>.
+            Flags for <see cref="M:Au.Acc.FromXY(Au.Types.POINT,Au.Types.AXYFlags)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.AXYFlags.UIA">
@@ -497,6 +497,24 @@
         <member name="F:Au.Types.Native.SWP_ASYNCWINDOWPOS">
             <exclude />
         </member>
+        <member name="P:Au.Types.Native.HWND_TOP">
+            <exclude />
+        </member>
+        <member name="P:Au.Types.Native.HWND_BOTTOM">
+            <exclude />
+        </member>
+        <member name="P:Au.Types.Native.HWND_TOPMOST">
+            <exclude />
+        </member>
+        <member name="P:Au.Types.Native.HWND_NOTOPMOST">
+            <exclude />
+        </member>
+        <member name="P:Au.Types.Native.HWND_MESSAGE">
+            <exclude />
+        </member>
+        <member name="P:Au.Types.Native.HWND_BROADCAST">
+            <exclude />
+        </member>
         <member name="F:Au.Types.Native.GWL_WNDPROC">
             <exclude />
         </member>
@@ -738,7 +756,7 @@
             Virtual-key codes.
             </summary>
             <remarks>
-            The values are the same as of the native VK_ constants. Also the same as in the <b>Keys</b> enum, but not as in the WPF <b>Key</b> enum.
+            The values are the same as of the native VK_ constants. Also the same as in the <see cref="T:System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
             Some key names are different than VK_/Keys, for example Alt instead of VK_MENU/Menu.
             Most rare and obsolete keys are not included. You can use Keys or VK_ (int) like <c>(KKey)Keys.Attn</c>.
             This library does not use the .NET <b>Keys</b> enum, mostly because it includes modifier key flags and it's easy to confuse eg Shift (flag) with ShiftKey (key). Also this library does not use the WPF <b>Key</b> enum; its values don't match the native VK_ constants that must be used with API functions.
@@ -864,21 +882,6 @@
         <member name="M:Au.Types.KHotkey.Deconstruct(Au.Types.KMod@,Au.Types.KKey@)">
             <summary>Allows to split a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c></summary>
         </member>
-        <member name="T:Au.Types.KWFlags">
-            <summary>Flags for <see cref="M:Au.Keyb.WaitForKeyEvent(System.Double,Au.Types.KKey,Au.Types.KWFlags)"/></summary>
-        </member>
-        <member name="F:Au.Types.KWFlags.Up">
-            <summary>Wait for key-up event.</summary>
-        </member>
-        <member name="F:Au.Types.KWFlags.Discard">
-            <summary>
-            Make the event invisible for other apps.
-            If flag <b>Up</b> also is specified, makes both down and up events invisible.
-            </summary>
-        </member>
-        <member name="F:Au.Types.KWFlags.ModLR">
-            <summary>Return left/right modifier key codes (LCtrl/RCtrl instead of Ctrl etc).</summary>
-        </member>
         <member name="T:Au.Types.WIArea">
             <summary>
             Defines the search area for <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and similar functions.
@@ -994,7 +997,7 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Used by <see cref="M:Au.Mouse.Move(System.Drawing.Point)"/>, <see cref="M:Au.Mouse.Click(System.Boolean)"/> and other functions that generate mouse movement events, except <see cref="M:Au.Mouse.MoveRecorded(System.String,System.Double)"/>.
+            Used by <see cref="M:Au.Mouse.Move(Au.Types.POINT)"/>, <see cref="M:Au.Mouse.Click(System.Boolean)"/> and other functions that generate mouse movement events, except <see cref="M:Au.Mouse.MoveRecorded(System.String,System.Double)"/>.
             It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
             Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
             </remarks>
@@ -1016,7 +1019,7 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Used by <see cref="M:Au.Mouse.Move(System.Drawing.Point)"/> (finally), <see cref="M:Au.Mouse.Click(System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
+            Used by <see cref="M:Au.Mouse.Move(Au.Types.POINT)"/> (finally), <see cref="M:Au.Mouse.Click(System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
             </remarks>
         </member>
         <member name="P:Au.Types.OptMouse.Relaxed">
@@ -1027,11 +1030,11 @@
             <remarks>
             This option is used by these functions:
             <list type="bullet">
-            <item><see cref="M:Au.Mouse.Move(System.Drawing.Point)"/>, <see cref="M:Au.Mouse.Click(System.Boolean)"/> and other functions that move the cursor (mouse pointer):
+            <item><see cref="M:Au.Mouse.Move(Au.Types.POINT)"/>, <see cref="M:Au.Mouse.Click(System.Boolean)"/> and other functions that move the cursor (mouse pointer):
             false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
             true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
             </item>
-            <item><see cref="M:Au.Mouse.Move(System.Drawing.Point)"/>, <see cref="M:Au.Mouse.Click(System.Boolean)"/> and other functions that move the cursor (mouse pointer):
+            <item><see cref="M:Au.Mouse.Move(Au.Types.POINT)"/>, <see cref="M:Au.Mouse.Click(System.Boolean)"/> and other functions that move the cursor (mouse pointer):
             false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
             true - do not wait.
             </item>
@@ -1292,6 +1295,454 @@
         <member name="M:Au.Types.OptWaitFor.op_Implicit(System.Boolean)~Au.Types.OptWaitFor">
             <summary>
             Implicit conversion from bool. Sets <see cref="P:Au.Types.OptWaitFor.DoEvents"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.Screen_">
+            <summary>
+            Used to specify a screen (display, monitor) using screen index, window, control, <see cref="T:Au.Acc"/>, point, rectangle, <see cref="T:System.Windows.Forms.Screen"/>, <see cref="F:Au.Types.Screen_.OfActiveWindow"/> or <see cref="F:Au.Types.Screen_.OfMouse"/>.
+            </summary>
+            <remarks>
+            Used mostly for function parameters. The caller can specify screen index (int), window (Wnd etc), <see cref="T:System.Windows.Forms.Screen"/> object, etc. There are implicit conversion operators from these types. The <b>Screen_</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="M:Au.Types.Screen_.GetScreen"/> to get <see cref="T:System.Windows.Forms.Screen"/> object corresponding that value at that time.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(System.Windows.Forms.Screen)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds <see cref="T:System.Windows.Forms.Screen"/> object. If invalid, will be used the primary screen.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(System.Int32)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds screen index. Later will be called <see cref="M:Au.Types.Screen_.ScreenFromIndex(System.Int32)"/>.
+            </summary>
+            <param name="screenIndex"><inheritdoc cref="M:Au.Types.Screen_.ScreenFromIndex(System.Int32)"/></param>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(Au.Wnd)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds window handle. Later will be called <see cref="M:Au.Types.Screen_.ScreenFromWindow(Au.Wnd)"/>. If invalid, will be used the primary screen.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(System.Windows.Forms.Control)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds <see cref="T:System.Windows.Forms.Control"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromControl(System.Windows.Forms.Control)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(System.Windows.Window)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds <see cref="T:System.Windows.Window"/>. Later will be called <see cref="M:Au.Types.Screen_.ScreenFromWindow(Au.Wnd)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(Au.Types.POINT)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds <see cref="T:Au.Types.POINT"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromPoint(System.Drawing.Point)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(Au.Types.RECT)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds <see cref="T:Au.Types.RECT"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.op_Implicit(Au.Acc)~Au.Types.Screen_">
+            <summary>
+            Creates variable that holds <see cref="T:Au.Acc"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.Screen_.Primary">
+            <summary>
+            Screen index of the primary screen. Value 0.
+            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+            </summary>
+        </member>
+        <member name="F:Au.Types.Screen_.OfMouse">
+            <summary>
+            Special screen index to specify the screen of the mouse pointer. Value -1.
+            </summary>
+        </member>
+        <member name="F:Au.Types.Screen_.OfActiveWindow">
+            <summary>
+            Special screen index to specify the screen of the active window. Value -2.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.ScreenFromIndex(System.Int32)">
+            <summary>
+            Gets <see cref="T:System.Windows.Forms.Screen"/> object from screen index.
+            </summary>
+            <param name="screenIndex">
+            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+            Also can be <see cref="F:Au.Types.Screen_.Primary"/> (0), <see cref="F:Au.Types.Screen_.OfMouse"/> (-1), <see cref="F:Au.Types.Screen_.OfActiveWindow"/> (-2).
+            If invalid, prints warning and gets the primary screen.
+            </param>
+            <remarks>
+            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Screen_.ScreenFromWindow(Au.Wnd)">
+            <summary>
+            Gets <see cref="T:System.Windows.Forms.Screen"/> object of the screen that contains the specified window (the biggest part of it) or is nearest to it.
+            If w handle is 0 or invalid, gets the primary screen (<see cref="M:System.Windows.Forms.Screen.FromHandle(System.IntPtr)"/> would return an invalid object if the window handle is invalid).
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.GetScreen">
+            <summary>
+            Gets <see cref="T:System.Windows.Forms.Screen"/> object from the value stored in this variable (screen index, window handle, etc).
+            If the value is null or invalid or fails, gets the primary screen.
+            </summary>
+            <remarks>
+            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.Screen_.Value">
+            <summary>
+            Gets the value as object.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Screen_.IsNull">
+            <summary>
+            true if this variable does not have a value.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Screen_.PrimaryWidth">
+            <summary>
+            Gets primary screen width.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Screen_.PrimaryHeight">
+            <summary>
+            Gets primary screen height.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Screen_.PrimaryRect">
+            <summary>
+            Gets primary screen rectangle.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.GetRect(Au.Types.Screen_,System.Boolean)">
+            <summary>
+            Gets screen rectangle.
+            </summary>
+            <param name="screen">Screen index etc. If default - primary screen.</param>
+            <param name="workArea">Get work area rectangle.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
+        </member>
+        <member name="P:Au.Types.Screen_.PrimaryWorkArea">
+            <summary>
+            Gets primary screen work area.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.IsInAnyScreen(Au.Types.POINT)">
+            <summary>
+            Returns true if point p is in some screen.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.IsInAnyScreen(Au.Types.RECT)">
+            <summary>
+            Returns true if rectangle r intersects with some screen.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Screen_.IsInAnyScreen(Au.Wnd)">
+            <summary>
+            Returns true if rectangle of window w intersects with some screen.
+            </summary>
+        </member>
+        <member name="T:Au.Types.ExtensionMethods">
+            <summary>
+            Adds extension methods to some .NET classes.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.GetIndex_(System.Windows.Forms.Screen)">
+            <summary>
+            Gets screen index that can be used with <see cref="T:Au.Types.Screen_"/> and functions that use it.
+            Primary screen is 0. Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+            </summary>
+            <param name="t"></param>
+            <exception cref="T:Au.Types.AuException">Failed (probably the Screen object is invalid).</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)">
+            <summary>
+            If this is default(Wnd), throws <see cref="T:Au.Types.NotFoundException"/>, else returns this.
+            </summary>
+            <exception cref="T:Au.Types.NotFoundException"></exception>
+            <example>
+            <code><![CDATA[
+            var w1 = Wnd.Find("Example").OrThrow();
+            var w2 = +Wnd.Find("Example"); //the same
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)">
+            <summary>
+            If this is null, throws <see cref="T:Au.Types.NotFoundException"/>, else returns this.
+            </summary>
+            <exception cref="T:Au.Types.NotFoundException"></exception>
+            <example>
+            <code><![CDATA[
+            var w = Wnd.Find("Example").OrThrow();
+            
+            var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
+            var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
+            
+            var a3 = (Acc.Find(w, "web:LINK", "Example")?.Navigate("example")).OrThrow();
+            var a4 = +Acc.Find(w, "web:LINK", "Example")?.Navigate("example"); //the same
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)">
+            <summary>
+            If this is null, throws <see cref="T:Au.Types.NotFoundException"/>, else returns this.
+            </summary>
+            <exception cref="T:Au.Types.NotFoundException"></exception>
+            <example>
+            <code><![CDATA[
+            var w = Wnd.Find("Example").OrThrow();
+            var r1 = WinImage.Find(w, "example").OrThrow();
+            var r2 = +WinImage.Find(w, "example"); //the same
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
+            <summary>
+            Moves the cursor (mouse pointer) to the position x y relative to this window.
+            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
+            By default x y coordinates are relative to the client area; default - center.
+            </summary>
+            <exception cref="T:Au.Types.NotFoundException">Window object not found (this variable is 0).</exception>
+            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.Wnd,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton,System.Boolean)">
+            <summary>
+            Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
+            By default x y coordinates are relative to the client area; default - center. Default action - left click.
+            </summary>
+            <exception cref="T:Au.Types.NotFoundException">Window object not found (this variable is 0).</exception>
+            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Acc,Au.Types.Coord,Au.Types.Coord)">
+            <summary>
+            Moves the cursor (mouse pointer) to this accessible object.
+            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
+            </summary>
+            <param name="t"></param>
+            <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
+            <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+            <exception cref="T:Au.Types.NotFoundException">Accessible object not found (this variable is null).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).</exception>
+            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.Acc,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)">
+            <summary>
+            Clicks this accessible object.
+            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
+            </summary>
+            <param name="t"></param>
+            <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
+            <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+            <param name="button">Which button and how to use it.</param>
+            <exception cref="T:Au.Types.NotFoundException">Accessible object not found (this variable is null).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).</exception>
+            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.WinImage,Au.Types.Coord,Au.Types.Coord)">
+            <summary>
+            Moves the mouse to the found image.
+            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> or <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)"/>.
+            </summary>
+            <param name="t"></param>
+            <param name="x">X coordinate in the found image. Default - center.</param>
+            <param name="y">Y coordinate in the found image. Default - center.</param>
+            <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
+            <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
+            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.WinImage,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)">
+            <summary>
+            Clicks the found image.
+            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> or <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)"/>.
+            </summary>
+            <param name="t"></param>
+            <param name="x">X coordinate in the found image. Default - center.</param>
+            <param name="y">Y coordinate in the found image. Default - center.</param>
+            <param name="button">Which button and how to use it.</param>
+            <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
+            <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
+            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.CreateHandle_(System.Windows.Forms.Control)">
+            <summary>
+            If control handle still not created, creates handle.
+            Like <see cref="M:System.Windows.Forms.Control.CreateHandle"/>, which is protected.
+            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseClientXY_(System.Windows.Forms.Control)">
+            <summary>
+            Gets mouse cursor position in client area coordinates.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.MouseWindowXY_(System.Windows.Forms.Control)">
+            <summary>
+            Gets mouse cursor position in window coordinates.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.TextBox,System.String,System.Boolean)">
+            <summary>
+            Sets the textual cue, or tip, that is displayed by the edit control to prompt the user for information.
+            Does not if Multiline.
+            Sends API <msdn>EM_SETCUEBANNER</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.ComboBox,System.String)">
+            <summary>
+            Sets the textual cue, or tip, that is displayed by the ComboBox edit control to prompt the user for information.
+            Sends API <msdn>CB_SETCUEBANNER</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Add_``1(System.Windows.Forms.ContainerControl,System.Int32,System.Int32,System.Int32,System.Int32,System.String,System.String,System.Windows.Forms.AnchorStyles)">
+            <summary>
+            Creates a control, sets its commonly used properties (Bounds, Text, tooltip, Anchor) and adds it to the Controls collection of this.
+            </summary>
+            <typeparam name="T">Control class.</typeparam>
+            <param name="t"></param>
+            <param name="x">Left.</param>
+            <param name="y">Top.</param>
+            <param name="width">Width.</param>
+            <param name="height">Height.</param>
+            <param name="text">The <see cref="P:System.Windows.Forms.Control.Text"/> property.</param>
+            <param name="tooltip">Tooltip text.
+            This function creates a ToolTip component and assigns it to the Tag property of this.</param>
+            <param name="anchor">The <see cref="P:System.Windows.Forms.Control.Anchor"/> property.</param>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
+            <summary>
+            Gets XML attribute value.
+            If the attribute does not exist, returns null.
+            If the attribute value is empty, returns "".
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.String)">
+            <summary>
+            Gets XML attribute value.
+            If the attribute does not exist, returns defaultValue.
+            If the attribute value is empty, returns "".
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.String@,System.Xml.Linq.XName)">
+            <summary>
+            Gets XML attribute value.
+            If the attribute does not exist, sets value=null and returns false.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Int32)">
+            <summary>
+            Gets attribute value converted to int (<see cref="M:Au.String_.ToInt_(System.String)"/>).
+            If the attribute does not exist, returns defaultValue.
+            If the attribute value is empty or does not begin with a valid number, returns 0.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Int32@,System.Xml.Linq.XName)">
+            <summary>
+            Gets attribute value converted to int (<see cref="M:Au.String_.ToInt_(System.String)"/>).
+            If the attribute does not exist, sets value=0 and returns false.
+            If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Single)">
+            <summary>
+            Gets attribute value converted to float (<see cref="M:Au.String_.ToFloat_(System.String,System.Boolean)"/>).
+            If the attribute does not exist, returns defaultValue.
+            If the attribute value is empty or is not a valid float number, returns 0F.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Single@,System.Xml.Linq.XName)">
+            <summary>
+            Gets attribute value converted to float (<see cref="M:Au.String_.ToFloat_(System.String,System.Boolean)"/>).
+            If the attribute does not exist, sets value=0F and returns false.
+            If the attribute value is empty or is not a valid number, sets value=0F and returns true.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.HasAttribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
+            <summary>
+            Returns true if this element has the specified attribute.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
+            <summary>
+            Gets the first found descendant element.
+            Returns null if not found.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
+            <summary>
+            Gets the first found descendant element that has the specified attribute.
+            Returns null if not found.
+            </summary>
+            <param name="t"></param>
+            <param name="name">Element name. If null, can be any name.</param>
+            <param name="attributeName">Attribute name.</param>
+            <param name="attributeValue">Attribute value. If null, can be any value.</param>
+            <param name="ignoreCase">Case-insensitive attributeValue.</param>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Element_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
+            <summary>
+            Gets the first found direct child element that has the specified attribute.
+            Returns null if not found.
+            </summary>
+            <param name="t"></param>
+            <param name="name">Element name. If null, can be any name.</param>
+            <param name="attributeName">Attribute name.</param>
+            <param name="attributeValue">Attribute value. If null, can be any value.</param>
+            <param name="ignoreCase">Case-insensitive attributeValue.</param>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.PreviousElement_(System.Xml.Linq.XElement)">
+            <summary>
+            Gets previous sibling element.
+            Returns null if no element.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.NextElement_(System.Xml.Linq.XElement)">
+            <summary>
+            Gets next sibling element.
+            Returns null if no element.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.ToString_(System.Double,System.String)">
+            <summary>
+            Converts double to string.
+            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+            Calls <see cref="M:System.Double.ToString(System.String,System.IFormatProvider)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.ToString_(System.Single,System.String)">
+            <summary>
+            Converts double to string.
+            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+            Calls <see cref="M:System.Single.ToString(System.String,System.IFormatProvider)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.ToString_(System.Decimal,System.String)">
+            <summary>
+            Converts double to string.
+            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
+            Calls <see cref="M:System.Decimal.ToString(System.String,System.IFormatProvider)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.IsEmpty_(System.Drawing.Rectangle)">
+            <summary>
+            Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
+            This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Has_``1(``0,``0)">
+            <summary>
+            Returns true if this enum variable has flag(s) f (all bits).
+            Compiled as inlined code <c>(t &amp; flag) == flags</c>. The same as Enum.HasFlag, but much much faster.
+            The enum type must be of size 4 (default).
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.HasAny_``1(``0,``0)">
+            <summary>
+            Returns true if this enum variable has one or more flag bits specified in f.
+            Compiled as inlined code <c>(t &amp; flags) != 0</c>. This is different from Enum.HasFlag.
+            The enum type must be of size 4 (default).
             </summary>
         </member>
         <member name="T:Au.Types.RXMatch">
@@ -2248,7 +2699,7 @@
             </summary>
             <param name="x">X coordinate relative to the specified screen (default - primary).</param>
             <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
-            <param name="co">Can be used to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
+            <param name="co">Can be used to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether x y are relative to the work area.</param>
             <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
         </member>
@@ -2262,7 +2713,7 @@
         </member>
         <member name="P:Au.Types.CoordOptions.Screen">
             <summary>
-            Screen index or anything that can be converted to <see cref="P:Au.Types.CoordOptions.Screen"/> with <see cref="M:Au.Screen_.FromObject(System.Object)"/>.
+            Screen index or anything that can be used to get screen.
             </summary>
         </member>
         <member name="P:Au.Types.CoordOptions.WorkArea">
@@ -2273,7 +2724,7 @@
         <member name="M:Au.Types.CoordOptions.#ctor">
             
         </member>
-        <member name="M:Au.Types.CoordOptions.#ctor(System.Boolean,System.Object)">
+        <member name="M:Au.Types.CoordOptions.#ctor(System.Boolean,Au.Types.Screen_)">
             
         </member>
         <member name="T:Au.Types.AnyWnd">
@@ -2574,300 +3025,6 @@
             Sets Message = message.
             </summary>
         </member>
-        <member name="T:Au.Types.ExtensionMethods">
-            <summary>
-            Adds extension methods to some .NET classes.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)">
-            <summary>
-            If this is default(Wnd), throws <see cref="T:Au.Types.NotFoundException"/>, else returns this.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException"></exception>
-            <example>
-            <code><![CDATA[
-            var w1 = Wnd.Find("Example").OrThrow();
-            var w2 = +Wnd.Find("Example"); //the same
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)">
-            <summary>
-            If this is null, throws <see cref="T:Au.Types.NotFoundException"/>, else returns this.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException"></exception>
-            <example>
-            <code><![CDATA[
-            var w = Wnd.Find("Example").OrThrow();
-            
-            var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
-            var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
-            
-            var a3 = (Acc.Find(w, "web:LINK", "Example")?.Navigate("example")).OrThrow();
-            var a4 = +Acc.Find(w, "web:LINK", "Example")?.Navigate("example"); //the same
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)">
-            <summary>
-            If this is null, throws <see cref="T:Au.Types.NotFoundException"/>, else returns this.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException"></exception>
-            <example>
-            <code><![CDATA[
-            var w = Wnd.Find("Example").OrThrow();
-            var r1 = WinImage.Find(w, "example").OrThrow();
-            var r2 = +WinImage.Find(w, "example"); //the same
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
-            <summary>
-            Moves the cursor (mouse pointer) to the position x y relative to this window.
-            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            By default x y coordinates are relative to the client area; default - center.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">Window object not found (this variable is 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.Wnd,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton,System.Boolean)">
-            <summary>
-            Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
-            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            By default x y coordinates are relative to the client area; default - center. Default action - left click.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">Window object not found (this variable is 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Acc,Au.Types.Coord,Au.Types.Coord)">
-            <summary>
-            Moves the cursor (mouse pointer) to this accessible object.
-            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </summary>
-            <param name="t"></param>
-            <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
-            <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
-            <exception cref="T:Au.Types.NotFoundException">Accessible object not found (this variable is null).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.Acc,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)">
-            <summary>
-            Clicks this accessible object.
-            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </summary>
-            <param name="t"></param>
-            <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
-            <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
-            <param name="button">Which button and how to use it.</param>
-            <exception cref="T:Au.Types.NotFoundException">Accessible object not found (this variable is null).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.WinImage,Au.Types.Coord,Au.Types.Coord)">
-            <summary>
-            Moves the mouse to the found image.
-            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> or <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)"/>.
-            </summary>
-            <param name="t"></param>
-            <param name="x">X coordinate in the found image. Default - center.</param>
-            <param name="y">Y coordinate in the found image. Default - center.</param>
-            <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
-            <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.WinImage,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)">
-            <summary>
-            Clicks the found image.
-            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> or <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)"/>.
-            </summary>
-            <param name="t"></param>
-            <param name="x">X coordinate in the found image. Default - center.</param>
-            <param name="y">Y coordinate in the found image. Default - center.</param>
-            <param name="button">Which button and how to use it.</param>
-            <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
-            <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.CreateHandle_(System.Windows.Forms.Control)">
-            <summary>
-            If control handle still not created, creates handle.
-            Like <see cref="M:System.Windows.Forms.Control.CreateHandle"/>, which is protected.
-            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseClientXY_(System.Windows.Forms.Control)">
-            <summary>
-            Gets mouse cursor position in client area coordinates.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseWindowXY_(System.Windows.Forms.Control)">
-            <summary>
-            Gets mouse cursor position in window coordinates.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.TextBox,System.String,System.Boolean)">
-            <summary>
-            Sets the textual cue, or tip, that is displayed by the edit control to prompt the user for information.
-            Does not if Multiline.
-            Sends API <msdn>EM_SETCUEBANNER</msdn>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.ComboBox,System.String)">
-            <summary>
-            Sets the textual cue, or tip, that is displayed by the ComboBox edit control to prompt the user for information.
-            Sends API <msdn>CB_SETCUEBANNER</msdn>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Add_``1(System.Windows.Forms.ContainerControl,System.Int32,System.Int32,System.Int32,System.Int32,System.String,System.String,System.Windows.Forms.AnchorStyles)">
-            <summary>
-            Creates a control, sets its commonly used properties (Bounds, Text, tooltip, Anchor) and adds it to the Controls collection of this.
-            </summary>
-            <typeparam name="T">Control class.</typeparam>
-            <param name="t"></param>
-            <param name="x">Left.</param>
-            <param name="y">Top.</param>
-            <param name="width">Width.</param>
-            <param name="height">Height.</param>
-            <param name="text">The <see cref="P:System.Windows.Forms.Control.Text"/> property.</param>
-            <param name="tooltip">Tooltip text.
-            This function creates a ToolTip component and assigns it to the Tag property of this.</param>
-            <param name="anchor">The <see cref="P:System.Windows.Forms.Control.Anchor"/> property.</param>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
-            <summary>
-            Gets XML attribute value.
-            If the attribute does not exist, returns null.
-            If the attribute value is empty, returns "".
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.String)">
-            <summary>
-            Gets XML attribute value.
-            If the attribute does not exist, returns defaultValue.
-            If the attribute value is empty, returns "".
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.String@,System.Xml.Linq.XName)">
-            <summary>
-            Gets XML attribute value.
-            If the attribute does not exist, sets value=null and returns false.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Int32)">
-            <summary>
-            Gets attribute value converted to int (<see cref="M:Au.String_.ToInt_(System.String)"/>).
-            If the attribute does not exist, returns defaultValue.
-            If the attribute value is empty or does not begin with a valid number, returns 0.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Int32@,System.Xml.Linq.XName)">
-            <summary>
-            Gets attribute value converted to int (<see cref="M:Au.String_.ToInt_(System.String)"/>).
-            If the attribute does not exist, sets value=0 and returns false.
-            If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Single)">
-            <summary>
-            Gets attribute value converted to float (<see cref="M:Au.String_.ToFloat_(System.String,System.Boolean)"/>).
-            If the attribute does not exist, returns defaultValue.
-            If the attribute value is empty or is not a valid float number, returns 0F.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Single@,System.Xml.Linq.XName)">
-            <summary>
-            Gets attribute value converted to float (<see cref="M:Au.String_.ToFloat_(System.String,System.Boolean)"/>).
-            If the attribute does not exist, sets value=0F and returns false.
-            If the attribute value is empty or is not a valid number, sets value=0F and returns true.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.HasAttribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
-            <summary>
-            Returns true if this element has the specified attribute.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
-            <summary>
-            Gets the first found descendant element.
-            Returns null if not found.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
-            <summary>
-            Gets the first found descendant element that has the specified attribute.
-            Returns null if not found.
-            </summary>
-            <param name="t"></param>
-            <param name="name">Element name. If null, can be any name.</param>
-            <param name="attributeName">Attribute name.</param>
-            <param name="attributeValue">Attribute value. If null, can be any value.</param>
-            <param name="ignoreCase">Case-insensitive attributeValue.</param>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Element_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
-            <summary>
-            Gets the first found direct child element that has the specified attribute.
-            Returns null if not found.
-            </summary>
-            <param name="t"></param>
-            <param name="name">Element name. If null, can be any name.</param>
-            <param name="attributeName">Attribute name.</param>
-            <param name="attributeValue">Attribute value. If null, can be any value.</param>
-            <param name="ignoreCase">Case-insensitive attributeValue.</param>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.PreviousElement_(System.Xml.Linq.XElement)">
-            <summary>
-            Gets previous sibling element.
-            Returns null if no element.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.NextElement_(System.Xml.Linq.XElement)">
-            <summary>
-            Gets next sibling element.
-            Returns null if no element.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.ToString_(System.Double,System.String)">
-            <summary>
-            Converts double to string.
-            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
-            Calls <see cref="M:System.Double.ToString(System.String,System.IFormatProvider)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.ToString_(System.Single,System.String)">
-            <summary>
-            Converts double to string.
-            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
-            Calls <see cref="M:System.Single.ToString(System.String,System.IFormatProvider)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.ToString_(System.Decimal,System.String)">
-            <summary>
-            Converts double to string.
-            Uses invariant culture, therefore decimal point is always '.', not ',' etc.
-            Calls <see cref="M:System.Decimal.ToString(System.String,System.IFormatProvider)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.IsEmpty_(System.Drawing.Rectangle)">
-            <summary>
-            Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
-            This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Has_``1(``0,``0)">
-            <summary>
-            Returns true if this enum variable has flag(s) f (all bits).
-            Compiled as inlined code <c>(t &amp; flag) == flags</c>. The same as Enum.HasFlag, but much much faster.
-            The enum type must be of size 4 (default).
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.HasAny_``1(``0,``0)">
-            <summary>
-            Returns true if this enum variable has one or more flag bits specified in f.
-            Compiled as inlined code <c>(t &amp; flags) != 0</c>. This is different from Enum.HasFlag.
-            The enum type must be of size 4 (default).
-            </summary>
-        </member>
         <member name="T:Au.Types.LPARAM">
             <summary>
             Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg wParam/lParam of SendMessage.
@@ -2880,9 +3037,19 @@
             There is no cast operators for enum. When need, cast through int or uint. For Wnd cast through IntPtr.
             </remarks>
         </member>
+        <member name="T:Au.Types.POINT">
+            <summary>
+            Point coordinates x y.
+            </summary>
+        </member>
+        <member name="T:Au.Types.SIZE">
+            <summary>
+            Width and height.
+            </summary>
+        </member>
         <member name="T:Au.Types.RECT">
             <summary>
-            Contains rectangle coordinates.
+            Rectangle coordinates left top right bottom.
             </summary>
             <remarks>
             This type can be used with Windows API functions. The .NET <b>Rectangle</b>/<b>Rect</b>/<b>Int32Rect</b> can't, because their fields are different.
@@ -2939,7 +3106,7 @@
             Returns true if this rectangle contains the specified point.
             </summary>
         </member>
-        <member name="M:Au.Types.RECT.Contains(System.Drawing.Point)">
+        <member name="M:Au.Types.RECT.Contains(Au.Types.POINT)">
             <summary>
             Returns true if this rectangle contains the specified point.
             </summary>
@@ -2994,31 +3161,29 @@
             If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
             </summary>
         </member>
-        <member name="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,System.Object,System.Boolean,System.Boolean)">
+        <member name="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.Types.Screen_,System.Boolean,System.Boolean)">
             <summary>
             Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
             Final rectangle coordinates are relative to the primary screen.
             </summary>
             <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
             <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
-            <param name="screen">Use this screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>). If null (default), uses the primary screen.</param>
+            <param name="screen">Use this screen (see <see cref="T:Au.Types.Screen_"/>). If null (default), uses the primary screen.</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
             <remarks>
-            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.Wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,System.Object,System.Boolean,System.Boolean)"/>.
+            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.Wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.Types.Screen_,System.Boolean,System.Boolean)"/>.
             </remarks>
         </member>
-        <member name="M:Au.Types.RECT.EnsureInScreen(System.Object,System.Boolean)">
+        <member name="M:Au.Types.RECT.EnsureInScreen(Au.Types.Screen_,System.Boolean)">
             <summary>
             Adjusts this rectangle to ensure that whole rectangle is in screen.
             Initial and final rectangle coordinates are relative to the primary screen.
             </summary>
-            <param name="screen">Use this screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>). If null (default), uses screen of the rectangle (or nearest).</param>
+            <param name="screen">Use this screen (see <see cref="T:Au.Types.Screen_"/>). If null (default), uses screen of the rectangle (or nearest).</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
             <remarks>
-            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.Wnd.EnsureInScreen(System.Object,System.Boolean)"/>.
+            This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.Wnd.EnsureInScreen(Au.Types.Screen_,System.Boolean)"/>.
             </remarks>
         </member>
         <member name="T:Au.Types.ColorInt">
@@ -3043,11 +3208,6 @@
             <summary>
             Creates ColorInt from color value in 0xRRGGBB format.
             Makes opaque (alpha 0xFF).
-            </summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.#ctor(System.Drawing.Color)">
-            <summary>
-            Creates ColorInt from <see cref="T:System.Drawing.Color"/>.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.op_Implicit(System.Drawing.Color)~Au.Types.ColorInt">
@@ -3221,7 +3381,7 @@
         </member>
         <member name="T:Au.Types.MButton">
             <summary>
-            button parameter type for <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/> and similar functions.
+            <i>button</i> parameter type for <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/> and similar functions.
             There are two groups of values:
             1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
             2. Action (Down, Up, DoubleClick). Default: click.
@@ -3230,29 +3390,19 @@
             </summary>
         </member>
         <member name="F:Au.Types.MButton.Left">
-            <summary>
-            The left button.
-            </summary>
+            <summary>The left button.</summary>
         </member>
         <member name="F:Au.Types.MButton.Right">
-            <summary>
-            The right button.
-            </summary>
+            <summary>The right button.</summary>
         </member>
         <member name="F:Au.Types.MButton.Middle">
-            <summary>
-            The middle button.
-            </summary>
+            <summary>The middle button.</summary>
         </member>
         <member name="F:Au.Types.MButton.X1">
-            <summary>
-            The 4-th button.
-            </summary>
+            <summary>The 4-th button.</summary>
         </member>
         <member name="F:Au.Types.MButton.X2">
-            <summary>
-            The 5-th button.
-            </summary>
+            <summary>The 5-th button.</summary>
         </member>
         <member name="F:Au.Types.MButton.Down">
             <summary>(flag) Press and don't release.</summary>
@@ -3262,6 +3412,30 @@
         </member>
         <member name="F:Au.Types.MButton.DoubleClick">
             <summary>(flag) Double-click.</summary>
+        </member>
+        <member name="T:Au.Types.MButtons">
+            <summary>
+            Flags for mouse buttons.
+            Used with functions that check mouse button states (pressed or released).
+            </summary>
+            <remarks>
+            The values are the same as of <see cref="T:System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.
+            </remarks>
+        </member>
+        <member name="F:Au.Types.MButtons.Left">
+            <summary>The left button.</summary>
+        </member>
+        <member name="F:Au.Types.MButtons.Right">
+            <summary>The right button.</summary>
+        </member>
+        <member name="F:Au.Types.MButtons.Middle">
+            <summary>The middle button.</summary>
+        </member>
+        <member name="F:Au.Types.MButtons.X1">
+            <summary>The 4-th button.</summary>
+        </member>
+        <member name="F:Au.Types.MButtons.X2">
+            <summary>The 5-th button.</summary>
         </member>
         <member name="T:Au.Types.MRelease">
             <summary>
@@ -3275,18 +3449,6 @@
         <member name="M:Au.Types.MRelease.Dispose">
             <summary>
             Releases mouse buttons pressed by the function that returned this variable.
-            </summary>
-        </member>
-        <member name="T:Au.Types.MWFlags">
-            <summary>Flags for <see cref="M:Au.Mouse.WaitForClick(System.Double,System.Windows.Forms.MouseButtons,Au.Types.MWFlags)"/></summary>
-        </member>
-        <member name="F:Au.Types.MWFlags.Up">
-            <summary>Wait for button-up event.</summary>
-        </member>
-        <member name="F:Au.Types.MWFlags.Discard">
-            <summary>
-            Make the event invisible for other apps.
-            If flag <b>Up</b> also is specified, makes both down and up events invisible.
             </summary>
         </member>
         <member name="T:Au.Types.MCursor">
@@ -3521,7 +3683,7 @@
         </member>
         <member name="F:Au.Types.DFlags.RawXY">
             <summary>
-            x y are relative to the primary screen (ignore <see cref="T:System.Windows.Forms.Screen"/> etc). Don't ensure thet entire window is in screen.
+            x y are relative to the primary screen (ignore <see cref="P:Au.AuDialog.Screen"/> etc). Don't ensure thet entire window is in screen.
             More info: <see cref="M:Au.AuDialog.SetXY(Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. 
             </summary>
         </member>
@@ -3890,29 +4052,6 @@
             Skip cloaked windows. See <see cref="P:Au.Wnd.IsCloaked"/>.
             Cloaked are windows hidden not in the classic way, therefore Wnd.IsVisible does not detect it, but Wnd.IsCloaked detects. For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.
             </summary>
-        </member>
-        <member name="T:Au.Types.SpecHwnd">
-            <summary>
-            Contains static properties that return special window handle values that can be used with some API functions and with some Wnd functions too.
-            </summary>
-        </member>
-        <member name="P:Au.Types.SpecHwnd.HWND_TOP">
-            <summary>API HWND_TOP (0). Used with SetWindowPos.</summary>
-        </member>
-        <member name="P:Au.Types.SpecHwnd.HWND_BOTTOM">
-            <summary>API HWND_BOTTOM (1). Used with SetWindowPos.</summary>
-        </member>
-        <member name="P:Au.Types.SpecHwnd.HWND_TOPMOST">
-            <summary>API HWND_TOPMOST (-1). Used with SetWindowPos.</summary>
-        </member>
-        <member name="P:Au.Types.SpecHwnd.HWND_NOTOPMOST">
-            <summary>API HWND_NOTOPMOST (-2). Used with SetWindowPos.</summary>
-        </member>
-        <member name="P:Au.Types.SpecHwnd.HWND_MESSAGE">
-            <summary>API HWND_MESSAGE (-3). Used with API CreateWindowEx, Wnd.WndOwner etc.</summary>
-        </member>
-        <member name="P:Au.Types.SpecHwnd.HWND_BROADCAST">
-            <summary>API HWND_BROADCAST (0xffff). Used with API SendMessage, Wnd.Send etc.</summary>
         </member>
         <member name="T:Au.Types.SUBCLASSPROC">
             <summary>API <msdn>SUBCLASSPROC</msdn></summary>
@@ -4528,14 +4667,14 @@
         <member name="M:Au.Acc.DoActionAndWaitForNewWebPage(System.Double,System.Action{Au.Acc})">
             <summary>
             Calls <see cref="M:Au.Acc.DoAction"/> or <paramref name="action"/> and waits until window name changes and web page name changes.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout">
             <inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/>
             Default 60 seconds.
             </param>
             <param name="action">If used, calls it instead of <see cref="M:Au.Acc.DoAction"/>.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
             <exception cref="T:Au.Types.WndException">The window was closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions thrown by <see cref="M:Au.Acc.DoAction"/> or by the <paramref name="action"/> function.</exception>
@@ -4780,23 +4919,22 @@
             <summary>
             Finds accessible object (AO) in window w.
             The same as <see cref="M:Au.Acc.Finder.Find(Au.Wnd)"/>, but waits until the AO is found or the given time expires.
-            Returns true if found. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
-            Returns true if found. Else if <paramref name="secondsTimeout"/> is negative, returns false. Else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="w">Window or control that contains the AO.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Finder.Find(Au.Wnd)"/>.</exception>
         </member>
         <member name="M:Au.Acc.Finder.Wait(System.Double,Au.Acc)">
             <summary>
             Finds accessible object (AO) in another AO.
             The same as <see cref="M:Au.Acc.Finder.Find(Au.Acc)"/>, but waits until the AO is found or the given time expires.
-            Returns true if found. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="a">Direct or indirect parent AO.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Finder.Find(Au.Acc)"/>.</exception>
         </member>
         <member name="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)">
@@ -4975,7 +5113,6 @@
         <member name="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)">
             <summary>
             Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
-            Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
             Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
             <param name="secondsTimeout">
@@ -4988,13 +5125,13 @@
             <param name="flags"></param>
             <param name="also"></param>
             <param name="skip"></param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.</exception>
         </member>
         <member name="M:Au.Acc.Wait(System.Double,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)">
             <summary>
             Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
-            Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
             Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
             <param name="secondsTimeout">
@@ -5006,7 +5143,8 @@
             <param name="flags"></param>
             <param name="also"></param>
             <param name="skip"></param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)"/>.</exception>
         </member>
         <member name="M:Au.Acc.FindAll(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean})">
@@ -5126,7 +5264,7 @@
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
         </member>
-        <member name="M:Au.Acc.FromXY(System.Drawing.Point,Au.Types.AXYFlags)">
+        <member name="M:Au.Acc.FromXY(Au.Types.POINT,Au.Types.AXYFlags)">
             <summary>
             Gets accessible object from point.
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
@@ -5142,7 +5280,7 @@
             </summary>
             <param name="x">X coordinate in screen.</param>
             <param name="y">Y coordinate in screen.</param>
-            <param name="co">Can be used to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
+            <param name="co">Can be used to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether x y are relative to the work area.</param>
             <param name="flags"></param>
             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
         </member>
@@ -5793,7 +5931,7 @@
             If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
             If null, prints "null".
             
-            This overload is used for value types (int, Point) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
+            This overload is used for value types (int, RECT) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
             </remarks>
         </member>
         <member name="M:Au.NoClass.LibPrintObjectToString(System.Object)">
@@ -5978,7 +6116,7 @@
         </member>
         <member name="M:Au.Keyb.Add(System.Object[])">
             <summary>
-            Adds any number of keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
+            Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="M:Au.Keyb.Send(System.Boolean)"/>.
             Returns self.
             </summary>
             <param name="keysEtc">Arguments. The same as with <see cref="M:Au.Keyb.Key(System.Object[])"/>.</param>
@@ -6197,36 +6335,35 @@
         <member name="M:Au.Keyb.WaitForNoModifierKeys(System.Double,Au.Types.KMod)">
             <summary>
             Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state (see <see cref="M:Au.Keyb.IsMod(Au.Types.KMod)"/>).
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="modifierKeys">Check only these keys. Default - all.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
         </member>
-        <member name="M:Au.Keyb.WaitForNoModifierKeysAndMouseButtons(System.Double,Au.Types.KMod,System.Windows.Forms.MouseButtons)">
+        <member name="M:Au.Keyb.WaitForNoModifierKeysAndMouseButtons(System.Double,Au.Types.KMod,Au.Types.MButtons)">
             <summary>
             Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="modifierKeys">Check only these keys. Default - all.</param>
             <param name="buttons">Check only these buttons. Default - all.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <seealso cref="M:Au.Keyb.IsMod(Au.Types.KMod)"/>
-            <seealso cref="M:Au.Mouse.IsPressed(System.Windows.Forms.MouseButtons)"/>
-            <seealso cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,System.Windows.Forms.MouseButtons)"/>
+            <seealso cref="M:Au.Mouse.IsPressed(Au.Types.MButtons)"/>
+            <seealso cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,Au.Types.MButtons)"/>
         </member>
         <member name="M:Au.Keyb.WaitForReleased(System.Double,Au.Types.KKey[])">
             <summary>
             Waits while the specified keys or/and mouse buttons are in pressed state.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="keys">One or more keys or/and mouse buttons. Waits for all.</param>
+            <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="M:Au.Keyb.Key(System.Object[])"/>, without operators.</param>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
         </member>
         <member name="M:Au.Keyb.WaitForReleased(System.Double,System.String)">
             <inheritdoc cref="M:Au.Keyb.WaitForReleased(System.Double,Au.Types.KKey[])"/>
-            <remarks>The keys string is like with <see cref="M:Au.Keyb.Key(System.Object[])"/>.</remarks>
         </member>
         <member name="M:Au.Keyb.WaitForHotkey(System.Double,Au.Types.KHotkey,System.Boolean)">
             <summary>
@@ -6255,31 +6392,53 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Keyb.WaitForKeyEvent(System.Double,Au.Types.KKey,Au.Types.KWFlags)">
+        <member name="M:Au.Keyb.WaitForKey(System.Double,Au.Types.KKey,System.Boolean,System.Boolean)">
             <summary>
-            Waits for down or up event of the specified key.
+            Waits for key-down or key-up event of the specified key.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="key">Wait for this key.</param>
-            <param name="flags"></param>
+            <param name="key">Wait for this key. Can be a single-key string like with <see cref="M:Au.Keyb.Key(System.Object[])"/>.</param>
+            <param name="up">Wait for key-up event.</param>
+            <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
-            <exception cref="T:System.ArgumentException">Invalid <paramref name="key"/>.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="key"/> is 0.</exception>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
-            Unlike <see cref="M:Au.Keyb.WaitForReleased(System.Double,Au.Types.KKey[])"/>, waits for down or up event, not for key state.
-            With default flags, waits for key-down event and discards the event.
+            Unlike <see cref="M:Au.Keyb.WaitForReleased(System.Double,Au.Types.KKey[])"/>, waits for key event, not for key state.
             Uses low-level keyboard hook. Can wait for any single key. See also <see cref="M:Au.Keyb.WaitForHotkey(System.Double,Au.Types.KHotkey,System.Boolean)"/>.
             </remarks>
+            <example>
+            <code><![CDATA[
+            Keyb.WaitForKey(0, KKey.Ctrl, up: false, block: true);
+            Print("Ctrl");
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.Keyb.WaitForKeyEvent(System.Double,System.String,Au.Types.KWFlags)">
-            <inheritdoc cref="M:Au.Keyb.WaitForKeyEvent(System.Double,Au.Types.KKey,Au.Types.KWFlags)"/>
+        <member name="M:Au.Keyb.WaitForKey(System.Double,System.String,System.Boolean,System.Boolean)">
+            <inheritdoc cref="M:Au.Keyb.WaitForKey(System.Double,Au.Types.KKey,System.Boolean,System.Boolean)"/>
+            <exception cref="T:System.ArgumentException">Invalid <paramref name="key"/> string.</exception>
+            <example>
+            <code><![CDATA[
+            Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
+            Print("Ctrl");
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.Keyb.WaitForKeyEvent(System.Double,Au.Types.KWFlags)">
+        <member name="M:Au.Keyb.WaitForKey(System.Double,System.Boolean,System.Boolean)">
             <summary>
-            Waits for down or up event of any key, and gets the key code.
+            Waits for key-down or key-up event of any key, and gets the key code.
             </summary>
-            <returns>Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-            <inheritdoc cref="M:Au.Keyb.WaitForKeyEvent(System.Double,Au.Types.KKey,Au.Types.KWFlags)"/>
+            <returns>
+            Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
+            For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
+            </returns>
+            <inheritdoc cref="M:Au.Keyb.WaitForKey(System.Double,Au.Types.KKey,System.Boolean,System.Boolean)"/>
+            <example>
+            <code><![CDATA[
+            var key = Keyb.WaitForKey(0, up: true, block: true);
+            Print(key);
+            ]]></code>
+            </example>
         </member>
         <member name="T:Au.Keyb.Misc">
             <summary>
@@ -7366,7 +7525,7 @@
         <member name="M:Au.Util.LibArrayBuilder`1.AddR(`0@)">
             <summary>
             Adds one element.
-            Uses ref to avoid copying when T size is big. Does not modify the passed variable.
+            The same as Add, but uses 'in'. Use to avoid copying values of big types.
             </summary>
         </member>
         <member name="M:Au.Util.LibArrayBuilder`1.Add(`0)">
@@ -7803,7 +7962,7 @@
             Drag-drop functions.
             </summary>
         </member>
-        <member name="M:Au.Util.DragDrop.SimpleDragDrop(Au.Wnd,System.Windows.Forms.MouseButtons,System.Action{Au.Util.DragDrop.MsgArgs})">
+        <member name="M:Au.Util.DragDrop.SimpleDragDrop(Au.Wnd,Au.Types.MButtons,System.Action{Au.Util.DragDrop.MsgArgs})">
             <summary>
             Simple non-OLE drag operation.
             Returns true if dropped, false if cancelled.
@@ -7812,7 +7971,7 @@
             <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
             <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
         </member>
-        <member name="M:Au.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Au.Util.DragDrop.MsgArgs})">
+        <member name="M:Au.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,Au.Types.MButtons,System.Action{Au.Util.DragDrop.MsgArgs})">
             <summary>
             Simple non-OLE drag operation.
             Returns true if dropped, false if cancelled.
@@ -7823,7 +7982,7 @@
         </member>
         <member name="T:Au.Util.DragDrop.MsgArgs">
             <summary>
-            <see cref="M:Au.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,System.Windows.Forms.MouseButtons,System.Action{Au.Util.DragDrop.MsgArgs})"/> callback function arguments.
+            <see cref="M:Au.Util.DragDrop.SimpleDragDrop(System.Windows.Forms.Control,Au.Types.MButtons,System.Action{Au.Util.DragDrop.MsgArgs})"/> callback function arguments.
             </summary>
         </member>
         <member name="F:Au.Util.DragDrop.MsgArgs.Msg">
@@ -8044,7 +8203,7 @@
             </summary>
             <param name="i"></param>
         </member>
-        <member name="M:Au.Util.Dpi.ScaleSize(System.Drawing.Size)">
+        <member name="M:Au.Util.Dpi.ScaleSize(Au.Types.SIZE)">
             <summary>
             If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
             Else returns z.
@@ -8309,8 +8468,7 @@
         <member name="M:Au.WinImage.Wait(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})">
             <summary>
             Waits for image(s) or color(s) displayed in window or other area.
-            Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image.
-            On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
+            Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns null.
@@ -8320,7 +8478,7 @@
             <param name="flags"></param>
             <param name="colorDiff"></param>
             <param name="also"></param>
-            <exception cref="T:System.TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.</exception>
             <remarks>
@@ -8330,7 +8488,6 @@
         <member name="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})">
             <summary>
             Waits until image(s) or color(s) is NOT displayed in window or other area.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="area"></param>
@@ -8338,7 +8495,8 @@
             <param name="flags"></param>
             <param name="colorDiff"></param>
             <param name="also"></param>
-            <exception cref="T:System.TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.</exception>
             <remarks>
@@ -8348,13 +8506,13 @@
         <member name="M:Au.WinImage.WaitChanged(System.Double,Au.Types.WIArea,Au.Types.WIFlags,System.Int32)">
             <summary>
             Waits until something visually changes in window or other area.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative (else exception).
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="area"></param>
             <param name="flags"></param>
             <param name="colorDiff"></param>
-            <exception cref="T:System.TimeoutException">Timeout. Thrown only when secondsTimeout is greater than 0.</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.</exception>
             <remarks>
@@ -9005,122 +9163,6 @@
         </member>
         <member name="M:Au.Output._WriteToQM2(System.String)">
             <param name="s">If null, clears output.</param>
-        </member>
-        <member name="T:Au.Screen_">
-            <summary>
-            Extends <see cref="T:System.Windows.Forms.Screen"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Screen_.Primary">
-            <summary>
-            Screen index of the primary screen. Value 0.
-            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            </summary>
-        </member>
-        <member name="F:Au.Screen_.OfMouse">
-            <summary>
-            Special screen index to specify the screen of the mouse pointer. Value -1.
-            </summary>
-        </member>
-        <member name="F:Au.Screen_.OfActiveWindow">
-            <summary>
-            Special screen index to specify the screen of the active window. Value -2.
-            </summary>
-        </member>
-        <member name="M:Au.Screen_.FromIndex(System.Int32,System.Boolean)">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object from screen index.
-            </summary>
-            <param name="index">
-            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            Also can be <see cref="F:Au.Screen_.Primary"/> (0), <see cref="F:Au.Screen_.OfMouse"/> (-1), <see cref="F:Au.Screen_.OfActiveWindow"/> (-2).
-            </param>
-            <param name="noThrow">Don't throw exception if index is invalid. Instead show warning and return null.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
-            <remarks>
-            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
-            </remarks>
-        </member>
-        <member name="M:Au.Screen_.GetIndex_(System.Windows.Forms.Screen)">
-            <summary>
-            Gets screen index that can be used with <see cref="M:Au.Screen_.FromIndex(System.Int32,System.Boolean)"/> (also with FromObject and some other functions of this library).
-            Primary screen is 0. Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            </summary>
-            <param name="t"></param>
-            <exception cref="T:Au.Types.AuException">Failed (probably the Screen object is invalid).</exception>
-        </member>
-        <member name="M:Au.Screen_.FromWindow(Au.Wnd)">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object of the screen that contains the specified window (the biggest part of it) or is nearest to it.
-            If w handle is 0 or invalid, gets the primary screen (<see cref="M:System.Windows.Forms.Screen.FromHandle(System.IntPtr)"/> would return an invalid object if the window handle is invalid).
-            </summary>
-        </member>
-        <member name="M:Au.Screen_.FromObject(System.Object)">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object by index or of the screen that contains (or is nearest to) the specified window, rectangle or point.
-            </summary>
-            <param name="screen">
-            Depends on type:
-            <list type="bullet">
-            <item>null - gets primary screen.</item>
-            <item><see cref="T:System.Windows.Forms.Screen"/> - returns it if valid. If invalid, gets primary screen.</item>
-            <item>int - 1-based non-primary screen index (see <see cref="M:Au.Screen_.FromIndex(System.Int32,System.Boolean)"/>), or Screen_.Primary (0), Screen_.OfMouse (-1), Screen_.OfActiveWindow (-2).</item>
-            <item><see cref="T:Au.Wnd"/> - gets screen of this window or control (see <see cref="M:Au.Screen_.FromWindow(Au.Wnd)"/>). If invalid, gets primary screen.</item>
-            <item><see cref="T:System.Windows.Forms.Control"/> - gets screen of this .NET form or control (see <see cref="M:System.Windows.Forms.Screen.FromControl(System.Windows.Forms.Control)"/>). If invalid, gets primary screen.</item>
-            <item><see cref="T:System.Drawing.Point"/> - gets screen of this point (see <see cref="M:System.Windows.Forms.Screen.FromPoint(System.Drawing.Point)"/>).</item>
-            <item><see cref="T:System.Drawing.Rectangle"/>, <see cref="T:Au.Types.RECT"/> - gets screen of this rectangle (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
-            <item><see cref="T:Au.Acc"/> - gets screen of this accessible object (see <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>).</item>
-            </list>
-            </param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
-            <exception cref="T:System.ArgumentException">Bad object type (not one from the above list).</exception>
-            <remarks>
-            If something fails (except if invalid index), gets primary screen.
-            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
-            </remarks>
-        </member>
-        <member name="P:Au.Screen_.Width">
-            <summary>
-            Gets primary screen width.
-            </summary>
-        </member>
-        <member name="P:Au.Screen_.Height">
-            <summary>
-            Gets primary screen height.
-            </summary>
-        </member>
-        <member name="P:Au.Screen_.Rect">
-            <summary>
-            Gets primary screen rectangle.
-            </summary>
-        </member>
-        <member name="M:Au.Screen_.GetRect(System.Object,System.Boolean)">
-            <summary>
-            Gets screen rectangle.
-            </summary>
-            <param name="screen">Screen index etc, see <see cref="M:Au.Screen_.FromObject(System.Object)"/>. If null - primary screen.</param>
-            <param name="workArea">Get work area rectangle.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
-        </member>
-        <member name="P:Au.Screen_.WorkArea">
-            <summary>
-            Gets primary screen work area.
-            </summary>
-        </member>
-        <member name="M:Au.Screen_.IsInAnyScreen(System.Drawing.Point)">
-            <summary>
-            Returns true if point p is in some screen.
-            </summary>
-        </member>
-        <member name="M:Au.Screen_.IsInAnyScreen(Au.Types.RECT)">
-            <summary>
-            Returns true if rectangle r intersects with some screen.
-            </summary>
-        </member>
-        <member name="M:Au.Screen_.IsInAnyScreen(Au.Wnd)">
-            <summary>
-            Returns true if rectangle of window w intersects with some screen.
-            </summary>
         </member>
         <member name="T:Au.Regex_">
             <summary>
@@ -12769,15 +12811,15 @@
         </member>
         <member name="P:Au.Mouse.X">
             <summary>
-            Gets cursor (mouse pointer) X coordinate (Mouse.XY.X).
+            Gets cursor (mouse pointer) X coordinate (Mouse.XY.x).
             </summary>
         </member>
         <member name="P:Au.Mouse.Y">
             <summary>
-            Gets cursor (mouse pointer) Y coordinate (Mouse.XY.Y).
+            Gets cursor (mouse pointer) Y coordinate (Mouse.XY.y).
             </summary>
         </member>
-        <member name="M:Au.Mouse.Move(System.Drawing.Point)">
+        <member name="M:Au.Mouse.Move(Au.Types.POINT)">
             <summary>
             Moves the cursor (mouse pointer) to the specified position in screen.
             </summary>
@@ -12807,12 +12849,12 @@
             </summary>
             <param name="x">X coordinate relative to screen.</param>
             <param name="y">Y coordinate relative to screen.</param>
-            <param name="co">Can be used to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
+            <param name="co">Can be used to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether x y are relative to the work area.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">
             1. The specified x y is not in screen (any screen). No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).
             2. Invalid screen index.
             </exception>
-            <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(System.Drawing.Point)"/></exception>
+            <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(Au.Types.POINT)"/></exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
@@ -12832,7 +12874,7 @@
             Other window-related failures.
             </exception>
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(System.Drawing.Point)"/></exception>
+            <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(Au.Types.POINT)"/></exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
@@ -12861,8 +12903,8 @@
             Moves the cursor (mouse pointer) relative to <see cref="P:Au.Mouse.LastMoveXY"/>.
             Returns the final cursor position in primary screen coordinates.
             </summary>
-            <param name="dx">X offset from LastMoveXY.X.</param>
-            <param name="dy">Y offset from LastMoveXY.Y.</param>
+            <param name="dx">X offset from LastMoveXY.x.</param>
+            <param name="dy">Y offset from LastMoveXY.y.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
             <remarks>
@@ -12883,13 +12925,13 @@
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
             </remarks>
         </member>
-        <member name="M:Au.Mouse._SendMove(System.Drawing.Point)">
+        <member name="M:Au.Mouse._SendMove(Au.Types.POINT)">
             <summary>
             Sends single mouse movement event.
             x y are normal absolute coordinates.
             </summary>
         </member>
-        <member name="M:Au.Mouse._SendButton(Au.Types.MButton,System.Boolean,System.Nullable{System.Drawing.Point})">
+        <member name="M:Au.Mouse._SendButton(Au.Types.MButton,System.Boolean,System.Nullable{Au.Types.POINT})">
             <summary>
             Sends single mouse button down or up event.
             Does not use the action flags of button.
@@ -12930,7 +12972,7 @@
             <param name="button">Button and action.</param>
             <param name="x">X coordinate relative to screen.</param>
             <param name="y">Y coordinate relative to screen.</param>
-            <param name="co">Can be used to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
+            <param name="co">Can be used to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether x y are relative to the work area.</param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.CoordOptions)"/>.</exception>
             <remarks>
@@ -13185,23 +13227,28 @@
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>.
             </remarks>
         </member>
-        <member name="M:Au.Mouse.IsPressed(System.Windows.Forms.MouseButtons)">
+        <member name="M:Au.Mouse.IsPressed(Au.Types.MButtons)">
             <summary>
             Returns true if some mouse buttons are pressed.
-            See also: <see cref="P:System.Windows.Forms.Control.MouseButtons"/>.
             </summary>
             <param name="buttons">Check only these buttons. Default - all.</param>
-            <seealso cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,System.Windows.Forms.MouseButtons)"/>
+            <seealso cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,Au.Types.MButtons)"/>
         </member>
-        <member name="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,System.Windows.Forms.MouseButtons)">
+        <member name="M:Au.Mouse.PressedButtons(Au.Types.MButtons)">
             <summary>
-            Waits while some mouse buttons are in pressed state (see <see cref="M:Au.Mouse.IsPressed(System.Windows.Forms.MouseButtons)"/>).
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
+            Returns a value indicating which mouse buttons are in pressed state.
+            </summary>
+            <param name="buttons">Check only these buttons. Default - all.</param>
+        </member>
+        <member name="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,Au.Types.MButtons)">
+            <summary>
+            Waits while some mouse buttons are in pressed state (see <see cref="M:Au.Mouse.IsPressed(Au.Types.MButtons)"/>).
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="buttons">Wait only for these buttons. Default - all.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
-            <seealso cref="M:Au.Keyb.WaitForNoModifierKeysAndMouseButtons(System.Double,Au.Types.KMod,System.Windows.Forms.MouseButtons)"/>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
+            <seealso cref="M:Au.Keyb.WaitForNoModifierKeysAndMouseButtons(System.Double,Au.Types.KMod,Au.Types.MButtons)"/>
         </member>
         <member name="M:Au.Mouse.LibWaitForNoButtonsPressed">
             <summary>
@@ -13209,48 +13256,60 @@
             Does nothing if the <b>Relaxed</b> option is true.
             </summary>
         </member>
-        <member name="M:Au.Mouse.WaitForClick(System.Double,System.Windows.Forms.MouseButtons,Au.Types.MWFlags)">
+        <member name="M:Au.Mouse.WaitForClick(System.Double,Au.Types.MButtons,System.Boolean,System.Boolean)">
             <summary>
-            Waits for down or up event of the specified mouse button or buttons.
+            Waits for button-down or button-up event of the specified mouse button or buttons.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
-            <param name="flags"></param>
+            <param name="up">Wait for button-up event.</param>
+            <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.ArgumentException"><paramref name="button"/> is 0.</exception>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
-            Unlike <see cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,System.Windows.Forms.MouseButtons)"/>, waits for down or up event, not for button state.
-            With default flags, waits for button-up event and does not discard the event.
+            Unlike <see cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,Au.Types.MButtons)"/>, waits for down or up event, not for button state.
             Uses low-level mouse hook.
             </remarks>
+            <example>
+            <code><![CDATA[
+            Mouse.WaitForClick(0, MButtons.Left, up: true, block: false);
+            Print("click");
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.Mouse.WaitForClick(System.Double,Au.Types.MWFlags)">
+        <member name="M:Au.Mouse.WaitForClick(System.Double,System.Boolean,System.Boolean)">
             <summary>
-            Waits for down or up event of any mouse button, and gets the button code.
+            Waits for button-down or button-up event of any mouse button, and gets the button code.
             </summary>
             <returns>Returns the button code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-            <inheritdoc cref="M:Au.Mouse.WaitForClick(System.Double,System.Windows.Forms.MouseButtons,Au.Types.MWFlags)"/>
+            <inheritdoc cref="M:Au.Mouse.WaitForClick(System.Double,Au.Types.MButtons,System.Boolean,System.Boolean)"/>
+            <example>
+            <code><![CDATA[
+            var button = Mouse.WaitForClick(0, up: true, block: true);
+            Print(button);
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.Mouse.WaitForCursor(System.Double,Au.Types.MCursor,System.Boolean)">
             <summary>
             Waits for a standard mouse cursor (pointer) visible.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="cursor">Id of a standard cursor.</param>
             <param name="not">Wait until this cursor disappears.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
         </member>
         <member name="M:Au.Mouse.WaitForCursor(System.Double,System.Int64,System.Boolean)">
             <summary>
             Waits for a nonstandard mouse cursor (pointer) visible.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Tools.Misc.HashMouseCursor(System.IntPtr)"/>.</param>
             <param name="not">Wait until this cursor disappears.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
         </member>
         <member name="T:Au.Char_">
             <summary>
@@ -14091,7 +14150,7 @@
             
             Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
             
-            Cannot be used in services. Instead use <see cref="M:System.Windows.Forms.MessageBox.Show(System.String,System.String,System.Windows.Forms.MessageBoxButtons,System.Windows.Forms.MessageBoxIcon,System.Windows.Forms.MessageBoxDefaultButton,System.Windows.Forms.MessageBoxOptions)"/> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
+            Cannot be used in services. Instead use <b>MessageBox.Show</b> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
             </remarks>
             <example>
             This example creates a class instance, sets properties, shows dialog, uses events, uses result.
@@ -14320,7 +14379,7 @@
             Sets the screen (display monitor) where to show the dialog in multi-screen environment.
             If null or not set, will be used owner window's screen or <see cref="P:Au.AuDialog.Options.DefaultScreen"/>.
             If screen index is invalid, the 'show' method shows warning, no exception.
-            More info: <see cref="M:Au.Screen_.FromObject(System.Object)"/>, <see cref="M:Au.Wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,System.Object,System.Boolean,System.Boolean)"/>.
+            More info: <see cref="T:Au.Types.Screen_"/>, <see cref="M:Au.Wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.Types.Screen_,System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
         <member name="M:Au.AuDialog.SetTimeout(System.Int32,System.String,System.Boolean)">
@@ -14499,8 +14558,8 @@
             <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
             <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
             <param name="defaultButton">id of button that responds to the Enter key.</param>
-            <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default(Coord) (default) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default(Coord) (default) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="secondsTimeout">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="F:Au.Types.DResult.Timeout"/>.</param>
             <param name="onLinkClick">
             A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
@@ -14636,8 +14695,8 @@
             <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.AuDialog.Options.DefaultTitle"/>.</param>
             <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
             <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-            <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
-            <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
+            <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
             <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
             <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.</param>
@@ -14739,8 +14798,8 @@
             <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.AuDialog.Options.DefaultTitle"/>.</param>
             <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
             <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-            <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
-            <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default(Coord) (default) - screen center. You also can use Coord.Reverse etc.</param>
+            <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
             <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
             <remarks>
@@ -15102,7 +15161,7 @@
             <param name="flags"></param>
             <param name="also"></param>
             <param name="contains"></param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
@@ -15134,7 +15193,7 @@
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Boolean,System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
             <param name="windows">One or more variables containing window properties.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
             </remarks>
@@ -15160,7 +15219,7 @@
             <param name="flags"></param>
             <param name="also"></param>
             <param name="contains"></param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
@@ -15174,12 +15233,11 @@
             </summary>
             <param name="secondsTimeout"></param>
             <param name="f">Window properties etc.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
         </member>
         <member name="M:Au.Wnd.WaitForCondition(System.Double,System.Func{Au.Wnd,System.Boolean},System.Boolean)">
             <summary>
             Waits for an user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
@@ -15187,7 +15245,8 @@
             Do not throw exception when the window handle is invalid or the window was closed while waiting.
             In such case the callback function must return false, like in the examples with <see cref="P:Au.Wnd.IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
             </param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">The window handle is invalid or the window was closed while waiting.</exception>
             <example>
             <code><![CDATA[
@@ -15220,25 +15279,25 @@
         <member name="M:Au.Wnd.WaitForName(System.Double,System.String)">
             <summary>
             Waits until this window has the specified name.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="name">
             Window name. Usually it is the title bar text.
             String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
             </param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">The window handle is invalid or the window was closed while waiting.</exception>
             <exception cref="T:System.ArgumentException">Invalid wildcard expression.</exception>
         </member>
         <member name="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)">
             <summary>
             Waits until this window is closed/destroyed or until its process ends.
-            Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.AuException">Failed to open process handle when <paramref name="waitUntilProcessEnds"/> is true.</exception>
             <remarks>
             If the window is already closed, immediately returns true.
@@ -16212,7 +16271,7 @@
         </member>
         <member name="M:Au.Wnd.LibSetWindowPlacement(Au.Types.Api.WINDOWPLACEMENT@,System.String)">
             <summary>
-            Sets WINDOWPLACEMENT length field and calls API <msdn>SetWindowPlacement</msdn>.
+            Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
             </summary>
             <exception cref="T:Au.Types.WndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
         </member>
@@ -16266,7 +16325,7 @@
             Wait for window animations to end. Eg when switching Win10 desktops.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Lib.MoveInScreen(System.Boolean,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Wnd,Au.Types.RECT@,System.Object,System.Boolean,System.Boolean)">
+        <member name="M:Au.Wnd.Lib.MoveInScreen(System.Boolean,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Wnd,Au.Types.RECT@,Au.Types.Screen_,System.Boolean,System.Boolean)">
             <summary>
             Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen.
             </summary>
@@ -16345,27 +16404,31 @@
         <member name="P:Au.Wnd.WndFocused">
             <summary>
             Gets the control or window that has the keyboard input focus.
-            It can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="P:Au.Wnd.WndFocusedLocal"/>.
-            Calls API <msdn>GetGUIThreadInfo</msdn>.
             </summary>
+            <remarks>
+            The control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="P:Au.Wnd.WndFocusedLocal"/>.
+            Calls API <msdn>GetGUIThreadInfo</msdn>.
+            </remarks>
             <seealso cref="M:Au.Wnd.Focus"/>
             <seealso cref="P:Au.Wnd.IsFocused"/>
         </member>
         <member name="P:Au.Wnd.IsFocused">
             <summary>
             Returns true if this is the control or window that has the keyboard input focus.
-            Can belong to any process/thread. With controls of this thread you can use the more lightweight function <see cref="P:Au.Wnd.IsFocusedLocal"/>.
-            Calls <see cref="P:Au.Wnd.WndFocused"/>.
             </summary>
+            <remarks>
+            This control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="P:Au.Wnd.IsFocusedLocal"/>.
+            Calls <see cref="P:Au.Wnd.WndFocused"/>.
+            </remarks>
             <seealso cref="M:Au.Wnd.Focus"/>
         </member>
         <member name="M:Au.Wnd.FocusLocal">
             <summary>
             Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to this control or window, which must be of this thread.
-            Fails if it belongs to another thread or is invalid or disabled.
             Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
             <remarks>
+            Fails if this control/window belongs to another thread or is invalid or disabled.
             Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then returns true.
             </remarks>
             <seealso cref="P:Au.Wnd.WndFocusedLocal"/>
@@ -16374,37 +16437,41 @@
         <member name="P:Au.Wnd.WndFocusedLocal">
             <summary>
             Gets the control or window of this thread that has the keyboard input focus.
-            Calls API <msdn>GetFocus</msdn>.
             </summary>
+            <remarks>
+            Calls API <msdn>GetFocus</msdn>.
+            </remarks>
             <seealso cref="M:Au.Wnd.FocusLocal"/>
             <seealso cref="P:Au.Wnd.IsFocusedLocal"/>
         </member>
         <member name="P:Au.Wnd.IsFocusedLocal">
             <summary>
             Returns true if this is the control or window of this thread that has the keyboard input focus.
-            Calls API <msdn>GetFocus</msdn>.
             </summary>
+            <remarks>
+            Calls API <msdn>GetFocus</msdn>.
+            </remarks>
             <seealso cref="M:Au.Wnd.FocusLocal"/>
             <seealso cref="P:Au.Wnd.WndFocusedLocal"/>
         </member>
         <member name="M:Au.Wnd.GetRect(Au.Types.RECT@)">
             <summary>
             Gets rectangle (position and size) in screen coordinates.
-            The same as the <see cref="P:Au.Wnd.Rect"/> property.
             </summary>
-            <param name="r">Receives the rectangle. Will be empty if failed.</param>
+            <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
             <remarks>
+            The same as the <see cref="P:Au.Wnd.Rect"/> property.
             Calls API <msdn>GetWindowRect</msdn> and returns its return value.
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.GetSize(System.Drawing.Size@)">
+        <member name="M:Au.Wnd.GetSize(Au.Types.SIZE@)">
             <summary>
             Gets width and height.
-            The same as the <see cref="P:Au.Wnd.Size"/> property.
             </summary>
-            <param name="z">Receives width and height. Will be empty if failed.</param>
+            <param name="z">Receives width and height. Will be default(SIZE) if failed.</param>
             <remarks>
+            The same as the <see cref="P:Au.Wnd.Size"/> property.
             Calls API <msdn>GetWindowRect</msdn> and returns its return value.
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
@@ -16414,7 +16481,7 @@
             Gets rectangle (position and size) in screen coordinates.
             </summary>
             <remarks>
-            Calls <see cref="M:Au.Wnd.GetRect(Au.Types.RECT@)"/>. Returns empty RECT if fails (eg window closed).
+            Calls <see cref="M:Au.Wnd.GetRect(Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
             </remarks>
         </member>
         <member name="P:Au.Wnd.Size">
@@ -16422,7 +16489,7 @@
             Gets width and height.
             </summary>
             <remarks>
-            Calls <see cref="M:Au.Wnd.GetSize(System.Drawing.Size@)"/>. Returns empty Size if fails (eg window closed).
+            Calls <see cref="M:Au.Wnd.GetSize(Au.Types.SIZE@)"/>. Returns default(SIZE) if fails (eg window closed).
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
         </member>
@@ -16454,22 +16521,22 @@
             <summary>
             Gets client area rectangle.
             </summary>
-            <param name="r">Receives the rectangle. Will be empty if failed.</param>
+            <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
             <param name="inScreen">
             Get rectangle in screen coordinates; the same as <see cref="M:Au.Wnd.GetWindowAndClientRectInScreen(Au.Types.RECT@,Au.Types.RECT@)"/>.
-            If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="P:Au.Wnd.ClientRect"/> or <see cref="M:Au.Wnd.GetClientSize(System.Drawing.Size@)"/>.</param>
+            If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="P:Au.Wnd.ClientRect"/> or <see cref="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)"/>.</param>
             <remarks>
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.GetClientSize(System.Drawing.Size@)">
+        <member name="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)">
             <summary>
             Gets client area width and height.
+            </summary>
+            <param name="z">Receives width and height. Will be default(RECT) if failed.</param>
+            <remarks>
             The same as the <see cref="P:Au.Wnd.ClientSize"/> property.
             The same as <see cref="M:Au.Wnd.GetClientRect(Au.Types.RECT@,System.Boolean)"/>, just the parameter type is different.
-            </summary>
-            <param name="z">Receives width and height. Will be empty if failed.</param>
-            <remarks>
             Calls API <msdn>GetClientRect</msdn> and returns its return value.
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
@@ -16477,33 +16544,33 @@
         <member name="P:Au.Wnd.ClientRect">
             <summary>
             Gets client area rectangle (width and height).
-            The same as <see cref="P:Au.Wnd.ClientSize"/>, just the return type is different.
             </summary>
             <remarks>
+            The same as <see cref="P:Au.Wnd.ClientSize"/>, just the return type is different.
             The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
-            Calls <see cref="M:Au.Wnd.GetClientRect(Au.Types.RECT@,System.Boolean)"/>. Returns empty rectangle if fails (eg window closed).
+            Calls <see cref="M:Au.Wnd.GetClientRect(Au.Types.RECT@,System.Boolean)"/>. Returns default(RECT) if fails (eg window closed).
             </remarks>
         </member>
         <member name="P:Au.Wnd.ClientSize">
             <summary>
             Gets client area width and height.
-            The same as <see cref="P:Au.Wnd.ClientRect"/>, just the return type is different.
             </summary>
             <remarks>
-            Calls <see cref="M:Au.Wnd.GetClientSize(System.Drawing.Size@)"/>. Returns empty Size value if fails (eg window closed).
+            The same as <see cref="P:Au.Wnd.ClientRect"/>, just the return type is different.
+            Calls <see cref="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)"/>. Returns default(SIZE) if fails (eg window closed).
             </remarks>
         </member>
         <member name="P:Au.Wnd.ClientWidth">
             <summary>
             Gets client area width.
             </summary>
-            <remarks>Calls <see cref="M:Au.Wnd.GetClientSize(System.Drawing.Size@)"/>.</remarks>
+            <remarks>Calls <see cref="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.ClientHeight">
             <summary>
             Gets client area height.
             </summary>
-            <remarks>Calls <see cref="M:Au.Wnd.GetClientSize(System.Drawing.Size@)"/>.</remarks>
+            <remarks>Calls <see cref="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.SetClientSize(System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
@@ -16535,7 +16602,7 @@
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.MapClientToClientOf(Au.Wnd,System.Drawing.Point@)">
+        <member name="M:Au.Wnd.MapClientToClientOf(Au.Wnd,Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
             </summary>
@@ -16547,7 +16614,7 @@
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.MapClientToScreen(System.Drawing.Point@)">
+        <member name="M:Au.Wnd.MapClientToScreen(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the screen.
             </summary>
@@ -16559,13 +16626,13 @@
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.MapScreenToClient(System.Drawing.Point@)">
+        <member name="M:Au.Wnd.MapScreenToClient(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the screen to coordinates relative to the client area of this window.
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.MapClientToWindow(System.Drawing.Point@)">
+        <member name="M:Au.Wnd.MapClientToWindow(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
             </summary>
@@ -16577,7 +16644,7 @@
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.MapWindowToClient(System.Drawing.Point@)">
+        <member name="M:Au.Wnd.MapWindowToClient(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
             </summary>
@@ -16589,7 +16656,7 @@
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.MapWindowToScreen(System.Drawing.Point@)">
+        <member name="M:Au.Wnd.MapWindowToScreen(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the top-left corner of this window to screen coordinates.
             </summary>
@@ -16615,7 +16682,7 @@
             Gets or sets child window rectangle in parent window's client area.
             </summary>
             <remarks>
-            Calls <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns empty rectangle if fails (eg window closed).
+            Calls <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetRectNotMinMax(Au.Types.RECT@)">
@@ -16635,7 +16702,7 @@
             </summary>
             <param name="x">X coordinate in screen. Not used if default(Coord).</param>
             <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
-            <param name="co">Allows to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area.</param>
+            <param name="co">Allows to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether to use the work area.</param>
         </member>
         <member name="M:Au.Wnd.ContainsWindowXY(Au.Wnd,Au.Types.Coord,Au.Types.Coord)">
             <summary>
@@ -16659,8 +16726,8 @@
             </summary>
             <remarks>
             Supports <see cref="M:Au.Types.Native.GetError"/>.
-            For swpFlags you can use Native.SWP_NOMOVE etc.
-            For wndInsertAfter you can use SpecHwnd.HWND_TOPMOST etc.
+            For <paramref name="swpFlags"/> you can use <b>Native.SWP_x</b>.
+            For <paramref name="wndInsertAfter"/> you can use <b>Native.HWND_x</b>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.MoveLL(System.Int32,System.Int32,System.Int32,System.Int32,System.UInt32)">
@@ -16709,7 +16776,7 @@
             <param name="y">Top. If default(Coord), does not move in Y axis.</param>
             <param name="width">Width. If default(Coord), does not change width.</param>
             <param name="height">Height. If default(Coord), does not change height.</param>
-            <param name="co">Allows to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
+            <param name="co">Allows to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
             For top-level windows use screen coordinates. For controls - direct parent client coordinates.
@@ -16724,7 +16791,7 @@
             </summary>
             <param name="x">Left. If default(Coord), does not move in X axis.</param>
             <param name="y">Top. If default(Coord), does not move in Y axis.</param>
-            <param name="co">Allows to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area. Not used when this is a child window.</param>
+            <param name="co">Allows to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether to use the work area. Not used when this is a child window.</param>
             <exception cref="T:Au.Types.WndException"/>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
@@ -16739,58 +16806,53 @@
             </summary>
             <param name="width">Width. If default(Coord), does not change width.</param>
             <param name="height">Height. If default(Coord), does not change height.</param>
-            <param name="co">Allows to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
+            <param name="co">Allows to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
             <exception cref="T:Au.Types.WndException"/>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,System.Object,System.Boolean,System.Boolean)">
+        <member name="M:Au.Wnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.Types.Screen_,System.Boolean,System.Boolean)">
             <summary>
             Moves this window to coordinates x y in specified screen, and ensures that entire window is in screen.
             </summary>
             <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="screen">Move to this screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>). If null (default), use screen of this window.</param>
+            <param name="screen">Move to this screen (see <see cref="T:Au.Types.Screen_"/>). If default, uses screen of this window.</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
             <exception cref="T:Au.Types.WndException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
             <remarks>
             If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
             </remarks>
-            <seealso cref="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,System.Object,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.Types.Screen_,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.Wnd.EnsureInScreen(System.Object,System.Boolean)">
+        <member name="M:Au.Wnd.EnsureInScreen(Au.Types.Screen_,System.Boolean)">
             <summary>
             Moves this window if need, to ensure that entire window is in screen.
             </summary>
-            <param name="screen">
-            Move to this screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>). If null (default), uses screen of this window.
-            If screen index is invalid, shows warning, no exception. Then uses screen of this window.
-            </param>
+            <param name="screen">Move to this screen (see <see cref="T:Au.Types.Screen_"/>). If default, uses screen of this window.</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <exception cref="T:Au.Types.WndException"/>
             <remarks>
             If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
             </remarks>
-            <seealso cref="M:Au.Types.RECT.EnsureInScreen(System.Object,System.Boolean)"/>
+            <seealso cref="M:Au.Types.RECT.EnsureInScreen(Au.Types.Screen_,System.Boolean)"/>
         </member>
-        <member name="M:Au.Wnd.MoveToScreenCenter(System.Object)">
+        <member name="M:Au.Wnd.MoveToScreenCenter(Au.Types.Screen_)">
             <summary>
             Moves this window to the center of the screen.
             </summary>
-            <param name="screen">Move to this screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>). If null (default), uses screen of this window.</param>
+            <param name="screen">Move to this screen (see <see cref="T:Au.Types.Screen_"/>). If default, uses screen of this window.</param>
             <exception cref="T:Au.Types.WndException"/>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid screen index.</exception>
             <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
-            <seealso cref="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,System.Object,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.Types.RECT.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.Types.Screen_,System.Boolean,System.Boolean)"/>
         </member>
         <member name="P:Au.Wnd.Screen">
             <summary>
             Gets <see cref="T:System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
             If this window handle is default(Wnd) or invalid, gets the primary screen.
-            Calls <see cref="M:Au.Screen_.FromWindow(Au.Wnd)"/>.
+            Calls <see cref="M:Au.Types.Screen_.ScreenFromWindow(Au.Wnd)"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.ZorderAbove(Au.Wnd)">
@@ -17063,7 +17125,7 @@
         </member>
         <member name="P:Au.Wnd.Name">
             <summary>
-            Gets window or control name.
+            Gets name.
             Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
             <remarks>
@@ -17587,7 +17649,7 @@
             <param name="x">X coordinate in screen.</param>
             <param name="y">Y coordinate in screen.</param>
             <param name="flags"></param>
-            <param name="co">Can be used to specify screen (see <see cref="M:Au.Screen_.FromObject(System.Object)"/>) and/or whether x y are relative to the work area.</param>
+            <param name="co">Can be used to specify screen (see <see cref="T:Au.Types.Screen_"/>) and/or whether x y are relative to the work area.</param>
             <remarks>
             Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
             This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
@@ -17595,7 +17657,7 @@
             x and y can be Coord.Reverse etc; cannot be null.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.FromXY(System.Drawing.Point,Au.Types.WXYFlags)">
+        <member name="M:Au.Wnd.FromXY(Au.Types.POINT,Au.Types.WXYFlags)">
             <summary>
             Gets visible top-level window or control from point.
             More info: <see cref="M:Au.Wnd.FromXY(Au.Types.Coord,Au.Types.Coord,Au.Types.WXYFlags,Au.Types.CoordOptions)"/>.
@@ -17676,7 +17738,7 @@
             Restores window position, size and state that is stored in a string created by <see cref="M:Au.Wnd.SavePositionSizeState(System.Boolean)"/>.
             </summary>
             <param name="s">The string. Can be null/"".</param>
-            <param name="ensureInScreen">Call <see cref="M:Au.Wnd.EnsureInScreen(System.Object,System.Boolean)"/>. Even when s is null/"".</param>
+            <param name="ensureInScreen">Call <see cref="M:Au.Wnd.EnsureInScreen(Au.Types.Screen_,System.Boolean)"/>. Even when s is null/"".</param>
             <param name="showActivate">Call <see cref="M:Au.Wnd.Show(System.Boolean)"/>(true) and <see cref="M:Au.Wnd.ActivateLL"/>. Even when s is null/"".</param>
             <exception cref="T:Au.Types.WndException"/>
         </member>
@@ -18065,8 +18127,8 @@
         </member>
         <member name="M:Au.Wnd.IsSpecHwnd(Au.Wnd)">
             <summary>
-            Returns true if w contains a non-zero special handle value (see <see cref="T:Au.Types.SpecHwnd"/>).
-            Note that HWND_TOP is 0.
+            Returns true if w contains a non-zero special handle value (<b>Native.HWND_x</b>).
+            Note that <b>Native.HWND_TOP</b> is 0.
             </summary>
         </member>
         <member name="T:Au.Time">
@@ -18185,7 +18247,7 @@
             </summary>
             <remarks>
             Similar to <see cref="M:System.Windows.Forms.Application.DoEvents"/>, but more lightweight. Uses API functions <msdn>PeekMessage</msdn>, <msdn>TranslateMessage</msdn> and <msdn>DispatchMessage</msdn>.
-            Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
+            Be careful, this function is as dangerous as <b>Application.DoEvents</b>.
             </remarks>
         </member>
         <member name="T:Au.Time.LibSleepPrecision">
@@ -18389,7 +18451,7 @@
             {
             	var x = new WaitFor.Loop(secondsTimeout);
             	for(; ; ) {
-            		if(Mouse.IsPressed(MouseButtons.Left)) return true;
+            		if(Mouse.IsPressed(MButtons.Left)) return true;
             		if(!x.Sleep()) return false;
             	}
             }
@@ -18398,7 +18460,7 @@
             <code><![CDATA[
             static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
             {
-            	return WaitFor.Condition(secondsTimeout, () => Mouse.IsPressed(MouseButtons.Left));
+            	return WaitFor.Condition(secondsTimeout, () => Mouse.IsPressed(MButtons.Left));
             }
             ]]></code>
             </example>
@@ -18468,7 +18530,7 @@
             Returns 1-based index of the first signaled handle. Negative if abandoned mutex.
             On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
             </returns>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.AuException">Failed. For example a handle is invalid.</exception>
             <remarks>
             Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
@@ -18501,7 +18563,7 @@
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
             While waiting, dispatches Windows messages etc, like <see cref="M:Au.Time.SleepDoEvents(System.Int32)"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
             Does not use <see cref="P:Au.Opt.WaitFor"/>.
@@ -18521,7 +18583,7 @@
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
             While waiting, dispatches Windows messages etc, like <see cref="M:Au.Time.SleepDoEvents(System.Int32)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
             Does not use <see cref="P:Au.Opt.WaitFor"/>.
@@ -18543,7 +18605,7 @@
             <param name="variable">Stop waiting when this variable is set to true.</param>
             <param name="options"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
-            <exception cref="T:System.TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
             This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="M:Au.WaitFor.Message(System.Double,System.Func{System.Boolean})"/>.
             </remarks>
@@ -18551,7 +18613,7 @@
             <code><![CDATA[
             bool stop = false;
             Task.Run(() => { 2.s(); Print("task"); stop = true; });
-            WaitFor.Variable(5, ref stop);
+            WaitFor.Variable(5, stop);
             Print(stop);
             ]]></code>
             </example>
@@ -19110,12 +19172,7 @@
         </member>
         <member name="M:Au.Perf.Inst.First(System.Int32)">
             <summary>
-            Calls <see cref="M:Au.Perf.WarmUpCPU(System.Int32,System.Action[])"/>(timeWarmUpCPU) and <see cref="M:Au.Perf.Inst.First"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Perf.Inst.First(System.Int32,System.Action[])">
-            <summary>
-            Calls <see cref="M:Au.Perf.WarmUpCPU(System.Int32,System.Action[])"/>(timeWarmUpCPU, codes) and <see cref="M:Au.Perf.Inst.First"/>.
+            Calls <see cref="M:Au.Perf.SpeedUpCPU(System.Int32)"/> and <see cref="M:Au.Perf.Inst.First"/>.
             </summary>
         </member>
         <member name="M:Au.Perf.Inst.Next(System.Char)">
@@ -19189,12 +19246,7 @@
         </member>
         <member name="M:Au.Perf.First(System.Int32)">
             <summary>
-            Calls <see cref="M:Au.Perf.WarmUpCPU(System.Int32,System.Action[])"/>(timeWarmUpCPU) and <see cref="M:Au.Perf.First"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Perf.First(System.Int32,System.Action[])">
-            <summary>
-            Calls <see cref="M:Au.Perf.WarmUpCPU(System.Int32,System.Action[])"/>(timeWarmUpCPU, codes) and <see cref="M:Au.Perf.First"/>.
+            Calls <see cref="M:Au.Perf.SpeedUpCPU(System.Int32)"/> and <see cref="M:Au.Perf.First"/>.
             </summary>
         </member>
         <member name="M:Au.Perf.Next(System.Char)">
@@ -19249,14 +19301,14 @@
             <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
             </summary>
         </member>
-        <member name="M:Au.Perf.WarmUpCPU(System.Int32,System.Action[])">
+        <member name="M:Au.Perf.SpeedUpCPU(System.Int32)">
             <summary>
             Makes CPU to run at full speed.
             </summary>
-            <param name="milliseconds">How long to warm up CPU. The minimal required time probably can be about 100 ms, but depends on CPU.</param>
-            <param name="codes">Zero or more lambda functions to execute in loop. For example can be used to JIT-compile them.</param>
+            <param name="timeMilliseconds">How long to speed up CPU, milliseconds. The minimal required time probably is about 100 ms, but depends on CPU.</param>
             <remarks>
-            To save energy, most CPU don't run at full speed when not actively used. Then time measurements can be incorrect. This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
+            To save energy, most CPU don't run at full speed when not actively used. Then code speed measurements can be incorrect when you want to measure it when CPU is running at full speed.
+            This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
             </remarks>
         </member>
     </members>

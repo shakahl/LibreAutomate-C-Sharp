@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -27,7 +25,7 @@ namespace Au
 	/// Clipboard functions: copy, paste, get and set clipboard text and other data.
 	/// </summary>
 	/// <remarks>
-	/// This class is similar to the .NET <see cref="Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
+	/// This class is similar to the .NET <see cref="System.Windows.Forms.Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
 	/// 
 	/// To set/get clipboard data of non-text formats, use class <see cref="Data"/>; to paste, use it with <see cref="PasteData"/>; to copy (get from the active app), use it with <see cref="CopyData"/>.
 	/// 
@@ -119,7 +117,7 @@ namespace Au
 		/// <summary>
 		/// Gets data of any formats from the focused app using the clipboard and a callback function.
 		/// </summary>
-		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="Data"/> class or the .NET <see cref="Clipboard"/> class. Don't call copy/paste functions.</param>
+		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="Data"/> class or the .NET <see cref="System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options"><inheritdoc cref="CopyText"/></param>
 		/// <exception cref="AuException">Failed.</exception>

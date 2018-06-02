@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -35,7 +33,7 @@ namespace Au
 		/// <param name="x">X coordinate in screen.</param>
 		/// <param name="y">Y coordinate in screen.</param>
 		/// <param name="flags"></param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
 		/// <remarks>
 		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
@@ -53,10 +51,8 @@ namespace Au
 		/// </summary>
 		/// <param name="p">X Y in screen coordinates.</param>
 		/// <param name="flags"></param>
-		public static Wnd FromXY(Point p, WXYFlags flags = 0)
+		public static Wnd FromXY(POINT p, WXYFlags flags = 0)
 		{
-			//TODO: rename all FromXY to FromPoint.
-
 			bool needW = 0 != (flags & WXYFlags.NeedWindow);
 			bool needC = 0 != (flags & WXYFlags.NeedControl);
 			if(needW && needC) throw new ArgumentException("", "flags");
@@ -128,12 +124,12 @@ namespace Au
 		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
 		{
 			ThrowIfInvalid();
-			Point p = screenXY ? Coord.Normalize(x, y) : Coord.NormalizeInWindow(x, y, this);
+			POINT p = screenXY ? Coord.Normalize(x, y) : Coord.NormalizeInWindow(x, y, this);
 			return _ChildFromXY(p, directChild, screenXY);
 		}
 
 		//Returns child or default(Wnd).
-		Wnd _ChildFromXY(Point p, bool directChild, bool screenXY)
+		Wnd _ChildFromXY(POINT p, bool directChild, bool screenXY)
 		{
 			Wnd R = _TopChildWindowFromPointSimple(this, p, directChild, screenXY);
 			if(R.Is0) return R;
@@ -155,7 +151,7 @@ namespace Au
 
 				//is R transparent?
 				//Print("WM_NCHITTEST", R);
-				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Math_.MakeUint(p.X, p.Y))) {
+				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Math_.MakeUint(p.x, p.y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
 					//break;
@@ -177,7 +173,7 @@ namespace Au
 		}
 
 		//Returns child or default(Wnd).
-		static Wnd _TopChildWindowFromPointSimple(Wnd w, Point p, bool directChild, bool screenXY)
+		static Wnd _TopChildWindowFromPointSimple(Wnd w, POINT p, bool directChild, bool screenXY)
 		{
 			if(screenXY && !Api.ScreenToClient(w, ref p)) return default;
 
@@ -190,9 +186,9 @@ namespace Au
 		}
 
 		//Returns direct child or default(Wnd).
-		static Wnd _RealChildWindowFromPoint_RtlAware(Wnd w, Point p)
+		static Wnd _RealChildWindowFromPoint_RtlAware(Wnd w, POINT p)
 		{
-			if(w.HasExStyle(Native.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.X = rc.right - p.X; }
+			if(w.HasExStyle(Native.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
 			Wnd R = Api.RealChildWindowFromPoint(w, p);
 			return R == w ? default : R;
 		}

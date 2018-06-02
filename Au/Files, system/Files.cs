@@ -13,8 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 
 //using VB = Microsoft.VisualBasic.FileIO;
@@ -453,7 +451,7 @@ namespace Au
 					//prepend @"\\?\" etc if need. Don't change fullPath length, because then would be difficult to get relative path.
 					var fp2 = Path_.PrefixLongPathIfNeed(fullPath);
 
-					var r = new FEFile(name, fp2, ref d, stack.Count);
+					var r = new FEFile(name, fp2, d, stack.Count);
 
 					if(filter != null && !filter(r)) continue;
 
@@ -1281,7 +1279,7 @@ namespace Au.Types
 	public class FEFile
 	{
 		///
-		internal FEFile(string name, string fullPath, ref Api.WIN32_FIND_DATA d, int level)
+		internal FEFile(string name, string fullPath, in Api.WIN32_FIND_DATA d, int level)
 		{
 			Name = name; FullPath = fullPath;
 			Attributes = d.dwFileAttributes;

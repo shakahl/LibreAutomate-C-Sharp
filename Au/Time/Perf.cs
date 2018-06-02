@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -118,20 +116,11 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU) and <see cref="First()"/>.
+			/// Calls <see cref="SpeedUpCPU"/> and <see cref="First()"/>.
 			/// </summary>
-			public void First(int timeWarmUpCPU)
+			public void First(int timeSpeedUpCPU)
 			{
-				WarmUpCPU(timeWarmUpCPU);
-				First();
-			}
-
-			/// <summary>
-			/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU, codes) and <see cref="First()"/>.
-			/// </summary>
-			public void First(int timeWarmUpCPU, params Action[] codes)
-			{
-				WarmUpCPU(timeWarmUpCPU, codes);
+				SpeedUpCPU(timeSpeedUpCPU);
 				First();
 			}
 
@@ -295,14 +284,9 @@ namespace Au
 		public static void First() { _SM->First(); }
 
 		/// <summary>
-		/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU) and <see cref="First()"/>.
+		/// Calls <see cref="SpeedUpCPU"/> and <see cref="First()"/>.
 		/// </summary>
-		public static void First(int timeWarmUpCPU) { _SM->First(timeWarmUpCPU); }
-
-		/// <summary>
-		/// Calls <see cref="WarmUpCPU"/>(timeWarmUpCPU, codes) and <see cref="First()"/>.
-		/// </summary>
-		public static void First(int timeWarmUpCPU, params Action[] codes) { _SM->First(timeWarmUpCPU, codes); }
+		public static void First(int timeSpeedUpCPU) { _SM->First(timeSpeedUpCPU); }
 
 		/// <summary>
 		/// Stores current time in next element of an internal array.
@@ -359,17 +343,15 @@ namespace Au
 		/// <summary>
 		/// Makes CPU to run at full speed.
 		/// </summary>
-		/// <param name="milliseconds">How long to warm up CPU. The minimal required time probably can be about 100 ms, but depends on CPU.</param>
-		/// <param name="codes">Zero or more lambda functions to execute in loop. For example can be used to JIT-compile them.</param>
+		/// <param name="timeMilliseconds">How long to speed up CPU, milliseconds. The minimal required time probably is about 100 ms, but depends on CPU.</param>
 		/// <remarks>
-		/// To save energy, most CPU don't run at full speed when not actively used. Then time measurements can be incorrect. This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
+		/// To save energy, most CPU don't run at full speed when not actively used. Then code speed measurements can be incorrect when you want to measure it when CPU is running at full speed.
+		/// This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
 		/// </remarks>
-		public static void WarmUpCPU(int milliseconds, params Action[] codes)
+		public static void SpeedUpCPU(int timeMilliseconds = 200)
 		{
 			int n = 0;
-			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < milliseconds * 1000; n++) {
-				for(int i = 0; i < codes.Length; i++) codes[i]();
-			}
+			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) {}
 			//Print(n);
 		}
 	}

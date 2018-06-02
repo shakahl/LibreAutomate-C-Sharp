@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -200,7 +198,7 @@ namespace Au
 				Api.IShellItem si = null;
 				try {
 					if(0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
-						//if(0 == Api.SHCreateItemFromIDList(pidl, ref Api.IID_IShellItem, out si)) { //same speed
+						//if(0 == Api.SHCreateItemFromIDList(pidl, Api.IID_IShellItem, out si)) { //same speed
 						//if(si.GetAttributes(0xffffffff, out uint attr)>=0) Print(attr);
 						if(si.GetAttributes(Api.SFGAO_BROWSABLE | Api.SFGAO_FILESYSTEM, out uint attr) >= 0 && attr != 0) {
 							var f = (0 != (attr & Api.SFGAO_FILESYSTEM)) ? Native.SIGDN.SIGDN_FILESYSPATH : Native.SIGDN.SIGDN_URL;

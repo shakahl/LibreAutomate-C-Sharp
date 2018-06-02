@@ -625,10 +625,10 @@ namespace SdkConverter
 
 			char* s = T(i), se;
 			if(*s == '0') {
-				if(s[1] == 'x' || s[1] == 'X') { value = Api.strtoui64(s, &se); isHex = true; } //hex
-				else if(s[1] == 'b' || s[1] == 'B') { value = Api.strtoui64(s + 2, &se, 2); isHex = true; } //binary constant like 0b10101010
-				else value = Api.strtoui64(s, &se, 8); //oct
-			} else value = Api.strtoui64(s, &se);
+				if(s[1] == 'x' || s[1] == 'X') { value = strtoui64(s, &se); isHex = true; } //hex
+				else if(s[1] == 'b' || s[1] == 'B') { value = strtoui64(s + 2, &se, 2); isHex = true; } //binary constant like 0b10101010
+				else value = strtoui64(s, &se, 8); //oct
+			} else value = strtoui64(s, &se);
 
 			bool isUnsigned = false, isLong = false;
 
@@ -650,6 +650,9 @@ namespace SdkConverter
 			if(isLong) type = isUnsigned ? _OP.OperandUlong : _OP.OperandLong; else if(isUnsigned) type = _OP.OperandUint;
 			return true;
 		}
+
+		[DllImport("msvcrt.dll", EntryPoint = "_wcstoui64", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern ulong strtoui64(char* s, char** endPtr = null, int radix = 0);
 
 		string __ExprTypeToString(_OP type)
 		{

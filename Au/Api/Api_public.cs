@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Drawing; //Point, Size
 
 using Au.Types;
 using static Au.NoClass;
@@ -108,7 +107,7 @@ namespace Au.Types
 			public LPARAM wParam;
 			public LPARAM lParam;
 			public uint time;
-			public Point pt;
+			public POINT pt;
 
 			public override string ToString()
 			{
@@ -262,7 +261,7 @@ namespace Au.Types
 		/// <tocexclude />
 		public struct MOUSEHOOKSTRUCT
 		{
-			public Point pt;
+			public POINT pt;
 			public Wnd hwnd;
 			public uint wHitTestCode;
 			public LPARAM dwExtraInfo;
@@ -337,6 +336,21 @@ namespace Au.Types
 		public const uint SWP_DEFERERASE = 0x2000;
 		/// <exclude />
 		public const uint SWP_ASYNCWINDOWPOS = 0x4000;
+
+		//HWND_
+
+		/// <exclude />
+		public static Wnd HWND_TOP => (Wnd)(LPARAM)0;
+		/// <exclude />
+		public static Wnd HWND_BOTTOM => (Wnd)(LPARAM)1;
+		/// <exclude />
+		public static Wnd HWND_TOPMOST => (Wnd)(LPARAM)(-1);
+		/// <exclude />
+		public static Wnd HWND_NOTOPMOST => (Wnd)(LPARAM)(-2);
+		/// <exclude />
+		public static Wnd HWND_MESSAGE => (Wnd)(LPARAM)(-3);
+		/// <exclude />
+		public static Wnd HWND_BROADCAST => (Wnd)(LPARAM)0xffff;
 
 		//GWL_, DWL_, DWLP_
 

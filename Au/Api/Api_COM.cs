@@ -30,13 +30,13 @@ namespace Au.Types
 		{
 			[PreserveSig] int ParseDisplayName(Wnd hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, uint* pchEaten, out IntPtr ppidl, uint* pdwAttributes);
 			[PreserveSig] int EnumObjects(Wnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
-			[PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
-			[PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, ref Guid riid, out IntPtr ppv);
+			[PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
+			[PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int CompareIDs(LPARAM lParam, IntPtr pidl1, IntPtr pidl2);
-			[PreserveSig] int CreateViewObject(Wnd hwndOwner, ref Guid riid, out IntPtr ppv);
+			[PreserveSig] int CreateViewObject(Wnd hwndOwner, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, ref uint rgfInOut);
-			[PreserveSig] //int GetUIObjectOf(Wnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, ref Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
-			int GetUIObjectOf(Wnd hwndOwner, uint cidl, IntPtr* apidl, ref Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.Interface)] out object ppv);
+			[PreserveSig] //int GetUIObjectOf(Wnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+			int GetUIObjectOf(Wnd hwndOwner, uint cidl, IntPtr* apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.Interface)] out object ppv);
 			[PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint uFlags, out STRRET pName);
 			[PreserveSig] int SetNameOf(Wnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
 		}
@@ -46,7 +46,7 @@ namespace Au.Types
 		[ComImport, Guid("43826d1e-e718-42ee-bc55-a1e261c37bfe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellItem
 		{
-			[PreserveSig] int BindToHandler(IntPtr pbc, ref Guid bhid, ref Guid riid, out IntPtr ppv); //IBindCtx
+			[PreserveSig] int BindToHandler(IntPtr pbc, in Guid bhid, in Guid riid, out IntPtr ppv); //IBindCtx
 			[PreserveSig] int GetParent(out IShellItem ppsi);
 			[PreserveSig] int GetDisplayName(Native.SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
 			[PreserveSig] int GetAttributes(uint sfgaoMask, out uint psfgaoAttribs);
@@ -158,8 +158,8 @@ namespace Au.Types
 		{
 			[PreserveSig] int GetCount(out int cProps);
 			[PreserveSig] int GetAt(int iProp, out PROPERTYKEY pkey);
-			[PreserveSig] int GetValue(ref PROPERTYKEY key, out PROPVARIANT pv);
-			[PreserveSig] int SetValue(ref PROPERTYKEY key, ref PROPVARIANT propvar);
+			[PreserveSig] int GetValue(in PROPERTYKEY key, out PROPVARIANT pv);
+			[PreserveSig] int SetValue(in PROPERTYKEY key, ref PROPVARIANT propvar);
 			[PreserveSig] int Commit();
 		}
 
@@ -188,8 +188,8 @@ namespace Au.Types
 		//	[PreserveSig] int GetIcon(int i, uint flags, out IntPtr picon);
 		//	[PreserveSig] int GetImageInfo(int i, out IMAGEINFO pImageInfo);
 		//	[PreserveSig] int Copy(int iDst, [MarshalAs(UnmanagedType.IUnknown)] Object punkSrc, int iSrc, uint uFlags);
-		//	[PreserveSig] int Merge(int i1, [MarshalAs(UnmanagedType.IUnknown)] Object punk2, int i2, int dx, int dy, ref Guid riid, out IntPtr ppv);
-		//	[PreserveSig] int Clone(ref Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int Merge(int i1, [MarshalAs(UnmanagedType.IUnknown)] Object punk2, int i2, int dx, int dy, in Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int Clone(in Guid riid, out IntPtr ppv);
 		//	[PreserveSig] int GetImageRect(int i, out RECT prc);
 		//	[PreserveSig] int GetIconSize(out int cx, out int cy);
 		//	[PreserveSig] int SetIconSize(int cx, int cy);
@@ -204,7 +204,7 @@ namespace Au.Types
 		//	[PreserveSig] int DragMove(int x, int y);
 		//	[PreserveSig] int SetDragCursorImage([MarshalAs(UnmanagedType.IUnknown)] Object punk, int iDrag, int dxHotspot, int dyHotspot);
 		//	[PreserveSig] int DragShowNolock([MarshalAs(UnmanagedType.Bool)] bool fShow);
-		//	[PreserveSig] int GetDragImage(out Point ppt, out Point pptHotspot, ref Guid riid, out IntPtr ppv);
+		//	[PreserveSig] int GetDragImage(out POINT ppt, out Point pptHotspot, in Guid riid, out IntPtr ppv);
 		//	[PreserveSig] int GetItemFlags(int i, out uint dwFlags);
 		//	[PreserveSig] int GetOverlayImage(int iOverlay, out int piIndex);
 		//}

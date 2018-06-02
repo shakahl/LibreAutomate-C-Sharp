@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 
 using Au.Types;
@@ -66,7 +64,7 @@ namespace Au
 				_also = also;
 				if(contains != null) {
 					if(contains is string s) _contains = new Acc.Finder(name: s, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
-					else if(contains is Acc.Finder || contains is ChildFinder || contains is Image) _contains = contains;
+					else if(contains is Acc.Finder || contains is ChildFinder || contains is System.Drawing.Image) _contains = contains;
 					else throw new ArgumentException("Bad type.", nameof(contains));
 				}
 			}
@@ -284,7 +282,7 @@ namespace Au
 						switch(_contains) {
 						case Acc.Finder f: found = f.Find(w); break;
 						case ChildFinder f: found = f.Find(w); break;
-						case Image f: found = null != WinImage.Find(w, f, WIFlags.WindowDC); break; //FUTURE: optimize
+						case System.Drawing.Image f: found = null != WinImage.Find(w, f, WIFlags.WindowDC); break; //FUTURE: optimize
 						}
 						if(!found) continue;
 					}
@@ -349,7 +347,7 @@ namespace Au
 		/// string - name of an accessible object (<see cref="Acc"/>) that must be in the window. Wildcard expression, the same as the <i>name</i> parameter of <see cref="Acc.Find"/>.
 		/// <see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.
 		/// <see cref="Wnd.ChildFinder"/> - arguments for <see cref="Wnd.Child"/>. Defines a child control that must be in the window.
-		/// <see cref="Image"/> or <see cref="Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>. See also <see cref="WinImage.LoadImage"/>.
+		/// <see cref="System.Drawing.Image"/> or <see cref="System.Drawing.Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>. See also <see cref="WinImage.LoadImage"/>.
 		///
 		/// This parameter is evaluated after <paramref name="also"/>.
 		/// </param>
@@ -564,7 +562,7 @@ namespace Au
 			/// </remarks>
 			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default)
 			{
-				return Api.FindWindowEx(SpecHwnd.HWND_MESSAGE, wAfter, className, name);
+				return Api.FindWindowEx(Native.HWND_MESSAGE, wAfter, className, name);
 			}
 		}
 

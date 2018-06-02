@@ -45,8 +45,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 using Microsoft.Win32.SafeHandles;
@@ -214,7 +212,7 @@ namespace Au.Tools
 		SafeFileHandle _mailslot; //used if global, else null
 		Util.WaitableTimer _timer; //used always
 		Action _callback;
-		Control _callbackControl;
+		System.Windows.Forms.Control _callbackControl;
 		bool _isStarted;
 		bool _isGlobal;
 		bool _isLocalTimer;
@@ -302,7 +300,7 @@ namespace Au.Tools
 		/// See example in class help.
 		/// </param>
 		/// <param name="c">A control or form. The callback function will be called in its thread. If null, the callback function will be called in other thread.</param>
-		public void SetNotifications(Action cbFunc, Control c = null)
+		public void SetNotifications(Action cbFunc, System.Windows.Forms.Control c = null)
 		{
 			lock(this) {
 				_callbackControl = c;
@@ -324,7 +322,7 @@ namespace Au.Tools
 						else _isLocalTimer = false;
 					}
 
-					Control cc; Action cbFunc;
+					System.Windows.Forms.Control cc; Action cbFunc;
 					lock(this) {
 						cc = _callbackControl;
 						cbFunc = _callback;

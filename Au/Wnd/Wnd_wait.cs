@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -40,7 +38,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="also"></param>
 		/// <param name="contains"></param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
@@ -87,7 +85,7 @@ namespace Au
 		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
 		/// <param name="secondsTimeout"><inheritdoc cref="Wait"/></param>
 		/// <param name="windows">One or more variables containing window properties.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
 		/// </remarks>
@@ -128,7 +126,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="also"></param>
 		/// <param name="contains"></param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
@@ -148,7 +146,7 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout"></param>
 		/// <param name="f">Window properties etc.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		public static Wnd WaitNot(double secondsTimeout, Finder f)
 		{
 			var to = new WaitFor.Loop(secondsTimeout);
@@ -170,7 +168,6 @@ namespace Au
 
 		/// <summary>
 		/// Waits for an user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
@@ -178,7 +175,8 @@ namespace Au
 		/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
 		/// In such case the callback function must return false, like in the examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
 		/// </param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="WndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -224,14 +222,14 @@ namespace Au
 
 		/// <summary>
 		/// Waits until this window has the specified name.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// </param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="WndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 		public bool WaitForName(double secondsTimeout, string name)
@@ -242,11 +240,11 @@ namespace Au
 
 		/// <summary>
 		/// Waits until this window is closed/destroyed or until its process ends.
-		/// Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired.</exception>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="AuException">Failed to open process handle when <paramref name="waitUntilProcessEnds"/> is true.</exception>
 		/// <remarks>
 		/// If the window is already closed, immediately returns true.

@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -160,12 +158,11 @@ namespace Au
 			/// <summary>
 			/// Finds accessible object (AO) in window w.
 			/// The same as <see cref="Find(Wnd)"/>, but waits until the AO is found or the given time expires.
-			/// Returns true if found. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
-			/// Returns true if found. Else if <paramref name="secondsTimeout"/> is negative, returns false. Else exception.
 			/// </summary>
 			/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 			/// <param name="w">Window or control that contains the AO.</param>
-			/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+			/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+			/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd)"/>.</exception>
 			public bool Wait(double secondsTimeout, Wnd w)
 			{
@@ -175,11 +172,11 @@ namespace Au
 			/// <summary>
 			/// Finds accessible object (AO) in another AO.
 			/// The same as <see cref="Find(Acc)"/>, but waits until the AO is found or the given time expires.
-			/// Returns true if found. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.
 			/// </summary>
 			/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 			/// <param name="a">Direct or indirect parent AO.</param>
-			/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+			/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+			/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Acc)"/>.</exception>
 			public bool Wait(double secondsTimeout, Acc a)
 			{
@@ -227,7 +224,7 @@ namespace Au
 
 				var to = new WaitFor.Loop(secondsTimeout, inProc ? 10 : 40);
 				for(bool doneUAC = false, doneThread = false; ;) {
-					var hr = Cpp.Cpp_AccFind(w, aParent, ref ap, _callback, out var ca, out var sResult);
+					var hr = Cpp.Cpp_AccFind(w, aParent, in ap, _callback, out var ca, out var sResult);
 
 					if(hr == 0) {
 						switch(_resultProp) {
@@ -478,7 +475,6 @@ namespace Au
 
 		/// <summary>
 		/// Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
-		/// Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// Parameters etc are as with <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">
@@ -491,7 +487,8 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="also"></param>
 		/// <param name="skip"></param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.</exception>
 		public static Acc Wait(double secondsTimeout, Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null, int skip = 0)
 		{
@@ -502,7 +499,6 @@ namespace Au
 
 		/// <summary>
 		/// Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
-		/// Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// Parameters etc are as with <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">
@@ -514,7 +510,8 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="also"></param>
 		/// <param name="skip"></param>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find(string, string, string, AFFlags, Func{Acc, bool}, int)"/>.</exception>
 		public Acc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null, int skip = 0)
 		{

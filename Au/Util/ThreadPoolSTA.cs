@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -217,13 +215,13 @@ namespace Au.Util
 		static ThreadPoolSTA()
 		{
 			var p = _ProcVar;
-			if(p->_pool == default) {
+			if(p->pool == default) {
 				lock("d3+gzRQ2mkiiOHFKsRGCXw") {
-					if(p->_pool == default) {
+					if(p->pool == default) {
 						var pool = CreateThreadpool(default);
 						//SetThreadpoolThreadMinimum(pool, 2); //don't need this
 						SetThreadpoolThreadMaximum(pool, 4); //info: 3-4 is optimal for getting icons
-						p->_pool = pool;
+						p->pool = pool;
 					}
 				}
 			}
@@ -231,7 +229,7 @@ namespace Au.Util
 			_env.Size = Api.SizeOf<TP_CALLBACK_ENVIRON_V3>();
 			_env.Version = 3;
 			_env.CallbackPriority = (int)TP_CALLBACK_PRIORITY.TP_CALLBACK_PRIORITY_NORMAL; //tested: low etc does not change speeds
-			_env.Pool = p->_pool;
+			_env.Pool = p->pool;
 			_env.CleanupGroup = CreateThreadpoolCleanupGroup();
 
 			if(AppDomain.CurrentDomain.IsDefaultAppDomain()) AppDomain.CurrentDomain.ProcessExit += _CurrentDomain_DomainExit;
@@ -260,7 +258,7 @@ namespace Au.Util
 
 		internal struct ProcessVariables
 		{
-			public IntPtr _pool;
+			public IntPtr pool;
 		}
 		static ProcessVariables* _ProcVar => &LibProcessMemory.Ptr->threadPool;
 

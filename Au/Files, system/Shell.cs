@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -139,7 +137,7 @@ namespace Au
 			try {
 				Api.AllowSetForegroundWindow(Api.ASFW_ANY);
 
-				if(x.lpVerb != null && !Application.MessageLoop)
+				if(x.lpVerb != null && !System.Windows.Forms.Application.MessageLoop)
 					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.
 
 				if(ph != null) {

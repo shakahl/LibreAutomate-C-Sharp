@@ -172,11 +172,11 @@ namespace Au.Controls
 						if(_onlyIcons && gp.Image != null) {
 							//var z = gp.Image.Size;
 							var z = Au.Util.Dpi.SmallIconSize;
-							if(z.Width > r.Width) z.Width = r.Width;
-							if(z.Height > r.Height) z.Height = r.Height;
-							var x = (r.Left + r.Right - z.Width) / 2;
-							var y = (r.Top + r.Bottom - z.Height) / 2;
-							g.DrawImage(gp.Image, x, y, z.Width, z.Height);
+							if(z.width > r.Width) z.width = r.Width;
+							if(z.height > r.Height) z.height = r.Height;
+							var x = (r.Left + r.Right - z.width) / 2;
+							var y = (r.Top + r.Bottom - z.height) / 2;
+							g.DrawImage(gp.Image, x, y, z.width, z.height);
 						} else {
 							string s = gp.Text;
 							var tf = vert ? t.txtFormatVert : t.txtFormatHorz;

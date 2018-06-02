@@ -13,8 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -195,12 +193,6 @@ namespace Au
 
 		public static partial class Misc
 		{
-			/// <summary>
-			/// Gets the active window of this thread.
-			/// Calls API <msdn>GetActiveWindow</msdn>.
-			/// </summary>
-			public static Wnd WndActiveOfThisThread => Api.GetActiveWindow();
-
 			/// <summary>
 			/// Gets the very first top-level window in the Z order.
 			/// Usually it is a topmost window.

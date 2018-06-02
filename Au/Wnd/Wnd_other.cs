@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -78,7 +76,7 @@ namespace Au
 				}
 
 				//covers whole monitor rect?
-				rm = Screen.FromHandle(Handle).Bounds; //fast except first time, because uses caching
+				rm = System.Windows.Forms.Screen.FromHandle(Handle).Bounds; //fast except first time, because uses caching
 				if(r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
 
 				//is it desktop?

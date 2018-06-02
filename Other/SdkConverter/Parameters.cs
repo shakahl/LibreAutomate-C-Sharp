@@ -275,13 +275,13 @@ namespace SdkConverter
 
 		/// <summary>
 		/// Converts type name/pointer to C# type name.
-		/// The return value is type name, possibly with * or []. If parameter, also can have ref/out and [In]/[Out].
+		/// The return value is type name, possibly with * or []. If parameter, also can have ref/out/in and [In]/[Out].
 		/// </summary>
 		/// <param name="t">The type.</param>
 		/// <param name="ptr">Pointer level. The function may adjust it depending on typedef pointer level etc.</param>
 		/// <param name="isConst">Is const.</param>
 		/// <param name="iTokTypename">Type name token index. Can be 0 if don't need to unalias etc; then just adds pointer/ref if need.</param>
-		/// <param name="context">Depending on it char* will be converted to "string", "StringBuilder" etc.</param>
+		/// <param name="context">Depending on it char* will be converted to "string" etc.</param>
 		/// <param name="attributes">Receives null or MarshalAs attribute.</param>
 		/// <param name="iSAL">SAL token index, or 0 if no SAL.</param>
 		string _ConvertTypeName(_Symbol t, ref int ptr, bool isConst, int iTokTypename, _TypeContext context, out string attributes, int iSAL = 0)
@@ -289,7 +289,7 @@ namespace SdkConverter
 			attributes = null;
 			string name, marshalAs = null;
 
-			bool isLangType = false, isParameter = false, isCOM = false, isBlittable = false;
+			bool isLangType = false, isParameter = false, isCOM = false, isBlittable = false, isRawPtr = false;
 			switch(context) {
 			case _TypeContext.Parameter: case _TypeContext.DelegateParameter: isParameter = true; break;
 			case _TypeContext.ComParameter: isParameter = true; isCOM = true; break;
@@ -316,30 +316,30 @@ namespace SdkConverter
 					switch(name) {
 					case "char":
 						isBlittable = false;
-						if(ptr == 1) { //not 'if(ptr != 0)', because cannot be 'ref string' or 'ref StringBuilder'
+						if(ptr == 1) { //not 'if(ptr != 0)', because cannot be 'ref string'
 							ptr = 0;
 							bool isBSTR = _TokIs(iTokTypename, "BSTR");
 
 							switch(context) {
 							case _TypeContext.Member:
 								if(isConst || isBSTR) {
-									name = "string"; //must be string, not StringBuilder
+									name = "string";
 									if(isBSTR) marshalAs = "BStr";
 								} else {
 									//string dangerous, because if the callee changes member pointer, .NET tries to free the new string with CoTaskMemFree.
-									name = "IntPtr";
+									ptr = 1;
 									//Print(_DebugGetLine(iTokTypename));
-									isBlittable = true;
+									isRawPtr = true;
 								}
 								break;
 							case _TypeContext.Return:
 							case _TypeContext.ComReturn:
-								name = "IntPtr"; //if string/StringBuilder, .NET tries to free the return value. Use Marshal.PtrToStringUni.
-								isBlittable = true;
+								ptr = 1; //if string, .NET tries to free the return value
+								isRawPtr = true;
 								break;
 							case _TypeContext.DelegateParameter:
-								name = "IntPtr"; //because some are "LPSTR or WORD". Rarely used. Use Marshal.PtrToStringUni.
-								isBlittable = true;
+								ptr = 1; //because some are "LPSTR or WORD". Rarely used.
+								isRawPtr = true;
 								break;
 							case _TypeContext.Parameter:
 							case _TypeContext.ComParameter:
@@ -353,14 +353,15 @@ namespace SdkConverter
 										if(isBSTR) marshalAs = "BStr";
 									}
 								} else {
-									name = _Out_ ? "[Out] StringBuilder" : "StringBuilder";
+									ptr = 1;
+									isRawPtr = true;
+									//Could be StringBuilder, but the Au library does not use it, it is slow.
+									//Or [Out] char[]. The Au library uses it with Util.Buffers.LibChar.
 								}
 								break;
 							}
 						} else if(ptr > 1) {
-							ptr--;
-							name = "IntPtr";
-							isBlittable = true;
+							isRawPtr = true;
 							isConst = false;
 						}
 						break;
@@ -378,11 +379,9 @@ namespace SdkConverter
 						isBlittable = false;
 						break;
 					case "void":
+					case "byte":
 					case "sbyte":
-						if(ptr > 0) {
-							name = "IntPtr";
-							ptr--;
-						}
+						if(ptr > 0) isRawPtr = true;
 						break;
 					case "double":
 						if(_TokIs(iTokTypename, "DATE")) {
@@ -393,6 +392,7 @@ namespace SdkConverter
 						}
 						break;
 					}
+					if(isRawPtr) isBlittable = true;
 				}
 			} else {
 				name = t.csTypename;
@@ -442,7 +442,7 @@ namespace SdkConverter
 			if(ptr > 0) {
 				__ctn.Clear();
 				bool isArray = false;
-				if(isParameter) {
+				if(!isRawPtr && isParameter) {
 					string sal = null;
 					if(iSAL > 0) sal = _TokToString(iSAL);
 
@@ -479,15 +479,15 @@ namespace SdkConverter
 									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 									isArray = true; //usually array, because there is no sense for eg 'const int* param', unless it is a 64-bit value (SDK usually then uses LARGE_INTEGER etc, not __int64). Those with just _In_ usually are not arrays, because for arrays are used _In_reads_ etc.
 								} else {
-									__ctn.Append("ref ");
+									__ctn.Append("in ");
 									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
 								}
 							} else {
 								if(isConst) {
-									__ctn.Append("[In] ref "); //prevents copying non-blittable types back to the caller when don't need
+									__ctn.Append("in "); //prevents copying non-blittable types back to the caller when don't need
 								} else {
 									//OutList(_tok[iTokTypename], name, _DebugGetLine(iTokTypename));
-									//__ctn.Append("[In] ref "); //no, because there are many errors in SDK where inout parameters have _In_
+									//__ctn.Append("in "); //no, because there are many errors in SDK where inout parameters have _In_
 									__ctn.Append("ref ");
 								}
 							}

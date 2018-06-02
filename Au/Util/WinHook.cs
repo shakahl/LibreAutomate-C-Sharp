@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -546,7 +544,7 @@ namespace Au.Types
 			}
 
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
-			public Point pt => _x->pt;
+			public POINT pt => _x->pt;
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public uint mouseData => _x->mouseData;
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>

@@ -860,7 +860,7 @@ static partial class Test
 	//static uint WM_HTML_GETOBJECT = Api.RegisterWindowMessage("WM_HTML_GETOBJECT");
 
 	[DllImport("oleacc.dll", PreserveSig = true)]
-	internal static extern int ObjectFromLresult(LPARAM lResult, ref Guid riid, LPARAM wParam, out IntPtr ppvObject);
+	internal static extern int ObjectFromLresult(LPARAM lResult, in Guid riid, LPARAM wParam, out IntPtr ppvObject);
 
 	static void TestAccMiscMethods()
 	{
@@ -904,7 +904,7 @@ static partial class Test
 				//	//Print(ap);
 				//	Print(!w1.Is0, !w2.Is0);
 				//}
-				if(i == 0) Perf.WarmUpCPU(100);
+				if(i == 0) Perf.SpeedUpCPU(100);
 			}
 		}
 		//100.ms();
@@ -1241,7 +1241,7 @@ static partial class Test
 		var x2 = new Regex_(w);
 
 		//100.ms();
-		Perf.WarmUpCPU(200);
+		Perf.SpeedUpCPU(200);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -1353,7 +1353,7 @@ static partial class Test
 			Print(w.Equals_(s, ignoreCase));
 			Print(x.Match(s));
 
-			Perf.WarmUpCPU(200);
+			Perf.SpeedUpCPU(200);
 			//200.ms();
 			for(int i1 = 0; i1 < 5; i1++) {
 				int n2 = 10000;
@@ -2150,7 +2150,7 @@ static partial class Test
 		//return;
 		Print("");
 		long lenIP = 0, lenNIP = 0;
-		Perf.WarmUpCPU(500);
+		Perf.SpeedUpCPU(500);
 		Perf.First();
 		var sb = new StringBuilder(1000000);
 		foreach(var a in k) {
@@ -2192,7 +2192,7 @@ static partial class Test
 		foreach(var w in Wnd.Misc.AllWindows(true)) {
 			k.AddRange(w.AllChildren());
 		}
-		Perf.WarmUpCPU(200);
+		Perf.SpeedUpCPU(200);
 		Perf.First();
 		long g = 0;
 		for(int i = 0; i < 5; i++) {
@@ -2817,7 +2817,7 @@ static partial class Test
 		Print(LevenshteinDistance("kitten", "sitting"));
 		0.1.s();
 		int n = 0;
-		Perf.WarmUpCPU(100);
+		Perf.SpeedUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -3749,7 +3749,7 @@ REE`");
 		//for(int i = 0; i < 1000; i++) rx[i] = _rxTest + i.ToString();
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0, k6 = 0, k7 = 0, k8 = 0, k9 = 0;
-		Perf.WarmUpCPU(100);
+		Perf.SpeedUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -4194,7 +4194,7 @@ REE`");
 		if(x.FindAllS(s, out var as1)) Print(as1);
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0;
-		Perf.WarmUpCPU(100);
+		Perf.SpeedUpCPU(100);
 		Debug_.LibPrintMemory();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 100;
@@ -4853,7 +4853,7 @@ REE`");
 		//Print(Keyb.IsMod());
 		Print(Keyb.GetMod());
 
-		Perf.WarmUpCPU(100);
+		Perf.SpeedUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -5824,7 +5824,7 @@ REE`");
 		fixed (char* p = s) {
 			Api.COPYDATASTRUCT d = default;
 			d.cbData = (s.Length + 1) * 2;
-			d.lpData = (IntPtr)p;
+			d.lpData = p;
 			_hwndQM2.Send(Api.WM_COPYDATA, 72598, &d);
 		}
 	}
@@ -5881,7 +5881,7 @@ REE`");
 		//s = new string('a', 11_0000);
 
 		100.ms();
-		Perf.WarmUpCPU(100);
+		Perf.SpeedUpCPU(100);
 		for(int i1 = 0; i1 < 1; i1++) {
 			int n2 = 100;
 			n2 = 1000000;
@@ -6006,7 +6006,7 @@ REE`");
 		Print(s1.IndexOfAny("ai".ToCharArray()));
 		Print(s1.IndexOfAny(s_ca1));
 
-		Perf.WarmUpCPU(100);
+		Perf.SpeedUpCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -6205,20 +6205,28 @@ REE`");
 		//Keyb.WaitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
 		//if(!Keyb.WaitForHotkey(-5, "Left")) Print("timeout"); //returns false after 5 s
 
-		//Print(Keyb.WaitForKeyEvent(-5));
-		//Print(Keyb.WaitForKeyEvent(-5, KWFlags.ModLR));
-		//Print(Keyb.WaitForKeyEvent(-5, KWFlags.Up));
-		//Print(Keyb.WaitForKeyEvent(-5, KWFlags.Up|KWFlags.Discard));
-		//Print(Keyb.WaitForKeyEvent(-5, KKey.Ctrl));
-		//Print(Keyb.WaitForKeyEvent(-5, KKey.RCtrl));
-		//Print(Keyb.WaitForKeyEvent(-5, "Left"));
+		//Print(Keyb.WaitForKey(-5));
+		//Print(Keyb.WaitForKey(-5, true));
+		//Print(Keyb.WaitForKey(-5, false, true));
+		//Print(Keyb.WaitForKey(-5, true, true));
+		//Print(Keyb.WaitForKey(-5, KKey.Ctrl));
+		//Print(Keyb.WaitForKey(-5, KKey.RCtrl));
+		//Print(Keyb.WaitForKey(-5, "Left"));
+		//Print(Keyb.WaitForKey(-5, "Left", true));
+		//Print(Keyb.WaitForKey(-5, "Left", true, true));
+		//Print(Keyb.WaitForKey(-5, "Shift", true, true));
+
+		//Mouse.WaitForClick(0, MouseButtons.Left, up: true, block: false);
+		//Print("click");
 
 		//Print(Mouse.WaitForClick(-5));
-		//Print(Mouse.WaitForClick(-5, MWFlags.Discard));
-		//Print(Mouse.WaitForClick(-5, MWFlags.Up | MWFlags.Discard));
+		//Print(Mouse.WaitForClick(-5, discard: true));
+		//Print(Mouse.WaitForClick(-5, true, true));
 		//Print(Mouse.WaitForClick(-5, 0));
 		//Print(Mouse.WaitForClick(-5, MouseButtons.Left));
 		//Print(Mouse.WaitForClick(-5, MouseButtons.Left | MouseButtons.Right));
+		//Print(Mouse.WaitForClick(-5, MouseButtons.Left, true));
+		//Print(Mouse.WaitForClick(-5, MouseButtons.Left, true, true));
 
 		//Print(Keyb.WaitForHotkey(0, "#5"));
 		//Print(Keyb.WaitForHotkey(0, 5));
@@ -6501,6 +6509,92 @@ REE`");
 
 	}
 
+	static void TestScreen()
+	{
+		//Print(Screen_.PrimaryWidth, Screen_.PrimaryHeight, Screen_.PrimaryRect, Screen_.PrimaryWorkArea);
+		//Print(Screen_.GetRect());
+		//Print(Screen_.GetRect(1));
+		//Print(Screen_.GetRect(2));
+		//Print(Screen_.GetRect(Screen_.Primary));
+		//Print(Screen_.GetRect(Screen_.OfActiveWindow));
+		//Print(Screen_.GetRect(Screen_.OfMouse));
+
+		var w = Wnd.Find("*Notepad");
+		//w.MoveToScreenCenter();
+		//w.MoveInScreen(Coord.Reverse(1), Coord.Reverse(1));
+		//w.MoveInScreen(Coord.Center, Coord.Center);
+		//w.EnsureInScreen();
+		//w.EnsureInScreen(Screen_.OfMouse);
+		//w.MoveInScreen(default, default);
+		//w.MoveInScreen(Coord.Center, Coord.Center);
+		//w.MoveToScreenCenter(1);
+
+		//AuDialog.Options.DefaultScreen = Screen.PrimaryScreen;
+		//AuDialog.Options.DefaultScreen = 1;
+		//var s = "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\nWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\n";
+		//AuDialog.Show(s);
+		//AuDialog.ShowEx(s, x: 10, y: -10);
+		//AuDialog.ShowEx(s, x: 0, y: 0);
+		//AuDialog.ShowEx(s, x: 10, y: Coord.Reverse(10));
+		//AuDialog.ShowEx(null, s, x: Coord.Reverse(10));
+		//AuDialog.ShowEx(null, s, x: Coord.Fraction(0.3));
+		//var d = new AuDialog(s);
+		//d.Screen = Screen_.Primary;
+		//d.Screen = Screen_.OfMouse;
+		//d.Screen = Screen_.OfActiveWindow;
+		//d.Screen = 1;
+		//d.Screen = 2;
+		//d.Screen = w;
+		//d.Screen = Acc.Find(w, "TEXT");
+		//d.Screen = new POINT(1000, 1500);
+		//d.Screen = new RECT(1000, 1500, 10, 10, true);
+		//d.Screen =Screen.PrimaryScreen;
+		//d.Screen = Screen.AllScreens[1];
+		//d.ShowDialog();
+
+		//Print(Wnd.FromXY(10, 10));
+		//Print(Wnd.FromXY(10, 10, co: new CoordOptions(false, 1)));
+		//Print(w.ContainsScreenXY(10, 10));
+		//Print(w.ContainsScreenXY(10, 10, new CoordOptions(false, 1)));
+		//w.Move(10, 10);
+		//w.Move(10, 10, new CoordOptions(false, 1));
+		//w.Move(10, 10, 500, 400);
+		//w.Move(10, 10, 500, 400, new CoordOptions(false, 1));
+		//w.Move(10, Coord.Reverse(0));
+		//w.Move(10, Coord.Reverse(200), new CoordOptions(false, 1));
+		//w.Resize(Coord.Reverse(40), Coord.Reverse(40));
+		//w.Resize(Coord.Reverse(20), Coord.Reverse(20), new CoordOptions(false, 0));
+
+		//var r = new RECT(0, 0, 100, 100, true);
+		////r.MoveInScreen(10, 10, 1);
+		//r.left -= 100; r.EnsureInScreen(1);
+		//Print(r);
+
+		//Mouse.Move(10, 10);
+		//Mouse.Move(10, 10, new CoordOptions(false, 1));
+
+		//var k = new System.Windows.Window();
+		////Timer_.Every(1000, t => { Screen_ j = k; Print(j.GetScreen()); });
+		//Timer_.After(1000, t => { AnyWnd j = k; Print(j.Wnd); });
+		//k.ShowDialog();
+
+		//Wnd.Lib.WinFlags.Set(w, (Wnd.Lib.WFlags)1);
+		//Print(Wnd.Lib.WinFlags.Get(w));
+	}
+
+	static void TestConvert()
+	{
+		//var b = new byte[] { (byte)'t', (byte)'e', (byte)'s', (byte)'t', };
+		//var s1 = Convert.ToBase64String(b);
+		//var s2 = Convert_.HexEncode(b);
+		//Print(s1, s2);
+
+		//Print(Convert_.HexDecode(s2));
+		//Print(Convert_.Base64Decode(s1));
+
+		//b = File.ReadAllBytes(@"Q:\app\Au\Tests\App.config");
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -6522,6 +6616,8 @@ REE`");
 		try {
 #if true
 
+			//TestConvert();
+			//TestScreen();
 			//TestWaitFor();
 			//TestAccFromEvent();
 			//TestAccHook();

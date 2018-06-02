@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -29,7 +27,7 @@ namespace Au.Types
 	/// Modifier keys as flags.
 	/// </summary>
 	/// <remarks>
-	/// The values don't match those in the .NET enum <see cref="Keys"/>. This library does not use the .NET enum for modifier keys, mostly because it: does not have Win as modifier flag; confusing names, for example Alt and Menu.
+	/// The values don't match those in the .NET enum <see cref="System.Windows.Forms.Keys"/>. This library does not use the .NET enum for modifier keys, mostly because it: does not have Win as modifier flag; confusing names, for example Alt and Menu.
 	/// </remarks>
 	/// <seealso cref="Keyb.Misc.KModToKeys"/>
 	/// <seealso cref="Keyb.Misc.KModFromKeys"/>
@@ -47,7 +45,7 @@ namespace Au.Types
 	/// Virtual-key codes.
 	/// </summary>
 	/// <remarks>
-	/// The values are the same as of the native VK_ constants. Also the same as in the <b>Keys</b> enum, but not as in the WPF <b>Key</b> enum.
+	/// The values are the same as of the native VK_ constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
 	/// Some key names are different than VK_/Keys, for example Alt instead of VK_MENU/Menu.
 	/// Most rare and obsolete keys are not included. You can use Keys or VK_ (int) like <c>(KKey)Keys.Attn</c>.
 	/// This library does not use the .NET <b>Keys</b> enum, mostly because it includes modifier key flags and it's easy to confuse eg Shift (flag) with ShiftKey (key). Also this library does not use the WPF <b>Key</b> enum; its values don't match the native VK_ constants that must be used with API functions.
@@ -295,31 +293,14 @@ namespace Au.Types
 		/// <summary>Implicit conversion from <see cref="KKey"/> (hotkey without modifiers).</summary>
 		public static implicit operator KHotkey(KKey key) => new KHotkey(0, key);
 
-		/// <summary>Implicit conversion from <see cref="Keys"/> like <c>Keys.Ctrl|Keys.B</c>.</summary>
-		public static implicit operator KHotkey(Keys hotkey) => new KHotkey(Keyb.Misc.KModFromKeys(hotkey), (KKey)(byte)hotkey);
+		/// <summary>Implicit conversion from <see cref="System.Windows.Forms.Keys"/> like <c>Keys.Ctrl|Keys.B</c>.</summary>
+		public static implicit operator KHotkey(System.Windows.Forms.Keys hotkey) => new KHotkey(Keyb.Misc.KModFromKeys(hotkey), (KKey)(byte)hotkey);
 
-		/// <summary>Explicit conversion to <see cref="Keys"/>.</summary>
-		public static explicit operator Keys(KHotkey hk) => Keyb.Misc.KModToKeys(hk.Mod) | (Keys)hk.Key;
+		/// <summary>Explicit conversion to <see cref="System.Windows.Forms.Keys"/>.</summary>
+		public static explicit operator System.Windows.Forms.Keys(KHotkey hk) => Keyb.Misc.KModToKeys(hk.Mod) | (System.Windows.Forms.Keys)hk.Key;
 
 		/// <summary>Allows to split a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c></summary>
 		public void Deconstruct(out KMod mod, out KKey key) { mod = Mod; key = Key; }
-	}
-
-	/// <summary>Flags for <see cref="Keyb.WaitForKeyEvent"/></summary>
-	[Flags]
-	public enum KWFlags
-	{
-		/// <summary>Wait for key-up event.</summary>
-		Up = 1,
-
-		/// <summary>
-		/// Make the event invisible for other apps.
-		/// If flag <b>Up</b> also is specified, makes both down and up events invisible.
-		/// </summary>
-		Discard = 2,
-
-		/// <summary>Return left/right modifier key codes (LCtrl/RCtrl instead of Ctrl etc).</summary>
-		ModLR = 4,
 	}
 }
 

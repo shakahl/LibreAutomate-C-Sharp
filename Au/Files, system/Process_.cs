@@ -13,8 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 using System.Security.Principal;
 
@@ -974,7 +972,7 @@ namespace Au
 			}
 
 			[DllImport("advapi32.dll")]
-			public static extern bool AllocateAndInitializeSid([In] ref SID_IDENTIFIER_AUTHORITY pIdentifierAuthority, byte nSubAuthorityCount, uint nSubAuthority0, uint nSubAuthority1, uint nSubAuthority2, uint nSubAuthority3, uint nSubAuthority4, uint nSubAuthority5, uint nSubAuthority6, uint nSubAuthority7, out IntPtr pSid);
+			public static extern bool AllocateAndInitializeSid(in SID_IDENTIFIER_AUTHORITY pIdentifierAuthority, byte nSubAuthorityCount, uint nSubAuthority0, uint nSubAuthority1, uint nSubAuthority2, uint nSubAuthority3, uint nSubAuthority4, uint nSubAuthority5, uint nSubAuthority6, uint nSubAuthority7, out IntPtr pSid);
 
 			[DllImport("advapi32.dll")]
 			public static extern bool CheckTokenMembership(IntPtr TokenHandle, IntPtr SidToCheck, out bool IsMember);
@@ -994,9 +992,9 @@ namespace Au
 			{
 				get
 				{
-					var NtAuthority = new SID_IDENTIFIER_AUTHORITY(); NtAuthority.b5 = 5; //SECURITY_NT_AUTHORITY
+					var NtAuthority = new SID_IDENTIFIER_AUTHORITY() { b5 = 5 }; //SECURITY_NT_AUTHORITY
 					IntPtr AdministratorsGroup;
-					if(!AllocateAndInitializeSid(ref NtAuthority, 2,
+					if(!AllocateAndInitializeSid(NtAuthority, 2,
 						SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
 						0, 0, 0, 0, 0, 0,
 						out AdministratorsGroup

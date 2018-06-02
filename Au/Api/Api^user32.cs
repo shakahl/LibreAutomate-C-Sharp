@@ -2,9 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Drawing;
-using System.Windows.Forms;
-using Microsoft.Win32.SafeHandles;
 
 namespace Au.Types
 {
@@ -59,9 +56,9 @@ namespace Au.Types
 		{
 			public LPARAM dwData;
 			public int cbData;
-			public IntPtr lpData;
+			public void* lpData;
 
-			public COPYDATASTRUCT(LPARAM dwData, int cbData, IntPtr lpData)
+			public COPYDATASTRUCT(LPARAM dwData, int cbData, void* lpData)
 			{
 				this.dwData = dwData; this.cbData = cbData; this.lpData = lpData;
 			}
@@ -142,7 +139,7 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern ushort RegisterClassEx(ref WNDCLASSEX lpwcx);
+		internal static extern ushort RegisterClassEx(in WNDCLASSEX lpwcx);
 
 		[DllImport("user32.dll", EntryPoint = "GetClassInfoExW", SetLastError = true)]
 		internal static extern ushort GetClassInfoEx(IntPtr hInstance, string lpszClass, ref WNDCLASSEX lpwcx);
@@ -173,10 +170,10 @@ namespace Au.Types
 		internal static extern int GetMessage(out Native.MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool TranslateMessage(ref Native.MSG lpMsg);
+		internal static extern bool TranslateMessage(in Native.MSG lpMsg);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM DispatchMessage(ref Native.MSG lpmsg);
+		internal static extern LPARAM DispatchMessage(in Native.MSG lpmsg);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool WaitMessage();
@@ -284,16 +281,16 @@ namespace Au.Types
 		internal static extern Wnd GetLastActivePopup(Wnd hWnd);
 
 		[DllImport("user32.dll")]
-		internal static extern bool IntersectRect(out RECT lprcDst, ref RECT lprcSrc1, ref RECT lprcSrc2);
+		internal static extern bool IntersectRect(out RECT lprcDst, in RECT lprcSrc1, in RECT lprcSrc2);
 
 		[DllImport("user32.dll")]
-		internal static extern bool UnionRect(out RECT lprcDst, ref RECT lprcSrc1, ref RECT lprcSrc2);
+		internal static extern bool UnionRect(out RECT lprcDst, in RECT lprcSrc1, in RECT lprcSrc2);
 
 		//Gets DPI physical cursor pos, ie always in pixels.
 		//The classic GetCursorPos API gets logical pos. Also it has a bug: randomly gets physical pos, even for same point.
 		//Make sure that the process is DPI-aware.
 		[DllImport("user32.dll", EntryPoint = "GetPhysicalCursorPos", SetLastError = true)]
-		internal static extern bool GetCursorPos(out Point lpPoint);
+		internal static extern bool GetCursorPos(out POINT lpPoint);
 
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
 		internal static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint LR_X);
@@ -325,8 +322,8 @@ namespace Au.Types
 			/// <summary> WPF_ </summary>
 			public uint flags;
 			public int showCmd;
-			public Point ptMinPosition;
-			public Point ptMaxPosition;
+			public POINT ptMinPosition;
+			public POINT ptMaxPosition;
 			public RECT rcNormalPosition;
 		}
 
@@ -334,7 +331,7 @@ namespace Au.Types
 		internal static extern bool GetWindowPlacement(Wnd hWnd, ref WINDOWPLACEMENT lpwndpl);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool SetWindowPlacement(Wnd hWnd, ref WINDOWPLACEMENT lpwndpl);
+		internal static extern bool SetWindowPlacement(Wnd hWnd, in WINDOWPLACEMENT lpwndpl);
 
 		internal struct WINDOWINFO
 		{
@@ -694,19 +691,19 @@ namespace Au.Types
 		#endregion
 
 		[DllImport("user32.dll")]
-		internal static extern Wnd WindowFromPoint(Point Point);
+		internal static extern Wnd WindowFromPoint(POINT pt);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern Wnd RealChildWindowFromPoint(Wnd hwndParent, Point ptParentClientCoords);
+		internal static extern Wnd RealChildWindowFromPoint(Wnd hwndParent, POINT ptParentClientCoords);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ScreenToClient(Wnd hWnd, ref Point lpPoint);
+		internal static extern bool ScreenToClient(Wnd hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ClientToScreen(Wnd hWnd, ref Point lpPoint);
+		internal static extern bool ClientToScreen(Wnd hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref Point lpPoints, int cPoints = 1);
+		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref POINT lpPoints, int cPoints = 1);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int MapWindowPoints(Wnd hWndFrom, Wnd hWndTo, ref RECT lpPoints, int cPoints = 2);
@@ -802,13 +799,13 @@ namespace Au.Types
 		internal const int AuExtraInfo = 0x71427fa5;
 
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern int SendInput(int cInputs, ref INPUTKEY pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, in INPUTKEY pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern int SendInput(int cInputs, INPUTKEY[] pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, [In] INPUTKEY[] pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern int SendInput(int cInputs, ref INPUTMOUSE pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, in INPUTMOUSE pInputs, int cbSize);
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern int SendInput(int cInputs, INPUTMOUSE[] pInputs, int cbSize);
+		//internal static extern int SendInput(int cInputs, [In] INPUTMOUSE[] pInputs, int cbSize);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int SendInput(int cInputs, void* pInputs, int cbSize);
@@ -876,13 +873,13 @@ namespace Au.Types
 		internal static extern bool EndMenu();
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool InvalidateRect(Wnd hWnd, ref RECT lpRect, bool bErase);
+		internal static extern bool InvalidateRect(Wnd hWnd, in RECT lpRect, bool bErase);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool InvalidateRect(Wnd hWnd, IntPtr lpRect, bool bErase);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ValidateRect(Wnd hWnd, ref RECT lpRect);
+		internal static extern bool ValidateRect(Wnd hWnd, in RECT lpRect);
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ValidateRect(Wnd hWnd, LPARAM zero = default);
 
@@ -903,7 +900,7 @@ namespace Au.Types
 		internal static extern bool InvalidateRgn(Wnd hWnd, IntPtr hRgn, bool bErase);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool DragDetect(Wnd hwnd, Point pt);
+		internal static extern bool DragDetect(Wnd hwnd, POINT pt);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr SetCursor(IntPtr hCursor);
@@ -940,10 +937,10 @@ namespace Au.Types
 		internal static extern bool BlockInput(bool fBlockIt);
 
 		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromPoint(Point pt, uint dwFlags);
+		internal static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
 
 		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromRect(ref RECT lprc, uint dwFlags);
+		internal static extern IntPtr MonitorFromRect(in RECT lprc, uint dwFlags);
 
 		[DllImport("user32.dll")]
 		internal static extern IntPtr MonitorFromWindow(Wnd hwnd, uint dwFlags);
@@ -962,7 +959,7 @@ namespace Au.Types
 		internal static extern IntPtr BeginPaint(Wnd hWnd, out PAINTSTRUCT lpPaint);
 
 		[DllImport("user32.dll")]
-		internal static extern bool EndPaint(Wnd hWnd, ref PAINTSTRUCT lpPaint);
+		internal static extern bool EndPaint(Wnd hWnd, in PAINTSTRUCT lpPaint);
 
 		[DllImport("user32.dll")]
 		internal static extern bool UpdateWindow(Wnd hWnd);
@@ -1034,7 +1031,7 @@ namespace Au.Types
 			public uint cbSize;
 			public uint flags;
 			public IntPtr hCursor;
-			public Point ptScreenPos;
+			public POINT ptScreenPos;
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
@@ -1106,7 +1103,7 @@ namespace Au.Types
 
 		internal struct MSLLHOOKSTRUCT
 		{
-			public Point pt;
+			public POINT pt;
 			public uint mouseData;
 			public uint flags;
 			public uint time;

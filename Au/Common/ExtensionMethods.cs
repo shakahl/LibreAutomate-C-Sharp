@@ -17,12 +17,11 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
 using System.Security; //for XML comments
 using System.Globalization;
+using System.Windows.Forms;
 
 using Au.Types;
 using static Au.NoClass;
@@ -52,7 +51,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets mouse cursor position in client area coordinates.
 		/// </summary>
-		public static Point MouseClientXY_(this Control t)
+		public static POINT MouseClientXY_(this Control t)
 		{
 			return ((Wnd)t).MouseClientXY;
 		}
@@ -60,11 +59,11 @@ namespace Au.Types
 		/// <summary>
 		/// Gets mouse cursor position in window coordinates.
 		/// </summary>
-		public static Point MouseWindowXY_(this Control t)
+		public static POINT MouseWindowXY_(this Control t)
 		{
-			var p = Mouse.XY;
-			var k = t.Location;
-			return new Point(p.X - k.X, p.Y - k.Y);
+			POINT p = Mouse.XY;
+			POINT k = t.Location;
+			return new POINT(p.x - k.x, p.y - k.y);
 		}
 
 		/// <summary>
@@ -104,7 +103,7 @@ namespace Au.Types
 		{
 			var c = new T();
 			//if(!Empty(name)) c.Name = name;
-			c.Bounds = new Rectangle(x, y, width, height);
+			c.Bounds = new System.Drawing.Rectangle(x, y, width, height);
 			if(anchor != AnchorStyles.None) c.Anchor = anchor;
 			if(text != null) c.Text = text;
 			if(!Empty(tooltip)) {
@@ -322,7 +321,7 @@ namespace Au.Types
 		/// This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsEmpty_(this Rectangle t)
+		public static bool IsEmpty_(this System.Drawing.Rectangle t)
 		{
 			return t.Width <= 0 || t.Height <= 0;
 		}

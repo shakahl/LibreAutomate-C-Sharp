@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 
 using Au;
 using static Au.NoClass;
@@ -29,7 +27,7 @@ namespace Au.Types
 			if(default != Api.LoadLibrary(Folders.ThisApp + s)) return; //normal
 			if(default != Api.LoadLibrary(Folders.ThisAppTemp + s)) return; //extracted from resources
 			if(default != Api.LoadLibrary("AuCpp.dll")) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
-			if(default != Api.LoadLibrary(@"Q:\app\Au\_" + s)) return; //my project output directory
+			if(default != Api.LoadLibrary(@"Q:\app\Au\_\" + s)) return; //my project output directory
 			throw new AuException(0, "*load AuCpp.dll");
 
 			//PROBLEM: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then Folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
@@ -75,7 +73,7 @@ namespace Au.Types
 		}
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern EError Cpp_AccFind(Wnd w, Cpp_Acc* aParent, [In] ref Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+		internal static extern EError Cpp_AccFind(Wnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
 
 		internal enum EError
 		{
@@ -98,7 +96,7 @@ namespace Au.Types
 
 		//flags: 1 get UIA, 2 prefer LINK.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFromPoint(Point p, AXYFlags flags, out Cpp_Acc aResult);
+		internal static extern int Cpp_AccFromPoint(POINT p, AXYFlags flags, out Cpp_Acc aResult);
 
 		//flags: 1 get UIA.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

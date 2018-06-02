@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -24,7 +22,7 @@ namespace Au.Util
 	{
 		internal struct ProcessVariables
 		{
-			internal bool doneWaitCursorWhenShowingMenuEtc;
+			public bool doneWaitCursorWhenShowingMenuEtc;
 		}
 		static bool _workaroundWaitCursor;
 
@@ -60,7 +58,7 @@ namespace Au.Util
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
 			ThreadStart d = () =>
 			{
-				Wnd w = Api.CreateWindowEx(Native.WS_EX_NOACTIVATE, "#32770", null, Native.WS_POPUP, 0, 0, 0, 0, SpecHwnd.Message, 0, default, 0);
+				Wnd w = Api.CreateWindowEx(Native.WS_EX_NOACTIVATE, "#32770", null, Native.WS_POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE, 0, default, 0);
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
@@ -98,7 +96,7 @@ namespace Au.Util
 			_actCtx.lpResourceName = (IntPtr)2;
 			_actCtx.dwFlags = Api.ACTCTX_FLAG_RESOURCE_NAME_VALID;
 
-			_hActCtx = Api.CreateActCtx(ref _actCtx);
+			_hActCtx = Api.CreateActCtx(_actCtx);
 			_contextCreationSucceeded = (_hActCtx != new IntPtr(-1));
 		}
 

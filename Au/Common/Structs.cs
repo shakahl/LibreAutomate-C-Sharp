@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
@@ -103,7 +102,51 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Contains rectangle coordinates.
+	/// Point coordinates x y.
+	/// </summary>
+	[DebuggerStepThrough]
+	[Serializable]
+	public struct POINT
+	{
+#pragma warning disable 1591 //XML doc
+		public int x, y;
+
+		public POINT(int x, int y) { this.x = x; this.y = y; }
+
+		public static implicit operator POINT(Point p) { return new POINT(p.X, p.Y); }
+		public static implicit operator Point(POINT p) { return new Point(p.x, p.y); }
+
+		public static bool operator ==(POINT p1, POINT p2) { return p1.x == p2.x && p1.y == p2.y; }
+		public static bool operator !=(POINT p1, POINT p2) { return !(p1 == p2); }
+
+		public override string ToString() { return $"{{x={x} y={y}}}"; }
+#pragma warning restore 1591 //XML doc
+	}
+
+	/// <summary>
+	/// Width and height.
+	/// </summary>
+	[DebuggerStepThrough]
+	[Serializable]
+	public struct SIZE
+	{
+#pragma warning disable 1591 //XML doc
+		public int width, height;
+
+		public SIZE(int cx, int cy) { this.width = cx; this.height = cy; }
+
+		public static implicit operator SIZE(Size z) { return new SIZE(z.Width, z.Height); }
+		public static implicit operator Size(SIZE z) { return new Size(z.width, z.height); }
+
+		public static bool operator ==(SIZE s1, SIZE s2) { return s1.width == s2.width && s1.height == s2.height; }
+		public static bool operator !=(SIZE s1, SIZE s2) { return !(s1 == s2); }
+
+		public override string ToString() { return $"{{cx={width} cy={height}}}"; }
+#pragma warning restore 1591 //XML doc
+	}
+
+	/// <summary>
+	/// Rectangle coordinates left top right bottom.
 	/// </summary>
 	/// <remarks>
 	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b>/<b>Rect</b>/<b>Int32Rect</b> can't, because their fields are different.
@@ -185,7 +228,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns true if this rectangle contains the specified point.
 		/// </summary>
-		public bool Contains(Point p) { return Contains(p.X, p.Y); }
+		public bool Contains(POINT p) { return Contains(p.x, p.y); }
 
 		/// <summary>
 		/// Returns true if this rectangle contains entire specified rectangle.
@@ -203,18 +246,18 @@ namespace Au.Types
 		/// Returns true if the rectangles intersect.
 		/// If they don't intersect, makes this RECT empty (IsEmpty would return true).
 		/// </summary>
-		public bool Intersect(RECT r2) { return Api.IntersectRect(out this, ref this, ref r2); }
+		public bool Intersect(RECT r2) { return Api.IntersectRect(out this, this, r2); }
 
 		/// <summary>
 		/// Returns the intersection rectangle of two rectangles.
 		/// If they don't intersect, returns empty rectangle (IsEmpty would return true).
 		/// </summary>
-		public static RECT Intersect(RECT r1, RECT r2) { Api.IntersectRect(out RECT r, ref r1, ref r2); return r; }
+		public static RECT Intersect(RECT r1, RECT r2) { Api.IntersectRect(out RECT r, r1, r2); return r; }
 
 		/// <summary>
 		/// Returns true if this rectangle and another rectangle intersect.
 		/// </summary>
-		public bool IntersectsWith(RECT r2) { return Api.IntersectRect(out _, ref this, ref r2); }
+		public bool IntersectsWith(RECT r2) { return Api.IntersectRect(out _, this, r2); }
 
 		/// <summary>
 		/// Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>
@@ -228,14 +271,14 @@ namespace Au.Types
 		/// Returns true if finally this rectangle is not empty.
 		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
-		public bool Union(RECT r2) { return Api.UnionRect(out this, ref this, ref r2); }
+		public bool Union(RECT r2) { return Api.UnionRect(out this, this, r2); }
 
 		/// <summary>
 		/// Returns the union of two rectangles.
 		/// Union is the smallest rectangle that contains two full rectangles.
 		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
-		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, ref r1, ref r2); return r; }
+		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, r1, r2); return r; }
 
 		/// <summary>
 		/// Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
@@ -243,14 +286,13 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="screen">Use this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses the primary screen.</param>
+		/// <param name="screen">Use this screen (see <see cref="Screen_"/>). If null (default), uses the primary screen.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="Wnd.MoveInScreen"/>.
 		/// </remarks>
-		public void MoveInScreen(Coord x, Coord y, object screen = null, bool workArea = true, bool ensureInScreen = true)
+		public void MoveInScreen(Coord x, Coord y, Screen_ screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
@@ -259,13 +301,12 @@ namespace Au.Types
 		/// Adjusts this rectangle to ensure that whole rectangle is in screen.
 		/// Initial and final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="screen">Use this screen (see <see cref="Screen_.FromObject"/>). If null (default), uses screen of the rectangle (or nearest).</param>
+		/// <param name="screen">Use this screen (see <see cref="Screen_"/>). If null (default), uses screen of the rectangle (or nearest).</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="Wnd.EnsureInScreen"/>.
 		/// </remarks>
-		public void EnsureInScreen(object screen = null, bool workArea = true)
+		public void EnsureInScreen(Screen_ screen = default, bool workArea = true)
 		{
 			Wnd.Lib.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
@@ -288,7 +329,7 @@ namespace Au.Types
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
-	public struct ColorInt
+	public struct ColorInt :IEquatable<ColorInt>
 	{
 		/// <summary>
 		/// Color value in 0xAARRGGBB format.
@@ -311,11 +352,6 @@ namespace Au.Types
 		/// Makes opaque (alpha 0xFF).
 		/// </summary>
 		public static implicit operator ColorInt(int color) => new ColorInt(color, true);
-
-		/// <summary>
-		/// Creates ColorInt from <see cref="Color"/>.
-		/// </summary>
-		public ColorInt(Color color) { this.color = color.ToArgb(); }
 
 		/// <summary>
 		/// Creates ColorInt from <see cref="Color"/>.
@@ -427,6 +463,8 @@ namespace Au.Types
 		public static bool operator ==(ColorInt a, Color b) => a.color == b.ToArgb();
 		public static bool operator !=(ColorInt a, Color b) => a.color != b.ToArgb();
 
+		public bool Equals(ColorInt other) => other.color == color;
+
 		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
 		public override int GetHashCode() => color;
 		public override string ToString() => "0x" + color.ToString("X");
@@ -485,7 +523,7 @@ namespace Au.Types
 			VARIANT v2 = default;
 			uint lcid = 0x409; //invariant
 			switch(vt & (Api.VARENUM)0xff) { case Api.VARENUM.VT_DATE: case Api.VARENUM.VT_DISPATCH: lcid = 0x400; break; } //LOCALE_USER_DEFAULT
-			if(0 != Api.VariantChangeTypeEx(ref v2, ref this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
+			if(0 != Api.VariantChangeTypeEx(ref v2, this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
 			return v2.value == default ? null : v2.ValueBstr.ToStringAndDispose(noCache);
 		}
 
@@ -562,7 +600,7 @@ namespace Au.Types
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
 			//int len2 = Util.LibCharPtr.Length(p, len); Debug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
-			string r = noCache ? Marshal.PtrToStringUni((IntPtr)p, len) : Util.StringCache.LibAdd(p, len);
+			string r = noCache ? new string(p, 0, len) : Util.StringCache.LibAdd(p, len);
 			Dispose();
 			return r;
 		}

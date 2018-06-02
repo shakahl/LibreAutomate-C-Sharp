@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 using System.Reflection.Emit;
 using Microsoft.Win32.SafeHandles;
@@ -182,7 +180,7 @@ namespace Au.Util
 	//	///// <param name="iunkFrom">COM object as IUnknown.</param>
 	//	///// <param name="iTo">Receives the requested COM interface pointer.</param>
 	//	///// <param name="riid">Interface GUID.</param>
-	//	//internal static unsafe bool QueryInterface<T>(IntPtr iunkFrom, out T iTo, ref Guid riid) where T : struct
+	//	//internal static unsafe bool QueryInterface<T>(IntPtr iunkFrom, out T iTo, Guid riid) where T : struct
 	//	//{
 	//	//	if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
 	//	//	iTo = default;
@@ -201,23 +199,23 @@ namespace Au.Util
 	//	///// <param name="iTo">Receives the requested COM interface pointer.</param>
 	//	///// <param name="guidService">Service GUID. If it is the same as riid, you can use other overload.</param>
 	//	///// <param name="riid">Interface GUID.</param>
-	//	//internal static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, ref Guid guidService, ref Guid riid) where T:struct
+	//	//internal static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, in Guid guidService, in Guid riid) where T:struct
 	//	//{
 	//	//	if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
 	//	//	if(iunkFrom==default) throw new ArgumentNullException();
 	//	//	iTo = default;
-	//	//	if(0 != Api.IUnknown_QueryService(iunkFrom, ref guidService, ref riid, out IntPtr ip) || ip==default) return false;
+	//	//	if(0 != Api.IUnknown_QueryService(iunkFrom, guidService, riid, out IntPtr ip) || ip==default) return false;
 	//	//	iTo=Unsafe.Read<T>(&ip);
 	//	//	return true;
 	//	//}
 
 	//	//currently not used
 	//	///// <summary>
-	//	///// This overload calls <see cref="QueryService{T}(IntPtr, out T, ref Guid, ref Guid)"/> with guidService = riid.
+	//	///// This overload calls <see cref="QueryService{T}(IntPtr, out T, in Guid, in Guid)"/> with guidService = riid.
 	//	///// </summary>
-	//	//internal static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, ref Guid riid) where T : struct
+	//	//internal static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, in Guid riid) where T : struct
 	//	//{
-	//	//	return QueryService(iunkFrom, out iTo, ref riid, ref riid);
+	//	//	return QueryService(iunkFrom, out iTo, riid, riid);
 	//	//}
 	//}
 
@@ -337,7 +335,7 @@ namespace Au.Util
 		/// Gets small icon size that depends on DPI of the primary screen.
 		/// Width and Height are <see cref="BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
 		/// </summary>
-		public static Size SmallIconSize { get { var t = BaseDPI / 6; return new Size(t, t); } }
+		public static SIZE SmallIconSize { get { var t = BaseDPI / 6; return new SIZE(t, t); } }
 
 		/// <summary>
 		/// If <see cref="BaseDPI"/> is more than 96, returns stretched i.
@@ -357,12 +355,12 @@ namespace Au.Util
 		/// Note: for images use <see cref="ImageSize"/>.
 		/// </summary>
 		/// <param name="z"></param>
-		public static Size ScaleSize(Size z)
+		public static SIZE ScaleSize(SIZE z)
 		{
 			int dpi = BaseDPI;
 			if(dpi > 96) {
-				z.Width = (int)((long)z.Width * dpi / 96);
-				z.Height = (int)((long)z.Height * dpi / 96);
+				z.width = (int)((long)z.width * dpi / 96);
+				z.height = (int)((long)z.height * dpi / 96);
 			}
 			return z;
 		}
@@ -372,14 +370,14 @@ namespace Au.Util
 		/// Else returns image.Size.
 		/// </summary>
 		/// <param name="image"></param>
-		public static Size ImageSize(Image image)
+		public static SIZE ImageSize(System.Drawing.Image image)
 		{
-			if(image == null) return Size.Empty;
-			var r = image.Size;
+			if(image == null) return default;
+			SIZE r = image.Size;
 			int dpi = BaseDPI;
 			if(dpi > 96) {
-				r.Width = (int)((long)r.Width * dpi / (int)Math.Round(image.HorizontalResolution));
-				r.Height = (int)((long)r.Height * dpi / (int)Math.Round(image.VerticalResolution));
+				r.width = (int)((long)r.width * dpi / (int)Math.Round(image.HorizontalResolution));
+				r.height = (int)((long)r.height * dpi / (int)Math.Round(image.VerticalResolution));
 			}
 			return r;
 		}

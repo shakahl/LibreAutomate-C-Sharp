@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -313,14 +311,14 @@ namespace Au
 		/// <param name="p">Coordinates in screen.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
-		public static Acc FromXY(Point p, AXYFlags flags = 0)
+		public static Acc FromXY(POINT p, AXYFlags flags = 0)
 		{
 			for(int i = 0; ; i++) {
 				var hr = Cpp.Cpp_AccFromPoint(p, flags, out var a);
 				if(hr == 0) return new Acc(a);
 				if(i < 2) continue;
 				if(flags.Has_(AXYFlags.NoThrow)) return null;
-				_WndThrow(hr, Wnd.FromXY(p.X, p.Y, WXYFlags.Raw), "*get accessible object from point.");
+				_WndThrow(hr, Wnd.FromXY(p.x, p.y, WXYFlags.Raw), "*get accessible object from point.");
 			}
 		}
 
@@ -330,7 +328,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in screen.</param>
 		/// <param name="y">Y coordinate in screen.</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_.FromObject"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
 		public static Acc FromXY(Coord x, Coord y, CoordOptions co = null, AXYFlags flags = 0)
@@ -409,8 +407,8 @@ namespace Au
 		public static Acc FromComObject(IntPtr x)
 		{
 			if(x == default) return null;
-			if(Util.Marshal_.QueryInterface(x, out IntPtr iacc, ref Api.IID_IAccessible)
-				|| Util.Marshal_.QueryService(x, out iacc, ref Api.IID_IAccessible)
+			if(Util.Marshal_.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
+				|| Util.Marshal_.QueryService(x, out iacc, Api.IID_IAccessible)
 				) return new Acc(iacc);
 			return null;
 		}

@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -396,7 +394,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds any number of keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
+		/// Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="Send"/>.
 		/// Returns self.
 		/// </summary>
 		/// <param name="keysEtc">Arguments. The same as with <see cref="Key"/>.</param>

@@ -895,8 +895,8 @@ namespace SdkConverter
 					//Call RegexReplace_ 2 times because regex (a|b) is very slow.
 					string repl = "IntPtr";
 					int n;
-					if(ts != null && ts.isInterface) n = R.RegexReplace_(out R, $@"\b{s}\b", repl); //decremented pointer level. 0 in SDK
-					else n = R.RegexReplace_(out R, $@"\b{s}\*", repl) + R.RegexReplace_(out R, $@"\bref {s}\b", repl);
+					if(ts != null && ts.isInterface) n = R.RegexReplace_($@"\b{s}\b", repl, out R); //decremented pointer level. 0 in SDK
+					else n = R.RegexReplace_($@"\b{s}\*", repl, out R) + R.RegexReplace_($@"\bref {s}\b", repl, out R);
 					if(n != 0) {
 						//Print($"<><c 0xff0000>{n}  {s}* = IntPtr</c>");
 						continue;
@@ -918,7 +918,7 @@ namespace SdkConverter
 					string s = v.Key.ToString();
 					//if(_FindIdentifierInString(R, s) >= 0) { //makes slower
 					//if(ts!=null) _FormatStruct(ts); else _FormatEnum(te);
-					if(0 != R.RegexReplace_(out R, $@"\b{s}\b", t.csTypename)) {
+					if(0 != R.RegexReplace_($@"\b{s}\b", t.csTypename, out R)) {
 						//Print($"<><c 0xff0000>{s} = {t.csTypename}    {t}</c>"); //all struct (0 enum) in SDK
 						continue;
 					}
@@ -951,11 +951,11 @@ namespace SdkConverter
 			//Perf.NW(); //800 1000 ms
 
 			//remove other known A and old versions
-			R.RegexReplace_(out R, @"(?ms)^internal struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "");
-			R.RegexReplace_(out R, @"(?ms)^internal struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "");
-			R.RegexReplace_(out R, @"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE");
-			R.RegexReplace_(out R, @"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER");
-			R.RegexReplace_(out R, @"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", 1);
+			R.RegexReplace_(@"(?ms)^internal struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "", out R);
+			R.RegexReplace_(@"(?ms)^internal struct PROPSHEETHEADER(?!W_V2\b).+?^\}\r\n", "", out R);
+			R.RegexReplace_(@"\bPROPSHEETPAGEW_V4\b", "PROPSHEETPAGE", out R);
+			R.RegexReplace_(@"\bPROPSHEETHEADERW_V2\b", "PROPSHEETHEADER", out R);
+			R.RegexReplace_(@"(?ms)^internal struct OPENFILENAME_NT4\b.+?^\}\r\n", "", out R, 1);
 
 			return R;
 		}
@@ -967,7 +967,7 @@ namespace SdkConverter
 			if((what & 0x10000) != 0) { sW = "_W"; sA = "_A"; }
 			what &= 0xff;
 
-			if(0 != R.RegexReplace_(out R, $@"\b{name}{sW}\b", name)) {
+			if(0 != R.RegexReplace_($@"\b{name}{sW}\b", name, out R)) {
 				//Print($"<><c 0xff0000>{name}</c>");
 
 				//remove STRUCTA
@@ -979,8 +979,7 @@ namespace SdkConverter
 				case 1: rx = $@"(?ms)^internal interface {name}{sA} .+?^\}}\r\n\r\n"; break;
 				case 2: rx = $@"(?m)^internal delegate \w+\** {name}{sA}\(.+\r\n\r\n"; break;
 				}
-				Match m = R.RegexMatch_(rx);
-				if(m.Success) {
+				if(R.RegexMatch_(rx, out var m)) {
 					//find attributes (regex with attributes would be very slow)
 					int i = m.Index - 3;
 					while(0 == string.Compare(R, i, "]\r\n", 0, 3)) {

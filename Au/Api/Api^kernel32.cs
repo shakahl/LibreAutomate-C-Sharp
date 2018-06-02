@@ -2,8 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using System.Drawing;
-using System.Windows.Forms;
 using Microsoft.Win32.SafeHandles;
 
 namespace Au.Types
@@ -539,7 +537,7 @@ namespace Au.Types
 		internal static extern bool WriteProcessMemory(HandleRef hProcess, IntPtr lpBaseAddress, void* lpBuffer, LPARAM nSize, LPARAM* lpNumberOfBytesWritten);
 
 		[DllImport("kernel32", SetLastError = true)]
-		internal extern static IntPtr CreateActCtx(ref ACTCTX actctx);
+		internal extern static IntPtr CreateActCtx(in ACTCTX actctx);
 
 		[DllImport("kernel32", SetLastError = true)]
 		internal extern static bool ActivateActCtx(IntPtr hActCtx, out IntPtr lpCookie);

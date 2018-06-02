@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -208,7 +206,7 @@ namespace Au.Util
 					using(var dcMem = new LibCompatibleDC(dcs)) {
 						var of = Api.SelectObject(dcMem, Handle);
 						Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
-						HeightOnScreen = z.Height;
+						HeightOnScreen = z.height;
 						Api.SelectObject(dcMem, of);
 					}
 				}

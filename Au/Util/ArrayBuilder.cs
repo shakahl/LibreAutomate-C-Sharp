@@ -11,8 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -132,15 +130,15 @@ namespace Au.Util
 
 		/// <summary>
 		/// Adds one element.
-		/// Uses ref to avoid copying when T size is big. Does not modify the passed variable.
+		/// The same as Add, but uses 'in'. Use to avoid copying values of big types.
 		/// </summary>
-		public void AddR(ref T value)
+		public void AddR(in T value)
 		{
 			if(_len == _cap) _EnsureCapacity();
 			void* dest = (byte*)_p + _TypeSize * _len;
-			Unsafe.Copy(dest, ref value);
+			//Unsafe.Copy(dest, ref value); //cannot be used because the parameter is 'in'
 			//Unsafe.Write(dest, value);
-			//Unsafe.AsRef<T>(dest) = value;
+			Unsafe.AsRef<T>(dest) = value;
 			_len++;
 
 			//tested the Unsafe calls, 64-bit:
