@@ -376,7 +376,7 @@ namespace Au.Util
 			if(mod.Has_(KMod.Alt)) m |= KMod.Shift;
 			if(mod.Has_(KMod.Shift)) m |= KMod.Alt;
 			var w = window.Wnd;
-			if(!Api.RegisterHotKey(w, id, (uint)m, (int)key)) return false;
+			if(!Api.RegisterHotKey(w, id, (uint)m, key)) return false;
 			_w = w; _id = id;
 			//Hotkey = hotkey;
 			return true;

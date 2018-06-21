@@ -83,12 +83,34 @@
     <Compile Include="Form_Acc.Designer.cs">
       <DependentUpon>Form_Acc.cs</DependentUpon>
     </Compile>
+    <Compile Include="Form_WinImage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form_WinImage.Designer.cs">
+      <DependentUpon>Form_WinImage.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Info util.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUtil.cs" />
+    <Compile Include="TextBoxWnd.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form_Acc.resx">
       <DependentUpon>Form_Acc.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form_WinImage.resx">
+      <DependentUpon>Form_WinImage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

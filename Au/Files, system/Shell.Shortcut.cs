@@ -157,7 +157,7 @@ namespace Au
 				get
 				{
 					if(0 != _isl.GetIDList(out var pidl)) return null;
-					try { return Pidl.LibToShellString(pidl, Native.SIGDN.SIGDN_URL); }
+					try { return Pidl.LibToShellString(pidl, Native.SIGDN.URL); }
 					finally { Marshal.FreeCoTaskMem(pidl); }
 				}
 				set

@@ -132,7 +132,7 @@ partial class PanelFiles
 			_c.Update();
 			Perf.NW();
 
-			Timer_.After(1000, t => f.FileRename(name, true));
+			Timer_.After(1000, () => f.FileRename(name, true));
 		};
 		m["udate row"] = o =>
 		{
@@ -144,7 +144,7 @@ partial class PanelFiles
 			_c.Update();
 			Perf.NW();
 
-			Timer_.After(1000, t => f.FileRename(name, true));
+			Timer_.After(1000, () => f.FileRename(name, true));
 		};
 		m["GC.Collect"] = o => GC.Collect();
 		m["disable control"] = o =>

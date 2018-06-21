@@ -478,8 +478,9 @@ namespace Au.Types
 		internal void LibReset(OptKey o)
 		{
 			if(o != null) {
-				_keySpeed = o._keySpeed;
 				_textSpeed = o._textSpeed;
+				_keySpeed = o._keySpeed;
+				_clipboardKeySpeed = o._clipboardKeySpeed;
 				_sleepFinally = o._sleepFinally;
 				_pasteLength = o._pasteLength;
 				TextOption = o.TextOption;
@@ -490,8 +491,9 @@ namespace Au.Types
 				NoBlockInput = o.NoBlockInput;
 				Hook = o.Hook;
 			} else {
-				_keySpeed = 1;
 				_textSpeed = default;
+				_keySpeed = 1;
+				_clipboardKeySpeed = 5;
 				_sleepFinally = 10;
 				_pasteLength = 300;
 				TextOption = KTextOption.Characters;
@@ -518,13 +520,27 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="Keyb.Text"/>, <see cref="Keyb.Key"/> and similar functions.
+		/// Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="Opt.Static.Key"/>: 0 - 10.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <remarks>
+		/// Not used for 'keys' parameters. See <see cref="KeySpeed"/>.
+		/// </remarks>
+		public int TextSpeed
+		{
+			get => _textSpeed;
+			set => _textSpeed = _SetValue(value, 1000, 10);
+		}
+		int _textSpeed;
+
+		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="Keyb.Key"/> and similar functions.
 		/// Default: 1. Valid values: 0 - 1000 (1 second). Valid values for <see cref="Opt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used for 'text' parameters; see <see cref="TextSpeed"/>.
-		/// Clipboard functions that send keys Ctrl+V, Ctrl+C or Ctrl+X use this only after Ctrl (need it for some apps). The V/C/X key time depends on how fast the target app gets or sets clipboard data. 
+		/// Not used for 'text' parameters. See <see cref="TextSpeed"/>.
 		/// </remarks>
 		public int KeySpeed
 		{
@@ -534,19 +550,19 @@ namespace Au.Types
 		int _keySpeed;
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="Keyb.Text"/>, <see cref="Keyb.Key"/> and similar functions.
-		/// Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="Opt.Static.Key"/>: 0 - 10.
+		/// How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
+		/// Default: 5. Valid values: 0 - 1000 (1 second). Valid values for <see cref="Opt.Static.Key"/>: 0 - 50.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used for 'keys' parameters; see <see cref="KeySpeed"/>.
+		/// In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
 		/// </remarks>
-		public int TextSpeed
+		public int KeySpeedClipboard
 		{
-			get => _textSpeed;
-			set => _textSpeed = _SetValue(value, 1000, 10);
+			get => _clipboardKeySpeed;
+			set => _clipboardKeySpeed = _SetValue(value, 1000, 50);
 		}
-		int _textSpeed;
+		int _clipboardKeySpeed;
 
 		/// <summary>
 		/// How long to wait (milliseconds) before a 'send keys or text' function returns.

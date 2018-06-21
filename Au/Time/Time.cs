@@ -365,7 +365,7 @@ namespace Au
 	/// </example>
 	public class Timer_
 	{
-		Action<Timer_> _callback;
+		object _callback; //Action<Timer_> or Action
 		LPARAM _id;
 		int _threadId;
 		bool _singlePeriod;
@@ -380,10 +380,13 @@ namespace Au
 		/// </summary>
 		public object Tag { get; set; }
 
-		/// <summary>
-		/// Initializes a new <see cref="Timer_"/> instance.
-		/// </summary>
-		public Timer_(Action<Timer_> callback, object tag = null) : base()
+		///
+		public Timer_(Action<Timer_> callback, object tag = null) : this((object)callback, tag) { }
+
+		///
+		public Timer_(Action callback, object tag = null) : this((object)callback, tag) { }
+
+		Timer_(object callback, object tag)
 		{
 			_callback = callback;
 			Tag = tag;
@@ -425,7 +428,11 @@ namespace Au
 				return;
 			}
 			if(t._singlePeriod) t.Stop();
-			t._callback(t);
+			
+			switch(t._callback) {
+			case Action<Timer_> f: f(t); break;
+			case Action f: f(); break;
+			}
 		}
 
 		/// <summary>
@@ -460,7 +467,7 @@ namespace Au
 
 		//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
 
-		static Timer_ _Set(int intervalMS, bool singlePeriod, Action<Timer_> callback, object tag = null)
+		static Timer_ _Set(int intervalMS, bool singlePeriod, object callback, object tag = null)
 		{
 			var t = new Timer_(callback, tag);
 			t.Start(intervalMS, singlePeriod);
@@ -478,6 +485,12 @@ namespace Au
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
+		public static Timer_ After(int milliseconds, Action callback, object tag = null)
+		{
+			return _Set(milliseconds, true, callback, tag);
+		}
+
+		/// <inheritdoc cref="After(int, Action, object)"/>
 		public static Timer_ After(int milliseconds, Action<Timer_> callback, object tag = null)
 		{
 			return _Set(milliseconds, true, callback, tag);
@@ -494,6 +507,12 @@ namespace Au
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
+		public static Timer_ Every(int periodMS, Action callback, object tag = null)
+		{
+			return _Set(periodMS, false, callback, tag);
+		}
+
+		/// <inheritdoc cref="Every(int, Action, object)"/>
 		public static Timer_ Every(int periodMS, Action<Timer_> callback, object tag = null)
 		{
 			return _Set(periodMS, false, callback, tag);

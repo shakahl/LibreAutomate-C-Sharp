@@ -575,7 +575,7 @@ namespace Au.Types
 		public const string Word = "CcVL0EtrK0ShqYWb4n1CmA";
 
 		/// <summary>
-		/// Specifies that separators are substrings "\r\n", as well as single ASCII line break characters '\r' and '\n'.
+		/// Specifies that separators are substrings "\r\n", as well as single characters '\r' and '\n'.
 		/// </summary>
 		public const string Line = "sKeg5AWCNkGTZDkWuyEa2g";
 	}

@@ -153,12 +153,12 @@ namespace Au
 		void _Init()
 		{
 			Perf.Next();
-			uint exStyle = Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST;
-			uint style = Native.WS_POPUP;
-			//style |= Native.WS_CAPTION | Native.WS_SYSMENU;
+			var exStyle = Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOPMOST;
+			var style = Native.WS.POPUP;
+			//style |= Native.WS.CAPTION | Native.WS.SYSMENU;
 
 			//RECT r = Screen.PrimaryScreen.WorkingArea; r.Inflate(-2, -2); r.top += 4;
-			RECT r = new RECT(0, 0, 200, 200, true);
+			RECT r = (0, 0, 200, 200);
 
 			_wClass = new WndClass(this);
 			if(!_wClass.Create("AuToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height)) throw new Win32Exception();
@@ -210,7 +210,7 @@ namespace Au
 				_x = x;
 			}
 
-			public override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+			protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
 			{
 				switch(message) {
 				case Api.WM_NCCREATE:

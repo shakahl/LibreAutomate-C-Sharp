@@ -30,7 +30,7 @@ namespace Au.Tools
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			this._tWnd = new System.Windows.Forms.TextBox();
+			this._tWnd = new Au.Tools.TextBoxWnd();
 			this._tree = new Aga.Controls.Tree.TreeViewAdv();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
@@ -295,7 +295,7 @@ namespace Au.Tools
 		}
 
 		#endregion
-		private TextBox _tWnd;
+		private Au.Tools.TextBoxWnd _tWnd;
 		private TextBox _tAcc;
 		private CheckBox _cCapture;
 		private Button _bTest;

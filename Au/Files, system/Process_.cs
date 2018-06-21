@@ -22,9 +22,8 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Process and thread functions. Extends <see cref="Process"/>.
+	/// Process functions. Extends <see cref="Process"/>.
 	/// </summary>
-	//[DebuggerStepThrough]
 	public static unsafe class Process_
 	{
 		/// <summary>
@@ -1046,21 +1045,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetCurrentThreadId</msdn>.
-		/// </summary>
-		public static int CurrentThreadId => Api.GetCurrentThreadId();
-
-		/// <summary>
 		/// Calls API <msdn>GetCurrentProcessId</msdn>.
 		/// </summary>
 		public static int CurrentProcessId => Api.GetCurrentProcessId();
-
-		/// <summary>
-		/// Returns current thread handle.
-		/// Calls API <msdn>GetCurrentThread</msdn>.
-		/// Don't need to close the handle.
-		/// </summary>
-		public static IntPtr CurrentThreadHandle => Api.GetCurrentThread();
 
 		/// <summary>
 		/// Returns current process handle.

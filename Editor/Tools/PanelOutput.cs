@@ -117,7 +117,7 @@ class PanelOutput :Control
 		if(on) {
 			w.WndOwner = default;
 			w.ZorderTopmost();
-			//w.SetExStyle(Native.WS_EX_APPWINDOW, SetAddRemove.Add);
+			//w.SetExStyle(Native.WS_EX.APPWINDOW, SetAddRemove.Add);
 			//Wnd.Misc.WndRoot.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
@@ -127,7 +127,7 @@ class PanelOutput :Control
 
 	protected override void OnParentChanged(EventArgs e)
 	{
-		if(Parent is Form && Topmost) Timer_.After(1, t => _SetTopmost(true));
+		if(Parent is Form && Topmost) Timer_.After(1, () => _SetTopmost(true));
 
 		base.OnParentChanged(e);
 	}

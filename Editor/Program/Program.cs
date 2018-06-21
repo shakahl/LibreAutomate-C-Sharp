@@ -57,7 +57,7 @@ static class Program
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			Timer_.Every(1000, t => Timer1s?.Invoke());
+			Timer_.Every(1000, () => Timer1s?.Invoke());
 
 			Settings = new ProgramSettings();
 

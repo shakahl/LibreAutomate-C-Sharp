@@ -16,9 +16,9 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 //using System.Xml.Linq;
-using System.Drawing.Imaging;
 
 using Au.Types;
 using static Au.NoClass;
@@ -32,152 +32,30 @@ namespace Au
 	/// An image is any visible rectangular part of window. A color is any visible pixel of window.
 	/// A <b>WinImage</b> variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
 	/// </remarks>
-	public class WinImage
+	public partial class WinImage
 	{
-		#region capture, etc
-
-		/// <summary>
-		/// Copies a rectangle of screen pixels to a new Bitmap object.
-		/// </summary>
-		/// <param name="rect">A rectangle in screen coordinates.</param>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
-		/// <remarks>
-		/// PixelFormat is always Format32bppRgb.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var file = Folders.Temp + "notepad.png";
-		/// Wnd w = Wnd.Find("* Notepad");
-		/// w.Activate();
-		/// using(var b = WinImage.Capture(w.Rect)) { b.Save(file); }
-		/// Shell.Run(file);
-		/// ]]></code>
-		/// </example>
-		public static Bitmap Capture(RECT rect)
-		{
-			return _Capture(rect);
-		}
-
-		/// <summary>
-		/// Copies a rectangle of window client area pixels to a new Bitmap object.
-		/// </summary>
-		/// <param name="w">Window or control.</param>
-		/// <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
-		/// <exception cref="WndException">Invalid w.</exception>
-		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
-		/// <remarks>
-		/// How this is different from <see cref="Capture(RECT)"/>:
-		/// 1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. 
-		/// 2. If the window is partially or completely transparent, gets non-transparent image.
-		/// 3. Does not work with Windows Store app windows (creates black image) and possibly with some other windows.
-		/// 4. If the window is DPI-scaled, captures its non-scaled view. And <paramref name="rect"/> must contain non-scaled coordinates.
-		/// </remarks>
-		public static Bitmap Capture(Wnd w, RECT rect)
-		{
-			w.ThrowIfInvalid();
-			return _Capture(rect, w);
-		}
-
-		static unsafe Bitmap _Capture(RECT r, Wnd w = default)
-		{
-			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
-
-			//rejected: parameter includeNonClient (GetWindowDC).
-			//	Nothing good. If in background, captures incorrect caption etc.
-			//	If need nonclient part, better activate window and capture window rectangle from screen.
-
-			using(var mb = new Util.MemoryBitmap(r.Width, r.Height)) {
-				using(var dc = new Util.LibWindowDC(w)) {
-					if(dc.Is0 && !w.Is0) w.ThrowNoNative("Failed");
-					uint rop = !w.Is0 ? 0xCC0020u : 0xCC0020u | 0x40000000u; //SRCCOPY|CAPTUREBLT
-					bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
-					Debug.Assert(ok); //the API fails only if a HDC is invalid
-				}
-				var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
-				try {
-					var bh = new Api.BITMAPINFOHEADER() {
-						biSize = sizeof(Api.BITMAPINFOHEADER),
-						biWidth = r.Width, biHeight = -r.Height, //use -height for top-down
-						biPlanes = 1, biBitCount = 32,
-						//biCompression = 0, //BI_RGB
-					};
-					var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
-					try {
-						var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &bh, 0); //DIB_RGB_COLORS
-						if(apiResult != r.Height) throw new AuException("GetDIBits");
-
-						//remove alpha. Will compress better.
-						//Perf.First();
-						byte* p = (byte*)d.Scan0, pe = p + r.Width * r.Height * 4;
-						for(p += 3; p < pe; p += 4) *p = 0xff;
-						//Perf.NW(); //1100 for max window
-					}
-					finally { R.UnlockBits(d); } //tested: fast, no copy
-					return R;
-				}
-				catch { R.Dispose(); throw; }
-			}
-		}
-
-		/// <summary>
-		/// Creates Bitmap from a GDI bitmap.
-		/// </summary>
-		/// <param name="hbitmap">GDI bitmap handle. This function makes its copy.</param>
-		/// <remarks>
-		/// How this function is different from <see cref="Image.FromHbitmap"/>:
-		/// 1. Image.FromHbitmap usually creates bottom-up bitmap, which is incompatible with <see cref="Find"/>. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc do.
-		/// 2. This function always creates bitmap of PixelFormat Format32bppRgb.
-		/// </remarks>
-		/// <exception cref="AuException">Failed. For example hbitmap is default(IntPtr).</exception>
-		/// <exception cref="Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
-		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
-		{
-			var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-			using(var dcs = new Util.LibScreenDC(0)) {
-				if(0 == Api.GetDIBits(dcs, hbitmap, 0, 0, null, &bh, 0)) goto ge;
-				int wid = bh.biWidth, hei = bh.biHeight;
-				if(hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
-				bh.biBitCount = 32;
-
-				var R = new Bitmap(wid, hei, PixelFormat.Format32bppRgb);
-				var d = R.LockBits(new Rectangle(0, 0, wid, hei), ImageLockMode.ReadWrite, R.PixelFormat);
-				bool ok = hei == Api.GetDIBits(dcs, hbitmap, 0, hei, (void*)d.Scan0, &bh, 0);
-				R.UnlockBits(d);
-				if(!ok) { R.Dispose(); goto ge; }
-				return R;
-			}
-			ge:
-			throw new AuException();
-		}
-
-		//FUTURE
-		//public static bool CaptureUI()
-		//{
-
-		//}
-
-		#endregion
-
 		#region load, save
 
 		/// <summary>
 		/// Loads image from file, string or resource.
-		/// <see cref="Find"/> uses this function when <i>image</i> argument type is string. More info there.
 		/// </summary>
-		/// <param name="file"></param>
+		/// <param name="image"><inheritdoc cref="Find"/></param>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
-		/// <exception cref="Exception">Depending on <paramref name="file"/> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
+		/// <exception cref="Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
 		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
-		public static unsafe Bitmap LoadImage(string file)
+		/// <remarks>
+		/// <see cref="Find"/> uses this function when <i>image</i> argument type is string. More info there.
+		/// </remarks>
+		public static unsafe Bitmap LoadImage(string image)
 		{
 			Bitmap R = null;
 			object o = null;
-			if(file.StartsWith_("image:") || file.StartsWith_("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
-				bool compressed = file[0] == '~';
-				int start = compressed ? 2 : 6, len = file.Length - start, n = (int)(len * 3L / 4);
+			if(image.StartsWith_("image:") || image.StartsWith_("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
+				bool compressed = image[0] == '~';
+				int start = compressed ? 2 : 6, len = image.Length - start, n = (int)(len * 3L / 4);
 				var b = new byte[n];
 				fixed (byte* pb = b) {
-					fixed (char* ps = file) n = Convert_.Base64Decode(ps + start, len, pb, n);
+					fixed (char* ps = image) n = Convert_.Base64Decode(ps + start, len, pb, n);
 				}
 				using(var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false)) {
 					if(compressed) Convert_.Decompress(stream, b, 0, n);
@@ -185,10 +63,10 @@ namespace Au
 				}
 				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 			} else {
-				file = Path_.Normalize(file, Folders.ThisAppImages);
-				if(!Files.ExistsAsFile(file))
-					o = Util.Resources_.GetAppResource(Path_.GetFileNameWithoutExtension(file));
-				if(o == null) o = Image.FromFile(file);
+				image = Path_.Normalize(image, Folders.ThisAppImages);
+				if(!Files.ExistsAsFile(image))
+					o = Util.Resources_.GetAppResource(Path_.GetFileNameWithoutExtension(image));
+				if(o == null) o = Image.FromFile(image);
 				R = o as Bitmap;
 				if(R == null) throw new ArgumentException("Bad image format."); //Image but not Bitmap
 			}
@@ -206,6 +84,14 @@ namespace Au
 			_area = area;
 		}
 
+		WinImage(WinImage copy)
+		{
+			_area = copy._area;
+			Rect = copy.Rect;
+			MatchIndex = copy.MatchIndex;
+			ListIndex = copy.ListIndex;
+		}
+
 		/// <summary>
 		/// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
 		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)" r=""/>.
@@ -215,17 +101,21 @@ namespace Au
 		public static WinImage operator +(WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 
 		/// <summary>
-		/// Location of the found image.
+		/// Location of the found image, relative to the search area.
+		/// </summary>
+		/// <remarks>
 		/// Relative to the window/control client area (if area type is Wnd), accessible object (if Acc), image (if Bitmap) or screen (if RECT).
 		/// More info: <see cref="Find"/>.
-		/// </summary>
+		/// </remarks>
 		public RECT Rect;
 
 		/// <summary>
 		/// When there are multiple matching images, this is the 0-based index of current matching image.
-		/// Can be used in callback function to create action "skip n matching images". Example: <c>also: t => t.MatchIndex==1</c>.
-		/// When the <i>image</i> argument specifies multiple images, this will start from 0 for each image.
 		/// </summary>
+		/// <remarks>
+		/// Can be used in callback function to create action "skip n matching images". Example: <c>also: t => t.MatchIndex==1</c>.
+		/// When the <i>image</i> argument specifies multiple images, <b>MatchIndex</b> starts from 0 for each image.
+		/// </remarks>
 		public int MatchIndex { get; internal set; }
 
 		/// <summary>
@@ -256,8 +146,8 @@ namespace Au
 			var p = Coord.NormalizeInRect(x, y, Rect, centerIfEmpty: true);
 
 			if(_area.Type == WIArea.AType.Screen) {
-				if(button == 0) Mouse.Move(p.x, p.y);
-				else Mouse.ClickEx(button, p.x, p.y);
+				if(button == 0) Mouse.Move(p);
+				else Mouse.ClickEx(button, p);
 			} else {
 				var w = _area.W;
 				if(_area.Type == WIArea.AType.Acc) {
@@ -268,6 +158,9 @@ namespace Au
 				else Mouse.ClickEx(button, w, p.x, p.y);
 			}
 		}
+
+		///
+		public override string ToString() => Rect.ToString();
 
 		#endregion
 
@@ -287,7 +180,7 @@ namespace Au
 		/// </list>
 		/// </param>
 		/// <param name="image">
-		/// Image or color to find. Can be:
+		/// Image or color to find. Can be of type:
 		/// string - path of .png or .bmp file. If not full path, uses <see cref="Folders.ThisAppImages"/>. Also can use resources and embedded images; read in Remarks.
 		/// Bitmap - image object in memory.
 		/// int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.
@@ -297,7 +190,7 @@ namespace Au
 		/// <param name="colorDiff">Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
 		/// <param name="also">
 		/// A callback function to call for each found image until it returns true.
-		/// Can be used to create actions like "skip n matching images" (like <c>also: t => t.MatchIndex == 1</c>), "click all matching images" (<c>also: t => { t.MouseClick(); 0.5.s(); return false; }</c>), "get rectangles of all matching images" (<c>also: t => { rectList.Add(t.Rect); return false; }</c>), "ignore images that are or aren't in some custom areas", etc.
+		/// Can be used to create actions like "skip n matching images" (like <c>also: t => t.MatchIndex == 1</c>), "click all matching images" (<c>also: t => { t.MouseClick(); 0.5.s(); return false; }</c>), "get rectangles of all matching images" (<c>also: t => { rectList.Add(t.Rect); return false; }</c>), "ignore some images", etc.
 		/// When the callback function returns true, Find() returns result "found". Else Find() tries to find more matching images (towards the right and bottom) and calls the callback function again when found. If the callback function always returns false, Find() returns result "not found".
 		/// </param>
 		/// <exception cref="WndException">Invalid window handle (the area argument).</exception>
@@ -315,7 +208,7 @@ namespace Au
 		/// The speed mostly depends on:
 		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>new WIArea(w, rectangle)</c>).
 		/// 2. Flag <see cref="WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
-		/// 3. Video driver. Can be eg 10 times slower if incorrect or generic driver is used, for example on a virtual PC. Flag <see cref="WIFlags.WindowDC"/> should help.
+		/// 3. Video driver. Can be much slower if incorrect, generic or virtual PC driver is used. Flag <see cref="WIFlags.WindowDC"/> should help.
 		/// 4. <paramref name="colorDiff"/>. Should be as small as possible.
 		/// 
 		/// If flag <see cref="WIFlags.WindowDC"/> is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in these windows.
@@ -328,8 +221,6 @@ namespace Au
 		/// </remarks>
 		public static WinImage Find(WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, bool> also = null)
 		{
-			//consider: object -> WIImage.
-
 			using(var f = new _Finder(_Action.Find, area, image, flags, colorDiff, also)) {
 				if(!f.Find()) return null;
 				return f.Result;
@@ -448,10 +339,10 @@ namespace Au
 					//speed: quite fast, even if need conversion. Much faster than Clone.
 				}
 
-				public _Image(int color)
+				public _Image(ColorInt color)
 				{
 					var p = (int*)Util.NativeHeap.Alloc(4);
-					*p = color |= unchecked((int)0xff000000);
+					*p = (int)color | unchecked((int)0xff000000);
 					data = new BitmapData() { Width = 1, Height = 1, Scan0 = (IntPtr)p };
 				}
 
@@ -569,32 +460,38 @@ namespace Au
 				case Bitmap bitmap:
 					_images.Add(new _Image(bitmap));
 					break;
-				case int color:
-					_images.Add(new _Image(color));
-					break;
 				case ColorInt color:
 					_AddColor(color);
 					break;
+				case int color:
+					_AddColor(color);
+					break;
 				case Color color:
-					_AddColor(color.ToArgb());
+					_AddColor(color);
+					break;
+				case System.Windows.Media.Color color:
+					_AddColor(color);
 					break;
 				case IEnumerable<object> e: //string, Bitmap or boxed color
 					foreach(var v in e) _AddImage(v);
 					break;
-				case IEnumerable<int> e:
-					foreach(var color in e) _AddColor(color);
-					break;
 				case IEnumerable<ColorInt> e:
 					foreach(var color in e) _AddColor(color);
 					break;
+				case IEnumerable<int> e:
+					foreach(var color in e) _AddColor(color);
+					break;
 				case IEnumerable<Color> e:
-					foreach(var color in e) _AddColor(color.ToArgb());
+					foreach(var color in e) _AddColor(color);
+					break;
+				case IEnumerable<System.Windows.Media.Color> e:
+					foreach(var color in e) _AddColor(color);
 					break;
 				default: throw new ArgumentException("Bad type.", nameof(image));
 				}
-			}
 
-			void _AddColor(int color) => _images.Add(new _Image(color));
+				void _AddColor(ColorInt color) => _images.Add(new _Image(color));
+			}
 
 			public bool Find()
 			{
@@ -616,7 +513,7 @@ namespace Au
 					failedGetRect = !(windowDC ? _area.A.GetRect(out r, _area.W) : _area.A.GetRect(out r));
 					break;
 				case WIArea.AType.Bitmap:
-					r = new RECT(0, 0, _area.B.Width, _area.B.Height, false);
+					r = (0, 0, _area.B.Width, _area.B.Height, false);
 					break;
 				default: //Screen
 					r = _area.R;
@@ -826,12 +723,12 @@ namespace Au
 
 				if(_action != _Action.WaitChanged) {
 					int iFound = (int)(f.p - o_pos0 - areaPixels);
-					RECT r = new RECT(iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight, true);
+					RECT r = (iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight);
 					r.Offset(_resultOffset.x, _resultOffset.y);
 					_result.Rect = r;
 
 					if(_also != null) {
-						if(!_also(_result)) {
+						if(!_also(new WinImage(_result))) { //create new WinImage object because the callback may add it to a list etc
 							_result.MatchIndex++;
 							goto gContinue;
 						}
@@ -1020,7 +917,7 @@ namespace Au
 					if(dc.Is0 && windowDC) w.ThrowNoNative("Failed");
 					//_Debug("get DC");
 					//copy from screen/window DC to memory bitmap
-					uint rop = windowDC ? 0xCC0020u : 0xCC0020u | 0x40000000u; //SRCCOPY|CAPTUREBLT
+					uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
 					bool bbOK = Api.BitBlt(_ad.mb.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, rop);
 					if(!bbOK) throw new AuException("BitBlt"); //the API fails only if a HDC is invalid
 				}
@@ -1074,10 +971,12 @@ namespace Au.Types
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 	/// <summary>
 	/// Defines the search area for <see cref="WinImage.Find"/> and similar functions.
+	/// </summary>
+	/// <remarks>
 	/// It can be a window/control, accessible object, another image or a rectangle in screen.
 	/// Also allows to specify a rectangle in it, which makes the search area smaller and the function faster.
 	/// Example: <c>WinImage.Find(new WIArea(w, 100, 100, 100, 100), "image.png");</c>.
-	/// </summary>
+	/// </remarks>
 	public class WIArea
 	{
 		internal enum AType :byte { Screen, Wnd, Acc, Bitmap }
@@ -1111,9 +1010,17 @@ namespace Au.Types
 
 		public void SetRect(RECT r) { R = r; HasRect = true; }
 
-		public void SetRect(int x, int y, int width, int height) { R = new RECT(x, y, width, height, true); HasRect = true; }
+		public void SetRect(int x, int y, int width, int height) { R = (x, y, width, height); HasRect = true; }
 	}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+	//rejected: now using object. Maybe in the future.
+	///// <summary>
+	///// Image or color for <see cref="WinImage.Find"/> and similar functions.
+	///// </summary>
+	//public struct WIImage
+	//{
+	//}
 
 	/// <summary>
 	/// Flags for <see cref="WinImage.Find"/> and similar functions.
@@ -1139,7 +1046,7 @@ namespace Au.Types
 		/// </summary>
 		AllMustExist = 2,
 
-		//CONSIDER: this was used in QM2. Now can use png alpha channel instead, but need some work and knowledge. But a code creator tool could do it in one click.
+		//rejected: this was used in QM2. Now can use png alpha instead, and CaptureUI allows to capture it.
 		///// <summary>
 		///// Use the top-left pixel color of the image as transparent color (don't compare pixels that have this color).
 		///// </summary>

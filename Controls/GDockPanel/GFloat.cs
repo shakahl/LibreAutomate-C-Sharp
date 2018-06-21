@@ -79,9 +79,9 @@ namespace Au.Controls
 					//This prevents resizing the window 3 times. But need to set FormBorderStyle, or will be wider.
 					//note: this func is called several times, first time before ctor
 					var p = base.CreateParams;
-					p.Style = unchecked((int)(Native.WS_POPUP | Native.WS_THICKFRAME | Native.WS_CLIPCHILDREN));
-					var ex = Native.WS_EX_TOOLWINDOW;
-					if(_hasToolbar) ex |= Native.WS_EX_NOACTIVATE;
+					p.Style = unchecked((int)(Native.WS.POPUP | Native.WS.THICKFRAME | Native.WS.CLIPCHILDREN));
+					var ex = Native.WS_EX.TOOLWINDOW;
+					if(_hasToolbar) ex |= Native.WS_EX.NOACTIVATE;
 					p.ExStyle = (int)ex;
 					return p;
 				}
@@ -198,8 +198,8 @@ namespace Au.Controls
 					get
 					{
 						CreateParams k = base.CreateParams;
-						k.ExStyle = (int)(Native.WS_EX_LAYERED | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOOLWINDOW);
-						k.Style = unchecked((int)(Native.WS_POPUP));
+						k.ExStyle = (int)(Native.WS_EX.LAYERED | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOOLWINDOW);
+						k.Style = unchecked((int)(Native.WS.POPUP));
 						return k;
 					}
 				}

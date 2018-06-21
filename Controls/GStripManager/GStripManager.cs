@@ -333,7 +333,7 @@ namespace Au.Controls
 			if(im == null && x.Attribute_(out s, "i")) im = _callbacks.GetImage(s); //image from resources
 			item.Image = im;
 
-			if(x.Attribute_(out s, "color") && ColorInt.FromString(s, out var color)) item.ForeColor = color;
+			if(x.Attribute_(out s, "color") && ColorInt.FromString(s, out var color)) item.ForeColor = (Color)color;
 			else if(!_inBuildAll) item.ForeColor = Color.FromKnownColor(KnownColor.ControlText);
 
 			bool hasCustomText = x.Attribute_(out s, "t2"); //custom text

@@ -24,8 +24,8 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int MulDiv(int nNumber, int nNumerator, int nDenominator);
 
-		[DllImport("kernel32.dll")]
-		internal static extern long GetTickCount64();
+		//[DllImport("kernel32.dll")]
+		//internal static extern long GetTickCount64();
 
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryUnbiasedInterruptTime(out long UnbiasedTime);

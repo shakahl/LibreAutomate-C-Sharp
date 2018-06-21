@@ -72,28 +72,35 @@ namespace Au
 			void _ParseProgramEtc(string programEtc)
 			{
 				if(programEtc.Length == 0) goto ge1;
-				if(programEtc.IndexOf('\0') < 0 && programEtc.IndexOf('=') < 0) {
+				if(programEtc.IndexOf('\0') < 0 && programEtc.IndexOf(':') < 0 && programEtc.IndexOf('=') < 0) {
 					_program = programEtc;
 					return;
 				}
 				foreach(var t in String_.Segments_(programEtc, "\0")) {
 					t.TrimStart();
-					if(t.StartsWith("program=")) {
-						var k = t.Substring(8);
+					if(_StartsWith("program")) {
+						var k = t.Substring(8).Trim();
 						if(k.Length == 0) goto ge1;
 						_program = k;
-					} else if(t.StartsWith("pid=")) {
+					} else if(_StartsWith("pid")) {
 						_processId = programEtc.ToInt_(t.Offset + 4);
 						if(_processId == 0) goto ge2;
-					} else if(t.StartsWith("tid=")) {
+					} else if(_StartsWith("tid")) {
 						_threadId = programEtc.ToInt_(t.Offset + 4);
 						if(_threadId == 0) goto ge2;
-					} else if(t.StartsWith("owner=")) {
+					} else if(_StartsWith("owner")) {
 						_owner = (Wnd)(LPARAM)programEtc.ToInt_(t.Offset + 6);
 						if(_owner.Is0) goto ge2;
 					} else goto ge3;
 
 					//rejected: programPath. Not very useful, 3 times slower, creates much more garbage, and not always can get full path.
+
+					bool _StartsWith(string s)
+					{
+						int k = s.Length; if(t.Length <= k) return false;
+						switch(t[k]) { case ':': case '=': break; default: return false; }
+						return t.StartsWith(s);
+					}
 				}
 				return;
 				ge1: throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
@@ -328,11 +335,11 @@ namespace Au
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// 
-		/// Or a list of the following properties. Format: one or more "name=value", separated with "\0" or "\0 ". Names must match case. Values of string properties are wildcard expressions.
+		/// Or a list of the following properties. Format: one or more "name=value" or "name:value", separated with "\0" or "\0 ". Names must match case. Values of string properties are wildcard expressions.
 		/// <list type="bullet">
 		/// <item>"program" - program file name. Example: <c>"program=notepad"</c>. Useful when need multiple properties or when file name contains character '='.</item>
 		/// <item>"pid" - process id. See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>. Example: <c>$"pid={pidVar}"</c>.</item>
-		/// <item>"tid" - thread id. See <see cref="ThreadId"/>, <see cref="Process_.CurrentThreadId"/>. Example: <c>"tid=" + tidVar</c>.</item>
+		/// <item>"tid" - thread id. See <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>. Example: <c>"tid=" + tidVar</c>.</item>
 		/// <item>"owner" - owner window handle. See <see cref="WndOwner"/>. Example: <c>$"owner={w1.Handle}"</c>.</item>
 		/// </list>
 		/// </param>
@@ -522,7 +529,7 @@ namespace Au
 			/// </summary>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
-			/// See <see cref="Process_.CurrentThreadId"/>, <see cref="ThreadId"/>.
+			/// See <see cref="Thread_.NativeId"/>, <see cref="ThreadId"/>.
 			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="Native.GetError"/>.
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
@@ -531,6 +538,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>EnumThreadWindows</msdn>.
 			/// </remarks>
+			/// <seealso cref="Thread_.IsUI"/>
 			public static Wnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
@@ -562,7 +570,7 @@ namespace Au
 			/// </remarks>
 			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default)
 			{
-				return Api.FindWindowEx(Native.HWND_MESSAGE, wAfter, className, name);
+				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, className, name);
 			}
 		}
 

@@ -202,10 +202,15 @@ namespace Au
 			/// </summary>
 			internal static void Sleep(int ms)
 			{
-				Time.SleepDoEvents(ms);
+				if(ms > 0) Time.SleepDoEvents(ms);
 
 				//see comments in Mouse._Sleep.
 			}
+
+			/// <summary>
+			/// If t &gt; 10, returns (t / 4 + 8).
+			/// </summary>
+			internal static int LimitSleepTime(int t) => t <= 10 ? t : (t / 4 + 8);
 
 			/// <summary>
 			/// If k is Shift, Ctrl, Alt or Win, returns it as modifier flag, eg KMod.Shift.
@@ -359,7 +364,7 @@ namespace Au
 					_opt = opt;
 
 					SendCtrl(true);
-					Time.Sleep(_LimitSleepTime(Math.Max(opt.KeySpeed, 3))); //to avoid problems with apps like IE address bar
+					Lib.Sleep(opt.KeySpeedClipboard); //need 1 ms for IE address bar, 100 ms for BlueStacks
 					SendKeyEventRaw(_vk, _scan, 0);
 				}
 

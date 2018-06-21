@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
+using System.Windows.Forms;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -112,7 +113,7 @@ namespace Au.Types
 		//[MethodImpl(MethodImplOptions.NoInlining)] //makes bigger/slower
 		public static implicit operator Coord(int v) => new Coord(CoordType.Normal, v);
 
-		//rejected. Would be used when assigning uint, long, ulong. Or need functions for these too.
+		//rejected. Because would be used when assigning uint, long, ulong. Or need functions for these too.
 		///// <summary>
 		///// Creates Coord of Fraction type.
 		///// </summary>
@@ -181,7 +182,7 @@ namespace Au.Types
 		/// <param name="x">X coordinate relative to r.</param>
 		/// <param name="y">Y coordinate relative to r.</param>
 		/// <param name="r">The rectangle.</param>
-		/// <param name="widthHeight">Use only width and height of r. If false, the function adds r offset (left and top).</param>
+		/// <param name="widthHeight">Use only width and height of r. If false (default), the function adds r offset (left and top).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
 		public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false)
 		{
@@ -228,18 +229,21 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate relative to the specified screen (default - primary).</param>
 		/// <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="workArea">x y are relative to the work area.</param>
+		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
-		public static POINT Normalize(Coord x, Coord y, CoordOptions co = null, bool widthHeight = false)
+		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
+		public static POINT Normalize(Coord x, Coord y, bool workArea = false, Screen_ screen = default, bool widthHeight = false, bool centerIfEmpty = false)
 		{
+			if(centerIfEmpty) {
+				if(x.IsEmpty) x = Center;
+				if(y.IsEmpty) y = Center;
+			}
 			POINT p = default;
 			if(!x.IsEmpty || !y.IsEmpty) {
-				Screen_ scr = co?.Screen??default;
-				bool workArea = co?.WorkArea ?? false;
 				RECT r;
-				if(workArea || !scr.IsNull || _NeedRect(x, y)) {
-					r = Screen_.GetRect(scr, workArea);
+				if(workArea || !screen.IsNull || _NeedRect(x, y)) {
+					r = Screen_.GetRect(screen, workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x._Normalize(r.left, r.right);
@@ -261,35 +265,104 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Screen and other options for functions that accept coordinates as <see cref="Coord"/>.
+	/// Can be used to specify coordinates for various popup windows and other UI objects.
 	/// </summary>
-	public class CoordOptions
+	public class PopupXY
 	{
-		/// <summary>
-		/// Screen index or anything that can be used to get screen.
-		/// </summary>
-		public Screen_ Screen { get; set; }
+#pragma warning disable 1591 //XML doc
+		public Coord x, y;
+		public Screen_ screen;
+		public bool workArea;
+		//public bool rawXY;
+		public RECT? rect;
 
-		/// <summary>
-		/// If true, coordinates are relative to the work area, not to whole screen.
-		/// </summary>
-		public bool WorkArea { get; set; }
+		public PopupXY() { }
 
-		//rejected: too much options, rarely used.
-		//public RECT? Rect { get; set; }
-
-		///
-		public CoordOptions() { }
-
-		///
-		public CoordOptions(bool workArea, Screen_ screen = default)
+		public PopupXY(Coord x, Coord y, bool workArea = true, Screen_ screen = default)
 		{
-			WorkArea = workArea;
-			Screen = screen;
+			this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 		}
 
-		//CONSIDER: implicit conversion operators.
+		public PopupXY(RECT r, Coord x, Coord y)
+		{
+			this.x = x; this.y = y; this.rect = r;
+		}
+#pragma warning restore 1591 //XML doc
+
+		/// <summary>Specifies position relative to the work area of the primary screen.</summary>
+		public static implicit operator PopupXY((Coord x, Coord y) p) => new PopupXY(p.x, p.y, true);
+		/// <summary>Specifies position relative to the primary screen or its work area.</summary>
+		public static implicit operator PopupXY((Coord x, Coord y, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea);
+		/// <summary>Specifies position relative to the work area of the specified screen.</summary>
+		public static implicit operator PopupXY((Coord x, Coord y, Screen_ screen) p) => new PopupXY(p.x, p.y, true, p.screen);
+		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
+		public static implicit operator PopupXY((Coord x, Coord y, bool workArea, Screen_ screen) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
+		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
+		public static implicit operator PopupXY((Coord x, Coord y, Screen_ screen, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
+		/// <summary>Specifies position relative to the primary screen.</summary>
+		public static implicit operator PopupXY(POINT p) => new PopupXY(p.x, p.y, false);
+		/// <summary>Specifies the center of the work area of the specified screen.</summary>
+		public static implicit operator PopupXY(Screen_ screen) => new PopupXY(default, default, true, screen);
+		/// <summary>Specifies the center of the specified screen or its work area.</summary>
+		public static implicit operator PopupXY((Screen_ screen, bool workArea) t) => new PopupXY(default, default, t.workArea, t.screen);
+		/// <summary>Specifies the center of the specified screen or its work area.</summary>
+		public static implicit operator PopupXY((bool workArea, Screen_ screen) t) => new PopupXY(default, default, t.workArea, t.screen);
+		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen.</summary>
+		public static implicit operator PopupXY((RECT r, Coord x, Coord y) t) => new PopupXY(t.r, t.x, t.y);
+		/// <summary>Specifies the center of the specified rectangle which is relative to the primary screen.</summary>
+		public static implicit operator PopupXY(RECT r) => new PopupXY { rect = r };
+		/// <summary>Specifies position in the specified window.</summary>
+		public static implicit operator PopupXY((Wnd w, Coord x, Coord y) t) => new PopupXY(t.w.Rect, t.x, t.y);
+		/// <summary>Specifies the center of the specified window.</summary>
+		public static implicit operator PopupXY(Wnd w) => new PopupXY { rect = w.Rect };
+
+		//public bool IsRawXY => screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
+
+		/// <summary>
+		/// Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
+		/// </summary>
+		public static POINT Mouse
+		{
+			get
+			{
+				int cy = Api.GetSystemMetrics(Api.SM_CYCURSOR);
+				var p = Au.Mouse.XY;
+				if(Tools.Misc.GetCurrentMouseCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
+					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
+					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
+
+					//Print(u.xHotspot, u.yHotspot);
+					p.y += cy - u.yHotspot - 1; //not perfect, but better than just to add SM_CYCURSOR or some constant value.
+					return p;
+				}
+				return (p.x, p.y + cy - 5);
+			}
+		}
+
+		/// <summary>
+		/// Gets <see cref="Screen"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
+		/// </summary>
+		public Screen GetScreen()
+		{
+			if(!screen.IsNull) return screen.GetScreen();
+			POINT p;
+			if(rect.HasValue) p = Coord.NormalizeInRect(x, y, rect.GetValueOrDefault(), centerIfEmpty: true);
+			else p = Coord.Normalize(x, y, workArea);
+			return Screen.FromPoint(p);
+		}
 	}
+
+	//FUTURE
+	//[Flags]
+	//public enum PopupAlignment
+	//{
+	//	XAtLeft = 0,
+	//	XAtRight = 1,
+	//	XAtCenter = 2,
+	//	YAtTop = 0,
+	//	YAtBottom = 1,
+	//	YAtCenter = 2,
+	//}
 
 	/// <summary>
 	/// Window handle.
@@ -306,7 +379,7 @@ namespace Au.Types
 		/// <summary> Assignment of a value of type Wnd. </summary>
 		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((Wnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
-		public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new AnyWnd(c);
+		public static implicit operator AnyWnd(Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.Window (WPF window). </summary>
 		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(w);
 
@@ -321,7 +394,7 @@ namespace Au.Types
 			{
 				if(_o == null) return default;
 				if(_o is Wnd) return (Wnd)_o;
-				if(_o is System.Windows.Forms.Control c) return (Wnd)c;
+				if(_o is Control c) return (Wnd)c;
 				return _Wpf();
 			}
 		}
@@ -330,33 +403,52 @@ namespace Au.Types
 		Wnd _Wpf() => (Wnd)(System.Windows.Window)_o;
 
 		/// <summary>
-		/// true if not assigned.
+		/// true if this is default(AnyWnd).
 		/// </summary>
 		public bool IsEmpty => _o == null;
 	}
 
-#if false //currently not used
 	/// <summary>
-	/// Contains a value of one of two types - string or IEnumerable&lt;string&gt;.
-	/// Has implicit conversion operators: from string and from IEnumerable&lt;string&gt;.
-	/// Often used for function parameters that support both these types.
+	/// Used for function parameters to specify multiple strings.
+	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversion operators from these types.
 	/// </summary>
 	[DebuggerStepThrough]
-	public struct StringOrList
+	public struct MultiString
 	{
+		MultiString(object o) => Value = o;
+
 		/// <summary>
-		/// The assigned value. It can be string, IEnumerable&lt;string&gt; or null.
+		/// The raw value.
 		/// </summary>
 		public object Value;
 
-		/// <summary> string assignment. </summary>
-		public static implicit operator StringOrList(string s) { return new StringOrList() { _o = s }; }
-		///// <summary> IEnumerable&lt;string&gt; assignment. </summary>
-		//public static implicit operator StringOrList(IEnumerable<string> e) { return new StringOrList() { _o = e }; } //error: "user-defined conversions to/from interfaces not allowed". Then why allowed when using generic?
-		/// <summary> string[] assignment. </summary>
-		public static implicit operator StringOrList(string[] e) { return new StringOrList() { _o = e }; }
-		/// <summary> List&lt;string&gt; assignment. </summary>
-		public static implicit operator StringOrList(List<string> e) { return new StringOrList() { _o = e }; }
+		/// <summary> Assignment of a value of type string. </summary>
+		public static implicit operator MultiString(string s) => new MultiString(s);
+		/// <summary> Assignment of a value of type string[]. </summary>
+		public static implicit operator MultiString(string[] e) { return new MultiString(e); }
+		/// <summary> Assignment of a value of type List&lt;string&gt;. </summary>
+		public static implicit operator MultiString(List<string> e) { return new MultiString(e); }
+
+		/// <summary>
+		/// Converts the value to string[].
+		/// </summary>
+		/// <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
+		/// <remarks>
+		/// If the value was string or List, converts to string[] and stores the string[] in <b>Value</b>. If null, returns empty array.
+		/// </remarks>
+		public string[] ToArray(char separator = '|')
+		{
+			switch(Value) {
+			case null:
+				return Array.Empty<string>(); //for safe foreach
+			case string s:
+				Value = s.Split(separator);
+				break;
+			case List<string> a:
+				Value = a.ToArray();
+				break;
+			}
+			return Value as string[];
+		}
 	}
-#endif
 }

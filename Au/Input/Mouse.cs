@@ -123,7 +123,10 @@ namespace Au
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
 		/// </summary>
-		/// <param name="p">Coordinates in screen.</param>
+		/// <param name="p">
+		/// Coordinates relative to the primary screen.
+		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.
+		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
 		/// <remarks>
@@ -149,30 +152,30 @@ namespace Au
 
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the position x y in screen.
-		/// Returns the final cursor position in primary screen coordinates.
+		/// Returns normalized cursor position.
 		/// </summary>
-		/// <param name="x">X coordinate relative to screen.</param>
-		/// <param name="y">Y coordinate relative to screen.</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">
-		/// 1. The specified x y is not in screen (any screen). No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).
+		/// 1. The specified x y is not in the screen (any screen). No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).
 		/// 2. Invalid screen index.
 		/// </exception>
 		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
-		public static POINT Move(Coord x, Coord y, CoordOptions co = null)
+		public static POINT Move(Coord x, Coord y)
 		{
 			LibWaitForNoButtonsPressed();
-			var p = Coord.Normalize(x, y, co);
+			var p = Coord.Normalize(x, y);
 			_Move(p, fast: false);
 			return p;
 		}
+		//rejected: parameters bool workArea = false, Screen_ screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
 
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
-		/// Returns the final cursor position in primary screen coordinates.
+		/// Returns cursor position in primary screen coordinates.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
@@ -550,22 +553,34 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button at position x y in screen.
-		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord, CoordOptions)"/>.
+		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
+		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord)"/>.
 		/// </summary>
 		/// <param name="button">Button and action.</param>
-		/// <param name="x">X coordinate relative to screen.</param>
-		/// <param name="y">Y coordinate relative to screen.</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
 		/// </remarks>
-		public static MRelease ClickEx(MButton button, Coord x, Coord y, CoordOptions co = null)
+		public static MRelease ClickEx(MButton button, Coord x, Coord y)
 		{
-			var p = Move(x, y, co);
+			var p = Move(x, y);
+			_Click(button, p);
+			return button;
+		}
+
+		/// <inheritdoc cref="ClickEx(MButton, Coord, Coord)"/>
+		/// <param name="button">Button and action.</param>
+		/// <param name="p">
+		/// Coordinates relative to the primary screen.
+		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.ClickEx(MButton.Right, (x, y, true));</c>.
+		/// </param>
+		public static MRelease ClickEx(MButton button, POINT p)
+		{
+			Move(p);
 			_Click(button, p);
 			return button;
 		}
@@ -617,7 +632,7 @@ namespace Au
 					var wfp = Wnd.FromXY(p, WXYFlags.NeedWindow);
 					if(wfp == wTL) return true;
 					//forgive if same thread and no caption. Eg a tooltip that disappears and relays the click to its owner window. But not if wTL is disabled.
-					if(wTL.IsEnabled && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(Native.WS_CAPTION)) return true;
+					if(wTL.IsEnabled && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(Native.WS.CAPTION)) return true;
 					return false;
 				}
 			}
@@ -638,11 +653,11 @@ namespace Au
 
 		/// <summary>
 		/// Left click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		public static void Click(Coord x, Coord y)
 		{
 			//note: most Click functions don't have a workArea and screen parameter. It is rarely used. For reliability better use the overloads that use window coordinates.
@@ -677,11 +692,11 @@ namespace Au
 
 		/// <summary>
 		/// Right click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		public static void RightClick(Coord x, Coord y)
 		{
 			ClickEx(MButton.Right, x, y);
@@ -714,11 +729,11 @@ namespace Au
 
 		/// <summary>
 		/// Double left click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		public static void DoubleClick(Coord x, Coord y)
 		{
 			ClickEx(MButton.Left | MButton.DoubleClick, x, y);
@@ -754,11 +769,11 @@ namespace Au
 
 		/// <summary>
 		/// Left down (press and don't release) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
@@ -803,11 +818,11 @@ namespace Au
 
 		/// <summary>
 		/// Left up (release pressed button) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		public static void LeftUp(Coord x, Coord y)
 		{
 			ClickEx(MButton.Left | MButton.Up, x, y);
@@ -842,11 +857,11 @@ namespace Au
 
 		/// <summary>
 		/// Right down (press and don't release) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		/// <remarks>
 		/// The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.
 		/// </remarks>
@@ -885,11 +900,11 @@ namespace Au
 
 		/// <summary>
 		/// Right up (release pressed button) at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord, CoordOptions)"/>. More info there.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord, CoordOptions)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		public static void RightUp(Coord x, Coord y)
 		{
 			ClickEx(MButton.Right | MButton.Up, x, y);
@@ -1419,8 +1434,8 @@ namespace Au.Types
 			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AuException(0, "*get rectangle");
 			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 			if(w.Is0) {
-				if(button == 0) Mouse.Move(p.x, p.y);
-				else Mouse.ClickEx(button, p.x, p.y);
+				if(button == 0) Mouse.Move(p);
+				else Mouse.ClickEx(button, p);
 			} else {
 				if(button == 0) Mouse.Move(w, p.x, p.y);
 				else Mouse.ClickEx(button, w, p.x, p.y);
@@ -1433,7 +1448,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Moves the mouse to the found image.
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord, CoordOptions)"/>.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.Move(Coord, Coord)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
@@ -1448,7 +1463,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Clicks the found image.
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord, CoordOptions)"/>.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/> or <see cref="Mouse.ClickEx(MButton, Coord, Coord)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
@@ -1496,11 +1511,15 @@ namespace Au.Tools
 		/// Gets the native handle of the current mouse cursor.
 		/// Returns false if the cursor is currently invisible.
 		/// </summary>
+		/// <remarks>
+		/// It is the system cursor, not the cursor of this thread.
+		/// </remarks>
 		public static bool GetCurrentMouseCursor(out IntPtr hcursor)
 		{
 			Api.CURSORINFO ci = default; ci.cbSize = Api.SizeOf(ci);
-			if(Api.GetCursorInfo(ref ci) && ci.flags.Has_(Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
+			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && ci.flags.Has_(Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
 			hcursor = default; return false;
 		}
+
 	}
 }

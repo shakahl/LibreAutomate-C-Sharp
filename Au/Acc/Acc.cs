@@ -284,14 +284,29 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
-		/// <param name="flags"></param>
+		/// <param name="flags">Flags.</param>
 		/// <exception cref="WndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+		/// <exception cref="ArgumentException"><paramref name="objid"/> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
 		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
 		{
+			bool spec = false;
+			switch(objid) {
+			case AccOBJID.QUERYCLASSNAMEIDX: //use WM_GETOBJECT
+			case AccOBJID.NATIVEOM: //use API AccessibleObjectFromWindow
+				throw new ArgumentException();
+			case AccOBJID.CARET: //w should be 0
+			case AccOBJID.CURSOR: //w should be 0
+			case AccOBJID.ALERT: //only with AccessibleObjectFromEvent?
+			case AccOBJID.SOUND: //only with AccessibleObjectFromEvent?
+				spec = true; flags |= AWFlags.NotInProc;
+				break;
+			}
+
 			var hr = Cpp.Cpp_AccFromWindow(flags.Has_(AWFlags.NotInProc) ? 1 : 0, w, objid, out var a, out _);
 			if(hr != 0) {
 				if(flags.Has_(AWFlags.NoThrow)) return null;
+				if(spec && w.Is0) throw new AuException();
 				w.ThrowIfInvalid();
 				_WndThrow(hr, w, "*get accessible object from window.");
 			}
@@ -306,11 +321,16 @@ namespace Au
 
 		/// <summary>
 		/// Gets accessible object from point.
-		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </summary>
-		/// <param name="p">Coordinates in screen.</param>
+		/// <param name="p">
+		/// Coordinates relative to the primary screen.
+		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = Acc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
+		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+		/// <remarks>
+		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+		/// </remarks>
 		public static Acc FromXY(POINT p, AXYFlags flags = 0)
 		{
 			for(int i = 0; ; i++) {
@@ -318,24 +338,10 @@ namespace Au
 				if(hr == 0) return new Acc(a);
 				if(i < 2) continue;
 				if(flags.Has_(AXYFlags.NoThrow)) return null;
-				_WndThrow(hr, Wnd.FromXY(p.x, p.y, WXYFlags.Raw), "*get accessible object from point.");
+				_WndThrow(hr, Wnd.FromXY(p, WXYFlags.Raw), "*get accessible object from point.");
 			}
 		}
-
-		/// <summary>
-		/// Gets accessible object from point.
-		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
-		/// </summary>
-		/// <param name="x">X coordinate in screen.</param>
-		/// <param name="y">Y coordinate in screen.</param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
-		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
-		public static Acc FromXY(Coord x, Coord y, CoordOptions co = null, AXYFlags flags = 0)
-		{
-			var p = Coord.Normalize(x, y, co);
-			return FromXY(p, flags);
-		}
+		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
 
 		/// <summary>
 		/// Gets accessible object from mouse cursor (pointer) position.

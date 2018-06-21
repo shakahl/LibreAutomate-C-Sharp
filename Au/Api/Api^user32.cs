@@ -11,7 +11,7 @@ namespace Au.Types
 		internal static extern LPARAM SendMessage(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-		internal static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, uint SMTO_X, uint uTimeout, out LPARAM lpdwResult);
+		internal static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, Native.SMTO flags, uint uTimeout, out LPARAM lpdwResult);
 
 		[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
 		internal static extern bool SendNotifyMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
@@ -151,7 +151,7 @@ namespace Au.Types
 		internal static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-		internal static extern Wnd CreateWindowEx(uint dwExStyle, string lpClassName, string lpWindowName, uint dwStyle, int x, int y, int nWidth, int nHeight, Wnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
+		internal static extern Wnd CreateWindowEx(Native.WS_EX dwExStyle, string lpClassName, string lpWindowName, Native.WS dwStyle, int x, int y, int nWidth, int nHeight, Wnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 		internal static extern LPARAM DefWindowProc(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
@@ -236,11 +236,11 @@ namespace Au.Types
 			public int y;
 			public int cx;
 			public int cy;
-			public uint flags;
+			public Native.SWP flags;
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool SetWindowPos(Wnd hWnd, Wnd hWndInsertAfter, int X, int Y, int cx, int cy, uint SWP_X);
+		internal static extern bool SetWindowPos(Wnd hWnd, Wnd hWndInsertAfter, int X, int Y, int cx, int cy, Native.SWP swpFlags);
 
 		internal struct FLASHWINFO
 		{
@@ -839,7 +839,7 @@ namespace Au.Types
 		internal static extern Wnd SetParent(Wnd hWndChild, Wnd hWndNewParent);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, uint dwStyle, bool bMenu, uint dwExStyle);
+		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, Native.WS dwStyle, bool bMenu, Native.WS_EX dwExStyle);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
@@ -857,7 +857,7 @@ namespace Au.Types
 		internal const uint MOD_NOREPEAT = 0x4000;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, int vk);
+		internal static extern bool RegisterHotKey(Wnd hWnd, int id, uint fsModifiers, KKey vk);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool UnregisterHotKey(Wnd hWnd, int id);
@@ -1040,8 +1040,8 @@ namespace Au.Types
 		internal struct ICONINFO
 		{
 			public bool fIcon;
-			public uint xHotspot;
-			public uint yHotspot;
+			public int xHotspot;
+			public int yHotspot;
 			public IntPtr hbmMask;
 			public IntPtr hbmColor;
 		}
@@ -1131,6 +1131,12 @@ namespace Au.Types
 
 		[DllImport("user32.dll")]
 		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+		/// <summary>
+		/// note: don't use LR_SHARED. It is only for native resources.
+		/// </summary>
+		[DllImport("user32.dll")] //does not support last error
+		internal static extern IntPtr CreateIconFromResourceEx(byte* pbIconBits, int cbIconBits, bool fIcon, uint dwVer= 0x30000, int cxDesired=0, int cyDesired=0, uint uFlags=0);
 
 	}
 }

@@ -150,11 +150,12 @@ namespace Au.Util
 		/// Simple non-OLE drag operation.
 		/// Returns true if dropped, false if cancelled.
 		/// </summary>
-		/// <param name="w">Window or control that owns the drag operation.</param>
+		/// <param name="window">Window or control that owns the drag operation.</param>
 		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-		public static bool SimpleDragDrop(Wnd w, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
+		public static bool SimpleDragDrop(AnyWnd window, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
+			Wnd w = window.Wnd;
 			Api.SetCapture(w);
 
 			bool R = false;
@@ -198,19 +199,7 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Simple non-OLE drag operation.
-		/// Returns true if dropped, false if cancelled.
-		/// </summary>
-		/// <param name="c">Window or control that owns the drag operation.</param>
-		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
-		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
-		public static bool SimpleDragDrop(Control c, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
-		{
-			return SimpleDragDrop((Wnd)c, mouseButton, onMouseKeyMessage);
-		}
-
-		/// <summary>
-		/// <see cref="SimpleDragDrop(Control, MButtons, Action{MsgArgs})"/> callback function arguments.
+		/// <see cref="SimpleDragDrop(AnyWnd, MButtons, Action{MsgArgs})"/> callback function arguments.
 		/// </summary>
 		public class MsgArgs
 		{

@@ -283,13 +283,13 @@ public:
 		return true;
 	}
 
-	static bool GetSize(IStream* x, out DWORD& size) {
-		size = 0;
-		STATSTG stat;
-		if(x->Stat(&stat, STATFLAG_NONAME)) return false;
-		size = stat.cbSize.LowPart;
-		return true;
-	}
+	//static bool GetSize(IStream* x, out DWORD& size) {
+	//	size = 0;
+	//	STATSTG stat;
+	//	if(x->Stat(&stat, STATFLAG_NONAME)) return false;
+	//	size = stat.cbSize.LowPart;
+	//	return true;
+	//}
 
 	static bool Clear(IStream* x) {
 		return 0 == x->SetSize(ULI(0));

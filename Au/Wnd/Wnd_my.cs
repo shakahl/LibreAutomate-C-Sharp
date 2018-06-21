@@ -31,7 +31,7 @@ namespace Au
 			/// Similar to <see cref="System.Windows.Forms.NativeWindow"/>, but more lightweight and does not change the class name.
 			/// Can register a new window class or extend (subclass) an existing class.
 			/// </remarks>
-			public class MyWindow
+			public abstract class MyWindow
 			{
 				static LPARAM _defWindowProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
 				LPARAM _classWndProc; //old window proc, usually _defWindowProc
@@ -50,8 +50,8 @@ namespace Au
 				/// </summary>
 				/// <param name="className">The name of any window class existing in this process. You can register a class with <see cref="RegisterClass"/> or use any other class.</param>
 				/// <param name="name">Window name or null.</param>
-				/// <param name="style">One or more Native.WS_ constants, like <c>Native.WS_OVERLAPPEDWINDOW|Native.WS_VISIBLE.</c></param>
-				/// <param name="exStyle">One or more Native.WS_EX_ constants.</param>
+				/// <param name="style"></param>
+				/// <param name="exStyle"></param>
 				/// <param name="x"></param>
 				/// <param name="y"></param>
 				/// <param name="width"></param>
@@ -62,10 +62,10 @@ namespace Au
 				/// Your derived class should override <see cref="WndProc"/>, which calls the window procedure of window class <paramref name="className"/>.
 				/// The window will be destroyed in these cases: 1. Called <see cref="Destroy"/>. 2. Closed by the user or some program/script. 3. When this thread ends. 4. This function called again (then destroys old window and creates new).
 				/// </remarks>
-				public bool Create(string className, string name = null, uint style = 0, uint exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default)
+				public bool Create(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default)
 				{
 					Destroy();
-					if(_wndProc == null) _wndProc = WndProc;
+					if(_wndProc == null) _wndProc = _WndProc;
 
 					if(!_Create(className, name, style, exStyle, x, y, width, height, parent, controlId)) return false;
 
@@ -82,7 +82,7 @@ namespace Au
 				/// </summary>
 				public bool CreateMessageWindow(string className)
 				{
-					return Create(className, null, Native.WS_POPUP, Native.WS_EX_NOACTIVATE, 0, 0, 0, 0, Native.HWND_MESSAGE);
+					return Create(className, null, Native.WS.POPUP, Native.WS_EX.NOACTIVATE, 0, 0, 0, 0, Native.HWND.MESSAGE);
 					//note: WS_EX_NOACTIVATE is important.
 				}
 
@@ -99,17 +99,9 @@ namespace Au
 					Debug.Assert(Handle == default && !t_windows.Contains(this));
 				}
 
-				/// <summary>
-				/// Calls the window procedure of the window class (see <see cref="Create"/>) and manages the lifetime of this variable.
-				/// Your derived class should override this function. Your WndProc must call it (base.WndProc) and return its return value, except when don't need default processing. Always call it on WM_NCCREATE and WM_NCDESTROY.
-				/// More info: <msdn>Window Procedures</msdn>.
-				/// </summary>
-				/// <seealso cref="Wnd.Misc.PrintMsg(Wnd, uint, LPARAM, LPARAM, uint[])"/>
-				public virtual LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+				LPARAM _WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
 				{
-					var R = _classWndProc == _defWindowProc
-						? Api.DefWindowProc(w, message, wParam, lParam) //not necessary but presumably faster
-						: Api.CallWindowProc(_classWndProc, w, message, wParam, lParam);
+					var R = WndProc(w, message, wParam, lParam);
 
 					if(message == Api.WM_NCDESTROY) {
 						Handle = default;
@@ -119,14 +111,27 @@ namespace Au
 					return R;
 				}
 
-				bool _Create(string className, string name, uint style, uint exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
+				/// <summary>
+				/// Calls the window procedure of the window class (see <see cref="Create"/>) and manages the lifetime of this variable.
+				/// Your derived class should override this function, call base.WndProc and return its return value, except when don't need default processing.
+				/// More info: <msdn>Window Procedures</msdn>.
+				/// </summary>
+				/// <seealso cref="Wnd.Misc.PrintMsg(Wnd, uint, LPARAM, LPARAM, uint[])"/>
+				protected virtual LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+				{
+					return _classWndProc == _defWindowProc
+						? Api.DefWindowProc(w, message, wParam, lParam) //not necessary but presumably faster
+						: Api.CallWindowProc(_classWndProc, w, message, wParam, lParam);
+				}
+
+				bool _Create(string className, string name, Native.WS style, Native.WS_EX exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
 				{
 					using(Util.WinHook.ThreadCbt(c =>
 					{
 						if(c.code == HookData.CbtEvent.CREATEWND) {
 							var ww = (Wnd)c.wParam;
 							Debug.Assert(ww.ClassNameIs(className));
-							_classWndProc = ww.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
+							_classWndProc = ww.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
 							c.hook.Unhook();
 						} else Debug.Assert(false);
 						return false;

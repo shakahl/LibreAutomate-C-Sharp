@@ -83,11 +83,11 @@ namespace Au.Controls
 				cp.ClassName = "Scintilla";
 
 				//this is like TextBoxBase and ScintillaNET do
-				cp.ExStyle &= (~(int)Native.WS_EX_CLIENTEDGE);
-				cp.Style &= (~(int)Native.WS_BORDER);
+				cp.ExStyle &= (~(int)Native.WS_EX.CLIENTEDGE);
+				cp.Style &= (~(int)Native.WS.BORDER);
 				switch(InitBorderStyle) {
-				case BorderStyle.Fixed3D: cp.ExStyle |= (int)Native.WS_EX_CLIENTEDGE; break;
-				case BorderStyle.FixedSingle: cp.Style |= (int)Native.WS_BORDER; break;
+				case BorderStyle.Fixed3D: cp.ExStyle |= (int)Native.WS_EX.CLIENTEDGE; break;
+				case BorderStyle.FixedSingle: cp.Style |= (int)Native.WS.BORDER; break;
 				}
 
 				return cp;

@@ -274,6 +274,8 @@ namespace Au
 						break;
 					default:
 						Debug.Assert(!Cpp.IsCppError((int)hr));
+						if(hr == (Cpp.EError)Api.RPC_E_SERVER_CANTMARSHAL_DATA && !_flags.Has_(AFFlags.NotInProc))
+							throw new AuException((int)hr, "For this object need flag NotInProc");
 						throw new AuException((int)hr);
 					}
 

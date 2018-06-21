@@ -31,11 +31,11 @@ namespace Au
 		/// <exception cref="WndException"/>
 		public void SetTransparency(bool allowTransparency, double? opacity = null, ColorInt? colorRGB = null)
 		{
-			uint est = ExStyle;
-			bool layered = (est & Native.WS_EX_LAYERED) != 0;
+			var est = ExStyle;
+			bool layered = (est & Native.WS_EX.LAYERED) != 0;
 
 			if(allowTransparency) {
-				if(!layered) SetExStyle(est | Native.WS_EX_LAYERED);
+				if(!layered) SetExStyle(est | Native.WS_EX.LAYERED);
 
 				uint col = 0, op = 0, f = 0;
 				if(colorRGB != null) {
@@ -52,7 +52,7 @@ namespace Au
 				if(!Api.SetLayeredWindowAttributes(this, col, (byte)op, f)) ThrowUseNative();
 			} else if(layered) {
 				//if(!Api.SetLayeredWindowAttributes(this, 0, 0, 0)) ThrowUseNative();
-				SetExStyle(est & ~Native.WS_EX_LAYERED);
+				SetExStyle(est & ~Native.WS_EX.LAYERED);
 			}
 		}
 
@@ -142,7 +142,7 @@ namespace Au
 			get
 			{
 				if(!Ver.MinWin8) return false;
-				if(!HasExStyle(Native.WS_EX_TOPMOST | Native.WS_EX_NOREDIRECTIONBITMAP) || (Style & Native.WS_CAPTION) != 0) return false;
+				if(!HasExStyle(Native.WS_EX.TOPMOST | Native.WS_EX.NOREDIRECTIONBITMAP) || (Style & Native.WS.CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
 				if(!Ver.MinWin10 && LibIsOfShellProcess) return true;
 				return false;
@@ -159,7 +159,7 @@ namespace Au
 			get
 			{
 				if(!Ver.MinWin10) return 0;
-				if(!HasExStyle(Native.WS_EX_NOREDIRECTIONBITMAP)) return 0;
+				if(!HasExStyle(Native.WS_EX.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better
 			}
@@ -191,19 +191,19 @@ namespace Au
 			if(siz == Convert_.HexDecode(s, &p, siz)) {
 				//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 				if(!showActivate && !this.IsVisible) {
-					uint style = this.Style;
+					var style = this.Style;
 					switch(p.showCmd) {
 					case Api.SW_SHOWMAXIMIZED:
-						if((style & Native.WS_MAXIMIZE) == 0) {
+						if((style & Native.WS.MAXIMIZE) == 0) {
 							this.MoveLL(p.rcNormalPosition.left, p.rcNormalPosition.top, p.rcNormalPosition.Width, p.rcNormalPosition.Height); //without this would be always in primary monitor
-							this.SetStyle(style | Native.WS_MAXIMIZE);
+							this.SetStyle(style | Native.WS.MAXIMIZE);
 						}
 						break;
 					case Api.SW_SHOWMINIMIZED:
-						if((style & Native.WS_MINIMIZE) == 0) this.SetStyle(style | Native.WS_MINIMIZE);
+						if((style & Native.WS.MINIMIZE) == 0) this.SetStyle(style | Native.WS.MINIMIZE);
 						break;
 					case Api.SW_SHOWNORMAL:
-						if((style & (Native.WS_MAXIMIZE | Native.WS_MINIMIZE)) != 0) this.SetStyle(style & ~(Native.WS_MAXIMIZE | Native.WS_MINIMIZE));
+						if((style & (Native.WS.MAXIMIZE | Native.WS.MINIMIZE)) != 0) this.SetStyle(style & ~(Native.WS.MAXIMIZE | Native.WS.MINIMIZE));
 						//never mind: if currently minimized, will not be restored. Usually currently is normal, because this func called after creating window, especially if invisible. But will restore if currently maximized.
 						break;
 					}

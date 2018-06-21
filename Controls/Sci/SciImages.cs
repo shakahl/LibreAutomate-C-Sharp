@@ -456,14 +456,14 @@ namespace Au.Controls
 							if(q.isCompressed) {
 								//this is slow with big images. It seems processes current line + all remaining lines. Such bitmaps are rare.
 								int yOffs = -c.annotLine * hLine; if(isFirstLine == 0) yOffs += IMAGE_MARGIN_TOP;
-								var ok = SetDIBitsToDevice(hdc, x, r.top + isFirstLine * IMAGE_MARGIN_TOP,
+								var ok = Api.SetDIBitsToDevice(hdc, x, r.top + isFirstLine * IMAGE_MARGIN_TOP,
 									q.width, q.height, 0, yOffs, 0, q.height,
 									pBits, q.biHeader, 0); //DIB_RGB_COLORS
 								Debug.Assert(ok > 0);
 							} else if(siz <= sizF) {
 								//this is fast, but cannot use with compressed bitmaps
 								int hei = yy - y, bmY = q.height - (currentTop - ((isFirstLine ^ 1) * IMAGE_MARGIN_TOP) + hei);
-								var ok = SetDIBitsToDevice(hdc, x, r.top + isFirstLine * IMAGE_MARGIN_TOP,
+								var ok = Api.SetDIBitsToDevice(hdc, x, r.top + isFirstLine * IMAGE_MARGIN_TOP,
 									q.width, hei, 0, 0, 0, hei,
 									pBits + bmY * bytesInLine, q.biHeader, 0); //DIB_RGB_COLORS
 								Debug.Assert(ok > 0);
@@ -513,9 +513,6 @@ namespace Au.Controls
 			//tested: in QM2 was used LZO compression, now ZIP (DeflateStream). ZIP compresses better, but not so much. LZO is faster, but ZIP is fast enough. GIF and JPG in most cases compress less than ZIP and sometimes less than LZO.
 			//tested: saving in 8-bit format in most cases does not make much smaller when compressed. For screenshots we reduce colors to 4-bit.
 		}
-
-		[DllImport("gdi32.dll")]
-		internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, byte* lpvBits, void* lpbmi, uint ColorUse); //BITMAPINFO*
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreatePen(int iStyle, int cWidth, uint color);

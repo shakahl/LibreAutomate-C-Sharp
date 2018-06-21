@@ -95,7 +95,7 @@ namespace Aga.Controls.Tree
 			var c = CurrentEditor;
 			if(c != null && !ContainsFocus && c.TopLevelControl == Form.ActiveForm) {
 				//async to avoid a hard-to-debug ObjectDisposedException
-				Timer_.After(100, t =>
+				Timer_.After(100, () =>
 				{
 					if(CurrentEditor != null && !ContainsFocus) {
 						CurrentEditorOwner.EndEdit(true);

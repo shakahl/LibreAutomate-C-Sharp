@@ -196,14 +196,13 @@ namespace Au.Types
 		/// <summary>
 		/// Gets primary screen rectangle.
 		/// </summary>
-		public static RECT PrimaryRect => new RECT(0, 0, PrimaryWidth, PrimaryHeight, false);
+		public static RECT PrimaryRect => (0, 0, PrimaryWidth, PrimaryHeight, false);
 
 		/// <summary>
 		/// Gets screen rectangle.
 		/// </summary>
 		/// <param name="screen">Screen index etc. If default - primary screen.</param>
 		/// <param name="workArea">Get work area rectangle.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid screen index.</exception>
 		public static RECT GetRect(Screen_ screen = default, bool workArea = false)
 		{
 			RECT r;

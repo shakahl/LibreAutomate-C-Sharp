@@ -675,7 +675,7 @@ namespace Au
 
 			bool _IsCheckbox()
 			{
-				switch(W.Style & 15) {
+				switch((uint)W.Style & 15) {
 				case BS_CHECKBOX:
 				case BS_AUTOCHECKBOX:
 				case BS_RADIOBUTTON:

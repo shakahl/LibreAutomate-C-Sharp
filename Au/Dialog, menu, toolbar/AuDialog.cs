@@ -321,14 +321,19 @@ namespace Au
 
 			bool _hasXButton;
 
-			internal TDCBF_ SetButtons(string buttons, object customButtons)
+			internal TDCBF_ SetButtons(string buttons, MultiString customButtons)
 			{
 				_customButtons = null;
 				_mapIdUserNative = null;
 				_defaultButtonUserId = 0;
 				_isDefaultButtonSet = false;
 
-				if(customButtons is IEnumerable<string> e) {
+				switch(customButtons.Value) {
+				case null: break;
+				case string s:
+					_ParseStringList(s, true);
+					break;
+				case IEnumerable<string> e:
 					int id = 0;
 					foreach(var v in e) {
 						if(_customButtons == null) _customButtons = new List<_Button>();
@@ -336,7 +341,8 @@ namespace Au
 						_customButtons.Add(new _Button(id, s));
 						DefaultButtonUserId = 1;
 					}
-				} else _ParseStringList(customButtons?.ToString(), true);
+					break;
+				}
 
 				return _ParseStringList(buttons, false);
 			}
@@ -485,11 +491,11 @@ namespace Au
 		/// <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">
 		/// Additional custom buttons. All will be custom, even if named "OK" etc.
-		/// List of labels without ids. Can be string like "One|Two|..." or string array/List/IEnumerable.
+		/// List of labels without ids. Can be string like "One|Two|..." or or string[] or List&lt;string&gt;.
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
-		public void SetButtons(string buttons, bool asCommandLinks = false, object customButtons = null)
+		public void SetButtons(string buttons, bool asCommandLinks = false, MultiString customButtons = default)
 		{
 			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
 			_SetFlag(TDF_.USE_COMMAND_LINKS, asCommandLinks);
@@ -657,7 +663,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure thet entire window is in screen.</param>
+		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure that entire window is in screen.</param>
 		public void SetXY(Coord x, Coord y, bool rawXY = false)
 		{
 			_x = x; _y = y;
@@ -940,8 +946,7 @@ namespace Au
 					_screen = Screen;
 					if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
 					if(!_screen.IsNull) _screen = _screen.GetScreen();
-				}
-				else if(isXY || !_screen.IsNull) _dlg.MoveInScreen(_x, _y, _screen);
+				} else if(isXY || !_screen.IsNull) _dlg.MoveInScreen(_x, _y, _screen);
 			} else if(isXY && !before) _dlg.Move(_x, _y);
 		}
 		Screen_ _screen;
@@ -973,14 +978,14 @@ namespace Au
 				else if(_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
 				if(topmost) w.ZorderTopmost();
 
-				//w.SetStyleAdd(Native.WS_THICKFRAME); //does not work
+				//w.SetStyleAdd(Native.WS.THICKFRAME); //does not work
 
 				if(_IsEdit) _EditControlCreate();
 
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
 
 				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
-				Timer_.After(1, tt => _dlg.ShowLL(true)); //use timer because at this time still invisible always
+				Timer_.After(1, () => _dlg.ShowLL(true)); //use timer because at this time still invisible always
 
 				e = Created;
 				break;
@@ -1292,23 +1297,23 @@ namespace Au
 
 			//Create an intermediate "#32770" to be direct parent of the Edit control.
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
-			uint pStyle = Native.WS_CHILD | Native.WS_VISIBLE | Native.WS_CLIPCHILDREN | Native.WS_CLIPSIBLINGS; //don't need WS_TABSTOP
-			uint pExStyle = Native.WS_EX_NOPARENTNOTIFY; //not Native.WS_EX_CONTROLPARENT
+			var pStyle = Native.WS.CHILD | Native.WS.VISIBLE | Native.WS.CLIPCHILDREN | Native.WS.CLIPSIBLINGS; //don't need WS_TABSTOP
+			var pExStyle = Native.WS_EX.NOPARENTNOTIFY; //not Native.WS_EX.CONTROLPARENT
 			_editParent = Wnd.Misc.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			_EditControlParentProcHolder = _EditControlParentProc;
-			_editParent.SetWindowLong(Native.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_EditControlParentProcHolder));
+			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_EditControlParentProcHolder));
 
 			//Create Edit or ComboBox control.
 			string className = "Edit";
-			uint style = Native.WS_CHILD | Native.WS_VISIBLE; //don't need WS_TABSTOP
+			var style = Native.WS.CHILD | Native.WS.VISIBLE; //don't need WS_TABSTOP
 			switch(_editType) {
-			case DEdit.Text: style |= Api.ES_AUTOHSCROLL; break;
-			case DEdit.Password: style |= Api.ES_PASSWORD | Api.ES_AUTOHSCROLL; break;
-			case DEdit.Number: style |= Api.ES_NUMBER | Api.ES_AUTOHSCROLL; break;
-			case DEdit.Multiline: style |= Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN | Native.WS_VSCROLL; break;
-			case DEdit.Combo: style |= Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL | Native.WS_VSCROLL; className = "ComboBox"; break;
+			case DEdit.Text: style |= (Native.WS)Api.ES_AUTOHSCROLL; break;
+			case DEdit.Password: style |= (Native.WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
+			case DEdit.Number: style |= (Native.WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
+			case DEdit.Multiline: style |= (Native.WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | Native.WS.VSCROLL; break;
+			case DEdit.Combo: style |= (Native.WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | Native.WS.VSCROLL; className = "ComboBox"; break;
 			}
-			_editWnd = Wnd.Misc.CreateWindowAndSetFont(className, null, style, Native.WS_EX_CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
+			_editWnd = Wnd.Misc.CreateWindowAndSetFont(className, null, style, Native.WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
 
 			//Init the control.
 			if(_editType == DEdit.Combo) {
@@ -1704,7 +1709,7 @@ namespace Au
 		/// Returns results packed in a <see cref="DResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
 		/// The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
 		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or string array/List/IEnumerable. See <see cref="SetButtons"/>.</param>
+		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or or string[] or List&lt;string&gt;. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
@@ -1730,7 +1735,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static DResult ShowListEx(
-			object list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
+			MultiString list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
@@ -1750,7 +1755,7 @@ namespace Au
 		/// Shows dialog with a list of command-link buttons.
 		/// Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
 		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or IEnumerable&lt;string&gt;. See <see cref="SetButtons"/>.</param>
+		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
@@ -1766,7 +1771,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(object list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default)
+		public static int ShowList(MultiString list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default)
 		{
 			return ShowListEx(list, text1, text2, flags, owner);
 		}

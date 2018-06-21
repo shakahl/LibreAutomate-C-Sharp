@@ -32,13 +32,13 @@ namespace Au
 			/// Calls API <msdn>AdjustWindowRectEx</msdn>.
 			/// </summary>
 			/// <param name="r">Input - client area rectangle in screen. Output - window rectangle in screen.</param>
-			/// <param name="style">Native.WS_ styles.</param>
-			/// <param name="exStyle">Native.WS_EX_ styles.</param>
+			/// <param name="style"></param>
+			/// <param name="exStyle"></param>
 			/// <param name="hasMenu"></param>
 			/// <remarks>
 			/// Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
 			/// </remarks>
-			public static bool WindowRectFromClientRect(ref RECT r, uint style, uint exStyle, bool hasMenu = false)
+			public static bool WindowRectFromClientRect(ref RECT r, Native.WS style, Native.WS_EX exStyle, bool hasMenu = false)
 			{
 				return Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
 			}
@@ -46,9 +46,7 @@ namespace Au
 			/// <summary>
 			/// Calculates window border width from style.
 			/// </summary>
-			/// <param name="style">Native.WS_ styles.</param>
-			/// <param name="exStyle">Native.WS_EX_ styles.</param>
-			public static int BorderWidth(uint style, uint exStyle)
+			public static int BorderWidth(Native.WS style, Native.WS_EX exStyle)
 			{
 				RECT r = default;
 				Api.AdjustWindowRectEx(ref r, style, false, exStyle);
@@ -58,7 +56,6 @@ namespace Au
 			/// <summary>
 			/// Gets window border width.
 			/// </summary>
-			/// <param name="w"></param>
 			public static int BorderWidth(Wnd w)
 			{
 				w.LibGetWindowInfo(out var x);
@@ -88,10 +85,9 @@ namespace Au
 			/// Creates native/unmanaged window.
 			/// Calls API <msdn>CreateWindowEx</msdn>.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
-			/// For style and exStyle you can use Native.WS_ constants.
 			/// Usually don't need to specify hInstance.
 			/// </summary>
-			public static Wnd CreateWindow(string className, string name = null, uint style = 0, uint exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
+			public static Wnd CreateWindow(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
 				return Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 			}
@@ -101,7 +97,7 @@ namespace Au
 			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
-			public static Wnd CreateWindowAndSetFont(string className, string name = null, uint style = 0, uint exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
+			public static Wnd CreateWindowAndSetFont(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? _msgBoxFont : customFontHandle);
@@ -117,7 +113,7 @@ namespace Au
 			/// <param name="className">Window class name. Can be any existing class.</param>
 			public static Wnd CreateMessageWindow(string className)
 			{
-				return CreateWindow(className, null, Native.WS_POPUP, Native.WS_EX_NOACTIVATE, parent: Native.HWND_MESSAGE);
+				return CreateWindow(className, null, Native.WS.POPUP, Native.WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
@@ -205,8 +201,8 @@ namespace Au
 
 				bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, size32);
 				if(R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !size32);
-				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL_HICON : Native.GCL_HICONSM);
-				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL_HICONSM : Native.GCL_HICON);
+				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL.HICON : Native.GCL.HICONSM);
+				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL.HICONSM : Native.GCL.HICON);
 				//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
 
 				//Copy, because will DestroyIcon, also it resizes if need.
@@ -215,11 +211,11 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls API <msdn>GetClassLong</msdn> if current process is 32-bit, GetClassLongPtr if 64-bit.
+			/// Calls API <msdn>GetClassLong</msdn> if current process is 32-bit, <msdn>GetClassLongPtr</msdn> if 64-bit.
 			/// </summary>
 			/// <remarks>
 			/// Supports <see cref="Native.GetError"/>.
-			/// All Native.GCL_/GCW_ values are the same in 32-bit and 64-bit process.
+			/// For index can be used constants from <see cref="Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
 			/// </remarks>
 			public static LPARAM GetClassLong(Wnd w, int index)
 			{
@@ -228,26 +224,23 @@ namespace Au
 				return R;
 			}
 
-			//Not useful. Dangerous.
+			//probably not useful. Dangerous.
 			///// <summary>
-			///// Calls API SetClassLong if this process is 32-bit, SetClassLongPtr if 64-bit.
+			///// Calls API <msdn>SetClassLong</msdn> if this process is 32-bit, <msdn>SetClassLongPtr</msdn> if 64-bit.
 			///// </summary>
-			///// <remarks>
-			///// All Native.GCL_ values are the same in 32-bit and 64-bit process.
-			///// </remarks>
 			///// <exception cref="WndException"/>
 			//public static LPARAM SetClassLong(Wnd w, int index, LPARAM newValue)
 			//{
 			//	Native.ClearError();
 			//	LPARAM R;
-			//	if(IntPtr.Size == 8) R = Api.SetClassLong64(w, index, newValue); else R = Api.SetClassLong32(w, index, newValue);
-			//	if(R == 0 && Native.GetError() != 0) ThrowUseNative();
+			//	if(IntPtr.Size == 8) R = Api.SetClassLong64(w, index, newValue); else R = Api.SetClassLong32(w, index, (int)newValue);
+			//	if(R == 0 && Native.GetError() != 0) w.ThrowUseNative();
 			//	return R;
 			//}
 
 			/// <summary>
 			/// Gets atom of a window class.
-			/// To get class atom when you have a window w, use <c>Wnd.Misc.GetClassLong(w, Native.GCW_ATOM)</c>.
+			/// To get class atom when you have a window w, use <c>Wnd.Misc.GetClassLong(w, Native.GCL.ATOM)</c>.
 			/// </summary>
 			/// <param name="className">Class name.</param>
 			/// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
@@ -256,6 +249,18 @@ namespace Au
 				var x = new Api.WNDCLASSEX();
 				x.cbSize = Api.SizeOf(x);
 				return Api.GetClassInfoEx(moduleHandle, className, ref x);
+			}
+
+			/// <summary>
+			/// Calls API <msdn>RegisterWindowMessage</msdn>.
+			/// </summary>
+			/// <param name="name">Message name. Can be any unique string.</param>
+			/// <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="UacEnableMessages"/>.</param>
+			public static uint RegisterMessage(string name, bool uacEnable = false)
+			{
+				var m = Api.RegisterWindowMessage(name);
+				if(uacEnable && m != 0) Api.ChangeWindowMessageFilter(m, 1);
+				return m;
 			}
 
 			/// <summary>
@@ -403,8 +408,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if w contains a non-zero special handle value (<b>Native.HWND_x</b>).
-		/// Note that <b>Native.HWND_TOP</b> is 0.
+		/// Returns true if w contains a non-zero special handle value (<see cref="Native.HWND"/>).
+		/// Note: <b>Native.HWND.TOP</b> is 0.
 		/// </summary>
 		public static bool IsSpecHwnd(Wnd w)
 		{

@@ -532,7 +532,7 @@ namespace Au
 		/// </summary>
 		public static bool DefaultActivateMenuWindow { get; set; }
 
-		uint _ExStyle => ActivateMenuWindow ? Native.WS_EX_TOOLWINDOW | Native.WS_EX_TOPMOST : Native.WS_EX_TOOLWINDOW | Native.WS_EX_TOPMOST | Native.WS_EX_NOACTIVATE;
+		Native.WS_EX _ExStyle => ActivateMenuWindow ? Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST : Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST | Native.WS_EX.NOACTIVATE;
 
 		#endregion
 
@@ -703,7 +703,7 @@ namespace Au
 			}
 
 			//AuMTBase creates this. We call GetAllAsync.
-			internal List<Icons.AsyncIn> AsyncIcons { get; set; }
+			internal List<Util.IconsAsync.Item> AsyncIcons { get; set; }
 
 			protected override void OnOpened(EventArgs e)
 			{
@@ -778,9 +778,9 @@ namespace Au
 				{
 					var p = (Api.WINDOWPOS*)m.LParam;
 					//after right-click, enabling etc somebody tries to make the menu non-topmost by placing it after some window, eg a hidden tooltip (which is topmost...???)
-					if((p->flags & Native.SWP_NOZORDER) == 0 && !p->hwndInsertAfter.Is0) {
+					if((p->flags & Native.SWP.NOZORDER) == 0 && !p->hwndInsertAfter.Is0) {
 						//Print(p->hwndInsertAfter, p->hwndInsertAfter.IsTopmost);
-						p->flags |= Native.SWP_NOZORDER;
+						p->flags |= Native.SWP.NOZORDER;
 					}
 				}
 				break;
@@ -887,7 +887,7 @@ namespace Au
 				//Close menu windows. Else they are just hidden and prevent garbage collection until appdomain ends.
 				foreach(var k in _windows) ((Wnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
 
-				if(!MultiShow && !_isModal) Timer_.After(10, o => { Dispose(); }); //cannot dispose now, exception
+				if(!MultiShow && !_isModal) Timer_.After(10, () => { Dispose(); }); //cannot dispose now, exception
 
 				if(_isModal) _msgLoop.Stop();
 			}
@@ -939,7 +939,7 @@ namespace Au
 			_mouseWasIn = false;
 			if(init) {
 				_timer = Timer_.Every(100, _OnTimer);
-				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, (int)KKey.Escape);
+				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, KKey.Escape);
 			} else {
 				if(_timer != null) { _timer.Stop(); _timer = null; }
 				if(_hotkeyRegistered) _hotkeyRegistered = !Api.UnregisterHotKey((Wnd)_cm.Handle, _hotkeyEsc);
@@ -1133,7 +1133,7 @@ namespace Au.Types
 				//var perf = Perf.StartNew();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
-				if(_AsyncIcons == null) _AsyncIcons = new Icons.AsyncIcons(); //used by submenus too
+				if(_AsyncIcons == null) _AsyncIcons = new Util.IconsAsync(); //used by submenus too
 				var submenu = !isBar ? (owner as AuMenu.ToolStripDropDownMenu_) : null;
 				bool isFirstImage = false;
 
@@ -1142,10 +1142,10 @@ namespace Au.Types
 					_AsyncIcons.Add(s, item);
 				} else {
 					if(submenu.AsyncIcons == null) {
-						submenu.AsyncIcons = new List<Icons.AsyncIn>();
+						submenu.AsyncIcons = new List<Util.IconsAsync.Item>();
 						isFirstImage = true;
 					}
-					submenu.AsyncIcons.Add(new Icons.AsyncIn(s, item));
+					submenu.AsyncIcons.Add(new Util.IconsAsync.Item(s, item));
 				}
 
 				//Reserve space for image.
@@ -1161,18 +1161,18 @@ namespace Au.Types
 		Image _imagePlaceholder;
 
 		//This is shared by toolbars and main menus. Submenus have their own.
-		Icons.AsyncIcons _AsyncIcons { get; set; }
+		Util.IconsAsync _AsyncIcons { get; set; }
 
 		//list - used by submenus.
-		internal void _GetIconsAsync(ToolStrip ts, List<Icons.AsyncIn> list = null)
+		internal void _GetIconsAsync(ToolStrip ts, List<Util.IconsAsync.Item> list = null)
 		{
 			if(_AsyncIcons == null) return;
-			if(list != null) _AsyncIcons.Add(list);
+			if(list != null) _AsyncIcons.AddRange(list);
 			if(_AsyncIcons.Count == 0) return;
 			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, IconFlags, ts);
 		}
 
-		void _AsyncCallback(Icons.AsyncResult r, object objCommon, int nLeft)
+		void _AsyncCallback(Util.IconsAsync.Result r, object objCommon, int nLeft)
 		{
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;

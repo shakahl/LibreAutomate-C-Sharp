@@ -68,7 +68,7 @@ partial class EForm :Form
 		Panels.Files.LoadCollection(CommandLine.CollectionDirectory);
 
 		//Perf.Next();
-		Timer_.After(1, t =>
+		Timer_.After(1, () =>
 		{
 			//Perf.NW();
 			Perf.Next();

@@ -6,6 +6,78 @@
 
 
 
+//rejected: too unreliable. Better use temp file.
+/// <summary>
+/// Creates cursor from cursor file data in memory, for example from a managed resource.
+/// Returns null if fails.
+/// </summary>
+/// <param name="cursorData">Data of .cur or .ani file.</param>
+/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
+/// <remarks>
+/// This function exists because <see cref="Cursor"/> constructors don't support colors, ani cursors and custom size.
+/// </remarks>
+[HandleProcessCorruptedStateExceptions]
+public static unsafe Cursor LoadCursorFromMemory(byte[] cursorData, int size = 0)
+{
+IntPtr hCur = default;
+try {
+fixed (byte* p = cursorData) {
+int memSize = cursorData.Length;
+NEWHEADER* ph = (NEWHEADER*)p;
+if(ph->wResType == 2) { //.cur. Else .ani or not cursor.
+CURSORDIRENTRY* c = (CURSORDIRENTRY*)(ph + 1);
+int n = ph->wResCount, offset = 0; uint hotspot = 0;
+if(memSize <= sizeof(NEWHEADER) + n * sizeof(CURSORDIRENTRY)) return null;
+for(int i = 0; i < n; i++, c++) {
+if(c->dwImageOffset + c->dwBytesInRes > memSize) return null;
+if(size == 0 || c->bWidth == size) {
+offset = c->dwImageOffset;
+hotspot = Math_.MakeUint(c->wXHotspot, c->wYHotspot);
+goto g1;
+}
+}
+return null;
+g1:
+//set hotspot. In resource there are 4 bytes for hotspot before BITMAPINFOHEADER. In file isn't.
+offset -= 4;
+var k = p + offset;
+uint u = *(uint*)k;
+*(uint*)k = hotspot;
+
+hCur = Api.CreateIconFromResourceEx(k, 0, false);
+*(uint*)k = u;
+} else {
+hCur = Api.CreateIconFromResourceEx(p, memSize, false, cxDesired: size, cyDesired: size, uFlags: size == 0 ? Api.LR_DEFAULTSIZE : 0);
+}
+}
+}
+catch(AccessViolationException ex) { Debug_.Print(ex); return null; }
+
+return _CursorFromHcursor(hCur);
+}
+
+#pragma warning disable 649, 169
+struct NEWHEADER
+{
+	ushort wReserved;
+	public ushort wResType;
+	public ushort wResCount;
+}
+
+struct CURSORDIRENTRY
+{
+	public byte bWidth;
+	public byte bHeight;
+	public byte bColorCount;
+	byte bReserved;
+	public ushort wXHotspot;
+	public ushort wYHotspot;
+	public int dwBytesInRes;
+	public int dwImageOffset;
+}
+#pragma warning restore 649, 169
+
+
 
 
 //rejected: struct WildexStruct - struct version of Wildex class. Does not make faster, although creates less garbage.

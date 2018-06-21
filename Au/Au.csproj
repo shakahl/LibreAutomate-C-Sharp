@@ -80,6 +80,8 @@
     <Compile Include="Acc\Acc_types.cs" />
     <Compile Include="Acc\Acc_find.cs" />
     <Compile Include="Acc\Acc.cs" />
+    <Compile Include="Util\IconsAsync.cs" />
+    <Compile Include="Files, system\Thread_.cs" />
     <Compile Include="Input\BlockInput.cs" />
     <Compile Include="Input\Clipb.cs" />
     <Compile Include="Input\Clipb.Data.cs" />
@@ -89,12 +91,18 @@
     <Compile Include="Input\Keyb^types.cs" />
     <Compile Include="Input\Keyb^util.cs" />
     <Compile Include="Input\Keyb^static.cs" />
+    <Compile Include="Other\Osd.cs" />
     <Compile Include="Other\WinImage.cs" />
     <Compile Include="Common\Opt.cs" />
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="Other\OnScreenRect.cs" />
     <Compile Include="Other\OutputServer.cs" />
     <Compile Include="Other\Screen_.cs" />
+    <Compile Include="Other\WinImage^etc.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="String\Regex_ types.cs" />
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
@@ -130,6 +138,10 @@
     <Compile Include="Dialog, menu, toolbar\AuDialog.cs" />
     <Compile Include="String\Csv.cs" />
     <Compile Include="Wnd\Wnd_wait.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="String\excluded\string classes.cs" />
     <None Include="String\excluded\String_ex.cs" />
@@ -171,6 +183,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Automation\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\red_cross_cursor.cur" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -192,7 +192,13 @@ namespace Au.Types
 		CURSOR = -9,
 		ALERT = -10,
 		SOUND = -11,
+		/// <summary>
+		/// Can be used with API <msdn>WM_GETOBJECT</msdn>, not with <see cref="Acc.FromWindow"/>.
+		/// </summary>
 		QUERYCLASSNAMEIDX = -12,
+		/// <summary>
+		/// Can be used with API <msdn>AccessibleObjectFromWindow</msdn>, not with <see cref="Acc.FromWindow"/>.
+		/// </summary>
 		NATIVEOM = -16,
 
 		//ours

@@ -346,10 +346,10 @@ namespace Au.Controls
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						Wnd.Misc.WindowRectFromClientRect(ref rect, Native.WS_POPUP | Native.WS_THICKFRAME, Native.WS_EX_TOOLWINDOW);
+						Wnd.Misc.WindowRectFromClientRect(ref rect, Native.WS.POPUP | Native.WS.THICKFRAME, Native.WS_EX.TOOLWINDOW);
 					} else { //new panel, empty bounds
 						var mp = Mouse.XY;
-						rect = new RECT(mp.x - 15, mp.y - 15, 300, 150, true);
+						rect = (mp.x - 15, mp.y - 15, 300, 150);
 						rect.EnsureInScreen();
 					}
 				}
@@ -507,7 +507,7 @@ namespace Au.Controls
 								_manager.Paint -= eh;
 								//Print(1);
 								//SetDockState(GDockState.Floating);
-								Timer_.After(200, tt => SetDockState(GDockState.Floating));
+								Timer_.After(200, () => SetDockState(GDockState.Floating));
 							};
 						_manager.Paint += eh;
 					}

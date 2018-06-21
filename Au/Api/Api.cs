@@ -154,6 +154,9 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern int FillRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
 
+		internal const uint SRCCOPY = 0xCC0020;
+		internal const uint CAPTUREBLT = 0x40000000;
+
 		[DllImport("gdi32.dll")] //tested: in some cases does not set last error even if returns false
 		internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
 
@@ -171,6 +174,12 @@ namespace Au.Types
 			public int biClrUsed;
 			public int biClrImportant;
 		}
+
+		/// <summary>
+		/// lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
+		/// </summary>
+		[DllImport("gdi32.dll")]
+		internal static extern int SetDIBitsToDevice(IntPtr hdc, int xDest, int yDest, int w, int h, int xSrc, int ySrc, int StartScan, int cLines, void* lpvBits, void* lpbmi, uint ColorUse);
 
 		[DllImport("gdi32.dll")]
 		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, BITMAPINFOHEADER* lpbmi, uint usage);
@@ -199,14 +208,14 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr GetStockObject(int i);
 
-		[DllImport("gdi32.dll")]
-		internal static extern IntPtr CreateSolidBrush(uint color);
+		//[DllImport("gdi32.dll")]
+		//internal static extern IntPtr CreateSolidBrush(uint color);
 
-		[DllImport("gdi32.dll")]
-		internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
+		//[DllImport("gdi32.dll")]
+		//internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
 
-		[DllImport("gdi32.dll")]
-		internal static extern bool FrameRgn(IntPtr hdc, IntPtr hrgn, IntPtr hbr, int w, int h);
+		//[DllImport("gdi32.dll")]
+		//internal static extern bool FrameRgn(IntPtr hdc, IntPtr hrgn, IntPtr hbr, int w, int h);
 
 
 
@@ -500,7 +509,7 @@ namespace Au.Types
 		}
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHGetStockIconInfo(Native.SHSTOCKICONID siid, uint uFlags, ref SHSTOCKICONINFO psii);
+		internal static extern int SHGetStockIconInfo(Icons.Stock siid, uint uFlags, ref SHSTOCKICONINFO psii);
 
 		[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
 		internal static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
@@ -939,11 +948,27 @@ namespace Au.Types
 
 		#region dwmapi
 
-		[DllImport("dwmapi.dll")]
-		internal static extern int DwmGetWindowAttribute(Wnd hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
+		internal enum DWMWA
+		{
+			NCRENDERING_ENABLED = 1,
+			NCRENDERING_POLICY,
+			TRANSITIONS_FORCEDISABLED,
+			ALLOW_NCPAINT,
+			CAPTION_BUTTON_BOUNDS,
+			NONCLIENT_RTL_LAYOUT,
+			FORCE_ICONIC_REPRESENTATION,
+			FLIP3D_POLICY,
+			EXTENDED_FRAME_BOUNDS,
+			HAS_ICONIC_BITMAP,
+			DISALLOW_PEEK,
+			EXCLUDED_FROM_PEEK,
+			CLOAK,
+			CLOAKED,
+			FREEZE_REPRESENTATION,
+		}
 
 		[DllImport("dwmapi.dll")]
-		internal static extern int DwmGetWindowAttribute(Wnd hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
+		internal static extern int DwmGetWindowAttribute(Wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
 
 
 

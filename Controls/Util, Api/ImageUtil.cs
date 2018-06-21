@@ -319,7 +319,7 @@ namespace Au.Controls
 			if(hi == default) return null;
 			try {
 				using(var m = new MemoryBitmap(siz, siz)) {
-					var r = new RECT(0, 0, siz, siz, false);
+					RECT r = (0, 0, siz, siz, false);
 					Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
 					if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
 

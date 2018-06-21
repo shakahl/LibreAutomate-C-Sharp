@@ -14,6 +14,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Xml;
@@ -209,7 +210,7 @@ static partial class Test
 			//Perf.NW();
 		};
 		f.Controls.Add(b);
-		Timer_.After(500, t =>
+		Timer_.After(500, () =>
 		{
 			Perf.First();
 			//Time.SleepDoEvents(5000, true);
@@ -1901,7 +1902,7 @@ static partial class Test
 		//	0.1.s();
 		//}
 		Acc.Find(w, null, "Back", "notin=DOCUMENT").VirtualRightClick();
-		var wBackMenu = Wnd.Wait(false, 10, null, menuClass, also: o => o.HasStyle(Native.WS_POPUP));
+		var wBackMenu = Wnd.Wait(false, 10, null, menuClass, also: o => o.HasStyle(Native.WS.POPUP));
 		//Print(wBackMenu);
 		a = Acc.Wait(10, wBackMenu, "MENUITEM", "Yahoo");
 		//Print(a);
@@ -2885,8 +2886,8 @@ static partial class Test
 	//{
 	//	var w = new NatWin();
 	//	var c = new CreateParams() { Caption = "test", Height = 100, Width = 100, X = 100, Y = 100 };
-	//	c.Style = unchecked((int)(Native.WS_POPUPWINDOW|Native.WS_VISIBLE));
-	//	c.ExStyle = (int)Native.WS_EX_TOPMOST;
+	//	c.Style = unchecked((int)(Native.WS.POPUPWINDOW|Native.WS.VISIBLE));
+	//	c.ExStyle = (int)Native.WS_EX.TOPMOST;
 
 	//	w.CreateHandle(c);
 
@@ -2992,7 +2993,7 @@ static partial class Test
 	//static void TestRegisterWndclassWithCbtHook()
 	//{
 	//	var atom = Wnd.Misc.MyWindowClass.InterDomainRegister("aa test", _WndProc1);
-	//	var style =Native.WS_OVERLAPPEDWINDOW |Native.WS_VISIBLE;
+	//	var style =Native.WS.OVERLAPPEDWINDOW |Native.WS.VISIBLE;
 	//	var w = Wnd.Misc.MyWindowClass.InterDomainCreateWindow("aa test", "Test1", style, 0, 200, 200, 200, 200);
 	//	AuDialog.Show("--");
 	//	Wnd.Misc.DestroyWindow(w);
@@ -3000,7 +3001,7 @@ static partial class Test
 
 	class MyWindow2 :Wnd.Misc.MyWindow
 	{
-		public override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+		protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
 		{
 			Wnd.Misc.PrintMsg(w, message, wParam, lParam);
 
@@ -3020,11 +3021,11 @@ static partial class Test
 		var e = new Wnd.Misc.MyWindow.WndClassEx() { hbrBackground = (IntPtr)(Api.COLOR_INFOBK + 1) };
 
 		Wnd.Misc.MyWindow.RegisterClass("MyWindow", ex: e);
-		var style = Native.WS_OVERLAPPEDWINDOW | Native.WS_VISIBLE;
+		var style = Native.WS.OVERLAPPEDWINDOW | Native.WS.VISIBLE;
 
 		var x = new MyWindow2();
 		if(!x.Create("MyWindow", "MyWindow", style, 0, 200, 200, 200, 200)) { Print("failed"); return; }
-		Timer_.After(1000, t => { GC.Collect(); });
+		Timer_.After(1000, () => { GC.Collect(); });
 		AuDialog.Show("--");
 		x.Destroy();
 
@@ -3037,13 +3038,13 @@ static partial class Test
 	static void TestOnScreenRect()
 	{
 		var r = new RECT(100, 100, 100, 100, true);
-		var x = new OnScreenRect();
+		var x = new OsdRect();
 		x.Rect = r;
 		//x.Color = 0xFF0000; //red
 		x.Color = Color.Orange;
 		x.Thickness = 2;
 		//x.Opacity = 0.3;
-		x.Show(true);
+		x.Show();
 
 		//for(int i = 0; i < 6; i++) {
 		//	0.3.s();
@@ -3057,7 +3058,8 @@ static partial class Test
 		{
 			//x.Visible = !x.Visible;
 			//r = x.Rect; r.Offset(20, 20); x.Rect = r;
-			x.Opacity += 0.03;
+			//x.Opacity += 0.03;
+			x.Thickness += 1;
 		});
 		AuDialog.Show("test");
 		//var f = new Form(); f.ShowDialog();
@@ -5796,7 +5798,7 @@ REE`");
 		var t = new TextBox();
 		f.Controls.Add(t);
 		//f.Click += (unu, sed) => _TestKeybClipbMouseOwnWindow();
-		Timer_.After(500, ti => _TestKeybClipbMouseOwnWindow());
+		Timer_.After(500, () => _TestKeybClipbMouseOwnWindow());
 		f.ShowDialog();
 	}
 
@@ -6595,6 +6597,365 @@ REE`");
 		//b = File.ReadAllBytes(@"Q:\app\Au\Tests\App.config");
 	}
 
+	static void TestMultiStringAndColor()
+	{
+		//Print(AuDialog.ShowList("One|Two|Three"));
+		//Print(AuDialog.ShowList(new string[] { "A", "One|Two|Three", "C" }));
+		//Print(AuDialog.ShowList(new List<string> { "A", "One|Two|Three", "C" }));
+
+		//var d = new AuDialog("test");
+		////d.SetButtons("-1 OK|-2 Cancel");
+		////d.SetButtons("-1 OK|-2 Cancel", false, "One|Two");
+		//d.SetButtons("-1 OK|-2 Cancel", false, new string[] { "A", "One|Two|Three", "C" });
+		//Print(d.ShowDialog());
+
+		//ColorInt c = 0xff00;
+		//var c1 = (Color)c; Print(c1);
+		//var c2 = (System.Windows.Media.Color)c; Print(c2);
+		//c = c1;
+		//Print(c);
+		//c = c2;
+		//Print(c);
+		//Print(c == 0xFF00ff00, c == 0xFF00ff01, c==0xff00, c==0xff01);
+		////c= 0xff;
+		//Print(c == c1, c== c2);
+		//c.color &= 0xffffff;
+		//Print(c);
+		//c = 0x10000ff; Print(c);
+	}
+
+	static void TestPasteBluestacks()
+	{
+		//var d = new Clipb.Data(); d.AddText("moo").SetClipboard();
+		Wnd.Find("BlueStacks").Activate();
+		//Wnd.Find("*Edge").Activate();
+		//Wnd.Find("*Notepad").Activate();
+		//Wnd.Find("*VMware*").Activate(); Mouse.Click(1079, 445);
+		//Print(Wnd.WndActive);
+		//for(int i = 0; i < 12; i++) {
+		//	Task.Run(() => Perf.SpeedUpCPU(500));
+		//}
+		100.ms();
+		//Print(Wnd.WndFocused);
+		Key("Back*20", 100);
+		//Opt.Key.KeySpeed = 1000; Key("ab"); return;
+#if true
+		//Opt.Key.RestoreClipboard = false;
+		//Opt.Key.KeySpeedClipboard = 100;
+		Opt.Key.Hook = o => { if(o.w.ProcessName.Equals_("HD-Player", true)) o.opt.KeySpeedClipboard = 100; };
+		Paste("one ");
+		Paste("two ");
+		Paste("three ");
+		//1000.ms();
+		//var d = new Clipb.Data(); d.AddText("OLD").SetClipboard();
+		//Key("Ctrl+A"); Print(CopyText());
+#else
+		var d = new Clipb.Data(); d.AddText("moo").SetClipboard();
+		Key("Ctrl+V");
+		//Key("Ctrl+", 260, "V");
+		//Key("Ctrl+V*down", 700, "V*up");
+#endif
+		//Text("Text");
+		Print("ok");
+	}
+
+	static void TestWinImageCapture()
+	{
+		//var w = Wnd.Find("*Chrome");
+		//var b = WinImage.Capture(w, w.Rect);
+
+		//var b = WinImage.Capture(new RECT(0, 0, 1, 1, true));
+		//_ShowImage(b);
+
+		if(!WinImage.CaptureUI(out var r, WICFlags.WindowDC)) return;
+		Print(r.rect, r.color, r.wnd);
+		_ShowImage(r.image);
+
+		//var f = new Form();
+		////f.SizeGripStyle = SizeGripStyle.Hide;
+		////f.FormBorderStyle = FormBorderStyle.FixedDialog;
+		//f.StartPosition = FormStartPosition.Manual;
+		//var r= SystemInformation.VirtualScreen;
+		//f.Top = r.Top;
+		//f.Left = r.Left;
+		//f.ShowDialog();
+
+		//var f = new Form();
+		//var p = new PictureBox();
+		//p.ImageLocation = @"Q:\My QM\C8375087-NET.png";
+		//p.SizeMode = PictureBoxSizeMode.AutoSize;
+		//f.Controls.Add(p);
+		//p.MouseDown += (unu, sed) =>
+		//  {
+		//	  var a = new List<POINT>() { Mouse.XY };
+		//	  if(!Au.Util.DragDrop.SimpleDragDrop(p, MButtons.Left, m =>
+		//	  {
+		//		  //Print(m.Msg.pt);
+		//		  a.Add(m.Msg.pt);
+		//	  })) return;
+
+		//	  //a = new List<POINT>() { (0,0),(2,0),(2,2),(0,2) };
+
+		//	  //var w =(Wnd)f;
+		//	  //w.WndOwner = Wnd.Misc.WndRoot;
+		//	  //Print(Wnd.Misc.OwnerWindowsAndThis(w)); return;
+
+		//	  var b = WinImage.Capture(a);
+		//	  _ShowImage(b);
+		//  };
+		//f.ShowDialog();
+	}
+
+	static void _ShowImage(Bitmap b)
+	{
+		if(b == null) return;
+		string file = Folders.Temp + "WinImage.png";
+		b.Save(file);
+		Shell.Run(file);
+	}
+
+	static void TestToolWinImage()
+	{
+		//var w = Wnd.Find("Quick*");
+		//WinImage.Find(w, @"q:\test\function icon.bmp").MouseMove();
+		//var r = WinImage.Find(w, @"q:\test\function icon.bmp");
+		//Print(r);
+
+		//var a = new List<WinImage>();
+		//var img = @"q:\test\function icon.bmp";
+		//var img = new string[] { @"q:\test\function icon.bmp", @"q:\test\autotext icon.bmp"};
+		//WinImage.Find(w, img, also: o => { a.Add(o); return false; });
+		//Print("----");
+		//Print(a);
+		//foreach(var k in a) { Print(k.MatchIndex, k.ListIndex); k.MouseMove(); 0.3.s(); }
+
+		//Print("ok");
+
+		var f = new Au.Tools.Form_WinImage();
+		f.ShowDialog();
+
+	}
+
+	static void TestLoadCursor()
+	{
+		Print(Api.GetSystemMetrics(Api.SM_CXCURSOR));
+		var f = new Form();
+		var s = @"C:\WINDOWS\Cursors\aero_busy.ani";
+		//var s = @"C:\WINDOWS\Cursors\aero_busy_xl.ani";
+		s = @"Q:\app\IDC_CROSS_RED.cur";
+		//f.Cursor = Au.Util.Cursors_.LoadCursorFromFile(s);
+		f.Cursor = Au.Util.Cursors_.LoadCursorFromMemory(File.ReadAllBytes(s));
+		//f.Cursor = new Cursor(s);
+		f.ShowDialog();
+	}
+
+	static void TestIconCacheEtc()
+	{
+		var sf = @"q:\app\app.cpp";
+		var c = new Icons.ImageCache(Folders.Temp + "Au.icon.cache", 16);
+		//c.ClearCache();
+		var k = c.GetImage(sf, true);
+		//var k = c.GetImage("DESKTOPPC", () => Icons.GetShellStockIconHandle(Icons.Stock.DESKTOPPC, 16));
+		Print(k);
+
+		if(k == null) return;
+		var so = Folders.Temp + "Au.icon.png";
+		k.Save(so);
+		Shell.Run(so);
+	}
+
+	static void TestOsd()
+	{
+		//Print(Thread_.IsUI);
+		//Timer_.After(1000, () => Print(Thread_.IsUI));
+		//var f = new Form();
+		//f.ShowDialog();
+		////var w = new System.Windows.Window();
+		////w.ShowDialog();
+
+		//Print(Thread_.NativeId);
+		_TestOsd();
+		AuDialog.Show("Test OSD");
+
+		//var f = new Form();
+		//f.Click += (unu, sed) => _TestOsd();
+		//f.ShowDialog();
+
+		//var r = new OnScreenRect();
+		//r.Color = Color.Blue;
+		//r.Rect = (300, 300, 100, 100);
+		//for(int i = 0; i < 10; i++) {
+		//	r.Show((i & 1) == 0);
+		//	100.ms();
+		//}
+
+		//TestOnScreenRect(); return;
+
+		//var r = new OsdRect();
+		//r.Color = Color.Blue;
+		////r.Opacity = 0.3;
+		////r.Thickness = 8;
+		//r.Rect = (300, 300, 100, 100);
+		//for(int i = 0; i < 10; i++) {
+		//	r.Visible = !r.Visible;
+		//	200.ms();
+		//}
+	}
+	//static int s_uytr;
+
+	static void _TestOsd()
+	{
+		string s = null;
+		s = "W Test OSD JjW";
+		//s = "&OSD qwertyuiop\nasdfghjkl\nzxcvbnm WWWW WWWWWW WWWWWWWW WWWWWWWW WWWWWWW WWWWWW WWWWWWW WWWWWW WWWWWWWWWW";
+		//s = "&OSD qwertyuiop WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW qwertyuiop WWWWWWWWWWWWWWWWWWWWWW WWWWWWWWWWWWWWWWWWWWWW asdfghjkl zxcvbnm A B C D E F G H I J K L M N O P Q R S T U V W Z X Y mmmm nnnn";
+		//s = "one\n\ttwo";
+
+		//Osd.DefaultScreen = 1;
+		var w = Wnd.Find("*Notepad");
+#if true
+
+		var o = new Osd();
+		o.Text = s;
+		o.ShowMode = OsdShowMode.ThisThread;
+
+		o.SecondsTimeout = 30;
+		//o.TransparentColor = 0xff00ff;
+		//o.Opacity = 0.8;
+		//o.BorderColor = o.BackColor;
+		o.ClickToClose = true;
+		//o.Shadow = true;
+		//o.Rect = (100, 100, 200, 400);
+		//o.Y = Coord.Fraction(0.9);
+		//o.XY = Mouse.XY;
+		//o.XY = (Coord.Center, Coord.Fraction(0.4));
+		//o.XY = (Coord.Center, Coord.Center, 1);
+		//o.XY = (default, default, 1);
+		//o.XY = true;
+		//o.XY = (Screen_)1;
+		//o.XY = (Screen_)Screen.AllScreens[1];
+		//o.XY = (1, true);
+		//o.XY = Mouse.XY + (0, 30);
+		//o.XY = PopupXY.Mouse;
+		//o.XY = (Coord.Fraction(0.9), Coord.Reverse(0));
+
+		//o.XY = w.Rect;
+		//o.XY = (Screen_)w.Rect;
+		//o.XY = (w.Rect, 0, 0);
+		//o.XY = (w.Rect, default, 0);
+		//o.XY = (w.Rect, Coord.Reverse(0), Coord.Reverse(0));
+		//o.XY = (w.Rect, Coord.Fraction(-1), Coord.Fraction(-1));
+
+		//o.ForeColor = 0x80;
+		//o.WrapWidth = 200;
+		//o.Icon = SystemIcons.Information;
+		//o.BackgroundImage = Image.FromFile(@"Q:\My QM\C8375087-NET.png");
+		//o.IsOfImageSize = true;
+		//o.WrapWidth = 80;
+
+		o.Show();
+		//o.Visible = true;
+		//o.X = 400;
+		//Timer_.After(4000, ()=>o.Visible = true);
+
+		//Timer_.Every(1000, () => Print(o.Handle));
+
+		o.ResizeWhenContentChanged = true;
+		Timer_.After(1000, () =>
+		{
+			//o.Text = "New text";
+			//o.Text = "WW Test OSD Jj";
+			//o.XY=(100, 200);
+			//o.Rect=(100, 100, 100, 100);
+
+			//o.TextColor = Color.Red;
+			//o.BackColor = Color.Orange;
+			//o.BorderColor = Color.Blue;
+
+		});
+
+		//var k = new OsdRect() { Rect = (300, 300, 100, 100) };
+		//k.Show();
+		////Timer_.After(1000, () => k.Rect = (300, 300, 150, 150));
+		//Timer_.After(1000, () => k.Rect = (300, 300, 50, 50));
+#else
+		//Osd.DefaultFont = new Font("Comic Sans MS", 12);
+		//Osd.DefaultBackColor=Color.Wheat;
+		//Osd.DefaultBorderColor = Color.Tomato;
+		//Osd.DefaultTextColor = Color.IndianRed;
+		//Osd.DefaultTextFormatFlags |= TextFormatFlags.HidePrefix|  TextFormatFlags.EndEllipsis;
+		//Osd.DefaultTransparentTextColor=Color.Green;
+		//Osd.DefaultTransparentTextFont=new Font("Comic Sans MS", 24);
+
+		//Osd.ShowTransparentText(s, 30);
+		//Osd.ShowTransparentText(s, 30, color: Color.Green);
+		//Osd.ShowTransparentText(s, 30, xy: (Screen_)w);
+		//Osd.ShowTransparentText(s, 30, xy: w);
+
+		//Osd.ShowText(s, 30);
+		//Osd.ShowText(s, 30, textColor: Color.Honeydew, backColor: Color.DarkBlue);
+		//Osd.ShowText("Test OSD", 30, PopupXY.Mouse, SystemIcons.Information);
+		//Osd.ShowText(s, 30, icon: SystemIcons.Information);
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetShellStockIcon(Icons.Stock.HELP, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetAppIcon(16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetProcessExeIcon(16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetFileIconRaw(@"q:\app\qm.exe", 1, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetFileIcon(@"q:\app\qm.exe,1", 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetPidlIcon(Folders.VirtualPidl.AddNewPrograms, 16));
+
+		//var ico = Icons.CreateIcon(32, 32);
+		//var ic = Icons.CreateIcon(32, 32, g =>
+		//{
+		//	//g.Clear(Color.Bisque);
+		//	g.SmoothingMode = SmoothingMode.HighQuality;
+		//	g.DrawEllipse(Pens.Blue, 1, 1, 30, 30);
+		//});
+		//Osd.ShowText("Test OSD", 30, icon: ic);
+
+		//var im = Image.FromFile(@"Q:\My QM\C8375087-NET.png");
+		////Print(im);
+		//Osd.ShowImage(im, 60);
+		////Osd.ShowImage(im, 60, transparentColor: 0xF5F8FC);
+
+		//var o= Osd.ShowImage(im, 60, doNotShow: true);
+		//o.ClickToHide = false;
+		//o.Show();
+
+		//var o= Osd.ShowText(s, 30, doNotShow: true);
+		//o.Opacity = 0.5;
+		//o.ClickToClose = false;
+		//o.Show();
+
+		//Timer_.After(3000, () => Osd.CloseAll());
+
+		//var m = new Osd { Text = "Text", ShowMode = OsdShowMode.StrongThread };
+		//m.XY = (Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
+		//m.Show();
+#endif
+
+		//var r = new OsdRect();
+		//r.
+
+
+		//o.SecondsTimeout = 2;
+		//o.ShowWait();
+		//o.Dispose();
+		//o.Shadow = false;
+		//o.ShowWait();
+
+		//o.SecondsTimeout = 1;
+		//for(int i = 0; i < 4; i++) {
+		//	o.ShowWait();
+		//	200.ms();
+		//}
+
+		//POINT p = (Coord.Center, default, true);
+		//p = (default, default, default, true);
+		////RECT r = (100, 100, 100, 100);
+		////p = (r, default, default);
+		//Print(p);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -6616,6 +6977,12 @@ REE`");
 		try {
 #if true
 
+
+			TestOsd();
+			//TestIconCacheEtc();
+			//TestToolWinImage();
+			//TestWinImageCapture();
+			//TestLoadCursor();
 			//TestConvert();
 			//TestScreen();
 			//TestWaitFor();
@@ -6699,8 +7066,20 @@ REE`");
 #else
 			try {
 
-				//TestAccLeaks();
+				//var w8 = +Wnd.Find("*Firefox*", "MozillaWindowClass");
+				////Print(w8);
+				//var a = Acc.FindAll(w8, "web:TEXT", "??*");
+				////var a = Acc.FindAll(w8, "web:");
+				////var a = Acc.FindAll(w8, "web:TEXT", "??*", flags: AFFlags.NotInProc);
+				////var a = Acc.Wait(3, w8, "web:TEXT", "Search the Web", flags: AFFlags.NotInProc);
+				////var a = Acc.Wait(3, w8, "TEXT", "Search the Web", flags: AFFlags.UIA);
+				//Print(a);
+				//Print("---");
+				//Print(a[0].MiscFlags);
+				//return;
+
 				TestAccForm();
+				//TestAccLeaks();
 				//TestWndFindContains();
 				//TestAccFindWithChildFinder();
 				//TestIpcWithWmCopydataAndAnonymousPipe();

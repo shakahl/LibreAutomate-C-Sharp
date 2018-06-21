@@ -542,7 +542,7 @@ namespace Au
 
 			int count = 1, sleep = opt.KeySpeed;
 			if(isLast) {
-				if(!k.IsPair) sleep = _LimitSleepTime(sleep) - opt.SleepFinally;
+				if(!k.IsPair) sleep = Lib.LimitSleepTime(sleep) - opt.SleepFinally;
 			} else {
 				if(kNext.IsRepeat) count = kNext.repeat;
 				else if(!k.IsPair) {
@@ -553,7 +553,7 @@ namespace Au
 					//	However some apps/controls then may not work. Maybe they process mod and nonmod keys somehow async.
 					//	For example, Ctrl+C in IE address bar often does not work if there is no sleep after Ctrl down. Always works if 1 ms.
 
-					sleep = _LimitSleepTime(sleep);
+					sleep = Lib.LimitSleepTime(sleep);
 					if(kNext.IsKey) {
 						bool thisMod = _KeyTypes.IsMod(k.vk), nextMod = _KeyTypes.IsMod(kNext.vk);
 						if(!k.IsUp) {
@@ -652,7 +652,7 @@ namespace Au
 						if(0 != (mod ^ pm & KMod.Alt)) Lib.SendAlt(0 != (mod & KMod.Alt));
 						if(0 != (mod ^ pm & KMod.Shift)) Lib.SendShift(0 != (mod & KMod.Shift));
 						prevMod = mod;
-						if(sleep > 0) Lib.Sleep(_LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
+						if(sleep > 0) Lib.Sleep(Lib.LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
 					}
 
 					var ki = new Lib.INPUTKEY2(vk, vk == 0 ? c : Lib.VkToSc(vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
@@ -673,7 +673,5 @@ namespace Au
 			//rejected: throw if changed the focused window.
 			//	Possible false positives, because everything is async.
 		}
-
-		static int _LimitSleepTime(int t) => t <= 10 ? t : (t / 4 + 10);
 	}
 }

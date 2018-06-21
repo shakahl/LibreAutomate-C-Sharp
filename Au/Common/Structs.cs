@@ -42,51 +42,51 @@ namespace Au.Types
 		LPARAM(void* v) { _v = v; }
 
 		//LPARAM = int etc
-		public static implicit operator LPARAM(void* x) { return new LPARAM(x); }
-		public static implicit operator LPARAM(IntPtr x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(UIntPtr x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(int x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(uint x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(sbyte x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(byte x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(short x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(ushort x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(char x) { return new LPARAM((void*)(ushort)x); }
-		public static implicit operator LPARAM(long x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(ulong x) { return new LPARAM((void*)x); }
-		public static implicit operator LPARAM(bool x) { return new LPARAM((void*)(x ? 1 : 0)); }
+		public static implicit operator LPARAM(void* x) => new LPARAM(x);
+		public static implicit operator LPARAM(IntPtr x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(UIntPtr x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(int x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(uint x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(sbyte x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(byte x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(short x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(ushort x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(char x) => new LPARAM((void*)(ushort)x);
+		public static implicit operator LPARAM(long x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(ulong x) => new LPARAM((void*)x);
+		public static implicit operator LPARAM(bool x) => new LPARAM((void*)(x ? 1 : 0));
 		//also would be good to have LPARAM(Enum x), but I don't know how. Try like ExtensionMethods.Has_<T>. Maybe future C# will allow it.
 
 		//int etc = LPARAM
-		public static implicit operator void* (LPARAM x) { return x._v; }
-		public static implicit operator IntPtr(LPARAM x) { return (IntPtr)x._v; }
-		public static explicit operator UIntPtr(LPARAM x) { return (UIntPtr)x._v; }
-		public static explicit operator int(LPARAM x) { return (int)x._v; }
-		public static explicit operator uint(LPARAM x) { return (uint)x._v; }
-		public static explicit operator sbyte(LPARAM x) { return (sbyte)x._v; }
-		public static explicit operator byte(LPARAM x) { return (byte)x._v; }
-		public static explicit operator short(LPARAM x) { return (short)x._v; }
-		public static explicit operator ushort(LPARAM x) { return (ushort)x._v; }
-		public static explicit operator char(LPARAM x) { return (char)(ushort)x._v; }
-		public static explicit operator long(LPARAM x) { return (long)x._v; }
-		public static explicit operator ulong(LPARAM x) { return (ulong)x._v; }
-		public static implicit operator bool(LPARAM x) { return x._v != null; }
+		public static implicit operator void* (LPARAM x) => x._v;
+		public static implicit operator IntPtr(LPARAM x) => (IntPtr)x._v;
+		public static explicit operator UIntPtr(LPARAM x) => (UIntPtr)x._v;
+		public static explicit operator int(LPARAM x) => (int)x._v;
+		public static explicit operator uint(LPARAM x) => (uint)x._v;
+		public static explicit operator sbyte(LPARAM x) => (sbyte)x._v;
+		public static explicit operator byte(LPARAM x) => (byte)x._v;
+		public static explicit operator short(LPARAM x) => (short)x._v;
+		public static explicit operator ushort(LPARAM x) => (ushort)x._v;
+		public static explicit operator char(LPARAM x) => (char)(ushort)x._v;
+		public static explicit operator long(LPARAM x) => (long)x._v;
+		public static explicit operator ulong(LPARAM x) => (ulong)x._v;
+		public static implicit operator bool(LPARAM x) => x._v != null;
 		//note: don't use implicit. It's unsafe. Eg arithmetic and other operators then implicitly convert LPARAM operands to int, although must be long.
 
-		public static bool operator ==(LPARAM a, LPARAM b) { return a._v == b._v; }
-		public static bool operator !=(LPARAM a, LPARAM b) { return a._v != b._v; }
-		public static bool operator <(LPARAM a, LPARAM b) { return a._v < b._v; }
-		public static bool operator >(LPARAM a, LPARAM b) { return a._v > b._v; }
-		public static bool operator <=(LPARAM a, LPARAM b) { return a._v <= b._v; }
-		public static bool operator >=(LPARAM a, LPARAM b) { return a._v >= b._v; }
-		public static LPARAM operator +(LPARAM a, int b) { return (byte*)a._v + b; }
-		public static LPARAM operator -(LPARAM a, int b) { return (byte*)a._v - b; }
+		public static bool operator ==(LPARAM a, LPARAM b) => a._v == b._v;
+		public static bool operator !=(LPARAM a, LPARAM b) => a._v != b._v;
+		public static bool operator <(LPARAM a, LPARAM b) => a._v < b._v;
+		public static bool operator >(LPARAM a, LPARAM b) => a._v > b._v;
+		public static bool operator <=(LPARAM a, LPARAM b) => a._v <= b._v;
+		public static bool operator >=(LPARAM a, LPARAM b) => a._v >= b._v;
+		public static LPARAM operator +(LPARAM a, int b) => (byte*)a._v + b;
+		public static LPARAM operator -(LPARAM a, int b) => (byte*)a._v - b;
 
 		public override string ToString() => ((IntPtr)_v).ToString();
 
 		public override int GetHashCode() => (int)_v;
 
-		public override bool Equals(object other) => other is LPARAM && (LPARAM)other == this;
+		public override bool Equals(object obj) => obj is LPARAM && (LPARAM)obj == this;
 
 		public bool Equals(LPARAM other) => _v == other._v;
 
@@ -95,7 +95,7 @@ namespace Au.Types
 		//ISerializable implementation.
 		//Need it because default serialization: 1. Gets only public members. 2. Exception if void*. 3. If would work, would format like <...><_v>value</_v></...>, but we need <...>value</...>.
 		//Rejected, because it loads System.Xml.dll and 2 more dlls. Rarely used.
-		//public XmlSchema GetSchema() { return null; }
+		//public XmlSchema GetSchema() => null;
 		//public void ReadXml(XmlReader reader) { _v = (void*)reader.ReadElementContentAsLong(); }
 		//public void WriteXml(XmlWriter writer) { writer.WriteValue((long)_v); }
 #pragma warning restore 1591 //XML doc
@@ -113,14 +113,32 @@ namespace Au.Types
 
 		public POINT(int x, int y) { this.x = x; this.y = y; }
 
-		public static implicit operator POINT(Point p) { return new POINT(p.X, p.Y); }
-		public static implicit operator Point(POINT p) { return new Point(p.x, p.y); }
+		public static implicit operator POINT(Point p) => new POINT(p.X, p.Y);
+		public static implicit operator Point(POINT p) => new Point(p.x, p.y);
+		public static implicit operator POINT(PointF p) => new POINT(checked((int)p.X), checked((int)p.Y));
+		public static implicit operator PointF(POINT p) => new PointF(p.x, p.y);
+		public static implicit operator POINT(System.Windows.Point p) => new POINT(checked((int)p.X), checked((int)p.Y));
+		public static implicit operator System.Windows.Point(POINT p) => new System.Windows.Point(p.x, p.y);
+		public static implicit operator POINT((int x, int y) t) => new POINT(t.x, t.y);
+		/// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/>.</summary>
+		public static implicit operator POINT((Coord x, Coord y, bool workArea) t) => _Coord(t.x, t.y, t.workArea, default);
+		/// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/>.</summary>
+		public static implicit operator POINT((Coord x, Coord y, Screen_ screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
+		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/>.</summary>
+		public static implicit operator POINT((RECT r, Coord x, Coord y) t) => Coord.NormalizeInRect(t.x, t.y, t.r, centerIfEmpty: true);
 
-		public static bool operator ==(POINT p1, POINT p2) { return p1.x == p2.x && p1.y == p2.y; }
-		public static bool operator !=(POINT p1, POINT p2) { return !(p1 == p2); }
+		public static bool operator ==(POINT p1, POINT p2) => p1.x == p2.x && p1.y == p2.y;
+		public static bool operator !=(POINT p1, POINT p2) => !(p1 == p2);
 
-		public override string ToString() { return $"{{x={x} y={y}}}"; }
+		/// <summary>Adds x and y to this.x and this.y.</summary>
+		public void Offset(int x, int y) { this.x += x; this.y += y; }
+		/// <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
+		public static POINT operator +(POINT p, (int x, int y) d) => new POINT(p.x + d.x, p.y + d.y);
+
+		public override string ToString() => $"{{x={x} y={y}}}";
 #pragma warning restore 1591 //XML doc
+
+		static POINT _Coord(Coord x, Coord y, bool workArea, Screen_ screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
 	}
 
 	/// <summary>
@@ -135,13 +153,21 @@ namespace Au.Types
 
 		public SIZE(int cx, int cy) { this.width = cx; this.height = cy; }
 
-		public static implicit operator SIZE(Size z) { return new SIZE(z.Width, z.Height); }
-		public static implicit operator Size(SIZE z) { return new Size(z.width, z.height); }
+		public static implicit operator SIZE(Size z) => new SIZE(z.Width, z.Height);
+		public static implicit operator Size(SIZE z) => new Size(z.width, z.height);
+		public static implicit operator SIZE(SizeF z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
+		public static implicit operator SizeF(SIZE z) => new SizeF(z.width, z.height);
+		public static implicit operator SIZE(System.Windows.Size z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
+		public static implicit operator System.Windows.Size(SIZE z) => new System.Windows.Size(z.width, z.height);
+		public static implicit operator SIZE((int width, int height) t) => new SIZE(t.width, t.height);
 
-		public static bool operator ==(SIZE s1, SIZE s2) { return s1.width == s2.width && s1.height == s2.height; }
-		public static bool operator !=(SIZE s1, SIZE s2) { return !(s1 == s2); }
+		public static bool operator ==(SIZE s1, SIZE s2) => s1.width == s2.width && s1.height == s2.height;
+		public static bool operator !=(SIZE s1, SIZE s2) => !(s1 == s2);
 
-		public override string ToString() { return $"{{cx={width} cy={height}}}"; }
+		/// <summary>Returns <c>new SIZE(z.width + d.x, z.height + d.y)</c>.</summary>
+		public static SIZE operator +(SIZE z, (int x, int y) d) => new SIZE(z.width + d.x, z.height + d.y);
+
+		public override string ToString() => $"{{cx={width} cy={height}}}";
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -150,7 +176,7 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b>/<b>Rect</b>/<b>Int32Rect</b> can't, because their fields are different.
-	/// This type has implicit conversions from/to <b>Rectangle</b>.
+	/// Has implicit conversions from/to <b>Rectangle</b> and <b>RectangleF</b>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	[Serializable]
@@ -166,24 +192,30 @@ namespace Au.Types
 		/// <param name="top"></param>
 		/// <param name="rightOrWidth">right or width, depending on <paramref name="useWidthHeight"/>.</param>
 		/// <param name="bottomOrHeight">bottom or height, depending on <paramref name="useWidthHeight"/>.</param>
-		/// <param name="useWidthHeight">If true, rightOrWidth/bottomOrHeight are width/height. Else right/bottom.</param>
-		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight)
+		/// <param name="useWidthHeight">If true (default), rightOrWidth/bottomOrHeight are width/height. Else right/bottom.</param>
+		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true)
 		{
 			this.left = left; this.top = top;
 			right = rightOrWidth; bottom = bottomOrHeight;
 			if(useWidthHeight) { right += left; bottom += top; }
 		}
 
-		public static implicit operator RECT(Rectangle r) { return new RECT(r.Left, r.Top, r.Width, r.Height, true); }
-		public static implicit operator Rectangle(RECT r) { return new Rectangle(r.left, r.top, r.Width, r.Height); }
+		public static implicit operator RECT(Rectangle r) => new RECT(r.Left, r.Top, r.Width, r.Height, true);
+		public static implicit operator Rectangle(RECT r) => new Rectangle(r.left, r.top, r.Width, r.Height);
+		public static implicit operator RECT(RectangleF r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
+		public static implicit operator RectangleF(RECT r) => new RectangleF(r.left, r.top, r.Width, r.Height);
+		public static implicit operator RECT(System.Windows.Rect r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
+		public static implicit operator System.Windows.Rect(RECT r) => new System.Windows.Rect(r.left, r.top, r.Width, r.Height);
+		public static implicit operator RECT((int, int, int, int, bool) t) => new RECT(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5);
+		public static implicit operator RECT((int, int, int, int) t) => new RECT(t.Item1, t.Item2, t.Item3, t.Item4, true);
 
-		public static bool operator ==(RECT r1, RECT r2) { return r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom; }
-		public static bool operator !=(RECT r1, RECT r2) { return !(r1 == r2); }
+		public static bool operator ==(RECT r1, RECT r2) => r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom;
+		public static bool operator !=(RECT r1, RECT r2) => !(r1 == r2);
 
 		/// <summary>
 		/// Sets fields like the constructor <see cref="RECT(int,int,int,int,bool)"/>.
 		/// </summary>
-		public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight)
+		public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true)
 		{
 			this.left = left; this.top = top;
 			right = rightOrWidth; bottom = bottomOrHeight;
@@ -223,17 +255,17 @@ namespace Au.Types
 		/// <summary>
 		/// Returns true if this rectangle contains the specified point.
 		/// </summary>
-		public bool Contains(int x, int y) { return x >= left && x < right && y >= top && y < bottom; }
+		public bool Contains(int x, int y) => x >= left && x < right && y >= top && y < bottom;
 
 		/// <summary>
 		/// Returns true if this rectangle contains the specified point.
 		/// </summary>
-		public bool Contains(POINT p) { return Contains(p.x, p.y); }
+		public bool Contains(POINT p) => Contains(p.x, p.y);
 
 		/// <summary>
 		/// Returns true if this rectangle contains entire specified rectangle.
 		/// </summary>
-		public bool Contains(RECT r2) { return r2.left >= left && r2.top >= top && r2.right <= right && r2.bottom <= bottom; }
+		public bool Contains(RECT r2) => r2.left >= left && r2.top >= top && r2.right <= right && r2.bottom <= bottom;
 
 		/// <summary>
 		/// Makes this rectangle bigger or smaller: <c>left-=dx; right+=dx; top-=dy; bottom+=dy;</c>
@@ -246,7 +278,7 @@ namespace Au.Types
 		/// Returns true if the rectangles intersect.
 		/// If they don't intersect, makes this RECT empty (IsEmpty would return true).
 		/// </summary>
-		public bool Intersect(RECT r2) { return Api.IntersectRect(out this, this, r2); }
+		public bool Intersect(RECT r2) => Api.IntersectRect(out this, this, r2);
 
 		/// <summary>
 		/// Returns the intersection rectangle of two rectangles.
@@ -257,7 +289,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns true if this rectangle and another rectangle intersect.
 		/// </summary>
-		public bool IntersectsWith(RECT r2) { return Api.IntersectRect(out _, this, r2); }
+		public bool IntersectsWith(RECT r2) => Api.IntersectRect(out _, this, r2);
 
 		/// <summary>
 		/// Moves this rectangle by the specified offsets: <c>left+=dx; right+=dx; top+=dy; bottom+=dy;</c>
@@ -271,7 +303,7 @@ namespace Au.Types
 		/// Returns true if finally this rectangle is not empty.
 		/// If either rectangle is empty (Width or Height is &lt;=0), the result is another rectangle. If both empty - empty rectangle.
 		/// </summary>
-		public bool Union(RECT r2) { return Api.UnionRect(out this, this, r2); }
+		public bool Union(RECT r2) => Api.UnionRect(out this, this, r2);
 
 		/// <summary>
 		/// Returns the union of two rectangles.
@@ -281,11 +313,21 @@ namespace Au.Types
 		public static RECT Union(RECT r1, RECT r2) { Api.UnionRect(out RECT r, r1, r2); return r; }
 
 		/// <summary>
+		/// If width or height are negative, modifies this rectangle so that they would not be negative.
+		/// </summary>
+		/// <param name="swap">true - swap right/left, bottom/top; false - set right = left, bottom = top.</param>
+		public void Normalize(bool swap)
+		{
+			if(right < left) { if(swap) Math_.Swap(ref left, ref right); else right = left; }
+			if(bottom < top) { if(swap) Math_.Swap(ref top, ref bottom); else bottom = top; }
+		}
+
+		/// <summary>
 		/// Moves this rectangle to the specified coordinates in the specified screen, and ensures that whole rectangle is in screen.
 		/// Final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
-		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use Coord.Reverse etc.</param>
+		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
+		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
 		/// <param name="screen">Use this screen (see <see cref="Screen_"/>). If null (default), uses the primary screen.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
@@ -295,6 +337,18 @@ namespace Au.Types
 		public void MoveInScreen(Coord x, Coord y, Screen_ screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
+		}
+
+		/// <summary>
+		/// Moves this rectangle to the specified coordinates in another rectangle <paramref name="r"/>.
+		/// </summary>
+		/// <param name="x">X coordinate relative to <paramref name="r"/>. Default - center. Can be Coord.Reverse etc.</param>
+		/// <param name="y">Y coordinate relative to <paramref name="r"/>. Default - center. Can be Coord.Reverse etc.</param>
+		/// <param name="r">Another rectangle.</param>
+		/// <param name="ensureInRect">If part of rectangle is not in <paramref name="r"/>, move and/or resize it so that entire rectangle would be in <paramref name="r"/>. Default true.</param>
+		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = true)
+		{
+			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
 		}
 
 		/// <summary>
@@ -325,7 +379,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Color, as int in 0xAARRGGBB format.
-	/// Can convert from/to <see cref="Color"/>, Windows native COLORREF (0xBBGGRR), from string.
+	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows native COLORREF (0xBBGGRR), string.
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
@@ -348,10 +402,16 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Creates ColorInt from color value in 0xRRGGBB format.
+		/// Creates ColorInt from int color value in 0xRRGGBB format.
 		/// Makes opaque (alpha 0xFF).
 		/// </summary>
 		public static implicit operator ColorInt(int color) => new ColorInt(color, true);
+
+		/// <summary>
+		/// Creates ColorInt from uint color value in 0xRRGGBB format.
+		/// Makes opaque (alpha 0xFF).
+		/// </summary>
+		public static implicit operator ColorInt(uint color) => new ColorInt((int)color, true);
 
 		/// <summary>
 		/// Creates ColorInt from <see cref="Color"/>.
@@ -359,7 +419,13 @@ namespace Au.Types
 		public static implicit operator ColorInt(Color color) => new ColorInt(color.ToArgb(), false);
 
 		/// <summary>
-		/// Creates ColorInt from color name (<see cref="Color.FromName(string)"/>) or string in "0xRRGGBB" or "#RRGGBB" format.
+		/// Creates ColorInt from <see cref="System.Windows.Media.Color"/>.
+		/// </summary>
+		public static implicit operator ColorInt(System.Windows.Media.Color color)
+			=> new ColorInt((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
+
+		/// <summary>
+		/// Creates ColorInt from color name (<see cref="Color.FromName(string)"/>) or string "0xRRGGBB" or "#RRGGBB".
 		/// </summary>
 		/// <remarks>
 		/// If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
@@ -403,15 +469,21 @@ namespace Au.Types
 			return r;
 		}
 
-		/// <summary>
-		/// Creates <see cref="Color"/> from ColorInt.
-		/// </summary>
-		public static implicit operator Color(ColorInt c) => Color.FromArgb(c.color);
+		/// <summary>Creates int from ColorInt.</summary>
+		public static explicit operator int(ColorInt c) => c.color;
 
-		/// <summary>
-		/// Creates int from ColorInt.
-		/// </summary>
-		public static implicit operator int(ColorInt c) => c.color;
+		/// <summary>Creates int from ColorInt.</summary>
+		public static explicit operator uint(ColorInt c) => (uint)c.color;
+
+		/// <summary>Creates <see cref="Color"/> from ColorInt.</summary>
+		public static explicit operator Color(ColorInt c) => Color.FromArgb(c.color);
+
+		/// <summary>Creates <see cref="System.Windows.Media.Color"/> from ColorInt.</summary>
+		public static explicit operator System.Windows.Media.Color(ColorInt c)
+		{
+			uint k = (uint)c.color;
+			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
+		}
 
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
@@ -458,16 +530,12 @@ namespace Au.Types
 #pragma warning disable 1591 //XML doc
 		public static bool operator ==(ColorInt a, ColorInt b) => a.color == b.color;
 		public static bool operator !=(ColorInt a, ColorInt b) => a.color != b.color;
-		public static bool operator ==(ColorInt a, int b) => a.color == b;
-		public static bool operator !=(ColorInt a, int b) => a.color != b;
-		public static bool operator ==(ColorInt a, Color b) => a.color == b.ToArgb();
-		public static bool operator !=(ColorInt a, Color b) => a.color != b.ToArgb();
 
 		public bool Equals(ColorInt other) => other.color == color;
 
 		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
 		public override int GetHashCode() => color;
-		public override string ToString() => "0x" + color.ToString("X");
+		public override string ToString() => "#" + color.ToString("X8");
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -484,8 +552,8 @@ namespace Au.Types
 		public VARIANT(int x) : this() { vt = Api.VARENUM.VT_I4; value = x; }
 		public VARIANT(string x) : this() { vt = Api.VARENUM.VT_BSTR; value = Marshal.StringToBSTR(x); }
 
-		public static implicit operator VARIANT(int x) { return new VARIANT(x); }
-		public static implicit operator VARIANT(string x) { return new VARIANT(x); }
+		public static implicit operator VARIANT(int x) => new VARIANT(x);
+		public static implicit operator VARIANT(string x) => new VARIANT(x);
 
 		public int ValueInt { get { Debug.Assert(vt == Api.VARENUM.VT_I4); return (int)value; } }
 		public BSTR ValueBstr { get { Debug.Assert(vt == Api.VARENUM.VT_BSTR); return BSTR.AttachBSTR((char*)value); } }

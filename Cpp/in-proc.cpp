@@ -169,8 +169,8 @@ IStream* MarshalAgentIAccessible(HWND wAgent) {
 	if(CoMarshalInterface(stream, IID_IAccessible, iacc, MSHCTX_LOCAL, null, MSHLFLAGS_TABLESTRONG)) return null;
 
 	DWORD streamSize, readSize;
-	if(!istream::GetSize(stream, out streamSize)) return null;
-	//Print(streamSize); //68
+	if(!istream::GetPos(stream, out streamSize)) return null;
+	//Print((int)streamSize); //68
 	assert(streamSize <= c_agentWndExtra / 2); //c_agentWndExtra=200
 	if(streamSize > c_agentWndExtra - 4) return null;
 

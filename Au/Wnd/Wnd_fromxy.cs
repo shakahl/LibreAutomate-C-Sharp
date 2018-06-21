@@ -28,29 +28,17 @@ namespace Au
 
 		/// <summary>
 		/// Gets visible top-level window or control from point.
-		/// By default the coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="x">X coordinate in screen.</param>
-		/// <param name="y">Y coordinate in screen.</param>
+		/// <param name="p">
+		/// Coordinates relative to the primary screen.
+		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = Wnd.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
+		/// </param>
 		/// <param name="flags"></param>
-		/// <param name="co">Can be used to specify screen (see <see cref="Screen_"/>) and/or whether x y are relative to the work area.</param>
 		/// <remarks>
 		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
 		/// This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
-		/// x and y can be Coord.Reverse etc; cannot be null.
 		/// </remarks>
-		public static Wnd FromXY(Coord x, Coord y, WXYFlags flags = 0, CoordOptions co = null)
-		{
-			return FromXY(Coord.Normalize(x, y, co), flags);
-		}
-
-		/// <summary>
-		/// Gets visible top-level window or control from point.
-		/// More info: <see cref="FromXY(Coord, Coord, WXYFlags, CoordOptions)"/>.
-		/// </summary>
-		/// <param name="p">X Y in screen coordinates.</param>
-		/// <param name="flags"></param>
 		public static Wnd FromXY(POINT p, WXYFlags flags = 0)
 		{
 			bool needW = 0 != (flags & WXYFlags.NeedWindow);
@@ -60,7 +48,7 @@ namespace Au
 
 			if(needW) {
 				w = Api.RealChildWindowFromPoint(Api.GetDesktopWindow(), p); //much faster than WindowFromPoint
-				if(!w.HasExStyle(Native.WS_EX_TRANSPARENT | Native.WS_EX_LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
+				if(!w.HasExStyle(Native.WS_EX.TRANSPARENT | Native.WS_EX.LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
 				return Api.WindowFromPoint(p).WndWindow; //ChildWindowFromPointEx would be faster, but less reliable
 
 				//info:
@@ -95,10 +83,11 @@ namespace Au
 			if(needC && t == w) return default;
 			return t;
 		}
+		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
 
 		/// <summary>
 		/// Gets visible top-level window or control from mouse cursor position.
-		/// More info: <see cref="FromXY(Coord, Coord, WXYFlags, CoordOptions)"/>.
+		/// More info: <see cref="FromXY"/>.
 		/// </summary>
 		public static Wnd FromMouse(WXYFlags flags = 0)
 		{
@@ -113,14 +102,11 @@ namespace Au
 		/// Gets child control from point.
 		/// Returns default(Wnd) if the point is not in a child control or not in the client area of this window.
 		/// </summary>
-		/// <param name="x">X coordinate in the client area of this window.</param>
-		/// <param name="y">Y coordinate in the client area of this window.</param>
+		/// <param name="x">X coordinate in the client area of this window. Can be <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <param name="screenXY">x y are relative to the pimary screen, not to the client area.</param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		/// <remarks>
-		/// x y can be Coord.Reverse etc; cannot be null.
-		/// </remarks>
 		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
 		{
 			ThrowIfInvalid();
@@ -137,7 +123,7 @@ namespace Au
 			//Test whether it is a transparent control, like tab, covering other controls.
 			//RealChildWindowFromPoint does it only for group button.
 
-			if(R.HasExStyle(Native.WS_EX_MDICHILD)) return R;
+			if(R.HasExStyle(Native.WS_EX.MDICHILD)) return R;
 
 			if(!screenXY) Api.ClientToScreen(this, ref p);
 			g1:
@@ -188,7 +174,7 @@ namespace Au
 		//Returns direct child or default(Wnd).
 		static Wnd _RealChildWindowFromPoint_RtlAware(Wnd w, POINT p)
 		{
-			if(w.HasExStyle(Native.WS_EX_LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
+			if(w.HasExStyle(Native.WS_EX.LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
 			Wnd R = Api.RealChildWindowFromPoint(w, p);
 			return R == w ? default : R;
 		}
@@ -200,7 +186,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Wnd.FromXY(Coord, Coord, WXYFlags, CoordOptions)"/> and <see cref="Wnd.FromMouse"/>.
+	/// Flags for <see cref="Wnd.FromXY"/> and <see cref="Wnd.FromMouse"/>.
 	/// </summary>
 	[Flags]
 	public enum WXYFlags

@@ -360,7 +360,7 @@ namespace Au
 		/// <param name="path">Any path.</param>
 		/// <param name="defaultParentDirectory">If path is not full path, combine it with defaultParentDirectory to make full path.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="ArgumentException">path is not full path, and defaultParentDirectory is not used or does not make it full path.</exception>
+		/// <exception cref="ArgumentException">path is not full path, and <paramref name="defaultParentDirectory"/> is not used or does not make it full path.</exception>
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, supports @"\\?\very long path", trims '\\' at the end if need, does not throw exceptions when [it thinks that] path is invalid (except when path is not full).
 		/// </remarks>

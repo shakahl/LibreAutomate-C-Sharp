@@ -147,10 +147,10 @@ namespace Au
 			/// <param name="stringType">
 			/// String format.
 			/// Often used:
-			/// Native.SIGDN.SIGDN_NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
-			/// Native.SIGDN.SIGDN_FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
-			/// Native.SIGDN.SIGDN_URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
-			/// Native.SIGDN.SIGDN_DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="ToString"/> instead.
+			/// Native.SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
+			/// Native.SIGDN.FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
+			/// Native.SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
+			/// Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="ToString"/> instead.
 			/// </param>
 			/// <param name="throwIfFailed">If failed, throw AuException.</param>
 			/// <exception cref="AuException">Failed, and throwIfFailed is true.</exception>
@@ -201,7 +201,7 @@ namespace Au
 						//if(0 == Api.SHCreateItemFromIDList(pidl, Api.IID_IShellItem, out si)) { //same speed
 						//if(si.GetAttributes(0xffffffff, out uint attr)>=0) Print(attr);
 						if(si.GetAttributes(Api.SFGAO_BROWSABLE | Api.SFGAO_FILESYSTEM, out uint attr) >= 0 && attr != 0) {
-							var f = (0 != (attr & Api.SFGAO_FILESYSTEM)) ? Native.SIGDN.SIGDN_FILESYSPATH : Native.SIGDN.SIGDN_URL;
+							var f = (0 != (attr & Api.SFGAO_FILESYSTEM)) ? Native.SIGDN.FILESYSPATH : Native.SIGDN.URL;
 							if(0 == si.GetDisplayName(f, out var R)) return R;
 						}
 					}
@@ -216,8 +216,8 @@ namespace Au
 			public static string ToString2(IntPtr pidl)
 			{
 				if(pidl == default) return null;
-				var R = ToShellString2(pidl, Native.SIGDN.SIGDN_FILESYSPATH);
-				if(R == null) R = ToShellString2(pidl, Native.SIGDN.SIGDN_URL);
+				var R = ToShellString2(pidl, Native.SIGDN.FILESYSPATH);
+				if(R == null) R = ToShellString2(pidl, Native.SIGDN.URL);
 				if(R == null) R = ToHexString2(pidl);
 				return R;
 			}
@@ -231,8 +231,8 @@ namespace Au
 				try {
 					if(0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
 						string R = null;
-						if(0 == si.GetDisplayName(Native.SIGDN.SIGDN_FILESYSPATH, out R)) return R;
-						if(0 == si.GetDisplayName(Native.SIGDN.SIGDN_URL, out R)) return R;
+						if(0 == si.GetDisplayName(Native.SIGDN.FILESYSPATH, out R)) return R;
+						if(0 == si.GetDisplayName(Native.SIGDN.URL, out R)) return R;
 					}
 				}
 				finally { Api.ReleaseComObject(si); }

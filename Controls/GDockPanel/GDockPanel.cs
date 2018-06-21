@@ -271,7 +271,7 @@ namespace Au.Controls
 		{
 			//foreach(var gp in _aPanel) e.Graphics.ExcludeClip(gp.Content.Bounds); //makes erasing 2 times faster when window maximized (2 -> 1 ms)
 
-			e.Graphics.Clear((ColorInt)0xAAAAAA); //draw borders
+			e.Graphics.Clear((Color)(ColorInt)0xAAAAAA); //draw borders
 
 			//speed: this is the slowest part of painting this control. Using API does not help.
 		}
@@ -309,7 +309,7 @@ namespace Au.Controls
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;
 							_HideTooltip();
 							_toolTipTabButton = ht.gp;
-							Timer_.After(delay, t =>
+							Timer_.After(delay, () =>
 							{
 								var gp = _toolTipTabButton; if(gp == null) return;
 								var p2 = gp.ParentControl.MouseClientXY_();

@@ -364,7 +364,7 @@ namespace Au
 				}
 				if(orMouse) {
 					Api.GetCursorPos(out var p);
-					r = new RECT(p.x, p.y, 0, 16, true);
+					r = (p.x, p.y, 0, 16);
 				} else r = default;
 				w = default;
 				return false;
@@ -690,16 +690,22 @@ namespace Au
 		/// Does not touch modifier keys. It can be dangerous.</description>
 		/// </item>
 		/// <item>
+		/// <description><see cref="OptKey.TextSpeed" r=""/></description>
+		/// <description>0 ms.</description>
+		/// <description>0 - 1000.
+		/// Changes the speed for 'text' arguments (makes slower).</description>
+		/// </item>
+		/// <item>
 		/// <description><see cref="OptKey.KeySpeed" r=""/></description>
 		/// <description>1 ms.</description>
 		/// <description>0 - 1000.
 		/// Changes the speed for 'keys' arguments (makes slower if &gt;1).</description>
 		/// </item>
 		/// <item>
-		/// <description><see cref="OptKey.TextSpeed" r=""/></description>
-		/// <description>0 ms.</description>
+		/// <description><see cref="OptKey.KeySpeedClipboard" r=""/></description>
+		/// <description>5 ms.</description>
 		/// <description>0 - 1000.
-		/// Changes the speed for 'text' arguments (makes slower).</description>
+		/// Changes the speed of Ctrl+V keys when text is pasted using the clipboard.</description>
 		/// </item>
 		/// <item>
 		/// <description><see cref="OptKey.SleepFinally" r=""/></description>

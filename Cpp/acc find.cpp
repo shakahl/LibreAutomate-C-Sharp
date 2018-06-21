@@ -289,8 +289,9 @@ public:
 
 		if(!!(_flags2&eAF2::InWebPage)) {
 			_flags |= eAF::MenuToo;
-			if(!!(_flags&(eAF::UIA | eAF::ClientArea))) return _Error(L"Don't use flags UIA and ClientArea to search in web page.");
-			if(!!(_flags2&eAF2::InControls)) return _Error(L"Don't use class/id to search in web page.");
+			if(!!(_flags&(eAF::UIA | eAF::ClientArea))
+				|| !!(_flags2&eAF2::InControls)
+				) return _Error(L"role prefix 'web:' cannot be used with: flag UIA, flag ClientArea, prop 'class', prop 'id'.");
 		}
 
 		return true;

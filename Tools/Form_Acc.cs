@@ -1,6 +1,4 @@
-﻿#define USE_CODEANALYSIS_REF
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -28,13 +26,7 @@ using System.Collections;
 
 using SG = SourceGrid;
 
-#if USE_CODEANALYSIS_REF
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
-#endif
-
 //FUTURE: when the AO is in a control of other thread, use Wnd.Find(...).Child(...), and show tree only of that control.
-//FUTURE: ngen C# compiler assemblies. Now each Windows update unngens most of them.
 //FUTURE: support Edge better. Eg can find without UIA. See the workarounds.
 
 namespace Au.Tools
@@ -43,9 +35,7 @@ namespace Au.Tools
 	{
 		Acc _acc;
 		Wnd _wnd;
-		string _sWndVar;
-		Timer_ _timer;
-		OnScreenRect _osr;
+		ToolsUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
 
 		public Form_Acc(Acc acc = null)
@@ -102,7 +92,7 @@ namespace Au.Tools
 			if(!_SetAccGrids(out var p)) return;
 
 			if(!_wnd.Is0) {
-				_SetWindow(); //set the Wnd.Find textbox
+				_tWnd.Hwnd = _wnd;
 				_FillTree(p);
 			}
 
@@ -118,50 +108,11 @@ namespace Au.Tools
 
 			_grid.ZAutoSizeRows();
 			_grid.ZAutoSizeColumns();
-			//tested: suspeding layout does not make faster.
+			//tested: suspending layout does not make faster.
 
 			_OnGridChanged(); //set the Acc.Find readonly textbox
 			return true;
 		}
-
-		void _SetWindow()
-		{
-			var b = new StringBuilder("var ");
-			b.Append(_sWndVar ?? "w").Append(" = +Wnd.Find(");
-
-			var s = _wnd.Name;
-			_AppendString(b, s, noComma: true);
-
-			s = _wnd.ClassName;
-			if(s == null) {
-				_tWnd.Text = "invalid window handle";
-				_tWnd.ReadOnly = true;
-				return;
-			}
-			_AppendString(b, _StripClassName(s, true));
-
-			if(!_wnd.IsVisibleEx) _AppendOther(b, "WFFlags.HiddenToo", "flags");
-
-			b.Append(");");
-			_tWnd.ReadOnly = false;
-			_noeventWndTextChanged = true;
-			_tWnd.Text = b.ToString();
-			_noeventWndTextChanged = false;
-		}
-
-		//When the user edits the Wnd.Find textbox, updates the window variable in the Acc.Find/Wait textbox.
-		private void _tWnd_TextChanged(object sender, EventArgs e)
-		{
-			if(_noeventWndTextChanged) return;
-			var s = (sender as TextBox).Text;
-			if(Empty(s)) return;
-			if(!s.RegexMatch_(@"^(?:Wnd|var) +(\w+) *=", 1, out var w)) return;
-			if(w != _sWndVar) {
-				_sWndVar = w;
-				_OnGridChanged();
-			}
-		}
-		bool _noeventWndTextChanged;
 
 		bool _FillGrid(out AccProperties p)
 		{
@@ -188,7 +139,7 @@ namespace Au.Tools
 				int id = w.ControlId;
 				bool isId = (id > 0 && id < 0x10000 && id != (int)w.Handle && _wnd.ChildAll("**id:" + id).Length == 1);
 				if(isId) _Add("id", id.ToString(), true, info: c_infoId);
-				_Add("class", _StripClassName(w.ClassName), !isId, info: c_infoClass);
+				_Add("class", ToolsUtil.StripWndClassName(w.ClassName), !isId, info: c_infoClass);
 			}
 
 			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
@@ -200,7 +151,7 @@ namespace Au.Tools
 				string na = attr.Key, va = attr.Value;
 				bool check = noName && (na == "id" || na == "name") && va.Length > 0;
 				if(check) noName = false;
-				_Add("@" + na, _EscapeWildex(va), check, info: "HTML attribute.$");
+				_Add("@" + na, ToolsUtil.EscapeWildex(va), check, info: "HTML attribute.$");
 			}
 			int elem = _acc.SimpleElementId; if(elem != 0) _Add("elem", elem.ToString(), info: c_infoElem);
 			_Add("state", p.State.ToString(), info: c_infoState);
@@ -228,7 +179,7 @@ namespace Au.Tools
 			bool _AddIfNotEmpty(string name, string s, bool check, bool escape, string tt = null, string info = null)
 			{
 				if(Empty(s)) return false;
-				if(escape) s = _EscapeWildex(s);
+				if(escape) s = ToolsUtil.EscapeWildex(s);
 				_Add(name, s, check, tt, info);
 				return true;
 			}
@@ -294,85 +245,8 @@ namespace Au.Tools
 
 		private void _cCapture_CheckedChanged(object sender, EventArgs e)
 		{
-			//Print(_cCapture.Checked);
-
-			if(_cCapture.Checked) {
-				//let other dialogs stop capturing
-				foreach(var w in Wnd.FindAll("Find accessible object")) {
-					if(w == (Wnd)this) continue;
-					var c = w.Child("Capture with F*", "*.BUTTON.*");
-					if(!c.Is0) {
-						var b = (Wnd.WButton)c;
-						if(b.IsChecked()) b.Check(false);
-					}
-				}
-
-				g1:
-				_capturing = Api.RegisterHotKey((Wnd)this, 1, 0, _CapturingKey + (int)KKey.F1 - 1);
-				if(!_capturing) {
-					if(_CapturingKeyDialog()) goto g1;
-					_cCapture.Checked = false;
-					return;
-				}
-			} else if(_capturing) {
-				_capturing = !Api.UnregisterHotKey((Wnd)this, 1);
-			}
-
-			if(_capturing) {
-				if(_timer == null) {
-					_osr = _CreateOnScreenRect();
-					_timer = new Timer_(t =>
-					{
-						var w = Wnd.FromMouse(WXYFlags.NeedWindow);
-						if(w.Is0 || w == (Wnd)this || w.WndOwner == (Wnd)this) _osr.Visible = false;
-						else {
-							if(!_AccFromMouse(out var a)) _osr.Visible = false;
-							else {
-								_osr.Rect = a.Rect;
-								_osr.Show(true);
-							}
-						}
-					});
-				}
-				_timer.Start(250, false);
-			} else if(_timer != null) {
-				_timer.Stop();
-				_osr.Show(false);
-			}
-		}
-		bool _capturing;
-
-		int _CapturingKey
-		{
-			get
-			{
-				if(_capturingKey == 0) {
-					Registry_.GetInt(out var k, "key", c_registryKey);
-					_capturingKey = Math_.MinMax(k, 3, 12);
-				}
-				return _capturingKey;
-			}
-			set
-			{
-				_capturingKey = value;
-				Registry_.SetInt(value, "key", c_registryKey);
-				if(_capturing) {
-					_cCapture.Checked = false;
-					_cCapture.Checked = true;
-				}
-				_SetFormInfo(null);
-			}
-		}
-		int _capturingKey;
-
-		bool _CapturingKeyDialog()
-		{
-			var key = _CapturingKey;
-			var d = new AuDialog("Accessible object capturing key", buttons: "OK|Cancel", owner: this, flags: DFlags.OwnerCenter);
-			d.SetRadioButtons("3F3|4F4|5F5|6F6|7F7|8F8|9F9|10F10|11F11|12F12", key);
-			var r = d.ShowDialog(); if(r != 1) return false;
-			if(r.RadioButton != key) _CapturingKey = r.RadioButton;
-			return true;
+			if(_capt == null) _capt = new ToolsUtil.CaptureWindowEtcWithHotkey(this, () => _AccFromMouse(out var a) ? a.Rect : default);
+			_capt.StartStop(_cCapture.Checked);
 		}
 
 		void _Capture()
@@ -400,25 +274,20 @@ namespace Au.Tools
 		bool _uiaUserChecked; //to prevent capturing with AXYFlags.UIA when the checkbox was checked automatically (not by the user)
 		bool _waitAutoCheckedOnce; //if user unchecks, don't check next time
 
-		#endregion
-
 		protected override void WndProc(ref Message m)
 		{
-			Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
-			//var s = m.ToString();
+			//Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
 
-			switch(msg) {
-			case Api.WM_HOTKEY:
-				switch((int)wParam) {
-				case 1:
-					_Capture();
-					return;
-				}
-				break;
+			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
+				if(capture) _Capture();
+				else _cCapture.Checked = false;
+				return;
 			}
 
 			base.WndProc(ref m);
 		}
+
+		#endregion
 
 		const string c_registryKey = @"\Tools\Acc";
 
@@ -430,8 +299,7 @@ namespace Au.Tools
 			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
-			_sWndVar = "w";
-			_tWnd.TextChanged += _tWnd_TextChanged;
+			_tWnd.WndVarNameChanged += (unu, sed) => _OnGridChanged();
 
 			if(_acc != null) _SetAcc(false);
 
@@ -452,8 +320,8 @@ namespace Au.Tools
 		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
 			Wnd w = (Wnd)this;
-			if(_capturing) _cCapture.Checked = false;
-			_osr?.Dispose();
+			_cCapture.Checked = false;
+			_capt?.Dispose();
 			Registry_.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 			base.OnFormClosing(e);
 		}
@@ -516,11 +384,11 @@ namespace Au.Tools
 				b.Append("Acc.Find(");
 			}
 
-			_AppendOther(b, _sWndVar, noComma: !isWait);
+			ToolsUtil.AppendOtherArg(b, _tWnd.WndVar, noComma: !isWait);
 
-			if(_grid.ZGetValueIfExists("role", out var role, true)) _AppendString(b, role);
+			if(_grid.ZGetValueIfExists("role", out var role, true)) ToolsUtil.AppendStringArg(b, role);
 			bool isName = _grid.ZGetValueIfExists("name", out var name, false);
-			if(isName) _AppendString(b, name ?? "");
+			if(isName) ToolsUtil.AppendStringArg(b, name ?? "");
 
 			bool isProp = false;
 			var query = (from r in _grid.Rows where _grid.ZIsChecked(r.Index) select r)
@@ -546,7 +414,7 @@ namespace Au.Tools
 				}
 				b.Append('\"').Append(na).Append('=');
 				if(!Empty(va)) {
-					if(_IsVerbatim(va)) {
+					if(ToolsUtil.IsVerbatim(va)) {
 						b.Append("\" + ").Append(va);
 						continue;
 					} else {
@@ -565,20 +433,20 @@ namespace Au.Tools
 				var flag = "AFFlags." + _grid2.ZGetRowKey(r);
 				if(!isFlags) {
 					isFlags = true;
-					_AppendOther(b, flag, (isName && isProp) ? null : "flags");
+					ToolsUtil.AppendOtherArg(b, flag, (isName && isProp) ? null : "flags");
 				} else {
 					b.Append('|').Append(flag);
 				}
 			}
 
-			if(_grid2.ZGetValue("also", out var also, true)) _AppendOther(b, also, "also");
-			if(_grid2.ZGetValue("skip", out var skip, true)) _AppendOther(b, skip, "skip");
+			if(_grid2.ZGetValue("also", out var also, true)) ToolsUtil.AppendOtherArg(b, also, "also");
+			if(_grid2.ZGetValue("skip", out var skip, true)) ToolsUtil.AppendOtherArg(b, skip, "skip");
 
 			b.Append(')');
 			if(isNavig) {
 				b.Append("?[");
-				_AppendString(b, navig, noComma: true);
-				if(isWait) _AppendOther(b, "1");
+				ToolsUtil.AppendStringArg(b, navig, noComma: true);
+				if(isWait) ToolsUtil.AppendOtherArg(b, "1");
 				b.Append(']');
 			}
 			b.Append(';');
@@ -590,76 +458,6 @@ namespace Au.Tools
 
 		bool _IsChecked2(string rowKey) => _grid2.ZIsChecked(rowKey);
 		void _Check2(string rowKey, bool check) => _grid2.ZCheck(rowKey, check);
-
-		static void _AppendString(StringBuilder b, string s, string param = null, bool noComma = false)
-		{
-			if(!noComma && b.Length > 1) b.Append(", ");
-			if(param != null) b.Append(param).Append(": ");
-			if(s == null) b.Append("null");
-			else if(_IsVerbatim(s)) b.Append(s);
-			else b.Append('\"').Append(s.Escape_()).Append('\"');
-		}
-
-		//Returns true if s is like @"*" or $"*" or $@"*".
-		static bool _IsVerbatim(string s)
-		{
-			if(s.Length < 3 || s[s.Length - 1] != '\"') return false;
-			if(s[0] == '@') return s[1] == '\"';
-			if(s[0] == '$') return s[1] == '\"' || (s[1] == '@' && s[2] == '\"' && s.Length > 3);
-			return false;
-		}
-
-		static void _AppendOther(StringBuilder b, string s, string param = null, bool noComma = false)
-		{
-			Debug.Assert(!Empty(s));
-			if(!noComma && b.Length > 1) b.Append(", ");
-			if(param != null) b.Append(param).Append(": ");
-			b.Append(s);
-		}
-
-		static string _EscapeWildex(string s)
-		{
-			if(Wildex.HasWildcards(s)) s = "**t " + s;
-			return s;
-		}
-
-		static string _StripClassName(string s, bool escapeWildex = false)
-		{
-			if(!Empty(s)) {
-				int n = s.RegexReplace_(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
-				if(n == 0) n = s.RegexReplace_(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
-				if(escapeWildex && n == 0) s = _EscapeWildex(s);
-			}
-			return s;
-		}
-
-		OnScreenRect _CreateOnScreenRect() => new OnScreenRect() { Color = Color.DarkOrange, Thickness = 2 };
-
-		void _ShowOnScreenRect(in RECT r, bool blink)
-		{
-			if(r.IsEmpty) return;
-			var osr = new OnScreenRect() { Color = Color.DarkOrange, Thickness = 4 };
-
-			osr.Rect = r;
-			osr.Show(true);
-
-			//FUTURE: show something more visible, eg line from Mouse.XY to r. For it create class OnScreenLine or extend OnScreenRect.
-			//	Or could animate the rect, but then not good when small.
-
-			if(blink) {
-				int i = 0;
-				Timer_.Every(250, t =>
-				{
-					if(i < 4) osr.Show((i++ & 1) != 0);
-					else {
-						t.Stop();
-						osr.Dispose();
-					}
-				});
-			} else {
-				Timer_.After(1000, t => osr.Dispose());
-			}
-		}
 
 		#endregion
 
@@ -679,7 +477,7 @@ namespace Au.Tools
 			//Print(prop.Replace('\0', ';'));
 			var role = p.Role; if(role.Length == 0) role = null;
 			try {
-				Acc.Find(w, role, p.Name, prop, flags, also: o =>
+				Acc.Find(w, role, "**tc " + p.Name, prop, flags, also: o =>
 				{
 					//var x = new _AccNode(o.Role);
 					var x = new _AccNode("a");
@@ -733,7 +531,7 @@ namespace Au.Tools
 						xRoot = m.xRoot;
 						xSelect = m.xSelect;
 						if(_grid.ZFindRow("class") < 0) {
-							_grid.ZAddOptional(null, "class", _StripClassName(c.ClassName), true);
+							_grid.ZAddOptional(null, "class", ToolsUtil.StripWndClassName(c.ClassName), true);
 							_grid.ZAutoSizeColumns();
 						}
 					}
@@ -834,14 +632,7 @@ namespace Au.Tools
 			if(node == null) return;
 			_acc = (node.Tag as _AccNode).a;
 			if(!_SetAccGrids(out var p)) return;
-
-			var r = p.Rect;
-			if(!r.IsEmpty) {
-				var osr = _CreateOnScreenRect();
-				osr.Rect = r;
-				osr.Show(true);
-				Timer_.After(1000, t => osr.Dispose());
-			}
+			ToolsUtil.ShowOsdRect(p.Rect, false);
 		}
 
 		class _AccTree :ITreeModel
@@ -915,100 +706,15 @@ namespace Au.Tools
 
 		#region test
 
-		//Namespaces and references for 'also' lambda, to use when testing.
-		//FUTURE: user-defined imports and references. Probably as script header, where can bu used #r, #load, using, etc.
-		static string[] s_testImports = { "Au", "Au.Types", "Au.NoClass", "System", "System.Collections.Generic", "System.Text.RegularExpressions", "System.Windows.Forms", "System.Drawing", "System.Linq" };
-		static Assembly[] s_testReferences = { Assembly.GetAssembly(typeof(Wnd)) }; //info: somehow don't need to add System.Windows.Forms, System.Drawing.
-
-#if USE_CODEANALYSIS_REF
-		//C# script compiler setup:
-		//Install nuget package Microsoft.CodeAnalysis.CSharp.Scripting.
-		//The easy way:
-		//	Install it in Au.Tools.
-		//	Problem - cluttering: it installs about 25 packages, adds them to References, to the main output folder, etc.
-		//Workaround:
-		//	Install it in another solution (Compiler) that contains single project (Compiler).
-		//	In Compiler project set output = subfolder "Compiler" of the main output folder "_".
-		//	Compile the Compiler project. It adds all the dlls to the "Compiler" subfolder.
-		//	In exe app.config add: configuration/runtime/assemblyBinding: <probing privatePath="Compiler"/>
-		//	In Au.Tools add references from the "Compiler" subfolder:
-		//		Microsoft.CodeAnalysis, Microsoft.CodeAnalysis.CSharp.Scripting, Microsoft.CodeAnalysis.Scripting, System.Collections.Immutable.
-		//		In reference assembly options, for each assembly make "copy local" = false.
-		//		In the future may need more if we'll use more code.
-		//	Issues:
-		//		Adds System.Collections.Immutable.dll to the main output folder.
-		//			Tried to edit app.config etc, unsuccessfully.
-		//		Also, in app.config must be:
-		//			<assemblyBinding xmlns = "urn:schemas-microsoft-com:asm.v1" >
-		//				<probing privatePath="Compiler"/>
-		//				<dependentAssembly>
-		//					<assemblyIdentity name = "System.Collections.Immutable" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-		//					<bindingRedirect oldVersion = "0.0.0.0-1.2.1.0" newVersion="1.2.1.0" />
-		//				</dependentAssembly>
-		//			</assemblyBinding>
-
 		private async void _bTest_Click(object sender, EventArgs ea)
 		{
 			if(_grid.RowsCount == 0) return;
-			string sWnd = _tWnd.Text; if(Empty(sWnd)) return;
-			_lSpeed.Text = "";
-			string sAcc = _FormatAcc(true);
+			if(Empty(_tWnd.Text)) return;
+			var r = await ToolsUtil.RunTestFindObject(_FormatAcc(true), _tWnd, _bTest, _lSpeed, o => (o as Acc).Rect);
 
-			//Perf.First();
-
-			var b = new StringBuilder();
-			b.Append(sWnd).Append("var _p_ = Perf.StartNew();").AppendLine("var _a_ = ");
-			b.AppendLine(sAcc);
-			b.AppendLine($"_p_.Next(); return (_p_.TimeTotal, _a_, {_sWndVar});");
-
-			var code = b.ToString(); //Print(code);
-			(long speed, Acc a, Wnd w) r = default;
-			try {
-				_bTest.Enabled = false;
-				var so = ScriptOptions.Default.WithReferences(s_testReferences).WithImports(s_testImports);
-				r = await CSharpScript.EvaluateAsync<(long, Acc, Wnd)>(code, so);
-			}
-			catch(CompilationErrorException e) {
-				var es = String.Join("\r\n", e.Diagnostics);
-				AuDialog.ShowError(e.GetType().Name, es, owner: this, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
-				return;
-			}
-			catch(NotFoundException) {
-				AuDialog.ShowInfo("Window not found", owner: this, flags: DFlags.OwnerCenter);
-				return;
-				//info: throws only when window not found. This is to show time anyway when acc not found.
-			}
-			catch(Exception e) {
-				AuDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: DFlags.OwnerCenter);
-				return;
-			}
-			finally {
-				GC.Collect(); //GC does not work with compiler. Task Manager shows 53 MB. After several times can be 300 MB. This makes 22 MB.
-				_bTest.Enabled = true;
-			}
-
-			//Perf.NW();
-			//Print(r);
-
-			var t = Math.Round((double)r.speed / 1000, r.speed < 1000 ? 2 : (r.speed < 10000 ? 1 : 0));
-			var sTime = t.ToString_() + " ms";
-			if(r.a != null) {
-				_lSpeed.ForeColor = Form.DefaultForeColor;
-				_lSpeed.Text = sTime;
-				_ShowOnScreenRect(r.a.Rect, true);
-			} else {
-				//AuDialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
-				_lSpeed.ForeColor = Color.Red;
-				_lSpeed.Text = "Not found,";
-				Timer_.After(500, tt => _lSpeed.Text = sTime);
-			}
-
-			if(r.w != _wnd) {
-				AuDialog.ShowWarning("Wnd.Find finds another window",
-				$"Captured: {_wnd.ToString()}\r\n\r\nFound: {r.w.ToString()}",
-				owner: this, flags: DFlags.OwnerCenter | DFlags.Wider);
-			} else if(r.a != null && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
-				if(!r.a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
+			var a = r.obj as Acc;
+			if(a != null && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
+				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
 					string ffInfo = c_infoFirefox, ffPath = _wnd.ProcessPath;
 					if(ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
@@ -1016,60 +722,6 @@ namespace Au.Tools
 				}
 			}
 		}
-#else
-
-		private async void _bTest_Click(object sender, EventArgs ea)
-		{
-			if(_grid.RowsCount == 0) return;
-			string sWnd = _tWnd.Text; if(Empty(sWnd)) return;
-			_lSpeed.Text = "";
-			string sAcc = _FormatAcc(true);
-
-			//Perf.First();
-
-			var b = new StringBuilder();
-			b.Append(sWnd); b.Append("var _p_ = Perf.StartNew();").AppendLine("var _a_ = ");
-			b.AppendLine(sAcc);
-			b.AppendLine("_p_.Next(); return (_p_.TimeTotal, _a_);");
-
-			var s = b.ToString(); //Print(s);
-			(long speed, Acc a) result = default;
-			try {
-				_bTest.Enabled = false;
-				result = ((long, Acc))(await Au.Compiler.Scripting.EvaluateAsync(s, s_testReferences, s_testImports));
-			}
-			catch(Au.Compiler.CompilationException e) {
-				AuDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: s*/);
-				return;
-			}
-			catch(NotFoundException) {
-				AuDialog.ShowInfo("Window not found", owner: this, flags: DFlags.OwnerCenter);
-				return;
-				//info: throws only when window not found. This is to show time anyway when acc not found.
-			}
-			catch(Exception e) {
-				AuDialog.ShowError(e.GetType().Name, e.Message, owner: this, flags: DFlags.OwnerCenter);
-				return;
-			}
-			finally { _bTest.Enabled = true; }
-
-			//Perf.NW();
-			//Print(result);
-
-			var t = Math.Round((double)result.speed / 1000, result.speed < 1000 ? 2 : (result.speed < 10000 ? 1 : 0));
-			var sTime=t.ToString_() + " ms";
-			if(result.a != null) {
-				_lSpeed.ForeColor = Form.DefaultForeColor;
-				_lSpeed.Text = sTime;
-				_ShowOnScreenRect(result.a.Rect, true);
-			} else {
-				//AuDialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
-				_lSpeed.ForeColor = Color.Red;
-				_lSpeed.Text = "Not found,";
-				Timer_.After(1000, tt => _lSpeed.Text = sTime);
-			}
-		}
-#endif
 
 		#endregion
 
@@ -1136,20 +788,16 @@ namespace Au.Tools
 
 			_commonInfos = new CommonInfos(_info);
 
-			_info.Tags.AddLinkTag("_key", _ => _CapturingKeyDialog());
 			_info.Tags.AddLinkTag("_resetInfo", _ => _SetFormInfo(null));
 			_info.Tags.AddLinkTag("_jab", _ => Java.EnableDisableJabUI(this));
 		}
 
-		//If info == null, sets form info text.
 		void _SetFormInfo(string info)
 		{
 			if(info == null) {
 				info = c_infoForm;
-				var k = _CapturingKey;
-				if(k != 3) info = info.Replace("F3", "F" + k.ToString());
-			}else if(info.EndsWith_("$")) {
-				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length-1));
+			} else if(info.EndsWith_("$")) {
+				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length - 1));
 				return;
 			}
 			_info.Text = info;
@@ -1157,7 +805,7 @@ namespace Au.Tools
 
 		const string c_infoForm =
 @"Creates code to find an <i>accessible object (AO)<> - button, link, etc. Then your script can click it, etc. See <help M_Au_Acc_Find>Acc.Find<>, <help T_Au_Acc>Acc<>, <help M_Au_Wnd_Find>Wnd.Find<>. How to use:
-1. Move the mouse to the AO you want. Press key <_key>F3<>.
+1. Move the mouse to the AO you want. Press key <b>F3<>.
 2. Click the Test button. It finds and shows the AO and the search time.
 3. If need, check/uncheck/edit some fields or select another AO, Test.
 4. Click OK, it inserts C# code in the editor. Or Copy to the clipboard.

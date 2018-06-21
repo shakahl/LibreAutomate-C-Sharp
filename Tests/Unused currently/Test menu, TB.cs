@@ -918,8 +918,8 @@ public partial class Test
 	//		get
 	//		{
 	//			var p = base.CreateParams;
-	//			p.Style = unchecked((int)Native.WS_POPUP);
-	//			p.ExStyle = (int)(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST);
+	//			p.Style = unchecked((int)Native.WS.POPUP);
+	//			p.ExStyle = (int)(Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOPMOST);
 	//			//p.Height = 50; p.Width = 1200;
 	//			p.X = 400; p.Y = 200;
 	//			//p.ClassName = _tbWndClass.Name;
@@ -1044,8 +1044,8 @@ public partial class Test
 //		}
 
 //		//bool topMost = true;
-//		Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass2.Name, null,
-//			Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+//		Wnd w = Api.CreateWindowEx(Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOPMOST, _tbWndClass2.Name, null,
+//			Native.WS.POPUP | Native.WS.CAPTION | Native.WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
 //		Perf.Next();
 
 //#if true
@@ -1137,8 +1137,8 @@ public partial class Test
 
 	//	Perf.First();
 	//	//bool topMost = true;
-	//	Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _tbWndClass3.Name, null,
-	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+	//	Wnd w = Api.CreateWindowEx(Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOPMOST, _tbWndClass3.Name, null,
+	//		Native.WS.POPUP | Native.WS.CAPTION | Native.WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
 	//	Perf.Next();
 
 
@@ -1201,8 +1201,8 @@ public partial class Test
 	//	}
 
 	//	//bool topMost = true;
-	//	Wnd w = Api.CreateWindowEx(Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE | Native.WS_EX_TOPMOST, _WndClassNW.Name, null,
-	//		Native.WS_POPUP | Native.WS_CAPTION | Native.WS_SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+	//	Wnd w = Api.CreateWindowEx(Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOPMOST, _WndClassNW.Name, null,
+	//		Native.WS.POPUP | Native.WS.CAPTION | Native.WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
 	//	Perf.Next();
 	//	w.Show(true);
 	//	//w.ActivateLL();

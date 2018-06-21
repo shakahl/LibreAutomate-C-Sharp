@@ -12,6 +12,8 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
+using System.Drawing;
+using System.Windows.Forms;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -31,7 +33,7 @@ namespace Au.Util
 
 		public LibScreenDC(int unused) => _dc = Api.GetDC(default);
 		public static implicit operator IntPtr(LibScreenDC dc) => dc._dc;
-		public void Dispose() => Api.ReleaseDC(default, _dc);
+		public void Dispose() { Api.ReleaseDC(default, _dc); _dc = default; }
 	}
 
 	/// <summary>
@@ -39,35 +41,54 @@ namespace Au.Util
 	/// Uses API GetDC and ReleaseDC.
 	/// If w is default(Wnd), gets screen DC.
 	/// </summary>
-	internal struct LibWindowDC :IDisposable
+	internal struct LibWindowDC :IDisposable, IDeviceContext
 	{
 		IntPtr _dc;
 		Wnd _w;
 
 		public LibWindowDC(Wnd w) => _dc = Api.GetDC(_w = w);
 		public static implicit operator IntPtr(LibWindowDC dc) => dc._dc;
-		public void Dispose() => Api.ReleaseDC(_w, _dc);
 		public bool Is0 => _dc == default;
+
+		public void Dispose() => ReleaseHdc();
+
+		public IntPtr GetHdc() => _dc;
+
+		public void ReleaseHdc()
+		{
+			Api.ReleaseDC(_w, _dc);
+			_w = default; _dc = default;
+		}
 	}
 
 	/// <summary>
 	/// Helps to create and delete screen DC with the 'using(...){...}' pattern.
 	/// Uses API CreateCompatibleDC and DeleteDC.
 	/// </summary>
-	internal struct LibCompatibleDC :IDisposable
+	internal struct LibCompatibleDC :IDisposable, IDeviceContext
 	{
 		IntPtr _dc;
 
 		public LibCompatibleDC(IntPtr dc) => _dc = Api.CreateCompatibleDC(dc);
 		public static implicit operator IntPtr(LibCompatibleDC dc) => dc._dc;
-		public void Dispose() => Api.DeleteDC(_dc);
+		public bool Is0 => _dc == default;
+
+		public void Dispose() => ReleaseHdc();
+
+		public IntPtr GetHdc()=> _dc;
+
+		public void ReleaseHdc()
+		{
+			Api.DeleteDC(_dc);
+			_dc = default;
+		}
 	}
 
 	/// <summary>
 	/// Creates and manages native bitmap handle and memory DC (GDI device context).
 	/// The bitmap is selected in the DC.
 	/// </summary>
-	public sealed class MemoryBitmap :IDisposable
+	public sealed class MemoryBitmap :IDisposable, IDeviceContext
 	{
 		IntPtr _dc, _bm, _oldbm;
 
@@ -89,9 +110,11 @@ namespace Au.Util
 		/// <summary>
 		/// Calls <see cref="Create"/>.
 		/// </summary>
+		/// <exception cref="ArgumentException">width or height is less than 1.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
 		public MemoryBitmap(int width, int height)
 		{
+			if(width <= 0 || height <= 0) throw new ArgumentException();
 			if(!Create(width, height)) throw new AuException("*create memory bitmap of specified size");
 		}
 
@@ -114,8 +137,14 @@ namespace Au.Util
 		}
 
 		///
-		~MemoryBitmap() { Delete(); }
+		~MemoryBitmap() => Delete();
 		//info: calls DeleteDC. MSDN says that ReleaseDC must be called from the same thread. But does not say it about DeleteDC and others.
+
+		///
+		public IntPtr GetHdc() => _dc;
+
+		///
+		public void ReleaseHdc() => Delete();
 
 		/// <summary>
 		/// Deletes the bitmap and DC.
@@ -137,8 +166,8 @@ namespace Au.Util
 		/// Returns false if failed.
 		/// In any case deletes previous bitmap and DC.
 		/// </summary>
-		/// <param name="width">Width, pixels.</param>
-		/// <param name="height">Height, pixels.</param>
+		/// <param name="width">Width, pixels. Must be &gt; 0.</param>
+		/// <param name="height">Height, pixels. Must be &gt; 0.</param>
 		public bool Create(int width, int height)
 		{
 			using(var dcs = new LibScreenDC(0)) {
@@ -214,4 +243,98 @@ namespace Au.Util
 		}
 	}
 
+	/// <summary>
+	/// Helps to load cursors.
+	/// </summary>
+	public static class Cursors_
+	{
+		/// <summary>
+		/// Loads cursor from file.
+		/// Returns null if fails.
+		/// </summary>
+		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="Folders.ThisAppImages"/>.</param>
+		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
+		/// <remarks>
+		/// This function exists because <see cref="Cursor"/> constructors don't support colors, ani cursors and custom size.
+		/// </remarks>
+		public static Cursor LoadCursorFromFile(string file, int size = 0)
+		{
+			file = Path_.Normalize(file, Folders.ThisAppImages);
+			if(file == null) return null;
+			uint fl = Api.LR_LOADFROMFILE; if(size == 0) fl |= Api.LR_DEFAULTSIZE;
+			var hCur = Api.LoadImage(default, file, Api.IMAGE_CURSOR, size, size, fl);
+			return _CursorFromHcursor(hCur);
+		}
+
+		static Cursor _CursorFromHcursor(IntPtr hCur)
+		{
+			if(hCur == default) return null;
+			var c = new Cursor(hCur);
+			var fi = typeof(Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
+			Debug.Assert(fi != null);
+			fi?.SetValue(c, true);
+			return c;
+		}
+
+		/// <summary>
+		/// Creates cursor from cursor file data in memory, for example from a managed resource.
+		/// Returns null if fails.
+		/// </summary>
+		/// <param name="cursorData">Data of .cur or .ani file.</param>
+		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
+		/// <remarks>
+		/// This function exists because <see cref="Cursor"/> constructors don't support colors, ani cursors and custom size.
+		/// </remarks>
+		public static Cursor LoadCursorFromMemory(byte[] cursorData, int size = 0)
+		{
+			var s = Folders.Temp + Guid.NewGuid().ToString();
+			File.WriteAllBytes(s, cursorData);
+			var c = LoadCursorFromFile(s, size);
+			Files.Delete(s);
+			return c;
+
+			//If want to avoid temp file, can use CreateIconFromResourceEx.
+			//	But quite much unsafe code (at first need to find cursor offset and set hotspot), less reliable (may fail for some .ani files), in some cases works not as well (may get wrong-size cursor).
+			//	The code moved to the Unused project.
+		}
+	}
+
+	/// <summary>
+	/// Misc GDI util.
+	/// </summary>
+	internal static class LibGDI
+	{
+		//rejected: now we use BufferedGraphics. Same speed. With BufferedGraphics no TextRenderer problems.
+		///// <summary>
+		///// Copies a .NET Bitmap to a native DC in a fast way.
+		///// </summary>
+		///// <remarks>
+		///// Can be used for double-buffering: create Bitmap and Graphics from it, draw in that Graphics, then call this func.
+		///// The bitmap should be PixelFormat.Format32bppArgb (normal), else slower etc. Must be top-down (normal).
+		///// </remarks>
+		//public static unsafe void CopyNetBitmapToDC(Bitmap b, IntPtr dc)
+		//{
+		//	var r = new Rectangle(0, 0, b.Width, b.Height);
+		//	var d = b.LockBits(r, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+		//	try {
+		//		Api.BITMAPINFOHEADER h = default;
+		//		h.biSize = sizeof(Api.BITMAPINFOHEADER);
+		//		h.biWidth = d.Width;
+		//		h.biHeight = -d.Height;
+		//		h.biPlanes = 1;
+		//		h.biBitCount = 32;
+		//		int k = Api.SetDIBitsToDevice(dc, 0, 0, d.Width, d.Height, 0, 0, 0, d.Height, (void*)d.Scan0, &h, 0);
+		//		Debug.Assert(k > 0);
+		//	}
+		//	finally { b.UnlockBits(d); }
+
+		//	//speed: 6-7 times faster than Graphics.FromHdc/DrawImageUnscaled. When testing, the dc was from BeginPaint.
+		//}
+		//public static unsafe void CopyNetBitmapToDC2(Bitmap b, IntPtr dc)
+		//{
+		//	using(var g = Graphics.FromHdc(dc)) {
+		//		g.DrawImageUnscaled(b, 0, 0);
+		//	}
+		//}
+	}
 }

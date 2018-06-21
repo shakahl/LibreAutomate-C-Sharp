@@ -70,6 +70,150 @@ public:
 	}
 };
 
+//Workaround for Firefox bug in TEXT AOs in multi-process mode.
+class AccessibleMarshalWrapper : public IAccessible
+{
+	IAccessible* _a;
+public:
+	bool ignoreQI;
+
+	AccessibleMarshalWrapper(IAccessible* a)
+	{
+		_a = a;
+		ignoreQI = true;
+	}
+
+	virtual STDMETHODIMP QueryInterface(REFIID riid, void ** ppvObject) override
+	{
+		if(riid == IID_IAccessible || riid == IID_IUnknown || riid == IID_IDispatch) {
+			_a->AddRef();
+			*ppvObject = this;
+			return 0;
+			//Firefox bug: TEXT AOs return E_NOINTERFACE for IID_IUnknown, that is why CoMarshalInterface fails.
+			//	Also they don't give custom IMarshal, although all other AOs do.
+		}
+		if(ignoreQI) { //don't give IMarshal and other interfaces while in CoMarshalInterface
+			*ppvObject = null;
+			return E_NOINTERFACE;
+		}
+
+		return _a->QueryInterface(riid, ppvObject);
+	}
+	virtual STDMETHODIMP_(ULONG) AddRef(void) override
+	{
+		return _a->AddRef();
+	}
+	virtual STDMETHODIMP_(ULONG) Release(void) override
+	{
+		auto r = _a->Release();
+		//Print((int)r);
+		if(r == 0) delete this;
+		return r;
+	}
+#pragma region
+	virtual STDMETHODIMP GetTypeInfoCount(UINT * pctinfo) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual STDMETHODIMP get_accParent(IDispatch ** ppdispParent) override
+	{
+		return _a->get_accParent(ppdispParent);
+	}
+	virtual STDMETHODIMP get_accChildCount(long * pcountChildren) override
+	{
+		return _a->get_accChildCount(pcountChildren);
+	}
+	virtual STDMETHODIMP get_accChild(VARIANT varChild, IDispatch ** ppdispChild) override
+	{
+		return _a->get_accChild(varChild, ppdispChild);
+	}
+	virtual STDMETHODIMP get_accName(VARIANT varChild, BSTR * pszName) override
+	{
+		return _a->get_accName(varChild, pszName);
+	}
+	virtual STDMETHODIMP get_accValue(VARIANT varChild, BSTR * pszValue) override
+	{
+		return _a->get_accValue(varChild, pszValue);
+	}
+	virtual STDMETHODIMP get_accDescription(VARIANT varChild, BSTR * pszDescription) override
+	{
+		return _a->get_accDescription(varChild, pszDescription);
+	}
+	virtual STDMETHODIMP get_accRole(VARIANT varChild, VARIANT * pvarRole) override
+	{
+		return _a->get_accRole(varChild, pvarRole);
+	}
+	virtual STDMETHODIMP get_accState(VARIANT varChild, VARIANT * pvarState) override
+	{
+		return _a->get_accState(varChild, pvarState);
+	}
+	virtual STDMETHODIMP get_accHelp(VARIANT varChild, BSTR * pszHelp) override
+	{
+		return _a->get_accHelp(varChild, pszHelp);
+	}
+	virtual STDMETHODIMP get_accHelpTopic(BSTR * pszHelpFile, VARIANT varChild, long * pidTopic) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual STDMETHODIMP get_accKeyboardShortcut(VARIANT varChild, BSTR * pszKeyboardShortcut) override
+	{
+		return _a->get_accKeyboardShortcut(varChild, pszKeyboardShortcut);
+	}
+	virtual STDMETHODIMP get_accFocus(VARIANT * pvarChild) override
+	{
+		return _a->get_accFocus(pvarChild);
+	}
+	virtual STDMETHODIMP get_accSelection(VARIANT * pvarChildren) override
+	{
+		return _a->get_accSelection(pvarChildren);
+	}
+	virtual STDMETHODIMP get_accDefaultAction(VARIANT varChild, BSTR * pszDefaultAction) override
+	{
+		return _a->get_accDefaultAction(varChild, pszDefaultAction);
+	}
+	virtual STDMETHODIMP accSelect(long flagsSelect, VARIANT varChild) override
+	{
+		return _a->accSelect(flagsSelect, varChild);
+	}
+	virtual STDMETHODIMP accLocation(long * pxLeft, long * pyTop, long * pcxWidth, long * pcyHeight, VARIANT varChild) override
+	{
+		return _a->accLocation(pxLeft, pyTop, pcxWidth, pcyHeight, varChild);
+	}
+	virtual STDMETHODIMP accNavigate(long navDir, VARIANT varStart, VARIANT * pvarEndUpAt) override
+	{
+		return _a->accNavigate(navDir, varStart, pvarEndUpAt);
+	}
+	virtual STDMETHODIMP accHitTest(long xLeft, long yTop, VARIANT * pvarChild) override
+	{
+		return _a->accHitTest(xLeft, yTop, pvarChild);
+	}
+	virtual STDMETHODIMP accDoDefaultAction(VARIANT varChild) override
+	{
+		return _a->accDoDefaultAction(varChild);
+	}
+	virtual STDMETHODIMP put_accName(VARIANT varChild, BSTR szName) override
+	{
+		return _a->put_accName(varChild, szName);
+	}
+	virtual STDMETHODIMP put_accValue(VARIANT varChild, BSTR szValue) override
+	{
+		return _a->put_accValue(varChild, szValue);
+	}
+#pragma endregion
+};
+
 //The BSTR returned by our get_accHelpTopic hook contains data of one or more accessible objects (AO).
 //	Each AO data can have IAccessible object data (created by CoMarshalInterface), child element id, level, role.
 //	These flags tell what is in the data.
@@ -111,12 +255,32 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 		m->Release();
 		a.misc.flags &= ~eAccMiscFlags::InProc;
 		//PRINTS(L"custom IMarshal. Using NotInProc.");
-	} else a.misc.flags |= eAccMiscFlags::InProc;
+	} else {
+		a.misc.flags |= eAccMiscFlags::InProc;
+		//PRINTS(L"standard IMarshal.");
+	}
 
 	if(stream->Write(&has, 1, null)) return false;
 
 	if(!(has&eAccResult::UsePrevAcc)) {
-		if(CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL)) return false;
+		HRESULT hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
+		//ao::PrintAcc(a.acc, a.elem);
+		if(hr) {
+			//Firefox bug when multi-process: fails to marshal all TEXT AOs.
+			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
+			//	Or could detect Firefox multi-process and use NotInProc implicitly. But slower almost 2 times. Also then cannot get HTML attributes etc later.
+
+			HRESULT hr1 = hr;
+			auto wrap = new AccessibleMarshalWrapper(a.acc);
+			a.acc = wrap;
+			hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
+			if(hr == 0) wrap->ignoreQI = false; else delete wrap;
+			//Print((UINT)hr);
+
+			PRINTF(L"failed to marshal AO: 0x%X 0x%X", hr1, hr);
+			//ao::PrintAcc(a.acc, a.elem);
+		} //else Print(L"OK");
+		if(hr) return false;
 		inproc::s_hookIAcc.Hook(a.acc);
 	}
 
@@ -199,7 +363,13 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 			} else {
 				if(!stream) CreateStreamOnHGlobal(0, true, &stream);
 
-				if(!WriteAccToStream(ref stream, a, &aPrev)) goto ge;
+				DWORD pos = 0;
+				if(findAll) istream::GetPos(stream, out pos);
+
+				if(!WriteAccToStream(ref stream, a, &aPrev)) {
+					if(!findAll) goto ge;
+					stream->Seek(istream::LI(pos), STREAM_SEEK_SET, null);
+				}
 			}
 
 			hr = 0;
@@ -215,7 +385,7 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 	}
 
 	DWORD streamSize, readSize;
-	if(istream::GetSize(stream, out streamSize) && istream::ResetPos(stream)) {
+	if(istream::GetPos(stream, out streamSize) && istream::ResetPos(stream)) {
 		sResult = SysAllocStringByteLen(null, streamSize);
 		if(0 == stream->Read(sResult, streamSize, &readSize) && readSize == streamSize) return 0;
 		SysFreeString(sResult); sResult = null;
@@ -241,7 +411,7 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 
 	DWORD pos; if(istream::GetPos(_stream, out pos) && pos == _resultSize) return (HRESULT)eError::NotFound; //no more results when FindAll. Fast.
 
-	eAccResult has;
+	eAccResult has=(eAccResult)0;
 	if(0 != _stream->Read(&has, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
 	if(!(has&eAccResult::UsePrevAcc)) {

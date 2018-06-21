@@ -98,7 +98,7 @@ partial class FilesModel :ITreeModel
 	NodeIcon _ncIcon;
 	NodeTextBox _ncName;
 
-	public static Icons.FileIconCache IconCache = new Icons.FileIconCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)Icons.ShellSize.SysSmall);
+	public static Icons.ImageCache IconCache = new Icons.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)Icons.ShellSize.SysSmall);
 
 	//Called by FilesPanel
 	public void InitNodeControls(NodeIcon icon, NodeTextBox name)
@@ -924,7 +924,7 @@ partial class FilesModel :ITreeModel
 				switch(AuDialog.ShowEx("Collection", a[0],
 					"1 Open collection|2 Import collection|0 Cancel",
 					flags: DFlags.Wider, footerText: GetSecurityInfo(true))) {
-				case 1: Timer_.After(1, t => Panels.Files.LoadCollection(a[0])); break;
+				case 1: Timer_.After(1, () => Panels.Files.LoadCollection(a[0])); break;
 				case 2: ImportCollection(a[0], target, pos); break;
 				}
 				return;

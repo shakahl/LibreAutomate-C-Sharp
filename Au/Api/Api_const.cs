@@ -39,6 +39,7 @@ namespace Au.Types
 		internal const int E_OUTOFMEMORY = unchecked((int)0x8007000E);
 		internal const int DISP_E_MEMBERNOTFOUND = unchecked((int)0x80020003);
 		internal const int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
+		internal const int RPC_E_SERVER_CANTMARSHAL_DATA = unchecked((int)0x8001000D);
 
 		#endregion
 
@@ -422,12 +423,6 @@ namespace Au.Types
 
 		#endregion
 
-		#region IDI_
-
-		internal const int IDI_APPLICATION = 32512;
-
-		#endregion
-
 		#region QS_
 
 		internal const uint QS_KEY = 0x1;
@@ -592,7 +587,13 @@ namespace Au.Types
 
 		#endregion
 
+		#region misc
+
 		internal const uint INFINITE = 0xFFFFFFFF;
+		internal const int IDI_APPLICATION = 32512;
+
+		#endregion
+
 
 
 

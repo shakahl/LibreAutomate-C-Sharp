@@ -93,6 +93,7 @@ namespace Au
 		public static explicit operator IntPtr(Wnd w) => w.Handle;
 		public static explicit operator Wnd(LPARAM hwnd) => new Wnd((void*)hwnd);
 		public static explicit operator LPARAM(Wnd w) => w._h;
+		public static implicit operator Wnd(Native.HWND hwnd) => new Wnd((void*)(int)hwnd);
 
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
@@ -216,9 +217,8 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
-		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default, LPARAM lParam = default, uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out LPARAM R);
 		}
@@ -226,9 +226,8 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
-		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default, LPARAM lParam = default, uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			result = 0;
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
@@ -237,9 +236,8 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
-		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			result = 0;
 			fixed (char* p = lParam)
@@ -249,9 +247,8 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
-		/// flags can be Native.SMTO_.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, char[] lParam, uint flags = Native.SMTO_ABORTIFHUNG)
+		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			result = 0;
 			fixed (char* p = lParam)
@@ -431,11 +428,11 @@ namespace Au
 				if(!Api.IsWindowVisible(this)) return false;
 
 				var style = Style;
-				if((style & (Native.WS_POPUP | Native.WS_CHILD)) == Native.WS_POPUP) {
-					if((style & Native.WS_CAPTION) != Native.WS_CAPTION) return !IsCloaked;
+				if((style & (Native.WS.POPUP | Native.WS.CHILD)) == Native.WS.POPUP) {
+					if((style & Native.WS.CAPTION) != Native.WS.CAPTION) return !IsCloaked;
 
 					//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
-					if(Ver.MinWin10 && HasExStyle(Native.WS_EX_NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
+					if(Ver.MinWin10 && HasExStyle(Native.WS_EX.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
 						var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
 						//Print(isGhost, this);
 						return !isGhost;
@@ -534,7 +531,8 @@ namespace Au
 			get
 			{
 				if(!Ver.MinWin8) return 0;
-				int hr = Api.DwmGetWindowAttribute(this, 14, out int cloaked, 4); //DWMWA_CLOAKED
+				int cloaked = 0;
+				int hr = Api.DwmGetWindowAttribute(this, Api.DWMWA.CLOAKED, &cloaked, 4);
 				return cloaked;
 			}
 		}
@@ -789,7 +787,7 @@ namespace Au
 			{
 				Debug_.Print("EnableActivate: need min/res");
 
-				Wnd t = Misc.CreateWindow("#32770", null, Native.WS_POPUP | Native.WS_MINIMIZE | Native.WS_VISIBLE, Native.WS_EX_TOOLWINDOW);
+				Wnd t = Misc.CreateWindow("#32770", null, Native.WS.POPUP | Native.WS.MINIMIZE | Native.WS.VISIBLE, Native.WS_EX.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -900,9 +898,9 @@ namespace Au
 			R = LibIsActiveOrNoActiveAndThisIsWndRoot;
 			if(!R) {
 				if(0 != (flags & Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
-					uint est = ExStyle;
-					if((est & Native.WS_EX_NOACTIVATE) != 0) noAct = true;
-					else if((est & (Native.WS_EX_TOOLWINDOW | Native.WS_EX_APPWINDOW)) == Native.WS_EX_TOOLWINDOW) noAct = !HasStyle(Native.WS_CAPTION);
+					var est = ExStyle;
+					if((est & Native.WS_EX.NOACTIVATE) != 0) noAct = true;
+					else if((est & (Native.WS_EX.TOOLWINDOW | Native.WS_EX.APPWINDOW)) == Native.WS_EX.TOOLWINDOW) noAct = !HasStyle(Native.WS.CAPTION);
 					if(noAct && !IsCloaked) {
 						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
 						return false; //if cloaked, need to activate to uncloak
@@ -1028,7 +1026,7 @@ namespace Au
 				for(int i = 0; i < 32; i++) {
 					Time.DoEvents();
 					if(!WndActive.Is0) return true;
-					Thread.Sleep(15); //SHOULDDO: SleepDoEvents
+					Thread.Sleep(15); //SHOULDDO: SleepDoEvents, or WaitForCallback
 				}
 				return false;
 				//Call this after showing a dialog API.
@@ -1206,13 +1204,22 @@ namespace Au
 		/// Gets rectangle (position and size) in screen coordinates.
 		/// </summary>
 		/// <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
+		/// <param name="withoutExtendedFrame">Don't include the transparent part of window border. For it is used API <msdn>DwmGetWindowAttribute</msdn>(DWMWA_EXTENDED_FRAME_BOUNDS); it is less reliable.</param>
 		/// <remarks>
 		/// The same as the <see cref="Rect"/> property.
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public bool GetRect(out RECT r)
+		public bool GetRect(out RECT r, bool withoutExtendedFrame = false)
 		{
+			if(withoutExtendedFrame) {
+				RECT t;
+				if(0 == Api.DwmGetWindowAttribute(this, Api.DWMWA.EXTENDED_FRAME_BOUNDS, &t, 16)) {
+					r = t;
+					return true;
+				}
+			}
+
 			if(Api.GetWindowRect(this, out r)) return true;
 			r = default;
 			return false;
@@ -1248,7 +1255,6 @@ namespace Au
 				return r;
 			}
 		}
-		//FUTURE: Need a function to get the visible part of window rect, without the transparent border on Win10. There is API, but don't remember, maybe in DWM.
 
 		/// <summary>
 		/// Gets width and height.
@@ -1353,6 +1359,22 @@ namespace Au
 				return r;
 			}
 		}
+
+		/// <summary>
+		/// Gets client area rectangle (width and height) in screen.
+		/// </summary>
+		/// <remarks>
+		/// Calls <see cref="GetClientRect"/>. Returns default(RECT) if fails (eg window closed).
+		/// </remarks>
+		public RECT ClientRectInScreen
+		{
+			get
+			{
+				GetClientRect(out RECT r, true);
+				return r;
+			}
+		}
+
 		/// <summary>
 		/// Gets client area width and height.
 		/// </summary>
@@ -1633,14 +1655,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if this window (its rectangle) contains the specified point in primary screen coordinates.
+		/// Returns true if this window (its rectangle) contains the specified point.
 		/// </summary>
 		/// <param name="x">X coordinate in screen. Not used if default(Coord).</param>
 		/// <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area.</param>
-		public bool ContainsScreenXY(Coord x, Coord y, CoordOptions co = null)
+		public bool ContainsScreenXY(Coord x, Coord y)
 		{
-			POINT p = Coord.Normalize(x, y, co);
+			POINT p = Coord.Normalize(x, y);
 			if(!GetRect(out RECT r)) return false;
 			if(!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
 			return true;
@@ -1683,10 +1704,9 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>.
-		/// For <paramref name="swpFlags"/> you can use <b>Native.SWP_x</b>.
-		/// For <paramref name="wndInsertAfter"/> you can use <b>Native.HWND_x</b>.
+		/// For <paramref name="wndInsertAfter"/> you can use enum <b>Native.HWND</b> members: <b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.
 		/// </remarks>
-		public bool SetWindowPos(uint swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default)
+		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default)
 		{
 			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags);
 		}
@@ -1695,24 +1715,24 @@ namespace Au
 		/// Moves and resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, Coord, Coord, CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP_ flags.
-		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
+		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="Native.GetError"/>.
 		/// 
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool MoveLL(int x, int y, int width, int height, uint swpFlagsToAdd = 0)
+		public bool MoveLL(int x, int y, int width, int height, Native.SWP swpFlagsToAdd = 0)
 		{
-			return SetWindowPos(Native.SWP_NOZORDER | Native.SWP_NOOWNERZORDER | Native.SWP_NOACTIVATE | swpFlagsToAdd, x, y, width, height);
+			return SetWindowPos(Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE | swpFlagsToAdd, x, y, width, height);
 		}
 
 		/// <summary>
 		/// Moves.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
-		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOSIZE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
+		/// See also <see cref="Move(Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="Native.GetError"/>.
 		/// 
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
@@ -1720,38 +1740,39 @@ namespace Au
 		/// <seealso cref="SetWindowPos"/>
 		public bool MoveLL(int x, int y)
 		{
-			return MoveLL(x, y, 0, 0, Native.SWP_NOSIZE);
+			return MoveLL(x, y, 0, 0, Native.SWP.NOSIZE);
 		}
 
 		/// <summary>
 		/// Resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Resize(Coord, Coord, CoordOptions)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
-		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags SWP_NOMOVE|SWP_NOZORDER|SWP_NOOWNERZORDER|SWP_NOACTIVATE. It is better to use in programming, with windows of current thread.
+		/// See also <see cref="Resize(Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
 		public bool ResizeLL(int width, int height)
 		{
-			return MoveLL(0, 0, width, height, Native.SWP_NOMOVE);
+			return MoveLL(0, 0, width, height, Native.SWP.NOMOVE);
 		}
 
 		/// <summary>
 		/// Moves and/or resizes.
-		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, uint)"/>.
 		/// </summary>
 		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area. Not used when this is a child window. For width/height used when width or height is Coord.Reverse etc.</param>
+		/// <param name="workArea"><i>x y width height</i> are relative to the work area. Not used when this is a child window.</param>
+		/// <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
-		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
+		/// For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
+		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
 		/// </remarks>
 		/// <exception cref="WndException"/>
-		public void Move(Coord x, Coord y, Coord width, Coord height, CoordOptions co = null)
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, Screen_ screen = default)
 		{
 			ThrowIfInvalid();
 
@@ -1761,13 +1782,13 @@ namespace Au
 				xy = Coord.NormalizeInWindow(x, y, w);
 				wh = Coord.NormalizeInWindow(width, height, w);
 			} else {
-				xy = Coord.Normalize(x, y, co);
-				wh = Coord.Normalize(width, height, co, widthHeight: true);
+				xy = Coord.Normalize(x, y, workArea, screen);
+				wh = Coord.Normalize(width, height, workArea, screen, widthHeight: true);
 			}
 
-			uint f = 0, getRect = 0;
-			if(x.IsEmpty && y.IsEmpty) f |= Native.SWP_NOMOVE; else if(x.IsEmpty) getRect |= 1; else if(y.IsEmpty) getRect |= 2;
-			if(width.IsEmpty && height.IsEmpty) f |= Native.SWP_NOSIZE; else if(width.IsEmpty) getRect |= 4; else if(height.IsEmpty) getRect |= 8;
+			Native.SWP f = 0; uint getRect = 0;
+			if(x.IsEmpty && y.IsEmpty) f |= Native.SWP.NOMOVE; else if(x.IsEmpty) getRect |= 1; else if(y.IsEmpty) getRect |= 2;
+			if(width.IsEmpty && height.IsEmpty) f |= Native.SWP.NOSIZE; else if(width.IsEmpty) getRect |= 4; else if(height.IsEmpty) getRect |= 8;
 
 			if(getRect != 0) {
 				if(!GetRectInClientOf(w, out RECT r)) ThrowUseNative("*move/resize*");
@@ -1790,37 +1811,37 @@ namespace Au
 
 		/// <summary>
 		/// Moves.
-		/// Calls <c>Move(x, y, default, default, co)</c>.
-		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </summary>
 		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area. Not used when this is a child window.</param>
+		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
+		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
+		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </remarks>
-		public void Move(Coord x, Coord y, CoordOptions co = null)
+		public void Move(Coord x, Coord y, bool workArea = false, Screen_ screen = default)
 		{
-			Move(x, y, default, default, co);
+			Move(x, y, default, default, workArea, screen);
 		}
 
 		/// <summary>
 		/// Resizes.
-		/// Calls Move(default, default, width, height, co).
-		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </summary>
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
-		/// <param name="co">Allows to specify screen (see <see cref="Screen_"/>) and/or whether to use the work area. Used when width or height is Coord.Reverse etc. Not used when this is a child window.</param>
+		/// <param name="workArea">For <see cref="Coord.Fraction"/> etc use width/height of the work area. Not used when this is a child window.</param>
+		/// <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
+		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </remarks>
-		public void Resize(Coord width, Coord height, CoordOptions co = null)
+		public void Resize(Coord width, Coord height, bool workArea = false, Screen_ screen = default)
 		{
-			Move(default, default, width, height, co);
+			Move(default, default, width, height, workArea, screen);
 		}
 
 		#endregion
@@ -1830,22 +1851,29 @@ namespace Au
 		internal static partial class Lib
 		{
 			/// <summary>
-			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen.
+			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen. With inRect used by RECT.MoveInRect.
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
 			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
-			Screen_ screen, bool bWorkArea, bool bEnsureInScreen)
+			Screen_ screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect=default)
 			{
+				RECT rs;
 				System.Windows.Forms.Screen scr;
-				if(!screen.IsNull) scr = screen.GetScreen();
-				else if(useWindow) scr = Screen_.ScreenFromWindow(w);
-				else if(bEnsureMethod) scr = System.Windows.Forms.Screen.FromRectangle(r);
-				else scr = System.Windows.Forms.Screen.PrimaryScreen;
+				if(inRect.HasValue) {
+					Debug.Assert(!useWindow);
+					rs = inRect.GetValueOrDefault();
+					scr = null;
+				} else {
+					if(!screen.IsNull) scr = screen.GetScreen();
+					else if(useWindow) scr = Screen_.ScreenFromWindow(w);
+					else if(bEnsureMethod) scr = System.Windows.Forms.Screen.FromRectangle(r);
+					else scr = System.Windows.Forms.Screen.PrimaryScreen;
 
-				RECT rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
+					rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
 
-				if(useWindow) {
-					if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
+					if(useWindow) {
+						if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
+					}
 				}
 
 				int x, y, wid = r.Width, hei = r.Height;
@@ -1856,7 +1884,7 @@ namespace Au
 				} else {
 					if(left.IsEmpty) left = Coord.Center;
 					if(top.IsEmpty) top = Coord.Center;
-					var p = Coord.NormalizeInRect(left, top, rs, centerIfEmpty: true);
+					var p = Coord.NormalizeInRect(left, top, rs);
 					x = p.x; y = p.y;
 					switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
 					switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
@@ -1968,7 +1996,7 @@ namespace Au
 		#endregion
 
 		#region Zorder
-		const uint _SWP_ZORDER = Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOACTIVATE;
+		const Native.SWP _SWP_ZORDER = Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE;
 
 		/// <summary>
 		/// Places this window before window w in the Z order.
@@ -2013,7 +2041,7 @@ namespace Au
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTop()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_TOP);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
 
 			//CONSIDER: find a workaround. Eg in some cases this works: set HWND_TOPMOST then HWND_NOTOPMOST.
 		}
@@ -2021,7 +2049,7 @@ namespace Au
 		//Better don't use workarounds here.
 		//public bool ZorderTop()
 		//{
-		//	Wnd wa = Native.HWND_TOP;
+		//	Wnd wa = Native.HWND.TOP;
 		//	if(!IsChildWindow) {
 		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
 		//		//Workaround: insert this after the first window, then insert the first window after this.
@@ -2039,7 +2067,7 @@ namespace Au
 		public bool ZorderBottom()
 		{
 			ZorderNoTopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_BOTTOM);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.BOTTOM);
 		}
 
 		/// <summary>
@@ -2051,7 +2079,7 @@ namespace Au
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		public bool ZorderTopmost()
 		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_TOPMOST);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST);
 		}
 
 		/// <summary>
@@ -2066,7 +2094,7 @@ namespace Au
 			if(!IsTopmost) return true;
 
 			for(int i = 0; i < 4; i++) {
-				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND_NOTOPMOST)) return false;
+				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.NOTOPMOST)) return false;
 				if(i == 0 && !IsTopmost) break;
 				//Print("retry");
 			}
@@ -2098,7 +2126,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this is a topmost (always-on-top) window.
 		/// </summary>
-		public bool IsTopmost => HasExStyle(Native.WS_EX_TOPMOST);
+		public bool IsTopmost => HasExStyle(Native.WS_EX.TOPMOST);
 
 		/// <summary>
 		/// Returns true if this window is above window w in the Z order.
@@ -2119,32 +2147,32 @@ namespace Au
 		/// <summary>
 		/// Gets window style.
 		/// </summary>
-		/// <value>One or more Native.WS_ flags (not WS_EX_) and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
+		/// <value>One or more <see cref="Native.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		/// <seealso cref="HasStyle"/>
 		/// <seealso cref="SetStyle"/>
-		public uint Style
+		public Native.WS Style
 		{
-			get => (uint)GetWindowLong(Native.GWL_STYLE);
+			get => (Native.WS)(uint)GetWindowLong(Native.GWL.STYLE);
 		}
 
 		/// <summary>
 		/// Gets window extended style.
 		/// </summary>
-		/// <value>One or more Native.WS_EX_ flags. Reference: <msdn>extended window styles</msdn>.</value>
+		/// <value>One or more <see cref="Native.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		/// <seealso cref="HasExStyle"/>
 		/// <seealso cref="SetExStyle"/>
-		public uint ExStyle
+		public Native.WS_EX ExStyle
 		{
-			get => (uint)GetWindowLong(Native.GWL_EXSTYLE);
+			get => (Native.WS_EX)(uint)GetWindowLong(Native.GWL.EXSTYLE);
 		}
 
 		/// <summary>
 		/// Returns true if the window has all specified style flags (see <see cref="Style"/>).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool HasStyle(uint style)
+		public bool HasStyle(Native.WS style)
 		{
 			return (Style & style) == style;
 		}
@@ -2153,7 +2181,7 @@ namespace Au
 		/// Returns true if the window has all specified extended style flags (see <see cref="ExStyle"/>).
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool HasExStyle(uint exStyle)
+		public bool HasExStyle(Native.WS_EX exStyle)
 		{
 			return (ExStyle & exStyle) == exStyle;
 		}
@@ -2161,74 +2189,74 @@ namespace Au
 		/// <summary>
 		/// Changes window style.
 		/// </summary>
-		/// <param name="style">One or more Native.WS_ flags (not WS_EX_) and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
+		/// <param name="style">One or more <see cref="Native.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
 		/// <param name="how"></param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
 		/// <param name="updateClient">Update client area.</param>
 		/// <exception cref="WndException"/>
 		/// <seealso cref="Style"/>
-		public void SetStyle(uint style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
+		public void SetStyle(Native.WS style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
 		{
-			_SetStyle(style, how, false, updateNC, updateClient);
+			_SetStyle((int)style, how, false, updateNC, updateClient);
 		}
 
 		/// <summary>
 		/// Changes window extended style.
 		/// </summary>
-		/// <param name="style">One or more Native.WS_EX_ flags. Reference: <msdn>extended window styles</msdn>.</param>
+		/// <param name="style">One or more <see cref="Native.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
 		/// <param name="how"></param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
 		/// <param name="updateClient">Update client area.</param>
 		/// <exception cref="WndException"/>
 		/// <seealso cref="ExStyle"/>
-		public void SetExStyle(uint style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
+		public void SetExStyle(Native.WS_EX style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
 		{
-			_SetStyle(style, how, true, updateNC, updateClient);
+			_SetStyle((int)style, how, true, updateNC, updateClient);
 		}
 
-		void _SetStyle(uint style, SetAddRemove how, bool exStyle = false, bool updateNC = false, bool updateClient = false)
+		void _SetStyle(int style, SetAddRemove how, bool exStyle = false, bool updateNC = false, bool updateClient = false)
 		{
-			var gwl = exStyle ? Native.GWL_EXSTYLE : Native.GWL_STYLE;
+			var gwl = exStyle ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
 			if(how != SetAddRemove.Set) {
-				uint pstyle = (uint)GetWindowLong(gwl);
+				int pstyle = (int)GetWindowLong(gwl);
 				if(how == SetAddRemove.Add) style |= pstyle;
 				else if(how == SetAddRemove.Remove) style = pstyle & ~style;
 				else if(how == SetAddRemove.Xor) style = pstyle ^ style;
 			}
 
-			SetWindowLong(gwl, (int)style);
+			SetWindowLong(gwl, style);
 
-			if(updateNC) SetWindowPos(Native.SWP_FRAMECHANGED | Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOZORDER | Native.SWP_NOOWNERZORDER | Native.SWP_NOACTIVATE);
+			if(updateNC) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
 			if(updateClient) Api.InvalidateRect(this, default, true);
 		}
 
 		/// <summary>
-		/// Returns true if has Native.WS_POPUP style.
+		/// Returns true if has Native.WS.POPUP style.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsPopupWindow => HasStyle(Native.WS_POPUP);
+		public bool IsPopupWindow => HasStyle(Native.WS.POPUP);
 
 		/// <summary>
-		/// Returns true if has Native.WS_EX_TOOLWINDOW style.
+		/// Returns true if has Native.WS_EX.TOOLWINDOW style.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsToolWindow => HasExStyle(Native.WS_EX_TOOLWINDOW);
+		public bool IsToolWindow => HasExStyle(Native.WS_EX.TOOLWINDOW);
 
 		/// <summary>
-		/// Returns true if has Native.WS_THICKFRAME style.
+		/// Returns true if has Native.WS.THICKFRAME style.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsResizable => HasStyle(Native.WS_THICKFRAME);
+		public bool IsResizable => HasStyle(Native.WS.THICKFRAME);
 
 		#endregion
 
 		#region window/class long, control id, prop
 
 		/// <summary>
-		/// Calls API GetWindowLong if this process is 32-bit, GetWindowLongPtr if 64-bit.
+		/// Calls API <msdn>GetWindowLong</msdn> if this process is 32-bit, <msdn>GetWindowLongPtr</msdn> if 64-bit.
 		/// </summary>
 		/// <remarks>
-		/// All Native.GWL_ values are the same in 32-bit and 64-bit process. Some Native.DWL_ values are different, use Native.DWLP_ instead.
+		/// For index can be used constants from <see cref="Native.GWL"/>.
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		public LPARAM GetWindowLong(int index)
@@ -2239,10 +2267,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls API <msdn>SetWindowLong</msdn> if this process is 32-bit, SetWindowLongPtr if 64-bit.
+		/// Calls API <msdn>SetWindowLong</msdn> if this process is 32-bit, <msdn>SetWindowLongPtr</msdn> if 64-bit.
 		/// </summary>
 		/// <remarks>
-		/// All Native.GWL_ values are the same in 32-bit and 64-bit process. Some Native.DWL_ values are different, use Native.DWLP_ instead.
+		/// For index can be used constants from <see cref="Native.GWL"/>.
 		/// </remarks>
 		/// <exception cref="WndException"/>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
@@ -2262,7 +2290,7 @@ namespace Au
 		public int ControlId
 		{
 			get => Api.GetDlgCtrlID(this);
-			set { SetWindowLong(Native.GWL_ID, value); }
+			set { SetWindowLong(Native.GWL.ID, value); }
 		}
 
 		/// <summary>
@@ -2296,14 +2324,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns thread id.
+		/// Gets native thread id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
-		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
+		/// <remarks>
+		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
+		/// </remarks>
 		public int ThreadId => GetThreadProcessId(out var pid);
 
 		/// <summary>
-		/// Calls API <msdn>GetWindowThreadProcessId</msdn> and returns process id.
+		/// Gets native process id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// Returns 0 if fails. Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		public int ProcessId { get { GetThreadProcessId(out var pid); return pid; } }
@@ -2509,7 +2539,7 @@ namespace Au
 		/// </param>
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-		/// Removes only if this is a control (has style Native.WS_CHILD).
+		/// Removes only if this is a control (has style Native.WS.CHILD).
 		/// Calls <see cref="Misc.StringRemoveUnderlineAmpersand"/>.
 		/// </param>
 		/// <seealso cref="SetText"/>
@@ -2526,7 +2556,7 @@ namespace Au
 			if(removeUnderlineAmpersand
 				&& !Empty(R)
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
-				&& HasStyle(Native.WS_CHILD)
+				&& HasStyle(Native.WS.CHILD)
 				) R = Misc.StringRemoveUnderlineAmpersand(R);
 
 			return R;
@@ -2548,7 +2578,7 @@ namespace Au
 				if(nr < na - 1) {
 					if(nr > 0) return Util.StringCache.LibAdd(b, nr);
 					if(Native.GetError() != 0) return null;
-					if(useSlowIfEmpty && HasStyle(Native.WS_CHILD)) return _GetTextSlow();
+					if(useSlowIfEmpty && HasStyle(Native.WS.CHILD)) return _GetTextSlow();
 					return "";
 				}
 			}
@@ -2701,7 +2731,7 @@ namespace Au
 					//Also if a popup, eg a Yes/No message box (disabled X button).
 					//Also if child.
 					//if(!IsVisible && !_IsBusy(2)) i += 4; //unreliable, too dirty
-					if(!IsVisible || (Style & (Native.WS_POPUP | Native.WS_CHILD)) != 0) i += 2;
+					if(!IsVisible || (Style & (Native.WS.POPUP | Native.WS.CHILD)) != 0) i += 2;
 
 					if(i >= 50) {
 						if(!SendTimeout(200, 0)) {
@@ -2733,11 +2763,11 @@ namespace Au
 		///// Returns the number of found windows.
 		///// </summary>
 		//public static int CloseAll(
-		//	string name, string className = null, object programEtc = null,
-		//	WFFlags flags = 0, Func<Wnd, bool> f = null
+		//	string name, string className = null, string programEtc = null,
+		//	WFFlags flags = 0, Func<Wnd, bool> f = null, object contains = null
 		//	)
 		//{
-		//	var a = FindAll(name, className, programEtc, flags, f);
+		//	var a = FindAll(name, className, programEtc, flags, f, contains);
 		//	foreach(Wnd w in a) w.Close();
 		//	return a.Count;
 		//}

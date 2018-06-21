@@ -35,7 +35,7 @@ namespace Au
 		public Wnd WndOwner
 		{
 			get => Api.GetWindow(this, Api.GW_OWNER);
-			set { SetWindowLong(Native.GWL_HWNDPARENT, (LPARAM)value); }
+			set { SetWindowLong(Native.GWL.HWNDPARENT, (LPARAM)value); }
 		}
 
 		/// <summary>
@@ -59,7 +59,7 @@ namespace Au
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>.
 		/// Uses <see cref="WndDirectParent"/>.
-		/// Another way is <c>w.HasStyle(Native.WS_CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
+		/// Another way is <c>w.HasStyle(Native.WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
 		/// </remarks>
 		public bool IsChildWindow => !WndDirectParent.Is0;
 
@@ -296,6 +296,23 @@ namespace Au
 				//When was no wallpaper and user selects a wallpaper, explorer creates WorkerW and moves the same SysListView32 control to it.
 			}
 
+			/// <summary>
+			/// Gets all owner windows of the specified window.
+			/// Returns array that starts with the specified window or its top-level parent (if control).
+			/// </summary>
+			/// <param name="w">Window or control. If control, its top-level parent window will be the first in the array.</param>
+			/// <param name="onlyVisible">Skip invisible windows.</param>
+			/// <remarks>
+			/// This function for example can be used to temporarily hide a tool window and its owners when capturing something from the screen.
+			/// The array does not include <see cref="WndRoot"/>.
+			/// </remarks>
+			public static Wnd[] OwnerWindowsAndThis(Wnd w, bool onlyVisible = false)
+			{
+				var a = new List<Wnd>();
+				for(w = w.WndWindow; !w.Is0 && w != WndRoot; w = w.WndOwner)
+					if(!onlyVisible || w.IsVisible) a.Add(w);
+				return a.ToArray();
+			}
 
 			//FUTURE: impl these:
 
@@ -304,10 +321,7 @@ namespace Au
 			//public static Wnd AuEditor { get { return ; } }
 
 			//public static Wnd AuCodeEditControl { get { return ; } }
-		}
 
-		public static partial class Misc
-		{
 			/// <summary>
 			/// Returns true if window w is considered a main window, ie probably is in the Windows taskbar.
 			/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
@@ -319,9 +333,9 @@ namespace Au
 			{
 				if(!w.IsVisible) return false;
 
-				uint exStyle = w.ExStyle;
-				if((exStyle & Native.WS_EX_APPWINDOW) == 0) {
-					if((exStyle & (Native.WS_EX_TOOLWINDOW | Native.WS_EX_NOACTIVATE)) != 0) return false;
+				var exStyle = w.ExStyle;
+				if((exStyle & Native.WS_EX.APPWINDOW) == 0) {
+					if((exStyle & (Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE)) != 0) return false;
 					if(!w.WndOwner.Is0) return false;
 				}
 
@@ -330,7 +344,7 @@ namespace Au
 				if(Ver.MinWin10) {
 					if(w.IsCloaked) {
 						if(!allDesktops) return false;
-						if((exStyle & Native.WS_EX_NOREDIRECTIONBITMAP) != 0) { //probably a store app
+						if((exStyle & Native.WS_EX.NOREDIRECTIONBITMAP) != 0) { //probably a store app
 							switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 							case 1: return false; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
 							case 2: if(_WindowsStoreAppFrameChild(w).Is0) return false; break; //skip hosts
@@ -338,8 +352,8 @@ namespace Au
 						}
 					}
 				} else if(Ver.MinWin8) {
-					if((exStyle & Native.WS_EX_NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Native.WS_CAPTION)) {
-						if(!allDesktops && (exStyle & Native.WS_EX_TOPMOST) != 0) return false; //skip store apps
+					if((exStyle & Native.WS_EX.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Native.WS.CAPTION)) {
+						if(!allDesktops && (exStyle & Native.WS_EX.TOPMOST) != 0) return false; //skip store apps
 						if(WndShell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.

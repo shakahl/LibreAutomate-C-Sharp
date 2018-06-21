@@ -146,7 +146,7 @@ namespace Au.Controls
 
 			switch((uint)m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
-				m.Result = (IntPtr)(((Wnd)_TopLevelParent).HasExStyle(Native.WS_EX_NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
+				m.Result = (IntPtr)(((Wnd)_TopLevelParent).HasExStyle(Native.WS_EX.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
 			}
 
@@ -180,7 +180,7 @@ namespace Au.Controls
 
 			switch((uint)m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
-				m.Result = (IntPtr)(((Wnd)this.TopLevelControl).HasExStyle(Native.WS_EX_NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
+				m.Result = (IntPtr)(((Wnd)this.TopLevelControl).HasExStyle(Native.WS_EX.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
 			}
 

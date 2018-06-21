@@ -99,7 +99,7 @@ namespace Au
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="Opt.Key"/>.
-		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, partially <see cref="OptKey.KeySpeed" r=""/>. Does not use <see cref="OptKey.Hook" r=""/>.
+		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, <see cref="OptKey.KeySpeedClipboard" r=""/>. Does not use <see cref="OptKey.Hook" r=""/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -208,14 +208,15 @@ namespace Au
 		/// <param name="text">Text.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="Opt.Key"/>.
-		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.PasteEnter" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, <see cref="OptKey.SleepFinally" r=""/>, <see cref="OptKey.Hook" r=""/>, partially <see cref="OptKey.KeySpeed" r=""/>.
+		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.PasteEnter" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, <see cref="OptKey.SleepFinally" r=""/>, <see cref="OptKey.Hook" r=""/>, <see cref="OptKey.KeySpeedClipboard" r=""/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Adds to the clipboard, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
 		/// Fails (exception) if nothing gets clipboard data in several seconds.
 		/// Works with console windows too, even if they don't support Ctrl+V.
-		/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a quite big delay.
+		/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a delay.
+		/// Possible problems with some virtual PC programs. Either pasting does not work in their windows, or they use a hidden clipboard viewer that makes this function slower and less reliable.
 		/// </remarks>
 		/// <seealso cref="Keyb.Text"/>
 		/// <example>
@@ -303,7 +304,7 @@ namespace Au
 				}
 			}
 
-			bool sync = true;
+			bool sync = true; //FUTURE: option to turn off, depending on window.
 			_ClipboardListener listener = null;
 			using(var oc = new _OpenClipboard(true)) {
 
@@ -329,32 +330,34 @@ namespace Au
 						ctrlV.Press(KKey.V, opt, wFocus, enter);
 					}
 
-					//wait if the app slowly gets clipboard text
+					//wait until the app gets clipboard text
 					if(sync) {
 						listener.Wait(ref ctrlV);
 						if(listener.FailedToSetData != null) throw new AuException(listener.FailedToSetData.Message);
 						if(listener.IsBadWindow) sync = false;
 					}
 					if(!sync) {
-						Keyb.Lib.Sleep(opt.KeySpeed + 3);
+						Keyb.Lib.Sleep(Keyb.Lib.LimitSleepTime(opt.KeySpeedClipboard)); //if too long, may autorepeat, eg BlueStacks after 500 ms
 					}
 				}
 				finally {
 					ctrlV.Release();
 				}
 
-				//CONSIDER: OptKey.TimePasteSync. Or use SleepFinally here, not after.
-				for(int i = 0, n = sync ? 3 : 20; i < n; i++) { //see comments below about Dreamweaver
+				if(restore && !save.IsSaved) restore = false;
+
+				//CONSIDER: opt.SleepClipboard. If 0, uses smart sync, else simply sleeps.
+				for(int i = 0, n = sync ? 3 : (restore ? 25 : 15); i < n; i++) {
 					wFocus.SendTimeout(1000, 0, flags: 0);
 					Keyb.Lib.Sleep(i + 3);
+
+					//info: repeats this min 3 times as a workaround for this Dreamweaver problem:
+					//	First time after starting DW, if several Paste called in loop, the first pasted text if of the second Paste.
 				}
 
-				if(restore && save.IsSaved && oc.Reopen(true)) save.Restore();
+				if(restore && oc.Reopen(true)) save.Restore();
 			}
 			GC.KeepAlive(listener);
-
-			//known problematic apps:
-			//	Dreamweaver: first time after starting DW, if several Paste called in loop, the first pasted text if of the second Paste. Workaround: two wFocus.SendTimeout(1000, 0);.
 		}
 
 		/// <summary>
@@ -399,7 +402,7 @@ namespace Au
 				_data = data;
 				_wndProc = _WndProc;
 				_wFocus = wFocus;
-				clipOwner.SetWindowLong(Native.GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
+				clipOwner.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
 
 				//rejected: use SetClipboardViewer to block clipboard managers/viewers/etc. This was used in QM2.
 				//	Nowadays most such programs don't use SetClipboardViewer. Probably they use AddClipboardFormatListener.
@@ -470,13 +473,21 @@ namespace Au
 
 					if(wOC == _wFocus) return true;
 					if(wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
-					if(wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers too, eg Ditto.
+					if(wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers are classnamed so too, eg Ditto.
 					if(wOC.ProcessName.Equals_("RuntimeBroker", true)) return true; //Edge, Store apps
 
 					//CONSIDER: option to return true for user-known windows. Also show warning or info that includes wOC info.
 
 					Debug_.Print(wOC.ToString());
 					return false;
+
+					//BlueStacks problems:
+					//	Uses an aggressive viewer. Always debugprints while it is running, even when other apps are active.
+					//	Sometimes pastes old text, especially after starting BlueStacks or after some time of not using it.
+					//		With or without clipboard restoring.
+					//		Then starts to work correctly always. Difficult to debug.
+					//		KeySpeedClipboard=100 usually helps, but sometimes even 300 does not help.
+					//	TODO: QM2 always pastes old text, waits and then error.
 				}
 			}
 		}
