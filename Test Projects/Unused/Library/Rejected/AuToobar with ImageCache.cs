@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -24,7 +24,7 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuToolbar :AuBaseMT
+	public class AuToolbar :AuMTBase
 	{
 		static AuToolbar()
 		{
@@ -66,7 +66,7 @@ namespace Au
 		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="onClick">Callback function. Called when the button clicked.</param>
+		/// <param name="onClick">Lambda etc function to be called when the button clicked.</param>
 		/// <param name="icon"><inheritdoc cref="AuMenu.Add(string, Action{MTClickArgs}, object)"/></param>
 		/// <example><code>
 		/// var m = new AuToolbar();
@@ -88,7 +88,7 @@ namespace Au
 		/// </summary>
 		/// <param name="item">An already created item of any supported type.</param>
 		/// <param name="icon"><inheritdoc cref="AuMenu.Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
+		/// <param name="onClick">Lambda etc function to be called when the item clicked. Not useful for most item types.</param>
 		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			_Items.Add(item);
@@ -159,7 +159,6 @@ namespace Au
 			get => _w.IsVisible;
 			set
 			{
-				_GetIconsAsync(_ts);
 				if(!_ts.Created) {
 					_ts.ResumeLayout();
 					_ts.CreateControl();
@@ -217,7 +216,7 @@ namespace Au
 		}
 
 
-		class ToolStrip_ :ToolStrip, _IAuToolStrip
+		class ToolStrip_ :ToolStrip//, _IAuToolStrip
 		{
 			AuToolbar _parent;
 
@@ -239,13 +238,6 @@ namespace Au
 					}
 					return p;
 				}
-			}
-
-			protected override void OnVisibleChanged(EventArgs e)
-			{
-				base.OnVisibleChanged(e);
-
-				//if(_AsyncIcons != null && _AsyncIcons.Count > 0) _AsyncIcons.GetAllAsync(_AsyncCallback, _cm.ImageScalingSize.Width, 0, true);
 			}
 
 			////Solves ToolStrip problem in inactive window: first time need to click 2 times.
@@ -304,27 +296,7 @@ namespace Au
 				base.OnMouseEnter(e);
 			}
 
-			protected override void OnPaint(PaintEventArgs e)
-			{
-				//var perf = Perf.StartNew();
-
-				//ThreadPriority tp = 0;
-				//if(!_paintedOnce) { //this could make the first paint faster if CPU is without hyperthreading
-				//	tp = Thread.CurrentThread.Priority;
-				//	Thread.CurrentThread.Priority = ThreadPriority.Highest;
-				//}
-				base.OnPaint(e);
-				//if(!_paintedOnce) Thread.CurrentThread.Priority = tp;
-
-				//perf.Next(); Print("------------------ paint", perf.Times);
-
-				_paintedOnce = true;
-			}
-
 			//ToolStrip _IAuToolStrip.ToolStrip => this;
-
-			bool _paintedOnce;
-			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
 		}
 
 	}

@@ -41,7 +41,7 @@ partial class FileNode
 			g1:
 			if(guid == null || guid.Length != 22) {
 				var g = Guid.NewGuid();
-				guid = Convert.ToBase64String(g.ToByteArray()).TrimEnd('=').Replace("/", "-");
+				guid = Convert_.GuidToBase64Filename(g);
 				_x.SetAttributeValue("g", guid);
 				_model.Save?.CollectionLater(); //_model.Save is null when importing this collection
 			}

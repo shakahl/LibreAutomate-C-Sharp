@@ -29,6 +29,7 @@ NEW TAGS:
    <bi> - bold italic.
    <mono> - monospace font.
    <size n> - font size (1-127).
+   <osd> - Osd.ShowText.
 
 NEW PARAMETERS:
    <c ColorName> - .NET color name for text color.
@@ -72,7 +73,14 @@ namespace Au.Controls
 {
 	using static Sci;
 
-	//TODO: document all tags.
+	/// <summary>
+	/// Used by <see cref="AuScintilla"/> controls. Adds links and formatting.
+	/// </summary>
+	/// <remarks>
+	/// Links and formatting is specified in control text using tags similar to HTML. To enable tags, use <see cref="AuScintilla.InitTagsStyle"/>.
+	/// 
+	/// //TODO
+	/// </remarks>
 	public unsafe class SciTags
 	{
 		const int STYLE_FIRST_EX = STYLE_LASTPREDEFINED + 1;
@@ -440,6 +448,9 @@ namespace Au.Controls
 				case 4 << 16 | 'h':
 					linkTag = "help";
 					break;
+				case 3 << 16 | 'o':
+					linkTag = "osd";
+					break;
 				case 4 << 16 | 'o':
 					linkTag = "open";
 					break;
@@ -687,6 +698,9 @@ namespace Au.Controls
 				break;
 			case "dialog":
 				AuDialog.Show(one ? null : s1, one ? s1 : s2, owner: _c);
+				break;
+			case "osd":
+				Osd.ShowText(s1, one ? 0 : s2.ToInt_(), PopupXY.Mouse);
 				break;
 			case "print":
 				Print(attr);

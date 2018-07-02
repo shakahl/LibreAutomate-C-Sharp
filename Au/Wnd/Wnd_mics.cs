@@ -317,35 +317,6 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Removes '&amp;' characters from string.
-			/// Replaces "&amp;&amp;" with "&amp;".
-			/// Returns new string if s has '&amp;' characters, else returns s.
-			/// </summary>
-			/// <remarks>
-			/// Character '&amp;' is used to underline next character in displayed text of dialog controls and menu items. Two '&amp;' are used to display single '&amp;'.
-			/// The underline is displayed when using the keyboard (eg Alt key) to select dialog controls and menu items.
-			/// </remarks>
-			public static string StringRemoveUnderlineAmpersand(string s)
-			{
-				if(!Empty(s)) {
-					for(int i = 0; i < s.Length; i++) if(s[i] == '&') goto g1;
-					return s;
-					g1:
-					var b = Util.Buffers.LibChar(s.Length);
-					int j = 0;
-					for(int i = 0; i < s.Length; i++) {
-						if(s[i] == '&') {
-							if(i < s.Length - 1 && s[i + 1] == '&') i++;
-							else continue;
-						}
-						b.A[j++] = s[i];
-					}
-					s = b.LibToStringCached(j);
-				}
-				return s;
-			}
-
-			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
 			/// <param name="m"></param>

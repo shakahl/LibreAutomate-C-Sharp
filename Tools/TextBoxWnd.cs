@@ -24,34 +24,35 @@ namespace Au.Tools
 		/// Gets or sets the window handle.
 		/// The setter formats Wnd.Find code and displays in this textbox.
 		/// </summary>
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Wnd Hwnd
 		{
 			get => _w;
 			set
 			{
 				_w = value;
+				string text = null;
+				if(!_w.Is0) {
+					var b = new StringBuilder("var ");
+					b.Append(WndVar ?? "w").Append(" = +Wnd.Find(");
 
-				var b = new StringBuilder("var ");
-				b.Append(WndVar ?? "w").Append(" = +Wnd.Find(");
+					var s = _w.Name;
+					ToolsUtil.AppendStringArg(b, s, noComma: true);
 
-				var s = _w.Name;
-				ToolsUtil.AppendStringArg(b, s, noComma: true);
+					s = _w.ClassName;
+					if(s != null) {
+						ToolsUtil.AppendStringArg(b, ToolsUtil.StripWndClassName(s, true));
 
-				s = _w.ClassName;
-				if(s == null) {
-					this.Text = "invalid window handle";
-					this.ReadOnly = true;
-					return;
+						if(!_w.IsVisibleEx) ToolsUtil.AppendOtherArg(b, "WFFlags.HiddenToo", "flags");
+
+						b.Append(");");
+						text = b.ToString();
+					}
 				}
-				ToolsUtil.AppendStringArg(b, ToolsUtil.StripWndClassName(s, true));
-
-				if(!_w.IsVisibleEx) ToolsUtil.AppendOtherArg(b, "WFFlags.HiddenToo", "flags");
-
-				b.Append(");");
-
-				this.ReadOnly = false;
+				this.ReadOnly = text == null;
 				_noeventWndTextChanged = true;
-				this.Text = b.ToString();
+				this.Text = text;
 				_noeventWndTextChanged = false;
 			}
 		}
@@ -60,6 +61,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Gets the Wnd variable name in this textbox. Default "w".
 		/// </summary>
+		[Browsable(false)]
 		public string WndVar { get; private set; }
 
 		//When the user edits this textbox, calls event WndVarNameChanged to update the window variable in the Find textbox.

@@ -509,7 +509,7 @@ namespace Au.Types
 		}
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHGetStockIconInfo(Icons.Stock siid, uint uFlags, ref SHSTOCKICONINFO psii);
+		internal static extern int SHGetStockIconInfo(StockIcon siid, uint uFlags, ref SHSTOCKICONINFO psii);
 
 		[DllImport("shell32.dll", EntryPoint = "#6", PreserveSig = true)]
 		internal static extern int SHDefExtractIcon(string pszIconFile, int iIndex, uint uFlags, IntPtr* phiconLarge, IntPtr* phiconSmall, int nIconSize);
@@ -941,6 +941,8 @@ namespace Au.Types
 		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void* memset(void* ptr, int ch, LPARAM n);
 
+		[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int memcmp(void* p1, void* p2, LPARAM count);
 
 
 

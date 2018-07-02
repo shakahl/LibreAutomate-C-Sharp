@@ -477,7 +477,7 @@ namespace Au.Tools
 			get
 			{
 				if(_mailslotName == null) {
-					_mailslotName = @"\\.\mailslot\Au.Output\" + Process_.GetSessionId().ToString();
+					_mailslotName = @"\\.\mailslot\Au.Output\" + Process_.CurrentSessionId.ToString();
 				}
 				return _mailslotName;
 			}

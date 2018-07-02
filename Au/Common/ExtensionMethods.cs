@@ -338,15 +338,15 @@ namespace Au.Types
 		#endregion
 
 		#region enum
-#pragma warning disable CS3024 // Constraint type is not CLS-compliant (IConvertible uses uint)
 
 		/// <summary>
 		/// Returns true if this enum variable has flag(s) f (all bits).
 		/// Compiled as inlined code <c>(t &amp; flag) == flags</c>. The same as Enum.HasFlag, but much much faster.
 		/// The enum type must be of size 4 (default).
 		/// </summary>
-		public static bool Has_<T>(this T t, T flag) where T : struct, IComparable, IFormattable, IConvertible
+		public static bool Has_<T>(this T t, T flag) where T : Enum
 		{
+			//return (t & flag) == flag; //error, although C# 7.3 supports Enum constraint
 			int a = Unsafe.As<T, int>(ref t);
 			int b = Unsafe.As<T, int>(ref flag);
 			return (a & b) == b;
@@ -357,14 +357,13 @@ namespace Au.Types
 		/// Compiled as inlined code <c>(t &amp; flags) != 0</c>. This is different from Enum.HasFlag.
 		/// The enum type must be of size 4 (default).
 		/// </summary>
-		public static bool HasAny_<T>(this T t, T flags) where T : struct, IComparable, IFormattable, IConvertible
+		public static bool HasAny_<T>(this T t, T flags) where T : Enum
 		{
 			int a = Unsafe.As<T, int>(ref t);
 			int b = Unsafe.As<T, int>(ref flags);
 			return (a & b) != 0;
 		}
 
-#pragma warning restore CS3024 // Constraint type is not CLS-compliant
 		#endregion
 
 		#region internal

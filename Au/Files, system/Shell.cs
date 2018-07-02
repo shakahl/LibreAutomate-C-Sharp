@@ -69,12 +69,12 @@ namespace Au
 		/// Run notepad and wait for its window.
 		/// <code><![CDATA[
 		/// Shell.Run("notepad.exe");
-		/// Wnd w = Wnd.Wait(true, 10, "*- Notepad", "Notepad");
+		/// Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
 		/// Run notepad or activate its window. Works like Wnd.FindOrRun.
 		/// <code><![CDATA[
 		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
+		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
 		/// w.Activate();
 		/// ]]></code>
 		/// </example>
@@ -131,13 +131,13 @@ namespace Au
 			Process_.LibProcessWaitHandle ph = null;
 			if(x.hProcess != default) {
 				if(waitForExit || needHandle) ph = new Process_.LibProcessWaitHandle(x.hProcess);
-				if(!waitForExit) R.ProcessId = Process_.GetProcessId(x.hProcess);
+				if(!waitForExit) R.ProcessId = Process_.ProcessIdFromHandle(x.hProcess);
 			}
 
 			try {
 				Api.AllowSetForegroundWindow(Api.ASFW_ANY);
 
-				if(x.lpVerb != null && !System.Windows.Forms.Application.MessageLoop)
+				if(x.lpVerb != null && !Thread_.IsUI)
 					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.
 
 				if(ph != null) {

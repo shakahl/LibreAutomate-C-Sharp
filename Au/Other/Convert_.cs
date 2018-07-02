@@ -591,6 +591,19 @@ namespace Au
 			}
 		}
 
+		/// <summary>
+		/// Converts GUID to string that can be used in file paths and URLs.
+		/// </summary>
+		/// <param name="guid"></param>
+		/// <remarks>
+		/// Standard Base64 strings cannot be used in file paths and URLs, because can contain characters '/' and '+'. This function replaces them with '_' and '-'. Also trims "==" at the end.
+		/// Such string can be parsed with <b>Convert_</b> class functions, not with <b>Convert</b> class functions.
+		/// </remarks>
+		public static string GuidToBase64Filename(Guid guid)
+		{
+			return Convert.ToBase64String(guid.ToByteArray()).TrimEnd('=').Replace("/", "_").Replace("+", "-");
+		}
+
 		#endregion
 
 		#region compress

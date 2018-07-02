@@ -330,7 +330,7 @@ namespace Au
 				}
 				R = x.vkCode; //info: for mod keys returns left/right
 				return block;
-			})) WaitFor.Message(secondsTimeout, () => R != 0);
+			})) WaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
 
 			return R;
 		}

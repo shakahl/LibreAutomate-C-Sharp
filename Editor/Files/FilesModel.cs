@@ -98,7 +98,7 @@ partial class FilesModel :ITreeModel
 	NodeIcon _ncIcon;
 	NodeTextBox _ncName;
 
-	public static Icons.ImageCache IconCache = new Icons.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)Icons.ShellSize.SysSmall);
+	public static Icons.ImageCache IconCache = new Icons.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	//Called by FilesPanel
 	public void InitNodeControls(NodeIcon icon, NodeTextBox name)

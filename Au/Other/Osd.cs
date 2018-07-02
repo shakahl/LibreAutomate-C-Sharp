@@ -39,7 +39,7 @@ namespace Au
 		protected virtual void Dispose(bool disposing)
 		{
 			if(!IsHandleCreated) return;
-			_w.Destroy();
+			_w.Handle.Close();
 		}
 
 		/// <summary>Destroys the OSD window.</summary>
@@ -244,7 +244,6 @@ namespace Au
 				return 0;
 			case Api.WM_PAINT:
 				var dc = Api.BeginPaint(w, out var ps);
-				Print(ps.rcPaint);//TODO
 				try {
 					var r = w.ClientRect;
 					using(var bg = BufferedGraphicsManager.Current.Allocate(dc, r)) {
@@ -285,7 +284,7 @@ namespace Au
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.</param>
 		public static void CloseAll(string name = null)
 		{
-			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", "pid=" + Process_.CurrentProcessId)) w.Close();
+			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", "***pid:" + Process_.CurrentProcessId.ToString())) w.Close(noWait: true);
 		}
 	}
 
@@ -573,11 +572,7 @@ namespace Au
 		/// </remarks>
 		public OsdShowMode ShowMode { get; set; }
 
-		//TODO:
-		//	public AnyWnd Owner { get; set; }
-		//	public bool SurviveAppExit { get; set; }
-		//	If SurviveAppExit, uses fore thread, else if Owner, uses same thread, else uses back thread.
-		//	Also shows in Owner's Screen and closes when Owner closed. Maybe makes Owner real owner instead of topmost.
+		//CONSIDER: public AnyWnd Owner { get; set; }
 
 		///
 		public Osd()
@@ -625,13 +620,15 @@ namespace Au
 			if(!_rectIsSet) base.Rect = Measure();
 
 			int t = SecondsTimeout;
-			if(t == 0) t = Math.Min(Text?.Length ?? 0, 1000) / 10 + 3;
-			if(t > 0) t = Math.Min(t, int.MaxValue / 1000) * 1000; else t = -1;
+			if(t == 0) t = Math.Min(Text?.Length ?? 0, 1000) / 10 + 3; //calc time from text length
 			base.Show();
 			if(sync) {
-				Time.SleepDoEvents(t);
-				Close();
-			} else if(t > 0) Timer_.After(t, () => Close());
+				if(t < 0) t = 0; else t = -t;
+				if(!WaitFor.MessagesAndCondition(t, () => !IsHandleCreated)) Close();
+			} else if(t > 0) {
+				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
+				Timer_.After(t, () => Close());
+			}
 		}
 
 		/// <summary>
@@ -856,8 +853,8 @@ namespace Au
 		/// Default screen when <see cref="XY"/> is not set.
 		/// Each thread has its own instance of this property.
 		/// </summary>
-		public static Screen_ DefaultScreen { get => t_defaultScreen; set => t_defaultScreen = value; }
-		[ThreadStatic] static Screen_ t_defaultScreen;
+		[field: ThreadStatic]
+		public static Screen_ DefaultScreen { get; set; }
 	}
 }
 

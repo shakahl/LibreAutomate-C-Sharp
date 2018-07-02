@@ -17,7 +17,6 @@ using Au.Types;
 using static Au.NoClass;
 
 //CONSIDER: add an option to inject and execute the script in any process/thread.
-//	For example, to work with accessible objects faster.
 //	[assembly: Inject("firefox.exe", windowName="* - Firefox")]
 
 namespace Au

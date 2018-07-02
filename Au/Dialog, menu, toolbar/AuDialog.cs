@@ -271,19 +271,16 @@ namespace Au
 			_c.hMainIcon = (IntPtr)(int)icon;
 			_SetFlag(TDF_.USE_HICON_MAIN, false);
 		}
+
 		/// <summary>
 		/// Sets custom icon.
 		/// </summary>
 		/// <param name="icon">
 		/// Icon of size 32 or 16.
-		/// If you have native handle (see <see cref="Icons.GetFileIconHandle"/>), use Icon.FromHandle.
-		/// In any case, the icon must remain valid until the dialog is closed. Then you can dispose/destroy it.
-		/// This AuDialog variable keeps icon reference to protect it from GC.
+		/// Don't dispose it until the dialog is closed.
 		/// </param>
 		public void SetIcon(Icon icon)
 		{
-			//rejected: accept native handle too (IntPtr). It's easy for callers to convert: Icon.FromHandle(h), and it just sets 2 Icon fields.
-
 			_iconGC = icon; //keep from GC
 			_c.hMainIcon = (icon == null) ? default : icon.Handle;
 			_SetFlag(TDF_.USE_HICON_MAIN, _c.hMainIcon != default);
@@ -792,10 +789,7 @@ namespace Au
 			}
 
 			if(_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) {
-				if(Icons.GetAppIconHandle(32) != default) _c.hInstance = Util.ModuleHandle.OfAppDomainEntryAssembly();
-				else if(Icons.GetProcessExeIconHandle(32) != default) _c.hInstance = Util.ModuleHandle.OfProcessExe();
-			}
+			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.ModuleHandle.OfAppIcon();
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.

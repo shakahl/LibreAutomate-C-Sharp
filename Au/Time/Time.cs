@@ -159,6 +159,8 @@ namespace Au
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
+		/// <seealso cref="WaitFor.MessagesAndCondition"/>
+		/// <seealso cref="WaitFor.PostedMessage"/>
 		/// <seealso cref="Util.MessageLoop"/>
 		public static void SleepDoEvents(int timeMS)
 		{
@@ -352,7 +354,7 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
-	/// Use in UI threads (need a message loop).
+	/// Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

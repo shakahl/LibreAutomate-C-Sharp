@@ -41,7 +41,7 @@ namespace Au.Tools
 		public Form_Acc(Acc acc = null)
 		{
 			InitializeComponent();
-			_SetGridEvents();
+			_SetEvents();
 			_InitTree();
 
 			//_TestFonts();
@@ -77,6 +77,8 @@ namespace Au.Tools
 		void _SetAcc(bool captured)
 		{
 			//note: don't reorder all the calls.
+
+			_bTest.Enabled = true; _bOK.Enabled = true; _bCopy.Enabled = true;
 
 			_wnd = _acc.WndTopLevel;
 			//if(captured && _wnd.Is0) _wnd = Wnd.FromMouse(WXYFlags.NeedWindow);
@@ -137,7 +139,7 @@ namespace Au.Tools
 			//control
 			if(!isWeb && w != _wnd) {
 				int id = w.ControlId;
-				bool isId = (id > 0 && id < 0x10000 && id != (int)w.Handle && _wnd.ChildAll("**id:" + id).Length == 1);
+				bool isId = (id > 0 && id < 0x10000 && id != (int)w.Handle && _wnd.ChildAll("***id:" + id).Length == 1);
 				if(isId) _Add("id", id.ToString(), true, info: c_infoId);
 				_Add("class", ToolsUtil.StripWndClassName(w.ClassName), !isId, info: c_infoClass);
 			}
@@ -218,7 +220,7 @@ namespace Au.Tools
 			_AddProp(null, "also", "o => false", tt: "Lambda that returns true if Acc o is the wanted AO.", info: c_infoAlso);
 			_AddProp(null, "skip", "1", tt: "0-based index of matching AO.\nFor example, if 1, gets the second matching AO.");
 			_AddProp(null, "navig", null, tt: "When found, call Acc.Navigate to get another AO.", info: c_infoNavig);
-			_AddProp(null, "wait", "3", tt: "Wait for the AO max this time, seconds.", info: c_infoWait);
+			_AddProp(null, "wait", "5", tt: "Wait for the AO max this time, seconds.", info: c_infoWait);
 			_AddFlag("orThrow", "Throw if not found", true, tt: "If not found, throw exception.\nIf this is unchecked, then the function returns null.");
 			_grid2.ZAddHeaderRow("Search settings");
 			_AddFlag(nameof(AFFlags.Reverse), "Reverse order", tt: "Flag AFFlags.Reverse.\nWalk the object tree from bottom to top.");
@@ -299,8 +301,6 @@ namespace Au.Tools
 			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
-			_tWnd.WndVarNameChanged += (unu, sed) => _OnGridChanged();
-
 			if(_acc != null) _SetAcc(false);
 
 			_InitInfo();
@@ -326,11 +326,13 @@ namespace Au.Tools
 			base.OnFormClosing(e);
 		}
 
-		void _SetGridEvents()
+		void _SetEvents()
 		{
 			Action<SG.CellContext> f = _OnValueChanged;
 			_grid.ZValueChanged += f;
 			_grid2.ZValueChanged += f;
+
+			_tWnd.WndVarNameChanged += (unu, sed) => _OnGridChanged();
 		}
 
 		void _OnValueChanged(SG.CellContext sender)
@@ -362,10 +364,10 @@ namespace Au.Tools
 		{
 			//Print("_OnGridChanged");
 			if(_grid.RowsCount == 0) return; //cleared on exception
-			_tAcc.Text = _FormatAcc(false);
+			_tAcc.Text = _FormatFindCode(false);
 		}
 
-		string _FormatAcc(bool forTest)
+		string _FormatFindCode(bool forTest)
 		{
 			var b = new StringBuilder();
 
@@ -377,7 +379,7 @@ namespace Au.Tools
 			if(isWait) {
 				if(orThrow && isNavig) b.Append('+');
 				b.Append("Acc.Wait(");
-				if(wait == null) wait = "0"; else if(!orThrow && !wait.StartsWith_('-')) b.Append('-');
+				if(wait == null) wait = "0"; else if(!orThrow && wait != "0" && !wait.StartsWith_('-')) b.Append('-');
 				b.Append(wait);
 			} else {
 				if(orThrow) b.Append('+');
@@ -632,7 +634,7 @@ namespace Au.Tools
 			if(node == null) return;
 			_acc = (node.Tag as _AccNode).a;
 			if(!_SetAccGrids(out var p)) return;
-			ToolsUtil.ShowOsdRect(p.Rect, false);
+			ToolsUtil.ShowOsdRect(p.Rect);
 		}
 
 		class _AccTree :ITreeModel
@@ -710,13 +712,13 @@ namespace Au.Tools
 		{
 			if(_grid.RowsCount == 0) return;
 			if(Empty(_tWnd.Text)) return;
-			var r = await ToolsUtil.RunTestFindObject(_FormatAcc(true), _tWnd, _bTest, _lSpeed, o => (o as Acc).Rect);
+			var r = await ToolsUtil.RunTestFindObject(_FormatFindCode(true), _tWnd, _bTest, _lSpeed, o => (o as Acc).Rect);
 
 			var a = r.obj as Acc;
 			if(a != null && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
 				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
-					string ffInfo = c_infoFirefox, ffPath = _wnd.ProcessPath;
+					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramFilePath;
 					if(ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
 					_SetFormInfo(ffInfo);
 				}
@@ -739,7 +741,7 @@ namespace Au.Tools
 		}
 
 		/// <summary>
-		/// When OK clicked, contains C# code to find the accessible object.
+		/// When OK clicked, contains C# code.
 		/// </summary>
 		public string ResultCode { get; private set; }
 
@@ -747,11 +749,11 @@ namespace Au.Tools
 		{
 			if(_grid.RowsCount == 0) return null;
 			string sWnd = _tWnd.Text;
-			string sAcc = _FormatAcc(false);
+			string sFind = _FormatFindCode(false);
 
 			var b = new StringBuilder();
 			if(!Empty(sWnd)) b.AppendLine(sWnd);
-			b.Append("var a = ").AppendLine(sAcc);
+			b.Append("var a = ").AppendLine(sFind);
 
 			return b.ToString();
 		}
@@ -807,7 +809,7 @@ namespace Au.Tools
 @"Creates code to find an <i>accessible object (AO)<> - button, link, etc. Then your script can click it, etc. See <help M_Au_Acc_Find>Acc.Find<>, <help T_Au_Acc>Acc<>, <help M_Au_Wnd_Find>Wnd.Find<>. How to use:
 1. Move the mouse to the AO you want. Press key <b>F3<>.
 2. Click the Test button. It finds and shows the AO and the search time.
-3. If need, check/uncheck/edit some fields or select another AO, Test.
+3. If need, check/uncheck/edit some fields or select another AO; click Test.
 4. Click OK, it inserts C# code in the editor. Or Copy to the clipboard.
 5. In the editor, add code to use the AO. <help T_Au_Acc>Examples<>. If need, rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.
 

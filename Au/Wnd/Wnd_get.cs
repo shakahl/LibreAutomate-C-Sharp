@@ -287,7 +287,7 @@ namespace Au
 			{
 				Wnd w = WndShell;
 				var f = new ChildFinder(className: "SysListView32");
-				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", "tid=" + w.ThreadId.ToString(), also: t => f.Find(t));
+				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", "***tid:" + w.ThreadId.ToString(), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;
 

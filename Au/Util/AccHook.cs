@@ -42,7 +42,7 @@ namespace Au.Util
 	/// })) {
 	/// 	MessageBox.Show("hook");
 	/// 	//or
-	/// 	//WaitFor.Message(-10, () => stop); //wait max 10 s for activated taskbar
+	/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
 	/// 	//Print("the end");
 	/// }
 	/// ]]></code>

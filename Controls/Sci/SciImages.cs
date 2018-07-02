@@ -20,6 +20,8 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
+//FUTURE: support mutiline images like @"image:line1 line2" and like "image:line1" + "line2";
+
 namespace Au.Controls
 {
 	using static Sci;

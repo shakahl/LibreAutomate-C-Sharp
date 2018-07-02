@@ -109,7 +109,7 @@ namespace Au.Tasks
 			if(add) {
 				_trayIcon = new NotifyIcon();
 				//_trayIcon.Icon = Properties.Resources.trayIcon; //28 ms first time
-				_trayIcon.Icon = Icon.FromHandle(Icons.GetAppIconHandle((int)Icons.ShellSize.SysSmall));
+				_trayIcon.Icon = Icons.GetAppIcon((int)IconSize.SysSmall);
 				_trayIcon.Text = "QM# Tasks";
 				_trayIcon.MouseClick += _trayIcon_MouseClick;
 				_trayIcon.Visible = true;
@@ -125,7 +125,7 @@ namespace Au.Tasks
 		{
 			switch(e.Button) {
 			case MouseButtons.Left:
-				_wMain.Close(true);
+				_wMain.Close(noWait: true);
 				break;
 			case MouseButtons.Right:
 				_TrayIcon_Menu();
@@ -142,7 +142,7 @@ namespace Au.Tasks
 			if(add) {
 				x.uFlags = Api.NIF_ICON | Api.NIF_MESSAGE | Api.NIF_TIP;
 				//x.hIcon = Properties.Resources.trayIcon.Handle; //27-28 ms (later in this appdomain - 0.25 ms)
-				x.hIcon = Icons.GetAppIconHandle((int)Icons.ShellSize.SysSmall);
+				x.hIcon = Icons.GetAppIconHandle((int)IconSize.SysSmall);
 				x.uCallbackMessage = Api.WM_USER + 3;
 				x.szTip = "QM# Tasks";
 				//Perf.Next();

@@ -372,9 +372,13 @@ namespace Au
 
 		/// <summary>
 		/// Sets to use QM2 as the output server.
-		/// Eg can be used to debug the Output class itself.
 		/// </summary>
-		internal static bool LibUseQM2 { get; set; }
+#if DEBUG
+		public
+#else
+		internal
+#endif
+		static bool LibUseQM2 { get; set; }
 
 		/// <param name="s">If null, clears output.</param>
 		static void _WriteToQM2(string s)

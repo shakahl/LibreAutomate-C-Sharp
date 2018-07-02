@@ -204,7 +204,7 @@ namespace Au
 		/// Returns 1-based index of the first signaled handle. Negative if abandoned mutex.
 		/// On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
 		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
@@ -330,10 +330,10 @@ namespace Au
 		/// <summary>
 		/// Waits for a posted message received by this thread.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="secondsTimeout"><inheritdoc cref="Condition"/></param>
+		/// <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
+		/// <returns><inheritdoc cref="Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
 		/// Does not use <see cref="Opt.WaitFor"/>.
@@ -351,39 +351,40 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits for a variable or other condition that is changed while processing a message or other event received by this thread.
+		/// Waits for a variable or other condition that is changed while processing messages or other events received by this thread.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="secondsTimeout"><inheritdoc cref="Condition"/></param>
+		/// <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
+		/// <returns><inheritdoc cref="Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
+		/// Similar to <see cref="Condition"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
 		/// Does not use <see cref="Opt.WaitFor"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// bool stop = false;
 		/// Timer_.After(2000, t => { Print("timer"); stop = true; });
-		/// WaitFor.Message(5, () => stop);
+		/// WaitFor.MessagesAndCondition(5, () => stop);
 		/// Print(stop);
 		/// ]]></code>
 		/// </example>
-		public static bool Message(double secondsTimeout, Func<bool> callback)
+		public static bool MessagesAndCondition(double secondsTimeout, Func<bool> condition)
 		{
-			return 1 == LibWaitS(secondsTimeout, WHFlags.DoEvents, callback, null);
+			return 1 == LibWaitS(secondsTimeout, WHFlags.DoEvents, condition, null);
 		}
 
 		/// <summary>
 		/// Waits until a variable is set = true.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout"><inheritdoc cref="Condition"/></param>
 		/// <param name="variable">Stop waiting when this variable is set to true.</param>
-		/// <param name="options"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="options"><inheritdoc cref="Condition"/></param>
+		/// <returns><inheritdoc cref="Condition"/></returns>
+		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
 		/// <remarks>
-		/// This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="Message"/>.
+		/// This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="MessagesAndCondition"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -451,5 +452,3 @@ namespace Au.Types
 
 //CONSIDER: WaitForFocusChanged
 //	Eg when showing Open/SaveAs dialog, the file Edit control receives focus after 200 ms. Sending text to it works anyway, but the script fails if then it clicks OK not with keys (eg with Acc).
-
-//CONSIDER: Acc.WaitForCondition. But easy with WaitFor.Condition.

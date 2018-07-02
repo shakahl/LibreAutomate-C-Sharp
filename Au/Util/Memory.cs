@@ -569,4 +569,39 @@ namespace Au.Util
 			_sb = null;
 		}
 	}
+
+	/// <summary>
+	/// <see cref="GC"/> extensions.
+	/// </summary>
+	public static class GC_
+	{
+		static ConditionalWeakTable<object, _Remover> s_table = new ConditionalWeakTable<object, _Remover>();
+
+		/// <summary>
+		/// Calls <see cref="GC.AddMemoryPressure"/>. Later, when object <paramref name="obj"/> is garbage-collected, will call <see cref="GC.RemoveMemoryPressure"/>.
+		/// </summary>
+		/// <param name="obj">An object of any type.</param>
+		/// <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
+		public static void AddObjectMemoryPressure(object obj, int size)
+		{
+			GC.AddMemoryPressure(size);
+			s_table.Add(obj, new _Remover(size));
+		}
+
+		class _Remover
+		{
+			int _size;
+
+			public _Remover(int size)
+			{
+				_size = size;
+			}
+
+			~_Remover()
+			{
+				//Print("removed " + _size);
+				GC.RemoveMemoryPressure(_size);
+			}
+		}
+	}
 }

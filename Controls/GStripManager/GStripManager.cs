@@ -326,7 +326,7 @@ namespace Au.Controls
 
 			Image im = null;
 			if(x.Attribute_(out s, "i2")) { //custom image as icon file
-				im = Icons.GetFileIconImage(s, (int)Icons.ShellSize.SysSmall, GIFlags.SearchPath);
+				im = Icons.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
 				if(im == null) Print($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}

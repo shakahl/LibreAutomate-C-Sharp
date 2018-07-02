@@ -396,7 +396,7 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
-		/// Lambda etc callback function to call for each matching AO. Let it return true if this is the wanted AO.
+		/// Callback function. Called for each matching AO. Let it return true if this is the wanted AO.
 		/// Example, the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
 		/// </param>
 		/// <param name="skip">

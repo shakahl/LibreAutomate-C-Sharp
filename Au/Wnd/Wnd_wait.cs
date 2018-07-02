@@ -28,10 +28,10 @@ namespace Au
 		/// Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
-		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
 		/// </param>
+		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
 		/// <param name="name"></param>
 		/// <param name="className"></param>
 		/// <param name="programEtc"></param>
@@ -46,7 +46,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.Wait(false, 10, "* Notepad");
+		/// Wnd w = Wnd.Wait(10, false, "* Notepad");
 		/// Print(w);
 		/// ]]></code>
 		/// Using in a Form/Control event handler.
@@ -55,13 +55,13 @@ namespace Au
 		/// f.Click += async (unu, sed) =>
 		///   {
 		/// 	  Print("waiting for Notepad...");
-		/// 	  Wnd w = await Task.Run(() => Wnd.Wait(false, -10, "* Notepad"));
+		/// 	  Wnd w = await Task.Run(() => Wnd.Wait(-10, false, "* Notepad"));
 		/// 	  if(w.Is0) Print("timeout"); else Print(w);
 		///   };
 		/// f.ShowDialog();
 		/// ]]></code>
 		/// </example>
-		public static Wnd Wait(bool active, double secondsTimeout = 0.0,
+		public static Wnd Wait(double secondsTimeout, bool active,
 			string name = null, string className = null, string programEtc = null,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
@@ -82,8 +82,8 @@ namespace Au
 		/// Waits until any of specified windows exists, is visible (optionally) and active (optionally).
 		/// Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
-		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
 		/// <param name="secondsTimeout"><inheritdoc cref="Wait"/></param>
+		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
 		/// <param name="windows">One or more variables containing window properties.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
@@ -91,11 +91,11 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.WaitAny(true, 10, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
+		/// Wnd w = Wnd.WaitAny(10, true, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
 		/// Print(w);
 		/// ]]></code>
 		/// </example>
-		public static Wnd WaitAny(bool active, double secondsTimeout, params Finder[] windows)
+		public static Wnd WaitAny(double secondsTimeout, bool active, params Finder[] windows)
 		{
 			foreach(var f in windows) f.Result = default;
 			var to = new WaitFor.Loop(secondsTimeout);
@@ -114,51 +114,56 @@ namespace Au
 
 		/// <summary>
 		/// Waits until window does not exist.
-		/// Returns default(Wnd). On timeout returns window handle if <paramref name="secondsTimeout"/> is negative; else exception.
-		/// All undocumented parameters etc are the same as <see cref="Find"/>.
+		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns window handle.
-		/// </param>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="name"></param>
 		/// <param name="className"></param>
 		/// <param name="programEtc"></param>
 		/// <param name="flags"></param>
 		/// <param name="also"></param>
 		/// <param name="contains"></param>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
-		/// If you have a window's Wnd variable, to wait until it is closed/etc use <see cref="WaitForCondition"/> instead.
+		/// If you have a window's Wnd variable, to wait until it is closed use <see cref="WaitForClosed"/> instead.
 		/// Examples: <see cref="Wait"/>.
 		/// </remarks>
-		public static Wnd WaitNot(double secondsTimeout = 0.0,
+		public static bool WaitNot(double secondsTimeout,
 			string name = null, string className = null, string programEtc = null,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
 			var f = new Finder(name, className, programEtc, flags, also, contains);
-			return WaitNot(secondsTimeout, f);
+			return WaitNot(secondsTimeout, f, out _);
 		}
 
+		/// <inheritdoc cref="WaitNot(double, string, string, string, WFFlags, Func{Wnd, bool}, object)"/>
 		/// <summary>
-		/// The same as <see cref="WaitNot(double, string, string, string, WFFlags, Func{Wnd, bool}, object)"/>. Arguments are passed differently.
+		/// Waits until window does not exist.
 		/// </summary>
 		/// <param name="secondsTimeout"></param>
 		/// <param name="f">Window properties etc.</param>
+		/// <param name="wFound">On timeout receives the found window.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
-		public static Wnd WaitNot(double secondsTimeout, Finder f)
+		public static bool WaitNot(double secondsTimeout, Finder f, out Wnd wFound)
 		{
+			wFound = default;
 			var to = new WaitFor.Loop(secondsTimeout);
 			Wnd w = default;
 			for(; ; ) {
 				if(!w.IsAlive || !f.IsMatch(w)) { //if first time, or closed (!IsAlive), or changed properties (!IsMatch)
-					if(!f.Find()) return default;
-					w = f.Result;
+					if(!f.Find()) { wFound = default; return true; }
+					wFound = w = f.Result;
 				}
-				if(!to.Sleep()) return f.Result;
+				if(!to.Sleep()) return false;
 			}
 		}
+
+		/// <inheritdoc cref="WaitNot(double, Finder, out Wnd)"/>
+		public static bool WaitNot(double secondsTimeout, Finder f)
+			=> WaitNot(secondsTimeout, f, out _);
 
 		//Not often used. It's easy with await Task.Run. Anyway, need to provide an example of similar size.
 		//public static async Task<Wnd> WaitAsync(double secondsTimeout, string name)
@@ -249,9 +254,11 @@ namespace Au
 		/// <remarks>
 		/// If the window is already closed, immediately returns true.
 		/// </remarks>
-		public bool WaitForClosed(double secondsTimeout = 0d, bool waitUntilProcessEnds = false)
+		public bool WaitForClosed(double secondsTimeout, bool waitUntilProcessEnds = false)
 		{
 			if(!waitUntilProcessEnds) return WaitForCondition(secondsTimeout, t => !t.IsAlive, true);
+
+			//SHOULDDO: if window of this thread or process...
 
 			if(!IsAlive) return true;
 			using(var ph = Process_.LibProcessHandle.FromWnd(this, Api.SYNCHRONIZE)) {

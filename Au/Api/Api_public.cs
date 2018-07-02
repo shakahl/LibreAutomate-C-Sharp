@@ -334,8 +334,9 @@ namespace Au.Types
 			MAXIMIZEBOX = 0x00010000,
 			TABSTOP = 0x00010000,
 			CAPTION = BORDER | DLGFRAME,
-			OVERLAPPEDWINDOW = CAPTION | SYSMENU | THICKFRAME | MINIMIZEBOX | MAXIMIZEBOX,
-			POPUPWINDOW = POPUP | BORDER | SYSMENU,
+			//these can cause bugs and confusion because consist of several styles. Not useful in C#, because used only to create native windows.
+			//OVERLAPPEDWINDOW = CAPTION | SYSMENU | THICKFRAME | MINIMIZEBOX | MAXIMIZEBOX,
+			//POPUPWINDOW = POPUP | BORDER | SYSMENU,
 		}
 
 		/// <summary><msdn>CreateWindowEx</msdn></summary>

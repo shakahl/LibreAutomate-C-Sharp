@@ -32,7 +32,6 @@ namespace Au.Util
 	/// <seealso cref="Icons.ImageCache"/>
 	public sealed class IconsAsync :IDisposable
 	{
-
 		//never mind:
 		//	Could instead use Dictionary<string, List<object>>, to avoid extracting icon multiple times for the same path or even file type (difficult).
 		//	But better is simpler code. Who wants max speed, in most cases can use a saved imagelist instead of getting multiple icons each time.
@@ -71,7 +70,7 @@ namespace Au.Util
 		/// Starts getting icons of added files.
 		/// </summary>
 		/// <param name="callback">A callback function delegate.</param>
-		/// <param name="iconSize">Icon width and height. Also can be enum <see cref="Icons.ShellSize"/>, cast to int.</param>
+		/// <param name="iconSize">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
 		/// <param name="flags"><see cref="GIFlags"/></param>
 		/// <param name="objCommon">Something to pass to callback functions.</param>
 		/// <remarks>

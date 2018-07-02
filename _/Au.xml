@@ -750,17 +750,18 @@
         </member>
         <member name="T:Au.Types.WIArea">
             <summary>
-            Defines the search area for <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and similar functions.
+            Defines the search area for <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> and similar functions.
             </summary>
             <remarks>
             It can be a window/control, accessible object, another image or a rectangle in screen.
             Also allows to specify a rectangle in it, which makes the search area smaller and the function faster.
-            Example: <c>WinImage.Find(new WIArea(w, 100, 100, 100, 100), "image.png");</c>.
+            Has implicit conversions from Wnd, Acc, Bitmap, RECT (rectangle in screen), tuple (Wnd, RECT), tuple (Acc, RECT).
+            Example: <c>WinImage.Find((w, (left, top, width, height)), "image.png");</c>.
             </remarks>
         </member>
         <member name="T:Au.Types.WIFlags">
             <summary>
-            Flags for <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and similar functions.
+            Flags for <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.WIFlags.WindowDC">
@@ -775,10 +776,57 @@
             Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels captured from these windows/parts are black.
             </summary>
         </member>
-        <member name="F:Au.Types.WIFlags.AllMustExist">
+        <member name="T:Au.Types.WIAlso">
             <summary>
-            When the image argument specifies multiple images, all they must exist, else result is "not found".
-            The result rectangle is of the last image. To get all rectangles, use the <i>also</i> parameter: <c>also: t => { rectList.Add(t.Rect); return true; }</c>.
+            Used with <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> and <see cref="M:Au.WinImage.Wait(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>. Its callback function (parameter <i>also</i>) can return one of these values.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.Return">
+            <summary>
+            Stop searching.
+            Let the main function (<b>Find</b> or <b>Wait</b>) return current result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.FindMoreAndReturn">
+            <summary>
+            Find more instances of current image. If used list of images, also search for other images.
+            Then let the main function return current result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.FindMoreOfThisAndReturn">
+            <summary>
+            Find more instances of current image. When used list of images, don't search for other images.
+            Then let the main function return current result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.FindMoreOfListAndReturn">
+            <summary>
+            If used list of images, search for other images. Don't search for more instances of current image.
+            Then let the main function return current result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.NotFound">
+            <summary>
+            Stop searching.
+            Let <b>Find</b> return null. Let <b>Wait</b> continue waiting. But if a <b>Find...Return</b> value used previously, return that result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.FindOther">
+            <summary>
+            Find more instances of current image. If used list of images, also search for other images.
+            If not found, let <b>Find</b> return null; let <b>Wait</b> continue waiting; but if a <b>Find...Return</b> value used previously, return that result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.FindOtherOfThis">
+            <summary>
+            Find more instances of current image. When used list of images, don't search for other images.
+            If not found, let <b>Find</b> return null; let <b>Wait</b> continue waiting; but if a <b>Find...Return</b> value used previously, return that result.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WIAlso.FindOtherOfList">
+            <summary>
+            If used list of images, search for other images. Don't search for more instances of current image.
+            If not found, let <b>Find</b> return null; let <b>Wait</b> continue waiting; but if a <b>Find...Return</b> value used previously, return that result.
             </summary>
         </member>
         <member name="T:Au.Types.OptDebug">
@@ -1160,6 +1208,7 @@
             <remarks>
             Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="M:Au.Time.SleepDoEvents(System.Int32)"/>.
             </remarks>
+            <seealso cref="M:Au.WaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
         </member>
         <member name="M:Au.Types.OptWaitFor.#ctor(System.Int32,System.Boolean)">
             
@@ -1625,15 +1674,24 @@
             <summary>
             Flags for <see cref="M:Au.WinImage.CaptureUI(Au.Types.WICResult@,Au.Types.WICFlags,Au.Types.AnyWnd)"/>.
             </summary>
-        </member>
-        <member name="F:Au.Types.WICFlags.Color">
-            <summary>Can capture only color, not image.</summary>
+            <remarks>
+            Only one of flags <b>Image</b>, <b>Color</b> and <b>Rectangle</b> can be used. If none, can capture image or color.
+            </remarks>
         </member>
         <member name="F:Au.Types.WICFlags.Image">
             <summary>Can capture only image, not color.</summary>
         </member>
+        <member name="F:Au.Types.WICFlags.Color">
+            <summary>Can capture only color, not image.</summary>
+        </member>
+        <member name="F:Au.Types.WICFlags.Rectangle">
+            <summary>Capture only rectangle, not image/color.</summary>
+        </member>
         <member name="F:Au.Types.WICFlags.WindowDC">
-            
+            <summary>
+            Get pixels from the client area device context (DC) of a user-selected window, not from screen DC.
+            More info: <see cref="F:Au.Types.WIFlags.WindowDC"/>.
+            </summary>
         </member>
         <member name="T:Au.Types.WICResult">
             <summary>
@@ -1643,6 +1701,7 @@
         <member name="F:Au.Types.WICResult.image">
             <summary>
             Captured image.
+            null if captured single pixel color or used flag <see cref="F:Au.Types.WICFlags.Rectangle"/>.
             </summary>
         </member>
         <member name="F:Au.Types.WICResult.color">
@@ -1652,12 +1711,12 @@
         </member>
         <member name="F:Au.Types.WICResult.rect">
             <summary>
-            Rectangle of the captured image, in screen coordinates.
+            Location of the captured image or rectangle, in screen coordinates.
             </summary>
         </member>
         <member name="F:Au.Types.WICResult.wnd">
             <summary>
-            Window or control containing the captured image, if whole image is in its client area.
+            Window or control containing the captured image or rectangle, if whole image is in its client area.
             In some cases may be incorrect, for example if windows moved/opened/closed/etc while capturing.
             </summary>
         </member>
@@ -3342,45 +3401,45 @@
             By default adds to our string cache.
             </summary>
         </member>
-        <member name="T:Au.Types.AuMTBase">
+        <member name="T:Au.Types.AuBaseMT">
             <summary>
             Base class of AuMenu and AuToolbar.
             </summary>
         </member>
-        <member name="P:Au.Types.AuMTBase.MainToolStrip">
+        <member name="P:Au.Types.AuBaseMT.MainToolStrip">
             <summary>
             Gets ToolStrip of AuMenu and AuToolbar, which override this.
             </summary>
         </member>
-        <member name="P:Au.Types.AuMTBase.LastItem">
+        <member name="P:Au.Types.AuBaseMT.LastItem">
             <summary>
             Gets the last added item as ToolStripItem, which is the base type of ToolStripMenuItem, ToolStripButton and other supported types.
             The item can be added with m.Add(...), m[...]=, m.Separator() and m.Submenu(...).
             </summary>
         </member>
-        <member name="E:Au.Types.AuMTBase.ItemAdded">
+        <member name="E:Au.Types.AuBaseMT.ItemAdded">
             <summary>
             Occurs when an item is added.
             Allows to set item properties in single place instead of after each 'add item' code line.
             For example, the event handler can set item properties common to all items, or set item properties encoded in item text.
             </summary>
         </member>
-        <member name="P:Au.Types.AuMTBase.IconFlags">
+        <member name="P:Au.Types.AuBaseMT.IconFlags">
             <summary>
             Flags to pass to <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>. See <see cref="T:Au.Types.GIFlags"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.AuMTBase.IconSize">
+        <member name="P:Au.Types.AuBaseMT.IconSize">
             <summary>
             Image width and height.
-            Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.
+            Also can be enum <see cref="P:Au.Types.AuBaseMT.IconSize"/>, cast to int.
             Set it before adding items.
             </summary>
             <remarks>
             To set different size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
             </remarks>
         </member>
-        <member name="M:Au.Types.AuMTBase.Finalize">
+        <member name="M:Au.Types.AuBaseMT.Finalize">
             
         </member>
         <member name="T:Au.Types.MTClickArgs">
@@ -3523,6 +3582,27 @@
         </member>
         <member name="F:Au.Types.MCursor.Help">
             <summary>Arrow and question mark.</summary>
+        </member>
+        <member name="T:Au.Types.ProcessInfo">
+            <summary>
+            Contains process id, name and session id.
+            </summary>
+            <tocexclude />
+        </member>
+        <member name="F:Au.Types.ProcessInfo.SessionId">
+            <summary>User session id.</summary>
+        </member>
+        <member name="F:Au.Types.ProcessInfo.ProcessId">
+            <summary>Process id.</summary>
+        </member>
+        <member name="F:Au.Types.ProcessInfo.Name">
+            <summary>Executable file name (with ".exe" etc). Not full path.</summary>
+        </member>
+        <member name="M:Au.Types.ProcessInfo.#ctor(System.Int32,System.Int32,System.String)">
+            
+        </member>
+        <member name="M:Au.Types.ProcessInfo.ToString">
+            
         </member>
         <member name="T:Au.Types.Wildex">
             <summary>
@@ -4301,7 +4381,7 @@
         </member>
         <member name="T:Au.Types.GIFlags">
             <summary>
-            Used with get-icon functions.
+            Flags for <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.GIFlags.LiteralPath">
@@ -4314,6 +4394,42 @@
             If file is not full path, call <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/>.
             Without this flag searches only in <see cref="P:Au.Folders.ThisAppImages"/>; with this flag also searches there first.
             </summary>
+        </member>
+        <member name="T:Au.Types.IconSize">
+            <summary>
+            Standard icon sizes.
+            </summary>
+            <seealso cref="M:Au.Icons.GetShellIconSize(Au.Types.IconSize)"/>
+            <tocexclude />
+        </member>
+        <member name="F:Au.Types.IconSize.SysSmall">
+            <summary>
+            Icons displayed in window title bar and system notification area (tray). Usually 16x16 when normal DPI, the same as <b>Small</b>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.IconSize.Small">
+            <summary>
+            Small icons displayed in Explorer folders. Usually 16x16 when normal DPI.
+            </summary>
+        </member>
+        <member name="F:Au.Types.IconSize.Large">
+            <summary>
+            Large icons displayed in Explorer folders. Usually 32x32 when normal DPI.
+            </summary>
+        </member>
+        <member name="F:Au.Types.IconSize.ExtraLarge">
+            <summary>
+            Extra large icons displayed in Explorer folders. Usually 48x48 when normal DPI.
+            </summary>
+        </member>
+        <member name="F:Au.Types.IconSize.Jumbo">
+            <summary>
+            256x256 icons displayed in Explorer folders.
+            </summary>
+        </member>
+        <member name="T:Au.Types.StockIcon">
+            <summary><msdn>SHSTOCKICONID</msdn></summary>
+            <seealso cref="M:Au.Icons.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
         </member>
         <member name="T:Au.Types.STIFlags">
             <summary>
@@ -5070,7 +5186,7 @@
              </param>
              <param name="flags"></param>
              <param name="also">
-             Lambda etc callback function to call for each matching AO. Let it return true if this is the wanted AO.
+             Callback function. Called for each matching AO. Let it return true if this is the wanted AO.
              Example, the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
              </param>
              <param name="skip">
@@ -5421,7 +5537,7 @@
             Starts getting icons of added files.
             </summary>
             <param name="callback">A callback function delegate.</param>
-            <param name="iconSize">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
+            <param name="iconSize">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
             <param name="flags"><see cref="T:Au.Types.GIFlags"/></param>
             <param name="objCommon">Something to pass to callback functions.</param>
             <remarks>
@@ -5581,7 +5697,7 @@
             })) {
             	MessageBox.Show("hook");
             	//or
-            	//WaitFor.Message(-10, () => stop); //wait max 10 s for activated taskbar
+            	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
             	//Print("the end");
             }
             ]]></code>
@@ -5616,6 +5732,33 @@
         </member>
         <member name="M:Au.Util.AccHook.Finalize">
             
+        </member>
+        <member name="T:Au.Util.StringMisc">
+            <summary>
+            Miscellaneous string functions. Parsing etc.
+            </summary>
+        </member>
+        <member name="M:Au.Util.StringMisc.ParseParam3Stars(System.String@,System.String[])">
+            <summary>
+            Parses a function parameter that can be either simple string (probably wildex) or like "***name:value" or "***name=value" or "***name value".
+            Returns: 0 - s does not start with "***" (or is null); i - s starts with "***names[i-1]:" etc; -1 - s is invalid.
+            </summary>
+            <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged.</param>
+            <param name="names">List of supported 'name'.</param>
+            <remarks>
+            Used to parse parameters like <i>programEtc</i> of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.StringMisc.RemoveUnderlineAmpersand(System.String)">
+            <summary>
+            Removes '&amp;' characters from string.
+            Replaces "&amp;&amp;" with "&amp;".
+            Returns new string if s has '&amp;' characters, else returns s.
+            </summary>
+            <remarks>
+            Character '&amp;' is used to underline next character in displayed text of dialog controls and menu items. Two '&amp;' are used to display single '&amp;'.
+            The underline is displayed when using the keyboard (eg Alt key) to select dialog controls and menu items.
+            </remarks>
         </member>
         <member name="T:Au.Util.LibScreenDC">
             <summary>
@@ -5775,7 +5918,7 @@
             })) {
             	MessageBox.Show("Low-level keyboard hook.", "Test");
             	//or
-            	//WaitFor.Message(-10, () => stop); //wait max 10 s for Esc key
+            	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
             	//Print("the end");
             }
             ]]></code>
@@ -5804,7 +5947,7 @@
             })) {
             	MessageBox.Show("Low-level mouse hook.", "Test");
             	//or
-            	//WaitFor.Message(-10, () => stop); //wait max 10 s for right-click
+            	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
             	//Print("the end");
             }
             ]]></code>
@@ -6539,6 +6682,18 @@
             Releases the StringBuilder to the cache.
             </summary>
         </member>
+        <member name="T:Au.Util.GC_">
+            <summary>
+            <see cref="T:System.GC"/> extensions.
+            </summary>
+        </member>
+        <member name="M:Au.Util.GC_.AddObjectMemoryPressure(System.Object,System.Int32)">
+            <summary>
+            Calls <see cref="M:System.GC.AddMemoryPressure(System.Int64)"/>. Later, when object <paramref name="obj"/> is garbage-collected, will call <see cref="M:System.GC.RemoveMemoryPressure(System.Int64)"/>.
+            </summary>
+            <param name="obj">An object of any type.</param>
+            <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
+        </member>
         <member name="T:Au.Util.MessageLoop">
             <summary>
             A message loop, alternative to Application.Run which does not support nested loops.
@@ -6735,6 +6890,14 @@
         <member name="M:Au.Util.ModuleHandle.OfProcessExe">
             <summary>
             Gets native module handle of the program file of this process.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle.OfAppIcon">
+            <summary>
+            Gets native module handle of the assembly containing native icon that can be displayed as icon of this app.
+            Some API functions need it when you use <msdn>IDI_APPLICATION</msdn>.
+            If the entry assembly of this appdomain is dll with icon, gets dll handle; else gets exe handle.
+            Returns default(IntPtr) if there are no native icons.
             </summary>
         </member>
         <member name="T:Au.Util.Assembly_">
@@ -8878,7 +9041,6 @@
         <member name="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)">
             <summary>
             Shows a tooltip-like OSD window with text and optionally icon.
-            Returns an <see cref="T:Au.Osd"/> object that can be used to change properties or close the OSD window.
             </summary>
             <param name="text"><see cref="P:Au.Osd.Text"/></param>
             <param name="secondsTimeout"><see cref="P:Au.Osd.SecondsTimeout"/></param>
@@ -8889,22 +9051,41 @@
             <param name="name"><see cref="P:Au.OsdWindow.Name"/></param>
             <param name="showMode"><see cref="P:Au.Osd.ShowMode"/></param>
             <param name="doNotShow">Don't call <see cref="M:Au.Osd.Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
+            <returns>Returns an <see cref="T:Au.Osd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
-            Also sets these properties: <see cref="!:Opacity"/>
+            Also sets these properties: <see cref="P:Au.Osd.ClickToClose"/>=true, <see cref="P:Au.Osd.Shadow"/>=true.
             </remarks>
         </member>
         <member name="M:Au.Osd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)">
             <summary>
             Shows a big-font text with transparent background.
             </summary>
-            <param name="text"></param>
-            <param name="secondsTimeout"></param>
-            <param name="xy"></param>
-            <param name="color"></param>
-            <param name="name"></param>
-            <param name="showMode"></param>
-            <param name="doNotShow"></param>
-            <returns></returns>
+            <param name="text"><see cref="P:Au.Osd.Text"/></param>
+            <param name="secondsTimeout"><see cref="P:Au.Osd.SecondsTimeout"/></param>
+            <param name="xy"><see cref="P:Au.Osd.XY"/></param>
+            <param name="color"><see cref="P:Au.Osd.TextColor"/>. Default: <see cref="P:Au.Osd.DefaultTransparentTextColor"/>.</param>
+            <param name="name"><see cref="P:Au.OsdWindow.Name"/></param>
+            <param name="showMode"><see cref="P:Au.Osd.ShowMode"/></param>
+            <param name="doNotShow"><inheritdoc cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/></param>
+            <returns><inheritdoc cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/></returns>
+            <remarks>
+            Also sets these properties: <see cref="P:Au.Osd.Font"/>=<see cref="P:Au.Osd.DefaultTransparentTextFont"/>, <see cref="P:Au.OsdWindow.Opacity"/>=0.
+            </remarks>
+        </member>
+        <member name="M:Au.Osd.ShowImage(System.Drawing.Image,System.Int32,Au.Types.PopupXY,System.String,Au.Types.OsdShowMode,System.Boolean)">
+            <summary>
+            Shows on-screen image.
+            </summary>
+            <param name="image"><see cref="P:Au.Osd.BackgroundImage"/></param>
+            <param name="secondsTimeout"><see cref="P:Au.Osd.SecondsTimeout"/></param>
+            <param name="xy"><see cref="P:Au.Osd.XY"/></param>
+            <param name="name"><see cref="P:Au.OsdWindow.Name"/></param>
+            <param name="showMode"><see cref="P:Au.Osd.ShowMode"/></param>
+            <param name="doNotShow"><inheritdoc cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/></param>
+            <returns><inheritdoc cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/></returns>
+            <remarks>
+            Also sets these properties: <see cref="P:Au.Osd.IsOfImageSize"/>=true, <see cref="P:Au.OsdWindow.Opacity"/>=0, <see cref="P:Au.Osd.ClickToClose"/>=true.
+            </remarks>
         </member>
         <member name="P:Au.Osd.DefaultFont">
             <summary>Default font for <see cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>Osd</b>. Default: <b>SystemFonts.MessageBoxFont</b> of size 12.</summary>
@@ -8937,20 +9118,20 @@
             Captures, finds and clicks images and colors in windows.
             </summary>
             <remarks>
-            An image is any visible rectangular part of window. A color is any visible pixel of window.
-            A <b>WinImage</b> variable holds results of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and similar functions (rectangle etc).
+            An image is any visible rectangular part of a window. A color is any visible pixel (the same as image of size 1x1).
+            A <b>WinImage</b> variable holds results of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> and similar functions (rectangle etc).
             </remarks>
         </member>
         <member name="M:Au.WinImage.LoadImage(System.String)">
             <summary>
             Loads image from file, string or resource.
             </summary>
-            <param name="image"><inheritdoc cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/></param>
+            <param name="image"><inheritdoc cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/></param>
             <exception cref="T:System.IO.FileNotFoundException">The specified file does not exist.</exception>
             <exception cref="T:System.Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
             <exception cref="T:System.ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
             <remarks>
-            <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> uses this function when <i>image</i> argument type is string. More info there.
+            <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> uses this function when <i>image</i> argument type is string. More info there.
             </remarks>
         </member>
         <member name="M:Au.WinImage.op_UnaryPlus(Au.WinImage)">
@@ -8961,38 +9142,54 @@
             <exception cref="T:Au.Types.NotFoundException">x is null.</exception>
             <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)"/></example>
         </member>
-        <member name="F:Au.WinImage.Rect">
+        <member name="P:Au.WinImage.Rect">
             <summary>
-            Location of the found image, relative to the search area.
+            Gets location of the found image, relative to the search area.
             </summary>
             <remarks>
             Relative to the window/control client area (if area type is Wnd), accessible object (if Acc), image (if Bitmap) or screen (if RECT).
-            More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.
+            More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.WinImage.RectInScreen">
+            <summary>
+            Gets location of the found image in screen coordinates.
+            </summary>
+            <remarks>
+            Slower than <see cref="P:Au.WinImage.Rect"/>.
             </remarks>
         </member>
         <member name="P:Au.WinImage.MatchIndex">
             <summary>
-            When there are multiple matching images, this is the 0-based index of current matching image.
+            Gets 0-based index of current matching image instance.
             </summary>
             <remarks>
-            Can be used in callback function to create action "skip n matching images". Example: <c>also: t => t.MatchIndex==1</c>.
-            When the <i>image</i> argument specifies multiple images, <b>MatchIndex</b> starts from 0 for each image.
+            Can be useful in <i>also</i> callback functions.
+            When the <i>image</i> argument is a list of images, <b>MatchIndex</b> starts from 0 for each list image.
             </remarks>
         </member>
         <member name="P:Au.WinImage.ListIndex">
             <summary>
-            When the image argument specifies multiple images, this is the 0-based index of the found image in the list.
+            When the <i>image</i> argument is a list of images, gets 0-based index of the list image.
             </summary>
+        </member>
+        <member name="M:Au.WinImage.Skip(System.Int32)">
+            <summary>
+            Can be used in <i>also</i> callback function to skip n matching images. Example: <c>also: o => o.Skip(n)</c>.
+            </summary>
+            <param name="n">How many matching images to skip.</param>
         </member>
         <member name="M:Au.WinImage.ToString">
             
         </member>
-        <member name="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})">
+        <member name="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})">
             <summary>
             Finds image(s) or color(s) displayed in window or other area.
-            Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image.
-            Returns null if not found. To throw exception you can use operator +: <c>var r = +WinImage.Find(...);</c>
             </summary>
+            <returns>
+            Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image.
+            Returns null if not found. See example.
+            </returns>
             <param name="area">
             Where to search. Can be a window/control, accessible object, another image or a rectangle in screen.
             <list type="bullet">
@@ -9000,37 +9197,53 @@
             <item><see cref="T:Au.Acc"/> - accessible object.</item>
             <item><see cref="T:System.Drawing.Bitmap"/> - another image. These flags are invalid: <see cref="F:Au.Types.WIFlags.WindowDC"/>.</item>
             <item><see cref="T:Au.Types.RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="F:Au.Types.WIFlags.WindowDC"/>.</item>
-            <item><see cref="T:Au.Types.WIArea"/> - can contain Wnd, Acc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>WinImage.Find(new WIArea(w, 100, 100, 100, 100), "image.png");</c>.</item>
+            <item><see cref="T:Au.Types.WIArea"/> - can contain Wnd, Acc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>WinImage.Find((w, (left, top, width, height)), "image.png");</c>.</item>
             </list>
             </param>
             <param name="image">
             Image or color to find. Can be of type:
-            string - path of .png or .bmp file. If not full path, uses <see cref="P:Au.Folders.ThisAppImages"/>. Also can use resources and embedded images; read in Remarks.
-            Bitmap - image object in memory.
-            int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.
-            IEnumerable of string, Bitmap, int/ColorInt/Color or object - multiple images or colors. Default action - find any. If flag <see cref="F:Au.Types.WIFlags.AllMustExist"/> - must find all.
+            <list type="bullet">
+            <item>
+            string - path of .png or .bmp file.
+            If not full path, uses <see cref="P:Au.Folders.ThisAppImages"/>.
+            If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) WinImage.Find(w, b);</c>.
+            </item>
+            <item>
+            string that starts with "image:" or "~:" - Base64-encoded .png or .bmp image embedded in script.
+            If "image:", it is .png file data, else it is compressed .bmp file data.
+            Can be created with Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
+            </item>
+            <item>int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.</item>
+            <item>Bitmap - image object in memory.</item>
+            <item>IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <paramref name="also"/>).</item>
+            </list>
+            Icons are not supported directly, but you can use <see cref="M:Au.Icons.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/> or <see cref="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)"/>.
+            Transparent and partially transparent pixels are not compared. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
             </param>
             <param name="flags"></param>
             <param name="colorDiff">Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
             <param name="also">
-            A callback function to call for each found image until it returns true.
-            Can be used to create actions like "skip n matching images" (like <c>also: t => t.MatchIndex == 1</c>), "click all matching images" (<c>also: t => { t.MouseClick(); 0.5.s(); return false; }</c>), "get rectangles of all matching images" (<c>also: t => { rectList.Add(t.Rect); return false; }</c>), "ignore some images", etc.
-            When the callback function returns true, Find() returns result "found". Else Find() tries to find more matching images (towards the right and bottom) and calls the callback function again when found. If the callback function always returns false, Find() returns result "not found".
+            Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="T:Au.Types.WIAlso"/> values.
+            Callback functions can be used to get rectangles of multiple found images, create custom behaviors/actions, etc. Examples:
+            <list type="bullet">
+            <item>Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.Return : WIAlso.FindOther</c></item>
+            <item>Skip n matching images: <c>also: o => o.Skip(n)</c></item>
+            <item>Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.</item>
+            <item>Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c></item>
+            <item>Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.FindMoreOfListAndReturn; }); if(found[0]) Print(0); if(found[1]) Print(1);</c></item>
+            </list>
             </param>
-            <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument).</exception>
-            <exception cref="T:System.ArgumentException">An argument is of unsupported type or is/contains a null/invalid value.</exception>
+            <exception cref="T:Au.Types.WndException">Invalid window handle (the <paramref name="area"/> argument).</exception>
+            <exception cref="T:System.ArgumentException">
+            An argument is of unsupported type or is/contains a null/invalid value.
+            Image or area is a bottom-up Bitmap object (see <see cref="P:System.Drawing.Imaging.BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by <b>Image.FromHbitmap</b> (instead use <see cref="M:Au.WinImage.BitmapFromHbitmap(System.IntPtr)"/>).
+            </exception>
             <exception cref="T:System.IO.FileNotFoundException">The specified file does not exist.</exception>
             <exception cref="T:System.Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
             <exception cref="T:Au.Types.AuException">Something failed.</exception>
             <remarks>
-            If <paramref name="image"/> is file path, and the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) WinImage.Find(w, b);</c>.
-            
-            <paramref name="image"/> can be string containing Base64-encoded .png image file data with prefix "image:" or compressed .bmp file data with prefix "~:". Created by Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
-            
-            Some pixels in image can be transparent or partially transparent (AA of 0xAARRGGBB is not 255). These pixels are not compared.
-            
             The speed mostly depends on:
-            1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>new WIArea(w, rectangle)</c>).
+            1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
             2. Flag <see cref="F:Au.Types.WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
             3. Video driver. Can be much slower if incorrect, generic or virtual PC driver is used. Flag <see cref="F:Au.Types.WIFlags.WindowDC"/> should help.
             4. <paramref name="colorDiff"/>. Should be as small as possible.
@@ -9040,67 +9253,55 @@
             The function can only find images that exactly match the specified image. With <paramref name="colorDiff"/> it can find images with slightly different colors and brightness. It cannot find images with different shapes.
             
             This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
-            
-            Throws ArgumentException if image or area is a bottom-up Bitmap object (see <see cref="P:System.Drawing.Imaging.BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by Image.FromHbitmap; instead use <see cref="M:Au.WinImage.BitmapFromHbitmap(System.IntPtr)"/>.
             </remarks>
+            <example>
+            Code created with dialog "Find image or color in window".
+            <code><![CDATA[
+            var w = +Wnd.Find("Window Name");
+            string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
+            var wi = WinImage.Find(w, image).OrThrow();
+            wi.MouseMove();
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.WinImage.Wait(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})">
+        <member name="M:Au.WinImage.Wait(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})">
+            <inheritdoc cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>
             <summary>
-            Waits for image(s) or color(s) displayed in window or other area.
-            Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.
+            Finds image(s) or color(s) displayed in window or other area. Waits until found.
             </summary>
+            <returns>Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns null.
             </param>
-            <param name="area"></param>
-            <param name="image"></param>
-            <param name="flags"></param>
-            <param name="colorDiff"></param>
-            <param name="also"></param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.</exception>
-            <remarks>
-            Parameters and other info is the same as with <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.
-            </remarks>
         </member>
-        <member name="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})">
+        <member name="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})">
+            <inheritdoc cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>
             <summary>
-            Waits until image(s) or color(s) is NOT displayed in window or other area.
+            Waits until image(s) or color(s) is not displayed in window or other area.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="area"></param>
-            <param name="image"></param>
-            <param name="flags"></param>
-            <param name="colorDiff"></param>
-            <param name="also"></param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.</exception>
-            <remarks>
-            Parameters and other info is the same as with <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.
-            </remarks>
         </member>
         <member name="M:Au.WinImage.WaitChanged(System.Double,Au.Types.WIArea,Au.Types.WIFlags,System.Int32)">
+            <inheritdoc cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>
             <summary>
             Waits until something visually changes in window or other area.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="area"></param>
-            <param name="flags"></param>
-            <param name="colorDiff"></param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.</exception>
             <remarks>
-            Parameters and other info is the same as with <see cref="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> and <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>. Instead of <i>image</i> parameter, this function captures the area image at the beginning.
+            The same as <see cref="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.
             </remarks>
         </member>
         <member name="M:Au.WinImage.Capture(Au.Types.RECT)">
             <summary>
-            Copies a rectangle of screen pixels to a new Bitmap object.
+            Creates image from a rectangle of screen pixels.
             </summary>
             <param name="rect">A rectangle in screen coordinates.</param>
             <exception cref="T:System.ArgumentException">Empty rectangle.</exception>
@@ -9120,7 +9321,7 @@
         </member>
         <member name="M:Au.WinImage.Capture(Au.Wnd,Au.Types.RECT)">
             <summary>
-            Copies a rectangle of window client area pixels to a new Bitmap object.
+            Creates image from a rectangle of window client area pixels.
             </summary>
             <param name="w">Window or control.</param>
             <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
@@ -9135,6 +9336,28 @@
             4. If the window is DPI-scaled, captures its non-scaled view. And <paramref name="rect"/> must contain non-scaled coordinates.
             </remarks>
         </member>
+        <member name="M:Au.WinImage.Capture(System.Collections.Generic.List{Au.Types.POINT})">
+            <summary>
+            Creates image from a non-rectangular area of screen pixels.
+            </summary>
+            <param name="outline">The outline (shape) of the area in screen. If single element, captures single pixel.</param>
+            <exception cref="T:System.ArgumentException"><paramref name="outline"/> is null or has 0 elements.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
+            <remarks>
+            PixelFormat is always Format32bppRgb.
+            </remarks>
+        </member>
+        <member name="M:Au.WinImage.Capture(Au.Wnd,System.Collections.Generic.List{Au.Types.POINT})">
+            <summary>
+            Creates image from a non-rectangular area of window client area pixels.
+            </summary>
+            <param name="w">Window or control.</param>
+            <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
+            <exception cref="T:Au.Types.WndException">Invalid <paramref name="w"/>.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="outline"/> is null or has 0 elements.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
+            <remarks>More info: <see cref="M:Au.WinImage.Capture(Au.Wnd,Au.Types.RECT)"/>.</remarks>
+        </member>
         <member name="M:Au.WinImage.BitmapFromHbitmap(System.IntPtr)">
             <summary>
             Creates Bitmap from a GDI bitmap.
@@ -9142,11 +9365,23 @@
             <param name="hbitmap">GDI bitmap handle. This function makes its copy.</param>
             <remarks>
             How this function is different from <see cref="M:System.Drawing.Image.FromHbitmap(System.IntPtr)"/>:
-            1. Image.FromHbitmap usually creates bottom-up bitmap, which is incompatible with <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc do.
+            1. Image.FromHbitmap usually creates bottom-up bitmap, which is incompatible with <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc do.
             2. This function always creates bitmap of PixelFormat Format32bppRgb.
             </remarks>
             <exception cref="T:Au.Types.AuException">Failed. For example hbitmap is default(IntPtr).</exception>
             <exception cref="T:System.Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
+        </member>
+        <member name="M:Au.WinImage.CaptureUI(Au.Types.WICResult@,Au.Types.WICFlags,Au.Types.AnyWnd)">
+            <summary>
+            Creates image from a user-selected area of screen pixels. Or gets single pixel color, or just rectangle.
+            Returns false if cancelled.
+            </summary>
+            <param name="result">Receives results.</param>
+            <param name="flags"></param>
+            <param name="toolWindow">Owner window. Temporarily hides it and its owner windows.</param>
+            <remarks>
+            Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
+            </remarks>
         </member>
         <member name="T:Au.Opt">
             <summary>
@@ -9711,7 +9946,6 @@
         <member name="P:Au.Output.LibUseQM2">
             <summary>
             Sets to use QM2 as the output server.
-            Eg can be used to debug the Output class itself.
             </summary>
         </member>
         <member name="M:Au.Output._WriteToQM2(System.String)">
@@ -11512,12 +11746,12 @@
             <param name="directoryPath">Full path of the directory.</param>
             <param name="flags"></param>
             <param name="filter">
-            A callback function to call for each file and subdirectory.
+            Callback function. Called for each file and subdirectory.
             If it returns false, the file/subdirectory is not included in results.
             This can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
             </param>
             <param name="errorHandler">
-            A callback function to call when fails to get children of a subdirectory, when using flag <see cref="F:Au.Types.FEFlags.AndSubdirectories"/>.
+            Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="F:Au.Types.FEFlags.AndSubdirectories"/>.
             It receives the subdirectory path. It can call <see cref="M:Au.Types.Native.GetError"/> and throw an exception.
             If it does not throw an exception, the enumeration continues as if the directory is empty.
             If errorHandler not used, then throws exception.
@@ -11618,7 +11852,7 @@
             <param name="ifExists"></param>
             <param name="copyFlags">Options used when copying directory.</param>
             <param name="filter">
-            This can be used when copying directory. A callback function to call for each descendant file and subdirectory.
+            This callback function can be used when copying directory. Called for each descendant file and subdirectory.
             If it returns false, the file/subdirectory is not copied.
             </param>
             <exception cref="T:System.ArgumentException">path or newPath is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).</exception>
@@ -11639,10 +11873,7 @@
             <param name="newDirectory">New parent directory.</param>
             <param name="ifExists"></param>
             <param name="copyFlags">Options used when copying directory.</param>
-            <param name="filter">
-            This can be used when copying directory. A callback function to call for each descendant file and subdirectory.
-            If it returns false, the file/subdirectory is not copied.
-            </param>
+            <param name="filter"><inheritdoc cref="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/></param>
             <exception cref="T:System.ArgumentException">
             path or newDirectory is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
             path is drive. To copy drive content, use <see cref="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
@@ -12093,12 +12324,12 @@
             Run notepad and wait for its window.
             <code><![CDATA[
             Shell.Run("notepad.exe");
-            Wnd w = Wnd.Wait(true, 10, "*- Notepad", "Notepad");
+            Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
             ]]></code>
             Run notepad or activate its window. Works like Wnd.FindOrRun.
             <code><![CDATA[
             Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
+            if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
             w.Activate();
             ]]></code>
             </example>
@@ -12313,7 +12544,7 @@
             3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
             4. If path is not full path, throws exception.
             5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' with '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
-            6. If no flag DoNotExpandDosPath, if contains '~' character, calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
+            6. If no flag DoNotExpandDosPath, if looks like a DOS path (contains '~' etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
             7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is a drive path (eg @"C:\").
             8. Appends '\\' character if ends with a drive name (eg "C:" -> @"C:\").
             9. If no flag DoNotPrefixLongPath, calls <see cref="M:Au.Path_.PrefixLongPathIfNeed(System.String)"/>, which adds @"\\?\" etc prefix if path is very long.
@@ -12335,7 +12566,14 @@
         <member name="M:Au.Path_.LibExpandDosPath(System.String)">
             <summary>
             Calls API GetLongPathName.
-            Currently does not check whether s contains '~' character. Note: the API is slow.
+            Does not check whether s contains '~' character etc. Note: the API is slow.
+            </summary>
+            <param name="s">Can be null.</param>
+        </member>
+        <member name="M:Au.Path_.LibIsPossiblyDos(System.String)">
+            <summary>
+            Returns true if pathOrFilename looks like a DOS filename or path.
+            Examples: "abcde~12", "abcde~12.txt", @"c:\path\abcde~12.txt", "c:\abcde~12\path".
             </summary>
             <param name="s">Can be null.</param>
         </member>
@@ -13012,19 +13250,7 @@
             <summary>Infrastructure.</summary>
         </member>
         <member name="P:Au.AuToolbar.Item(System.String,System.Object)">
-            <summary>
-            Adds new button as ToolStripButton.
-            Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-            Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
-            </summary>
-            <param name="text">Text.</param>
-            <param name="icon">Can be:
-            string - icon file, as with <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>.
-            string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
-            int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
-            IntPtr - unmanaged icon handle (the function makes its own copy).
-            Icon, Image, Folders.FolderPath.
-            </param>
+            <inheritdoc cref="M:Au.AuToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>
             <example><code>
             var t = new AuToolbar();
             t["One"] = o => Print(o);
@@ -13039,14 +13265,8 @@
             Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
             </summary>
             <param name="text">Text.</param>
-            <param name="onClick">Lambda etc function to be called when the button clicked.</param>
-            <param name="icon">Can be:
-            string - icon file, as with <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>.
-            string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
-            int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
-            IntPtr - unmanaged icon handle (the function makes its own copy).
-            Icon, Image, Folders.FolderPath.
-            </param>
+            <param name="onClick">Callback function. Called when the button clicked.</param>
+            <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
             <example><code>
             var m = new AuToolbar();
             t.Add("One", o => Print(o), @"icon file path");
@@ -13060,8 +13280,8 @@
             Supports types derived from ToolStripItem.
             </summary>
             <param name="item">An already created item of any supported type.</param>
-            <param name="icon">The same as with other overload.</param>
-            <param name="onClick">Lambda etc function to be called when the item clicked. Not useful for most item types.</param>
+            <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
+            <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
         </member>
         <member name="M:Au.AuToolbar.Separator">
             <summary>
@@ -13107,19 +13327,7 @@
             
         </member>
         <member name="P:Au.AuMenu.Item(System.String,System.Object)">
-            <summary>
-            Adds new item as ToolStripMenuItem.
-            Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
-            Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c> .
-            </summary>
-            <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-            <param name="icon">Can be:
-            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.AuMTBase.IconFlags"/>.
-            string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
-            int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
-            IntPtr - unmanaged icon handle (the function makes its own copy).
-            Icon, Image, Folders.FolderPath.
-            </param>
+            <inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>
             <example><code>
             var m = new AuMenu();
             m["One"] = o => Print(o);
@@ -13137,12 +13345,11 @@
             Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c> .
             </summary>
             <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-            <param name="onClick">Lambda etc function to be called when the menu item clicked.</param>
+            <param name="onClick">Callback function. Called when the menu item clicked.</param>
             <param name="icon">Can be:
-            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.AuMTBase.IconFlags"/>.
+            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.AuBaseMT.IconFlags"/>.
             string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
-            IntPtr - unmanaged icon handle (the function makes its own copy).
             Icon, Image, Folders.FolderPath.
             </param>
             <example><code>
@@ -13159,8 +13366,8 @@
             Supports types derived from ToolStripItem.
             </summary>
             <param name="item">An already created item of any supported type.</param>
-            <param name="icon">The same as with other overload.</param>
-            <param name="onClick">Lambda etc function to be called when the item clicked. Not useful for most item types.</param>
+            <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
+            <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
         </member>
         <member name="M:Au.AuMenu.Separator">
             <summary>
@@ -13176,8 +13383,8 @@
             2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="M:Au.AuMenu.EndSubmenu"/>.
             </summary>
             <param name="text">Text.</param>
-            <param name="icon">The same as with <see cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.</param>
-            <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
+            <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
+            <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
             <remarks>
             Submenus inherit these properties of the main menu, set before adding submenus (see example):
             BackgroundImage, BackgroundImageLayout, ContextMenu, Cursor, Font, ForeColor, ImageList, ImageScalingSize, Renderer, ShowCheckMargin, ShowImageMargin.
@@ -13238,9 +13445,9 @@
             When showing the submenu first time, your callback function will be called and can add submenu items.
             </summary>
             <param name="text">Text.</param>
-            <param name="onOpening">Lambda etc callback function that should add submenu items.</param>
-            <param name="icon">The same as with <see cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.</param>
-            <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
+            <param name="onOpening">Callback function that should add submenu items.</param>
+            <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
+            <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
             <example><code>
             var m = new AuMenu();
             m["One"] = o => Print(o);
@@ -13303,7 +13510,7 @@
             <param name="y">Y position in control's client area.</param>
             <param name="direction">Menu drop direction.</param>
             <remarks>
-            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call Show(). Use the <see cref="P:Au.AuMenu.CMS"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
+            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AuMenu.CMS"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
             </remarks>
         </member>
         <member name="M:Au.AuMenu.Show(System.Windows.Forms.Control,System.Windows.Forms.ToolStripDropDownDirection)">
@@ -13313,14 +13520,14 @@
             <param name="owner">A control or form that will own the menu.</param>
             <param name="direction">Menu drop direction.</param>
             <remarks>
-            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call Show(). Use the <see cref="P:Au.AuMenu.CMS"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
+            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AuMenu.CMS"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
             </remarks>
         </member>
         <member name="P:Au.AuMenu.MultiShow">
             <summary>
             If false, calls Dispose() when the menu is closed.
-            If true, does not call Dispose(); then you can call Show() multiple times for the same object.
-            Default is false, but is automatically set to true when showing the menu not with AuMenu.Show(), eg when assigned to a control.
+            If true, does not call Dispose(); then you can call <b>Show</b> multiple times for the same object.
+            Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
             </summary>
             <seealso cref="P:Au.AuMenu.DefaultMultiShow"/>
         </member>
@@ -13331,8 +13538,8 @@
         </member>
         <member name="P:Au.AuMenu.ModalAlways">
             <summary>
-            If true, Show() always waits until the menu is closed.
-            If false, does not wait if the thread has a message loop (Application.MessageLoop==true).
+            If true, <b>Show</b> always waits until the menu is closed.
+            If false, does not wait if the thread has a .NET message loop (<see cref="P:Au.Thread_.IsUI"/>==true).
             </summary>
         </member>
         <member name="P:Au.AuMenu.ActivateMenuWindow">
@@ -14140,6 +14347,16 @@
             This library does not have Base64-encode functions. Use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>.
             </remarks>
         </member>
+        <member name="M:Au.Convert_.GuidToBase64Filename(System.Guid)">
+            <summary>
+            Converts GUID to string that can be used in file paths and URLs.
+            </summary>
+            <param name="guid"></param>
+            <remarks>
+            Standard Base64 strings cannot be used in file paths and URLs, because can contain characters '/' and '+'. This function replaces them with '_' and '-'. Also trims "==" at the end.
+            Such string can be parsed with <b>Convert_</b> class functions, not with <b>Convert</b> class functions.
+            </remarks>
+        </member>
         <member name="M:Au.Convert_.Compress(System.Byte[])">
             <summary>
             Compresses data using <see cref="T:System.IO.Compression.DeflateStream"/>.
@@ -14316,6 +14533,12 @@
         </member>
         <member name="F:Au.Debug_.s_mem0">
             <summary>
+            Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
+            Works in Release too.
+            </summary>
+        </member>
+        <member name="M:Au.Debug_.LibPrintMemory">
+            <summary>
             Prints managed memory size. Uses GC.GetTotalMemory.
             Works in Release too.
             </summary>
@@ -14325,65 +14548,111 @@
             Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
             </summary>
         </member>
-        <member name="M:Au.Process_.GetProcessName(System.Int32,System.Boolean,System.Boolean)">
+        <member name="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)">
             <summary>
-            Gets process executable file name without ".exe", or full path.
+            Gets process executable file name (with ".exe" etc) or full path.
             Returns null if fails.
             </summary>
-            <param name="processId">Process id. If you have a window, use <see cref="P:Au.Wnd.ProcessId"/>.</param>
-            <param name="fullPath">Get full path. Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.</param>
-            <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if fullPath is true.</param>
+            <param name="processId">Process id.</param>
+            <param name="fullPath">
+            Get full path.
+            Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
+            </param>
+            <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
+            <seealso cref="P:Au.Wnd.ProgramName"/>
+            <seealso cref="P:Au.Wnd.ProgramFilePath"/>
+            <seealso cref="P:Au.Wnd.ProcessId"/>
         </member>
-        <member name="P:Au.Process_.ProcessInfoInternal.ProcessName">
+        <member name="M:Au.Process_.LibProcessInfo.GetName(System.Boolean)">
             <summary>
-            Process executable file name without ".exe". Not full path.
-            If contains '~', tries to unexpand DOS path.
+            Gets process executable file name (with ".exe" etc). Not full path.
+            If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
             Don't call multiple times, because always converts from raw char*.
             </summary>
         </member>
-        <member name="T:Au.Process_.ProcessInfo">
+        <member name="M:Au.Process_.AllProcesses(System.Boolean)">
             <summary>
-            Contains process id, name and session id.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="F:Au.Process_.ProcessInfo.SessionId">
-            <summary>User session id.</summary>
-        </member>
-        <member name="F:Au.Process_.ProcessInfo.ProcessId">
-            <summary>Process id.</summary>
-        </member>
-        <member name="F:Au.Process_.ProcessInfo.ProcessName">
-            <summary>Process executable file name without ".exe". Not full path.</summary>
-        </member>
-        <member name="M:Au.Process_.ProcessInfo.#ctor(System.Int32,System.Int32,System.String)">
-            
-        </member>
-        <member name="M:Au.Process_.ProcessInfo.ToString">
-            
-        </member>
-        <member name="M:Au.Process_.GetProcesses(System.Boolean)">
-            <summary>
-            Gets processes array that contains process name, id and session id.
+            Gets basic info of all processes: name, id, session id.
             </summary>
             <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
             <exception cref="T:Au.Types.AuException">Failed. Unlikely.</exception>
         </member>
-        <member name="M:Au.Process_.GetProcessesByName(System.String,System.Boolean,System.Boolean)">
+        <member name="M:Au.Process_.GetProcessIds(System.String,System.Boolean,System.Boolean)">
             <summary>
-            Gets array of process id of all processes whose names match processName.
-            Returns empty array if there are no matching processes.
+            Gets process ids of all processes of the specified program.
+            Returns array containing 0 or more elements.
             </summary>
             <param name="processName">
-            Process name.
+            Process executable file name (with ".exe" etc), like "notepad.exe".
             String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
             </param>
-            <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.</param>
-            <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
+            <param name="fullPath">
+            <paramref name="processName"/> is full path.
+            Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
+            </param>
+            <param name="ofThisSession">Get processes only of this user session.</param>
             <exception cref="T:System.ArgumentException">
             processName is "" or null.
             Invalid wildcard expression ("**options " or regular expression).
             </exception>
+        </member>
+        <member name="M:Au.Process_.GetProcessId(System.String,System.Boolean,System.Boolean)">
+            <inheritdoc cref="M:Au.Process_.GetProcessIds(System.String,System.Boolean,System.Boolean)"/>
+            <summary>
+            Gets process id of the first found process of the specified program.
+            Returns 0 if not found.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.CurrentProcessId">
+            <summary>
+            Calls API <msdn>GetCurrentProcessId</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.CurrentProcessHandle">
+            <summary>
+            Returns current process handle.
+            Calls API <msdn>GetCurrentProcess</msdn>.
+            Don't need to close the handle.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.ProcessIdFromHandle(System.IntPtr)">
+            <summary>
+            Gets process id from handle.
+            Returns 0 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Calls API <msdn>GetProcessId</msdn>.
+            </summary>
+            <param name="processHandle">Process handle.</param>
+        </member>
+        <member name="M:Au.Process_.GetSessionId(System.Int32)">
+            <summary>
+            Gets user session id of process.
+            Returns -1 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Calls API <msdn>ProcessIdToSessionId</msdn>.
+            </summary>
+            <param name="processId">Process id.</param>
+        </member>
+        <member name="P:Au.Process_.CurrentSessionId">
+            <summary>
+            Gets user session id of this process.
+            Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.GetVersionInfo(System.Int32)">
+            <summary>
+            Gets version info of process executable file.
+            Return null if fails.
+            </summary>
+            <param name="processId">Process id.</param>
+        </member>
+        <member name="M:Au.Process_.GetDescription(System.Int32)">
+            <summary>
+            Gets description of process executable file.
+            Return null if fails.
+            </summary>
+            <param name="processId">Process id.</param>
+            <remarks>
+            Calls <see cref="M:Au.Process_.GetVersionInfo(System.Int32)"/> and <see cref="P:System.Diagnostics.FileVersionInfo.FileDescription"/>.
+            </remarks>
         </member>
         <member name="T:Au.Process_.LibProcessHandle">
             <summary>
@@ -14677,40 +14946,6 @@
             On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
             </summary>
         </member>
-        <member name="P:Au.Process_.CurrentProcessId">
-            <summary>
-            Calls API <msdn>GetCurrentProcessId</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.CurrentProcessHandle">
-            <summary>
-            Returns current process handle.
-            Calls API <msdn>GetCurrentProcess</msdn>.
-            Don't need to close the handle.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.GetProcessId(System.IntPtr)">
-            <summary>
-            Gets process id from handle.
-            Returns 0 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            Calls API <msdn>GetProcessId</msdn>.
-            </summary>
-            <param name="processHandle">Process handle.</param>
-        </member>
-        <member name="M:Au.Process_.GetSessionId(System.Int32)">
-            <summary>
-            Gets user session id of a process.
-            Returns -1 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            Calls API <msdn>ProcessIdToSessionId</msdn>.
-            </summary>
-            <param name="processId">Process id.</param>
-        </member>
-        <member name="M:Au.Process_.GetSessionId">
-            <summary>
-            Gets user session id of this process.
-            Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
-            </summary>
-        </member>
         <member name="T:Au.AuDialog">
             <summary>
             Standard dialogs to show information or get user input.
@@ -14818,9 +15053,7 @@
             </summary>
             <param name="icon">
             Icon of size 32 or 16.
-            If you have native handle (see <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>), use Icon.FromHandle.
-            In any case, the icon must remain valid until the dialog is closed. Then you can dispose/destroy it.
-            This AuDialog variable keeps icon reference to protect it from GC.
+            Don't dispose it until the dialog is closed.
             </param>
         </member>
         <member name="M:Au.AuDialog._Buttons.MarshalButtons(Au.AuDialog.TASKDIALOGCONFIG@)">
@@ -15716,16 +15949,16 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.Wait(System.Boolean,System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
             Waits until window exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
             Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
-            <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
             </param>
+            <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
             <param name="name"></param>
             <param name="className"></param>
             <param name="programEtc"></param>
@@ -15740,7 +15973,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            Wnd w = Wnd.Wait(false, 10, "* Notepad");
+            Wnd w = Wnd.Wait(10, false, "* Notepad");
             Print(w);
             ]]></code>
             Using in a Form/Control event handler.
@@ -15749,20 +15982,20 @@
             f.Click += async (unu, sed) =>
               {
             	  Print("waiting for Notepad...");
-            	  Wnd w = await Task.Run(() => Wnd.Wait(false, -10, "* Notepad"));
+            	  Wnd w = await Task.Run(() => Wnd.Wait(-10, false, "* Notepad"));
             	  if(w.Is0) Print("timeout"); else Print(w);
               };
             f.ShowDialog();
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.WaitAny(System.Boolean,System.Double,Au.Wnd.Finder[])">
+        <member name="M:Au.Wnd.WaitAny(System.Double,System.Boolean,Au.Wnd.Finder[])">
             <summary>
             Waits until any of specified windows exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
+            <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
-            <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Boolean,System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
             <param name="windows">One or more variables containing window properties.</param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
@@ -15770,7 +16003,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            Wnd w = Wnd.WaitAny(true, 10, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
+            Wnd w = Wnd.WaitAny(10, true, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
             Print(w);
             ]]></code>
             </example>
@@ -15778,33 +16011,36 @@
         <member name="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
             Waits until window does not exist.
-            Returns default(Wnd). On timeout returns window handle if <paramref name="secondsTimeout"/> is negative; else exception.
-            All undocumented parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
-            <param name="secondsTimeout">
-            The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns window handle.
-            </param>
+            <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <param name="name"></param>
             <param name="className"></param>
             <param name="programEtc"></param>
             <param name="flags"></param>
             <param name="also"></param>
             <param name="contains"></param>
+            <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
-            If you have a window's Wnd variable, to wait until it is closed/etc use <see cref="M:Au.Wnd.WaitForCondition(System.Double,System.Func{Au.Wnd,System.Boolean},System.Boolean)"/> instead.
-            Examples: <see cref="M:Au.Wnd.Wait(System.Boolean,System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            If you have a window's Wnd variable, to wait until it is closed use <see cref="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)"/> instead.
+            Examples: <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.WaitNot(System.Double,Au.Wnd.Finder)">
+        <member name="M:Au.Wnd.WaitNot(System.Double,Au.Wnd.Finder,Au.Wnd@)">
+            <inheritdoc cref="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
-            The same as <see cref="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>. Arguments are passed differently.
+            Waits until window does not exist.
             </summary>
             <param name="secondsTimeout"></param>
             <param name="f">Window properties etc.</param>
+            <param name="wFound">On timeout receives the found window.</param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
+        </member>
+        <member name="M:Au.Wnd.WaitNot(System.Double,Au.Wnd.Finder)">
+            <inheritdoc cref="M:Au.Wnd.WaitNot(System.Double,Au.Wnd.Finder,Au.Wnd@)"/>
         </member>
         <member name="M:Au.Wnd.WaitForCondition(System.Double,System.Func{Au.Wnd,System.Boolean},System.Boolean)">
             <summary>
@@ -15927,7 +16163,7 @@
         </member>
         <member name="M:Au.Wnd.ToString">
             <summary>
-            Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProcessName}  {Rect}".
+            Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}".
             </summary>
         </member>
         <member name="M:Au.Wnd.Send(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
@@ -16433,7 +16669,7 @@
             <summary>
             Creates native/unmanaged window.
             Calls API <msdn>CreateWindowEx</msdn>.
-            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
+            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>.
             Usually don't need to specify hInstance.
             </summary>
         </member>
@@ -16441,14 +16677,14 @@
             <summary>
             Creates native/unmanaged window like <see cref="M:Au.Wnd.Misc.CreateWindow(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> and sets font.
             If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
-            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
+            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.CreateMessageWindow(System.String)">
             <summary>
             Creates native/unmanaged <msdn>message-only window</msdn>.
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
+            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>.
             </summary>
             <param name="className">Window class name. Can be any existing class.</param>
         </member>
@@ -16458,7 +16694,7 @@
             Calls API <msdn>DestroyWindow</msdn>.
             Returns false if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
-            <seealso cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>
         </member>
         <member name="M:Au.Wnd.Misc.GetWindowsStoreAppId(Au.Wnd,System.Boolean,System.Boolean)">
             <summary>
@@ -16567,17 +16803,6 @@
             <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
             <remarks>
             <note type="note"><conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.StringRemoveUnderlineAmpersand(System.String)">
-            <summary>
-            Removes '&amp;' characters from string.
-            Replaces "&amp;&amp;" with "&amp;".
-            Returns new string if s has '&amp;' characters, else returns s.
-            </summary>
-            <remarks>
-            Character '&amp;' is used to underline next character in displayed text of dialog controls and menu items. Two '&amp;' are used to display single '&amp;'.
-            The underline is displayed when using the keyboard (eg Alt key) to select dialog controls and menu items.
             </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.PrintMsg(System.Windows.Forms.Message@,System.UInt32[])">
@@ -17266,14 +17491,22 @@
             <param name="w">The returned rectangle will be relative to the client area of window w. If w is default(Wnd), gets rectangle in screen.</param>
             <param name="r">Receives the rectangle.</param>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-            <seealso cref="P:Au.Wnd.RectInParent"/>
+            <seealso cref="P:Au.Wnd.RectInDirectParent"/>
         </member>
-        <member name="P:Au.Wnd.RectInParent">
+        <member name="P:Au.Wnd.RectInDirectParent">
             <summary>
-            Gets or sets child window rectangle in parent window's client area.
+            Gets child window rectangle in the client area of the direct parent window.
             </summary>
             <remarks>
-            Calls <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
+            Calls <see cref="P:Au.Wnd.WndDirectParent"/> and <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.RectInWindow">
+            <summary>
+            Gets child window rectangle in the client area of the top-level parent window.
+            </summary>
+            <remarks>
+            Calls <see cref="P:Au.Wnd.WndWindow"/> and <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetRectNotMinMax(Au.Types.RECT@)">
@@ -17515,7 +17748,7 @@
             </summary>
             <value>One or more <see cref="T:Au.Types.Native.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-            <seealso cref="M:Au.Wnd.HasStyle(Au.Types.Native.WS)"/>
+            <seealso cref="M:Au.Wnd.HasStyle(Au.Types.Native.WS,System.Boolean)"/>
             <seealso cref="M:Au.Wnd.SetStyle(Au.Types.Native.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
         </member>
         <member name="P:Au.Wnd.ExStyle">
@@ -17524,19 +17757,26 @@
             </summary>
             <value>One or more <see cref="T:Au.Types.Native.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-            <seealso cref="M:Au.Wnd.HasExStyle(Au.Types.Native.WS_EX)"/>
+            <seealso cref="M:Au.Wnd.HasExStyle(Au.Types.Native.WS_EX,System.Boolean)"/>
             <seealso cref="M:Au.Wnd.SetExStyle(Au.Types.Native.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.Wnd.HasStyle(Au.Types.Native.WS)">
+        <member name="M:Au.Wnd.HasStyle(Au.Types.Native.WS,System.Boolean)">
             <summary>
             Returns true if the window has all specified style flags (see <see cref="P:Au.Wnd.Style"/>).
             </summary>
+            <param name="style">One or more styles.</param>
+            <param name="any">
+            Return true if has any (not necessary all) of the specified styles.
+            Note: don't use <see cref="F:Au.Types.Native.WS.CAPTION"/>, because it consists of two other styles - BORDER and DLGFRAME.
+            </param>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.HasExStyle(Au.Types.Native.WS_EX)">
+        <member name="M:Au.Wnd.HasExStyle(Au.Types.Native.WS_EX,System.Boolean)">
             <summary>
             Returns true if the window has all specified extended style flags (see <see cref="P:Au.Wnd.ExStyle"/>).
             </summary>
+            <param name="exStyle">One or more extended styles.</param>
+            <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.SetStyle(Au.Types.Native.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
@@ -17761,7 +18001,7 @@
             <param name="removeUnderlineAmpersand">
             Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
             Removes only if this is a control (has style Native.WS.CHILD).
-            Calls <see cref="M:Au.Wnd.Misc.StringRemoveUnderlineAmpersand(System.String)"/>.
+            Calls <see cref="M:Au.Util.StringMisc.RemoveUnderlineAmpersand(System.String)"/>.
             </param>
             <seealso cref="M:Au.Wnd.SetText(System.String)"/>
             <seealso cref="P:Au.Wnd.NameAcc"/>
@@ -17814,28 +18054,36 @@
             </summary>
             <seealso cref="M:Au.Wnd.Misc.WinFormsControlNames.IsWinFormsControl(Au.Wnd)"/>
         </member>
-        <member name="P:Au.Wnd.ProcessName">
+        <member name="P:Au.Wnd.ProgramName">
             <summary>
-            Gets filename (without ".exe") of process executable file.
+            Gets filename (with ".exe" etc) of process executable file.
             Return null if fails.
-            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetProcessName(System.Int32,System.Boolean,System.Boolean)"/>.
+            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
-        <member name="P:Au.Wnd.ProcessPath">
+        <member name="P:Au.Wnd.ProgramFilePath">
             <summary>
             Gets full path of process executable file.
             Return null if fails.
-            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetProcessName(System.Int32,System.Boolean,System.Boolean)"/>.
+            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Close(System.Boolean,System.Boolean)">
+        <member name="P:Au.Wnd.ProgramDescription">
+            <summary>
+            Gets description of process executable file.
+            Return null if fails.
+            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetDescription(System.Int32)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)">
             <summary>
             Closes the window.
-            Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if noWait==true.
+            Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <paramref name="noWait"/>==true.
             </summary>
             <param name="noWait">
-            If false (default), waits a while until the window is destroyed or disabled. But does not wait infinitely.
-            If true, does not wait.
+            If true, does not wait until the window is closed.
+            If false, waits about 1 s (depends on window type etc) until the window is destroyed or disabled.
+            If null (default), waits (as if false) if <see cref="P:Au.Thread_.IsUI"/> returns false.
             </param>
             <param name="useXButton">
             If false (default), uses API message <msdn>WM_CLOSE</msdn>.
@@ -17844,8 +18092,9 @@
             </param>
             <remarks>
             The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-            If the window is of this thread, just calls <see cref="M:Au.Wnd.Send(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if noWait==false) or <see cref="M:Au.Wnd.Post(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if noWait==true) and returns true.
+            If the window is of this thread, just calls <see cref="M:Au.Wnd.Send(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/> or <see cref="M:Au.Wnd.Post(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if <paramref name="noWait"/>==true) and returns true.
             </remarks>
+            <seealso cref="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)"/>
             <example>
             <code><![CDATA[
             //close all Notepad windows
@@ -17875,10 +18124,7 @@
             <summary>
             See <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>.
             </summary>
-            <exception cref="T:System.ArgumentException">
-            className is "". To match any, use null.
-            Invalid wildcard expression ("**options " or regular expression).
-            </exception>
+            <exception cref="T:System.ArgumentException"><inheritdoc cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/></exception>
         </member>
         <member name="P:Au.Wnd.ChildFinder.Result">
             <summary>
@@ -17942,29 +18188,30 @@
             </summary>
             <param name="name">
             Control name.
+            String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+            null means 'can be any'. "" means 'must not have name'.
+            
             By default the function gets control names with <see cref="P:Au.Wnd.Name"/>.
             Can start with these prefix strings:
             <list type="bullet">
             <item>
-            "**text:" - use <see cref="P:Au.Wnd.ControlText"/>.
+            "***text:" - use <see cref="P:Au.Wnd.ControlText"/>.
             It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
             </item>
             <item>
-            "**accName:" - use <see cref="P:Au.Wnd.NameAcc"/>.
+            "***accName:" - use <see cref="P:Au.Wnd.NameAcc"/>.
             Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
             </item>
             <item>
-            "**wfName:" - use .NET Windows Forms Control Name property.
+            "***wfName:" - use .NET Windows Forms Control Name property.
             To get it this function uses <see cref="T:Au.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
             </item>
             <item>
-            "**id:" (like "**id:15") - use control id.
+            "***id:" (like "***id:15") - use control id.
             To get it this function uses <see cref="P:Au.Wnd.ControlId"/>.
-            Cannot be wildcard expression.
-            You can instead use <see cref="M:Au.Wnd.Kid(System.Int32,Au.Types.WCFlags)"/>, it is faster than <b>Child</b>.</item>
+            You can instead use <see cref="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)"/>, it is faster.</item>
             </list>
-            String format (not including the prefix): <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-            null means 'can be any'. "" means 'must not have name'.
+            In "***..." string, separator character can be ':', '=' or ' '. The string part after it is wildcard expression, except for "***id:".
             </param>
             <param name="className">
             Control class name.
@@ -17973,7 +18220,7 @@
             </param>
             <param name="flags"></param>
             <param name="also">
-            Lambda etc callback function to call for each matching control.
+            Callback function. Called for each matching control.
             It can evaluate more properties of the control and return true when they match.
             Example: <c>also: t =&gt; t.IsEnabled</c>
             </param>
@@ -17985,6 +18232,7 @@
             <exception cref="T:System.ArgumentException">
             className is "". To match any, use null.
             Invalid wildcard expression ("**options " or regular expression).
+            name starts with "***" and is invalid.
             </exception>
         </member>
         <member name="M:Au.Wnd.HasChild(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)">
@@ -18039,7 +18287,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.Kid(System.Int32,Au.Types.WCFlags)">
+        <member name="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)">
             <summary>
             Finds a child control by its id and returns its handle as Wnd.
             Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
@@ -18193,10 +18441,10 @@
             Finds a child button by id and sends a "click" message. Does not use the mouse.
             Calls <see cref="M:Au.Wnd.WButton.Click(System.Boolean)"/>.
             </summary>
-            <param name="buttonId">Control id of the button. This function calls <see cref="M:Au.Wnd.Kid(System.Int32,Au.Types.WCFlags)"/> to find the button.</param>
+            <param name="buttonId">Control id of the button. This function calls <see cref="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)"/> to find the button.</param>
             <param name="useAcc">Use <see cref="M:Au.Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Au.Types.NotFoundException">Button not found.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Kid(System.Int32,Au.Types.WCFlags)"/> and <see cref="M:Au.Wnd.WButton.Click(System.Boolean)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)"/> and <see cref="M:Au.Wnd.WButton.Click(System.Boolean)"/>.</exception>
             <example>
             <code><![CDATA[
             Wnd.Find("Options").ButtonClick(2);
@@ -18434,21 +18682,20 @@
              null means 'can be any'. Cannot be "".
              </param>
              <param name="programEtc">
-             Program file name without ".exe".
+             Program file name (with ".exe" etc).
              String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
              null means 'can be any'. Cannot be "". Cannot be path.
-             
-             Or a list of the following properties. Format: one or more "name=value" or "name:value", separated with "\0" or "\0 ". Names must match case. Values of string properties are wildcard expressions.
+             Or one of:
              <list type="bullet">
-             <item>"program" - program file name. Example: <c>"program=notepad"</c>. Useful when need multiple properties or when file name contains character '='.</item>
-             <item>"pid" - process id. See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>. Example: <c>$"pid={pidVar}"</c>.</item>
-             <item>"tid" - thread id. See <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>. Example: <c>"tid=" + tidVar</c>.</item>
-             <item>"owner" - owner window handle. See <see cref="P:Au.Wnd.WndOwner"/>. Example: <c>$"owner={w1.Handle}"</c>.</item>
+             <item>$"**pid:{processId}". See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>.</item>
+             <item>$"**tid:{threadId}". See <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>.</item>
+             <item>$"**owner:{ownerWindow.Handle}". See <see cref="P:Au.Wnd.WndOwner"/>.</item>
              </list>
+             In "***..." string, separator character can be ':', '=' or ' '. Examples: <c>$"**pid={processId}"</c>, <c>$"**pid {processId}"</c>, <c>"**pid:" + processId</c>.
              </param>
              <param name="flags"></param>
              <param name="also">
-             Lambda etc callback function to call for each matching window.
+             Callback function. Called for each matching window.
              It can evaluate more properties of the window and return true when they match.
              Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
              </param>
@@ -18457,7 +18704,7 @@
              string - name of an accessible object (<see cref="T:Au.Acc"/>) that must be in the window. Wildcard expression, the same as the <i>name</i> parameter of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
              <see cref="T:Au.Acc.Finder"/> - arguments for <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>. Defines an accessible object that must be in the window.
              <see cref="T:Au.Wnd.ChildFinder"/> - arguments for <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>. Defines a child control that must be in the window.
-             <see cref="T:System.Drawing.Image"/> or <see cref="T:System.Drawing.Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/> with flag <see cref="F:Au.Types.WIFlags.WindowDC"/>. See also <see cref="M:Au.WinImage.LoadImage(System.String)"/>.
+             <see cref="T:System.Drawing.Image"/> or <see cref="T:System.Drawing.Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> with flag <see cref="F:Au.Types.WIFlags.WindowDC"/>. See also <see cref="M:Au.WinImage.LoadImage(System.String)"/>.
             
              This parameter is evaluated after <paramref name="also"/>.
              </param>
@@ -18495,7 +18742,7 @@
             This example is similar to what <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> does.
             <code><![CDATA[
             Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
+            if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
             ]]></code>
             </example>
         </member>
@@ -18549,7 +18796,7 @@
             <param name="also"></param>
             <param name="contains"></param>
             <param name="run">Callback function's delegate. See example.</param>
-            <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Boolean,System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
+            <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
             <param name="needActiveWindow">Finally the window must be active.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <exception cref="T:System.TimeoutException"><paramref name="runWaitS"/> time has expired.</exception>
@@ -18557,7 +18804,7 @@
             The algorithm is:
             <code>
             var w=Wnd.Find(...);
-            if(w.Is0) { run(); w=Wnd.Wait(needActiveWindow, runWaitS, ...); }
+            if(w.Is0) { run(); w=Wnd.Wait(runWaitS, needActiveWindow, ...); }
             else if(needActiveWindow) w.Activate();
             return w;
             </code>
@@ -18816,6 +19063,8 @@
             Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="M:Au.Time.DoEvents"/>.
             </remarks>
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="timeMS"/> is negative and not Timeout.Infinite.</exception>
+            <seealso cref="M:Au.WaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
+            <seealso cref="M:Au.WaitFor.PostedMessage(System.Double,Au.Types.WaitMsgCallback)"/>
             <seealso cref="T:Au.Util.MessageLoop"/>
         </member>
         <member name="M:Au.Time.LibSleepDoEvents(System.Int32,System.Boolean)">
@@ -18914,7 +19163,7 @@
             </summary>
             <remarks>
             Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
-            Use in UI threads (need a message loop).
+            Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
             </remarks>
             <example>
             <code><![CDATA[
@@ -18998,7 +19247,7 @@
             Contains functions to wait for a user-defined condition or variable.
             </summary>
             <remarks>
-            Specialized 'wait for' functions are in other classes, for example <see cref="M:Au.Wnd.Wait(System.Boolean,System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Specialized 'wait for' functions are in other classes, for example <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             
             All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
             
@@ -19148,7 +19397,7 @@
             Waits for a posted message received by this thread.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
+            <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
@@ -19163,23 +19412,24 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.WaitFor.Message(System.Double,System.Func{System.Boolean})">
+        <member name="M:Au.WaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})">
             <summary>
-            Waits for a variable or other condition that is changed while processing a message or other event received by this thread.
+            Waits for a variable or other condition that is changed while processing messages or other events received by this thread.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="callback">Call this callback function while dispatching posted Windows messages, and stop waiting when it returns true.</param>
+            <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
             While waiting, dispatches Windows messages etc, like <see cref="M:Au.Time.SleepDoEvents(System.Int32)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
+            Similar to <see cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
             Does not use <see cref="P:Au.Opt.WaitFor"/>.
             </remarks>
             <example>
             <code><![CDATA[
             bool stop = false;
             Timer_.After(2000, t => { Print("timer"); stop = true; });
-            WaitFor.Message(5, () => stop);
+            WaitFor.MessagesAndCondition(5, () => stop);
             Print(stop);
             ]]></code>
             </example>
@@ -19194,7 +19444,7 @@
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
-            This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="M:Au.WaitFor.Message(System.Double,System.Func{System.Boolean})"/>.
+            This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="M:Au.WaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -19411,10 +19661,10 @@
             Shell object parsing name, like @"::{CLSID-1}\::{CLSID-2}" or "shell:AppsFolder\WinStoreAppId".
             File type like ".txt" or URL protocol like "http:".
             If it is a file containing multiple icons (eg exe, dll), can be specified icon index like "path,index" or native icon resource id like "path,-id".
-            If not full path, the function will look in <see cref="P:Au.Folders.ThisAppImages"/>.
+            If not full path, the function will look in <see cref="P:Au.Folders.ThisAppImages"/>. See also <see cref="T:Au.Types.GIFlags"/>.
             Supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>).
             </param>
-            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
+            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
             <param name="flags"></param>
             <seealso cref="M:Au.Wnd.Misc.GetIconHandle(Au.Wnd,System.Boolean)"/>
         </member>
@@ -19435,80 +19685,44 @@
             </summary>
             <returns>Returns null if failed.</returns>
             <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
-            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
+            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
         <member name="M:Au.Icons.GetPidlIconImage(Au.Shell.Pidl,System.Int32)">
             <inheritdoc cref="M:Au.Icons.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>
             <remarks>Calls <see cref="M:Au.Icons.GetPidlIconHandle(Au.Shell.Pidl,System.Int32)"/> and converts to Bitmap.</remarks>
         </member>
-        <member name="T:Au.Icons.ShellSize">
-            <summary>
-            Standard icon sizes.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="F:Au.Icons.ShellSize.SysSmall">
-            <summary>
-            Icons displayed in window title bar and system notification area (tray). Usually 16x16 when normal DPI, the same as Small.
-            </summary>
-        </member>
-        <member name="F:Au.Icons.ShellSize.Small">
-            <summary>
-            Small icons displayed in Explorer folders. Usually 16x16 when normal DPI.
-            </summary>
-        </member>
-        <member name="F:Au.Icons.ShellSize.Large">
-            <summary>
-            Large icons displayed in Explorer folders. Usually 32x32 when normal DPI.
-            </summary>
-        </member>
-        <member name="F:Au.Icons.ShellSize.ExtraLarge">
-            <summary>
-            Extra large icons displayed in Explorer folders. Usually 48x48 when normal DPI.
-            </summary>
-        </member>
-        <member name="F:Au.Icons.ShellSize.Jumbo">
-            <summary>
-            256x256 icons displayed in Explorer folders.
-            </summary>
-        </member>
-        <member name="M:Au.Icons.GetShellIconSize(Au.Icons.ShellSize)">
+        <member name="M:Au.Icons.GetShellIconSize(Au.Types.IconSize)">
             <summary>
             Gets the width and height of shell icons of standard sizes - small, large, extra large and jumbo.
             Jumbo is always 256. Others depend on text size (DPI) that can be changed in Control Panel. If text size is 100%, they usually are 16, 32, 48.
             </summary>
-            <param name="shellSize"><see cref="T:Au.Icons.ShellSize"/></param>
         </member>
-        <member name="M:Au.Icons.GetFileIconRawHandle(System.String,System.Int32,System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetFileIconRaw(System.String,System.Int32,System.Int32)"/>
+        <member name="M:Au.Icons.LoadIconHandle(System.String,System.Int32,System.Int32)">
+            <inheritdoc cref="M:Au.Icons.LoadIcon(System.String,System.Int32,System.Int32)"/>
             <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
             <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.GetFileIconRaw(System.String,System.Int32,System.Int32)">
+        <member name="M:Au.Icons.LoadIcon(System.String,System.Int32,System.Int32)">
             <summary>
-            Extracts icon directly from file that contains it.
+            Extracts icon from file that contains it.
             </summary>
             <returns>Returns null if failed.</returns>
             <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>).</param>
             <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
-            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
+            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
-        <member name="T:Au.Icons.Stock">
-            <summary><msdn>SHSTOCKICONID</msdn></summary>
-            <tocexclude />
-        </member>
-        <member name="M:Au.Icons.GetShellStockIconHandle(Au.Icons.Stock,System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetShellStockIcon(Au.Icons.Stock,System.Int32)"/>
+        <member name="M:Au.Icons.GetStockIconHandle(Au.Types.StockIcon,System.Int32)">
+            <inheritdoc cref="M:Au.Icons.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
             <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
             <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.GetShellStockIcon(Au.Icons.Stock,System.Int32)">
+        <member name="M:Au.Icons.GetStockIcon(Au.Types.StockIcon,System.Int32)">
             <summary>
             Gets a shell stock icon.
             </summary>
             <returns>Returns null if failed.</returns>
             <param name="icon">Shell stock icon id.</param>
-            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
+            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
         <member name="M:Au.Icons.GetAppIconHandle(System.Int32)">
             <inheritdoc cref="M:Au.Icons.GetAppIcon(System.Int32)"/>
@@ -19517,22 +19731,11 @@
         </member>
         <member name="M:Au.Icons.GetAppIcon(System.Int32)">
             <summary>
-            Gets the first icon from unmanaged resources of the entry assembly of this appdomain.
+            Gets the first icon from unmanaged resources of this app.
+            If the entry assembly of this appdomain is dll with icon, gets that icon; else gets exe icon.
             </summary>
             <returns>Returns null if there are no icons.</returns>
-            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
-        </member>
-        <member name="M:Au.Icons.GetProcessExeIconHandle(System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetProcessExeIcon(System.Int32)"/>
-            <returns>Returns native icon handle, or default(IntPtr) if there are no icons.</returns>
-            <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
-        </member>
-        <member name="M:Au.Icons.GetProcessExeIcon(System.Int32)">
-            <summary>
-            Gets the first icon from unmanaged resources of the program file of this process.
-            </summary>
-            <returns>Returns null if there are no icons.</returns>
-            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Icons.ShellSize"/>, cast to int.</param>
+            <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
         <member name="M:Au.Icons.CreateIconHandle(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
             <inheritdoc cref="M:Au.Icons.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})"/>
@@ -19553,14 +19756,6 @@
             Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is default(IntPtr).
             </summary>
         </member>
-        <member name="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)">
-            <summary>
-            Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
-            Returns null if hi is default(IntPtr) or if fails to convert.
-            </summary>
-            <param name="hi">Icon handle.</param>
-            <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
-        </member>
         <member name="M:Au.Icons.HandleToIcon(System.IntPtr,System.Boolean)">
             <summary>
             Converts unmanaged icon to Icon object.
@@ -19568,6 +19763,14 @@
             </summary>
             <param name="hi">Icon handle.</param>
             <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/>.</param>
+        </member>
+        <member name="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)">
+            <summary>
+            Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
+            Returns null if hi is default(IntPtr) or if fails to convert.
+            </summary>
+            <param name="hi">Icon handle.</param>
+            <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
         </member>
         <member name="M:Au.Icons.ParseIconLocation(System.String@,System.Int32@)">
             <summary>
@@ -19582,9 +19785,7 @@
             <summary>
             Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
             </summary>
-            <remarks>
-            Thread-safe; functions can be called from any thread without locking.
-            </remarks>
+            <threadsafety static="true" instance="true"/>
             <seealso cref="T:Au.Util.IconsAsync"/>
         </member>
         <member name="M:Au.Icons.ImageCache.#ctor(System.String,System.Int32)">
@@ -19609,7 +19810,7 @@
             Clears the memory cache and deletes the cache file.
             </summary>
         </member>
-        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Boolean)">
+        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Boolean,Au.Types.GIFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
             <summary>
             Gets file icon as <b>Bitmap</b>.
             If it is in the memory cache, gets it from there.
@@ -19622,28 +19823,27 @@
             Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
             This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
             </param>
+            <param name="giFlags">Flags for <see cref="M:Au.Icons.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
+            <param name="autoUpdate">
+            If not null, the cached image will be auto-updated when changed. Then will be called this function. It can update the image in UI.
+            How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
+            Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
+            </param>
+            <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
         </member>
-        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Func{System.IntPtr})">
+        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Func{System.Drawing.Bitmap},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Boolean)">
             <summary>
-            Gets any icon as <b>Bitmap</b>, using callback function.
-            If it is in the memory cache, gets it from there.
-            Else if it is in the file cache, gets it from there and adds to the memory cache.
-            Else calls callback function, which should return icon handle, and adds to the file cache and to the memory cache.
-            Returns null if the callback function returns default(IntPtr).
-            </summary>
-            <param name="name">Some unique name. It is used to identify this icon in cache.</param>
-            <param name="callback">Called to get icon. The returned icon will be converted to Bitmap and destroyed.</param>
-        </member>
-        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Func{System.Drawing.Bitmap})">
-            <summary>
-            Gets any image using callback function.
+            Gets any icon or image using callback function.
             If it is in the memory cache, gets it from there.
             Else if it is in the file cache, gets it from there and adds to the memory cache.
             Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
             Returns null if the callback function returns null.
             </summary>
             <param name="name">Some unique name. It is used to identify this image in cache.</param>
-            <param name="callback">Called to get image.</param>
+            <param name="callback">Called to get image. To convert icon handle to image, use <see cref="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)"/>.</param>
+            <param name="autoUpdate"><inheritdoc cref="M:Au.Icons.ImageCache.GetImage(System.String,System.Boolean,Au.Types.GIFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)"/></param>
+            <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
+            <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <paramref name="callback"/>.</param>
         </member>
         <member name="T:Au.Script">
             <summary>

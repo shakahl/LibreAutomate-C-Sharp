@@ -54,10 +54,7 @@ namespace Au
 			/// <summary>
 			/// See <see cref="Wnd.Child"/>.
 			/// </summary>
-			/// <exception cref="ArgumentException">
-			/// className is "". To match any, use null.
-			/// Invalid wildcard expression ("**options " or regular expression).
-			/// </exception>
+			/// <exception cref="ArgumentException"><inheritdoc cref="Child"/></exception>
 			public ChildFinder(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 			{
 				if(className != null) {
@@ -65,19 +62,14 @@ namespace Au
 					_className = className;
 				}
 				if(name != null) {
-					int i = 0;
-					if(name.Length >= 5 && name[0] == '*' && name[1] == '*') {
-						i = name.EqualsAt_(2, false, "id:", "text:", "accName:", "wfName:");
-						int iFrom = 0;
-						switch(i) {
-						case 1: _nameIs = _NameIs.id; _id = name.ToInt_(5); break;
-						case 2: _nameIs = _NameIs.text; iFrom = 7; break;
-						case 3: _nameIs = _NameIs.accName; iFrom = 10; break;
-						case 4: _nameIs = _NameIs.wfName; iFrom = 9; break;
-						}
-						if(iFrom != 0) name = name.Substring(iFrom);
+					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "accName", "wfName")) {
+					case -1: throw new ArgumentException("Invalid name.");
+					case 1: _nameIs = _NameIs.id; _id = name.ToInt_(); break;
+					case 2: _nameIs = _NameIs.text; break;
+					case 3: _nameIs = _NameIs.accName; break;
+					case 4: _nameIs = _NameIs.wfName; break;
 					}
-					if(i != 1) _name = name;
+					if(_nameIs != _NameIs.id) _name = name;
 				}
 				_flags = flags;
 				_also = also;
@@ -267,29 +259,30 @@ namespace Au
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
+		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// null means 'can be any'. "" means 'must not have name'.
+		/// 
 		/// By default the function gets control names with <see cref="Name"/>.
 		/// Can start with these prefix strings:
 		/// <list type="bullet">
 		/// <item>
-		/// "**text:" - use <see cref="ControlText"/>.
+		/// "***text:" - use <see cref="ControlText"/>.
 		/// It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </item>
 		/// <item>
-		/// "**accName:" - use <see cref="NameAcc"/>.
+		/// "***accName:" - use <see cref="NameAcc"/>.
 		/// Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// </item>
 		/// <item>
-		/// "**wfName:" - use .NET Windows Forms Control Name property.
+		/// "***wfName:" - use .NET Windows Forms Control Name property.
 		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
 		/// </item>
 		/// <item>
-		/// "**id:" (like "**id:15") - use control id.
+		/// "***id:" (like "***id:15") - use control id.
 		/// To get it this function uses <see cref="ControlId"/>.
-		/// Cannot be wildcard expression.
-		/// You can instead use <see cref="Kid"/>, it is faster than <b>Child</b>.</item>
+		/// You can instead use <see cref="ChildById"/>, it is faster.</item>
 		/// </list>
-		/// String format (not including the prefix): <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-		/// null means 'can be any'. "" means 'must not have name'.
+		/// In "***..." string, separator character can be ':', '=' or ' '. The string part after it is wildcard expression, except for "***id:".
 		/// </param>
 		/// <param name="className">
 		/// Control class name.
@@ -298,7 +291,7 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
-		/// Lambda etc callback function to call for each matching control.
+		/// Callback function. Called for each matching control.
 		/// It can evaluate more properties of the control and return true when they match.
 		/// Example: <c>also: t =&gt; t.IsEnabled</c>
 		/// </param>
@@ -310,6 +303,7 @@ namespace Au
 		/// <exception cref="ArgumentException">
 		/// className is "". To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
+		/// name starts with "***" and is invalid.
 		/// </exception>
 		public Wnd Child(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
@@ -390,7 +384,7 @@ namespace Au
 		/// Not all controls have a useful id. If control id is 0 or different in each window instance, this function is not useful.
 		/// </remarks>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public Wnd Kid(int id, WCFlags flags = 0)
+		public Wnd ChildById(int id, WCFlags flags = 0)
 		{
 			ThrowIfInvalid();
 			if(flags.Has_(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
@@ -709,10 +703,10 @@ namespace Au
 		/// Finds a child button by id and sends a "click" message. Does not use the mouse.
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
-		/// <param name="buttonId">Control id of the button. This function calls <see cref="Kid"/> to find the button.</param>
+		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
 		/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Kid"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Wnd.Find("Options").ButtonClick(2);
@@ -720,7 +714,7 @@ namespace Au
 		/// </example>
 		public void ButtonClick(int buttonId, bool useAcc = false)
 		{
-			var c = Kid(buttonId);
+			var c = ChildById(buttonId);
 			if(c.Is0) throw new NotFoundException();
 			c.AsButton.Click(useAcc);
 		}

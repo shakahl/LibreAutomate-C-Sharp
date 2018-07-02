@@ -27,18 +27,19 @@ namespace Au
 	public static unsafe class Process_
 	{
 		/// <summary>
-		/// Gets process executable file name without ".exe", or full path.
+		/// Gets process executable file name (with ".exe" etc) or full path.
 		/// Returns null if fails.
 		/// </summary>
-		/// <param name="processId">Process id. If you have a window, use <see cref="Wnd.ProcessId"/>.</param>
-		/// <param name="fullPath">Get full path. Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.</param>
-		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if fullPath is true.</param>
-		public static string GetProcessName(int processId, bool fullPath = false, bool noSlowAPI = false)
-		{
-			return _GetProcessName(processId, fullPath, noSlowAPI);
-		}
-
-		static string _GetProcessName(int processId, bool fullPath, bool dontEnumerate = false)
+		/// <param name="processId">Process id.</param>
+		/// <param name="fullPath">
+		/// Get full path.
+		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
+		/// </param>
+		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
+		/// <seealso cref="Wnd.ProgramName"/>
+		/// <seealso cref="Wnd.ProgramFilePath"/>
+		/// <seealso cref="Wnd.ProcessId"/>
+		public static string GetName(int processId, bool fullPath = false, bool noSlowAPI = false)
 		{
 			if(processId == 0) return null;
 			string R = null;
@@ -51,18 +52,18 @@ namespace Au
 					//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
 					if(_QueryFullProcessImageName(ph, !fullPath, out var s)) {
 						R = s;
-						if(R.IndexOf('~') >= 0) { //DOS path?
+						if(Path_.LibIsPossiblyDos(R)) {
 							if(fullPath || _QueryFullProcessImageName(ph, false, out s)) {
 								R = Path_.LibExpandDosPath(s);
-								if(!fullPath) fixed (char* p = R) R = _GetFileNameWithoutExe(p, R.Length);
+								if(!fullPath) R = _GetFileName(R);
 							}
 						}
 					}
-				} else if(!dontEnumerate && !fullPath) { //the slow way. Can get only names, not paths.
+				} else if(!noSlowAPI && !fullPath) { //the slow way. Can get only names, not paths.
 					using(new _AllProcesses(out var p, out int n)) {
 						for(int i = 0; i < n; i++)
 							if(p[i].processID == processId) {
-								R = p[i].ProcessName;
+								R = p[i].GetName(cannotOpen: true);
 								break;
 							}
 					}
@@ -82,7 +83,7 @@ namespace Au
 			for(int na = 300; ; na *= 2) {
 				var b = Util.Buffers.LibChar(ref na);
 				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
-					if(getFilename) s = _GetFileNameWithoutExe(b, na);
+					if(getFilename) s = _GetFileName(b, na);
 					else s = b.LibToStringCached(na);
 					return true;
 				}
@@ -93,9 +94,9 @@ namespace Au
 #if USE_WTS //simple, safe, but ~2 times slower
 		struct _AllProcesses :IDisposable
 		{
-			ProcessInfoInternal* _p;
+			LibProcessInfo* _p;
 
-			public _AllProcesses(out ProcessInfoInternal* p, out int count)
+			public _AllProcesses(out LibProcessInfo* p, out int count)
 			{
 				if(WTSEnumerateProcessesW(default, 0, 1, out p, out count)) _p = p; else _p = null;
 			}
@@ -106,17 +107,17 @@ namespace Au
 			}
 
 			[DllImport("wtsapi32.dll", SetLastError = true)]
-			static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out ProcessInfoInternal* ppProcessInfo, out int pCount);
+			static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out LibProcessInfo* ppProcessInfo, out int pCount);
 
 			[DllImport("wtsapi32.dll", SetLastError = false)]
-			static extern void WTSFreeMemory(ProcessInfoInternal* memory);
+			static extern void WTSFreeMemory(LibProcessInfo* memory);
 		}
 #else //the .NET Process class uses this. But it creates about 0.4 MB of garbage.
 		struct _AllProcesses :IDisposable
 		{
-			ProcessInfoInternal* _p;
+			LibProcessInfo* _p;
 
-			public _AllProcesses(out ProcessInfoInternal* pi, out int count)
+			public _AllProcesses(out LibProcessInfo* pi, out int count)
 			{
 				_p = null;
 				SYSTEM_PROCESS_INFORMATION* b = null;
@@ -139,20 +140,20 @@ namespace Au
 						nbNames += p->NameLength; //bytes, not chars
 					}
 					count = nProcesses;
-					_p = (ProcessInfoInternal*)Util.NativeHeap.Alloc(nProcesses * sizeof(ProcessInfoInternal) + nbNames);
-					ProcessInfoInternal* r = _p;
+					_p = (LibProcessInfo*)Util.NativeHeap.Alloc(nProcesses * sizeof(LibProcessInfo) + nbNames);
+					LibProcessInfo* r = _p;
 					char* names = (char*)(_p + nProcesses);
 					for(p = b; p->NextEntryOffset != 0; p = (SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
 						r->processID = (int)p->UniqueProcessId;
 						r->sessionID = (int)p->SessionId;
 						int len = p->NameLength / 2;
-						r->processNameLen = len;
+						r->nameLen = len;
 						if(len > 0) {
 							//copy name to _p memory because it's in the huge buffer that will be released in this func
-							r->processNamePtr = names;
+							r->namePtr = names;
 							Api.memcpy(names, (char*)p->NamePtr, len * 2);
 							names += len;
-						} else r->processNamePtr = null; //Idle
+						} else r->namePtr = null; //Idle
 					}
 					pi = _p;
 				}
@@ -197,171 +198,216 @@ namespace Au
 		}
 #endif
 
-		//Use ProcessInfoInternal and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory.
-		//	GetProcesses() converts ProcessInfoInternal to ProcessInfo where ProcessName is string. Almost same speed.
-		internal unsafe struct ProcessInfoInternal
+		//Use LibProcessInfo and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory.
+		//	AllProcesses() converts LibProcessInfo to ProcessInfo where Name is string. Almost same speed.
+		internal unsafe struct LibProcessInfo
 		{
-#pragma warning disable 649 //says never used
+#pragma warning disable 649 //never used
 			public int sessionID;
 			public int processID;
-			public char* processNamePtr;
+			public char* namePtr;
+			public int nameLen;
 #if USE_WTS
 			public IntPtr userSid;
-#else
-			public int processNameLen;
 #endif
-#pragma warning restore
+#pragma warning restore 649
 
 			/// <summary>
-			/// Process executable file name without ".exe". Not full path.
-			/// If contains '~', tries to unexpand DOS path.
+			/// Gets process executable file name (with ".exe" etc). Not full path.
+			/// If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
 			/// Don't call multiple times, because always converts from raw char*.
 			/// </summary>
-			public string ProcessName
+			public string GetName(bool cannotOpen = false)
 			{
-				get
-				{
-					if(processNamePtr == null) {
-						if(processID == 0) return "Idle";
-						return null;
-					}
-					string R = _GetFileNameWithoutExe(processNamePtr
-#if !USE_WTS
-						, processNameLen
-#endif
-						);
-					if(R.IndexOf('~') >= 0) {
-						string s = null;
-						using(var ph = LibProcessHandle.FromId(processID)) {
-							if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out s)) {
-								s = Path_.LibExpandDosPath(s);
-								fixed (char* p = s) R = _GetFileNameWithoutExe(p, s.Length);
-							}
+				if(namePtr == null) {
+					if(processID == 0) return "Idle";
+					return null;
+				}
+				string R = Util.StringCache.LibAdd(namePtr, nameLen);
+				if(!cannotOpen && Path_.LibIsPossiblyDos(R)) {
+					using(var ph = LibProcessHandle.FromId(processID)) {
+						if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
+							R = _GetFileName(Path_.LibExpandDosPath(s));
 						}
 					}
-					return R;
 				}
+				return R;
 			}
 		}
 
 		/// <summary>
-		/// Contains process id, name and session id.
-		/// </summary>
-		/// <tocexclude />
-		public struct ProcessInfo
-		{
-			/// <summary>User session id.</summary>
-			public int SessionId;
-
-			/// <summary>Process id.</summary>
-			public int ProcessId;
-
-			/// <summary>Process executable file name without ".exe". Not full path.</summary>
-			public string ProcessName;
-
-			//public IntPtr UserSid; //where is its memory?
-
-			///
-			public ProcessInfo(int session, int pid, string name)
-			{
-				SessionId = session; ProcessId = pid; ProcessName = name;
-			}
-
-			///
-			public override string ToString()
-			{
-				return ProcessName;
-			}
-		}
-
-		/// <summary>
-		/// Gets processes array that contains process name, id and session id.
+		/// Gets basic info of all processes: name, id, session id.
 		/// </summary>
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		/// <exception cref="AuException">Failed. Unlikely.</exception>
-		public static ProcessInfo[] GetProcesses(bool ofThisSession = false)
+		public static ProcessInfo[] AllProcesses(bool ofThisSession = false)
 		{
 			using(new _AllProcesses(out var p, out int n)) {
 				if(n == 0) throw new AuException();
+				int sessionId = 0, ns = n;
 				if(ofThisSession) {
-					int sessionId = GetSessionId();
-
-					var t = new List<ProcessInfo>(n / 2);
-					for(int i = 0; i < n; i++) {
-						if(p[i].sessionID != sessionId) continue;
-						t.Add(new ProcessInfo(p[i].sessionID, p[i].processID, p[i].ProcessName));
-					}
-					return t.ToArray();
-				} else {
-					var a = new ProcessInfo[n];
-					for(int i = 0; i < n; i++) {
-						a[i] = new ProcessInfo(p[i].sessionID, p[i].processID, p[i].ProcessName);
-					}
-					return a;
+					sessionId = CurrentSessionId;
+					for(int i = 0; i < n; i++) if(p[i].sessionID != sessionId) ns--;
 				}
+				var a = new ProcessInfo[ns];
+				for(int i = 0, j = 0; i < n; i++) {
+					if(ofThisSession && p[i].sessionID != sessionId) continue;
+					a[j++] = new ProcessInfo(p[i].sessionID, p[i].processID, p[i].GetName());
+				}
+				return a;
 			}
 		}
 
 		/// <summary>
-		/// Gets array of process id of all processes whose names match processName.
-		/// Returns empty array if there are no matching processes.
+		/// Gets process ids of all processes of the specified program.
+		/// Returns array containing 0 or more elements.
 		/// </summary>
 		/// <param name="processName">
-		/// Process name.
+		/// Process executable file name (with ".exe" etc), like "notepad.exe".
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// </param>
-		/// <param name="fullPath">If false, processName is filename without ".exe". If true, processName is full path. Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.</param>
-		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
+		/// <param name="fullPath">
+		/// <paramref name="processName"/> is full path.
+		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
+		/// </param>
+		/// <param name="ofThisSession">Get processes only of this user session.</param>
 		/// <exception cref="ArgumentException">
 		/// processName is "" or null.
 		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
-		public static int[] GetProcessesByName(string processName, bool fullPath = false, bool ofThisSession = false)
+		public static int[] GetProcessIds(string processName, bool fullPath = false, bool ofThisSession = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			List<int> a = null;
 			LibGetProcessesByName(ref a, processName, fullPath, ofThisSession);
-			if(a == null) return Array.Empty<int>();
-			return a.ToArray();
+			return a?.ToArray() ?? Array.Empty<int>();
 		}
 
-		internal static void LibGetProcessesByName(ref List<int> a, Wildex processName, bool fullPath = false, bool ofThisSession = false)
+		/// <inheritdoc cref="GetProcessIds"/>
+		/// <summary>
+		/// Gets process id of the first found process of the specified program.
+		/// Returns 0 if not found.
+		/// </summary>
+		public static int GetProcessId(string processName, bool fullPath = false, bool ofThisSession = false)
 		{
-			if(a != null) a.Clear();
+			if(Empty(processName)) throw new ArgumentException();
+			List<int> a = null;
+			return LibGetProcessesByName(ref a, processName, fullPath, ofThisSession, true);
+		}
 
-			int sessionId = ofThisSession ? GetSessionId() : 0;
+		internal static int LibGetProcessesByName(ref List<int> a, Wildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false)
+		{
+			a?.Clear();
+
+			int sessionId = ofThisSession ? CurrentSessionId : 0;
 
 			using(new _AllProcesses(out var p, out int n)) {
 				for(int i = 0; i < n; i++) {
 					if(ofThisSession && p[i].sessionID != sessionId) continue;
-					string s;
-					if(fullPath) {
-						s = GetProcessName(p[i].processID, true);
-						if(s == null) continue;
-					} else s = p[i].ProcessName;
+					string s = fullPath ? GetName(p[i].processID, true) : p[i].GetName();
+					if(s == null) continue;
 
 					if(processName.Match(s)) {
+						if(first) return p[i].processID;
 						if(a == null) a = new List<int>();
 						a.Add(p[i].processID);
 					}
 				}
 			}
+
+			return 0;
 		}
 
-		static string _GetFileNameWithoutExe(char[] s, int len = -1)
-		{
-			fixed (char* p = s) return _GetFileNameWithoutExe(p, len);
-		}
-
-		static string _GetFileNameWithoutExe(char* s, int len = -1)
+		static string _GetFileName(char* s, int len)
 		{
 			if(s == null) return null;
-			if(len < 0) len = Util.LibCharPtr.Length(s);
-			if(Util.LibCharPtr.EndsWith(s, len, ".exe", true)) len -= 4;
 			char* ss = s + len;
 			for(; ss > s; ss--) if(ss[-1] == '\\' || ss[-1] == '/') break;
 			return Util.StringCache.LibAdd(ss, len - (int)(ss - s));
 		}
+
+		static string _GetFileName(string s)
+		{
+			fixed (char* p = s) return _GetFileName(p, s.Length);
+		}
+
+		static string _GetFileName(char[] s, int len)
+		{
+			fixed (char* p = s) return _GetFileName(p, len);
+		}
+
+		/// <summary>
+		/// Calls API <msdn>GetCurrentProcessId</msdn>.
+		/// </summary>
+		public static int CurrentProcessId => Api.GetCurrentProcessId();
+
+		/// <summary>
+		/// Returns current process handle.
+		/// Calls API <msdn>GetCurrentProcess</msdn>.
+		/// Don't need to close the handle.
+		/// </summary>
+		public static IntPtr CurrentProcessHandle => Api.GetCurrentProcess();
+
+		/// <summary>
+		/// Gets process id from handle.
+		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>GetProcessId</msdn>.
+		/// </summary>
+		/// <param name="processHandle">Process handle.</param>
+		public static int ProcessIdFromHandle(IntPtr processHandle)
+		{
+			return Api.GetProcessId(processHandle);
+			//speed: 250 ns
+		}
+
+		//public static Process GetProcessObject(IntPtr processHandle)
+		//{
+		//	int pid = GetProcessId(processHandle);
+		//	if(pid == 0) return null;
+		//	return Process.GetProcessById(pid); //slow, makes much garbage, at first gets all processes just to throw exception if pid not found...
+		//}
+
+		/// <summary>
+		/// Gets user session id of process.
+		/// Returns -1 if failed. Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		public static int GetSessionId(int processId)
+		{
+			if(!Api.ProcessIdToSessionId(processId, out var R)) return -1;
+			return R;
+		}
+
+		/// <summary>
+		/// Gets user session id of this process.
+		/// Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
+		/// </summary>
+		public static int CurrentSessionId => GetSessionId(Api.GetCurrentProcessId());
+
+		/// <summary>
+		/// Gets version info of process executable file.
+		/// Return null if fails.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		public static FileVersionInfo GetVersionInfo(int processId)
+		{
+			var s = GetName(processId, true);
+			if(s != null) {
+				try { return FileVersionInfo.GetVersionInfo(s); } catch {  }
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Gets description of process executable file.
+		/// Return null if fails.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		/// <remarks>
+		/// Calls <see cref="GetVersionInfo"/> and <see cref="FileVersionInfo.FileDescription"/>.
+		/// </remarks>
+		public static string GetDescription(int processId) => GetVersionInfo(processId)?.FileDescription;
 
 		/// <summary>
 		/// Opens and manages a process handle.
@@ -1043,57 +1089,35 @@ namespace Au
 				return r == 0;
 			}
 		}
+	}
+}
 
-		/// <summary>
-		/// Calls API <msdn>GetCurrentProcessId</msdn>.
-		/// </summary>
-		public static int CurrentProcessId => Api.GetCurrentProcessId();
+namespace Au.Types
+{
+	/// <summary>
+	/// Contains process id, name and session id.
+	/// </summary>
+	/// <tocexclude />
+	public struct ProcessInfo
+	{
+		/// <summary>User session id.</summary>
+		public int SessionId;
 
-		/// <summary>
-		/// Returns current process handle.
-		/// Calls API <msdn>GetCurrentProcess</msdn>.
-		/// Don't need to close the handle.
-		/// </summary>
-		public static IntPtr CurrentProcessHandle => Api.GetCurrentProcess();
+		/// <summary>Process id.</summary>
+		public int ProcessId;
 
-		/// <summary>
-		/// Gets process id from handle.
-		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
-		/// Calls API <msdn>GetProcessId</msdn>.
-		/// </summary>
-		/// <param name="processHandle">Process handle.</param>
-		public static int GetProcessId(IntPtr processHandle)
+		/// <summary>Executable file name (with ".exe" etc). Not full path.</summary>
+		public string Name;
+
+		//public IntPtr UserSid; //where is its memory?
+
+		///
+		public ProcessInfo(int session, int pid, string name)
 		{
-			return Api.GetProcessId(processHandle);
-			//speed: 250 ns
+			SessionId = session; ProcessId = pid; Name = name;
 		}
 
-		//public static Process GetProcessObject(IntPtr processHandle)
-		//{
-		//	int pid = GetProcessId(processHandle);
-		//	if(pid == 0) return null;
-		//	return Process.GetProcessById(pid); //slow, makes much garbage, at first gets all processes just to throw exception if pid not found...
-		//}
-
-		/// <summary>
-		/// Gets user session id of a process.
-		/// Returns -1 if failed. Supports <see cref="Native.GetError"/>.
-		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
-		/// </summary>
-		/// <param name="processId">Process id.</param>
-		public static int GetSessionId(int processId)
-		{
-			if(!Api.ProcessIdToSessionId(processId, out var R)) return -1;
-			return R;
-		}
-
-		/// <summary>
-		/// Gets user session id of this process.
-		/// Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
-		/// </summary>
-		public static int GetSessionId()
-		{
-			return GetSessionId(Api.GetCurrentProcessId());
-		}
+		///
+		public override string ToString() => Name;
 	}
 }

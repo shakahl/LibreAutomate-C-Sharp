@@ -95,7 +95,8 @@ namespace Au
 				public void Destroy()
 				{
 					if(Handle.Is0) return;
-					Api.DestroyWindow(Handle);
+					bool ok=Api.DestroyWindow(Handle);
+					Debug.Assert(ok);
 					Debug.Assert(Handle == default && !t_windows.Contains(this));
 				}
 

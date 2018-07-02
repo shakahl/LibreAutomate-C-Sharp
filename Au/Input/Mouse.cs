@@ -1100,7 +1100,7 @@ namespace Au
 				}
 				R = b;
 				return block;
-			})) WaitFor.Message(secondsTimeout, () => R != 0);
+			})) WaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
 
 			return R;
 		}
@@ -1517,7 +1517,7 @@ namespace Au.Tools
 		public static bool GetCurrentMouseCursor(out IntPtr hcursor)
 		{
 			Api.CURSORINFO ci = default; ci.cbSize = Api.SizeOf(ci);
-			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && ci.flags.Has_(Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
+			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && 0 != (ci.flags & Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
 			hcursor = default; return false;
 		}
 

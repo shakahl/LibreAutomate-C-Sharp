@@ -20,12 +20,6 @@
             3. Fixes some MenuStrip bugs.
             </summary>
         </member>
-        <member name="P:Au.Controls.ParamGrid.ValueEditor">
-            <summary>
-            The editor of values.
-            For example, can be used to subscribe to its Control.Validating event.
-            </summary>
-        </member>
         <member name="M:Au.Controls.ParamGrid.ZAutoSizeColumns">
             <summary>
             Call this after adding all rows.
@@ -47,24 +41,24 @@
             When ended, the string is null.
             </summary>
         </member>
-        <member name="T:Au.Controls.ParamGrid.RowType">
+        <member name="T:Au.Controls.ParamGrid._RowType">
             <summary>
             Row type.
             </summary>
         </member>
-        <member name="F:Au.Controls.ParamGrid.RowType.Optional">
+        <member name="F:Au.Controls.ParamGrid._RowType.Optional">
             <summary>Checkbox and editable cell.</summary>
         </member>
-        <member name="F:Au.Controls.ParamGrid.RowType.Required">
+        <member name="F:Au.Controls.ParamGrid._RowType.Required">
             <summary>Label and editable cell.</summary>
         </member>
-        <member name="F:Au.Controls.ParamGrid.RowType.Flag">
+        <member name="F:Au.Controls.ParamGrid._RowType.Flag">
             <summary>Only checkbox.</summary>
         </member>
-        <member name="F:Au.Controls.ParamGrid.RowType.Header">
+        <member name="F:Au.Controls.ParamGrid._RowType.Header">
             <summary>Only label.</summary>
         </member>
-        <member name="M:Au.Controls.ParamGrid.ZAddRequired(System.String,System.String,System.String,System.String,System.String,System.Int32)">
+        <member name="M:Au.Controls.ParamGrid.ZAddRequired(System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Controls.ParamGrid.EditType,System.Action)">
             <summary>
             Adds required parameter.
             </summary>
@@ -74,8 +68,10 @@
             <param name="tt">Tooltip text.</param>
             <param name="info"><see cref="E:Au.Controls.ParamGrid.ZShowEditInfo"/> text.</param>
             <param name="insertAt"></param>
+            <param name="etype">Edit cell control type.</param>
+            <param name="buttonAction">Button click action when etype is TextButton.</param>
         </member>
-        <member name="M:Au.Controls.ParamGrid.ZAddOptional(System.String,System.String,System.String,System.Boolean,System.String,System.String,System.Int32)">
+        <member name="M:Au.Controls.ParamGrid.ZAddOptional(System.String,System.String,System.String,System.Boolean,System.String,System.String,System.Int32,Au.Controls.ParamGrid.EditType,System.Action)">
             <summary>
             Adds required parameter.
             </summary>
@@ -86,6 +82,8 @@
             <param name="tt">Tooltip text.</param>
             <param name="info"><see cref="E:Au.Controls.ParamGrid.ZShowEditInfo"/> text.</param>
             <param name="insertAt"></param>
+            <param name="etype">Edit cell control type.</param>
+            <param name="buttonAction">Button click action when etype is TextButton.</param>
         </member>
         <member name="M:Au.Controls.ParamGrid.ZAddFlag(System.String,System.String,System.Boolean,System.String,System.Int32)">
             <summary>
@@ -168,6 +166,22 @@
             <param name="rowKey">Row key. If not found, asserts and returns null.</param>
             <param name="column">Column index.</param>
         </member>
+        <member name="M:Au.Controls.ParamGrid.ZSetCellText(System.Int32,System.Int32,System.String)">
+            <summary>
+            Changes cell value or checkbox label.
+            </summary>
+            <param name="row">Row index. If negative, asserts and returns null.</param>
+            <param name="column">Column index.</param>
+            <param name="text"></param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZSetCellText(System.String,System.Int32,System.String)">
+            <summary>
+            Changes cell value or checkbox label.
+            </summary>
+            <param name="rowKey">Row key. If not found, asserts and returns null.</param>
+            <param name="column">Column index.</param>
+            <param name="text"></param>
+        </member>
         <member name="M:Au.Controls.ParamGrid.ZFindRow(System.String)">
             <summary>
             Finds row by row key and returns row index.
@@ -184,10 +198,31 @@
             Removes all rows.
             </summary>
         </member>
+        <member name="M:Au.Controls.ParamGrid.ZGetEditCell(SourceGrid.CellContext@)">
+            <summary>
+            If editing any cell, gets the cell context and returns true.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZEndEdit(System.Boolean)">
+            <summary>
+            If editing any cell, ends editing and returns true.
+            </summary>
+            <param name="cancel">Undo changes.</param>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZIsEditing(System.Int32,System.Int32,SourceGrid.CellContext@)">
+            <summary>
+            If editing the specified cell, gets cell context and returns true.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZEndEdit(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            If editing the specified cell, ends editing and returns true.
+            </summary>
+        </member>
         <member name="T:Au.Controls.AuInfoBox">
             <summary>
             Scintilla-based control to show formatted information text.
-            To set text use the <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/> property. For formatting and links use tags. See <see cref="T:Au.Controls.SciTags"/>.
+            To set text use the <see cref="M:Au.NoClass.Text(System.String,System.Object[])"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
             </summary>
         </member>
         <member name="T:Au.Controls.SciText">
@@ -438,19 +473,10 @@
         <member name="T:Au.Controls.AuScintilla">
             <summary>
             This .NET control wraps native Scintilla control.
-            This is not an universal Scintilla wrapper class. Designed just for purposes of this library and related software.
+            This is not a universal Scintilla wrapper class. Designed just for purposes of this library and related software.
             Responsible for creating and initializing the control. Also used to set/change control properties.
             The ST property returns a SciText object that can be used to work with text, code styling etc.
             </summary>
-            <remarks>
-            Why don't use ScintillaNET:
-            1. Delays to update for the newest Scintilla version.
-            2. Possibly will be abandoned some day.
-            3. Adds yet another layer of bugs, and I found one.
-            4. I don't like some things how it is implemented. Eg aggressively uses "clamping", creates much garbage, eg new Line object for each line-related Scintilla message call.
-            5. For me it does not make much easier because I used Scintilla in QM2 (C++) and am familiar with its API (which is well documented). When using ScintillaNET, I often search its source code just to find which function calls the API I need. Now I can simply convert much of QM2 code to C#.
-            6. I use modified Scintilla. Would need to synchronize some modifications with ScintillaNET. For example I use a callback function instead of WM_NOTIFY/WM_REFLECT.
-            </remarks>
         </member>
         <member name="P:Au.Controls.AuScintilla.ST">
             <summary>
@@ -565,6 +591,16 @@
             <summary>
             Gets or sets all text.
             </summary>
+        </member>
+        <member name="T:Au.Controls.SciTags">
+            <summary>
+            Used by <see cref="T:Au.Controls.AuScintilla"/> controls. Adds links and formatting.
+            </summary>
+            <remarks>
+            Links and formatting is specified in control text using tags similar to HTML. To enable tags, use <see cref="P:Au.Controls.AuScintilla.InitTagsStyle"/>.
+            
+            //TODO
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciTags._ClearUserStyles">
             <summary>
@@ -1337,7 +1373,7 @@
         </member>
         <member name="M:Au.Controls.ImageUtil.ImageToString(System.String)">
             <summary>
-            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,System.Boolean})"/>.
+            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
             Supports all <see cref="T:Au.Controls.ImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
             Returns null if path is not a valid image string or the file does not exist or failed to load.

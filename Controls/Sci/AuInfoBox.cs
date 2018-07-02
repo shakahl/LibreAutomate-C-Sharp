@@ -25,7 +25,7 @@ namespace Au.Controls
 {
 	/// <summary>
 	/// Scintilla-based control to show formatted information text.
-	/// To set text use the <see cref="Text"/> property. For formatting and links use tags. See <see cref="SciTags"/>.
+	/// To set text use the <see cref="Text"/> property. For formatting and links use tags: <see cref="SciTags"/>.
 	/// </summary>
 	public class AuInfoBox :AuScintilla
 	{

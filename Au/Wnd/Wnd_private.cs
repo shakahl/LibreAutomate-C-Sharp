@@ -82,7 +82,7 @@ namespace Au
 			}
 
 			if(getExePathIfNotWinStoreApp) {
-				appId = w.ProcessPath;
+				appId = w.ProgramFilePath;
 				if(appId != null) return 2;
 			}
 

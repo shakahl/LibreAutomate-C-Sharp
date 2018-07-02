@@ -601,5 +601,8 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int SleepEx(uint dwMilliseconds, bool bAlertable);
 
+		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
+		internal static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+
 	}
 }

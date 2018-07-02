@@ -167,7 +167,7 @@ namespace Au
 		public IntPtr Handle => new IntPtr(_h);
 
 		/// <summary>
-		/// Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProcessName}  {Rect}".
+		/// Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}".
 		/// </summary>
 		public override string ToString()
 		{
@@ -177,7 +177,7 @@ namespace Au
 			if(cn == null) return sh + " <invalid handle>";
 			string s = Name;
 			if(s != null) s = s.Escape_(limit: 250);
-			return $"{sh}  {cn}  \"{s}\"  {ProcessName}  {Rect.ToString()}";
+			return $"{sh}  {cn}  \"{s}\"  {ProgramName}  {Rect.ToString()}";
 		}
 
 		#endregion
@@ -1608,7 +1608,7 @@ namespace Au
 		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is default(Wnd), gets rectangle in screen.</param>
 		/// <param name="r">Receives the rectangle.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		/// <seealso cref="RectInParent"/>
+		/// <seealso cref="RectInDirectParent"/>
 		public bool GetRectInClientOf(Wnd w, out RECT r)
 		{
 			if(w.Is0) return GetRect(out r);
@@ -1616,19 +1616,20 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets or sets child window rectangle in parent window's client area.
+		/// Gets child window rectangle in the client area of the direct parent window.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
+		/// Calls <see cref="WndDirectParent"/> and <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
-		public RECT RectInParent
-		{
-			get
-			{
-				if(!GetRectInClientOf(WndDirectParent, out var r)) r = default;
-				return r;
-			}
-		}
+		public RECT RectInDirectParent => GetRectInClientOf(WndDirectParent, out var r) ? r : default;
+
+		/// <summary>
+		/// Gets child window rectangle in the client area of the top-level parent window.
+		/// </summary>
+		/// <remarks>
+		/// Calls <see cref="WndWindow"/> and <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
+		/// </remarks>
+		public RECT RectInWindow => GetRectInClientOf(WndWindow, out var r) ? r : default;
 
 		/// <summary>
 		/// Gets rectangle of normal (restored) window even if currently it is minimized or maximized.
@@ -1855,7 +1856,7 @@ namespace Au
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
 			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
-			Screen_ screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect=default)
+			Screen_ screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
 			{
 				RECT rs;
 				System.Windows.Forms.Screen scr;
@@ -2171,19 +2172,28 @@ namespace Au
 		/// <summary>
 		/// Returns true if the window has all specified style flags (see <see cref="Style"/>).
 		/// </summary>
+		/// <param name="style">One or more styles.</param>
+		/// <param name="any">
+		/// Return true if has any (not necessary all) of the specified styles.
+		/// Note: don't use <see cref="Native.WS.CAPTION"/>, because it consists of two other styles - BORDER and DLGFRAME.
+		/// </param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool HasStyle(Native.WS style)
+		public bool HasStyle(Native.WS style, bool any = false)
 		{
-			return (Style & style) == style;
+			var k = Style & style;
+			return any ? k != 0 : k == style;
 		}
 
 		/// <summary>
 		/// Returns true if the window has all specified extended style flags (see <see cref="ExStyle"/>).
 		/// </summary>
+		/// <param name="exStyle">One or more extended styles.</param>
+		/// <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool HasExStyle(Native.WS_EX exStyle)
+		public bool HasExStyle(Native.WS_EX exStyle, bool any = false)
 		{
-			return (ExStyle & exStyle) == exStyle;
+			var k = ExStyle & exStyle;
+			return any ? k != 0 : k == exStyle;
 		}
 
 		/// <summary>
@@ -2400,7 +2410,7 @@ namespace Au
 		/// </summary>
 		public bool IsHungGhost
 		{
-			get => IsHung && ClassNameIs("Ghost") && ProcessName.Equals_("DWM", true);
+			get => IsHung && ClassNameIs("Ghost.exe") && ProgramName.Equals_("DWM.exe", true);
 			//Class is "Ghost", exe is "DWM" (even if no Aero), text sometimes ends with "(Not Responding)".
 			//IsHungWindow returns true for ghost window, although it is not actually hung. It is the fastest.
 		}
@@ -2540,7 +2550,7 @@ namespace Au
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// Removes only if this is a control (has style Native.WS.CHILD).
-		/// Calls <see cref="Misc.StringRemoveUnderlineAmpersand"/>.
+		/// Calls <see cref="Util.StringMisc.RemoveUnderlineAmpersand"/>.
 		/// </param>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
@@ -2557,7 +2567,7 @@ namespace Au
 				&& !Empty(R)
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(Native.WS.CHILD)
-				) R = Misc.StringRemoveUnderlineAmpersand(R);
+				) R = Util.StringMisc.RemoveUnderlineAmpersand(R);
 
 			return R;
 		}
@@ -2646,18 +2656,25 @@ namespace Au
 		public string NameWinForms => Misc.WinFormsControlNames.GetSingleControlName(this);
 
 		/// <summary>
-		/// Gets filename (without ".exe") of process executable file.
+		/// Gets filename (with ".exe" etc) of process executable file.
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName"/>.
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
 		/// </summary>
-		public string ProcessName => Process_.GetProcessName(ProcessId);
+		public string ProgramName => Process_.GetName(ProcessId);
 
 		/// <summary>
 		/// Gets full path of process executable file.
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetProcessName"/>.
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
 		/// </summary>
-		public string ProcessPath => Process_.GetProcessName(ProcessId, true);
+		public string ProgramFilePath => Process_.GetName(ProcessId, true);
+
+		/// <summary>
+		/// Gets description of process executable file.
+		/// Return null if fails.
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetDescription"/>.
+		/// </summary>
+		public string ProgramDescription => Process_.GetDescription(ProcessId);
 
 		#endregion
 
@@ -2665,11 +2682,12 @@ namespace Au
 
 		/// <summary>
 		/// Closes the window.
-		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if noWait==true.
+		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <paramref name="noWait"/>==true.
 		/// </summary>
 		/// <param name="noWait">
-		/// If false (default), waits a while until the window is destroyed or disabled. But does not wait infinitely.
-		/// If true, does not wait.
+		/// If true, does not wait until the window is closed.
+		/// If false, waits about 1 s (depends on window type etc) until the window is destroyed or disabled.
+		/// If null (default), waits (as if false) if <see cref="Thread_.IsUI"/> returns false.
 		/// </param>
 		/// <param name="useXButton">
 		/// If false (default), uses API message <msdn>WM_CLOSE</msdn>.
@@ -2678,24 +2696,23 @@ namespace Au
 		/// </param>
 		/// <remarks>
 		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-		/// If the window is of this thread, just calls <see cref="Send"/> (if noWait==false) or <see cref="Post"/> (if noWait==true) and returns true.
+		/// If the window is of this thread, just calls <see cref="Send"/> or <see cref="Post"/> (if <paramref name="noWait"/>==true) and returns true.
 		/// </remarks>
+		/// <seealso cref="WaitForClosed"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// //close all Notepad windows
 		/// Wnd.FindAll("* Notepad", "Notepad").ForEach(t => t.Close());
 		/// ]]></code>
 		/// </example>
-		public bool Close(bool noWait = false, bool useXButton = false)
+		public bool Close(bool? noWait = null, bool useXButton = false)
 		{
-			//CONSIDER: add parameter killProcessAfterTimeMS. If non-0, kills process if the window still exists after that time. The default wait is not inclused in this timeout.
-
 			if(!IsAlive) return true;
 
 			uint msg = Api.WM_CLOSE, wparam = 0; if(useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
 
 			if(IsOfThisThread) {
-				if(noWait) Post(msg, wparam);
+				if(noWait.GetValueOrDefault()) Post(msg, wparam);
 				else Send(msg, wparam);
 				return true;
 			}
@@ -2720,7 +2737,9 @@ namespace Au
 				//Print(Native.GetError()); //0 when UAC access denied
 				if(!useXButton) ok = Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE); //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
 			}
-			if(noWait) return true;
+
+			if(!noWait.HasValue) noWait = Thread_.IsUI;
+			if(noWait.GetValueOrDefault()) return true;
 
 			if(ok) {
 				for(int i = 0; i < 100; i++) {

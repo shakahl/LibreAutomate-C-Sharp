@@ -1,4 +1,16 @@
-﻿using System;
+//rejected: Icons.ImageCache.
+//	Util.IconsAsync is better in this case.
+//	What is good with ImageCache:
+//		If cached, displays icons immediately. With IconsAsync some icons may be delayed.
+//	What is bad with ImageCache:
+//		Need to specify cache file path. Most users will not do it, and they will have slow menus/toolbars.
+//		For large menus, eg created from folder contents with subfolders, creates large cache files. The user eg can browse whole computer using menus.
+//		Slow first time (when still not cached). It can be problem with dynamic menus, eg used to browse files.
+
+
+//#define ONIMAGEUPDATED
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -23,7 +35,7 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuMenu :AuBaseMT, IDisposable
+	public class AuMenu :AuMTBase, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
@@ -117,12 +129,12 @@ namespace Au
 		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-		/// <param name="onClick">Callback function. Called when the menu item clicked.</param>
+		/// <param name="onClick">Lambda etc function to be called when the menu item clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="AuBaseMT.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="AuMTBase.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
-		/// Icon, Image, Folders.FolderPath.
+		/// Image, Icon, Folders.FolderPath.
 		/// </param>
 		/// <example><code>
 		/// var m = new AuMenu();
@@ -162,7 +174,7 @@ namespace Au
 		/// </summary>
 		/// <param name="item">An already created item of any supported type.</param>
 		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
+		/// <param name="onClick">Lambda etc function to be called when the item clicked. Not useful for most item types.</param>
 		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			_Add(item, onClick, icon);
@@ -205,7 +217,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
+		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
 		/// BackgroundImage, BackgroundImageLayout, ContextMenu, Cursor, Font, ForeColor, ImageList, ImageScalingSize, Renderer, ShowCheckMargin, ShowImageMargin.
@@ -330,9 +342,9 @@ namespace Au
 		/// When showing the submenu first time, your callback function will be called and can add submenu items.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="onOpening">Callback function that should add submenu items.</param>
+		/// <param name="onOpening">Lambda etc callback function that should add submenu items.</param>
 		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
+		/// <param name="onClick">Lambda etc function to be called when the menu item clicked. Rarely used.</param>
 		/// <example><code>
 		/// var m = new AuMenu();
 		/// m["One"] = o => Print(o);
@@ -428,7 +440,7 @@ namespace Au
 		/// <param name="y">Y position in control's client area.</param>
 		/// <param name="direction">Menu drop direction.</param>
 		/// <remarks>
-		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="CMS"/> property, which gets <see cref="ContextMenuStrip"/>.
+		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call Show(). Use the <see cref="CMS"/> property, which gets <see cref="ContextMenuStrip"/>.
 		/// </remarks>
 		public void Show(Control owner, int x, int y, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
 		{
@@ -441,7 +453,7 @@ namespace Au
 		/// <param name="owner">A control or form that will own the menu.</param>
 		/// <param name="direction">Menu drop direction.</param>
 		/// <remarks>
-		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="CMS"/> property, which gets <see cref="ContextMenuStrip"/>.
+		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call Show(). Use the <see cref="CMS"/> property, which gets <see cref="ContextMenuStrip"/>.
 		/// </remarks>
 		public void Show(Control owner, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
 		{
@@ -461,7 +473,7 @@ namespace Au
 			//Perf.Next();
 
 			_isOwned = control != null;
-			_isModal = ModalAlways ? true : !Thread_.IsUI;
+			_isModal = ModalAlways ? true : !Application.MessageLoop;
 
 			_inOurShow = true;
 			switch(overload) {
@@ -486,8 +498,8 @@ namespace Au
 
 		/// <summary>
 		/// If false, calls Dispose() when the menu is closed.
-		/// If true, does not call Dispose(); then you can call <b>Show</b> multiple times for the same object.
-		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
+		/// If true, does not call Dispose(); then you can call Show() multiple times for the same object.
+		/// Default is false, but is automatically set to true when showing the menu not with AuMenu.Show(), eg when assigned to a control.
 		/// </summary>
 		/// <seealso cref="DefaultMultiShow"/>
 		public bool MultiShow { get; set; } = DefaultMultiShow;
@@ -498,8 +510,8 @@ namespace Au
 		public static bool DefaultMultiShow { get; set; }
 
 		/// <summary>
-		/// If true, <b>Show</b> always waits until the menu is closed.
-		/// If false, does not wait if the thread has a .NET message loop (<see cref="Thread_.IsUI"/>==true).
+		/// If true, Show() always waits until the menu is closed.
+		/// If false, does not wait if the thread has a message loop (Application.MessageLoop==true).
 		/// </summary>
 		public bool ModalAlways { get; set; }
 		//note: don't allow to make non-modal when there is no message loop, because it can crash Windows if the programmer does not create a loop then, and it is not useful.
@@ -524,7 +536,7 @@ namespace Au
 		#endregion
 
 		//Extends ContextMenuStrip of the main menu to change its behavior as we need.
-		class ContextMenuStrip_ :ContextMenuStrip, _IAuToolStrip
+		class ContextMenuStrip_ :ContextMenuStrip//, _IAuToolStrip
 		{
 			AuMenu _am;
 
@@ -601,22 +613,17 @@ namespace Au
 				//Print("menu disposed", disposing);
 			}
 
-			protected override void OnPaint(PaintEventArgs e)
-			{
-				//var perf = Perf.StartNew();
+			//protected override void OnPaint(PaintEventArgs e)
+			//{
+			//	//var perf = Perf.StartNew();
 
-				//DebugPrintFunc();
-				base.OnPaint(e);
+			//	//DebugPrintFunc();
+			//	base.OnPaint(e);
 
-				//perf.Next(); Print("------------------ paint", perf.Times);
-
-				_paintedOnce = true;
-			}
+			//	//perf.Next(); Print("------------------ paint", perf.Times);
+			//}
 
 			//ToolStrip _IAuToolStrip.ToolStrip => this;
-
-			bool _paintedOnce;
-			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
 
 			protected override void OnBackColorChanged(EventArgs e)
 			{
@@ -634,7 +641,7 @@ namespace Au
 		}
 
 		//Extends ToolStripDropDownMenu of a submenu to change its behavior as we need.
-		internal class ToolStripDropDownMenu_ :ToolStripDropDownMenu, _IAuToolStrip
+		internal class ToolStripDropDownMenu_ :ToolStripDropDownMenu//, _IAuToolStrip
 		{
 			AuMenu _am;
 			bool _openedOnce;
@@ -681,16 +688,8 @@ namespace Au
 					PerformLayout();
 				}
 
-				if(AsyncIcons != null) {
-					_am._GetIconsAsync(this, AsyncIcons);
-					AsyncIcons = null;
-				}
-
 				base.OnOpening(e);
 			}
-
-			//AuBaseMT creates this. We call GetAllAsync.
-			internal List<Util.IconsAsync.Item> AsyncIcons { get; set; }
 
 			protected override void OnOpened(EventArgs e)
 			{
@@ -727,18 +726,6 @@ namespace Au
 			//	base.Dispose(disposing);
 			//	Print("submenu disposed", disposing);
 			//}
-
-			protected override void OnPaint(PaintEventArgs e)
-			{
-				//DebugPrintFunc();
-				base.OnPaint(e);
-				_paintedOnce = true;
-			}
-
-			//ToolStrip _IAuToolStrip.ToolStrip => this;
-
-			bool _paintedOnce;
-			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
 		}
 
 		#region wndproc
@@ -829,8 +816,6 @@ namespace Au
 				_showedOnce = true;
 				_cm.PerformLayout();
 			}
-
-			_GetIconsAsync(_cm);
 		}
 
 		//Prevents closing when working with focusable child controls and windows created by child controls or event handlers.
@@ -999,23 +984,22 @@ namespace Au
 
 namespace Au.Types
 {
-	interface _IAuToolStrip
-	{
-		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
-		bool PaintedOnce { get; }
-	}
+	//interface _IAuToolStrip
+	//{
+	//	//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
+	//}
 
 	/// <summary>
 	/// Base class of AuMenu and AuToolbar.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public abstract class AuBaseMT
+	public abstract class AuMTBase
 	{
 		internal bool m_inRightClick;
 		EventHandler _onClick;
 		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
 
-		internal AuBaseMT()
+		internal AuMTBase()
 		{
 			_onClick = _OnClick;
 		}
@@ -1078,10 +1062,17 @@ namespace Au.Types
 			set { MainToolStrip.ImageScalingSize = new Size(value, value); }
 		}
 
+		/// <summary>
+		/// Icon cache file.
+		/// The file has XML format.
+		/// If null (default), icons are not cached.
+		/// </summary>
+		public string IconCache { get; set; }
+
 		//Sets icon and onClick delegate.
 		//Sets LastItem.
 		//Calls ItemAdded event handlers.
-		internal void _SetItemProp(bool isBar, ToolStripItem item, Action<MTClickArgs> onClick, object icon)
+		internal void _SetItemProp(bool isTB, ToolStripItem item, Action<MTClickArgs> onClick, object icon)
 		{
 			if(onClick != null) {
 				_clickDelegates[item] = onClick;
@@ -1091,13 +1082,15 @@ namespace Au.Types
 #if true //to quickly disable icons when measuring speed
 			if(icon != null) {
 				try {
+					string path = null;
 					switch(icon) {
-					case string path: _SetItemFileIcon(isBar, item, path); break;
+					case string s: path = s; break;
 					case int index: if(index >= 0) item.ImageIndex = index; break;
 					case Image img: item.Image = img; break;
 					case Icon ico: item.Image = ico.ToBitmap(); break;
-					case Folders.FolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
+					case Folders.FolderPath fp: path = fp; break;
 					}
+					if(path != null) _SetItemFileIcon(isTB, item, path);
 				}
 				catch(Exception e) { Debug_.Print(e.Message); } //ToBitmap() may throw
 			}
@@ -1107,7 +1100,7 @@ namespace Au.Types
 			ItemAdded?.Invoke(item);
 		}
 
-		void _SetItemFileIcon(bool isBar, ToolStripItem item, string s)
+		void _SetItemFileIcon(bool isTB, ToolStripItem item, string s)
 		{
 			if(Empty(s)) return;
 			var owner = item.Owner;
@@ -1118,110 +1111,93 @@ namespace Au.Types
 				//var perf = Perf.StartNew();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
-				if(_AsyncIcons == null) _AsyncIcons = new Util.IconsAsync(); //used by submenus too
-				var submenu = !isBar ? (owner as AuMenu.ToolStripDropDownMenu_) : null;
-				bool isFirstImage = false;
+				var submenu = !isTB ? (owner as AuMenu.ToolStripDropDownMenu_) : null;
 
-				if(submenu == null) {
-					if(_AsyncIcons.Count == 0) isFirstImage = true;
-					_AsyncIcons.Add(s, item);
-				} else {
-					if(submenu.AsyncIcons == null) {
-						submenu.AsyncIcons = new List<Util.IconsAsync.Item>();
-						isFirstImage = true;
+				Bitmap b;
+				if(IconCache != null) {
+					if(_imageCache == null) {
+						_imageCache = new Icons.ImageCache(IconCache, IconSize); //used by submenus too
+#if ONIMAGEUPDATED
+						_onImageUpdated = _OnImageUpdated;
+#endif
 					}
-					submenu.AsyncIcons.Add(new Util.IconsAsync.Item(s, item));
+#if ONIMAGEUPDATED
+					b = _imageCache.GetImage(s, false, IconFlags, _onImageUpdated, item);
+#else
+					//b = _imageCache.GetImage(s, false, IconFlags, (b2, o) => (o as ToolStripItem).Image = b2, item); //500 times slower
+					b = _imageCache.GetImage(s, false, IconFlags, (b2, o) =>
+					{
+						var item2 = o as ToolStripItem;
+						var ts = item2.Owner as ToolStrip;
+						ts.SuspendLayout(); //without this much slower, especially when with overflow arrows (when many items)
+						item2.Image = b2;
+						ts.ResumeLayout(false);
+					}, item); //500 times slower
+#endif
+				} else {
+					b = Icons.GetFileIconImage(s, IconSize, IconFlags);
 				}
+				if(b == null) return;
 
-				//Reserve space for image.
-				//If toolbar, need to do it for each button, else only for the first item (it sets size of all items).
-				if(isFirstImage) {
-					var z = owner.ImageScalingSize;
-					_imagePlaceholder = new Bitmap(z.Width, z.Height);
-				}
-				if(isBar || isFirstImage) item.Image = _imagePlaceholder;
-				//perf.NW();
-			}
-		}
-		Image _imagePlaceholder;
-
-		//This is shared by toolbars and main menus. Submenus have their own.
-		Util.IconsAsync _AsyncIcons { get; set; }
-
-		//list - used by submenus.
-		internal void _GetIconsAsync(ToolStrip ts, List<Util.IconsAsync.Item> list = null)
-		{
-			if(_AsyncIcons == null) return;
-			if(list != null) _AsyncIcons.AddRange(list);
-			if(_AsyncIcons.Count == 0) return;
-			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, IconFlags, ts);
-		}
-
-		void _AsyncCallback(Util.IconsAsync.Result r, object objCommon, int nLeft)
-		{
-			var ts = objCommon as ToolStrip;
-			var item = r.obj as ToolStripItem;
-
-			//Print(r.image, r.hIcon);
-			//Image im = r.image;
-			//if(im == null && r.hIcon != default) im = Icons.HandleToImage(r.hIcon);
-
-			Image im = Icons.HandleToImage(r.hIcon, true);
-
-			//if(im != null) _SetItemIcon(ts, item, im);
-			if(im != null) {
-				_SetItemIcon(ts, item, im);
+				//unfinished: for submenus should load icons on demand, before showing the submenu.
 
 				//to dispose images in our Dispose()
 				if(_images == null) _images = new List<Image>();
-				_images.Add(im);
-			}
+				_images.Add(b);
 
-			//#if DEBUG
-			//			if(im == null) item.ForeColor = Color.Red;
-			//#endif
-			if(nLeft == 0) {
-				//Perf.Next();
-				ts.Update();
-				//Perf.NW();
+				item.Image = b;
+
+				//perf.NW();
 			}
 		}
+		Icons.ImageCache _imageCache;
 
-		void _SetItemIcon(ToolStrip ts, ToolStripItem item, Image im)
+#if ONIMAGEUPDATED
+		Action<Bitmap, object> _onImageUpdated;
+		void _OnImageUpdated(Bitmap b, object o)
 		{
-			Wnd w = default;
-			var its = ts as _IAuToolStrip;
-			if(its.PaintedOnce) {
-				if(_region1 == default) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
-				if(_region2 == default) _region2 = Api.CreateRectRgn(0, 0, 0, 0);
+			var item = o as ToolStripItem;
+			var ts = item.Owner as ToolStrip;
 
-				w = (Wnd)ts.Handle;
-				Api.GetUpdateRgn(w, _region1, false);
-			}
+			Wnd w = default;
+			if(_region1 == default) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
+			if(_region2 == default) _region2 = Api.CreateRectRgn(0, 0, 0, 0);
+
+			w = (Wnd)ts.Handle;
+			Api.GetUpdateRgn(w, _region1, false);
 
 			//RECT u;
 			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); Print(its.PaintedOnce, u);
 
 			ts.SuspendLayout(); //without this much slower, especially when with overflow arrows (when many items)
-			item.Image = im;
+			item.Image = b;
 			ts.ResumeLayout(false);
 
-			if(its.PaintedOnce) {
-				Api.ValidateRect(w); //tested: with WM_SETREDRAW 3 times slower
-				RECT r = item.Bounds; //r.Inflate(-2, -1);
-									  //r.right = r.left + r.Height; //same speed
-				Api.SetRectRgn(_region2, r.left, r.top, r.right, r.bottom);
-				Api.CombineRgn(_region1, _region1, _region2, Api.RGN_OR);
+			Api.ValidateRect(w); //tested: with WM_SETREDRAW 3 times slower
+			RECT r = item.Bounds; //r.Inflate(-2, -1);
+								  //r.right = r.left + r.Height; //same speed
+			Api.SetRectRgn(_region2, r.left, r.top, r.right, r.bottom);
+			Api.CombineRgn(_region1, _region1, _region2, Api.RGN_OR);
 
-				//RECT b; GetRgnBox(_region1, out b); Print(b, _region1);
+			//RECT b; GetRgnBox(_region1, out b); Print(b, _region1);
 
-				Api.InvalidateRgn(w, _region1, false);
-			}
+			Api.InvalidateRgn(w, _region1, false);
 
 			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); Print("after", u);
-		}
 
+			//to dispose images in our Dispose()
+			if(_images == null) _images = new List<Image>();
+			_images.Add(b);
+
+			//if(nLeft == 0) {
+			//	//Perf.Next();
+			//	ts.Update();
+			//	//Perf.NW();
+			//}
+		}
 		IntPtr _region1, _region2;
+#endif
+
 		internal List<Image> _images;
 		bool _isDisposed;
 
@@ -1232,22 +1208,22 @@ namespace Au.Types
 			_isDisposed = true;
 
 			if(disposing) {
-				if(_AsyncIcons != null) _AsyncIcons.Dispose();
-
 				if(_images != null) {
 					foreach(var im in _images) im.Dispose();
 					_images = null;
 				}
 			}
 
+#if ONIMAGEUPDATED
 			if(_region1 != default) Api.DeleteObject(_region1);
 			if(_region2 != default) Api.DeleteObject(_region2);
+#endif
 
 			LastItem = null;
 		}
 
 		///
-		~AuBaseMT() { /*Print("base dtor");*/ _Dispose(false); }
+		~AuMTBase() { /*Print("base dtor");*/ _Dispose(false); }
 	}
 
 	/// <summary>

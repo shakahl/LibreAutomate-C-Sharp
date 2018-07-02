@@ -212,7 +212,6 @@ System.NullReferenceException: Object reference not set to an instance of an obj
 
 		//var w = Api.CreateWindowEx(0, "#32770", null, Api.WS_OVERLAPPEDWINDOW | Api.WS_VISIBLE, 300, 300, 300, 300, Wnd0, 0, default, 0);
 
-		//TODO: test wait cursor with AuDialog.Show
 	}
 
 	static Au.Util.MessageLoop _mlTb = new Au.Util.MessageLoop();

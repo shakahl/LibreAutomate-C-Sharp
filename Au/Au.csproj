@@ -107,6 +107,7 @@
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\AccHook.cs" />
+    <Compile Include="Util\StringMisc.cs" />
     <Compile Include="Util\Util^GDI.cs" />
     <Compile Include="Util\WinHook.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />

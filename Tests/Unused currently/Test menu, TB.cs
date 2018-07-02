@@ -332,7 +332,7 @@ public partial class Test
 		Perf.First();
 
 		var m = new AuMenu();
-		m.MouseClosingDistance = 50;
+		m.MouseClosingDistance = 100;
 		//m.ActivateMenuWindow = true;
 		//m.IconDirectory = @"q:\app";
 		Folders.ThisAppImages=@"q:\app";
@@ -341,6 +341,8 @@ public partial class Test
 		//m.CMS.ImageScalingSize = new Size(64,64);
 		//m.CMS.ImageScalingSize = new Size(256,256);
 		//m.CMS.ImageScalingSize = new Size(24,24);
+
+		//m.IconCache = Folders.Temp + "test menu icon cache.xml";
 
 		foreach(var f in a) {
 			//Print(f);
@@ -358,6 +360,11 @@ public partial class Test
 
 		//using(m.Submenu("sub")) {
 #if true
+		Perf.First();
+		//for(int i = 0; i < 30; i++) {
+		//	m["auto-update", @"Q:\My QM\icon.exe"] = o => Print(o);
+		//}
+		//m.Separator();
 		m["One", "Cut.ico"] = o => Print(o);
 		m["ILSpy", @"Q:\Programs\ILSpy\ILSpy.exe"] = o => Print(o);
 		m["Notepad", Folders.System + "notepad.exe"] = o => Print(o);
@@ -372,7 +379,7 @@ public partial class Test
 		m["Procexp", @"Q:\Programs\ProcessExplorer\procexp.exe"] = o => Print(o);
 		m["Inno", Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Print(o);
 		m["hhw", Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Print(o);
-		m["FileZilla", Folders.ProgramFilesX86 + @"FileZilla FTP Client\filezilla.exe"] = o => Print(o);
+		m["FileZilla", Folders.ProgramFiles + @"FileZilla FTP Client\filezilla.exe"] = o => Print(o);
 		m["IE", Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Print(o);
 		m["Procmon", @"Q:\Programs\ProcessMonitor\Procmon.exe"] = o => Print(o);
 		m["ResourceHacker", Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Print(o);
@@ -396,8 +403,8 @@ public partial class Test
 		m[".cat", @".cat"] = null;
 		m[".cat", @".cat"] = null;
 		m["ani", @"C:\WINDOWS\Cursors\aero_busy.ani"] = null;
-#endif
 
+		m.Separator();
 		m["no icon"] = null;
 		m["no icon"] = null;
 		m.Separator();
@@ -406,6 +413,7 @@ public partial class Test
 		m["no icon"] = null;
 		m[".cat", @".cat"] = null;
 		//}
+#endif
 
 		//Timer_.After(1000, t => { m.CMS.Close(); });
 		//Timer_.After(1000, t => { m.CMS.Visible=false; });
@@ -413,6 +421,8 @@ public partial class Test
 		//Timer_.After(1000, t => { m.CMS.Dispose(); });
 
 		//m.MultiShow = true;
+		Perf.Next();
+		m.CMS.Paint += (unu, sed) => Perf.NW();
 		m.Show();
 		//Thread.Sleep(500);
 		//m.Separator();

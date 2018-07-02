@@ -194,6 +194,7 @@ namespace Au.Tools
 			// _bOK
 			// 
 			this._bOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+			this._bOK.Enabled = false;
 			this._bOK.Location = new System.Drawing.Point(168, 128);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
@@ -214,12 +215,13 @@ namespace Au.Tools
 			// 
 			// _bTest
 			// 
+			this._bTest.Enabled = false;
 			this._bTest.Location = new System.Drawing.Point(8, 128);
 			this._bTest.Name = "_bTest";
 			this._bTest.Size = new System.Drawing.Size(72, 24);
 			this._bTest.TabIndex = 7;
 			this._bTest.Text = "&Test";
-			this._toolTip.SetToolTip(this._bTest, "Executes the Wnd.Find and Acc.Find code. Shows the rectangle of the found AO.");
+			this._toolTip.SetToolTip(this._bTest, "Executes the code. Shows the rectangle of the found AO.");
 			this._bTest.UseVisualStyleBackColor = true;
 			this._bTest.Click += new System.EventHandler(this._bTest_Click);
 			// 
@@ -229,10 +231,11 @@ namespace Au.Tools
 			this._lSpeed.Name = "_lSpeed";
 			this._lSpeed.Size = new System.Drawing.Size(81, 15);
 			this._lSpeed.TabIndex = 0;
-			this._toolTip.SetToolTip(this._lSpeed, "Shows the Acc.Find time. Red if not found.");
+			this._toolTip.SetToolTip(this._lSpeed, "Shows the Test execution time. Red if not found.");
 			// 
 			// _bCopy
 			// 
+			this._bCopy.Enabled = false;
 			this._bCopy.Location = new System.Drawing.Point(328, 128);
 			this._bCopy.Name = "_bCopy";
 			this._bCopy.Size = new System.Drawing.Size(72, 24);

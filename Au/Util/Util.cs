@@ -83,6 +83,26 @@ namespace Au.Util
 		{
 			return Api.GetModuleHandle(null);
 		}
+
+		/// <summary>
+		/// Gets native module handle of the assembly containing native icon that can be displayed as icon of this app.
+		/// Some API functions need it when you use <msdn>IDI_APPLICATION</msdn>.
+		/// If the entry assembly of this appdomain is dll with icon, gets dll handle; else gets exe handle.
+		/// Returns default(IntPtr) if there are no native icons.
+		/// </summary>
+		public static IntPtr OfAppIcon()
+		{
+			if(s_hmodAppIcon == default) {
+				IntPtr h = OfAppDomainEntryAssembly();
+				if(h == default || default == Api.FindResource(h, Api.IDI_APPLICATION, 14)) { //RT_GROUP_ICON
+					h = OfProcessExe();
+					if(default == Api.FindResource(h, Api.IDI_APPLICATION, 14)) h = (IntPtr)1;
+				}
+				s_hmodAppIcon = h;
+			}
+			return s_hmodAppIcon == (IntPtr)1 ? default : s_hmodAppIcon;
+		}
+		static IntPtr s_hmodAppIcon;
 	}
 
 	/// <summary>

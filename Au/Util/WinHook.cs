@@ -57,7 +57,7 @@ namespace Au.Util
 		/// })) {
 		/// 	MessageBox.Show("Low-level keyboard hook.", "Test");
 		/// 	//or
-		/// 	//WaitFor.Message(-10, () => stop); //wait max 10 s for Esc key
+		/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
 		/// 	//Print("the end");
 		/// }
 		/// ]]></code>
@@ -87,7 +87,7 @@ namespace Au.Util
 		/// })) {
 		/// 	MessageBox.Show("Low-level mouse hook.", "Test");
 		/// 	//or
-		/// 	//WaitFor.Message(-10, () => stop); //wait max 10 s for right-click
+		/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
 		/// 	//Print("the end");
 		/// }
 		/// ]]></code>

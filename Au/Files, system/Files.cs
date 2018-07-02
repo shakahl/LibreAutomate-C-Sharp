@@ -317,12 +317,12 @@ namespace Au
 		/// <param name="directoryPath">Full path of the directory.</param>
 		/// <param name="flags"></param>
 		/// <param name="filter">
-		/// A callback function to call for each file and subdirectory.
+		/// Callback function. Called for each file and subdirectory.
 		/// If it returns false, the file/subdirectory is not included in results.
 		/// This can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
 		/// </param>
 		/// <param name="errorHandler">
-		/// A callback function to call when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
+		/// Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
 		/// It receives the subdirectory path. It can call <see cref="Native.GetError"/> and throw an exception.
 		/// If it does not throw an exception, the enumeration continues as if the directory is empty.
 		/// If errorHandler not used, then throws exception.
@@ -774,7 +774,7 @@ namespace Au
 		/// <param name="ifExists"></param>
 		/// <param name="copyFlags">Options used when copying directory.</param>
 		/// <param name="filter">
-		/// This can be used when copying directory. A callback function to call for each descendant file and subdirectory.
+		/// This callback function can be used when copying directory. Called for each descendant file and subdirectory.
 		/// If it returns false, the file/subdirectory is not copied.
 		/// </param>
 		/// <exception cref="ArgumentException">path or newPath is not full path (see <see cref="Path_.IsFullPath"/>).</exception>
@@ -798,10 +798,7 @@ namespace Au
 		/// <param name="newDirectory">New parent directory.</param>
 		/// <param name="ifExists"></param>
 		/// <param name="copyFlags">Options used when copying directory.</param>
-		/// <param name="filter">
-		/// This can be used when copying directory. A callback function to call for each descendant file and subdirectory.
-		/// If it returns false, the file/subdirectory is not copied.
-		/// </param>
+		/// <param name="filter"><inheritdoc cref="Copy"/></param>
 		/// <exception cref="ArgumentException">
 		/// path or newDirectory is not full path (see <see cref="Path_.IsFullPath"/>).
 		/// path is drive. To copy drive content, use <see cref="Copy"/>.

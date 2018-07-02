@@ -193,15 +193,20 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Prints managed memory size. Uses GC.GetTotalMemory.
+		/// Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
 		/// Works in Release too.
 		/// </summary>
 		static long s_mem0;
-		internal static void LibPrintMemory()
+		internal static string LibGetMemory()
 		{
 			var mem = GC.GetTotalMemory(false);
 			if(s_mem0 == 0) s_mem0 = mem;
-			Print(((mem - s_mem0) / 1024d / 1024d).ToString_("F3"));
+			return ((mem - s_mem0) / 1024d / 1024d).ToString_("F3");
 		}
+		/// <summary>
+		/// Prints managed memory size. Uses GC.GetTotalMemory.
+		/// Works in Release too.
+		/// </summary>
+		internal static void LibPrintMemory() => Print(LibGetMemory());
 	}
 }

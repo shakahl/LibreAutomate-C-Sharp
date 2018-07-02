@@ -71,42 +71,18 @@ namespace Au
 
 			void _ParseProgramEtc(string programEtc)
 			{
-				if(programEtc.Length == 0) goto ge1;
-				if(programEtc.IndexOf('\0') < 0 && programEtc.IndexOf(':') < 0 && programEtc.IndexOf('=') < 0) {
-					_program = programEtc;
-					return;
+				if(programEtc.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
+				int i = Util.StringMisc.ParseParam3Stars(ref programEtc, s_programEtc);
+				if(i == 0) { _program = programEtc; return; }
+				if(i < 0) throw new ArgumentException("Invalid programEtc.");
+				int v = programEtc.ToInt_(); if(v == 0) throw new ArgumentException(s_programEtc[i - 1].ToString() + " is 0.");
+				switch(i) {
+				case 1: _processId = v; break;
+				case 2: _threadId = v; break;
+				case 3: _owner = (Wnd)(LPARAM)v; break;
 				}
-				foreach(var t in String_.Segments_(programEtc, "\0")) {
-					t.TrimStart();
-					if(_StartsWith("program")) {
-						var k = t.Substring(8).Trim();
-						if(k.Length == 0) goto ge1;
-						_program = k;
-					} else if(_StartsWith("pid")) {
-						_processId = programEtc.ToInt_(t.Offset + 4);
-						if(_processId == 0) goto ge2;
-					} else if(_StartsWith("tid")) {
-						_threadId = programEtc.ToInt_(t.Offset + 4);
-						if(_threadId == 0) goto ge2;
-					} else if(_StartsWith("owner")) {
-						_owner = (Wnd)(LPARAM)programEtc.ToInt_(t.Offset + 6);
-						if(_owner.Is0) goto ge2;
-					} else goto ge3;
-
-					//rejected: programPath. Not very useful, 3 times slower, creates much more garbage, and not always can get full path.
-
-					bool _StartsWith(string s)
-					{
-						int k = s.Length; if(t.Length <= k) return false;
-						switch(t[k]) { case ':': case '=': break; default: return false; }
-						return t.StartsWith(s);
-					}
-				}
-				return;
-				ge1: throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
-				ge2: throw new ArgumentException("programEtc contains a 0 value.");
-				ge3: throw new ArgumentException("Invalid programEtc.");
 			}
+			static string[] s_programEtc = { "pid", "tid", "owner" };
 
 			/// <summary>
 			/// The found window.
@@ -235,18 +211,18 @@ namespace Au
 						//Usually it does not slow down much because need to do it only 1 or several times, only when window name, class etc match.
 						//The worst case is when only program is specified, and the very worst case is when also using flag HiddenToo.
 						//We are prepared for the worst case.
-						//Normally we call Process_.GetProcessName. In most cases it is quite fast.
+						//Normally we call Process_.GetName. In most cases it is quite fast.
 						//Anyway, we use this optimization:
 						//	Add pid of processes that don't match the specified name in the pids list (bad pids).
 						//	Next time, if pid is in the bad pids list, just continue, don't need to get program name again.
-						//However in the worst case we would encounter some processes that Process_.GetProcessName cannot get name using the fast API.
-						//For each such process it would then use the much slower 'get all processes' API, which is almost as slow as Process.GetProcessById(pid).ProcessName.
+						//However in the worst case we would encounter some processes that Process_.GetName cannot get name using the fast API.
+						//For each such process it would then use the much slower 'get all processes' API, which is almost as slow as Process.GetProcessById(pid).ProgramName.
 						//To solve this:
-						//We tell Process_.GetProcessName to not use the slow API, but just return null when the fast API fails.
-						//When it happens (Process_.GetProcessName returns null):
+						//We tell Process_.GetName to not use the slow API, but just return null when the fast API fails.
+						//When it happens (Process_.GetName returns null):
 						//	If need full path: continue, we cannot do anything more.
 						//	Switch to plan B and no longer use all the above. Plan B:
-						//	Get list of pids of all processes that match _program. For it we call Process_.GetProcessesByName, which uses the same slow API, but we call it just one time.
+						//	Get list of pids of all processes that match _program. For it we call Process_.LibGetProcessesByName, which uses the same slow API, but we call it just one time.
 						//	If it returns null (it means there are no matching processes), break (window not found).
 						//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
 
@@ -256,8 +232,8 @@ namespace Au
 						} else {
 							if(pids != null && pids.Contains(pid)) continue; //is known bad pid?
 
-							//string pname = Process_.GetProcessName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
-							string pname = Process_.GetProcessName(pid, false, true);
+							//string pname = Process_.GetName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
+							string pname = Process_.GetName(pid, false, true);
 
 							if(pname == null) {
 								//if(0!=(_flags&WFFlags.ProgramPath)) continue;
@@ -331,21 +307,20 @@ namespace Au
 		/// null means 'can be any'. Cannot be "".
 		/// </param>
 		/// <param name="programEtc">
-		/// Program file name without ".exe".
+		/// Program file name (with ".exe" etc).
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "". Cannot be path.
-		/// 
-		/// Or a list of the following properties. Format: one or more "name=value" or "name:value", separated with "\0" or "\0 ". Names must match case. Values of string properties are wildcard expressions.
+		/// Or one of:
 		/// <list type="bullet">
-		/// <item>"program" - program file name. Example: <c>"program=notepad"</c>. Useful when need multiple properties or when file name contains character '='.</item>
-		/// <item>"pid" - process id. See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>. Example: <c>$"pid={pidVar}"</c>.</item>
-		/// <item>"tid" - thread id. See <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>. Example: <c>"tid=" + tidVar</c>.</item>
-		/// <item>"owner" - owner window handle. See <see cref="WndOwner"/>. Example: <c>$"owner={w1.Handle}"</c>.</item>
+		/// <item>$"**pid:{processId}". See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>.</item>
+		/// <item>$"**tid:{threadId}". See <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>.</item>
+		/// <item>$"**owner:{ownerWindow.Handle}". See <see cref="WndOwner"/>.</item>
 		/// </list>
+		/// In "***..." string, separator character can be ':', '=' or ' '. Examples: <c>$"**pid={processId}"</c>, <c>$"**pid {processId}"</c>, <c>"**pid:" + processId</c>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
-		/// Lambda etc callback function to call for each matching window.
+		/// Callback function. Called for each matching window.
 		/// It can evaluate more properties of the window and return true when they match.
 		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
 		/// </param>
@@ -401,11 +376,11 @@ namespace Au
 		/// This example is similar to what <see cref="FindOrRun"/> does.
 		/// <code><![CDATA[
 		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
+		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
 		/// ]]></code>
 		/// </example>
-		public static Finder LastFind { get => t_lastFindParams; set { t_lastFindParams = value; } }
-		[ThreadStatic] static Finder t_lastFindParams;
+		[field: ThreadStatic]
+		public static Finder LastFind { get; set; }
 
 		/// <summary>
 		/// Finds all matching windows.
@@ -475,7 +450,7 @@ namespace Au
 		/// The algorithm is:
 		/// <code>
 		/// var w=Wnd.Find(...);
-		/// if(w.Is0) { run(); w=Wnd.Wait(needActiveWindow, runWaitS, ...); }
+		/// if(w.Is0) { run(); w=Wnd.Wait(runWaitS, needActiveWindow, ...); }
 		/// else if(needActiveWindow) w.Activate();
 		/// return w;
 		/// </code>
@@ -497,7 +472,7 @@ namespace Au
 			} else if(run != null) {
 				var finder = LastFind;
 				run();
-				w = WaitAny(needActiveWindow, runWaitS, finder);
+				w = WaitAny(runWaitS, needActiveWindow, finder);
 			}
 			return w;
 		}

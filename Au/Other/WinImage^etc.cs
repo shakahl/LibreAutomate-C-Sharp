@@ -30,7 +30,7 @@ namespace Au
 		#region capture, etc
 
 		/// <summary>
-		/// Copies a rectangle of screen pixels to a new Bitmap object.
+		/// Creates image from a rectangle of screen pixels.
 		/// </summary>
 		/// <param name="rect">A rectangle in screen coordinates.</param>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
@@ -53,7 +53,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Copies a rectangle of window client area pixels to a new Bitmap object.
+		/// Creates image from a rectangle of window client area pixels.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
@@ -162,11 +162,29 @@ namespace Au
 			}
 		}
 
+		/// <summary>
+		/// Creates image from a non-rectangular area of screen pixels.
+		/// </summary>
+		/// <param name="outline">The outline (shape) of the area in screen. If single element, captures single pixel.</param>
+		/// <exception cref="ArgumentException"><paramref name="outline"/> is null or has 0 elements.</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
+		/// <remarks>
+		/// PixelFormat is always Format32bppRgb.
+		/// </remarks>
 		public static Bitmap Capture(List<POINT> outline)
 		{
 			return _Capture(outline);
 		}
 
+		/// <summary>
+		/// Creates image from a non-rectangular area of window client area pixels.
+		/// </summary>
+		/// <param name="w">Window or control.</param>
+		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
+		/// <exception cref="WndException">Invalid <paramref name="w"/>.</exception>
+		/// <exception cref="ArgumentException"><paramref name="outline"/> is null or has 0 elements.</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
+		/// <remarks>More info: <see cref="Capture(Wnd, RECT)"/>.</remarks>
 		public static Bitmap Capture(Wnd w, List<POINT> outline)
 		{
 			w.ThrowIfInvalid();
@@ -212,25 +230,40 @@ namespace Au
 
 		#region capture UI
 
+		/// <summary>
+		/// Creates image from a user-selected area of screen pixels. Or gets single pixel color, or just rectangle.
+		/// Returns false if cancelled.
+		/// </summary>
+		/// <param name="result">Receives results.</param>
+		/// <param name="flags"></param>
+		/// <param name="toolWindow">Owner window. Temporarily hides it and its owner windows.</param>
+		/// <remarks>
+		/// Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
+		/// </remarks>
 		public static bool CaptureUI(out WICResult result, WICFlags flags = 0, AnyWnd toolWindow = default)
 		{
 			result = default;
+
+			switch(flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle)) {
+			case 0: case WICFlags.Image: case WICFlags.Color: case WICFlags.Rectangle: break;
+			default: throw new ArgumentException();
+			}
+
 			Wnd[] aw = null; Wnd wTool = default;
 			try {
 				if(!toolWindow.IsEmpty) {
 					aw = Wnd.Misc.OwnerWindowsAndThis(wTool = toolWindow.Wnd, true);
 					foreach(var w in aw) w.ShowLL(false);
-					Time.SleepDoEvents(550);
+					using(new BlockUserInput(BIEvents.MouseClicks)) Time.SleepDoEvents(300); //time for animations
 				}
 
 				g1:
 				RECT rs = SystemInformation.VirtualScreen;
-				//RECT rs = Screen.PrimaryScreen.Bounds;
+				//RECT rs = Screen.PrimaryScreen.Bounds; //for testing, to see Print output in other screen
 				Bitmap bs;
 				bool windowDC = flags.Has_(WICFlags.WindowDC);
-				//windowDC = true;
 				if(windowDC) {
-					if(!_WaitForHotkey("Press F3 to select window")) return false;
+					if(!_WaitForHotkey("Press F3 to select window from mouse pointer.")) return false;
 					var w = Wnd.FromMouse(WXYFlags.NeedWindow);
 					w.GetClientRect(out var rc, inScreen: true);
 					using(var bw = Capture(w, w.ClientRect)) {
@@ -249,22 +282,13 @@ namespace Au
 				switch(f.ShowDialog()) {
 				case DialogResult.OK: break;
 				case DialogResult.Retry:
-					if(!_WaitForHotkey("Press F3 when ready for new screenshot")) return false;
+					if(!windowDC && !_WaitForHotkey("Press F3 when ready for new screenshot.")) return false;
 					goto g1;
 				default: return false;
 				}
 
-				//window from rect
 				var r = f.Result;
-				Wnd w1 = Wnd.FromXY((r.rect.left, r.rect.top));
-				Wnd w2 = (r.image == null) ? w1 : Wnd.FromXY((r.rect.right, r.rect.bottom));
-				if(w2 != w1 || !_IsInClientArea(w1)) {
-					Wnd w3 = w1.WndWindow, w4 = w2.WndWindow;
-					w1 = (w4 == w3 && _IsInClientArea(w3)) ? w3 : default;
-				}
-				r.wnd = w1;
-				bool _IsInClientArea(Wnd w) => w.GetClientRect(out var rc, true) && rc.Contains(r.rect);
-
+				r.wnd = _WindowFromRect(r);
 				result = r;
 			}
 			finally {
@@ -278,17 +302,29 @@ namespace Au
 			}
 			return true;
 		}
-		
+
+		static Wnd _WindowFromRect(WICResult r)
+		{
+			Thread.Sleep(25); //after the form is closed, sometimes need several ms until OS sets correct Z order. Until that may get different w1 and w2.
+			Wnd w1 = Wnd.FromXY((r.rect.left, r.rect.top));
+			Wnd w2 = (r.image == null) ? w1 : Wnd.FromXY((r.rect.right - 1, r.rect.bottom - 1));
+			if(w2 != w1 || !_IsInClientArea(w1)) {
+				Wnd w3 = w1.WndWindow, w4 = w2.WndWindow;
+				w1 = (w4 == w3 && _IsInClientArea(w3)) ? w3 : default;
+			}
+			return w1;
+
+			bool _IsInClientArea(Wnd w) => w.GetClientRect(out var rc, true) && rc.Contains(r.rect);
+		}
+
 		static bool _WaitForHotkey(string info)
 		{
-			//if(1 != AuDialog.ShowInfo(info, buttons: "OK|Cancel")) return false;
-			AuDialog.ShowEx(info, icon: DIcon.Info, secondsTimeout: 3);
-			//FUTURE: OSD
+			using(Osd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
+				//try { Keyb.WaitForHotkey(0, KKey.F3); }
+				//catch(AuException) { AuDialog.ShowError("Failed to register hotkey F3"); return false; }
 
-			//try { Keyb.WaitForHotkey(0, KKey.F3); }
-			//catch(AuException) { AuDialog.ShowError("Failed to register hotkey F3"); return false; }
-
-			Keyb.WaitForKey(0, KKey.F3, up: true, block: true);
+				Keyb.WaitForKey(0, KKey.F3, up: true, block: true);
+			}
 			return true;
 		}
 
@@ -302,7 +338,6 @@ namespace Au
 			bool _capturing;
 			WICFlags _flags;
 			Cursor _cursor;
-			//POINT _p, _p0;
 
 			public WICResult Result;
 
@@ -318,8 +353,6 @@ namespace Au
 				StartPosition = FormStartPosition.Manual;
 				Text = "Au.WinImage.CaptureUI";
 				Cursor = _cursor = Util.Cursors_.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
-
-				//Font = new Font("Tahoma", 16); //test
 			}
 
 			protected override CreateParams CreateParams
@@ -358,15 +391,27 @@ namespace Au
 					var pc = e.Location; //cursor position
 
 					//format text to draw below magnifier
-					//const TextFormatFlags textFlags = TextFormatFlags.Left| TextFormatFlags.WordBreak;
-					var color = _img.GetPixel(pc.X, pc.Y).ToArgb() & 0xffffff;
-					string text = $@"Color  0x{color:X6}
-How to capture
-  rectangle: mouse drag
-  any shape: Shift+drag
-  color: Ctrl+click
-  cancel: key Esc
-  retry: key F3 ... F3";
+					string text;
+					using(new Util.LibStringBuilder(out var s)) {
+						var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
+						if(ic == 0) ic = WICFlags.Image | WICFlags.Color;
+						bool canColor = ic.Has_(WICFlags.Color);
+						if(canColor) {
+							var color = _img.GetPixel(pc.X, pc.Y).ToArgb() & 0xffffff;
+							s.Append("Color  0x").Append(color.ToString("X6")).Append('\n');
+						}
+						if(ic == WICFlags.Color) {
+							s.Append("Click to capture color.\n");
+						} else if(ic == WICFlags.Rectangle) {
+							s.Append("Mouse-drag to capture rectangle.\n");
+						} else {
+							s.Append("How to capture\n");
+							s.Append("  rectangle:  mouse-drag\n  any shape:  Shift+drag\n");
+							if(canColor) s.Append("  color:  Ctrl+click\n");
+						}
+						s.Append("More:  right-click"); //"  cancel:  key Esc\n  retry:  key F3 ... F3"
+						text = s.ToString();
+					}
 
 					const int magnWH = 200; //width and height of the magnified image without borders etc
 
@@ -412,19 +457,26 @@ How to capture
 
 					//m -> gr
 					gr.DrawImageUnscaled(_bMagn, pm);
-
-					//_p = p;
 				}
 			}
 
 			protected override void OnMouseDown(MouseEventArgs e)
 			{
+				if(e.Button != MouseButtons.Left) return;
+
 				bool isColor = false, isAnyShape = false;
-				switch(ModifierKeys) {
-				case Keys.Control: isColor = true; break;
-				case Keys.Shift: isAnyShape = true; break;
-				case Keys.None: break;
-				default: return;
+				var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
+				if(ic == WICFlags.Color) {
+					isColor = true;
+				} else {
+					var mod = ModifierKeys;
+					if(mod != 0 && ic == WICFlags.Rectangle) return;
+					switch(mod) {
+					case Keys.None: break;
+					case Keys.Shift: isAnyShape = true; break;
+					case Keys.Control when ic != WICFlags.Image: isColor = true; break;
+					default: return;
+					}
 				}
 
 				Result = new WICResult();
@@ -433,13 +485,13 @@ How to capture
 					Result.color = _img.GetPixel(p0.x, p0.y).ToArgb();
 					Result.rect = (p0.x, p0.y, 1, 1);
 				} else {
-					RECT r = default;
+					RECT r = (p0.x, p0.y, 0, 0);
 					var a = isAnyShape ? new List<POINT>() { p0 } : null;
 					var pen = Pens.Red;
 					bool notFirstMove = false;
 					_capturing = true;
 					try {
-						if(!Au.Util.DragDrop.SimpleDragDrop(this, MButtons.Left, m =>
+						if(!Util.DragDrop.SimpleDragDrop(this, MButtons.Left, m =>
 						{
 							if(m.Msg.message != Api.WM_MOUSEMOVE) return;
 							POINT p = m.Msg.pt;
@@ -479,13 +531,16 @@ How to capture
 						return;
 					}
 
-					var b = _img.Clone(r, PixelFormat.Format32bppArgb);
-					var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
-					try {
-						_SetAlpha(d, r, path);
+					if(ic != WICFlags.Rectangle) {
+						var b = _img.Clone(r, PixelFormat.Format32bppArgb);
+						var d = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadWrite, b.PixelFormat);
+						try {
+							_SetAlpha(d, r, path);
+						}
+						finally { b.UnlockBits(d); path?.Dispose(); }
+						Result.image = b;
 					}
-					finally { b.UnlockBits(d); path?.Dispose(); }
-					Result.image = b;
+
 					r.Offset(Left, Top); //client to screen
 					Result.rect = r;
 				}
@@ -494,7 +549,17 @@ How to capture
 				this.Close();
 			}
 
-			protected override void OnKeyDown(KeyEventArgs e)
+			protected override void OnMouseUp(MouseEventArgs e)
+			{
+				if(e.Button != MouseButtons.Right) return;
+				var m = new AuMenu();
+				m["Retry\tF3"] = o => { this.DialogResult = DialogResult.Retry; this.Close(); };
+				m["Cancel\tEsc"] = o => this.Close();
+				m.Show(this);
+			}
+
+			//note: the OSD window is not always activated. Then can use context menu.
+			protected override void OnKeyUp(KeyEventArgs e) //note: not Down, because on F3 will wait for F3 up
 			{
 				if(_capturing) return;
 				switch(e.KeyCode) {
@@ -518,19 +583,26 @@ namespace Au.Types
 	/// <summary>
 	/// Flags for <see cref="WinImage.CaptureUI"/>.
 	/// </summary>
+	/// <remarks>
+	/// Only one of flags <b>Image</b>, <b>Color</b> and <b>Rectangle</b> can be used. If none, can capture image or color.
+	/// </remarks>
 	[Flags]
 	public enum WICFlags
 	{
-		/// <summary>Can capture only color, not image.</summary>
-		Color = 1,
-
 		/// <summary>Can capture only image, not color.</summary>
-		Image = 2,
+		Image = 1,
 
-		///
-		WindowDC = 4,
+		/// <summary>Can capture only color, not image.</summary>
+		Color = 2,
 
-		//TODO
+		/// <summary>Capture only rectangle, not image/color.</summary>
+		Rectangle = 4,
+
+		/// <summary>
+		/// Get pixels from the client area device context (DC) of a user-selected window, not from screen DC.
+		/// More info: <see cref="WIFlags.WindowDC"/>.
+		/// </summary>
+		WindowDC = 8,
 	}
 
 	/// <summary>
@@ -540,6 +612,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Captured image.
+		/// null if captured single pixel color or used flag <see cref="WICFlags.Rectangle"/>.
 		/// </summary>
 		public Bitmap image;
 
@@ -549,12 +622,12 @@ namespace Au.Types
 		public ColorInt color;
 
 		/// <summary>
-		/// Rectangle of the captured image, in screen coordinates.
+		/// Location of the captured image or rectangle, in screen coordinates.
 		/// </summary>
 		public RECT rect;
 
 		/// <summary>
-		/// Window or control containing the captured image, if whole image is in its client area.
+		/// Window or control containing the captured image or rectangle, if whole image is in its client area.
 		/// In some cases may be incorrect, for example if windows moved/opened/closed/etc while capturing.
 		/// </summary>
 		public Wnd wnd;

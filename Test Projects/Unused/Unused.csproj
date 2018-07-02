@@ -36,9 +36,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Library\Api_COM_wrap.cs" />
+    <Compile Include="Library\Rejected\AuToobar with ImageCache.cs" />
     <Compile Include="Library\BitList.cs" />
     <Compile Include="Library\Ftp upload with progress.cs" />
     <Compile Include="Library\Keyb^sync.cs" />
+    <Compile Include="Library\Rejected\AuMenu with ImageCache.cs" />
     <Compile Include="Library\Uia\ACondition.cs" />
     <Compile Include="Library\Uia\AElement.cs" />
     <Compile Include="Library\Uia\AE_find.cs" />

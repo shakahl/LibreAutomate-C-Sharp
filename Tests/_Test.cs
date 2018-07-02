@@ -446,7 +446,7 @@ static partial class Test
 	//	//	foreach(var a in )
 	//	//}
 
-	//	Wnd wSkip = Wnd.Find("Quick*").Kid(2202);
+	//	Wnd wSkip = Wnd.Find("Quick*").Child(2202);
 	//	w = Wnd.Misc.WndRoot;
 	//	//w = Wnd.Find("app -*");
 	//	//w = Wnd.Find("* - Notepad");
@@ -1015,7 +1015,7 @@ static partial class Test
 		//Perf.Write();
 		////si.MouseMove();
 
-		//var w = Wnd.Find("Options*").Kid(1571);
+		//var w = Wnd.Find("Options*").ChildById(1571);
 		//Print(w.NameAcc);
 
 		//var w = Wnd.Find("Options*").Child("**accName:Run as", "combo*").OrThrow();
@@ -1025,7 +1025,7 @@ static partial class Test
 		//var af = new Acc.Finder("COMBOBOX", "Run as");
 		//Print(w.HasAcc(af));
 
-		//var w = Wnd.Find("Options*").Kid(1099);
+		//var w = Wnd.Find("Options*").ChildById(1099);
 		//w.AsButton.Click(true);
 	}
 
@@ -1512,7 +1512,7 @@ static partial class Test
 		//var w = Wnd.Find("Options").OrThrow();
 		//var w = Wnd.Find("ipc_server").OrThrow();
 		//var w = Wnd.Find(null, "QM_Editor").OrThrow();
-		//var w = Wnd.Find(null, "QM_Editor").Kid(2051).OrThrow();
+		//var w = Wnd.Find(null, "QM_Editor").ChildById(2051).OrThrow();
 		//var w = Wnd.Find("QM Dialog").OrThrow();
 		//var w = Wnd.Find("QM# - Q*").OrThrow();
 		//var w = Wnd.Find("Calculator").OrThrow();
@@ -1527,9 +1527,9 @@ static partial class Test
 		//var w = Wnd.Find("* Help Viewer *").OrThrow();
 		//var w = Wnd.Find("*Visual Studio ").OrThrow();
 		//var w = Wnd.Find("app -*").OrThrow();
-		//var w = Wnd.Find(null, "QM_Editor").Kid(2053).OrThrow();
+		//var w = Wnd.Find(null, "QM_Editor").ChildById(2053).OrThrow();
 		//var w = Wnd.Find("FileZilla").OrThrow();
-		//var w = Wnd.Find("FileZilla").Kid(-31801).OrThrow(); //toolbar
+		//var w = Wnd.Find("FileZilla").ChildById(-31801).OrThrow(); //toolbar
 		//var w = Wnd.Find("*cmd.exe").OrThrow(); //fails to inject
 		//var w = Wnd.Find("Character Map").OrThrow();
 		//var w = Wnd.Find("Form55").OrThrow();
@@ -1902,7 +1902,7 @@ static partial class Test
 		//	0.1.s();
 		//}
 		Acc.Find(w, null, "Back", "notin=DOCUMENT").VirtualRightClick();
-		var wBackMenu = Wnd.Wait(false, 10, null, menuClass, also: o => o.HasStyle(Native.WS.POPUP));
+		var wBackMenu = Wnd.Wait(10, false, null, menuClass, also: o => o.HasStyle(Native.WS.POPUP));
 		//Print(wBackMenu);
 		a = Acc.Wait(10, wBackMenu, "MENUITEM", "Yahoo");
 		//Print(a);
@@ -1913,7 +1913,7 @@ static partial class Test
 
 		//return;
 		if(stop) return;
-		Wnd.Wait(false, 30, appName);
+		Wnd.Wait(30, false, appName);
 		3.s();
 		Print("---------");
 		goto g1;
@@ -3021,7 +3021,7 @@ static partial class Test
 		var e = new Wnd.Misc.MyWindow.WndClassEx() { hbrBackground = (IntPtr)(Api.COLOR_INFOBK + 1) };
 
 		Wnd.Misc.MyWindow.RegisterClass("MyWindow", ex: e);
-		var style = Native.WS.OVERLAPPEDWINDOW | Native.WS.VISIBLE;
+		var style = Native.WS.CAPTION | Native.WS.SYSMENU | Native.WS.VISIBLE;
 
 		var x = new MyWindow2();
 		if(!x.Create("MyWindow", "MyWindow", style, 0, 200, 200, 200, 200)) { Print("failed"); return; }
@@ -3540,6 +3540,10 @@ REE`");
 			//System.Windows.MessageBox.Show(w, "message");
 			var k = (Wnd)w;
 			Print(k);
+
+			//var m = new AuMenu();
+			//m["test"] = o => Print(o);
+			//m.Show();
 		};
 		w.Show();
 		var app = new System.Windows.Application();
@@ -4873,7 +4877,7 @@ REE`");
 
 	//static void TestAttachThreadInput()
 	//{
-	//	var w = Wnd.Find("FileZilla").Kid(-31791).OrThrow();
+	//	var w = Wnd.Find("FileZilla").ChildById(-31791).OrThrow();
 	//	//using(new LibAttachThreadInput(w.ThreadId, out bool ok)) {
 	//	//	Print(ok);
 	//	//}
@@ -5984,7 +5988,7 @@ REE`");
 		//Print(Au.Controls.ImageUtil.ImageToString(@"Q:\app\il_qm.bmp"));
 
 		var s = Au.Controls.ImageUtil.ImageToString(@"Q:\Test\image.png");
-		WinImage.Find(new WIArea(0, 0, 2000, 2000), s).MouseMove();
+		WinImage.Find(new RECT(0, 0, 2000, 2000), s).MouseMove();
 	}
 
 	static void TestStringCompare()
@@ -6055,8 +6059,8 @@ REE`");
 		//new Acc.Finder().Wait
 		//new Wnd.Finder().
 
-		//Print(Wnd.Wait(true, 10, "* Notepad"));
-		//Wnd w = Wnd.WaitAny(true, 10, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
+		//Print(Wnd.Wait(10, true, "* Notepad"));
+		//Wnd w = Wnd.WaitAny(10, true, new Wnd.Finder("* Notepad"), new Wnd.Finder("* Word"));
 		//Print(w);
 
 		//Print(Wnd.WaitNot(-5, "* Notepad"));
@@ -6087,10 +6091,10 @@ REE`");
 		//WaitFor.Condition(0, () => !a.IsDisabled);
 
 		//Shell.Run("notepad.exe");
-		//Wnd w = Wnd.Wait(true, 10, "*- Notepad", "Notepad");
+		//Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
 
 		//Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		//if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(true, 60, Wnd.LastFind); }
+		//if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
 		//w.Activate();
 
 		//var s = @"Q:\Test\image.png";
@@ -6152,8 +6156,8 @@ REE`");
 		//var w = Wnd.Find("Font");
 		//////w.ShowMinimized();
 		//////Api.SetForegroundWindow(w);
-		//////Print(Wnd.Wait(true, 30, "*Notepad"));
-		////Print(Wnd.WaitAny(true, 30, new Wnd.Finder("*Notepad")));
+		//////Print(Wnd.Wait(30, true, "*Notepad"));
+		////Print(Wnd.WaitAny(30, true, new Wnd.Finder("*Notepad")));
 
 		////Print(w.WaitForCondition(10, t => !t.IsAlive, true));
 		//Opt.WaitFor.DoEvents = true;
@@ -6245,7 +6249,7 @@ REE`");
 
 		//bool stop = false;
 		//Timer_.After(2000, t => { Print("timer"); stop = true; });
-		//WaitFor.Message(5, () => stop);
+		//WaitFor.MessagesAndCondition(5, () => stop);
 		//Print(stop);
 
 		//Timer_.After(2000, t => { Print("timer"); });
@@ -6344,7 +6348,7 @@ REE`");
 		//})) {
 		//	MessageBox.Show("Low-level keyboard hook.", "Test");
 		//	//or
-		//	//WaitFor.Message(-10, () => stop); //wait max 10 s for Esc key
+		//	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
 		//	//Print("the end");
 		//}
 
@@ -6358,7 +6362,7 @@ REE`");
 		//})) {
 		//	MessageBox.Show("Low-level mouse hook.", "Test");
 		//	//or
-		//	//WaitFor.Message(-10, () => stop); //wait max 10 s for right-click
+		//	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
 		//	//Print("the end");
 		//}
 
@@ -6470,7 +6474,7 @@ REE`");
 	//{
 	//	bool ok = false;
 	//	using(WinHook.Keyboard(x => ok = x.IsKey(key))) {
-	//		return WaitFor.Message(secondsTimeout, () => ok);
+	//		return WaitFor.MessagesAndCondition(secondsTimeout, () => ok);
 	//	}
 	//}
 
@@ -6496,7 +6500,7 @@ REE`");
 		})) {
 			MessageBox.Show("hook");
 			//or
-			//WaitFor.Message(-10, () => stop); //wait max 10 s for activated taskbar
+			//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
 			//Print("the end");
 		}
 
@@ -6509,6 +6513,65 @@ REE`");
 	static void TestWaitWithHook()
 	{
 
+	}
+
+	static void TestWndChild()
+	{
+		//var w = Wnd.Find("Quick*");
+		////w.ChildById
+		//w = Wnd.Find("Quick*", programEtc: "***pid:" + w.ProcessId);
+		//Print(w);
+		//w = Wnd.Find("Quick*", programEtc: "***tid:" + w.ThreadId);
+		//Print(w);
+		//w = Wnd.Find("Options", programEtc: "***owner:" + w.Handle);
+		//Print(w);
+
+		//Print(Wnd.Misc.WndDesktop);
+
+		//var s = "***tid 88";
+		//Print(Au.Util.StringMisc.ParseParam3Stars(ref s, "pid", "tid", "owner"), s);
+
+		//Print(w.Child("Open items"));
+		//Print(w.Child("***id:2214"));
+		//w = Wnd.Find("Options", programEtc: "***owner:" + w.Handle);
+		////Print(w.Child("***accName:Run as", "combobox"));
+		//Print(w.Child("moo"));
+		//Print(w.Child("***text:moo"));
+		////Print(w.Child("***bad:bad"));
+
+		//w = +Wnd.Find("Options").Child("***id=" + 11030);
+
+		var w = Wnd.Find("Quick*", programEtc: "qm.exe");
+		//var w = Wnd.Find("Quick*", programEtc: "***pid:0");
+		//Print(w.ProgramName, w.ProgramFilePath);
+		//Print(Process_.GetProcessIds("notepad.exe"));
+		//Print(Process_.AllProcesses(true));
+
+		////int pid = Process_.GetProcessIds("winlogon.exe")[0];
+		//int pid = Process_.GetProcessIds("qmserv.exe")[0];
+		////pid = Process_.GetProcessId("qm.exe");
+		//Print(pid);
+		//Print(Process_.GetName(pid, true));
+		//Print(Process_.GetName(pid, false));
+		//Print(Process_.GetName(pid, false, true));
+
+		//Print(Process_.GetProcessId(@"q:\app\qm.exe", fullPath: true));
+		//Print(Process_.GetProcessId("qmserv.exe", ofThisSession: true));
+
+		//foreach(var v in Process_.AllProcesses()) Print(v.SessionId, v.ProcessId, v.Name);
+
+		//Print(Process_.CurrentSessionId);
+
+		//var a = Process.GetProcesses();
+		//foreach(var p in a) {
+		//	//Print(p.ProcessM)
+		//	try { Print(p.ProcessName, p.MainModule.FileVersionInfo.FileDescription); } catch { }
+		//}
+		//Print(w.ProgramDescription);
+		//Print(Process_.GetVersionInfo(w.ProcessId).CompanyName);
+
+		w = w.ChildById(2052);
+		Print(w);
 	}
 
 	static void TestScreen()
@@ -6584,6 +6647,33 @@ REE`");
 		//Print(Wnd.Lib.WinFlags.Get(w));
 	}
 
+	static void TestLibIsPossiblyDos()
+	{
+		//Print(Path_.LibIsPossiblyDos("file.txt"));
+		//Print(Path_.LibIsPossiblyDos("~file.txt"));
+		//Print(Path_.LibIsPossiblyDos("file~.txt"));
+		//Print(Path_.LibIsPossiblyDos("file~8.txt"));
+		//Print(Path_.LibIsPossiblyDos("file12~8.txt"));
+		//Print(Path_.LibIsPossiblyDos("file1~12.txt"));
+		//Print(Path_.LibIsPossiblyDos("file~123.txt"));
+		//Print(Path_.LibIsPossiblyDos("fil~1234.txt"));
+		//Print(Path_.LibIsPossiblyDos("/i~12345.txt"));
+		//Print(Path_.LibIsPossiblyDos("f~123456.txt"));
+		//Print(Path_.LibIsPossiblyDos("f~1234567.txt"));
+		//Print(Path_.LibIsPossiblyDos("file12~8.txtt"));
+		//Print(Path_.LibIsPossiblyDos("file~123"));
+		//Print(Path_.LibIsPossiblyDos("ile~123"));
+		//Print(Path_.LibIsPossiblyDos("ffile~123.txt"));
+		//Print(Path_.LibIsPossiblyDos(@"c:\file~123"));
+		//Print(Path_.LibIsPossiblyDos(@"c:\ile~123"));
+		//Print(Path_.LibIsPossiblyDos(@"c:\ffile~123"));
+		//Print(Path_.LibIsPossiblyDos(@"c:\file~123\more"));
+		//Print(Path_.LibIsPossiblyDos(@"c:\ile~123\more"));
+		//Print(Path_.LibIsPossiblyDos(@"c:\ffile~123\more"));
+
+		Print(Path_.Normalize(@"c:\progra~1"));
+	}
+
 	static void TestConvert()
 	{
 		//var b = new byte[] { (byte)'t', (byte)'e', (byte)'s', (byte)'t', };
@@ -6642,7 +6732,7 @@ REE`");
 #if true
 		//Opt.Key.RestoreClipboard = false;
 		//Opt.Key.KeySpeedClipboard = 100;
-		Opt.Key.Hook = o => { if(o.w.ProcessName.Equals_("HD-Player", true)) o.opt.KeySpeedClipboard = 100; };
+		Opt.Key.Hook = o => { if(o.w.ProgramName.Equals_("HD-Player.exe", true)) o.opt.KeySpeedClipboard = 100; };
 		Paste("one ");
 		Paste("two ");
 		Paste("three ");
@@ -6667,7 +6757,12 @@ REE`");
 		//var b = WinImage.Capture(new RECT(0, 0, 1, 1, true));
 		//_ShowImage(b);
 
-		if(!WinImage.CaptureUI(out var r, WICFlags.WindowDC)) return;
+		WICFlags f = 0;
+		//f|=WICFlags.WindowDC;
+		//f |= WICFlags.Color;
+		//f |= WICFlags.Image;
+		f |= WICFlags.Rectangle;
+		if(!WinImage.CaptureUI(out var r, f)) return;
 		Print(r.rect, r.color, r.wnd);
 		_ShowImage(r.image);
 
@@ -6714,28 +6809,6 @@ REE`");
 		Shell.Run(file);
 	}
 
-	static void TestToolWinImage()
-	{
-		//var w = Wnd.Find("Quick*");
-		//WinImage.Find(w, @"q:\test\function icon.bmp").MouseMove();
-		//var r = WinImage.Find(w, @"q:\test\function icon.bmp");
-		//Print(r);
-
-		//var a = new List<WinImage>();
-		//var img = @"q:\test\function icon.bmp";
-		//var img = new string[] { @"q:\test\function icon.bmp", @"q:\test\autotext icon.bmp"};
-		//WinImage.Find(w, img, also: o => { a.Add(o); return false; });
-		//Print("----");
-		//Print(a);
-		//foreach(var k in a) { Print(k.MatchIndex, k.ListIndex); k.MouseMove(); 0.3.s(); }
-
-		//Print("ok");
-
-		var f = new Au.Tools.Form_WinImage();
-		f.ShowDialog();
-
-	}
-
 	static void TestLoadCursor()
 	{
 		Print(Api.GetSystemMetrics(Api.SM_CXCURSOR));
@@ -6749,19 +6822,94 @@ REE`");
 		f.ShowDialog();
 	}
 
+	class _TestHookFinalizer :IDisposable
+	{
+		public int x = 8;
+		public override string ToString()
+		{
+			return "x=" + x;
+		}
+
+		public void Dispose()
+		{
+			GC.SuppressFinalize(this);
+		}
+
+		~_TestHookFinalizer() => Print("~_TestHookFinalizer");
+
+
+	}
+
+	static void _TestIconMemory()
+	{
+		//var k = Icons.GetStockIcon(StockIcon.DESKTOPPC, 32);
+		var k = new _TestHookFinalizer();
+		//GCInterceptor.RegisterGCEvent(k, hash => Print(hash), k);
+		Au.Util.GC_.AddObjectMemoryPressure(k, 100);
+		k.Dispose();
+	}
+
+	static void TestIconMemory()
+	{
+		//_TestIconMemory();
+		//Timer_.After(1000, () =>
+		//{
+		//	Print("collect");
+		//	GC.Collect();
+		//	GC.WaitForPendingFinalizers();
+		//	Print("collected");
+		//});
+
+		//AuDialog.Show();
+
+		for(int i = 0; i < 400; i++) {
+			if((i % 10) == 0) {
+				//1.ms();
+			}
+			if((i % 10) == 0) {
+				Print(i, Debug_.LibGetMemory(),
+					GetGuiResources(Process_.CurrentProcessHandle, 1),
+					GetGuiResources(Process_.CurrentProcessHandle, 4),
+					GetGuiResources(Process_.CurrentProcessHandle, 0),
+					GetGuiResources(Process_.CurrentProcessHandle, 2)
+					);
+			}
+			int size = 32;
+			//Perf.First();
+			//var k = Icons.GetStockIcon(StockIcon.DESKTOPPC, size);
+			var k = Icons.GetFileIcon(@"q:\app\qm.exe", size);
+			//var k = Icons.GetFileIcon(@"q:\app\macro.ico", size);
+			//Perf.Next();
+			//size/=2;
+			//Au.Util.GCMemoryPressure.Add(k, 1000+ size * size);
+			//Perf.NW();
+			if(k == null) throw new AuException(i.ToString() + ",  " + Native.GetErrorMessage());
+		}
+	}
+	[DllImport("user32.dll")]
+	internal static extern int GetGuiResources(IntPtr hProcess, uint uiFlags);
+
 	static void TestIconCacheEtc()
 	{
-		var sf = @"q:\app\app.cpp";
+		//var sf = @"q:\app\app.cpp";
+		var sf = @"Q:\My QM\icon.exe";
 		var c = new Icons.ImageCache(Folders.Temp + "Au.icon.cache", 16);
 		//c.ClearCache();
-		var k = c.GetImage(sf, true);
-		//var k = c.GetImage("DESKTOPPC", () => Icons.GetShellStockIconHandle(Icons.Stock.DESKTOPPC, 16));
-		Print(k);
+		//Print(k);
 
+		var f = new Form();
+		f.BackgroundImageLayout = ImageLayout.None;
+
+		var k = c.GetImage(sf, true, 0, (im, ob) => { Print(im, ob); f.BackgroundImage = im; }, 5);
+		//var k = c.GetImage("DESKTOPPC", () => Icons.GetStockIconHandle(StockIcon.DESKTOPPC, 16));
 		if(k == null) return;
-		var so = Folders.Temp + "Au.icon.png";
-		k.Save(so);
-		Shell.Run(so);
+
+		f.BackgroundImage = k;
+		f.ShowDialog();
+
+		//var so = Folders.Temp + "Au.icon.png";
+		//k.Save(so);
+		//Shell.Run(so);
 	}
 
 	static void TestOsd()
@@ -6800,6 +6948,16 @@ REE`");
 		//	r.Visible = !r.Visible;
 		//	200.ms();
 		//}
+
+		//var k = new Osd();
+		//k.Text = "Test";
+		//k.SecondsTimeout = 5;
+		//k.ShowMode = OsdShowMode.Wait;
+		//k.ClickToClose = true;
+		//k.Show();
+		//1.s();
+		//k.Text = "Moo";
+		//k.Show();
 	}
 	//static int s_uytr;
 
@@ -6813,7 +6971,7 @@ REE`");
 
 		//Osd.DefaultScreen = 1;
 		var w = Wnd.Find("*Notepad");
-#if true
+#if false
 
 		var o = new Osd();
 		o.Text = s;
@@ -6863,7 +7021,7 @@ REE`");
 		o.ResizeWhenContentChanged = true;
 		Timer_.After(1000, () =>
 		{
-			//o.Text = "New text";
+			o.Text = "New text";
 			//o.Text = "WW Test OSD Jj";
 			//o.XY=(100, 200);
 			//o.Rect=(100, 100, 100, 100);
@@ -6896,17 +7054,16 @@ REE`");
 		//Osd.ShowText(s, 30, textColor: Color.Honeydew, backColor: Color.DarkBlue);
 		//Osd.ShowText("Test OSD", 30, PopupXY.Mouse, SystemIcons.Information);
 		//Osd.ShowText(s, 30, icon: SystemIcons.Information);
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetShellStockIcon(Icons.Stock.HELP, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.GetStockIcon(StockIcon.HELP, 16));
 		//Osd.ShowText("Test OSD", 30, icon: Icons.GetAppIcon(16));
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetProcessExeIcon(16));
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetFileIconRaw(@"q:\app\qm.exe", 1, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icons.LoadIcon(@"q:\app\qm.exe", 1, 16));
 		//Osd.ShowText("Test OSD", 30, icon: Icons.GetFileIcon(@"q:\app\qm.exe,1", 16));
 		//Osd.ShowText("Test OSD", 30, icon: Icons.GetPidlIcon(Folders.VirtualPidl.AddNewPrograms, 16));
 
 		//var ico = Icons.CreateIcon(32, 32);
 		//var ic = Icons.CreateIcon(32, 32, g =>
 		//{
-		//	//g.Clear(Color.Bisque);
+		//	g.Clear(Color.Bisque);
 		//	g.SmoothingMode = SmoothingMode.HighQuality;
 		//	g.DrawEllipse(Pens.Blue, 1, 1, 30, 30);
 		//});
@@ -6954,6 +7111,96 @@ REE`");
 		////RECT r = (100, 100, 100, 100);
 		////p = (r, default, default);
 		//Print(p);
+
+		//Osd.ShowText("Test OSD", 5, showMode: OsdShowMode.StrongThread);
+		//Osd.ShowText("Test OSD", 5, showMode: OsdShowMode.WeakThread);
+		//Osd.ShowText("Test OSD", 5, showMode: OsdShowMode.Wait);
+		//Osd.ShowText("Test OSD", 5, showMode: OsdShowMode.ThisThread);
+		//AuDialog.Show();
+	}
+
+	static void TestToolWinImage()
+	{
+		var f = new Au.Tools.Form_WinImage();
+		f.ShowDialog();
+		//AuDialog.Show();
+	}
+
+	static void TestToolWinImageCode()
+	{
+#if false
+		//var w = Wnd.Find("Quick*");
+
+
+		//WinImage.Find(w, @"q:\test\function icon.bmp").MouseMove();
+		//var r = WinImage.Find(w, @"q:\test\function icon.bmp");
+		//Print(r);
+
+		//var a = new List<WinImage>();
+		//var img = @"q:\test\function icon.bmp";
+		////var img = new string[] { @"q:\test\function icon.bmp", @"q:\test\autotext icon.bmp"};
+		//WinImage.Find(w, img, also: o => { a.Add(o); return false; });
+		////Print("----");
+		////Print(a);
+		//foreach(var k in a) { Print(k.MatchIndex, k.ListIndex); k.MouseMove(); 0.3.s(); }
+
+		//Print("ok");
+
+		var w = +Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
+		object[] images = {
+			"image:iVBORw0KGgoAAAANSUhEUgAAABwAAAAQCAYAAAAFzx/vAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADqSURBVEhLY/hPZzD4Lfz37x+URR4gyUKYZZP2Tvhv1W8Kx/OOzAGLg9jINDaAYuHVV1//+2x5/l916eP/Hpue/T/7/DNUBgFglgXN9QNbBOJvv7wVbjkyxgZQLHTd+Oz/vCvv/n/6/vP/kmvv/1uuffr/77+/UFkIABnkNs3p/9evX6AiCACzBJdlIEByHIIMy1uRDeUhAEgcHWMDKBYqLnmCgdEByCCq+RBmyY8fP7Ba+OfPH7DvQAYix+Hq0yuhKggDkiwEAZDPYJbCMMhCYrMLyUGKDYB8TiwgOdFQCkYtpDqgs4X//wMAud2NhZbZMbsAAAAASUVORK5CYII=",
+			"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAALCAYAAACksgdhAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABiSURBVChTY/iPBD6/vv//5bVd/3/8+IEV39vZBFbHcH9/939k/O3rV6waQBiuCZskLjwAmkAMfPjr54+ka3p6aiHpmkD448v7pGu6v7eLdE0g/OrWwf+Pjs2AaAKTJIH//wEF2/8fchW91wAAAABJRU5ErkJggg==",
+		};
+		var all = new List<WinImage>();
+		//all.Add(WinImage.Find(w, images));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindOther; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindMoreAndReturn; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfList; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfListAndReturn; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfThis; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfThisAndReturn; }));
+		//bool found = false; Print(WinImage.Find(w, images, also: t => { all.Add(t); if(!found) { found = true; return WIAlso.FindMoreOfThisAndReturn; } return WIAlso.FindOtherOfThis; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.Return; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.NotFound; }));
+
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindOther; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindMoreAndReturn; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfList; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfListAndReturn; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfThis; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfThisAndReturn; }));
+		//bool found = false; Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); if(!found) { found = true; return WIAlso.FindMoreOfThisAndReturn; } return WIAlso.FindOtherOfThis; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.Return; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.NotFound; }));
+
+		//var found = new BitArray(images.Length); WinImage.Find(w, images, also: t => { found[t.ListIndex] = true; return WIAlso.FindMoreOfListAndReturn; }); if(found[0]) Print(0); if(found[1]) Print(1);
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return true ? WIAlso.Return : WIAlso.FindOther; }));
+		Print(WinImage.Find(w, images, also: o => { all.Add(o); return o.Skip(1); }));
+		Print("---");
+		foreach(var wi in all) { Print(wi); }
+
+#else
+		//var w = +Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
+		//string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADZSURBVDhPY/hPIzACDP737x+UhR+QZDDM0El7J/y36jeF43lH5oDFQWwYjWLw1Vdf//tsef5fdenj/x6bnv0/+/wzVAYBYIYGzfUDGwjib7+8FW4JDKMY7Lrx2f95V979//T95/8l197/t1z79P/ff3+hshAA0uQ2zen/169foCIIAJKD0SSHMUhT3opsKA8BQOLIGMVgxSVPMDA6AGki2cUww378+IHV4D9//oBdC9KIHMarT6+EqkAAkgwGAZBLYYbDMMhg9GRIclBgAyCfoAOSI4848P8/AFdhC+1vmMLqAAAAAElFTkSuQmCC";
+		//var wi = WinImage.Find(w, image).OrThrow();
+		//wi.MouseMove();
+
+
+
+
+#endif
+
+	}
+
+	static void TestThrowAndWait()
+	{
+		//Print(WaitFor.Condition(1, () => false));
+
+	}
+
+	static void TestAccFindParamNavig()
+	{
+
 	}
 
 
@@ -6971,20 +7218,27 @@ REE`");
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
-			100.ms();
+			//100.ms();
 		}
 
 		try {
 #if true
 
-
-			TestOsd();
-			//TestIconCacheEtc();
+			TestAccFindParamNavig();
+			//TestThrowAndWait();
+			//TestToolWinImageCode();
 			//TestToolWinImage();
 			//TestWinImageCapture();
+			//Au.Tools.Test.OsdRect();
+			//TestOsd();
+			//TestAuMenuIcons();
+			//TestIconMemory();
+			//TestIconCacheEtc();
 			//TestLoadCursor();
 			//TestConvert();
+			//TestLibIsPossiblyDos();
 			//TestScreen();
+			//TestWndChild();
 			//TestWaitFor();
 			//TestAccFromEvent();
 			//TestAccHook();
@@ -7123,4 +7377,3 @@ REE`");
 
 	}
 }
-

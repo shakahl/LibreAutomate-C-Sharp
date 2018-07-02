@@ -806,6 +806,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="Time.SleepDoEvents"/>.
 		/// </remarks>
+		/// <seealso cref="WaitFor.MessagesAndCondition"/>
 		public bool DoEvents { get; set; }
 
 		///

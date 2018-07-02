@@ -352,7 +352,7 @@ namespace Au
 		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
 		/// 4. If path is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' with '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
-		/// 6. If no flag DoNotExpandDosPath, if contains '~' character, calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
+		/// 6. If no flag DoNotExpandDosPath, if looks like a DOS path (contains '~' etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
 		/// 7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is a drive path (eg @"C:\").
 		/// 8. Appends '\\' character if ends with a drive name (eg "C:" -> @"C:\").
 		/// 9. If no flag DoNotPrefixLongPath, calls <see cref="PrefixLongPathIfNeed"/>, which adds @"\\?\" etc prefix if path is very long.
@@ -400,7 +400,7 @@ namespace Au
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
 
-				if(0 == (flags & PNFlags.DoNotExpandDosPath) && s.IndexOf('~') > 0) s = LibExpandDosPath(s);
+				if(0 == (flags & PNFlags.DoNotExpandDosPath) && LibIsPossiblyDos(s)) s = LibExpandDosPath(s);
 
 				if(0 == (flags & PNFlags.DoNotRemoveEndSeparator)) s = _AddRemoveSep(s);
 				else if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
@@ -412,7 +412,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API GetLongPathName.
-		/// Currently does not check whether s contains '~' character. Note: the API is slow.
+		/// Does not check whether s contains '~' character etc. Note: the API is slow.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		internal static string LibExpandDosPath(string s)
@@ -427,7 +427,31 @@ namespace Au
 			return s;
 			//CONSIDER: the API fails if the file does not exist.
 			//	Workaround: if filename does not contain '~', pass only the part that contains.
-			//	Also, call API only if parts containing '~' are 8 or 12 char long.
+		}
+
+		/// <summary>
+		/// Returns true if pathOrFilename looks like a DOS filename or path.
+		/// Examples: "abcde~12", "abcde~12.txt", @"c:\path\abcde~12.txt", "c:\abcde~12\path".
+		/// </summary>
+		/// <param name="s">Can be null.</param>
+		internal static bool LibIsPossiblyDos(string s)
+		{
+			//Print(s);
+			if(s != null && s.Length >= 8) {
+				for(int i = 0; (i = s.IndexOf('~', i + 1)) > 0;) {
+					int j = i + 1, k = 0;
+					for(; k < 6 && j < s.Length; k++, j++) if(!Char_.IsAsciiDigit(s[j])) break;
+					if(k == 0) continue;
+					char c = j < s.Length ? s[j] : '\\';
+					if(c == '\\' || c == '/' || (c == '.' && j == s.Length - 4)) {
+						for(j = i; j > 0; j--) {
+							c = s[j - 1]; if(c == '\\' || c == '/') break;
+						}
+						if(j == i - (7 - k)) return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		/// <summary>

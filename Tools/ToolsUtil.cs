@@ -109,34 +109,28 @@ namespace Au.Tools
 		/// <summary>
 		/// Creates standard <see cref="OsdRect"/>.
 		/// </summary>
-		internal static OsdRect CreateOsdRect(int thickness = 2) => new OsdRect() { Color = Color.DarkOrange, Thickness = thickness };
+		internal static OsdRect CreateOsdRect(int thickness = 2) => new OsdRect() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
 
 		/// <summary>
-		/// Briefly shows standard static or blinking on-screen rectangle.
+		/// Briefly shows standard blinking on-screen rectangle.
 		/// </summary>
-		internal static void ShowOsdRect(in RECT r, bool blink)
+		internal static void ShowOsdRect(RECT r)
 		{
-			if(r.IsEmpty) return;
 			var osr = CreateOsdRect(4);
+			r.Inflate(2, 2); //2 pixels inside, 2 outside
 			osr.Rect = r;
 			osr.Show();
 
-			//FUTURE: show something more visible, eg line from Mouse.XY to r. For it create class OnScreenLine or extend OnScreenRect.
-			//	Or could animate the rect, but then not good when small.
-
-			if(blink) {
-				int i = 0;
-				Timer_.Every(250, t =>
-				{
-					if(i++ < 5) osr.Visible = !osr.Visible;
-					else {
-						t.Stop();
-						osr.Dispose();
-					}
-				});
-			} else {
-				Timer_.After(1000, () => osr.Dispose());
-			}
+			int i = 0;
+			Timer_.Every(250, t =>
+			{
+				if(i++ < 5) {
+					osr.Color = (i & 1) != 0 ? 0xFFADFF2F : 0xFF8A2BE2; //Color.GreenYellow : Color.BlueViolet
+				} else {
+					t.Stop();
+					osr.Dispose();
+				}
+			});
 		}
 
 		#endregion
@@ -277,7 +271,7 @@ namespace Au.Tools
 		/// Executes test code that finds an object in window.
 		/// Returns the found object and the speed.
 		/// </summary>
-		/// <param name="sFind">Code that finds and returns an object. Example: "+Acc.Find(...);".</param>
+		/// <param name="sFind">Code that finds and returns an object. Example: "+Acc.Find(...);". Can be preceded by more code lines.</param>
 		/// <param name="tWnd">Control that contains window handle and code to find the window.</param>
 		/// <param name="bTest">The 'Test' button. This function will disable/enable it.</param>
 		/// <param name="lSpeed">Control used to display speed.</param>
@@ -292,8 +286,13 @@ namespace Au.Tools
 			//Perf.First();
 
 			var b = new StringBuilder();
-			b.Append(sWnd).Append("var _p_ = Perf.StartNew();").AppendLine("var _a_ = ");
-			b.AppendLine(sFind);
+			b.AppendLine(sWnd);
+
+			var lines = sFind.SplitLines_(true);
+			int lastLine = lines.Length - 1;
+			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
+			b.AppendLine("var _p_ = Perf.StartNew(); var _a_ =");
+			b.AppendLine(lines[lastLine]);
 			b.AppendLine($"_p_.Next(); return (_p_.TimeTotal, _a_, {tWnd.WndVar});");
 
 			var code = b.ToString(); //Print(code);
@@ -307,6 +306,8 @@ namespace Au.Tools
 			}
 			catch(CompilationErrorException e) {
 				var es = String.Join("\r\n", e.Diagnostics);
+				//lastLine += 3; es = es.RegexReplace_($@"(?m)^\({lastLine},", $"({lastLine - 1},"); //correct the line number of the last line, because we inserted one line before it; cannot insert at the end of previous line because it can end with comments
+				Print("---- CODE ----\r\n" + code + "--------------");
 				AuDialog.ShowError(e.GetType().Name, es, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 			}
 			catch(NotFoundException) {
@@ -330,13 +331,25 @@ namespace Au.Tools
 			if(r.obj != null) {
 				lSpeed.ForeColor = Form.DefaultForeColor;
 				lSpeed.Text = sTime;
-				ToolsUtil.ShowOsdRect(getRect(r.obj), true);
+				var re = getRect(r.obj);
+				ToolsUtil.ShowOsdRect(re);
+
+				//if form or its visible owners cover the found object, temporarily activate object's window
+				foreach(var ow in Wnd.Misc.OwnerWindowsAndThis((Wnd)form, true)) {
+					if(re.IntersectsWith(ow.Rect)) {
+						r.wnd.ActivateLL();
+						Time.SleepDoEvents(1500);
+						break;
+					}
+				}
 			} else {
 				//AuDialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				lSpeed.ForeColor = Color.Red;
 				lSpeed.Text = "Not found,";
-				Timer_.After(500, () => lSpeed.Text = sTime);
+				Timer_.After(700, () => lSpeed.Text = sTime);
 			}
+
+			((Wnd)form).ActivateLL();
 
 			var w = tWnd.Hwnd;
 			if(r.wnd != w) {
@@ -358,4 +371,14 @@ namespace Au.Tools
 
 		#endregion
 	}
+
+	//public static class Test
+	//{
+	//	public static void OsdRect()
+	//	{
+	//		RECT r = (500, 500, 30, 20);
+	//		ToolsUtil.ShowOsdRect(r);
+	//		AuDialog.Show();
+	//	}
+	//}
 }
