@@ -30,7 +30,7 @@ namespace Au
 		/// A window that has an owner window is always on top of its owner window.
 		/// Don't call this for controls, they don't have an owner window.
 		/// The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="Native.GetError"/>.
-		/// The 'set' function can fail, eg if the owner's process has higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level.
+		/// The 'set' function can fail, eg if the owner's process has higher <see cref="Process_.UacInfo">UAC</see> integrity level.
 		/// </remarks>
 		public Wnd WndOwner
 		{
@@ -61,7 +61,7 @@ namespace Au
 		/// Uses <see cref="WndDirectParent"/>.
 		/// Another way is <c>w.HasStyle(Native.WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
 		/// </remarks>
-		public bool IsChildWindow => !WndDirectParent.Is0;
+		public bool IsChild => !WndDirectParent.Is0;
 
 		/// <summary>
 		/// Returns true if this is a direct or indirect child (descendant) of window w.
@@ -287,7 +287,7 @@ namespace Au
 			{
 				Wnd w = WndShell;
 				var f = new ChildFinder(className: "SysListView32");
-				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", "***tid:" + w.ThreadId.ToString(), also: t => f.Find(t));
+				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", WFEtc.Thread(w.ThreadId), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;
 
@@ -327,7 +327,7 @@ namespace Au
 			/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
 			/// </summary>
 			/// <param name="w"></param>
-			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
 			/// <param name="skipMinimized">Return false if w is minimized.</param>
 			public static bool IsMainWindow(Wnd w, bool allDesktops = false, bool skipMinimized = false)
 			{
@@ -369,7 +369,7 @@ namespace Au
 			/// Gets main windows, ie those that probably are in the Windows taskbar.
 			/// Returns array containing 0 or more Wnd.
 			/// </summary>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
 			/// <remarks>
 			/// Uses <see cref="IsMainWindow"/>.
 			/// Does not match the order of buttons in the Windows taskbar.
@@ -396,7 +396,7 @@ namespace Au
 			/// Returns default(Wnd) if there are no such windows.
 			/// </summary>
 			/// <param name="w">Start from this window. If default(Wnd), starts from the top of the Z order.</param>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
 			/// <param name="skipMinimized">Skip minimized windows.</param>
 			/// <param name="retryFromTop">If w is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
 			/// <remarks>

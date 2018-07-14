@@ -63,7 +63,7 @@ namespace Au.Types
 		{
 			POINT p = Mouse.XY;
 			POINT k = t.Location;
-			return new POINT(p.x - k.x, p.y - k.y);
+			return (p.x - k.x, p.y - k.y);
 		}
 
 		/// <summary>

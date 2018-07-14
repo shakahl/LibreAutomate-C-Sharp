@@ -48,9 +48,18 @@ namespace Au.Tools
 			_control.Tags.AddLinkTag("_examples", what => _Examples(what));
 		}
 
+		/// <summary>
+		/// Displays text with appended wildex info that starts with "\r\nThe text is wildcard expression".
+		/// If text ends with $, wildex info starts with " is wildcard expression".
+		/// </summary>
 		public void SetTextWithWildexInfo(string text)
 		{
-			_SetInfoText(text + c_infoWildex);
+			string wild = c_infoWildex;
+			if(text.EndsWith_("$")) {
+				text = text.Remove(text.Length - 1);
+				wild = wild.Substring(10);
+			}
+			_SetInfoText(text + wild);
 		}
 
 		void _SetInfoText(string text)

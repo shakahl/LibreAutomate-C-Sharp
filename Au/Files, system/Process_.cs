@@ -27,7 +27,7 @@ namespace Au
 	public static unsafe class Process_
 	{
 		/// <summary>
-		/// Gets process executable file name (with ".exe" etc) or full path.
+		/// Gets process executable file name (like "notepad.exe") or full path.
 		/// Returns null if fails.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
@@ -213,7 +213,7 @@ namespace Au
 #pragma warning restore 649
 
 			/// <summary>
-			/// Gets process executable file name (with ".exe" etc). Not full path.
+			/// Gets process executable file name (like "notepad.exe"). Not full path.
 			/// If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
 			/// Don't call multiple times, because always converts from raw char*.
 			/// </summary>
@@ -263,7 +263,7 @@ namespace Au
 		/// Returns array containing 0 or more elements.
 		/// </summary>
 		/// <param name="processName">
-		/// Process executable file name (with ".exe" etc), like "notepad.exe".
+		/// Process executable file name, like "notepad.exe".
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// </param>
 		/// <param name="fullPath">
@@ -588,7 +588,7 @@ namespace Au
 			/// </summary>
 			/// <param name="w">A window in that process.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> High integrity level when this process is Medium+uiAccess.</remarks>
+			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
 			/// <exception cref="WndException">w invalid.</exception>
 			/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(Wnd w, int nBytes)
@@ -602,7 +602,7 @@ namespace Au
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="AuException">Failed to open process handle (usually because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>) or allocate memory.</exception>
+			/// <exception cref="AuException">Failed to open process handle (usually because of <see cref="UacInfo">UAC</see>) or allocate memory.</exception>
 			public Memory(int processId, int nBytes)
 			{
 				_Alloc(processId, default, nBytes);
@@ -757,7 +757,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Holds an access token (security info) of a process and provides various security info, eg <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level.
+		/// Holds an access token (security info) of a process and provides various security info, eg UAC integrity level.
 		/// </summary>
 		public sealed class UacInfo :IDisposable
 		{
@@ -791,8 +791,8 @@ namespace Au
 			public IntPtr UnsafeTokenHandle => _htoken;
 
 			/// <summary>
-			/// Gets true if the last called property function failed.
-			/// Normally getting properties should never fail. Only <see cref="GetOfProcess"/> can fail (then it returns null).
+			/// Returns true if the last called property function failed.
+			/// Normally it should never fail. Only <see cref="GetOfProcess"/> can fail (then it returns null).
 			/// </summary>
 			public bool Failed { get; private set; }
 
@@ -812,7 +812,7 @@ namespace Au
 
 			ElevationType _Elevation; byte _haveElevation;
 			/// <summary>
-			/// Gets process <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> elevation type.
+			/// Gets the <see cref="UacInfo">UAC</see> elevation type of the process.
 			/// Elevation types:
 			/// Full - runs as administrator (High or System integrity level).
 			/// Limited - runs as standard user (Medium, Medium+UIAccess or Low integrity level) on administrator user session.
@@ -841,7 +841,7 @@ namespace Au
 
 			bool _isUIAccess; byte _haveIsUIAccess;
 			/// <summary>
-			/// Returns true if the process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">uiAccess</conceptualLink> property.
+			/// Returns true if the process has <see cref="UacInfo">uiAccess</see> property.
 			/// A uiAccess process can access/automate all windows of processes running in the same user session.
 			/// Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
 			/// Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevelAndUIAccess==IL.UIAccess</c> (<see cref="IntegrityLevelAndUIAccess"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
@@ -894,7 +894,7 @@ namespace Au
 
 			IL _integrityLevel; byte _haveIntegrityLevel;
 			/// <summary>
-			/// Gets process <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (IL).
+			/// Gets the <see cref="UacInfo">UAC</see> integrity level (IL) of the process.
 			/// IL from lowest to highest value:
 			///		<b>Untrusted</b> - the most limited rights. Very rare.
 			///		<b>Low</b> - very limited rights. Used by Internet Explorer tab processes, Windows Store apps.
@@ -989,7 +989,7 @@ namespace Au
 			static UacInfo _thisProcess;
 
 			/// <summary>
-			/// Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
+			/// Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="UacInfo">UAC</see>.
 			/// This function for example can be used to check whether you can write to protected locations in the file system and registry.
 			/// </summary>
 			public static bool IsAdmin
@@ -1054,7 +1054,7 @@ namespace Au
 			*/
 
 			/// <summary>
-			/// Returns true if <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> is disabled (turned off) on this Windows 7 computer.
+			/// Returns true if <see cref="UacInfo">UAC</see> is disabled (turned off) on this Windows 7 computer.
 			/// On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
 			/// </summary>
 			public static bool IsUacDisabled
@@ -1106,7 +1106,7 @@ namespace Au.Types
 		/// <summary>Process id.</summary>
 		public int ProcessId;
 
-		/// <summary>Executable file name (with ".exe" etc). Not full path.</summary>
+		/// <summary>Executable file name, like "notepad.exe".</summary>
 		public string Name;
 
 		//public IntPtr UserSid; //where is its memory?

@@ -23,38 +23,17 @@ using static Au.NoClass;
 
 using SG = SourceGrid;
 using Editors = SourceGrid.Cells.Editors;
+using DevAge.Drawing;
+
+//TODO: xml doc.
+//SHOULDDO: now combo button when editing the cell is drawn randomly as hot or cold. Sometimes hot even when form opened.
 
 namespace Au.Controls
 {
-	//[DebuggerStepThrough]
 	public class ParamGrid :SG.Grid
 	{
 		Editors.TextBox _editor;
-		SG.Cells.Views.Cell _viewReadonly;
-		SG.Cells.Views.Cell _viewHeaderRow;
 		SG.Cells.Controllers.ToolTipText _controllerTooltip0, _controllerTooltip1;
-
-		static ParamGrid()
-		{
-			var tr = new DevAge.Drawing.VisualElements.TextRenderer();
-			//tr.TextFormatFlags |= TextFormatFlags.ExpandTabs; //ignored. It seems it can be used only in SourceGrid.Cells.Views.Cell.PrepareVisualElementText override. Never mind.
-			SG.Cells.Views.Cell.Default.ElementText = tr; //default GDI+
-
-			//workaround for too big cell height, especially with font SegoeUI, which is the default Windows UI font
-			var p1 = new DevAge.Drawing.Padding(0, 2, 0, 0);
-			var p2 = new DevAge.Drawing.Padding(2, 6, 0, -1);
-			SG.Cells.Views.Cell.DefaultPadding = p1; //default all 2 2 2 2
-			SG.Cells.Views.Cell.Default.Padding = p1; //need both
-			SG.Cells.Views.CheckBox.DefaultPadding = p2;
-			//SG.Cells.Views.CheckBox.DefaultAlignment = DevAge.Drawing.ContentAlignment.TopLeft; //somehow makes big cell height
-
-			//SG.Cells.Views.Cell.Default.WordWrap = true; //does not change row height automatically. We could do it in OnClientSizeChanged.
-			SG.Cells.Views.CheckBox.DefaultBackColor = Form.DefaultBackColor; //default white
-
-			//_viewOfValueCells = new SG.Cells.Views.Cell();
-			//_viewOfValueCells.WordWrap = true; //does not work correctly
-			//_viewOfValueCells.Padding = //uses SG.Cells.Views.Cell.DefaultPadding;
-		}
 
 		const SG.EditableMode c_editableMode = SG.EditableMode.SingleClick | SG.EditableMode.F2Key | SG.EditableMode.AnyKey; //double click -> single click. See also OnMouseDown.
 
@@ -74,6 +53,8 @@ namespace Au.Controls
 			this.Controller.AddController(SG.Cells.Controllers.Resizable.ResizeWidth); //we resize width and height automatically, but the user may want to resize width. This is like in VS.
 			_controllerTooltip0 = new SG.Cells.Controllers.ToolTipText() /*{ IsBalloon = true }*/;
 			_controllerTooltip1 = new SG.Cells.Controllers.ToolTipText();
+
+			//this.Font = new Font("Verdana", 8);
 		}
 
 		protected override void CreateHandle()
@@ -93,7 +74,13 @@ namespace Au.Controls
 			//SourceGrid.Grid always shows a selection rect after entering first time.
 			//	The properties only allow to change background color when focused/nonfocused.
 			//	We use OnEnter/OnLeave to show a focus rect only when the control is focused.
+
+			VScrollBar.LocationChanged += (unu, sed) => _AutoSizeLastColumn(); //when vscrollbar added/removed (SB width changed); when grid width changed.
 		}
+
+#if DEBUG
+		public bool ZDebug { get; set; }
+#endif
 
 		void _ShowCellFocusRect(bool yes)
 		{
@@ -115,12 +102,6 @@ namespace Au.Controls
 			_ShowCellFocusRect(false);
 		}
 
-		protected override void OnClientSizeChanged(EventArgs e)
-		{
-			base.OnClientSizeChanged(e);
-			_AutoSizeLastColumn(); //not ZAutoSizeColumns
-		}
-
 		void _AutoSizeLastColumn()
 		{
 			//Print(this.Name, this.RowsCount);
@@ -135,7 +116,7 @@ namespace Au.Controls
 				this.Columns[col].Width = Math.Max(n, 0);
 			}
 
-			//TODO: also call this when the user resizes column 0. Or don't allow to resize, why need it.
+			//SHOULDDO: also call this when the user resizes column 0. Or don't allow to resize, why need it.
 		}
 
 		int _MeasureColumnWidth(int column)
@@ -156,23 +137,20 @@ namespace Au.Controls
 		/// <summary>
 		/// Call this after adding all rows.
 		/// </summary>
-		public void ZAutoSizeColumns()
+		public void ZAutoSize(bool rows = true, bool columns = true)
 		{
-			if(this.ColumnsCount > 1 && this.RowsCount > 0) {
-				//this.Columns.AutoSizeColumn(0); //no, may be too wide. There is MinimumWidth but no MaximumWidth.
-				//int wid = this.Columns.MeasureColumnWidth(0, false, 0, this.RowsCount - 1); //no, it does not work well with col-spanned cells
-				int wid = _MeasureColumnWidth(0);
-				this.Columns.SetWidth(0, Math.Min(wid, this.ClientSize.Width / 2));
+			if(rows) {
+				this.Rows.AutoSize(false);
 			}
-			_AutoSizeLastColumn();
-		}
-
-		/// <summary>
-		/// Call this after adding all rows.
-		/// </summary>
-		public void ZAutoSizeRows()
-		{
-			this.Rows.AutoSize(false);
+			if(columns) {
+				if(this.ColumnsCount > 1 && this.RowsCount > 0) {
+					//this.Columns.AutoSizeColumn(0); //no, may be too wide. There is MinimumWidth but no MaximumWidth.
+					//int wid = this.Columns.MeasureColumnWidth(0, false, 0, this.RowsCount - 1); //no, it does not work well with col-spanned cells
+					int wid = _MeasureColumnWidth(0);
+					this.Columns.SetWidth(0, Math.Min(wid, this.ClientSize.Width / 2));
+				}
+				_AutoSizeLastColumn();
+			}
 		}
 
 		class _CellController :SG.Cells.Controllers.ControllerBase
@@ -192,32 +170,23 @@ namespace Au.Controls
 				grid.ZOnValueChanged(sender);
 			}
 
-			//rejected: start editing on mouse enter. Probably more bad than good.
-			//public override void OnMouseEnter(SG.CellContext sender, EventArgs e)
-			//{
-			//	base.OnMouseEnter(sender, e);
-
-			//	Print(sender.Position, sender.IsEditing());
-			//	var pos = sender.Position;
-			//	if(pos.Column == 1) {
-			//		var grid = sender.Grid as ParamGrid;
-			//		//if(!grid.ValueEditor.IsEditing) { //bad
-			//			sender.StartEdit();
-			//			//var con = (sender.Cell.Editor as Editors.TextBox).Control;
-			//			//con.SelectionLength = 0;
-			//		//}
-			//	}
-			//}
-
 			public override void OnEditStarted(SG.CellContext sender, EventArgs e)
 			{
-				_ShowEditInfo(sender, true);
-				base.OnEditStarted(sender, e);
+				//Debug_.PrintFunc();
 
 				if(sender.Cell.Editor is Editors.ComboBox cb) {
-					var c = cb.Control;
-					if(c.DropDownStyle == ComboBoxStyle.DropDownList) c.DroppedDown = true;
+					cb.Control.DroppedDown = true;
+				} else if(sender.Cell is ComboCell cc) {
+					var g = cc.Grid as ParamGrid;
+					var tb = (cc.Editor as Editors.TextBox).Control;
+					var bWidth = cc.MeasuredButtonWidth;
+					tb.Width -= bWidth;
+					if(g._clickX >= tb.Right) cc.ShowDropDown(); //clicked drop-down button
 				}
+
+				base.OnEditStarted(sender, e);
+
+				_ShowEditInfo(sender, true);
 			}
 
 			public override void OnEditEnded(SG.CellContext sender, EventArgs e)
@@ -234,37 +203,44 @@ namespace Au.Controls
 					grid.ZOnShowEditInfo(sender, show ? t.Info : null);
 				}
 			}
-
-			//public override void OnFocusEntered(SG.CellContext sender, EventArgs e)
-			//{
-			//	Debug_.PrintFunc();
-			//	base.OnFocusEntered(sender, e);
-			//}
-
-			//public override void OnFocusLeft(SG.CellContext sender, EventArgs e)
-			//{
-			//	Debug_.PrintFunc();
-			//	base.OnFocusLeft(sender, e);
-			//}
-
-			//public override void OnMouseEnter(SG.CellContext sender, EventArgs e)
-			//{
-			//	Debug_.PrintFunc();
-			//	base.OnMouseEnter(sender, e);
-			//}
-
-			//public override void OnMouseLeave(SG.CellContext sender, EventArgs e)
-			//{
-			//	Debug_.PrintFunc();
-			//	base.OnMouseLeave(sender, e);
-			//}
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
-			if(ZEndEdit(cancel: false)) return;
+			if(ZGetEditCell(out var c)) {
+				if(c.Position != PositionAtPoint(e.Location)) {
+					c.EndEdit(cancel: false);
+				} else if(c.Cell is ComboCell cc && _comboPopup!=null) {
+					//never mind: cannot toggle, because the click closed the popup before this event
+					//_comboPopup.Popup.Visible = !_comboPopup.Popup.Visible; //no, then shows in wrong place if form moved while editing cell
+					cc.ShowDropDown(sameItems: true);
+				}
+				return;
+			}
+
 			base.OnMouseDown(e);
 		}
+
+		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+		{
+			switch(keyData) {
+			case Keys.Down: case Keys.Down | Keys.Alt:
+				if(ZGetEditCell(out var c) && c.Cell is ComboCell cc) {
+					cc.ShowDropDown();
+					return true;
+				}
+				break;
+			}
+			return base.ProcessCmdKey(ref msg, keyData);
+		}
+
+		protected override void OnMouseClick(MouseEventArgs e)
+		{
+			_clickX = e.Location.X;
+			base.OnMouseClick(e);
+			_clickX = 0;
+		}
+		int _clickX;
 
 		protected virtual void ZOnValueChanged(SG.CellContext sender)
 		{
@@ -287,6 +263,7 @@ namespace Au.Controls
 		/// </summary>
 		public event Action<SG.CellContext, string> ZShowEditInfo;
 
+		//Adds Info.
 		public class EditCell :SG.Cells.Cell
 		{
 			public EditCell(string value) : base(value, typeof(string)) { }
@@ -294,18 +271,204 @@ namespace Au.Controls
 			public string Info { get; set; }
 		}
 
-		/// <summary>
-		/// Row type.
-		/// </summary>
+		//Adds drop-down button and shows drop-down list.
+		public class ComboCell :EditCell
+		{
+			string[] _items;
+			Func<string[]> _callback;
+
+			internal ComboCell(string[] items, int iSelect) : base(iSelect >= 0 ? items[iSelect] : "")
+			{
+				_items = items;
+			}
+
+			internal ComboCell(Func<string[]> callback) : base("")
+			{
+				_callback = callback;
+			}
+
+			internal int MeasuredButtonWidth => ((this.View as SG.Cells.Views.ComboBox).ElementDropDown as _ComboButton).MeasuredWidth;
+
+			internal void ShowDropDown(bool sameItems = false)
+			{
+				var g = Grid as ParamGrid;
+				var p = g._comboPopup;
+				if(!sameItems) {
+					var items = _items;
+					if(items == null) items = _callback?.Invoke();
+					if(items == null || items.Length == 0) return;
+
+					var tb = (this.Editor as Editors.TextBox).Control;
+					tb.Update(); g.Update(); //paint controls before the popup animation, to avoid flickering
+					if(p == null) g._comboPopup = p = new PopupList();
+					p.Items = items;
+					p.OnSelected = pp =>
+					{
+						tb.Value = pp.ResultString;
+						if(!pp.ResultWasKey) g.ZEndEdit(cancel: false);
+					};
+				}
+				var r = g.PositionToRectangle(new SG.Position(Row.Index, Column.Index));
+				p.Show(g, r);
+			}
+		}
+		PopupList _comboPopup;
+
+		//Makes IAccessible.Name = Caption instead of "True" or "False".
+		//public class CheckCell :SG.Cells.CheckBox
+		//{
+		//	public CheckCell(string caption, bool? checkValue) : base(caption, checkValue) { }
+
+		//	//public override string DisplayText => Caption ?? base.DisplayText;
+		//	public override string DisplayText
+		//	{
+		//		get
+		//		{
+		//			var s = Caption;
+		//			if(Empty(s))return base.DisplayText;
+		//			if(Checked.GetValueOrDefault()) return s + ", checked";
+		//			return s;
+		//		}
+		//	}
+		//}
+		//I reviewed DisplayText usage in grid source. This change isn't dangerous. In most cases it does more good than bad.
+		//Not perfect. Grid also uses DisplayText for IAccessible.Value and when exporting (CSV, HTML).
+		//Better modify grid source in class GridRowCellAccessibleObject:
+#if false
+			//au: for checkbox return Caption instead of True/False.
+			public override string Name
+			{
+				get
+				{
+					string s;
+					if(cell is Cells.CheckBox c) {
+						s = c.Caption;
+						if(!String.IsNullOrEmpty(s)) return s;
+					}
+					s = cell.DisplayText;
+					if(s != null) return s;
+					return "Column " + cell.Column.Index;
+				}
+			}
+
+			//au: add state
+			public override AccessibleStates State
+			{
+				get
+				{
+					if(cell is Cells.CheckBox c) {
+						var v = c.Checked;
+						switch(v) {
+						case true: return AccessibleStates.Checked;
+						case null: return AccessibleStates.Mixed;
+						}
+					}
+					if(cell.Editor == null) return AccessibleStates.ReadOnly;
+					return AccessibleStates.None;
+				}
+			}
+
+			//au: add Help
+			public override string Help => cell.ToolTipText ?? base.Help;
+#endif
+
+		enum _ViewType
+		{
+			//column 0
+			Check, Readonly, HeaderRow, HeaderRowCheck,
+			//column 1
+			Edit, Combo, Button
+		}
+		SG.Cells.Views.Cell[] _views = new SG.Cells.Views.Cell[7];
+		static DevAge.Drawing.VisualElements.TextRenderer s_textRenderer = new DevAge.Drawing.VisualElements.TextRenderer(); //default GDI+ //ExpandTabs ignored. It seems it can be used only in SourceGrid.Cells.Views.Cell.PrepareVisualElementText override. Never mind.
+
+		SG.Cells.Views.Cell _GetView(_ViewType type)
+		{
+			ref SG.Cells.Views.Cell view = ref _views[(int)type];
+			switch(type) {
+			case _ViewType.Edit:
+				if(view == null) view = new SG.Cells.Views.Cell {
+					ElementText = s_textRenderer,
+					Padding = new DevAge.Drawing.Padding(0, 2, 0, 0) //default all 2 2 2 2
+				};
+				break;
+			case _ViewType.Combo:
+				if(view == null) view = new SG.Cells.Views.ComboBox {
+					ElementText = s_textRenderer,
+					Padding = new DevAge.Drawing.Padding(0, 0, 0, 0),
+					ElementDropDown = new _ComboButton()
+				};
+				break;
+			case _ViewType.Button:
+				if(view == null) view = new SG.Cells.Views.Button {
+					ElementText = s_textRenderer,
+					Padding = new DevAge.Drawing.Padding(0, 0, 0, 0)
+				};
+				break;
+			case _ViewType.Check:
+				if(view == null) view = new SG.Cells.Views.CheckBox {
+					ElementText = s_textRenderer,
+					BackColor = Form.DefaultBackColor,
+					CheckBoxAlignment = DevAge.Drawing.ContentAlignment.MiddleLeft,
+					Padding = new DevAge.Drawing.Padding(2, 2, 0, 0)
+				};
+				break;
+			case _ViewType.Readonly:
+				if(view == null) view = new SG.Cells.Views.Cell {
+					ElementText = s_textRenderer,
+					BackColor = Form.DefaultBackColor,
+					Padding = new DevAge.Drawing.Padding(0, 2, 0, 0)
+				};
+				break;
+			case _ViewType.HeaderRow:
+				if(view == null) view = new SG.Cells.Views.Cell {
+					ElementText = s_textRenderer,
+					TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter,
+					Padding = new DevAge.Drawing.Padding(2.1f),
+					Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.Silver, Color.WhiteSmoke, 90)
+				};
+				break;
+			case _ViewType.HeaderRowCheck:
+				if(view == null) view = new SG.Cells.Views.CheckBox {
+					ElementText = s_textRenderer,
+					TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter,
+					CheckBoxAlignment = DevAge.Drawing.ContentAlignment.MiddleLeft, //default MiddleCenter draws on text
+					Padding = new DevAge.Drawing.Padding(2.1f),
+					Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.Silver, Color.WhiteSmoke, 90)
+				};
+				break;
+			}
+			return view;
+		}
+
+		//Combo button that does not make the cell taller.
+		class _ComboButton :DevAge.Drawing.VisualElements.DropDownButtonThemed
+		{
+			public _ComboButton()
+			{
+				AnchorArea = new AnchorArea(float.NaN, 0, 0, 0, false, false);
+			}
+
+			protected override SizeF OnMeasureContent(MeasureHelper measure, SizeF maxSize)
+			{
+				var z = base.OnMeasureContent(measure, maxSize);
+				z.Height = 16; //info: can be even 0; grid does not draw it smaller than cell height.
+				MeasuredWidth = (int)z.Width;
+				return z;
+			}
+
+			public int MeasuredWidth { get; private set; }
+		}
+
 		enum _RowType
 		{
-			/// <summary>Checkbox and editable cell.</summary>
-			Optional,
-			/// <summary>Label and editable cell.</summary>
-			Required,
+			/// <summary>Checkbox and editable cell. If check is null, adds lebel instead of checkbox.</summary>
+			Editable,
+
 			/// <summary>Only checkbox.</summary>
-			Flag,
-			/// <summary>Only label.</summary>
+			Check,
+
+			/// <summary>Only label. If check is not null, adds checkbox instead of label.</summary>
 			Header,
 		}
 
@@ -315,133 +478,155 @@ namespace Au.Controls
 			ComboText,
 			ComboList,
 			TextButton,
+			Button,
 		}
 
-		int _AddRow(string key, string name, string value, bool check, _RowType type, string tt, string info, int insertAt,
-			EditType etype = EditType.Text, Action buttonAction = null)
+		int _AddRow(string key, string name, object value, bool? check, _RowType type, string tt, string info, bool hidden, int insertAt,
+			EditType etype = EditType.Text, EventHandler buttonAction = null, int comboIndex = -1)
 		{
 			int r = insertAt < 0 ? this.RowsCount : insertAt;
-			this.Rows.Insert(r);
-			SG.Cells.Cell c;
-			if(type == _RowType.Required) {
-				c = new SG.Cells.Cell(name);
-				if(_viewReadonly == null) {
-					_viewReadonly = new SG.Cells.Views.Cell() { BackColor = Form.DefaultBackColor }; //default white
-				}
-				c.View = _viewReadonly;
-			} else if(type == _RowType.Header) {
-				c = new SG.Cells.Cell(name);
-				if(_viewHeaderRow == null) {
-					_viewHeaderRow = new SG.Cells.Views.Cell() { TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter };
-					_viewHeaderRow.Padding = new DevAge.Drawing.Padding(1);
-					_viewHeaderRow.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.Silver, Color.WhiteSmoke, 90);
-				}
-				c.View = _viewHeaderRow;
-				c.AddController(SG.Cells.Controllers.Unselectable.Default);
-			} else {
-				c = new SG.Cells.CheckBox(name, check);
 
-				//FUTURE: try to add correct acc name, maybe it is possible through model
-				//SG.Cells.Models.
-				//Print(c.Model.ValueModel);
+			this.Rows.Insert(r);
+			if(hidden) this.Rows[r].Visible = false;
+
+			SG.Cells.Cell c; SG.Cells.Views.Cell view;
+			if(check == null) {
+				c = new SG.Cells.Cell(name);
+				if(type == _RowType.Header) {
+					view = _GetView(_ViewType.HeaderRow);
+					c.AddController(SG.Cells.Controllers.Unselectable.Default);
+				} else {
+					view = _GetView(_ViewType.Readonly);
+				}
+			} else {
+				c = new SG.Cells.CheckBox(name, check.GetValueOrDefault());
+				if(type == _RowType.Header) {
+					view = _GetView(_ViewType.HeaderRowCheck);
+				} else {
+					view = _GetView(_ViewType.Check);
+				}
 			}
-			//c.AddController(SG.Cells.Controllers.Unselectable.Default); //no, then cannot check/uncheck with keyboard
+			c.View = view;
+
 			if(tt != null) {
 				c.AddController(_controllerTooltip0);
 				c.ToolTipText = tt;
 			}
+
 			this[r, 0] = c;
+
 			int nc = this.ColumnsCount;
 			if(nc > 1) {
-				if(type == _RowType.Flag || type == _RowType.Header) {
+				if(type == _RowType.Check || type == _RowType.Header) {
 					c.ColumnSpan = nc;
 				} else {
-					SG.Cells.Cell t;
+					SG.Cells.Cell t; _ViewType viewType = _ViewType.Edit;
 					switch(etype) {
 					case EditType.Text:
-						t = new EditCell(value) { Editor = _editor, Info = info };
+						t = new EditCell(value?.ToString()) { Editor = _editor, Info = info };
 						break;
 					case EditType.TextButton: {
 							var ed = new Editors.TextBoxButton(typeof(string)) { EditableMode = c_editableMode };
-							t = new EditCell(value) { Editor = ed, Info = info };
-							ed.Control.DialogOpen += (unu, sed) => buttonAction();
+							ed.Control.TextBox.Multiline = true;
+							t = new EditCell(value?.ToString()) { Editor = ed, Info = info };
+							ed.Control.DialogOpen += buttonAction;
+						}
+						break;
+					case EditType.Button: {
+							t = new SG.Cells.Button(value?.ToString());
+							var ev = new SG.Cells.Controllers.Button();
+							ev.Executed += buttonAction;
+							t.Controller.AddController(ev);
+							viewType = _ViewType.Button;
 						}
 						break;
 					default: { //combo
-							bool ro = etype == EditType.ComboList;
-							var a = value.Split_("|");
-							var ed = new Editors.ComboBox(typeof(string), a, false) { EditableMode = c_editableMode };
-							if(ro) ed.Control.DropDownStyle = ComboBoxStyle.DropDownList;
-							ed.Control.SelectionChangeCommitted += (unu, sed) => ZEndEdit(false);
-							t = new SG.Cells.Cell(ro ? a[0] : "", ed);
+							string[] a = null; Func<string[]> callback = null;
+							switch(value) {
+							case string s: a = s.Split_("|"); break;
+							case string[] sa: a = sa; break;
+							case List<string> sl: a = sl.ToArray(); break;
+							case Func<string[]> callb: callback = callb; break;
+							}
+							if(etype == EditType.ComboList) {
+								var ed = new Editors.ComboBox(typeof(string), a, false) { EditableMode = c_editableMode };
+								var cb = ed.Control;
+								cb.DropDownStyle = ComboBoxStyle.DropDownList;
+								cb.SelectionChangeCommitted += (unu, sed) => ZEndEdit(false);
+								if(buttonAction != null) cb.DropDown += buttonAction;
+								t = new EditCell(comboIndex >= 0 ? a[comboIndex] : "") { Editor = ed, Info = info };
+							} else {
+								var ed = _editor;
+								var cc = (callback != null) ? new ComboCell(callback) : new ComboCell(a, comboIndex);
+								cc.Editor = ed;
+								cc.Info = info;
+								t = cc;
+								viewType = _ViewType.Combo;
+							}
 						}
 						break;
 					}
 					t.AddController(_controllerTooltip1);
+					t.View = _GetView(viewType);
 					this[r, 1] = t;
 				}
 			}
 
-			this.Rows[r].Tag = key ?? name;
+			if(key == null) key = name;
+#if DEBUG
+			Debug.Assert(ZFindRow(key) < 0, "Duplicate grid row key:", key);
+#endif
+			this.Rows[r].Tag = key;
 			return r;
 		}
 
 		#region public add/get/clear functions
 
 		/// <summary>
-		/// Adds required parameter.
+		/// Adds row with checkbox (or label) and editable cell.
 		/// </summary>
 		/// <param name="key">Row Tag property. Used by <see cref="ZGetValue(string, out string, bool)"/>.</param>
 		/// <param name="name"></param>
-		/// <param name="value"></param>
+		/// <param name="value">
+		/// string.
+		/// For combo can be string like "one|two|three" or string[] List of string.
+		/// For editable combo also can be Func&lt;string[]&gt; callback that returns items. Called before each dropdown.
+		/// </param>
+		/// <param name="check">If null, adds label instead of checkbox.</param>
 		/// <param name="tt">Tooltip text.</param>
 		/// <param name="info"><see cref="ZShowEditInfo"/> text.</param>
+		/// <param name="hidden"></param>
 		/// <param name="insertAt"></param>
 		/// <param name="etype">Edit cell control type.</param>
-		/// <param name="buttonAction">Button click action when etype is TextButton.</param>
-		public int ZAddRequired(string key, string name, string value = null, string tt = null, string info = null, int insertAt = -1,
-			EditType etype = EditType.Text, Action buttonAction = null)
+		/// <param name="buttonAction">Button click action when etype is Button or TextButton; required.</param>
+		/// <param name="comboIndex">If not -1, selects this combo box item.</param>
+		public int ZAdd(string key, string name, object value = null, bool? check = false, string tt = null, string info = null,
+			bool hidden = false, int insertAt = -1,
+			EditType etype = EditType.Text, EventHandler buttonAction = null, int comboIndex = -1)
 		{
-			return _AddRow(key, name, value, check: true, type: _RowType.Required, tt, info, insertAt, etype, buttonAction);
+			return _AddRow(key, name, value, check, _RowType.Editable, tt, info, hidden, insertAt, etype, buttonAction, comboIndex);
 		}
 
 		/// <summary>
-		/// Adds required parameter.
-		/// </summary>
-		/// <param name="key">Row Tag property. Used by <see cref="ZGetValue(string, out string, bool)"/>.</param>
-		/// <param name="name"></param>
-		/// <param name="value"></param>
-		/// <param name="check"></param>
-		/// <param name="tt">Tooltip text.</param>
-		/// <param name="info"><see cref="ZShowEditInfo"/> text.</param>
-		/// <param name="insertAt"></param>
-		/// <param name="etype">Edit cell control type.</param>
-		/// <param name="buttonAction">Button click action when etype is TextButton.</param>
-		public int ZAddOptional(string key, string name, string value = null, bool check = false, string tt = null, string info = null, int insertAt = -1,
-			EditType etype = EditType.Text, Action buttonAction = null)
-		{
-			return _AddRow(key, name, value, check, type: _RowType.Optional, tt, info, insertAt, etype, buttonAction);
-		}
-
-		/// <summary>
-		/// Adds required parameter.
+		/// Adds row with only checkbox (without an editable cell).
 		/// </summary>
 		/// <param name="key">Row Tag property. Used by <see cref="ZGetValue(string, out string, bool)"/>.</param>
 		/// <param name="name"></param>
 		/// <param name="check"></param>
 		/// <param name="tt">Tooltip text.</param>
+		/// <param name="hidden"></param>
 		/// <param name="insertAt"></param>
-		public int ZAddFlag(string key, string name, bool check = false, string tt = null, int insertAt = -1)
+		public int ZAddCheck(string key, string name, bool check = false, string tt = null, bool hidden = false, int insertAt = -1)
 		{
-			return _AddRow(key, name, null, check, type: _RowType.Flag, tt, null, insertAt);
+			return _AddRow(key, name, null, check, _RowType.Check, tt, null, hidden, insertAt);
 		}
 
 		/// <summary>
-		/// Adds a header row. It is readonly and spans all columns.
+		/// Adds a header row. It is readonly and spans all columns. Optionally with checkbox.
 		/// </summary>
-		public int ZAddHeaderRow(string text, int insertAt = -1)
+		public int ZAddHeaderRow(string text, bool? check = null, string tt = null, bool hidden = false, int insertAt = -1)
 		{
-			return _AddRow(null, text, null, false, type: _RowType.Header, null, null, insertAt);
+			return _AddRow(null, text, null, check, _RowType.Header, tt, null, hidden, insertAt);
 		}
 
 		/// <summary>
@@ -451,9 +636,8 @@ namespace Au.Controls
 		public bool ZIsChecked(int row)
 		{
 			Debug.Assert(row >= 0); if(row < 0) return false;
-			var cb = this[row, 0] as SG.Cells.CheckBox;
-			if(cb == null) return this[row, 0].View != _viewHeaderRow; //required
-			return cb.Checked.GetValueOrDefault();
+			if(this[row, 0] is SG.Cells.CheckBox cb) return cb.Checked.GetValueOrDefault();
+			return this[row, 0].View == _views[(int)_ViewType.Readonly]; //required; else header row
 		}
 
 		/// <summary>
@@ -483,6 +667,7 @@ namespace Au.Controls
 		/// <param name="rowKey">Row key. If not found, asserts and returns.</param>
 		/// <param name="check"></param>
 		public void ZCheck(string rowKey, bool check) => ZCheck(ZFindRow(rowKey), check);
+		public void ZCheckIfExists(string rowKey, bool check) { int i = ZFindRow(rowKey); if(i >= 0) ZCheck(i, check); }
 
 		/// <summary>
 		/// If the row is checked or required, gets its value and returns true.
@@ -542,7 +727,7 @@ namespace Au.Controls
 		public string ZGetCellText(string rowKey, int column) => ZGetCellText(ZFindRow(rowKey), column);
 
 		/// <summary>
-		/// Changes cell value or checkbox label.
+		/// Changes cell text or checkbox label.
 		/// </summary>
 		/// <param name="row">Row index. If negative, asserts and returns null.</param>
 		/// <param name="column">Column index.</param>
@@ -554,7 +739,7 @@ namespace Au.Controls
 			var c = this[row, column];
 			if(c is SG.Cells.CheckBox cb) cb.Caption = text;
 			else c.Value = text;
-			this.Invalidate();
+			InvalidateCell(new SG.Position(row, column));
 		}
 
 		/// <summary>
@@ -611,17 +796,6 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// If editing any cell, ends editing and returns true.
-		/// </summary>
-		/// <param name="cancel">Undo changes.</param>
-		public bool ZEndEdit(bool cancel)
-		{
-			if(!ZGetEditCell(out var c)) return false;
-			c.EndEdit(cancel: false);
-			return true;
-		}
-
-		/// <summary>
 		/// If editing the specified cell, gets cell context and returns true.
 		/// </summary>
 		public bool ZIsEditing(int row, int col, out SG.CellContext c)
@@ -634,6 +808,17 @@ namespace Au.Controls
 		}
 
 		/// <summary>
+		/// If editing any cell, ends editing and returns true.
+		/// </summary>
+		/// <param name="cancel">Undo changes.</param>
+		public bool ZEndEdit(bool cancel)
+		{
+			if(!ZGetEditCell(out var c)) return false;
+			c.EndEdit(cancel: false);
+			return true;
+		}
+
+		/// <summary>
 		/// If editing the specified cell, ends editing and returns true.
 		/// </summary>
 		public bool ZEndEdit(int row, int col, bool cancel)
@@ -643,13 +828,23 @@ namespace Au.Controls
 			return true;
 		}
 
-		///// <summary>
-		///// The editor of values of simple text cells.
-		///// For example, can be used to subscribe to its Control.Validating event.
-		///// </summary>
-		//public Editors.TextBox ZTextEditor => _editor;
-
+		public void ZShowRows(bool visible, int from, int to)
+		{
+			if(to < 0) to = RowsCount;
+			for(int i = from; i < to; i++) Rows.ShowRow(i, visible);
+			RecalcCustomScrollBars();
+		}
 
 		#endregion
+
+		protected override void OnEnabledChanged(EventArgs e)
+		{
+			//ForeColor = c; //does nothing
+
+			Color c = Enabled ? SystemColors.ControlText : SystemColors.GrayText;
+			foreach(var v in _views) v.ForeColor = c;
+
+			base.OnEnabledChanged(e);
+		}
 	}
 }

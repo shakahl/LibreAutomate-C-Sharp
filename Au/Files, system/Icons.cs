@@ -421,6 +421,8 @@ namespace Au
 			var s = new string(x.szPath);
 			return LoadIconHandle(s, x.iIcon, size);
 			//note: don't cache, because of the limit of handles a process can have. Maybe only exe and document icons; maybe also folder and open folder.
+
+			//tested: always gets 32x32 icon: Api.LoadImage(default, 32516, Api.IMAGE_ICON, 16, 16, Api.LR_SHARED); //OIC_INFORMATION
 		}
 
 		/// <summary>

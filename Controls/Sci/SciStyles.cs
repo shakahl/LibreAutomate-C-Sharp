@@ -44,6 +44,12 @@ namespace Au.Controls
 			StyleFontSize(style, size);
 		}
 
+		/// <remarks>Uses only font name and size. Not style etc.</remarks>
+		public void StyleFont(int style, Font f)
+		{
+			StyleFont(style, f.Name, (int)f.Size);
+		}
+
 		public void StyleFontSize(int style, int value)
 		{
 			Call(SCI_STYLESETSIZE, style, value);
@@ -197,6 +203,64 @@ namespace Au.Controls
 		public int MarginWidth(int margin)
 		{
 			return Call(SCI_GETMARGINWIDTHN, margin);
+		}
+
+		#endregion
+
+		#region lexer
+
+		public void SetLexerCpp()
+		{
+			StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
+			Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_CPP);
+
+			const int colorComment = 0x8000;
+			const int colorString = 0xA07040;
+			const int colorNumber = 0xA04000;
+			const int colorDoc = 0x606060;
+			StyleForeColor((int)LexCppStyles.SCE_C_COMMENT, colorComment); //  /*...*/
+			StyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINE, colorComment); //  //...
+			StyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINEDOC, colorDoc); //  ///...
+			StyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOC, colorDoc); //  /**...*/
+			StyleForeColor((int)LexCppStyles.SCE_C_CHARACTER, colorNumber);
+			StyleForeColor((int)LexCppStyles.SCE_C_NUMBER, colorNumber);
+			StyleForeColor((int)LexCppStyles.SCE_C_STRING, colorString);
+			StyleForeColor((int)LexCppStyles.SCE_C_VERBATIM, colorString); //@"string"
+			StyleForeColor((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, colorString);
+			StyleUnderline((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, true);
+			//StyleForeColor((int)LexCppStyles.SCE_C_OPERATOR, 0x80); //+,;( etc. Let it be black.
+			StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSOR, 0xFF8000);
+			StyleForeColor((int)LexCppStyles.SCE_C_WORD, 0xFF); //keywords
+			StyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0xFFFF00);
+			StyleBackColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x0);
+			//StyleForeColor((int)LexCppStyles.SCE_C_WORD2, 0x80F0); //functions. Not using here.
+			//StyleForeColor((int)LexCppStyles.SCE_C_GLOBALCLASS, 0xC000C0); //types. Not using here.
+
+			//StyleForeColor((int)LexCppStyles.SCE_C_USERLITERAL, ); //C++, like 10_km
+			//StyleForeColor((int)LexCppStyles.SCE_C_STRINGRAW, ); //R"string"
+			//StyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOCKEYWORD, ); //supports only JavaDoc and Doxygen
+			//StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENT, ); //?
+			//StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENTDOC, ); //?
+
+			SetStringString(SCI_SETPROPERTY, "styling.within.preprocessor\0" + "1");
+			SetStringString(SCI_SETPROPERTY, "lexer.cpp.allow.dollars\0" + "0");
+			SetStringString(SCI_SETPROPERTY, "lexer.cpp.track.preprocessor\0" + "0"); //default 1
+			SetStringString(SCI_SETPROPERTY, "lexer.cpp.escape.sequence\0" + "1");
+			//SetStringString(SCI_SETPROPERTY, "lexer.cpp.verbatim.strings.allow.escapes\0" + "1"); //expected to style "", but it does nothing
+
+			//Print(GetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
+			//Primary keywords and identifiers
+			//Secondary keywords and identifiers
+			//Documentation comment keywords
+			//Global classes and typedefs
+			//Preprocessor definitions
+			//Task marker and error marker keywords
+			SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield");
+			//SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
+			//SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
+			//SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
+			//SetString(SCI_SETKEYWORDS, 4, "DEBUG TRACE"); //if used with #if, lexer knows which #if/#else branch to style. Not using here (see "lexer.cpp.track.preprocessor").
+			SetString(SCI_SETKEYWORDS, 5, "TO" + "DO SHOULD" + "DO CON" + "SIDER FU" + "TURE B" + "UG");
 		}
 
 		#endregion

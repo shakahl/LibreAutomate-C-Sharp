@@ -233,12 +233,11 @@ namespace Au.Types
 		/// <exception cref="NotFoundException"></exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// var w1 = Wnd.Find("Example").OrThrow();
-		/// var w2 = +Wnd.Find("Example"); //the same
+		/// var w = Wnd.Find("Example").OrThrow();
 		/// ]]></code>
 		/// </example>
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public static Wnd OrThrow(this Wnd x) => +x;
+		public static Wnd OrThrow(this Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 
 		/// <summary>
 		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.
@@ -249,14 +248,12 @@ namespace Au.Types
 		/// var w = Wnd.Find("Example").OrThrow();
 		/// 
 		/// var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
-		/// var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
 		/// 
-		/// var a3 = (Acc.Find(w, "web:LINK", "Example")?.Navigate("example")).OrThrow();
-		/// var a4 = +Acc.Find(w, "web:LINK", "Example")?.Navigate("example"); //the same
+		/// var a2 = (Acc.Find(w, ...)?.Find(...)).OrThrow();
 		/// ]]></code>
 		/// </example>
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public static Acc OrThrow(this Acc x) => +x;
+		public static Acc OrThrow(this Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
 
 		/// <summary>
 		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.
@@ -265,11 +262,10 @@ namespace Au.Types
 		/// <example>
 		/// <code><![CDATA[
 		/// var w = Wnd.Find("Example").OrThrow();
-		/// var r1 = WinImage.Find(w, "example").OrThrow();
-		/// var r2 = +WinImage.Find(w, "example"); //the same
+		/// var wi = WinImage.Find(w, ...).OrThrow();
 		/// ]]></code>
 		/// </example>
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public static WinImage OrThrow(this WinImage x) => +x;
+		public static WinImage OrThrow(this WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 	}
 }

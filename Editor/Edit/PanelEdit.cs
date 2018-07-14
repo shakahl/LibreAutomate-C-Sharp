@@ -215,7 +215,8 @@ partial class PanelEdit :Control
 			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
 			ST.StyleClearAll();
 
-			_SetLexer(LexLanguage.SCLEX_CPP);
+			//_SetLexer(LexLanguage.SCLEX_CPP);
+			ST.SetLexerCpp();
 		}
 
 		//protected override void OnMouseDown(MouseEventArgs e)
@@ -245,66 +246,32 @@ partial class PanelEdit :Control
 			base.OnSciNotify(ref n);
 		}
 
-		void _SetLexer(LexLanguage lang)
-		{
-			if(lang == _currentLexer) return;
-			_currentLexer = lang;
-			ST.StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
-			Call(SCI_SETLEXER, (int)lang);
+		//void _SetLexer(LexLanguage lang)
+		//{
+		//	if(lang == _currentLexer) return;
+		//	_currentLexer = lang;
 
-			const int colorComment = 0x8000;
-			const int colorString = 0xA07040;
-			const int colorNumber = 0xA04000;
-			const int colorDoc = 0x606060;
-			switch(lang) {
-			case LexLanguage.SCLEX_CPP:
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENT, colorComment); //  /*...*/
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINE, colorComment); //  //...
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENTLINEDOC, colorDoc); //  ///...
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOC, colorDoc); //  /**...*/
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_CHARACTER, colorNumber);
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_NUMBER, colorNumber);
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_STRING, colorString);
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_VERBATIM, colorString); //@"string"
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, colorString);
-				ST.StyleUnderline((int)LexCppStyles.SCE_C_ESCAPESEQUENCE, true);
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_OPERATOR, 0x80); //+,;( etc. Let it be black.
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSOR, 0xFF8000);
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_WORD, 0xFF); //keywords
-				ST.StyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0xFFFF00);
-				ST.StyleBackColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x0);
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_WORD2, 0x80F0); //functions. Not using here.
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_GLOBALCLASS, 0xC000C0); //types. Not using here.
+		//	if(lang == LexLanguage.SCLEX_CPP) {
+		//		ST.SetLexerCpp();
+		//		return;
+		//	}
 
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_USERLITERAL, ); //C++, like 10_km
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_STRINGRAW, ); //R"string"
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENTDOCKEYWORD, ); //supports only JavaDoc and Doxygen
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENT, ); //?
-				//ST.StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSORCOMMENTDOC, ); //?
+		//	ST.StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
+		//	Call(SCI_SETLEXER, (int)lang);
 
-				ST.SetStringString(SCI_SETPROPERTY, "styling.within.preprocessor\0" + "1");
-				ST.SetStringString(SCI_SETPROPERTY, "lexer.cpp.allow.dollars\0" + "0");
-				ST.SetStringString(SCI_SETPROPERTY, "lexer.cpp.track.preprocessor\0" + "0"); //default 1
-				ST.SetStringString(SCI_SETPROPERTY, "lexer.cpp.escape.sequence\0" + "1");
-				//ST.SetStringString(SCI_SETPROPERTY, "lexer.cpp.verbatim.strings.allow.escapes\0" + "1"); //expected to style "", but it does nothing
+		//	const int colorComment = 0x8000;
+		//	const int colorString = 0xA07040;
+		//	const int colorNumber = 0xA04000;
+		//	const int colorDoc = 0x606060;
+		//	switch(lang) {
+		//	case LexLanguage.SCLEX_CPP:
+		//		ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENT, colorComment); //  /*...*/
 
-				//Print(ST.GetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
-				//Primary keywords and identifiers
-				//Secondary keywords and identifiers
-				//Documentation comment keywords
-				//Global classes and typedefs
-				//Preprocessor definitions
-				//Task marker and error marker keywords
-				ST.SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using using static void volatile while add alias ascending async await descending dynamic from get global group into join let orderby partial partial remove select set value var when where yield");
-				//ST.SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
-				//ST.SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
-				//ST.SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
-				//ST.SetString(SCI_SETKEYWORDS, 4, "DEBUG TRACE"); //if used with #if, lexer knows which #if/#else branch to style. Not using here (see "lexer.cpp.track.preprocessor").
-				ST.SetString(SCI_SETKEYWORDS, 5, "TO" + "DO SHOULD" + "DO CON" + "SIDER FU" + "TURE B" + "UG");
-				break;
-			}
-		}
-		LexLanguage _currentLexer;
+		//		//... (see SciText.SetLexerCpp)
+		//		break;
+		//	}
+		//}
+		//LexLanguage _currentLexer;
 
 		public bool IsModified { get; private set; }
 

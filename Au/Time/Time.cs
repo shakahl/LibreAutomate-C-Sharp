@@ -359,15 +359,15 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// //this example sets 3 timers
-	/// Timer_.After(500, t => Print("simple one-time timer"));
-	/// Timer_.Every(1000, t => Print("simple periodic timer"));
-	/// var t3 = new Timer_(t => Print("with Timer_ object")); t3.Start(3000, true); //the same as Timer_.After
+	/// Timer_.After(500, t => Print("after 500 ms"));
+	/// Timer_.Every(1000, t => Print("every 1000 ms"));
+	/// var t3 = new Timer_(t => Print("after 3000 ms")); t3.Start(3000, true); //the same as Timer_.After
 	/// MessageBox.Show("");
 	/// ]]></code>
 	/// </example>
 	public class Timer_
 	{
-		object _callback; //Action<Timer_> or Action
+		object _action; //Action<Timer_> or Action
 		LPARAM _id;
 		int _threadId;
 		bool _singlePeriod;
@@ -383,34 +383,34 @@ namespace Au
 		public object Tag { get; set; }
 
 		///
-		public Timer_(Action<Timer_> callback, object tag = null) : this((object)callback, tag) { }
+		public Timer_(Action<Timer_> timerAction, object tag = null) : this((object)timerAction, tag) { }
 
 		///
-		public Timer_(Action callback, object tag = null) : this((object)callback, tag) { }
+		public Timer_(Action timerAction, object tag = null) : this((object)timerAction, tag) { }
 
-		Timer_(object callback, object tag)
+		Timer_(object timerAction, object tag)
 		{
-			_callback = callback;
+			_action = timerAction;
 			Tag = tag;
 		}
 
 		/// <summary>
 		/// Starts timer. If already started, resets and changes its period.
 		/// </summary>
-		/// <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds.</param>
-		/// <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
+		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function (constructor's parameter <i>timerAction</i>), milliseconds.</param>
+		/// <param name="singlePeriod">Call the callback function once (stop the timer before calling the callback function).</param>
 		/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
 		/// <remarks>
 		/// If already started, this function must be called in the same thread as when started.
 		/// </remarks>
 		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
-		public void Start(int intervalMS, bool singlePeriod)
+		public void Start(int periodMilliseconds, bool singlePeriod)
 		{
 			bool isNew = _id == 0;
 			if(!isNew) {
 				_CheckThread();
 			}
-			LPARAM r = Api.SetTimer(default, _id, (uint)intervalMS, _timerProc);
+			LPARAM r = Api.SetTimer(default, _id, (uint)periodMilliseconds, _timerProc);
 			if(r == 0) throw new Win32Exception();
 			Debug.Assert(isNew || r == _id);
 			_id = r;
@@ -431,7 +431,7 @@ namespace Au
 			}
 			if(t._singlePeriod) t.Stop();
 			
-			switch(t._callback) {
+			switch(t._action) {
 			case Action<Timer_> f: f(t); break;
 			case Action f: f(); break;
 			}
@@ -469,55 +469,55 @@ namespace Au
 
 		//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
 
-		static Timer_ _Set(int intervalMS, bool singlePeriod, object callback, object tag = null)
+		static Timer_ _Set(int time, bool singlePeriod, object timerAction, object tag = null)
 		{
-			var t = new Timer_(callback, tag);
-			t.Start(intervalMS, singlePeriod);
+			var t = new Timer_(timerAction, tag);
+			t.Start(time, singlePeriod);
 			return t;
 		}
 
 		/// <summary>
 		/// Sets new one-time timer.
-		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
+		/// Returns new <see cref="Timer_"/> object. Rarely used.
 		/// </summary>
-		/// <param name="milliseconds">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
-		/// <param name="callback">A callback function (delegate), for example lambda.</param>
-		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+		/// <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
+		/// <param name="timerAction">Callback function.</param>
+		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
 		/// <remarks>
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static Timer_ After(int milliseconds, Action callback, object tag = null)
+		public static Timer_ After(int timeMilliseconds, Action timerAction, object tag = null)
 		{
-			return _Set(milliseconds, true, callback, tag);
+			return _Set(timeMilliseconds, true, timerAction, tag);
 		}
 
 		/// <inheritdoc cref="After(int, Action, object)"/>
-		public static Timer_ After(int milliseconds, Action<Timer_> callback, object tag = null)
+		public static Timer_ After(int timeMilliseconds, Action<Timer_> timerAction, object tag = null)
 		{
-			return _Set(milliseconds, true, callback, tag);
+			return _Set(timeMilliseconds, true, timerAction, tag);
 		}
 
 		/// <summary>
 		/// Sets new periodic timer.
 		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
-		/// <param name="periodMS">Time interval (period) of calling the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal period usually is 10-20.</param>
-		/// <param name="callback">A callback function (delegate), for example lambda.</param>
-		/// <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal period usually is 10-20.</param>
+		/// <param name="timerAction">Callback function.</param>
+		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
 		/// <remarks>
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static Timer_ Every(int periodMS, Action callback, object tag = null)
+		public static Timer_ Every(int periodMilliseconds, Action timerAction, object tag = null)
 		{
-			return _Set(periodMS, false, callback, tag);
+			return _Set(periodMilliseconds, false, timerAction, tag);
 		}
 
 		/// <inheritdoc cref="Every(int, Action, object)"/>
-		public static Timer_ Every(int periodMS, Action<Timer_> callback, object tag = null)
+		public static Timer_ Every(int periodMilliseconds, Action<Timer_> timerAction, object tag = null)
 		{
-			return _Set(periodMS, false, callback, tag);
+			return _Set(periodMilliseconds, false, timerAction, tag);
 		}
 	}
 }

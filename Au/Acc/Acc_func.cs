@@ -291,7 +291,7 @@ namespace Au
 		internal static string LibNameOfWindow(Wnd w)
 		{
 			if(!w.IsAlive) return null;
-			var hr = Cpp.Cpp_AccFromWindow(2, w, 0, out _, out var b);
+			var hr = Cpp.Cpp_AccFromWindow(1 | 2, w, 0, out _, out var b);
 			return _BstrToString(hr, b);
 
 			//speed: inproc ~10% faster. But first time slower, especially if process of different bitness.
@@ -747,6 +747,22 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Gets the number of direct child objects.
+		/// Uses <msdn>IAccessible.get_accChildCount</msdn>.
+		/// </summary>
+		public int ChildCount
+		{
+			get
+			{
+				LibThrowIfDisposed();
+				if(_elem != 0) { Native.ClearError(); return 0; }
+				_Hresult(_FuncId.child_count, Cpp.Cpp_AccGetInt(this, 'c', out int cc));
+				GC.KeepAlive(this);
+				return cc;
+			}
+		}
+
+		/// <summary>
 		/// Gets multiple properties.
 		/// </summary>
 		/// <param name="props">
@@ -865,10 +881,9 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid navig string.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// a = +a.Navigate("parent next ch3", true);
+		/// a = a.Navigate("parent next ch3", true);
 		/// ]]></code>
 		/// </example>
-		/// <seealso cref="this[string, double]"/>
 		public Acc Navigate(string navig, double secondsToWait = 0)
 		{
 			LibThrowIfDisposed();
@@ -886,14 +901,6 @@ namespace Au
 			return hr == 0 ? new Acc(ca) : null;
 
 			//FUTURE: when fails, possibly this is disconnected etc. Retry Find with same Finder.
-		}
-
-		/// <summary>
-		/// Calls <see cref="Navigate"/>.
-		/// </summary>
-		public Acc this[string navig, double secondsToWait = 0]
-		{
-			get => Navigate(navig, secondsToWait);
 		}
 
 		//rejected: public Acc Parent() (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.

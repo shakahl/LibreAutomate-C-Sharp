@@ -106,18 +106,14 @@ namespace Au
 			MatchIndex = 0;
 		}
 
-		//TODO: reject + operators.
-		//	Instead of '+Acc.Find()?["navigate"];' use '(Acc.Find()?.Navigate("navigate")).OrThrow()'.
-		//TODO: reject Acc operator [] (navigation). Add navig parameter to Acc.Find.
-		//CONSIDER: with wait functions don't use negative timeout. Instead use OrThrow.
-
-		/// <summary>
-		/// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)" r=""/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">x is null.</exception>
-		/// <example><inheritdoc cref="ExtensionMethods.OrThrow(WinImage)"/></example>
-		public static WinImage operator +(WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
+		//rejected. Use OrThrow.
+		///// <summary>
+		///// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
+		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)" r=""/>.
+		///// </summary>
+		///// <exception cref="NotFoundException">x is null.</exception>
+		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(WinImage)"/></example>
+		//public static WinImage operator +(WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 
 		/// <summary>
 		/// Gets location of the found image, relative to the search area.
@@ -172,7 +168,7 @@ namespace Au
 		/// Can be used in <i>also</i> callback function to skip n matching images. Example: <c>also: o => o.Skip(n)</c>.
 		/// </summary>
 		/// <param name="n">How many matching images to skip.</param>
-		public WIAlso Skip(int n) => MatchIndex == n ? WIAlso.Return : (MatchIndex < n ? WIAlso.FindOther : WIAlso.FindOtherOfList);
+		public WIAlso Skip(int n) => MatchIndex == n ? WIAlso.OkReturn : (MatchIndex < n ? WIAlso.FindOther : WIAlso.FindOtherOfList);
 
 		//Called by extension methods.
 		internal void LibMouseAction(MButton button, Coord x, Coord y)
@@ -251,11 +247,11 @@ namespace Au
 		/// Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="WIAlso"/> values.
 		/// Callback functions can be used to get rectangles of multiple found images, create custom behaviors/actions, etc. Examples:
 		/// <list type="bullet">
-		/// <item>Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.Return : WIAlso.FindOther</c></item>
+		/// <item>Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.OkReturn : WIAlso.FindOther</c></item>
 		/// <item>Skip n matching images: <c>also: o => o.Skip(n)</c></item>
 		/// <item>Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.</item>
 		/// <item>Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c></item>
-		/// <item>Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.FindMoreOfListAndReturn; }); if(found[0]) Print(0); if(found[1]) Print(1);</c></item>
+		/// <item>Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c></item>
 		/// </list>
 		/// </param>
 		/// <exception cref="WndException">Invalid window handle (the <paramref name="area"/> argument).</exception>
@@ -282,7 +278,7 @@ namespace Au
 		/// <example>
 		/// Code created with dialog "Find image or color in window".
 		/// <code><![CDATA[
-		/// var w = +Wnd.Find("Window Name");
+		/// var w = Wnd.Find("Window Name").OrThrow();
 		/// string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
 		/// var wi = WinImage.Find(w, image).OrThrow();
 		/// wi.MouseMove();
@@ -636,7 +632,7 @@ namespace Au
 					Result.ListIndex = i;
 					Result.MatchIndex = 0;
 					if(_FindImage(_images[i], out var alsoAction, ref alsoResult)) return true;
-					if(alsoAction == WIAlso.NotFound || alsoAction == WIAlso.FindOtherOfThis || alsoAction == WIAlso.FindMoreOfThisAndReturn) break;
+					if(alsoAction == WIAlso.NotFound || alsoAction == WIAlso.FindOtherOfThis || alsoAction == WIAlso.OkFindMoreOfThis) break;
 				}
 				//Perf.Next();
 				if(alsoResult != null) {
@@ -779,14 +775,14 @@ namespace Au
 					if(_also != null) {
 						var wi = new WinImage(Result); //create new WinImage object because the callback may add it to a list etc
 						switch(alsoAction = _also(wi)) {
-						case WIAlso.Return:
+						case WIAlso.OkReturn:
 							alsoResult = null;
 							break;
-						case WIAlso.FindMoreAndReturn:
-						case WIAlso.FindMoreOfThisAndReturn:
+						case WIAlso.OkFindMore:
+						case WIAlso.OkFindMoreOfThis:
 							alsoResult = wi;
 							goto case WIAlso.FindOther;
-						case WIAlso.FindMoreOfListAndReturn:
+						case WIAlso.OkFindMoreOfList:
 							alsoResult = wi;
 							goto gNotFound;
 						case WIAlso.NotFound:
@@ -1111,25 +1107,25 @@ namespace Au.Types
 		/// Stop searching.
 		/// Let the main function (<b>Find</b> or <b>Wait</b>) return current result.
 		/// </summary>
-		Return,
+		OkReturn,
 
 		/// <summary>
 		/// Find more instances of current image. If used list of images, also search for other images.
 		/// Then let the main function return current result.
 		/// </summary>
-		FindMoreAndReturn,
+		OkFindMore,
 
 		/// <summary>
 		/// Find more instances of current image. When used list of images, don't search for other images.
 		/// Then let the main function return current result.
 		/// </summary>
-		FindMoreOfThisAndReturn,
+		OkFindMoreOfThis,
 
 		/// <summary>
 		/// If used list of images, search for other images. Don't search for more instances of current image.
 		/// Then let the main function return current result.
 		/// </summary>
-		FindMoreOfListAndReturn,
+		OkFindMoreOfList,
 
 		/// <summary>
 		/// Stop searching.

@@ -156,11 +156,11 @@ static partial class Test
 
 		Task.Run(() => { for(; ; ) { 100.ms(); GC.Collect(); } });
 
-		var w = +Wnd.Find("Quick*");
+		var w = Wnd.Find("Quick*").OrThrow();
 
-		var a = +Acc.Find(w, "CHECKBOX", "Annot*");
-		//var atb = +Acc.Find(w, "TOOLBAR", prop: "id=2053");
-		//var a = +atb.Find("CHECKBOX", "Annot*");
+		var a = Acc.Find(w, "CHECKBOX", "Annot*").OrThrow();
+		//var atb = Acc.Find(w, "TOOLBAR", prop: "id=2053").OrThrow();
+		//var a = atb.Find("CHECKBOX", "Annot*").OrThrow();
 
 		a.DoAction();
 
@@ -3196,15 +3196,14 @@ REE`");
 		////a = (Acc.Find(w, "web:LINK")?["ne100"]).OrThrow();
 		//////a = Acc.Find(w, "web:UUU")["ne100"];
 		////a = -Acc.Find(w, "web:LINK")?["ne100"];
-		////var a = +Acc.Find(w, "web:LINK")?["ne"];
-		////var a = +Acc.Find(w, "web:LINK-").SimpleElementId;
+		////var a = Acc.Find(w, "web:LINK-").SimpleElementId.OrThrow();
 		//Acc.Find(w, "web:LINK", "Portal-").MouseMove();
 
 		////a = Acc.Find(w, "web:UUU").OrThrow();
 		////Print(a);
 
 		//var w1 = Wnd.Find("Example").OrThrow();
-		//var w2 = +Wnd.Find("Example"); //the same
+		//var w2 = Wnd.Find("Example").OrThrow(); //the same
 
 		//var w3 = Wnd.Find("Example").OrThrow().Child("Example").OrThrow();
 		//var w4 = Wnd.Find("Example").Child("Example").OrThrow();
@@ -3214,17 +3213,15 @@ REE`");
 		//var w = Wnd.Find("Example").OrThrow();
 
 		//var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
-		//var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
+		//var a2 = Acc.Find(w, "web:LINK", "Example").OrThrow(); //the same
 
 		//var a3 = (Acc.Find(w, "web:LINK", "Example")?.Navigate("example")).OrThrow();
-		//var a4 = +Acc.Find(w, "web:LINK", "Example")?.Navigate("example"); //the same
 
 		//var a5 = (Acc.Wait(3, w, "Example")?.Navigate("example")).OrThrow();
-		//var a6 = +Acc.Wait(3, w, "Example")?.Navigate("example");
 
 		//var w = Wnd.Find("Example").OrThrow();
 		//var r1 = WinImage.Find(w, "example").OrThrow();
-		//var r2 = +WinImage.Find(w, "example"); //the same
+		//var r2 = WinImage.Find(w, "example").OrThrow(); //the same
 	}
 
 	static void TestAccEdgeNoUIA()
@@ -3339,8 +3336,8 @@ REE`");
 
 	static void TestAccFirefoxNoSuchInterface()
 	{
-		//var w = +Wnd.Find("Quick Macros Forum - Mozilla Firefox", "MozillaWindowClass");
-		////var w = +Wnd.Find("* Chrome");
+		//var w = Wnd.Find("Quick Macros Forum - Mozilla Firefox", "MozillaWindowClass").OrThrow();
+		////var w = Wnd.Find("* Chrome").OrThrow();
 		//AFFlags f = 0;
 		////f |= AFFlags.NotInProc;
 
@@ -3356,7 +3353,7 @@ REE`");
 		////Acc.PrintAll(w, "web:", flags: f);
 		////return;
 
-		//var a = +Acc.Find(w, "web:LINK", "Bug Reports", null, f);
+		//var a = Acc.Find(w, "web:LINK", "Bug Reports", null, f).OrThrow();
 		//Print(a.MiscFlags);
 		//Print(a);
 		////Print(a.Role);
@@ -3365,12 +3362,12 @@ REE`");
 		////Print(a.Rect);
 		////Print(a.WndContainer);
 
-		//var w = +Wnd.Find("Settings", "ApplicationFrameWindow");
-		//var a = +Acc.Find(w, "LISTITEM", "Devices", "class=Windows.UI.Core.CoreWindow");
+		//var w = Wnd.Find("Settings", "ApplicationFrameWindow").OrThrow();
+		//var a = Acc.Find(w, "LISTITEM", "Devices", "class=Windows.UI.Core.CoreWindow").OrThrow();
 
-		var w = +Wnd.Find("Microsoft Edge", "Windows.UI.Core.CoreWindow", flags: WFFlags.HiddenToo);
+		var w = Wnd.Find("Microsoft Edge", "Windows.UI.Core.CoreWindow", flags: WFFlags.HiddenToo).OrThrow();
 		Acc.PrintAll(w, flags: AFFlags.UIA);
-		var a = +Acc.Find(w, "TEXT", "this exact word or phrase:", flags: AFFlags.UIA);
+		var a = Acc.Find(w, "TEXT", "this exact word or phrase:", flags: AFFlags.UIA).OrThrow();
 		Print(a);
 		Print(a.MiscFlags);
 	}
@@ -3458,7 +3455,7 @@ REE`");
 
 		//Print(Wnd.Misc.MainWindows());
 		////Print(Wnd.Misc.WndNextMain());
-		//var w = +Wnd.Find("* Chrome");
+		//var w = Wnd.Find("* Chrome").OrThrow();
 		//Print(Wnd.Misc.WndNextMain(w, retryFromTop: true));
 		Print(Wnd.Misc.SwitchActiveWindow());
 		Print(Wnd.WndActive);
@@ -3641,24 +3638,24 @@ REE`");
 
 	static void TestWndImage()
 	{
-		//var w = +Wnd.Find("Icons");
-		//var r = +WinImage.Find(w, @"Q:\My QM\copy.bmp", WIFlags.WindowDC);
+		//var w = Wnd.Find("Icons").OrThrow();
+		//var r = WinImage.Find(w, @"Q:\My QM\copy.bmp", WIFlags.WindowDC).OrThrow();
 		//r.MouseMove();
 
-		//var w = +Wnd.Find("Icons");
+		//var w = Wnd.Find("Icons").OrThrow();
 		//var _image = Au.Controls.ImageUtil.ImageToString(@"Q:\My QM\copy.bmp");
 		//Print(_image);
-		//var r = +WinImage.Find(w, _image, WIFlags.WindowDC);
+		//var r = WinImage.Find(w, _image, WIFlags.WindowDC).OrThrow();
 		//r.MouseMove();
 
 
 
 		//Perf.First();
 		////var im = Image.FromFile(@"Q:\My QM\copy.bmp");
-		////var w = +Wnd.Find(also: o=> null!=WinImage.Find(o, im, WIFlags.WindowDC));
-		//var w = +Wnd.Find(also: o => null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC));
-		////var w = +Wnd.Find(also: o=> { Print(o); return null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC); });
-		////var w = +Wnd.Find(also: o => { Print(o); Perf.First(); var ok = null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC); Perf.NW(); return ok; });
+		////var w = Wnd.Find(also: o=> null!=WinImage.Find(o, im, WIFlags.WindowDC)).OrThrow();
+		//var w = Wnd.Find(also: o => null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC)).OrThrow();
+		////var w = Wnd.Find(also: o=> { Print(o); return null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC); }).OrThrow();
+		////var w = Wnd.Find(also: o => { Print(o); Perf.First(); var ok = null != WinImage.Find(o, @"Q:\My QM\copy.bmp", WIFlags.WindowDC); Perf.NW(); return ok; }).OrThrow();
 		//Perf.NW();
 		//Print(w);
 
@@ -3686,16 +3683,16 @@ REE`");
 	static void TestWndFindContains()
 	{
 		Perf.First();
-		var w = +Wnd.Find(contains: "Do you want to save*");
-		//var w = +Wnd.Find(contains: "Untitled - Notepad");
-		//var w = +Wnd.Find(contains: "Personalization");
-		//var w = +Wnd.Find(contains: new Acc.Finder("STATICTEXT", "Do you want to save*"));
-		//var w = +Wnd.Find(contains: new Wnd.ChildFinder("Save", "Button"));
-		//var w = +Wnd.Find(contains: WinImage.LoadImage(@"Q:\My QM\copy.bmp"));
+		var w = Wnd.Find(contains: "Do you want to save*").OrThrow();
+		//var w = Wnd.Find(contains: "Untitled - Notepad").OrThrow();
+		//var w = Wnd.Find(contains: "Personalization").OrThrow();
+		//var w = Wnd.Find(contains: new Acc.Finder("STATICTEXT", "Do you want to save*")).OrThrow();
+		//var w = Wnd.Find(contains: new Wnd.ChildFinder("Save", "Button")).OrThrow();
+		//var w = Wnd.Find(contains: WinImage.LoadImage(@"Q:\My QM\copy.bmp")).OrThrow();
 		Perf.NW();
 		Print(w);
 
-		//var w = +Wnd.Find("* Notepad");
+		//var w = Wnd.Find("* Notepad").OrThrow();
 		//Acc.PrintAll(w);
 		////Acc.PrintAll(w, flags: AFFlags.ClientArea);
 		//////Acc.PrintAll(w, flags: AFFlags.ClientArea | AFFlags.UIA);
@@ -3707,10 +3704,10 @@ REE`");
 		for(int i = 0; i < 5; i++) {
 			100.ms();
 			Perf.First();
-			//var a = +Acc.Find(w, "web:LINK", "Videos");
-			//var a = +Acc.Find(w, "LINK", "Videos");
-			//var a = +Acc.Find(w, "LINK", "Videos", "class=*Server");
-			var a = +Acc.Find(w, "LINK", "Videos", controls: new Wnd.ChildFinder(null, "*Server"));
+			//var a = Acc.Find(w, "web:LINK", "Videos").OrThrow();
+			//var a = Acc.Find(w, "LINK", "Videos").OrThrow();
+			//var a = Acc.Find(w, "LINK", "Videos", "class=*Server").OrThrow();
+			var a = Acc.Find(w, "LINK", "Videos", controls: new Wnd.ChildFinder(null, "*Server")).OrThrow();
 			Perf.NW();
 			Print(a);
 		}
@@ -4314,11 +4311,11 @@ REE`");
 
 	static void TestAccLeaks()
 	{
-		//var w = +Wnd.Find(className: "FM");
-		//var w = +Wnd.Find("QM Help");
-		//var w = +Wnd.Find("* Firefox");
-		var w = +Wnd.Find("Quick M*");
-		//var w = +Wnd.Find("*Chrome");
+		//var w = Wnd.Find(className: "FM").OrThrow();
+		//var w = Wnd.Find("QM Help").OrThrow();
+		//var w = Wnd.Find("* Firefox").OrThrow();
+		var w = Wnd.Find("Quick M*").OrThrow();
+		//var w = Wnd.Find("*Chrome").OrThrow();
 		Acc.FindAll(w);
 		GC.Collect();
 		MessageBox.Show("continue");
@@ -5724,7 +5721,7 @@ REE`");
 		//	600.ms();
 		//}
 
-		//var w = +Wnd.Find("*Notepad");
+		//var w = Wnd.Find("*Notepad").OrThrow();
 		////Opt.Mouse.Relaxed = true;
 		//Mouse.Move(w, 200, 200);
 
@@ -6518,31 +6515,21 @@ REE`");
 	static void TestWndChild()
 	{
 		//var w = Wnd.Find("Quick*");
-		////w.ChildById
-		//w = Wnd.Find("Quick*", programEtc: "***pid:" + w.ProcessId);
-		//Print(w);
-		//w = Wnd.Find("Quick*", programEtc: "***tid:" + w.ThreadId);
-		//Print(w);
-		//w = Wnd.Find("Options", programEtc: "***owner:" + w.Handle);
-		//Print(w);
-
-		//Print(Wnd.Misc.WndDesktop);
 
 		//var s = "***tid 88";
 		//Print(Au.Util.StringMisc.ParseParam3Stars(ref s, "pid", "tid", "owner"), s);
 
 		//Print(w.Child("Open items"));
-		//Print(w.Child("***id:2214"));
-		//w = Wnd.Find("Options", programEtc: "***owner:" + w.Handle);
-		////Print(w.Child("***accName:Run as", "combobox"));
+		//Print(w.Child("***id 2214"));
+		//w = Wnd.Find("Options", programEtc: WFEtc.Owner(w));
+		////Print(w.Child("***accName Run as", "combobox"));
 		//Print(w.Child("moo"));
-		//Print(w.Child("***text:moo"));
-		////Print(w.Child("***bad:bad"));
+		//Print(w.Child("***text moo"));
+		////Print(w.Child("***bad bad"));
 
-		//w = +Wnd.Find("Options").Child("***id=" + 11030);
+		//w = Wnd.Find("Options").Child("***id " + 11030).OrThrow();
 
 		var w = Wnd.Find("Quick*", programEtc: "qm.exe");
-		//var w = Wnd.Find("Quick*", programEtc: "***pid:0");
 		//Print(w.ProgramName, w.ProgramFilePath);
 		//Print(Process_.GetProcessIds("notepad.exe"));
 		//Print(Process_.AllProcesses(true));
@@ -7123,12 +7110,11 @@ REE`");
 	{
 		var f = new Au.Tools.Form_WinImage();
 		f.ShowDialog();
-		//AuDialog.Show();
 	}
 
 	static void TestToolWinImageCode()
 	{
-#if false
+#if true
 		//var w = Wnd.Find("Quick*");
 
 
@@ -7146,7 +7132,7 @@ REE`");
 
 		//Print("ok");
 
-		var w = +Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
+		var w = Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*").OrThrow();
 		object[] images = {
 			"image:iVBORw0KGgoAAAANSUhEUgAAABwAAAAQCAYAAAAFzx/vAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADqSURBVEhLY/hPZzD4Lfz37x+URR4gyUKYZZP2Tvhv1W8Kx/OOzAGLg9jINDaAYuHVV1//+2x5/l916eP/Hpue/T/7/DNUBgFglgXN9QNbBOJvv7wVbjkyxgZQLHTd+Oz/vCvv/n/6/vP/kmvv/1uuffr/77+/UFkIABnkNs3p/9evX6AiCACzBJdlIEByHIIMy1uRDeUhAEgcHWMDKBYqLnmCgdEByCCq+RBmyY8fP7Ba+OfPH7DvQAYix+Hq0yuhKggDkiwEAZDPYJbCMMhCYrMLyUGKDYB8TiwgOdFQCkYtpDqgs4X//wMAud2NhZbZMbsAAAAASUVORK5CYII=",
 			"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAALCAYAAACksgdhAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABiSURBVChTY/iPBD6/vv//5bVd/3/8+IEV39vZBFbHcH9/939k/O3rV6waQBiuCZskLjwAmkAMfPjr54+ka3p6aiHpmkD448v7pGu6v7eLdE0g/OrWwf+Pjs2AaAKTJIH//wEF2/8fchW91wAAAABJRU5ErkJggg==",
@@ -7154,38 +7140,41 @@ REE`");
 		var all = new List<WinImage>();
 		//all.Add(WinImage.Find(w, images));
 		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindOther; }));
-		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindMoreAndReturn; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.OkFindMore; }));
 		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfList; }));
-		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfListAndReturn; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.OkFindMoreOfList; }));
 		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfThis; }));
-		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfThisAndReturn; }));
-		//bool found = false; Print(WinImage.Find(w, images, also: t => { all.Add(t); if(!found) { found = true; return WIAlso.FindMoreOfThisAndReturn; } return WIAlso.FindOtherOfThis; }));
-		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.Return; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.OkFindMoreOfThis; }));
+		//bool found = false; Print(WinImage.Find(w, images, also: t => { all.Add(t); if(!found) { found = true; return WIAlso.OkFindMoreOfThis; } return WIAlso.FindOtherOfThis; }));
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.OkReturn; }));
 		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return WIAlso.NotFound; }));
 
 		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindOther; }));
-		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindMoreAndReturn; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.OkFindMore; }));
 		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfList; }));
-		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfListAndReturn; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.OkFindMoreOfList; }));
 		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindOtherOfThis; }));
-		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.FindMoreOfThisAndReturn; }));
-		//bool found = false; Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); if(!found) { found = true; return WIAlso.FindMoreOfThisAndReturn; } return WIAlso.FindOtherOfThis; }));
-		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.Return; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.OkFindMoreOfThis; }));
+		//bool found = false; Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); if(!found) { found = true; return WIAlso.OkFindMoreOfThis; } return WIAlso.FindOtherOfThis; }));
+		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.OkReturn; }));
 		//Print(WinImage.Wait(-1, w, images, also: t => { all.Add(t); return WIAlso.NotFound; }));
 
-		//var found = new BitArray(images.Length); WinImage.Find(w, images, also: t => { found[t.ListIndex] = true; return WIAlso.FindMoreOfListAndReturn; }); if(found[0]) Print(0); if(found[1]) Print(1);
-		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return true ? WIAlso.Return : WIAlso.FindOther; }));
+		//var found = new BitArray(images.Length); WinImage.Find(w, images, also: t => { found[t.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);
+		//Print(WinImage.Find(w, images, also: t => { all.Add(t); return true ? WIAlso.OkReturn : WIAlso.FindOther; }));
 		Print(WinImage.Find(w, images, also: o => { all.Add(o); return o.Skip(1); }));
 		Print("---");
 		foreach(var wi in all) { Print(wi); }
 
 #else
-		//var w = +Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*");
+		//var w = Wnd.Find("Au - Microsoft Visual Studio ", "HwndWrapper[DefaultDomain;*").OrThrow();
 		//string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADZSURBVDhPY/hPIzACDP737x+UhR+QZDDM0El7J/y36jeF43lH5oDFQWwYjWLw1Vdf//tsef5fdenj/x6bnv0/+/wzVAYBYIYGzfUDGwjib7+8FW4JDKMY7Lrx2f95V979//T95/8l197/t1z79P/ff3+hshAA0uQ2zen/169foCIIAJKD0SSHMUhT3opsKA8BQOLIGMVgxSVPMDA6AGki2cUww378+IHV4D9//oBdC9KIHMarT6+EqkAAkgwGAZBLYYbDMMhg9GRIclBgAyCfoAOSI4848P8/AFdhC+1vmMLqAAAAAElFTkSuQmCC";
 		//var wi = WinImage.Find(w, image).OrThrow();
 		//wi.MouseMove();
 
-
+		//var w = Wnd.Find("Quick Macros - ok - [Macro10]", "QM_Editor").OrThrow();
+		//string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAAoAAAANCAYAAACQN/8FAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACDSURBVChTY/j//8B/YjCKQo81ViiSyBhDoewUbhQFMIyhcPGzPqyKURRaLdP5H3nNDatiFIUmi5XBCkHYaq8mimIUhSrzRP57HTcHK5JZyPRfZAoDGGMoFJ/DiqJIoB+iCEOh0EwGrIpAGEMhNkUgjKIQlyIQRlGISxEIoyjEjQ/8BwCB76UzQz6WoQAAAABJRU5ErkJggg==";
+		//var wi = WinImage.Find(w, image).OrThrow();
+		//using(wi.MouseClick(button: MButton.Left | MButton.Down)) Mouse.MoveRelative(0, 50);
 
 
 #endif
@@ -7200,7 +7189,62 @@ REE`");
 
 	static void TestAccFindParamNavig()
 	{
+		var w = Wnd.Find("Quick Macros - ok - [Macro10]", "QM_Editor").OrThrow();
+		//var a = (Acc.Find(w, "BUTTON", "Copy*", "id=2053")?.Navigate("ne")).OrThrow();
+		//var a = Acc.Find(w, "BUTTON", "Copy*", "id=2053", navig: "ne").OrThrow();
+		//var a = Acc.Wait(2, w, "BUTTON", "Copy*", "id=2053");
+		var a = Acc.Wait(2, w, "BUTTON", "Copy*", "id=2053", navig: "ne");
+		Print(a);
+	}
 
+	static void TestWndFindContainsRoleName()
+	{
+		//var w = Wnd.Find("Options", contains: "Unicode");
+		var w = Wnd.Find("Options", contains: "'CHECKBOX' Unicode");
+		//var w = Wnd.Find("Options", contains: "'' Unicode");
+		//var w = Wnd.Find("Options", contains: "'CHECKBOX' ");
+		Print(w);
+	}
+
+	static void TestWFEtc()
+	{
+		//var w = Wnd.Find("Options", null, null);
+		//var w = Wnd.Find("Options", null, "qm.exe");
+		var wo = Wnd.Find(null, "QM_Editor");
+		//var wo = Wnd.Find(null, "Shell_TrayWnd");
+		var w = Wnd.Find("Options", null, WFEtc.Owner(wo));
+		//var w = Wnd.Find("Options", null, WFEtc.Process(wo.ProcessId));
+		//var w = Wnd.Find("Options", null, WFEtc.Thread(wo.ThreadId));
+		Print(w);
+
+		//Print(Wnd.Misc.WndDesktop);
+
+	}
+
+	static void TestToolWnd()
+	{
+		Wnd w = default;
+
+		//w = Wnd.Find(null, "QM_Editor");
+		//w = Wnd.Find(className: "Shell_TrayWnd");
+		//w = Wnd.Find("Notepad");
+		w = Wnd.Find("Options");
+		w.OrThrow();
+
+		//w = w.Child(null, "Button").OrThrow();
+		//w = w.Child(null, "SysListView32").OrThrow();
+		w = w.Child(null, "ComboBox").OrThrow();
+		////w = w.Child("***label Check").OrThrow();
+		//w = w.Child("***label Text", "Edit").OrThrow();
+		////w.Child(also: o => { Print(o.ClassName, o.NameLabel); return false; });
+		////w.Child("***id 1001", also: o => { Print(o.ClassName, o.NameLabel); return false; });
+		//Print(w); return;
+
+		//var w = Wnd.Find("*Sandcastle*").OrThrow();
+		//w = w.Child(null, "*.SysTree*").OrThrow();
+
+		var f = new Au.Tools.Form_Wnd(w);
+		f.ShowDialog();
 	}
 
 
@@ -7224,10 +7268,13 @@ REE`");
 		try {
 #if true
 
-			TestAccFindParamNavig();
+			TestToolWnd();
+			//TestWFEtc();
+			//TestWndFindContainsRoleName();
+			//TestToolWinImage();
+			//TestAccFindParamNavig();
 			//TestThrowAndWait();
 			//TestToolWinImageCode();
-			//TestToolWinImage();
 			//TestWinImageCapture();
 			//Au.Tools.Test.OsdRect();
 			//TestOsd();
@@ -7320,7 +7367,7 @@ REE`");
 #else
 			try {
 
-				//var w8 = +Wnd.Find("*Firefox*", "MozillaWindowClass");
+				//var w8 = Wnd.Find("*Firefox*", "MozillaWindowClass").OrThrow();
 				////Print(w8);
 				//var a = Acc.FindAll(w8, "web:TEXT", "??*");
 				////var a = Acc.FindAll(w8, "web:");
@@ -7331,6 +7378,11 @@ REE`");
 				//Print("---");
 				//Print(a[0].MiscFlags);
 				//return;
+
+				//var w = Wnd.Find("Java Control Panel", "SunAwtFrame").OrThrow();
+				////var a = Acc.Find(w, "push button", "Settings...").OrThrow();
+				//var a = Acc.Find(w, "push button", "Settings...", flags: AFFlags.ClientArea).OrThrow();
+				//Print(a);
 
 				TestAccForm();
 				//TestAccLeaks();

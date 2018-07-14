@@ -23,6 +23,7 @@ namespace Au
 {
 	public partial struct Wnd
 	{
+		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Waits until window exists, is visible (optionally) and active (optionally).
 		/// Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
@@ -32,14 +33,7 @@ namespace Au
 		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
 		/// </param>
 		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
-		/// <param name="name"></param>
-		/// <param name="className"></param>
-		/// <param name="programEtc"></param>
-		/// <param name="flags"></param>
-		/// <param name="also"></param>
-		/// <param name="contains"></param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
 		/// If you have a window's Wnd variable, to wait until it is active/visible/etc use <see cref="WaitForCondition"/> instead.
@@ -62,8 +56,10 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static Wnd Wait(double secondsTimeout, bool active,
-			string name = null, string className = null, string programEtc = null,
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+			string name = null, string className = null, WFEtc programEtc = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
 			var f = new Finder(name, className, programEtc, flags, also, contains);
 			var to = new WaitFor.Loop(secondsTimeout);
@@ -112,17 +108,12 @@ namespace Au
 			}
 		}
 
+		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Waits until window does not exist.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="name"></param>
-		/// <param name="className"></param>
-		/// <param name="programEtc"></param>
-		/// <param name="flags"></param>
-		/// <param name="also"></param>
-		/// <param name="contains"></param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
@@ -132,14 +123,16 @@ namespace Au
 		/// Examples: <see cref="Wait"/>.
 		/// </remarks>
 		public static bool WaitNot(double secondsTimeout,
-			string name = null, string className = null, string programEtc = null,
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+			string name = null, string className = null, WFEtc programEtc = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
 			var f = new Finder(name, className, programEtc, flags, also, contains);
 			return WaitNot(secondsTimeout, f, out _);
 		}
 
-		/// <inheritdoc cref="WaitNot(double, string, string, string, WFFlags, Func{Wnd, bool}, object)"/>
+		/// <inheritdoc cref="WaitNot(double, string, string, WFEtc, WFFlags, Func{Wnd, bool}, object)"/>
 		/// <summary>
 		/// Waits until window does not exist.
 		/// </summary>

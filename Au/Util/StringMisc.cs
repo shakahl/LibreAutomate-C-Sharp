@@ -29,13 +29,13 @@ namespace Au.Util
 	public static class StringMisc
 	{
 		/// <summary>
-		/// Parses a function parameter that can be either simple string (probably wildex) or like "***name:value" or "***name=value" or "***name value".
-		/// Returns: 0 - s does not start with "***" (or is null); i - s starts with "***names[i-1]:" etc; -1 - s is invalid.
+		/// Parses a function parameter that can optionally have a "***name " prefix, like "***id 100".
+		/// Returns: 0 - s does not start with "***"; i+1 - s starts with "***names[i] "; -1 - s is invalid.
 		/// </summary>
-		/// <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged.</param>
+		/// <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged. Can be null.</param>
 		/// <param name="names">List of supported 'name'.</param>
 		/// <remarks>
-		/// Used to parse parameters like <i>programEtc</i> of <see cref="Wnd.Find"/>.
+		/// Used to parse parameters like <i>name</i> of <see cref="Wnd.Child"/>.
 		/// </remarks>
 		internal static int ParseParam3Stars(ref string s, params string[] names)
 		{
@@ -44,7 +44,7 @@ namespace Au.Util
 				var ni = names[i];
 				if(s.Length - 3 <= ni.Length || !s.EqualsAt_(3, ni)) continue;
 				int j = 3 + ni.Length;
-				char c = s[j]; if(!(c == ':' || c == '=' || c == ' ')) break;
+				char c = s[j]; if(c != ' ') break;
 				s=s.Substring(j + 1);
 				return i + 1;
 			}

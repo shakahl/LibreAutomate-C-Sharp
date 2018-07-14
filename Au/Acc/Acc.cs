@@ -113,13 +113,13 @@ namespace Au
 	/// <example>
 	/// Click link "Example" in Chrome.
 	/// <code><![CDATA[
-	/// var w = +Wnd.Find("* Chrome");
-	/// var a = +Acc.Find(w, "web:LINK", "Example");
+	/// var w = Wnd.Find("* Chrome").OrThrow();
+	/// var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
 	/// a.DoAction();
 	/// ]]></code>
 	/// Click a link, wait for new web page, click a link in it.
 	/// <code><![CDATA[
-	/// var w = +Wnd.Find("* Chrome");
+	/// var w = Wnd.Find("* Chrome").OrThrow();
 	/// var a = Acc.Wait(1, w, "web:LINK", "Link 1");
 	/// a.DoActionAndWaitForNewWebPage();
 	/// a = Acc.Wait(10, w, "web:LINK", "Link 2");
@@ -234,13 +234,14 @@ namespace Au
 			Dispose(false);
 		}
 
-		/// <summary>
-		/// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)" r=""/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">x is null.</exception>
-		/// <example><inheritdoc cref="ExtensionMethods.OrThrow(Acc)"/></example>
-		public static Acc operator +(Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
+		//rejected. Use OrThrow.
+		///// <summary>
+		///// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
+		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)" r=""/>.
+		///// </summary>
+		///// <exception cref="NotFoundException">x is null.</exception>
+		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(Acc)"/></example>
+		//public static Acc operator +(Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
 
 		/// <summary>
 		/// Gets or changes simple element id, also known as child id.
@@ -286,7 +287,7 @@ namespace Au
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
 		/// <param name="flags">Flags.</param>
 		/// <exception cref="WndException">Invalid window.</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
 		/// <exception cref="ArgumentException"><paramref name="objid"/> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
 		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
 		{
@@ -327,7 +328,7 @@ namespace Au
 		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = Acc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
@@ -348,7 +349,7 @@ namespace Au
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </summary>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
 		public static Acc FromMouse(AXYFlags flags = 0)
 		{
 			return FromXY(Mouse.XY, flags);
@@ -555,7 +556,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="ToString"/>.
 		/// Catches exceptions. On exception prints $"!exception! exceptionType exceptionMessage".
-		/// Parameters are of <see cref="Find(Wnd, string, string, string, AFFlags, Func{Acc, bool}, int, Wnd.ChildFinder)"/>.
+		/// Parameters are of <see cref="Find"/>.
 		/// By default skips invisible objects and objects in menus. Use flags to include them.
 		/// Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix "web:" or "chrome:" to enable. See example.
 		/// </remarks>
@@ -563,7 +564,7 @@ namespace Au
 		/// Displays visible accessible objects in Chrome web page.
 		/// <code><![CDATA[
 		/// Output.Clear();
-		/// var w = +Wnd.Find("* Chrome");
+		/// var w = Wnd.Find("* Chrome").OrThrow();
 		/// Print("---- all ----");
 		/// Acc.PrintAll(w, "web:");
 		/// Print("---- links ----");

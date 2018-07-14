@@ -45,7 +45,7 @@ namespace Au.Types
 	/// Virtual-key codes.
 	/// </summary>
 	/// <remarks>
-	/// The values are the same as of the native VK_ constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
+	/// The values are the same as the native VK_ constants. Also the same as in the <see cref="System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
 	/// Some key names are different than VK_/Keys, for example Alt instead of VK_MENU/Menu.
 	/// Most rare and obsolete keys are not included. You can use Keys or VK_ (int) like <c>(KKey)Keys.Attn</c>.
 	/// This library does not use the .NET <b>Keys</b> enum, mostly because it includes modifier key flags and it's easy to confuse eg Shift (flag) with ShiftKey (key). Also this library does not use the WPF <b>Key</b> enum; its values don't match the native VK_ constants that must be used with API functions.

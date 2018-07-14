@@ -275,7 +275,7 @@ namespace Au
 				/// </summary>
 				/// <param name="w">Any top-level or child window of that process.</param>
 				/// <exception cref="WndException">w invalid.</exception>
-				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.</exception>
+				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of <see cref="Process_.UacInfo">UAC</see>.</exception>
 				public WinFormsControlNames(Wnd w)
 				{
 					_pm = new Process_.Memory(w, 4096); //throws

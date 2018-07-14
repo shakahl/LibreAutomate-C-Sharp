@@ -275,6 +275,8 @@ namespace Au.Types
 		internal const uint WM_HSHELL_WINDOWACTIVATED = 4;
 		internal const uint WM_HSHELL_WINDOWREPLACED = 13;
 
+		internal const uint WM_REFLECT = 0x2000;
+
 		#endregion
 
 		#region control styles, messages etc

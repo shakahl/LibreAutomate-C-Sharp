@@ -355,8 +355,9 @@ private:
 			//	Problems: 1. No Level. 2. Cannot apply many flags; then in some cases can be slower or less reliable.
 			//	Not very important. Now fast enough. Edge only 3 times slower (outproc); many times faster than outproc Chrome. JavaFX almost same speed (inproc).
 		} else {
-			hr = ao::AccFromWindowSR(w, !!(_flags&eAF::ClientArea) ? OBJID_CLIENT : OBJID_WINDOW, &aw.acc);
-			aw.misc.role = ROLE_SYSTEM_WINDOW;
+			bool inCLIENT = !!(_flags&eAF::ClientArea);
+			hr = ao::AccFromWindowSR(w, inCLIENT ? OBJID_CLIENT : OBJID_WINDOW, &aw.acc);
+			aw.misc.role = inCLIENT ? ROLE_SYSTEM_CLIENT : ROLE_SYSTEM_WINDOW; //not important: can be not CLIENT (eg DIALOG)
 		}
 		if(hr) return hr;
 		if(_FindInAcc(ref aw, 0)) return 0; //note: caller also must check _found; this is just for EnumChildWindows.
@@ -376,7 +377,7 @@ private:
 		if(c.Count() == 0) {
 			if(_w) {
 				//Java?
-				if(level == 1 && aParent.misc.role == ROLE_SYSTEM_CLIENT && !(GetWindowLongW(_w, GWL_STYLE)&WS_CHILD)) {
+				if(level == (!!(_flags&eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT && !(GetWindowLongW(_w, GWL_STYLE)&WS_CHILD)) {
 					if(wnd::ClassNameIs(_w, L"SunAwt*")) {
 						AccDtorIfElem0 aw(AccJavaFromWindow(_w), 0, eAccMiscFlags::Java);
 						if(aw.acc) {

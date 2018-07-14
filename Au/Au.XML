@@ -76,7 +76,7 @@
         </member>
         <member name="M:Au.Types.Cpp.Cpp_AccFromWindow(System.Int32,Au.Wnd,Au.Types.AccOBJID,Au.Types.Cpp.Cpp_Acc@,Au.Types.BSTR@)">
             <summary>
-            flags: 1 inproc, 2 get only name.
+            flags: 1 not inproc, 2 get only name.
             </summary>
         </member>
         <member name="M:Au.Types.Cpp.Cpp_RegexCompile(System.String,Au.Types.LPARAM,Au.Types.RXFlags,System.Int32@,Au.Types.BSTR@)">
@@ -90,7 +90,7 @@
         </member>
         <member name="T:Au.Types.AFFlags">
             <summary>
-            Flags for <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/> and similar functions.
+            Flags for <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.AFFlags.Reverse">
@@ -124,7 +124,7 @@
             <summary>
             Search without loading dll into the target process.
             Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
-            Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level, Firefox web page if its multiprocess feature is not disabled.
+            Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level, Firefox web page if its multiprocess feature is not disabled.
             Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/> and search in it. 3. Use <see cref="M:Au.Acc.Finder.Find(Au.Wnd,Au.Wnd.ChildFinder)"/>.
             Don't need this flag when searching in Acc (then it is inherited from the Acc variable).
             See also: <see cref="P:Au.Acc.MiscFlags"/>.
@@ -593,7 +593,7 @@
             Virtual-key codes.
             </summary>
             <remarks>
-            The values are the same as of the native VK_ constants. Also the same as in the <see cref="T:System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
+            The values are the same as the native VK_ constants. Also the same as in the <see cref="T:System.Windows.Forms.Keys"/> enum, but not as in the WPF <b>Key</b> enum.
             Some key names are different than VK_/Keys, for example Alt instead of VK_MENU/Menu.
             Most rare and obsolete keys are not included. You can use Keys or VK_ (int) like <c>(KKey)Keys.Attn</c>.
             This library does not use the .NET <b>Keys</b> enum, mostly because it includes modifier key flags and it's easy to confuse eg Shift (flag) with ShiftKey (key). Also this library does not use the WPF <b>Key</b> enum; its values don't match the native VK_ constants that must be used with API functions.
@@ -781,25 +781,25 @@
             Used with <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> and <see cref="M:Au.WinImage.Wait(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>. Its callback function (parameter <i>also</i>) can return one of these values.
             </summary>
         </member>
-        <member name="F:Au.Types.WIAlso.Return">
+        <member name="F:Au.Types.WIAlso.OkReturn">
             <summary>
             Stop searching.
             Let the main function (<b>Find</b> or <b>Wait</b>) return current result.
             </summary>
         </member>
-        <member name="F:Au.Types.WIAlso.FindMoreAndReturn">
+        <member name="F:Au.Types.WIAlso.OkFindMore">
             <summary>
             Find more instances of current image. If used list of images, also search for other images.
             Then let the main function return current result.
             </summary>
         </member>
-        <member name="F:Au.Types.WIAlso.FindMoreOfThisAndReturn">
+        <member name="F:Au.Types.WIAlso.OkFindMoreOfThis">
             <summary>
             Find more instances of current image. When used list of images, don't search for other images.
             Then let the main function return current result.
             </summary>
         </member>
-        <member name="F:Au.Types.WIAlso.FindMoreOfListAndReturn">
+        <member name="F:Au.Types.WIAlso.OkFindMoreOfList">
             <summary>
             If used list of images, search for other images. Don't search for more instances of current image.
             Then let the main function return current result.
@@ -1388,8 +1388,7 @@
             <exception cref="T:Au.Types.NotFoundException"></exception>
             <example>
             <code><![CDATA[
-            var w1 = Wnd.Find("Example").OrThrow();
-            var w2 = +Wnd.Find("Example"); //the same
+            var w = Wnd.Find("Example").OrThrow();
             ]]></code>
             </example>
         </member>
@@ -1403,10 +1402,8 @@
             var w = Wnd.Find("Example").OrThrow();
             
             var a1 = Acc.Find(w, "web:LINK", "Example").OrThrow();
-            var a2 = +Acc.Find(w, "web:LINK", "Example"); //the same
             
-            var a3 = (Acc.Find(w, "web:LINK", "Example")?.Navigate("example")).OrThrow();
-            var a4 = +Acc.Find(w, "web:LINK", "Example")?.Navigate("example"); //the same
+            var a2 = (Acc.Find(w, ...)?.Find(...)).OrThrow();
             ]]></code>
             </example>
         </member>
@@ -1418,70 +1415,70 @@
             <example>
             <code><![CDATA[
             var w = Wnd.Find("Example").OrThrow();
-            var r1 = WinImage.Find(w, "example").OrThrow();
-            var r2 = +WinImage.Find(w, "example"); //the same
+            var wi = WinImage.Find(w, ...).OrThrow();
             ]]></code>
             </example>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
+            <inheritdoc cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
             Moves the cursor (mouse pointer) to the position x y relative to this window.
-            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            By default x y coordinates are relative to the client area; default - center.
             </summary>
-            <exception cref="T:Au.Types.NotFoundException">Window object not found (this variable is 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
+            <exception cref="T:Au.Types.NotFoundException">Window not found (this variable is 0).</exception>
+            <seealso cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.Wnd,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton,System.Boolean)">
+            <inheritdoc cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
             Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
-            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            By default x y coordinates are relative to the client area; default - center. Default action - left click.
             </summary>
-            <exception cref="T:Au.Types.NotFoundException">Window object not found (this variable is 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
+            <exception cref="T:Au.Types.NotFoundException">Window not found (this variable is 0).</exception>
+            <seealso cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Acc,Au.Types.Coord,Au.Types.Coord)">
+            <inheritdoc cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
             Moves the cursor (mouse pointer) to this accessible object.
-            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
             </summary>
             <param name="t"></param>
             <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
             <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
             <exception cref="T:Au.Types.NotFoundException">Accessible object not found (this variable is null).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
+            <exception cref="T:Au.Types.AuException">
+            Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).
+            <inheritdoc cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
+            </exception>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.Acc,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)">
+            <inheritdoc cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
             Clicks this accessible object.
-            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
             </summary>
             <param name="t"></param>
             <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
             <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
             <param name="button">Which button and how to use it.</param>
             <exception cref="T:Au.Types.NotFoundException">Accessible object not found (this variable is null).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
+            <exception cref="T:Au.Types.AuException">
+            Failed to get object rectangle (<see cref="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)"/>) or container window (<see cref="P:Au.Acc.WndContainer"/>).
+            <inheritdoc cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
+            </exception>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.WinImage,Au.Types.Coord,Au.Types.Coord)">
+            <inheritdoc cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
             Moves the mouse to the found image.
-            Calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> or <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.
             </summary>
             <param name="t"></param>
             <param name="x">X coordinate in the found image. Default - center.</param>
             <param name="y">Y coordinate in the found image. Default - center.</param>
             <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
             <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.Move.</exception>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseClick(Au.WinImage,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)">
+            <inheritdoc cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
             Clicks the found image.
-            Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> or <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>.
             </summary>
             <param name="t"></param>
             <param name="x">X coordinate in the found image. Default - center.</param>
@@ -1489,7 +1486,6 @@
             <param name="button">Which button and how to use it.</param>
             <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
             <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
-            <exception cref="T:System.Exception">Exceptions of Mouse.ClickEx.</exception>
         </member>
         <member name="M:Au.Types.ExtensionMethods.CreateHandle_(System.Windows.Forms.Control)">
             <summary>
@@ -2726,6 +2722,9 @@
         <member name="M:Au.Types.PopupXY.op_Implicit(Au.Wnd)~Au.Types.PopupXY">
             <summary>Specifies the center of the specified window.</summary>
         </member>
+        <member name="M:Au.Types.PopupXY.op_Implicit(System.Windows.Forms.Control)~Au.Types.PopupXY">
+            <summary>Specifies the center of the specified control or form.</summary>
+        </member>
         <member name="P:Au.Types.PopupXY.Mouse">
             <summary>
             Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
@@ -3466,12 +3465,14 @@
         <member name="T:Au.Types.MButton">
             <summary>
             <i>button</i> parameter type for <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/> and similar functions.
+            </summary>
+            <remarks>
             There are two groups of values:
             1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
             2. Action (Down, Up, DoubleClick). Default: click.
             Multiple values from the same group cannot be combined. For example Left|Right is invalid.
             Values from different groups can be combined. For example Right|Down.
-            </summary>
+            </remarks>
         </member>
         <member name="F:Au.Types.MButton.Left">
             <summary>The left button.</summary>
@@ -3503,7 +3504,7 @@
             Used with functions that check mouse button states (pressed or released).
             </summary>
             <remarks>
-            The values are the same as of <see cref="T:System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.
+            The values are the same as <see cref="T:System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.
             </remarks>
         </member>
         <member name="F:Au.Types.MButtons.Left">
@@ -3596,7 +3597,7 @@
             <summary>Process id.</summary>
         </member>
         <member name="F:Au.Types.ProcessInfo.Name">
-            <summary>Executable file name (with ".exe" etc). Not full path.</summary>
+            <summary>Executable file name, like "notepad.exe".</summary>
         </member>
         <member name="M:Au.Types.ProcessInfo.#ctor(System.Int32,System.Int32,System.String)">
             
@@ -3607,7 +3608,7 @@
         <member name="T:Au.Types.Wildex">
             <summary>
             This class implements <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> parsing and matching (comparing).
-            Typically used in 'find' functions. For example, <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> uses it to compare window name, class name and program.
+            Typically used in 'find' functions. For example, <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> uses it to compare window name, class name and program.
             The 'find' function creates a Wildex instance (which parses the wildcard expression), then calls <see cref="M:Au.Types.Wildex.Match(System.String)"/> for each item (eg window) to compare some its property text.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid "**options " or regular expression.</exception>
@@ -4094,7 +4095,7 @@
             Uses API <msdn>EnumPropsEx</msdn>.
             </summary>
             <remarks>
-            Returns 0-length list if fails. Fails if invalid window or access denied (<conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="T:Au.Process_.UacInfo">UAC</see>). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
         </member>
         <member name="M:Au.Types.WProp.ToString">
@@ -4143,7 +4144,7 @@
         </member>
         <member name="T:Au.Types.WFFlags">
             <summary>
-            'flags' parameter of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            'flags' parameter of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.WFFlags.HiddenToo">
@@ -4157,6 +4158,30 @@
             Skip cloaked windows. See <see cref="P:Au.Wnd.IsCloaked"/>.
             Cloaked are windows hidden not in the classic way, therefore Wnd.IsVisible does not detect it, but Wnd.IsCloaked detects. For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.
             </summary>
+        </member>
+        <member name="T:Au.Types.WFEtc">
+            <summary>
+            <i>programEtc</i> of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.WFEtc.op_Implicit(System.String)~Au.Types.WFEtc">
+            <summary>Program name like "notepad.exe", or null.</summary>
+        </member>
+        <member name="M:Au.Types.WFEtc.Process(System.Int32)">
+            <summary>Process id.</summary>
+        </member>
+        <member name="M:Au.Types.WFEtc.Thread(System.Int32)">
+            <summary>Thread id.</summary>
+        </member>
+        <member name="M:Au.Types.WFEtc.Owner(Au.Types.AnyWnd)">
+            <summary>Owner window.</summary>
+        </member>
+        <member name="M:Au.Types.WFEtc.GetValue(Au.Types.Wildex@,System.Int32@,System.Int32@,Au.Wnd@)">
+            <summary>
+            Gets program name or process id or thread id or owner window.
+            Other variables will be null/0.
+            </summary>
+            <exception cref="T:System.ArgumentException">The value is "" or 0.</exception>
         </member>
         <member name="T:Au.Types.SUBCLASSPROC">
             <summary>API <msdn>SUBCLASSPROC</msdn></summary>
@@ -4539,13 +4564,13 @@
             <example>
             Click link "Example" in Chrome.
             <code><![CDATA[
-            var w = +Wnd.Find("* Chrome");
-            var a = +Acc.Find(w, "web:LINK", "Example");
+            var w = Wnd.Find("* Chrome").OrThrow();
+            var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
             a.DoAction();
             ]]></code>
             Click a link, wait for new web page, click a link in it.
             <code><![CDATA[
-            var w = +Wnd.Find("* Chrome");
+            var w = Wnd.Find("* Chrome").OrThrow();
             var a = Acc.Wait(1, w, "web:LINK", "Link 1");
             a.DoActionAndWaitForNewWebPage();
             a = Acc.Wait(10, w, "web:LINK", "Link 2");
@@ -4854,6 +4879,12 @@
             Returns empty array if there are no selected items of if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
+        <member name="P:Au.Acc.ChildCount">
+            <summary>
+            Gets the number of direct child objects.
+            Uses <msdn>IAccessible.get_accChildCount</msdn>.
+            </summary>
+        </member>
         <member name="M:Au.Acc.GetProperties(System.String,Au.Types.AccProperties@)">
             <summary>
             Gets multiple properties.
@@ -4912,15 +4943,9 @@
             <exception cref="T:System.ArgumentException">Invalid navig string.</exception>
             <example>
             <code><![CDATA[
-            a = +a.Navigate("parent next ch3", true);
+            a = a.Navigate("parent next ch3", true);
             ]]></code>
             </example>
-            <seealso cref="P:Au.Acc.Item(System.String,System.Double)"/>
-        </member>
-        <member name="P:Au.Acc.Item(System.String,System.Double)">
-            <summary>
-            Calls <see cref="M:Au.Acc.Navigate(System.String,System.Double)"/>.
-            </summary>
         </member>
         <member name="M:Au.Acc.Html(System.Boolean)">
             <summary>
@@ -4971,7 +4996,7 @@
             Contains accessible object (AO) properties and is used to find the AO.
             </summary>
             <remarks>
-            Can be used instead of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
+            Can be used instead of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             </remarks>
             <example>
             Find window that contains certain AO, and get the AO too.
@@ -4992,7 +5017,7 @@
         <member name="P:Au.Acc.Finder.ResultProperty">
             <summary>
             The requested propery of the found accessible object, depending on <see cref="P:Au.Acc.Finder.ResultGetProperty"/>.
-            null if: 1. Object not found. 2. ResultGetProperty not used or is '-'. 3. Failed to get the property.
+            null if: 1. Object not found. 2. <b>ResultGetProperty</b> not used or is '-'. 3. Failed to get the property.
             </summary>
             <remarks>
             The type depends on the property. Most properties are String. Others: <see cref="P:Au.Acc.Rect"/>, <see cref="P:Au.Acc.State"/>, <see cref="P:Au.Acc.WndContainer"/>, <see cref="M:Au.Acc.HtmlAttributes"/>.
@@ -5003,14 +5028,17 @@
             Set this when you need only some property of the accessible object (name, etc) and not the object itself.
             The value is a character, the same as with <see cref="M:Au.Acc.GetProperties(System.String,Au.Types.AccProperties@)"/>, for example 'n' for Name. Use '-' if you don't need any property.
             </summary>
-            <exception cref="T:System.ArgumentException">Parameter <i>also</i> was used.</exception>
-            <remarks>
-            ResultGetProperty cannot be used with parameter <i>also</i>.
-            </remarks>
+            <exception cref="T:System.ArgumentException">Used parameter <i>also</i> or <i>navig</i>.</exception>
         </member>
-        <member name="M:Au.Acc.Finder.#ctor(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)">
+        <member name="P:Au.Acc.Finder.NavigFailed">
             <summary>
-            Allows to specify accessible object properties, like with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
+            true if used parameter <i>navig</i> and the intermediate object was found but the navigation did not find the final object.
+            </summary>
+        </member>
+        <member name="M:Au.Acc.Finder.#ctor(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)">
+            <summary>
+            Stores the specified accessible object properties in this object. Reference: <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
+            Does not search now. For it call <b>Find</b> or <b>Wait</b>.
             </summary>
         </member>
         <member name="M:Au.Acc.Finder.Find(Au.Wnd,Au.Wnd.ChildFinder)">
@@ -5027,7 +5055,7 @@
         </member>
         <member name="M:Au.Acc.Finder.Find(Au.Wnd)">
             <summary>
-            Finds accessible object (AO) in window w, like <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
+            Finds accessible object (AO) in window w, like <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             Returns true if found. The <see cref="P:Au.Acc.Finder.Result"/> property will be the found AO.
             </summary>
             <param name="w">Window or control that contains the AO.</param>
@@ -5038,11 +5066,11 @@
             Using flag <see cref="F:Au.Types.AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
             </exception>
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
         </member>
         <member name="M:Au.Acc.Finder.Find(Au.Acc)">
             <summary>
-            Finds accessible object (AO) in another AO, like <see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)"/>.
+            Finds accessible object (AO) in another AO, like <see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/>.
             Returns true if found. The <see cref="P:Au.Acc.Finder.Result"/> property will be the found AO.
             </summary>
             <param name="a">Direct or indirect parent AO.</param>
@@ -5051,10 +5079,10 @@
             <i>role</i> is "" or invalid or has a prefix ("web:" etc).
             <i>name</i> is invalid wildcard expression ("**options " or regular expression).
             <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
-            <see cref="P:Au.Acc.SimpleElementId"/> is not 0.
             Using flag <see cref="F:Au.Types.AFFlags.UIA"/>.
+            <see cref="P:Au.Acc.SimpleElementId"/> is not 0.
             </exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
         </member>
         <member name="M:Au.Acc.Finder.Wait(System.Double,Au.Wnd)">
             <summary>
@@ -5078,7 +5106,7 @@
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Finder.Find(Au.Acc)"/>.</exception>
         </member>
-        <member name="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)">
+        <member name="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)">
              <summary>
              Finds accessible object (AO) in window.
              Returns the found AO. Returns null if not found. See examples.
@@ -5087,7 +5115,7 @@
              <param name="role">
              AO role, like "LINK". Or path, like "ROLE/ROLE/ROLE".
              See <see cref="P:Au.Acc.Role"/>. Can be used standard roles (see <see cref="T:Au.Types.AccROLE"/>) and custom roles (like "div" in Firefox).
-             This parameter is string. If you want to use AccROLE: <c>nameof(AccROLE.CHECKBOX)</c>.
+             This parameter is string. If you want to use <see cref="T:Au.Types.AccROLE"/>: <c>nameof(AccROLE.CHECKBOX)</c>.
              Case-sensitive, not wildcard. Use null to match any role. Cannot be "".
              
              Role or path can have a prefix:
@@ -5102,7 +5130,7 @@
              <item>"firefox:" - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used "web:" instead.</item>
              <item>"chrome:" - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used "web:" instead.</item>
              </list>
-             Cannot use prefix when <paramref name="prop"/> contains "id" or "class". Also with flag <see cref="F:Au.Types.AFFlags.UIA"/>. Also when searching in Acc (<see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)"/>).
+             Prefix cannot be used if: <paramref name="prop"/> contains "id" or "class"; with flag <see cref="F:Au.Types.AFFlags.UIA"/>; searching in Acc (<see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/>).
             
              Can be used path consisting of roles separated by "/". Examples:
              <list type="bullet">
@@ -5126,9 +5154,11 @@
              <list type="bullet">
              <item>
              "class" - search only in child controls that have this class name (see <see cref="P:Au.Wnd.ClassName"/>).
+             Cannot be used when searching in Acc.
              </item>
              <item>
              "id" - search only in child controls that have this id (see <see cref="P:Au.Wnd.ControlId"/>).
+             Cannot be used when searching in Acc.
              </item>
              <item>
              "value" - <see cref="P:Au.Acc.Value"/>.
@@ -5193,42 +5223,44 @@
              0-based index of matching AO.
              For example, if 1, the function skips the first matching AO and returns the second.
              </param>
+             <param name="navig">If not null, call <see cref="M:Au.Acc.Navigate(System.String,System.Double)"/> with this string and return its result.</param>
              <param name="controls">
              Properties of child controls where to search.
              This is an alternative for class/id in <paramref name="prop"/>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
              </param>
              <exception cref="T:System.ArgumentException">
-             role is "" or invalid.
-             name is invalid wildcard expression ("**options " or regular expression).
-             prop has invalid format or contains unknown property names or invalid wildcard expressions.
+             <paramref name="role"/> is "" or invalid.
+             <paramref name="name"/> is invalid wildcard expression ("**options " or regular expression).
+             <paramref name="prop"/> has invalid format or contains unknown property names or invalid wildcard expressions.
+             <paramref name="navig"/> string is invalid.
              Using flag <see cref="F:Au.Types.AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
              </exception>
-             <exception cref="T:Au.Types.WndException">Invalid w.</exception>
-             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+             <exception cref="T:Au.Types.WndException">Invalid window (if the function has parameter <paramref name="w"/>).</exception>
+             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
              <remarks>
-             This function walks the tree of accessible objects of the window, control or web page, until it finds a matching AO.
-             Uses <see cref="M:Au.Acc.Finder.Find(Au.Wnd)"/>. You can use it directly (see example).
+             Walks the tree of accessible objects, until finds a matching AO.
+             Uses <see cref="T:Au.Acc.Finder"/>. You can use it directly. See example.
              In wildcard expressions supports PCRE regular expressions (prefix "**r ") but not .NET regular expressions (prefix "**R "). They are similar.
-             To find web page AOs usually it's better to use <see cref="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)"/> instead, it's more reliable.
+             To find web page AOs usually it's better to use <see cref="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/> instead, it's more reliable.
              More info in <see cref="T:Au.Acc"/> topic.
              </remarks>
              <example>
              Find link "Example" in web page, and click. Throw NotFoundException if not found.
              <code><![CDATA[
-             var w = +Wnd.Find("* Chrome");
-             var a = +Acc.Find(w, "web:LINK", "Example");
+             var w = Wnd.Find("* Chrome").OrThrow();
+             var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
              a.DoAction();
              ]]></code>
              Try to find link "Example" in web page. Return if not found.
              <code><![CDATA[
-             var w = +Wnd.Find("* Chrome");
+             var w = Wnd.Find("* Chrome").OrThrow();
              var a = Acc.Find(w, "web:LINK", "Example");
              if(a == null) { Print("not found"); return; }
              a.DoAction();
              ]]></code>
              Use a Finder.
              <code><![CDATA[
-             var w = +Wnd.Find("* Chrome");
+             var w = Wnd.Find("* Chrome").OrThrow();
              var f = new Acc.Finder("BUTTON", "Example");
              if(!f.Find(w)) { Print("not found"); return; }
              Acc a = f.Result;
@@ -5236,94 +5268,69 @@
              ]]></code>
              </example>
         </member>
-        <member name="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)">
+        <member name="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)">
+            <inheritdoc cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>
             <summary>
             Finds a descendant accessible object (AO) of this AO.
             Returns the found AO. Returns null if not found.
-            Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
             <exception cref="T:System.ArgumentException">
             <paramref name="role"/> is "" or invalid or has a prefix ("web:" etc).
             <paramref name="name"/> is invalid wildcard expression ("**options " or regular expression).
             <paramref name="prop"/> has invalid format or contains unknown property names or invalid wildcard expressions or "class", "id".
-            <see cref="P:Au.Acc.SimpleElementId"/> is not 0.
+            <paramref name="navig"/> string is invalid.
             Using flag <see cref="F:Au.Types.AFFlags.UIA"/>.
+            <see cref="P:Au.Acc.SimpleElementId"/> is not 0.
             </exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
         </member>
-        <member name="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)">
+        <member name="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)">
+            <inheritdoc cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>
             <summary>
             Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
-            Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns null.
             </param>
-            <param name="w"></param>
-            <param name="role"></param>
-            <param name="name"></param>
-            <param name="prop"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <param name="skip"></param>
             <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.</exception>
         </member>
-        <member name="M:Au.Acc.Wait(System.Double,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)">
+        <member name="M:Au.Acc.Wait(System.Double,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)">
+            <inheritdoc cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/>
             <summary>
             Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
-            Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
-            <param name="secondsTimeout">
-            The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns null.
-            </param>
-            <param name="role"></param>
-            <param name="name"></param>
-            <param name="prop"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <param name="skip"></param>
-            <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)"/>.</exception>
+            <param name="secondsTimeout"><inheritdoc cref="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/></param>
+            <returns><inheritdoc cref="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/></returns>
+            <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.Acc.Wait(System.Double,Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/></exception>
         </member>
         <member name="M:Au.Acc.FindAll(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean})">
+            <inheritdoc cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>
             <summary>
             Finds all matching accessible objects in window.
             Returns array of 0 or more elements.
-            Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.</exception>
             <example>
             Get all taskbar buttons (Windows 10).
             <code><![CDATA[
-            var w = +Wnd.Find(null, "Shell_TrayWnd");
+            var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
             foreach(var a in Acc.FindAll(w, "BUTTON", prop: "level=7")) Print(a);
             ]]></code>
             </example>
         </member>
         <member name="M:Au.Acc.FindAll(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean})">
+            <inheritdoc cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String)"/>
             <summary>
             Finds all matching descendant accessible objects (AO) of this AO.
             Returns array of 0 or more elements.
-            Parameters etc are as with <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
             </summary>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Find(System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32)"/>.</exception>
             <example>
             Get all taskbar buttons (Windows 10).
             <code><![CDATA[
-            var w = +Wnd.Find(null, "Shell_TrayWnd");
-            var atb = +Acc.Find(w, "TOOLBAR", "Running applications");
+            var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
+            var atb = Acc.Find(w, "TOOLBAR", "Running applications").OrThrow();
             foreach(var a in atb.FindAll("BUTTON", prop: "level=0")) Print(a);
             ]]></code>
             </example>
-        </member>
-        <member name="P:Au.Acc.ChildCount">
-            <summary>
-            Gets the number of direct child objects.
-            Uses <msdn>IAccessible.get_accChildCount</msdn>.
-            </summary>
         </member>
         <member name="M:Au.Acc.#ctor(System.IntPtr,System.Int32,System.Boolean)">
             <summary>
@@ -5355,14 +5362,6 @@
         </member>
         <member name="M:Au.Acc.Finalize">
             
-        </member>
-        <member name="M:Au.Acc.op_UnaryPlus(Au.Acc)">
-            <summary>
-            If x is not null, returns x, else throws <see cref="T:Au.Types.NotFoundException"/>.
-            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)" r=""/>.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">x is null.</exception>
-            <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Acc)"/></example>
         </member>
         <member name="P:Au.Acc.SimpleElementId">
             <summary>
@@ -5403,7 +5402,7 @@
             <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
             <param name="flags">Flags.</param>
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="objid"/> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
         </member>
         <member name="M:Au.Acc.FromXY(Au.Types.POINT,Au.Types.AXYFlags)">
@@ -5415,7 +5414,7 @@
             Tip: When need coordinates relative to another screen or/and the work area, use <see cref="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_,System.Boolean,System.Boolean)"/> or tuple (x, y, workArea) etc. Example: <c>var a = Acc.FromXY((x, y, true));</c>. Also when need <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.
             </param>
             <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
             <remarks>
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </remarks>
@@ -5426,7 +5425,7 @@
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </summary>
             <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
         </member>
         <member name="M:Au.Acc.Focused(System.Boolean)">
             <summary>
@@ -5484,7 +5483,7 @@
             <remarks>
             Uses <see cref="M:Au.Acc.ToString"/>.
             Catches exceptions. On exception prints $"!exception! exceptionType exceptionMessage".
-            Parameters are of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
+            Parameters are of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             By default skips invisible objects and objects in menus. Use flags to include them.
             Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix "web:" or "chrome:" to enable. See example.
             </remarks>
@@ -5492,7 +5491,7 @@
             Displays visible accessible objects in Chrome web page.
             <code><![CDATA[
             Output.Clear();
-            var w = +Wnd.Find("* Chrome");
+            var w = Wnd.Find("* Chrome").OrThrow();
             Print("---- all ----");
             Acc.PrintAll(w, "web:");
             Print("---- links ----");
@@ -5740,13 +5739,13 @@
         </member>
         <member name="M:Au.Util.StringMisc.ParseParam3Stars(System.String@,System.String[])">
             <summary>
-            Parses a function parameter that can be either simple string (probably wildex) or like "***name:value" or "***name=value" or "***name value".
-            Returns: 0 - s does not start with "***" (or is null); i - s starts with "***names[i-1]:" etc; -1 - s is invalid.
+            Parses a function parameter that can optionally have a "***name " prefix, like "***id 100".
+            Returns: 0 - s does not start with "***"; i+1 - s starts with "***names[i] "; -1 - s is invalid.
             </summary>
-            <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged.</param>
+            <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged. Can be null.</param>
             <param name="names">List of supported 'name'.</param>
             <remarks>
-            Used to parse parameters like <i>programEtc</i> of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Used to parse parameters like <i>name</i> of <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>.
             </remarks>
         </member>
         <member name="M:Au.Util.StringMisc.RemoveUnderlineAmpersand(System.String)">
@@ -7127,7 +7126,7 @@
             Does not block:
             <list type="bullet">
             <item>In windows of the same thread that started blocking. For example, if your script shows a message box, the user can click its buttons.</item>
-            <item>In windows of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (IL) processes, unless this process has uiAccess IL.</item>
+            <item>In windows of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) processes, unless this process has uiAccess IL.</item>
             <item>In special screens such as when you press Ctrl+Alt+Delete or when you launch and admin program. See also <see cref="P:Au.BlockUserInput.ResumeAfterCtrlAltDelete"/>.</item>
             <item>Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.</item>
             <item><see cref="P:Au.BlockUserInput.DoNotBlockKeys"/> keys.</item>
@@ -7182,7 +7181,7 @@
         </member>
         <member name="P:Au.BlockUserInput.ResumeAfterCtrlAltDelete">
             <summary>
-            Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> consent, etc.
+            Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <see cref="T:Au.Process_.UacInfo">UAC</see> consent, etc.
             </summary>
         </member>
         <member name="P:Au.BlockUserInput.ResendBlockedKeys">
@@ -7190,7 +7189,7 @@
             Record blocked keys, and play back when stopped blocking.
             </summary>
             <remarks>
-            Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> consent or some other special screen. 3. Called <see cref="P:Au.BlockUserInput.Pause"/>.
+            Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <see cref="T:Au.Process_.UacInfo">UAC</see> consent or some other special screen. 3. Called <see cref="P:Au.BlockUserInput.Pause"/>.
             </remarks>
         </member>
         <member name="P:Au.BlockUserInput.DoNotBlockInjectedExtraInfo">
@@ -8550,7 +8549,7 @@
             
             This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
             
-            Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
+            Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <see cref="T:Au.Process_.UacInfo">UAC</see>.
             
             The mouse button codes/names (eg <see cref="F:Au.Types.KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
             </remarks>
@@ -8749,6 +8748,21 @@
             Does nothing if not created or not visible.
             </summary>
         </member>
+        <member name="M:Au.OsdWindow.WndProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Called when the OSD window receives a message.
+            If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
+            </summary>
+        </member>
+        <member name="M:Au.OsdWindow.OnPaint(System.Drawing.Graphics,System.Drawing.Rectangle)">
+            <summary>
+            Called when the OSD window must be drawn or redrawn.
+            Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="T:Au.OsdWindow"/>, it does nothing.
+            </summary>
+            <remarks>
+            If <see cref="P:Au.OsdWindow.Opacity"/> is 0 (default), <paramref name="g"/> is filled with <see cref="P:Au.OsdWindow.TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
+            </remarks>
+        </member>
         <member name="P:Au.OsdWindow.Shadow">
             <summary>
             If true, the OSD window will have shadow.
@@ -8774,21 +8788,6 @@
             </remarks>
             <remarks>
             This property cannot be changed after creating OSD window.
-            </remarks>
-        </member>
-        <member name="M:Au.OsdWindow.WndProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Called when the OSD window receives a message.
-            If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
-            </summary>
-        </member>
-        <member name="M:Au.OsdWindow.OnPaint(System.Drawing.Graphics,System.Drawing.Rectangle)">
-            <summary>
-            Called when the OSD window must be drawn or redrawn.
-            Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="T:Au.OsdWindow"/>, it does nothing.
-            </summary>
-            <remarks>
-            If <see cref="P:Au.OsdWindow.Opacity"/> is 0 (default), <paramref name="g"/> is filled with <see cref="P:Au.OsdWindow.TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
             </remarks>
         </member>
         <member name="M:Au.OsdWindow.CloseAll(System.String)">
@@ -9134,14 +9133,6 @@
             <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> uses this function when <i>image</i> argument type is string. More info there.
             </remarks>
         </member>
-        <member name="M:Au.WinImage.op_UnaryPlus(Au.WinImage)">
-            <summary>
-            If x is not null, returns x, else throws <see cref="T:Au.Types.NotFoundException"/>.
-            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)" r=""/>.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">x is null.</exception>
-            <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.WinImage)"/></example>
-        </member>
         <member name="P:Au.WinImage.Rect">
             <summary>
             Gets location of the found image, relative to the search area.
@@ -9226,11 +9217,11 @@
             Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="T:Au.Types.WIAlso"/> values.
             Callback functions can be used to get rectangles of multiple found images, create custom behaviors/actions, etc. Examples:
             <list type="bullet">
-            <item>Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.Return : WIAlso.FindOther</c></item>
+            <item>Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.OkReturn : WIAlso.FindOther</c></item>
             <item>Skip n matching images: <c>also: o => o.Skip(n)</c></item>
             <item>Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.</item>
             <item>Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c></item>
-            <item>Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.FindMoreOfListAndReturn; }); if(found[0]) Print(0); if(found[1]) Print(1);</c></item>
+            <item>Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c></item>
             </list>
             </param>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the <paramref name="area"/> argument).</exception>
@@ -9257,7 +9248,7 @@
             <example>
             Code created with dialog "Find image or color in window".
             <code><![CDATA[
-            var w = +Wnd.Find("Window Name");
+            var w = Wnd.Find("Window Name").OrThrow();
             string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
             var wi = WinImage.Find(w, image).OrThrow();
             wi.MouseMove();
@@ -12319,7 +12310,7 @@
             Uses API <msdn>ShellExecuteEx</msdn>.
             Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
             </remarks>
-            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
             <example>
             Run notepad and wait for its window.
             <code><![CDATA[
@@ -12345,7 +12336,7 @@
             </remarks>
             <seealso cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>
             <seealso cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>
-            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
         </member>
         <member name="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
@@ -13608,8 +13599,8 @@
             Coordinates relative to the primary screen.
             Tip: When need coordinates relative to another screen or/and the work area, use <see cref="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_,System.Boolean,System.Boolean)"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.
             </param>
-            <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
@@ -13634,7 +13625,7 @@
             <param name="x">X coordinate.</param>
             <param name="y">Y coordinate.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">
-            1. The specified x y is not in the screen (any screen). No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).
+            1. The specified x y is not in the screen (any screen). No exception if option <b>Relaxed</b> is true (then moves to a screen edge).
             2. Invalid screen index.
             </exception>
             <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(Au.Types.POINT)"/></exception>
@@ -13656,7 +13647,7 @@
             The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
             Other window-related failures.
             </exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException"><inheritdoc cref="M:Au.Mouse.Move(Au.Types.POINT)"/></exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
@@ -13688,8 +13679,8 @@
             </summary>
             <param name="dx">X offset from LastMoveXY.x.</param>
             <param name="dy">Y offset from LastMoveXY.y.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
@@ -13702,8 +13693,8 @@
             <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="M:Au.Tools.Recording.MouseToString(System.Collections.Generic.IEnumerable{System.UInt32},System.Boolean)"/>.</param>
             <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
             <exception cref="T:System.ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">The last x y is not in screen. No exception if the <b>Relaxed</b> option is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level; 3. Some application called API ClipCursor. No exception if the <b>Relaxed</b> option is true (then final cursor position is undefined).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
             </remarks>
@@ -13735,6 +13726,7 @@
             Clicks, double-clicks, presses or releases a mouse button.
             By default does not move the mouse cursor.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="button">Button and action. Default: left click.</param>
             <param name="useLastMoveXY">
             Use <see cref="P:Au.Mouse.LastMoveXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse move and click' function called in this thread. Use this option for reliability.
@@ -13743,22 +13735,21 @@
             </param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.ClickSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>.
             </remarks>
         </member>
         <member name="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)">
             <summary>
             Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
-            To move the mouse cursor, calls <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="button">Button and action.</param>
             <param name="x">X coordinate.</param>
             <param name="y">Y coordinate.</param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.</exception>
             <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
+            To move the mouse cursor, calls <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="P:Au.Types.OptMouse.ClickSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
         </member>
@@ -13773,8 +13764,8 @@
         <member name="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
             Clicks, double-clicks, presses or releases a mouse button at position x y relative to window w.
-            To move the mouse cursor, calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="button">Button and action.</param>
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
@@ -13784,21 +13775,21 @@
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.WndException">x y is not in the window (read more in Remarks).</exception>
             <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
+            To move the mouse cursor, calls <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="P:Au.Types.OptMouse.ClickSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
-            If after moving the cursor it is not in window w or a window of its thread, activates w (or its top-level parent window). Throws exception if then x y is still not in w. Skips all this when just releasing button or if <b>Opt.Mouse.Relaxed</b> is true. Also, if w is a control, x y can be somewhere else in its top-level parent window.
+            If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then x y is still not in the window. Skips all this when just releasing button or if option <b>Relaxed</b> is true. Also, if it is a control, x y can be somewhere else in its top-level parent window.
             </remarks>
         </member>
         <member name="M:Au.Mouse.Click(System.Boolean)">
             <summary>
-            Left click.
+            Left button click.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
         </member>
         <member name="M:Au.Mouse.Click(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Left click at position x y.
+            Left button click at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
@@ -13807,7 +13798,7 @@
         </member>
         <member name="M:Au.Mouse.Click(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Left click at position x y relative to window w.
+            Left button click at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
@@ -13819,14 +13810,14 @@
         </member>
         <member name="M:Au.Mouse.RightClick(System.Boolean)">
             <summary>
-            Right click.
+            Right button click.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
         </member>
         <member name="M:Au.Mouse.RightClick(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Right click at position x y.
+            Right button click at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
@@ -13835,7 +13826,7 @@
         </member>
         <member name="M:Au.Mouse.RightClick(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Right click at position x y relative to window w.
+            Right button click at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
@@ -13847,14 +13838,14 @@
         </member>
         <member name="M:Au.Mouse.DoubleClick(System.Boolean)">
             <summary>
-            Double left click.
+            Left button double click.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
         </member>
         <member name="M:Au.Mouse.DoubleClick(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Double left click at position x y.
+            Left button double click at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
@@ -13863,7 +13854,7 @@
         </member>
         <member name="M:Au.Mouse.DoubleClick(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Double left click at position x y relative to window w.
+            Left button double click at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
@@ -13875,40 +13866,34 @@
         </member>
         <member name="M:Au.Mouse.LeftDown(System.Boolean)">
             <summary>
-            Left down (press and don't release).
+            Left button down (press and don't release).
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
+            <returns>The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</returns>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
-            <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </remarks>
         </member>
         <member name="M:Au.Mouse.LeftDown(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Left down (press and don't release) at position x y.
+            Left button down (press and don't release) at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.</exception>
-            <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </remarks>
         </member>
         <member name="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
             Left down (press and don't release) at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
+            <returns>The return value can be used to auto-release pressed button. See example.</returns>
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
             <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
-            <remarks>
-            The return value can be used to auto-release pressed button. See example.
-            </remarks>
             <example>
             <code><![CDATA[
             //drag and drop: start at x=8 y=8, move 20 pixels down, drop
@@ -13918,14 +13903,14 @@
         </member>
         <member name="M:Au.Mouse.LeftUp(System.Boolean)">
             <summary>
-            Left up (release pressed button).
+            Left button up (release pressed button).
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
         </member>
         <member name="M:Au.Mouse.LeftUp(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Left up (release pressed button) at position x y.
+            Left button up (release pressed button) at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
@@ -13934,7 +13919,7 @@
         </member>
         <member name="M:Au.Mouse.LeftUp(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Left up (release pressed button) at position x y relative to window w.
+            Left button up (release pressed button) at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
@@ -13945,51 +13930,45 @@
         </member>
         <member name="M:Au.Mouse.RightDown(System.Boolean)">
             <summary>
-            Right down (press and don't release).
+            Right button down (press and don't release).
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
-            <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </remarks>
         </member>
         <member name="M:Au.Mouse.RightDown(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Right down (press and don't release) at position x y.
+            Right button down (press and don't release) at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="x">X coordinate in the screen.</param>
             <param name="y">Y coordinate in the screen.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.</exception>
-            <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </remarks>
         </member>
         <member name="M:Au.Mouse.RightDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Right down (press and don't release) at position x y relative to window w.
+            Right button down (press and don't release) at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
+            <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
             <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
-            <remarks>
-            The return value can be used to auto-release pressed button. See example with <see cref="M:Au.Mouse.LeftDown(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.
-            </remarks>
         </member>
         <member name="M:Au.Mouse.RightUp(System.Boolean)">
             <summary>
-            Right up (release pressed button).
+            Right button up (release pressed button).
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,System.Boolean)"/>. More info there.
             </summary>
             <param name="useLastMoveXY">Use <see cref="P:Au.Mouse.LastMoveXY"/>, not current cursor position.</param>
         </member>
         <member name="M:Au.Mouse.RightUp(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            Right up (release pressed button) at position x y.
+            Right button up (release pressed button) at position x y.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Types.Coord,Au.Types.Coord)"/>. More info there.
             </summary>
             <param name="x">X coordinate in the screen.</param>
@@ -13998,7 +13977,7 @@
         </member>
         <member name="M:Au.Mouse.RightUp(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Right up (release pressed button) at position x y relative to window w.
+            Right button up (release pressed button) at position x y relative to window w.
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
@@ -14043,7 +14022,7 @@
         <member name="M:Au.Mouse.LibWaitForNoButtonsPressed">
             <summary>
             Waits while some buttons are in pressed state, except those pressed by a <see cref="T:Au.Mouse"/> class function in this thread.
-            Does nothing if the <b>Relaxed</b> option is true.
+            Does nothing option <b>Relaxed</b> is true.
             </summary>
         </member>
         <member name="M:Au.Mouse.WaitForClick(System.Double,Au.Types.MButtons,System.Boolean,System.Boolean)">
@@ -14550,7 +14529,7 @@
         </member>
         <member name="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)">
             <summary>
-            Gets process executable file name (with ".exe" etc) or full path.
+            Gets process executable file name (like "notepad.exe") or full path.
             Returns null if fails.
             </summary>
             <param name="processId">Process id.</param>
@@ -14565,7 +14544,7 @@
         </member>
         <member name="M:Au.Process_.LibProcessInfo.GetName(System.Boolean)">
             <summary>
-            Gets process executable file name (with ".exe" etc). Not full path.
+            Gets process executable file name (like "notepad.exe"). Not full path.
             If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
             Don't call multiple times, because always converts from raw char*.
             </summary>
@@ -14583,7 +14562,7 @@
             Returns array containing 0 or more elements.
             </summary>
             <param name="processName">
-            Process executable file name (with ".exe" etc), like "notepad.exe".
+            Process executable file name, like "notepad.exe".
             String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
             </param>
             <param name="fullPath">
@@ -14747,7 +14726,7 @@
             </summary>
             <param name="w">A window in that process.</param>
             <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-            <remarks>This is the preferred constructor when the process has windows. It works with windows of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> High integrity level when this process is Medium+uiAccess.</remarks>
+            <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="T:Au.Process_.UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
             <exception cref="T:Au.Types.WndException">w invalid.</exception>
             <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
         </member>
@@ -14757,7 +14736,7 @@
             </summary>
             <param name="processId">Process id.</param>
             <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>) or allocate memory.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of <see cref="T:Au.Process_.UacInfo">UAC</see>) or allocate memory.</exception>
         </member>
         <member name="M:Au.Process_.Memory.WriteUnicodeString(System.String,System.Int32)">
             <summary>
@@ -14844,7 +14823,7 @@
         </member>
         <member name="T:Au.Process_.UacInfo">
             <summary>
-            Holds an access token (security info) of a process and provides various security info, eg <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level.
+            Holds an access token (security info) of a process and provides various security info, eg UAC integrity level.
             </summary>
         </member>
         <member name="M:Au.Process_.UacInfo.Finalize">
@@ -14863,8 +14842,8 @@
         </member>
         <member name="P:Au.Process_.UacInfo.Failed">
             <summary>
-            Gets true if the last called property function failed.
-            Normally getting properties should never fail. Only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).
+            Returns true if the last called property function failed.
+            Normally it should never fail. Only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).
             </summary>
         </member>
         <member name="T:Au.Process_.UacInfo.IL">
@@ -14881,7 +14860,7 @@
         </member>
         <member name="P:Au.Process_.UacInfo.Elevation">
             <summary>
-            Gets process <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> elevation type.
+            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> elevation type of the process.
             Elevation types:
             Full - runs as administrator (High or System integrity level).
             Limited - runs as standard user (Medium, Medium+UIAccess or Low integrity level) on administrator user session.
@@ -14892,7 +14871,7 @@
         </member>
         <member name="P:Au.Process_.UacInfo.IsUIAccess">
             <summary>
-            Returns true if the process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">uiAccess</conceptualLink> property.
+            Returns true if the process has <see cref="T:Au.Process_.UacInfo">uiAccess</see> property.
             A uiAccess process can access/automate all windows of processes running in the same user session.
             Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
             Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevelAndUIAccess==IL.UIAccess</c> (<see cref="P:Au.Process_.UacInfo.IntegrityLevelAndUIAccess"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
@@ -14901,7 +14880,7 @@
         </member>
         <member name="P:Au.Process_.UacInfo.IntegrityLevel">
             <summary>
-            Gets process <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (IL).
+            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) of the process.
             IL from lowest to highest value:
             	<b>Untrusted</b> - the most limited rights. Very rare.
             	<b>Low</b> - very limited rights. Used by Internet Explorer tab processes, Windows Store apps.
@@ -14936,13 +14915,13 @@
         </member>
         <member name="P:Au.Process_.UacInfo.IsAdmin">
             <summary>
-            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
+            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="T:Au.Process_.UacInfo">UAC</see>.
             This function for example can be used to check whether you can write to protected locations in the file system and registry.
             </summary>
         </member>
         <member name="P:Au.Process_.UacInfo.IsUacDisabled">
             <summary>
-            Returns true if <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> is disabled (turned off) on this Windows 7 computer.
+            Returns true if <see cref="T:Au.Process_.UacInfo">UAC</see> is disabled (turned off) on this Windows 7 computer.
             On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
             </summary>
         </member>
@@ -15933,7 +15912,7 @@
             <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
             </list>
             
-            Many functions fail if the window's process has a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
+            Many functions fail if the window's process has a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
             
             The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
             
@@ -15944,29 +15923,23 @@
             Wnd w = Wnd.Find("* - Notepad");
             if(w.Is0) { Print("window not found"); return; }
             w.Activate();
-            Wnd c = w.Child(className: "Edit");
+            Wnd c = w.Child(className: "Button");
             Print(c.Name);
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Waits until window exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
-            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
             </param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
-            <param name="name"></param>
-            <param name="className"></param>
-            <param name="programEtc"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <param name="contains"></param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
             If you have a window's Wnd variable, to wait until it is active/visible/etc use <see cref="M:Au.Wnd.WaitForCondition(System.Double,System.Func{Au.Wnd,System.Boolean},System.Boolean)"/> instead.
@@ -15994,7 +15967,7 @@
             Waits until any of specified windows exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
-            <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
+            <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
             <param name="windows">One or more variables containing window properties.</param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
@@ -16008,29 +15981,24 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Waits until window does not exist.
-            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="name"></param>
-            <param name="className"></param>
-            <param name="programEtc"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <param name="contains"></param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
             If you have a window's Wnd variable, to wait until it is closed use <see cref="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)"/> instead.
-            Examples: <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Examples: <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.WaitNot(System.Double,Au.Wnd.Finder,Au.Wnd@)">
-            <inheritdoc cref="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+            <inheritdoc cref="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Waits until window does not exist.
             </summary>
@@ -16128,14 +16096,6 @@
         </member>
         <member name="M:Au.Wnd.op_Inequality(Au.Wnd,Au.Wnd)">
             <summary>Compares window handles.</summary>
-        </member>
-        <member name="M:Au.Wnd.op_UnaryPlus(Au.Wnd)">
-            <summary>
-            If x is not default(Wnd), returns x, else throws <see cref="T:Au.Types.NotFoundException"/>.
-            Alternatively you can use <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>.
-            </summary>
-            <exception cref="T:Au.Types.NotFoundException">x is default(Wnd).</exception>
-            <example><inheritdoc cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)"/></example>
         </member>
         <member name="M:Au.Wnd.Equals(Au.Wnd)">
             <summary>
@@ -16356,7 +16316,7 @@
             </summary>
             <param name="w">Any top-level or child window of that process.</param>
             <exception cref="T:Au.Types.WndException">w invalid.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to allocate process memory (see <see cref="T:Au.Process_.Memory"/>) needed to get control names, usually because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to allocate process memory (see <see cref="T:Au.Process_.Memory"/>) needed to get control names, usually because of <see cref="T:Au.Process_.UacInfo">UAC</see>.</exception>
         </member>
         <member name="M:Au.Wnd.Misc.WinFormsControlNames.GetControlName(Au.Wnd)">
             <summary>
@@ -16477,7 +16437,7 @@
             Calls API <msdn>EnumWindows</msdn>.
             <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.Misc.MainWindows(System.Boolean)"/>.</note>
             By default array elements are sorted to match the Z order.
-            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
+            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.ThreadWindows(System.Int32,System.Boolean,System.Boolean)">
@@ -16502,7 +16462,7 @@
             <summary>
             Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
             Calls API <msdn>FindWindowEx</msdn>.
-            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which does not find message-only windows.
+            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which does not find message-only windows.
             Can be used only when you know full name and/or class name.
             Finds hidden windows too.
             </summary>
@@ -16597,7 +16557,7 @@
             Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
             </summary>
             <param name="w"></param>
-            <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
+            <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
             <param name="skipMinimized">Return false if w is minimized.</param>
         </member>
         <member name="M:Au.Wnd.Misc.MainWindows(System.Boolean)">
@@ -16605,7 +16565,7 @@
             Gets main windows, ie those that probably are in the Windows taskbar.
             Returns array containing 0 or more Wnd.
             </summary>
-            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
+            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
             <remarks>
             Uses <see cref="M:Au.Wnd.Misc.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)"/>.
             Does not match the order of buttons in the Windows taskbar.
@@ -16617,7 +16577,7 @@
             Returns default(Wnd) if there are no such windows.
             </summary>
             <param name="w">Start from this window. If default(Wnd), starts from the top of the Z order.</param>
-            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level uiAccess).</param>
+            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
             <param name="skipMinimized">Skip minimized windows.</param>
             <param name="retryFromTop">If w is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
             <remarks>
@@ -16773,12 +16733,12 @@
         <member name="M:Au.Wnd.Misc.UacEnableMessages(System.UInt32[])">
             <summary>
             Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
-            It allows processes of lower <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level to send these messages to this process.
+            It allows processes of lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level to send these messages to this process.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA">
             <summary>
-            Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level processes, for example if you'll use <see cref="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.Int32@)"/>.
+            Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level processes, for example if you'll use <see cref="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.Int32@)"/>.
             Call this once in process.
             </summary>
         </member>
@@ -16802,7 +16762,7 @@
             <param name="lParam">lParam of the window procedure when it received WM_COPYDATA message. It is COPYDATASTRUCT pointer.</param>
             <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
             <remarks>
-            <note type="note"><conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
+            <note type="note"><see cref="T:Au.Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
             </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.PrintMsg(System.Windows.Forms.Message@,System.UInt32[])">
@@ -17197,7 +17157,7 @@
             </remarks>
             <exception cref="T:Au.Types.WndException">
             Invalid handle; disabled; failed to set focus; failed to activate parent window.
-            Fails to set focus when the target process is admin or uiAccess and this process isn't (see <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>).
+            Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="T:Au.Process_.UacInfo">UAC</see>).
             </exception>
             <seealso cref="P:Au.Wnd.WndFocused"/>
             <seealso cref="P:Au.Wnd.IsFocused"/>
@@ -17930,7 +17890,7 @@
         </member>
         <member name="P:Au.Wnd.IsUacAccessDenied">
             <summary>
-            Returns true if <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> would not allow to automate the window.
+            Returns true if <see cref="T:Au.Process_.UacInfo">UAC</see> would not allow to automate the window.
             It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
@@ -18039,6 +17999,16 @@
             <seealso cref="P:Au.Wnd.Name"/>
             <seealso cref="P:Au.Wnd.ControlText"/>
         </member>
+        <member name="P:Au.Wnd.NameLabel">
+            <summary>
+            Gets <see cref="P:Au.Wnd.Name"/> of previous (in Z order) sibling control.
+            Returns null if there is no such control.
+            </summary>
+            <remarks>
+            Can be used to identify controls that have no name but have a named control (label) at the left or above. For example Edit And ComboBox controls in dialogs.
+            In such cases this function works like <see cref="P:Au.Wnd.NameAcc"/>, but is faster and supports any sibling control type.
+            </remarks>
+        </member>
         <member name="P:Au.Wnd.NameAcc">
             <summary>
             Gets <see cref="P:Au.Acc.Name"/> of the accessible object (role WINDOW) of this window or control.
@@ -18056,7 +18026,7 @@
         </member>
         <member name="P:Au.Wnd.ProgramName">
             <summary>
-            Gets filename (with ".exe" etc) of process executable file.
+            Gets filename of process executable file, like "notepad.exe".
             Return null if fails.
             Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
             </summary>
@@ -18184,7 +18154,7 @@
         <member name="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)">
             <summary>
             Finds a child control and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>.
             </summary>
             <param name="name">
             Control name.
@@ -18195,23 +18165,27 @@
             Can start with these prefix strings:
             <list type="bullet">
             <item>
-            "***text:" - use <see cref="P:Au.Wnd.ControlText"/>.
+            "***text " - use <see cref="P:Au.Wnd.ControlText"/>.
             It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
             </item>
             <item>
-            "***accName:" - use <see cref="P:Au.Wnd.NameAcc"/>.
+            "***label " - use <see cref="P:Au.Wnd.NameLabel"/>.
+            Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
+            </item>
+            <item>
+            "***accName " - use <see cref="P:Au.Wnd.NameAcc"/>.
             Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
             </item>
             <item>
-            "***wfName:" - use .NET Windows Forms Control Name property.
-            To get it this function uses <see cref="T:Au.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
+            "***wfName " - use .NET Windows Forms Control Name property.
+            To get it this function uses <see cref="T:Au.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="T:Au.Process_.UacInfo">UAC</see>.
             </item>
             <item>
-            "***id:" (like "***id:15") - use control id.
+            "***id " (like "***id 15") - use control id.
             To get it this function uses <see cref="P:Au.Wnd.ControlId"/>.
-            You can instead use <see cref="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)"/>, it is faster.</item>
+            The id value cannot be wildcard expression.
+            See also <see cref="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)"/>.</item>
             </list>
-            In "***..." string, separator character can be ':', '=' or ' '. The string part after it is wildcard expression, except for "***id:".
             </param>
             <param name="className">
             Control class name.
@@ -18230,9 +18204,9 @@
             </param>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
             <exception cref="T:System.ArgumentException">
-            className is "". To match any, use null.
+            <paramref name="name"/> starts with "***", but the prefix is invalid.
+            <paramref name="className"/> is "". To match any, use null.
             Invalid wildcard expression ("**options " or regular expression).
-            name starts with "***" and is invalid.
             </exception>
         </member>
         <member name="M:Au.Wnd.HasChild(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)">
@@ -18290,12 +18264,12 @@
         <member name="M:Au.Wnd.ChildById(System.Int32,Au.Types.WCFlags)">
             <summary>
             Finds a child control by its id and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>.
             </summary>
             <param name="id">Control id.</param>
             <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>.</param>
             <remarks>
-            Not all controls have a useful id. If control id is 0 or different in each window instance, this function is not useful.
+            Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
             </remarks>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
         </member>
@@ -18314,7 +18288,7 @@
         <member name="M:Au.Wnd.ChildFast(System.String,System.String,Au.Wnd)">
             <summary>
             Finds a direct child control and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>.
             Calls API <msdn>FindWindowEx</msdn>.
             Faster than <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>, which uses API <msdn>EnumChildWindows</msdn>.
             Can be used only when you know full name and/or class name.
@@ -18602,20 +18576,20 @@
             Contains top-level window properties and can be used to find the window.
             </summary>
             <remarks>
-            Can be used instead of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Can be used instead of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             These codes are equivalent:
             <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
             <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
             Also can find in a list of windows.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.Finder.#ctor(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.Finder.#ctor(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
-            See <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            See <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <exception cref="T:System.ArgumentException">
             className is "". To match any, use null.
-            programEtc is "" or contains an empty/0 value or unknown property. To match any, use null.
+            programEtc is "" or 0. To match any, use null.
             Invalid wildcard expression ("**options " or regular expression).
             </exception>
         </member>
@@ -18626,7 +18600,7 @@
         </member>
         <member name="M:Au.Wnd.Finder.Find">
             <summary>
-            Finds the specified window, like <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Finds the specified window, like <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             Returns true if found.
             The <see cref="P:Au.Wnd.Finder.Result"/> property will be the window.
             </summary>
@@ -18641,7 +18615,7 @@
         </member>
         <member name="M:Au.Wnd.Finder.FindAll">
             <summary>
-            Finds all matching windows, like <see cref="M:Au.Wnd.FindAll(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Finds all matching windows, like <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             Returns array containing 0 or more window handles as Wnd.
             </summary>
         </member>
@@ -18666,10 +18640,10 @@
             </summary>
             <param name="w">A top-level window. Can be 0/invalid, then returns false.</param>
         </member>
-        <member name="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
              <summary>
              Finds a top-level window and returns its handle as Wnd.
-             Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>. See examples.
+             Returns default(Wnd) if not found. See examples.
              </summary>
              <param name="name">
              Window name. Usually it is the title bar text.
@@ -18682,27 +18656,24 @@
              null means 'can be any'. Cannot be "".
              </param>
              <param name="programEtc">
-             Program file name (with ".exe" etc).
+             Program file name, like "notepad.exe".
              String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
              null means 'can be any'. Cannot be "". Cannot be path.
-             Or one of:
-             <list type="bullet">
-             <item>$"**pid:{processId}". See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>.</item>
-             <item>$"**tid:{threadId}". See <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>.</item>
-             <item>$"**owner:{ownerWindow.Handle}". See <see cref="P:Au.Wnd.WndOwner"/>.</item>
-             </list>
-             In "***..." string, separator character can be ':', '=' or ' '. Examples: <c>$"**pid={processId}"</c>, <c>$"**pid {processId}"</c>, <c>"**pid:" + processId</c>.
+             Or <see cref="M:Au.Types.WFEtc.Process(System.Int32)"/>(process id), <see cref="M:Au.Types.WFEtc.Thread(System.Int32)"/>(thread id), <see cref="M:Au.Types.WFEtc.Owner(Au.Types.AnyWnd)"/>(owner window).
+             See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>, <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.WndOwner"/>.
              </param>
              <param name="flags"></param>
              <param name="also">
              Callback function. Called for each matching window.
              It can evaluate more properties of the window and return true when they match.
              Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
+            
+             Called after evaluating all other parameters except <paramref name="contains"/>.
              </param>
              <param name="contains">
              Text, image or other object in the client area of the window. Depends on type:
-             string - name of an accessible object (<see cref="T:Au.Acc"/>) that must be in the window. Wildcard expression, the same as the <i>name</i> parameter of <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>.
-             <see cref="T:Au.Acc.Finder"/> - arguments for <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,Au.Wnd.ChildFinder)"/>. Defines an accessible object that must be in the window.
+             string - an accessible object that must be in the window. Format: "'role' name" or "name". See <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
+             <see cref="T:Au.Acc.Finder"/> - arguments for <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>. Defines an accessible object that must be in the window.
              <see cref="T:Au.Wnd.ChildFinder"/> - arguments for <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>. Defines a child control that must be in the window.
              <see cref="T:System.Drawing.Image"/> or <see cref="T:System.Drawing.Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> with flag <see cref="F:Au.Types.WIFlags.WindowDC"/>. See also <see cref="M:Au.WinImage.LoadImage(System.String)"/>.
             
@@ -18714,8 +18685,8 @@
              To find message-only windows use <see cref="M:Au.Wnd.Misc.FindMessageWindow(System.String,System.String,Au.Wnd)"/> instead.
              </remarks>
              <exception cref="T:System.ArgumentException">
-             className is "". To match any, use null.
-             programEtc is "" or contains an empty/0 value or unknown property. To match any, use null.
+             <paramref name="className"/> is "". To match any, use null.
+             <paramref name="programEtc"/> is "" or 0. To match any, use null.
              Invalid wildcard expression ("**options " or regular expression).
              </exception>
              <example>
@@ -18727,44 +18698,39 @@
              Try to find Notepad window. Throw NotFoundException if not found.
              <code>
              Wnd w1 = Wnd.Find("* Notepad").OrThrow();
-             Wnd w2 = +Wnd.Find("* Notepad"); //the same
              </code>
              </example>
         </member>
         <member name="P:Au.Wnd.LastFind">
             <summary>
-            Gets arguments and result of this thread's last call to <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Gets arguments and result of this thread's last call to <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <remarks>
-            <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> and some other functions of this library change this property because they call <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> internally.
+            <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> and some other functions of this library change this property because they call <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> internally.
             </remarks>
             <example>
-            This example is similar to what <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> does.
+            This example is similar to what <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> does.
             <code><![CDATA[
             Wnd w = Wnd.Find("*- Notepad", "Notepad");
             if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.FindAll(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Finds all matching windows.
             Returns array containing 0 or more window handles as Wnd.
-            Everything except the return type is the same as with <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
-            <exception cref="T:System.ArgumentException"/>
             <remarks>
-            The list is sorted to match the Z order, however hidden windows (when using WFFlags.HiddenToo) are always after visible windows.
+            The list is sorted to match the Z order, however hidden windows (when using <see cref="F:Au.Types.WFFlags.HiddenToo"/>) are always after visible windows.
             </remarks>
         </member>
         <member name="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)">
             <summary>
             Finds a top-level window and returns its handle as Wnd.
-            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>, <see cref="M:Au.Wnd.op_UnaryPlus(Au.Wnd)"/>.
-            Calls API <msdn>FindWindowEx</msdn>.
-            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
-            Can be used only when you know full name and/or class name.
-            Finds hidden windows too.
+            Returns default(Wnd) if not found. See also: <see cref="P:Au.Wnd.Is0"/>, <see cref="M:Au.Types.ExtensionMethods.OrThrow(Au.Wnd)" r=""/>.
             </summary>
             <param name="name">
             Name.
@@ -18778,28 +18744,25 @@
             </param>
             <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
             <remarks>
+            Calls API <msdn>FindWindowEx</msdn>.
+            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
+            Can be used only full name and/or class name.
+            Finds hidden windows too.
             To find message-only windows use <see cref="M:Au.Wnd.Misc.FindMessageWindow(System.String,System.String,Au.Wnd)"/> instead.
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.FindOrRun(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
+        <member name="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
-            Finds a top-level window. If found, activates (optionally), else calls callback function that should open the window (eg call <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>) and waits for the window.
+            Finds a top-level window (<see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
             Returns window handle as Wnd. Returns default(Wnd) if not found (if <paramref name="runWaitS"/> is negative; else exception).
-            The first 6 parameters are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
-            <param name="name"></param>
-            <param name="className"></param>
-            <param name="programEtc"></param>
-            <param name="flags"></param>
-            <param name="also"></param>
-            <param name="contains"></param>
-            <param name="run">Callback function's delegate. See example.</param>
-            <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
-            <param name="needActiveWindow">Finally the window must be active.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
-            <exception cref="T:System.TimeoutException"><paramref name="runWaitS"/> time has expired.</exception>
+            <param name="run">Callback function. See example.</param>
+            <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
+            <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
+            <exception cref="T:System.TimeoutException"><paramref name="runWaitS"/> time has expired. Not thrown if <paramref name="runWaitS"/> &lt;= 0.</exception>
             <remarks>
             The algorithm is:
             <code>
@@ -18832,7 +18795,7 @@
             A window that has an owner window is always on top of its owner window.
             Don't call this for controls, they don't have an owner window.
             The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            The 'set' function can fail, eg if the owner's process has higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level.
+            The 'set' function can fail, eg if the owner's process has higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level.
             </remarks>
         </member>
         <member name="P:Au.Wnd.WndWindow">
@@ -18842,7 +18805,7 @@
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="P:Au.Wnd.IsChildWindow">
+        <member name="P:Au.Wnd.IsChild">
             <summary>
             Returns true if this is a child window (control), false if top-level window.
             </summary>
@@ -19168,9 +19131,9 @@
             <example>
             <code><![CDATA[
             //this example sets 3 timers
-            Timer_.After(500, t => Print("simple one-time timer"));
-            Timer_.Every(1000, t => Print("simple periodic timer"));
-            var t3 = new Timer_(t => Print("with Timer_ object")); t3.Start(3000, true); //the same as Timer_.After
+            Timer_.After(500, t => Print("after 500 ms"));
+            Timer_.Every(1000, t => Print("every 1000 ms"));
+            var t3 = new Timer_(t => Print("after 3000 ms")); t3.Start(3000, true); //the same as Timer_.After
             MessageBox.Show("");
             ]]></code>
             </example>
@@ -19190,8 +19153,8 @@
             <summary>
             Starts timer. If already started, resets and changes its period.
             </summary>
-            <param name="intervalMS">Time interval (period) of calling the callback function, milliseconds.</param>
-            <param name="singlePeriod">Call the callback function once, not repeatedly. The timer will be stopped before calling the callback function.</param>
+            <param name="periodMilliseconds">Time interval (period) of calling the callback function (constructor's parameter <i>timerAction</i>), milliseconds.</param>
+            <param name="singlePeriod">Call the callback function once (stop the timer before calling the callback function).</param>
             <exception cref="T:System.InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
             <remarks>
             If already started, this function must be called in the same thread as when started.
@@ -19213,11 +19176,11 @@
         <member name="M:Au.Timer_.After(System.Int32,System.Action,System.Object)">
             <summary>
             Sets new one-time timer.
-            Returns new <see cref="T:Au.Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
+            Returns new <see cref="T:Au.Timer_"/> object. Rarely used.
             </summary>
-            <param name="milliseconds">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
-            <param name="callback">A callback function (delegate), for example lambda.</param>
-            <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+            <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
+            <param name="timerAction">Callback function.</param>
+            <param name="tag">Something to pass to the callback function as <see cref="P:Au.Timer_.Tag"/>.</param>
             <remarks>
             The callback function will be called in this thread.
             This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
@@ -19231,9 +19194,9 @@
             Sets new periodic timer.
             Returns new <see cref="T:Au.Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
             </summary>
-            <param name="periodMS">Time interval (period) of calling the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal period usually is 10-20.</param>
-            <param name="callback">A callback function (delegate), for example lambda.</param>
-            <param name="tag">Something to pass to the callback function as Timer_.Tag.</param>
+            <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal period usually is 10-20.</param>
+            <param name="timerAction">Callback function.</param>
+            <param name="tag">Something to pass to the callback function as <see cref="P:Au.Timer_.Tag"/>.</param>
             <remarks>
             The callback function will be called in this thread.
             This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
@@ -19247,7 +19210,7 @@
             Contains functions to wait for a user-defined condition or variable.
             </summary>
             <remarks>
-            Specialized 'wait for' functions are in other classes, for example <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,System.String,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Specialized 'wait for' functions are in other classes, for example <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             
             All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
             

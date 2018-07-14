@@ -40,7 +40,7 @@ namespace Au
 	/// <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
 	/// </list>
 	/// 
-	/// Many functions fail if the window's process has a higher <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
+	/// Many functions fail if the window's process has a higher <see cref="Process_.UacInfo">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
 	/// 
 	/// The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
 	/// 
@@ -51,7 +51,7 @@ namespace Au
 	/// Wnd w = Wnd.Find("* - Notepad");
 	/// if(w.Is0) { Print("window not found"); return; }
 	/// w.Activate();
-	/// Wnd c = w.Child(className: "Edit");
+	/// Wnd c = w.Child(className: "Button");
 	/// Print(c.Name);
 	/// ]]></code>
 	/// </example>
@@ -125,13 +125,14 @@ namespace Au
 		public static bool operator !=(Wnd? w1, Wnd w2) => true;
 #pragma warning restore 1591 //XML doc
 
-		/// <summary>
-		/// If x is not default(Wnd), returns x, else throws <see cref="NotFoundException"/>.
-		/// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">x is default(Wnd).</exception>
-		/// <example><inheritdoc cref="ExtensionMethods.OrThrow(Wnd)"/></example>
-		public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
+		//rejected. Use OrThrow.
+		///// <summary>
+		///// If x is not default(Wnd), returns x, else throws <see cref="NotFoundException"/>.
+		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
+		///// </summary>
+		///// <exception cref="NotFoundException">x is default(Wnd).</exception>
+		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(Wnd)"/></example>
+		//public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 
 		/// <summary>
 		/// Returns true if w == this.
@@ -877,7 +878,7 @@ namespace Au
 		internal bool LibActivate(Lib.ActivateFlags flags)
 		{
 			if(!flags.Has_(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(flags.Has_(Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChildWindow);
+			if(flags.Has_(Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = WndWindow;
 				if(w != this) {
@@ -1072,7 +1073,7 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="WndException">
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
-		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>).
+		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="Process_.UacInfo">UAC</see>).
 		/// </exception>
 		/// <seealso cref="WndFocused"/>
 		/// <seealso cref="IsFocused"/>
@@ -2051,7 +2052,7 @@ namespace Au
 		//public bool ZorderTop()
 		//{
 		//	Wnd wa = Native.HWND.TOP;
-		//	if(!IsChildWindow) {
+		//	if(!IsChild) {
 		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
 		//		//Workaround: insert this after the first window, then insert the first window after this.
 		//		wa = Api.GetTopWindow(IsTopmost ? default : this);
@@ -2430,7 +2431,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink> would not allow to automate the window.
+		/// Returns true if <see cref="Process_.UacInfo">UAC</see> would not allow to automate the window.
 		/// It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
@@ -2641,6 +2642,32 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Gets <see cref="Name"/> of previous (in Z order) sibling control.
+		/// Returns null if there is no such control.
+		/// </summary>
+		/// <remarks>
+		/// Can be used to identify controls that have no name but have a named control (label) at the left or above. For example Edit And ComboBox controls in dialogs.
+		/// In such cases this function works like <see cref="NameAcc"/>, but is faster and supports any sibling control type.
+		/// </remarks>
+		public string NameLabel
+		{
+			get
+			{
+				for(var w = this; ;) {
+					var p = w.WndDirectParent;
+					if(p.Is0) return null;
+					w = w.WndPrev; if(!w.Is0) return w.Name;
+					w = p;
+				}
+				//TODO: if the label control is not at the left/above, find topmost control at the left/above
+			}
+		}
+		//TODO: reject. Instead, let Child find label control itself, and then navigate.
+		//	To navigate: WndLeft(Coord xDistance, Coord yEdge=Coord.Center); WndRight, WndAbove, WndBelow.
+		//	Or: WndXY(WXY.Left, 20). Or WndX(bool right, Coord xDistance, Coord yEdge=Coord.Center); WndY.
+		//		Also can replace all WndNext etc with WndZ(WZ.Next).
+
+		/// <summary>
 		/// Gets <see cref="Acc.Name"/> of the accessible object (role WINDOW) of this window or control.
 		/// Returns "" if the object has no name or failed to get it. Returns null if invalid window handle.
 		/// </summary>
@@ -2656,7 +2683,7 @@ namespace Au
 		public string NameWinForms => Misc.WinFormsControlNames.GetSingleControlName(this);
 
 		/// <summary>
-		/// Gets filename (with ".exe" etc) of process executable file.
+		/// Gets filename of process executable file, like "notepad.exe".
 		/// Return null if fails.
 		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
 		/// </summary>
@@ -2782,7 +2809,7 @@ namespace Au
 		///// Returns the number of found windows.
 		///// </summary>
 		//public static int CloseAll(
-		//	string name, string className = null, string programEtc = null,
+		//	string name, string className = null, WFEtc programEtc = default,
 		//	WFFlags flags = 0, Func<Wnd, bool> f = null, object contains = null
 		//	)
 		//{
@@ -2882,7 +2909,7 @@ namespace Au.Types
 		/// Uses API <msdn>EnumPropsEx</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied (<conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>). Supports <see cref="Native.GetError"/>.
+		/// Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="Process_.UacInfo">UAC</see>). Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		public Dictionary<string, LPARAM> GetList()
 		{

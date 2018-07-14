@@ -45,12 +45,16 @@ namespace Au.Controls
 		LPARAM _ptrDirect;
 		Sci_NotifyCallback _notifyCallback;
 
+		[Browsable(false)]
 		public SciImages Images { get; private set; }
+
+		[Browsable(false)]
 		public SciTags Tags { get; private set; }
 
 		/// <summary>
 		/// Gets the SciText object that contains most Scintilla-related functions.
 		/// </summary>
+		[Browsable(false)]
 		public SciText ST { get; internal set; }
 
 		///
@@ -123,6 +127,8 @@ namespace Au.Controls
 
 			if(hasImages) Images = new SciImages(this, InitImagesStyle == ImagesStyle.AnyString);
 			if(hasTags) Tags = new SciTags(this);
+
+			if(AccessibleName == null) AccessibleName = Name;
 
 			base.OnHandleCreated(e);
 		}

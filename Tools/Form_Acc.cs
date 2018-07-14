@@ -15,16 +15,15 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
+using System.Collections;
 
 using Au;
 using Au.Types;
 using static Au.NoClass;
 using Au.Controls;
+using SG = SourceGrid;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
-using System.Collections;
-
-using SG = SourceGrid;
 
 //FUTURE: when the AO is in a control of other thread, use Wnd.Find(...).Child(...), and show tree only of that control.
 //FUTURE: support Edge better. Eg can find without UIA. See the workarounds.
@@ -35,93 +34,92 @@ namespace Au.Tools
 	{
 		Acc _acc;
 		Wnd _wnd;
-		ToolsUtil.CaptureWindowEtcWithHotkey _capt;
+		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
 
 		public Form_Acc(Acc acc = null)
 		{
 			InitializeComponent();
-			_SetEvents();
-			_InitTree();
 
-			//_TestFonts();
+			Action<SG.CellContext> f = _grid_ZValueChanged;
+			_grid.ZValueChanged += f;
+			_grid2.ZValueChanged += f;
+
+			_InitTree();
 
 			_acc = acc; //will be processed in OnLoad
 		}
 
-		//_TODO: remove this test code.
+		const string c_registryKey = @"\Tools\Acc";
 
-		//protected override void OnPaint(PaintEventArgs e)
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+
+			Wnd w = (Wnd)this;
+			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
+				try { w.RestorePositionSizeState(wndPos, true); } catch { }
+
+			if(_acc != null) _SetAcc(false);
+
+			_InitInfo();
+
+			_cCapture.Checked = true;
+		}
+
+		protected override void OnFormClosing(FormClosingEventArgs e)
+		{
+			_cCapture.Checked = false;
+			_capt?.Dispose();
+
+			Wnd w = (Wnd)this;
+			Registry_.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
+
+			base.OnFormClosing(e);
+		}
+
+		//protected override void OnShown(EventArgs e)
 		//{
-		//	base.OnPaint(e);
-		//	Perf.NW();
+		//	base.OnShown(e);
+
+		//	if(_acc != null) try { Mouse.Move((Wnd)_bTest); } catch { }
 		//}
-
-		//#if DEBUG
-		//	void _TestFonts()
-		//	{
-		//		//var f = new Font("Segoe UI", 9);
-		//		//var f = new Font("MS Sans Serif", 9);
-		//		var f = new Font("Courier New", 9);
-		//		//var f = new Font("Verdana", 9);
-		//		//var f = new Font("Tahoma", 9);
-		//		//var f = new Font("Segoe UI", 14);
-		//		//var f = new Font("MS Sans Serif", 14);
-		//		_grid.Font = f;
-
-		//		using(var grap = _grid.CreateGraphics())
-		//			Print(TextRenderer.MeasureText(grap, "l", f));
-		//	}
-		//#endif
 
 		void _SetAcc(bool captured)
 		{
 			//note: don't reorder all the calls.
 
-			_bTest.Enabled = true; _bOK.Enabled = true; _bCopy.Enabled = true;
+			_bTest.Enabled = true; _bOK.Enabled = true;
 
+			var wndOld = _wnd;
 			_wnd = _acc.WndTopLevel;
 			//if(captured && _wnd.Is0) _wnd = Wnd.FromMouse(WXYFlags.NeedWindow);
 			if(captured && !_wnd.IsVisibleEx) _wnd = Wnd.FromMouse(WXYFlags.NeedWindow); //Edge workaround. Without it, _wnd would be some cloaked window of other process, and there are many such cloaked windows, and Wnd.Find often finds wrong window.
 
-			if(_grid2.RowsCount == 0) {
-				_FillGrid2();
-				_grid2.ZAutoSizeRows();
-				_grid2.ZAutoSizeColumns();
-			}
+			if(_grid2.RowsCount == 0) _FillGrid2();
 
 			_ClearTree();
-			if(!_SetAccGrids(out var p)) return;
+			if(!_FillGrid(out var p)) return;
 
-			if(!_wnd.Is0) {
-				_tWnd.Hwnd = _wnd;
-				_FillTree(p);
-			}
+			_FormatCode(newWindow: _wnd != wndOld);
+
+			if(!_wnd.Is0) _FillTree(p);
 
 			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has_(AccMiscFlags.Java) && Ver.Is64BitOS)
 				_SetFormInfo(c_infoJava);
 		}
 
-		bool _SetAccGrids(out AccProperties p)
-		{
-			//fill _grid and check/uncheck some rows in other grids
-			_grid.Clear();
-			if(!_FillGrid(out p)) return false;
-
-			_grid.ZAutoSizeRows();
-			_grid.ZAutoSizeColumns();
-			//tested: suspending layout does not make faster.
-
-			_OnGridChanged(); //set the Acc.Find readonly textbox
-			return true;
-		}
-
 		bool _FillGrid(out AccProperties p)
 		{
+			var g = _grid;
+			g.Clear();
+
 			if(!_acc.GetProperties("Rnuvdakh@srw", out p)) {
-				_tAcc.Text = "Failed to get AO properties: " + Native.GetErrorMessage();
+				_propError = "Failed to get AO properties: \r\n" + Native.GetErrorMessage();
+				g.Invalidate();
 				return false;
 			}
+			_propError = null;
 
 			_noeventGridValueChanged = true;
 
@@ -138,10 +136,8 @@ namespace Au.Tools
 
 			//control
 			if(!isWeb && w != _wnd) {
-				int id = w.ControlId;
-				bool isId = (id > 0 && id < 0x10000 && id != (int)w.Handle && _wnd.ChildAll("***id:" + id).Length == 1);
-				if(isId) _Add("id", id.ToString(), true, info: c_infoId);
-				_Add("class", ToolsUtil.StripWndClassName(w.ClassName), !isId, info: c_infoClass);
+				if(TUtil.GetUsefulControlId(w, _wnd, out int id)) _Add("id", id.ToString(), true, info: c_infoId);
+				_Add("class", TUtil.StripWndClassName(w.ClassName, true), id == 0, info: c_infoClass);
 			}
 
 			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
@@ -153,7 +149,7 @@ namespace Au.Tools
 				string na = attr.Key, va = attr.Value;
 				bool check = noName && (na == "id" || na == "name") && va.Length > 0;
 				if(check) noName = false;
-				_Add("@" + na, ToolsUtil.EscapeWildex(va), check, info: "HTML attribute.$");
+				_Add("@" + na, TUtil.EscapeWildex(va), check, info: "HTML attribute.$");
 			}
 			int elem = _acc.SimpleElementId; if(elem != 0) _Add("elem", elem.ToString(), info: c_infoElem);
 			_Add("state", p.State.ToString(), info: c_infoState);
@@ -167,87 +163,158 @@ namespace Au.Tools
 			_Check2(nameof(AFFlags.UIA), _acc.MiscFlags.Has_(AccMiscFlags.UIA));
 
 			_noeventGridValueChanged = false;
-
-
-			//int r = _grid.ZAddRequired("test", "test");
-			//var ed = SourceGrid.Cells.Editors.Factory.Create(typeof(string), null, true, null, false, null, new RegexTypeEditor());
-			//Print(ed != null);
-			//_grid[r, 1] = new SourceGrid.Cells.Cell(@"^test$");
-			//_grid[r, 1].Editor = ed;
-
-
+			g.ZAutoSize(); //tested: suspending layout does not make faster.
 			return true;
 
-			bool _AddIfNotEmpty(string name, string s, bool check, bool escape, string tt = null, string info = null)
+			bool _AddIfNotEmpty(string name, string value, bool check, bool escape, string tt = null, string info = null)
 			{
-				if(Empty(s)) return false;
-				if(escape) s = ToolsUtil.EscapeWildex(s);
-				_Add(name, s, check, tt, info);
+				if(Empty(value)) return false;
+				if(escape) value = TUtil.EscapeWildex(value);
+				_Add(name, value, check, tt, info);
 				return true;
 			}
 
 			void _Add(string name, string value, bool check = false, string tt = null, string info = null)
 			{
-				//tests
-				//name = value = "Tjgtli";
-				//value = value + "\r\nline2";
-				//if(name == "role") { _grid.ZAddRequired(null, name, value); return; }
-
-				_grid.ZAddOptional(null, name, value, check, tt, info);
+				g.ZAdd(null, name, value, check, tt, info);
 			}
-		}
-
-		//Returns true if a is in visible web page in one of 3 browsers.
-		//browser - receives nonzero if container's class is like in one of browsers: 1 IES, 2 FF, 3 Chrome. Even if returns false.
-		static bool _IsVisibleWebPage(Acc a, out int browser, Wnd wContainer = default)
-		{
-			browser = 0;
-			if(wContainer.Is0) wContainer = a.WndContainer;
-			browser = wContainer.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
-			if(browser == 0) return false;
-			if(browser == 1) return true;
-			Acc ad = null;
-			do {
-				if(a.RoleInt == AccROLE.DOCUMENT) ad = a;
-				a = a.Navigate("pa");
-			} while(a != null);
-			if(ad == null || ad.IsInvisible) return false;
-			return true;
 		}
 
 		void _FillGrid2()
 		{
-			_AddProp(null, "also", "o => false", tt: "Lambda that returns true if Acc o is the wanted AO.", info: c_infoAlso);
-			_AddProp(null, "skip", "1", tt: "0-based index of matching AO.\nFor example, if 1, gets the second matching AO.");
-			_AddProp(null, "navig", null, tt: "When found, call Acc.Navigate to get another AO.", info: c_infoNavig);
-			_AddProp(null, "wait", "5", tt: "Wait for the AO max this time, seconds.", info: c_infoWait);
-			_AddFlag("orThrow", "Throw if not found", true, tt: "If not found, throw exception.\nIf this is unchecked, then the function returns null.");
-			_grid2.ZAddHeaderRow("Search settings");
-			_AddFlag(nameof(AFFlags.Reverse), "Reverse order", tt: "Flag AFFlags.Reverse.\nWalk the object tree from bottom to top.");
-			_AddFlag(nameof(AFFlags.HiddenToo), "Can be invisible", tt: "Flag AFFlags.HiddenToo.");
-			_AddFlag(nameof(AFFlags.UIA), "UI Automation", tt: "Flag AFFlags.UIA.\nUse UI Automation API instead of IAccessible.\nThe capturing tool checks/unchecks this automatically when need.");
-			_AddFlag(nameof(AFFlags.NotInProc), "Not in-process", tt: "Flag AFFlags.NotInProc.\nMore info in AFFlags help.");
-			_AddFlag(nameof(AFFlags.MenuToo), "Can be in MENUITEM", tt: "Flag AFFlags.MenuToo.\nCheck this if the AO is in a menu and its role is not MENUITEM or MENUPOPUP.");
-			_AddProp("notin", "Not in", null, tt: "Don't search in AOs that have these roles. Can make faster.", info: c_infoNotin);
-			_AddProp(null, "maxcc", null, tt: "Don't search in AOs that have more direct children. Default 10000.");
-			_AddProp(null, "level", null, tt: "Level of the AO in the object tree. Or min and max levels. Default 0 1000.", info: c_infoLevel);
+			var g = _grid2;
 
-			void _AddProp(string key, string name, string value, string tt = null, string info = null)
-			{
-				_grid2.ZAddOptional(key, name, value, false, tt, info);
+			g.ZAdd(null, "also", "o => false", tt: "Lambda that returns true if Acc o is the wanted AO.", info: c_infoAlso);
+			g.ZAdd(null, "skip", "1", tt: "0-based index of matching AO.\nFor example, if 1, gets the second matching AO.");
+			g.ZAdd(null, "navig", null, tt: "When found, call Acc.Navigate to get another AO.", info: c_infoNavig);
+			g.ZAdd(null, "wait", "5", tt: c_infoWait);
+			g.ZAddCheck("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return null.");
+			g.ZAddHeaderRow("Search settings");
+			g.ZAddCheck(nameof(AFFlags.Reverse), "Reverse order", tt: "Flag AFFlags.Reverse.\nWalk the object tree from bottom to top.");
+			g.ZAddCheck(nameof(AFFlags.HiddenToo), "Can be invisible", tt: "Flag AFFlags.HiddenToo.");
+			g.ZAddCheck(nameof(AFFlags.UIA), "UI Automation", tt: "Flag AFFlags.UIA.\nUse UI Automation API instead of IAccessible.\nThe capturing tool checks/unchecks this automatically when need.");
+			g.ZAddCheck(nameof(AFFlags.NotInProc), "Not in-process", tt: "Flag AFFlags.NotInProc.\nMore info in AFFlags help.");
+			g.ZAddCheck(nameof(AFFlags.ClientArea), "Only client area", tt: "Flag AFFlags.ClientArea.\nMore info in AFFlags help.");
+			g.ZAddCheck(nameof(AFFlags.MenuToo), "Can be in MENUITEM", tt: "Flag AFFlags.MenuToo.\nCheck this if the AO is in a menu and its role is not MENUITEM or MENUPOPUP.");
+			g.ZAdd("notin", "Not in", null, tt: "Don't search in AOs that have these roles. Can make faster.\nExample: LIST,TREE,TASKBAR,SCROLLBAR");
+			g.ZAdd(null, "maxcc", null, tt: "Don't search in AOs that have more direct children. Default 10000.");
+			g.ZAdd(null, "level", null, tt: "Level of the AO in the object tree. Or min and max levels. Default 0 1000.", info: c_infoLevel);
+
+			g.ZAutoSize();
+		}
+
+		void _grid_ZValueChanged(SG.CellContext sender)
+		{
+			//Print(sender.DisplayText);
+			//Print(_inSetGrid);
+
+			if(_noeventGridValueChanged) return; _noeventGridValueChanged = true;
+			var g = sender.Grid as ParamGrid;
+			var pos = sender.Position;
+			switch(pos.Column) {
+			case 0:
+				if(g == _grid2 && g.ZGetRowKey(pos.Row) == nameof(AFFlags.UIA)) {
+					_uiaUserChecked = _IsChecked2(pos.Row);
+					_ShowTreeInfo("Please capture the AO again.");
+					_cCapture.Checked = true;
+				}
+				break;
+			case 1:
+				break;
+			}
+			_noeventGridValueChanged = false;
+
+			_FormatCode();
+		}
+		bool _noeventGridValueChanged;
+
+		string _FormatCode(bool forTest = false, bool newWindow = false)
+		{
+			if(_grid.RowsCount == 0) return null; //cleared on exception
+
+			var (wndCode, wndVar) = _code.FormatWndFindCode(_wnd, newWindow);
+
+			var b = new StringBuilder();
+			b.AppendLine(wndCode);
+			if(!forTest) b.Append("var a = ");
+
+			bool orThrow = !forTest && _IsChecked2("orThrow");
+
+			string waitTime = null;
+			bool isWait = !forTest && _grid2.ZGetValue("wait", out waitTime, false);
+			if(isWait) {
+				b.Append("Acc.Wait(").AppendWaitTime(waitTime, orThrow);
+			} else {
+				b.Append("Acc.Find(");
 			}
 
-			void _AddFlag(string flag, string name, bool check = false, string tt = null)
-			{
-				_grid2.ZAddFlag(flag, name, check, tt: tt);
+			b.AppendOtherArg(wndVar, noComma: !isWait);
+
+			_grid.ZGetValueIfExists("role", out var role, false);
+			b.AppendStringArg(role);
+
+			bool isName = _grid.ZGetValueIfExists("name", out var name, false);
+			if(isName) b.AppendStringArg(name ?? "");
+
+			bool isProp = false;
+			var query = (from r in _grid.Rows where _grid.ZIsChecked(r.Index) select r)
+				.Concat(from r in _grid2.Rows where r.Index >= 4 && _grid2.ZIsChecked(r.Index) select r);
+			foreach(var r in query) {
+				var g = r.Grid as ParamGrid;
+				int i = r.Index;
+				string na = g.ZGetRowKey(i), va = g.ZGetCellText(i, 1);
+				switch(na) {
+				case "role": case "name": continue;
+				case "level": if(va == "0 1000") continue; break;
+				case "maxcc": if(va == "10000") continue; break;
+				}
+				if(va == null) {
+					if(g == _grid2) continue;
+					switch(na) { case "class": case "id": case "elem": case "state": case "rect": continue; }
+				}
+				if(isProp) b.Append(@" + '\0' + ");
+				else {
+					isProp = true;
+					b.Append(", ");
+					if(!isName) b.Append("prop: ");
+				}
+				int j = b.Length;
+				b.Append('\"').Append(na).Append('=');
+				if(!Empty(va)) {
+					if(TUtil.IsVerbatim(va, out int prefixLen)) {
+						b.Insert(j, va.Remove(prefixLen++));
+						b.Append(va, prefixLen, va.Length - prefixLen);
+						continue;
+					} else {
+						va = va.Escape_();
+						b.Append(va);
+					}
+				}
+				b.Append('\"');
 			}
+
+			b.AppendFlagsFromGrid(typeof(AFFlags), _grid2, (isName && isProp) ? null : "flags");
+
+			if(_grid2.ZGetValue("also", out var also, true)) b.AppendOtherArg(also, "also");
+			if(_grid2.ZGetValue("skip", out var skip, true)) b.AppendOtherArg(skip, "skip");
+			if(_grid2.ZGetValue("navig", out var navig, true)) b.AppendStringArg(navig, "navig");
+
+			if(orThrow && !isWait) b.Append(").OrThrow(");
+			b.Append(");");
+			if(!orThrow && !forTest) b.AppendLine().Append("if(a == null) { Print(\"not found\"); }");
+
+			var R = b.ToString();
+
+			if(!forTest) _code.ZSetText(R, wndCode.Length);
+
+			return R;
 		}
 
 		#region capture
 
 		private void _cCapture_CheckedChanged(object sender, EventArgs e)
 		{
-			if(_capt == null) _capt = new ToolsUtil.CaptureWindowEtcWithHotkey(this, () => _AccFromMouse(out var a) ? a.Rect : default);
+			if(_capt == null) _capt = new TUtil.CaptureWindowEtcWithHotkey(this, _cCapture, () => _AccFromMouse(out var a) ? a.Rect : default);
 			_capt.StartStop(_cCapture.Checked);
 		}
 
@@ -280,9 +347,8 @@ namespace Au.Tools
 		{
 			//Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
 
-			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
-				if(capture) _Capture();
-				else _cCapture.Checked = false;
+			if(_capt != null && _capt.WndProc(ref m)) {
+				_Capture();
 				return;
 			}
 
@@ -291,175 +357,59 @@ namespace Au.Tools
 
 		#endregion
 
-		const string c_registryKey = @"\Tools\Acc";
-
-		protected override void OnLoad(EventArgs e)
-		{
-			base.OnLoad(e);
-
-			Wnd w = (Wnd)this;
-			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
-				try { w.RestorePositionSizeState(wndPos, true); } catch { }
-
-			if(_acc != null) _SetAcc(false);
-
-			_InitInfo();
-
-			_cCapture.Checked = true;
-
-			//_grid.ValueEditor.Control.Validating += (sender, cea) => _GridValidating(_grid, cea);
-		}
-
-		protected override void OnShown(EventArgs e)
-		{
-			base.OnShown(e);
-
-			if(_acc != null) try { Mouse.Move((Wnd)_bTest); } catch { }
-		}
-
-		protected override void OnFormClosing(FormClosingEventArgs e)
-		{
-			Wnd w = (Wnd)this;
-			_cCapture.Checked = false;
-			_capt?.Dispose();
-			Registry_.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
-			base.OnFormClosing(e);
-		}
-
-		void _SetEvents()
-		{
-			Action<SG.CellContext> f = _OnValueChanged;
-			_grid.ZValueChanged += f;
-			_grid2.ZValueChanged += f;
-
-			_tWnd.WndVarNameChanged += (unu, sed) => _OnGridChanged();
-		}
-
-		void _OnValueChanged(SG.CellContext sender)
-		{
-			//Print(sender.DisplayText);
-			//Print(_inSetGrid);
-
-			if(_noeventGridValueChanged) return; _noeventGridValueChanged = true;
-			var g = sender.Grid as ParamGrid;
-			var pos = sender.Position;
-			switch(pos.Column) {
-			case 0:
-				if(g == _grid2 && g.ZGetRowKey(pos.Row) == nameof(AFFlags.UIA)) {
-					_uiaUserChecked = _IsChecked2(nameof(AFFlags.UIA));
-					_ShowTreeInfo("Please capture the AO again.");
-					_cCapture.Checked = true;
-				}
-				break;
-			case 1:
-				break;
-			}
-			_noeventGridValueChanged = false;
-
-			_OnGridChanged();
-		}
-		bool _noeventGridValueChanged;
-
-		void _OnGridChanged()
-		{
-			//Print("_OnGridChanged");
-			if(_grid.RowsCount == 0) return; //cleared on exception
-			_tAcc.Text = _FormatFindCode(false);
-		}
-
-		string _FormatFindCode(bool forTest)
-		{
-			var b = new StringBuilder();
-
-			bool orThrow = !forTest && _IsChecked2("orThrow");
-			bool isNavig = _grid2.ZGetValue("navig", out var navig, true);
-
-			string wait = null;
-			bool isWait = !forTest && _grid2.ZGetValue("wait", out wait, false);
-			if(isWait) {
-				if(orThrow && isNavig) b.Append('+');
-				b.Append("Acc.Wait(");
-				if(wait == null) wait = "0"; else if(!orThrow && wait != "0" && !wait.StartsWith_('-')) b.Append('-');
-				b.Append(wait);
-			} else {
-				if(orThrow) b.Append('+');
-				b.Append("Acc.Find(");
-			}
-
-			ToolsUtil.AppendOtherArg(b, _tWnd.WndVar, noComma: !isWait);
-
-			if(_grid.ZGetValueIfExists("role", out var role, true)) ToolsUtil.AppendStringArg(b, role);
-			bool isName = _grid.ZGetValueIfExists("name", out var name, false);
-			if(isName) ToolsUtil.AppendStringArg(b, name ?? "");
-
-			bool isProp = false;
-			var query = (from r in _grid.Rows where _grid.ZIsChecked(r.Index) select r)
-				.Concat(from r in _grid2.Rows where r.Index >= 4 && _grid2.ZIsChecked(r.Index) select r);
-			foreach(var r in query) {
-				var g = r.Grid as ParamGrid;
-				int i = r.Index;
-				string na = g.ZGetRowKey(i), va = g.ZGetCellText(i, 1);
-				switch(na) {
-				case "role": case "name": continue;
-				case "level": if(va == "0 1000") continue; break;
-				case "maxcc": if(va == "10000") continue; break;
-				}
-				if(va == null) {
-					if(g == _grid2) continue;
-					switch(na) { case "class": case "id": case "elem": case "state": case "rect": continue; }
-				}
-				if(isProp) b.Append(@" + '\0' + ");
-				else {
-					isProp = true;
-					b.Append(", ");
-					if(!isName) b.Append("prop: ");
-				}
-				b.Append('\"').Append(na).Append('=');
-				if(!Empty(va)) {
-					if(ToolsUtil.IsVerbatim(va)) {
-						b.Append("\" + ").Append(va);
-						continue;
-					} else {
-						va = va.Escape_();
-						b.Append(va);
-					}
-				}
-				b.Append('\"');
-			}
-
-			bool isFlags = false;
-			string[] flagNames = typeof(AFFlags).GetEnumNames();
-			for(int r = 0, n = _grid2.RowsCount; r < n; r++) {
-				if(!flagNames.Contains(_grid2.ZGetRowKey(r))) continue;
-				if(!_grid2.ZIsChecked(r)) continue;
-				var flag = "AFFlags." + _grid2.ZGetRowKey(r);
-				if(!isFlags) {
-					isFlags = true;
-					ToolsUtil.AppendOtherArg(b, flag, (isName && isProp) ? null : "flags");
-				} else {
-					b.Append('|').Append(flag);
-				}
-			}
-
-			if(_grid2.ZGetValue("also", out var also, true)) ToolsUtil.AppendOtherArg(b, also, "also");
-			if(_grid2.ZGetValue("skip", out var skip, true)) ToolsUtil.AppendOtherArg(b, skip, "skip");
-
-			b.Append(')');
-			if(isNavig) {
-				b.Append("?[");
-				ToolsUtil.AppendStringArg(b, navig, noComma: true);
-				if(isWait) ToolsUtil.AppendOtherArg(b, "1");
-				b.Append(']');
-			}
-			b.Append(';');
-
-			return b.ToString();
-		}
-
 		#region util
 
+		bool _IsChecked2(int row) => _grid2.ZIsChecked(row);
 		bool _IsChecked2(string rowKey) => _grid2.ZIsChecked(rowKey);
 		void _Check2(string rowKey, bool check) => _grid2.ZCheck(rowKey, check);
+
+		//Returns true if a is in visible web page in one of 3 browsers.
+		//browser - receives nonzero if container's class is like in one of browsers: 1 IES, 2 FF, 3 Chrome. Even if returns false.
+		static bool _IsVisibleWebPage(Acc a, out int browser, Wnd wContainer = default)
+		{
+			browser = 0;
+			if(wContainer.Is0) wContainer = a.WndContainer;
+			browser = wContainer.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
+			if(browser == 0) return false;
+			if(browser == 1) return true;
+			Acc ad = null;
+			do {
+				if(a.RoleInt == AccROLE.DOCUMENT) ad = a;
+				a = a.Navigate("pa");
+			} while(a != null);
+			if(ad == null || ad.IsInvisible) return false;
+			return true;
+		}
+
+		#endregion
+
+		#region OK, Test
+
+		/// <summary>
+		/// When OK clicked, contains C# code.
+		/// </summary>
+		public string ResultCode { get; private set; }
+
+		private void _bOK_Click(object sender, EventArgs e)
+		{
+			ResultCode = _code.Text;
+			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
+		}
+
+		private async void _bTest_Click(object sender, EventArgs ea)
+		{
+			var code = _FormatCode(true); if(code == null) return;
+			var r = await TUtil.RunTestFindObject(code, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
+
+			if(r.obj is Acc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
+				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
+					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
+					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramFilePath;
+					if(ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
+					_SetFormInfo(ffInfo);
+				}
+			}
+		}
 
 		#endregion
 
@@ -533,8 +483,8 @@ namespace Au.Tools
 						xRoot = m.xRoot;
 						xSelect = m.xSelect;
 						if(_grid.ZFindRow("class") < 0) {
-							_grid.ZAddOptional(null, "class", ToolsUtil.StripWndClassName(c.ClassName), true);
-							_grid.ZAutoSizeColumns();
+							_grid.ZAdd(null, "class", TUtil.StripWndClassName(c.ClassName, true), true);
+							_grid.ZAutoSize(rows: false);
 						}
 					}
 				}
@@ -633,8 +583,9 @@ namespace Au.Tools
 		{
 			if(node == null) return;
 			_acc = (node.Tag as _AccNode).a;
-			if(!_SetAccGrids(out var p)) return;
-			ToolsUtil.ShowOsdRect(p.Rect);
+			if(!_FillGrid(out var p)) return;
+			_FormatCode();
+			TUtil.ShowOsdRect(p.Rect);
 		}
 
 		class _AccTree :ITreeModel
@@ -706,60 +657,6 @@ namespace Au.Tools
 
 		#endregion
 
-		#region test
-
-		private async void _bTest_Click(object sender, EventArgs ea)
-		{
-			if(_grid.RowsCount == 0) return;
-			if(Empty(_tWnd.Text)) return;
-			var r = await ToolsUtil.RunTestFindObject(_FormatFindCode(true), _tWnd, _bTest, _lSpeed, o => (o as Acc).Rect);
-
-			var a = r.obj as Acc;
-			if(a != null && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
-				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
-					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
-					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramFilePath;
-					if(ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
-					_SetFormInfo(ffInfo);
-				}
-			}
-		}
-
-		#endregion
-
-		#region OK, Copy
-
-		private void _bCopy_Click(object sender, EventArgs e)
-		{
-			Clipboard.SetText(_FormatFullCode() ?? "");
-		}
-
-		private void _bOK_Click(object sender, EventArgs e)
-		{
-			ResultCode = _FormatFullCode();
-			if(ResultCode == null) this.DialogResult = DialogResult.Cancel;
-		}
-
-		/// <summary>
-		/// When OK clicked, contains C# code.
-		/// </summary>
-		public string ResultCode { get; private set; }
-
-		string _FormatFullCode()
-		{
-			if(_grid.RowsCount == 0) return null;
-			string sWnd = _tWnd.Text;
-			string sFind = _FormatFindCode(false);
-
-			var b = new StringBuilder();
-			if(!Empty(sWnd)) b.AppendLine(sWnd);
-			b.Append("var a = ").AppendLine(sFind);
-
-			return b.ToString();
-		}
-
-		#endregion
-
 		#region info
 
 		//Called by OnLoad.
@@ -772,15 +669,14 @@ namespace Au.Tools
 
 			_tree.Paint += (object sender, PaintEventArgs e) =>
 			 {
-				 const string s = @"Object tree of the window.";
 				 if(_tree.Model == null && !(_lTreeInfo?.Visible ?? false)) {
 					 e.Graphics.Clear(this.BackColor); //like grids
-					 _OnPaintDrawBackText(sender, e, s);
+					 _OnPaintDrawBackText(sender, e, "Object tree.");
 				 }
 			 };
 
-			_grid.Paint += (sender, e) => { if(_acc == null) _OnPaintDrawBackText(sender, e, @"AO properties."); };
-			_grid2.Paint += (sender, e) => { if(_acc == null) _OnPaintDrawBackText(sender, e, @"Other parameters and search settings."); };
+			_grid.Paint += (sender, e) => { if(_acc == null || _propError != null) _OnPaintDrawBackText(sender, e, _propError ?? "AO properties."); };
+			_grid2.Paint += (sender, e) => { if(_acc == null) _OnPaintDrawBackText(sender, e, "Other parameters and search settings."); };
 
 			void _OnPaintDrawBackText(object sender, PaintEventArgs e, string text)
 			{
@@ -794,6 +690,8 @@ namespace Au.Tools
 			_info.Tags.AddLinkTag("_jab", _ => Java.EnableDisableJabUI(this));
 		}
 
+		string _propError;
+
 		void _SetFormInfo(string info)
 		{
 			if(info == null) {
@@ -806,15 +704,16 @@ namespace Au.Tools
 		}
 
 		const string c_infoForm =
-@"Creates code to find an <i>accessible object (AO)<> - button, link, etc. Then your script can click it, etc. See <help M_Au_Acc_Find>Acc.Find<>, <help T_Au_Acc>Acc<>, <help M_Au_Wnd_Find>Wnd.Find<>. How to use:
-1. Move the mouse to the AO you want. Press key <b>F3<>.
+@"Creates code to <help M_Au_Acc_Find>find accessible object (AO)<> in <help M_Au_Wnd_Find>window<>. Your script can click it, etc.
+1. Move the mouse to an AO (button, link, etc). Press key <b>F3<>.
 2. Click the Test button. It finds and shows the AO and the search time.
 3. If need, check/uncheck/edit some fields or select another AO; click Test.
-4. Click OK, it inserts C# code in the editor. Or Copy to the clipboard.
+4. Click OK, it inserts C# code in the editor. Or copy/paste.
 5. In the editor, add code to use the AO. <help T_Au_Acc>Examples<>. If need, rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.
 
 How to find AOs that don't have a name or other property with unique constant value? Capture another AO near it, and use <b>navig<> to get it. Or try <b>skip<>.";
-		const string c_infoRole = @"Role. Or path, like ROLE1/ROLE2/ROLE3. Prefix <b>web:<>, <b>firefox:<> or <b>chrome:<> means 'in web page'. Path is relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc). Read more in <help M_Au_Acc_Find>Acc.Find<> help.";
+		const string c_infoRole = @"Role. Prefix <b>web:<> means 'in web page'. Can be path, like ROLE1/ROLE2/ROLE3. Path is relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<>).
+Read more in <help M_Au_Acc_Find>Acc.Find<> help.";
 		const string c_infoState = @"State. List of states that the AO must have and/or not have.
 Example: CHECKED, !DISABLED
 Note: AO state can change. Use only states you need. Remove others from the list.";
@@ -826,40 +725,20 @@ Example: {W=100 H=20}";
 Note: It usually changes when elements before the AO are added or removed. Use it only if really need.";
 		const string c_infoAlso = @"<b>also<> examples:
 <code>o => { Print(o); return false; }</code>
-<code>o => o.GetRect(out var r, o.WndTopLevel) && r.Contains(266, 33)</code>";
+<code>o => o.GetRect(out var r, o.WndTopLevel) && r.Contains(266, 33)</code>
+
+Can be multiline. For newline use Ctrl+Enter.";
 		const string c_infoNavig = @"<b>navig<> is a path to another AO from the found AO in the object tree. One or more of these words: <u><i>parent<> <i>child<> <i>first<> <i>last<> <i>next<> <i>previous<><>. Or 2 letters, like <i>ne<>.
 Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 would be 3-rd from end). More info: <help M_Au_Acc_Navigate>Acc.Navigate<>.";
-		const string c_infoWait = @"The <b>wait<> value is the max number of seconds to wait for the AO. If 0 or empty, waits without a timeout. Else on timeout the function returns null or throws exception, depending on <b>Throw if not found<>.";
+		const string c_infoWait = @"Wait timeout, seconds.
+If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 		const string c_infoLevel = @"<b>level<> - 0-based level of the AO in the object tree. Or min and max levels. Default 0 1000. Relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc).";
-		const string c_infoNotin = @"<b>notin<> - don't search in AOs that have these roles. Can make faster.
-Example: LIST,TREE,TASKBAR,SCROLLBAR";
 		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature: open URL <link firefox.exe|about:config>about:config<>, set <b>browser.tabs.remote.autostart<> = <b>false<>, restart Firefox. More info in <help T_Au_Acc>Acc<> help.
 <_resetInfo>X<>";
 		const string c_infoJava = @"If there are no AOs in this window, need to <_jab>enable<> Java Access Bridge etc. More info in <help T_Au_Acc>Acc<> help.
 <_resetInfo>X<>";
 
 		#endregion
-
-		//This func can be used to validate any text cell in any grid.
-		//void _GridValidating(ParamGrid grid, CancelEventArgs ce)
-		//{
-		//	var editor = grid.ValueEditor;
-		//	var pos = editor.EditPosition;
-		//	string sOld = grid[pos].Value as string, sNew = editor.GetEditedValue() as string, err = null;
-		//	if(sNew == sOld) return;
-		//	if(sNew == null) return;
-		//	//Print(sOld, sNew);
-		//	switch(grid.ZGetRowKey(pos.Row)) {
-		//	case "example":
-		//		if(!sNew.RegexIs_(@"^example$")) err = "example.";
-		//		break;
-		//	}
-		//	if(err != null) {
-		//		ce.Cancel = true;
-		//		_errorProvider.SetIconAlignment(editor.Control, ErrorIconAlignment.MiddleLeft);
-		//	}
-		//	_errorProvider.SetError(editor.Control, err);
-		//}
 
 		#region misc
 

@@ -40,7 +40,7 @@ namespace Au
 		/// </example>
 		public class ChildFinder
 		{
-			enum _NameIs { name, text, id, accName, wfName }
+			enum _NameIs { name, id, text, label, accName, wfName }
 
 			readonly Wildex _name;
 			readonly Wildex _className;
@@ -62,12 +62,13 @@ namespace Au
 					_className = className;
 				}
 				if(name != null) {
-					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "accName", "wfName")) {
-					case -1: throw new ArgumentException("Invalid name.");
+					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "label", "accName", "wfName")) {
+					case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***label \", \"***accName \", \"***wfName \".");
 					case 1: _nameIs = _NameIs.id; _id = name.ToInt_(); break;
 					case 2: _nameIs = _NameIs.text; break;
-					case 3: _nameIs = _NameIs.accName; break;
-					case 4: _nameIs = _NameIs.wfName; break;
+					case 3: _nameIs = _NameIs.label; break;
+					case 4: _nameIs = _NameIs.accName; break;
+					case 5: _nameIs = _NameIs.wfName; break;
 					}
 					if(_nameIs != _NameIs.id) _name = name;
 				}
@@ -191,6 +192,9 @@ namespace Au
 							case _NameIs.text:
 								s = w.ControlText;
 								break;
+							case _NameIs.label:
+								s = w.NameLabel;
+								break;
 							case _NameIs.accName:
 								s = w.NameAcc;
 								break;
@@ -255,7 +259,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -266,23 +270,27 @@ namespace Au
 		/// Can start with these prefix strings:
 		/// <list type="bullet">
 		/// <item>
-		/// "***text:" - use <see cref="ControlText"/>.
+		/// "***text " - use <see cref="ControlText"/>.
 		/// It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </item>
 		/// <item>
-		/// "***accName:" - use <see cref="NameAcc"/>.
+		/// "***label " - use <see cref="NameLabel"/>.
+		/// Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
+		/// </item>
+		/// <item>
+		/// "***accName " - use <see cref="NameAcc"/>.
 		/// Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// </item>
 		/// <item>
-		/// "***wfName:" - use .NET Windows Forms Control Name property.
-		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <conceptualLink target="e2645f42-9c3a-4d8c-8bef-eabba00c92e9">UAC</conceptualLink>.
+		/// "***wfName " - use .NET Windows Forms Control Name property.
+		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="Process_.UacInfo">UAC</see>.
 		/// </item>
 		/// <item>
-		/// "***id:" (like "***id:15") - use control id.
+		/// "***id " (like "***id 15") - use control id.
 		/// To get it this function uses <see cref="ControlId"/>.
-		/// You can instead use <see cref="ChildById"/>, it is faster.</item>
+		/// The id value cannot be wildcard expression.
+		/// See also <see cref="ChildById"/>.</item>
 		/// </list>
-		/// In "***..." string, separator character can be ':', '=' or ' '. The string part after it is wildcard expression, except for "***id:".
 		/// </param>
 		/// <param name="className">
 		/// Control class name.
@@ -301,9 +309,9 @@ namespace Au
 		/// </param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
-		/// className is "". To match any, use null.
+		/// <paramref name="name"/> starts with "***", but the prefix is invalid.
+		/// <paramref name="className"/> is "". To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
-		/// name starts with "***" and is invalid.
 		/// </exception>
 		public Wnd Child(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
@@ -376,12 +384,12 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <remarks>
-		/// Not all controls have a useful id. If control id is 0 or different in each window instance, this function is not useful.
+		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		public Wnd ChildById(int id, WCFlags flags = 0)
@@ -431,7 +439,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>, <see cref="operator +(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -800,6 +808,7 @@ namespace Au.Types
 	{
 		/// <summary>Can find hidden controls.</summary>
 		HiddenToo = 1,
+
 		/// <summary>Skip indirect descendant controls (children of children and so on).</summary>
 		DirectChild = 2,
 	}

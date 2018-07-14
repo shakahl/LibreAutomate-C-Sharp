@@ -181,7 +181,7 @@ namespace Au
 			string cn; byte regMask;
 			if(Shadow) { cn = "Au.OSD2"; regMask = 2; } else { cn = "Au.OSD"; regMask = 1; }
 			if((_isWinClassRegistered & regMask) == 0) {
-				var ce = new Wnd.Misc.MyWindow.WndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW };
+				var ce = new Wnd.Misc.MyWindow.WndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
 				Wnd.Misc.MyWindow.RegisterClass(cn, ce);
 				_isWinClassRegistered |= regMask;
@@ -189,49 +189,12 @@ namespace Au
 
 			var es = Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST | Native.WS_EX.LAYERED | Native.WS_EX.TRANSPARENT | Native.WS_EX.NOACTIVATE;
 			if(ClickToClose) es &= ~Native.WS_EX.TRANSPARENT;
-			_w.Create(cn, Name, Native.WS.POPUP, es, _r.left, _r.top, _r.Width, _r.Height);
+			_w.Create(cn, Name, Native.WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
+			if(!_r.Is0) _w.Handle.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
 			return _w.Handle;
 		}
 		static byte _isWinClassRegistered;
-
-		/// <summary>
-		/// If true, the OSD window will have shadow.
-		/// </summary>
-		/// <remarks>
-		/// This property cannot be changed after creating OSD window.
-		/// </remarks>
-		protected bool Shadow { get; set; }
-
-		/// <summary>
-		/// If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
-		/// </summary>
-		/// <remarks>
-		/// This property cannot be changed after creating OSD window.
-		/// </remarks>
-		protected bool ClickToClose { get; set; }
-
-		/// <summary>
-		/// OSD window name. Optional, default null.
-		/// </summary>
-		/// <remarks>
-		/// This text is invisible. Can be used to find OSD window. The class name is "Au.OSD"; if with shadow - "Au.OSD2".
-		/// </remarks>
-		/// <remarks>
-		/// This property cannot be changed after creating OSD window.
-		/// </remarks>
-		public string Name { get; set; }
-
-		class WndClass :Wnd.Misc.MyWindow
-		{
-			OsdWindow _osd;
-
-			public WndClass(OsdWindow osd) => _osd = osd;
-
-			protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam) => _osd.WndProc(w, message, wParam, lParam);
-
-			public LPARAM WndProc2(Wnd w, uint message, LPARAM wParam, LPARAM lParam) => base.WndProc(w, message, wParam, lParam);
-		}
 
 		/// <summary>
 		/// Called when the OSD window receives a message.
@@ -267,6 +230,17 @@ namespace Au
 			return _w.WndProc2(w, message, wParam, lParam);
 		}
 
+		class WndClass :Wnd.Misc.MyWindow
+		{
+			OsdWindow _osd;
+
+			public WndClass(OsdWindow osd) => _osd = osd;
+
+			protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam) => _osd.WndProc(w, message, wParam, lParam);
+
+			public LPARAM WndProc2(Wnd w, uint message, LPARAM wParam, LPARAM lParam) => base.WndProc(w, message, wParam, lParam);
+		}
+
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn.
 		/// Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="OsdWindow"/>, it does nothing.
@@ -279,12 +253,39 @@ namespace Au
 		}
 
 		/// <summary>
+		/// If true, the OSD window will have shadow.
+		/// </summary>
+		/// <remarks>
+		/// This property cannot be changed after creating OSD window.
+		/// </remarks>
+		protected bool Shadow { get; set; }
+
+		/// <summary>
+		/// If true, the OSD window receive mouse messages. Only completely transparent areas don't. The user can click to close the OSD (left, right or middle button).
+		/// </summary>
+		/// <remarks>
+		/// This property cannot be changed after creating OSD window.
+		/// </remarks>
+		protected bool ClickToClose { get; set; }
+
+		/// <summary>
+		/// OSD window name. Optional, default null.
+		/// </summary>
+		/// <remarks>
+		/// This text is invisible. Can be used to find OSD window. The class name is "Au.OSD"; if with shadow - "Au.OSD2".
+		/// </remarks>
+		/// <remarks>
+		/// This property cannot be changed after creating OSD window.
+		/// </remarks>
+		public string Name { get; set; }
+
+		/// <summary>
 		/// Closes all OSD windows of this process.
 		/// </summary>
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.</param>
 		public static void CloseAll(string name = null)
 		{
-			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", "***pid:" + Process_.CurrentProcessId.ToString())) w.Close(noWait: true);
+			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WFEtc.Process(Process_.CurrentProcessId))) w.Close(noWait: true);
 		}
 	}
 

@@ -73,5 +73,11 @@ namespace Au.Controls
 		public new bool TabStop { get => base.TabStop; set => base.TabStop = value; }
 
 		#endregion
+
+		protected override bool IsInputKey(Keys keyData)
+		{
+			switch(keyData & Keys.KeyCode) { case Keys.Tab: case Keys.Escape: case Keys.Enter: return false; }
+			return base.IsInputKey(keyData);
+		}
 	}
 }

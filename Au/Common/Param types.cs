@@ -191,7 +191,7 @@ namespace Au.Types
 				if(x.IsEmpty) x = Center;
 				if(y.IsEmpty) y = Center;
 			}
-			return new POINT(x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
+			return (x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
 		}
 
 		/// <summary>
@@ -315,6 +315,8 @@ namespace Au.Types
 		public static implicit operator PopupXY((Wnd w, Coord x, Coord y) t) => new PopupXY(t.w.Rect, t.x, t.y);
 		/// <summary>Specifies the center of the specified window.</summary>
 		public static implicit operator PopupXY(Wnd w) => new PopupXY { rect = w.Rect };
+		/// <summary>Specifies the center of the specified control or form.</summary>
+		public static implicit operator PopupXY(Control c) => new PopupXY { rect = ((Wnd)c).Rect };
 
 		//public bool IsRawXY => screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
 

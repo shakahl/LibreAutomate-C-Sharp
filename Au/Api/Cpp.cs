@@ -89,7 +89,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// flags: 1 inproc, 2 get only name.
+		/// flags: 1 not inproc, 2 get only name.
 		/// </summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccFromWindow(int flags, Wnd w, AccOBJID objId, out Cpp_Acc aResult, out BSTR sResult);

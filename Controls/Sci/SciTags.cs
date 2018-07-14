@@ -32,9 +32,9 @@ NEW TAGS:
    <osd> - Osd.ShowText.
 
 NEW PARAMETERS:
-   <c ColorName> - .NET color name for text color.
-   <z ColorName> - .NET color name for background color.
-   <Z ColorName> - .NET color name for background color, whole line.
+   <c ColorName> - .NET color name for text color. Also color can be #RRGGBB.
+   <z ColorName> - .NET color name for background color. Also color can be #RRGGBB.
+   <Z ColorName> - .NET color name for background color, whole line. Also color can be #RRGGBB.
 
 RENAMED TAGS:
 	<dialog>, was <mes>.
@@ -272,7 +272,7 @@ namespace Au.Controls
 			}
 
 			int len = Convert_.Utf8LengthFromString(text);
-			byte* buffer = (byte*)Au.Util.NativeHeap.Alloc(len * 2 + 4), s = buffer;
+			byte* buffer = (byte*)NativeHeap.Alloc(len * 2 + 4), s = buffer;
 			try {
 				Convert_.Utf8FromString(text, s, len + 1);
 				if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
@@ -281,7 +281,7 @@ namespace Au.Controls
 				_AddText(s, len, appendLine);
 			}
 			finally {
-				Au.Util.NativeHeap.Free(buffer);
+				NativeHeap.Free(buffer);
 			}
 		}
 
@@ -390,6 +390,7 @@ namespace Au.Controls
 					if(attr == null) goto ge;
 					int color;
 					if(Char_.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
+					else if(*attr=='#') color = Api.strtoi(attr+1, radix: 16);
 					else {
 						var c = Color.FromName(new string((sbyte*)attr, 0, attrLen));
 						if(c.A == 0) break; //invalid color name
@@ -428,7 +429,7 @@ namespace Au.Controls
 					if(i2 < 0) goto ge;
 					if(codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
-					codes.Add(new POINT(iStartCode, iStartCode + i2));
+					codes.Add((iStartCode, iStartCode + i2));
 					while(i2-- > 0) _Write(*s++, STYLE_DEFAULT);
 					s += 7;
 					hasTags = true;

@@ -57,7 +57,7 @@ static class CommandLine
 			//activate main window
 			if(a.Length == 0) {
 				try {
-					Wnd wMain = Wnd.Find("QM#*", "WindowsForms*", "***tid:" + w.ThreadId.ToString(), WFFlags.HiddenToo, t => !t.IsPopupWindow);
+					Wnd wMain = Wnd.Find("QM#*", "WindowsForms*", WFEtc.Thread(w.ThreadId), WFFlags.HiddenToo, t => !t.IsPopupWindow);
 					if(!wMain.Is0) wMain.Activate();
 				}
 				catch { }
